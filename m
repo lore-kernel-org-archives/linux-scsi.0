@@ -2,102 +2,112 @@ Return-Path: <SRS0=CaZB=WP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11766C41514
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 07:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 287D3C3A59F
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 08:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC03E21852
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 07:56:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFD9E20874
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Aug 2019 08:25:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BArwRWm1"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V1oy9GwR";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QW7ThUwN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726132AbfHSH4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Aug 2019 03:56:10 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:45348 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725536AbfHSH4K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2019 03:56:10 -0400
-Received: by mail-pg1-f196.google.com with SMTP id o13so719522pgp.12;
-        Mon, 19 Aug 2019 00:56:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CfD4pxcmsBOD0JzPOjdXmaU+TeQQm+86Lzg/ymH88+k=;
-        b=BArwRWm1ImVBI8S4DBJT/VvuVmBZnlj9RnPnF5Wi9GHZ0l3LeIfYbKTGMKYe2uEeG9
-         +o+4yfpSLOqP2BulTYzUtrt8ydxadNV+EUkxe3sif6Mnq6c/KThkgyrGo9alPuVw1P5W
-         amiZeXP9PY5q+sFaqz9wZF92NtZU2b4oQgTgc2XobhDrh3LROIo6zFvO+obysEWKMEPZ
-         0JyrT6chmjuCwlIt+Q+Kv5wp0UbJKcEMAQhPdIGx4L1Bqrf6JHxzw3q7T5cPh0COpI2I
-         MOJO8rsrhzzcbt3cYU7hFh3VC2osh5A0wKN0R67QGFF7YkU8FaKZOZPL/8zJsTWK/Wbc
-         7dkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CfD4pxcmsBOD0JzPOjdXmaU+TeQQm+86Lzg/ymH88+k=;
-        b=GJcUcrSwQaTSrl6F/XuXocYkvnF1WVjdCcAYop0LP6HLd+JsWvZgmStlmpTmaNnvli
-         MQSISyI7EUZhFUK3M4NAzm37vTlf4ShFHt0RdK01c9FBBpwtySyb0Jwu73cEtXmhhUe9
-         T1iqxji2JvDvo/oEmfmYkl8OP0q+9Vv/CIpHOQUQin8I2z3Yv+vN0jIU+gf8rrjuKr+I
-         8s1V2pBLdRA0OGnnN6n9hSnQDm8DkhMEH8pnzpAR2JDVT6sxvQAdVnC89k+R4Tzuhf6+
-         UOLRRIFw0Vz1zf0VodfNL5VkLg9ymGw4KcO5Hxp5XBVGiAsI3TIrk8LeoOCr7S+4t4bG
-         M51w==
-X-Gm-Message-State: APjAAAUCetI5/OBv5sH1ElZG3jdAy5Yi9z7BqK2KxiYKtS1iJnGFCu9C
-        znKpLEqWIlAZjuvppxsaeSk=
-X-Google-Smtp-Source: APXvYqwrzXMMw4vjlEp/kre9mkNnD1+WQhWHfjp7nEGi7/gdILYk21UrhrkUeenIx3QOJXF6ASVjRQ==
-X-Received: by 2002:a63:fa11:: with SMTP id y17mr18873142pgh.267.1566201369424;
-        Mon, 19 Aug 2019 00:56:09 -0700 (PDT)
-Received: from localhost.localdomain ([110.225.16.165])
-        by smtp.gmail.com with ESMTPSA id e13sm19148162pfl.130.2019.08.19.00.56.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Aug 2019 00:56:09 -0700 (PDT)
-From:   Nishka Dasgupta <nishkadg.linux@gmail.com>
-To:     agross@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        id S1727049AbfHSIZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Aug 2019 04:25:44 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:42740 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726661AbfHSIZo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Aug 2019 04:25:44 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5D5E060A44; Mon, 19 Aug 2019 08:25:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1566203143;
+        bh=3MIGLCqNQzxtDvy3lqyNCEPCNNhYlcANdLA6Obi7OJg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=V1oy9GwR8C3SZ1FX5zoPu6hNC9eunJH6AK1GWY9FW681ARQvEDj0c++h6GHBqdXyi
+         N90NZcY2tT5lNqL7baSWRdmJEg1y/1dxpFeiA9BNifDqq9IrvqyjJ1GuyE7RbJ73R4
+         NQCMu8+kujQoF/ybqclF8rrM/2FIlmmJvXFSAaxE=
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: vivek.gautam@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F4B660AA8;
+        Mon, 19 Aug 2019 08:25:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1566203142;
+        bh=3MIGLCqNQzxtDvy3lqyNCEPCNNhYlcANdLA6Obi7OJg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=QW7ThUwNhbSwIGRwMntYLklwNHP3Kauc+WWw/x3O7VKXnA8gTOq7Jvb8yPftUYjEi
+         7GEpZS/3ZFtgknfbHQRMsXKyeiZ5HTQF3mjNen08cgaJDhFUYaTQIjm/LxVz2BQW4G
+         8XUjKm5Ve/vECctQ8mHYWn7iVNP8cYEwL0+9UiZI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F4B660AA8
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=vivek.gautam@codeaurora.org
+Received: by mail-ed1-f53.google.com with SMTP id g8so867246edm.6;
+        Mon, 19 Aug 2019 01:25:42 -0700 (PDT)
+X-Gm-Message-State: APjAAAVjmiyKfFdd4neCSYBams1n3l76TZHYkIjJg5a4mHzZfIwZ4vxb
+        uPdBJmCvky3PgeazrlLpfI/YnQaHg64JCApMCUI=
+X-Google-Smtp-Source: APXvYqxCh97JmEUeH7K6W1Q7HSEKXXrZ9y46FLd2VqVxnPaHT/6qVAMhBvz/DyAUlubXNbbUk0vNFR9vUq+2TwOOrQ8=
+X-Received: by 2002:a17:906:a94d:: with SMTP id hh13mr5531528ejb.65.1566203140957;
+ Mon, 19 Aug 2019 01:25:40 -0700 (PDT)
+MIME-Version: 1.0
+References: <20190819075557.1547-1-nishkadg.linux@gmail.com>
+In-Reply-To: <20190819075557.1547-1-nishkadg.linux@gmail.com>
+From:   Vivek Gautam <vivek.gautam@codeaurora.org>
+Date:   Mon, 19 Aug 2019 13:55:29 +0530
+X-Gmail-Original-Message-ID: <CAFp+6iHJQJiNw2JKFJi7=9-Ac8nZbTPv5XGARqr9iHzcJb0yOA@mail.gmail.com>
+Message-ID: <CAFp+6iHJQJiNw2JKFJi7=9-Ac8nZbTPv5XGARqr9iHzcJb0yOA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs-qcom: Make structure ufs_hba_qcom_vops constant
+To:     Nishka Dasgupta <nishkadg.linux@gmail.com>
+Cc:     Andy Gross <agross@kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>, avri.altman@wdc.com,
         pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
         martin.peterson@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc:     Nishka Dasgupta <nishkadg.linux@gmail.com>
-Subject: [PATCH] scsi: ufs-qcom: Make structure ufs_hba_qcom_vops constant
-Date:   Mon, 19 Aug 2019 13:25:57 +0530
-Message-Id: <20190819075557.1547-1-nishkadg.linux@gmail.com>
-X-Mailer: git-send-email 2.19.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Static structure ufs_hba_qcom_vops, of type ufs_hba_variant_ops, is used
-only once, when it is passed as the second argument to function
-ufshcd_pltfrm_init(). In the definition of ufshcd_pltfrm_init(), its
-second parameter (corresponding to ufs_hba_qcom_vops) is declared as
-constant. Hence declare ufs_hba_qcom_vops itself constant as well to
-protect it from unintended modification.
-Issue found with Coccinelle.
+On Mon, Aug 19, 2019 at 1:26 PM Nishka Dasgupta
+<nishkadg.linux@gmail.com> wrote:
+>
+> Static structure ufs_hba_qcom_vops, of type ufs_hba_variant_ops, is used
+> only once, when it is passed as the second argument to function
+> ufshcd_pltfrm_init(). In the definition of ufshcd_pltfrm_init(), its
+> second parameter (corresponding to ufs_hba_qcom_vops) is declared as
+> constant. Hence declare ufs_hba_qcom_vops itself constant as well to
+> protect it from unintended modification.
+> Issue found with Coccinelle.
+>
+> Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index ee4b1da1e223..4473f339cbc0 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1551,7 +1551,7 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+>   * The variant operations configure the necessary controller and PHY
+>   * handshake during initialization.
+>   */
+> -static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+> +static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+>         .name                   = "qcom",
+>         .init                   = ufs_qcom_init,
+>         .exit                   = ufs_qcom_exit,
+> --
+> 2.19.1
+>
+Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 
-Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
----
- drivers/scsi/ufs/ufs-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ee4b1da1e223..4473f339cbc0 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1551,7 +1551,7 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
-  * The variant operations configure the necessary controller and PHY
-  * handshake during initialization.
-  */
--static struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
-+static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.name                   = "qcom",
- 	.init                   = ufs_qcom_init,
- 	.exit                   = ufs_qcom_exit,
 -- 
-2.19.1
-
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
