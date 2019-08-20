@@ -2,113 +2,115 @@ Return-Path: <SRS0=HqgQ=WQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F2A3C3A589
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Aug 2019 09:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73948C3A589
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Aug 2019 14:05:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5D0E22DBF
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Aug 2019 09:05:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="EP9KgOdD"
+	by mail.kernel.org (Postfix) with ESMTP id 4FB5E22CF7
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Aug 2019 14:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729341AbfHTJFA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Aug 2019 05:05:00 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:16080 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728698AbfHTJFA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2019 05:05:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1566291904; x=1597827904;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=MnC9I/+eq+q2Ei5v2mBRNNadmxEq1GlCxXcT3BpX/mk=;
-  b=EP9KgOdDLnzAW16bHgJGfp0zIIsqAKy9iZiql7Bm29bWzigvFl0FLh+a
-   Y8x5LPuLd+VG7loJItYklhNGia1kC7Lgc759o+aN1WGGe+mDKv3eBpnkI
-   pwThyzQjdzNw/0x2fbQgrL/mAx+BQGvpVRhrF8OX04fLXbvqP3JW0rz3B
-   2iXTnf1XPjwqtkzS6CoIc1HRkibDtgIlPEaksO+9j+jFh9h3BpdgdLQua
-   y8whPkJ3wMGBlVxR6bxsPx1sIKOEW4ziyOVo6mMY7hob+w7aGv6CoWd/j
-   NyJCtnU+zS60qtBpRWB6OElIHsgQEKJSuYAqMkz0KYBsN955xN6N1e3Qv
-   Q==;
-IronPort-SDR: ByVHicBDJWbirCzrZ7Ef0+lruTDPMrYseR8FA+3LSrBQ7j0LBYR3BnM5xgTLeF1U4BSPARAVF7
- QjfIguPG9XhzEHoEFcK0u4nl+wQA+T1kZpWsx3SOOjBJJ36I54LJmaYU3iJTUMBpYT77mACsc5
- RTvYJo3et6In3d2nxFKyx+xgiFXbH69SkHNi8XRYHp49vy5kiBGvgitMzomNaEmM0oEkPLt+bL
- 0A/5DTKpsX11SQTx+XCozt38pv0rqnJsvThRCFYhM9x8vDK3zHd21kT/40YKY4+++x/NLtkEYm
- kvM=
-X-IronPort-AV: E=Sophos;i="5.64,408,1559491200"; 
-   d="scan'208";a="216621449"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2019 17:05:03 +0800
-IronPort-SDR: 7GAmPa1U8WzWjP77iMJfEQ3vogNrg8p6Xg6V6Tc19jM43InSVJShbM4+WbOaUXaGo0mRMkxNr+
- dbiW9mUqTT0FL/IoeMexztIjdm6t4ue1wENUIGesiB6JHHFLGnuUW4TmDgeb01QjqSXo4kLMaZ
- SojxFgREid36g9wOsZfNsPZxQ9PC660h0JvQPrqTWHxbWIR1J++XPVO1ekAkgwRvK5UwayfQL6
- wxOYAXBxAWeEqVMc80j8ntrxAFVxbjU+Y3lPOO20bbdyIPwsUL3AphoaPfOHZW39cy2DiKUaWR
- WgSRh9ulpg5ReDa3Kc6HRRFQ
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 02:02:22 -0700
-IronPort-SDR: sRH6lXI2d7s0zVPGznpsL3FE6x+nFHv05UYQvz2F7SfTGmMt5uQP1gEefGy0sW2jonkZTQGB+/
- M+y9MN5lDrM2+oU4y/hxI0auzrNMkNRzrXrnKsAX4r6bvKFozK2Os/NXKcKGZkrXwK6gtEIsh6
- Z0O81WzIk0seDSDRbL6doWvRgcZdDsLjMcS6MzfUFf7a2VQtdlSw4ngR0NwZrDuVyUw/9J8R4N
- 7QOXkqCbSOYuW7FUtgWs+LtHUQM+MzYJdYrRZRAdnAv3YD2eswmTmJw95IqH/LJu0W/86am3Oz
- glw=
-Received: from naota.dhcp.fujisawa.hgst.com (HELO naota.fujisawa.hgst.com) ([10.149.53.115])
-  by uls-op-cesaip01.wdc.com with ESMTP; 20 Aug 2019 02:04:59 -0700
-From:   Naohiro Aota <naohiro.aota@wdc.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+        id S1729965AbfHTOE7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Aug 2019 10:04:59 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:33737 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728248AbfHTOE7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Aug 2019 10:04:59 -0400
+Received: by mail-pl1-f194.google.com with SMTP id go14so2815312plb.0;
+        Tue, 20 Aug 2019 07:04:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uU0E9BnbCaRlRcxE+6+0us4/0Y9cyL7jBTJ2b+KsM+s=;
+        b=WWl3MBiwGsVQuQSGt+5CRyVUpY/VEmVaOpVBtrVCK8mZKJG0z90ZEdRcia0mGzEMqx
+         5rmFTJC2yG5g6ENrn33mSU2PENV9uenMfCFJP3UxpaYgRdIILfAQHQ6UKav/+FMO8nT+
+         RyzGYS3oFlcT9h5+60IJPKtCWovD/zMjfJbWpwmMqQ7v46yQ9kLOL7BUSWfhYHWUgZE3
+         3hjz68QqKU1JZCQ6wIXrJa68qVXOLwIo0WIl4xQ9XsVpDvm7c88wzcYGRW5uXVKDUncg
+         60+GNcL8+pf3wBhEMhrJyAfmKaFIVfGNsM3Yw46J778wxYy5fjgPPGvGQTjfOlM7wS1m
+         6bYQ==
+X-Gm-Message-State: APjAAAU9ZQD/t4AW9T/ycwDRbbiatVZ5fvSb5WLgWNl+sJ2+RCzf9DHd
+        5vdDYkseESMXef6q1ixPdvs=
+X-Google-Smtp-Source: APXvYqzHIs2+J9/hpuOOW84DIwir/Y9TRxXZmTXss7dEB5WRygZ5nP6SEWygWovMRcUnzgv90JALIQ==
+X-Received: by 2002:a17:902:9348:: with SMTP id g8mr28953098plp.18.1566309898854;
+        Tue, 20 Aug 2019 07:04:58 -0700 (PDT)
+Received: from asus.site (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id w9sm19709886pfn.19.2019.08.20.07.04.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Aug 2019 07:04:53 -0700 (PDT)
+Subject: Re: [PATCH v2 1/2] scsi: target/tcm_loop: ignore already deleted scsi
+ device
+To:     Naohiro Aota <naohiro.aota@wdc.com>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
 Cc:     Mike Christie <mchristi@redhat.com>,
         Nicholas Bellinger <nab@linux-iscsi.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>
-Subject: [PATCH v2 2/2] scsi: target/tcm_loop: update upper limit of LUN
-Date:   Tue, 20 Aug 2019 18:04:29 +0900
-Message-Id: <20190820090429.1961085-2-naohiro.aota@wdc.com>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20190820090429.1961085-1-naohiro.aota@wdc.com>
+        "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20190820090429.1961085-1-naohiro.aota@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <1973f310-ad00-ff88-fe08-a31f81dc5c33@acm.org>
+Date:   Tue, 20 Aug 2019 07:02:35 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190820090429.1961085-1-naohiro.aota@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-targetcli-fb (or its library: rtslib-fb) allows us to create LUN up to
-65535. On the other hand, the kernel driver is limiting max_lun to 0.
+On 8/20/19 2:04 AM, Naohiro Aota wrote:
+> If there is no corresponding scsi_device for a LUN,
+> tcm_loop_port_unlink() complains that it "Unable to locate struct
+> scsi_device for " the device and keep %tl_tpg_port_count as is. However,
+> such situation is legal when we delete a SCSI device using
+> /sys/class/scsi_device/${lun}/device/delete. We can safely ignore the
+> missing SCSI device case here.
+> 
+> Signed-off-by: Naohiro Aota <naohiro.aota@wdc.com>
+> ---
+>   drivers/target/loopback/tcm_loop.c | 18 +++++++++---------
+>   1 file changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index 3305b47fdf53..0942f3bd7eec 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -654,16 +654,16 @@ static void tcm_loop_port_unlink(
+>   
+>   	sd = scsi_device_lookup(tl_hba->sh, 0, tl_tpg->tl_tpgt,
+>   				se_lun->unpacked_lun);
+> -	if (!sd) {
+> -		pr_err("Unable to locate struct scsi_device for %d:%d:%llu\n",
+> -		       0, tl_tpg->tl_tpgt, se_lun->unpacked_lun);
+> -		return;
+> +	if (sd) {
+> +		/*
+> +		 * Remove Linux/SCSI struct scsi_device by HCTL
+> +		 */
+> +		scsi_remove_device(sd);
+> +		scsi_device_put(sd);
+> +	} else {
+> +		pr_debug("Unable to locate struct scsi_device for %d:%d:%llu\n",
+> +			 0, tl_tpg->tl_tpgt, se_lun->unpacked_lun);
+>   	}
+> -	/*
+> -	 * Remove Linux/SCSI struct scsi_device by HCTL
+> -	 */
+> -	scsi_remove_device(sd);
+> -	scsi_device_put(sd);
+>   
+>   	atomic_dec_mb(&tl_tpg->tl_tpg_port_count);
 
-This limitation causes actual problem when you delete a loopback device
-(using /sys/class/scsi_device/${lun}/device/delete) and rescan it (using
-/sys/class/scsi_host/host${h}/scan). You can delete the device, but
-cannot rescan it because its LUN is larger than max_lun and so the scan
-request results in -EINVAL error in scsi_scan_host_selected().
+The above patch looks wrong to me. I think this patch does not fix the 
+reference leak present in the current code. Have you considered to 
+modify tcm_loop_port_link() such that it saves the pointer returned by 
+scsi_add_device() and to use that pointer in tcm_loop_port_unlink()?
 
-This commit fix the upper limit to a max possible value: U64_MAX.
-
-Signed-off-by: Naohiro Aota <naohiro.aota@wdc.com>
----
- drivers/target/loopback/tcm_loop.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 0942f3bd7eec..50e93b487375 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -336,10 +336,10 @@ static int tcm_loop_driver_probe(struct device *dev)
- 	 */
- 	*((struct tcm_loop_hba **)sh->hostdata) = tl_hba;
- 	/*
--	 * Setup single ID, Channel and LUN for now..
-+	 * Setup single ID, and Channel for now..
- 	 */
- 	sh->max_id = 2;
--	sh->max_lun = 0;
-+	sh->max_lun = U64_MAX;
- 	sh->max_channel = 0;
- 	sh->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
- 
--- 
-2.23.0
+Bart.
 
