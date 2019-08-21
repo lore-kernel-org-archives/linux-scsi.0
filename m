@@ -2,406 +2,189 @@ Return-Path: <SRS0=MIBM=WR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB9EAC3A59E
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 07:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E12CC3A59E
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 08:59:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B340222DA7
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 07:57:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DkO7Nn7D"
+	by mail.kernel.org (Postfix) with ESMTP id 6D1F02339E
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 08:59:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727151AbfHUH5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Aug 2019 03:57:41 -0400
-Received: from mail-pl1-f202.google.com ([209.85.214.202]:38490 "EHLO
-        mail-pl1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727122AbfHUH5j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 03:57:39 -0400
-Received: by mail-pl1-f202.google.com with SMTP id x5so1009292pln.5
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2019 00:57:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=Za7w9RhqOvx+rbdwwS8b0CPcodToPB6Hjzwh7+A6Syg=;
-        b=DkO7Nn7D2Xk3T8cG9p5c6N+nZxrZ4col+9+vVnpt+G8JRphS7kgWTTlgn5Bd5a7AEr
-         2+F74HCdI8eYIHLUkOCPVnjF6FETFobs//509xgwEM6D2QXn5fWkqtj1OYtyNK9jLmcb
-         nUKfbKW2EpHKT2STSUPVMDF1nO/bLvyj7TNB7z7JrveFvkG+H83icRhL4TabD7m81QWd
-         rLvILk0GUc37LAVeI9NTyikh6FTn203V3g/QNWZMD7plUmU3b9axvSOM/g4hUsLM+MdH
-         qocPUAm3Qz2URW8cy40aN8EXQVmgiiGAjvgjxDT2Zlcia441Z0Tq6MJ7LfZvRRBZ/kxa
-         m3aA==
+        id S1726965AbfHUI7r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Aug 2019 04:59:47 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47214 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725283AbfHUI7r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Aug 2019 04:59:47 -0400
+Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com [209.85.221.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C7BED3B738
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2019 08:59:46 +0000 (UTC)
+Received: by mail-vk1-f198.google.com with SMTP id r17so629852vkd.23
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2019 01:59:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=Za7w9RhqOvx+rbdwwS8b0CPcodToPB6Hjzwh7+A6Syg=;
-        b=K0im5Bm7/Cs+inGx7oXzkbKia1HukW3E3YZgbexE8wXlpvtrRBkzZ99UmobifscIRU
-         7GOX9GM/PfctyRbezxuXW7DmnRjCzyfogMzMuW1+q8noN5Os/jR1mu6xve60jEiolqYu
-         8MvM7MTwqCbvidK7uH8175C5OxwC5BJlTGh9R7uVezspPbOmlJ0scXYVrhnQKYLWpo6p
-         bxLc/086xgyY5T6yxTvRv6wrkt0gF4XlmKVvbYMGj5zuVGQCokG+fcZuQZGUPk0zCfLv
-         OZPSwBL7qZ4GuBgBVTe5RbcVKlXLxk+IGbVesEgYx8BYW8mErSvIxUbdcNR31h56745e
-         VtZQ==
-X-Gm-Message-State: APjAAAXnh1/fJUm/PEGl57lNkUzHE8WSQdO1FN/+9vXqis18EAkW2mVU
-        VY2D34nKgsM3bSGBWIZVvHyj4RjAA2U=
-X-Google-Smtp-Source: APXvYqxT3jAgizDP+6vcOIt7t24Pqk/vf2IKzBLMg5jcFQikXJNxIrCVsY+Yz+Wd8/Yvw1kXif/HLfUjnzU=
-X-Received: by 2002:a63:ab08:: with SMTP id p8mr29238085pgf.340.1566374258557;
- Wed, 21 Aug 2019 00:57:38 -0700 (PDT)
-Date:   Wed, 21 Aug 2019 00:57:14 -0700
-In-Reply-To: <20190821075714.65140-1-satyat@google.com>
-Message-Id: <20190821075714.65140-9-satyat@google.com>
-Mime-Version: 1.0
-References: <20190821075714.65140-1-satyat@google.com>
-X-Mailer: git-send-email 2.23.0.rc1.153.gdeed80330f-goog
-Subject: [PATCH v4 8/8] f2fs: Wire up f2fs to use inline encryption via fscrypt
-From:   Satya Tangirala <satyat@google.com>
-To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net
-Cc:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=T0zyt8pdmUNNX5LUieDb3WOJzDsiFXIwY84UanirCHE=;
+        b=gv+zJzwXeW4zcTbFdM10Pp8fIXvxrN0GxMfQWj/pCLU97HbjC24ns2x6efFsZumQUE
+         gvrVPEUyTHYla6gIuyx7lWrKXrpOJlV1Gi2P0ay2rs+by3/lOm9BJI43bnVlCTjCfzxW
+         BwCakRbmG7W7ET3bH/r74NnfDD0yMf/6n3O/YI0ysD6fU6P1S3tfSRaoRJC/BW8x89x5
+         pifv6y8fRUsaUztyZg3+TQIN0bzfT+ljv7JnBhFh2NAhM/gKaHNwMz7F7XIWRdzGuDid
+         uvws9r4aoaXlozg9VXPzuGix1noOlk0D9P3Y9gBy0JN0/d53911OBNnGyLIoqD07PxqU
+         2CTw==
+X-Gm-Message-State: APjAAAUC0MltKTkkvyTX7qZ9Br8tPpN+vy/rf/bNtYKeUxV4jl5DnPWX
+        xWxGUD0rF/8FjUmqt+fenHm1oJpMlhOtCl2woG3nYWY062BguqpVJvSoElQkrURUX9GwRdCK+vJ
+        u4BK50w3bDv85wCoWmp/70ha5+z5r4K/qFNxQbw==
+X-Received: by 2002:a9f:2927:: with SMTP id t36mr1714717uat.142.1566377985793;
+        Wed, 21 Aug 2019 01:59:45 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwYQw3Dg8bUC1rAxb19kP040V1FJ472/1p8t9Oahk0Hdk0jkqDawfnX8B1JqUkBDKrSI2ayOnLrlq/NvjTsa98=
+X-Received: by 2002:a9f:2927:: with SMTP id t36mr1714705uat.142.1566377985390;
+ Wed, 21 Aug 2019 01:59:45 -0700 (PDT)
+MIME-Version: 1.0
+From:   Li Wang <liwang@redhat.com>
+Date:   Wed, 21 Aug 2019 16:59:34 +0800
+Message-ID: <CAEemH2f5FTS4tGvjhmz6VpethOYnhVhVcETY2AdFbSfdQ8=y9g@mail.gmail.com>
+Subject: [5.3.0-rc4 Bug] WARNING: CPU: 17 PID: 25085 at lib/list_debug.c:47 __list_del_entry_valid+0x4e/0x90
+To:     james.smart@broadcom.com, Arun Easi <aeasi@marvell.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Satya Tangirala <satyat@google.com>
----
- fs/f2fs/data.c  | 127 ++++++++++++++++++++++++++++++++++++++++++++----
- fs/f2fs/super.c |  15 +++---
- 2 files changed, 126 insertions(+), 16 deletions(-)
+Hi lpfc experts,
 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index abbf14e9bd72..a7294edce173 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -143,6 +143,8 @@ static bool f2fs_bio_post_read_required(struct bio *bio)
- 
- static void f2fs_read_end_io(struct bio *bio)
- {
-+	fscrypt_unset_bio_crypt_ctx(bio);
-+
- 	if (time_to_inject(F2FS_P_SB(bio_first_page_all(bio)),
- 						FAULT_READ_IO)) {
- 		f2fs_show_injection_info(FAULT_READ_IO);
-@@ -166,6 +168,8 @@ static void f2fs_write_end_io(struct bio *bio)
- 	struct bio_vec *bvec;
- 	struct bvec_iter_all iter_all;
- 
-+	fscrypt_unset_bio_crypt_ctx(bio);
-+
- 	if (time_to_inject(sbi, FAULT_WRITE_IO)) {
- 		f2fs_show_injection_info(FAULT_WRITE_IO);
- 		bio->bi_status = BLK_STS_IOERR;
-@@ -283,6 +287,53 @@ static struct bio *__bio_alloc(struct f2fs_sb_info *sbi, block_t blk_addr,
- 	return bio;
- }
- 
-+static int f2fs_init_bio_crypt_ctx(struct bio *bio, struct inode *inode,
-+				   struct f2fs_io_info *fio, bool no_fail)
-+{
-+	gfp_t gfp_mask = GFP_NOIO;
-+	/*
-+	 * This function should be called with NULL inode iff the pages
-+	 * being added to the bio are to be handled without inline
-+	 * en/decryption.
-+	 */
-+	if (!inode)
-+		return 0;
-+
-+	/*
-+	 * If the fio has an encrypted page, that means we want to read/write
-+	 * it without inline encryption (for e.g. when moving blocks)
-+	 */
-+	if (fio && fio->encrypted_page)
-+		return 0;
-+
-+	if (no_fail)
-+		gfp_mask |= __GFP_NOFAIL;
-+
-+	return fscrypt_set_bio_crypt_ctx(bio, inode, 0, gfp_mask);
-+}
-+
-+static inline u64 inline_crypt_dun(struct inode *inode, pgoff_t offset)
-+{
-+	return (((u64)inode->i_ino) << 32) | lower_32_bits(offset);
-+}
-+
-+bool f2fs_page_crypt_back_mergeable(const struct bio *bio,
-+				    const struct page *page)
-+{
-+	struct inode *bio_inode = bio && bio_page(bio)->mapping ?
-+				    bio_page(bio)->mapping->host : NULL;
-+	struct inode *page_inode = page && page->mapping ? page->mapping->host
-+							 : NULL;
-+
-+	if (!fscrypt_inode_crypt_mergeable(page_inode, bio_inode))
-+		return false;
-+	if (!bio_inode || !fscrypt_inode_is_inline_crypted(bio_inode))
-+		return true;
-+	return inline_crypt_dun(bio_inode, bio_page(bio)->index) +
-+	       (bio->bi_iter.bi_size >> PAGE_SHIFT) ==
-+	       inline_crypt_dun(page_inode, page->index);
-+}
-+
- static inline void __submit_bio(struct f2fs_sb_info *sbi,
- 				struct bio *bio, enum page_type type)
- {
-@@ -327,6 +378,14 @@ static inline void __submit_bio(struct f2fs_sb_info *sbi,
- 		trace_f2fs_submit_read_bio(sbi->sb, type, bio);
- 	else
- 		trace_f2fs_submit_write_bio(sbi->sb, type, bio);
-+
-+	if (bio_has_data(bio) && bio_has_crypt_ctx(bio)) {
-+		struct page *page = bio_page(bio);
-+
-+		bio_set_data_unit_num(bio, inline_crypt_dun(page->mapping->host,
-+							    page->index));
-+	}
-+
- 	submit_bio(bio);
- }
- 
-@@ -451,6 +510,7 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
- 	struct bio *bio;
- 	struct page *page = fio->encrypted_page ?
- 			fio->encrypted_page : fio->page;
-+	int err;
- 
- 	if (!f2fs_is_valid_blkaddr(fio->sbi, fio->new_blkaddr,
- 			fio->is_por ? META_POR : (__is_meta_io(fio) ?
-@@ -464,9 +524,15 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
- 	bio = __bio_alloc(fio->sbi, fio->new_blkaddr, fio->io_wbc,
- 				1, is_read_io(fio->op), fio->type, fio->temp);
- 
--	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
-+	err = f2fs_init_bio_crypt_ctx(bio, fio->page->mapping->host, fio,
-+				      false);
-+
-+	if (!err && bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE)
-+		err = -EFAULT;
-+
-+	if (err) {
- 		bio_put(bio);
--		return -EFAULT;
-+		return err;
- 	}
- 
- 	if (fio->io_wbc && !is_read_io(fio->op))
-@@ -486,6 +552,7 @@ int f2fs_merge_page_bio(struct f2fs_io_info *fio)
- 	struct bio *bio = *fio->bio;
- 	struct page *page = fio->encrypted_page ?
- 			fio->encrypted_page : fio->page;
-+	int err;
- 
- 	if (!f2fs_is_valid_blkaddr(fio->sbi, fio->new_blkaddr,
- 			__is_meta_io(fio) ? META_GENERIC : DATA_GENERIC))
-@@ -495,7 +562,8 @@ int f2fs_merge_page_bio(struct f2fs_io_info *fio)
- 	f2fs_trace_ios(fio, 0);
- 
- 	if (bio && (*fio->last_block + 1 != fio->new_blkaddr ||
--			!__same_bdev(fio->sbi, fio->new_blkaddr, bio))) {
-+			!__same_bdev(fio->sbi, fio->new_blkaddr, bio) ||
-+			!f2fs_page_crypt_back_mergeable(bio, page))) {
- 		__submit_bio(fio->sbi, bio, fio->type);
- 		bio = NULL;
- 	}
-@@ -503,6 +571,12 @@ int f2fs_merge_page_bio(struct f2fs_io_info *fio)
- 	if (!bio) {
- 		bio = __bio_alloc(fio->sbi, fio->new_blkaddr, fio->io_wbc,
- 				BIO_MAX_PAGES, false, fio->type, fio->temp);
-+		err = f2fs_init_bio_crypt_ctx(bio, fio->page->mapping->host,
-+					      fio, false);
-+		if (err) {
-+			bio_put(bio);
-+			return err;
-+		}
- 		bio_set_op_attrs(bio, fio->op, fio->op_flags);
- 	}
- 
-@@ -570,8 +644,10 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
- 
- 	if (io->bio && (io->last_block_in_bio != fio->new_blkaddr - 1 ||
- 	    (io->fio.op != fio->op || io->fio.op_flags != fio->op_flags) ||
--			!__same_bdev(sbi, fio->new_blkaddr, io->bio)))
-+			!__same_bdev(sbi, fio->new_blkaddr, io->bio) ||
-+			!f2fs_page_crypt_back_mergeable(io->bio, bio_page)))
- 		__submit_merged_bio(io);
-+
- alloc_new:
- 	if (io->bio == NULL) {
- 		if ((fio->type == DATA || fio->type == NODE) &&
-@@ -583,6 +659,8 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
- 		io->bio = __bio_alloc(sbi, fio->new_blkaddr, fio->io_wbc,
- 						BIO_MAX_PAGES, false,
- 						fio->type, fio->temp);
-+		f2fs_init_bio_crypt_ctx(io->bio, fio->page->mapping->host,
-+					fio, true);
- 		io->fio = *fio;
- 	}
- 
-@@ -615,16 +693,24 @@ static struct bio *f2fs_grab_read_bio(struct inode *inode, block_t blkaddr,
- 	struct bio *bio;
- 	struct bio_post_read_ctx *ctx;
- 	unsigned int post_read_steps = 0;
-+	int err;
- 
- 	bio = f2fs_bio_alloc(sbi, min_t(int, nr_pages, BIO_MAX_PAGES), false);
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
-+	err = f2fs_init_bio_crypt_ctx(bio, inode, NULL, false);
-+	if (err) {
-+		bio_put(bio);
-+		return ERR_PTR(err);
-+	}
-+
- 	f2fs_target_device(sbi, blkaddr, bio);
- 	bio->bi_end_io = f2fs_read_end_io;
- 	bio_set_op_attrs(bio, REQ_OP_READ, op_flag);
- 
--	if (f2fs_encrypted_file(inode))
-+	if (fscrypt_needs_fs_layer_crypto(inode))
- 		post_read_steps |= 1 << STEP_DECRYPT;
-+
- 	if (post_read_steps) {
- 		ctx = mempool_alloc(bio_post_read_ctx_pool, GFP_NOFS);
- 		if (!ctx) {
-@@ -1574,6 +1660,7 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 					struct f2fs_map_blocks *map,
- 					struct bio **bio_ret,
- 					sector_t *last_block_in_bio,
-+					u64 *next_dun,
- 					bool is_readahead)
- {
- 	struct bio *bio = *bio_ret;
-@@ -1648,6 +1735,13 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 		__submit_bio(F2FS_I_SB(inode), bio, DATA);
- 		bio = NULL;
- 	}
-+
-+	if (bio && fscrypt_inode_is_inline_crypted(inode) &&
-+	    *next_dun != inline_crypt_dun(inode, page->index)) {
-+		__submit_bio(F2FS_I_SB(inode), bio, DATA);
-+		bio = NULL;
-+	}
-+
- 	if (bio == NULL) {
- 		bio = f2fs_grab_read_bio(inode, block_nr, nr_pages,
- 				is_readahead ? REQ_RAHEAD : 0);
-@@ -1667,6 +1761,9 @@ static int f2fs_read_single_page(struct inode *inode, struct page *page,
- 	if (bio_add_page(bio, page, blocksize, 0) < blocksize)
- 		goto submit_and_realloc;
- 
-+	if (fscrypt_inode_is_inline_crypted(inode))
-+		*next_dun = inline_crypt_dun(inode, page->index) + 1;
-+
- 	inc_page_count(F2FS_I_SB(inode), F2FS_RD_DATA);
- 	ClearPageError(page);
- 	*last_block_in_bio = block_nr;
-@@ -1700,6 +1797,7 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
- 	struct inode *inode = mapping->host;
- 	struct f2fs_map_blocks map;
- 	int ret = 0;
-+	u64 next_dun = 0;
- 
- 	map.m_pblk = 0;
- 	map.m_lblk = 0;
-@@ -1723,7 +1821,8 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
- 		}
- 
- 		ret = f2fs_read_single_page(inode, page, nr_pages, &map, &bio,
--					&last_block_in_bio, is_readahead);
-+					&last_block_in_bio, &next_dun,
-+					is_readahead);
- 		if (ret) {
- 			SetPageError(page);
- 			zero_user_segment(page, 0, PAGE_SIZE);
-@@ -1777,12 +1876,12 @@ static int encrypt_one_page(struct f2fs_io_info *fio)
- 	struct page *mpage;
- 	gfp_t gfp_flags = GFP_NOFS;
- 
--	if (!f2fs_encrypted_file(inode))
--		return 0;
--
- 	/* wait for GCed page writeback via META_MAPPING */
- 	f2fs_wait_on_block_writeback(inode, fio->old_blkaddr);
- 
-+	if (!fscrypt_needs_fs_layer_crypto(inode))
-+		return 0;
-+
- retry_encrypt:
- 	fio->encrypted_page = fscrypt_encrypt_pagecache_blocks(fio->page,
- 							       PAGE_SIZE, 0,
-@@ -1957,7 +2056,7 @@ int f2fs_do_write_data_page(struct f2fs_io_info *fio)
- 			f2fs_unlock_op(fio->sbi);
- 		err = f2fs_inplace_write_data(fio);
- 		if (err) {
--			if (f2fs_encrypted_file(inode))
-+			if (fscrypt_needs_fs_layer_crypto(inode))
- 				fscrypt_finalize_bounce_page(&fio->encrypted_page);
- 			if (PageWriteback(page))
- 				end_page_writeback(page);
-@@ -2692,6 +2791,8 @@ static void f2fs_dio_end_io(struct bio *bio)
- {
- 	struct f2fs_private_dio *dio = bio->bi_private;
- 
-+	fscrypt_unset_bio_crypt_ctx(bio);
-+
- 	dec_page_count(F2FS_I_SB(dio->inode),
- 			dio->write ? F2FS_DIO_WRITE : F2FS_DIO_READ);
- 
-@@ -2708,12 +2809,18 @@ static void f2fs_dio_submit_bio(struct bio *bio, struct inode *inode,
- {
- 	struct f2fs_private_dio *dio;
- 	bool write = (bio_op(bio) == REQ_OP_WRITE);
-+	u64 data_unit_num = inline_crypt_dun(inode, file_offset >> PAGE_SHIFT);
- 
- 	dio = f2fs_kzalloc(F2FS_I_SB(inode),
- 			sizeof(struct f2fs_private_dio), GFP_NOFS);
- 	if (!dio)
- 		goto out;
- 
-+	if (fscrypt_set_bio_crypt_ctx(bio, inode, data_unit_num, GFP_NOIO)) {
-+		kvfree(dio);
-+		goto out;
-+	}
-+
- 	dio->inode = inode;
- 	dio->orig_end_io = bio->bi_end_io;
- 	dio->orig_private = bio->bi_private;
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 78a1b873e48a..196145cb42f9 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2223,12 +2223,15 @@ static bool f2fs_dummy_context(struct inode *inode)
- }
- 
- static const struct fscrypt_operations f2fs_cryptops = {
--	.key_prefix	= "f2fs:",
--	.get_context	= f2fs_get_context,
--	.set_context	= f2fs_set_context,
--	.dummy_context	= f2fs_dummy_context,
--	.empty_dir	= f2fs_empty_dir,
--	.max_namelen	= F2FS_NAME_LEN,
-+	.key_prefix		= "f2fs:",
-+	.get_context		= f2fs_get_context,
-+	.set_context		= f2fs_set_context,
-+	.dummy_context		= f2fs_dummy_context,
-+	.empty_dir		= f2fs_empty_dir,
-+	.max_namelen		= F2FS_NAME_LEN,
-+#ifdef CONFIG_FS_ENCRYPTION_INLINE_CRYPT
-+	.inline_crypt_supp	= true,
-+#endif
- };
- #endif
- 
--- 
-2.23.0.rc1.153.gdeed80330f-goog
+We observed these warnings during the mainline kernel-v5.3.0-rc4
+testing. There is no explicit reproducer so far, if you need some more
+information, plz let me know.
 
+Test system has this device: OneConnect 10Gb FCoE Initiator (be3)
+
+[  211.080240] lpfc 0000:47:00.3: 1:2505 EQ_DESTROY mailbox failed
+with status x5 add_status x0, mbx status x10
+[  211.129399] ------------[ cut here ]------------
+[  211.153700] list_del corruption, ffff97b9bb58b470->next is
+LIST_POISON1 (dead000000000100)
+[  211.199179] WARNING: CPU: 17 PID: 25085 at lib/list_debug.c:47
+__list_del_entry_valid+0x4e/0x90
+[  211.246981] Modules linked in: sunrpc amd64_edac_mod edac_mce_amd
+kvm_amd ccp kvm ipmi_ssif irqbypass crct10dif_pclmul crc32_pclmul
+sp5100_tco hpwdt joydev pcspkr ipmi_si ghash_clmulni_intel i2c_piix4
+sg fam15h_power k10temp ipmi_devintf hpilo ipmi_msghandler
+acpi_power_meter xfs libcrc32c radeon i2c_algo_bit lpfc drm_kms_helper
+sd_mod nvmet_fc syscopyarea sysfillrect sysimgblt nvmet fb_sys_fops
+ttm nvme_fc nvme_fabrics drm nvme_core ahci libahci ata_generic
+scsi_transport_fc crc32c_intel serio_raw netxen_nic libata hpsa
+scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
+[  211.512759] CPU: 17 PID: 25085 Comm: reboot Not tainted 5.3.0-rc4+ #1
+[  211.546757] Hardware name: HP ProLiant DL585 G7, BIOS A16 06/04/2013
+[  211.577666] RIP: 0010:__list_del_entry_valid+0x4e/0x90
+[  211.605776] Code: 2e 48 8b 32 48 39 fe 75 3a 48 8b 50 08 48 39 f2
+75 48 b8 01 00 00 00 c3 48 89 fe 48 89 c2 48 c7 c7 90 7c 70 89 e8 4b
+31 c7 ff <0f> 0b 31 c0 c3 48 89 fe 48 c7 c7 c8 7c 70 89 e8 37 31 c7 ff
+0f 0b
+[  211.700384] RSP: 0018:ffffa5cfd9f1fcf0 EFLAGS: 00010286
+[  211.730407] RAX: 0000000000000000 RBX: 0000000000000028 RCX: ffffffff89858d08
+[  211.770165] RDX: 0000000000000001 RSI: 0000000000000092 RDI: ffffffff8a0452ac
+[  211.809284] RBP: ffff97b9bb58b400 R08: 000000000000071b R09: 0000000000000011
+[  211.848165] R10: 0000000000000000 R11: ffffa5cfd9f1fb98 R12: ffff97b9bb58b450
+[  211.887273] R13: 0000000000000002 R14: 000000000000000e R15: ffff989407d38000
+[  211.924806] FS:  00007fa6614fb380(0000) GS:ffff97f73fb00000(0000)
+knlGS:0000000000000000
+[  211.964734] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  211.994813] CR2: 0000563ca3983ae0 CR3: 0000005fbeec8000 CR4: 00000000000406e0
+[  212.029859] Call Trace:
+[  212.043832]  lpfc_sli4_queue_free+0xfb/0x140 [lpfc]
+[  212.068662]  lpfc_sli4_queue_destroy+0x11a/0x390 [lpfc]
+[  212.093783]  lpfc_pci_remove_one+0x7d6/0x970 [lpfc]
+[  212.120727]  pci_device_shutdown+0x34/0x60
+[  212.140789]  device_shutdown+0x160/0x1c0
+[  212.159573]  kernel_restart+0xe/0x30
+[  212.179305]  __do_sys_reboot+0x1cf/0x210
+[  212.200663]  ? __fput+0x168/0x250
+[  212.217031]  ? syscall_trace_enter+0x198/0x2c0
+[  212.238690]  ? __audit_syscall_exit+0x249/0x2a0
+[  212.263835]  do_syscall_64+0x59/0x1e0
+[  212.284258]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[  212.311343] RIP: 0033:0x7fa660744427
+[  212.331477] Code: 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00
+00 00 90 f3 0f 1e fa 89 fa be 69 19 12 28 bf ad de e1 fe b8 a9 00 00
+00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 8b 15 31 9a 2c 00 f7 d8 64 89
+02 b8
+[  212.431882] RSP: 002b:00007fff7cdde998 EFLAGS: 00000246 ORIG_RAX:
+00000000000000a9
+[  212.468850] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fa660744427
+[  212.506676] RDX: 0000000001234567 RSI: 0000000028121969 RDI: 00000000fee1dead
+[  212.541728] RBP: 00007fff7cdde9e0 R08: 0000000000000002 R09: 0000000000000000
+[  212.578997] R10: 000000000000004b R11: 0000000000000246 R12: 0000000000000001
+[  212.614302] R13: 00000000fffffffe R14: 0000000000000006 R15: 0000000000000000
+[  212.651285] ---[ end trace 791103fd1685648d ]---
+
+
+[  119.322923] ------------[ cut here ]------------
+[  119.347248] kernel BUG at mm/slub.c:3952!
+[  119.366674] invalid opcode: 0000 [#1] SMP NOPTI
+[  119.391577] CPU: 32 PID: 2944 Comm: reboot Kdump: loaded Tainted: G
+       W         5.3.0-rc4+ #1
+[  119.436031] Hardware name: HP ProLiant DL585 G7, BIOS A16 06/04/2013
+[  119.470259] RIP: 0010:kfree+0x19e/0x1d0
+[  119.488625] Code: 00 74 1f 48 8b 45 00 31 f6 a9 00 00 01 00 74 04
+0f b6 75 51 5b 48 89 ef 5d 41 5c 41 5d e9 ba 78 fd ff 48 8b 45 08 a8
+01 75 d9 <0f> 0b 4d 89 e9 48 89 d9 48 89 da 48 89 ee 5b 4c 89 e7 5d 41
+b8 01
+[  119.582912] RSP: 0018:ffffafb99a397cf0 EFLAGS: 00010246
+[  119.611357] RAX: ffffdb0dfee52c08 RBX: ffff97cc79450000 RCX: ffffffff92c58d08
+[  119.646037] RDX: 0000000000000000 RSI: 0000000000000092 RDI: ffff97cc79450000
+[  119.684937] RBP: ffffdb0dfee51400 R08: 0000000000000827 R09: 0000000000000020
+[  119.723524] R10: 0000000000000000 R11: ffffafb99a397b98 R12: ffffffffc04b25ba
+[  119.764290] R13: 000000000000000d R14: 000000000000000e R15: ffff97e947b0a000
+[  119.803531] FS:  00007f7f70243380(0000) GS:ffff972c7fa80000(0000)
+knlGS:0000000000000000
+[  119.846450] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  119.873893] CR2: 0000560e85910ae0 CR3: 0000003fba9d2000 CR4: 00000000000406e0
+[  119.912293] Call Trace:
+[  119.924344]  lpfc_sli4_queue_destroy+0x11a/0x390 [lpfc]
+[  119.949270]  lpfc_pci_remove_one+0x7d6/0x970 [lpfc]
+[  119.976858]  pci_device_shutdown+0x34/0x60
+[  119.996353]  device_shutdown+0x160/0x1c0
+[  120.015045]  kernel_restart+0xe/0x30
+[  120.033515]  __do_sys_reboot+0x1cf/0x210
+[  120.054274]  ? __fput+0x168/0x250
+[  120.070250]  ? syscall_trace_enter+0x198/0x2c0
+[  120.091719]  ? __audit_syscall_exit+0x249/0x2a0
+[  120.115046]  do_syscall_64+0x59/0x1e0
+[  120.135104]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[  120.158848] RIP: 0033:0x7f7f6f48c427
+[  120.175870] Code: 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00
+00 00 90 f3 0f 1e fa 89 fa be 69 19 12 28 bf ad de e1 fe b8 a9 00 00
+00 0f 05 <48> 3d 00 f0 ff ff 77 01 c3 48 8b 15 31 9a 2c 00 f7 d8 64 89
+02 b8
+[  120.279588] RSP: 002b:00007fffe3e36288 EFLAGS: 00000246 ORIG_RAX:
+00000000000000a9
+[  120.321551] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f7f6f48c427
+[  120.361854] RDX: 0000000001234567 RSI: 0000000028121969 RDI: 00000000fee1dead
+[  120.398536] RBP: 00007fffe3e362d0 R08: 0000000000000002 R09: 0000000000000000
+[  120.436702] R10: 000000000000004b R11: 0000000000000246 R12: 0000000000000001
+[  120.470997] R13: 00000000fffffffe R14: 0000000000000006 R15: 0000000000000000
+[  120.508557] Modules linked in: sunrpc amd64_edac_mod edac_mce_amd
+kvm_amd ccp kvm irqbypass ipmi_ssif crct10dif_pclmul crc32_pclmul
+sp5100_tco ipmi_si joydev ghash_clmulni_intel pcspkr i2c_piix4 hpwdt
+sg fam15h_power ipmi_devintf k10temp hpilo ipmi_msghandler
+acpi_power_meter xfs libcrc32c radeon i2c_algo_bit drm_kms_helper
+syscopyarea sysfillrect sysimgblt fb_sys_fops lpfc sd_mod ttm ahci
+nvmet_fc nvmet libahci ata_generic drm nvme_fc libata nvme_fabrics
+netxen_nic hpsa nvme_core crc32c_intel scsi_transport_fc serio_raw
+scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
+
+
+--
+Regards,
+Li Wang
