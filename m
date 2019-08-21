@@ -2,105 +2,77 @@ Return-Path: <SRS0=MIBM=WR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A568C3A59E
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 14:37:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 302C8C3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 15:18:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20EAD233A0
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 14:37:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566398230;
-	bh=LLHM3HLNnSTk9CIZqdIrW76ESIQASTQvj9y7JVMhEwU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=r2gB2R8USw07+gsV89S3MRMQ+8xzQ9koljsxeLNXHSu4n9+k0fTevD5uRtjZjLioa
-	 hLNWy6I5XaCao4zELD358KQVSbEmp7SqU+HpxMkFmL9Jndv9Jc8OIfg4yLV/A8fgwd
-	 0RCeYtoz+H3Jonl0CdBKMzPHsyC2a6mn2gKNLKLE=
+	by mail.kernel.org (Postfix) with ESMTP id 0F64022DD3
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 15:18:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729168AbfHUOhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Aug 2019 10:37:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728724AbfHUOhG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Aug 2019 10:37:06 -0400
-Received: from linux-8ccs (ip5f5ade6e.dynamic.kabel-deutschland.de [95.90.222.110])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B6C2C206BA;
-        Wed, 21 Aug 2019 14:36:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566398225;
-        bh=LLHM3HLNnSTk9CIZqdIrW76ESIQASTQvj9y7JVMhEwU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tX0ldqZERDP4xQ8nTag6pfFnc82CxILalGtaetxbHG8xXXzAIW0JIHVE3CJGb/4E/
-         EMjrjUGonCrYNoOy6eDoS609WwM0Ddr/MJYcXij1vlsZAS6fj2xJ0YB3fwrJmrZor9
-         QEX8ufh6sVHXovTET4evmeAPBDKEozvv0a7cSA5A=
-Date:   Wed, 21 Aug 2019 16:36:55 +0200
-From:   Jessica Yu <jeyu@kernel.org>
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     Matthias Maennich <maennich@google.com>,
-        linux-kernel@vger.kernel.org, kernel-team@android.com,
-        arnd@arndb.de, geert@linux-m68k.org, hpa@zytor.com,
-        joel@joelfernandes.org, kstewart@linuxfoundation.org,
-        linux-arch@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-modules@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        lucas.de.marchi@gmail.com, maco@android.com, maco@google.com,
-        michal.lkml@markovi.net, mingo@redhat.com, oneukum@suse.com,
-        pombredanne@nexb.com, sam@ravnborg.org, sspatil@google.com,
-        stern@rowland.harvard.edu, tglx@linutronix.de,
-        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        yamada.masahiro@socionext.com
-Subject: Re: [PATCH v3 10/11] RFC: usb-storage: export symbols in USB_STORAGE
- namespace
-Message-ID: <20190821143655.GA13637@linux-8ccs>
-References: <20190813121733.52480-1-maennich@google.com>
- <20190821114955.12788-1-maennich@google.com>
- <20190821114955.12788-11-maennich@google.com>
- <20190821123827.GB4059@kroah.com>
+        id S1729945AbfHUPSd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Aug 2019 11:18:33 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:45894 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727683AbfHUPSd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 11:18:33 -0400
+Received: by mail-pf1-f195.google.com with SMTP id w26so1618060pfq.12;
+        Wed, 21 Aug 2019 08:18:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cPgn/PFoCByY+PWlvj5b9AZN9a5jNavJRN/2PxPSIno=;
+        b=g1CX4b2eTyonKS5piHV+yiC/Fwgq/odzze8I1X06IYpGiEWQFg+ncFguwGvwwZ2z4p
+         BnWVkauCP/WaaaUOhqQLZD1hKUN62Yz8W04ZQdZ9TZr5jvRD1IYg+IdeoXJLxSsO0BR3
+         q18xg4hNIKarrvmNOsmGX71yydc1LEB+jpG6sFBWPiiDo6sij6vg4NfmVQsG/YSj3/4K
+         loEaj86BbLHVD7fhRvvQ+ks3D9fomstBSR/JM+9AZnM/BGZY74OUuDZf4v7bnF5SP4Ab
+         jdXV4jam4AV7NqcywvONxir5XG7PPWEsjL/A82XsDkmgtmWJnL4jd5kE3V5fraiXoRom
+         YhxQ==
+X-Gm-Message-State: APjAAAUSV78v2QlMNCA9n4Gbog/VvLAqb1Mmi4hwljU72/vJ9144S0Hu
+        D343+5L/wjBxogrKWIGi0gHjvYJ5
+X-Google-Smtp-Source: APXvYqy2L7AA2hz9ZXPWsXWD1fEa7Fk43rILvDcukCeG1BmZKwwhPZ2GXrWLLrTzPCyrP/BP2vReaA==
+X-Received: by 2002:aa7:9799:: with SMTP id o25mr36325210pfp.74.1566400711891;
+        Wed, 21 Aug 2019 08:18:31 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id b24sm22101467pgw.66.2019.08.21.08.18.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Aug 2019 08:18:31 -0700 (PDT)
+Subject: Re: [PATCH V5 1/9] block: add a helper function to read nr_setcs
+To:     Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-block@vger.kernel.org
+Cc:     colyli@suse.de, linux-bcache@vger.kernel.org,
+        linux-btrace@vger.kernel.org, xen-devel@lists.xenproject.org,
+        kent.overstreet@gmail.com, yuchao0@huawei.com, jaegeuk@kernel.org,
+        damien.lemoal@wdc.com, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, linux-scsi@vger.kernel.org
+References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
+ <20190821061423.3408-2-chaitanya.kulkarni@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <3e0917fc-290e-d1e6-3ba9-936accda0a2b@acm.org>
+Date:   Wed, 21 Aug 2019 08:18:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20190821123827.GB4059@kroah.com>
-X-OS:   Linux linux-8ccs 4.12.14-lp150.12.28-default x86_64
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190821061423.3408-2-chaitanya.kulkarni@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+++ Greg KH [21/08/19 05:38 -0700]:
->On Wed, Aug 21, 2019 at 12:49:25PM +0100, Matthias Maennich wrote:
->> Modules using these symbols are required to explicitly import the
->> namespace. This patch was generated with the following steps and serves
->> as a reference to use the symbol namespace feature:
->>
->>  1) Define DEFAULT_SYMBOL_NAMESPACE in the corresponding Makefile
->>  2) make  (see warnings during modpost about missing imports)
->>  3) make nsdeps
->>
->> Instead of a DEFAULT_SYMBOL_NAMESPACE definition, the EXPORT_SYMBOL_NS
->> variants can be used to explicitly specify the namespace. The advantage
->> of the method used here is that newly added symbols are automatically
->> exported and existing ones are exported without touching their
->> respective EXPORT_SYMBOL macro expansion.
->>
->> Signed-off-by: Matthias Maennich <maennich@google.com>
->
->This looks good to me.  This can be included with the rest of this
->series when/if it goes through the kbuild or module tree:
->
->Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
->Actually, which tree will this be going through?
+On 8/20/19 11:14 PM, Chaitanya Kulkarni wrote:
+> This patch introduces helper function to read the number of sectors
+> from struct block_device->bd_part member. For more details Please refer
+> to the comment in the include/linux/genhd.h for part_nr_sects_read().
+> 
+> Reviewed-by: Minwoo Im <minwoo.im.dev@gmail.com>
+> Reviewed-by: Martin K. Petersen <martin.petersen@xxxxxxxxxx>
+                                                    ^^^^^^^^^^
+This looks weird.
 
-I would be happy to take the patchset through the modules tree once it
-collects the appropriate ack/reviewed-by's and once I get a chance to
-sit down and review/test it next week :)
-
-Thanks!
-
-Jessica
