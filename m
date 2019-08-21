@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95308C3A59E
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9151FC3A5A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6761822D6D
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 671B62339E
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="YG4jaOgF"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="O1RAlnrq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727878AbfHUGOy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727883AbfHUGOy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 21 Aug 2019 02:14:54 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:49516 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727481AbfHUGOx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 02:14:53 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:34533 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727780AbfHUGOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 02:14:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
   t=1566368094; x=1597904094;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references;
-  bh=KskMhIccdhyYejQPXHxAAXs3ig7LJbUasu+JL5qAjTA=;
-  b=YG4jaOgFKeTYg0ti7PvIC57yt5m9AsxQ9iU5BzcRswX/BTFd9phF3l6y
-   TNkQs7JLY5LGqtASPE945Y/am4IQZus4qMZOVAmiijPkdtqC0LGHDh7ED
-   CIIag/IKOTXJ5Tp6GdNAY6GZNH1UVNe5yRHxSh53w1vKPyskYH4FCbsEz
-   bGDmy4jXXEwALa9bIzPDU4DxVrE7gkOMC8OQ9METyk3i/1OrWW3RZx34Z
-   zygCIEV7L63/MH+VVyN6h9I/2DUDNtSHhp1dR1oYwHcpIEwYx5LagvFpM
-   fzoq9/3fCv4XUtd+VwSOg6b3ZCssyq6JIB1XjE1nxWeileH6fNUOiaGwD
-   A==;
-IronPort-SDR: mVJm7nUgQqO3RI2g+IowUVG9hAsva9CpG7hITmQlyad1SUd0Hkt7n8qjYctfVf1JUwU2i8zku5
- ELz6xoUgkL6TGgAcAi/4Pbb6NsXI2xmpneHIyubRVM2MvyVefjQcLAOAWT0oe+td+lNNtJPXS/
- lWS9p6SCV+sj8aZSQJZ0SlzRGq8pwORoouAlgLjAfv7UNwD9oa0VgEZW+jnrtuFk9BwJBdE3If
- egHxU+WAxQwNY+NjB2DqyUp1mluKzk9JBSdafdWDZL+fLl1FLkuodHmGV0DEe8zwNh5W4+eoA0
- q+0=
+  bh=dNQR+/WArddUJx9huMcsBlSubmN9JNdoAJJzC4US2gU=;
+  b=O1RAlnrqTa23+EExriBZd/Ie66s0TTz+kcVcerKbEmRK4q04pL6n0Fvv
+   LOMisZ8WpGklLxwVLqHd4NYnNVD2noFkxcqRYTnnb5FCNLJvdQ9kyl6Fh
+   BI5+1Rw6fhkmNU74Q4dTsdYOA8i1Wy4763q66f6VLY5CfWAoP8avgg5+K
+   stu3WHV+9XlEoYcMB5mr3yErMzWucbyuXyFcEPdvgJ3ZuRT/P67Ze1ANg
+   CSjXIjUvNrC4FjnKL3l+xE2GuXeFNSGymxFKvNT2THK00zalrPp5ab0rc
+   eQK6RF9cf12N0vFLwyEYtbV2lL8549GbMYwR16M1xP3ntjAtlJlReA63J
+   g==;
+IronPort-SDR: QtPJnJEUbx9FyxTGFGOQ+28+nywff34iJ50uyvjsSM+dAALCLhx1YBAwKxW480va++DJow71/H
+ 5BXDvhm2akWvLtP2cvfGftQCXA2jAAzBuVyrQkycVQKRZYSw47OH1AMCeHKzSbTlD9uVpHGOVP
+ sZpFJtu2vLIfeYZ3buMyaUwRBFtjaZEmQkj2635fo2//8AZo5QxzecPrFXPnCMwr3vvGKg0B9n
+ FqoSAD9kLE65nBH7gfax/absNpiF5G7NVDq3I7rnA1HtfhW73i1mU49EfNM6ll5YxxrCnoOqf9
+ 250=
 X-IronPort-AV: E=Sophos;i="5.64,411,1559491200"; 
-   d="scan'208";a="116306276"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2019 14:14:41 +0800
-IronPort-SDR: rZsy/B4B3wwvVJpTKt5hf+tLSIV4aBjcGSJB0F5pyqqF2LRQr7RCz/RpUUxji/n1b45gZXn4tO
- JLbDaZjrT2zlapApFTNp+Y2hjM00BQ8s0FfeidZVj5sK5w/rPUWGzVP+KKwtqirtnOGGFjVjAz
- J995jgWR+9csnWPzHEKNLptbawpZy0S0NSCSRmFmgi+1dG18yG8Y2AVZwfDmUM8C6ZeFS9l5Ko
- IT3XBHrwHQ68+aPjSX/Fv5EQBOFFSySAsZR5bOZy623Wi3icEzhXxQQw6+bvlWRAbxHEmOGlDF
- lsdLjO6uIgrPiWEpcenropag
+   d="scan'208";a="117904699"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2019 14:14:54 +0800
+IronPort-SDR: RsDDRzmt1V+Zcx9sYmP64LDNWh4yP++YbAbng+qoqCtH/U84XJhiwvY0WSwveCSDF/B+cnZ9V/
+ k05dyuClQfjODaNUzqbvYaupvO0LGN7GofrgiXs7yrHH6PcGYLAnuzrv6De/vfjD76Uw2IPaTV
+ ZG1D3T0p0QVfqkxmIS3h+uNLFSWW+HPJZsWuzxzHbozzxcIPjwadX9OakhC3PAT27RK40fz550
+ wLnYTJbSn+XWPeBMDuCucgb/cAL9Qlt1B9s9T+MKeH09gewmhjD6R7RvOSnNPKgtdKYZGgywOW
+ 09yrW0DMcrrXeVQ7QKDW15LI
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 23:12:02 -0700
-IronPort-SDR: Wkxy2ajw+rcxmh/A1OPQtV/EVpqzu8VQYhbba5Ebo14vmpR//tFwqZJh/KAarh6nBHY302sfLS
- f9y+8m+P7OM4ikcpCf+hrIOkI8rUOheGzIZa7JJEOFgHfeh6fIDpHabHw92QGl2m+MUfpkURBP
- lQz6Vvn3QwxeIwdmkjnxoiS9l0kPa0JFCdZzE8f2tfJpY+Er+2QWJkbPr0OEM04oU8Z5q+nDf8
- HlWWVyH6PtIzzUMmJlH7BSX4MKo4ABaBnXMVRa0qDzPRLG7b3ovnpkJMU1P6TTZ7PmsuGmT6Ci
- NZg=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 23:12:15 -0700
+IronPort-SDR: WGDSV7zozYwbRlbZcH9Vsh+dYPGAeQLVyYHbXF8UemtuqeBj1gbc3L2/qhUPOCHpvgps3+qYTw
+ 6KCzf/ZLXk78xFV6cdmLogFtTGmboLlw3XK2ceoI6b2c+M7ALIPJEQThmicDSyitL7i3yOytT1
+ v+4Y82D+aKvlSZujII8U7Id+Kevc5LUiaZ6XBwmp2zgzzCpxiE2eRE2BNPGklnoPiudQmcQiOV
+ UcqacoGyWtWWVgxu10FPvyFGi3BggvrpIAb2Pyel4K/An3TBhmBU9rAfhfEJ4/GlAyYSvjR3bp
+ +mc=
 WDCIronportException: Internal
 Received: from cvenusqemu.hgst.com ([10.202.66.73])
-  by uls-op-cesaip01.wdc.com with ESMTP; 20 Aug 2019 23:14:40 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 20 Aug 2019 23:14:53 -0700
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org
 Cc:     colyli@suse.de, linux-bcache@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     colyli@suse.de, linux-bcache@vger.kernel.org,
         roger.pau@citrix.com, bvanassche@acm.org,
         linux-scsi@vger.kernel.org,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH V5 2/9] blk-zoned: update blkdev_nr_zones() with helper
-Date:   Tue, 20 Aug 2019 23:14:16 -0700
-Message-Id: <20190821061423.3408-3-chaitanya.kulkarni@wdc.com>
+Subject: [PATCH V5 4/9] blk-zoned: update blkdev_reset_zones() with helper
+Date:   Tue, 20 Aug 2019 23:14:18 -0700
+Message-Id: <20190821061423.3408-5-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
@@ -78,29 +78,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch updates the blkdev_nr_zones() with newly introduced helper
-function to read the nr_sects from block device's hd_parts with the
-help if part_nr_sects_read().
+This patch updates the blkdev_reset_zones() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
 
 Reviewed-by: Minwoo Im <minwoo.im.dev@gmail.com>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- block/blk-zoned.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-zoned.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 4bc5f260248a..3f5e9bf03486 100644
+index 7e0c0b54d194..53f9df376cfb 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -93,7 +93,7 @@ unsigned int blkdev_nr_zones(struct block_device *bdev)
- 	if (!blk_queue_is_zoned(q))
- 		return 0;
+@@ -267,7 +267,7 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	if (bdev_read_only(bdev))
+ 		return -EPERM;
  
--	return __blkdev_nr_zones(q, bdev->bd_part->nr_sects);
-+	return __blkdev_nr_zones(q, bdev_nr_sects(bdev));
- }
- EXPORT_SYMBOL_GPL(blkdev_nr_zones);
+-	if (!nr_sectors || end_sector > bdev->bd_part->nr_sects)
++	if (!nr_sectors || end_sector > bdev_nr_sects(bdev))
+ 		/* Out of range */
+ 		return -EINVAL;
  
+@@ -280,7 +280,7 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 		return -EINVAL;
+ 
+ 	if ((nr_sectors & (zone_sectors - 1)) &&
+-	    end_sector != bdev->bd_part->nr_sects)
++	    end_sector != bdev_nr_sects(bdev))
+ 		return -EINVAL;
+ 
+ 	blk_start_plug(&plug);
 -- 
 2.17.0
 
