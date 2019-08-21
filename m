@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B180CC3A59E
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDBABC3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 846982339E
-	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C396A233A2
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Aug 2019 06:14:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MaMiwGfR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kPHet30H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbfHUGOf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Aug 2019 02:14:35 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:34498 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727766AbfHUGOf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 02:14:35 -0400
+        id S1727862AbfHUGOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Aug 2019 02:14:48 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:20504 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727481AbfHUGOr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Aug 2019 02:14:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1566368074; x=1597904074;
+  t=1566368116; x=1597904116;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references;
-  bh=YxWj03mIGVcVbYKOln1UBPzCaYS0qRuFrw+e6W6O8fU=;
-  b=MaMiwGfRcNgMb7+ytBS3Va8PMKEOCH0BlzZE0NcmTMppBfMs2a4eL9Yt
-   LlqUkKVBkbdNaoCydPT9PzeCKEg7W0HHsQdchztkdxCLGbO0zNddy+MHN
-   rC4VzB3J0JOQnZmEzVY2CEZxpazoPaY1QQJjkimpfxqCbMHTFFAkHHeC0
-   tM8atciSbm2GmRE/y8rLcsbhLYdDHzZN7SN9TBNMQUd8788htt4hFGIY2
-   k6pBiHt2SR8SLc05p2kqdIifHyGTf6hOqQTQDpnsl13ys9O0QFjkoBc4M
-   BdX+qJWkkPJcBIv7hGasdC1WM/BuQSoDmFbhxizu+c8hhiLHwW6vUsuW+
-   Q==;
-IronPort-SDR: CgKU5uQFZOtXSnflEOa9Wxs+RJ2H0l+YiQq04NIRRiPSANXRhk4mzH4dB/m3raj2w44GTjkm4P
- a/crukhRhFmiZcz8klbtG2imv91wSvGz+HJ3PKo51XZ17g+rRh1ClTO2EHTpt7Aaee6z70c45U
- bcq022hcHPMPXjDOKRC4Ng4SlgJ9N3Bpy3v4W5y3AzgI/hCo52nprmQPTilc/66Ky8DbaXQRDa
- GvXMqLUdeMNeEO/EIdCPghc7zsfqzSxYTOnlhDjorSvktcKnhLxHPtBTb/wFqWhM6NNF7pof0Q
- Kn8=
+  bh=fAftc0jXLF+PYgBKMR7sJr2letplG8FiARgg+iOt4Mk=;
+  b=kPHet30HfrnzDMW2pcjrC2T1a7czFNn7aTCRU33dtJ1jXIRv6s+/MqHv
+   o6xg5VCIKrxR1wR4wMTwqP13v0ty2puNFECEnIk2SXcGi1MTKQB9cQZTk
+   +J0UZICLwrFeGV3vimQjTf32CjTQD8otI4B6/dmvz55ulV7OQ9DNlD1pJ
+   9lKE0KAwrW8YvnnVE/13vBeNwraFBlMN9Gm5nXckQdQnmZ1VVk1rb7gXF
+   yxdz5AotKrJkdWUcVV6W5Gs2+/8eCYfORNIlZLAG8lMDmV3ovNBDZhyyp
+   i7mY/AJhBF5zGTMN/CDGuLwLJkEm3+z5S/jkEMXdvF7juZ3YqmS4o27N1
+   w==;
+IronPort-SDR: 8T22Y9rgiAC6W1kZwtmuWZNBPuma1XW5LZasuTnmeuLpIrqQW8n/8hHfq9OYUK52t7cq9pDaIq
+ IaDXrjn1RsCxh0OEZM4L4gCsQYSSI7g/sdXmV6h5BOQLIontqJ+FvCN2ltfOqp3pzeon1AwhdF
+ JXdXRT2JWVoqF+p96xAphfi6z4lRmuMVBhncHak+GxeHrH8NZlaGiUn0ZjVoxaAncIKRhK/pfY
+ MvY4NbLZ7+SfWMTiGv646IFhj9vd1HLXbkjQvAr1Yd0bsUcDNwiHcX/ehZBBBO34LfucQf/gDk
+ +6c=
 X-IronPort-AV: E=Sophos;i="5.64,411,1559491200"; 
-   d="scan'208";a="117904641"
+   d="scan'208";a="216721083"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2019 14:14:32 +0800
-IronPort-SDR: enE0E3BSbWZ0lvkP1xxRNohhL4LJHuEUalT42vk5hP124w4r4S3JRwtN3HrwfLSDL0Ftv8a6By
- xpv4wuPtxypizvxVauvlYHuhmbJbnUAQ2+tUppy+naNEKGyOo5ZJdCkJ2RHH+N8dMakO0b4oH8
- K1q9Jbmc7aX5KRCcpR1ctYV6EUKHGM3PGGxWp4vIXvwwDFxZY0jRlpy4Dm2SwC8D9v4FcY+qGD
- x9Iz5yoJsSruk9FLMaPPScNpzYPEXrn7pwBibknNp1xOWPVzkEHOIM+iyfjM8aKaImOJjt0n3K
- 3vVqLFTPT5mD6ElPXOvL/fQe
+  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2019 14:15:15 +0800
+IronPort-SDR: BNUaaEfCWLEk1cprItBV73tnJNQuJC3CZosVgRYFUeUfk3LCNJiCfff42GFeu5TVDHE5AP43yH
+ rDVkEtbZbN9DR1s3ruTNFcbjxBENdRDHSTei0YDZmnucWqVb4olQolFFONROmU/yDhrsEE+T+y
+ QxgJoGW1oPLWluAuePh8d5231fmy8XxM24g7qw1mXh4G2XtHQ0u2mP+X/J/cRiUpexLjdHHESz
+ 2ogoS6HDjUJ2/N7RArr1xX77gAlGfMz1+XWapPmTH6uMNZojftgMfBO8ILsPqvzs2KhOzxx8IE
+ qRZaiX5T0RpfV4VwIEM0P1fJ
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 23:11:54 -0700
-IronPort-SDR: J1I/5bgiTFIAu8nNl9kv6CSGMFr4yg0TlUcqLzMJdDy8EZZg8n4rfy/XPfR/JjpgmOnfkVltBx
- ssjiOGwNssK5XXLGHSuoQGzY72APilAq4AuufFX7XHX3TUf6fMAFSvIG+S4BOIvcE8H6g4FFk4
- w6w8aEGbtPr28z7XjcaeIOJwLHNeebOJOnfEd1HlWA5+RnjTkgiUj/gkJ7B08lWbk1QlQ2RUaA
- iYA9zikhwLYCTW/T6a0mIofhJVPKp5ODf79l+YclGUXbyljEgCoXjsbem9ACoYAnj3ly4+ysyD
- mtk=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 23:12:08 -0700
+IronPort-SDR: 5VdlNZVMNPdB4YJKi8PvEuaTgpLYyJfh2G/rBJ/AFXXZQlCBvtiNoYa7ESeeEq6JoKhDakQyQ3
+ bzj4rf3rS5gKcHvy0LSRr1h325MA8E4vMf0unZpmXiHbj6LGx2U6Y9bgmSHdFLKdRjPf4RGA9+
+ HwIzbBlZS6rNLPIocY2VAP2a1yR7H1bp99zjaHM6EqIEWm1ysT1yq9XJYu1XdiXk7/3pAgpb4V
+ uRKAxSzSii+HX5bHYsNUptuuDX0oQ0jdvrOp+F5m95Slc4aGqzUCOtNlfEJhQ7uyeuvqUB4rIT
+ KXg=
 WDCIronportException: Internal
 Received: from cvenusqemu.hgst.com ([10.202.66.73])
-  by uls-op-cesaip01.wdc.com with ESMTP; 20 Aug 2019 23:14:32 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 20 Aug 2019 23:14:47 -0700
 From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 To:     linux-block@vger.kernel.org
 Cc:     colyli@suse.de, linux-bcache@vger.kernel.org,
@@ -67,9 +67,9 @@ Cc:     colyli@suse.de, linux-bcache@vger.kernel.org,
         roger.pau@citrix.com, bvanassche@acm.org,
         linux-scsi@vger.kernel.org,
         Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [PATCH V5 1/9] block: add a helper function to read nr_setcs
-Date:   Tue, 20 Aug 2019 23:14:15 -0700
-Message-Id: <20190821061423.3408-2-chaitanya.kulkarni@wdc.com>
+Subject: [PATCH V5 3/9] blk-zoned: update blkdev_report_zone() with helper
+Date:   Tue, 20 Aug 2019 23:14:17 -0700
+Message-Id: <20190821061423.3408-4-chaitanya.kulkarni@wdc.com>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
 References: <20190821061423.3408-1-chaitanya.kulkarni@wdc.com>
@@ -78,33 +78,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch introduces helper function to read the number of sectors
-from struct block_device->bd_part member. For more details Please refer
-to the comment in the include/linux/genhd.h for part_nr_sects_read().
+This patch updates the blkdev_report_zone(s)() with newly introduced
+helper function to read the nr_sects from block device's hd_parts with
+the help of part_nr_sects_read().
 
 Reviewed-by: Minwoo Im <minwoo.im.dev@gmail.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@xxxxxxxxxx>
 Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
 ---
- include/linux/blkdev.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ block/blk-zoned.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4798bb25f1ee..aa5801c8ff73 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1468,6 +1468,11 @@ static inline void put_dev_sector(Sector p)
- 	put_page(p.v);
- }
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 3f5e9bf03486..7e0c0b54d194 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -109,7 +109,7 @@ static bool blkdev_report_zone(struct block_device *bdev, struct blk_zone *rep)
+ 		return false;
  
-+static inline sector_t bdev_nr_sects(struct block_device *bdev)
-+{
-+	return part_nr_sects_read(bdev->bd_part);
-+}
-+
- int kblockd_schedule_work(struct work_struct *work);
- int kblockd_schedule_work_on(int cpu, struct work_struct *work);
- int kblockd_mod_delayed_work_on(int cpu, struct delayed_work *dwork, unsigned long delay);
+ 	rep->start -= offset;
+-	if (rep->start + rep->len > bdev->bd_part->nr_sects)
++	if (rep->start + rep->len > bdev_nr_sects(bdev))
+ 		return false;
+ 
+ 	if (rep->type == BLK_ZONE_TYPE_CONVENTIONAL)
+@@ -178,13 +178,13 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 	if (WARN_ON_ONCE(!bdev->bd_disk->fops->report_zones))
+ 		return -EOPNOTSUPP;
+ 
+-	if (!*nr_zones || sector >= bdev->bd_part->nr_sects) {
++	if (!*nr_zones || sector >= bdev_nr_sects(bdev)) {
+ 		*nr_zones = 0;
+ 		return 0;
+ 	}
+ 
+ 	nrz = min(*nr_zones,
+-		  __blkdev_nr_zones(q, bdev->bd_part->nr_sects - sector));
++		  __blkdev_nr_zones(q, bdev_nr_sects(bdev) - sector));
+ 	ret = blk_report_zones(bdev->bd_disk, get_start_sect(bdev) + sector,
+ 			       zones, &nrz);
+ 	if (ret)
 -- 
 2.17.0
 
