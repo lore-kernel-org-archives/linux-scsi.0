@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDEDC3A5A1
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 22:22:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E85C3A5A1
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 22:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A86120578
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 22:22:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F0102082F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 22:29:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="QBr04x1V"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="GvS+YhzP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390526AbfHVWWO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Aug 2019 18:22:14 -0400
-Received: from mail-eopbgr820102.outbound.protection.outlook.com ([40.107.82.102]:34021
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        id S1731886AbfHVW3V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Aug 2019 18:29:21 -0400
+Received: from mail-eopbgr780091.outbound.protection.outlook.com ([40.107.78.91]:37566
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2393833AbfHVWWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Aug 2019 18:22:14 -0400
+        id S1730641AbfHVW3V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Aug 2019 18:29:21 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=n84jCrtbRNaM2UsPDvqM6pvMK69CaiaButItkqX+yCvfucyrW54luvagwqlTJNrno0YfN7GGD3P2/h5nDQRVOBPQJnMifmv+ZvtjxhjRtZpomhsuGMpZcDreqkJLmPwuoycoQ1LKpViRjOgJdb8x+SdxB1c1fxni8N/WyzeshTTJA4DSKDzYlYPF8fpnNdDQ2e6NB4o71bJEN6QAgI02/clxd2xXgH2kR+ILdDrzalq+KjUWqr/M0jFdctCOM5GQrZXbrdotbtebtqajK9odkRANpU9H+iJ6qBqId97UAZ2lHTQSdU1XVn6kHYxJEyuobWR8VFg+zBMhNkv8AnH/mw==
+ b=A61y/pO142+NhcdMbmXjiWmvs6HquCi+dFBAsVU0vYRMwRj7ouHbTgc4fupTJ/K1GKO6GEU+fKgLZUMzXQQAG44M5UsSROmGw8RVE64j+Lmzsl9fYATOqLSuKby93ljdR6Pbe1voV5KVrLcMcxINN+D05GG93w/tKZ+j2oChjBc+HYM2qkxhXqu5JP+v7bcggf60LO599nUvNR+7BpRLT2fYZPRjmPcUcARW6aMY4kmoGsEs88ftP5Y0o+D8GsvG69qiv03U3LPQlFJ2Q4x23Mo+GfxEcCfPfE/iO1kmPCt9AnaPLob5bQAyLLA93dmPaF+sjTC8aEy011pWa48YBg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6R3LIW86inRwpGltgl8emlme5gdqNyhxVm5ix1BM/hM=;
- b=EocOiKFvAB/WFxGMT+wWlrMRN5FTepJxH6BkYbgluXkvoTF/0eULQVXLY1jVQtO7nrKVbBzbxueOJqgxKNDfLCiRbtXRYApTVZCFKYZgnN/406xsXpt+qkEnFXI5S1cGuXl19uWF+PUixNYxVojXsOrja/ZVcNhA0VmD6/1ns40TI28Rubvg8rMVkFkrqOyYKJfPpXay5X5a4V25KoleMda59MISjUQyrhKOsBoCRNUc86TVug3gObRl5yO+umiWe+UQCecwUCxsv6JeVrI5UIAivTBTgxs+jO8+MFU2l6xtkm3GSG/7rCnNpf3yw896PQJ2Utb7vPE45asUg0UBxQ==
+ bh=QWahqFq88NY/cXZPjklrh/eUy2K/cuEgrTHiOxer53w=;
+ b=OSohk27BFXYskieaM6SaP9GO6e4LCwi/B34SS9XpoqZi3+FwKvuwISUjiGlxmsk6F5UDRgFvybcC/V1Wojw3uOhh52HC1LT7S/AOmkPLuu87jfMcIzQJdoXGBSbCqXdw6bZ4hk01xAyb4QeOW6G+gltK/xy0E1dDnxpqPtkzuJeFbpPchkXwiojIKFd3uVdLU9y4vlVMZC9JVU8wV1hMc3YEd6wpCIt4Q9pnKH2FmM0SZm/RDBO7Q0cdurMN6dlIBc2SLDyYPHLqVQghBIsGd2NNY+DAsHRwaWgzgRD0M9Q6zUpy95ezBXwHi+DpVCMd2lCt8GFy9+j5GPxZn4gbkw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microsoft.com; dmarc=pass action=none
  header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6R3LIW86inRwpGltgl8emlme5gdqNyhxVm5ix1BM/hM=;
- b=QBr04x1VtxyJL/BQ+CB9y4rHMyQvSTng2xOh/IScGOc5dk16FdYSUQVQi/WiV3a+dYbzUTqVZrn8lN9oEW8lFDHBwCOssEUqrekDYDpcrrXGh4t9eGjWYMfNHVcMTWpz5FQOtTwaTPGMjeqBnQ5ugbtK9+KqJyABdBHEWEBNOuY=
+ bh=QWahqFq88NY/cXZPjklrh/eUy2K/cuEgrTHiOxer53w=;
+ b=GvS+YhzPo5GNMNWBhty08MMVGAq5WFMo7nsyrAJ3iiqN9XDxMJT9fjIc18mMAwKYAcot/ZfG7+KmPUvTTNoE3V2XrqAVetLSyGS0oKVwdjmOfVcyheMJooj/iI/8ZHOWhUtad3XJUvIHrUARJ0o1ydAGjdJs9GqWu1dj7x5Zgfc=
 Received: from CY4PR21MB0741.namprd21.prod.outlook.com (10.173.189.7) by
- CY4PR21MB0183.namprd21.prod.outlook.com (10.173.193.9) with Microsoft SMTP
+ CY4PR21MB0838.namprd21.prod.outlook.com (10.173.192.139) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2199.9; Thu, 22 Aug 2019 22:21:32 +0000
+ 15.20.2220.3; Thu, 22 Aug 2019 22:29:18 +0000
 Received: from CY4PR21MB0741.namprd21.prod.outlook.com
  ([fe80::2c62:5380:9ed8:496d]) by CY4PR21MB0741.namprd21.prod.outlook.com
  ([fe80::2c62:5380:9ed8:496d%11]) with mapi id 15.20.2220.000; Thu, 22 Aug
- 2019 22:21:31 +0000
+ 2019 22:29:18 +0000
 From:   Long Li <longli@microsoft.com>
 To:     Michael Kelley <mikelley@microsoft.com>,
         "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
@@ -61,12 +61,13 @@ Subject: RE: [Patch v2] storvsc: setup 1:1 mapping between hardware queue and
  CPU queue
 Thread-Topic: [Patch v2] storvsc: setup 1:1 mapping between hardware queue and
  CPU queue
-Thread-Index: AQHVWSojurs2/K071EGMpSV6zPYfmKcHpzgAgAAUbOA=
-Date:   Thu, 22 Aug 2019 22:21:31 +0000
-Message-ID: <CY4PR21MB0741D566F71F0D1E8C5B9970CEA50@CY4PR21MB0741.namprd21.prod.outlook.com>
+Thread-Index: AQHVWSojurs2/K071EGMpSV6zPYfmKcHpzgAgAAUbOCAAAK5IA==
+Date:   Thu, 22 Aug 2019 22:29:17 +0000
+Message-ID: <CY4PR21MB07411317E2AE90D70E23E2CECEA50@CY4PR21MB0741.namprd21.prod.outlook.com>
 References: <1566506543-1090-1-git-send-email-longli@linuxonhyperv.com>
  <DM5PR21MB01372B7A717EAC7F0BCF826AD7A50@DM5PR21MB0137.namprd21.prod.outlook.com>
-In-Reply-To: <DM5PR21MB01372B7A717EAC7F0BCF826AD7A50@DM5PR21MB0137.namprd21.prod.outlook.com>
+ <CY4PR21MB0741D566F71F0D1E8C5B9970CEA50@CY4PR21MB0741.namprd21.prod.outlook.com>
+In-Reply-To: <CY4PR21MB0741D566F71F0D1E8C5B9970CEA50@CY4PR21MB0741.namprd21.prod.outlook.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -84,31 +85,31 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=longli@microsoft.com; 
 x-originating-ip: [2001:4898:80e8:7:ede6:db5c:c6fe:798]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9fe08954-909c-4876-1f4b-08d7274f15df
+x-ms-office365-filtering-correlation-id: 6bab8079-6781-4af8-950e-08d727502bb7
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:CY4PR21MB0183;
-x-ms-traffictypediagnostic: CY4PR21MB0183:|CY4PR21MB0183:
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:CY4PR21MB0838;
+x-ms-traffictypediagnostic: CY4PR21MB0838:|CY4PR21MB0838:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR21MB0183169766DA2D33C2F28D94CEA50@CY4PR21MB0183.namprd21.prod.outlook.com>
+x-microsoft-antispam-prvs: <CY4PR21MB0838B0264102CDD6491C559CCEA50@CY4PR21MB0838.namprd21.prod.outlook.com>
 x-ms-oob-tlc-oobclassifiers: OLM:7691;
 x-forefront-prvs: 01371B902F
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(979002)(4636009)(376002)(346002)(396003)(366004)(39860400002)(136003)(199004)(189003)(71200400001)(52536014)(478600001)(8936002)(7696005)(76176011)(229853002)(99286004)(186003)(9686003)(81156014)(8676002)(33656002)(476003)(486006)(6116002)(2906002)(305945005)(1511001)(22452003)(46003)(71190400001)(81166006)(74316002)(7736002)(2501003)(8990500004)(110136005)(316002)(10090500001)(66476007)(6506007)(66556008)(64756008)(66446008)(76116006)(102836004)(6436002)(66946007)(53936002)(2201001)(5660300002)(6246003)(86362001)(25786009)(14454004)(55016002)(446003)(11346002)(256004)(10290500003)(921003)(1121003)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1102;SCL:1;SRVR:CY4PR21MB0183;H:CY4PR21MB0741.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(39860400002)(376002)(396003)(366004)(136003)(199004)(189003)(53936002)(5660300002)(52536014)(10290500003)(6436002)(55016002)(2906002)(8936002)(76176011)(7696005)(9686003)(478600001)(6246003)(6116002)(66446008)(229853002)(46003)(10090500001)(446003)(11346002)(1511001)(25786009)(66556008)(66946007)(99286004)(66476007)(81156014)(81166006)(76116006)(486006)(2501003)(2940100002)(64756008)(14454004)(71190400001)(8676002)(71200400001)(6506007)(8990500004)(74316002)(186003)(305945005)(102836004)(7736002)(86362001)(2201001)(110136005)(476003)(316002)(33656002)(22452003)(256004)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:CY4PR21MB0838;H:CY4PR21MB0741.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microsoft.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: zs8UuTRN+VKVQbaLUgVEKkIEZp7BAX4SY0JDEK5MsItWkJ24Gh37S9Mjai9QHZjkgtDk99u3vziIsPCvyDlHO2U9XYu4Csz2LZkk7PcPeWOsINe210mhXSpaPb1ThG8xzT9FnCDliJgo47Yft/OHz9/BkO6ggxDzkPkgw9uKgLlulSKMmW0MLkqLfVt5Oa5NYh0dUbeScesa6qcjC9vpbKPdA5CqLe4enCGVIn7f7up7nu21hTCf/9rZZsoev2mSFzdNb1zI/Cul9cFVIjTe+G113Ubq5LemvB8e9bpPIlYl4LqDCvivgpaP6DQqm6A4ZBWTdEYjAif6C3N/LxmuSp58YLBIvp8w/8Fze7S+c+R/556s0sjfyz+PD8n+upjBy0Gfja/SPNsgfteAmwRzPofYzNsCOh/VpYbH4O6llN4=
+x-microsoft-antispam-message-info: Wt8sQ7VJY11ASOrZgeCR8g0OGs/47DQKEAN9Yg/hQ0IERYlNOoYFSFQ8ktK1MSQv4cKoBT61sloHorRKYJWciEFfC6EBEErystwkXynbGCSXsxYcsVN/pqSmRnat9qD6f5ro+kIypljyyitdpq8Vc1AcIEX+891qiezwLWEuy8/C7F6Yl2Vg/+jqBsA5TDtPPZPrweI8QtPxUxmCotv9Q8/OPgmCXLehS8nw9ka7nwLuApwXHOsK0ip0JbPNcVbbHmPKjySJ1DWY9vo9G5c9LhW0hwCvHE7CnvOa5am7vXMjG426Eu27ElpjdUAPDOt9hdwvVlfsN/u9VqzREnoNkq6BT7quknK6VIitUhcXpXdcKVsK6gvDHkCC8rTWe7di8aCsNOOOKVU2VJ6UFbDttpAtieTCWjmQrnJdGL30hjE=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9fe08954-909c-4876-1f4b-08d7274f15df
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Aug 2019 22:21:31.7728
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6bab8079-6781-4af8-950e-08d727502bb7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Aug 2019 22:29:17.9243
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: BGspVHTVhjYKEhMfW0BqQ8X+mlTAwIPbWn8e9rmA80X5WXmvTcna4W17pbABLe4ONHUzSOnqmObQkdLiJw2MTQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR21MB0183
+X-MS-Exchange-CrossTenant-userprincipalname: fiRrTtZJ7lUV8y9BiUu4m7ks3CbqXs+oh0BBbKl4PffBBiCzVeVULkR0t7XvyXBrTGxX5dp7MhPbl3HeGdj/LA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR21MB0838
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -117,59 +118,74 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >>>Subject: RE: [Patch v2] storvsc: setup 1:1 mapping between hardware
 >>>queue and CPU queue
 >>>
->>>From: Long Li <longli@linuxonhyperv.com> Sent: Thursday, August 22, 2019
->>>1:42 PM
->>>>
->>>> storvsc doesn't use a dedicated hardware queue for a given CPU queue.
->>>> When issuing I/O, it selects returning CPU (hardware queue)
->>>> dynamically based on vmbus channel usage across all channels.
->>>>
->>>> This patch advertises num_possible_cpus() as number of hardware
->>>> queues. This will have upper layer setup 1:1 mapping between hardware
->>>> queue and CPU queue and avoid unnecessary locking when issuing I/O.
->>>>
->>>> Changes:
->>>> v2: rely on default upper layer function to map queues. (suggested by
->>>> Ming Lei
->>>> <tom.leiming@gmail.com>)
->>>>
->>>> Signed-off-by: Long Li <longli@microsoft.com>
->>>> ---
->>>>  drivers/scsi/storvsc_drv.c | 3 +--
->>>>  1 file changed, 1 insertion(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
->>>> index b89269120a2d..dfd3b76a4f89 100644
->>>> --- a/drivers/scsi/storvsc_drv.c
->>>> +++ b/drivers/scsi/storvsc_drv.c
->>>> @@ -1836,8 +1836,7 @@ static int storvsc_probe(struct hv_device
->>>*device,
->>>>  	/*
->>>>  	 * Set the number of HW queues we are supporting.
->>>>  	 */
->>>> -	if (stor_device->num_sc !=3D 0)
->>>> -		host->nr_hw_queues =3D stor_device->num_sc + 1;
->>>> +	host->nr_hw_queues =3D num_possible_cpus();
+>>>>>>Subject: RE: [Patch v2] storvsc: setup 1:1 mapping between hardware
+>>>>>>queue and CPU queue
+>>>>>>
+>>>>>>From: Long Li <longli@linuxonhyperv.com> Sent: Thursday, August 22,
+>>>>>>2019
+>>>>>>1:42 PM
+>>>>>>>
+>>>>>>> storvsc doesn't use a dedicated hardware queue for a given CPU
+>>>queue.
+>>>>>>> When issuing I/O, it selects returning CPU (hardware queue)
+>>>>>>> dynamically based on vmbus channel usage across all channels.
+>>>>>>>
+>>>>>>> This patch advertises num_possible_cpus() as number of hardware
+>>>>>>> queues. This will have upper layer setup 1:1 mapping between
+>>>>>>> hardware queue and CPU queue and avoid unnecessary locking when
+>>>issuing I/O.
+>>>>>>>
+>>>>>>> Changes:
+>>>>>>> v2: rely on default upper layer function to map queues. (suggested
+>>>>>>> by Ming Lei
+>>>>>>> <tom.leiming@gmail.com>)
+>>>>>>>
+>>>>>>> Signed-off-by: Long Li <longli@microsoft.com>
+>>>>>>> ---
+>>>>>>>  drivers/scsi/storvsc_drv.c | 3 +--
+>>>>>>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/scsi/storvsc_drv.c
+>>>>>>> b/drivers/scsi/storvsc_drv.c index b89269120a2d..dfd3b76a4f89
+>>>>>>> 100644
+>>>>>>> --- a/drivers/scsi/storvsc_drv.c
+>>>>>>> +++ b/drivers/scsi/storvsc_drv.c
+>>>>>>> @@ -1836,8 +1836,7 @@ static int storvsc_probe(struct hv_device
+>>>>>>*device,
+>>>>>>>  	/*
+>>>>>>>  	 * Set the number of HW queues we are supporting.
+>>>>>>>  	 */
+>>>>>>> -	if (stor_device->num_sc !=3D 0)
+>>>>>>> -		host->nr_hw_queues =3D stor_device->num_sc + 1;
+>>>>>>> +	host->nr_hw_queues =3D num_possible_cpus();
+>>>>>>
+>>>>>>For a lot of the VM sizes in Azure, num_possible_cpus() is 128, even
+>>>>>>if the VM has only 4 or 8 or some other smaller number of vCPUs.
+>>>>>>So I'm wondering if you really want num_present_cpus() here instead,
+>>>>>>which would include only the vCPUs that actually exist in the VM.
 >>>
->>>For a lot of the VM sizes in Azure, num_possible_cpus() is 128, even if =
-the
->>>VM has only 4 or 8 or some other smaller number of vCPUs.
->>>So I'm wondering if you really want num_present_cpus() here instead,
->>>which would include only the vCPUs that actually exist in the VM.
+>>>I think reporting num_possible_cpus() doesn't do more harm or take more
+>>>resources. Because block layer allocates map for all the possible CPUs.
+>>>
+>>>The actual mapping is done in blk_mq_map_queues(), and it iterates all t=
+he
+>>>possible CPUs. If we report num_present_cpus(), the rest of the CPUs als=
+o
+>>>need to be mapped.
 
-I think reporting num_possible_cpus() doesn't do more harm or take more res=
-ources. Because block layer allocates map for all the possible CPUs.
+Actually I get your point, reporting num_present_cpus() will get less numbe=
+r of struct blk_mq_hw_ctx created. So it saves memory.
 
-The actual mapping is done in blk_mq_map_queues(), and it iterates all the =
-possible CPUs. If we report num_present_cpus(), the rest of the CPUs also n=
-eed to be mapped.
+If we don't plan to support adding/onlining CPUs, we should use num_present=
+_cpus().
 
 >>>
->>>Michael
->>>
->>>>
->>>>  	/*
->>>>  	 * Set the error handler work queue.
->>>> --
->>>> 2.17.1
+>>>>>>
+>>>>>>Michael
+>>>>>>
+>>>>>>>
+>>>>>>>  	/*
+>>>>>>>  	 * Set the error handler work queue.
+>>>>>>> --
+>>>>>>> 2.17.1
 
