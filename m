@@ -2,160 +2,316 @@ Return-Path: <SRS0=BT6k=WS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18E2EC3A5A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 06:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22FCC3A59D
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 06:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2A65233A2
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 06:11:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FC792082F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Aug 2019 06:19:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="oEgDK/P6"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F2hdSMKh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731451AbfHVGLP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Aug 2019 02:11:15 -0400
-Received: from mout.web.de ([212.227.15.14]:58157 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727476AbfHVGLO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Aug 2019 02:11:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1566454197;
-        bh=TPWE1k7o/B4f3kwbr1YU20EaviM7gzdQpubK6giRGHs=;
-        h=X-UI-Sender-Class:References:Subject:To:From:Cc:Date:In-Reply-To;
-        b=oEgDK/P60u9I0vquCLDYeSq8mCNR1xF6msLm/XXAQiH/DtrzvwcvksW6EmaA12g0+
-         4NfDmGA7mNFkf8nUcRuooqyfX+Mn8MV9mdAT9HL+zWjXjocyIYPRBFwKveLKbSNCVY
-         6bLF958lUWVtsMcgxhevB8kO7WqZDU3dEmz4KLQw=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([78.49.181.43]) by smtp.web.de (mrweb001
- [213.165.67.108]) with ESMTPSA (Nemesis) id 0M5woT-1iC9T330vZ-00xuA3; Thu, 22
- Aug 2019 08:09:57 +0200
-References: <20190821114955.12788-9-maennich@google.com>
-Subject: Re: [v3 08/11] scripts: Coccinelle script for namespace dependencies
-To:     Matthias Maennich <maennich@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        Martijn Coenen <maco@android.com>,
-        Himanshu Jha <himanshujha199640@gmail.com>,
-        cocci@systeme.lip6.fr, kernel-janitors@vger.kernel.org
-From:   Markus Elfring <Markus.Elfring@web.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-Cc:     linux-arch@vger.kernel.org, linux-kbuild@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, kernel-team@android.com,
-        usb-storage@lists.one-eyed-alien.net, x86@kernel.org,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Gilles Muller <Gilles.Muller@lip6.fr>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        Jessica Yu <jeyu@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Lucas De Marchi <lucas.de.marchi@gmail.com>,
-        Martijn Coenen <maco@google.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Michal Marek <michal.lkml@markovi.net>,
-        Nicolas Ferre <nicolas.ferre@microchip.com>,
-        Nicolas Palix <nicolas.palix@imag.fr>,
-        Oliver Neukum <oneukum@suse.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Sam Ravnborg <sam@ravnborg.org>,
-        Sandeep Patil <sspatil@google.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-Message-ID: <81cc3995-ea95-8125-bbd2-2889cc623e23@web.de>
-Date:   Thu, 22 Aug 2019 08:09:42 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20190821114955.12788-9-maennich@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-X-Provags-ID: V03:K1:9LZl2wqzsp0x2TafjaRoU9EeqxgnDZXFmkrC+Ti/L+vIL7UfNgB
- V2wq50MMJAjg3qd+NPRguYavUCq2c0qLxxDHvaAe5scbimexXV/Ncs3jW+9ds31dwOMnEEB
- EeRiQ0HkGh/y3pr3T76fb2FUcWEXrdC/SfezhDcPKBaYstMAQoitoEpZjPiKOKji4V0R+Y1
- M42nA81yVvaIwy3RZYSZA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:74ZF/xIKr0s=:GBPByv/WtB8BREl4ND7A4T
- /O8T2WRGmwzT6+GqOAchW6m8RRFU/1WvakBWvlMt1lvammmiN1QCRCiWtaHOLH3+bqd4xGLNr
- oMDI94/4MhmvVhrN3RtHsazBYQkU7mYr63v4s4WoHi5QWfYXkdHgfQuCbdBWUQuvmTJHaPS1m
- QhICR4e6GZeY9Nu5Jmahoql3WXsKSYAHmMe5xkdyytmDkT1avaAApqfOq+xpAOQE4SCHRum3g
- vtginvig3BFOaaY6w7F/bDZLv3l55yw483G4sEFV34JW9LHtmjVisdCu4v7/yBKATV9eysxLi
- 7IvfjA5i2BsfXqI5vJX8Dh5dSVjHz/hiyz6h8AlbkK4IoskyqT6aHnVMogG3/F0TIGvxmQfSt
- iK0z0r7JjxXvrEBoPsDA/Cu/hEQCRcYjmUGB6e1cj4iavq5cIwWYqEhXW5/cmBbkQRpoHCDjW
- ISJe+uf8963TNP1Z7u/AylBQiCTPYoFUQSNjWfzqGDU2i2SR/tEGT8p6DATTQTVx2A2OiuHee
- tk8XzgVBUOszuo3YJhNWwvLgXzPHC+XXuvH3cfbtCS2d7HYxBi6a7IJji4jOQ62Lw7SnBP4Er
- N3tKgUfuYUG43a8kD9mil3/BzIBxMqGZLBckaoB9COCmJMOwXhM6qjgZbItwK1FNuBG9U0DdW
- 2FWhNJFDgIuJwgS28pZ0IotxlsScTlxzJSQHSSXMOF7Bxvchdk9ghfMwp71AUvxkscL3e6eBf
- tz7PBNLau2P8p/A1Hm6H6+MHL4zhort+onoFO+rucsSnPJ8qe+mtbF252SPiHrUVmDB4LtmpY
- LoDV6LoQqKUf4Hsr/izzxcZvON33hVNbpXhF9aZLi/g3UvgWq/wM14wLGNxnXMH+uLI300/fE
- 25MuUl2VLvqZ9b5PZiXxa1ZWC0YvT5RwuUVDZsQLBogXWoIMp9T0XcvedoCPVZHdkrnevdaLt
- DF8v292gp3iHEBQAJxBuXUTrQRyRZbdMajlXwDixNfezHNxK6o8eNwAm0B5V7pmqy+u7NTcoh
- 3sQApVFYq1uoPJIE9DTtn5FR52IhfUUq0wBLrD6czRcyCjCtI9xmOzicGnZ0FQR2lNeXTU+tO
- VhQkzYFNyxKAQa5NlQRI56bA4KApICoxGn+Z2YSXSpoFn/YoNcFnal5NOmfSAqIbB1r8VJMVp
- Vij6o=
+        id S1731615AbfHVGTQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Aug 2019 02:19:16 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:46359 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727476AbfHVGTP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Aug 2019 02:19:15 -0400
+Received: by mail-pl1-f195.google.com with SMTP id c2so2800809plz.13
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2019 23:19:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=cx4+pHSHlvPh/qgyUhOxVOLljlEmwcwTtezxtvmr7uc=;
+        b=F2hdSMKhv7bcqx93Ac49nBnVYQMDSexcMX1KIOKHH7xPJphq3JCd0dZdUqcB2js0QN
+         yLIb49z0Bc+KQGOKJR8TCT1wN3d7a8ojE8CUme1Dx+hOEfnAaAhusGMvYgdvgVa00QLA
+         5Va3or3Qc7jqeJZyMDYrbQDlLXOH6C74mPKzc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=cx4+pHSHlvPh/qgyUhOxVOLljlEmwcwTtezxtvmr7uc=;
+        b=Js3Vl3mq5LlgZeWkm0xbyPzYTyzp3eCRQ5G0sqae0toJD9d31WzoWmUr/DONSJlBXJ
+         FsgHMxAusMNTyr5C8f7HwYHtqq5ZBLPKUuhdrh1UJ0rn8BY3cpmboxlIIMXZ5oQL0/cV
+         TSZkkD/jskr7eQZQC1snNjFg0ciHEpQI9tR54MYRC4DNhQBpRib4TYyahbZCqqeofbvn
+         gXPxee3xx0VjicjwQkxRMAJvj9FCeoNzsWRUdxEUBK89W6RwVaRlMPMnGGcftHKV3e2i
+         pf5jd09zOSVe79wKJtacq/9j0b4aw0ObOUYrf+K3jiWdMkN1kIFJxrerithywW9QMGmz
+         Memw==
+X-Gm-Message-State: APjAAAVn4sQ1Wm3VBm4gmYZHrtz03+Xkrlv1HNUsgHbsZmlsPkZKr+h6
+        WREbsS3UjDc9xg7ohidMOFJ/EkmvRYc=
+X-Google-Smtp-Source: APXvYqxygVHqX4UDhQTlp5nGtl401HES5cCplVm0x4Yyj58l4bo3/EJasQw6yWaAGIt8cdrgTJHXLA==
+X-Received: by 2002:a17:902:9041:: with SMTP id w1mr38360113plz.132.1566454754839;
+        Wed, 21 Aug 2019 23:19:14 -0700 (PDT)
+Received: from dhcp-10-123-20-15.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id g19sm43531372pfk.0.2019.08.21.23.19.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 21 Aug 2019 23:19:14 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, suganath-prabu.subramani@broadcom.com,
+        sathya.prakash@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Add sysfs parameter to set sdev qd to host can_queue
+Date:   Thu, 22 Aug 2019 02:19:01 -0400
+Message-Id: <1566454741-34409-1-git-send-email-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +generate_deps_for_ns() {
-> +	$SPATCH --very-quiet --in-place --sp-file \
-> +		$srctree/scripts/coccinelle/misc/add_namespace.cocci -D ns=$1 $2
-> +}
+This patch provides the module parameter and sysfs interface
+named 'enable_sdev_max_qd' to switch between the driver provided
+(optimal)queue depth and controller queue depth (can_queue).
 
-I would appreciate more constructive answers for specific software development concerns.
-https://lore.kernel.org/lkml/1c4420f4-361c-7358-49d9-87d8a51f7920@web.de/
-https://lkml.org/lkml/2019/8/15/515
+When 'enable_sdev_max_qd' is set to one then all the device's queue depth
+is set to shost's can_queue value. When this sysfs is reset to zero then
+all the devices queue depth is set to corresponding device type's default
+(i.e. optimal) value defined by the driver.
 
-Regards,
-Markus
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |   2 +
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 102 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |  40 ++++++++++++--
+ 3 files changed, 140 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 745e0e1..faca0a5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1232,6 +1232,7 @@ struct MPT3SAS_ADAPTER {
+ 	u16		thresh_hold;
+ 	u8		high_iops_queues;
+ 	u32		drv_support_bitmap;
++	bool		enable_sdev_max_qd;
+ 
+ 	/* internal commands, callback index */
+ 	u8		scsi_io_cb_idx;
+@@ -1587,6 +1588,7 @@ struct _pcie_device *mpt3sas_get_pdev_by_handle(struct MPT3SAS_ADAPTER *ioc,
+ void mpt3sas_port_enable_complete(struct MPT3SAS_ADAPTER *ioc);
+ struct _raid_device *
+ mpt3sas_raid_device_find_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle);
++void mpt3sas_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
+ 
+ /* config shared API */
+ u8 mpt3sas_config_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index da29005..7d69695 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3400,6 +3400,107 @@ drv_support_bitmap_show(struct device *cdev,
+ }
+ static DEVICE_ATTR_RO(drv_support_bitmap);
+ 
++/**
++ * enable_sdev_max_qd_show - display whether sdev max qd is enabled/disabled
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs read/write shost attribute. This attribute is used to set the
++ * targets queue depth to HBA IO queue depth if this attribute is enabled.
++ */
++static ssize_t
++enable_sdev_max_qd_show(struct device *cdev,
++	struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->enable_sdev_max_qd);
++}
++
++/**
++ * enable_sdev_max_qd_store - Enable/disable sdev max qd
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs read/write shost attribute. This attribute is used to set the
++ * targets queue depth to HBA IO queue depth if this attribute is enabled.
++ * If this attribute is disabled then targets will have corresponding default
++ * queue depth.
++ */
++static ssize_t
++enable_sdev_max_qd_store(struct device *cdev,
++	struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
++	struct MPT3SAS_DEVICE *sas_device_priv_data;
++	struct MPT3SAS_TARGET *sas_target_priv_data;
++	int val = 0;
++	struct scsi_device *sdev;
++	struct _raid_device *raid_device;
++	int qdepth;
++
++	if (kstrtoint(buf, 0, &val) != 0)
++		return -EINVAL;
++
++	switch (val) {
++	case 0:
++		ioc->enable_sdev_max_qd = 0;
++		shost_for_each_device(sdev, ioc->shost) {
++			sas_device_priv_data = sdev->hostdata;
++			if (!sas_device_priv_data)
++				continue;
++			sas_target_priv_data = sas_device_priv_data->sas_target;
++			if (!sas_target_priv_data)
++				continue;
++
++			if (sas_target_priv_data->flags &
++			    MPT_TARGET_FLAGS_VOLUME) {
++				raid_device =
++				    mpt3sas_raid_device_find_by_handle(ioc,
++				    sas_target_priv_data->handle);
++
++				switch (raid_device->volume_type) {
++				case MPI2_RAID_VOL_TYPE_RAID0:
++					if (raid_device->device_info &
++					    MPI2_SAS_DEVICE_INFO_SSP_TARGET)
++						qdepth =
++						    MPT3SAS_SAS_QUEUE_DEPTH;
++					else
++						qdepth =
++						    MPT3SAS_SATA_QUEUE_DEPTH;
++					break;
++				case MPI2_RAID_VOL_TYPE_RAID1E:
++				case MPI2_RAID_VOL_TYPE_RAID1:
++				case MPI2_RAID_VOL_TYPE_RAID10:
++				case MPI2_RAID_VOL_TYPE_UNKNOWN:
++				default:
++					qdepth = MPT3SAS_RAID_QUEUE_DEPTH;
++				}
++			} else if (sas_target_priv_data->flags &
++			    MPT_TARGET_FLAGS_PCIE_DEVICE)
++				qdepth = MPT3SAS_NVME_QUEUE_DEPTH;
++			else
++				qdepth = MPT3SAS_SAS_QUEUE_DEPTH;
++
++			mpt3sas_scsih_change_queue_depth(sdev, qdepth);
++		}
++		break;
++	case 1:
++		ioc->enable_sdev_max_qd = 1;
++		shost_for_each_device(sdev, ioc->shost)
++			mpt3sas_scsih_change_queue_depth(sdev,
++			    shost->can_queue);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return strlen(buf);
++}
++static DEVICE_ATTR_RW(enable_sdev_max_qd);
++
+ struct device_attribute *mpt3sas_host_attrs[] = {
+ 	&dev_attr_version_fw,
+ 	&dev_attr_version_bios,
+@@ -3427,6 +3528,7 @@ struct device_attribute *mpt3sas_host_attrs[] = {
+ 	&dev_attr_diag_trigger_mpi,
+ 	&dev_attr_drv_support_bitmap,
+ 	&dev_attr_BRM_status,
++	&dev_attr_enable_sdev_max_qd,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 9904775..d0c2f8d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -155,6 +155,10 @@ static int prot_mask = -1;
+ module_param(prot_mask, int, 0444);
+ MODULE_PARM_DESC(prot_mask, " host protection capabilities mask, def=7 ");
+ 
++static bool enable_sdev_max_qd;
++module_param(enable_sdev_max_qd, bool, 0444);
++MODULE_PARM_DESC(enable_sdev_max_qd,
++	"Enable sdev max qd as can_queue, def=disabled(0)");
+ 
+ /* raid transport support */
+ static struct raid_template *mpt3sas_raid_template;
+@@ -1519,7 +1523,13 @@ scsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
+ 
+ 	max_depth = shost->can_queue;
+ 
+-	/* limit max device queue for SATA to 32 */
++	/*
++	 * limit max device queue for SATA to 32 if enable_sdev_max_qd
++	 * is disabled.
++	 */
++	if (ioc->enable_sdev_max_qd)
++		goto not_sata;
++
+ 	sas_device_priv_data = sdev->hostdata;
+ 	if (!sas_device_priv_data)
+ 		goto not_sata;
+@@ -1549,6 +1559,25 @@ scsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
+ }
+ 
+ /**
++ * mpt3sas_scsih_change_queue_depth - setting device queue depth
++ * @sdev: scsi device struct
++ * @qdepth: requested queue depth
++ *
++ * Returns nothing.
++ */
++void
++mpt3sas_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
++{
++	struct Scsi_Host *shost = sdev->host;
++	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
++
++	if (ioc->enable_sdev_max_qd)
++		qdepth = shost->can_queue;
++
++	scsih_change_queue_depth(sdev, qdepth);
++}
++
++/**
+  * scsih_target_alloc - target add routine
+  * @starget: scsi target struct
+  *
+@@ -2306,7 +2335,7 @@ scsih_slave_configure(struct scsi_device *sdev)
+ 						MPT3SAS_RAID_MAX_SECTORS);
+ 		}
+ 
+-		scsih_change_queue_depth(sdev, qdepth);
++		mpt3sas_scsih_change_queue_depth(sdev, qdepth);
+ 
+ 		/* raid transport support */
+ 		if (!ioc->is_warpdrive)
+@@ -2370,7 +2399,7 @@ scsih_slave_configure(struct scsi_device *sdev)
+ 
+ 		pcie_device_put(pcie_device);
+ 		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+-		scsih_change_queue_depth(sdev, qdepth);
++		mpt3sas_scsih_change_queue_depth(sdev, qdepth);
+ 		/* Enable QUEUE_FLAG_NOMERGES flag, so that IOs won't be
+ 		 ** merged and can eliminate holes created during merging
+ 		 ** operation.
+@@ -2430,7 +2459,7 @@ scsih_slave_configure(struct scsi_device *sdev)
+ 		_scsih_display_sata_capabilities(ioc, handle, sdev);
+ 
+ 
+-	scsih_change_queue_depth(sdev, qdepth);
++	mpt3sas_scsih_change_queue_depth(sdev, qdepth);
+ 
+ 	if (ssp_target) {
+ 		sas_read_port_mode_page(sdev);
+@@ -10507,6 +10536,9 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	 * Enable MEMORY MOVE support flag.
+ 	 */
+ 	ioc->drv_support_bitmap |= MPT_DRV_SUPPORT_BITMAP_MEMMOVE;
++
++	ioc->enable_sdev_max_qd = enable_sdev_max_qd;
++
+ 	/* misc semaphores and spin locks */
+ 	mutex_init(&ioc->reset_in_progress_mutex);
+ 	/* initializing pci_access_mutex lock */
+-- 
+1.8.3.1
+
