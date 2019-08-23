@@ -2,136 +2,184 @@ Return-Path: <SRS0=qm3h=WT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9128C3A5A4
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 16:00:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20A4C3A5A2
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 20:42:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B085E2173E
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 16:00:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kGVFTI4b"
+	by mail.kernel.org (Postfix) with ESMTP id 940302133F
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 20:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387568AbfHWQA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Aug 2019 12:00:58 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:37720 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726964AbfHWQA5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2019 12:00:57 -0400
-Received: by mail-pl1-f195.google.com with SMTP id bj8so5811258plb.4;
-        Fri, 23 Aug 2019 09:00:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=07Egtsx8BTLakWMyam+EKjHQWLxH1naEmDIZmgusaPw=;
-        b=kGVFTI4bDL3B5jc2VlVW5iNmXRnUns2ue0ZpTj/fDStyBw8Q9ba/aDJhVLlhhdjQ1j
-         ogGV58sT2dQmXFH+ghLlgsrPhOGFZmx0WW6SiMtPKUin6e8nSlYRMn+AYzE9fzIK6wor
-         0pqaY5SeWurvg9cHY1LON3iXEhKyCq8YJJ/HmRTRXn2m4qthUFlq0FoItb2VpMQzvjpL
-         ZF56Ogp+uaJxM/+62vHmbmSphGhTT0dvJJVSf9FciAyb1QaRotXxvCMY86+MfEttowlS
-         bJZCN82/usH7zyQ3DUI4O4NqGizfKpQvdN0qp5jWlp85bmS+20xviHSD63RHYaEG8N6w
-         sf7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=07Egtsx8BTLakWMyam+EKjHQWLxH1naEmDIZmgusaPw=;
-        b=CVF3AoJZ1WVsTf0+DVnXXiI2MzvO7UlYLWtvgaMQRBJJsiQiDPkwnqlZcqY55hUjjR
-         ZfqpSaAKDLDuAiCyb/SMGbBEXfadeyEfNkKAowVDs/GxmOvoX6aog92u9jBMQP+gBWSQ
-         X3ic4apyBpAvQ+DpXlBMa3z92MffUYuJVCtI7eJVK55teKw51cVN6w0wXac1Rcx2Y8uj
-         oQHBHax827hGQEI3o6W59n5m7sAAeYj8B2ouhnjdw60Z6bSPxh4ppJDW3gEzyMnQFk6r
-         7PFnw5LaEGOa9uSpkxhmYpRA9OVxGrQhoCW/tABILQ9VRms9hHzV7TMta14/CiDGvmCp
-         +2NA==
-X-Gm-Message-State: APjAAAViUHC8fh5JrjEWVYYdSEkDkL3y/ImXueHGmID+W0f5e/qotXC/
-        Df0oKYXkpUKuVBE6ve5ySjhCMHW7AYUxPNdIr1g=
-X-Google-Smtp-Source: APXvYqwxreGNcoRuFbMgXFknH7qbT7cPrnLAnQlAAkT7aQK81Y52MAYNqO9wNzUbU3CbY9CwNUKZ4CQXxpNGir8SmPw=
-X-Received: by 2002:a17:902:a715:: with SMTP id w21mr5383370plq.274.1566576056998;
- Fri, 23 Aug 2019 09:00:56 -0700 (PDT)
-MIME-Version: 1.0
-References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
- <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
- <20190817145509.GA18381@amd> <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
- <20190819143842.GA25401@amd> <7c4c4853-7e3a-0618-92a0-337e248e2b4c@gmail.com> <c937b7e0-02c6-ae9a-aaf7-16a2ef29886d@gmail.com>
-In-Reply-To: <c937b7e0-02c6-ae9a-aaf7-16a2ef29886d@gmail.com>
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-Date:   Sat, 24 Aug 2019 01:00:45 +0900
-Message-ID: <CAC5umyjxkeR3rhf3XZvwkxLvc-0ENEkQfOLnk8A12Qazr9Et8w@mail.gmail.com>
-Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
-To:     Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Cc:     Pavel Machek <pavel@ucw.cz>, linux-block@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S2389481AbfHWUmJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Aug 2019 16:42:09 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:39630 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S2389217AbfHWUmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Aug 2019 16:42:09 -0400
+Received: (qmail 5214 invoked by uid 2102); 23 Aug 2019 16:42:08 -0400
+Received: from localhost (sendmail-bs@127.0.0.1)
+  by localhost with SMTP; 23 Aug 2019 16:42:08 -0400
+Date:   Fri, 23 Aug 2019 16:42:08 -0400 (EDT)
+From:   Alan Stern <stern@rowland.harvard.edu>
+X-X-Sender: stern@iolanthe.rowland.org
+To:     Andrea Vai <andrea.vai@unipv.it>
+cc:     Johannes Thumshirn <jthumshirn@suse.de>,
+        Jens Axboe <axboe@kernel.dk>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: Slow I/O on USB media after commit f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+In-Reply-To: <9b06f6f469ea535d336945992242e32b6524cb2b.camel@unipv.it>
+Message-ID: <Pine.LNX.4.44L0.1908231449390.1628-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-2019=E5=B9=B48=E6=9C=8820=E6=97=A5(=E7=81=AB) 3:38 Jacek Anaszewski <jacek.=
-anaszewski@gmail.com>:
->
-> On 8/19/19 8:22 PM, Jacek Anaszewski wrote:
-> > On 8/19/19 4:38 PM, Pavel Machek wrote:
-> >> On Sat 2019-08-17 22:07:43, Jacek Anaszewski wrote:
-> >>> On 8/17/19 4:55 PM, Pavel Machek wrote:
-> >>>> On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
-> >>>>> This allows LEDs to be controlled by block device activity.
-> >>>>>
-> >>>>> We already have ledtrig-disk (LED disk activity trigger), but the l=
-ower
-> >>>>> level disk drivers need to utilize ledtrig_disk_activity() to make =
-the
-> >>>>> LED blink.
-> >>>>>
-> >>>>> The LED block device trigger doesn't require the lower level driver=
-s to
-> >>>>> have any instrumentation. The activity is collected by polling the =
-disk
-> >>>>> stats.
-> >>>>>
-> >>>>> Example:
-> >>>>>
-> >>>>> echo block-nvme0n1 > /sys/class/leds/diy/trigger
-> >>>>
-> >>>> Lets use one trigger "block" and have the device as a parameter,
-> >>>> please.
-> >>>>
-> >>>> We already have 1000 cpu triggers on 1000 cpu machines, and yes, its=
- a
-> >>>> disaster we'll need to fix. Lets not repeat the same mistake here.
-> >>>>
-> >>>> I guess it may be slightly more work. Sorry about that.
-> >>>
-> >>> We should be able to list available block devices to set,
-> >>> so the problem would be not avoided anyway.
-> >>
-> >> Should we? We need to list triggers, but we may not list all the devic=
-es...
-> >
-> > This is similar to usbport trigger that lists available
-> > ports as files in a sub-directory. We might eventually go
-> > in this direction.
->
-> I must withdraw this statement. This is not similar to usbport
-> trigger. The difference is that with ledtrig-block we have separate
-> triggers per each device and I am not aware if there is some centralized
-> mechanism similar to blocking_notifier_chain (usb_notifier_list
-> in drivers/usb/core/notify.c) available for block devices, that
-> would allow to gather all available block devs under common trigger.
->
-> Moreover I remember Greg once discouraged using notifier chains
-> as they are unsafe, so we would need some other solution anyway.
+On Fri, 23 Aug 2019, Andrea Vai wrote:
 
-I start thinking that we should implement the LED block device activity
-trigger in userspace.  The userspace application firstly activates
-one-shot LED trigger and periodically reads /sys/block/<disk>/stat and
-writes /sys/class/leds/<led>/shot if there is any disk activity.
+> Il giorno mar, 20/08/2019 alle 13.13 -0400, Alan Stern ha scritto:
+> > On Mon, 19 Aug 2019, Andrea Vai wrote:
+> > 
+> > > Hi Alan,
+> > >   I attach the two traces, collected as follows:
+> > > 
+> > > - start the trace;
+> > > - wait 10 seconds;
+> > > - plug the drive;
+> > > - wait 5 seconds;
+> > > - mount the drive;
+> > > - wait 5 seconds;
+> > > - copy a 500 byte file;
+> > > - wait 5 seconds;
+> > > - unmount the drive;
+> > > - wait 5 seconds;
+> > > - stop the trace.
+> > 
+> > Still no noticeable differences between the two traces.  They both 
+> > include a 1.2 second delay shortly after the writing starts, and
+> > the 
+> > initialization sequences are the same.
+> > 
+> > I really don't know where to look for this.  The only thing I can
+> > think
+> > of at this point is to repeat this test, but using a file large
+> > enough
+> > for the difference in writing speed to show up plainly.
+> > 
+> > By the way, it would be best to run the tests with the smallest
+> > possible number of other USB devices plugged in.  None at all, if
+> > you
+> > can arrange it.
+> 
+> Thanks, I went some steps further on this.
+> The following considerations all apply to the "bad" kernel.
+> 
+> Increasing the filesize lead me to find out that using a file sized
+> less than roughly 10MB the problem does not happen.
+> 
+> I found these results by making sets of 10 tries for each filesize,
+> using a filesize of 1kB, 10kB, 100kB, 1MB, 10MB, 100MB, 500MB (so, we
+> have 70 usbmon logs on these). If we define "fast" a copy that takes
+> (roughly(*)) no more time to complete than all the other tries in its
+> set, and "slow" elsewhere (=one or more tries in its set are
+> (sensibly(*)) faster), I noticed that in each set with a filesize of
+> 10MB or more the behavior can be very different: sometimes the copy is
+> still "fast", sometimes is "slow". The frequency of the "slow" copies
+> increases with the filesize. Also, among the "slow" copies in a set,
+> the time can be very different.
+> 
+> Also, I found that if the file is not present on the target location
+> (i.e. the USB pendrive), the problem does not happen (I have ten
+> usbmon logs here, taken in the worst scenario (500MB filesize)).
+> 
+> Tell me which log(s) would you like me to send you: I can sum up here
+> all the sets of tries, and the time their copies took to complete (in
+> seconds):
+> 
+> 1kB: 26, 27, 26, 26, 27, 26, 26, 27, 26, 27
+> 10kB: 27, 27, 26, 26, 27, 26, 27, 26, 27, 27
+> 100kB: 26, 26, 26, 27, 26, 26, 26, 27, 27, 27
+> 1MB: 26, 27, 27, 27, 27, 27, 27, 27, 27, 26
+> 10MB: 27, 31, 37, 27, 38, 27, 39, 27, 30, 28
+> 100MB: 32, 32, 144, 32, 145, 32, 123, 32, 153, 123
+> 500MB: 56, 1396, 747, 131, 795, 764, 292, 1021, 807, 516
+> 
+> Also, note that the first copy is always "fast", because each file was
+> initially not present on the pendrive. As said, I did one test of 10
+> tries by deleting the file on the pendrive before copying it again,
+> and the results are
+> 
+> 500MB: 56, 56, 57, 57, 56, 56, 60, 25***, 55, 56 (***Note the "fake"
+> 25s, doesn't matter because I forgot to plug the pendrive :-/ )
+> 
+> I have made a script to semi-automate all the tests I have done. I
+> attach the script here, so anyone interested could check it for any
+> mistake (remember I am not very skilled so I may have wrote buggy
+> code, done wrong assumptions, etc.). Please note that I decreased the
+> time between the trace start and the drive plugging from 10s to 5s
+> (simply to reduce the time needed to me to look at the countdown). Of
+> course I can do again the test(s) you need with a bigger amount of
+> $wait.
+> 
+> The script has been run with the command
+> 
+> # for k in {1..10}; do size=1000; ./test_usbmon $size && ping -a -c 5 8.8.8.8 ; done
+> (example for 1kB filesize)
+> 
+> or, in the set of "delete before copy",
+> 
+> # for k in {1..10}; do size=500000000; ./cancellaTestFile $size && ./test_usbmon $size && ping -a -c 5 8.8.8.8 ; done
+> 
+> The ping command is there just to have a sound alarm when finished.
+> 
+> I also attach the script to delete the file ("cancellaTestFile").
+> 
+> I took care to plug the pendrive exactly at the end of the countdown,
+> to keep the times in the logs more simple to detect and manage by you.
+> 
+> I have also logged all the terminal output log of the script.
+> 
+> Last note: I ran all the tests without any other USB device connected
+> but the pendrive (well, actually there is a card reader connected to
+> the internal USB connector, but on another bus. I didn't want to open
+> the case and disconnect it but of course I can do it if needed).
+> Thanks for pointing it out.
+> 
+> Thanks, and bye
+> Andrea
+> 
+> (*) as an example, on a set that shows the total elapsed time in
+> seconds being
+> 
+> 26, 27, 27, 27, 27, 27, 27, 27, 27, 26
+> 
+> I have assumed all of the copies to be "fast", while in the set
+> 
+> 32, 32, 144, 32, 145, 32, 123, 32, 153, 123
+> 
+> I have assumed 5 of the copies as "fast" (the ones that took 32
+> seconds) and the other "slow". Not going to deepen in some standard
+> deviation evaluation, etc., but if you'd like to I can provide some
+> more scientific detailed data :-)
+
+Wow, that sounds like a lot of work.
+
+Let's start with the 39-second run for the 10-MB file.  If you can put 
+the trace files on a server somewhere, available for downloading, that 
+would avoid sending a lot of uninteresting data to the mailing list.
+
+Odd that the delays never occur when you're writing a new file.  (If
+nothing else, that gives you a way to work around the problem!)  It's
+hard to say what it means, though.  Maybe the flash drive doesn't like 
+overwriting used blocks.
+
+Alan Stern
+
