@@ -2,76 +2,114 @@ Return-Path: <SRS0=qm3h=WT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41BFCC3A589
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 04:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E69DFC3A5A2
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 09:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EB9C2341F
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 04:02:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B64B420850
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Aug 2019 09:52:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="cEXejb6e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728043AbfHWECh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Aug 2019 00:02:37 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:4772 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725951AbfHWECh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Aug 2019 00:02:37 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id DE2A86D44B4D10D0A3E1;
-        Fri, 23 Aug 2019 12:02:15 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Fri, 23 Aug 2019
- 12:02:07 +0800
-From:   zhengbin <zhengbin13@huawei.com>
-To:     <artur.paszkiewicz@intel.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
-Subject: [PATCH] scsi: isci: remove set but not used variable 'index'
-Date:   Fri, 23 Aug 2019 12:08:39 +0800
-Message-ID: <1566533319-23019-1-git-send-email-zhengbin13@huawei.com>
-X-Mailer: git-send-email 2.7.4
+        id S2388060AbfHWJwr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 23 Aug 2019 05:52:47 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28408 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732878AbfHWJwr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Aug 2019 05:52:47 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7N9nhVq002712
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2019 02:52:45 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=Wk+k8EloB2LxRGIh7AYvYaDTvNONiy6wh2pBWZeoDVQ=;
+ b=cEXejb6epWy9vxu7tqh1qKvNGfg93l4oCh7ntT83vtyeQuOWFH+FhsDcdzx1dEIFiMIs
+ yXiGvJTadt2ZPn+ZhrSKq8xTfgPt51a6p8+mxP1noIa9tkGo4g68eEh5jwG9MrwNFW0r
+ tgVPLfd9ns0FK7ebdpSvB66zZh1LaPP7Zvst0hl26zlDgpYv5blrtHKqD3RwJc2ApCIv
+ aE83mFOvSx81fmQvsnbRcSAm6hAK2djF3y6uFWMxXiIukVPeydRJiWtvfXvUq6jdaODh
+ n0QX2wqGpAJoVh6PNjTp1OVksRaM6nwlTV61gdctj5lQowHBNSfwaOI+WLSoWpS57uyP xg== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2uhad4072c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Aug 2019 02:52:45 -0700
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Fri, 23 Aug
+ 2019 02:52:44 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
+ Transport; Fri, 23 Aug 2019 02:52:44 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 908223F703F;
+        Fri, 23 Aug 2019 02:52:44 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x7N9qimq007865;
+        Fri, 23 Aug 2019 02:52:44 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x7N9qiiF007864;
+        Fri, 23 Aug 2019 02:52:44 -0700
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <gbasrur@marvell.com>, <svernekar@marvell.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: [PATCH 00/14] qedf: Miscellaneous fixes.
+Date:   Fri, 23 Aug 2019 02:52:30 -0700
+Message-ID: <20190823095244.7830-1-skashyap@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:5.22.84,1.0.8
+ definitions=2019-08-23_03:2019-08-21,2019-08-23 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+Hi Martin,
 
-drivers/scsi/isci/host.c: In function sci_controller_complete_io:
-drivers/scsi/isci/host.c:2674:6: warning: variable index set but not used [-Wunused-but-set-variable]
+This series have bug fixes and improve the log messages for better debugging.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: zhengbin <zhengbin13@huawei.com>
----
- drivers/scsi/isci/host.c | 2 --
- 1 file changed, 2 deletions(-)
+Kindly apply this series to scsi-queue at your earliest convenience.
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 7b5deae..7ebfa3c 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -2671,7 +2671,6 @@ enum sci_status sci_controller_complete_io(struct isci_host *ihost,
- 					   struct isci_request *ireq)
- {
- 	enum sci_status status;
--	u16 index;
+Thanks,
+~Saurav 
 
- 	switch (ihost->sm.current_state_id) {
- 	case SCIC_STOPPING:
-@@ -2682,7 +2681,6 @@ enum sci_status sci_controller_complete_io(struct isci_host *ihost,
- 		if (status != SCI_SUCCESS)
- 			return status;
 
--		index = ISCI_TAG_TCI(ireq->io_tag);
- 		clear_bit(IREQ_ACTIVE, &ireq->flags);
- 		return SCI_SUCCESS;
- 	default:
---
-2.7.4
+Arun Easi (1):
+  qedf: Fix crash during sg_reset.
+
+Hannes Reinecke (1):
+  qedf: Use discovery list to traverse rports
+
+Nilesh Javali (1):
+  qedf: Update module description string.
+
+Saurav Kashyap (11):
+  qedf: Print message during bailout conditions.
+  qedf: Stop sending fipvlan request on unload.
+  qedf: Add shutdown callback handler.
+  qedf: Interpret supported caps value correctly.
+  qedf: Add support for 20 Gbps speed.
+  qedf: Add debug information for unsolicited processing.
+  qedf: Initiator fails to re-login to switch after link down.
+  qedf: Check for module unloading bit before processing link update
+    AEN.
+  qedf: Decrease the LL2 MTU size to 2500.
+  qedf: Fix race betwen fipvlan request and response path.
+  qedf: Update the version to 8.42.3.0.
+
+ drivers/scsi/qedf/qedf.h         |   1 +
+ drivers/scsi/qedf/qedf_debugfs.c |  16 ++--
+ drivers/scsi/qedf/qedf_els.c     |  38 +++++++--
+ drivers/scsi/qedf/qedf_fip.c     |  33 +++++---
+ drivers/scsi/qedf/qedf_io.c      |  66 ++++++++++++---
+ drivers/scsi/qedf/qedf_main.c    | 178 +++++++++++++++++++++++++--------------
+ drivers/scsi/qedf/qedf_version.h |   8 +-
+ 7 files changed, 232 insertions(+), 108 deletions(-)
+
+-- 
+1.8.3.1
 
