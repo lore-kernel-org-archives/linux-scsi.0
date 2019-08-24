@@ -2,149 +2,164 @@ Return-Path: <SRS0=/6u/=WU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 373CEC3A59E
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 12:56:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EC9C3A5A4
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 15:02:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1533B2146E
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 12:56:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EB472173E
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 15:02:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sQCRGRLg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727802AbfHXM4J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Aug 2019 08:56:09 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:47058 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727590AbfHXM4J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 24 Aug 2019 08:56:09 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5BB741089042;
-        Sat, 24 Aug 2019 12:56:08 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 606615D6D0;
-        Sat, 24 Aug 2019 12:55:58 +0000 (UTC)
-Date:   Sat, 24 Aug 2019 20:55:54 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Long Li <longli@microsoft.com>
-Cc:     Sagi Grimberg <sagi@grimberg.me>,
-        "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: Re: [PATCH 3/3] nvme: complete request in work queue on CPU with
- flooded interrupts
-Message-ID: <20190824125553.GA8474@ming.t460p>
-References: <1566281669-48212-1-git-send-email-longli@linuxonhyperv.com>
- <1566281669-48212-4-git-send-email-longli@linuxonhyperv.com>
- <2a30a07f-982c-c291-e263-0cf72ec61235@grimberg.me>
- <20190823032129.GA18680@ming.t460p>
- <CY4PR21MB074173E79C7FC3AC13C69CB3CEA70@CY4PR21MB0741.namprd21.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CY4PR21MB074173E79C7FC3AC13C69CB3CEA70@CY4PR21MB0741.namprd21.prod.outlook.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.64]); Sat, 24 Aug 2019 12:56:08 +0000 (UTC)
+        id S1727682AbfHXPCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Aug 2019 11:02:43 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42656 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727556AbfHXPCn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Aug 2019 11:02:43 -0400
+Received: by mail-pf1-f194.google.com with SMTP id i30so8658096pfk.9;
+        Sat, 24 Aug 2019 08:02:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=yvlfcwHhYYEt45AEV3kpvsKP89qUArjfynDA7p15x1g=;
+        b=sQCRGRLg0XwcENprB4U9XKoLQbl1pdzKeXP908+f4eAo2UBXTk8lR9dNTjBJMd7qBG
+         AjPytexu7y1JIqX9qSxvYS3BDFBhCXAmy1f5ghYVnz1r2QawaNcH7wQJm0CJOg5yhwZD
+         MCqF3oV8hnNpxiafdWmsdXf79QMdNCKteycBGb5ZaMMUHTF3MsQLo8bzPpfswjEsL3fe
+         LVWfVUtzaUcYy0CxenU+6kOHySLPDYzvqb/Mre5xRKuprWH7CpNPlMKGunl/Phq5Jc9p
+         3hFHov4jyt3cN+W/+xhJvEvp4s8hgisDyEWn/Bw/qca59reUvTJQTc7OS0199PxeXHqf
+         T2kA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=yvlfcwHhYYEt45AEV3kpvsKP89qUArjfynDA7p15x1g=;
+        b=XgqJRH0fKcVnhmLTIsRgnhEbvRDac+cuAvfvkH17hERL83E3oTv9fgarHbO55e2XP6
+         KE4HT98PZBciMYxFZb6iDZBa4/931f6vbFcAiUiEE2ApedBO0YO3TeDdf0KgBaRBkLFz
+         onot/eAzfOLgOdUdh3GdjYFVww4nL/yotBXhWdeFfil7oI/sDqYsaiCH0eyVf2GVFttc
+         /OKN8GvK9evcPaItOrVoZz0EYCmg9tqJkMIsxEvgpvCeD+Ad4hESCWiAySav6asrHTjU
+         LTOp0ahuviB0vFzazKlnqOnAgj9ytOBAPkYUOz3SNPRiuzbgzFpTuL8IyH6kWzCzifQm
+         nnhA==
+X-Gm-Message-State: APjAAAUt5RTOElQS1EZ9irPZ1d7GearvIa8z0MiYkk3z1n4mSpmen6hc
+        r1BDMFufEYHUTRIL1GYQl8w=
+X-Google-Smtp-Source: APXvYqwVdR14UXJ4cILqtv2OODOEEm6/JWssfKvn3BXAgbuL/zLqTejw/DZHr0LenO5mEuGLQEP1GA==
+X-Received: by 2002:a17:90a:23c5:: with SMTP id g63mr10621207pje.124.1566658962276;
+        Sat, 24 Aug 2019 08:02:42 -0700 (PDT)
+Received: from jordon-HP-15-Notebook-PC.domain.name ([106.51.17.2])
+        by smtp.gmail.com with ESMTPSA id c12sm8680413pfc.22.2019.08.24.08.02.38
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sat, 24 Aug 2019 08:02:41 -0700 (PDT)
+From:   Souptick Joarder <jrdr.linux@gmail.com>
+To:     hare@suse.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH] scsi: aic7xxx: Remove dead code
+Date:   Sat, 24 Aug 2019 20:38:22 +0530
+Message-Id: <1566659302-3514-1-git-send-email-jrdr.linux@gmail.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Aug 24, 2019 at 12:27:18AM +0000, Long Li wrote:
-> >>>Subject: Re: [PATCH 3/3] nvme: complete request in work queue on CPU
-> >>>with flooded interrupts
-> >>>
-> >>>On Tue, Aug 20, 2019 at 10:33:38AM -0700, Sagi Grimberg wrote:
-> >>>>
-> >>>> > From: Long Li <longli@microsoft.com>
-> >>>> >
-> >>>> > When a NVMe hardware queue is mapped to several CPU queues, it is
-> >>>> > possible that the CPU this hardware queue is bound to is flooded by
-> >>>> > returning I/O for other CPUs.
-> >>>> >
-> >>>> > For example, consider the following scenario:
-> >>>> > 1. CPU 0, 1, 2 and 3 share the same hardware queue 2. the hardware
-> >>>> > queue interrupts CPU 0 for I/O response 3. processes from CPU 1, 2
-> >>>> > and 3 keep sending I/Os
-> >>>> >
-> >>>> > CPU 0 may be flooded with interrupts from NVMe device that are I/O
-> >>>> > responses for CPU 1, 2 and 3. Under heavy I/O load, it is possible
-> >>>> > that CPU 0 spends all the time serving NVMe and other system
-> >>>> > interrupts, but doesn't have a chance to run in process context.
-> >>>> >
-> >>>> > To fix this, CPU 0 can schedule a work to complete the I/O request
-> >>>> > when it detects the scheduler is not making progress. This serves
-> >>>multiple purposes:
-> >>>> >
-> >>>> > 1. This CPU has to be scheduled to complete the request. The other
-> >>>> > CPUs can't issue more I/Os until some previous I/Os are completed.
-> >>>> > This helps this CPU get out of NVMe interrupts.
-> >>>> >
-> >>>> > 2. This acts a throttling mechanisum for NVMe devices, in that it
-> >>>> > can not starve a CPU while servicing I/Os from other CPUs.
-> >>>> >
-> >>>> > 3. This CPU can make progress on RCU and other work items on its
-> >>>queue.
-> >>>>
-> >>>> The problem is indeed real, but this is the wrong approach in my mind.
-> >>>>
-> >>>> We already have irqpoll which takes care proper budgeting polling
-> >>>> cycles and not hogging the cpu.
-> >>>
-> >>>The issue isn't unique to NVMe, and can be any fast devices which
-> >>>interrupts CPU too frequently, meantime the interrupt/softirq handler may
-> >>>take a bit much time, then CPU is easy to be lockup by the interrupt/sofirq
-> >>>handler, especially in case that multiple submission CPUs vs. single
-> >>>completion CPU.
-> >>>
-> >>>Some SCSI devices has the same problem too.
-> >>>
-> >>>Could we consider to add one generic mechanism to cover this kind of
-> >>>problem?
-> >>>
-> >>>One approach I thought of is to allocate one backup thread for handling such
-> >>>interrupt, which can be marked as IRQF_BACKUP_THREAD by drivers.
-> >>>
-> >>>Inside do_IRQ(), irqtime is accounted, before calling action->handler(),
-> >>>check if this CPU has taken too long time for handling IRQ(interrupt or
-> >>>softirq) and see if this CPU could be lock up. If yes, wakeup the backup
-> 
-> How do you know if this CPU is spending all the time in do_IRQ()?
-> 
-> Is it something like:
-> If (IRQ_time /elapsed_time > a threshold value)
-> 	wake up the backup thread
+These are dead code since 2.6.13. If there is no plan
+to use it further, these can be removed forever.
 
-Yeah, the above could work in theory.
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c | 68 --------------------------------------
+ 1 file changed, 68 deletions(-)
 
-Another approach I thought of is to monitor average irq gap time on each
-CPU.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index d5c4a0d..98d2e14 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -2445,68 +2445,6 @@ static void ahc_linux_set_dt(struct scsi_target *starget, int dt)
+ 	ahc_unlock(ahc, &flags);
+ }
+ 
+-#if 0
+-/* FIXME: This code claims to support IU and QAS.  However, the actual
+- * sequencer code and aic7xxx_core have no support for these parameters and
+- * will get into a bad state if they're negotiated.  Do not enable this
+- * unless you know what you're doing */
+-static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
+-{
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+-	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
+-		= ahc_fetch_transinfo(ahc,
+-				      starget->channel + 'A',
+-				      shost->this_id, starget->id, &tstate);
+-	struct ahc_devinfo devinfo;
+-	unsigned int ppr_options = tinfo->goal.ppr_options
+-		& ~MSG_EXT_PPR_QAS_REQ;
+-	unsigned int period = tinfo->goal.period;
+-	unsigned long flags;
+-	struct ahc_syncrate *syncrate;
+-
+-	if (qas)
+-		ppr_options |= MSG_EXT_PPR_QAS_REQ;
+-
+-	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+-			    starget->channel + 'A', ROLE_INITIATOR);
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
+-	ahc_lock(ahc, &flags);
+-	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->goal.offset,
+-			 ppr_options, AHC_TRANS_GOAL, FALSE);
+-	ahc_unlock(ahc, &flags);
+-}
+-
+-static void ahc_linux_set_iu(struct scsi_target *starget, int iu)
+-{
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	struct ahc_softc *ahc = *((struct ahc_softc **)shost->hostdata);
+-	struct ahc_tmode_tstate *tstate;
+-	struct ahc_initiator_tinfo *tinfo 
+-		= ahc_fetch_transinfo(ahc,
+-				      starget->channel + 'A',
+-				      shost->this_id, starget->id, &tstate);
+-	struct ahc_devinfo devinfo;
+-	unsigned int ppr_options = tinfo->goal.ppr_options
+-		& ~MSG_EXT_PPR_IU_REQ;
+-	unsigned int period = tinfo->goal.period;
+-	unsigned long flags;
+-	struct ahc_syncrate *syncrate;
+-
+-	if (iu)
+-		ppr_options |= MSG_EXT_PPR_IU_REQ;
+-
+-	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+-			    starget->channel + 'A', ROLE_INITIATOR);
+-	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options, AHC_SYNCRATE_DT);
+-	ahc_lock(ahc, &flags);
+-	ahc_set_syncrate(ahc, &devinfo, syncrate, period, tinfo->goal.offset,
+-			 ppr_options, AHC_TRANS_GOAL, FALSE);
+-	ahc_unlock(ahc, &flags);
+-}
+-#endif
+-
+ static void ahc_linux_get_signalling(struct Scsi_Host *shost)
+ {
+ 	struct ahc_softc *ahc = *(struct ahc_softc **)shost->hostdata;
+@@ -2545,12 +2483,6 @@ static void ahc_linux_get_signalling(struct Scsi_Host *shost)
+ 	.show_width	= 1,
+ 	.set_dt		= ahc_linux_set_dt,
+ 	.show_dt	= 1,
+-#if 0
+-	.set_iu		= ahc_linux_set_iu,
+-	.show_iu	= 1,
+-	.set_qas	= ahc_linux_set_qas,
+-	.show_qas	= 1,
+-#endif
+ 	.get_signalling	= ahc_linux_get_signalling,
+ };
+ 
+-- 
+1.9.1
 
-We could use EWMA(Exponential Weighted Moving Average) to do it simply,
-such as:
-
-	curr_irq_gap(cpu) = current start time of do_IRQ() on 'cpu' -
-			end time of last do_IRQ() on 'cpu'
-	avg_irq_gap(cpu) = weight_prev * avg_irq_gap(cpu) + weight_curr * curr_irq_gap(cpu) 
-
-	note:
-		weight_prev + weight_curr = 1
-
-When avg_irq_gap(cpu) is close to one small enough threshold, we think irq flood is
-detected.
-
-'weight_prev' could be chosen as one big enough value for avoiding short-time flood.
-
-
-Thanks,
-Ming
