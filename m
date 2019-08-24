@@ -2,186 +2,311 @@ Return-Path: <SRS0=/6u/=WU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A2CC3A5A2
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 00:27:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 394D3C3A5A4
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 09:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 236B2206E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 00:27:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FB7820874
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 09:23:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="hWLcDWrA"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gLw7ytGN";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="iw8fNYdb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726436AbfHXA1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 23 Aug 2019 20:27:23 -0400
-Received: from mail-eopbgr770104.outbound.protection.outlook.com ([40.107.77.104]:14284
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725917AbfHXA1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Aug 2019 20:27:23 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WuA/90yxYFiClXOKsAOjn1sdaGEkptEUzq/qDtlzsiQPRnzhcsSmrXEQ1wkQYX2cnZm1Bgdult7c3wqmYJiz1Mtmw0McwCMefqedD0N7F18JKLzpt0OiSfAafztHIiN51H4XUj/h2k1CMXD2MJXksGwaLagtdyLfIAmxnmY0hYE2+fGtmcmAc0fpslJeDBZbWjYUkpyYStuq/Vax6rcfeSTdsiG7cfu2uzrXgBT4fs1KIg1SbU1/0n/iCpuHczFsc0ZdeWaUGg+bTpK+GyI7W4JtjZhoAJmqsdgAzonCGSoa5TqO8aLjXQXc4Rl7bi+FGESgI9ABaKKthCGz6131DA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8aWe/RoV649/6UucnkCgtOVg7cMYEFGNnE/2asnmwmM=;
- b=N4GMeOlraElj552ciy1eHGQvvLr4CmLnyIqN4KzT3hIcgok2Mq1sDqEnclL5HWBgJPsyC7SC7ljwdKjXZ1jSEJnB8AmkecpAdbtN2UNEes/K56GWmr6lgkNP+xQ6/5Qf6a2UCrlfYXG9tfGHTggcSPusyWHB/scVgVCII2TD5j1kUGK7Q4yR1BjS7HU312O5GuNyeK0Hxdf3yhL1hVJoSjDxd0VUhWFavwHeXdjuW2bbBkmLfD3yqOw9LcDsrI6r4NF6Vw+NcuM4EoxJrWXdvGZcYCvFlEkd2vC+Lp7ORPoDiNr0E4SLUlv8Gi0kEiYWkljb+rQvtRne6+AjxQzfZA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8aWe/RoV649/6UucnkCgtOVg7cMYEFGNnE/2asnmwmM=;
- b=hWLcDWrA+eUVxV3GcyTgJyDwNB+5TXBkzYNsLZT8iPrYg/sDDC0QRdx5dvAW1In0ZqGFU2heirPt1MW8wNwf/BfqnFfQzWOsD/fICDpPbdJ0pXwx4m67AtmeppjIcse7UAnt+eO8c/cNe4IHIdX9QOcZ1zZ2KHbGSaSl21X97AM=
-Received: from CY4PR21MB0741.namprd21.prod.outlook.com (10.173.189.7) by
- CY4PR21MB0824.namprd21.prod.outlook.com (10.173.192.10) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2220.3; Sat, 24 Aug 2019 00:27:19 +0000
-Received: from CY4PR21MB0741.namprd21.prod.outlook.com
- ([fe80::2c62:5380:9ed8:496d]) by CY4PR21MB0741.namprd21.prod.outlook.com
- ([fe80::2c62:5380:9ed8:496d%11]) with mapi id 15.20.2220.000; Sat, 24 Aug
- 2019 00:27:19 +0000
-From:   Long Li <longli@microsoft.com>
-To:     Ming Lei <ming.lei@redhat.com>, Sagi Grimberg <sagi@grimberg.me>
-CC:     "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: RE: [PATCH 3/3] nvme: complete request in work queue on CPU with
- flooded interrupts
-Thread-Topic: [PATCH 3/3] nvme: complete request in work queue on CPU with
- flooded interrupts
-Thread-Index: AQHVVx6V8EslWtuw80WR9kecrOlyh6cETI8AgAPI6gCAAV8FUA==
-Date:   Sat, 24 Aug 2019 00:27:18 +0000
-Message-ID: <CY4PR21MB074173E79C7FC3AC13C69CB3CEA70@CY4PR21MB0741.namprd21.prod.outlook.com>
-References: <1566281669-48212-1-git-send-email-longli@linuxonhyperv.com>
- <1566281669-48212-4-git-send-email-longli@linuxonhyperv.com>
- <2a30a07f-982c-c291-e263-0cf72ec61235@grimberg.me>
- <20190823032129.GA18680@ming.t460p>
-In-Reply-To: <20190823032129.GA18680@ming.t460p>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=longli@microsoft.com; 
-x-originating-ip: [2001:4898:80e8:7:ede6:db5c:c6fe:798]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f3a2f6ab-77c2-4b54-e716-08d72829d2dc
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:CY4PR21MB0824;
-x-ms-traffictypediagnostic: CY4PR21MB0824:
-x-microsoft-antispam-prvs: <CY4PR21MB08245699B01D5F1F5BA531D1CEA70@CY4PR21MB0824.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 0139052FDB
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(376002)(346002)(136003)(39860400002)(366004)(189003)(199004)(66556008)(305945005)(64756008)(66446008)(66476007)(74316002)(54906003)(7736002)(110136005)(76176011)(8676002)(10090500001)(8990500004)(22452003)(55016002)(6436002)(6246003)(229853002)(99286004)(71190400001)(102836004)(6506007)(81166006)(33656002)(316002)(9686003)(53936002)(7416002)(66946007)(8936002)(5660300002)(486006)(446003)(478600001)(46003)(25786009)(86362001)(14454004)(7696005)(476003)(81156014)(14444005)(2906002)(71200400001)(11346002)(6116002)(256004)(10290500003)(4326008)(76116006)(186003)(52536014);DIR:OUT;SFP:1102;SCL:1;SRVR:CY4PR21MB0824;H:CY4PR21MB0741.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: i344YVK29nPgLQLBQAcBW9WIo13v/WsLspKPZt7R+SRlpi17Zc+hDgBwmF7TUy2AbtYm5mldpBIf7hRCPSVlIJHvGkb2Evu5iFaBHX3ztghR+ETVmuq0WGATPv8BTLXFuMzE5wyr31jaKrBT8wdwEsfz5EW+rqnQTkkixnYX/2eE6EjX9PJgOquVlMqPTcr0tnYR/gWkt7qVCNFqcDWRWE0GhVbWqDRoaOLNHYaG3QjYxXuoCU2lHHEeBIvJhZ3oGSoB2CvjnGKrW/lElpG2KUI06TsLPxBhZvgerybE/E4NYFV0B/qnW4O+oXQJRPJSm6MwNG0AOqxFaUm2ZFOP89ch7aoHI7rcCOnVMYxyMxiPvWI4C8pI+m172n3HK1iwtfqIHTPDMSwyvyVjVACX+4WlfRnGQ9LEXQUXFq9YcTg=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f3a2f6ab-77c2-4b54-e716-08d72829d2dc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Aug 2019 00:27:18.9758
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: /tM5YJtWn7icaPxiZ7U4XrBu2H3KnTaGuuSnWV6Lb8I8n91i7WcFY8SeqO66x8BoKyTQCM5D1fC2PNmvHN2ASA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR21MB0824
+        id S1727034AbfHXJXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Aug 2019 05:23:50 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52520 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725616AbfHXJXu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 24 Aug 2019 05:23:50 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 560A98EE429;
+        Sat, 24 Aug 2019 02:23:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1566638629;
+        bh=9Anpb/QOC/a+9PHkwatJpwn5NmP0apY1aVPY7wJsqLc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=gLw7ytGN9avku7lQDWkCfKGDaldm3Njnx/g8lEvoKmGrP2K/TrujDiZbWF1Pv6qy1
+         jcwigd+95mNHpMEs1V+ud4/l2d3CM7cF/s0cBz8JBM0ksnNKrDbZYacegqz30vWLZE
+         zMsv3QMXXN5XAfU9scnO+EOD9gSxaRejzfUsezHY=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id vMXKbkcTV_q0; Sat, 24 Aug 2019 02:23:41 -0700 (PDT)
+Received: from jarvis (host86-134-253-190.range86-134.btcentralplus.com [86.134.253.190])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C16518EE0A4;
+        Sat, 24 Aug 2019 02:23:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1566638614;
+        bh=9Anpb/QOC/a+9PHkwatJpwn5NmP0apY1aVPY7wJsqLc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=iw8fNYdbDkkXXoQ3s11YzgdpNJbmtlQ5PkYlBIbmjpD20cGw7VGYTzMyt81hWiEdm
+         4w019Z9MEwe7pdiVvI+0kWPR8ex0ejc85jLy8NPL5UnnhjrIRjQ7bsEvACbirOkHdp
+         7c5Xe985D+SlBPixnF6P2BOuxAXzAGmvzCY/eDew=
+Message-ID: <1566638608.2975.19.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.3-rc5
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 24 Aug 2019 10:23:28 +0100
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>>Subject: Re: [PATCH 3/3] nvme: complete request in work queue on CPU
->>>with flooded interrupts
->>>
->>>On Tue, Aug 20, 2019 at 10:33:38AM -0700, Sagi Grimberg wrote:
->>>>
->>>> > From: Long Li <longli@microsoft.com>
->>>> >
->>>> > When a NVMe hardware queue is mapped to several CPU queues, it is
->>>> > possible that the CPU this hardware queue is bound to is flooded by
->>>> > returning I/O for other CPUs.
->>>> >
->>>> > For example, consider the following scenario:
->>>> > 1. CPU 0, 1, 2 and 3 share the same hardware queue 2. the hardware
->>>> > queue interrupts CPU 0 for I/O response 3. processes from CPU 1, 2
->>>> > and 3 keep sending I/Os
->>>> >
->>>> > CPU 0 may be flooded with interrupts from NVMe device that are I/O
->>>> > responses for CPU 1, 2 and 3. Under heavy I/O load, it is possible
->>>> > that CPU 0 spends all the time serving NVMe and other system
->>>> > interrupts, but doesn't have a chance to run in process context.
->>>> >
->>>> > To fix this, CPU 0 can schedule a work to complete the I/O request
->>>> > when it detects the scheduler is not making progress. This serves
->>>multiple purposes:
->>>> >
->>>> > 1. This CPU has to be scheduled to complete the request. The other
->>>> > CPUs can't issue more I/Os until some previous I/Os are completed.
->>>> > This helps this CPU get out of NVMe interrupts.
->>>> >
->>>> > 2. This acts a throttling mechanisum for NVMe devices, in that it
->>>> > can not starve a CPU while servicing I/Os from other CPUs.
->>>> >
->>>> > 3. This CPU can make progress on RCU and other work items on its
->>>queue.
->>>>
->>>> The problem is indeed real, but this is the wrong approach in my mind.
->>>>
->>>> We already have irqpoll which takes care proper budgeting polling
->>>> cycles and not hogging the cpu.
->>>
->>>The issue isn't unique to NVMe, and can be any fast devices which
->>>interrupts CPU too frequently, meantime the interrupt/softirq handler ma=
-y
->>>take a bit much time, then CPU is easy to be lockup by the interrupt/sof=
-irq
->>>handler, especially in case that multiple submission CPUs vs. single
->>>completion CPU.
->>>
->>>Some SCSI devices has the same problem too.
->>>
->>>Could we consider to add one generic mechanism to cover this kind of
->>>problem?
->>>
->>>One approach I thought of is to allocate one backup thread for handling =
-such
->>>interrupt, which can be marked as IRQF_BACKUP_THREAD by drivers.
->>>
->>>Inside do_IRQ(), irqtime is accounted, before calling action->handler(),
->>>check if this CPU has taken too long time for handling IRQ(interrupt or
->>>softirq) and see if this CPU could be lock up. If yes, wakeup the backup
+Four fixes, three for edge conditions which don't occur very often. 
+The lpfc fix mitigates memory exhaustion for some high CPU systems.
 
-How do you know if this CPU is spending all the time in do_IRQ()?
+The patch is available here:
 
-Is it something like:
-If (IRQ_time /elapsed_time > a threshold value)
-	wake up the backup thread
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
->>>thread to handle the interrupt for avoiding lockup this CPU.
->>>
->>>The threaded interrupt framework is there, and this way could be easier =
-to
->>>implement. Meantime most time the handler is run in interrupt context an=
-d
->>>we may avoid the performance loss when CPU isn't busy enough.
->>>
->>>Any comment on this approach?
->>>
->>>Thanks,
->>>Ming
+The short changelog is:
+
+Adrian Hunter (1):
+      scsi: ufs: Fix NULL pointer dereference in ufshcd_config_vreg_hpm()
+
+Bill Kuzeja (1):
+      scsi: qla2xxx: Fix gnl.l memory leak on adapter init failure
+
+Dmitry Fomichev (1):
+      scsi: target: tcmu: avoid use-after-free after command timeout
+
+James Smart (1):
+      scsi: lpfc: Mitigate high memory pre-allocation by SCSI-MQ
+
+and the diffstat:
+
+ drivers/scsi/lpfc/lpfc.h          |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c     | 15 +++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c     | 10 ++++++----
+ drivers/scsi/lpfc/lpfc_sli4.h     |  5 +++++
+ drivers/scsi/qla2xxx/qla_attr.c   |  2 ++
+ drivers/scsi/qla2xxx/qla_os.c     | 11 ++++++++++-
+ drivers/scsi/ufs/ufshcd.c         |  3 +++
+ drivers/target/target_core_user.c |  9 +++++++--
+ 8 files changed, 49 insertions(+), 7 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 2c3bb8a966e5..bade2e025ecf 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -824,6 +824,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_cq_poll_threshold;
+ 	uint32_t cfg_cq_max_proc_limit;
+ 	uint32_t cfg_fcp_cpu_map;
++	uint32_t cfg_fcp_mq_threshold;
+ 	uint32_t cfg_hdw_queue;
+ 	uint32_t cfg_irq_chann;
+ 	uint32_t cfg_suppress_rsp;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index ea62322ffe2b..8d8c495b5b60 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5708,6 +5708,19 @@ LPFC_ATTR_RW(nvme_oas, 0, 0, 1,
+ LPFC_ATTR_RW(nvme_embed_cmd, 1, 0, 2,
+ 	     "Embed NVME Command in WQE");
+ 
++/*
++ * lpfc_fcp_mq_threshold: Set the maximum number of Hardware Queues
++ * the driver will advertise it supports to the SCSI layer.
++ *
++ *      0    = Set nr_hw_queues by the number of CPUs or HW queues.
++ *      1,128 = Manually specify the maximum nr_hw_queue value to be set,
++ *
++ * Value range is [0,128]. Default value is 8.
++ */
++LPFC_ATTR_R(fcp_mq_threshold, LPFC_FCP_MQ_THRESHOLD_DEF,
++	    LPFC_FCP_MQ_THRESHOLD_MIN, LPFC_FCP_MQ_THRESHOLD_MAX,
++	    "Set the number of SCSI Queues advertised");
++
+ /*
+  * lpfc_hdw_queue: Set the number of Hardware Queues the driver
+  * will advertise it supports to the NVME and  SCSI layers. This also
+@@ -6030,6 +6043,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
+ 	&dev_attr_lpfc_cq_poll_threshold,
+ 	&dev_attr_lpfc_cq_max_proc_limit,
+ 	&dev_attr_lpfc_fcp_cpu_map,
++	&dev_attr_lpfc_fcp_mq_threshold,
+ 	&dev_attr_lpfc_hdw_queue,
+ 	&dev_attr_lpfc_irq_chann,
+ 	&dev_attr_lpfc_suppress_rsp,
+@@ -7112,6 +7126,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	/* Initialize first burst. Target vs Initiator are different. */
+ 	lpfc_nvme_enable_fb_init(phba, lpfc_nvme_enable_fb);
+ 	lpfc_nvmet_fb_size_init(phba, lpfc_nvmet_fb_size);
++	lpfc_fcp_mq_threshold_init(phba, lpfc_fcp_mq_threshold);
+ 	lpfc_hdw_queue_init(phba, lpfc_hdw_queue);
+ 	lpfc_irq_chann_init(phba, lpfc_irq_chann);
+ 	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index a7549ae32542..1ac98becb5ba 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4309,10 +4309,12 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	shost->max_cmd_len = 16;
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+-		if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ)
+-			shost->nr_hw_queues = phba->cfg_hdw_queue;
+-		else
+-			shost->nr_hw_queues = phba->sli4_hba.num_present_cpu;
++		if (!phba->cfg_fcp_mq_threshold ||
++		    phba->cfg_fcp_mq_threshold > phba->cfg_hdw_queue)
++			phba->cfg_fcp_mq_threshold = phba->cfg_hdw_queue;
++
++		shost->nr_hw_queues = min_t(int, 2 * num_possible_nodes(),
++					    phba->cfg_fcp_mq_threshold);
+ 
+ 		shost->dma_boundary =
+ 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 3aeca387b22a..329f7aa7e169 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -44,6 +44,11 @@
+ #define LPFC_HBA_HDWQ_MAX	128
+ #define LPFC_HBA_HDWQ_DEF	0
+ 
++/* FCP MQ queue count limiting */
++#define LPFC_FCP_MQ_THRESHOLD_MIN	0
++#define LPFC_FCP_MQ_THRESHOLD_MAX	128
++#define LPFC_FCP_MQ_THRESHOLD_DEF	8
++
+ /* Common buffer size to accomidate SCSI and NVME IO buffers */
+ #define LPFC_COMMON_IO_BUF_SZ	768
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 8d560c562e9c..6b7b390b2e52 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2956,6 +2956,8 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
+ 	    vha->gnl.ldma);
+ 
++	vha->gnl.l = NULL;
++
+ 	vfree(vha->scan.l);
+ 
+ 	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2e58cff9d200..98e60a34afd9 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3440,6 +3440,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return 0;
+ 
+ probe_failed:
++	if (base_vha->gnl.l) {
++		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
++				base_vha->gnl.l, base_vha->gnl.ldma);
++		base_vha->gnl.l = NULL;
++	}
++
+ 	if (base_vha->timer_active)
+ 		qla2x00_stop_timer(base_vha);
+ 	base_vha->flags.online = 0;
+@@ -3673,7 +3679,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	if (!atomic_read(&pdev->enable_cnt)) {
+ 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
+ 		    base_vha->gnl.l, base_vha->gnl.ldma);
+-
++		base_vha->gnl.l = NULL;
+ 		scsi_host_put(base_vha->host);
+ 		kfree(ha);
+ 		pci_set_drvdata(pdev, NULL);
+@@ -3713,6 +3719,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	dma_free_coherent(&ha->pdev->dev,
+ 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
+ 
++	base_vha->gnl.l = NULL;
++
+ 	vfree(base_vha->scan.l);
+ 
+ 	if (IS_QLAFX00(ha))
+@@ -4816,6 +4824,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 		    "Alloc failed for scan database.\n");
+ 		dma_free_coherent(&ha->pdev->dev, vha->gnl.size,
+ 		    vha->gnl.l, vha->gnl.ldma);
++		vha->gnl.l = NULL;
+ 		scsi_remove_host(vha->host);
+ 		return NULL;
+ 	}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e274053109d0..029da74bb2f5 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7062,6 +7062,9 @@ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+ 					 struct ufs_vreg *vreg)
+ {
++	if (!vreg)
++		return 0;
++
+ 	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
+ }
+ 
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 04eda111920e..661bb9358364 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1132,14 +1132,16 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 	struct se_cmd *se_cmd = cmd->se_cmd;
+ 	struct tcmu_dev *udev = cmd->tcmu_dev;
+ 	bool read_len_valid = false;
+-	uint32_t read_len = se_cmd->data_length;
++	uint32_t read_len;
+ 
+ 	/*
+ 	 * cmd has been completed already from timeout, just reclaim
+ 	 * data area space and free cmd
+ 	 */
+-	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
++	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
++		WARN_ON_ONCE(se_cmd);
+ 		goto out;
++	}
+ 
+ 	list_del_init(&cmd->queue_entry);
+ 
+@@ -1152,6 +1154,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
+ 		goto done;
+ 	}
+ 
++	read_len = se_cmd->data_length;
+ 	if (se_cmd->data_direction == DMA_FROM_DEVICE &&
+ 	    (entry->hdr.uflags & TCMU_UFLAG_READ_LEN) && entry->rsp.read_len) {
+ 		read_len_valid = true;
+@@ -1307,6 +1310,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+ 		 */
+ 		scsi_status = SAM_STAT_CHECK_CONDITION;
+ 		list_del_init(&cmd->queue_entry);
++		cmd->se_cmd = NULL;
+ 	} else {
+ 		list_del_init(&cmd->queue_entry);
+ 		idr_remove(&udev->commands, id);
+@@ -2022,6 +2026,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+ 
+ 		idr_remove(&udev->commands, i);
+ 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
++			WARN_ON(!cmd->se_cmd);
+ 			list_del_init(&cmd->queue_entry);
+ 			if (err_level == 1) {
+ 				/*
