@@ -2,311 +2,178 @@ Return-Path: <SRS0=/6u/=WU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 394D3C3A5A4
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 09:23:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B34C3A59E
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 10:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FB7820874
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 09:23:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FBF620874
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Aug 2019 10:03:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gLw7ytGN";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="iw8fNYdb"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="a0rMiwi1";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="sA/YPTlx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727034AbfHXJXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Aug 2019 05:23:50 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52520 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725616AbfHXJXu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 24 Aug 2019 05:23:50 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 560A98EE429;
-        Sat, 24 Aug 2019 02:23:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1566638629;
-        bh=9Anpb/QOC/a+9PHkwatJpwn5NmP0apY1aVPY7wJsqLc=;
-        h=Subject:From:To:Cc:Date:From;
-        b=gLw7ytGN9avku7lQDWkCfKGDaldm3Njnx/g8lEvoKmGrP2K/TrujDiZbWF1Pv6qy1
-         jcwigd+95mNHpMEs1V+ud4/l2d3CM7cF/s0cBz8JBM0ksnNKrDbZYacegqz30vWLZE
-         zMsv3QMXXN5XAfU9scnO+EOD9gSxaRejzfUsezHY=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id vMXKbkcTV_q0; Sat, 24 Aug 2019 02:23:41 -0700 (PDT)
-Received: from jarvis (host86-134-253-190.range86-134.btcentralplus.com [86.134.253.190])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C16518EE0A4;
-        Sat, 24 Aug 2019 02:23:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1566638614;
-        bh=9Anpb/QOC/a+9PHkwatJpwn5NmP0apY1aVPY7wJsqLc=;
-        h=Subject:From:To:Cc:Date:From;
-        b=iw8fNYdbDkkXXoQ3s11YzgdpNJbmtlQ5PkYlBIbmjpD20cGw7VGYTzMyt81hWiEdm
-         4w019Z9MEwe7pdiVvI+0kWPR8ex0ejc85jLy8NPL5UnnhjrIRjQ7bsEvACbirOkHdp
-         7c5Xe985D+SlBPixnF6P2BOuxAXzAGmvzCY/eDew=
-Message-ID: <1566638608.2975.19.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.3-rc5
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 24 Aug 2019 10:23:28 +0100
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1726485AbfHXKDe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Aug 2019 06:03:34 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:16603 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726072AbfHXKDd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Aug 2019 06:03:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1566641014; x=1598177014;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=c73cz6khD4BIgTV4VFwoEQRXCDKwd/zNvpvXkkDvV18=;
+  b=a0rMiwi1Z0WSsPk5cxzsW/YRp//MQNZ4ePVV8eQFZwwfjcPcZxxiKzxs
+   AqzEgu30iw6siPvLQbKssHwi3VzqwMbXQVf5aLlRM6lPb99cyKDFayPtP
+   x7NBqxML4t+rnVs+i5IpbZtY/RrSR9xPJhOHTBYtoilhW2ZDJh+81d9d0
+   TBo7TKTER9/4Z8tL7gQFxom+wbjEN1q+KJC2j89stbO3Zwg5ZW9TyGQn4
+   fB2wVuGvqVWai0b9z6R0DzFKTEursn4ra4+O40lwFg8wsk0Z3ZGIvAI7y
+   9rjwOVf/juQHwWRXPJ9bhZ8Okj5rN9RQaU3nPvOjazAwmF8undQQVtv/o
+   w==;
+IronPort-SDR: d9Wd0eUVQHLcxL0DEKdstL/b3g7frOddpus7QGiYAwAE23/YFwEoP0/j3vxc1lXB7nLd3YNX1f
+ ATDx3uBypAzGpabrqbsJ6AgEfxf89jScWKiA0/IJ7gPwoqJZc4Yg4+fzxl5fN0uhANfqZROaC/
+ 3lS3I0EdEP2aCUCzBnAEdwV6uF/13cGfi5CPv0kGiqWlJby1pT9gxFDjQm+9eqMNrEIVL2ZtQS
+ xx2tBMM6a18lbMmf/orC0+kfs8dpTvjSwUYrc2j/k8FmN54dsJP8FhjoG7scsVCSAyEVu/E0bl
+ Mb8=
+X-IronPort-AV: E=Sophos;i="5.64,424,1559491200"; 
+   d="scan'208";a="121157974"
+Received: from mail-by2nam05lp2058.outbound.protection.outlook.com (HELO NAM05-BY2-obe.outbound.protection.outlook.com) ([104.47.50.58])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Aug 2019 18:03:33 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QLiWEc37M5KmX1dDJEF1HmwN1CIXc30MrQdiOWl4inP6CLV7CoUtd9NO4Xus5xaG5jzIEdd59PVwycxIeHqATab/b1uSl7G+jQBw+TZYr5pgtIQcVbEj5ZUV81Bmm0hJEN+5RJE9Jlv0dbdUaaDJ1Zntx5p3RDqH+ajmRpLYyjBYyFQy5T+69qmR1xAv7NgCV2/f5+G4VjSKCon0a7O9k/GZhCFvJO7zCszcf/YllJfhO8tlX+eRWm4jgJLi9PU8iUGxBug6vp7Hq2SmnZI34cyzTaSyX/YY+fWStnPXZf1eqNnpJymmDtspXvjV67yTcGxJWeYPCNi/5iOrFSzCgA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lZprDJJ529TbHc5mSO4thkrU33NU8WGrtQ0XVNmq4q4=;
+ b=Mo84k1ufi6BC3ukQ5CV+BOgSGWe7j13ybz3I772wC8zW3YDUDuv4ssW2PgaQr8PJg0CnxpnZf2tj3behjtue7lpnay5zBhVRl9ucg2dDEKaE/WvlXa5lVoXAq2icoDuE9hLRaM4cAkEohLyGz66hpj9Hu1zvOupedkAGL1ENAG5+hDC2ZX7WjkBOiCuEKD88l7eas3qYXW9ifhBqwU6uqCFN7bkjxGr29P1HkmRpq2ShLo3aLlf7zQ8lulcRGo1mNbRpjTst50SnJL0WCp1470mLPJ0R6+5E+dxRkUN41OQ9mAuX+rjATARKre0PAsJnXeFLWAG3/tWOhnMlwsMy8g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lZprDJJ529TbHc5mSO4thkrU33NU8WGrtQ0XVNmq4q4=;
+ b=sA/YPTlxIG2X+ND9qBFiy+xTJhddQFP8H77IS+xqfRy5aMGegMHF9/DPVMTozkOpBsN6Zlsb9CuTFVUaNCxCdumBgfH6pw5XLCuUqgS9imgz/r0XSOnfnOWb8IklpFXQi7dBoIXHwaNgMXkMGiZduU+N/7f/DWSfBINyRVZomlY=
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
+ MN2PR04MB6095.namprd04.prod.outlook.com (20.178.245.224) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2178.16; Sat, 24 Aug 2019 10:03:31 +0000
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::5d3b:c35e:a95a:51e2]) by MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::5d3b:c35e:a95a:51e2%3]) with mapi id 15.20.2178.020; Sat, 24 Aug 2019
+ 10:03:31 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     zhengbin <zhengbin13@huawei.com>,
+        "agross@kernel.org" <agross@kernel.org>,
+        "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "yi.zhang@huawei.com" <yi.zhang@huawei.com>
+Subject: Re: [PATCH] scsi: ufs: remove set but not used variable 'val'
+Thread-Topic: [PATCH] scsi: ufs: remove set but not used variable 'val'
+Thread-Index: AQHVWbxWutHRQVh4g0CQaC3vFGC4yKcKEfoI
+Date:   Sat, 24 Aug 2019 10:03:30 +0000
+Message-ID: <MN2PR04MB69918EA15BA501FC88FF2254FCA70@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1566569726-75596-1-git-send-email-zhengbin13@huawei.com>
+In-Reply-To: <1566569726-75596-1-git-send-email-zhengbin13@huawei.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [2a00:a040:19b:4327:492b:bc90:1e5:e780]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 03546d70-d1e8-47a6-d7a0-08d7287a5140
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:MN2PR04MB6095;
+x-ms-traffictypediagnostic: MN2PR04MB6095:
+x-microsoft-antispam-prvs: <MN2PR04MB6095206510CF4D272B43A09FFCA70@MN2PR04MB6095.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:3383;
+x-forefront-prvs: 0139052FDB
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(136003)(366004)(396003)(346002)(376002)(199004)(189003)(14454004)(476003)(186003)(81156014)(8676002)(74316002)(11346002)(64756008)(446003)(6506007)(66556008)(66446008)(71200400001)(7696005)(66946007)(6436002)(305945005)(55016002)(9686003)(2906002)(46003)(8936002)(81166006)(316002)(486006)(66476007)(229853002)(76176011)(478600001)(6246003)(14444005)(5024004)(2201001)(86362001)(102836004)(53546011)(6116002)(2501003)(7736002)(4326008)(91956017)(256004)(76116006)(5660300002)(33656002)(52536014)(53936002)(99286004)(25786009)(71190400001)(110136005);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6095;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: hol4oxV7OMOrlvYuSLiCf7JCF7A5PG8ZrHj0ubfb/C7Pu3yoGLItNNhK8P1TK7h3dVGUpICCUbUBqNm+W9Dsk9eAidw503E1XFVtYZbaLIQwIVet6sM5q/ulppzYsuTDBQi7/NkztLKDOc9ld1DRu4YCFzwsHLQeWfoMmdCXHvqdWXjmbRNItjt2TstOG2yDty5eDtELR2h3XXz/fjXL7lCbsLHFigKCj9I5ne66ylb3zf0q9FJfUdPrGUZ07Q9u774ML7WNkWdc5m7rpt/1SrDMUEKX0jhvkGyH+vMHvV7E0rQX8n0qK0br71+rchUiXft17gE0YQZ/EH1HgM3//65sz6cOdVtImWB/CrKee1J8EYILeHmrCKBH4UBotMNQp9SgI+LQSPLhaxDljUfm6AymTbYOtfo/8Gq7wwkB+AI=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 03546d70-d1e8-47a6-d7a0-08d7287a5140
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Aug 2019 10:03:30.9398
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: n2WFDEGUawShJ0Ln/fiURG4YF3vdl6+zreVttDIBqa6BU1StYYHckTJBauM4vjp36JS1/RmzQlPVP7pYcQ+u6A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6095
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Four fixes, three for edge conditions which don't occur very often. 
-The lpfc fix mitigates memory exhaustion for some high CPU systems.
+nit: you are missing the 'fixes' tag:
+fixes: 1e1e465c6d23 (scsi/ufs: qcom: Remove ufs_qcom_phy_*() calls from hos=
+t)
 
-The patch is available here:
+Otherwise, looks good to me.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Thanks,
+Avri
+________________________________________
+From: zhengbin <zhengbin13@huawei.com>
+Sent: Friday, August 23, 2019 5:15 PM
+To: agross@kernel.org; Avri Altman; pedrom.sousa@synopsys.com; jejb@linux.i=
+bm.com; martin.petersen@oracle.com; linux-scsi@vger.kernel.org
+Cc: yi.zhang@huawei.com; zhengbin13@huawei.com
+Subject: [PATCH] scsi: ufs: remove set but not used variable 'val'
 
-The short changelog is:
+CAUTION: This email originated from outside of Western Digital. Do not clic=
+k on links or open attachments unless you recognize the sender and know tha=
+t the content is safe.
 
-Adrian Hunter (1):
-      scsi: ufs: Fix NULL pointer dereference in ufshcd_config_vreg_hpm()
 
-Bill Kuzeja (1):
-      scsi: qla2xxx: Fix gnl.l memory leak on adapter init failure
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Dmitry Fomichev (1):
-      scsi: target: tcmu: avoid use-after-free after command timeout
+drivers/scsi/ufs/ufs-qcom.c: In function ufs_qcom_pwr_change_notify:
+drivers/scsi/ufs/ufs-qcom.c:808:6: warning: variable val set but not used [=
+-Wunused-but-set-variable]
 
-James Smart (1):
-      scsi: lpfc: Mitigate high memory pre-allocation by SCSI-MQ
-
-and the diffstat:
-
- drivers/scsi/lpfc/lpfc.h          |  1 +
- drivers/scsi/lpfc/lpfc_attr.c     | 15 +++++++++++++++
- drivers/scsi/lpfc/lpfc_init.c     | 10 ++++++----
- drivers/scsi/lpfc/lpfc_sli4.h     |  5 +++++
- drivers/scsi/qla2xxx/qla_attr.c   |  2 ++
- drivers/scsi/qla2xxx/qla_os.c     | 11 ++++++++++-
- drivers/scsi/ufs/ufshcd.c         |  3 +++
- drivers/target/target_core_user.c |  9 +++++++--
- 8 files changed, 49 insertions(+), 7 deletions(-)
-
-With full diff below.
-
-James
-
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
+ drivers/scsi/ufs/ufs-qcom.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 2c3bb8a966e5..bade2e025ecf 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -824,6 +824,7 @@ struct lpfc_hba {
- 	uint32_t cfg_cq_poll_threshold;
- 	uint32_t cfg_cq_max_proc_limit;
- 	uint32_t cfg_fcp_cpu_map;
-+	uint32_t cfg_fcp_mq_threshold;
- 	uint32_t cfg_hdw_queue;
- 	uint32_t cfg_irq_chann;
- 	uint32_t cfg_suppress_rsp;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index ea62322ffe2b..8d8c495b5b60 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -5708,6 +5708,19 @@ LPFC_ATTR_RW(nvme_oas, 0, 0, 1,
- LPFC_ATTR_RW(nvme_embed_cmd, 1, 0, 2,
- 	     "Embed NVME Command in WQE");
- 
-+/*
-+ * lpfc_fcp_mq_threshold: Set the maximum number of Hardware Queues
-+ * the driver will advertise it supports to the SCSI layer.
-+ *
-+ *      0    = Set nr_hw_queues by the number of CPUs or HW queues.
-+ *      1,128 = Manually specify the maximum nr_hw_queue value to be set,
-+ *
-+ * Value range is [0,128]. Default value is 8.
-+ */
-+LPFC_ATTR_R(fcp_mq_threshold, LPFC_FCP_MQ_THRESHOLD_DEF,
-+	    LPFC_FCP_MQ_THRESHOLD_MIN, LPFC_FCP_MQ_THRESHOLD_MAX,
-+	    "Set the number of SCSI Queues advertised");
-+
- /*
-  * lpfc_hdw_queue: Set the number of Hardware Queues the driver
-  * will advertise it supports to the NVME and  SCSI layers. This also
-@@ -6030,6 +6043,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_cq_poll_threshold,
- 	&dev_attr_lpfc_cq_max_proc_limit,
- 	&dev_attr_lpfc_fcp_cpu_map,
-+	&dev_attr_lpfc_fcp_mq_threshold,
- 	&dev_attr_lpfc_hdw_queue,
- 	&dev_attr_lpfc_irq_chann,
- 	&dev_attr_lpfc_suppress_rsp,
-@@ -7112,6 +7126,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	/* Initialize first burst. Target vs Initiator are different. */
- 	lpfc_nvme_enable_fb_init(phba, lpfc_nvme_enable_fb);
- 	lpfc_nvmet_fb_size_init(phba, lpfc_nvmet_fb_size);
-+	lpfc_fcp_mq_threshold_init(phba, lpfc_fcp_mq_threshold);
- 	lpfc_hdw_queue_init(phba, lpfc_hdw_queue);
- 	lpfc_irq_chann_init(phba, lpfc_irq_chann);
- 	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index a7549ae32542..1ac98becb5ba 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4309,10 +4309,12 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
- 	shost->max_cmd_len = 16;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
--		if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ)
--			shost->nr_hw_queues = phba->cfg_hdw_queue;
--		else
--			shost->nr_hw_queues = phba->sli4_hba.num_present_cpu;
-+		if (!phba->cfg_fcp_mq_threshold ||
-+		    phba->cfg_fcp_mq_threshold > phba->cfg_hdw_queue)
-+			phba->cfg_fcp_mq_threshold = phba->cfg_hdw_queue;
-+
-+		shost->nr_hw_queues = min_t(int, 2 * num_possible_nodes(),
-+					    phba->cfg_fcp_mq_threshold);
- 
- 		shost->dma_boundary =
- 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 3aeca387b22a..329f7aa7e169 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -44,6 +44,11 @@
- #define LPFC_HBA_HDWQ_MAX	128
- #define LPFC_HBA_HDWQ_DEF	0
- 
-+/* FCP MQ queue count limiting */
-+#define LPFC_FCP_MQ_THRESHOLD_MIN	0
-+#define LPFC_FCP_MQ_THRESHOLD_MAX	128
-+#define LPFC_FCP_MQ_THRESHOLD_DEF	8
-+
- /* Common buffer size to accomidate SCSI and NVME IO buffers */
- #define LPFC_COMMON_IO_BUF_SZ	768
- 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 8d560c562e9c..6b7b390b2e52 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2956,6 +2956,8 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
- 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
- 	    vha->gnl.ldma);
- 
-+	vha->gnl.l = NULL;
-+
- 	vfree(vha->scan.l);
- 
- 	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2e58cff9d200..98e60a34afd9 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3440,6 +3440,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return 0;
- 
- probe_failed:
-+	if (base_vha->gnl.l) {
-+		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
-+				base_vha->gnl.l, base_vha->gnl.ldma);
-+		base_vha->gnl.l = NULL;
-+	}
-+
- 	if (base_vha->timer_active)
- 		qla2x00_stop_timer(base_vha);
- 	base_vha->flags.online = 0;
-@@ -3673,7 +3679,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	if (!atomic_read(&pdev->enable_cnt)) {
- 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
- 		    base_vha->gnl.l, base_vha->gnl.ldma);
--
-+		base_vha->gnl.l = NULL;
- 		scsi_host_put(base_vha->host);
- 		kfree(ha);
- 		pci_set_drvdata(pdev, NULL);
-@@ -3713,6 +3719,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	dma_free_coherent(&ha->pdev->dev,
- 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
- 
-+	base_vha->gnl.l = NULL;
-+
- 	vfree(base_vha->scan.l);
- 
- 	if (IS_QLAFX00(ha))
-@@ -4816,6 +4824,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 		    "Alloc failed for scan database.\n");
- 		dma_free_coherent(&ha->pdev->dev, vha->gnl.size,
- 		    vha->gnl.l, vha->gnl.ldma);
-+		vha->gnl.l = NULL;
- 		scsi_remove_host(vha->host);
- 		return NULL;
- 	}
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e274053109d0..029da74bb2f5 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7062,6 +7062,9 @@ static inline int ufshcd_config_vreg_lpm(struct ufs_hba *hba,
- static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
- 					 struct ufs_vreg *vreg)
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 4473f33..02cdcef 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -800,7 +800,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *h=
+ba,
+                                struct ufs_pa_layer_attr *dev_max_params,
+                                struct ufs_pa_layer_attr *dev_req_params)
  {
-+	if (!vreg)
-+		return 0;
-+
- 	return ufshcd_config_vreg_load(hba->dev, vreg, vreg->max_uA);
- }
- 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 04eda111920e..661bb9358364 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1132,14 +1132,16 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 	struct se_cmd *se_cmd = cmd->se_cmd;
- 	struct tcmu_dev *udev = cmd->tcmu_dev;
- 	bool read_len_valid = false;
--	uint32_t read_len = se_cmd->data_length;
-+	uint32_t read_len;
- 
- 	/*
- 	 * cmd has been completed already from timeout, just reclaim
- 	 * data area space and free cmd
- 	 */
--	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
-+	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+		WARN_ON_ONCE(se_cmd);
- 		goto out;
-+	}
- 
- 	list_del_init(&cmd->queue_entry);
- 
-@@ -1152,6 +1154,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		goto done;
- 	}
- 
-+	read_len = se_cmd->data_length;
- 	if (se_cmd->data_direction == DMA_FROM_DEVICE &&
- 	    (entry->hdr.uflags & TCMU_UFLAG_READ_LEN) && entry->rsp.read_len) {
- 		read_len_valid = true;
-@@ -1307,6 +1310,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
- 		 */
- 		scsi_status = SAM_STAT_CHECK_CONDITION;
- 		list_del_init(&cmd->queue_entry);
-+		cmd->se_cmd = NULL;
- 	} else {
- 		list_del_init(&cmd->queue_entry);
- 		idr_remove(&udev->commands, id);
-@@ -2022,6 +2026,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 
- 		idr_remove(&udev->commands, i);
- 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+			WARN_ON(!cmd->se_cmd);
- 			list_del_init(&cmd->queue_entry);
- 			if (err_level == 1) {
- 				/*
+-       u32 val;
+        struct ufs_qcom_host *host =3D ufshcd_get_variant(hba);
+        struct ufs_dev_params ufs_qcom_cap;
+        int ret =3D 0;
+@@ -869,8 +868,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *h=
+ba,
+                        ret =3D -EINVAL;
+                }
+
+-               val =3D ~(MAX_U32 << dev_req_params->lane_tx);
+-
+                /* cache the power mode parameters to use internally */
+                memcpy(&host->dev_req_params,
+                                dev_req_params, sizeof(*dev_req_params));
+--
+2.7.4
+
