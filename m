@@ -2,152 +2,130 @@ Return-Path: <SRS0=IeCF=WW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.6 required=3.0 tests=BIGNUM_EMAILS,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E5CCC3A59F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 13:40:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81081C3A59F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 15:27:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1150821848
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 13:40:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RQunTSxI"
+	by mail.kernel.org (Postfix) with ESMTP id 5DBCD22CF5
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 15:27:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729713AbfHZNkz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Aug 2019 09:40:55 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:46212 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728295AbfHZNkz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2019 09:40:55 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QDcc0F143599;
-        Mon, 26 Aug 2019 13:40:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=JKWZzwUv3AdnbIRJIRy7ln4tMTqfIMb/O56RXfONqrk=;
- b=RQunTSxIEyUlnof+i4JlxYcZfVz06rGssbz041iP6CzB9P+2HkAsnteYcqc6/gNkPbJv
- /tqdgl4vS1+RGT2/v4jKX9SccZVc0S0IMiX40gUECuPNK4hhTtSAp1UhJFfFELmxjxUb
- QQ9Z1aTk8dOuYbAXdlx+jGa4lF5eLyVMpv6ytLgUgzgdeGJ5UH+Lp+9nKOm/kLJwo1En
- O8MHxlHtt2eJtuFtiQG0Wztg7paAQXqj6ID7pc9qW1NjFJ99truhYAMsWbDgXkJk8PAE
- ohVdqEM4FLfZ5zqxATTpZR3BA/5FaJsxaMy4vWZ66Pv2nHMhgEUGzznw9Lpkg3vx0kyL XA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2ujwvq9354-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 13:40:52 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QDYBYt054555;
-        Mon, 26 Aug 2019 13:40:52 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2ujw6uvfn3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 13:40:51 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QDepw2007690;
-        Mon, 26 Aug 2019 13:40:51 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 06:40:50 -0700
-Date:   Mon, 26 Aug 2019 16:40:44 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     jsmart2021@gmail.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: lpfc: Support dynamic unbounded SGL lists on G7
- hardware.
-Message-ID: <20190826134044.GA8726@mwanda>
+        id S1732306AbfHZP1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Aug 2019 11:27:49 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47696 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731565AbfHZP1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Aug 2019 11:27:48 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id C75E7AD6D;
+        Mon, 26 Aug 2019 15:27:46 +0000 (UTC)
+Subject: Re: [PATCH RFC 00/24] scsi: enable reserved commands for LLDDs
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
+References: <20190529132901.27645-1-hare@suse.de>
+ <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
+Date:   Mon, 26 Aug 2019 17:27:45 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9360 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908260148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9360 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908260149
+In-Reply-To: <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+On 8/23/19 3:26 PM, John Garry wrote:
+> On 29/05/2019 14:28, Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> quite some drivers use internal commands for various purposes, most
+>> commonly sending TMFs or querying the HBA status.
+>> While these commands use the same submission mechanism than normal
+>> I/O commands, they will not be counted as outstanding commands,
+>> requiring those drivers to implement their own mechanism to figure
+>> out outstanding commands.
+>> This patchset enables the use of reserved tags for the SCSI midlayer,
+>> enabling LLDDs to rely on the block layer for tracking outstanding
+>> commands.
+>> More importantly, it allows LLDD to request a valid tag from the block
+>> layer without having to implement some tracking mechanism within the
+>> driver. This removes quite some hacks which were required for some
+>> drivers (eg. fnic or snic).
+>>
+>> As usual, comments and reviews are welcome.
+>>
+> 
+> Hi Hannes,
+> 
+> I was wondering if you have any plans to progress this series?
+> 
+> I don't mind helping out...
+> 
+Thanks for the reminder.
+I'll need to re-evaluate this where we stand now with shared tags;
+this patchset partially relies on them.
+Will be sending an updated patchset.
 
-The patch d79c9e9d4b3d: "scsi: lpfc: Support dynamic unbounded SGL
-lists on G7 hardware." from Aug 14, 2019, leads to the following
-static checker warning:
+Cheers,
 
-	drivers/scsi/lpfc/lpfc_init.c:4107 lpfc_new_io_buf()
-	error: not allocating enough data 784 vs 768
-
-drivers/scsi/lpfc/lpfc_init.c
-  4071  /**
-  4072   * lpfc_new_io_buf - IO buffer allocator for HBA with SLI4 IF spec
-  4073   * @vport: The virtual port for which this call being executed.
-  4074   * @num_to_allocate: The requested number of buffers to allocate.
-  4075   *
-  4076   * This routine allocates nvme buffers for device with SLI-4 interface spec,
-  4077   * the nvme buffer contains all the necessary information needed to initiate
-  4078   * an I/O. After allocating up to @num_to_allocate IO buffers and put
-  4079   * them on a list, it post them to the port by using SGL block post.
-  4080   *
-  4081   * Return codes:
-  4082   *   int - number of IO buffers that were allocated and posted.
-  4083   *   0 = failure, less than num_to_alloc is a partial failure.
-  4084   **/
-  4085  int
-  4086  lpfc_new_io_buf(struct lpfc_hba *phba, int num_to_alloc)
-  4087  {
-  4088          struct lpfc_io_buf *lpfc_ncmd;
-  4089          struct lpfc_iocbq *pwqeq;
-  4090          uint16_t iotag, lxri = 0;
-  4091          int bcnt, num_posted;
-  4092          LIST_HEAD(prep_nblist);
-  4093          LIST_HEAD(post_nblist);
-  4094          LIST_HEAD(nvme_nblist);
-  4095  
-  4096          /* Sanity check to ensure our sizing is right for both SCSI and NVME */
-  4097          if (sizeof(struct lpfc_io_buf) > LPFC_COMMON_IO_BUF_SZ) {
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-We made the lpfc_io_buf struct larger so now this check is more likely
-to trigger.  Why don't we make this condition a BUILD_BUG_ON()?
-
-  4098                  lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
-  4099                                  "6426 Common buffer size %zd exceeds %d\n",
-  4100                                  sizeof(struct lpfc_io_buf),
-  4101                                  LPFC_COMMON_IO_BUF_SZ);
-  4102                  return 0;
-
-Zero means we're returning failure on this path.
-
-  4103          }
-  4104  
-  4105          phba->sli4_hba.io_xri_cnt = 0;
-  4106          for (bcnt = 0; bcnt < num_to_alloc; bcnt++) {
-  4107                  lpfc_ncmd = kzalloc(LPFC_COMMON_IO_BUF_SZ, GFP_KERNEL);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Smatch generates a warning here.  It's obviously not a problem, because
-of the earlier check.  I guess I don't really understand why
-LPFC_COMMON_IO_BUF_SZ is useful when it's so close to sizeof(*lpfc_ncmd).
-
-  4108                  if (!lpfc_ncmd)
-  4109                          break;
-  4110                  /*
-  4111                   * Get memory from the pci pool to map the virt space to
-  4112                   * pci bus space for an I/O. The DMA buffer includes the
-  4113                   * number of SGE's necessary to support the sg_tablesize.
-  4114                   */
-  4115                  lpfc_ncmd->data = dma_pool_zalloc(phba->lpfc_sg_dma_buf_pool,
-  4116                                                    GFP_KERNEL,
-  4117                                                    &lpfc_ncmd->dma_handle);
-  4118                  if (!lpfc_ncmd->data) {
-
-regards,
-dan carpenter
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
