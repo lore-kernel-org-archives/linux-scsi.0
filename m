@@ -2,115 +2,99 @@ Return-Path: <SRS0=IeCF=WW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D455C3A59F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3033CC3A59F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:33:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B50B21848
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:29:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D5D020874
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:33:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732475AbfHZQ3x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Aug 2019 12:29:53 -0400
-Received: from zeniv.linux.org.uk ([195.92.253.2]:43882 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728559AbfHZQ3x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2019 12:29:53 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i2HsL-0004RY-O7; Mon, 26 Aug 2019 16:29:49 +0000
-Date:   Mon, 26 Aug 2019 17:29:49 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-fsdevel@vger.kernel.org,
-        Octavian Purdila <octavian.purdila@intel.com>,
-        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
-        linux-scsi@vger.kernel.org
-Subject: [RFC] Re: broken userland ABI in configfs binary attributes
-Message-ID: <20190826162949.GA9980@ZenIV.linux.org.uk>
-References: <20190826024838.GN1131@ZenIV.linux.org.uk>
+        id S1732170AbfHZQdW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Aug 2019 12:33:22 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:41108 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1727261AbfHZQdW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2019 12:33:22 -0400
+Received: (qmail 5153 invoked by uid 2102); 26 Aug 2019 12:33:21 -0400
+Received: from localhost (sendmail-bs@127.0.0.1)
+  by localhost with SMTP; 26 Aug 2019 12:33:21 -0400
+Date:   Mon, 26 Aug 2019 12:33:21 -0400 (EDT)
+From:   Alan Stern <stern@rowland.harvard.edu>
+X-X-Sender: stern@iolanthe.rowland.org
+To:     Andrea Vai <andrea.vai@unipv.it>
+cc:     Johannes Thumshirn <jthumshirn@suse.de>,
+        Jens Axboe <axboe@kernel.dk>, <linux-usb@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: Slow I/O on USB media after commit f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+In-Reply-To: <ba1d4fe53258c7a710174723c99e002a4d9eecb0.camel@unipv.it>
+Message-ID: <Pine.LNX.4.44L0.1908261219060.1662-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190826024838.GN1131@ZenIV.linux.org.uk>
-User-Agent: Mutt/1.12.0 (2019-05-25)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 03:48:38AM +0100, Al Viro wrote:
+On Mon, 26 Aug 2019, Andrea Vai wrote:
 
-> 	We might be able to paper over that mess by doing what /dev/st does -
-> checking that file_count(file) == 1 in ->flush() instance and doing commit
-> there in such case.  It's not entirely reliable, though, and it's definitely
-> not something I'd like to see spreading.
+> ok, so you can grab them at
+> 
+> http://fisica.unipv.it/transfer/usbmon_logs.zip
+> 
+> (they will be automatically removed from there in a couple of weeks).
+> 
+> For each size there is a .txt file (which contains the terminal
+> output) and 10 bad.mon.out_.... trace files. The file suffix "NonCanc"
+> means there has not been file deletion before copy; while "Canc" means
+> the opposite.
+> 
+> Each trace file name is identified by a timestamp that is also
+> referenced inside the txt, so if you want to get i.e. the 39-sec trial
+> for the 10MB filesize you have to open the ...10MB....txt, search for
+> the 39 seconds total time string ("Dopo stop trace: 39"), look at the
+> beginning of that trial, a dozen rows before, take note of the
+> timestamp, and open the corresponding bad.mon.out file (of course, if
+> there are more trials with the same time, you have to identify it by
+> counting its position (7th in the example above)).
+> 
+> To make it more simple:
+> 
+> $ seconds=39; size=10MB; grep -B14 "Dopo stop trace: $seconds" log_10trials_"$size"_NonCanc.txt
+> 
+> should show you more straightly the part(s) you need.
+> 
+> > Odd that the delays never occur when you're writing a new file.  (If
+> > nothing else, that gives you a way to work around the problem!) 
+> 
+> Thank you, didn't realize that :-) I will try it.
 
-	This "not entirely reliable" turns out to be an understatement.
-If you have /proc/*/fdinfo/* being read from at the time of final close(2),
-you'll get file_count(file) > 1 the last time ->flush() is called.  In other
-words, we'd get the data not committed at all.
+In fact, even the traces where the file doesn't exist beforehand show 
+some delays.  Just not as many delays as the traces where the file does 
+exist.  And again, each delay is in the middle of a write command, not 
+between commands.
 
-	And that problem is shared with /dev/st*, unfortunately ;-/
-We could somewhat mitigate that by having fs/proc/fd.c:seq_show() call
-->flush() before fput(), but that would still hide errors from close(2)
-(and still have close(2) return before the data is flushed).
+I suppose changes to the upper software layers could affect which
+blocks are assigned when a new file is written.  Perhaps one kernel
+re-uses the same old blocks that had been previously occupied and the
+other kernel allocates a completely new set of blocks.  That might
+change the drive's behavior.  The quick way to tell is to record two
+usbmon traces, one under the "good" kernel and one under the "bad"  
+kernel, where each test involves writing over a file that already
+exists (say, 50 MB) -- the same file for both tests.  The block numbers
+will appear in the traces.
 
-	read() on /proc/*/fdinfo/* does the following:
+Also, I wonder if the changing the size of the data transfers would
+make any difference.  This is easy to try; just write "64" to
+/sys/block/sd?/queue/max_sectors_kb (where the ? is the appropriate
+drive letter) after the drive is plugged in but before the test starts.
 
-find the task_struct
-grab its descriptor table, drop task_struct
-lock the table, pick struct file out of it
-bump struct file refcount, unlock the table
-        seq_printf(m, "pos:\t%lli\nflags:\t0%o\nmnt_id:\t%i\n",
-                   (long long)file->f_pos, f_flags,
-                   real_mount(file->f_path.mnt)->mnt_id);
-        show_fd_locks(m, file, files);
-        if (seq_has_overflowed(m))
-                goto out;
-        if (file->f_op->show_fdinfo)
-                file->f_op->show_fdinfo(m, file);
-drop the file reference (with fput()).
+Alan Stern
 
-	Before "procfs: Convert /proc/pid/fdinfo/ handling routines to
-seq-file v2" (in 2012), we did just snprintf() while under the lock on
-descriptor table.  That commit moved the printf part from under the lock,
-at the cost of grabbing and dropping file reference.  Shortly after that
-"procfs: add ability to plug in auxiliary fdinfo providers" has added
-->show_fdinfo() there, making it impossible to call under the descriptor
-table lock - that method can block (and does so for eventpoll, idiotify,
-etc.)
-
-	We really want ->show_fdinfo() to happen before __fput() gets
-anywhere near ->release().  And even the non-blocking cases can be too
-costly to do under the descriptor table lock.  OTOH, it can very well be
-done after or during ->flush(); the only problematic case right now
-is /dev/st* that has its ->flush() do nothing in case if file_count(file)
-is greater than 1.
-
-	One kludgy way to handle that would be to have something like
-FMODE_SUCKY_FLUSH that would have fs/proc/fd.c:seq_show() just do
-the damn thing still under descriptor table lock and skip the rest
-of it - /dev/st* has nothing in ->show_fdinfo(), and show_fd_locks()
-is not too terribly costly.  Still best avoided in default case,
-but...
-
-	Another possibility is to have a secondary counter, with
-__fput() waiting for it to go down to zero and fdinfo reads bumping
-(and then dropping) that instead of the primary counter.  Not sure
-which approach is better - adding extra logics in __fput() for the
-sake of one (and not terribly common) device is not nice, but another
-variant really is an ugly kludge ;-/  OTOH, this kind of "take
-a secondary reference, ->release() will block until you drop it"
-interface can breed deadlocks; procfs situation, AFAICS, allows to
-use it safely, but it's begging to be abused...
-
-	Ideas?  I don't like either approach, to put it very mildly,
-so any cleaner suggestions would be very welcome.
-
-PS: just dropping the check in st_flush() is probably a bad idea -
-as it is, it can't overlap with st_write() and after such change it
-will...
