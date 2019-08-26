@@ -2,96 +2,145 @@ Return-Path: <SRS0=IeCF=WW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6675CC3A59E
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 08:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD70C3A59F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 12:07:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 449752173E
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 08:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23DFB217F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 12:07:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="HweVH68I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730681AbfHZIdQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Aug 2019 04:33:16 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:29890 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726401AbfHZIdP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Aug 2019 04:33:15 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7Q8Wqd8131575;
-        Mon, 26 Aug 2019 04:33:10 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2um9mb5bgw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 26 Aug 2019 04:33:09 -0400
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x7Q8X5r5132260;
-        Mon, 26 Aug 2019 04:33:08 -0400
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2um9mb5ajr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 26 Aug 2019 04:33:00 -0400
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7Q8U2o3009495;
-        Mon, 26 Aug 2019 08:31:52 GMT
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-        by ppma04dal.us.ibm.com with ESMTP id 2ujvv6eqwm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 26 Aug 2019 08:31:52 +0000
-Received: from b01ledav006.gho.pok.ibm.com (b01ledav006.gho.pok.ibm.com [9.57.199.111])
-        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7Q8VpR727197824
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 08:31:51 GMT
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 96A99AC05B;
-        Mon, 26 Aug 2019 08:31:51 +0000 (GMT)
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 84A19AC059;
-        Mon, 26 Aug 2019 08:31:49 +0000 (GMT)
-Received: from jarvis.ext.hansenpartnership.com (unknown [9.85.160.207])
-        by b01ledav006.gho.pok.ibm.com (Postfix) with ESMTP;
-        Mon, 26 Aug 2019 08:31:49 +0000 (GMT)
-Message-ID: <1566808307.3089.2.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: aic7xxx: Remove dead code
-From:   James Bottomley <jejb@linux.ibm.com>
-To:     Souptick Joarder <jrdr.linux@gmail.com>, hare@suse.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 26 Aug 2019 09:31:47 +0100
-In-Reply-To: <1566659302-3514-1-git-send-email-jrdr.linux@gmail.com>
-References: <1566659302-3514-1-git-send-email-jrdr.linux@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
+        id S1731378AbfHZMHm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Aug 2019 08:07:42 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:42980 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729961AbfHZMHm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Aug 2019 08:07:42 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x7QC7OvV051639;
+        Mon, 26 Aug 2019 07:07:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1566821244;
+        bh=tCXNjmhATrStRBQuVkSpDgDyQKbAcrP9nCBe2iY6MHk=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=HweVH68IpZIYb26a+UAZiOlWFQhNCfV+2yVgdpfW+KIKzTd84n+vQcVyGccx8nGeY
+         CKjN8T9yToh/w2snbrqTjVgRIukmfrue9Bi+dpExJAJhDZSWQPYhRjVMWX76P3+h5x
+         W4oVIF/HG7YoceRw+xRFws7pF3V0LgJyll8MmzSM=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x7QC7OsL125832
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 26 Aug 2019 07:07:24 -0500
+Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 26
+ Aug 2019 07:07:24 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE108.ent.ti.com
+ (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
+ Frontend Transport; Mon, 26 Aug 2019 07:07:24 -0500
+Received: from [172.24.145.136] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id x7QC7I1O059086;
+        Mon, 26 Aug 2019 07:07:19 -0500
+Subject: Re: [PATCH v1] scsi: ufs: Disable local LCC in .link_startup_notify()
+ in Cadence UFS
+To:     Anil Varughese <aniljoy@cadence.com>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <pedrom.sousa@synopsys.com>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <hare@suse.de>,
+        <rafalc@cadence.com>, <mparab@cadence.com>, <jank@cadence.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20190813074250.28177-1-aniljoy@cadence.com>
+From:   Vignesh Raghavendra <vigneshr@ti.com>
+Message-ID: <ef91f93a-89d9-e49b-e9f3-dd5a9cd98b91@ti.com>
+Date:   Mon, 26 Aug 2019 17:37:56 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20190813074250.28177-1-aniljoy@cadence.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-26_05:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908260095
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2019-08-24 at 20:38 +0530, Souptick Joarder wrote:
-> These are dead code since 2.6.13. If there is no plan
-> to use it further, these can be removed forever.
+Hi,
 
-Unless you can articulate a clear useful reason for the removal I'd
-rather keep this and the other code.  Most of the documentation for
-this chip is lost in the mists of time, so code fragments like this are
-the only way we know how it was supposed to work.
+On 13/08/19 1:12 PM, Anil Varughese wrote:
+> Some UFS devices have issues if LCC is enabled. So we
+> are setting PA_LOCAL_TX_LCC_Enable to 0 before link
+> startup which will make sure that both host and device
+> TX LCC are disabled once link startup is completed.
+> 
+> Signed-off-by: Anil Varughese <aniljoy@cadence.com>> ---
 
-A clear reason might be that it's impossible for aic7xxx ever to make
-use of IU and QAS because they're LVD parameters and it's a SE/HVD
-card, so the documentation in the code is actively wrong, but you'd
-need to research that.
+Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
 
-James
+Regards
+Vignesh
 
+>  drivers/scsi/ufs/cdns-pltfrm.c | 27 +++++++++++++++++++++++++++
+>  1 file changed, 27 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+> index 993519080..b2af04c57 100644
+> --- a/drivers/scsi/ufs/cdns-pltfrm.c
+> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
+> @@ -77,6 +77,31 @@ static int cdns_ufs_hce_enable_notify(struct ufs_hba *hba,
+>  	return cdns_ufs_set_hclkdiv(hba);
+>  }
+>  
+> +/**
+> + * Called before and after Link startup is carried out.
+> + * @hba: host controller instance
+> + * @status: notify stage (pre, post change)
+> + *
+> + * Return zero for success and non-zero for failure
+> + */
+> +static int cdns_ufs_link_startup_notify(struct ufs_hba *hba,
+> +					enum ufs_notify_change_status status)
+> +{
+> +	if (status != PRE_CHANGE)
+> +		return 0;
+> +
+> +	/*
+> +	 * Some UFS devices have issues if LCC is enabled.
+> +	 * So we are setting PA_Local_TX_LCC_Enable to 0
+> +	 * before link startup which will make sure that both host
+> +	 * and device TX LCC are disabled once link startup is
+> +	 * completed.
+> +	 */
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
+> +
+> +	return 0;
+> +}
+> +
+>  /**
+>   * cdns_ufs_init - performs additional ufs initialization
+>   * @hba: host controller instance
+> @@ -114,12 +139,14 @@ static int cdns_ufs_m31_16nm_phy_initialization(struct ufs_hba *hba)
+>  static const struct ufs_hba_variant_ops cdns_ufs_pltfm_hba_vops = {
+>  	.name = "cdns-ufs-pltfm",
+>  	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+> +	.link_startup_notify = cdns_ufs_link_startup_notify,
+>  };
+>  
+>  static const struct ufs_hba_variant_ops cdns_ufs_m31_16nm_pltfm_hba_vops = {
+>  	.name = "cdns-ufs-pltfm",
+>  	.init = cdns_ufs_init,
+>  	.hce_enable_notify = cdns_ufs_hce_enable_notify,
+> +	.link_startup_notify = cdns_ufs_link_startup_notify,
+>  	.phy_initialization = cdns_ufs_m31_16nm_phy_initialization,
+>  };
+>  
+> 
+
+-- 
+Regards
+Vignesh
