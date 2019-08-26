@@ -2,130 +2,300 @@ Return-Path: <SRS0=IeCF=WW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81081C3A59F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 15:27:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3378DC3A59F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:21:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DBCD22CF5
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 15:27:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1AD221852
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Aug 2019 16:21:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566836514;
+	bh=m4XKgSxewkwMJcvHgcYRs3HGBgA+LZEaGyuDJG5PqT4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=y5aZtGnwtp2WSQ9XnhbZ7GVzAMdctjurkc0hvYIxdjByAkBR76aVPuXB+aMRu3hgJ
+	 CJfKjjv9IBi34emGW35VV6bXAx08cJkcdq4yiNa7feUwl+bfr8PQNheLR02FQpDLp9
+	 hBcX7OkckuxUEmHTWrKEPZJaDjAEG7iUIbjun+6w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732306AbfHZP1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Aug 2019 11:27:49 -0400
-Received: from mx2.suse.de ([195.135.220.15]:47696 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731565AbfHZP1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Aug 2019 11:27:48 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id C75E7AD6D;
-        Mon, 26 Aug 2019 15:27:46 +0000 (UTC)
-Subject: Re: [PATCH RFC 00/24] scsi: enable reserved commands for LLDDs
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
-References: <20190529132901.27645-1-hare@suse.de>
- <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
-Date:   Mon, 26 Aug 2019 17:27:45 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1732078AbfHZQVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Aug 2019 12:21:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49296 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728560AbfHZQVs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Aug 2019 12:21:48 -0400
+Received: from linux-8ccs (unknown [92.117.241.205])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1927E2173E;
+        Mon, 26 Aug 2019 16:21:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566836507;
+        bh=m4XKgSxewkwMJcvHgcYRs3HGBgA+LZEaGyuDJG5PqT4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pnCkPbWFLILW2QetAMWRNFN1wJ6osogrEWa7m+hF7CHkvo1b3Y6pCk4/pA+pu08rC
+         WEgFusvmwMANzv2SQGBXQz+vE86sMqYPMDoSnLlSRsJh0JX4pAkZt+te/udOZGXCTi
+         y0rU1Gp4BpS+6qHRQZ45htF8i6L/nNVifWKbYE2E=
+Date:   Mon, 26 Aug 2019 18:21:38 +0200
+From:   Jessica Yu <jeyu@kernel.org>
+To:     Matthias Maennich <maennich@google.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-team@android.com,
+        arnd@arndb.de, geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        hpa@zytor.com, joel@joelfernandes.org,
+        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
+        maco@android.com, maco@google.com, michal.lkml@markovi.net,
+        mingo@redhat.com, oneukum@suse.com, pombredanne@nexb.com,
+        sam@ravnborg.org, sspatil@google.com, stern@rowland.harvard.edu,
+        tglx@linutronix.de, usb-storage@lists.one-eyed-alien.net,
+        x86@kernel.org, yamada.masahiro@socionext.com
+Subject: Re: [PATCH v3 04/11] modpost: add support for symbol namespaces
+Message-ID: <20190826162138.GA31739@linux-8ccs>
+References: <20190813121733.52480-1-maennich@google.com>
+ <20190821114955.12788-1-maennich@google.com>
+ <20190821114955.12788-5-maennich@google.com>
 MIME-Version: 1.0
-In-Reply-To: <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190821114955.12788-5-maennich@google.com>
+X-OS:   Linux linux-8ccs 4.12.14-lp150.12.61-default x86_64
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/23/19 3:26 PM, John Garry wrote:
-> On 29/05/2019 14:28, Hannes Reinecke wrote:
->> Hi all,
->>
->> quite some drivers use internal commands for various purposes, most
->> commonly sending TMFs or querying the HBA status.
->> While these commands use the same submission mechanism than normal
->> I/O commands, they will not be counted as outstanding commands,
->> requiring those drivers to implement their own mechanism to figure
->> out outstanding commands.
->> This patchset enables the use of reserved tags for the SCSI midlayer,
->> enabling LLDDs to rely on the block layer for tracking outstanding
->> commands.
->> More importantly, it allows LLDD to request a valid tag from the block
->> layer without having to implement some tracking mechanism within the
->> driver. This removes quite some hacks which were required for some
->> drivers (eg. fnic or snic).
->>
->> As usual, comments and reviews are welcome.
->>
-> 
-> Hi Hannes,
-> 
-> I was wondering if you have any plans to progress this series?
-> 
-> I don't mind helping out...
-> 
-Thanks for the reminder.
-I'll need to re-evaluate this where we stand now with shared tags;
-this patchset partially relies on them.
-Will be sending an updated patchset.
++++ Matthias Maennich [21/08/19 12:49 +0100]:
+>Add support for symbols that are exported into namespaces. For that,
+>extract any namespace suffix from the symbol name. In addition, emit a
+>warning whenever a module refers to an exported symbol without
+>explicitly importing the namespace that it is defined in. This patch
+>consistently adds the namespace suffix to symbol names exported into
+>Module.symvers.
+>
+>Example warning emitted by modpost in case of the above violation:
+>
+> WARNING: module ums-usbat uses symbol usb_stor_resume from namespace
+> USB_STORAGE, but does not import it.
+>
+>Co-developed-by: Martijn Coenen <maco@android.com>
+>Signed-off-by: Martijn Coenen <maco@android.com>
+>Reviewed-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+>Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>Signed-off-by: Matthias Maennich <maennich@google.com>
+>---
+> scripts/mod/modpost.c | 91 +++++++++++++++++++++++++++++++++++++------
+> scripts/mod/modpost.h |  7 ++++
+> 2 files changed, 87 insertions(+), 11 deletions(-)
+>
+>diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+>index f277e116e0eb..538bb24ffee3 100644
+>--- a/scripts/mod/modpost.c
+>+++ b/scripts/mod/modpost.c
+>@@ -164,6 +164,7 @@ struct symbol {
+> 	struct module *module;
+> 	unsigned int crc;
+> 	int crc_valid;
+>+	const char *namespace;
+> 	unsigned int weak:1;
+> 	unsigned int vmlinux:1;    /* 1 if symbol is defined in vmlinux */
+> 	unsigned int kernel:1;     /* 1 if symbol is from kernel
+>@@ -233,6 +234,37 @@ static struct symbol *find_symbol(const char *name)
+> 	return NULL;
+> }
+>
+>+static bool contains_namespace(struct namespace_list *list,
+>+			       const char *namespace)
+>+{
+>+	struct namespace_list *ns_entry;
+>+
+>+	for (ns_entry = list; ns_entry != NULL; ns_entry = ns_entry->next)
+>+		if (strcmp(ns_entry->namespace, namespace) == 0)
+>+			return true;
+>+
+>+	return false;
+>+}
+>+
+>+static void add_namespace(struct namespace_list **list, const char *namespace)
+>+{
+>+	struct namespace_list *ns_entry;
+>+
+>+	if (!contains_namespace(*list, namespace)) {
+>+		ns_entry = NOFAIL(malloc(sizeof(struct namespace_list) +
+>+					 strlen(namespace) + 1));
+>+		strcpy(ns_entry->namespace, namespace);
+>+		ns_entry->next = *list;
+>+		*list = ns_entry;
+>+	}
+>+}
+>+
+>+static bool module_imports_namespace(struct module *module,
+>+				     const char *namespace)
+>+{
+>+	return contains_namespace(module->imported_namespaces, namespace);
+>+}
+>+
+> static const struct {
+> 	const char *str;
+> 	enum export export;
+>@@ -312,6 +344,22 @@ static enum export export_from_sec(struct elf_info *elf, unsigned int sec)
+> 		return export_unknown;
+> }
+>
+>+static const char *sym_extract_namespace(const char **symname)
+>+{
+>+	size_t n;
+>+	char *dupsymname;
+>+
+>+	n = strcspn(*symname, ".");
+>+	if (n < strlen(*symname) - 1) {
+>+		dupsymname = NOFAIL(strdup(*symname));
+>+		dupsymname[n] = '\0';
+>+		*symname = dupsymname;
+>+		return dupsymname + n + 1;
+>+	}
+>+
+>+	return NULL;
+>+}
+>+
+> /**
+>  * Add an exported symbol - it may have already been added without a
+>  * CRC, in this case just update the CRC
+>@@ -319,16 +367,18 @@ static enum export export_from_sec(struct elf_info *elf, unsigned int sec)
+> static struct symbol *sym_add_exported(const char *name, struct module *mod,
+> 				       enum export export)
+> {
+>-	struct symbol *s = find_symbol(name);
+>+	const char *symbol_name = name;
+>+	const char *namespace = sym_extract_namespace(&symbol_name);
+>+	struct symbol *s = find_symbol(symbol_name);
+>
+> 	if (!s) {
+>-		s = new_symbol(name, mod, export);
+>+		s = new_symbol(symbol_name, mod, export);
+>+		s->namespace = namespace;
+> 	} else {
+> 		if (!s->preloaded) {
+>-			warn("%s: '%s' exported twice. Previous export "
+>-			     "was in %s%s\n", mod->name, name,
+>-			     s->module->name,
+>-			     is_vmlinux(s->module->name) ?"":".ko");
+>+			warn("%s: '%s' exported twice. Previous export was in %s%s\n",
+>+			     mod->name, symbol_name, s->module->name,
+>+			     is_vmlinux(s->module->name) ? "" : ".ko");
+> 		} else {
+> 			/* In case Module.symvers was out of date */
+> 			s->module = mod;
+>@@ -1943,6 +1993,7 @@ static void read_symbols(const char *modname)
+> 	const char *symname;
+> 	char *version;
+> 	char *license;
+>+	char *namespace;
+> 	struct module *mod;
+> 	struct elf_info info = { };
+> 	Elf_Sym *sym;
+>@@ -1974,6 +2025,12 @@ static void read_symbols(const char *modname)
+> 		license = get_next_modinfo(&info, "license", license);
+> 	}
+>
+>+	namespace = get_modinfo(&info, "import_ns");
+>+	while (namespace) {
+>+		add_namespace(&mod->imported_namespaces, namespace);
+>+		namespace = get_next_modinfo(&info, "import_ns", namespace);
+>+	}
+>+
+> 	for (sym = info.symtab_start; sym < info.symtab_stop; sym++) {
+> 		symname = remove_dot(info.strtab + sym->st_name);
+>
+>@@ -2118,6 +2175,13 @@ static int check_exports(struct module *mod)
+> 			basename++;
+> 		else
+> 			basename = mod->name;
+>+
+>+		if (exp->namespace &&
+>+		    !module_imports_namespace(mod, exp->namespace)) {
+>+			warn("module %s uses symbol %s from namespace %s, but does not import it.\n",
+>+			     basename, exp->name, exp->namespace);
+>+		}
+>+
+> 		if (!mod->gpl_compatible)
+> 			check_for_gpl_usage(exp->export, basename, exp->name);
+> 		check_for_unused(exp->export, basename, exp->name);
+>@@ -2395,16 +2459,21 @@ static void write_dump(const char *fname)
+> {
+> 	struct buffer buf = { };
+> 	struct symbol *symbol;
+>+	const char *namespace;
+> 	int n;
+>
+> 	for (n = 0; n < SYMBOL_HASH_SIZE ; n++) {
+> 		symbol = symbolhash[n];
+> 		while (symbol) {
+>-			if (dump_sym(symbol))
+>-				buf_printf(&buf, "0x%08x\t%s\t%s\t%s\n",
+>-					symbol->crc, symbol->name,
+>-					symbol->module->name,
+>-					export_str(symbol->export));
+>+			if (dump_sym(symbol)) {
+>+				namespace = symbol->namespace;
+>+				buf_printf(&buf, "0x%08x\t%s%s%s\t%s\t%s\n",
+>+					   symbol->crc, symbol->name,
+>+					   namespace ? "." : "",
+>+					   namespace ? namespace : "",
 
-Cheers,
+I think it might be cleaner to just have namespace be a separate
+field in Module.symvers, rather than appending a dot and the
+namespace at the end of a symbol name. Maybe something like
 
-Hannes
--- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 247165 (AG München), GF: Felix Imendörffer
+    <crc> <symbol_name> <namespace> <module>
+
+For symbols without a namespace, we could just have "", with all
+fields delimited by tabs. This is just a stylistic suggestion, what do
+you think?
+
+Regardless of the chosen format, I think we need to document how
+namespaces are represented in Documentation/kbuild/modules.rst, where
+it describes the Module.symvers format.
+
+Thanks!
+
+Jessica
+
+>+					   symbol->module->name,
+>+					   export_str(symbol->export));
+>+			}
+> 			symbol = symbol->next;
+> 		}
+> 	}
+>diff --git a/scripts/mod/modpost.h b/scripts/mod/modpost.h
+>index 8453d6ac2f77..9626bf3e7424 100644
+>--- a/scripts/mod/modpost.h
+>+++ b/scripts/mod/modpost.h
+>@@ -109,6 +109,11 @@ buf_printf(struct buffer *buf, const char *fmt, ...);
+> void
+> buf_write(struct buffer *buf, const char *s, int len);
+>
+>+struct namespace_list {
+>+	struct namespace_list *next;
+>+	char namespace[0];
+>+};
+>+
+> struct module {
+> 	struct module *next;
+> 	const char *name;
+>@@ -121,6 +126,8 @@ struct module {
+> 	struct buffer dev_table_buf;
+> 	char	     srcversion[25];
+> 	int is_dot_o;
+>+	// Actual imported namespaces
+>+	struct namespace_list *imported_namespaces;
+> };
+>
+> struct elf_info {
+>-- 
+>2.23.0.rc1.153.gdeed80330f-goog
+>
