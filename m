@@ -2,324 +2,101 @@ Return-Path: <SRS0=cdy6=WX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD63C3A5A4
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 22:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B623C3A5A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 22:59:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22EA12189D
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 22:34:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566945262;
-	bh=z3xopfZ51WkV8awSgGyWZJzCisrDG8pyxGkIqqDVBSE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=xxspJibNCpiUFgrBfbDFiKcWZMiW6jm6nedj8nXy23zHqOEiJYpGdineek0sGnKp4
-	 myNMq+65I0gjLRxY6PIOyHSLMedS7zpCumOhIbGVT2gcehB0V0XSH1v2ExItcNsvcA
-	 9V6hyA0eQCfog26n6ifZt5j7OZg3j2+l1WJY/fPI=
+	by mail.kernel.org (Postfix) with ESMTP id EFF86214DA
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 22:59:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726034AbfH0WeV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Aug 2019 18:34:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60552 "EHLO mail.kernel.org"
+        id S1726065AbfH0W7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Aug 2019 18:59:07 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50952 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725989AbfH0WeV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Aug 2019 18:34:21 -0400
-Received: from gmail.com (unknown [104.132.1.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1725997AbfH0W7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Aug 2019 18:59:07 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B50CF20856;
-        Tue, 27 Aug 2019 22:34:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566945259;
-        bh=z3xopfZ51WkV8awSgGyWZJzCisrDG8pyxGkIqqDVBSE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IHnbWObz7IdfNCr+53RBoZHkmbFKif0Ubb3U5DkhOtvlRer9YxXdAsIT9YoL7Kidv
-         Q22s8MGqTqqZZeT2DNSgZhSuqMttd550jyK2IOBeMRSVdo96htJcCV2bX9pl4maVMR
-         Z2Gg+MPSg2Ep+r0t8NHplneXUJkCyIiA254+HXT8=
-Date:   Tue, 27 Aug 2019 15:34:17 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v4 3/8] block: blk-crypto for Inline Encryption
-Message-ID: <20190827223415.GC27166@gmail.com>
-Mail-Followup-To: Satya Tangirala <satyat@google.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-References: <20190821075714.65140-1-satyat@google.com>
- <20190821075714.65140-4-satyat@google.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 93D233084244;
+        Tue, 27 Aug 2019 22:59:06 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2C6825D6B0;
+        Tue, 27 Aug 2019 22:58:53 +0000 (UTC)
+Date:   Wed, 28 Aug 2019 06:58:30 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
+Message-ID: <20190827225827.GA5263@ming.t460p>
+References: <20190827085344.30799-1-ming.lei@redhat.com>
+ <20190827085344.30799-2-ming.lei@redhat.com>
+ <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190821075714.65140-4-satyat@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 27 Aug 2019 22:59:07 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 12:57:09AM -0700, Satya Tangirala wrote:
-> diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-> new file mode 100644
-> index 000000000000..c8f06264a0f5
-> --- /dev/null
-> +++ b/block/blk-crypto.c
-> @@ -0,0 +1,737 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright 2019 Google LLC
-> + */
-> +
-> +/*
-> + * Refer to Documentation/block/inline-encryption.txt for detailed explanation.
-> + */
-> +
-> +#ifdef pr_fmt
-> +#undef pr_fmt
-> +#endif
+On Tue, Aug 27, 2019 at 04:42:02PM +0200, Thomas Gleixner wrote:
+> On Tue, 27 Aug 2019, Ming Lei wrote:
+> > +/*
+> > + * Update average irq interval with the Exponential Weighted Moving
+> > + * Average(EWMA)
+> > + */
+> > +static void irq_update_interval(void)
+> > +{
+> > +#define IRQ_INTERVAL_EWMA_WEIGHT	128
+> > +#define IRQ_INTERVAL_EWMA_PREV_FACTOR	127
+> > +#define IRQ_INTERVAL_EWMA_CURR_FACTOR	(IRQ_INTERVAL_EWMA_WEIGHT - \
+> > +		IRQ_INTERVAL_EWMA_PREV_FACTOR)
+> 
+> Please do not stick defines into a function body. That's horrible.
 
-This is the beginning of the file, so the
+OK.
 
-#ifdef pr_fmt
-#undef pr_fmt
-#endif
+> 
+> > +
+> > +	int cpu = raw_smp_processor_id();
+> > +	struct irq_interval *inter = per_cpu_ptr(&avg_irq_interval, cpu);
+> > +	u64 delta = sched_clock_cpu(cpu) - inter->last_irq_end;
+> 
+> Why are you doing that raw_smp_processor_id() dance? The call site has
+> interrupts and preemption disabled.
 
-is unnecessary.
+OK, will change to __smp_processor_id().
 
-> +static struct blk_crypto_keyslot {
-> +	struct crypto_skcipher *tfm;
-> +	enum blk_crypto_mode_num crypto_mode;
-> +	u8 key[BLK_CRYPTO_MAX_KEY_SIZE];
-> +	struct crypto_skcipher *tfms[ARRAY_SIZE(blk_crypto_modes)];
-> +} *blk_crypto_keyslots;
+> 
+> Also how is that supposed to work when sched_clock is jiffies based?
 
-It would be helpful if there was a comment somewhere explaining what's going on
-with the crypto tfms now, like:
+Good catch, looks ktime_get_ns() is needed.
 
-/*
- * Allocating a crypto tfm during I/O can deadlock, so we have to preallocate
- * all a mode's tfms when that mode starts being used.  Since each mode may need
- * all the keyslots at some point, each mode needs its own tfm for each keyslot;
- * thus, a keyslot may contain tfms for multiple modes.  However, to match the
- * behavior of real inline encryption hardware (which only supports a single
- * encryption context per keyslot), we only allow one tfm per keyslot to be used
- * at a time.  Unused tfms have their keys cleared.
- */
+> 
+> > +	inter->avg = (inter->avg * IRQ_INTERVAL_EWMA_PREV_FACTOR +
+> > +		delta * IRQ_INTERVAL_EWMA_CURR_FACTOR) /
+> > +		IRQ_INTERVAL_EWMA_WEIGHT;
+> 
+> We definitely are not going to have a 64bit multiplication and division on
+> every interrupt. Asided of that this breaks 32bit builds all over the place.
 
-Otherwise it's not at all obvious what's going on.
+I will convert the above into add/subtract/shift only.
 
-> +
-> +static struct mutex tfms_lock[ARRAY_SIZE(blk_crypto_modes)];
-> +static bool tfms_inited[ARRAY_SIZE(blk_crypto_modes)];
-> +
-> +struct work_mem {
-> +	struct work_struct crypto_work;
-> +	struct bio *bio;
-> +};
-> +
-> +/* The following few vars are only used during the crypto API fallback */
-> +static struct keyslot_manager *blk_crypto_ksm;
-> +static struct workqueue_struct *blk_crypto_wq;
-> +static mempool_t *blk_crypto_page_pool;
-> +static struct kmem_cache *blk_crypto_work_mem_cache;
-> +
-> +bool bio_crypt_swhandled(struct bio *bio)
-> +{
-> +	return bio_has_crypt_ctx(bio) &&
-> +	       bio->bi_crypt_context->processing_ksm == blk_crypto_ksm;
-> +}
-> +
-> +static const u8 zeroes[BLK_CRYPTO_MAX_KEY_SIZE];
-> +static void evict_keyslot(unsigned int slot)
-> +{
-> +	struct blk_crypto_keyslot *slotp = &blk_crypto_keyslots[slot];
-> +	enum blk_crypto_mode_num crypto_mode = slotp->crypto_mode;
-> +
-> +	/* Clear the key in the skcipher */
-> +	crypto_skcipher_setkey(slotp->tfms[crypto_mode], zeroes,
-> +			       blk_crypto_modes[crypto_mode].keysize);
-> +	memzero_explicit(slotp->key, BLK_CRYPTO_MAX_KEY_SIZE);
-> +}
-
-Unfortunately setting the all-zeroes key won't work, because the all-zeroes key
-fails the "weak key" check for XTS, as its two halves are the same.
-
-Presumably this wasn't noticed during testing because the return value of
-crypto_skcipher_setkey() is ignored.  So I suggest adding a WARN_ON():
-
-	err = crypto_skcipher_setkey(slotp->tfms[crypto_mode], blank_key,
-				     blk_crypto_modes[crypto_mode].keysize);
-	WARN_ON(err);
-
-Then for the actual fix, maybe set a random key instead of an all-zeroes one?
-
-> +
-> +static int blk_crypto_keyslot_program(void *priv, const u8 *key,
-> +				      enum blk_crypto_mode_num crypto_mode,
-> +				      unsigned int data_unit_size,
-> +				      unsigned int slot)
-> +{
-> +	struct blk_crypto_keyslot *slotp = &blk_crypto_keyslots[slot];
-> +	const struct blk_crypto_mode *mode = &blk_crypto_modes[crypto_mode];
-> +	size_t keysize = mode->keysize;
-> +	int err;
-> +
-> +	if (crypto_mode != slotp->crypto_mode) {
-> +		evict_keyslot(slot);
-> +		slotp->crypto_mode = crypto_mode;
-> +	}
-
-Currently the crypto_mode of every blk_crypto_keyslot starts out as AES_256_XTS
-(0).  So if the user starts by choosing some other mode, this will immediately
-call evict_keyslot() and crash dereferencing a NULL pointer.
-
-To fix this, how about initializing all the modes to
-BLK_ENCRYPTION_MODE_INVALID?
-
-Then here the code would need to be:
-
-	if (crypto_mode != slotp->crypto_mode &&
-	    slotp->crypto_mode != BLK_ENCRYPTION_MODE_INVALID)
-		evict_keyslot(slot);
-
-And evict_keyslot() should invalidate the crypto_mode:
-
-static void evict_keyslot(unsigned int slot)
-{
-	...
-
-	slotp->crypto_mode = BLK_ENCRYPTION_MODE_INVALID;
-}
-
-> +
-> +static int blk_crypto_keyslot_evict(void *priv, const u8 *key,
-> +				    enum blk_crypto_mode_num crypto_mode,
-> +				    unsigned int data_unit_size,
-> +				    unsigned int slot)
-> +{
-> +	evict_keyslot(slot);
-> +	return 0;
-> +}
-
-It might be useful to have a WARN_ON() here if the keyslot isn't in use
-(i.e., if slotp->crypto_mode == BLK_ENCRYPTION_MODE_INVALID).
-
-> +int blk_crypto_submit_bio(struct bio **bio_ptr)
-> +{
-> +	struct bio *bio = *bio_ptr;
-> +	struct request_queue *q;
-> +	int err;
-> +	struct bio_crypt_ctx *crypt_ctx;
-> +
-> +	if (!bio_has_crypt_ctx(bio) || !bio_has_data(bio))
-> +		return 0;
-> +
-> +	/*
-> +	 * When a read bio is marked for sw decryption, its bi_iter is saved
-> +	 * so that when we decrypt the bio later, we know what part of it was
-> +	 * marked for sw decryption (when the bio is passed down after
-> +	 * blk_crypto_submit bio, it may be split or advanced so we cannot rely
-> +	 * on the bi_iter while decrypting in blk_crypto_endio)
-> +	 */
-> +	if (bio_crypt_swhandled(bio))
-> +		return 0;
-> +
-> +	err = bio_crypt_check_alignment(bio);
-> +	if (err)
-> +		goto out;
-
-Need to set ->bi_status if bio_crypt_check_alignment() fails.
-
-> +bool blk_crypto_endio(struct bio *bio)
-> +{
-> +	if (!bio_has_crypt_ctx(bio))
-> +		return true;
-> +
-> +	if (bio_crypt_swhandled(bio)) {
-> +		/*
-> +		 * The only bios that are swhandled when they reach here
-> +		 * are those with bio_data_dir(bio) == READ, since WRITE
-> +		 * bios that are encrypted by the crypto API fallback are
-> +		 * handled by blk_crypto_encrypt_endio.
-> +		 */
-> +
-> +		/* If there was an IO error, don't decrypt. */
-> +		if (bio->bi_status)
-> +			return true;
-> +
-> +		blk_crypto_queue_decrypt_bio(bio);
-> +		return false;
-> +	}
-> +
-> +	if (bio_has_crypt_ctx(bio) && bio_crypt_has_keyslot(bio))
-> +		bio_crypt_ctx_release_keyslot(bio);
-
-No need to check bio_has_crypt_ctx(bio) here, as it was already checked above.
-
-> +int blk_crypto_mode_alloc_ciphers(enum blk_crypto_mode_num mode_num)
-> +{
-> +	struct blk_crypto_keyslot *slotp;
-> +	int err = 0;
-> +	int i;
-> +
-> +	/* Fast path */
-> +	if (likely(READ_ONCE(tfms_inited[mode_num]))) {
-> +		/*
-> +		 * Ensure that updates to blk_crypto_keyslots[i].tfms[mode_num]
-> +		 * for each i are visible before we try to access them.
-> +		 */
-> +		smp_rmb();
-> +		return 0;
-> +	}
-
-I think we want smp_load_acquire() here.
-
-	/* pairs with smp_store_release() below */
-	if (smp_load_acquire(&tfms_inited[mode_num]))
-		return 0;
-
-> +
-> +	mutex_lock(&tfms_lock[mode_num]);
-> +	if (likely(tfms_inited[mode_num]))
-> +		goto out;
-> +
-> +	for (i = 0; i < blk_crypto_num_keyslots; i++) {
-> +		slotp = &blk_crypto_keyslots[i];
-> +		slotp->tfms[mode_num] = crypto_alloc_skcipher(
-> +					blk_crypto_modes[mode_num].cipher_str,
-> +					0, 0);
-> +		if (IS_ERR(slotp->tfms[mode_num])) {
-> +			err = PTR_ERR(slotp->tfms[mode_num]);
-> +			slotp->tfms[mode_num] = NULL;
-> +			goto out_free_tfms;
-> +		}
-> +
-> +		crypto_skcipher_set_flags(slotp->tfms[mode_num],
-> +					  CRYPTO_TFM_REQ_FORBID_WEAK_KEYS);
-> +	}
-> +
-> +	/*
-> +	 * Ensure that updates to blk_crypto_keyslots[i].tfms[mode_num]
-> +	 * for each i are visible before we set tfms_inited[mode_num].
-> +	 */
-> +	smp_wmb();
-> +	WRITE_ONCE(tfms_inited[mode_num], true);
-> +	goto out;
-
-... and smp_store_release() here.
-
-	/* pairs with smp_load_acquire() above */
-	smp_store_release(&tfms_inited[mode_num], true);
-	goto out;
-
-- Eric
+thanks,
+Ming
