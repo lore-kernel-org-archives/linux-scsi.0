@@ -2,231 +2,130 @@ Return-Path: <SRS0=cdy6=WX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BIGNUM_EMAILS,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 735F5C41514
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9603C3A5A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:27:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 492D220828
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 997D520656
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:27:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k15hrvDz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XAX0hunp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730513AbfH0VXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Aug 2019 17:23:20 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:34852 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726675AbfH0VXT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 17:23:19 -0400
-Received: by mail-wr1-f65.google.com with SMTP id k2so283979wrq.2;
-        Tue, 27 Aug 2019 14:23:16 -0700 (PDT)
+        id S1730376AbfH0V1z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Aug 2019 17:27:55 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:44993 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726871AbfH0V1y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 17:27:54 -0400
+Received: by mail-pl1-f194.google.com with SMTP id t14so155278plr.11
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Aug 2019 14:27:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=pTOaZhW5xKtnT1x8xRBR+lYJlD1bPd7S9+Vr1x5mo0c=;
-        b=k15hrvDzSkku9LhKt4Dw7rN5H5/wnPa5DLw2TxVQi9ZwArGhWd0Bq6pcX7CLvAme9f
-         vujFTq4VbRK80hSNZXfgYzkt7nmoJEZukM+3t0q4bv9a6JgkRK6iJFjsjSPGsQJ+2JrC
-         HP9YCDUHmub9O9iG6bOWZTl/iWQXjCm/athaXNwoqlGq+la0uegJnH6Pz4pXkvS+ngXp
-         u3g7kLmnKo1fMhze/vyb6DVBuZste+cB8J5Ewg4wHYs0Aahb260NPhW6uCxw8/BlK95u
-         K8PcgYnn8BBpozs2i3R6x1EZxl3OYzep37PIWYmoiMx4rpp2RZrNvUX55u6Jbxv0r5Ma
-         recw==
+        h=from:to:cc:subject:date:message-id;
+        bh=BeQaHKw3ZuT2lX0C278defXCS68h8O4TAbVUH2e3kqI=;
+        b=XAX0hunphpypuIEpxTNMZZr1obqw/7pzEER8VUe6i0836J++/lmEyn8KEwqNK8h8yW
+         dnHnmcHqD+xTdgX0/fxPUQGg6qII3YPzbJjc0In5wQZut6uTilPFvtdtlblQWE8Su7RY
+         Gw4kMtfTOZTf6EkXGK0ph1dnfX/Ntzc1TKsG9PSNDHuxK5VmYHZ8+6Iy6Cfji9aWnf2A
+         pM3xfiMbF7pkdIurMooIF/RgX95LC2MHSd3ODTt0Na6c3a2VmkLs8vWdg6zjxkLMTBYK
+         akybWIN0CdvP4Ods7pDktIsruITLuhWtiL0b9fWh1zRwDi9ANSPFpSaoKgaHq6WeryRg
+         Uq6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=pTOaZhW5xKtnT1x8xRBR+lYJlD1bPd7S9+Vr1x5mo0c=;
-        b=IEEfk+J6v6LuxVaTPfLUTRsAlX71daCqtwxJbidEk4NEuifFlk1OEWS6EVXXZCl5MZ
-         cZo9Y4iH7tnqfOjFg1drEJ+b61hsqI8ZU/LTLYoBxkBOWooyiRwrNelhQP/CN8xcl/Jn
-         ivO7kfak2IBgU8/pjH7BiVqGK0Rzm45AGii71pwAiDawyA4KqUpp6OORj/gdzZGnI9XX
-         0TvH6uvE8lOatM7YYkjQtpaZmDlpkYtZ6YVgjKIsiu4CgJP7Yx5XkOCHGYRpVugCRJgJ
-         21yHS8XHuhfN/bAa2D+jgh0tAs0N6RPS5iYaXoDhehU0QjzahdCWkAuEybQTnJtvdttQ
-         ZddQ==
-X-Gm-Message-State: APjAAAVjgJDGAq5qhaoKc8bnVt6YId101pJ+SVpjY4h+eGFS6Cv0C378
-        CNb09ANOkIwCxiJs1HDF1memyIwR
-X-Google-Smtp-Source: APXvYqwch/WIGFqX8UdlE+stqLlGzDb6mAAO+ADMOVPkX0a9I6jBXMkZldGyPc5HrWWioaq5b/AYSQ==
-X-Received: by 2002:adf:f281:: with SMTP id k1mr262269wro.154.1566940996262;
-        Tue, 27 Aug 2019 14:23:16 -0700 (PDT)
-Received: from [192.168.1.19] (ckl27.neoplus.adsl.tpnet.pl. [83.31.87.27])
-        by smtp.gmail.com with ESMTPSA id f13sm252179wrr.5.2019.08.27.14.23.14
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 27 Aug 2019 14:23:15 -0700 (PDT)
-Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
-To:     Akinobu Mita <akinobu.mita@gmail.com>
-Cc:     Pavel Machek <pavel@ucw.cz>, linux-block@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
- <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
- <20190817145509.GA18381@amd> <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
- <20190819143842.GA25401@amd> <7c4c4853-7e3a-0618-92a0-337e248e2b4c@gmail.com>
- <c937b7e0-02c6-ae9a-aaf7-16a2ef29886d@gmail.com>
- <CAC5umyjxkeR3rhf3XZvwkxLvc-0ENEkQfOLnk8A12Qazr9Et8w@mail.gmail.com>
- <86309c4f-bcee-182c-369f-fcc883f379c6@gmail.com>
- <CAC5umyibEMrxhZv0TyS6hYHR+oyj2Oby+LVsjrYmMV8u-chXRQ@mail.gmail.com>
-From:   Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=jacek.anaszewski@gmail.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <1f7928a1-61ba-72f0-fd03-2208856cd8b8@gmail.com>
-Date:   Tue, 27 Aug 2019 23:23:13 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <CAC5umyibEMrxhZv0TyS6hYHR+oyj2Oby+LVsjrYmMV8u-chXRQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=BeQaHKw3ZuT2lX0C278defXCS68h8O4TAbVUH2e3kqI=;
+        b=q6BlkwKnKwPilQaIslRHMDtAT/Gjn7YQleoxzCEZmxLHamrjlr9BWmwbSGtYC8pVpY
+         XFpInj1fb2H6z8rd1gCstm8pJ0JuNT+FKh6YIVcETF/XCjes/u7H1BrlUdYAoI6lrplM
+         RHy3SfPSDqKttXyV5U7MYHzASAkPXX9vdkLIdTlwKYHbpGom2QoXlO18zR64yMuB1rqR
+         KHfssyGZAR7VI+FI4rV7Rbvwb8uxL57wlvHeMvUiGaqjYn8T2UYPG2IxNB7ceQFSGCyO
+         xBA4zvDa28JTy/w6zoVjZi0Yw3Ud38qlNg9qTuPELrzoeF1/YoVAjbH2q99mC2MIztLP
+         beRw==
+X-Gm-Message-State: APjAAAWCtX+u3vcWnbQMUl4H1tQy9v1VM74OUSUQjmcxWncN1t9plbaB
+        GkYhoj8vNOwMhsYwr5+HeOoPNlCu
+X-Google-Smtp-Source: APXvYqyTYXm8hnjPdWutF6wkB30STC0cbT265XHQA9ZkEmrLl4uwmZ1L3W447YVMh+XS6k9wRm8yfg==
+X-Received: by 2002:a17:902:76c7:: with SMTP id j7mr960704plt.247.1566941274103;
+        Tue, 27 Aug 2019 14:27:54 -0700 (PDT)
+Received: from os42.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id a15sm270659pfg.102.2019.08.27.14.27.53
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 27 Aug 2019 14:27:53 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] lpfc: Resolve checker warning for lpfc_new_io_buf()
+Date:   Tue, 27 Aug 2019 14:27:46 -0700
+Message-Id: <20190827212746.30011-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/27/19 4:03 PM, Akinobu Mita wrote:
-> 2019年8月25日(日) 0:53 Jacek Anaszewski <jacek.anaszewski@gmail.com>:
->>
->> On 8/23/19 6:00 PM, Akinobu Mita wrote:
->>> 2019年8月20日(火) 3:38 Jacek Anaszewski <jacek.anaszewski@gmail.com>:
->>>>
->>>> On 8/19/19 8:22 PM, Jacek Anaszewski wrote:
->>>>> On 8/19/19 4:38 PM, Pavel Machek wrote:
->>>>>> On Sat 2019-08-17 22:07:43, Jacek Anaszewski wrote:
->>>>>>> On 8/17/19 4:55 PM, Pavel Machek wrote:
->>>>>>>> On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
->>>>>>>>> This allows LEDs to be controlled by block device activity.
->>>>>>>>>
->>>>>>>>> We already have ledtrig-disk (LED disk activity trigger), but the lower
->>>>>>>>> level disk drivers need to utilize ledtrig_disk_activity() to make the
->>>>>>>>> LED blink.
->>>>>>>>>
->>>>>>>>> The LED block device trigger doesn't require the lower level drivers to
->>>>>>>>> have any instrumentation. The activity is collected by polling the disk
->>>>>>>>> stats.
->>>>>>>>>
->>>>>>>>> Example:
->>>>>>>>>
->>>>>>>>> echo block-nvme0n1 > /sys/class/leds/diy/trigger
->>>>>>>>
->>>>>>>> Lets use one trigger "block" and have the device as a parameter,
->>>>>>>> please.
->>>>>>>>
->>>>>>>> We already have 1000 cpu triggers on 1000 cpu machines, and yes, its a
->>>>>>>> disaster we'll need to fix. Lets not repeat the same mistake here.
->>>>>>>>
->>>>>>>> I guess it may be slightly more work. Sorry about that.
->>>>>>>
->>>>>>> We should be able to list available block devices to set,
->>>>>>> so the problem would be not avoided anyway.
->>>>>>
->>>>>> Should we? We need to list triggers, but we may not list all the devices...
->>>>>
->>>>> This is similar to usbport trigger that lists available
->>>>> ports as files in a sub-directory. We might eventually go
->>>>> in this direction.
->>>>
->>>> I must withdraw this statement. This is not similar to usbport
->>>> trigger. The difference is that with ledtrig-block we have separate
->>>> triggers per each device and I am not aware if there is some centralized
->>>> mechanism similar to blocking_notifier_chain (usb_notifier_list
->>>> in drivers/usb/core/notify.c) available for block devices, that
->>>> would allow to gather all available block devs under common trigger.
->>>>
->>>> Moreover I remember Greg once discouraged using notifier chains
->>>> as they are unsafe, so we would need some other solution anyway.
->>>
->>> I start thinking that we should implement the LED block device activity
->>> trigger in userspace.  The userspace application firstly activates
->>> one-shot LED trigger and periodically reads /sys/block/<disk>/stat and
->>> writes /sys/class/leds/<led>/shot if there is any disk activity.
->>
->> This would suboptimal solution. I have another idea - let's get back
->> to the implementation of ledtrig-blk in genhd.c. We would be registering
->> one trigger on module initialization in a function with __init modifier.
->> Then we would need to add/remove triggers to the ledtrig-blk in
->> register_blkdev()/unregister_blkdev(). And registered triggers would
->> be listed in block_devs directory created by the trigger.
->>
->> You can compare how drivers/usb/core/ledtrig-usbport.c maintains
->> similar directory of usb ports.
-> 
-> It could be possible, but I have yet another idea.  What about introducing
-> /proc/led-triggers and /sys/class/leds/<led>/current-trigger?
-> The /sys/class/leds/<led>/trigger will be obsoleted by these two files.
-> 
-> The /proc/led-triggers is read only and no PAGE_SIZE limitation by the
-> seq_file interface.  So we can list all triggers in this file.
-> 
-> The /sys/class/leds/<led>/current-trigger is almost identical to
-> /sys/class/leds/<led>/trigger.  The only difference is that
-> 'current-trigger' only shows the current trigger name.
+Per Dan Carpenter:
+The patch d79c9e9d4b3d: "scsi: lpfc: Support dynamic unbounded SGL
+lists on G7 hardware." from Aug 14, 2019, leads to the following
+static checker warning:
 
-There's not need to come up with yet another trigger interface.
-We just need to convert sysfs trigger attribute type to binary.
+   drivers/scsi/lpfc/lpfc_init.c:4107 lpfc_new_io_buf()
+  error: not allocating enough data 784 vs 768
 
+There was no need to compare sizes nor to allocate size based on a
+define.
+
+Change allocation to use actual structure length
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+CC: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 11 +----------
+ drivers/scsi/lpfc/lpfc_sli4.h |  3 ---
+ 2 files changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 9600d1ecc518..9e83ed8ec6a6 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4087,18 +4087,9 @@ lpfc_new_io_buf(struct lpfc_hba *phba, int num_to_alloc)
+ 	LIST_HEAD(post_nblist);
+ 	LIST_HEAD(nvme_nblist);
+ 
+-	/* Sanity check to ensure our sizing is right for both SCSI and NVME */
+-	if (sizeof(struct lpfc_io_buf) > LPFC_COMMON_IO_BUF_SZ) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-				"6426 Common buffer size %zd exceeds %d\n",
+-				sizeof(struct lpfc_io_buf),
+-				LPFC_COMMON_IO_BUF_SZ);
+-		return 0;
+-	}
+-
+ 	phba->sli4_hba.io_xri_cnt = 0;
+ 	for (bcnt = 0; bcnt < num_to_alloc; bcnt++) {
+-		lpfc_ncmd = kzalloc(LPFC_COMMON_IO_BUF_SZ, GFP_KERNEL);
++		lpfc_ncmd = kzalloc(sizeof(*lpfc_ncmd), GFP_KERNEL);
+ 		if (!lpfc_ncmd)
+ 			break;
+ 		/*
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index a4be83d1f37e..0d4882a9e634 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -49,9 +49,6 @@
+ #define LPFC_FCP_MQ_THRESHOLD_MAX	256
+ #define LPFC_FCP_MQ_THRESHOLD_DEF	8
+ 
+-/* Common buffer size to accomidate SCSI and NVME IO buffers */
+-#define LPFC_COMMON_IO_BUF_SZ	768
+-
+ /*
+  * Provide the default FCF Record attributes used by the driver
+  * when nonFIP mode is configured and there is no other default
 -- 
-Best regards,
-Jacek Anaszewski
+2.13.7
+
