@@ -2,76 +2,165 @@ Return-Path: <SRS0=cdy6=WX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C98BDC3A5A3
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 23:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F15BC3A5A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A3A520856
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 23:12:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02C3321883
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566948356;
+	bh=kMH6BdnXJ0P1hQ2TM0m1VxKP+jJ+UNc7nQOh8WbQ5Gk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=hpK6EAKa9PZ0xulIua7bkcx+9uGOfUY3x3kQFoV3tokmZEdkGfkMGhWcnXms6c9Pa
+	 bC93h3zbhqf4a2rQ2O2GdhrDPW/OUKAVPcwgbKWoLTYmNZ4Jw/kmB1gTJqP3cgFtRE
+	 /OxCFcnkxrtgebO0i6EaDmRSDREK+OigaJTtNIrg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbfH0XM3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Aug 2019 19:12:29 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:45358 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726065AbfH0XM3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 19:12:29 -0400
-Received: from p5de0b6c5.dip0.t-ipconnect.de ([93.224.182.197] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1i2kdD-0005dr-Ja; Wed, 28 Aug 2019 01:12:07 +0200
-Date:   Wed, 28 Aug 2019 01:12:06 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Ming Lei <ming.lei@redhat.com>
-cc:     LKML <linux-kernel@vger.kernel.org>,
-        Long Li <longli@microsoft.com>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        John Garry <john.garry@huawei.com>,
-        Hannes Reinecke <hare@suse.com>,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Daniel Lezcano <daniel.lezcano@linaro.org>
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-In-Reply-To: <20190827230451.GB5263@ming.t460p>
-Message-ID: <alpine.DEB.2.21.1908280110380.1939@nanos.tec.linutronix.de>
-References: <20190827085344.30799-1-ming.lei@redhat.com> <20190827085344.30799-2-ming.lei@redhat.com> <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de> <alpine.DEB.2.21.1908271817180.1939@nanos.tec.linutronix.de>
- <20190827230451.GB5263@ming.t460p>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1726091AbfH0XZz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Aug 2019 19:25:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45404 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725992AbfH0XZz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Aug 2019 19:25:55 -0400
+Received: from gmail.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B093420856;
+        Tue, 27 Aug 2019 23:25:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566948354;
+        bh=kMH6BdnXJ0P1hQ2TM0m1VxKP+jJ+UNc7nQOh8WbQ5Gk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fzp493DGyrg1ykv7936i4fHAp9VPTqGr0lZM0f0hRIYmEY0Z0zFg/lz3/M2PXMOQh
+         rllvYtJgcYjLzn+R5A7WBLebZR2yHRqIsRwDkBvrrwnwBG153NKuWW3w+i6Y+XYfzB
+         G+W8UaZo4Jo98QfQkpkewv8SrDB/kJ1eUppmFsj4=
+Date:   Tue, 27 Aug 2019 16:25:52 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v4 5/8] scsi: ufs: UFS crypto API
+Message-ID: <20190827232550.GA92220@gmail.com>
+Mail-Followup-To: Satya Tangirala <satyat@google.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+References: <20190821075714.65140-1-satyat@google.com>
+ <20190821075714.65140-6-satyat@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190821075714.65140-6-satyat@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 28 Aug 2019, Ming Lei wrote:
-> On Tue, Aug 27, 2019 at 06:19:00PM +0200, Thomas Gleixner wrote:
-> > > We definitely are not going to have a 64bit multiplication and division on
-> > > every interrupt. Asided of that this breaks 32bit builds all over the place.
-> > 
-> > That said, we already have infrastructure for something like this in the
-> > core interrupt code which is optimized to be lightweight in the fast path.
-> > 
-> > kernel/irq/timings.c
-> 
-> irq/timings.c is much more complicated, especially it applies EWMA to
-> compute each irq's average interval. However, we only need it for
-> do_IRQ() to cover all interrupt & softirq handler.
+On Wed, Aug 21, 2019 at 12:57:11AM -0700, Satya Tangirala wrote:
+> +static int ufshcd_crypto_cap_find(void *hba_p,
+> +			   enum blk_crypto_mode_num crypto_mode,
+> +			   unsigned int data_unit_size)
+> +{
+> +	struct ufs_hba *hba = hba_p;
+> +	enum ufs_crypto_alg ufs_alg;
+> +	u8 data_unit_mask;
+> +	int cap_idx;
+> +	enum ufs_crypto_key_size ufs_key_size;
+> +	union ufs_crypto_cap_entry *ccap_array = hba->crypto_cap_array;
+> +
+> +	if (!ufshcd_hba_is_crypto_supported(hba))
+> +		return -EINVAL;
+> +
+> +	switch (crypto_mode) {
+> +	case BLK_ENCRYPTION_MODE_AES_256_XTS:
+> +		ufs_alg = UFS_CRYPTO_ALG_AES_XTS;
+> +		ufs_key_size = UFS_CRYPTO_KEY_SIZE_256;
+> +		break;
+> +	/*
+> +	 * case BLK_CRYPTO_ALG_BITLOCKER_AES_CBC:
+> +	 *	ufs_alg = UFS_CRYPTO_ALG_BITLOCKER_AES_CBC;
+> +	 *	break;
+> +	 * case BLK_CRYPTO_ALG_AES_ECB:
+> +	 *	ufs_alg = UFS_CRYPTO_ALG_AES_ECB;
+> +	 *	break;
+> +	 * case BLK_CRYPTO_ALG_ESSIV_AES_CBC:
+> +	 *	ufs_alg = UFS_CRYPTO_ALG_ESSIV_AES_CBC;
+> +	 *	break;
+> +	 */
 
-That does not justify yet another ad hoc thingy.
+Perhaps just delete this comment... the constants are already outdated.
 
-> Also CONFIG_IRQ_TIMINGS is usually disabled on distributions.
+> +	hba->crypto_cfgs =
+> +		devm_kcalloc(hba->dev,
+> +			     hba->crypto_capabilities.config_count + 1,
+> +			     sizeof(hba->crypto_cfgs[0]),
+> +			     GFP_KERNEL);
 
-That's not an argument at all.
+Can use NUM_KEYSLOTS(hba) here, to avoid hardcoding the awkward '+ 1' again.
 
-Thanks,
+> +void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+> +					    struct request_queue *q)
+> +{
+> +	if (!ufshcd_hba_is_crypto_supported(hba))
+> +		return;
+> +
+> +	if (q) {
+> +		mutex_lock(&hba->ksm_lock);
+> +		if (!hba->ksm) {
+> +			hba->ksm = keyslot_manager_create(
+> +				hba->crypto_capabilities.config_count + 1,
+> +				&ufshcd_ksm_ops, hba);
+> +			hba->ksm_num_refs = 0;
 
-	tglx
+Same here.
+
+> +		}
+> +		hba->ksm_num_refs++;
+> +		mutex_unlock(&hba->ksm_lock);
+> +		q->ksm = hba->ksm;
+> +	}
+> +	/*
+> +	 * If we fail we make it look like
+> +	 * crypto is not supported, which will avoid issues
+> +	 * with reset
+> +	 */
+> +	if (!q || !q->ksm) {
+> +		ufshcd_crypto_disable(hba);
+> +		hba->crypto_capabilities.reg_val = 0;
+> +		devm_kfree(hba->dev, hba->crypto_cap_array);
+> +		devm_kfree(hba->dev, hba->crypto_cfgs);
+> +	}
+> +}
+> +
+> +void ufshcd_crypto_destroy_rq_keyslot_manager(struct ufs_hba *hba,
+> +					      struct request_queue *q)
+> +{
+> +	if (q && q->ksm) {
+> +		q->ksm = NULL;
+> +		mutex_lock(&hba->ksm_lock);
+> +		hba->ksm_num_refs--;
+> +		if (hba->ksm_num_refs == 0) {
+> +			keyslot_manager_destroy(hba->ksm);
+> +			hba->ksm = NULL;
+> +		}
+> +		mutex_unlock(&hba->ksm_lock);
+> +	}
+> +}
+
+Why is the keyslot_manager reference counted?  Doesn't it live as long as the
+individual devices do?  So, can't we just create the keyslot manager when the
+ufs_hba is created, and destroy it when the ufs_hba is destroyed?  Then for each
+device we'd just set 'q->ksm = hba->ksm;', with no refcounting needed.
+
+- Eric
