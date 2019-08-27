@@ -2,97 +2,231 @@ Return-Path: <SRS0=cdy6=WX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8290BC3A5A3
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 735F5C41514
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:23:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 404A620828
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:19:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 492D220828
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 21:23:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="PrihlO43"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k15hrvDz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730710AbfH0VT4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Aug 2019 17:19:56 -0400
-Received: from rcdn-iport-8.cisco.com ([173.37.86.79]:39518 "EHLO
-        rcdn-iport-8.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726871AbfH0VT4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 17:19:56 -0400
-X-Greylist: delayed 424 seconds by postgrey-1.27 at vger.kernel.org; Tue, 27 Aug 2019 17:19:55 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=cisco.com; i=@cisco.com; l=1244; q=dns/txt; s=iport;
-  t=1566940795; x=1568150395;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ctQoQRPIDAnumzvZIxcHe/wDmcyljwj9W3MoQzgkDsA=;
-  b=PrihlO43/56a/WZ0UnSNGFvGb91aHhea01SqyQ1jqcqZll6OG0+r3dFu
-   Vj7ht2SLvQBRYDRHMsSc3213OyAj9Y7jqmLJScBxMW44KXaWQGCKSzNNb
-   TZBRxmU9Eih2PjGuhRjrMlqDdqd7gbP/yb65Y+T01y2No/TSk06Af8a1O
-   4=;
-X-IronPort-AV: E=Sophos;i="5.64,438,1559520000"; 
-   d="scan'208";a="620082385"
-Received: from rcdn-core-7.cisco.com ([173.37.93.143])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/DHE-RSA-SEED-SHA; 27 Aug 2019 21:12:51 +0000
-Received: from cisco.cisco.com ([10.157.132.113])
-        (authenticated bits=0)
-        by rcdn-core-7.cisco.com (8.15.2/8.15.2) with ESMTPSA id x7RLCki6005712
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO);
-        Tue, 27 Aug 2019 21:12:51 GMT
-From:   Govindarajulu Varadarajan <gvaradar@cisco.com>
-To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.ibm.com
-Cc:     Govindarajulu Varadarajan <gvaradar@cisco.com>,
-        Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH] scsi: fnic: fix msix interrupt allocation
-Date:   Tue, 27 Aug 2019 14:13:40 -0700
-Message-Id: <20190827211340.1095-1-gvaradar@cisco.com>
-X-Mailer: git-send-email 2.23.0
+        id S1730513AbfH0VXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Aug 2019 17:23:20 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:34852 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726675AbfH0VXT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 17:23:19 -0400
+Received: by mail-wr1-f65.google.com with SMTP id k2so283979wrq.2;
+        Tue, 27 Aug 2019 14:23:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=pTOaZhW5xKtnT1x8xRBR+lYJlD1bPd7S9+Vr1x5mo0c=;
+        b=k15hrvDzSkku9LhKt4Dw7rN5H5/wnPa5DLw2TxVQi9ZwArGhWd0Bq6pcX7CLvAme9f
+         vujFTq4VbRK80hSNZXfgYzkt7nmoJEZukM+3t0q4bv9a6JgkRK6iJFjsjSPGsQJ+2JrC
+         HP9YCDUHmub9O9iG6bOWZTl/iWQXjCm/athaXNwoqlGq+la0uegJnH6Pz4pXkvS+ngXp
+         u3g7kLmnKo1fMhze/vyb6DVBuZste+cB8J5Ewg4wHYs0Aahb260NPhW6uCxw8/BlK95u
+         K8PcgYnn8BBpozs2i3R6x1EZxl3OYzep37PIWYmoiMx4rpp2RZrNvUX55u6Jbxv0r5Ma
+         recw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=pTOaZhW5xKtnT1x8xRBR+lYJlD1bPd7S9+Vr1x5mo0c=;
+        b=IEEfk+J6v6LuxVaTPfLUTRsAlX71daCqtwxJbidEk4NEuifFlk1OEWS6EVXXZCl5MZ
+         cZo9Y4iH7tnqfOjFg1drEJ+b61hsqI8ZU/LTLYoBxkBOWooyiRwrNelhQP/CN8xcl/Jn
+         ivO7kfak2IBgU8/pjH7BiVqGK0Rzm45AGii71pwAiDawyA4KqUpp6OORj/gdzZGnI9XX
+         0TvH6uvE8lOatM7YYkjQtpaZmDlpkYtZ6YVgjKIsiu4CgJP7Yx5XkOCHGYRpVugCRJgJ
+         21yHS8XHuhfN/bAa2D+jgh0tAs0N6RPS5iYaXoDhehU0QjzahdCWkAuEybQTnJtvdttQ
+         ZddQ==
+X-Gm-Message-State: APjAAAVjgJDGAq5qhaoKc8bnVt6YId101pJ+SVpjY4h+eGFS6Cv0C378
+        CNb09ANOkIwCxiJs1HDF1memyIwR
+X-Google-Smtp-Source: APXvYqwch/WIGFqX8UdlE+stqLlGzDb6mAAO+ADMOVPkX0a9I6jBXMkZldGyPc5HrWWioaq5b/AYSQ==
+X-Received: by 2002:adf:f281:: with SMTP id k1mr262269wro.154.1566940996262;
+        Tue, 27 Aug 2019 14:23:16 -0700 (PDT)
+Received: from [192.168.1.19] (ckl27.neoplus.adsl.tpnet.pl. [83.31.87.27])
+        by smtp.gmail.com with ESMTPSA id f13sm252179wrr.5.2019.08.27.14.23.14
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 27 Aug 2019 14:23:15 -0700 (PDT)
+Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
+To:     Akinobu Mita <akinobu.mita@gmail.com>
+Cc:     Pavel Machek <pavel@ucw.cz>, linux-block@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org,
+        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
+        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
+ <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
+ <20190817145509.GA18381@amd> <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
+ <20190819143842.GA25401@amd> <7c4c4853-7e3a-0618-92a0-337e248e2b4c@gmail.com>
+ <c937b7e0-02c6-ae9a-aaf7-16a2ef29886d@gmail.com>
+ <CAC5umyjxkeR3rhf3XZvwkxLvc-0ENEkQfOLnk8A12Qazr9Et8w@mail.gmail.com>
+ <86309c4f-bcee-182c-369f-fcc883f379c6@gmail.com>
+ <CAC5umyibEMrxhZv0TyS6hYHR+oyj2Oby+LVsjrYmMV8u-chXRQ@mail.gmail.com>
+From:   Jacek Anaszewski <jacek.anaszewski@gmail.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=jacek.anaszewski@gmail.com; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <1f7928a1-61ba-72f0-fd03-2208856cd8b8@gmail.com>
+Date:   Tue, 27 Aug 2019 23:23:13 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <CAC5umyibEMrxhZv0TyS6hYHR+oyj2Oby+LVsjrYmMV8u-chXRQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Authenticated-User: gvaradar@cisco.com
-X-Outbound-SMTP-Client: 10.157.132.113, [10.157.132.113]
-X-Outbound-Node: rcdn-core-7.cisco.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-pci_alloc_irq_vectors() returns number of vectors allocated.
-Fix the check for error condition.
+On 8/27/19 4:03 PM, Akinobu Mita wrote:
+> 2019年8月25日(日) 0:53 Jacek Anaszewski <jacek.anaszewski@gmail.com>:
+>>
+>> On 8/23/19 6:00 PM, Akinobu Mita wrote:
+>>> 2019年8月20日(火) 3:38 Jacek Anaszewski <jacek.anaszewski@gmail.com>:
+>>>>
+>>>> On 8/19/19 8:22 PM, Jacek Anaszewski wrote:
+>>>>> On 8/19/19 4:38 PM, Pavel Machek wrote:
+>>>>>> On Sat 2019-08-17 22:07:43, Jacek Anaszewski wrote:
+>>>>>>> On 8/17/19 4:55 PM, Pavel Machek wrote:
+>>>>>>>> On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
+>>>>>>>>> This allows LEDs to be controlled by block device activity.
+>>>>>>>>>
+>>>>>>>>> We already have ledtrig-disk (LED disk activity trigger), but the lower
+>>>>>>>>> level disk drivers need to utilize ledtrig_disk_activity() to make the
+>>>>>>>>> LED blink.
+>>>>>>>>>
+>>>>>>>>> The LED block device trigger doesn't require the lower level drivers to
+>>>>>>>>> have any instrumentation. The activity is collected by polling the disk
+>>>>>>>>> stats.
+>>>>>>>>>
+>>>>>>>>> Example:
+>>>>>>>>>
+>>>>>>>>> echo block-nvme0n1 > /sys/class/leds/diy/trigger
+>>>>>>>>
+>>>>>>>> Lets use one trigger "block" and have the device as a parameter,
+>>>>>>>> please.
+>>>>>>>>
+>>>>>>>> We already have 1000 cpu triggers on 1000 cpu machines, and yes, its a
+>>>>>>>> disaster we'll need to fix. Lets not repeat the same mistake here.
+>>>>>>>>
+>>>>>>>> I guess it may be slightly more work. Sorry about that.
+>>>>>>>
+>>>>>>> We should be able to list available block devices to set,
+>>>>>>> so the problem would be not avoided anyway.
+>>>>>>
+>>>>>> Should we? We need to list triggers, but we may not list all the devices...
+>>>>>
+>>>>> This is similar to usbport trigger that lists available
+>>>>> ports as files in a sub-directory. We might eventually go
+>>>>> in this direction.
+>>>>
+>>>> I must withdraw this statement. This is not similar to usbport
+>>>> trigger. The difference is that with ledtrig-block we have separate
+>>>> triggers per each device and I am not aware if there is some centralized
+>>>> mechanism similar to blocking_notifier_chain (usb_notifier_list
+>>>> in drivers/usb/core/notify.c) available for block devices, that
+>>>> would allow to gather all available block devs under common trigger.
+>>>>
+>>>> Moreover I remember Greg once discouraged using notifier chains
+>>>> as they are unsafe, so we would need some other solution anyway.
+>>>
+>>> I start thinking that we should implement the LED block device activity
+>>> trigger in userspace.  The userspace application firstly activates
+>>> one-shot LED trigger and periodically reads /sys/block/<disk>/stat and
+>>> writes /sys/class/leds/<led>/shot if there is any disk activity.
+>>
+>> This would suboptimal solution. I have another idea - let's get back
+>> to the implementation of ledtrig-blk in genhd.c. We would be registering
+>> one trigger on module initialization in a function with __init modifier.
+>> Then we would need to add/remove triggers to the ledtrig-blk in
+>> register_blkdev()/unregister_blkdev(). And registered triggers would
+>> be listed in block_devs directory created by the trigger.
+>>
+>> You can compare how drivers/usb/core/ledtrig-usbport.c maintains
+>> similar directory of usb ports.
+> 
+> It could be possible, but I have yet another idea.  What about introducing
+> /proc/led-triggers and /sys/class/leds/<led>/current-trigger?
+> The /sys/class/leds/<led>/trigger will be obsoleted by these two files.
+> 
+> The /proc/led-triggers is read only and no PAGE_SIZE limitation by the
+> seq_file interface.  So we can list all triggers in this file.
+> 
+> The /sys/class/leds/<led>/current-trigger is almost identical to
+> /sys/class/leds/<led>/trigger.  The only difference is that
+> 'current-trigger' only shows the current trigger name.
 
-Fixes: cca678dfbad49 ("scsi: fnic: switch to pci_alloc_irq_vectors")
-Acked-by: Satish Kharat <satishkh@cisco.com>
-Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
----
- drivers/scsi/fnic/fnic_isr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There's not need to come up with yet another trigger interface.
+We just need to convert sysfs trigger attribute type to binary.
 
-diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
-index da4602b63495..2fb2731f50fb 100644
---- a/drivers/scsi/fnic/fnic_isr.c
-+++ b/drivers/scsi/fnic/fnic_isr.c
-@@ -254,7 +254,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
- 		int vecs = n + m + o + 1;
- 
- 		if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
--				PCI_IRQ_MSIX) < 0) {
-+				PCI_IRQ_MSIX) == vecs) {
- 			fnic->rq_count = n;
- 			fnic->raw_wq_count = m;
- 			fnic->wq_copy_count = o;
-@@ -280,7 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
- 	    fnic->wq_copy_count >= 1 &&
- 	    fnic->cq_count >= 3 &&
- 	    fnic->intr_count >= 1 &&
--	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
-+	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) == 1) {
- 		fnic->rq_count = 1;
- 		fnic->raw_wq_count = 1;
- 		fnic->wq_copy_count = 1;
 -- 
-2.21.0
-
+Best regards,
+Jacek Anaszewski
