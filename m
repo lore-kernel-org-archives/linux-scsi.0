@@ -6,90 +6,101 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE6E7C3A5A3
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 16:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C68D5C3A5A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 17:27:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DE7321883
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 16:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A82AF2184D
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Aug 2019 17:27:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728834AbfH0QTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Aug 2019 12:19:47 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:44288 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726621AbfH0QTq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 12:19:46 -0400
-Received: from p5de0b6c5.dip0.t-ipconnect.de ([93.224.182.197] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1i2eBS-0002Hz-3S; Tue, 27 Aug 2019 18:19:02 +0200
-Date:   Tue, 27 Aug 2019 18:19:00 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Ming Lei <ming.lei@redhat.com>
-cc:     LKML <linux-kernel@vger.kernel.org>,
-        Long Li <longli@microsoft.com>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        John Garry <john.garry@huawei.com>,
-        Hannes Reinecke <hare@suse.com>,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Daniel Lezcano <daniel.lezcano@linaro.org>
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-In-Reply-To: <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de>
-Message-ID: <alpine.DEB.2.21.1908271817180.1939@nanos.tec.linutronix.de>
-References: <20190827085344.30799-1-ming.lei@redhat.com> <20190827085344.30799-2-ming.lei@redhat.com> <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1729779AbfH0R1n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Aug 2019 13:27:43 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:33118 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727633AbfH0R1m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Aug 2019 13:27:42 -0400
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i2fFm-0007Sw-Vk; Tue, 27 Aug 2019 17:27:35 +0000
+Date:   Tue, 27 Aug 2019 18:27:34 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Boaz Harrosh <boaz@plexistor.com>
+Cc:     Kai =?iso-8859-1?Q?M=E4kisara_=28Kolumbus=29?= 
+        <kai.makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>,
+        linux-fsdevel@vger.kernel.org,
+        Octavian Purdila <octavian.purdila@intel.com>,
+        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [RFC] Re: broken userland ABI in configfs binary attributes
+Message-ID: <20190827172734.GS1131@ZenIV.linux.org.uk>
+References: <20190826024838.GN1131@ZenIV.linux.org.uk>
+ <20190826162949.GA9980@ZenIV.linux.org.uk>
+ <B35B5EA9-939C-49F5-BF65-491D70BCA8D4@kolumbus.fi>
+ <20190826193210.GP1131@ZenIV.linux.org.uk>
+ <b362af55-4f45-bf29-9bc4-dd64e6b04688@plexistor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b362af55-4f45-bf29-9bc4-dd64e6b04688@plexistor.com>
+User-Agent: Mutt/1.12.0 (2019-05-25)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 27 Aug 2019, Thomas Gleixner wrote:
-> On Tue, 27 Aug 2019, Ming Lei wrote:
-> > +/*
-> > + * Update average irq interval with the Exponential Weighted Moving
-> > + * Average(EWMA)
-> > + */
-> > +static void irq_update_interval(void)
-> > +{
-> > +#define IRQ_INTERVAL_EWMA_WEIGHT	128
-> > +#define IRQ_INTERVAL_EWMA_PREV_FACTOR	127
-> > +#define IRQ_INTERVAL_EWMA_CURR_FACTOR	(IRQ_INTERVAL_EWMA_WEIGHT - \
-> > +		IRQ_INTERVAL_EWMA_PREV_FACTOR)
+On Tue, Aug 27, 2019 at 06:01:27PM +0300, Boaz Harrosh wrote:
+> On 26/08/2019 22:32, Al Viro wrote:
+> <>
+> > D'oh...  OK, that settles it; exclusion with st_write() would've been
+> > painful, but playing with the next st_write() on the same struct file
+> > rewinding the damn thing to overwrite what st_flush() had spewed is
+> > an obvious no-go.
+> > 
 > 
-> Please do not stick defines into a function body. That's horrible.
-> 
-> > +
-> > +	int cpu = raw_smp_processor_id();
-> > +	struct irq_interval *inter = per_cpu_ptr(&avg_irq_interval, cpu);
-> > +	u64 delta = sched_clock_cpu(cpu) - inter->last_irq_end;
-> 
-> Why are you doing that raw_smp_processor_id() dance? The call site has
-> interrupts and preemption disabled.
-> 
-> Also how is that supposed to work when sched_clock is jiffies based?
-> 
-> > +	inter->avg = (inter->avg * IRQ_INTERVAL_EWMA_PREV_FACTOR +
-> > +		delta * IRQ_INTERVAL_EWMA_CURR_FACTOR) /
-> > +		IRQ_INTERVAL_EWMA_WEIGHT;
-> 
-> We definitely are not going to have a 64bit multiplication and division on
-> every interrupt. Asided of that this breaks 32bit builds all over the place.
+> So what are the kind of errors current ->release implementation is trying to return?
+> Is it actual access the HW errors or its more of a resource allocations errors?
+> If the later then maybe the allocations can be done before hand, say at ->flush but
+> are not redone on redundant flushes?
 
-That said, we already have infrastructure for something like this in the
-core interrupt code which is optimized to be lightweight in the fast path.
+Most of them are actually pure bollocks - "it can never happen, but if it does,
+let's return -EWHATEVER to feel better".  Some are crap like -EINTR, which is
+also bollocks - for one thing, process might've been closing files precisely
+because it's been hit by SIGKILL.  For another, it's a destructor.  It won't
+be retried by the caller - there's nothing called for that object afterwards.
+What you don't do in it won't be done at all.
 
-kernel/irq/timings.c
+And some are "commit on final close" kind of thing, both with the hardware
+errors and parsing errors.
 
-Talk to Daniel Lezcano (Cc'ed) how you can (ab)use that.
+> If the former then yes looks like troubles. That said I believe the 
+> ->last_close_with_error() is a very common needed pattern which few use exactly
+> because it does not work. But which I wanted/needed many times before.
+> 
+> So I would break some eggs which ever is the most elegant way, and perhaps add a
+> new parameter to ->flush(bool last) or some other easy API.
+> [Which is BTW the worst name ever, while at it lets rename it to ->close() which
+>  is what it is. "flush" is used elsewhere to mean sync.
+> ]
 
-Thanks,
+It *is* flush.  And nothing else, really - it makes sure that dirty data is
+pushed to destination, with any errors reported.
 
-	tglx
+> So yes please lets fix VFS API with drivers so to have an easy and safe way
+> to execute very last close, all the while still being able to report errors to
+> close(2).
+
+What the hell is "very last close()"?  Note, BTW, that you can have one thread
+call close() in the middle of write() by another thread.  And that will succeed,
+with actual ->release() happening no earlier than write() is done; however,
+descriptor will be gone when close(2) is done.
+
+You are assuming the model that doesn't match the basic userland ABI for
+descriptors.  And no, close(2) is not going to wait for write(2) to finish.
+Neither it is going to interrupt said write(2).
+
+Note, BTW, that an error returned by close(2) does *NOT* leave the descriptor
+in place - success or failure, it's gone.
+
+If you want to express something like "data packet formed; now you can commit
+it and tell me if there'd been any errors", use something explicit.  close()
+simply isn't suitable for that.  writev() for datagram-like semantics might
+be; fsync() or fdatasync() could serve for "commit now".
