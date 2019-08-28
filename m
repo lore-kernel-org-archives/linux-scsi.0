@@ -2,195 +2,283 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F72C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 09:09:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79075C3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 09:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B0FB21883
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 09:09:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4664E217F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 09:43:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566985421;
+	bh=DrxpcvLPjSoef3pZxbyGqKU+s+5EBC36hX41i/pgb9Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=BvNbPdPsrre32bWby62eboGEpbFb4UkxEBMFRpQcLY4K+pyexvPXUCnKBmch/KibS
+	 Ye2cNqnmw21mT2o4UklEv8WLNLWhnxrkJJsJq2dsh5pfnkoOe5xfNpgz/oPXIzcsSS
+	 5nFDlMRv88B9pu+7MOJqDrxeeoUkcAx0+UNpnGoc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726315AbfH1JJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 05:09:07 -0400
-Received: from ns.iliad.fr ([212.27.33.1]:46764 "EHLO ns.iliad.fr"
+        id S1726445AbfH1Jnh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 05:43:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57918 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726300AbfH1JJG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Aug 2019 05:09:06 -0400
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 3823F205F8;
-        Wed, 28 Aug 2019 11:09:03 +0200 (CEST)
-Received: from [192.168.108.37] (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 13E812018B;
-        Wed, 28 Aug 2019 11:09:03 +0200 (CEST)
-To:     SCSI <linux-scsi@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>
-Cc:     Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Nikita Shvets <runetmember@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-Subject: ufshcd_abort: Device abort task at tag 7
-Message-ID: <9f3ed253-5f6b-1893-531d-085f881956dd@free.fr>
-Date:   Wed, 28 Aug 2019 11:09:02 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726273AbfH1Jnh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Aug 2019 05:43:37 -0400
+Received: from linux-8ccs (ip5f5adbee.dynamic.kabel-deutschland.de [95.90.219.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E457F20856;
+        Wed, 28 Aug 2019 09:43:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566985415;
+        bh=DrxpcvLPjSoef3pZxbyGqKU+s+5EBC36hX41i/pgb9Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KSVkX0CgHwWNBsu2RQeu4ZP/IvBVvB40IedOwcv7ENixOzcdZU8MUeeexgPlOi5u1
+         mIK5Xw9TIbZC4SYcwobysGcj7+rSdjPVrg+7EaJIsy5Yk4Jcq6IaqEWIlgk5QEdGSM
+         CIIbpoJbCMm+6cqUQDa3gr/1HchbVefrheq+7EKI=
+Date:   Wed, 28 Aug 2019 11:43:26 +0200
+From:   Jessica Yu <jeyu@kernel.org>
+To:     Matthias Maennich <maennich@google.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-team@android.com,
+        arnd@arndb.de, geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        hpa@zytor.com, joel@joelfernandes.org,
+        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
+        maco@android.com, maco@google.com, michal.lkml@markovi.net,
+        mingo@redhat.com, oneukum@suse.com, pombredanne@nexb.com,
+        sam@ravnborg.org, sspatil@google.com, stern@rowland.harvard.edu,
+        tglx@linutronix.de, usb-storage@lists.one-eyed-alien.net,
+        x86@kernel.org, yamada.masahiro@socionext.com
+Subject: Re: [PATCH v3 04/11] modpost: add support for symbol namespaces
+Message-ID: <20190828094325.GA25048@linux-8ccs>
+References: <20190813121733.52480-1-maennich@google.com>
+ <20190821114955.12788-1-maennich@google.com>
+ <20190821114955.12788-5-maennich@google.com>
+ <20190826162138.GA31739@linux-8ccs>
+ <20190827144117.GB102829@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Wed Aug 28 11:09:03 2019 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190827144117.GB102829@google.com>
+X-OS:   Linux linux-8ccs 4.12.14-lp150.12.61-default x86_64
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
++++ Matthias Maennich [27/08/19 15:41 +0100]:
+>On Mon, Aug 26, 2019 at 06:21:38PM +0200, Jessica Yu wrote:
+>>+++ Matthias Maennich [21/08/19 12:49 +0100]:
+>>>Add support for symbols that are exported into namespaces. For that,
+>>>extract any namespace suffix from the symbol name. In addition, emit a
+>>>warning whenever a module refers to an exported symbol without
+>>>explicitly importing the namespace that it is defined in. This patch
+>>>consistently adds the namespace suffix to symbol names exported into
+>>>Module.symvers.
+>>>
+>>>Example warning emitted by modpost in case of the above violation:
+>>>
+>>>WARNING: module ums-usbat uses symbol usb_stor_resume from namespace
+>>>USB_STORAGE, but does not import it.
+>>>
+>>>Co-developed-by: Martijn Coenen <maco@android.com>
+>>>Signed-off-by: Martijn Coenen <maco@android.com>
+>>>Reviewed-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+>>>Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>>>Signed-off-by: Matthias Maennich <maennich@google.com>
+>>>---
+>>>scripts/mod/modpost.c | 91 +++++++++++++++++++++++++++++++++++++------
+>>>scripts/mod/modpost.h |  7 ++++
+>>>2 files changed, 87 insertions(+), 11 deletions(-)
+>>>
+>>>diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+>>>index f277e116e0eb..538bb24ffee3 100644
+>>>--- a/scripts/mod/modpost.c
+>>>+++ b/scripts/mod/modpost.c
+>>>@@ -164,6 +164,7 @@ struct symbol {
+>>>	struct module *module;
+>>>	unsigned int crc;
+>>>	int crc_valid;
+>>>+	const char *namespace;
+>>>	unsigned int weak:1;
+>>>	unsigned int vmlinux:1;    /* 1 if symbol is defined in vmlinux */
+>>>	unsigned int kernel:1;     /* 1 if symbol is from kernel
+>>>@@ -233,6 +234,37 @@ static struct symbol *find_symbol(const char *name)
+>>>	return NULL;
+>>>}
+>>>
+>>>+static bool contains_namespace(struct namespace_list *list,
+>>>+			       const char *namespace)
+>>>+{
+>>>+	struct namespace_list *ns_entry;
+>>>+
+>>>+	for (ns_entry = list; ns_entry != NULL; ns_entry = ns_entry->next)
+>>>+		if (strcmp(ns_entry->namespace, namespace) == 0)
+>>>+			return true;
+>>>+
+>>>+	return false;
+>>>+}
+>>>+
+>>>+static void add_namespace(struct namespace_list **list, const char *namespace)
+>>>+{
+>>>+	struct namespace_list *ns_entry;
+>>>+
+>>>+	if (!contains_namespace(*list, namespace)) {
+>>>+		ns_entry = NOFAIL(malloc(sizeof(struct namespace_list) +
+>>>+					 strlen(namespace) + 1));
+>>>+		strcpy(ns_entry->namespace, namespace);
+>>>+		ns_entry->next = *list;
+>>>+		*list = ns_entry;
+>>>+	}
+>>>+}
+>>>+
+>>>+static bool module_imports_namespace(struct module *module,
+>>>+				     const char *namespace)
+>>>+{
+>>>+	return contains_namespace(module->imported_namespaces, namespace);
+>>>+}
+>>>+
+>>>static const struct {
+>>>	const char *str;
+>>>	enum export export;
+>>>@@ -312,6 +344,22 @@ static enum export export_from_sec(struct elf_info *elf, unsigned int sec)
+>>>		return export_unknown;
+>>>}
+>>>
+>>>+static const char *sym_extract_namespace(const char **symname)
+>>>+{
+>>>+	size_t n;
+>>>+	char *dupsymname;
+>>>+
+>>>+	n = strcspn(*symname, ".");
+>>>+	if (n < strlen(*symname) - 1) {
+>>>+		dupsymname = NOFAIL(strdup(*symname));
+>>>+		dupsymname[n] = '\0';
+>>>+		*symname = dupsymname;
+>>>+		return dupsymname + n + 1;
+>>>+	}
+>>>+
+>>>+	return NULL;
+>>>+}
+>>>+
+>>>/**
+>>>* Add an exported symbol - it may have already been added without a
+>>>* CRC, in this case just update the CRC
+>>>@@ -319,16 +367,18 @@ static enum export export_from_sec(struct elf_info *elf, unsigned int sec)
+>>>static struct symbol *sym_add_exported(const char *name, struct module *mod,
+>>>				       enum export export)
+>>>{
+>>>-	struct symbol *s = find_symbol(name);
+>>>+	const char *symbol_name = name;
+>>>+	const char *namespace = sym_extract_namespace(&symbol_name);
+>>>+	struct symbol *s = find_symbol(symbol_name);
+>>>
+>>>	if (!s) {
+>>>-		s = new_symbol(name, mod, export);
+>>>+		s = new_symbol(symbol_name, mod, export);
+>>>+		s->namespace = namespace;
+>>>	} else {
+>>>		if (!s->preloaded) {
+>>>-			warn("%s: '%s' exported twice. Previous export "
+>>>-			     "was in %s%s\n", mod->name, name,
+>>>-			     s->module->name,
+>>>-			     is_vmlinux(s->module->name) ?"":".ko");
+>>>+			warn("%s: '%s' exported twice. Previous export was in %s%s\n",
+>>>+			     mod->name, symbol_name, s->module->name,
+>>>+			     is_vmlinux(s->module->name) ? "" : ".ko");
+>>>		} else {
+>>>			/* In case Module.symvers was out of date */
+>>>			s->module = mod;
+>>>@@ -1943,6 +1993,7 @@ static void read_symbols(const char *modname)
+>>>	const char *symname;
+>>>	char *version;
+>>>	char *license;
+>>>+	char *namespace;
+>>>	struct module *mod;
+>>>	struct elf_info info = { };
+>>>	Elf_Sym *sym;
+>>>@@ -1974,6 +2025,12 @@ static void read_symbols(const char *modname)
+>>>		license = get_next_modinfo(&info, "license", license);
+>>>	}
+>>>
+>>>+	namespace = get_modinfo(&info, "import_ns");
+>>>+	while (namespace) {
+>>>+		add_namespace(&mod->imported_namespaces, namespace);
+>>>+		namespace = get_next_modinfo(&info, "import_ns", namespace);
+>>>+	}
+>>>+
+>>>	for (sym = info.symtab_start; sym < info.symtab_stop; sym++) {
+>>>		symname = remove_dot(info.strtab + sym->st_name);
+>>>
+>>>@@ -2118,6 +2175,13 @@ static int check_exports(struct module *mod)
+>>>			basename++;
+>>>		else
+>>>			basename = mod->name;
+>>>+
+>>>+		if (exp->namespace &&
+>>>+		    !module_imports_namespace(mod, exp->namespace)) {
+>>>+			warn("module %s uses symbol %s from namespace %s, but does not import it.\n",
+>>>+			     basename, exp->name, exp->namespace);
+>>>+		}
+>>>+
+>>>		if (!mod->gpl_compatible)
+>>>			check_for_gpl_usage(exp->export, basename, exp->name);
+>>>		check_for_unused(exp->export, basename, exp->name);
+>>>@@ -2395,16 +2459,21 @@ static void write_dump(const char *fname)
+>>>{
+>>>	struct buffer buf = { };
+>>>	struct symbol *symbol;
+>>>+	const char *namespace;
+>>>	int n;
+>>>
+>>>	for (n = 0; n < SYMBOL_HASH_SIZE ; n++) {
+>>>		symbol = symbolhash[n];
+>>>		while (symbol) {
+>>>-			if (dump_sym(symbol))
+>>>-				buf_printf(&buf, "0x%08x\t%s\t%s\t%s\n",
+>>>-					symbol->crc, symbol->name,
+>>>-					symbol->module->name,
+>>>-					export_str(symbol->export));
+>>>+			if (dump_sym(symbol)) {
+>>>+				namespace = symbol->namespace;
+>>>+				buf_printf(&buf, "0x%08x\t%s%s%s\t%s\t%s\n",
+>>>+					   symbol->crc, symbol->name,
+>>>+					   namespace ? "." : "",
+>>>+					   namespace ? namespace : "",
+>>
+>>I think it might be cleaner to just have namespace be a separate
+>>field in Module.symvers, rather than appending a dot and the
+>>namespace at the end of a symbol name. Maybe something like
+>>
+>>  <crc> <symbol_name> <namespace> <module>
+>>
+>>For symbols without a namespace, we could just have "", with all
+>>fields delimited by tabs. This is just a stylistic suggestion, what do
+>>you think?
+>
+>I thought of something like that initially, but did not do it to not
+>break users of this file. But as I am anyway breaking users by changing
+>the symbol name into symbol.NS, I might as well do it as you suggested.
+>Since read_dump() also knew already how to extract the namespaces from
+>symbol.NS, it had already worked without a change to the reading code
+>of modpost. Are there any other consumers of Module.symvers that we
+>should be aware of?
 
-Someone posted a bug report for UFS on an sdm850 tablet:
-https://bugzilla.kernel.org/show_bug.cgi?id=204685
+Maybe we can ease any possible breakage caused by the new format by
+putting the namespace column last? Then the first 4 fields crc,
+symbol, module, export type will remain in the same order, with
+namespace last. In-tree, I think we would need to update
+scripts/export_report.pl.
 
-If I'm reading the boot logs right, this board is EFI rather than DT.
-(Lee: EFI on qcom is one of your areas, right?
-The UFSHC driver is DT-aware, but is it EFI-aware?)
+kmod is likely to be affected too - Lucas, would the addition of a new
+field (in the order described above) in Module.symvers break any kmod tools?
 
-[    0.000000] efi: memattr: Unexpected EFI Memory Attributes table version -1347440721
-I suppose this may be safely ignored?
+Thanks,
 
-[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.2.0-99-generic root=UUID=66e85825-5c21-4120-b4ee-e17e4cdc1e58 ro efi=novamap ignore_loglevel clk_ignore_unused pd_ignore_unused console=tty0
-IIUC, the kernel is supposed to boot successfully even without
-"clk_ignore_unused pd_ignore_unused" (tangential, unrelated)
+Jessica
 
-Bjorn, any ideas? Ever see this issue?
-
-Regards.
-
-
-Notable events:
-
-[    2.438780] geni_se_qup 8c0000.geniqup: Err getting AHB clks -517
-[    2.439030] geni_se_qup ac0000.geniqup: Err getting AHB clks -517
-
-[    2.453050] ufshcd-qcom 1d84000.ufshc: ufshcd_get_vreg: vcc get failed, err=-517
-[    2.458477] ufshcd-qcom 1d84000.ufshc: Initialization failed
-
-[    2.540980] ufshcd-qcom 1d84000.ufshc: ufs_qcom_init: required phy device. hasn't probed yet. err = -517
-[    2.540986] ufshcd-qcom 1d84000.ufshc: ufshcd_variant_hba_init: variant qcom init failed err -517
-[    2.541052] ufshcd-qcom 1d84000.ufshc: Initialization failed
-
-[    2.695052] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
-[    2.699182] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq-supply regulator, assuming enabled
-[    2.706287] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
-[    2.866207] ufshcd-qcom 1d84000.ufshc: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
-
-[   33.772190] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 7
-[   33.774946] sd 0:0:0:5: [sdf] tag#7 CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
-[   33.805525] ufshcd-qcom 1d84000.ufshc: hba->ufs_version = 0x210, hba->capabilities = 0x1587031f
-[   33.808338] ufshcd-qcom 1d84000.ufshc: hba->outstanding_reqs = 0xab000080, hba->outstanding_tasks = 0x0
-
-[   34.045961] ufshcd-qcom 1d84000.ufshc: UPIU[7] - issue time 3165714 us
-[   34.047069] ufshcd-qcom 1d84000.ufshc: UPIU[7] - complete time 0 us
-[   34.048196] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Transfer Request Descriptor phys@0x2661cd0e0
-[   34.051799] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Request UPIU phys@0xdf045400
-[   34.055715] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Response UPIU phys@0xdf045600
-[   34.062761] ufshcd-qcom 1d84000.ufshc: UPIU[7] - PRDT - 1 entries  phys@0xdf045800
-[   34.065836] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: cmd pending in the device. tag = 7
-[   34.168171] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x01 timed-out
-[   34.169822] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -110
-[   34.171497] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 29
-[   34.174951] ufshcd-qcom 1d84000.ufshc: UPIU[29] - issue time 3036529 us
-[   34.176740] ufshcd-qcom 1d84000.ufshc: UPIU[29] - complete time 0 us
-[   34.178534] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Transfer Request Descriptor phys@0x2661cd3a0
-[   34.184172] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Request UPIU phys@0xdf055c00
-[   34.190105] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Response UPIU phys@0xdf055e00
-[   34.200535] ufshcd-qcom 1d84000.ufshc: UPIU[29] - PRDT - 1 entries  phys@0xdf056000
-[   34.202707] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
-[   34.204910] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 25
-[   34.209414] ufshcd-qcom 1d84000.ufshc: UPIU[25] - issue time 3017240 us
-[   34.211722] ufshcd-qcom 1d84000.ufshc: UPIU[25] - complete time 0 us
-[   34.214048] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Transfer Request Descriptor phys@0x2661cd320
-[   34.221259] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Request UPIU phys@0xdf052c00
-[   34.228788] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Response UPIU phys@0xdf052e00
-[   34.241869] ufshcd-qcom 1d84000.ufshc: UPIU[25] - PRDT - 1 entries  phys@0xdf053000
-[   34.244578] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
-[   34.247307] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 24
-[   34.252877] ufshcd-qcom 1d84000.ufshc: UPIU[24] - issue time 3018666 us
-[   34.255718] ufshcd-qcom 1d84000.ufshc: UPIU[24] - complete time 0 us
-[   34.258540] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Transfer Request Descriptor phys@0x2661cd300
-[   34.266987] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Request UPIU phys@0xdf052000
-[   34.275500] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Response UPIU phys@0xdf052200
-[   34.289559] ufshcd-qcom 1d84000.ufshc: UPIU[24] - PRDT - 1 entries  phys@0xdf052400
-[   34.292343] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
-[   34.295114] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 27
-[   34.300650] ufshcd-qcom 1d84000.ufshc: UPIU[27] - issue time 3040502 us
-[   34.303419] ufshcd-qcom 1d84000.ufshc: UPIU[27] - complete time 0 us
-[   34.306159] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Transfer Request Descriptor phys@0x2661cd360
-[   34.314450] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Request UPIU phys@0xdf054400
-[   34.322892] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Response UPIU phys@0xdf054600
-[   34.336707] ufshcd-qcom 1d84000.ufshc: UPIU[27] - PRDT - 1 entries  phys@0xdf054800
-[   34.339447] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
-[   34.342173] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 31
-[   34.347604] ufshcd-qcom 1d84000.ufshc: UPIU[31] - issue time 3036762 us
-[   34.350345] ufshcd-qcom 1d84000.ufshc: UPIU[31] - complete time 0 us
-[   34.353042] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Transfer Request Descriptor phys@0x2661cd3e0
-[   34.361194] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Request UPIU phys@0xdf057400
-[   34.369347] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Response UPIU phys@0xdf057600
-[   34.383041] ufshcd-qcom 1d84000.ufshc: UPIU[31] - PRDT - 1 entries  phys@0xdf057800
-[   34.385789] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
-[   34.508188] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   34.511533] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   34.616170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   34.619542] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   34.724170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   34.727563] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   34.832169] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   34.835539] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   34.940170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   34.943576] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   35.048171] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
-[   35.051618] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
-[   35.095792] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
-[   35.099829] ufshcd-qcom 1d84000.ufshc: UPIU[7] - issue time 3165714 us
-[   35.103402] ufshcd-qcom 1d84000.ufshc: UPIU[7] - complete time 0 us
-[   35.106937] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Transfer Request Descriptor phys@0x2661cd0e0
-[   35.117587] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Request UPIU phys@0xdf045400
-[   35.128237] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Response UPIU phys@0xdf045600
-[   35.145785] ufshcd-qcom 1d84000.ufshc: UPIU[7] - PRDT - 1 entries  phys@0xdf045800
-[   35.152773] ufshcd-qcom 1d84000.ufshc: UPIU[24] - issue time 3018666 us
-[   35.156346] ufshcd-qcom 1d84000.ufshc: UPIU[24] - complete time 0 us
-[   35.159906] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Transfer Request Descriptor phys@0x2661cd300
-[   35.170605] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Request UPIU phys@0xdf052000
-[   35.181279] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Response UPIU phys@0xdf052200
-[   35.198877] ufshcd-qcom 1d84000.ufshc: UPIU[24] - PRDT - 1 entries  phys@0xdf052400
-[   35.205904] ufshcd-qcom 1d84000.ufshc: UPIU[25] - issue time 3017240 us
-[   35.209398] ufshcd-qcom 1d84000.ufshc: UPIU[25] - complete time 0 us
-[   35.212913] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Transfer Request Descriptor phys@0x2661cd320
-[   35.223656] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Request UPIU phys@0xdf052c00
-[   35.234408] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Response UPIU phys@0xdf052e00
-[   35.252106] ufshcd-qcom 1d84000.ufshc: UPIU[25] - PRDT - 1 entries  phys@0xdf053000
-[   35.259137] ufshcd-qcom 1d84000.ufshc: UPIU[27] - issue time 3040502 us
-[   35.262691] ufshcd-qcom 1d84000.ufshc: UPIU[27] - complete time 0 us
-[   35.266202] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Transfer Request Descriptor phys@0x2661cd360
-[   35.276857] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Request UPIU phys@0xdf054400
-[   35.287652] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Response UPIU phys@0xdf054600
-[   35.305317] ufshcd-qcom 1d84000.ufshc: UPIU[27] - PRDT - 1 entries  phys@0xdf054800
-[   35.312298] ufshcd-qcom 1d84000.ufshc: UPIU[29] - issue time 3036529 us
-[   35.315788] ufshcd-qcom 1d84000.ufshc: UPIU[29] - complete time 0 us
-[   35.319240] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Transfer Request Descriptor phys@0x2661cd3a0
-[   35.329591] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Request UPIU phys@0xdf055c00
-[   35.339727] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Response UPIU phys@0xdf055e00
-[   35.356361] ufshcd-qcom 1d84000.ufshc: UPIU[29] - PRDT - 1 entries  phys@0xdf056000
-[   35.363009] ufshcd-qcom 1d84000.ufshc: UPIU[31] - issue time 3036762 us
-[   35.366321] ufshcd-qcom 1d84000.ufshc: UPIU[31] - complete time 0 us
-[   35.369646] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Transfer Request Descriptor phys@0x2661cd3e0
-[   35.379815] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Request UPIU phys@0xdf057400
-[   35.389919] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Response UPIU phys@0xdf057600
-[   35.406573] ufshcd-qcom 1d84000.ufshc: UPIU[31] - PRDT - 1 entries  phys@0xdf057800
-[   35.506995] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX, TX]: gear=[3, 3], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
