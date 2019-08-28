@@ -2,64 +2,64 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C80DC3A5A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 15:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B45A0C3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 17:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D6702339E
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 15:22:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GFysR3J8"
+	by mail.kernel.org (Postfix) with ESMTP id 795EB2173E
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 17:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbfH1PWY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 11:22:24 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:46232 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726440AbfH1PWX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2019 11:22:23 -0400
-Received: by mail-pf1-f196.google.com with SMTP id q139so1916580pfc.13;
-        Wed, 28 Aug 2019 08:22:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=K1Wo1uryMad+JJHaOOhI3eSiwsKm2WkRf/8nzV4iG5o=;
-        b=GFysR3J8M2/ErxWakUhYzi+sSNmBeOJsqfZEFYbxE1KjTRbEdMgPJwDSY2sfWBF4M7
-         m554SzdeYG0q9h/3O3YP6S2ney8bZM6NSUhhOs+BcEYtnRmLb27/zrn1sJZtev1TbNe8
-         Ai8qsV+khBr3j4Yeyz+kBWE8P0eeENZ+6OFFzS80tsvOSrP0xUaSlO1uH6C13cFJ1009
-         cxRzDP706pd2EsdANnd/MK7GNAPYq8p3tpJ8PjWaOCxXwYlQQGvYBgvVjchn42TnWe65
-         11Wwhjjeaz6joh+i8Sr2d4JPadlNYYU7M2Bgrc23JlOSFDz4XSx0ovXC/EBXU/ZO9zLX
-         +74A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=K1Wo1uryMad+JJHaOOhI3eSiwsKm2WkRf/8nzV4iG5o=;
-        b=mA55HSv0Se57jG3Smf8xcDnDsb55Wi8iZw7c1XJAxvmvFayCRQsdNxWOG89H1wLmsl
-         /jjAqiPQGxWTtzEfkz8MB/i1FcWdv5DTmoP/3Ya2Y4hlYKRcX2y+u3bg6j2yyC6O9AS+
-         D3QQh00Mtg+mtPzYIkNYUT1glDoXzIkL+pgpmNgSLw55p4jFtg3oKm9i4yDeSOS227ob
-         /tYbZzngkVcMssFlFWmn+Jm5awiaTSCdkfQGzpvZ618+k7PNyx1ywOxAmZqvmmOzUijF
-         JVs5vtv/X41IjG2NKM5d7uFqvWtIGBiRVWkEFBecpBuMaXxKMsPB6Xb4JHYcTVDURxa0
-         mZ5A==
-X-Gm-Message-State: APjAAAWadgk1gS3+qg177cxjmyai4lXba9L1Y+ER5UGbkiKb+TTHDTg2
-        d+Cy+LwWKxVe7Tcn+4PxG443nPPb
-X-Google-Smtp-Source: APXvYqwMulwQmSKyJYZ5XStrF/EheQfqT2YR1ENZMg7+TqRcL/vGToHCYNsXooYGBikFTAvDL3sR0g==
-X-Received: by 2002:a17:90a:bc06:: with SMTP id w6mr5002407pjr.130.1567005743009;
-        Wed, 28 Aug 2019 08:22:23 -0700 (PDT)
-Received: from [10.69.69.102] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id g1sm3330822pgg.27.2019.08.28.08.22.18
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 28 Aug 2019 08:22:22 -0700 (PDT)
-Subject: Re: [linux-next][BUG][driver/scsi/lpfc][10541f] Kernel panics when
- booting next kernel on my Power 9 box
-To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Cc:     linux-next <linux-next@vger.kernel.org>,
+        id S1726603AbfH1RnR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 13:43:17 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32314 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726563AbfH1RnQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Aug 2019 13:43:16 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7SHbmDR042508;
+        Wed, 28 Aug 2019 13:43:04 -0400
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2unuxk5ap3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 28 Aug 2019 13:43:03 -0400
+Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x7SHdaVT058445;
+        Wed, 28 Aug 2019 13:43:03 -0400
+Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2unuxk5anh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 28 Aug 2019 13:43:03 -0400
+Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
+        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7SHdUP2030957;
+        Wed, 28 Aug 2019 17:43:02 GMT
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+        by ppma05wdc.us.ibm.com with ESMTP id 2ujvv7799e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 28 Aug 2019 17:43:02 +0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7SHh1iW48103852
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 28 Aug 2019 17:43:01 GMT
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D9710112063;
+        Wed, 28 Aug 2019 17:43:01 +0000 (GMT)
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B2DBF112062;
+        Wed, 28 Aug 2019 17:42:56 +0000 (GMT)
+Received: from [9.85.111.211] (unknown [9.85.111.211])
+        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
+        Wed, 28 Aug 2019 17:42:56 +0000 (GMT)
+Message-ID: <1567014175.5082.6.camel@abdul>
+Subject: Re: [linux-next][BUG][driver/scsi/lpfc][c00f62e6] Kernel panics
+ when booting next kernel on my Power 9 box
+From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        linux-next <linux-next@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>,
         Stephen Rothwell <sfr@canb.auug.org.au>,
         sachinp <sachinp@linux.vnet.ibm.com>,
@@ -69,37 +69,66 @@ Cc:     linux-next <linux-next@vger.kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         dougmill <dougmill@linux.vnet.ibm.com>,
         Brian King <brking@linux.vnet.ibm.com>
+Date:   Wed, 28 Aug 2019 23:12:55 +0530
+In-Reply-To: <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
 References: <1566968536.23670.9.camel@abdul>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
-Date:   Wed, 28 Aug 2019 08:22:17 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <1566968536.23670.9.camel@abdul>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+         <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.10.4-0ubuntu1 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-28_08:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1906280000 definitions=main-1908280172
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/27/2019 10:02 PM, Abdul Haleem wrote:
-> Greetings,
+On Wed, 2019-08-28 at 08:22 -0700, James Smart wrote:
+> On 8/27/2019 10:02 PM, Abdul Haleem wrote:
+> > Greetings,
+> > 
+> > linux-next kernel 5.3.0-rc1 failed to boot with kernel Oops on Power 9
+> > box
+> > 
+> > I see a recent changes to lpfc code was from commit
+> > 10541f03 scsi: lpfc: Update lpfc version to 12.4.0.0
+> > 
+> > Recent boot logs:
+> > 
+> > [..snip..]
 > 
-> linux-next kernel 5.3.0-rc1 failed to boot with kernel Oops on Power 9
-> box
+> see  https://www.spinics.net/lists/linux-scsi/msg133343.html
 > 
-> I see a recent changes to lpfc code was from commit
-> 10541f03 scsi: lpfc: Update lpfc version to 12.4.0.0
-> 
-> Recent boot logs:
-> 
-> [..snip..]
+> It hasn't been tested yet, but appears to be the issue.
 
-see  https://www.spinics.net/lists/linux-scsi/msg133343.html
+Ah, commit c00f62e6 (scsi: lpfc: Merge per-protocol...) is the bad one
+and Yes the patch fixes it, System booted fine with below code change
 
-It hasn't been tested yet, but appears to be the issue.
+--- a/drivers/scsi/lpfc/lpfc_sli.c    2019-08-23 13:55:18.253546775 -0700
++++ b/drivers/scsi/lpfc_sli.c    2019-08-27 17:04:51.095330056 -0700
+@@ -5553,7 +5553,7 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba
+         for (qidx = 0; qidx < phba->cfg_hdw_queue; qidx++) {
+             qp = &sli4_hba->hdwq[qidx];
+             /* ARM the corresponding CQ */
+-            sli4_hba->sli4_write_cq_db(phba, qp[qidx].io_cq, 0,
++            sli4_hba->sli4_write_cq_db(phba, qp->io_cq, 0,
+                         LPFC_QUEUE_REARM);
 
--- james
+
+Tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+
+-- 
+Regard's
+
+Abdul Haleem
+IBM Linux Technology Centre
+
+
+
