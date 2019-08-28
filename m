@@ -2,133 +2,152 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B45A0C3A5A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 17:43:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 062FAC3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 19:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 795EB2173E
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 17:43:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE1BE214DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 19:18:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Yjb6U4UM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726603AbfH1RnR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 13:43:17 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32314 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726563AbfH1RnQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Aug 2019 13:43:16 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7SHbmDR042508;
-        Wed, 28 Aug 2019 13:43:04 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2unuxk5ap3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 28 Aug 2019 13:43:03 -0400
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x7SHdaVT058445;
-        Wed, 28 Aug 2019 13:43:03 -0400
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2unuxk5anh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 28 Aug 2019 13:43:03 -0400
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x7SHdUP2030957;
-        Wed, 28 Aug 2019 17:43:02 GMT
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-        by ppma05wdc.us.ibm.com with ESMTP id 2ujvv7799e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 28 Aug 2019 17:43:02 +0000
-Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
-        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7SHh1iW48103852
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 28 Aug 2019 17:43:01 GMT
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D9710112063;
-        Wed, 28 Aug 2019 17:43:01 +0000 (GMT)
-Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B2DBF112062;
-        Wed, 28 Aug 2019 17:42:56 +0000 (GMT)
-Received: from [9.85.111.211] (unknown [9.85.111.211])
-        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed, 28 Aug 2019 17:42:56 +0000 (GMT)
-Message-ID: <1567014175.5082.6.camel@abdul>
-Subject: Re: [linux-next][BUG][driver/scsi/lpfc][c00f62e6] Kernel panics
- when booting next kernel on my Power 9 box
-From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        linux-next <linux-next@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        sachinp <sachinp@linux.vnet.ibm.com>,
-        manvanth <manvanth@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        dick.kennedy@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        dougmill <dougmill@linux.vnet.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>
-Date:   Wed, 28 Aug 2019 23:12:55 +0530
-In-Reply-To: <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
-References: <1566968536.23670.9.camel@abdul>
-         <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.10.4-0ubuntu1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-28_08:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908280172
+        id S1726911AbfH1TSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 15:18:04 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42990 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726887AbfH1TSD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2019 15:18:03 -0400
+Received: by mail-pg1-f195.google.com with SMTP id p3so226395pgb.9
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2019 12:18:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=frRCVqPEFMbhw8WqpjXDJar8k8pcOq5o3U1C6HdWuBw=;
+        b=Yjb6U4UM55j8Qd5lit9icVMiTabO3K/CK55xecjtlEFvjf+4Pdftmlehf2ZPI1XIYc
+         XrzRw9OqguPYP/qHWihbXPRn6ybHx6rhep7dXtDjlsOroLX5AKsTmUPW7cm/2xjS/Hp6
+         dw/ffiytgOzt9ZYxOZAGv7I+35KMp+ivU2u9dlKLMgz6xEtf26Wysin8jIrSgFYnq3Jb
+         C3i14S5BW5mrcB8yH9ljDgWNGHe4oAX3+91T+dNOO1xbJK+SMB6UxpfRUikAymXzARuy
+         Gv5nYSbgbCB8hb+Ruc8hubVmChEAiViAlTyrKPrLdvfCuzC5B9R6HU1RSuen7bquT3Dg
+         Rgpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=frRCVqPEFMbhw8WqpjXDJar8k8pcOq5o3U1C6HdWuBw=;
+        b=oWS/K2pzNxluduBBBKVj8hlfZknYJO5cJBFKd1zaM3AMcMTLpa1kdrEd64BLP5keNN
+         QGM6phRgOitslusIrB3lJx8/3mfTKyXRgMMfdoZQ/vO0a/WHB0A/qoqbNSYV+uSS9L8A
+         GnmfbGc8aSS8sm94TAII7Bwg+OqmBj47ZyCYZTL7aohXpHtg9h4smBynIk9ZR4q4KCTG
+         uPL6jlVa/04VWDqItSl+1xBBp9JyF/hT9dRroxOprNuBL5Vnu87GGKOTtTv1wFDashwS
+         9vnzsGOMi8I/qy8maYAODOcvmYylYkzRjbGLgqT1q+NZJGpX1YMmbbpboPSy2qofzQMd
+         F+0Q==
+X-Gm-Message-State: APjAAAVCwfMrFP+hLyKk4wHoX+did2dw4Ym5VdUGZWVouiS2iNPphcLM
+        VknFCRCisGZOqZkB/X/qpKy3eg==
+X-Google-Smtp-Source: APXvYqwrFTCnXoqdHbgZohuVx98l8XulzgZc2FWKZBE02LtPNRDCRgfcbpdHghyq8UYkjWZjVa3ZRw==
+X-Received: by 2002:a63:e948:: with SMTP id q8mr4686361pgj.93.1567019882331;
+        Wed, 28 Aug 2019 12:18:02 -0700 (PDT)
+Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id n128sm122717pfn.46.2019.08.28.12.18.01
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 28 Aug 2019 12:18:01 -0700 (PDT)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Andy Gross <agross@kernel.org>, Bean Huo <beanhuo@micron.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH v4 1/3] scsi: ufs: Introduce vops for resetting device
+Date:   Wed, 28 Aug 2019 12:17:54 -0700
+Message-Id: <20190828191756.24312-2-bjorn.andersson@linaro.org>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20190828191756.24312-1-bjorn.andersson@linaro.org>
+References: <20190828191756.24312-1-bjorn.andersson@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2019-08-28 at 08:22 -0700, James Smart wrote:
-> On 8/27/2019 10:02 PM, Abdul Haleem wrote:
-> > Greetings,
-> > 
-> > linux-next kernel 5.3.0-rc1 failed to boot with kernel Oops on Power 9
-> > box
-> > 
-> > I see a recent changes to lpfc code was from commit
-> > 10541f03 scsi: lpfc: Update lpfc version to 12.4.0.0
-> > 
-> > Recent boot logs:
-> > 
-> > [..snip..]
-> 
-> see  https://www.spinics.net/lists/linux-scsi/msg133343.html
-> 
-> It hasn't been tested yet, but appears to be the issue.
+Some UFS memory devices needs their reset line toggled in order to get
+them into a good state for initialization. Provide a new vops to allow
+the platform driver to implement this operation.
 
-Ah, commit c00f62e6 (scsi: lpfc: Merge per-protocol...) is the bad one
-and Yes the patch fixes it, System booted fine with below code change
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
 
---- a/drivers/scsi/lpfc/lpfc_sli.c    2019-08-23 13:55:18.253546775 -0700
-+++ b/drivers/scsi/lpfc_sli.c    2019-08-27 17:04:51.095330056 -0700
-@@ -5553,7 +5553,7 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba
-         for (qidx = 0; qidx < phba->cfg_hdw_queue; qidx++) {
-             qp = &sli4_hba->hdwq[qidx];
-             /* ARM the corresponding CQ */
--            sli4_hba->sli4_write_cq_db(phba, qp[qidx].io_cq, 0,
-+            sli4_hba->sli4_write_cq_db(phba, qp->io_cq, 0,
-                         LPFC_QUEUE_REARM);
+Changes since v3:
+- None
 
+ drivers/scsi/ufs/ufshcd.c | 6 ++++++
+ drivers/scsi/ufs/ufshcd.h | 8 ++++++++
+ 2 files changed, 14 insertions(+)
 
-Tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 219c435d69a7..0fb4bfdd7943 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6235,6 +6235,9 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+ 	int retries = MAX_HOST_RESET_RETRIES;
+ 
+ 	do {
++		/* Reset the attached device */
++		ufshcd_vops_device_reset(hba);
++
+ 		err = ufshcd_host_reset_and_restore(hba);
+ 	} while (err && --retries);
+ 
+@@ -8371,6 +8374,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		goto exit_gating;
+ 	}
+ 
++	/* Reset the attached device */
++	ufshcd_vops_device_reset(hba);
++
+ 	/* Host controller enable */
+ 	err = ufshcd_hba_enable(hba);
+ 	if (err) {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 9f61550abc7f..c94cfda52829 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -298,6 +298,7 @@ struct ufs_pwr_mode_info {
+  * @resume: called during host controller PM callback
+  * @dbg_register_dump: used to dump controller debug information
+  * @phy_initialization: used to initialize phys
++ * @device_reset: called to issue a reset pulse on the UFS device
+  */
+ struct ufs_hba_variant_ops {
+ 	const char *name;
+@@ -326,6 +327,7 @@ struct ufs_hba_variant_ops {
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+ 	void	(*dbg_register_dump)(struct ufs_hba *hba);
+ 	int	(*phy_initialization)(struct ufs_hba *);
++	void	(*device_reset)(struct ufs_hba *hba);
+ };
+ 
+ /* clock gating state  */
+@@ -1070,6 +1072,12 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+ 		hba->vops->dbg_register_dump(hba);
+ }
+ 
++static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
++{
++	if (hba->vops && hba->vops->device_reset)
++		hba->vops->device_reset(hba);
++}
++
+ extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ 
+ /*
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
-
-
+2.18.0
 
