@@ -2,180 +2,104 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D3F2C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 14:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C80DC3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 15:22:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9D8F22CED
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 14:57:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D6702339E
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 15:22:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VjafpiHn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GFysR3J8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726618AbfH1O5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 10:57:04 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:32801 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726454AbfH1O5E (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2019 10:57:04 -0400
-Received: by mail-pl1-f193.google.com with SMTP id go14so117638plb.0;
-        Wed, 28 Aug 2019 07:57:03 -0700 (PDT)
+        id S1726651AbfH1PWY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 11:22:24 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:46232 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726440AbfH1PWX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2019 11:22:23 -0400
+Received: by mail-pf1-f196.google.com with SMTP id q139so1916580pfc.13;
+        Wed, 28 Aug 2019 08:22:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=JzE5osCTB92XAPpUB75wCbGts3OVhlEyRxVtEnEhM+s=;
-        b=VjafpiHn+H/Yn3ttsfJr5HQonWbXr70KXEmx0gnO39ej1X0lllUFu7YbyJzR5Xmb9X
-         pY0MEvyRHBq6SoRV4pw+e/OmRF/9Ehmn4pnpjmXbIoDrLQYFA8C9P9aGUbIOlna4K/I4
-         mT+IWsYtQgekyP8NBtddxS1iUw6KL5tX04Dx7XgdvJNuYVNLJ5pUu/TqaSLavXroCTwk
-         DROvd2xkRwR6S5fsE5R6gJvu2pWY2Ge2zJVIHxb2DOwQdxx5MBbCwd4EcRuUXTEofiat
-         opgF80qTA4p6UTx+mzD7884oIHIhoISj9+zM2f/MYFY07q2OMiOfrYacY/cVAXX67/j8
-         ujdA==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=K1Wo1uryMad+JJHaOOhI3eSiwsKm2WkRf/8nzV4iG5o=;
+        b=GFysR3J8M2/ErxWakUhYzi+sSNmBeOJsqfZEFYbxE1KjTRbEdMgPJwDSY2sfWBF4M7
+         m554SzdeYG0q9h/3O3YP6S2ney8bZM6NSUhhOs+BcEYtnRmLb27/zrn1sJZtev1TbNe8
+         Ai8qsV+khBr3j4Yeyz+kBWE8P0eeENZ+6OFFzS80tsvOSrP0xUaSlO1uH6C13cFJ1009
+         cxRzDP706pd2EsdANnd/MK7GNAPYq8p3tpJ8PjWaOCxXwYlQQGvYBgvVjchn42TnWe65
+         11Wwhjjeaz6joh+i8Sr2d4JPadlNYYU7M2Bgrc23JlOSFDz4XSx0ovXC/EBXU/ZO9zLX
+         +74A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=JzE5osCTB92XAPpUB75wCbGts3OVhlEyRxVtEnEhM+s=;
-        b=mxtU+I4Vv+ITY/jdLO9XoM8KuBOOtI/eWaCxY2Av0HeLbthPe4DyNCHXZ6OTVPZNXv
-         kPWcqTGevlyKtFEkVeaFskS8IxNuH+CCi3M+x4GQdaCK8qBLFqi6/etUsWyLUu40tbr4
-         Scl9La4Q6lIRUpCuA0Sq2pbW/ut/Wy3oFY9SimdRZXDtZgPMO7u7JInGLzlKf5iCCMPk
-         psH8OrF9Ix+PSOWsDHB+fxFHxAmFyn+lwN3dGfQeLLetJFHj7k6AHZM5VBOoPJUJmPV7
-         6Coxj1SlPtC9VQSFWRHV6VsoQT/DJkizsKN9/hd9LOK7h9iuZBkh1xf9QY31BtTPPwcA
-         7TDg==
-X-Gm-Message-State: APjAAAUGBmDT3Cc2O2EP/1Dk7inkxS3nvf28tjSK8U7iXzShJobf7pYl
-        ZTMeb0npBSvQNymO0z2qXlKfzY9C49zkx68kWUw=
-X-Google-Smtp-Source: APXvYqx4jFzQQN92tBres1dfrzux0bEqo1UfkwxDaRPm7h+C4Zv52PksySBqfNdYulxwW35s56T3DlTv/QuLEuZvtpY=
-X-Received: by 2002:a17:902:426:: with SMTP id 35mr4859364ple.192.1567004222800;
- Wed, 28 Aug 2019 07:57:02 -0700 (PDT)
-MIME-Version: 1.0
-References: <1565888399-21550-1-git-send-email-akinobu.mita@gmail.com>
- <1565888399-21550-5-git-send-email-akinobu.mita@gmail.com>
- <20190817145509.GA18381@amd> <925633c4-a459-5e84-9c9a-502a504fdc82@gmail.com>
- <20190819143842.GA25401@amd> <7c4c4853-7e3a-0618-92a0-337e248e2b4c@gmail.com>
- <c937b7e0-02c6-ae9a-aaf7-16a2ef29886d@gmail.com> <CAC5umyjxkeR3rhf3XZvwkxLvc-0ENEkQfOLnk8A12Qazr9Et8w@mail.gmail.com>
- <86309c4f-bcee-182c-369f-fcc883f379c6@gmail.com> <CAC5umyibEMrxhZv0TyS6hYHR+oyj2Oby+LVsjrYmMV8u-chXRQ@mail.gmail.com>
- <1f7928a1-61ba-72f0-fd03-2208856cd8b8@gmail.com>
-In-Reply-To: <1f7928a1-61ba-72f0-fd03-2208856cd8b8@gmail.com>
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-Date:   Wed, 28 Aug 2019 23:56:51 +0900
-Message-ID: <CAC5umygq7p63sAnL+cqe35RqXpFDv=CyuEMiWGQy76=_uq8ZHg@mail.gmail.com>
-Subject: Re: [PATCH v4 4/5] block: introduce LED block device activity trigger
-To:     Jacek Anaszewski <jacek.anaszewski@gmail.com>
-Cc:     Pavel Machek <pavel@ucw.cz>, linux-block@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        Frank Steiner <fsteiner-mail1@bio.ifi.lmu.de>,
-        Dan Murphy <dmurphy@ti.com>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=K1Wo1uryMad+JJHaOOhI3eSiwsKm2WkRf/8nzV4iG5o=;
+        b=mA55HSv0Se57jG3Smf8xcDnDsb55Wi8iZw7c1XJAxvmvFayCRQsdNxWOG89H1wLmsl
+         /jjAqiPQGxWTtzEfkz8MB/i1FcWdv5DTmoP/3Ya2Y4hlYKRcX2y+u3bg6j2yyC6O9AS+
+         D3QQh00Mtg+mtPzYIkNYUT1glDoXzIkL+pgpmNgSLw55p4jFtg3oKm9i4yDeSOS227ob
+         /tYbZzngkVcMssFlFWmn+Jm5awiaTSCdkfQGzpvZ618+k7PNyx1ywOxAmZqvmmOzUijF
+         JVs5vtv/X41IjG2NKM5d7uFqvWtIGBiRVWkEFBecpBuMaXxKMsPB6Xb4JHYcTVDURxa0
+         mZ5A==
+X-Gm-Message-State: APjAAAWadgk1gS3+qg177cxjmyai4lXba9L1Y+ER5UGbkiKb+TTHDTg2
+        d+Cy+LwWKxVe7Tcn+4PxG443nPPb
+X-Google-Smtp-Source: APXvYqwMulwQmSKyJYZ5XStrF/EheQfqT2YR1ENZMg7+TqRcL/vGToHCYNsXooYGBikFTAvDL3sR0g==
+X-Received: by 2002:a17:90a:bc06:: with SMTP id w6mr5002407pjr.130.1567005743009;
+        Wed, 28 Aug 2019 08:22:23 -0700 (PDT)
+Received: from [10.69.69.102] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id g1sm3330822pgg.27.2019.08.28.08.22.18
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 28 Aug 2019 08:22:22 -0700 (PDT)
+Subject: Re: [linux-next][BUG][driver/scsi/lpfc][10541f] Kernel panics when
+ booting next kernel on my Power 9 box
+To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Cc:     linux-next <linux-next@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        sachinp <sachinp@linux.vnet.ibm.com>,
+        manvanth <manvanth@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        dick.kennedy@broadcom.com,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        dougmill <dougmill@linux.vnet.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>
+References: <1566968536.23670.9.camel@abdul>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <601365f6-c753-96f6-5d61-481f54d95440@gmail.com>
+Date:   Wed, 28 Aug 2019 08:22:17 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <1566968536.23670.9.camel@abdul>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-2019=E5=B9=B48=E6=9C=8828=E6=97=A5(=E6=B0=B4) 6:23 Jacek Anaszewski <jacek.=
-anaszewski@gmail.com>:
->
-> On 8/27/19 4:03 PM, Akinobu Mita wrote:
-> > 2019=E5=B9=B48=E6=9C=8825=E6=97=A5(=E6=97=A5) 0:53 Jacek Anaszewski <ja=
-cek.anaszewski@gmail.com>:
-> >>
-> >> On 8/23/19 6:00 PM, Akinobu Mita wrote:
-> >>> 2019=E5=B9=B48=E6=9C=8820=E6=97=A5(=E7=81=AB) 3:38 Jacek Anaszewski <=
-jacek.anaszewski@gmail.com>:
-> >>>>
-> >>>> On 8/19/19 8:22 PM, Jacek Anaszewski wrote:
-> >>>>> On 8/19/19 4:38 PM, Pavel Machek wrote:
-> >>>>>> On Sat 2019-08-17 22:07:43, Jacek Anaszewski wrote:
-> >>>>>>> On 8/17/19 4:55 PM, Pavel Machek wrote:
-> >>>>>>>> On Fri 2019-08-16 01:59:58, Akinobu Mita wrote:
-> >>>>>>>>> This allows LEDs to be controlled by block device activity.
-> >>>>>>>>>
-> >>>>>>>>> We already have ledtrig-disk (LED disk activity trigger), but t=
-he lower
-> >>>>>>>>> level disk drivers need to utilize ledtrig_disk_activity() to m=
-ake the
-> >>>>>>>>> LED blink.
-> >>>>>>>>>
-> >>>>>>>>> The LED block device trigger doesn't require the lower level dr=
-ivers to
-> >>>>>>>>> have any instrumentation. The activity is collected by polling =
-the disk
-> >>>>>>>>> stats.
-> >>>>>>>>>
-> >>>>>>>>> Example:
-> >>>>>>>>>
-> >>>>>>>>> echo block-nvme0n1 > /sys/class/leds/diy/trigger
-> >>>>>>>>
-> >>>>>>>> Lets use one trigger "block" and have the device as a parameter,
-> >>>>>>>> please.
-> >>>>>>>>
-> >>>>>>>> We already have 1000 cpu triggers on 1000 cpu machines, and yes,=
- its a
-> >>>>>>>> disaster we'll need to fix. Lets not repeat the same mistake her=
-e.
-> >>>>>>>>
-> >>>>>>>> I guess it may be slightly more work. Sorry about that.
-> >>>>>>>
-> >>>>>>> We should be able to list available block devices to set,
-> >>>>>>> so the problem would be not avoided anyway.
-> >>>>>>
-> >>>>>> Should we? We need to list triggers, but we may not list all the d=
-evices...
-> >>>>>
-> >>>>> This is similar to usbport trigger that lists available
-> >>>>> ports as files in a sub-directory. We might eventually go
-> >>>>> in this direction.
-> >>>>
-> >>>> I must withdraw this statement. This is not similar to usbport
-> >>>> trigger. The difference is that with ledtrig-block we have separate
-> >>>> triggers per each device and I am not aware if there is some central=
-ized
-> >>>> mechanism similar to blocking_notifier_chain (usb_notifier_list
-> >>>> in drivers/usb/core/notify.c) available for block devices, that
-> >>>> would allow to gather all available block devs under common trigger.
-> >>>>
-> >>>> Moreover I remember Greg once discouraged using notifier chains
-> >>>> as they are unsafe, so we would need some other solution anyway.
-> >>>
-> >>> I start thinking that we should implement the LED block device activi=
-ty
-> >>> trigger in userspace.  The userspace application firstly activates
-> >>> one-shot LED trigger and periodically reads /sys/block/<disk>/stat an=
-d
-> >>> writes /sys/class/leds/<led>/shot if there is any disk activity.
-> >>
-> >> This would suboptimal solution. I have another idea - let's get back
-> >> to the implementation of ledtrig-blk in genhd.c. We would be registeri=
-ng
-> >> one trigger on module initialization in a function with __init modifie=
-r.
-> >> Then we would need to add/remove triggers to the ledtrig-blk in
-> >> register_blkdev()/unregister_blkdev(). And registered triggers would
-> >> be listed in block_devs directory created by the trigger.
-> >>
-> >> You can compare how drivers/usb/core/ledtrig-usbport.c maintains
-> >> similar directory of usb ports.
-> >
-> > It could be possible, but I have yet another idea.  What about introduc=
-ing
-> > /proc/led-triggers and /sys/class/leds/<led>/current-trigger?
-> > The /sys/class/leds/<led>/trigger will be obsoleted by these two files.
-> >
-> > The /proc/led-triggers is read only and no PAGE_SIZE limitation by the
-> > seq_file interface.  So we can list all triggers in this file.
-> >
-> > The /sys/class/leds/<led>/current-trigger is almost identical to
-> > /sys/class/leds/<led>/trigger.  The only difference is that
-> > 'current-trigger' only shows the current trigger name.
->
-> There's not need to come up with yet another trigger interface.
-> We just need to convert sysfs trigger attribute type to binary.
+On 8/27/2019 10:02 PM, Abdul Haleem wrote:
+> Greetings,
+> 
+> linux-next kernel 5.3.0-rc1 failed to boot with kernel Oops on Power 9
+> box
+> 
+> I see a recent changes to lpfc code was from commit
+> 10541f03 scsi: lpfc: Update lpfc version to 12.4.0.0
+> 
+> Recent boot logs:
+> 
+> [..snip..]
 
-OK, I'll try it.
+see  https://www.spinics.net/lists/linux-scsi/msg133343.html
+
+It hasn't been tested yet, but appears to be the issue.
+
+-- james
