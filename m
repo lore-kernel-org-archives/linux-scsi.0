@@ -2,128 +2,137 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A400DC3A5A6
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1ABC3A5A6
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:50:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85D4422CF5
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:43:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50F7B23403
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:50:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566989407;
+	bh=He3MdEl4k4wvBwy2BRtUix0E0BXxfd11sG2nGJHSlno=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=QRgWGsLcoFCs/Ixeie0LFmFfr470zfxr7DWOTJSjtE+MjW83UCuNQXSOfpGCKUshw
+	 /m6HwRLqTLZ0VN5eaVbXYrzwx6wuOTuIcqFoCBMFMcXA3MNii03Ifa8b70D3+UvLnB
+	 W043vKXAdPYwUmx+GGTYPZ3OsmWMjA2cLc0KqlnI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726315AbfH1Knw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 06:43:52 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43052 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726272AbfH1Knw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Aug 2019 06:43:52 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 926A4AC6C;
-        Wed, 28 Aug 2019 10:43:50 +0000 (UTC)
-Subject: Re: [PATCH v2 3/7] block: Introduce elevator features
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20190828022947.23364-1-damien.lemoal@wdc.com>
- <20190828022947.23364-4-damien.lemoal@wdc.com>
- <69e86ed3-348a-ac8c-d3ac-550fa8972246@suse.de>
- <BYAPR04MB5816FDDCF4080943AA408956E7A30@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Johannes Thumshirn <jthumshirn@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=jthumshirn@suse.de; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <a0275d93-0454-3cc5-faf4-77210ac03928@suse.de>
-Date:   Wed, 28 Aug 2019 12:43:50 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726315AbfH1KuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 06:50:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55992 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726232AbfH1KuC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Aug 2019 06:50:02 -0400
+Received: from linux-8ccs (ip5f5adbee.dynamic.kabel-deutschland.de [95.90.219.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0AA242173E;
+        Wed, 28 Aug 2019 10:49:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566989401;
+        bh=He3MdEl4k4wvBwy2BRtUix0E0BXxfd11sG2nGJHSlno=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=i40dmLIc4hNolwteO8/CrjM9Cpmu93uXZsAOD1MxRqDqkwMajOhi3Dh0Ac1J5QGbq
+         LszHHQ0TpbI6YImDsJdcJH+2MQ+nkwnpo8Rh7e8htHxd79vlrmg8Y4hcNYyhaKnSc2
+         TcnnzjJhpv8JAIXkqv1vRtuz4HQ/xogZe5mhW1hk=
+Date:   Wed, 28 Aug 2019 12:49:51 +0200
+From:   Jessica Yu <jeyu@kernel.org>
+To:     Matthias Maennich <maennich@google.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-team@android.com,
+        arnd@arndb.de, geert@linux-m68k.org, gregkh@linuxfoundation.org,
+        hpa@zytor.com, joel@joelfernandes.org,
+        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
+        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
+        maco@android.com, maco@google.com, michal.lkml@markovi.net,
+        mingo@redhat.com, oneukum@suse.com, pombredanne@nexb.com,
+        sam@ravnborg.org, sspatil@google.com, stern@rowland.harvard.edu,
+        tglx@linutronix.de, usb-storage@lists.one-eyed-alien.net,
+        x86@kernel.org, yamada.masahiro@socionext.com,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Ingo Molnar <mingo@kernel.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v3 06/11] export: allow definition default namespaces in
+ Makefiles or sources
+Message-ID: <20190828104951.GC25048@linux-8ccs>
+References: <20190813121733.52480-1-maennich@google.com>
+ <20190821114955.12788-1-maennich@google.com>
+ <20190821114955.12788-7-maennich@google.com>
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816FDDCF4080943AA408956E7A30@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190821114955.12788-7-maennich@google.com>
+X-OS:   Linux linux-8ccs 4.12.14-lp150.12.61-default x86_64
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/08/2019 12:41, Damien Le Moal wrote:
-> On 2019/08/28 17:16, Johannes Thumshirn wrote:
->> What happened to my review comment for v1 of this patch?
->>
-> 
-> I merged the renamed ELEVATOR_F_ZBD_SEQ_WRITE feature into this patch instead of
-> following patch and separated the nullblk and sd_zbc changes into other patches.
-> Well, at least that is what I understood you wanted... Did I misunderstand ?
-> When tired, my english becomes fuzzy sometimes :)
-> 
-> Please let me know if that is not what you wanted (it does seem so).
++++ Matthias Maennich [21/08/19 12:49 +0100]:
+>To avoid excessive usage of EXPORT_SYMBOL_NS(sym, MY_NAMESPACE), where
+>MY_NAMESPACE will always be the namespace we are exporting to, allow
+>exporting all definitions of EXPORT_SYMBOL() and friends by defining
+>DEFAULT_SYMBOL_NAMESPACE.
+>
+>For example, to export all symbols defined in usb-common into the
+>namespace USB_COMMON, add a line like this to drivers/usb/common/Makefile:
+>
+>  ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=USB_COMMON
+>
+>That is equivalent to changing all EXPORT_SYMBOL(sym) definitions to
+>EXPORT_SYMBOL_NS(sym, USB_COMMON). Subsequently all symbol namespaces
+>functionality will apply.
+>
+>Another way of making use of this feature is to define the namespace
+>within source or header files similar to how TRACE_SYSTEM defines are
+>used:
+>  #undef DEFAULT_SYMBOL_NAMESPACE
+>  #define DEFAULT_SYMBOL_NAMESPACE USB_COMMON
+>
+>Please note that, as opposed to TRACE_SYSTEM, DEFAULT_SYMBOL_NAMESPACE
+>has to be defined before including include/linux/export.h.
+>
+>If DEFAULT_SYMBOL_NAMESPACE is defined, a symbol can still be exported
+>to another namespace by using EXPORT_SYMBOL_NS() and friends with
+>explicitly specifying the namespace.
 
-I meant to useage of an 'unsigned int' vs. explicit u32/u64 for
-'elevator_features'
+This changelog provides a good summary of how to use
+DEFAULT_SYMBOL_NAMESPACE, I wonder if we should explicitly document
+its proper usage somewhere? (along with EXPORT_SYMBOL_NS*)
+The EXPORT_SYMBOL API is briefly documented in
+Documentation/kernel-hacking/hacking.rst - it might be slightly dated,
+but perhaps it'd fit there best?
 
--- 
-Johannes Thumshirn                            SUSE Labs Filesystems
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE Software Solutions Germany GmbH
-Maxfeldstr. 5
-90409 Nürnberg
-Germany
-(HRB 247165, AG München)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>Suggested-by: Arnd Bergmann <arnd@arndb.de>
+>Reviewed-by: Martijn Coenen <maco@android.com>
+>Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>Signed-off-by: Matthias Maennich <maennich@google.com>
+>---
+> include/linux/export.h | 6 ++++++
+> 1 file changed, 6 insertions(+)
+>
+>diff --git a/include/linux/export.h b/include/linux/export.h
+>index 8e12e05444d1..1fb243abdbc4 100644
+>--- a/include/linux/export.h
+>+++ b/include/linux/export.h
+>@@ -166,6 +166,12 @@ struct kernel_symbol {
+> #define __EXPORT_SYMBOL ___EXPORT_SYMBOL
+> #endif
+>
+>+#ifdef DEFAULT_SYMBOL_NAMESPACE
+>+#undef __EXPORT_SYMBOL
+>+#define __EXPORT_SYMBOL(sym, sec)				\
+>+	__EXPORT_SYMBOL_NS(sym, sec, DEFAULT_SYMBOL_NAMESPACE)
+>+#endif
+>+
+> #define EXPORT_SYMBOL(sym) __EXPORT_SYMBOL(sym, "")
+> #define EXPORT_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_gpl")
+> #define EXPORT_SYMBOL_GPL_FUTURE(sym) __EXPORT_SYMBOL(sym, "_gpl_future")
+>-- 
+>2.23.0.rc1.153.gdeed80330f-goog
+>
