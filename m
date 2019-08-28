@@ -2,158 +2,153 @@ Return-Path: <SRS0=d3SH=WY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1,USER_IN_DEF_DKIM_WL autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3ED9C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F58C3A5A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 11:06:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA38F22CF8
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 10:56:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NVdwLJqM"
+	by mail.kernel.org (Postfix) with ESMTP id 94B59208CB
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Aug 2019 11:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726444AbfH1K4e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Aug 2019 06:56:34 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:40748 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726246AbfH1K4e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Aug 2019 06:56:34 -0400
-Received: by mail-wr1-f68.google.com with SMTP id c3so2009805wrd.7
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Aug 2019 03:56:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=Vx9t5xjLzwxSs68UQHUay9ecnGA4GXfJUCmBL33YCMk=;
-        b=NVdwLJqMFK27Egi+W5DT/3XO+B227WKx3M16ICzoXvtv3NVx+kYKIWtAq4ZidBcYR/
-         6IGwVIoAcsDgTwvd+pwztc4kqW7mf2sSDts/mC7aobOdzcsHuc/F1dpU/BpqoiE9ML/s
-         cDjmOLbsoCc6teLG/5wl/NGS2xAgrdjgeDYEI91IhxSHXf76R4GeGYbxSFH+75iaJUfe
-         wT8+75/RkSk5caZV3qv54/qXQy42Kzg3eZmIM2FCd4NoNwrSMF71P581+GSac3L9QeRC
-         S3Wx1vvGVwqa0gtVdM4obwVJsgIHz4ohf44ieueSHJ/wOuQxb45CsaAbBU1sGHgIo0nm
-         DTqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Vx9t5xjLzwxSs68UQHUay9ecnGA4GXfJUCmBL33YCMk=;
-        b=e89uMr49kwD1Silqn5eKK6tayK73C4ziWF9U7Bgg+ET4w00tN8VR0t1ORgYk/dzzJb
-         v3Xh0KJtYn8Yv6xN1VvBmFXnhY/T0RgM0l2AnkVw+DKQmX8C1yxp1C/FnkYpwZ63ubZ6
-         ADsIER5BVrsJUZpmqoYfWlf6On7T3CCYv7h9qkH6PdSp6M1uesUl8EMlSzkvIlyZ7sWh
-         TBA13n/7XaR34FTT5BObruAkzJzlRYms5tUs6/n92AK/xJNJQMre4vMV50Y/3j3r1rjw
-         Yelbp8euE9+pJ1IpPIfLfkFiU8ijCQ0kSpxA03uuNSvXj3q4KBUxbng/y/Jg0//49s7x
-         vQ+Q==
-X-Gm-Message-State: APjAAAVTckn2EvYmuIUHQk+ZZfaqVxZNKX5X80TkvQwS/yf11dMPI8QR
-        DWFLA3ZzQ+jjQfUjb/eZTjhKrQ==
-X-Google-Smtp-Source: APXvYqzmp0a1H7Elm+SaoHNY31yTb5NC/BkvI3kruZqJ9jlO42a8aciCDXtLmxYxYGNQyoKWXYPq/A==
-X-Received: by 2002:adf:ce81:: with SMTP id r1mr3959629wrn.114.1566989791786;
-        Wed, 28 Aug 2019 03:56:31 -0700 (PDT)
-Received: from google.com ([2a00:79e0:d:210:e8f7:125b:61e9:733d])
-        by smtp.gmail.com with ESMTPSA id f6sm4573707wrh.30.2019.08.28.03.56.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2019 03:56:31 -0700 (PDT)
-Date:   Wed, 28 Aug 2019 11:56:27 +0100
-From:   Matthias Maennich <maennich@google.com>
-To:     Jessica Yu <jeyu@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, kernel-team@android.com,
-        arnd@arndb.de, geert@linux-m68k.org, gregkh@linuxfoundation.org,
-        hpa@zytor.com, joel@joelfernandes.org,
-        kstewart@linuxfoundation.org, linux-arch@vger.kernel.org,
-        linux-kbuild@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-modules@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-usb@vger.kernel.org, lucas.de.marchi@gmail.com,
-        maco@android.com, maco@google.com, michal.lkml@markovi.net,
-        mingo@redhat.com, oneukum@suse.com, pombredanne@nexb.com,
-        sam@ravnborg.org, sspatil@google.com, stern@rowland.harvard.edu,
-        tglx@linutronix.de, usb-storage@lists.one-eyed-alien.net,
-        x86@kernel.org, yamada.masahiro@socionext.com,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Ingo Molnar <mingo@kernel.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v3 06/11] export: allow definition default namespaces in
- Makefiles or sources
-Message-ID: <20190828105627.GA41539@google.com>
-References: <20190813121733.52480-1-maennich@google.com>
- <20190821114955.12788-1-maennich@google.com>
- <20190821114955.12788-7-maennich@google.com>
- <20190828104951.GC25048@linux-8ccs>
+        id S1726310AbfH1LGu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Aug 2019 07:06:50 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56100 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725991AbfH1LGt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Aug 2019 07:06:49 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 436273087958;
+        Wed, 28 Aug 2019 11:06:49 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-32.pek2.redhat.com [10.72.8.32])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C6336194B2;
+        Wed, 28 Aug 2019 11:06:39 +0000 (UTC)
+Date:   Wed, 28 Aug 2019 19:06:34 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     linux-kernel@vger.kernel.org, Long Li <longli@microsoft.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
+Message-ID: <20190828110633.GC15524@ming.t460p>
+References: <20190827085344.30799-1-ming.lei@redhat.com>
+ <20190827085344.30799-2-ming.lei@redhat.com>
+ <alpine.DEB.2.21.1908271633450.1939@nanos.tec.linutronix.de>
+ <20190827225827.GA5263@ming.t460p>
+ <alpine.DEB.2.21.1908280104330.1939@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190828104951.GC25048@linux-8ccs>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <alpine.DEB.2.21.1908280104330.1939@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Wed, 28 Aug 2019 11:06:49 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 28, 2019 at 12:49:51PM +0200, Jessica Yu wrote:
->+++ Matthias Maennich [21/08/19 12:49 +0100]:
->>To avoid excessive usage of EXPORT_SYMBOL_NS(sym, MY_NAMESPACE), where
->>MY_NAMESPACE will always be the namespace we are exporting to, allow
->>exporting all definitions of EXPORT_SYMBOL() and friends by defining
->>DEFAULT_SYMBOL_NAMESPACE.
->>
->>For example, to export all symbols defined in usb-common into the
->>namespace USB_COMMON, add a line like this to drivers/usb/common/Makefile:
->>
->> ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE=USB_COMMON
->>
->>That is equivalent to changing all EXPORT_SYMBOL(sym) definitions to
->>EXPORT_SYMBOL_NS(sym, USB_COMMON). Subsequently all symbol namespaces
->>functionality will apply.
->>
->>Another way of making use of this feature is to define the namespace
->>within source or header files similar to how TRACE_SYSTEM defines are
->>used:
->> #undef DEFAULT_SYMBOL_NAMESPACE
->> #define DEFAULT_SYMBOL_NAMESPACE USB_COMMON
->>
->>Please note that, as opposed to TRACE_SYSTEM, DEFAULT_SYMBOL_NAMESPACE
->>has to be defined before including include/linux/export.h.
->>
->>If DEFAULT_SYMBOL_NAMESPACE is defined, a symbol can still be exported
->>to another namespace by using EXPORT_SYMBOL_NS() and friends with
->>explicitly specifying the namespace.
->
->This changelog provides a good summary of how to use
->DEFAULT_SYMBOL_NAMESPACE, I wonder if we should explicitly document
->its proper usage somewhere? (along with EXPORT_SYMBOL_NS*)
->The EXPORT_SYMBOL API is briefly documented in
->Documentation/kernel-hacking/hacking.rst - it might be slightly dated,
->but perhaps it'd fit there best?
+On Wed, Aug 28, 2019 at 01:09:44AM +0200, Thomas Gleixner wrote:
+> On Wed, 28 Aug 2019, Ming Lei wrote:
+> > On Tue, Aug 27, 2019 at 04:42:02PM +0200, Thomas Gleixner wrote:
+> > > On Tue, 27 Aug 2019, Ming Lei wrote:
+> > > > +
+> > > > +	int cpu = raw_smp_processor_id();
+> > > > +	struct irq_interval *inter = per_cpu_ptr(&avg_irq_interval, cpu);
+> > > > +	u64 delta = sched_clock_cpu(cpu) - inter->last_irq_end;
+> > > 
+> > > Why are you doing that raw_smp_processor_id() dance? The call site has
+> > > interrupts and preemption disabled.
+> > 
+> > OK, will change to __smp_processor_id().
+> 
+> You do not need smp_processor_id() as all.
 
-I will add documentation along with the commits. Not only for the
-macros, but in general to describe the feature.
+OK.
 
->>Suggested-by: Arnd Bergmann <arnd@arndb.de>
->>Reviewed-by: Martijn Coenen <maco@android.com>
->>Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>Signed-off-by: Matthias Maennich <maennich@google.com>
->>---
->>include/linux/export.h | 6 ++++++
->>1 file changed, 6 insertions(+)
->>
->>diff --git a/include/linux/export.h b/include/linux/export.h
->>index 8e12e05444d1..1fb243abdbc4 100644
->>--- a/include/linux/export.h
->>+++ b/include/linux/export.h
->>@@ -166,6 +166,12 @@ struct kernel_symbol {
->>#define __EXPORT_SYMBOL ___EXPORT_SYMBOL
->>#endif
->>
->>+#ifdef DEFAULT_SYMBOL_NAMESPACE
->>+#undef __EXPORT_SYMBOL
->>+#define __EXPORT_SYMBOL(sym, sec)				\
->>+	__EXPORT_SYMBOL_NS(sym, sec, DEFAULT_SYMBOL_NAMESPACE)
->>+#endif
->>+
->>#define EXPORT_SYMBOL(sym) __EXPORT_SYMBOL(sym, "")
->>#define EXPORT_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_gpl")
->>#define EXPORT_SYMBOL_GPL_FUTURE(sym) __EXPORT_SYMBOL(sym, "_gpl_future")
->>-- 
->>2.23.0.rc1.153.gdeed80330f-goog
->>
+> 
+> > > Also how is that supposed to work when sched_clock is jiffies based?
+> > 
+> > Good catch, looks ktime_get_ns() is needed.
+> 
+> And what is ktime_get_ns() returning when the only available clocksource is
+> jiffies?
+
+IMO, it isn't one issue. If the only clocksource is jiffies, we needn't to
+expect high IO performance. Then it is fine to always handle the irq in
+interrupt context or thread context.
+
+However, if it can be recognized runtime, irq_flood_detected() can
+always return true or false.
+
+> 
+> > > 
+> > > > +	inter->avg = (inter->avg * IRQ_INTERVAL_EWMA_PREV_FACTOR +
+> > > > +		delta * IRQ_INTERVAL_EWMA_CURR_FACTOR) /
+> > > > +		IRQ_INTERVAL_EWMA_WEIGHT;
+> > > 
+> > > We definitely are not going to have a 64bit multiplication and division on
+> > > every interrupt. Asided of that this breaks 32bit builds all over the place.
+> > 
+> > I will convert the above into add/subtract/shift only.
+> 
+> No. Talk to Daniel. There is not going to be yet another ad hoc thingy just
+> to make block happy.
+
+I just take a first glance at the code of 'interrupt timing', and its
+motivation is to predicate of the next occurrence of interested interrupt
+for use cases of PM, such as predicate wakeup time.
+
+And predication could be one much more difficult thing, and its implementation
+requires to record more info: such as irq number, recent multiple irq timestamps,
+that means its overhead is a bit high. Meantime IRQS_TIMINGS should only be set
+on interested interrupt(s).
+
+Yeah, irq timing uses the Exponential Weighted Moving Average(EWMA) for computing
+average irq interval for each interrupt.
+
+So either motivation or approaches taken are totally different between
+irq timing and irq flood detection.
+
+Daniel, correct me if I am wrong.
+
+For the case of detecting IRQ flood, we only need to sum the average
+interval of any do_IRQ() on each CPU, and the overhead is quite low since
+just two read & write on one percpu varible is required. We don't
+care what the exact irq number is. However, we have to account time
+taken by softirq handler, which can't be covered by interrupt timing.
+
+Also it is quite simple to use EWMA to compute average interrupt
+interval, however we can't reuse irq timing's result which is done on
+each irq. IRQ flood detection simply computes the average interval
+of any do_IRQ() on each CPU for covering handling interrupt and softirq.
+
+> 
+> And aside of that why does block not have a "NAPI" mode which was
+> explicitely designed to avoid all that?
+
+Block layer knows nothing about interrupt, even don't know which context
+is run for completing IO request, which is decided by driver, could
+be interrupt context, softirq context, or process context.
+
+Also it is hard for block layer to figure out when IRQ flood is triggered.
+CPU is shared resource, all kinds of interrupt sources may contribute
+some for IRQ flood. That is why this patch implements the detection
+mechanism in genirq/softirq code.
+
+In theory, this patch provides one simple generic mechanism for avoiding
+IRQ flood/CPU lockup, which could be used for any devices, not only high
+performance storage.
+
+
+Thanks,
+Ming
