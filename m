@@ -2,81 +2,180 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28480C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:11:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D176C3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:32:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EAAB4208C2
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:11:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567120276;
-	bh=ag0UIe0YzhQynQuCXKX36KQPqflG0cViD6Fin3LuR7w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=fKGNgCeeH/nHM3qXwF1Xq7q2X0VkZMzqVOT3BwIMsrYVa1i+V04idkPYjsmg5OwPA
-	 GzRLFEfueepG2rfeTomCCPprCQ6JNqtLr1k6bKI72GzJjE5Le40pIm578Ds7sNCznM
-	 Q5OD3fxMJx7imQZWt5Q15XdPhNCPbMiV2TH7Dfmo=
+	by mail.kernel.org (Postfix) with ESMTP id 45A7A21874
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:32:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728158AbfH2XLM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 19:11:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727826AbfH2XLM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Aug 2019 19:11:12 -0400
-Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9F3D5208C2;
-        Thu, 29 Aug 2019 23:11:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567120270;
-        bh=ag0UIe0YzhQynQuCXKX36KQPqflG0cViD6Fin3LuR7w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PVREcpwizbQy+GWwZCdLcHvjGLow3aetqQLoIwjCWBKXmHDy4tKY4RbjsElKDmHsY
-         5BUzfpbbFSdPADeQWT1GBYGnftSc0i5kVDUIOdKiFxYnn6zQkkc6KkkKPq8S4kRjfL
-         f+3roI81jUEVpZXC+k0vmuC7z9Xs0BbyaG+W4l8E=
-Date:   Thu, 29 Aug 2019 19:11:09 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Mathieu Poirier <mathieu.poirier@linaro.org>
-Cc:     stable@vger.kernel.org, architt@codeaurora.org,
-        a.hajda@samsung.com, Laurent.pinchart@ideasonboard.com,
-        airlied@linux.ie, jsarha@ti.com, tomi.valkeinen@ti.com,
-        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [BACKPORT 4.19.y 3/3] drm/tilcdc: Register cpufreq notifier
- after we have initialized crtc
-Message-ID: <20190829231109.GR5281@sasha-vm>
-References: <20190829200001.17092-1-mathieu.poirier@linaro.org>
- <20190829200001.17092-4-mathieu.poirier@linaro.org>
+        id S1727066AbfH2XcL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 19:32:11 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:41492 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725883AbfH2XcL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 19:32:11 -0400
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3Ttd-0002C0-JC; Thu, 29 Aug 2019 23:32:05 +0000
+Date:   Fri, 30 Aug 2019 00:32:05 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Boaz Harrosh <boaz@plexistor.com>
+Cc:     Kai =?iso-8859-1?Q?M=E4kisara_=28Kolumbus=29?= 
+        <kai.makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>,
+        linux-fsdevel@vger.kernel.org,
+        Octavian Purdila <octavian.purdila@intel.com>,
+        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [RFC] Re: broken userland ABI in configfs binary attributes
+Message-ID: <20190829233205.GU1131@ZenIV.linux.org.uk>
+References: <20190826024838.GN1131@ZenIV.linux.org.uk>
+ <20190826162949.GA9980@ZenIV.linux.org.uk>
+ <B35B5EA9-939C-49F5-BF65-491D70BCA8D4@kolumbus.fi>
+ <20190826193210.GP1131@ZenIV.linux.org.uk>
+ <b362af55-4f45-bf29-9bc4-dd64e6b04688@plexistor.com>
+ <20190827172734.GS1131@ZenIV.linux.org.uk>
+ <20190829222258.GA16625@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829200001.17092-4-mathieu.poirier@linaro.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190829222258.GA16625@ZenIV.linux.org.uk>
+User-Agent: Mutt/1.12.0 (2019-05-25)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 02:00:01PM -0600, Mathieu Poirier wrote:
->From: Jyri Sarha <jsarha@ti.com>
->
->commit 432973fd3a20102840d5f7e61af9f1a03c217a4c upstream
->
->Register cpufreq notifier after we have initialized the crtc and
->unregister it before we remove the ctrc. Receiving a cpufreq notify
->without crtc causes a crash.
->
->Reported-by: Peter Ujfalusi <peter.ujfalusi@ti.com>
->Signed-off-by: Jyri Sarha <jsarha@ti.com>
->Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+On Thu, Aug 29, 2019 at 11:22:58PM +0100, Al Viro wrote:
+> On Tue, Aug 27, 2019 at 06:27:35PM +0100, Al Viro wrote:
+> 
+> > Most of them are actually pure bollocks - "it can never happen, but if it does,
+> > let's return -EWHATEVER to feel better".  Some are crap like -EINTR, which is
+> > also bollocks - for one thing, process might've been closing files precisely
+> > because it's been hit by SIGKILL.  For another, it's a destructor.  It won't
+> > be retried by the caller - there's nothing called for that object afterwards.
+> > What you don't do in it won't be done at all.
+> > 
+> > And some are "commit on final close" kind of thing, both with the hardware
+> > errors and parsing errors.
 
-I've queued this one for 4.19 and 4.14, thank you!
+[snip]
 
---
-Thanks,
-Sasha
+> In other words, the real mess is hidden in drivers/*...
+
+BTW, here's a live example - v4l stuff.  There we have
+static int v4l2_release(struct inode *inode, struct file *filp)
+{
+...
+        if (vdev->fops->release) {
+                if (v4l2_device_supports_requests(vdev->v4l2_dev)) {
+                        mutex_lock(&vdev->v4l2_dev->mdev->req_queue_mutex);
+                        ret = vdev->fops->release(filp);
+                        mutex_unlock(&vdev->v4l2_dev->mdev->req_queue_mutex);
+                } else {
+                        ret = vdev->fops->release(filp);
+                }
+        }
+...
+        return ret;
+}
+
+	OK, so we have a secondary method, also called "release".  It lives in
+struct v4l2_file_operations and its return value is passed to caller of
+v4l2_release() (and discarded by it).  There is a sodding plenty of instances,
+most of them explicitly initialized (for values of "sodding plenty" well over
+a hundred).  Quite a few of those have .release initialized with vb2_fop_release
+or v4l2_fh_release, so it's not _that_ horrible.  And these two helpers are
+returning 0 in all cases.  Many instances return 0, vb2_fop_release(...),
+or v4l2_fh_release(...), so they are also fine.  However, there are exceptions.
+
+1) drivers/media/radio/wl128x/fmdrv_v4l2.c:fm_v4l2_fops_release()
+...
+        ret = fmc_set_mode(fmdev, FM_MODE_OFF);  
+        if (ret < 0) {
+                fmerr("Unable to turn off the chip\n");
+                goto release_unlock;
+        }
+...
+release_unlock:
+        mutex_unlock(&fmdev->mutex);
+        return ret;
+}
+
+2) drivers/media/platform/omap/omap_vout.c:omap_vout_release()
+...
+        /* Turn off the pipeline */
+        ret = omapvid_apply_changes(vout);
+        if (ret)   
+                v4l2_warn(&vout->vid_dev->v4l2_dev,
+                                "Unable to apply changes\n");
+...
+        return ret;
+}
+
+3) drivers/media/platform/pxa_camera.c:pxac_fops_camera_release()
+...
+        if (fh_singular)
+                ret = pxac_sensor_set_power(pcdev, 0);
+        mutex_unlock(&pcdev->mlock);
+
+        return ret;
+}
+
+4) drivers/media/platform/sti/bdisp/bdisp-v4l2.c:bdisp_release()
+...
+        if (mutex_lock_interruptible(&bdisp->lock))
+                return -ERESTARTSYS;
+
+5) drivers/media/radio/radio-wl1273.c:wl1273_fm_fops_release()
+...
+                        if (mutex_lock_interruptible(&core->lock))
+                                return -EINTR;
+
+                        radio->irq_flags &= ~WL1273_RDS_EVENT;
+
+                        if (core->mode == WL1273_MODE_RX) {
+                                r = core->write(core,
+                                                WL1273_INT_MASK_SET,
+                                                radio->irq_flags);
+                                if (r) {
+                                        mutex_unlock(&core->lock);
+                                        goto out;
+                                }
+...
+out:
+        return r;
+}
+
+... and then it gets even better: in drivers/media/pci/ttpci/av7110_v4l.c
+we have struct v4l2_file_operations embedded into struct saa7146_ext_vv,
+with
+        .vbi_fops.open  = av7110_vbi_reset,
+        .vbi_fops.release = av7110_vbi_reset,
+in initializers.  Yes, the same instance for ->open() and ->release().
+Both currently take struct file * and return int.  And it certainly
+can return an error.
+
+So we have
+	* 3 simple cases of returning an error that gets seen by nobody.
+	* 2 outright bugs - ERESTARTSYS is particularly cute, seeing that
+restarting close(2) would not do the right thing even if it had been passed
+to userland.  As it is, it simply leaks.  IMO they should switch to plain
+mutex_lock; bdisp becomes regular, wl1273 becomes another "reporting error
+that goes nowhere" case.
+	* av7110, where we get basically the same "lost error, maybe we
+care, maybe not" with a twist - we can't just convert the ->release() to
+return void, since the same function is used for both ->open and ->release.
+Not hard to produce a wrapper, of course...
+
+I've no idea if v4l userland would want to see those errors; currently
+they are simply lost.
+
+All of the above is from grep; build coverage is not going to be great,
+seeing how much in there is embedded stuff...  Granted, v4l is probably
+the most hairy subsystem in that respect, but there's enough isolated
+fun cases where file_operations ->release() in drivers/* is trying to
+return errors, without any calls of subsystem methods...
