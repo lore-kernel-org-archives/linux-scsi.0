@@ -2,116 +2,100 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E103C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBE2C3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C44C20674
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:23:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AFC121874
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:40:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cHJ+dQNs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728067AbfH2WXG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 18:23:06 -0400
-Received: from zeniv.linux.org.uk ([195.92.253.2]:40826 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727912AbfH2WXG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 18:23:06 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3Sok-0000EE-UR; Thu, 29 Aug 2019 22:22:59 +0000
-Date:   Thu, 29 Aug 2019 23:22:58 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Boaz Harrosh <boaz@plexistor.com>
-Cc:     Kai =?iso-8859-1?Q?M=E4kisara_=28Kolumbus=29?= 
-        <kai.makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>,
-        linux-fsdevel@vger.kernel.org,
-        Octavian Purdila <octavian.purdila@intel.com>,
-        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [RFC] Re: broken userland ABI in configfs binary attributes
-Message-ID: <20190829222258.GA16625@ZenIV.linux.org.uk>
-References: <20190826024838.GN1131@ZenIV.linux.org.uk>
- <20190826162949.GA9980@ZenIV.linux.org.uk>
- <B35B5EA9-939C-49F5-BF65-491D70BCA8D4@kolumbus.fi>
- <20190826193210.GP1131@ZenIV.linux.org.uk>
- <b362af55-4f45-bf29-9bc4-dd64e6b04688@plexistor.com>
- <20190827172734.GS1131@ZenIV.linux.org.uk>
+        id S1727912AbfH2Wkm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 18:40:42 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:60820 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726526AbfH2Wkm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 18:40:42 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TMdm9n025184;
+        Thu, 29 Aug 2019 22:40:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=p5XboHPEsjuMq57E1RRwft/aFkGWzy1Dt70dyabjgHo=;
+ b=cHJ+dQNsiPW0/uRZ5QUkSe7j1ZujCHcjINjnNASoEaj4fq5VGBZOSEM0QCvFmUEEzu7G
+ F1/JmIo2mr96rqjiDFoQ9U71V2HZLk+vjRjPC0ryHkcIsXZbloNnm4tj0wLunU/h+wFM
+ +is0Ioaia53m9ILa84u89F6N8vQQ79vlOo3DXChAeW+wQXZYhodwwI1OWBWDKU2bs9tY
+ 4Y/d1ndSFvHSSABZJK+vHT5NSqZ4StUQHF/v0dIKigDjzwcrIic5VTcDZSgiThpa6n+d
+ ylZ9DcYbGPEGPYG8GbQ/HyYIy+w6vM70r9qXCBiZFekUakZIiLOn/vSkrct+7ZioGwcl xA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2upqnsg07r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 22:40:10 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TMc6U7014596;
+        Thu, 29 Aug 2019 22:40:09 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2unvu0q5k8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 22:40:09 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7TMe6af005524;
+        Thu, 29 Aug 2019 22:40:07 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 15:40:06 -0700
+To:     Don Brace <don.brace@microsemi.com>
+Cc:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
+        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
+        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
+        <POSWALD@suse.com>, <shunyong.yang@hxt-semitech.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 00/11] smartpqi updates
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <156650628375.18562.9889154437665249418.stgit@brunhilda>
+Date:   Thu, 29 Aug 2019 18:40:03 -0400
+In-Reply-To: <156650628375.18562.9889154437665249418.stgit@brunhilda> (Don
+        Brace's message of "Thu, 22 Aug 2019 15:38:51 -0500")
+Message-ID: <yq1v9ufppdo.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190827172734.GS1131@ZenIV.linux.org.uk>
-User-Agent: Mutt/1.12.0 (2019-05-25)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=988
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290225
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290225
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 27, 2019 at 06:27:35PM +0100, Al Viro wrote:
 
-> Most of them are actually pure bollocks - "it can never happen, but if it does,
-> let's return -EWHATEVER to feel better".  Some are crap like -EINTR, which is
-> also bollocks - for one thing, process might've been closing files precisely
-> because it's been hit by SIGKILL.  For another, it's a destructor.  It won't
-> be retried by the caller - there's nothing called for that object afterwards.
-> What you don't do in it won't be done at all.
-> 
-> And some are "commit on final close" kind of thing, both with the hardware
-> errors and parsing errors.
+Don,
 
-FWIW, here's the picture for fs/*: 6 instances.
+> These patches are based on Linus's tree
 
-afs_release():
-	 calls vfs_fsync() if file had been opened for write, tries to pass
-	the return value to caller.  Job for ->flush(), AFAICS.
+Applied to 5.4/scsi-queue. In the future, please make your commit
+descriptions a bit more verbose. Doesn't matter for adding new PCI ids.
+But it would be nice with some additional background for the more
+intricate functional driver changes.
 
-coda_psdev_release():
-	returns -1 in situation impossible after successful ->open().
-	Can't happen without memory corruption.
+Thanks!
 
-configfs_release_bin_file():
-	discussed upthread
-
-dlm device_close():
-	returns -ENOENT if dlm_find_lockspace_local(proc->lockspace) fails.
-No idea if that can happen.
-
-reiserfs_file_release():
-	tries to return an error if it can't free preallocated blocks.
-
-xfs_release():
-	similar to the previous case.
-
-In kernel/*: ftrace_graph_release() might return -ENOMEM.  No idea whether it's
-actually possible.
-
-In net/*: none
-
-In sound/*: 4 instances.
-
-snd_pcm_oss_release():
-        if (snd_BUG_ON(!substream))
-                return -ENXIO;
-	IOW, whine in impossible case.
-
-snd_pcm_release():
-	ditto.
-
-sq_release():
-        if (file->f_mode & FMODE_WRITE) {
-                if (write_sq.busy)
-                        rc = sq_fsync();
-	subsequently returns rc; sq_fsync() can return an error, both on timeout
-	and in case of interrupted wait.
-
-snd_hwdep_release():
-	passes the return value of hwdep ->release() method; two of those
-	can return an error.   snd_asihpi_hpi_release() is, AFAICS, impossible,
-	unless you manage to flip this module_param(enable_hpi_hwdep, bool, 0644);
-	off after opening a file.  And snd_usX2Y_hwdep_pcm_release() calls
-	usX2Y_pcms_busy_check() and passes its return value out.  No idea
-	whether that can be triggered.
-
-
-In other words, the real mess is hidden in drivers/*...
+-- 
+Martin K. Petersen	Oracle Linux Engineering
