@@ -2,95 +2,82 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8995C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BDAC3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:01:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A705C20828
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 22:58:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JIJSkj+U"
+	by mail.kernel.org (Postfix) with ESMTP id 7851C2173E
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 23:01:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567119695;
+	bh=W9b8uz0feEaW6eZCGVA4xllacD7howC1goKBJQjIsP4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=CVKRbSufVVH8RJzVT5OfRYcrP96GVItbSgS0k/EKr7hwEpK16fObV59Bh5cpnoNxs
+	 8TJtmzVG4fArGDLuw5+x+bLVZcsrnKjCUxDSiqzDTVu1Xu+8wzHec4578O/xh5W29o
+	 cmqzPYB57Zlow8L8CT8w7K3lfFl5/2eBOGQ2TAJY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728337AbfH2W6t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 18:58:49 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52970 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726526AbfH2W6t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 18:58:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TMrUND049882;
-        Thu, 29 Aug 2019 22:58:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=Y9KVsNHJ8CUFKe64GT7n5oVYFghHsJkoPRCde19Kris=;
- b=JIJSkj+UQyfRClV0PZMyVtN0VI9nVQuO9WHS2u1CTbN6BRPknuwi5YQZ/s6zETMzA3gr
- iPPwxaDqyS/HqSg01D7GiiP57BR5+mq+lfgUS6wTkQftoxLWJ/4Btq6/SpG0xnZN+aMu
- Rd9GZCAfm4eHAI9gbQHYFJSxJnkpPqpOxFv3LLSfXRVUMlCfAbITMR4m3qnQNINsvicA
- tRGqMUkDjdm109Yxne1ZXsKJCkSVK/l4xrFWKvpp9ArZ4PqLwbNmnKaQDOQn3PNzlz2h
- T2i5yUTKNDjFYr2JxoP0OlaZreezDIrpMOK62RgPhAzxkoeArhyxFoFZfAyqA0tYjAR9 Mg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2upqsdg1ds-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 22:58:36 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TMvgFw055687;
-        Thu, 29 Aug 2019 22:58:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2unvu0qvvx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 22:58:35 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7TMwYhV000897;
-        Thu, 29 Aug 2019 22:58:34 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Aug 2019 15:58:34 -0700
-To:     John Pittman <jpittman@redhat.com>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, satishkh@cisco.com,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: fnic: print port speed only at driver init or speed change
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20190823140852.1852-1-jpittman@redhat.com>
-Date:   Thu, 29 Aug 2019 18:58:32 -0400
-In-Reply-To: <20190823140852.1852-1-jpittman@redhat.com> (John Pittman's
-        message of "Fri, 23 Aug 2019 10:08:52 -0400")
-Message-ID: <yq1imqfpoiv.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1728102AbfH2XBb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 19:01:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35490 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727826AbfH2XBa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Aug 2019 19:01:30 -0400
+Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D2D220828;
+        Thu, 29 Aug 2019 23:01:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1567119689;
+        bh=W9b8uz0feEaW6eZCGVA4xllacD7howC1goKBJQjIsP4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bSJ6EehHO0cOzJSIr27S1Lja+mZUxP500FnEZtxxAgXtdPYX6f/m17eD5+lda6brA
+         YPZdc70TZBBcV2AmJtoXO5/c/Ds6ILtQM+spB9LQXswf+yQTXxIL3t7auVDhf7WLdA
+         tSelT+jtK3910rMvMUNQ02HQ6j9R79g+fxFCiYJY=
+Date:   Thu, 29 Aug 2019 19:01:28 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Mathieu Poirier <mathieu.poirier@linaro.org>
+Cc:     stable@vger.kernel.org, architt@codeaurora.org,
+        a.hajda@samsung.com, Laurent.pinchart@ideasonboard.com,
+        airlied@linux.ie, jsarha@ti.com, tomi.valkeinen@ti.com,
+        vinholikatti@gmail.com, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [BACKPORT 4.19.y 1/3] drm/bridge: tfp410: fix memleak in
+ get_modes()
+Message-ID: <20190829230128.GP5281@sasha-vm>
+References: <20190829200001.17092-1-mathieu.poirier@linaro.org>
+ <20190829200001.17092-2-mathieu.poirier@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908290229
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908290228
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20190829200001.17092-2-mathieu.poirier@linaro.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Aug 29, 2019 at 01:59:59PM -0600, Mathieu Poirier wrote:
+>From: Tomi Valkeinen <tomi.valkeinen@ti.com>
+>
+>commit c08f99c39083ab55a9c93b3e93cef48711294dad upstream
+>
+>We don't free the edid blob allocated by the call to drm_get_edid(),
+>causing a memleak. Fix this by calling kfree(edid) at the end of the
+>get_modes().
+>
+>Signed-off-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+>Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+>Link: https://patchwork.freedesktop.org/patch/msgid/20190610135739.6077-1-tomi.valkeinen@ti.com
+>Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-John,
+I've queued this one for 4.14-5.2, thanks!
 
-> Port speed printing was added by commit d948e6383ec3 ("scsi: fnic:
-> Add port speed stat to fnic debug stats"). As currently configured,
-> this will cause the port speed to be printed to syslog every
-> 2 seconds. To prevent log spamming, only print the vnic port speed
-> at driver initialization and if the speed changes. Also clean up a
-> small typo in fnic_trace.c.
-
-Applied to 5.4/scsi-queue, thanks.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+--
+Thanks,
+Sasha
