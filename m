@@ -4,53 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF5FC3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 055B6C3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03D41233FF
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:25:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C981D205C9
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:29:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567103139;
-	bh=YaV+f0950vjRD5TeumxAXpgg2lCSSecBsPFAdte19FQ=;
+	s=default; t=1567103360;
+	bh=RWqFe7Un65rshSuXKt6U5B/SGrXFu6/jZLaCmJW8e9Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fCb1B+nOLQqM3NU8xae8JqQebO32DzSp9w2noOZH5+ePk39+nDZlj7UhW6n35mTSW
-	 Vg5Q8THA5b6SrYG9QlmELbsbQJppz/er7rYwxwA+wIiCrT3PxpGlYe8KWG3BivywAA
-	 O4rfj7qTAW9XKMzDFzjU0+yRVW1Dvxf5HT6M146g=
+	b=0J8FpzRdYkw93cIyRkCsTw+HUM4xZKsfrIT9iH/xkifeNsdg+MwIUGM+S51xZbBsX
+	 gPDYvash+KYWI2hvmghQcfbM3fit87XfA1+Vtvp31IdWUYkmypSaGhXwoJkBSCLkTg
+	 gunWFVSnvz7wNXcJVld5OMbP6mEoUEkhmY9/KKWw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729625AbfH2SQL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 14:16:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58172 "EHLO mail.kernel.org"
+        id S1729169AbfH2S3U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 14:29:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728236AbfH2SQL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Aug 2019 14:16:11 -0400
+        id S1729073AbfH2SPC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Aug 2019 14:15:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6228F23404;
-        Thu, 29 Aug 2019 18:16:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A2C262339E;
+        Thu, 29 Aug 2019 18:15:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567102570;
-        bh=YaV+f0950vjRD5TeumxAXpgg2lCSSecBsPFAdte19FQ=;
+        s=default; t=1567102501;
+        bh=RWqFe7Un65rshSuXKt6U5B/SGrXFu6/jZLaCmJW8e9Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RQPmj9J474XRAC57GsCmWTPer88hbCdzU0vS0+HGGCulwmEOUUsNwjsMvq5tcPfmF
-         hnNxwt2yQt5y2QVS2PvmLEmjIR6R6dr9TwKF5KIBo0bEZKGVBFb6TVvxVIVjyg2p7e
-         LELgrXkkyRX+8uMt0ffdhBjlUczJtYRMniD8vA2g=
+        b=qk3i03lW1cYcoDti60XM9YYZEygzcx01Sak7eCqBSAwwpGucPxWffdMhdfucol5gH
+         qLHWGAh+f0paJEEfmV5jbTqqxOIl4AhI0YbwXwudAlv9RXyaeSbGO8GADBDPj5sGLm
+         5VX0C4dmK6aecMIxFOfHIhMGCKYLVn5qes1vmRQQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bill Kuzeja <William.Kuzeja@stratus.com>,
-        Bill Kuzeja <william.kuzeja@stratus.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 16/45] scsi: qla2xxx: Fix gnl.l memory leak on adapter init failure
-Date:   Thu, 29 Aug 2019 14:15:16 -0400
-Message-Id: <20190829181547.8280-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 52/76] scsi: lpfc: Mitigate high memory pre-allocation by SCSI-MQ
+Date:   Thu, 29 Aug 2019 14:12:47 -0400
+Message-Id: <20190829181311.7562-52-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190829181547.8280-1-sashal@kernel.org>
-References: <20190829181547.8280-1-sashal@kernel.org>
+In-Reply-To: <20190829181311.7562-1-sashal@kernel.org>
+References: <20190829181311.7562-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,80 +61,131 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bill Kuzeja <William.Kuzeja@stratus.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 26fa656e9a0cbccddf7db132ea020d2169dbe46e ]
+[ Upstream commit 77ffd3465ba837e9dc714e17b014e77b2eae765a ]
 
-If HBA initialization fails unexpectedly (exiting via probe_failed:), we
-may fail to free vha->gnl.l. So that we don't attempt to double free, set
-this pointer to NULL after a free and check for NULL at probe_failed: so we
-know whether or not to call dma_free_coherent.
+When SCSI-MQ is enabled, the SCSI-MQ layers will do pre-allocation of MQ
+resources based on shost values set by the driver. In newer cases of the
+driver, which attempts to set nr_hw_queues to the cpu count, the
+multipliers become excessive, with a single shost having SCSI-MQ
+pre-allocation reaching into the multiple GBytes range.  NPIV, which
+creates additional shosts, only multiply this overhead. On lower-memory
+systems, this can exhaust system memory very quickly, resulting in a system
+crash or failures in the driver or elsewhere due to low memory conditions.
 
-Signed-off-by: Bill Kuzeja <william.kuzeja@stratus.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+After testing several scenarios, the situation can be mitigated by limiting
+the value set in shost->nr_hw_queues to 4. Although the shost values were
+changed, the driver still had per-cpu hardware queues of its own that
+allowed parallelization per-cpu.  Testing revealed that even with the
+smallish number for nr_hw_queues for SCSI-MQ, performance levels remained
+near maximum with the within-driver affiinitization.
+
+A module parameter was created to allow the value set for the nr_hw_queues
+to be tunable.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |  2 ++
- drivers/scsi/qla2xxx/qla_os.c   | 11 ++++++++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc.h      |  1 +
+ drivers/scsi/lpfc/lpfc_attr.c | 15 +++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c | 10 ++++++----
+ drivers/scsi/lpfc/lpfc_sli4.h |  5 +++++
+ 4 files changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index f8f4d3ea67f3f..15d493f30810f 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2191,6 +2191,8 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
- 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
- 	    vha->gnl.ldma);
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index aafcffaa25f71..4604e1bc334c0 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -822,6 +822,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_cq_poll_threshold;
+ 	uint32_t cfg_cq_max_proc_limit;
+ 	uint32_t cfg_fcp_cpu_map;
++	uint32_t cfg_fcp_mq_threshold;
+ 	uint32_t cfg_hdw_queue;
+ 	uint32_t cfg_irq_chann;
+ 	uint32_t cfg_suppress_rsp;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index d4c65e2109e2f..353da12d797ba 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5640,6 +5640,19 @@ LPFC_ATTR_RW(nvme_oas, 0, 0, 1,
+ LPFC_ATTR_RW(nvme_embed_cmd, 1, 0, 2,
+ 	     "Embed NVME Command in WQE");
  
-+	vha->gnl.l = NULL;
++/*
++ * lpfc_fcp_mq_threshold: Set the maximum number of Hardware Queues
++ * the driver will advertise it supports to the SCSI layer.
++ *
++ *      0    = Set nr_hw_queues by the number of CPUs or HW queues.
++ *      1,128 = Manually specify the maximum nr_hw_queue value to be set,
++ *
++ * Value range is [0,128]. Default value is 8.
++ */
++LPFC_ATTR_R(fcp_mq_threshold, LPFC_FCP_MQ_THRESHOLD_DEF,
++	    LPFC_FCP_MQ_THRESHOLD_MIN, LPFC_FCP_MQ_THRESHOLD_MAX,
++	    "Set the number of SCSI Queues advertised");
 +
- 	vfree(vha->scan.l);
+ /*
+  * lpfc_hdw_queue: Set the number of Hardware Queues the driver
+  * will advertise it supports to the NVME and  SCSI layers. This also
+@@ -5961,6 +5974,7 @@ struct device_attribute *lpfc_hba_attrs[] = {
+ 	&dev_attr_lpfc_cq_poll_threshold,
+ 	&dev_attr_lpfc_cq_max_proc_limit,
+ 	&dev_attr_lpfc_fcp_cpu_map,
++	&dev_attr_lpfc_fcp_mq_threshold,
+ 	&dev_attr_lpfc_hdw_queue,
+ 	&dev_attr_lpfc_irq_chann,
+ 	&dev_attr_lpfc_suppress_rsp,
+@@ -7042,6 +7056,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	/* Initialize first burst. Target vs Initiator are different. */
+ 	lpfc_nvme_enable_fb_init(phba, lpfc_nvme_enable_fb);
+ 	lpfc_nvmet_fb_size_init(phba, lpfc_nvmet_fb_size);
++	lpfc_fcp_mq_threshold_init(phba, lpfc_fcp_mq_threshold);
+ 	lpfc_hdw_queue_init(phba, lpfc_hdw_queue);
+ 	lpfc_irq_chann_init(phba, lpfc_irq_chann);
+ 	lpfc_enable_bbcr_init(phba, lpfc_enable_bbcr);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index eaaef682de251..2fd8f15f99975 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4308,10 +4308,12 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	shost->max_cmd_len = 16;
  
- 	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 42b8f0d3e580d..02fa81f122c22 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3395,6 +3395,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return 0;
- 
- probe_failed:
-+	if (base_vha->gnl.l) {
-+		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
-+				base_vha->gnl.l, base_vha->gnl.ldma);
-+		base_vha->gnl.l = NULL;
-+	}
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+-		if (phba->cfg_fcp_io_sched == LPFC_FCP_SCHED_BY_HDWQ)
+-			shost->nr_hw_queues = phba->cfg_hdw_queue;
+-		else
+-			shost->nr_hw_queues = phba->sli4_hba.num_present_cpu;
++		if (!phba->cfg_fcp_mq_threshold ||
++		    phba->cfg_fcp_mq_threshold > phba->cfg_hdw_queue)
++			phba->cfg_fcp_mq_threshold = phba->cfg_hdw_queue;
 +
- 	if (base_vha->timer_active)
- 		qla2x00_stop_timer(base_vha);
- 	base_vha->flags.online = 0;
-@@ -3624,7 +3630,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	if (!atomic_read(&pdev->enable_cnt)) {
- 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
- 		    base_vha->gnl.l, base_vha->gnl.ldma);
--
-+		base_vha->gnl.l = NULL;
- 		scsi_host_put(base_vha->host);
- 		kfree(ha);
- 		pci_set_drvdata(pdev, NULL);
-@@ -3663,6 +3669,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	dma_free_coherent(&ha->pdev->dev,
- 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
++		shost->nr_hw_queues = min_t(int, 2 * num_possible_nodes(),
++					    phba->cfg_fcp_mq_threshold);
  
-+	base_vha->gnl.l = NULL;
+ 		shost->dma_boundary =
+ 			phba->sli4_hba.pc_sli4_params.sge_supp_len-1;
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 8e4fd1a98023c..986594ec40e2a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -44,6 +44,11 @@
+ #define LPFC_HBA_HDWQ_MAX	128
+ #define LPFC_HBA_HDWQ_DEF	0
+ 
++/* FCP MQ queue count limiting */
++#define LPFC_FCP_MQ_THRESHOLD_MIN	0
++#define LPFC_FCP_MQ_THRESHOLD_MAX	128
++#define LPFC_FCP_MQ_THRESHOLD_DEF	8
 +
- 	vfree(base_vha->scan.l);
+ /* Common buffer size to accomidate SCSI and NVME IO buffers */
+ #define LPFC_COMMON_IO_BUF_SZ	768
  
- 	if (IS_QLAFX00(ha))
-@@ -4602,6 +4610,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 		    "Alloc failed for scan database.\n");
- 		dma_free_coherent(&ha->pdev->dev, vha->gnl.size,
- 		    vha->gnl.l, vha->gnl.ldma);
-+		vha->gnl.l = NULL;
- 		scsi_remove_host(vha->host);
- 		return NULL;
- 	}
 -- 
 2.20.1
 
