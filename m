@@ -2,69 +2,78 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A10C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40499C3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:59:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C56F72166E
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:50:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mF6BZy/N"
+	by mail.kernel.org (Postfix) with ESMTP id 15604205ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:59:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728159AbfH2PuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 11:50:02 -0400
-Received: from mail-io1-f45.google.com ([209.85.166.45]:37952 "EHLO
-        mail-io1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727985AbfH2PuC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 11:50:02 -0400
-Received: by mail-io1-f45.google.com with SMTP id p12so7890684iog.5
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2019 08:50:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=D12yczZaTC/S+CJHiRlFxphGcTx9y5WZVxMU7TOeq34=;
-        b=mF6BZy/No7+e7a5YFiwDmKmdhriTUeHTGN7xgi4ruqgm6H1b80AqknMPolQgbCfRVN
-         YZFqqGRaP5BCBiqSvPK7jhJr2oS69E5+uDwjbeDDuzUQcU1+InqeU0XN17zmsAzLlTQ2
-         7MH5ykWVYzVl3Ub0fWl3wh6an0cMb2f+n74uX1OC5NiCelF8v15Ks9H7m+n0o5IH0JOj
-         XVHKaP7OmJkGWD3Cp+MSSGP2FXBeHbpeCW65HVl9Wllz1N6s5FySlFBvAa8v98d0K8y6
-         6NFBuTalFn/N3lT8Rvu8Fdycvm9oXSQJoa1VvZq3tnLJmvKPY2E6lA2nNXdLrVD8r4Wq
-         hCYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=D12yczZaTC/S+CJHiRlFxphGcTx9y5WZVxMU7TOeq34=;
-        b=WwkGYurtY0BN6kCpkO5huYIJhkw1oXeixbtcT273V98kEecKMfXGZwHQ1WZcGgcZS0
-         ypMdrjy2fzZtrNqj3dJZb0GKajOQONCBoQf545UzRJPZYxOsvdQn+1uUzjkqxODPFZiD
-         /ERqfEhcZAPRIN2BOxmuVGCxdqgSYSNiroxZVceQ15A47U7ruYWOBR1a6vMkz5Pi2P8d
-         lWeZoDGV8ZUQDnE7epdppzhq+wYiARtKbgxTZfSze9Ga6tZbineiJZ04oCyJyVKvqGjb
-         4B8Ns9bRkYtf4Fk1sVtT7G5TI07oV9iIXLsJG/J721+jW8+JoBCun7Sp+kaaLNrDjes3
-         02+Q==
-X-Gm-Message-State: APjAAAV0VR9ryJ2YgBb8e4nZtcyhnlfxjrR6YAfQeyC7cvCfCZb1vPsx
-        PLPAggrsYVk7aOv1rfuf5z0NsCsVEjD2aWjqpmJSyw5gsJI=
-X-Google-Smtp-Source: APXvYqzVvMXzwLKYrNkOys87A8/EO/qlqa+jTpjhcnlPbT3NV6iAlTS4O4ru56P5dELFesIT6frIa8HvK4DZbjMmTf8=
-X-Received: by 2002:a5d:8e15:: with SMTP id e21mr5668402iod.296.1567093801506;
- Thu, 29 Aug 2019 08:50:01 -0700 (PDT)
+        id S1728173AbfH2P7e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 11:59:34 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:59701 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726283AbfH2P7e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Aug 2019 11:59:34 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5A4111256C5;
+        Thu, 29 Aug 2019 15:59:34 +0000 (UTC)
+Received: from manaslu.redhat.com (unknown [10.35.206.41])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 926A15D712;
+        Thu, 29 Aug 2019 15:59:31 +0000 (UTC)
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     cleech@redhat.com
+Cc:     mchristi@redhat.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [RFC PATCH 0/4] iscsi: chap: introduce support for SHA1 and SHA3-256
+Date:   Thu, 29 Aug 2019 17:59:25 +0200
+Message-Id: <20190829155929.27701-1-mlombard@redhat.com>
 MIME-Version: 1.0
-From:   Andrey Melnikov <temnota.am@gmail.com>
-Date:   Thu, 29 Aug 2019 18:49:48 +0300
-Message-ID: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
-Subject: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT
-To:     Li Zhong <lizhongfs@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.71]); Thu, 29 Aug 2019 15:59:34 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello.
+iSCSI with the Challenge-Handshake Authentication Protocol is not FIPS compliant.
+This is due to the fact that CHAP currently uses MD5 as the only supported
+digest algorithm and MD5 is not allowed by FIPS.
 
-This patch break exposing individual RAID disks from adaptec raid
-controller. I need access to this disc's for S.M.A.R.T monitoring.
+When FIPS mode is enabled on the target server, the CHAP authentication
+won't work because the target driver will be prevented from using the MD5 module.
 
-Please find other way to workaround bugs in IBM/2145 controller.
+Given that CHAP is agnostic regarding the algorithm it uses, this
+patchset introduce support for two new alternatives: SHA1 and SHA3-256.
+
+SHA1 has already its own assigned value for its use in CHAP, as reported by IANA:
+https://www.iana.org/assignments/ppp-numbers/ppp-numbers.xml#ppp-numbers-9
+On the other hand the use of SHA1 on FIPS-enabled systems has been deprecated
+and therefore it's not a vialable long term option.
+
+We could consider introducing a more modern hash algorithm like SHA3-256, as
+this patchset does.
+
+A pull request for the open-iscsi initiator side implementation has been
+submitted here:
+https://github.com/open-iscsi/open-iscsi/pull/170
+
+Maurizio Lombardi (4):
+  target-iscsi: CHAP: add support to SHA1 and SHA3-256 hash functions
+  target-iscsi: remove unneeded function
+  target-iscsi: tie the challenge length to the hash digest size
+  target-iscsi: rename some variables to avoid confusion.
+
+ drivers/target/iscsi/iscsi_target_auth.c | 218 ++++++++++++++---------
+ drivers/target/iscsi/iscsi_target_auth.h |  13 +-
+ 2 files changed, 147 insertions(+), 84 deletions(-)
+
+-- 
+Maurizio Lombardi
+
