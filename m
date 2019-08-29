@@ -2,118 +2,69 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4DBC3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A10C3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5EA21726
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C56F72166E
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:50:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mF6BZy/N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728116AbfH2PrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 11:47:12 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:42399 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726283AbfH2PrM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Aug 2019 11:47:12 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1384C204191;
-        Thu, 29 Aug 2019 17:47:11 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 5ZkrM5D+6x05; Thu, 29 Aug 2019 17:47:09 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id B04AA204158;
-        Thu, 29 Aug 2019 17:47:07 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v4 07/22] sg: move header to uapi section
-To:     kbuild test robot <lkp@intel.com>
-Cc:     kbuild-all@01.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bvanassche@acm.org, hch@infradead.org,
-        Hannes Reinecke <hare@suse.com>
-References: <20190829022659.23130-8-dgilbert@interlog.com>
- <201908291926.MPGuRgEm%lkp@intel.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <58567761-ab7e-b01e-6bb9-2494aca6d7c8@interlog.com>
-Date:   Thu, 29 Aug 2019 11:47:04 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1728159AbfH2PuC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 11:50:02 -0400
+Received: from mail-io1-f45.google.com ([209.85.166.45]:37952 "EHLO
+        mail-io1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727985AbfH2PuC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 11:50:02 -0400
+Received: by mail-io1-f45.google.com with SMTP id p12so7890684iog.5
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2019 08:50:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=D12yczZaTC/S+CJHiRlFxphGcTx9y5WZVxMU7TOeq34=;
+        b=mF6BZy/No7+e7a5YFiwDmKmdhriTUeHTGN7xgi4ruqgm6H1b80AqknMPolQgbCfRVN
+         YZFqqGRaP5BCBiqSvPK7jhJr2oS69E5+uDwjbeDDuzUQcU1+InqeU0XN17zmsAzLlTQ2
+         7MH5ykWVYzVl3Ub0fWl3wh6an0cMb2f+n74uX1OC5NiCelF8v15Ks9H7m+n0o5IH0JOj
+         XVHKaP7OmJkGWD3Cp+MSSGP2FXBeHbpeCW65HVl9Wllz1N6s5FySlFBvAa8v98d0K8y6
+         6NFBuTalFn/N3lT8Rvu8Fdycvm9oXSQJoa1VvZq3tnLJmvKPY2E6lA2nNXdLrVD8r4Wq
+         hCYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=D12yczZaTC/S+CJHiRlFxphGcTx9y5WZVxMU7TOeq34=;
+        b=WwkGYurtY0BN6kCpkO5huYIJhkw1oXeixbtcT273V98kEecKMfXGZwHQ1WZcGgcZS0
+         ypMdrjy2fzZtrNqj3dJZb0GKajOQONCBoQf545UzRJPZYxOsvdQn+1uUzjkqxODPFZiD
+         /ERqfEhcZAPRIN2BOxmuVGCxdqgSYSNiroxZVceQ15A47U7ruYWOBR1a6vMkz5Pi2P8d
+         lWeZoDGV8ZUQDnE7epdppzhq+wYiARtKbgxTZfSze9Ga6tZbineiJZ04oCyJyVKvqGjb
+         4B8Ns9bRkYtf4Fk1sVtT7G5TI07oV9iIXLsJG/J721+jW8+JoBCun7Sp+kaaLNrDjes3
+         02+Q==
+X-Gm-Message-State: APjAAAV0VR9ryJ2YgBb8e4nZtcyhnlfxjrR6YAfQeyC7cvCfCZb1vPsx
+        PLPAggrsYVk7aOv1rfuf5z0NsCsVEjD2aWjqpmJSyw5gsJI=
+X-Google-Smtp-Source: APXvYqzVvMXzwLKYrNkOys87A8/EO/qlqa+jTpjhcnlPbT3NV6iAlTS4O4ru56P5dELFesIT6frIa8HvK4DZbjMmTf8=
+X-Received: by 2002:a5d:8e15:: with SMTP id e21mr5668402iod.296.1567093801506;
+ Thu, 29 Aug 2019 08:50:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201908291926.MPGuRgEm%lkp@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+From:   Andrey Melnikov <temnota.am@gmail.com>
+Date:   Thu, 29 Aug 2019 18:49:48 +0300
+Message-ID: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
+Subject: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT
+To:     Li Zhong <lizhongfs@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-08-29 7:15 a.m., kbuild test robot wrote:
-> Hi Douglas,
-> 
-> Thank you for the patch! Yet something to improve:
+Hello.
 
-Hi Kbuild,
-Both of us have something to improve. I should fix my code, but it
-was correct before you told me to fix it last time!
+This patch break exposing individual RAID disks from adaptec raid
+controller. I need access to this disc's for S.M.A.R.T monitoring.
 
-The change that caused this error is on line 35 of include/uapi/scsi/sg.h:
-     #include <uapi/linux/bsg.h>
-
-which is indeed incorrect since no other header under include/uapi
-has "uapi" in the path of one of its embedded includes. So the rule seems
-to be that header files under the uapi directory implicitly refer to
-other headers under the uapi directory when they "#include <filename>".
-
-However the change in my code was a result of this kbuild report from
-version 2 of this patchset:
-    https://www.spinics.net/lists/linux-scsi/msg132432.html
-
-And that earlier error report seems incorrect and indicates that your
-build tree is misconfigured with respect to this directory:
-     include/uapi/scsi/
-
-The failure shown in msg132432.html indicates that when your tree resolved
-this line in include/uapi/scsi/sg.h :
-     #include <linux/bsg.h>
-
-that it incorrectly included
-     include/linux/bsg.h
-instead of
-     include/uapi/linux/bsg.h
-
-If you concur and fix this issue, kindly add the following tag
-Reported-by: Douglas Gilbert <dgilbert@interlog.com>
-
-
-> [auto build test ERROR on linus/master]
-> [cannot apply to v5.3-rc6 next-20190828]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/sg-add-v4-interface/20190829-123646
-> config: x86_64-allyesconfig (attached as .config)
-> compiler: gcc-7 (Debian 7.4.0-11) 7.4.0
-> reproduce:
->          # save the attached .config to linux build tree
->          make ARCH=x86_64
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
-> 
-> All errors (new ones prefixed by >>):
-> 
->     In file included from <command-line>:32:0:
->>> ./usr/include/scsi/sg.h:35:10: fatal error: uapi/linux/bsg.h: No such file or directory
->      #include <uapi/linux/bsg.h>
->               ^~~~~~~~~~~~~~~~~~
->     compilation terminated.
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
-
+Please find other way to workaround bugs in IBM/2145 controller.
