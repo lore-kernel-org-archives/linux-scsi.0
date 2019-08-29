@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77478C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF5FC3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:25:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 513562189D
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:16:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03D41233FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 18:25:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567102574;
-	bh=FT5S8CfGpyNkkHr+ptSaEIc1V6jjrI6BUr3yjEz4r18=;
+	s=default; t=1567103139;
+	bh=YaV+f0950vjRD5TeumxAXpgg2lCSSecBsPFAdte19FQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=W8ciJ69gwQtYuaMYPPC/hA7LBpeJ7vgsPyM8hERpESsDykJTXDJ0jQhknjcmuFoHm
-	 2+5M6DQAnha9up3e6yFcEnyqwAgVVKbNM5ScnfKK//h/gV8KeaORnLQtzArTUgyQHQ
-	 wCN+1tvKh9OooswKwjAeqX2hvmKT1hSJyIQVPfNg=
+	b=fCb1B+nOLQqM3NU8xae8JqQebO32DzSp9w2noOZH5+ePk39+nDZlj7UhW6n35mTSW
+	 Vg5Q8THA5b6SrYG9QlmELbsbQJppz/er7rYwxwA+wIiCrT3PxpGlYe8KWG3BivywAA
+	 O4rfj7qTAW9XKMzDFzjU0+yRVW1Dvxf5HT6M146g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729666AbfH2SQN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 14:16:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58196 "EHLO mail.kernel.org"
+        id S1729625AbfH2SQL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 14:16:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729630AbfH2SQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Aug 2019 14:16:12 -0400
+        id S1728236AbfH2SQL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Aug 2019 14:16:11 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 93EC02342C;
-        Thu, 29 Aug 2019 18:16:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6228F23404;
+        Thu, 29 Aug 2019 18:16:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567102571;
-        bh=FT5S8CfGpyNkkHr+ptSaEIc1V6jjrI6BUr3yjEz4r18=;
+        s=default; t=1567102570;
+        bh=YaV+f0950vjRD5TeumxAXpgg2lCSSecBsPFAdte19FQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AyMg9sllf9watCvY9sOkqwWtuDuUREFDU4LCGgmE4M1yFQHrp+CE1GHvFEtAZUYUC
-         OZMsWLfcNRsRNxNX4cXbaMSKwBG5qrPpe/2DoYJlzdBx7J7FlQ37aGd+O8UrxT6pow
-         H2913Zov1ufT4I/0TyVGDYxTCuJg8fpED3v8zNm4=
+        b=RQPmj9J474XRAC57GsCmWTPer88hbCdzU0vS0+HGGCulwmEOUUsNwjsMvq5tcPfmF
+         hnNxwt2yQt5y2QVS2PvmLEmjIR6R6dr9TwKF5KIBo0bEZKGVBFb6TVvxVIVjyg2p7e
+         LELgrXkkyRX+8uMt0ffdhBjlUczJtYRMniD8vA2g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dmitry Fomichev <dmitry.fomichev@wdc.com>,
-        Mike Christie <mchristi@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
+Cc:     Bill Kuzeja <William.Kuzeja@stratus.com>,
+        Bill Kuzeja <william.kuzeja@stratus.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 17/45] scsi: target: tcmu: avoid use-after-free after command timeout
-Date:   Thu, 29 Aug 2019 14:15:17 -0400
-Message-Id: <20190829181547.8280-17-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 16/45] scsi: qla2xxx: Fix gnl.l memory leak on adapter init failure
+Date:   Thu, 29 Aug 2019 14:15:16 -0400
+Message-Id: <20190829181547.8280-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190829181547.8280-1-sashal@kernel.org>
 References: <20190829181547.8280-1-sashal@kernel.org>
@@ -61,79 +60,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Dmitry Fomichev <dmitry.fomichev@wdc.com>
+From: Bill Kuzeja <William.Kuzeja@stratus.com>
 
-[ Upstream commit a86a75865ff4d8c05f355d1750a5250aec89ab15 ]
+[ Upstream commit 26fa656e9a0cbccddf7db132ea020d2169dbe46e ]
 
-In tcmu_handle_completion() function, the variable called read_len is
-always initialized with a value taken from se_cmd structure. If this
-function is called to complete an expired (timed out) out command, the
-session command pointed by se_cmd is likely to be already deallocated by
-the target core at that moment. As the result, this access triggers a
-use-after-free warning from KASAN.
+If HBA initialization fails unexpectedly (exiting via probe_failed:), we
+may fail to free vha->gnl.l. So that we don't attempt to double free, set
+this pointer to NULL after a free and check for NULL at probe_failed: so we
+know whether or not to call dma_free_coherent.
 
-This patch fixes the code not to touch se_cmd when completing timed out
-TCMU commands. It also resets the pointer to se_cmd at the time when the
-TCMU_CMD_BIT_EXPIRED flag is set because it is going to become invalid
-after calling target_complete_cmd() later in the same function,
-tcmu_check_expired_cmd().
-
-Signed-off-by: Dmitry Fomichev <dmitry.fomichev@wdc.com>
-Acked-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+Signed-off-by: Bill Kuzeja <william.kuzeja@stratus.com>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |  2 ++
+ drivers/scsi/qla2xxx/qla_os.c   | 11 ++++++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index c46efa47d68a5..7159e8363b83b 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1143,14 +1143,16 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 	struct se_cmd *se_cmd = cmd->se_cmd;
- 	struct tcmu_dev *udev = cmd->tcmu_dev;
- 	bool read_len_valid = false;
--	uint32_t read_len = se_cmd->data_length;
-+	uint32_t read_len;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index f8f4d3ea67f3f..15d493f30810f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2191,6 +2191,8 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
+ 	    vha->gnl.ldma);
  
- 	/*
- 	 * cmd has been completed already from timeout, just reclaim
- 	 * data area space and free cmd
- 	 */
--	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
-+	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+		WARN_ON_ONCE(se_cmd);
- 		goto out;
++	vha->gnl.l = NULL;
++
+ 	vfree(vha->scan.l);
+ 
+ 	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 42b8f0d3e580d..02fa81f122c22 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3395,6 +3395,12 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return 0;
+ 
+ probe_failed:
++	if (base_vha->gnl.l) {
++		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
++				base_vha->gnl.l, base_vha->gnl.ldma);
++		base_vha->gnl.l = NULL;
 +	}
++
+ 	if (base_vha->timer_active)
+ 		qla2x00_stop_timer(base_vha);
+ 	base_vha->flags.online = 0;
+@@ -3624,7 +3630,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	if (!atomic_read(&pdev->enable_cnt)) {
+ 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
+ 		    base_vha->gnl.l, base_vha->gnl.ldma);
+-
++		base_vha->gnl.l = NULL;
+ 		scsi_host_put(base_vha->host);
+ 		kfree(ha);
+ 		pci_set_drvdata(pdev, NULL);
+@@ -3663,6 +3669,8 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	dma_free_coherent(&ha->pdev->dev,
+ 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
  
- 	list_del_init(&cmd->queue_entry);
++	base_vha->gnl.l = NULL;
++
+ 	vfree(base_vha->scan.l);
  
-@@ -1163,6 +1165,7 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		goto done;
+ 	if (IS_QLAFX00(ha))
+@@ -4602,6 +4610,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 		    "Alloc failed for scan database.\n");
+ 		dma_free_coherent(&ha->pdev->dev, vha->gnl.size,
+ 		    vha->gnl.l, vha->gnl.ldma);
++		vha->gnl.l = NULL;
+ 		scsi_remove_host(vha->host);
+ 		return NULL;
  	}
- 
-+	read_len = se_cmd->data_length;
- 	if (se_cmd->data_direction == DMA_FROM_DEVICE &&
- 	    (entry->hdr.uflags & TCMU_UFLAG_READ_LEN) && entry->rsp.read_len) {
- 		read_len_valid = true;
-@@ -1318,6 +1321,7 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
- 		 */
- 		scsi_status = SAM_STAT_CHECK_CONDITION;
- 		list_del_init(&cmd->queue_entry);
-+		cmd->se_cmd = NULL;
- 	} else {
- 		list_del_init(&cmd->queue_entry);
- 		idr_remove(&udev->commands, id);
-@@ -2036,6 +2040,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
- 
- 		idr_remove(&udev->commands, i);
- 		if (!test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags)) {
-+			WARN_ON(!cmd->se_cmd);
- 			list_del_init(&cmd->queue_entry);
- 			if (err_level == 1) {
- 				/*
 -- 
 2.20.1
 
