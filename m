@@ -2,131 +2,96 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A41C3A5A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 21:32:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CABC3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 21:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E40922CEA
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 21:32:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A436021726
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 21:42:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EKurTXmv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727564AbfH2Vcn convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 17:32:43 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44178 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726245AbfH2Vcn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Aug 2019 17:32:43 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 13294B048;
-        Thu, 29 Aug 2019 21:32:42 +0000 (UTC)
-Date:   Thu, 29 Aug 2019 23:32:40 +0200
-From:   Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
-To:     Uma Krishnan <ukrishn@linux.ibm.com>
-Cc:     linuxppc-dev@lists.ozlabs.org,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] scsi: cxlflash: Fix fallthrough warnings.
-Message-ID: <20190829233240.243e6206@naga>
-In-Reply-To: <21A3BB0F-98DB-4D64-AE93-9B8A8B6193B3@linux.ibm.com>
-References: <cover.1567081143.git.msuchanek@suse.de>
-        <279d33f05007e9f3e3fb4e6ea19634b2608ffbd3.1567081143.git.msuchanek@suse.de>
-        <21A3BB0F-98DB-4D64-AE93-9B8A8B6193B3@linux.ibm.com>
-X-Mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; x86_64-suse-linux-gnu)
+        id S1727826AbfH2VmK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 17:42:10 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:51938 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727108AbfH2VmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 17:42:09 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TLY41k166442;
+        Thu, 29 Aug 2019 21:42:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=deNZWI6PiLDEavMMeSpovS/y3cbRCeyWgHH5wuwQOj0=;
+ b=EKurTXmvnKXLZ/1PgWGuNn0YyyYK861F3rdurqQcMLG94BVQCY1ZRX7X8JEyjAPpNp0A
+ kQ2brfMfdtrJF9lC0JrmDtWhaNx35mZhDNzP4odRUoJ8u1GnRD2ZOtaZttNFVC9iv2L+
+ C9ABhWTFVtKbkGI7bBHF/9UqErA2k8wSQowUjJYnERrS4quhG8Q4R2ScQw489p6yPtSb
+ DGq8wrSTHsHTT0VikCcJ5EZDGBnn/V9Ype1a8QG7b7m+XDF9xtdAOeWMenkWPyothX83
+ fvUn/WRQmo+aTZsUo0eIFF9QTcH/So6kFq3vNWi+DTHYZlbXmzkyyCyFvE3jmriNDunC tQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2upphkg3vg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 21:42:02 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TLYGaI129817;
+        Thu, 29 Aug 2019 21:42:01 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2uphaubbq3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 21:42:01 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7TLfxo9020142;
+        Thu, 29 Aug 2019 21:41:59 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 14:41:59 -0700
+To:     Colin King <colin.king@canonical.com>
+Cc:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: bfa: remove redundant assignment to variable error
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190731221152.15304-1-colin.king@canonical.com>
+Date:   Thu, 29 Aug 2019 17:41:56 -0400
+In-Reply-To: <20190731221152.15304-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 31 Jul 2019 23:11:52 +0100")
+Message-ID: <yq1k1avsl7f.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290216
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290216
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 29 Aug 2019 15:34:08 -0500
-Uma Krishnan <ukrishn@linux.ibm.com> wrote:
 
-> Below commit queued up for 5.4 includes these changes.
-> 
-> commit 657bd277c162580674ddb86a90c4aeb62639bff5
-> Author: Gustavo A. R. Silva <gustavo@embeddedor.com>
-> Date:   Sun Jul 28 19:21:19 2019 -0500
-> 
-> Thanks,
-> Uma Krishnan
+Colin,
 
-Works for me as well.
+> Variable error is being initialized with a value that is never read
+> and error is being re-assigned a little later on. The assignment is
+> redundant and hence can be removed.
 
-Thanks
+Applied to 5.4/scsi-queue, thanks!
 
-Michal
-
-> 
-> On Aug 29, 2019, at 7:32 AM, Michal Suchanek <msuchanek@suse.de> wrote:
-> > 
-> > Add fallthrough comments where missing.
-> > 
-> > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > ---
-> > drivers/scsi/cxlflash/main.c | 8 ++++++++
-> > 1 file changed, 8 insertions(+)
-> > 
-> > diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-> > index b1f4724efde2..f402fa9a7bec 100644
-> > --- a/drivers/scsi/cxlflash/main.c
-> > +++ b/drivers/scsi/cxlflash/main.c
-> > @@ -753,10 +753,13 @@ static void term_intr(struct cxlflash_cfg *cfg, enum undo_level level,
-> > /* SISL_MSI_ASYNC_ERROR is setup only for the primary HWQ */
-> > if (index == PRIMARY_HWQ)
-> > cfg->ops->unmap_afu_irq(hwq->ctx_cookie, 3, hwq);
-> > + /* fall through */
-> > case UNMAP_TWO:
-> > cfg->ops->unmap_afu_irq(hwq->ctx_cookie, 2, hwq);
-> > + /* fall through */
-> > case UNMAP_ONE:
-> > cfg->ops->unmap_afu_irq(hwq->ctx_cookie, 1, hwq);
-> > + /* fall through */
-> > case FREE_IRQ:
-> > cfg->ops->free_afu_irqs(hwq->ctx_cookie);
-> > /* fall through */
-> > @@ -973,14 +976,18 @@ static void cxlflash_remove(struct pci_dev *pdev)
-> > switch (cfg->init_state) {
-> > case INIT_STATE_CDEV:
-> > cxlflash_release_chrdev(cfg);
-> > + /* fall through */
-> > case INIT_STATE_SCSI:
-> > cxlflash_term_local_luns(cfg);
-> > scsi_remove_host(cfg->host);
-> > + /* fall through */
-> > case INIT_STATE_AFU:
-> > term_afu(cfg);
-> > + /* fall through */
-> > case INIT_STATE_PCI:
-> > cfg->ops->destroy_afu(cfg->afu_cookie);
-> > pci_disable_device(pdev);
-> > + /* fall through */
-> > case INIT_STATE_NONE:
-> > free_mem(cfg);
-> > scsi_host_put(cfg->host);
-> > @@ -3017,6 +3024,7 @@ static ssize_t num_hwqs_store(struct device *dev,
-> > wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
-> > if (cfg->state == STATE_NORMAL)
-> > goto retry;
-> > + /* fall through */
-> > default:
-> > /* Ideally should not happen */
-> > dev_err(dev, "%s: Device is not ready, state=%d\n",
-> > --
-> > 2.12.3
-> > 
-> > 
-> 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
