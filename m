@@ -2,120 +2,118 @@ Return-Path: <SRS0=0byZ=WZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.6 required=3.0 tests=BIGNUM_EMAILS,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE1B9C3A59F
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 12:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4DBC3A59F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:47:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91B042339E
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 12:41:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AtN5/++r"
+	by mail.kernel.org (Postfix) with ESMTP id 5C5EA21726
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Aug 2019 15:47:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726985AbfH2MlL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 29 Aug 2019 08:41:11 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40400 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725782AbfH2MlL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Aug 2019 08:41:11 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TCdsJO020598;
-        Thu, 29 Aug 2019 12:41:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=qYQJUDqvbjCBd9qzJfrKsLJxoTShyvwgZpsn+07ywtM=;
- b=AtN5/++rBFPnOKDQXeFn4Rpe0nj3WPKzHHQ+SpvIj0ie1fb5NCnZge5/94GFYT3UctWT
- Mwm/m+Kxh8mTMxVT9S0BY+3gnNZsSoQ/NJZ3vBn7HJ8r4t70fLezHcNoee4GpEuU+Xnc
- jVnLUkCQlMApqEI8WivC9GmlafuHk8X5qCAN8q08qQgVWweQMJlLMaTGMaLNrz7lxlDj
- KaJ5FWfgSI0w01Sw5FZ8/QBmwr7wRxmHq5ABx6bafEGqnVwM+mmxBVbe4773hQ48jEXY
- MPjQEKPerigZUQXysTmwcABwp+ZnVDkjSNymPfiMhOrX1My9ZfEduxfnzb1sV8VRyrJx VA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2upewc0084-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 12:41:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TCbvtx162692;
-        Thu, 29 Aug 2019 12:41:07 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2upc8un95k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 12:41:07 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7TCf72w030253;
-        Thu, 29 Aug 2019 12:41:07 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Aug 2019 05:41:06 -0700
-Date:   Thu, 29 Aug 2019 15:41:00 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     jsmart2021@gmail.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: lpfc: Adding ability to reset chip via pci bus
- reset
-Message-ID: <20190829124100.GB20116@mwanda>
+        id S1728116AbfH2PrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 29 Aug 2019 11:47:12 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:42399 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726283AbfH2PrM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Aug 2019 11:47:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 1384C204191;
+        Thu, 29 Aug 2019 17:47:11 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 5ZkrM5D+6x05; Thu, 29 Aug 2019 17:47:09 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id B04AA204158;
+        Thu, 29 Aug 2019 17:47:07 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v4 07/22] sg: move header to uapi section
+To:     kbuild test robot <lkp@intel.com>
+Cc:     kbuild-all@01.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org, hch@infradead.org,
+        Hannes Reinecke <hare@suse.com>
+References: <20190829022659.23130-8-dgilbert@interlog.com>
+ <201908291926.MPGuRgEm%lkp@intel.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <58567761-ab7e-b01e-6bb9-2494aca6d7c8@interlog.com>
+Date:   Thu, 29 Aug 2019 11:47:04 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=972
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908290139
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908290139
+In-Reply-To: <201908291926.MPGuRgEm%lkp@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+On 2019-08-29 7:15 a.m., kbuild test robot wrote:
+> Hi Douglas,
+> 
+> Thank you for the patch! Yet something to improve:
 
-The patch 5021267af132: "scsi: lpfc: Adding ability to reset chip via
-pci bus reset" from Dec 13, 2018, leads to the following static
-checker warning:
+Hi Kbuild,
+Both of us have something to improve. I should fix my code, but it
+was correct before you told me to fix it last time!
 
-	drivers/scsi/lpfc/lpfc_attr.c:1322 lpfc_reset_pci_bus()
-	warn: passing bogus address: '&(phba->pcidev)->dev' val = 176
+The change that caused this error is on line 35 of include/uapi/scsi/sg.h:
+     #include <uapi/linux/bsg.h>
 
-drivers/scsi/lpfc/lpfc_attr.c
-  1309  static int
-  1310  lpfc_reset_pci_bus(struct lpfc_hba *phba)
-  1311  {
-  1312          struct pci_dev *pdev = phba->pcidev;
-                                ^^^^^^^^^^^^^^^^^^^
-pdev and phba->pcidev are the same.
+which is indeed incorrect since no other header under include/uapi
+has "uapi" in the path of one of its embedded includes. So the rule seems
+to be that header files under the uapi directory implicitly refer to
+other headers under the uapi directory when they "#include <filename>".
 
-  1313          struct Scsi_Host *shost = NULL;
-  1314          struct lpfc_hba *phba_other = NULL;
-  1315          struct pci_dev *ptr = NULL;
-  1316          int res;
-  1317  
-  1318          if (phba->cfg_enable_hba_reset != 2)
-  1319                  return -ENOTSUPP;
-  1320  
-  1321          if (!pdev) {
-                    ^^^^^
-They are both NULL.
+However the change in my code was a result of this kbuild report from
+version 2 of this patchset:
+    https://www.spinics.net/lists/linux-scsi/msg132432.html
 
-  1322                  lpfc_printf_log(phba, KERN_INFO, LOG_INIT, "8345 pdev NULL!\n");
+And that earlier error report seems incorrect and indicates that your
+build tree is misconfigured with respect to this directory:
+     include/uapi/scsi/
 
-This passes "&(phba->pcidev)->dev" which is "(void *)176" to __dev_printk()
-which dereferences it.  Can it really be NULL?
+The failure shown in msg132432.html indicates that when your tree resolved
+this line in include/uapi/scsi/sg.h :
+     #include <linux/bsg.h>
 
-  1323                  return -ENODEV;
-  1324          }
-  1325  
-  1326          res = lpfc_check_pci_resettable(phba);
-  1327          if (res)
-  1328                  return res;
+that it incorrectly included
+     include/linux/bsg.h
+instead of
+     include/uapi/linux/bsg.h
 
-regards,
-dan carpenter
+If you concur and fix this issue, kindly add the following tag
+Reported-by: Douglas Gilbert <dgilbert@interlog.com>
+
+
+> [auto build test ERROR on linus/master]
+> [cannot apply to v5.3-rc6 next-20190828]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/sg-add-v4-interface/20190829-123646
+> config: x86_64-allyesconfig (attached as .config)
+> compiler: gcc-7 (Debian 7.4.0-11) 7.4.0
+> reproduce:
+>          # save the attached .config to linux build tree
+>          make ARCH=x86_64
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> All errors (new ones prefixed by >>):
+> 
+>     In file included from <command-line>:32:0:
+>>> ./usr/include/scsi/sg.h:35:10: fatal error: uapi/linux/bsg.h: No such file or directory
+>      #include <uapi/linux/bsg.h>
+>               ^~~~~~~~~~~~~~~~~~
+>     compilation terminated.
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
+
