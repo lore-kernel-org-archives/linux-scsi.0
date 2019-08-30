@@ -2,143 +2,242 @@ Return-Path: <SRS0=dBT0=W2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71295C3A5A3
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 06:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 524CDC3A5A7
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 13:24:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3797821874
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 06:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25F7121897
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 13:24:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ClV2Qe9U";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="cxrxfYKN"
+	dkim=pass (1024-bit key) header.d=ya.ru header.i=@ya.ru header.b="u17R4h9G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727634AbfH3Gnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Aug 2019 02:43:55 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33358 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726510AbfH3Gny (ORCPT
+        id S1727754AbfH3NYB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Aug 2019 09:24:01 -0400
+Received: from forward500p.mail.yandex.net ([77.88.28.110]:50643 "EHLO
+        forward500p.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727135AbfH3NYB (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Aug 2019 02:43:54 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7U6f3fB009750
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2019 23:43:53 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=pfpt0818;
- bh=gA5GrPJsLSEvb8SoZm1Lfo1LhcDSCs8JP6Z86a349iY=;
- b=ClV2Qe9UjqzRtmyR6GoJ7TXiHg9rhDLvPg15Dplvyoczw04rzDqwrLWHgn4mJTf1XbvY
- PXHaicUSHjFflBr8etn+OfYT1VJcNFMq85h2R0NS7G4b4wfiF5yC31Jzitrlho0JmZa3
- xLcLVWpIGHKXzHg6WkFARpAmoZuA8oZ61Uw8OL5FD0h7isAcPEmA7ga8d25uCUid/XrX
- twmOkRd73vesrmKOS3lrChzvEXbBNlo21xGHXtoPeaeZyD5pXozTkP/XKzPoYvFZt9pE
- hIQ6nJO2szLenSdTXgwSqFN3bBzXZX4we8gOZdl7ZsAYBjPAjtByTZ5pLwT1uh9mnn2I AQ== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2upmepj509-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Aug 2019 23:43:53 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 29 Aug
- 2019 23:43:52 -0700
-Received: from NAM04-BN3-obe.outbound.protection.outlook.com (104.47.46.57) by
- SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Thu, 29 Aug 2019 23:43:52 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RNVBllL0B1W9LW0CUdPSo6FOUsZ9MVWcZjjAyw7NMAZgQsoWYFDPsX+2WKdjSz9W0BG7vYpvJU2gQGlobLfztS3rVa2GSFOBYUKKgHJGokiYGOimAVpvxu4VywJ9y/XcHmebg6mPIdcUm9CwXD7Bb34VQ65gJvnLMSmgftRI9nNR6s6X4N1Vqmp2zhaR86LFRjiiKYQi72O+YXOhtFryxP0zopJqD+C/QnlzDbz5z5Cw3V49MoPD+hNqWEOP5YQSfnb8NjNIlNBCNBl2JpbzxEbfQzuiNpsVs2JuZgLxL1k3DY+JZ4JhBK9I/2vpt5EM0vC4ykKM4C/98GbpuQSAoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gA5GrPJsLSEvb8SoZm1Lfo1LhcDSCs8JP6Z86a349iY=;
- b=NnwhAn6/PRckXovqu7U03aC1OOOM8+jlTwrf8cl1MirjqjjGMkou4IAbM4td0n7iRBtSnhQQd5zlwQEkjhSFppH5mwgoa3IEjFxsOPlyeJzmpx9Guvvcp12blYsCKV34JDKCXSTrBFbY3MsylWhibnhMNFMbJToW5yJ+0KYCE+7h4qad1in5z9KAvbd3E0NVtcEbd6Wihni5mWqYvTtTxOnYC8y5U9QRAnYbFR45otoj57pSC0IpmHIuiCckvV1RcvsKz9BuZ28Iaf0OrQQYzzza3H8vobonGqJgPaK5M5zr40WxNMaMOFXPT/UpdUFtqmu1tt6CLv66ZppUKtCokw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gA5GrPJsLSEvb8SoZm1Lfo1LhcDSCs8JP6Z86a349iY=;
- b=cxrxfYKNinDLD28uO9bRqzENx/did+4jVjDFHgJTG29NEAZADXtvh8BYXjub5qe28Evw82XNMshQBtFWq8+QZXz9U+NxK4OEoS4zloQYD31gO0LXq9n+D/fVl/kzQ8seHIvYXyO3OHihT4zsS/sIUC8cndA0orVz6cUgAUg5OZg=
-Received: from MN2PR18MB2527.namprd18.prod.outlook.com (20.179.82.202) by
- MN2PR18MB3262.namprd18.prod.outlook.com (10.255.237.87) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2220.18; Fri, 30 Aug 2019 06:43:49 +0000
-Received: from MN2PR18MB2527.namprd18.prod.outlook.com
- ([fe80::849c:fe5a:a645:5668]) by MN2PR18MB2527.namprd18.prod.outlook.com
- ([fe80::849c:fe5a:a645:5668%7]) with mapi id 15.20.2178.023; Fri, 30 Aug 2019
- 06:43:49 +0000
-From:   Saurav Kashyap <skashyap@marvell.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Girish Basrur <gbasrur@marvell.com>,
-        Santosh Vernekar <svernekar@marvell.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 00/14] qedf: Miscellaneous fixes.
-Thread-Topic: [PATCH 00/14] qedf: Miscellaneous fixes.
-Thread-Index: AQHVWZiKJrA1SUl7e0auZjS6bR0ExKcSxZkxgADf4wA=
-Date:   Fri, 30 Aug 2019 06:43:49 +0000
-Message-ID: <D98EC344.19787%skashyap@marvell.com>
-References: <20190823095244.7830-1-skashyap@marvell.com>
- <yq1r253potq.fsf@oracle.com>
-In-Reply-To: <yq1r253potq.fsf@oracle.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [114.143.185.87]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a9a94c89-a6c4-437f-efda-08d72d156a63
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB3262;
-x-ms-traffictypediagnostic: MN2PR18MB3262:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB326203037470227FE0554A04D2BD0@MN2PR18MB3262.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5516;
-x-forefront-prvs: 0145758B1D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(346002)(396003)(39860400002)(376002)(136003)(366004)(189003)(199004)(81156014)(8676002)(76116006)(81166006)(91956017)(229853002)(86362001)(6486002)(66066001)(2906002)(66476007)(4326008)(25786009)(53936002)(4744005)(66446008)(6512007)(66556008)(64756008)(5660300002)(6246003)(2616005)(26005)(478600001)(14454004)(76176011)(186003)(102836004)(53546011)(6506007)(6916009)(476003)(446003)(11346002)(14444005)(256004)(36756003)(71200400001)(71190400001)(486006)(6436002)(54906003)(99286004)(316002)(66946007)(6116002)(305945005)(3846002)(7736002)(8936002);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3262;H:MN2PR18MB2527.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: A+5cEGiIBEhexGnGSAPSA7w4vfQOGEdOk01JWOMDQWxuS5E3IkqD+uBRVeIZNp9VsClZlKgAxwp3vbjlwCTJ9DWnzHlrnEK/P2J/Hz4GpW5M7Vo6UZPEUhQ8U2THH6h6PfUjpdC2Uw1Fo46Vwyao8oYFD2l7hZUhEK9IqznI19cp4mysde/a3+POHKUUeVjZ+RWMHtFiMo73nlf4t4+e7tfIH6jwMkHjd9eEGM29lt8mKHkhPd5Pwm0stjrT3xW1O176YmI9hzTZ7CwxbgAJ7voWdubXypmCt5rSKI3CbL15doztRVdya11DTmban9Fb9mQQ5nS1E+VAAB7W787VuL0qtu5fiCMf1g4VYtQYEAhATY0xj8gTLW2dY7FAjvQ7lyzADHIcujy86+XYVzIohQIPvMY/lyJRpjQLLE8pIeY=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <DC7865FDC63A5D45B9D73FC976C0B6F6@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        Fri, 30 Aug 2019 09:24:01 -0400
+X-Greylist: delayed 453 seconds by postgrey-1.27 at vger.kernel.org; Fri, 30 Aug 2019 09:23:56 EDT
+Received: from mxback21o.mail.yandex.net (mxback21o.mail.yandex.net [IPv6:2a02:6b8:0:1a2d::72])
+        by forward500p.mail.yandex.net (Yandex) with ESMTP id DF1E2940A4C;
+        Fri, 30 Aug 2019 16:16:21 +0300 (MSK)
+Received: from localhost (localhost [::1])
+        by mxback21o.mail.yandex.net (nwsmtp/Yandex) with ESMTP id 6RBI7dHPdw-GKWmTb87;
+        Fri, 30 Aug 2019 16:16:21 +0300
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1567170981;
+        bh=UpV4vQdXlvdVBE5YNCKUISemoyW4n0GKjkqA5FqjhYI=;
+        h=Message-Id:Cc:Subject:In-Reply-To:Date:References:To:From;
+        b=u17R4h9GwJYr3eA0mSEENMK+k7JrRa1d9ohEnYyzHOHUwWHjI1vFVhxRqXXzM6DhS
+         4QaqD9Ob8snk/sBWWV56PL7bECBJe6rMtqt627f/mOd4IbIz0ea9D4fx3vYHNW+aZg
+         VciBSe0sfB/2M4Wr0S8+dbS/aTGwtJkMkxCvtL/o=
+Authentication-Results: mxback21o.mail.yandex.net; dkim=pass header.i=@ya.ru
+Received: by myt1-1e65ebab2412.qloud-c.yandex.net with HTTP;
+        Fri, 30 Aug 2019 16:16:20 +0300
+From:   "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
+Envelope-From: russianneuromancer@yandex.ru
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc:     SCSI <linux-scsi@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+In-Reply-To: <20190828192031.GN6167@minitux>
+References: <9f3ed253-5f6b-1893-531d-085f881956dd@free.fr> <20190828192031.GN6167@minitux>
+Subject: Re: ufshcd_abort: Device abort task at tag 7
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: a9a94c89-a6c4-437f-efda-08d72d156a63
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Aug 2019 06:43:49.7832
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: bnw3sAaZvDOK1pJV32atzcyhMjcg+Jba7qBKHMhD20eARB4ouNoPTInvb0kuugP0e0DJBr69eKuwdFG4ZsfSNQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3262
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.70,1.0.8
- definitions=2019-08-30_03:2019-08-29,2019-08-30 signatures=0
+X-Mailer: Yamail [ http://yandex.ru ] 5.0
+Date:   Fri, 30 Aug 2019 21:16:20 +0800
+Message-Id: <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+Hello!
 
-On 30/08/19, 4:22 AM, "Martin K. Petersen" <martin.petersen@oracle.com>
-wrote:
 
+> I don't remember the exact splats seen, but I would suggest that this is
+> retested after applying the following series:
 >
->Saurav,
+> https://lore.kernel.org/linux-arm-msm/20190828191756.24312-1-bjorn.andersson@linaro.org/T/#u
+
+Turns out this patches is already applied to kernel running on this device, but one line in dts was missing: 
+
+https://github.com/aarch64-laptops/linux/pull/2
+
+With this line issue is no longer reproducible with DT boot. Thank you!
+
+As I understand it's planned to eventually boot this devices via ACPI. 
+
+@Lee Jones, is my understanding correct?
+
+29.08.2019, 03:20, "Bjorn Andersson" <bjorn.andersson@linaro.org>:
+> On Wed 28 Aug 02:09 PDT 2019, Marc Gonzalez wrote:
 >
->> This series have bug fixes and improve the log messages for better
->> debugging.
+>>  Hello,
 >>
->> Kindly apply this series to scsi-queue at your earliest convenience.
+>>  Someone posted a bug report for UFS on an sdm850 tablet:
+>>  https://bugzilla.kernel.org/show_bug.cgi?id=204685
+>>
+>>  If I'm reading the boot logs right, this board is EFI rather than DT.
 >
->Applied to 5.4/scsi-queue. I fixed a warning in patch #8. Please
->verify. Thanks!
-
-The change make sense.
-
-Thanks,
-~Saurav
+> It's UEFI-based and Linux will either operate based on DT or ACPI
+> tables, depending on what was provided.
 >
->--=20
->Martin K. Petersen	Oracle Linux Engineering
-
+>>  (Lee: EFI on qcom is one of your areas, right?
+>>  The UFSHC driver is DT-aware, but is it EFI-aware?)
+>>
+>>  [ 0.000000] efi: memattr: Unexpected EFI Memory Attributes table version -1347440721
+>>  I suppose this may be safely ignored?
+>>
+>>  [ 0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-5.2.0-99-generic root=UUID=66e85825-5c21-4120-b4ee-e17e4cdc1e58 ro efi=novamap ignore_loglevel clk_ignore_unused pd_ignore_unused console=tty0
+>>  IIUC, the kernel is supposed to boot successfully even without
+>>  "clk_ignore_unused pd_ignore_unused" (tangential, unrelated)
+>>
+>>  Bjorn, any ideas? Ever see this issue?
+>
+> I don't remember the exact splats seen, but I would suggest that this is
+> retested after applying the following series:
+>
+> https://lore.kernel.org/linux-arm-msm/20190828191756.24312-1-bjorn.andersson@linaro.org/T/#u
+>
+> Regards,
+> Bjorn
+>
+>>  Regards.
+>>
+>>  Notable events:
+>>
+>>  [ 2.438780] geni_se_qup 8c0000.geniqup: Err getting AHB clks -517
+>>  [ 2.439030] geni_se_qup ac0000.geniqup: Err getting AHB clks -517
+>>
+>>  [ 2.453050] ufshcd-qcom 1d84000.ufshc: ufshcd_get_vreg: vcc get failed, err=-517
+>>  [ 2.458477] ufshcd-qcom 1d84000.ufshc: Initialization failed
+>>
+>>  [ 2.540980] ufshcd-qcom 1d84000.ufshc: ufs_qcom_init: required phy device. hasn't probed yet. err = -517
+>>  [ 2.540986] ufshcd-qcom 1d84000.ufshc: ufshcd_variant_hba_init: variant qcom init failed err -517
+>>  [ 2.541052] ufshcd-qcom 1d84000.ufshc: Initialization failed
+>>
+>>  [ 2.695052] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
+>>  [ 2.699182] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq-supply regulator, assuming enabled
+>>  [ 2.706287] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
+>>  [ 2.866207] ufshcd-qcom 1d84000.ufshc: ufshcd_find_max_sup_active_icc_level: Regulator capability was not set, actvIccLevel=0
+>>
+>>  [ 33.772190] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 7
+>>  [ 33.774946] sd 0:0:0:5: [sdf] tag#7 CDB: Read(10) 28 00 00 00 00 00 00 00 01 00
+>>  [ 33.805525] ufshcd-qcom 1d84000.ufshc: hba->ufs_version = 0x210, hba->capabilities = 0x1587031f
+>>  [ 33.808338] ufshcd-qcom 1d84000.ufshc: hba->outstanding_reqs = 0xab000080, hba->outstanding_tasks = 0x0
+>>
+>>  [ 34.045961] ufshcd-qcom 1d84000.ufshc: UPIU[7] - issue time 3165714 us
+>>  [ 34.047069] ufshcd-qcom 1d84000.ufshc: UPIU[7] - complete time 0 us
+>>  [ 34.048196] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Transfer Request Descriptor phys@0x2661cd0e0
+>>  [ 34.051799] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Request UPIU phys@0xdf045400
+>>  [ 34.055715] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Response UPIU phys@0xdf045600
+>>  [ 34.062761] ufshcd-qcom 1d84000.ufshc: UPIU[7] - PRDT - 1 entries phys@0xdf045800
+>>  [ 34.065836] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: cmd pending in the device. tag = 7
+>>  [ 34.168171] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x01 timed-out
+>>  [ 34.169822] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -110
+>>  [ 34.171497] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 29
+>>  [ 34.174951] ufshcd-qcom 1d84000.ufshc: UPIU[29] - issue time 3036529 us
+>>  [ 34.176740] ufshcd-qcom 1d84000.ufshc: UPIU[29] - complete time 0 us
+>>  [ 34.178534] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Transfer Request Descriptor phys@0x2661cd3a0
+>>  [ 34.184172] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Request UPIU phys@0xdf055c00
+>>  [ 34.190105] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Response UPIU phys@0xdf055e00
+>>  [ 34.200535] ufshcd-qcom 1d84000.ufshc: UPIU[29] - PRDT - 1 entries phys@0xdf056000
+>>  [ 34.202707] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
+>>  [ 34.204910] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 25
+>>  [ 34.209414] ufshcd-qcom 1d84000.ufshc: UPIU[25] - issue time 3017240 us
+>>  [ 34.211722] ufshcd-qcom 1d84000.ufshc: UPIU[25] - complete time 0 us
+>>  [ 34.214048] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Transfer Request Descriptor phys@0x2661cd320
+>>  [ 34.221259] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Request UPIU phys@0xdf052c00
+>>  [ 34.228788] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Response UPIU phys@0xdf052e00
+>>  [ 34.241869] ufshcd-qcom 1d84000.ufshc: UPIU[25] - PRDT - 1 entries phys@0xdf053000
+>>  [ 34.244578] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
+>>  [ 34.247307] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 24
+>>  [ 34.252877] ufshcd-qcom 1d84000.ufshc: UPIU[24] - issue time 3018666 us
+>>  [ 34.255718] ufshcd-qcom 1d84000.ufshc: UPIU[24] - complete time 0 us
+>>  [ 34.258540] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Transfer Request Descriptor phys@0x2661cd300
+>>  [ 34.266987] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Request UPIU phys@0xdf052000
+>>  [ 34.275500] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Response UPIU phys@0xdf052200
+>>  [ 34.289559] ufshcd-qcom 1d84000.ufshc: UPIU[24] - PRDT - 1 entries phys@0xdf052400
+>>  [ 34.292343] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
+>>  [ 34.295114] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 27
+>>  [ 34.300650] ufshcd-qcom 1d84000.ufshc: UPIU[27] - issue time 3040502 us
+>>  [ 34.303419] ufshcd-qcom 1d84000.ufshc: UPIU[27] - complete time 0 us
+>>  [ 34.306159] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Transfer Request Descriptor phys@0x2661cd360
+>>  [ 34.314450] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Request UPIU phys@0xdf054400
+>>  [ 34.322892] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Response UPIU phys@0xdf054600
+>>  [ 34.336707] ufshcd-qcom 1d84000.ufshc: UPIU[27] - PRDT - 1 entries phys@0xdf054800
+>>  [ 34.339447] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
+>>  [ 34.342173] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: Device abort task at tag 31
+>>  [ 34.347604] ufshcd-qcom 1d84000.ufshc: UPIU[31] - issue time 3036762 us
+>>  [ 34.350345] ufshcd-qcom 1d84000.ufshc: UPIU[31] - complete time 0 us
+>>  [ 34.353042] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Transfer Request Descriptor phys@0x2661cd3e0
+>>  [ 34.361194] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Request UPIU phys@0xdf057400
+>>  [ 34.369347] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Response UPIU phys@0xdf057600
+>>  [ 34.383041] ufshcd-qcom 1d84000.ufshc: UPIU[31] - PRDT - 1 entries phys@0xdf057800
+>>  [ 34.385789] ufshcd-qcom 1d84000.ufshc: ufshcd_abort: failed with err -5
+>>  [ 34.508188] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 34.511533] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 34.616170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 34.619542] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 34.724170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 34.727563] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 34.832169] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 34.835539] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 34.940170] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 34.943576] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 35.048171] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task management cmd 0x08 timed-out
+>>  [ 35.051618] ufshcd-qcom 1d84000.ufshc: ufshcd_eh_device_reset_handler: failed with err -110
+>>  [ 35.095792] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX, TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate = 0
+>>  [ 35.099829] ufshcd-qcom 1d84000.ufshc: UPIU[7] - issue time 3165714 us
+>>  [ 35.103402] ufshcd-qcom 1d84000.ufshc: UPIU[7] - complete time 0 us
+>>  [ 35.106937] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Transfer Request Descriptor phys@0x2661cd0e0
+>>  [ 35.117587] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Request UPIU phys@0xdf045400
+>>  [ 35.128237] ufshcd-qcom 1d84000.ufshc: UPIU[7] - Response UPIU phys@0xdf045600
+>>  [ 35.145785] ufshcd-qcom 1d84000.ufshc: UPIU[7] - PRDT - 1 entries phys@0xdf045800
+>>  [ 35.152773] ufshcd-qcom 1d84000.ufshc: UPIU[24] - issue time 3018666 us
+>>  [ 35.156346] ufshcd-qcom 1d84000.ufshc: UPIU[24] - complete time 0 us
+>>  [ 35.159906] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Transfer Request Descriptor phys@0x2661cd300
+>>  [ 35.170605] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Request UPIU phys@0xdf052000
+>>  [ 35.181279] ufshcd-qcom 1d84000.ufshc: UPIU[24] - Response UPIU phys@0xdf052200
+>>  [ 35.198877] ufshcd-qcom 1d84000.ufshc: UPIU[24] - PRDT - 1 entries phys@0xdf052400
+>>  [ 35.205904] ufshcd-qcom 1d84000.ufshc: UPIU[25] - issue time 3017240 us
+>>  [ 35.209398] ufshcd-qcom 1d84000.ufshc: UPIU[25] - complete time 0 us
+>>  [ 35.212913] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Transfer Request Descriptor phys@0x2661cd320
+>>  [ 35.223656] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Request UPIU phys@0xdf052c00
+>>  [ 35.234408] ufshcd-qcom 1d84000.ufshc: UPIU[25] - Response UPIU phys@0xdf052e00
+>>  [ 35.252106] ufshcd-qcom 1d84000.ufshc: UPIU[25] - PRDT - 1 entries phys@0xdf053000
+>>  [ 35.259137] ufshcd-qcom 1d84000.ufshc: UPIU[27] - issue time 3040502 us
+>>  [ 35.262691] ufshcd-qcom 1d84000.ufshc: UPIU[27] - complete time 0 us
+>>  [ 35.266202] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Transfer Request Descriptor phys@0x2661cd360
+>>  [ 35.276857] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Request UPIU phys@0xdf054400
+>>  [ 35.287652] ufshcd-qcom 1d84000.ufshc: UPIU[27] - Response UPIU phys@0xdf054600
+>>  [ 35.305317] ufshcd-qcom 1d84000.ufshc: UPIU[27] - PRDT - 1 entries phys@0xdf054800
+>>  [ 35.312298] ufshcd-qcom 1d84000.ufshc: UPIU[29] - issue time 3036529 us
+>>  [ 35.315788] ufshcd-qcom 1d84000.ufshc: UPIU[29] - complete time 0 us
+>>  [ 35.319240] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Transfer Request Descriptor phys@0x2661cd3a0
+>>  [ 35.329591] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Request UPIU phys@0xdf055c00
+>>  [ 35.339727] ufshcd-qcom 1d84000.ufshc: UPIU[29] - Response UPIU phys@0xdf055e00
+>>  [ 35.356361] ufshcd-qcom 1d84000.ufshc: UPIU[29] - PRDT - 1 entries phys@0xdf056000
+>>  [ 35.363009] ufshcd-qcom 1d84000.ufshc: UPIU[31] - issue time 3036762 us
+>>  [ 35.366321] ufshcd-qcom 1d84000.ufshc: UPIU[31] - complete time 0 us
+>>  [ 35.369646] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Transfer Request Descriptor phys@0x2661cd3e0
+>>  [ 35.379815] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Request UPIU phys@0xdf057400
+>>  [ 35.389919] ufshcd-qcom 1d84000.ufshc: UPIU[31] - Response UPIU phys@0xdf057600
+>>  [ 35.406573] ufshcd-qcom 1d84000.ufshc: UPIU[31] - PRDT - 1 entries phys@0xdf057800
+>>  [ 35.506995] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX, TX]: gear=[3, 3], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
