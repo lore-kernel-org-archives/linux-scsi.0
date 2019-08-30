@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF842C3A59B
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 22:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09810C3A59B
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 22:24:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9328E23431
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 22:24:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDFA723439
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 22:24:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GIXdAsJj"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="wtE1jnWy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728306AbfH3WY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Aug 2019 18:24:27 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53568 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728138AbfH3WY1 (ORCPT
+        id S1728373AbfH3WYa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Aug 2019 18:24:30 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57942 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728157AbfH3WY2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Aug 2019 18:24:27 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7UMJjih006169;
+        Fri, 30 Aug 2019 18:24:28 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7UMOOO4005338;
         Fri, 30 Aug 2019 15:24:24 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=Xp1jTREgtFS7wAN4cVQ+VeA3PaBDwU/7B/+bvqa2w2Y=;
- b=GIXdAsJjKp7VyFYMBvcnaO5kGRQ+Ecnzjn/jMuux+AZ68/ecEFfztaaH0P6lrpxJeZ15
- b4SSUGPW4MthGzeI/Ca8e/4bObUyeRAlgkOto8EgJKIuKIR5zsT+073eixxTD3D9x91g
- HQulFyHl2q7c6GZU+c8+pp9vh03ZS//jCztmFphc06w/RbOIFevlaZX3looKG2Q6modP
- Wu0o3ZFhizWWxMNAanaKeOjZFeiBjXKAYIFf75+6FQRHZlLMJRgVSKHTWuPEovtrR6U3
- hJrbexhVoHWwHwfvCJMNoU3U4bSLWABMju+V2POebMEHtgInSX5ww67Gt8FDa63FwnKg QQ== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2upmepn44s-1
+ content-type; s=pfpt0818; bh=fvn1UDPuFAOsz8HLEhqLFfD3HAU2At4ZSdJMotp+YL4=;
+ b=wtE1jnWyNJ+5EZaIWcRUVII9xTtB6Dty3xGTdoP+Oxwk26zTq82Q41LCwukpXz3AcKbE
+ AkSstkinA3ZL2OXKBax9nLVU2TXV0+kfWi5deRvk9kH6N+XEiv1VKMskp/nGbs3Dh106
+ 4Hjs4PnwjCXsRf4tBh/VK602UQZ+AZMj9tlG1plpOk38HRUf4G+d4SRjDYpbYMBE3F7z
+ VQlRs17McBReRUSJZutfJarB+iuDDm+vgEkVNK5RdEk3ioU/Z1hrcY84HNvyoJvwF8pE
+ IHRnL/rGMSELbRy9DU5YDdrZnTaYXWM3FnuBiNF2tMYGuhHG+pv4rwCw09ckZn4gul9X gQ== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2uk4rm2dat-3
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
         Fri, 30 Aug 2019 15:24:24 -0700
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Fri, 30 Aug
- 2019 15:24:22 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
- Transport; Fri, 30 Aug 2019 15:24:22 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Fri, 30 Aug
+ 2019 15:24:18 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
+ Transport; Fri, 30 Aug 2019 15:24:18 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id B774F3F703F;
-        Fri, 30 Aug 2019 15:24:21 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 89DFE3F703F;
+        Fri, 30 Aug 2019 15:24:18 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x7UMOLxQ023748;
-        Fri, 30 Aug 2019 15:24:21 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x7UMOIJ6023743;
+        Fri, 30 Aug 2019 15:24:18 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x7UMOL1J023746;
-        Fri, 30 Aug 2019 15:24:21 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x7UMOIfe023742;
+        Fri, 30 Aug 2019 15:24:18 -0700
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 6/6] qla2xxx: Update driver version to 10.01.00.19-k
-Date:   Fri, 30 Aug 2019 15:24:02 -0700
-Message-ID: <20190830222402.23688-7-hmadhani@marvell.com>
+Subject: [PATCH 5/6] qla2xxx: Fix stale session
+Date:   Fri, 30 Aug 2019 15:24:01 -0700
+Message-ID: <20190830222402.23688-6-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20190830222402.23688-1-hmadhani@marvell.com>
 References: <20190830222402.23688-1-hmadhani@marvell.com>
@@ -71,24 +71,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Quinn Tran <qutran@marvell.com>
+
+On fast cable pull, where driver is unable to detect device
+has disappeared and came back based on switch info, qla2xxx
+would not re-login while remote port has already invalidate
+the session.  This cause IO timeout.  This patch would relogin
+to remote device for RSCN affected port.
+
+Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_gs.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 0833546a1b43..a8f2a953ceff 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.01.00.18-k"
-+#define QLA2XXX_VERSION      "10.01.00.19-k"
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 03f94eb372b6..dc0e36676313 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3628,7 +3628,6 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+ 			if (memcmp(rp->port_name, fcport->port_name, WWN_SIZE))
+ 				continue;
+-			fcport->scan_needed = 0;
+ 			fcport->scan_state = QLA_FCPORT_FOUND;
+ 			found = true;
+ 			/*
+@@ -3637,10 +3636,12 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+ 				qla2x00_clear_loop_id(fcport);
+ 				fcport->flags |= FCF_FABRIC_DEVICE;
+-			} else if (fcport->d_id.b24 != rp->id.b24) {
++			} else if (fcport->d_id.b24 != rp->id.b24 ||
++				fcport->scan_needed) {
+ 				qlt_schedule_sess_for_deletion(fcport);
+ 			}
+ 			fcport->d_id.b24 = rp->id.b24;
++			fcport->scan_needed = 0;
+ 			break;
+ 		}
  
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	1
 -- 
 2.12.0
 
