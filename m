@@ -2,32 +2,27 @@ Return-Path: <SRS0=dBT0=W2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 971FEC3A5A3
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 04:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1768CC3A5A3
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 04:44:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A9BB2073F
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 04:11:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9F38205ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Aug 2019 04:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726236AbfH3EKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Aug 2019 00:10:50 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45494 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725648AbfH3EKu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Aug 2019 00:10:50 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 57F2D36124F;
-        Fri, 30 Aug 2019 14:10:44 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i3YFG-0003Gk-Ja; Fri, 30 Aug 2019 14:10:42 +1000
-Date:   Fri, 30 Aug 2019 14:10:42 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Al Viro <viro@zeniv.linux.org.uk>
+        id S1725852AbfH3Eop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Aug 2019 00:44:45 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44704 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725774AbfH3Eop (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Aug 2019 00:44:45 -0400
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3Ym7-0000W4-4h; Fri, 30 Aug 2019 04:44:39 +0000
+Date:   Fri, 30 Aug 2019 05:44:39 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     Boaz Harrosh <boaz@plexistor.com>,
         Kai =?iso-8859-1?Q?M=E4kisara_=28Kolumbus=29?= 
         <kai.makisara@kolumbus.fi>, Christoph Hellwig <hch@lst.de>,
@@ -37,7 +32,7 @@ Cc:     Boaz Harrosh <boaz@plexistor.com>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         linux-scsi@vger.kernel.org
 Subject: Re: [RFC] Re: broken userland ABI in configfs binary attributes
-Message-ID: <20190830041042.GB7777@dread.disaster.area>
+Message-ID: <20190830044439.GV1131@ZenIV.linux.org.uk>
 References: <20190826024838.GN1131@ZenIV.linux.org.uk>
  <20190826162949.GA9980@ZenIV.linux.org.uk>
  <B35B5EA9-939C-49F5-BF65-491D70BCA8D4@kolumbus.fi>
@@ -45,69 +40,33 @@ References: <20190826024838.GN1131@ZenIV.linux.org.uk>
  <b362af55-4f45-bf29-9bc4-dd64e6b04688@plexistor.com>
  <20190827172734.GS1131@ZenIV.linux.org.uk>
  <20190829222258.GA16625@ZenIV.linux.org.uk>
+ <20190830041042.GB7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829222258.GA16625@ZenIV.linux.org.uk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=N2kktmuLRUS6YMNfu2cA:9 a=5YWUSbzEL5tuTBhT:21
-        a=7ahwL-F6K2TBhvZj:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190830041042.GB7777@dread.disaster.area>
+User-Agent: Mutt/1.12.0 (2019-05-25)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 11:22:58PM +0100, Al Viro wrote:
-> On Tue, Aug 27, 2019 at 06:27:35PM +0100, Al Viro wrote:
-> 
-> > Most of them are actually pure bollocks - "it can never happen, but if it does,
-> > let's return -EWHATEVER to feel better".  Some are crap like -EINTR, which is
-> > also bollocks - for one thing, process might've been closing files precisely
-> > because it's been hit by SIGKILL.  For another, it's a destructor.  It won't
-> > be retried by the caller - there's nothing called for that object afterwards.
-> > What you don't do in it won't be done at all.
+On Fri, Aug 30, 2019 at 02:10:42PM +1000, Dave Chinner wrote:
+
+> > reiserfs_file_release():
+> > 	tries to return an error if it can't free preallocated blocks.
 > > 
-> > And some are "commit on final close" kind of thing, both with the hardware
-> > errors and parsing errors.
+> > xfs_release():
+> > 	similar to the previous case.
 > 
-> FWIW, here's the picture for fs/*: 6 instances.
+> Not quite right. XFS only returns an error if there is data
+> writeback failure or filesystem corruption or shutdown detected
+> during whatever operation it is performing.
 > 
-> afs_release():
-> 	 calls vfs_fsync() if file had been opened for write, tries to pass
-> 	the return value to caller.  Job for ->flush(), AFAICS.
-> 
-> coda_psdev_release():
-> 	returns -1 in situation impossible after successful ->open().
-> 	Can't happen without memory corruption.
-> 
-> configfs_release_bin_file():
-> 	discussed upthread
-> 
-> dlm device_close():
-> 	returns -ENOENT if dlm_find_lockspace_local(proc->lockspace) fails.
-> No idea if that can happen.
-> 
-> reiserfs_file_release():
-> 	tries to return an error if it can't free preallocated blocks.
-> 
-> xfs_release():
-> 	similar to the previous case.
+> We don't really care what is done with the error that we return;
+> we're just returning an error because that's what the function
+> prototype indicates we should do...
 
-Not quite right. XFS only returns an error if there is data
-writeback failure or filesystem corruption or shutdown detected
-during whatever operation it is performing.
-
-We don't really care what is done with the error that we return;
-we're just returning an error because that's what the function
-prototype indicates we should do...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I thought that xfs_release() and friends followed the prototypes
+you had on IRIX, while xfs_file_release() et.al. were the
+impedance-matching layer for Linux.  Oh, well...
