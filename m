@@ -2,115 +2,95 @@ Return-Path: <SRS0=zgrd=W5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 275B9C3A59B
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D463C3A59E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 13:40:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00BEE21881
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 334EF21881
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 13:40:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567431626;
+	bh=K3vO38Rb/zCPbOfoceu+yNtZEd8FOHzfA6fTWKRGMEE=;
+	h=Date:From:Subject:References:In-Reply-To:Cc:Cc:To:List-ID:From;
+	b=efSKNT0rN9ViiUs+Fcv4T2MnWNRKF7YhTdPCmNlzBlZQS/Mh0XfjdvqBe8utKGU6e
+	 pjHj6KsuP04nyidLZYVQun2Qi/+0Zk8X/4qgNwFILqTd74t77NHhsvvjlfWO8z6/zb
+	 2YTgDjo47p7u7cN19CrBFYAlyjDbR2xq8EV33pN8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729773AbfIBIrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Sep 2019 04:47:14 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6176 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729534AbfIBIrO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Sep 2019 04:47:14 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 16338281DB2CFA4E2403;
-        Mon,  2 Sep 2019 16:47:13 +0800 (CST)
-Received: from [127.0.0.1] (10.202.227.238) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Mon, 2 Sep 2019
- 16:47:11 +0800
-Subject: Re: [PATCH RFC 00/24] scsi: enable reserved commands for LLDDs
-To:     Hannes Reinecke <hare@suse.de>,
+        id S1731052AbfIBNi4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Sep 2019 09:38:56 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:40910 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731019AbfIBNiz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2019 09:38:55 -0400
+Received: by mail-wr1-f66.google.com with SMTP id c3so14067306wrd.7;
+        Mon, 02 Sep 2019 06:38:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:date:from:subject:references
+         :in-reply-to:cc:cc:to;
+        bh=3MigCfRMPHZaTe6xntZFSgd60Ton27WsycAk1QzXSb8=;
+        b=WcGFqW8VVEUW9shRtoBC0Rj3+Kt2edWEka8AQEGIjlZVW6lWqkD4fmkikfJ4el8Jes
+         /t55O1Ih7pcqs/i9iDTQ1BctiA9QrqOMAtbKYNvLHuQAu6DGxO19ucPcSKg2gihc+egL
+         w2tq9YwqjcNXSA6zzWJkE+ImPyvalDkZ9tfrDXk6bJ1LEE+IkqGbDH6Mah7W6JEvu+hd
+         MsAXyWEkdYw8bnvlUOcG/0uHVJK1b3qKYXz/XYtMEBThSz0JHfgGWatIZOJJoUftS8hy
+         SnxdJWhduMxOwBcfjageINOmhRmJl6RTaKzM4IWLseJWI7pxa+SphGGPiUHhwxZ7BC0v
+         lDwg==
+X-Gm-Message-State: APjAAAVDsaLBbE3fVuJpYoZmN63dF8MzOUGVZbatEHlozyA0ea7nQ0BW
+        Avu/uGghlJeiXlpizO23sg==
+X-Google-Smtp-Source: APXvYqzJYI/YKwgHJ8rDQWv7wGduOfTx+1tB96ZS93ckiyaJdJDOz7lX4rknN0anPKeGu35ijjfZRg==
+X-Received: by 2002:adf:8043:: with SMTP id 61mr29988673wrk.115.1567431533168;
+        Mon, 02 Sep 2019 06:38:53 -0700 (PDT)
+Received: from localhost ([212.187.182.166])
+        by smtp.gmail.com with ESMTPSA id x17sm11602618wmi.46.2019.09.02.06.38.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Sep 2019 06:38:52 -0700 (PDT)
+Message-ID: <5d6d1b6c.1c69fb81.e1729.0655@mx.google.com>
+Date:   Mon, 02 Sep 2019 14:38:51 +0100
+From:   Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v4 2/3] scsi: ufs-qcom: Implement device_reset vops
+References: <20190828191756.24312-1-bjorn.andersson@linaro.org> <20190828191756.24312-3-bjorn.andersson@linaro.org>
+In-Reply-To: <20190828191756.24312-3-bjorn.andersson@linaro.org>
+Cc:     Mark Rutland <mark.rutland@arm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20190529132901.27645-1-hare@suse.de>
- <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
- <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>, "Ming Lei" <ming.lei@redhat.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <64d4b289-555d-8854-ca2b-ec26d397061e@huawei.com>
-Date:   Mon, 2 Sep 2019 09:47:06 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.3.0
-MIME-Version: 1.0
-In-Reply-To: <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.238]
-X-CFilter-Loop: Reflected
+Cc:     Andy Gross <agross@kernel.org>, Bean Huo <beanhuo@micron.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 26/08/2019 16:27, Hannes Reinecke wrote:
-> On 8/23/19 3:26 PM, John Garry wrote:
->> On 29/05/2019 14:28, Hannes Reinecke wrote:
->>> Hi all,
->>>
->>> quite some drivers use internal commands for various purposes, most
->>> commonly sending TMFs or querying the HBA status.
->>> While these commands use the same submission mechanism than normal
->>> I/O commands, they will not be counted as outstanding commands,
->>> requiring those drivers to implement their own mechanism to figure
->>> out outstanding commands.
->>> This patchset enables the use of reserved tags for the SCSI midlayer,
->>> enabling LLDDs to rely on the block layer for tracking outstanding
->>> commands.
->>> More importantly, it allows LLDD to request a valid tag from the block
->>> layer without having to implement some tracking mechanism within the
->>> driver. This removes quite some hacks which were required for some
->>> drivers (eg. fnic or snic).
->>>
->>> As usual, comments and reviews are welcome.
->>>
->>
->> Hi Hannes,
->>
->> I was wondering if you have any plans to progress this series?
->>
->> I don't mind helping out...
->>
-> Thanks for the reminder.
+On Wed, 28 Aug 2019 12:17:55 -0700, Bjorn Andersson wrote:
+> The UFS_RESET pin on Qualcomm SoCs are controlled by TLMM and exposed
+> through the GPIO framework. Acquire the device-reset GPIO and use this
+> to implement the device_reset vops, to allow resetting the attached
+> memory.
+> 
+> Based on downstream support implemented by Subhash Jadavani
+> <subhashj@codeaurora.org>.
+> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+> 
+> Changes since v3:
+> - Renamed device-reset-gpios to just reset-gpios.
+> - Explicitly bail on !host->device_reset, to not rely on passing NULL to
+>   gpiod_set_value_cansleep()
+> 
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt |  2 ++
+>  drivers/scsi/ufs/ufs-qcom.c                   | 36 +++++++++++++++++++
+>  drivers/scsi/ufs/ufs-qcom.h                   |  4 +++
+>  3 files changed, 42 insertions(+)
+> 
 
-Hi Hannes,
-
-> I'll need to re-evaluate this where we stand now with shared tags;
-
-As Ming Lei mentioned in 
-https://www.spinics.net/lists/linux-block/msg43779.html, the future for 
-hostwide shared tags doesn't look bright. I would tend to agree.
-
-> this patchset partially relies on them.
-
-In which way? I didn't think/hope it did.
-
-> Will be sending an updated patchset.
-
-For me, the way I see forward is to upstream this series, in addition to 
-Ming's, linked above.
-
-As for LLDDs and the unique tag problem, I suggest that they use sbitmap 
-to generate the tag internally if they want to expose multiple queues. 
- From our testing, using managed interrupts + sbitmap still far 
-outperforms non-managed interrupts.
-
-This approach would mean that we can still revisit hostwide shared tags 
-or other some other approach in future.
-
-Thanks,
-John
-
->
-> Cheers,
->
-> Hannes
->
-
+Acked-by: Rob Herring <robh@kernel.org>
 
