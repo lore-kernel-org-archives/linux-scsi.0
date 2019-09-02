@@ -2,121 +2,114 @@ Return-Path: <SRS0=zgrd=W5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD94FC3A5A8
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:12:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B65CC3A59B
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:39:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEDCE2173E
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:12:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B82A21881
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:39:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H7zUbmDN"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="bYOhCRQA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729734AbfIBIMJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Sep 2019 04:12:09 -0400
-Received: from mail-wr1-f53.google.com ([209.85.221.53]:37827 "EHLO
-        mail-wr1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729790AbfIBIMI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2019 04:12:08 -0400
-Received: by mail-wr1-f53.google.com with SMTP id z11so12993667wrt.4
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Sep 2019 01:12:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=+mMBfGfyBXwVzvFVVfcxlJch8FPILgIOjN0mMOx57to=;
-        b=H7zUbmDNXTLW3eCoCc7zvbS6pobtO0IYx8M00dTL91TOrBJAxIZGE809izxBaeL+mm
-         N6GD4bG5Wb9PmZoabAqTdoG0UkXlNDb3FPiRjZ6RW6PEPMZi5vdjl3kEnv4WOzu3KIon
-         1WhdOB4PnnWUDZzRiYUAY9X6L6OpOt7NCiI/00yuT3vq3kY7alMlGTEe3wggc8kQ7flz
-         DNWnyI5pZBGtGt50e8Ce2bVMNrRRvpNW4UC7XgY2VLbzYT5XPj2aR4F8JMEFDcadVuzW
-         5KL9Ch1ayCFK1x5GNp2TYuL21Ke1PgNHgiH6r7SNq107rj7B5mwxIPTAhZ36bTgrZ8ch
-         bldw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=+mMBfGfyBXwVzvFVVfcxlJch8FPILgIOjN0mMOx57to=;
-        b=jr7ugO67VRQC9M9Z9oW2CDw4RzJuZUt3eCefiZNPziVmUS/N5Z/ESXkWIsV7j2qHN1
-         XB0ZLTMJVRHcrRSA/hET/Mleeq3OSKLmXVOvsFMwFhF6ZndpUyygmObsefcq5SkgMsLW
-         k6JAf8y58/QyUDVaVIiXTe32JMR6o9yLECZIRJsYxk58Pw186RDbgy5NtY1vfPXaUiKG
-         3Ew7iEDlzpY6ncWasRqY6nmwm9sqh7fRo8kgQcw8UExnvEpwGVpVa+ZdT5YmpNX56DOa
-         efnBDBvTkG3Ns0EetR0tF2TSkQV6fXIkCNsICRZOM2blN6Lyee2XPr7JjebpB4q+DYR0
-         B+6w==
-X-Gm-Message-State: APjAAAVEJ27ELl7qLyv2gM4w03Ygrlks9FxRAQW03SIXvGt70uSkC568
-        dfSDrPiVSW06PIpU5THySgTx2A==
-X-Google-Smtp-Source: APXvYqywQPyDv6ILjrXdAZAqwfPFaMqdQX4RwwrHVYMZBXzIEVOOyD8h5ALQ0yiiYgcwLnlRdAAGoA==
-X-Received: by 2002:a5d:4fc4:: with SMTP id h4mr35018846wrw.64.1567411926634;
-        Mon, 02 Sep 2019 01:12:06 -0700 (PDT)
-Received: from dell ([95.147.198.93])
-        by smtp.gmail.com with ESMTPSA id n12sm19000149wmc.24.2019.09.02.01.12.05
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 02 Sep 2019 01:12:06 -0700 (PDT)
-Date:   Mon, 2 Sep 2019 09:12:04 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Marc Gonzalez <marc.w.gonzalez@free.fr>,
-        SCSI <linux-scsi@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S1730687AbfIBIjR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Sep 2019 04:39:17 -0400
+Received: from mail-eopbgr710055.outbound.protection.outlook.com ([40.107.71.55]:60799
+        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730155AbfIBIjQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Sep 2019 04:39:16 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EfV3mq42xWciAZ6XYZokDky1YARkBta2o1J6lT6TSIVAP7/TazYGlkziY/L4hDUM12/2WKC+clDTewJfyxPd+8aMd2WQT398r53DjvqMNqFotd2WXlz3uw/FGC64RsOUmV2KioqaufkoOHMyROx5g1E/ASMRLfxLY5orWWAs/o8YmyIXIA8FclEqYH54ZbwniE4ZZZLnQdRV0k5t+cZWks/q/3PmFe7pWY4g2Td32qI1IvEO2JbnjxX/WSiV88+kftoWrRl7H6jGe2akvDR7mVH9Q8gfyz73EnfqDPGdneS/GgQq3JEh0En+fm+MXKtPLCioqEoCOolp1bBxeTdS/g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ajzl+po9rLpeRV4D8+FDnTseMsOMZuK19i+zrkhwYbc=;
+ b=jTGMB1UcsMXTYTYc1GKh09aFKG9aJKti0Zxa4rLh0EiNkGwJRMh0Cz6GNhckcHFElNZj8VszVH8G6e4Oj7BdG+aNuX/6xX9NVACX/2dU8LVyGn+TiGpGy8/9k5ej+UqrYUaFsmYyM58X+JyemCD3rLt4G7tJM/TV7a3o5Y7U+4nDGQ0fnjHOAmzy0T2DIfJiPysDkdNdads6FLKyoUtc9/aAoNj80dlXIoHg9gSkpD9eaG8Dmuh3o/Hzfvx4tEHaBElFVEjXYjf9O5gNtzUm5C3xRAcZC/AsiDrhyRY9RZAOOB97ShsESE0Ml6ZICGEJDyvghSfjAyYbXJzUPXOLsw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ajzl+po9rLpeRV4D8+FDnTseMsOMZuK19i+zrkhwYbc=;
+ b=bYOhCRQAW8K81WpgEEnzUbPjVtN9lMj+kZDitPlQ8y0CUhlkmz3F45dI17V4EJA+St7t3DHKK7zSykJADOmKppe95o30sGbnhQtbSg8UpdTcBSy+cQQ4f89XJ7UO0PsF/4gAXDQLjdpCZI9MoeaH2bTz0XKeTM6qgJnCiDVf89I=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
+ BN7PR08MB6116.namprd08.prod.outlook.com (20.176.29.32) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2220.19; Mon, 2 Sep 2019 08:39:10 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::1c5f:b47c:d1c3:c30c]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::1c5f:b47c:d1c3:c30c%7]) with mapi id 15.20.2220.021; Mon, 2 Sep 2019
+ 08:39:10 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: Re: ufshcd_abort: Device abort task at tag 7
-Message-ID: <20190902081204.GO4804@dell>
-References: <9f3ed253-5f6b-1893-531d-085f881956dd@free.fr>
- <20190828192031.GN6167@minitux>
- <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net>
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Andy Gross <agross@kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: RE: [EXT] [PATCH v4 1/3] scsi: ufs: Introduce vops for resetting
+ device
+Thread-Topic: [EXT] [PATCH v4 1/3] scsi: ufs: Introduce vops for resetting
+ device
+Thread-Index: AQHVXdVTwpSMXoBF7UGihYWygcclaqcYF7yQ
+Date:   Mon, 2 Sep 2019 08:39:10 +0000
+Message-ID: <BN7PR08MB5684EEDE565DC4AAC9E658A3DBBE0@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <20190828191756.24312-1-bjorn.andersson@linaro.org>
+ <20190828191756.24312-2-bjorn.andersson@linaro.org>
+In-Reply-To: <20190828191756.24312-2-bjorn.andersson@linaro.org>
+Accept-Language: en-150, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.81.111]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3dd1d36d-c609-4f1b-40bd-08d72f810689
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:BN7PR08MB6116;
+x-ms-traffictypediagnostic: BN7PR08MB6116:|BN7PR08MB6116:|BN7PR08MB6116:
+x-microsoft-antispam-prvs: <BN7PR08MB611680F2FAE12848DD64DAFDDBBE0@BN7PR08MB6116.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:400;
+x-forefront-prvs: 01480965DA
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(376002)(346002)(39860400002)(136003)(396003)(189003)(199004)(66556008)(486006)(446003)(54906003)(7416002)(11346002)(14454004)(33656002)(6506007)(2906002)(305945005)(110136005)(55236004)(7696005)(76176011)(5660300002)(4326008)(6436002)(26005)(6246003)(3846002)(53936002)(66946007)(25786009)(9686003)(558084003)(55016002)(229853002)(66066001)(256004)(64756008)(66476007)(66446008)(102836004)(71190400001)(71200400001)(76116006)(478600001)(6116002)(186003)(7736002)(99286004)(86362001)(81156014)(8936002)(81166006)(8676002)(74316002)(316002)(476003)(52536014);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB6116;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: UzZHpAECDrWVRr4stDrRWdYXyJbB6jG41ZWCFdT2kABFjulEnfQLY67nVFx5WhsxkPOGkaUtxUZXuqN1AIH6pZqzCDGk+dSaP6uXtl4AttwlWAV0Tk0S7ur5fCFysrzmIRphCxlKePstbxL9Brh/ysn1JAIqMsVNTGZFnu0z/rhTovb6hPNTZntHAGvzUDgWTX0tHHdEPnWmYSoaVattHpOOC+fJzBxFmNgzutQJXst2oWM5EKDCzdJy+snpit85BJKCgZWRBdk0Fx3qYY+0SEdairsLL1XsKgXLnzTa26BY3oKPEhDXLIGY0kwPQ8wEsVL+kPE2GXLL/Jb1nhZaxfB4O4mA0p/nNSVuOZb5Sw8bvGVCb/BEvEbwakru9mjZQfEngZVN5CppJU5+Ilwt8H8CACW9s82LZp7Qx2m2ocg=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3dd1d36d-c609-4f1b-40bd-08d72f810689
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2019 08:39:10.1240
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Uf72roamKCbF1bCCV/T8qSdFueWMpctj5d/EhWDSxUgiEsPDa5kP7ye22dc+uQsc9lMRx7u6n7sIyZ8JpbQf/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB6116
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 30 Aug 2019, russianneuromancer@ya.ru wrote:
+>
+>Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+>Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
-> Hello!
-> 
-> 
-> > I don't remember the exact splats seen, but I would suggest that this is
-> > retested after applying the following series:
-> >
-> > https://lore.kernel.org/linux-arm-msm/20190828191756.24312-1-bjorn.andersson@linaro.org/T/#u
-> 
-> Turns out this patches is already applied to kernel running on this device, but one line in dts was missing: 
-> 
-> https://github.com/aarch64-laptops/linux/pull/2
-> 
-> With this line issue is no longer reproducible with DT boot. Thank you!
-> 
-> As I understand it's planned to eventually boot this devices via ACPI. 
-> 
-> @Lee Jones, is my understanding correct?
-
-No, not exactly.  We can boot these devices using ACPI, but with
-limited functionality (when compared with booting using DT).  There
-are too many black-boxes when booting with ACPI - something that can
-only be resolved with Qualcomm's help.
-
-Booting with ACPI helps us to use generic Linux distribution
-installers, but it is expected for users to switch to DT once the OS
-is installed.
-
--- 
-Lee Jones [李琼斯]
-Linaro Services Technical Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+//Bean Huo
