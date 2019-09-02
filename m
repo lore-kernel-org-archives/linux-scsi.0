@@ -2,114 +2,115 @@ Return-Path: <SRS0=zgrd=W5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B65CC3A59B
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 275B9C3A59B
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:47:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B82A21881
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:39:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="bYOhCRQA"
+	by mail.kernel.org (Postfix) with ESMTP id 00BEE21881
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:47:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730687AbfIBIjR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Sep 2019 04:39:17 -0400
-Received: from mail-eopbgr710055.outbound.protection.outlook.com ([40.107.71.55]:60799
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
+        id S1729773AbfIBIrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Sep 2019 04:47:14 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6176 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730155AbfIBIjQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Sep 2019 04:39:16 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EfV3mq42xWciAZ6XYZokDky1YARkBta2o1J6lT6TSIVAP7/TazYGlkziY/L4hDUM12/2WKC+clDTewJfyxPd+8aMd2WQT398r53DjvqMNqFotd2WXlz3uw/FGC64RsOUmV2KioqaufkoOHMyROx5g1E/ASMRLfxLY5orWWAs/o8YmyIXIA8FclEqYH54ZbwniE4ZZZLnQdRV0k5t+cZWks/q/3PmFe7pWY4g2Td32qI1IvEO2JbnjxX/WSiV88+kftoWrRl7H6jGe2akvDR7mVH9Q8gfyz73EnfqDPGdneS/GgQq3JEh0En+fm+MXKtPLCioqEoCOolp1bBxeTdS/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ajzl+po9rLpeRV4D8+FDnTseMsOMZuK19i+zrkhwYbc=;
- b=jTGMB1UcsMXTYTYc1GKh09aFKG9aJKti0Zxa4rLh0EiNkGwJRMh0Cz6GNhckcHFElNZj8VszVH8G6e4Oj7BdG+aNuX/6xX9NVACX/2dU8LVyGn+TiGpGy8/9k5ej+UqrYUaFsmYyM58X+JyemCD3rLt4G7tJM/TV7a3o5Y7U+4nDGQ0fnjHOAmzy0T2DIfJiPysDkdNdads6FLKyoUtc9/aAoNj80dlXIoHg9gSkpD9eaG8Dmuh3o/Hzfvx4tEHaBElFVEjXYjf9O5gNtzUm5C3xRAcZC/AsiDrhyRY9RZAOOB97ShsESE0Ml6ZICGEJDyvghSfjAyYbXJzUPXOLsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ajzl+po9rLpeRV4D8+FDnTseMsOMZuK19i+zrkhwYbc=;
- b=bYOhCRQAW8K81WpgEEnzUbPjVtN9lMj+kZDitPlQ8y0CUhlkmz3F45dI17V4EJA+St7t3DHKK7zSykJADOmKppe95o30sGbnhQtbSg8UpdTcBSy+cQQ4f89XJ7UO0PsF/4gAXDQLjdpCZI9MoeaH2bTz0XKeTM6qgJnCiDVf89I=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB6116.namprd08.prod.outlook.com (20.176.29.32) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2220.19; Mon, 2 Sep 2019 08:39:10 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::1c5f:b47c:d1c3:c30c]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::1c5f:b47c:d1c3:c30c%7]) with mapi id 15.20.2220.021; Mon, 2 Sep 2019
- 08:39:10 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1729534AbfIBIrO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Sep 2019 04:47:14 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 16338281DB2CFA4E2403;
+        Mon,  2 Sep 2019 16:47:13 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Mon, 2 Sep 2019
+ 16:47:11 +0800
+Subject: Re: [PATCH RFC 00/24] scsi: enable reserved commands for LLDDs
+To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Andy Gross <agross@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: RE: [EXT] [PATCH v4 1/3] scsi: ufs: Introduce vops for resetting
- device
-Thread-Topic: [EXT] [PATCH v4 1/3] scsi: ufs: Introduce vops for resetting
- device
-Thread-Index: AQHVXdVTwpSMXoBF7UGihYWygcclaqcYF7yQ
-Date:   Mon, 2 Sep 2019 08:39:10 +0000
-Message-ID: <BN7PR08MB5684EEDE565DC4AAC9E658A3DBBE0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <20190828191756.24312-1-bjorn.andersson@linaro.org>
- <20190828191756.24312-2-bjorn.andersson@linaro.org>
-In-Reply-To: <20190828191756.24312-2-bjorn.andersson@linaro.org>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.81.111]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3dd1d36d-c609-4f1b-40bd-08d72f810689
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:BN7PR08MB6116;
-x-ms-traffictypediagnostic: BN7PR08MB6116:|BN7PR08MB6116:|BN7PR08MB6116:
-x-microsoft-antispam-prvs: <BN7PR08MB611680F2FAE12848DD64DAFDDBBE0@BN7PR08MB6116.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:400;
-x-forefront-prvs: 01480965DA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(376002)(346002)(39860400002)(136003)(396003)(189003)(199004)(66556008)(486006)(446003)(54906003)(7416002)(11346002)(14454004)(33656002)(6506007)(2906002)(305945005)(110136005)(55236004)(7696005)(76176011)(5660300002)(4326008)(6436002)(26005)(6246003)(3846002)(53936002)(66946007)(25786009)(9686003)(558084003)(55016002)(229853002)(66066001)(256004)(64756008)(66476007)(66446008)(102836004)(71190400001)(71200400001)(76116006)(478600001)(6116002)(186003)(7736002)(99286004)(86362001)(81156014)(8936002)(81166006)(8676002)(74316002)(316002)(476003)(52536014);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB6116;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: UzZHpAECDrWVRr4stDrRWdYXyJbB6jG41ZWCFdT2kABFjulEnfQLY67nVFx5WhsxkPOGkaUtxUZXuqN1AIH6pZqzCDGk+dSaP6uXtl4AttwlWAV0Tk0S7ur5fCFysrzmIRphCxlKePstbxL9Brh/ysn1JAIqMsVNTGZFnu0z/rhTovb6hPNTZntHAGvzUDgWTX0tHHdEPnWmYSoaVattHpOOC+fJzBxFmNgzutQJXst2oWM5EKDCzdJy+snpit85BJKCgZWRBdk0Fx3qYY+0SEdairsLL1XsKgXLnzTa26BY3oKPEhDXLIGY0kwPQ8wEsVL+kPE2GXLL/Jb1nhZaxfB4O4mA0p/nNSVuOZb5Sw8bvGVCb/BEvEbwakru9mjZQfEngZVN5CppJU5+Ilwt8H8CACW9s82LZp7Qx2m2ocg=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+References: <20190529132901.27645-1-hare@suse.de>
+ <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
+ <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>, "Ming Lei" <ming.lei@redhat.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <64d4b289-555d-8854-ca2b-ec26d397061e@huawei.com>
+Date:   Mon, 2 Sep 2019 09:47:06 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3dd1d36d-c609-4f1b-40bd-08d72f810689
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2019 08:39:10.1240
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Uf72roamKCbF1bCCV/T8qSdFueWMpctj5d/EhWDSxUgiEsPDa5kP7ye22dc+uQsc9lMRx7u6n7sIyZ8JpbQf/Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB6116
+In-Reply-To: <3a92946e-e967-bc68-e995-2c28ae455566@suse.de>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.238]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->
->Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
->Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+On 26/08/2019 16:27, Hannes Reinecke wrote:
+> On 8/23/19 3:26 PM, John Garry wrote:
+>> On 29/05/2019 14:28, Hannes Reinecke wrote:
+>>> Hi all,
+>>>
+>>> quite some drivers use internal commands for various purposes, most
+>>> commonly sending TMFs or querying the HBA status.
+>>> While these commands use the same submission mechanism than normal
+>>> I/O commands, they will not be counted as outstanding commands,
+>>> requiring those drivers to implement their own mechanism to figure
+>>> out outstanding commands.
+>>> This patchset enables the use of reserved tags for the SCSI midlayer,
+>>> enabling LLDDs to rely on the block layer for tracking outstanding
+>>> commands.
+>>> More importantly, it allows LLDD to request a valid tag from the block
+>>> layer without having to implement some tracking mechanism within the
+>>> driver. This removes quite some hacks which were required for some
+>>> drivers (eg. fnic or snic).
+>>>
+>>> As usual, comments and reviews are welcome.
+>>>
+>>
+>> Hi Hannes,
+>>
+>> I was wondering if you have any plans to progress this series?
+>>
+>> I don't mind helping out...
+>>
+> Thanks for the reminder.
 
-//Bean Huo
+Hi Hannes,
+
+> I'll need to re-evaluate this where we stand now with shared tags;
+
+As Ming Lei mentioned in 
+https://www.spinics.net/lists/linux-block/msg43779.html, the future for 
+hostwide shared tags doesn't look bright. I would tend to agree.
+
+> this patchset partially relies on them.
+
+In which way? I didn't think/hope it did.
+
+> Will be sending an updated patchset.
+
+For me, the way I see forward is to upstream this series, in addition to 
+Ming's, linked above.
+
+As for LLDDs and the unique tag problem, I suggest that they use sbitmap 
+to generate the tag internally if they want to expose multiple queues. 
+ From our testing, using managed interrupts + sbitmap still far 
+outperforms non-managed interrupts.
+
+This approach would mean that we can still revisit hostwide shared tags 
+or other some other approach in future.
+
+Thanks,
+John
+
+>
+> Cheers,
+>
+> Hannes
+>
+
+
