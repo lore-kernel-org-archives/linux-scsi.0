@@ -1,145 +1,122 @@
-Return-Path: <SRS0=BXQW=W4=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=zgrd=W5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF28FC3A5A8
-	for <linux-scsi@archiver.kernel.org>; Sun,  1 Sep 2019 06:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD94FC3A5A8
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:12:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C39BE2339D
-	for <linux-scsi@archiver.kernel.org>; Sun,  1 Sep 2019 06:12:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEDCE2173E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Sep 2019 08:12:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JjvKZdJd";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="aaU/HoU0"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H7zUbmDN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725954AbfIAGMT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Sep 2019 02:12:19 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:30813 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725280AbfIAGMT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Sep 2019 02:12:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1567318419; x=1598854419;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=xDIrxnuXWQ5SQxL0XSqyl+/YK8l7jYoBkzAboLdB7VE=;
-  b=JjvKZdJdQ8M70KkNNUXe7z9L0g+2ENjlfHK83FuZVJbdQRtSyo0X2dip
-   G9cItrmGEFGIypUdUACCk02yUx++3kAclapu37c2tF8P5TxY4KRS+maye
-   j8YK8G1CHX8PD1Z1ZpCLx0kEZrL6hGITidc0MrLTmccFHQUz6L1wzebIp
-   iGEMkOVZ2KmZXMr1RpWHaC32nfhDJClmsFh7hMvV4nZXWtWTw1/4YdOYA
-   cStbtbRYOhZCplPKZ/yrHUPFjbETTfr+mqxcHyJXDYdtmKUJ3YGy67NI5
-   C2SNqZJD0hlY0JvW3X6H0Z0swoIZ+nFUXY1kSxUDsx878HvHZTikd0vgB
-   Q==;
-IronPort-SDR: nGWBAh5MvPz9/geSP9PqGbbiqwNG9pc6rlpJmR8AVUZRSgxDULt45PMrPxAOFOsseToHeGfMQr
- HVPBcWzpw4Ekq81lduDVsBRtUxRieX8rmHrdPVtgKUoEZbT7BEuE/qVeWM9TRt7/uQOf/RYNS4
- V7/Sh4abJXCfTc0DqasvClFr1swKcxYHSteSR0eymgzoai9kUC+3gf+hsMIRqCV4sIxAf6suVD
- AkaAzJc+qA2C2oFU+/h11DMtJ/z13Vr96upqA7jXxUURnwb5r/QYydme8OTWF1cK+XDdgIUlDM
- cSA=
-X-IronPort-AV: E=Sophos;i="5.64,454,1559491200"; 
-   d="scan'208";a="217681882"
-Received: from mail-by2nam05lp2057.outbound.protection.outlook.com (HELO NAM05-BY2-obe.outbound.protection.outlook.com) ([104.47.50.57])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2019 14:13:37 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fmBbrDU66ohPiPyqO2TMXdb4j3KGkSNg1tKIT/bq+RB6Ygz911IFx3UggpEiYEwwtViKJYlikk7zQD80WczlSkGg3gsOWKKnWzA62POYiFs+y17OsLgzeLCmbmpJMpNbNlQg1JfURg7dbTQsGSBDhY6+/k1C1CE1a4p2+hMKUfHjHPhC+vQmhdiQAdnA5MlrC5LciHyH+GwazAuJuSIixb6JPei2JnaLbLjPw1xzhG4gxDMuf2Rbvy63bfSHaZgEG23wZR6o0raCd1Uz7hhsGKqY4h6mKyU/C5mvRBqTveJC1quvXsrSkhR9UmRIUZLYpi+U0MIYfYewAqzT5VIsTQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xDIrxnuXWQ5SQxL0XSqyl+/YK8l7jYoBkzAboLdB7VE=;
- b=cBo8AUaqooVn42qE+fTpsK26MORCB/G1TpIJ54/uAVegkI56LOWSRDQ+LUDGobSIgJ3b2lpBzhV8sBCjoYxdFyMeOnQw4DT2Azz/aNeGiBmWYc1guYVctlP4ySAYQLh4UU8+jEoQHfDqGb+cWb1DrTglaxWDJWGWO1Nvrb+ZWazCU+/td4Byj8e7p6LGRg0osrpFiWFMxTZYLgcHaSby5eccwpzLtobvHO7BIe4uoHkma1aggqI4tXg4FOLWTKvtw7oXjQB/CwUrp2cV8TRxNfP+ZSjHgGKssS5TjNyuDvIkMFLIYczNdXUfL15kvgoJ/BFthPhRCeClx04pE1j9jg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1729734AbfIBIMJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Sep 2019 04:12:09 -0400
+Received: from mail-wr1-f53.google.com ([209.85.221.53]:37827 "EHLO
+        mail-wr1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729790AbfIBIMI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Sep 2019 04:12:08 -0400
+Received: by mail-wr1-f53.google.com with SMTP id z11so12993667wrt.4
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Sep 2019 01:12:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xDIrxnuXWQ5SQxL0XSqyl+/YK8l7jYoBkzAboLdB7VE=;
- b=aaU/HoU0uUk9W/GiAFu6LjJjziGoeBIXX3XorH9/srTHcfS0mZ8hXWPAm/q2ucRH35pRh2v32QxtF5QSJQtrr+7JPW94kqAar9AAo3sSgZeqVejy2EqeB/3YSM4mriFdTQ6jQASqqvvVss9yd3R+sAf1A3tStJTc5c65T/6OgE4=
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
- MN2PR04MB7038.namprd04.prod.outlook.com (10.186.146.24) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2220.21; Sun, 1 Sep 2019 06:12:15 +0000
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::9c2b:ac1b:67b8:f371]) by MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::9c2b:ac1b:67b8:f371%2]) with mapi id 15.20.2220.021; Sun, 1 Sep 2019
- 06:12:15 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Andy Gross <agross@kernel.org>,
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=+mMBfGfyBXwVzvFVVfcxlJch8FPILgIOjN0mMOx57to=;
+        b=H7zUbmDNXTLW3eCoCc7zvbS6pobtO0IYx8M00dTL91TOrBJAxIZGE809izxBaeL+mm
+         N6GD4bG5Wb9PmZoabAqTdoG0UkXlNDb3FPiRjZ6RW6PEPMZi5vdjl3kEnv4WOzu3KIon
+         1WhdOB4PnnWUDZzRiYUAY9X6L6OpOt7NCiI/00yuT3vq3kY7alMlGTEe3wggc8kQ7flz
+         DNWnyI5pZBGtGt50e8Ce2bVMNrRRvpNW4UC7XgY2VLbzYT5XPj2aR4F8JMEFDcadVuzW
+         5KL9Ch1ayCFK1x5GNp2TYuL21Ke1PgNHgiH6r7SNq107rj7B5mwxIPTAhZ36bTgrZ8ch
+         bldw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to:user-agent;
+        bh=+mMBfGfyBXwVzvFVVfcxlJch8FPILgIOjN0mMOx57to=;
+        b=jr7ugO67VRQC9M9Z9oW2CDw4RzJuZUt3eCefiZNPziVmUS/N5Z/ESXkWIsV7j2qHN1
+         XB0ZLTMJVRHcrRSA/hET/Mleeq3OSKLmXVOvsFMwFhF6ZndpUyygmObsefcq5SkgMsLW
+         k6JAf8y58/QyUDVaVIiXTe32JMR6o9yLECZIRJsYxk58Pw186RDbgy5NtY1vfPXaUiKG
+         3Ew7iEDlzpY6ncWasRqY6nmwm9sqh7fRo8kgQcw8UExnvEpwGVpVa+ZdT5YmpNX56DOa
+         efnBDBvTkG3Ns0EetR0tF2TSkQV6fXIkCNsICRZOM2blN6Lyee2XPr7JjebpB4q+DYR0
+         B+6w==
+X-Gm-Message-State: APjAAAVEJ27ELl7qLyv2gM4w03Ygrlks9FxRAQW03SIXvGt70uSkC568
+        dfSDrPiVSW06PIpU5THySgTx2A==
+X-Google-Smtp-Source: APXvYqywQPyDv6ILjrXdAZAqwfPFaMqdQX4RwwrHVYMZBXzIEVOOyD8h5ALQ0yiiYgcwLnlRdAAGoA==
+X-Received: by 2002:a5d:4fc4:: with SMTP id h4mr35018846wrw.64.1567411926634;
+        Mon, 02 Sep 2019 01:12:06 -0700 (PDT)
+Received: from dell ([95.147.198.93])
+        by smtp.gmail.com with ESMTPSA id n12sm19000149wmc.24.2019.09.02.01.12.05
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 02 Sep 2019 01:12:06 -0700 (PDT)
+Date:   Mon, 2 Sep 2019 09:12:04 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Marc Gonzalez <marc.w.gonzalez@free.fr>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Bean Huo <beanhuo@micron.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: RE: [PATCH v4 0/3] Qualcomm UFS device reset support
-Thread-Topic: [PATCH v4 0/3] Qualcomm UFS device reset support
-Thread-Index: AQHVXdVcVndtIrqA7kuEICogWXBJSKcWW9dA
-Date:   Sun, 1 Sep 2019 06:12:15 +0000
-Message-ID: <MN2PR04MB699135203C45147049130AB6FCBF0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <20190828191756.24312-1-bjorn.andersson@linaro.org>
-In-Reply-To: <20190828191756.24312-1-bjorn.andersson@linaro.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b4f4c177-a8f8-433f-fbbf-08d72ea35615
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:MN2PR04MB7038;
-x-ms-traffictypediagnostic: MN2PR04MB7038:
-x-microsoft-antispam-prvs: <MN2PR04MB7038767175C3D7B6351513CEFCBF0@MN2PR04MB7038.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 0147E151B5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(376002)(39860400002)(346002)(366004)(396003)(199004)(189003)(66066001)(6436002)(55016002)(9686003)(53936002)(7416002)(6506007)(102836004)(4326008)(25786009)(7696005)(76176011)(26005)(186003)(33656002)(71200400001)(71190400001)(6246003)(52536014)(5660300002)(81156014)(81166006)(86362001)(305945005)(7736002)(8936002)(6116002)(3846002)(74316002)(478600001)(4744005)(99286004)(2906002)(14454004)(229853002)(5024004)(8676002)(446003)(256004)(54906003)(110136005)(316002)(64756008)(486006)(476003)(66556008)(66476007)(66946007)(76116006)(11346002)(66446008);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB7038;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: vSw8AvMuxRtT+8s6+HCUKQRZFY8ao1Hizk4Beo4WkvXbhftWo405KIogPwvOndGQBUnChTN5QjdyN/ZMdaqd66tic98h1fGBfVLDJdis0YuFCQceEC3F62WsadklScs2195/nvjsM09YdYIm29KM08gRZUO5x2z5Y/AO0gOLMbWAejMul+xvYD1cXpMQFu7W6uqKXhIzooHJWunC1CNAzzuQBSa346YqMmbCWWnB2u0t/J3/IWv61OP4Jdd8rWa7SHq/5wKoCRnt3mo8ugzdPjQgiRypVi36c+EO31LQbCrYHJmLW7qQOjTmZ5lhEEImcGzkcuMPp0RDs0/aotpFei9l4CBUUKniCfHGosYr6Nvo+RPOJuSVrFBg7ouxTahe1APH3eenb6dHyh6YVo7K27nYGd3KWfoUQrw/P5vivOk=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: Re: ufshcd_abort: Device abort task at tag 7
+Message-ID: <20190902081204.GO4804@dell>
+References: <9f3ed253-5f6b-1893-531d-085f881956dd@free.fr>
+ <20190828192031.GN6167@minitux>
+ <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b4f4c177-a8f8-433f-fbbf-08d72ea35615
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Sep 2019 06:12:15.2951
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7dZr/LZQH02AkKyOLgNt2NrzREMcqPo38ohwiHgtTKaBD06ko/5pF0ED60W7VccugN9O6OmIw5XZ8LIjSZ8bgA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB7038
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,=20
->=20
-> This series adds a new ufs vops to allow platform specific methods for
-> resetting an attached UFS device, then implements this for the
-> Qualcomm driver.
-> This reset seems to be necessary for the majority of Dragonboard845c
-> devices.
->=20
-> Bean requested in v3 that a software fallback mechanism, using
-> UIC_CMD_DME_END_PT_RST. I have not been successful in validating
-> that this
-> works for me, so I'm postponing this effort and hoping we can add it
-> incrementally at a later time.
-This series looks good to me.
-Yeah - We can add and test the uic command bail-out once this is accepted.
+On Fri, 30 Aug 2019, russianneuromancer@ya.ru wrote:
 
-Thanks,
-Avri
+> Hello!
+> 
+> 
+> > I don't remember the exact splats seen, but I would suggest that this is
+> > retested after applying the following series:
+> >
+> > https://lore.kernel.org/linux-arm-msm/20190828191756.24312-1-bjorn.andersson@linaro.org/T/#u
+> 
+> Turns out this patches is already applied to kernel running on this device, but one line in dts was missing: 
+> 
+> https://github.com/aarch64-laptops/linux/pull/2
+> 
+> With this line issue is no longer reproducible with DT boot. Thank you!
+> 
+> As I understand it's planned to eventually boot this devices via ACPI. 
+> 
+> @Lee Jones, is my understanding correct?
+
+No, not exactly.  We can boot these devices using ACPI, but with
+limited functionality (when compared with booting using DT).  There
+are too many black-boxes when booting with ACPI - something that can
+only be resolved with Qualcomm's help.
+
+Booting with ACPI helps us to use generic Linux distribution
+installers, but it is expected for users to switch to DT once the OS
+is installed.
+
+-- 
+Lee Jones [李琼斯]
+Linaro Services Technical Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
