@@ -2,115 +2,251 @@ Return-Path: <SRS0=3hcu=W6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65633C3A5A7
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 15:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9099C3A5A7
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:25:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3ED6F23401
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 15:25:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ya.ru header.i=@ya.ru header.b="TXhRP4xC"
+	by mail.kernel.org (Postfix) with ESMTP id 8237D2377D
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:25:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567527933;
+	bh=ebni2Q/ND9c27z/FRRPtQ6XbVmW0cE2YmgCn70MAkkQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=WVTtCoeTxqVJAHW51XeK1WRnJtIsruNZMcI3lU76SdKpB0org0e/rC6PwQf2WeDIg
+	 GIlWkJnp/l1yHT4zRPSar93to9NijhKz8g5sEQjS/fi+eJmNzqChbzgKoPS+XnnMuz
+	 yBc4iRkVq4LZeYaCaf9Fr/L9+YWmAdyyGfjbfMZQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729578AbfICPZy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Sep 2019 11:25:54 -0400
-Received: from forward501o.mail.yandex.net ([37.140.190.203]:44410 "EHLO
-        forward501o.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728679AbfICPZy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2019 11:25:54 -0400
-X-Greylist: delayed 481 seconds by postgrey-1.27 at vger.kernel.org; Tue, 03 Sep 2019 11:25:52 EDT
-Received: from mxback21o.mail.yandex.net (mxback21o.mail.yandex.net [IPv6:2a02:6b8:0:1a2d::72])
-        by forward501o.mail.yandex.net (Yandex) with ESMTP id E67701E802DE;
-        Tue,  3 Sep 2019 18:17:49 +0300 (MSK)
-Received: from localhost (localhost [::1])
-        by mxback21o.mail.yandex.net (nwsmtp/Yandex) with ESMTP id sP12zh0Lk0-Hmxe1Ksp;
-        Tue, 03 Sep 2019 18:17:49 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1567523869;
-        bh=xd4oAwVzKayMlSWnqNDk876qieyfNhXMXztAwmcI5rw=;
-        h=Message-Id:Cc:Subject:In-Reply-To:Date:References:To:From;
-        b=TXhRP4xCfsWC/CRn1QpUIpsQLX9nYEHR+PkqJVfI+pXWBS2vIGDG1N5hwI22wxqf+
-         t8qgkX6Ce64FP1OaxV2PfhxACtYfleYMwg/hEUhSfQXO27mXn24uWlI3E5FcxJMN8E
-         uGzVAHHE+AgCTisAXQZHmXXSMhHnGiyDmG86Kr8U=
-Authentication-Results: mxback21o.mail.yandex.net; dkim=pass header.i=@ya.ru
-Received: by sas2-b4ed770db137.qloud-c.yandex.net with HTTP;
-        Tue, 03 Sep 2019 18:17:48 +0300
-From:   "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>
-Envelope-From: russianneuromancer@yandex.ru
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Marc Gonzalez <marc.w.gonzalez@free.fr>,
-        SCSI <linux-scsi@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>
-In-Reply-To: <20190902081204.GO4804@dell>
-References: <9f3ed253-5f6b-1893-531d-085f881956dd@free.fr>
-         <20190828192031.GN6167@minitux>
-         <9257741567170980@myt1-1e65ebab2412.qloud-c.yandex.net> <20190902081204.GO4804@dell>
-Subject: Re: ufshcd_abort: Device abort task at tag 7
+        id S1730409AbfICQZc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Sep 2019 12:25:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45612 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730395AbfICQZa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 3 Sep 2019 12:25:30 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0485923717;
+        Tue,  3 Sep 2019 16:25:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1567527928;
+        bh=ebni2Q/ND9c27z/FRRPtQ6XbVmW0cE2YmgCn70MAkkQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hVbRpHGI1/6Nts9d2y+iYuRvfT+4n55028mT7D2TMxuAYR6qVt1zCxd7pfYtjoiHr
+         J9W9IEeCrXC7/u3Qdoc7RXnzCGcBhh2lOrzp84HvgjaEMfwCLV2ftrcu8skuQQYDAW
+         sPtqBWlCNMauj1MzDGI4BqDM/JQV05Xkk3eqwWjU=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Giridhar Malavali <giridhar.malavali@cavium.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 004/167] scsi: qla2xxx: Move log messages before issuing command to firmware
+Date:   Tue,  3 Sep 2019 12:22:36 -0400
+Message-Id: <20190903162519.7136-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190903162519.7136-1-sashal@kernel.org>
+References: <20190903162519.7136-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-Mailer: Yamail [ http://yandex.ru ] 5.0
-Date:   Tue, 03 Sep 2019 23:17:48 +0800
-Message-Id: <25410681567523868@sas2-b4ed770db137.qloud-c.yandex.net>
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=utf-8
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello!
+From: Giridhar Malavali <giridhar.malavali@cavium.com>
 
-> Booting with ACPI helps us to use generic Linux distribution
-> installers, but it is expected for users to switch to DT once the OS
-> is installed.
+[ Upstream commit 9fe278f44b4bc06cc61e33b2af65f87d507d13d0 ]
 
-Thank you for clarification!
+There is a probability that the SRB structure might have been released by the
+time the debug log message dereferences it.  This patch moved the log messages
+before the command is issued to the firmware to prevent unknown behavior and
+kernel crash
 
-Should I close my bugreport when Bjorn's "Qualcomm UFS device reset support" series will hit upstream, or I should wait for additional fix that applicable for ACPI boot as well?  
+Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_gs.c   | 15 ++++++-----
+ drivers/scsi/qla2xxx/qla_init.c | 48 +++++++++++++++++----------------
+ 2 files changed, 33 insertions(+), 30 deletions(-)
 
-I don't know if this boot delay is Ok for generic installer image, and it's not up to me to decide this, which is why I ask.
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 1f1a05a90d3d7..fc08e46a93ca9 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3360,15 +3360,15 @@ int qla24xx_async_gpsc(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
+ 	sp->done = qla24xx_async_gpsc_sp_done;
+ 
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+-
+ 	ql_dbg(ql_dbg_disc, vha, 0x205e,
+ 	    "Async-%s %8phC hdl=%x loopid=%x portid=%02x%02x%02x.\n",
+ 	    sp->name, fcport->port_name, sp->handle,
+ 	    fcport->loop_id, fcport->d_id.b.domain,
+ 	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
++
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
+ 	return rval;
+ 
+ done_free_sp:
+@@ -3729,13 +3729,14 @@ int qla24xx_async_gpnid(scsi_qla_host_t *vha, port_id_t *id)
+ 	sp->u.iocb_cmd.timeout = qla2x00_async_iocb_timeout;
+ 	sp->done = qla2x00_async_gpnid_sp_done;
+ 
++	ql_dbg(ql_dbg_disc, vha, 0x2067,
++	    "Async-%s hdl=%x ID %3phC.\n", sp->name,
++	    sp->handle, ct_req->req.port_id.port_id);
++
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS)
+ 		goto done_free_sp;
+ 
+-	ql_dbg(ql_dbg_disc, vha, 0x2067,
+-	    "Async-%s hdl=%x ID %3phC.\n", sp->name,
+-	    sp->handle, ct_req->req.port_id.port_id);
+ 	return rval;
+ 
+ done_free_sp:
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ddce32fe0513a..39a8f4a671aaa 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -247,6 +247,12 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 
+ 	}
+ 
++	ql_dbg(ql_dbg_disc, vha, 0x2072,
++	    "Async-login - %8phC hdl=%x, loopid=%x portid=%02x%02x%02x "
++		"retries=%d.\n", fcport->port_name, sp->handle, fcport->loop_id,
++	    fcport->d_id.b.domain, fcport->d_id.b.area, fcport->d_id.b.al_pa,
++	    fcport->login_retry);
++
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
+ 		fcport->flags |= FCF_LOGIN_NEEDED;
+@@ -254,11 +260,6 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		goto done_free_sp;
+ 	}
+ 
+-	ql_dbg(ql_dbg_disc, vha, 0x2072,
+-	    "Async-login - %8phC hdl=%x, loopid=%x portid=%02x%02x%02x "
+-		"retries=%d.\n", fcport->port_name, sp->handle, fcport->loop_id,
+-	    fcport->d_id.b.domain, fcport->d_id.b.area, fcport->d_id.b.al_pa,
+-	    fcport->login_retry);
+ 	return rval;
+ 
+ done_free_sp:
+@@ -303,15 +304,16 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
+ 
+ 	sp->done = qla2x00_async_logout_sp_done;
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0x2070,
+ 	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC.\n",
+ 	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+ 		fcport->d_id.b.area, fcport->d_id.b.al_pa,
+ 		fcport->port_name);
++
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
+ 	return rval;
+ 
+ done_free_sp:
+@@ -489,13 +491,15 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 	sp->done = qla2x00_async_adisc_sp_done;
+ 	if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
+ 		lio->u.logio.flags |= SRB_LOGIN_RETRIED;
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0x206f,
+ 	    "Async-adisc - hdl=%x loopid=%x portid=%06x %8phC.\n",
+ 	    sp->handle, fcport->loop_id, fcport->d_id.b24, fcport->port_name);
++
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
++
+ 	return rval;
+ 
+ done_free_sp:
+@@ -1161,14 +1165,13 @@ int qla24xx_async_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ 
+ 	sp->done = qla24xx_async_gpdb_sp_done;
+ 
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+-
+ 	ql_dbg(ql_dbg_disc, vha, 0x20dc,
+ 	    "Async-%s %8phC hndl %x opt %x\n",
+ 	    sp->name, fcport->port_name, sp->handle, opt);
+ 
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
+ 	return rval;
+ 
+ done_free_sp:
+@@ -1698,15 +1701,14 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
+ 	tm_iocb->u.tmf.data = tag;
+ 	sp->done = qla2x00_tmf_sp_done;
+ 
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+-
+ 	ql_dbg(ql_dbg_taskm, vha, 0x802f,
+ 	    "Async-tmf hdl=%x loop-id=%x portid=%02x%02x%02x.\n",
+ 	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
+ 	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
+ 
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
+ 	wait_for_completion(&tm_iocb->u.tmf.comp);
+ 
+ 	rval = tm_iocb->u.tmf.data;
+@@ -1790,14 +1792,14 @@ qla24xx_async_abort_cmd(srb_t *cmd_sp, bool wait)
+ 
+ 	sp->done = qla24xx_abort_sp_done;
+ 
+-	rval = qla2x00_start_sp(sp);
+-	if (rval != QLA_SUCCESS)
+-		goto done_free_sp;
+-
+ 	ql_dbg(ql_dbg_async, vha, 0x507c,
+ 	    "Abort command issued - hdl=%x, target_id=%x\n",
+ 	    cmd_sp->handle, fcport->tgt_id);
+ 
++	rval = qla2x00_start_sp(sp);
++	if (rval != QLA_SUCCESS)
++		goto done_free_sp;
++
+ 	if (wait) {
+ 		wait_for_completion(&abt_iocb->u.abt.comp);
+ 		rval = abt_iocb->u.abt.comp_status == CS_COMPLETE ?
+-- 
+2.20.1
 
-02.09.2019, 16:12, "Lee Jones" <lee.jones@linaro.org>:
-> On Fri, 30 Aug 2019, russianneuromancer@ya.ru wrote:
->
->>  Hello!
->>
->>  > I don't remember the exact splats seen, but I would suggest that this is
->>  > retested after applying the following series:
->>  >
->>  > https://lore.kernel.org/linux-arm-msm/20190828191756.24312-1-bjorn.andersson@linaro.org/T/#u
->>
->>  Turns out this patches is already applied to kernel running on this device, but one line in dts was missing:
->>
->>  https://github.com/aarch64-laptops/linux/pull/2
->>
->>  With this line issue is no longer reproducible with DT boot. Thank you!
->>
->>  As I understand it's planned to eventually boot this devices via ACPI.
->>
->>  @Lee Jones, is my understanding correct?
->
-> No, not exactly. We can boot these devices using ACPI, but with
-> limited functionality (when compared with booting using DT). There
-> are too many black-boxes when booting with ACPI - something that can
-> only be resolved with Qualcomm's help.
->
-> Booting with ACPI helps us to use generic Linux distribution
-> installers, but it is expected for users to switch to DT once the OS
-> is installed.
->
-> --
-> Lee Jones [李琼斯]
-> Linaro Services Technical Lead
-> Linaro.org │ Open source software for ARM SoCs
-> Follow Linaro: Facebook | Twitter | Blog
