@@ -4,50 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D723C3A5A8
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:28:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 339AEC3A5A8
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:31:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D80E238F9
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:28:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A17B23431
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 16:31:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567528133;
-	bh=SQyxLkOf/O6d/Hq0r71pzE4mhrqkkJQ4k3Ezo+dnXf8=;
+	s=default; t=1567528293;
+	bh=C0os0u59lpcVwQNJ3fMkWbkaHLQ/ZyBoPdY1311WfMQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=v1jhCDQk5TIzjkWaArvSzXpSnbOQ+gQI4Rvs+FFXDR6vVEvk+V+q55V3GOHGQhEfg
-	 CJbDzIQePyh2drI05ujmLpT6wpgJ8Y7kCdgeUPp/ZdIUxJNCS6zqPcSzK1CGeiDXT0
-	 UW5/8++pOR68jFWX0xEXUUmIodnt1gvlRNdxPpsQ=
+	b=cCNYlSMh6QG/henKztK58WG8jpP1VOMBH+/0t4GNjt+bwNrUXOyqbkapfHVlgoREV
+	 oQmJXKkkFSDsFDfeusOEHe4IR6L4Loc6OiPFjVAUxLmwiUkecFm4glxKNcfyIfgK1o
+	 pMEamlOUABqu0dSUHPWW3dHqmcJOxyo+XSxoFkAM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731192AbfICQ2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Sep 2019 12:28:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51200 "EHLO mail.kernel.org"
+        id S1731096AbfICQ2U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Sep 2019 12:28:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50206 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731178AbfICQ2v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 3 Sep 2019 12:28:51 -0400
+        id S1731088AbfICQ2T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 3 Sep 2019 12:28:19 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 484A223431;
-        Tue,  3 Sep 2019 16:28:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 400DE238CE;
+        Tue,  3 Sep 2019 16:28:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567528130;
-        bh=SQyxLkOf/O6d/Hq0r71pzE4mhrqkkJQ4k3Ezo+dnXf8=;
+        s=default; t=1567528098;
+        bh=C0os0u59lpcVwQNJ3fMkWbkaHLQ/ZyBoPdY1311WfMQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HkM0G6QgRKkAg2Co4fV7zfWiXzV5PGWWecY75fvaWTt0+9fAQt108wqMMTlq0/6aI
-         5NP65ZCAvOjRfm4LuPDo8NDee/78KjtUwPkWMP1H1kwiAgeB2/LFvxQZZbJy459ksD
-         G90h5aDqkHvbIZ84JgBvCGSonsfV70vRcmA5oBbo=
+        b=wRCEcicboszdO/yEAIB+ctiSjwCSKJEcaEC3mL0E0oIARwYnDi6xIxYeP+jO5FPv1
+         Bb0Y8pogScSIdChINCtmZyIrITj7T1PWVoGDE+GGwnrE9xjuMQ8lssfwB4LZYt2GSL
+         P1opxFqy8ZMDMoOSx8PhPcLeW9gVZn1uTXOf2kdY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Dongli Zhang <dongli.zhang@oracle.com>,
+        James Smart <james.smart@broadcom.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 125/167] scsi: target/iblock: Fix overrun in WRITE SAME emulation
-Date:   Tue,  3 Sep 2019 12:24:37 -0400
-Message-Id: <20190903162519.7136-125-sashal@kernel.org>
+        Christoph Hellwig <hch@lst.de>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 106/167] blk-mq: free hw queue's resource in hctx's release handler
+Date:   Tue,  3 Sep 2019 12:24:18 -0400
+Message-Id: <20190903162519.7136-106-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190903162519.7136-1-sashal@kernel.org>
 References: <20190903162519.7136-1-sashal@kernel.org>
@@ -60,44 +65,139 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Roman Bolshakov <r.bolshakov@yadro.com>
+From: Ming Lei <ming.lei@redhat.com>
 
-[ Upstream commit 5676234f20fef02f6ca9bd66c63a8860fce62645 ]
+[ Upstream commit c7e2d94b3d1634988a95ac4d77a72dc7487ece06 ]
 
-WRITE SAME corrupts data on the block device behind iblock if the command
-is emulated. The emulation code issues (M - 1) * N times more bios than
-requested, where M is the number of 512 blocks per real block size and N is
-the NUMBER OF LOGICAL BLOCKS specified in WRITE SAME command. So, for a
-device with 4k blocks, 7 * N more LBAs gets written after the requested
-range.
+Once blk_cleanup_queue() returns, tags shouldn't be used any more,
+because blk_mq_free_tag_set() may be called. Commit 45a9c9d909b2
+("blk-mq: Fix a use-after-free") fixes this issue exactly.
 
-The issue happens because the number of 512 byte sectors to be written is
-decreased one by one while the real bios are typically from 1 to 8 512 byte
-sectors per bio.
+However, that commit introduces another issue. Before 45a9c9d909b2,
+we are allowed to run queue during cleaning up queue if the queue's
+kobj refcount is held. After that commit, queue can't be run during
+queue cleaning up, otherwise oops can be triggered easily because
+some fields of hctx are freed by blk_mq_free_queue() in blk_cleanup_queue().
 
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+We have invented ways for addressing this kind of issue before, such as:
+
+	8dc765d438f1 ("SCSI: fix queue cleanup race before queue initialization is done")
+	c2856ae2f315 ("blk-mq: quiesce queue before freeing queue")
+
+But still can't cover all cases, recently James reports another such
+kind of issue:
+
+	https://marc.info/?l=linux-scsi&m=155389088124782&w=2
+
+This issue can be quite hard to address by previous way, given
+scsi_run_queue() may run requeues for other LUNs.
+
+Fixes the above issue by freeing hctx's resources in its release handler, and this
+way is safe becasue tags isn't needed for freeing such hctx resource.
+
+This approach follows typical design pattern wrt. kobject's release handler.
+
+Cc: Dongli Zhang <dongli.zhang@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Cc: linux-scsi@vger.kernel.org,
+Cc: Martin K . Petersen <martin.petersen@oracle.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>,
+Reported-by: James Smart <james.smart@broadcom.com>
+Fixes: 45a9c9d909b2 ("blk-mq: Fix a use-after-free")
+Cc: stable@vger.kernel.org
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tested-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_iblock.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-core.c     | 3 ++-
+ block/blk-mq-sysfs.c | 6 ++++++
+ block/blk-mq.c       | 8 ++------
+ block/blk-mq.h       | 2 +-
+ 4 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 1bc9b14236d8b..854b2bcca7c1a 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -515,7 +515,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 4a3e1f4178804..af635f878f966 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -816,7 +816,8 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	blk_exit_queue(q);
  
- 		/* Always in 512 byte units for Linux/Block */
- 		block_lba += sg->length >> SECTOR_SHIFT;
--		sectors -= 1;
-+		sectors -= sg->length >> SECTOR_SHIFT;
- 	}
+ 	if (q->mq_ops)
+-		blk_mq_free_queue(q);
++		blk_mq_exit_queue(q);
++
+ 	percpu_ref_exit(&q->q_usage_counter);
  
- 	iblock_submit_bios(&list);
+ 	spin_lock_irq(lock);
+diff --git a/block/blk-mq-sysfs.c b/block/blk-mq-sysfs.c
+index aafb44224c896..0b7297a43ccd2 100644
+--- a/block/blk-mq-sysfs.c
++++ b/block/blk-mq-sysfs.c
+@@ -10,6 +10,7 @@
+ #include <linux/smp.h>
+ 
+ #include <linux/blk-mq.h>
++#include "blk.h"
+ #include "blk-mq.h"
+ #include "blk-mq-tag.h"
+ 
+@@ -21,6 +22,11 @@ static void blk_mq_hw_sysfs_release(struct kobject *kobj)
+ {
+ 	struct blk_mq_hw_ctx *hctx = container_of(kobj, struct blk_mq_hw_ctx,
+ 						  kobj);
++
++	if (hctx->flags & BLK_MQ_F_BLOCKING)
++		cleanup_srcu_struct(hctx->srcu);
++	blk_free_flush_queue(hctx->fq);
++	sbitmap_free(&hctx->ctx_map);
+ 	free_cpumask_var(hctx->cpumask);
+ 	kfree(hctx->ctxs);
+ 	kfree(hctx);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 70d839b9c3b09..455fda99255a4 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2157,12 +2157,7 @@ static void blk_mq_exit_hctx(struct request_queue *q,
+ 	if (set->ops->exit_hctx)
+ 		set->ops->exit_hctx(hctx, hctx_idx);
+ 
+-	if (hctx->flags & BLK_MQ_F_BLOCKING)
+-		cleanup_srcu_struct(hctx->srcu);
+-
+ 	blk_mq_remove_cpuhp(hctx);
+-	blk_free_flush_queue(hctx->fq);
+-	sbitmap_free(&hctx->ctx_map);
+ }
+ 
+ static void blk_mq_exit_hw_queues(struct request_queue *q,
+@@ -2662,7 +2657,8 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ }
+ EXPORT_SYMBOL(blk_mq_init_allocated_queue);
+ 
+-void blk_mq_free_queue(struct request_queue *q)
++/* tags can _not_ be used after returning from blk_mq_exit_queue */
++void blk_mq_exit_queue(struct request_queue *q)
+ {
+ 	struct blk_mq_tag_set	*set = q->tag_set;
+ 
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 9497b47e2526c..5ad9251627f80 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -31,7 +31,7 @@ struct blk_mq_ctx {
+ } ____cacheline_aligned_in_smp;
+ 
+ void blk_mq_freeze_queue(struct request_queue *q);
+-void blk_mq_free_queue(struct request_queue *q);
++void blk_mq_exit_queue(struct request_queue *q);
+ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr);
+ void blk_mq_wake_waiters(struct request_queue *q);
+ bool blk_mq_dispatch_rq_list(struct request_queue *, struct list_head *, bool);
 -- 
 2.20.1
 
