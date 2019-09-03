@@ -2,140 +2,116 @@ Return-Path: <SRS0=3hcu=W6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E6AC3A5A2
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 21:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9CD3C3A5A2
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 21:54:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A2172087E
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 21:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4C1122CF7
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Sep 2019 21:54:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c/Jihop+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726441AbfICVEK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Sep 2019 17:04:10 -0400
-Received: from wind.enjellic.com ([76.10.64.91]:41810 "EHLO wind.enjellic.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726219AbfICVEK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 3 Sep 2019 17:04:10 -0400
-X-Greylist: delayed 1506 seconds by postgrey-1.27 at vger.kernel.org; Tue, 03 Sep 2019 17:04:10 EDT
-Received: from wind.enjellic.com (localhost [127.0.0.1])
-        by wind.enjellic.com (8.15.2/8.15.2) with ESMTP id x83Kcqax027110;
-        Tue, 3 Sep 2019 15:38:52 -0500
-Received: (from greg@localhost)
-        by wind.enjellic.com (8.15.2/8.15.2/Submit) id x83Kcpiu027109;
-        Tue, 3 Sep 2019 15:38:51 -0500
-Date:   Tue, 3 Sep 2019 15:38:51 -0500
-From:   "Dr. G.W. Wettstein" <greg@wind.enjellic.com>
-Message-Id: <201909032038.x83Kcpiu027109@wind.enjellic.com>
-Reply-To: greg@enjellic.com
-X-Mailer: Mail User's Shell (7.2.6-ESD1.0 03/31/2012)
-To:     hmadhani@marvell.com, qtran@marvell.com,
-        qla2xxx-upstream@qlogic.com
-Subject: SRR response handling.
-Cc:     linux-scsi@vger.kernel.org
-X-Greylist: Sender passed SPF test, not delayed by milter-greylist-4.2.3 (wind.enjellic.com [127.0.0.1]); Tue, 03 Sep 2019 15:38:52 -0500 (CDT)
+        id S1726079AbfICVyx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Sep 2019 17:54:53 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:44830 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725939AbfICVyx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Sep 2019 17:54:53 -0400
+Received: by mail-pf1-f194.google.com with SMTP id q21so6713466pfn.11
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Sep 2019 14:54:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=FwFUaBbytXYWYxey+xP5r7CeZpfOBkFBHTMHIejSy14=;
+        b=c/Jihop+1an98mqOzTfXjPwBtd5snNhQJJoUp8Vi1MVCvg7LayCZ8gQXhJOangWFKR
+         7BINPFotCnB2WCbIigDNge4QtIjxaKKS213T1sWsZ/yMhPugGuQC3+Ylg+oJZUWxRMBx
+         Lk+wJezUoHYlr3mAKyqKJIqQl+ZNeJbJdpVwwb+U5bm8rnXu3/y2w2Itr71F78VSObFg
+         lECv3mnxg9wKoK0HNimMEma/bs9pJk+vn4tDfhVRt0CHaPhrgDnlmBPtK4oIA5M9yEiu
+         tfjOHwdjHggavNB0+POS+bf4rATihhKP/ScEf2/D6e+mt2QUD7NMQrLL5RU8hk1fQAfS
+         83xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=FwFUaBbytXYWYxey+xP5r7CeZpfOBkFBHTMHIejSy14=;
+        b=Vl8IMFNbRyXF5ZB6NIUVUs2aik8B/IHODW4kHwGcZ+zn8cd5gRhsA081Z2JbOhBZax
+         IbF1CTA1DW9NYNCyjztBO275XtfolA2C9zSjKSGAgcivlgDz3nQ3XGrlFfBK//Ab7pZB
+         o4Dy3SgdzpLcJNXVV/sXXFOz1m53lx6/RMnzB0rkvzDl2/tus98ac29lGrZr9ZPdpVkv
+         zOVRXHQVHB9DGuBOkExEUSfZ7NXyCg+2ckOSe7eCdTAwSKsKUj+AjLGuEvgOBia5wLqs
+         ZMgnqEs5XTo5Nkpi3wuVxKH/x+VeN99Bt8+mvhMfVXBB+5a8vUvR0d3IFv5CKiCDxxyB
+         wrVA==
+X-Gm-Message-State: APjAAAUKpf+e1CD7nTdbydZVN882Qq5US+QDQC6gFHEYeUqHsH9OhanA
+        /N2o+Y5iZwbINbu43KX0SDc4nrnr
+X-Google-Smtp-Source: APXvYqxrbknR64XAJ7x+lIzduWErqzRrHBAXp1+P/hKwiJoKpphO70TnJFPRXWvPECElKuBbB4EdBw==
+X-Received: by 2002:a65:5289:: with SMTP id y9mr32252520pgp.445.1567547692222;
+        Tue, 03 Sep 2019 14:54:52 -0700 (PDT)
+Received: from pallmd1.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id u9sm490162pjb.4.2019.09.03.14.54.51
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 03 Sep 2019 14:54:51 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH] lpfc: Fix reset recovery paths that are not recovering
+Date:   Tue,  3 Sep 2019 14:54:41 -0700
+Message-Id: <20190903215441.10490-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Good afternoon, I hope the week is going well for everyone.
+A recent patch unconditionally marks the hba as in error as part
+of resetting the adapter. The driver flow that called the adapter
+reset was a recovery path, which expects the adapter to not be in
+an error state in order to finish the recovery.  Given the new error
+state being set, the recovery fails and the adapter is left in limbo.
 
-Himanshu/Quinn, it has been a while since we spoke but I think I have
-the right group targeted for this.  I see that you have evolved from
-Qlogic to Cavium to Marvell e-mail addresses, which must indicate the
-transition of who is making the hardware... :-)
+Revise the adapter reset routine so that it will only mark the
+adapter in error if it was unable to reset the adapter.
 
-I've been away focused on other issues but I noted with interest that
-you are now distributing the Qlogic-Target/SCST interface driver that
-we developed with your 32GBPS hardware capable driver.  I'm pleased to
-see that it must have utility with respect to providing support for
-SCST on mainstream Linux.
+Fixes: 8c24a4f643ed ("scsi: lpfc: Fix crash due to port reset racing vs adapter error handling")
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
-I wanted to bounce an issue off your collective judgement since you
-may be the only people that know the answer to this and we may be the
-only ones that can demonstrate and/or test the issue.
+---
+Indicated commit that is fixed is only in 5.4/scsi-queue
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-In the following commit:
-
-commit 2c39b5c ("qla2xxx: Remove SRR code")
-
-Himanshu had pulled the SRR code handling out of the target driver.
-The changelog indicates that the code was removed since no one
-appeared to be using it but it could be re-added if there was a need
-for it.
-
-While SRR is ostensibly in support of tape, a block target initiator
-on an FCOE fabric will issue SRR's in response to frame drops on the
-underlying ethernet fabric.  In the following commit:
-
-commit 6f58c78 ("qla2xxx: Fix kernel panic on selective retransmission request")
-
-We fixed a bug that caused the Qlogic target driver to immediately
-panic the kernel if an SRR was received and debugging was enabled.  We
-found this bug secondary to debugging an issue with the fact that the
-Clipper ASIC's on Cisco Nexus 7K switches are not configured by
-default to support lossless fibre-channel frame transport.
-
-We have been using a version of the target driver from before when the
-SRR code was removed that has been performing flawlessly which is why
-we haven't spent time monkeying with upgrades.
-
-Secondary to a recent firmware upgrade on the Nexus switches that we
-conducted, we ended up in a situation where one of the ethernet
-interfaces in a port-channel began dropping frames at high rates.
-This caused one of our target servers, running a 4GBPS 2462 HBA in
-target mode, to immediately panic on what appears to be the BUG_ON
-assertion at the start of the scst_tgt_cmd_done() function.
-
-We were going to run this down when we noticed that you had officially
-married the Qlogic target driver with the SCST interface driver.  So
-we rolled a 4.9.190 kernel with the driver out of the SCST trunk to
-see how it handled all of this since we would prefer to be on
-something that you guys are directly and actively maintaining.
-
-We tested the resultant kernel and target driver and it appears to be
-functioning fine.  After thinking about things for a bit we elected to
-not expose the target server to the initiators on the other side of
-the port-channel which has the interface with the high frame discard
-rate.  The rationale for this is that we are unsure of what the
-behavior is going to be when a block initiator issues an SRR against a
-target server that has had the SRR handling code removed.
-
-We currently have three target servers that are handling thousands of
-SRR's from these initiators on a day in and day out basis with no ill
-effects, with the old driver that has SRR handling support.  One of
-the local patches we carry has debug code that prints out which
-initiator has issued an SRR.  So we know that the SRR handling code is
-being invoked and appears to be coping with the situation just fine,
-which is what is giving us pause with respect to exposing the new
-target server to those initiators.
-
-If the initiators throw an error that is well and good but we are
-obviously concerned about possible silent failures and/or corruption.
-
-Since all of this is so esoteric and uncommon we wanted to bounce this
-off the experts to get your sense on what we are dealing with.
-Obviously if we can help debug and/or improve the driver or provide a
-rationale for folding the SRR code back into the driver we would be
-more then happy to contribute and test.
-
-Let me know your thoughts and we will go from there.
-
-Have a good day.
-
-Dr. Greg
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686            EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"If you plugged up your nose and mouth right before you sneezed, would
- the sneeze go out your ears or would your head explode?  Either way I'm
- afraid to try."
-                                -- Nick Kean
-
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index bb5705267c39..75bb75800642 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4619,8 +4619,10 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
+ 	hba_aer_enabled = phba->hba_flag & HBA_AER_ENABLED;
+ 
+ 	rc = lpfc_sli4_brdreset(phba);
+-	if (rc)
+-		goto error;
++	if (rc) {
++		phba->link_state = LPFC_HBA_ERROR;
++		goto hba_down_queue;
++	}
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	phba->pport->stopped = 0;
+@@ -4635,8 +4637,7 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
+ 	if (hba_aer_enabled)
+ 		pci_disable_pcie_error_reporting(phba->pcidev);
+ 
+-error:
+-	phba->link_state = LPFC_HBA_ERROR;
++hba_down_queue:
+ 	lpfc_hba_down_post(phba);
+ 	lpfc_sli4_queue_destroy(phba);
+ 
 -- 
+2.13.7
+
