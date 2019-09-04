@@ -2,167 +2,111 @@ Return-Path: <SRS0=LwoI=W7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A71C3A5AA
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F8FC3A5A7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:51:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 998842339D
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:43:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="l/Lo/jwO"
+	by mail.kernel.org (Postfix) with ESMTP id 21CE72339D
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729253AbfIDInC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Sep 2019 04:43:02 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39238 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728448AbfIDInB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Sep 2019 04:43:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1567586581; x=1599122581;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=fh2X6sgqVyA/YgEaWwJn5yd67V2WgvSpchuXNuvnbp4=;
-  b=l/Lo/jwOWc/bmQprdXHUO4rYmeEhpaex930AZiykMZduq3oDKfJp5Soz
-   nWOSh9Guq+UyP3rEVzwlSTUnTuGeEaA/OLGQcEjQ3jS3SQ3j2GA82KTER
-   UICp0yX+X7+O71/r4EUnr662LsUu55FD+vvFjj4Yf8pBJgaCPvz4TO5Ch
-   LMyr1OwrDZiORxAhhaYhkQ3Wrt8FFXZZ6Kuh+O5lS8fSqk7rY1V1t/kcg
-   AU/P5baI/g6Eg/b0pVyVGRKopDdvGLARrRDWqk75MAa5XKcP4rJt+u68y
-   ME8ksp5ZXpom5RNImIr/yzYUL4RlgykVoW3mPfoNkG6t6umaHmCBBhsHA
-   A==;
-IronPort-SDR: q7rl7ihhzsAm9pnM3iKXUdaDMTieZvohZMRD6tKesqHxRPVkfDSAXy9+WNWyccp9MyaIOenGNK
- rTJ09TaGgxdOUUDFR5FXSyY8VqccVuWHduBCAY0HlInhAtASBtzd/1uKiYDUpsOhFGQBrgc5pd
- BNb0oXANl5IMaymaIreVWr5jwNgJY+6JlNmsv/ZFIt/eK7c/2pPqAZIKxyC7gkhHrn17zWntKz
- pOb39zCdNfc+HxJC8Bi/kc3AYkqLqTddSlDc0nHRZ1bcx2/JPeg7xahAs8bJiBpgto2rmQI4J1
- rw4=
-X-IronPort-AV: E=Sophos;i="5.64,465,1559491200"; 
-   d="scan'208";a="117374685"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Sep 2019 16:42:54 +0800
-IronPort-SDR: 3DAFxzdsO3kNmYow1Dxy+bCLVK4L2MQtafUsBJtYBes1ihiXrbIacFzGU6++cNC/IrsMBqAiHB
- R4MgJZzLbUAvd8D3+RTt/0gKvWmU/imIBgO1Qh+Ujb50O2iZe/DpFjkqTNeEKGEr1e+AU8QRcL
- diqUgimM4OIDeVuOffmqzRac4U3EhTtt9u1ctc1oI233NzW2Y5B6NL4kN4uzdFnoEC4vSJ69LB
- 7Grk2C9jFyhQryfxSK5l+gyZU/6WV2PCTXEuIVMlecxgWYu0TmSZCLPKNeBsnE+gIQcZ3XoQdp
- xpSPV4T7Yzsy/LSMfgCgQyFv
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Sep 2019 01:39:52 -0700
-IronPort-SDR: blnx04rCNK6PSIJNFSPMdCGTO2BygABGR9ZMqg7LFcOSekPqR7JdvT0W0iNCbXOWoZ3hkO9pbw
- NJbKXx6AJ5OGRO8jAebtR4J3PMnvWU2yYd7WEI0XyG/ClP858COeqnuq3VKv0pdwztbYB5olg/
- 2BBTt5KkEmSbeET/8a7/rdIAqm5Y1cxXOnC//FvHjLJf6mSE0+oNWNeFbJQ+KxG7+u0ulAUzkY
- pv9B13F62+U+YyiB+73K0fBZG84b3COPybZ+vpGn2CUAPm0nN7m0qbtuYnFBZUfAGGMmG08UZH
- m+c=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 04 Sep 2019 01:42:53 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        id S1727156AbfIDIvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Sep 2019 04:51:49 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58088 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725938AbfIDIvt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Sep 2019 04:51:49 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 55510B624;
+        Wed,  4 Sep 2019 08:51:47 +0000 (UTC)
+Subject: Re: [PATCH v3 4/7] block: Improve default elevator selection
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 5/7] block: Delay default elevator initialization
-Date:   Wed,  4 Sep 2019 17:42:45 +0900
-Message-Id: <20190904084247.23338-6-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190904084247.23338-1-damien.lemoal@wdc.com>
 References: <20190904084247.23338-1-damien.lemoal@wdc.com>
+ <20190904084247.23338-5-damien.lemoal@wdc.com>
+From:   Johannes Thumshirn <jthumshirn@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=jthumshirn@suse.de; prefer-encrypt=mutual; keydata=
+ xsFNBFTTwPEBEADOadCyru0ZmVLaBn620Lq6WhXUlVhtvZF5r1JrbYaBROp8ZpiaOc9YpkN3
+ rXTgBx+UoDGtnz9DZnIa9fwxkcby63igMPFJEYpwt9adN6bA1DiKKBqbaV5ZbDXR1tRrSvCl
+ 2V4IgvgVuO0ZJEt7gakOQlqjQaOvIzDnMIi/abKLSSzYAThsOUf6qBEn2G46r886Mk8MwkJN
+ hilcQ7F5UsKfcVVGrTBoim6j69Ve6EztSXOXjFgsoBw4pEhWuBQCkDWPzxkkQof1WfkLAVJ2
+ X9McVokrRXeuu3mmB+ltamYcZ/DtvBRy8K6ViAgGyNRWmLTNWdJj19Qgw9Ef+Q9O5rwfbPZy
+ SHS2PVE9dEaciS+EJkFQ3/TBRMP1bGeNbZUgrMwWOvt37yguvrCOglbHW+a8/G+L7vz0hasm
+ OpvD9+kyTOHjqkknVJL69BOJeCIVUtSjT9EXaAOkqw3EyNJzzhdaMXcOPwvTXNkd8rQZIHft
+ SPg47zMp2SJtVdYrA6YgLv7OMMhXhNkUsvhU0HZWUhcXZnj+F9NmDnuccarez9FmLijRUNgL
+ 6iU+oypB/jaBkO6XLLwo2tf7CYmBYMmvXpygyL8/wt+SIciNiM34Yc+WIx4xv5nDVzG1n09b
+ +iXDTYoWH82Dq1xBSVm0gxlNQRUGMmsX1dCbCS2wmWbEJJDEeQARAQABzSdKb2hhbm5lcyBU
+ aHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT7CwYAEEwEIACoCGwMFCwkIBwIGFQgJCgsC
+ BBYCAwECHgECF4AFCQo9ta8FAlohZmoCGQEACgkQA5OWnS12CFATLQ//ajhNDVJLK9bjjiOH
+ 53B0+hCrRBj5jQiT8I60+4w+hssvRHWkgsujF+V51jcmX3NOXeSyLC1Gk43A9vCz5gXnqyqG
+ tOlYm26bihzG02eAoWr/glHBQyy7RYcd97SuRSv77WzuXT3mCnM15TKiqXYNzRCK7u5nx4eu
+ szAU+AoXAC/y1gtuDMvANBEuHWE4LNQLkTwJshU1vwoNcTSl+JuQWe89GB8eeeMnHuY92T6A
+ ActzHN14R1SRD/51N9sebAxGVZntXzSVKyMID6eGdNegWrz4q55H56ZrOMQ6IIaa7KSz3QSj
+ 3E8VIY4FawfjCSOuA2joemnXH1a1cJtuqbDPZrO2TUZlNGrO2TRi9e2nIzouShc5EdwmL6qt
+ WG5nbGajkm1wCNb6t4v9ueYMPkHsr6xJorFZHlu7PKqB6YY3hRC8dMcCDSLkOPWf+iZrqtpE
+ odFBlnYNfmAXp+1ynhUvaeH6eSOqCN3jvQbITUo8mMQsdVgVeJwRdeAOFhP7fsxNugii721U
+ acNVDPpEz4QyxfZtfu9QGI405j9MXF/CPrHlNLD5ZM5k9NxnmIdCM9i1ii4nmWvmz9JdVJ+8
+ 6LkxauROr2apgTXxMnJ3Desp+IRWaFvTVhbwfxmwC5F3Kr0ouhr5Kt8jkQeD/vuqYuxOAyDI
+ egjo3Y7OGqct+5nybmbOwU0EVNPA8QEQAN/79cFVNpC+8rmudnXGbob9sk0J99qnwM2tw33v
+ uvQjEGAJTVCOHrewDbHmqZ5V1X1LI9cMlLUNMR3W0+L04+MH8s/JxshFST+hOaijGc81AN2P
+ NrAQD7IKpA78Q2F3I6gpbMzyMy0DxmoKF73IAMQIknrhzn37DgM+x4jQgkvhFMqnnZ/xIQ9d
+ QEBKDtfxH78QPosDqCzsN9HRArC75TiKTKOxC12ZRNFZfEPnmqJ260oImtmoD/L8QiBsdA4m
+ Mdkmo6Pq6iAhbGQ5phmhUVuj+7O8rTpGRXySMLZ44BimM8yHWTaiLWxCehHgfUWRNLwFbrd+
+ nYJYHoqyFGueZFBNxY4bS2rIEDg+nSKiAwJv3DUJDDd/QJpikB5HIjg/5kcSm7laqfbr1pmC
+ ZbR2JCTp4FTABVLxt7pJP40SuLx5He63aA/VyxoInLcZPBNvVfq/3v3fkoILphi77ZfTvKrl
+ RkDdH6PkFOFpnrctdTWbIFAYfU96VvySFAOOg5fsCeLv9/zD4dQEGsvva/qKZXkH/l2LeVp3
+ xEXoFsUZtajPZgyRBxer0nVWRyeVwUQnLG8kjEOcZzX27GUpughi8w42p4oMD+96tr3BKTAr
+ guRHJnU1M1xwRPbw5UsNXEOgYsFc8cdto0X7hQ2Ugc07CRSDvyH50IKXf2++znOTXFDhABEB
+ AAHCwV8EGAECAAkFAlTTwPECGwwACgkQA5OWnS12CFAdRg//ZGV0voLRjjgX9ODzaz6LP+IP
+ /ebGLXe3I+QXz8DaTkG45evOu6B2J53IM8t1xEug0OnfnTo1z0AFg5vU53L24LAdpi12CarV
+ Da53WvHzG4BzCVGOGrAvJnMvUXf0/aEm0Sen2Mvf5kvOwsr9UTHJ8N/ucEKSXAXf+KZLYJbL
+ NL4LbOFP+ywxtjV+SgLpDgRotM43yCRbONUXEML64SJ2ST+uNzvilhEQT/mlDP7cY259QDk7
+ 1K6B+/ACE3Dn7X0/kp8a+ZoNjUJZkQQY4JyMOkITD6+CJ1YsxhX+/few9k5uVrwK/Cw+Vmae
+ A85gYfFn+OlLFO/6RGjMAKOsdtPFMltNOZoT+YjgAcW6Q9qGgtVYKcVOxusL8C3v8PAYf7Ul
+ Su7c+/Ayr3YV9Sp8PH4X4jK/zk3+DDY1/ASE94c95DW1lpOcyx3n1TwQbwp6TzPMRe1IkkYe
+ 0lYj9ZgKaZ8hEmzuhg6FKXk9Dah+H73LdV57M4OFN8Xwb7v+oEG23vdsb2KBVG5K6Tv7Hb2N
+ sfHWRdU3quYIistrNWWeGmfTlhVLgDhEmAsKZFH05QsAv3pQv7dH/JD+Tbn6sSnNAVrATff1
+ AD3dXmt+5d3qYuUxam1UFGufGzV7jqG5QNStp0yvLP0xroB8y0CnnX2FY6bAVCU+CqKu+n1B
+ LGlgwABHRtLCwe0EGAEIACAWIQTsOJyrwsTyXYYA0NADk5adLXYIUAUCWsTXAwIbAgCBCRAD
+ k5adLXYIUHYgBBkWCAAdFiEEx1U9vxg1xAeUwus20p7yIq+KHe4FAlrE1wMACgkQ0p7yIq+K
+ He6RfAEA+frSSvrHiuatNqvgYAJcraYhp1GQJrWSWMmi2eFcGskBAJyLp47etEn3xhJBLVVh
+ 2y2K4Nobb6ZgxA4Svfnkf7AAdicQALiaOKDwKD3tgf90ypEoummYzAxv8MxyPXZ7ylRnkheA
+ eQDxuoc/YwMA4qyxhzf6K4tD/aT12XJd95gk+YAL6flGkJD8rA3jsEucPmo5eko4Ms2rOEdG
+ jKsZetkdPKGBd2qVxxyZgzUkgRXduvyux04b9erEpJmoIXs/lE0IRbL9A9rJ6ASjFPGpXYrb
+ 73pb6Dtkdpvv+hoe4cKeae4dS0AnDc7LWSW3Ub0n61uk/rqpTmKuesmTZeB2GHzLN5GAXfNj
+ ELHAeSVfFLPRFrjF5jjKJkpiyq98+oUnvTtDIPMTg05wSN2JtwKnoQ0TAIHWhiF6coGeEfY8
+ ikdVLSZDEjW54Td5aIXWCRTBWa6Zqz/G6oESF+Lchu/lDv5+nuN04KZRAwCpXLS++/givJWo
+ M9FMnQSvt4N95dVQE3kDsasl960ct8OzxaxuevW0OV/jQEd9gH50RaFif412DTrsuaPsBz6O
+ l2t2TyTuHm7wVUY2J3gJYgG723/PUGW4LaoqNrYQUr/rqo6NXw6c+EglRpm1BdpkwPwAng63
+ W5VOQMdnozD2RsDM5GfA4aEFi5m00tE+8XPICCtkduyWw+Z+zIqYk2v+zraPLs9Gs0X2C7X0
+ yvqY9voUoJjG6skkOToGZbqtMX9K4GOv9JAxVs075QRXL3brHtHONDt6udYobzz+
+Message-ID: <f3bde4fb-e5a8-09e1-bbfd-ef7c3919d364@suse.de>
+Date:   Wed, 4 Sep 2019 10:51:46 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20190904084247.23338-5-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When elevator_init_mq() is called from blk_mq_init_allocated_queue(),
-the only information known about the device is the number of hardware
-queues as the block device scan by the device driver is not completed
-yet. The device type and the device required features are not set yet,
-preventing to correctly choose the default elevator most suitable for
-the device.
-
-This currently affects all multi-queue zoned block devices which default
-to the "none" elevator instead of the required "mq-deadline" elevator.
-These drives currently include host-managed SMR disks connected to a
-smartpqi HBA and null_blk block devices with zoned mode enabled.
-Upcoming NVMe Zoned Namespace devices will also be affected.
-
-Fix this by moving the execution of elevator_init_mq() from
-blk_mq_init_allocated_queue() into __device_add_disk() to allow for the
-device driver to probe the device characteristics and set attributes
-of the device request queue prior to the elevator initialization.
-
-Also to make sure that the elevator initialization is never done while
-requests are in-flight (there should be none when the device driver
-calls device_add_disk()), freeze and quiesce the device request queue
-before executing blk_mq_init_sched().
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- block/blk-mq.c   | 2 --
- block/elevator.c | 7 +++++++
- block/genhd.c    | 8 ++++++++
- 3 files changed, 15 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index ee4caf0c0807..a37503984206 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2902,8 +2902,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- 	blk_mq_add_queue_tag_set(set, q);
- 	blk_mq_map_swqueue(q);
- 
--	elevator_init_mq(q);
--
- 	return q;
- 
- err_hctxs:
-diff --git a/block/elevator.c b/block/elevator.c
-index 520d6b224b74..096a670d22d7 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -712,7 +712,14 @@ void elevator_init_mq(struct request_queue *q)
- 	if (!e)
- 		return;
- 
-+	blk_mq_freeze_queue(q);
-+	blk_mq_quiesce_queue(q);
-+
- 	err = blk_mq_init_sched(q, e);
-+
-+	blk_mq_unquiesce_queue(q);
-+	blk_mq_unfreeze_queue(q);
-+
- 	if (err) {
- 		pr_warn("\"%s\" elevator initialization failed, "
- 			"falling back to \"none\"\n", e->elevator_name);
-diff --git a/block/genhd.c b/block/genhd.c
-index 54f1f0d381f4..7380dd7b2257 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -695,6 +695,13 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
- 	dev_t devt;
- 	int retval;
- 
-+	/*
-+	 * The disk queue should now be all set with enough information about
-+	 * the device for the elevator code to pick an adequate default
-+	 * elevator.
-+	 */
-+	elevator_init_mq(disk->queue);
-+
- 	/* minors == 0 indicates to use ext devt from part0 and should
- 	 * be accompanied with EXT_DEVT flag.  Make sure all
- 	 * parameters make sense.
-@@ -734,6 +741,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
- 				    exact_match, exact_lock, disk);
- 	}
- 	register_disk(parent, disk, groups);
-+
- 	if (register_queue)
- 		blk_register_queue(disk);
- 
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 -- 
-2.21.0
-
+Johannes Thumshirn                            SUSE Labs Filesystems
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE Software Solutions Germany GmbH
+Maxfeldstr. 5
+90409 Nürnberg
+Germany
+(HRB 247165, AG München)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
