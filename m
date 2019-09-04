@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E09C3A5A7
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 606F0C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:56:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29C0922CF7
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:52:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4273A22CF7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 08:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729472AbfIDIw0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Sep 2019 04:52:26 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58316 "EHLO mx1.suse.de"
+        id S1728769AbfIDI4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Sep 2019 04:56:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60984 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729459AbfIDIwZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Sep 2019 04:52:25 -0400
+        id S1727873AbfIDI4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Sep 2019 04:56:33 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 029DFB624;
-        Wed,  4 Sep 2019 08:52:24 +0000 (UTC)
-Subject: Re: [PATCH v3 7/7] sd: Set ELEVATOR_F_ZBD_SEQ_WRITE for ZBC disks
+        by mx1.suse.de (Postfix) with ESMTP id 18ABDABF4;
+        Wed,  4 Sep 2019 08:56:32 +0000 (UTC)
+Subject: Re: [PATCH v3 5/7] block: Delay default elevator initialization
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20190904084247.23338-1-damien.lemoal@wdc.com>
- <20190904084247.23338-8-damien.lemoal@wdc.com>
+ <20190904084247.23338-6-damien.lemoal@wdc.com>
 From:   Johannes Thumshirn <jthumshirn@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=jthumshirn@suse.de; prefer-encrypt=mutual; keydata=
@@ -86,12 +86,12 @@ Autocrypt: addr=jthumshirn@suse.de; prefer-encrypt=mutual; keydata=
  l2t2TyTuHm7wVUY2J3gJYgG723/PUGW4LaoqNrYQUr/rqo6NXw6c+EglRpm1BdpkwPwAng63
  W5VOQMdnozD2RsDM5GfA4aEFi5m00tE+8XPICCtkduyWw+Z+zIqYk2v+zraPLs9Gs0X2C7X0
  yvqY9voUoJjG6skkOToGZbqtMX9K4GOv9JAxVs075QRXL3brHtHONDt6udYobzz+
-Message-ID: <265a4a6a-d8bc-0f7a-bf9f-85fb048aa2e5@suse.de>
-Date:   Wed, 4 Sep 2019 10:52:23 +0200
+Message-ID: <22bc754b-541d-3c72-6bb0-68cd841faee5@suse.de>
+Date:   Wed, 4 Sep 2019 10:56:31 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190904084247.23338-8-damien.lemoal@wdc.com>
+In-Reply-To: <20190904084247.23338-6-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,6 +100,16 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 04/09/2019 10:42, Damien Le Moal wrote:
+> @@ -734,6 +741,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+>  				    exact_match, exact_lock, disk);
+>  	}
+>  	register_disk(parent, disk, groups);
+> +
+>  	if (register_queue)
+>  		blk_register_queue(disk);
+
+That hunk looks unrelated, but anyways:
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
