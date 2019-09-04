@@ -2,103 +2,114 @@ Return-Path: <SRS0=LwoI=W7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28FEDC3A5A8
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 17:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4DC4C3A5A8
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 17:23:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 083BB20882
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 17:07:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B82EE2087E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 17:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731911AbfIDRHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Sep 2019 13:07:51 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:43520 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731625AbfIDRHv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Sep 2019 13:07:51 -0400
-Received: by mail-pf1-f194.google.com with SMTP id d15so4124517pfo.10;
-        Wed, 04 Sep 2019 10:07:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=doRviDRcuI8ukbxh960Ewx7U5Vu3KSMcpLgAPd33oB4=;
-        b=T2oaSe2aH1ursHjCkmEAsLjRP2HY1OhNGPTQLwpXXRogemv0owBTT59/HkeipicoDC
-         CcWL5Tq7bLRq/RIxj/nkusHBJl3HJsDGgdiIJGHQncqA7YWSwMgbkMQ88hagbqMAxJ5D
-         4gCghOIkdwfmw56wGFpNiV6iBQdvF2KQdaujkujNJfo4zQAoIjv+8s/Un7Bi7p3BqSwS
-         /JYUA4KshkPrKtquwHSb6AB8H5jR8UWc0WFZhlSv7PjPFMkjVEktKE1AVObqCFAyp4Ju
-         S0w4VUMvzSNQ1mbZ1B+GJAzRz5ILwQmUBNZ7m0lhx7892wZmye9XjataeW0q4CT2yN29
-         vdHA==
-X-Gm-Message-State: APjAAAXZPtoqPmELC+0qLDA4hGqN5qvtVSmgMNbnu3uL5VS/EpemZFGW
-        0xOW7v2KoXwQJ5gIjLpzCMg=
-X-Google-Smtp-Source: APXvYqxTGX0yWsgvrQzLKsJf9CtThotqfcBWqegNulPltQ1d0FC1QU27SwfyIzRS1iCIIODIqAnaUA==
-X-Received: by 2002:aa7:8a83:: with SMTP id a3mr47156125pfc.115.1567616870289;
-        Wed, 04 Sep 2019 10:07:50 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id 2sm23516255pfa.43.2019.09.04.10.07.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Sep 2019 10:07:49 -0700 (PDT)
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-To:     Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.com>,
-        Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Keith Busch <keith.busch@intel.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>
-References: <20190827225827.GA5263@ming.t460p>
- <alpine.DEB.2.21.1908280104330.1939@nanos.tec.linutronix.de>
- <20190828110633.GC15524@ming.t460p>
- <alpine.DEB.2.21.1908281316230.1869@nanos.tec.linutronix.de>
- <20190828135054.GA23861@ming.t460p>
- <alpine.DEB.2.21.1908281605190.23149@nanos.tec.linutronix.de>
- <20190903033001.GB23861@ming.t460p>
- <299fb6b5-d414-2e71-1dd2-9d6e34ee1c79@linaro.org>
- <20190903063125.GA21022@ming.t460p>
- <6b88719c-782a-4a63-db9f-bf62734a7874@linaro.org>
- <20190903072848.GA22170@ming.t460p>
- <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
-Date:   Wed, 4 Sep 2019 10:07:48 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1731829AbfIDRXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Sep 2019 13:23:41 -0400
+Received: from mga04.intel.com ([192.55.52.120]:18319 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731447AbfIDRXk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Sep 2019 13:23:40 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Sep 2019 10:23:40 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,467,1559545200"; 
+   d="scan'208";a="383550359"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by fmsmga006.fm.intel.com with ESMTP; 04 Sep 2019 10:23:38 -0700
+Received: from andy by smile with local (Exim 4.92.1)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1i5Z0L-0004UW-2P; Wed, 04 Sep 2019 20:23:37 +0300
+Date:   Wed, 4 Sep 2019 20:23:37 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Sakari Ailus <sakari.ailus@linux.intel.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>,
+        Petr Mladek <pmladek@suse.com>, linux-kernel@vger.kernel.org,
+        rafael@kernel.org,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Subject: Re: [PATCH 1/1] scsi: lpfc: Convert existing %pf users to %ps
+Message-ID: <20190904172337.GW2680@smile.fi.intel.com>
+References: <20190904160423.3865-1-sakari.ailus@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190904160423.3865-1-sakari.ailus@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/3/19 12:50 AM, Daniel Lezcano wrote:
-> On 03/09/2019 09:28, Ming Lei wrote:
->> On Tue, Sep 03, 2019 at 08:40:35AM +0200, Daniel Lezcano wrote:
->>> It is a scheduler problem then ?
->>
->> Scheduler can do nothing if the CPU is taken completely by handling
->> interrupt & softirq, so seems not a scheduler problem, IMO.
+On Wed, Sep 04, 2019 at 07:04:23PM +0300, Sakari Ailus wrote:
+> Convert the remaining %pf users to %ps to prepare for the removal of the
+> old %pf conversion specifier support.
+
+FWIW,
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+> Fixes: 323506644972 ("scsi: lpfc: Migrate to %px and %pf in kernel print calls")
+> Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_hbadisc.c | 4 ++--
+>  drivers/scsi/lpfc/lpfc_sli.c     | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> Why? If there is a irq pressure on one CPU reducing its capacity, the
-> scheduler will balance the tasks on another CPU, no?
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> index e7463d561f305..749286acdc173 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -6051,7 +6051,7 @@ __lpfc_find_node(struct lpfc_vport *vport, node_filter filter, void *param)
+>  	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+>  		if (filter(ndlp, param)) {
+>  			lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
+> -					 "3185 FIND node filter %pf DID "
+> +					 "3185 FIND node filter %ps DID "
+>  					 "ndlp x%px did x%x flg x%x st x%x "
+>  					 "xri x%x type x%x rpi x%x\n",
+>  					 filter, ndlp, ndlp->nlp_DID,
+> @@ -6062,7 +6062,7 @@ __lpfc_find_node(struct lpfc_vport *vport, node_filter filter, void *param)
+>  		}
+>  	}
+>  	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
+> -			 "3186 FIND node filter %pf NOT FOUND.\n", filter);
+> +			 "3186 FIND node filter %ps NOT FOUND.\n", filter);
+>  	return NULL;
+>  }
+>  
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index bb5705267c395..2ff0879a95126 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -2712,7 +2712,7 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
+>  
+>  		/* Mailbox cmd <cmd> Cmpl <cmpl> */
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_MBOX | LOG_SLI,
+> -				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl %pf "
+> +				"(%d):0307 Mailbox cmd x%x (x%x/x%x) Cmpl %ps "
+>  				"Data: x%x x%x x%x x%x x%x x%x x%x x%x x%x "
+>  				"x%x x%x x%x\n",
+>  				pmb->vport ? pmb->vport->vpi : 0,
+> -- 
+> 2.20.1
+> 
 
-Only if CONFIG_IRQ_TIME_ACCOUNTING has been enabled. However, I don't 
-know any Linux distro that enables that option. That's probably because 
-that option introduces two rdtsc() calls in each interrupt. Given the 
-overhead introduced by this option, I don't think this is the solution 
-Ming is looking for.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-See also irqtime_account_irq() in kernel/sched/cputime.c.
 
-Bart.
