@@ -2,139 +2,104 @@ Return-Path: <SRS0=LwoI=W7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE2AC3A5A8
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 09:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63300C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:09:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A2DA12339D
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 09:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 476C72339E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:09:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727768AbfIDJ3n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Sep 2019 05:29:43 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60470 "EHLO mx1.redhat.com"
+        id S1729803AbfIDMJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Sep 2019 08:09:23 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33982 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725840AbfIDJ3m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Sep 2019 05:29:42 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1729597AbfIDMJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Sep 2019 08:09:22 -0400
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6F9A57FDE9;
-        Wed,  4 Sep 2019 09:29:42 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1323160625;
-        Wed,  4 Sep 2019 09:29:21 +0000 (UTC)
-Date:   Wed, 4 Sep 2019 17:29:17 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Subject: Re: [PATCH v3 5/7] block: Delay default elevator initialization
-Message-ID: <20190904092915.GF7578@ming.t460p>
-References: <20190904084247.23338-1-damien.lemoal@wdc.com>
- <20190904084247.23338-6-damien.lemoal@wdc.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 8BD342CE95A
+        for <linux-scsi@vger.kernel.org>; Wed,  4 Sep 2019 12:09:22 +0000 (UTC)
+Received: by mail-oi1-f198.google.com with SMTP id k185so2051690oih.1
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Sep 2019 05:09:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EBLnUfaAtvpON2iaBFPpt0UNo0Lp+9e8PyvtjqjIkBo=;
+        b=axv/8WJgBp1Ga72b/5/mO7Dj/ziDisdBZOt3KWEuu7kfM2ALfxsLtV/767ctSS1lnh
+         ixhLnQnq/deOjBxCneLw4dCn1NhZyGbsNSYV0HkZhw4JDg6e4ootoKB2PdlSddLk9MJb
+         LhAvnLm30OEQdEzGhsYUpCC+fVcVySqvSaAAdGuf8hFBNVyvCjg7K3bshyI/7UCHkURY
+         jxaG/bqDkoOpLWBxl30VWU8i+R6U+JwdsueCGvJDbr552gmhcWGpGJ4JgEiICDoOh4y1
+         OVaks/ebib/76SKVHKC9SKabSkGiLfF2oNezxnFJ64uXDDaW5Qe4zq49dyw7lbyLXOnN
+         TLOA==
+X-Gm-Message-State: APjAAAUOvWDlHACaGc6MgMN6SfxxQhRYhDV6/6E8LbUz/86ZGpX7UMW0
+        NkJ9lT6qRC6VtS1BXsJ4RNWpVzIkkF8SEJc0uczspQh7MvJNbbyURHZEqsMpM+ui13LaDLzsrGs
+        5rUEB+ijZyj9w54m9ubK5sVKtlcwcCw/7MOh7MQ==
+X-Received: by 2002:a9d:404a:: with SMTP id o10mr3738190oti.94.1567598961943;
+        Wed, 04 Sep 2019 05:09:21 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwWXUEuBf3lisKNAzBv9cywSE5x6C0KQ71edplmE4UCiDJ88Cj9cXKSgpOakBPycQVqSXgSfw8TXdQBoxFdCe0=
+X-Received: by 2002:a9d:404a:: with SMTP id o10mr3738176oti.94.1567598961785;
+ Wed, 04 Sep 2019 05:09:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190904084247.23338-6-damien.lemoal@wdc.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Wed, 04 Sep 2019 09:29:42 +0000 (UTC)
+References: <20190827211340.1095-1-gvaradar@cisco.com>
+In-Reply-To: <20190827211340.1095-1-gvaradar@cisco.com>
+From:   John Pittman <jpittman@redhat.com>
+Date:   Wed, 4 Sep 2019 08:09:11 -0400
+Message-ID: <CA+RJvhxYHR+ey1wz+mRCL+aufdi3+ox4uUYRge_kLh1MFTV4zg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: fnic: fix msix interrupt allocation
+To:     Govindarajulu Varadarajan <gvaradar@cisco.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        jejb@linux.ibm.com, Satish Kharat <satishkh@cisco.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 04, 2019 at 05:42:45PM +0900, Damien Le Moal wrote:
-> When elevator_init_mq() is called from blk_mq_init_allocated_queue(),
-> the only information known about the device is the number of hardware
-> queues as the block device scan by the device driver is not completed
-> yet. The device type and the device required features are not set yet,
-> preventing to correctly choose the default elevator most suitable for
-> the device.
-> 
-> This currently affects all multi-queue zoned block devices which default
-> to the "none" elevator instead of the required "mq-deadline" elevator.
-> These drives currently include host-managed SMR disks connected to a
-> smartpqi HBA and null_blk block devices with zoned mode enabled.
-> Upcoming NVMe Zoned Namespace devices will also be affected.
-> 
-> Fix this by moving the execution of elevator_init_mq() from
-> blk_mq_init_allocated_queue() into __device_add_disk() to allow for the
-> device driver to probe the device characteristics and set attributes
-> of the device request queue prior to the elevator initialization.
-> 
-> Also to make sure that the elevator initialization is never done while
-> requests are in-flight (there should be none when the device driver
-> calls device_add_disk()), freeze and quiesce the device request queue
-> before executing blk_mq_init_sched().
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Hi Martin, would you have a quick look at this one when you get a
+moment?  Bugging you for selfish reasons as I'm trying to get this
+included in the next RHEL release.  Thanks for any info.
+
+On Tue, Aug 27, 2019 at 5:20 PM Govindarajulu Varadarajan
+<gvaradar@cisco.com> wrote:
+>
+> pci_alloc_irq_vectors() returns number of vectors allocated.
+> Fix the check for error condition.
+>
+> Fixes: cca678dfbad49 ("scsi: fnic: switch to pci_alloc_irq_vectors")
+> Acked-by: Satish Kharat <satishkh@cisco.com>
+> Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
 > ---
->  block/blk-mq.c   | 2 --
->  block/elevator.c | 7 +++++++
->  block/genhd.c    | 8 ++++++++
->  3 files changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index ee4caf0c0807..a37503984206 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -2902,8 +2902,6 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
->  	blk_mq_add_queue_tag_set(set, q);
->  	blk_mq_map_swqueue(q);
->  
-> -	elevator_init_mq(q);
-> -
->  	return q;
->  
->  err_hctxs:
-> diff --git a/block/elevator.c b/block/elevator.c
-> index 520d6b224b74..096a670d22d7 100644
-> --- a/block/elevator.c
-> +++ b/block/elevator.c
-> @@ -712,7 +712,14 @@ void elevator_init_mq(struct request_queue *q)
->  	if (!e)
->  		return;
->  
-> +	blk_mq_freeze_queue(q);
-> +	blk_mq_quiesce_queue(q);
-> +
->  	err = blk_mq_init_sched(q, e);
-> +
-> +	blk_mq_unquiesce_queue(q);
-> +	blk_mq_unfreeze_queue(q);
-> +
->  	if (err) {
->  		pr_warn("\"%s\" elevator initialization failed, "
->  			"falling back to \"none\"\n", e->elevator_name);
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 54f1f0d381f4..7380dd7b2257 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -695,6 +695,13 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
->  	dev_t devt;
->  	int retval;
->  
-> +	/*
-> +	 * The disk queue should now be all set with enough information about
-> +	 * the device for the elevator code to pick an adequate default
-> +	 * elevator.
-> +	 */
-> +	elevator_init_mq(disk->queue);
-> +
-
-For dm-rq, add_disk_no_queue_reg() is called before blk_mq_init_allocated_queue().
-
-That means this patch actually sets elevator early for dm-rq, and I
-guess this way may not work as expected since hw/sw queues aren't allocated
-yet.
-
-
-Thanks,
-Ming
+>  drivers/scsi/fnic/fnic_isr.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+> index da4602b63495..2fb2731f50fb 100644
+> --- a/drivers/scsi/fnic/fnic_isr.c
+> +++ b/drivers/scsi/fnic/fnic_isr.c
+> @@ -254,7 +254,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+>                 int vecs = n + m + o + 1;
+>
+>                 if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
+> -                               PCI_IRQ_MSIX) < 0) {
+> +                               PCI_IRQ_MSIX) == vecs) {
+>                         fnic->rq_count = n;
+>                         fnic->raw_wq_count = m;
+>                         fnic->wq_copy_count = o;
+> @@ -280,7 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+>             fnic->wq_copy_count >= 1 &&
+>             fnic->cq_count >= 3 &&
+>             fnic->intr_count >= 1 &&
+> -           pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
+> +           pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) == 1) {
+>                 fnic->rq_count = 1;
+>                 fnic->raw_wq_count = 1;
+>                 fnic->wq_copy_count = 1;
+> --
+> 2.21.0
+>
