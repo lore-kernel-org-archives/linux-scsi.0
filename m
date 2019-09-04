@@ -2,104 +2,102 @@ Return-Path: <SRS0=LwoI=W7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63300C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB545C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 476C72339E
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:09:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B41772339D
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Sep 2019 12:57:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="kdG9noEp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729803AbfIDMJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Sep 2019 08:09:23 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:33982 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729597AbfIDMJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Sep 2019 08:09:22 -0400
-Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8BD342CE95A
-        for <linux-scsi@vger.kernel.org>; Wed,  4 Sep 2019 12:09:22 +0000 (UTC)
-Received: by mail-oi1-f198.google.com with SMTP id k185so2051690oih.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Sep 2019 05:09:22 -0700 (PDT)
+        id S1726528AbfIDM5A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Sep 2019 08:57:00 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:43506 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725965AbfIDM47 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Sep 2019 08:56:59 -0400
+Received: by mail-io1-f68.google.com with SMTP id u185so40119780iod.10
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Sep 2019 05:56:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=75iMfH7EEXhbGGrWPnlP6nj0Xir+moE5RQ+sKgLPRNY=;
+        b=kdG9noEpHEHEBAQRW2XMpdpvLr511vFWRb6qxgP+Q6UPrnAn8JxFi39xw2eqlADNHV
+         Bxt5LCA9y0Tk/5AyDOoKB/A6bnbywBAUrDiG7YgmnvYBLLYsI7EaWRcPNMVfhcRPGU+i
+         gbuAUMojbQpIqkv4GJ6zE9Jehrd0RcywdkHQjKPxDOYq4tMQro8/luMwv1bXuoiLeT5Y
+         kxJJFx8o3ZyG5mBqnaLjErbNe8z+lQBHqLqH8lm4iis9RvmAVZ39mop9GRJyDprJG6Zi
+         Q3HKqoD+nt5FZxALgfs+Gau8qrKWbJy5Ci8xuzMlrz5qDBbWGFeP6uYPdiwSUwTr8hVF
+         j39g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EBLnUfaAtvpON2iaBFPpt0UNo0Lp+9e8PyvtjqjIkBo=;
-        b=axv/8WJgBp1Ga72b/5/mO7Dj/ziDisdBZOt3KWEuu7kfM2ALfxsLtV/767ctSS1lnh
-         ixhLnQnq/deOjBxCneLw4dCn1NhZyGbsNSYV0HkZhw4JDg6e4ootoKB2PdlSddLk9MJb
-         LhAvnLm30OEQdEzGhsYUpCC+fVcVySqvSaAAdGuf8hFBNVyvCjg7K3bshyI/7UCHkURY
-         jxaG/bqDkoOpLWBxl30VWU8i+R6U+JwdsueCGvJDbr552gmhcWGpGJ4JgEiICDoOh4y1
-         OVaks/ebib/76SKVHKC9SKabSkGiLfF2oNezxnFJ64uXDDaW5Qe4zq49dyw7lbyLXOnN
-         TLOA==
-X-Gm-Message-State: APjAAAUOvWDlHACaGc6MgMN6SfxxQhRYhDV6/6E8LbUz/86ZGpX7UMW0
-        NkJ9lT6qRC6VtS1BXsJ4RNWpVzIkkF8SEJc0uczspQh7MvJNbbyURHZEqsMpM+ui13LaDLzsrGs
-        5rUEB+ijZyj9w54m9ubK5sVKtlcwcCw/7MOh7MQ==
-X-Received: by 2002:a9d:404a:: with SMTP id o10mr3738190oti.94.1567598961943;
-        Wed, 04 Sep 2019 05:09:21 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwWXUEuBf3lisKNAzBv9cywSE5x6C0KQ71edplmE4UCiDJ88Cj9cXKSgpOakBPycQVqSXgSfw8TXdQBoxFdCe0=
-X-Received: by 2002:a9d:404a:: with SMTP id o10mr3738176oti.94.1567598961785;
- Wed, 04 Sep 2019 05:09:21 -0700 (PDT)
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=75iMfH7EEXhbGGrWPnlP6nj0Xir+moE5RQ+sKgLPRNY=;
+        b=T4Jm/grBWr9uQDS5t5tJFJwlO9uKdXNf74u9SMD+/chnV6CGMObgeg1Yd0R9QxOvu6
+         sDdfBBOitfBUpJ6UL1mnaXctimZA7uJ3d0r32xBZhbfRV+6Q1HxPo1Be77Iq0U0RQGMj
+         jQPCE/C1rUVBkfft2zHdYr67r0mrb8NeKQykFLSlSruYkHJKoVxtVEjA/04YrxIsG3vF
+         +sOX0qntwP+DODDvNyq/HdoGgJ8Wo6BeRki39m45RnE4EkINLMYMkTcpjMu+7jNoXr52
+         nqFR676nKzZOU7YJqxus7LwXk2JyYITH6amQXwfYfo29ZvNPUYsjZ6JJQZ2pRcGeLdPp
+         PgWA==
+X-Gm-Message-State: APjAAAXpbkANS1kDZ6hJ+GrZSIKKAizrt7oECwXJbxV2bejICtL0qSmn
+        10ETHMNf2WEoqpuYP8CGpuwTfQ==
+X-Google-Smtp-Source: APXvYqxOc9zhjcAdOOZR/ZoC0fv44rZYBtSMM14qc1QfkygD/0cSMfcO48ZA37T8nh7y6BWeNxrR5g==
+X-Received: by 2002:a5d:8e15:: with SMTP id e21mr25845056iod.296.1567601819078;
+        Wed, 04 Sep 2019 05:56:59 -0700 (PDT)
+Received: from [192.168.1.50] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id l13sm21622537iob.73.2019.09.04.05.56.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 04 Sep 2019 05:56:58 -0700 (PDT)
+Subject: Re: [PATCH v3 5/7] block: Delay default elevator initialization
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20190904084247.23338-1-damien.lemoal@wdc.com>
+ <20190904084247.23338-6-damien.lemoal@wdc.com>
+ <22bc754b-541d-3c72-6bb0-68cd841faee5@suse.de>
+ <BYAPR04MB5816ADDE69D61A3CB47DCC3FE7B80@BYAPR04MB5816.namprd04.prod.outlook.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <68bd56dd-46cf-efa3-14f2-4f8e50ac15c0@kernel.dk>
+Date:   Wed, 4 Sep 2019 06:56:56 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <20190827211340.1095-1-gvaradar@cisco.com>
-In-Reply-To: <20190827211340.1095-1-gvaradar@cisco.com>
-From:   John Pittman <jpittman@redhat.com>
-Date:   Wed, 4 Sep 2019 08:09:11 -0400
-Message-ID: <CA+RJvhxYHR+ey1wz+mRCL+aufdi3+ox4uUYRge_kLh1MFTV4zg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: fnic: fix msix interrupt allocation
-To:     Govindarajulu Varadarajan <gvaradar@cisco.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, Satish Kharat <satishkh@cisco.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <BYAPR04MB5816ADDE69D61A3CB47DCC3FE7B80@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin, would you have a quick look at this one when you get a
-moment?  Bugging you for selfish reasons as I'm trying to get this
-included in the next RHEL release.  Thanks for any info.
+On 9/4/19 3:02 AM, Damien Le Moal wrote:
+> On 2019/09/04 17:56, Johannes Thumshirn wrote:
+>> On 04/09/2019 10:42, Damien Le Moal wrote:
+>>> @@ -734,6 +741,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+>>>   				    exact_match, exact_lock, disk);
+>>>   	}
+>>>   	register_disk(parent, disk, groups);
+>>> +
+>>>   	if (register_queue)
+>>>   		blk_register_queue(disk);
+>>
+>> That hunk looks unrelated, but anyways:
+>> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> 
+> Oops. Yes, did not delete the blank line when I moved elevator_init_mq() call.
+> Jens, should I resend a v4 to fix this ?
 
-On Tue, Aug 27, 2019 at 5:20 PM Govindarajulu Varadarajan
-<gvaradar@cisco.com> wrote:
->
-> pci_alloc_irq_vectors() returns number of vectors allocated.
-> Fix the check for error condition.
->
-> Fixes: cca678dfbad49 ("scsi: fnic: switch to pci_alloc_irq_vectors")
-> Acked-by: Satish Kharat <satishkh@cisco.com>
-> Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
-> ---
->  drivers/scsi/fnic/fnic_isr.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
-> index da4602b63495..2fb2731f50fb 100644
-> --- a/drivers/scsi/fnic/fnic_isr.c
-> +++ b/drivers/scsi/fnic/fnic_isr.c
-> @@ -254,7 +254,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
->                 int vecs = n + m + o + 1;
->
->                 if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
-> -                               PCI_IRQ_MSIX) < 0) {
-> +                               PCI_IRQ_MSIX) == vecs) {
->                         fnic->rq_count = n;
->                         fnic->raw_wq_count = m;
->                         fnic->wq_copy_count = o;
-> @@ -280,7 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
->             fnic->wq_copy_count >= 1 &&
->             fnic->cq_count >= 3 &&
->             fnic->intr_count >= 1 &&
-> -           pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
-> +           pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) == 1) {
->                 fnic->rq_count = 1;
->                 fnic->raw_wq_count = 1;
->                 fnic->wq_copy_count = 1;
-> --
-> 2.21.0
->
+Series looks good to me, I'll just delete this one hunk, not a big deal.
+
+-- 
+Jens Axboe
+
