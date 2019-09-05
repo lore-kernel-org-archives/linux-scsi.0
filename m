@@ -7,66 +7,66 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3154DC3A5AB
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Sep 2019 09:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8435AC3A5AC
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Sep 2019 09:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 028A522CEC
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Sep 2019 09:51:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53B6F21743
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Sep 2019 09:51:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="KXQnxiyc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="o54BQ3W7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387604AbfIEJvw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Sep 2019 05:51:52 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:25326 "EHLO
+        id S2387613AbfIEJvx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Sep 2019 05:51:53 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:25315 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387564AbfIEJvw (ORCPT
+        with ESMTP id S1732595AbfIEJvw (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2019 05:51:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1567677112; x=1599213112;
+  t=1567677113; x=1599213113;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=lXmNGw+0DXKWd3/CW5QfLTARK01VfROVWdtvZQJsTFQ=;
-  b=KXQnxiycu/YuCU/ER4aVBOV7VwobSmpOG8hbqnppzwP6U9SWO4YavO7e
-   UOMY3YSPZlxvVm8rHqvIGtKoc19zTy7issQ97BHgwc4z7xUgVTu7C1ZEk
-   Ir8zsPytOoTTvOOtZ7t5QmM/4I5JKnaR30f5Bq9/VQkTz8GITkg9cuhM1
-   EWwli/snhBwE9uXKGke7SoQMWl8G0qRSagCJ6gslIiZH72bjnPpRftLPD
-   bBlgqWU3fezVeGyaKhkPe6/ZAFYWUDMuDLSmRBSncHGC5AW8vIuz2G20S
-   ZaagFD7IIDAHGu/l+Txul7X/o+xqEEeyeyAasuTSrVGz07stMJa9XfXTP
-   Q==;
-IronPort-SDR: p2bLDDYRmQ1oFZtnuc4dz4cO1/9ep2nXnyEx1TYTSIOj+LRPu/ywFtay52VF0kQ4SKGn5QGdRr
- 8FwQ1p0sApX0AGhb/lBpLBRs69Z4lUcb0fZhEwo9QV6Cw96ALBjkpC6bbdJnYxalZeeGL4gZDa
- rf81xYTAj+drNPNeAEpzO1mD1sqCD+N4AvFRSmVirCMKrsigGx5yu/9a7Rqb94T+fXdVp1QGml
- qB4Y1KHpjvygjpT9jP1nLrFOcqhOzVkoXHGZrUPmFg2InLzvJVjEY2O++36T+4Zd4viMa+EK5f
- AeA=
+  bh=PErFhJdbRHZCrM47arWeyOIBOCDRRRHkAOiFwGGBAlU=;
+  b=o54BQ3W7VYrJ3RCAcZOMze7AbqtmACBP4Ec2f4Gpzj/yfI38xBnhELnx
+   AMAdDN2AQAc2UaEObMB5zSDTGAotpbOJyPGAWyQd89AwNMLUWyoGHKzAP
+   XsomAtSqvOyiNp/p47+fTTIXh5uCylIYf4CFbZLS79SIQL9pdswFkdcU0
+   kppTZ69ie6VEO86xyG2eLBRi/rJU7wdSHEMBe0sfaul7JZb0VQvDlnq/8
+   4pZmo+yjWpk2IcG5/6yHGVlRLjaXfvTVPi0cPyh+NX0y2n87SFHDt6Vgg
+   /NoxT5L3ujgzVqH2BffE09peW4m2XL5VutvCABvz9riFnZxQJYqRE9dZG
+   A==;
+IronPort-SDR: VORp8KgBhVUf4CaQDt8+BsCxPR8qaE6Rb1J3YjLjBnvetyefg368Mtb9N7eOv64zAibWQ7S47A
+ s1Y1Q9o1C0AwH1MuoRPQyTPKN5mx3J9kxhjOUNUBiOSuqFOUDeWKBGTWL/83n3IHEBVTSewVb8
+ 4desonFD7KCpyJFPrwFoWPhNl7l3ggu1dw++5tDS1CNYjV+VockUiP2owTWyBzT2hKmLHvBk96
+ dkijyikRlFXZngWiEcz01+bpUTAFzicH+fS0cOq4wAXsvRgJLdIkO3zr670d5s2hZ0l36Inrbh
+ zUw=
 X-IronPort-AV: E=Sophos;i="5.64,470,1559491200"; 
-   d="scan'208";a="119106260"
+   d="scan'208";a="119106271"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Sep 2019 17:51:41 +0800
-IronPort-SDR: US/8LjkpZQ9uu7JCbv6Ut6o7sOvCRF7keEywiaXUthoDafTarFY7GIkG7qGFdSAFa+A3tk2l/L
- GKZ2UfgkWEjaolJjpS+IE9ZQyqxby5hNRNUfeGp4GqqPVy3lVlxDqAc4l0dMt5+gwq5/O2zba5
- 1kugFbeRaUWFJGgLZEn04g9puEwwM/24W5frsW/salJxXKl5W3pxm0EGpY/Ufy19OkOma/uJj3
- Nz+dCgU0nDa7rR1ks+fbY43AUQnUqgT+TgwzXeF9psNybvW/h7qjWTnCxTej8taaAevTK0LGnO
- 2RmqIz99sHdly6i7I4xDCp3K
+  by ob1.hgst.iphmx.com with ESMTP; 05 Sep 2019 17:51:44 +0800
+IronPort-SDR: 5kxLtwjt7oPvjOFujmrtL+RvvVYl9vOBE//8LtGRjH+nRtOWP2/9W5ILarabby0njSWLxS5ers
+ V+6O/yFpVO+lrU3Kt+k4RWCeugjJi41gWweiA5/fC/3xJ15PH2ZCL18QzdmVkg5RzEOXB8et72
+ zUtefc9CZo+e5a5khcuyzv+umxPUd+8FIbvejIuHusKAeMdstRUgZXHXDlk2cycg+88nOWZQEi
+ YJTcaNZE8AKWJgCSEULPIpMBjJzYbJWpR6BwOJz/AdkoCtDJiMbs095CdFWQum/Y0CTaMwIiEx
+ IJuA2+TJJT9RDpZ03ADinD/y
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2019 02:48:37 -0700
-IronPort-SDR: BXnLMIJWTPTDJVKVkqGiX3Pm3W77w+cFRGiV5qS407CiAIIkRQA1tMvRvO1XpK11Bt3xNmaAIA
- c8RT+WpHE6bP2OzfH1zYR7gKFWmwpYX1UWQtjTfgOSQKqpsUgZohHZUAYBWkjwP3f6+ZYmIGQi
- mwKAPH7HeQTeLYAns0GXWA75IKPKVtZvW6ivsaM0qG3BVWJIU182LGfhScGC2AKh3++p2rlwb8
- VQtmZ2n/DsgxyasQlIO3OYeiWKC+jTQd6pSIDwf4MDsVFB+3FzS8LAds+5cROStM0xhO+2OjDR
- apI=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2019 02:48:39 -0700
+IronPort-SDR: W0iMItwJl+ZikypMnIqWii/vG5T4FLldmcZVG8h+aJmUfwZSH5seHXYPjySsjO8bbPIwhTCv8A
+ jBPS2uYscziQRnY/8tUEr6LFBJOimsCeqXo38Vi6EvPWy1zMmMxPmU3ex8kS2IdK1tmGl3hEiF
+ SF4vhznaXt90rqZhneKKcGV6S1lvHDY++qEYrDwgpKiyQLIu7fR5bF7E66myaA9iTYa+BkZo65
+ Ve6wCjshlslQTpYuPDPGS70VniGp/DSlrfep05asPiF5JsY0hM2N96rkf4yRRRRzRqIgvHhcz5
+ zKA=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 05 Sep 2019 02:51:41 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 05 Sep 2019 02:51:43 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
 Cc:     Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v5 3/7] block: Introduce elevator features
-Date:   Thu,  5 Sep 2019 18:51:31 +0900
-Message-Id: <20190905095135.26026-4-damien.lemoal@wdc.com>
+Subject: [PATCH v5 5/7] block: Delay default elevator initialization
+Date:   Thu,  5 Sep 2019 18:51:33 +0900
+Message-Id: <20190905095135.26026-6-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190905095135.26026-1-damien.lemoal@wdc.com>
 References: <20190905095135.26026-1-damien.lemoal@wdc.com>
@@ -77,238 +77,153 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce the definition of elevator features through the
-elevator_features flags in the elevator_type structure. Each flag can
-represent a feature supported by an elevator. The first feature defined
-by this patch is support for zoned block device sequential write
-constraint with the flag ELEVATOR_F_ZBD_SEQ_WRITE, which is implemented
-by the mq-deadline elevator using zone write locking.
+When elevator_init_mq() is called from blk_mq_init_allocated_queue(),
+the only information known about the device is the number of hardware
+queues as the block device scan by the device driver is not completed
+yet for most drivers. The device type and elevator required features
+are not set yet, preventing to correctly select the default elevator
+most suitable for the device.
 
-Other possible features are IO priorities, write hints, latency targets
-or single-LUN dual-actuator disks (for which the elevator could maintain
-one LBA ordered list per actuator).
+This currently affects all multi-queue zoned block devices which default
+to the "none" elevator instead of the required "mq-deadline" elevator.
+These drives currently include host-managed SMR disks connected to a
+smartpqi HBA and null_blk block devices with zoned mode enabled.
+Upcoming NVMe Zoned Namespace devices will also be affected.
 
-The required_elevator_features field is also added to the request_queue
-structure to allow a device driver to specify elevator feature flags
-that an elevator must support for the correct operation of the device
-(e.g. device drivers for zoned block devices can have the
-ELEVATOR_F_ZBD_SEQ_WRITE flag as a required feature).
-The helper function blk_queue_required_elevator_features() is
-defined for setting this new field.
+Fix this by adding the boolean elevator_init argument to
+blk_mq_init_allocated_queue() to control the execution of
+elevator_init_mq(). Two cases exist:
+1) elevator_init = false is used for calls to
+   blk_mq_init_allocated_queue() within blk_mq_init_queue(). In this
+   case, a call to elevator_init_mq() is added to __device_add_disk(),
+   resulting in the delayed initialization of the queue elevator
+   after the device driver finished probing the device information. This
+   effectively allows elevator_init_mq() access to more information
+   about the device.
+2) elevator_init = true preserves the current behavior of initializing
+   the elevator directly from blk_mq_init_allocated_queue(). This case
+   is used for the special request based DM devices where the device
+   gendisk is created before the queue initialization and device
+   information (e.g. queue limits) is already known when the queue
+   initialization is executed.
 
-With these two new fields in place, the elevator functions
-elevator_match() and elevator_find() are modified to allow a user to set
-only an elevator with a set of features that satisfies the device
-required features. Elevators not matching the device requirements are
-not shown in the device sysfs queue/scheduler file to prevent their use.
-
-The "none" elevator can always be selected as before.
+Additionally, to make sure that the elevator initialization is never
+done while requests are in-flight (there should be none when the device
+driver calls device_add_disk()), freeze and quiesce the device request
+queue before calling blk_mq_init_sched() in elevator_init_mq().
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-settings.c     | 16 +++++++++++++
- block/elevator.c         | 49 +++++++++++++++++++++++++++++++---------
- block/mq-deadline.c      |  1 +
- include/linux/blkdev.h   |  4 ++++
- include/linux/elevator.h |  8 +++++++
- 5 files changed, 67 insertions(+), 11 deletions(-)
+ block/blk-mq.c         | 12 +++++++++---
+ block/elevator.c       |  7 +++++++
+ block/genhd.c          |  9 +++++++++
+ drivers/md/dm-rq.c     |  2 +-
+ include/linux/blk-mq.h |  3 ++-
+ 5 files changed, 28 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index a058997b9cce..6bd1e3b082d8 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -832,6 +832,22 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
- }
- EXPORT_SYMBOL_GPL(blk_queue_write_cache);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index ee4caf0c0807..240416057f28 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2689,7 +2689,11 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
+ 	if (!uninit_q)
+ 		return ERR_PTR(-ENOMEM);
  
-+/**
-+ * blk_queue_required_elevator_features - Set a queue required elevator features
-+ * @q:		the request queue for the target device
-+ * @features:	Required elevator features OR'ed together
-+ *
-+ * Tell the block layer that for the device controlled through @q, only the
-+ * only elevators that can be used are those that implement at least the set of
-+ * features specified by @features.
-+ */
-+void blk_queue_required_elevator_features(struct request_queue *q,
-+					  unsigned int features)
-+{
-+	q->required_elevator_features = features;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_required_elevator_features);
-+
- static int __init blk_settings_init(void)
+-	q = blk_mq_init_allocated_queue(set, uninit_q);
++	/*
++	 * Initialize the queue without an elevator. device_add_disk() will do
++	 * the initialization.
++	 */
++	q = blk_mq_init_allocated_queue(set, uninit_q, false);
+ 	if (IS_ERR(q))
+ 		blk_cleanup_queue(uninit_q);
+ 
+@@ -2840,7 +2844,8 @@ static unsigned int nr_hw_queues(struct blk_mq_tag_set *set)
+ }
+ 
+ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+-						  struct request_queue *q)
++						  struct request_queue *q,
++						  bool elevator_init)
  {
- 	blk_max_low_pfn = max_low_pfn - 1;
+ 	/* mark the queue as mq asap */
+ 	q->mq_ops = set->ops;
+@@ -2902,7 +2907,8 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	blk_mq_add_queue_tag_set(set, q);
+ 	blk_mq_map_swqueue(q);
+ 
+-	elevator_init_mq(q);
++	if (elevator_init)
++		elevator_init_mq(q);
+ 
+ 	return q;
+ 
 diff --git a/block/elevator.c b/block/elevator.c
-index 2944c129760c..ac7c8ad580ba 100644
+index 520d6b224b74..096a670d22d7 100644
 --- a/block/elevator.c
 +++ b/block/elevator.c
-@@ -83,8 +83,26 @@ bool elv_bio_merge_ok(struct request *rq, struct bio *bio)
- }
- EXPORT_SYMBOL(elv_bio_merge_ok);
- 
--static bool elevator_match(const struct elevator_type *e, const char *name)
-+static inline bool elv_support_features(unsigned int elv_features,
-+					unsigned int required_features)
- {
-+	return (required_features & elv_features) == required_features;
-+}
-+
-+/**
-+ * elevator_match - Test an elevator name and features
-+ * @e: Scheduler to test
-+ * @name: Elevator name to test
-+ * @required_features: Features that the elevator must provide
-+ *
-+ * Return true is the elevator @e name matches @name and if @e provides all the
-+ * the feratures spcified by @required_features.
-+ */
-+static bool elevator_match(const struct elevator_type *e, const char *name,
-+			   unsigned int required_features)
-+{
-+	if (!elv_support_features(e->elevator_features, required_features))
-+		return false;
- 	if (!strcmp(e->elevator_name, name))
- 		return true;
- 	if (e->elevator_alias && !strcmp(e->elevator_alias, name))
-@@ -93,15 +111,21 @@ static bool elevator_match(const struct elevator_type *e, const char *name)
- 	return false;
- }
- 
--/*
-- * Return scheduler with name 'name'
-+/**
-+ * elevator_find - Find an elevator
-+ * @name: Name of the elevator to find
-+ * @required_features: Features that the elevator must provide
-+ *
-+ * Return the first registered scheduler with name @name and supporting the
-+ * features @required_features and NULL otherwise.
-  */
--static struct elevator_type *elevator_find(const char *name)
-+static struct elevator_type *elevator_find(const char *name,
-+					   unsigned int required_features)
- {
- 	struct elevator_type *e;
- 
- 	list_for_each_entry(e, &elv_list, list) {
--		if (elevator_match(e, name))
-+		if (elevator_match(e, name, required_features))
- 			return e;
- 	}
- 
-@@ -120,12 +144,12 @@ static struct elevator_type *elevator_get(struct request_queue *q,
- 
- 	spin_lock(&elv_list_lock);
- 
--	e = elevator_find(name);
-+	e = elevator_find(name, q->required_elevator_features);
- 	if (!e && try_loading) {
- 		spin_unlock(&elv_list_lock);
- 		request_module("%s-iosched", name);
- 		spin_lock(&elv_list_lock);
--		e = elevator_find(name);
-+		e = elevator_find(name, q->required_elevator_features);
- 	}
- 
- 	if (e && !try_module_get(e->elevator_owner))
-@@ -525,7 +549,7 @@ int elv_register(struct elevator_type *e)
- 
- 	/* register, don't allow duplicate names */
- 	spin_lock(&elv_list_lock);
--	if (elevator_find(e->elevator_name)) {
-+	if (elevator_find(e->elevator_name, 0)) {
- 		spin_unlock(&elv_list_lock);
- 		kmem_cache_destroy(e->icq_cache);
- 		return -EBUSY;
-@@ -709,7 +733,8 @@ static int __elevator_change(struct request_queue *q, const char *name)
+@@ -712,7 +712,14 @@ void elevator_init_mq(struct request_queue *q)
  	if (!e)
- 		return -EINVAL;
+ 		return;
  
--	if (q->elevator && elevator_match(q->elevator->type, elevator_name)) {
-+	if (q->elevator &&
-+	    elevator_match(q->elevator->type, elevator_name, 0)) {
- 		elevator_put(e);
- 		return 0;
- 	}
-@@ -749,11 +774,13 @@ ssize_t elv_iosched_show(struct request_queue *q, char *name)
- 
- 	spin_lock(&elv_list_lock);
- 	list_for_each_entry(__e, &elv_list, list) {
--		if (elv && elevator_match(elv, __e->elevator_name)) {
-+		if (elv && elevator_match(elv, __e->elevator_name, 0)) {
- 			len += sprintf(name+len, "[%s] ", elv->elevator_name);
- 			continue;
- 		}
--		if (elv_support_iosched(q))
-+		if (elv_support_iosched(q) &&
-+		    elevator_match(__e, __e->elevator_name,
-+				   q->required_elevator_features))
- 			len += sprintf(name+len, "%s ", __e->elevator_name);
- 	}
- 	spin_unlock(&elv_list_lock);
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 35e84bc0ec8c..b490f47fd553 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -794,6 +794,7 @@ static struct elevator_type mq_deadline = {
- 	.elevator_attrs = deadline_attrs,
- 	.elevator_name = "mq-deadline",
- 	.elevator_alias = "deadline",
-+	.elevator_features = ELEVATOR_F_ZBD_SEQ_WRITE,
- 	.elevator_owner = THIS_MODULE,
- };
- MODULE_ALIAS("mq-deadline-iosched");
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d0ad21e4771b..b196124e3240 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -496,6 +496,8 @@ struct request_queue {
- 
- 	struct queue_limits	limits;
- 
-+	unsigned int		required_elevator_features;
++	blk_mq_freeze_queue(q);
++	blk_mq_quiesce_queue(q);
 +
- #ifdef CONFIG_BLK_DEV_ZONED
- 	/*
- 	 * Zoned block device information for request dispatch control.
-@@ -1097,6 +1099,8 @@ extern void blk_queue_dma_alignment(struct request_queue *, int);
- extern void blk_queue_update_dma_alignment(struct request_queue *, int);
- extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- extern void blk_queue_write_cache(struct request_queue *q, bool enabled, bool fua);
-+extern void blk_queue_required_elevator_features(struct request_queue *q,
-+						 unsigned int features);
- 
- /*
-  * Number of physical segments as sent to the device.
-diff --git a/include/linux/elevator.h b/include/linux/elevator.h
-index 1dd014c9c87b..901bda352dcb 100644
---- a/include/linux/elevator.h
-+++ b/include/linux/elevator.h
-@@ -76,6 +76,7 @@ struct elevator_type
- 	struct elv_fs_entry *elevator_attrs;
- 	const char *elevator_name;
- 	const char *elevator_alias;
-+	const unsigned int elevator_features;
- 	struct module *elevator_owner;
- #ifdef CONFIG_BLK_DEBUG_FS
- 	const struct blk_mq_debugfs_attr *queue_debugfs_attrs;
-@@ -165,5 +166,12 @@ extern struct request *elv_rb_find(struct rb_root *, sector_t);
- #define rq_entry_fifo(ptr)	list_entry((ptr), struct request, queuelist)
- #define rq_fifo_clear(rq)	list_del_init(&(rq)->queuelist)
- 
-+/*
-+ * Elevator features.
-+ */
+ 	err = blk_mq_init_sched(q, e);
 +
-+/* Supports zoned block devices sequential write constraint */
-+#define ELEVATOR_F_ZBD_SEQ_WRITE	(1U << 0)
++	blk_mq_unquiesce_queue(q);
++	blk_mq_unfreeze_queue(q);
 +
- #endif /* CONFIG_BLOCK */
- #endif
+ 	if (err) {
+ 		pr_warn("\"%s\" elevator initialization failed, "
+ 			"falling back to \"none\"\n", e->elevator_name);
+diff --git a/block/genhd.c b/block/genhd.c
+index 54f1f0d381f4..26b31fcae217 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -695,6 +695,15 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+ 	dev_t devt;
+ 	int retval;
+ 
++	/*
++	 * The disk queue should now be all set with enough information about
++	 * the device for the elevator code to pick an adequate default
++	 * elevator if one is needed, that is, for devices requesting queue
++	 * registration.
++	 */
++	if (register_queue)
++		elevator_init_mq(disk->queue);
++
+ 	/* minors == 0 indicates to use ext devt from part0 and should
+ 	 * be accompanied with EXT_DEVT flag.  Make sure all
+ 	 * parameters make sense.
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 21d5c1784d0c..3f8577e2c13b 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -563,7 +563,7 @@ int dm_mq_init_request_queue(struct mapped_device *md, struct dm_table *t)
+ 	if (err)
+ 		goto out_kfree_tag_set;
+ 
+-	q = blk_mq_init_allocated_queue(md->tag_set, md->queue);
++	q = blk_mq_init_allocated_queue(md->tag_set, md->queue, true);
+ 	if (IS_ERR(q)) {
+ 		err = PTR_ERR(q);
+ 		goto out_tag_set;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 62a3bb715899..0bf056de5cc3 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -248,7 +248,8 @@ enum {
+ 
+ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *);
+ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+-						  struct request_queue *q);
++						  struct request_queue *q,
++						  bool elevator_init);
+ struct request_queue *blk_mq_init_sq_queue(struct blk_mq_tag_set *set,
+ 						const struct blk_mq_ops *ops,
+ 						unsigned int queue_depth,
 -- 
 2.21.0
 
