@@ -2,140 +2,81 @@ Return-Path: <SRS0=yvfi=XB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A115C43140
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 15:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F343C43331
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 16:39:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A51E20838
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 15:45:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="NIt+eG7L"
+	by mail.kernel.org (Postfix) with ESMTP id 72F1B207FC
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 16:39:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405783AbfIFPpO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Sep 2019 11:45:14 -0400
-Received: from mail-eopbgr820093.outbound.protection.outlook.com ([40.107.82.93]:13088
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2392814AbfIFPpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Sep 2019 11:45:13 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IkNC+ner05qpQg22/GgjdptqF3fZJ9Eu/ANkD3N9bmCkIQv2KSjb0rAiUPelcfLWBMply+xLII3JVeTZDXHJfHYGa6AcQRx1RCK5P0IlH3yzwJKzC0KhjfMFTy+7zrHJTTUgVhN0C4PgrJqRhJWTWa/ocGkuv5t1UZA8ebq/GxVdFhQwOoN5AVC2urak0ReEwSj2LB4Ux3IEVr7pAjNX7dixqXc9A+cvoyMSW7FtyTBnnXMgrDLjrdFZWegZJ04X5k/Dpg9Bix/Nyuu8KhtBuLypH4F2bQHhRSey+TW9rMbbqMFi4EySkmIogGKgr6OFsz0hhd4Fsh3ZGgPK53G87g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l9mSFKhiEWfZ5+OE/Mn+M5DQMe57kqyu4N0lRW9mnFs=;
- b=PvNwEaCorrP5mIqCy+6s3n7lecdOkaazIjoo/7Sy1P9X9gCKoup4oKa5vOxvW2Be6LlHMgdARoQlw2FE2muca1hQJ3tsPDVCVAbOc2iJz+soxlPFelfVOI1wklDbveNoQF+dZnM20HbLdPZmDdyeKWftkyireE4JnbkgoxpTGuFx0dKHt697dPCFRIi7ETJU//0SqxpYjrCY+b/I3vkJUAi0sqdDZnqjU+S9Bp32PsKM4EsdbDwYhKo/+iQo6j7AAx1y4zqw3ubwZwE15YkY7YAw4u/eeHEmgAwmbBZhl7oosIc7K1vEAWAcqCYRSBM6YBaTa/AUoQcZZENtGjlLjA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l9mSFKhiEWfZ5+OE/Mn+M5DQMe57kqyu4N0lRW9mnFs=;
- b=NIt+eG7L900FijgZ0g/t0CZZByOvR+RKg1JsDB4b9Pqfj4ycRG5UkvCWFbASTikLj8QbMo1KDg3A/ef3kyneqxpI5JD927hBoWgIRmD7688IWZ3CIf0EZuBIr+Esk8iNG08l1Eqve8M7etg8EQqS8Gz6pzkcH/u4wDJ/fog0sSA=
-Received: from DM5PR21MB0137.namprd21.prod.outlook.com (10.173.173.12) by
- DM5PR21MB0777.namprd21.prod.outlook.com (10.173.172.147) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2263.4; Fri, 6 Sep 2019 15:45:09 +0000
-Received: from DM5PR21MB0137.namprd21.prod.outlook.com
- ([fe80::c437:6219:efcc:fb8a]) by DM5PR21MB0137.namprd21.prod.outlook.com
- ([fe80::c437:6219:efcc:fb8a%7]) with mapi id 15.20.2263.004; Fri, 6 Sep 2019
- 15:45:09 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Long Li <longli@microsoft.com>,
-        "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [Patch v3] storvsc: setup 1:1 mapping between hardware queue and
- CPU queue
-Thread-Topic: [Patch v3] storvsc: setup 1:1 mapping between hardware queue and
- CPU queue
-Thread-Index: AQHVZDzovSuzxYYkAEeci8JFnGV5zKcdtlHwgABJPwCAAMvU8A==
-Date:   Fri, 6 Sep 2019 15:45:09 +0000
-Message-ID: <DM5PR21MB0137ABFD8778BC94EAFF835ED7BA0@DM5PR21MB0137.namprd21.prod.outlook.com>
-References: <1567724073-30192-1-git-send-email-longli@linuxonhyperv.com>
- <DM5PR21MB013716CEE8942CB769E236F2D7BB0@DM5PR21MB0137.namprd21.prod.outlook.com>
- <CY4PR21MB074110983075A3BC91D73AE4CEBA0@CY4PR21MB0741.namprd21.prod.outlook.com>
-In-Reply-To: <CY4PR21MB074110983075A3BC91D73AE4CEBA0@CY4PR21MB0741.namprd21.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-09-05T23:18:53.2998445Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8c8ad67e-2337-47ff-9485-b53edfd6eb3e;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=mikelley@microsoft.com; 
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 981ec6ad-ebcc-48b6-ac6a-08d732e13285
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:DM5PR21MB0777;
-x-ms-traffictypediagnostic: DM5PR21MB0777:|DM5PR21MB0777:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM5PR21MB0777B282E1D6294FA3967E2BD7BA0@DM5PR21MB0777.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 0152EBA40F
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(136003)(39860400002)(376002)(346002)(366004)(199004)(189003)(4744005)(14454004)(2501003)(2201001)(3846002)(6116002)(2906002)(5660300002)(10290500003)(10090500001)(6436002)(229853002)(186003)(446003)(99286004)(305945005)(486006)(74316002)(7736002)(476003)(11346002)(26005)(8990500004)(25786009)(316002)(66446008)(66556008)(76116006)(64756008)(66476007)(22452003)(66066001)(81166006)(81156014)(8676002)(66946007)(6246003)(33656002)(9686003)(55016002)(52536014)(110136005)(102836004)(76176011)(6506007)(7696005)(86362001)(256004)(71190400001)(71200400001)(478600001)(8936002)(53936002)(1511001)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR21MB0777;H:DM5PR21MB0137.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: CSm/NAfg21rsImD3DoJH3UylwRHK7sMGIMXaGyGtHLrK8RD97kHiCrS1w2p/RQSTax5mT/RqrP1lZ45GcmclIdiiap6Ezhxu3vvTvpC7Yk1qWpQFPtGeZZ9w0/H7ckzIrvgDwSuQV2er/xKKAefPeRaCLdWXoWr6nKgx91kk6JULlNuUnvoE8u2qTflOxKcbJlPDevD4JyGMfZhY9sE19QFxtirkcPob2pT/ERhYatD0RaBcp52rgs/TkrOA3w8i+qEme6HyJy6/cQV0wQzyPwyF5XZDR2IC9yVKNw3ZdQEoRgWT2vlCAaG9K/v30NxpLG6jVmZnJ5dZfzTnD3v6LSfriRaLXqj0129wiMJjBCC9+FCKXT+FXZFzVQdmmImVYf2KAgTHONcjJb9qfe/tvkep23qRSyxmXAakcJE+9rA=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S2391839AbfIFQju (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Sep 2019 12:39:50 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:52842 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389180AbfIFQju (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2019 12:39:50 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1i6HH0-0000Yh-0p; Fri, 06 Sep 2019 16:39:46 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: fnic: make array dev_cmd_err static const, makes object smaller
+Date:   Fri,  6 Sep 2019 17:39:45 +0100
+Message-Id: <20190906163945.3889-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 981ec6ad-ebcc-48b6-ac6a-08d732e13285
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Sep 2019 15:45:09.1076
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: y6rmFNm9MaEyySNbSHSBmTYagccpFULvLjv2jRYdTMW5iBvipSsCMBHDoVWR12I/RiXC1Wal0onMG47Owge1y79J1YjKmXGOpGEP05JfDmg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR21MB0777
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com> Sent: Thursday, September 5, 2019 8:35=
- PM
-> >>
-> >> Changes:
-> >> v2: rely on default upper layer function to map queues. (suggested by
-> >> Ming Lei
-> >> <tom.leiming@gmail.com>)
-> >> v3: use num_present_cpus() instead of num_online_cpus(). Hyper-v
-> >> doesn't support hot-add CPUs. (suggested by Michael Kelley
-> >> <mikelley@microsoft.com>)
-> >
-> >I've mostly seen the "Changes:" section placed below the "---" so that i=
-t
-> >doesn't clutter up the commit log.  But maybe there's not a strong
-> >requirement one way or the other as I didn't find anything called out in=
- the
-> >"Documentation/process"
-> >directory.
->=20
-> Should I resubmit the patch (but keep it v3)?
->=20
+From: Colin Ian King <colin.king@canonical.com>
 
-I would say do a quick resubmit as v4 so there's no confusion.
+Don't populate the array dev_cmd_err on the stack but instead make it
+static const. Makes the object code smaller by 80 bytes.
 
-Michael
+Before:
+   text	   data	    bss	    dec	    hex	filename
+  21461	   1564	      0	  23025	   59f1	drivers/scsi/fnic/vnic_dev.o
+
+After:
+   text	   data	    bss	    dec	    hex	filename
+  21318	   1628	      0	  22946	   59a2	drivers/scsi/fnic/vnic_dev.o
+
+(gcc version 9.2.1, amd64)
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/fnic/vnic_dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+index 78af9cc2009b..f7f445c6b4fc 100644
+--- a/drivers/scsi/fnic/vnic_dev.c
++++ b/drivers/scsi/fnic/vnic_dev.c
+@@ -259,7 +259,7 @@ int vnic_dev_cmd1(struct vnic_dev *vdev, enum vnic_devcmd_cmd cmd, int wait)
+ 	struct vnic_devcmd __iomem *devcmd = vdev->devcmd;
+ 	int delay;
+ 	u32 status;
+-	int dev_cmd_err[] = {
++	static const int dev_cmd_err[] = {
+ 		/* convert from fw's version of error.h to host's version */
+ 		0,	/* ERR_SUCCESS */
+ 		EINVAL,	/* ERR_EINVAL */
+-- 
+2.20.1
+
