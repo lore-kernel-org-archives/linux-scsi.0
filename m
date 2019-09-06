@@ -2,81 +2,91 @@ Return-Path: <SRS0=yvfi=XB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA388C43331
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 17:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E90B2C43331
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 17:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C9B420578
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 17:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF84C20838
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 17:24:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="Wj15W/uw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2395115AbfIFRBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Sep 2019 13:01:13 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:53697 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727816AbfIFRBN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2019 13:01:13 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1i6Hbc-0002Xh-UF; Fri, 06 Sep 2019 17:01:05 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: make array setup_attrs static const, makes object smaller
-Date:   Fri,  6 Sep 2019 18:01:04 +0100
-Message-Id: <20190906170104.10450-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        id S2406073AbfIFRYe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Sep 2019 13:24:34 -0400
+Received: from linux.microsoft.com ([13.77.154.182]:56654 "EHLO
+        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404294AbfIFRYa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Sep 2019 13:24:30 -0400
+Received: by linux.microsoft.com (Postfix, from userid 1004)
+        id 974CE20B7186; Fri,  6 Sep 2019 10:24:29 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 974CE20B7186
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
+        s=default; t=1567790669;
+        bh=FKTihZNngFvRRCwA/80i7qZ10cRQB8xfMfzWyjeanNQ=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Wj15W/uwgnIhIASmA0wYAVO28Gnt9Tj19L+q3dSbVXvz//EWt5esXzNDpFaJLrfSK
+         vGigB9zgYDJpgNH+GTRpJsVtVsPOxNmywCk7y/GW8ksD5js3fvWncIu4B0ceRuN6Jo
+         avtqN2sIdN7k1e/eMfucZsQMmSg4gtKaBZXt9Z9s=
+From:   longli@linuxonhyperv.com
+To:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Long Li <longli@microsoft.com>
+Subject: [Patch v4] storvsc: setup 1:1 mapping between hardware queue and CPU queue
+Date:   Fri,  6 Sep 2019 10:24:20 -0700
+Message-Id: <1567790660-48142-1-git-send-email-longli@linuxonhyperv.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Long Li <longli@microsoft.com>
 
-Don't populate the array setup_attrs on the stack but instead make it
-static const. Makes the object code smaller by 180 bytes.
+storvsc doesn't use a dedicated hardware queue for a given CPU queue. When
+issuing I/O, it selects returning CPU (hardware queue) dynamically based on
+vmbus channel usage across all channels.
 
-Before:
-   text	   data	    bss	    dec	    hex	filename
-   2140	    224	      0	   2364	    93c	drivers/scsi/ufs/ufshcd-dwc.o
+This patch advertises num_present_cpus() as number of hardware queues. This
+will have upper layer setup 1:1 mapping between hardware queue and CPU queue
+and avoid unnecessary locking when issuing I/O.
 
-After:
-   text	   data	    bss	    dec	    hex	filename
-   1863	    320	      0	   2183	    887	drivers/scsi/ufs/ufshcd-dwc.o
-
-(gcc version 9.2.1, amd64)
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Long Li <longli@microsoft.com>
 ---
- drivers/scsi/ufs/ufshcd-dwc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
-index fb9e2ff4f8d2..6a901da2d15a 100644
---- a/drivers/scsi/ufs/ufshcd-dwc.c
-+++ b/drivers/scsi/ufs/ufshcd-dwc.c
-@@ -80,7 +80,7 @@ static int ufshcd_dwc_link_is_up(struct ufs_hba *hba)
-  */
- static int ufshcd_dwc_connection_setup(struct ufs_hba *hba)
- {
--	const struct ufshcd_dme_attr_val setup_attrs[] = {
-+	static const struct ufshcd_dme_attr_val setup_attrs[] = {
- 		{ UIC_ARG_MIB(T_CONNECTIONSTATE), 0, DME_LOCAL },
- 		{ UIC_ARG_MIB(N_DEVICEID), 0, DME_LOCAL },
- 		{ UIC_ARG_MIB(N_DEVICEID_VALID), 0, DME_LOCAL },
+Changes:
+v2: rely on default upper layer function to map queues. (suggested by Ming Lei
+<tom.leiming@gmail.com>)
+v3: use num_present_cpus() instead of num_online_cpus(). Hyper-v doesn't
+support hot-add CPUs. (suggested by Michael Kelley <mikelley@microsoft.com>)
+v4: move change logs to after Signed-of-by
+
+ drivers/scsi/storvsc_drv.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index b89269120a2d..cf987712041a 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1836,8 +1836,7 @@ static int storvsc_probe(struct hv_device *device,
+ 	/*
+ 	 * Set the number of HW queues we are supporting.
+ 	 */
+-	if (stor_device->num_sc != 0)
+-		host->nr_hw_queues = stor_device->num_sc + 1;
++	host->nr_hw_queues = num_present_cpus();
+ 
+ 	/*
+ 	 * Set the error handler work queue.
 -- 
-2.20.1
+2.17.1
 
