@@ -2,89 +2,163 @@ Return-Path: <SRS0=yvfi=XB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BEC2C43331
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 19:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8C3C43331
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 19:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76879214E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 19:01:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567796477;
-	bh=Jiz8B43eSk9SxWcQmicR7EYR2TlCQ2PdKvvmefGBoLA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=iO02pL/ewWwn1X5yukb6djieT9lNQRZzQM2CP46yRP0t4KEcvvf/3H0vJ9MXnbpS0
-	 yGQyk8wGQ/rqPkNjjqrq55yE0xf41xaHcxjmF5jhhIWowZBEhC3sFxwschxeWLWlaJ
-	 wlsgWXd9531i6C0PRL8iGP52ublopNZJSMexDy9w=
+	by mail.kernel.org (Postfix) with ESMTP id 8D2DD21670
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 19:14:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="OKn4KvcZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405241AbfIFTBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Sep 2019 15:01:13 -0400
-Received: from mga06.intel.com ([134.134.136.31]:16332 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405197AbfIFTBM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Sep 2019 15:01:12 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Sep 2019 12:01:12 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,474,1559545200"; 
-   d="scan'208";a="190907127"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by FMSMGA003.fm.intel.com with ESMTP; 06 Sep 2019 12:01:11 -0700
-Date:   Fri, 6 Sep 2019 12:52:11 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Sagi Grimberg <sagi@grimberg.me>
-Cc:     Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
-        Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Keith Busch <keith.busch@intel.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-Message-ID: <20190906185210.GA4260@localhost.localdomain>
-References: <6b88719c-782a-4a63-db9f-bf62734a7874@linaro.org>
- <20190903072848.GA22170@ming.t460p>
- <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
- <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
- <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
- <20190905090617.GB4432@ming.t460p>
- <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
- <20190906014819.GB27116@ming.t460p>
- <ffefcfa0-09b6-9af5-f94e-8e7ddd2eef16@linaro.org>
- <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
+        id S2406351AbfIFTOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Sep 2019 15:14:44 -0400
+Received: from mail-eopbgr780101.outbound.protection.outlook.com ([40.107.78.101]:64240
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2404511AbfIFTOl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 6 Sep 2019 15:14:41 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=N2jenu9paCEYoIC/AaspufUcLPgi8Wg53zX99gMAqB5jgdApnV7ZsET6oHHU6n1VpMsMFCiAPtAjCiNdJBtFwTiE63Pt0StRmcOyinuyuNWRoij232aScgjxlA2UPVEOc22ZfAVLrQiacd52QW3IqDRsKMIaK7euUc43CXlchsV3poGqt4nlv1h9i45kEe0RKenhk3Gb7cYKY5NMACKeUlsA5Gi3mZsWXIBDFcBlW8jYiVSIwZFSQDQ560FTLv+dte8dM1fYT3YwjboeU8eSVQuZ5CwJXWxAedd1SOt3EDGS/GX/+HNePs48U3ZaOpY8iRunvXiFxOvbl/IS9kP2jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2T8bL8xFIBxqyRlZm/cOvET9uWHvS10GMi7u89DagrM=;
+ b=oTNcU8p77OFQLd6EvfvAIo5fghB26CcVuLZMmufl5hkQ2tUKAWA7yYplmOmv/3ROIceKzvokCbZjqHCSGZSMPyLgOOHm4VPXuT+3JVmZKzF4jO09Pa2Dfd2LbPdnxstpmHqn//odCL7FhBWMuRmnYylHj+QGYItUOiUtmkFs0kbjZZN+4v47GzaDTaZeIOiCvDyvk764gnj6T61hx1EPluhU/vyajSatxeFaRg/Sxha+kYfquwCNlYtCzUK2ITZ48l+nSscrNWflCOBRxROcGvHKXPVQHR1D0GmBNeObVvOXf0JY0eCOVJzrdAUjkIsmgxz78jjuOeGXse1il5tMVQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2T8bL8xFIBxqyRlZm/cOvET9uWHvS10GMi7u89DagrM=;
+ b=OKn4KvcZtjBERbc0KO4NeT5ECs8CH+gowmrkomrbjZGN9G/1EegZO1jOi21wDOG7tWS3EWJdapDTj9Ok3hLuoywdkEUD9hdr71XbqNdxLFiXDCATpAPBhUko4Yco8OZpc0o38djWFsLXa+nhxW9szwUV/++ZbclhBKikJLOJWjk=
+Received: from DM5PR21MB0137.namprd21.prod.outlook.com (10.173.173.12) by
+ DM5PR21MB0777.namprd21.prod.outlook.com (10.173.172.147) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2263.4; Fri, 6 Sep 2019 19:14:35 +0000
+Received: from DM5PR21MB0137.namprd21.prod.outlook.com
+ ([fe80::c437:6219:efcc:fb8a]) by DM5PR21MB0137.namprd21.prod.outlook.com
+ ([fe80::c437:6219:efcc:fb8a%7]) with mapi id 15.20.2263.004; Fri, 6 Sep 2019
+ 19:14:35 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     Long Li <longli@microsoft.com>
+Subject: RE: [Patch v4] storvsc: setup 1:1 mapping between hardware queue and
+ CPU queue
+Thread-Topic: [Patch v4] storvsc: setup 1:1 mapping between hardware queue and
+ CPU queue
+Thread-Index: AQHVZNf5d6gqxCtgp0Wp5Wp4RKbtH6cfBJNQ
+Date:   Fri, 6 Sep 2019 19:14:35 +0000
+Message-ID: <DM5PR21MB01376CB3688150F0731808F8D7BA0@DM5PR21MB0137.namprd21.prod.outlook.com>
+References: <1567790660-48142-1-git-send-email-longli@linuxonhyperv.com>
+In-Reply-To: <1567790660-48142-1-git-send-email-longli@linuxonhyperv.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-09-06T19:14:33.3313595Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=f2571df8-af2e-443b-bbf0-eb32105d2e3b;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=mikelley@microsoft.com; 
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e58c6ec7-b016-4f78-24d6-08d732fe7498
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600166)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:DM5PR21MB0777;
+x-ms-traffictypediagnostic: DM5PR21MB0777:|DM5PR21MB0777:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM5PR21MB07776A5ABDFDBB871AD75D09D7BA0@DM5PR21MB0777.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3826;
+x-forefront-prvs: 0152EBA40F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(136003)(346002)(376002)(39860400002)(366004)(189003)(199004)(54534003)(9686003)(55016002)(52536014)(6246003)(110136005)(4326008)(7696005)(76176011)(102836004)(33656002)(76116006)(64756008)(66446008)(66556008)(66476007)(22452003)(316002)(6506007)(66946007)(107886003)(66066001)(8676002)(81156014)(81166006)(1511001)(53936002)(8936002)(86362001)(256004)(478600001)(71200400001)(71190400001)(10290500003)(2906002)(10090500001)(5660300002)(6436002)(14454004)(6116002)(3846002)(2201001)(2501003)(8990500004)(25786009)(99286004)(186003)(229853002)(446003)(11346002)(26005)(476003)(305945005)(486006)(7736002)(74316002)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR21MB0777;H:DM5PR21MB0137.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: uuITBlqFhHU7qgph1ZoB9oznNJiO0lpFR1vmKh4HOHkXs3iqQ1rRVAsnK5ZIVJtjF+dKIwCKQabgIb/5J7q6hOmZGGrewI+OTvjLHRazV9B6jENLmR1fHrhoPkQum2Pb0GkSmq2ph6mxtGdT03QdhKy6jQHbx7cDyJufThXJzvLSMVjPvi2jlJ5LJo3AiLCoTWo8Nio9r/PMFFwO5eQByrzCX3I8JxsuDhrXuSt8+SBnM5UfgHUkAIEgdxneW5iyUzX7Ph+nPHg8WHHkX8e3UUd4jE/bXAihkufQy2UZUECNexNokzoA/DjEJihXBwO85ceymGovdTTql1mw3KuHWQSDdxn6tobLAfKGr6OREu02gHX+N8OdOU1eoYuM/2HvYK6LbstghzD83lbnZXveSi/ODVEEQT2TPq1Nd3YZTnI=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e58c6ec7-b016-4f78-24d6-08d732fe7498
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Sep 2019 19:14:35.3845
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: n+fOpl/oWaLl338BPAWLNtvLynXaq5pzOFM5SIFggvHberREg1Yzrzth2LH4ouXuk+3pm53M62hBQY8/IwubRPIDemd4Ahvk6tx7cIHJwrg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR21MB0777
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 06, 2019 at 11:30:57AM -0700, Sagi Grimberg wrote:
-> 
-> > 
-> > Ok, so the real problem is per-cpu bounded tasks.
-> > 
-> > I share Thomas opinion about a NAPI like approach.
-> 
-> We already have that, its irq_poll, but it seems that for this
-> use-case, we get lower performance for some reason. I'm not
-> entirely sure why that is, maybe its because we need to mask interrupts
-> because we don't have an "arm" register in nvme like network devices
-> have?
+From: Long Li <longli@microsoft.com> Sent: Friday, September 6, 2019 10:24 =
+AM
+>=20
+> storvsc doesn't use a dedicated hardware queue for a given CPU queue. Whe=
+n
+> issuing I/O, it selects returning CPU (hardware queue) dynamically based =
+on
+> vmbus channel usage across all channels.
+>=20
+> This patch advertises num_present_cpus() as number of hardware queues. Th=
+is
+> will have upper layer setup 1:1 mapping between hardware queue and CPU qu=
+eue
+> and avoid unnecessary locking when issuing I/O.
+>=20
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>=20
+> Changes:
+> v2: rely on default upper layer function to map queues. (suggested by Min=
+g Lei
+> <tom.leiming@gmail.com>)
+> v3: use num_present_cpus() instead of num_online_cpus(). Hyper-v doesn't
+> support hot-add CPUs. (suggested by Michael Kelley <mikelley@microsoft.co=
+m>)
+> v4: move change logs to after Signed-of-by
+>=20
+>  drivers/scsi/storvsc_drv.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index b89269120a2d..cf987712041a 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1836,8 +1836,7 @@ static int storvsc_probe(struct hv_device *device,
+>  	/*
+>  	 * Set the number of HW queues we are supporting.
+>  	 */
+> -	if (stor_device->num_sc !=3D 0)
+> -		host->nr_hw_queues =3D stor_device->num_sc + 1;
+> +	host->nr_hw_queues =3D num_present_cpus();
+>=20
+>  	/*
+>  	 * Set the error handler work queue.
+> --
+> 2.17.1
 
-For MSI, that's the INTMS/INTMC NVMe registers. MSI-x, though, has to
-disarm it in its table entry, and the Linux implementation will do a
-posted read in that path, which is a bit too expensive.
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+
