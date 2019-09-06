@@ -2,169 +2,107 @@ Return-Path: <SRS0=yvfi=XB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9A41C43331
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 01:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A18C43140
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 01:53:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB79E206CD
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 01:48:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 874BE20870
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Sep 2019 01:53:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="fLnDmBU4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404271AbfIFBsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Sep 2019 21:48:45 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:42136 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404265AbfIFBsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Sep 2019 21:48:45 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A106218C4266;
-        Fri,  6 Sep 2019 01:48:44 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8744860C18;
-        Fri,  6 Sep 2019 01:48:26 +0000 (UTC)
-Date:   Fri, 6 Sep 2019 09:48:21 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc:     Keith Busch <keith.busch@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
-        Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-Message-ID: <20190906014819.GB27116@ming.t460p>
-References: <20190903033001.GB23861@ming.t460p>
- <299fb6b5-d414-2e71-1dd2-9d6e34ee1c79@linaro.org>
- <20190903063125.GA21022@ming.t460p>
- <6b88719c-782a-4a63-db9f-bf62734a7874@linaro.org>
- <20190903072848.GA22170@ming.t460p>
- <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
- <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
- <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
- <20190905090617.GB4432@ming.t460p>
- <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
+        id S2389496AbfIFBxP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Sep 2019 21:53:15 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:36682 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730991AbfIFBxP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Sep 2019 21:53:15 -0400
+Received: by mail-pf1-f193.google.com with SMTP id y22so3221039pfr.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Sep 2019 18:53:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=fuC7aNrIlu0FLWb5uxW6Ky6irB9KcFY2ncrOP9ADl4s=;
+        b=fLnDmBU4gq7Er1C5Apm/3birxvKxf+Uu6oi9W55fvSI5ONTupwrw2Pvzpqw1MUoLcG
+         vtwUFAKMivKiy64FfLznT8Bi2ksY6pmyaUhXclUrC8uo9yj97NIdAxnelRfWJi9iB44+
+         jnZjNnsvcmuiv1YcCU1mxw/q3YjiSLTpZNUa9pVIb+WfyXVtQAQ7ioduuSvRW4cFCK30
+         H6OfHXeG3cCEs6CBR9kEIu/pV/zXIGO2c3IDKtg/4bDSHHw3G6OSgqpVTM3WZavgSNY8
+         dt7V/RIOIYbQq6KEOv+ME0I2AqeMQJAD7x04O0CW+r78jpvUpUpNyKhHxy5TiVMPlhun
+         WZsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=fuC7aNrIlu0FLWb5uxW6Ky6irB9KcFY2ncrOP9ADl4s=;
+        b=r+oT7BWSIrKjkAg81pfQ7qdlVNBH8SABmpFaQHqtTH1n2xcYJg9D5oM9KgY4uKR47o
+         rxsIQwtcGxPzRR2Z/k4oHHHHtjqtMbk+KbG6PXA1xV9HycoDfiKZ2bQW3vwFW8MfB7WK
+         xg/uUEg4koMN68bx/v/0x9ZMBOFDHqpRdWA81q8zVTI0NCpc6uOabRuNPDk6xpYBMfBO
+         mIxLNMI0h46Km6L55u1hE609odTfhS9gLJUF9TaEHZNLSPaGlSPn/A+0NpKgEiqM2pm2
+         I0CrH9MM8CPovtcGbasAcFZwJPcsK9PP/fpK1bEgw5uE75t9Sjj2I2ZSEW83JCnNkqiZ
+         NqBQ==
+X-Gm-Message-State: APjAAAWSE+Xj+/4Ww8YnXRmfZGOnAITAmoEoFYqIMsl9wSF+NLqGhXHm
+        j6MHmK2aT1nfUHFCncvsGQ+yFw==
+X-Google-Smtp-Source: APXvYqwR+QVXHh47vAMcFozkBntiZ58ZyB4KlT1RLDiLFzWrkFjIH/t9MkG95W7t0nL/6o+PPAih2g==
+X-Received: by 2002:a17:90a:c70c:: with SMTP id o12mr5672683pjt.50.1567734794503;
+        Thu, 05 Sep 2019 18:53:14 -0700 (PDT)
+Received: from [192.168.1.188] (66.29.164.166.static.utbb.net. [66.29.164.166])
+        by smtp.gmail.com with ESMTPSA id m24sm5662690pfa.37.2019.09.05.18.53.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 05 Sep 2019 18:53:13 -0700 (PDT)
+Subject: Re: [PATCH v5 0/7] Elevator cleanups and improvements
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc:     Ming Lei <ming.lei@redhat.com>
+References: <20190905095135.26026-1-damien.lemoal@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <b0913603-5a3f-472d-1013-9b12835e77fe@kernel.dk>
+Date:   Thu, 5 Sep 2019 19:53:11 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.62]); Fri, 06 Sep 2019 01:48:44 +0000 (UTC)
+In-Reply-To: <20190905095135.26026-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Daniel,
-
-On Thu, Sep 05, 2019 at 12:37:13PM +0200, Daniel Lezcano wrote:
+On 9/5/19 3:51 AM, Damien Le Moal wrote:
+> This patch series implements some cleanup of the elevator initialization
+> code and introduces elevator features identification and device matching
+> to enhance checks for elevator/device compatibility and fitness.
 > 
-> Hi Ming,
+> The first 2 patches of the series are simple cleanups which simplify
+> elevator initialization for newly allocated device queues.
 > 
-> On 05/09/2019 11:06, Ming Lei wrote:
-> > On Wed, Sep 04, 2019 at 07:31:48PM +0200, Daniel Lezcano wrote:
-> >> Hi,
-> >>
-> >> On 04/09/2019 19:07, Bart Van Assche wrote:
-> >>> On 9/3/19 12:50 AM, Daniel Lezcano wrote:
-> >>>> On 03/09/2019 09:28, Ming Lei wrote:
-> >>>>> On Tue, Sep 03, 2019 at 08:40:35AM +0200, Daniel Lezcano wrote:
-> >>>>>> It is a scheduler problem then ?
-> >>>>>
-> >>>>> Scheduler can do nothing if the CPU is taken completely by handling
-> >>>>> interrupt & softirq, so seems not a scheduler problem, IMO.
-> >>>>
-> >>>> Why? If there is a irq pressure on one CPU reducing its capacity, the
-> >>>> scheduler will balance the tasks on another CPU, no?
-> >>>
-> >>> Only if CONFIG_IRQ_TIME_ACCOUNTING has been enabled. However, I don't
-> >>> know any Linux distro that enables that option. That's probably because
-> >>> that option introduces two rdtsc() calls in each interrupt. Given the
-> >>> overhead introduced by this option, I don't think this is the solution
-> >>> Ming is looking for.
-> >>
-> >> Was this overhead reported somewhere ?
-> > 
-> > The syscall of gettimeofday() calls ktime_get_real_ts64() which finally
-> > calls tk_clock_read() which calls rdtsc too.
-> > 
-> > But gettimeofday() is often used in fast path, and block IO_STAT needs to
-> > read it too.
-> > 
-> >>
-> >>> See also irqtime_account_irq() in kernel/sched/cputime.c.
-> >>
-> >> From my POV, this framework could be interesting to detect this situation.
-> > 
-> > Now we are talking about IRQ_TIME_ACCOUNTING instead of IRQ_TIMINGS, and the
-> > former one could be used to implement the detection. And the only sharing
-> > should be the read of timestamp.
+> Patch 3 introduce elevator features, allowing a clean and extensible
+> definition of devices and features that an elevator supports and match
+> these against features required by a block device. With this, the sysfs
+> elevator list for a device always shows only elevators matching the
+> features that a particular device requires, with the exception of the
+> none elevator which has no features but is always available for use
+> with any device.
 > 
-> You did not share yet the analysis of the problem (the kernel warnings
-> give the symptoms) and gave the reasoning for the solution. It is hard
-> to understand what you are looking for exactly and how to connect the dots.
-
-Let me explain it one more time:
-
-When one IRQ flood happens on one CPU:
-
-1) softirq handling on this CPU can't make progress
-
-2) kernel thread bound to this CPU can't make progress
-
-For example, network may require softirq to xmit packets, or another irq
-thread for handling keyboards/mice or whatever, or rcu_sched may depend
-on that CPU for making progress, then the irq flood stalls the whole
-system.
-
+> The first feature defined is for zoned block device sequential write
+> constraint support through zone write locking which prevents the use of
+> any elevator that does not support this feature with zoned devices.
 > 
-> AFAIU, there are fast medium where the responses to requests are faster
-> than the time to process them, right?
+> The last 4 patches of this series rework the default elevator selection
+> and initialization to allow for the elevator/device features matching
+> to work, doing so addressing cases not currently well supported, namely,
+> multi-queue zoned block devices.
 
-Usually medium may not be faster than CPU, now we are talking about
-interrupts, which can be originated from lots of devices concurrently,
-for example, in Long Li'test, there are 8 NVMe drives involved.
+Applied for 5.4, thanks.
 
-> 
-> I don't see how detecting IRQ flooding and use a threaded irq is the
-> solution, can you explain?
+-- 
+Jens Axboe
 
-When IRQ flood is detected, we reserve a bit little time for providing
-chance to make softirq/threads scheduled by scheduler, then the above
-problem can be avoided.
-
-> 
-> If the responses are coming at a very high rate, whatever the solution
-> (interrupts, threaded interrupts, polling), we are still in the same
-> situation.
-
-When we moving the interrupt handling into irq thread, other softirq/
-threaded interrupt/thread gets chance to be scheduled, so we can avoid
-to stall the whole system.
-
-> 
-> My suggestion was initially to see if the interrupt load will be taken
-> into accounts in the cpu load and favorize task migration with the
-> scheduler load balance to a less loaded CPU, thus the CPU processing
-> interrupts will end up doing only that while other CPUs will handle the
-> "threaded" side.
-> 
-> Beside that, I'm wondering if the block scheduler should be somehow
-> involved in that [1]
-
-For NVMe or any multi-queue storage, the default scheduler is 'none',
-which basically does nothing except for submitting IO asap.
-
-
-Thanks,
-Ming
