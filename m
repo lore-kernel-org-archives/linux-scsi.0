@@ -2,68 +2,88 @@ Return-Path: <SRS0=mW7r=XC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91652C43331
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Sep 2019 00:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82B92C43331
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Sep 2019 00:01:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4F52173E
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Sep 2019 00:00:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567814410;
-	bh=3rCpcINeaB832GStVxP1L3/B8p7yuzOO05KsfCq9KR4=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=KZXI3PaE12+MnNMNq30Y9QG4JzSxh14FNwU1W9bLb8RUW8+E71fYFocoqONB9BIPe
-	 yWxozZYdVw1f2YHEHCEqissJzh1TSSrEeHRPuttLu4ZZloZNDx95xuRjjozHxTt0Yb
-	 UN6B6zRuAeWXKXKgdIqVqnTgu6GmX412zTBMHPW4=
+	by mail.kernel.org (Postfix) with ESMTP id 68181208C3
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Sep 2019 00:01:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405580AbfIGAAJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Sep 2019 20:00:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46086 "EHLO mail.kernel.org"
+        id S2405517AbfIGABR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Sep 2019 20:01:17 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:41288 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405541AbfIGAAI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Sep 2019 20:00:08 -0400
-Subject: Re: [GIT PULL] SCSI fixes for 5.3-rc7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567814407;
-        bh=3rCpcINeaB832GStVxP1L3/B8p7yuzOO05KsfCq9KR4=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=Hd1t/x1eovekgLfHjmeJJ+FSpRIwZB4Mm79uHqpstJALTyy8J/uKanlzzm3q9MpDx
-         ATYEqgMBIQLu2l27Nw02Kc5BQMf3fBK551sX+GoeCOAGJdk7brtK+339xQXunnfrrr
-         HiO9DtrW0Frambtzuzznhw7WS7JAA9+ug1vWCIDw=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1567802352.26275.3.camel@HansenPartnership.com>
-References: <1567802352.26275.3.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1567802352.26275.3.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 0622800d2ebccead42b3a85e255f7d473a36ec99
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 1e3778cb223e861808ae0daccf353536e7573eed
-Message-Id: <156781440764.2933.15376461867039956784.pr-tracker-bot@kernel.org>
-Date:   Sat, 07 Sep 2019 00:00:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S2405473AbfIGABR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 6 Sep 2019 20:01:17 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 75B9FA46C07;
+        Sat,  7 Sep 2019 00:01:16 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 764675D9CA;
+        Sat,  7 Sep 2019 00:01:06 +0000 (UTC)
+Date:   Sat, 7 Sep 2019 08:01:01 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Sagi Grimberg <sagi@grimberg.me>
+Cc:     Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
+        Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
+Message-ID: <20190907000100.GC12290@ming.t460p>
+References: <6b88719c-782a-4a63-db9f-bf62734a7874@linaro.org>
+ <20190903072848.GA22170@ming.t460p>
+ <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
+ <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
+ <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
+ <20190905090617.GB4432@ming.t460p>
+ <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
+ <20190906014819.GB27116@ming.t460p>
+ <ffefcfa0-09b6-9af5-f94e-8e7ddd2eef16@linaro.org>
+ <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Sat, 07 Sep 2019 00:01:16 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 06 Sep 2019 16:39:12 -0400:
+On Fri, Sep 06, 2019 at 11:30:57AM -0700, Sagi Grimberg wrote:
+> 
+> > 
+> > Ok, so the real problem is per-cpu bounded tasks.
+> > 
+> > I share Thomas opinion about a NAPI like approach.
+> 
+> We already have that, its irq_poll, but it seems that for this
+> use-case, we get lower performance for some reason. I'm not
+> entirely sure why that is, maybe its because we need to mask interrupts
+> because we don't have an "arm" register in nvme like network devices
+> have?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Long observed that IOPS drops much too by switching to threaded irq. If
+softirqd is waken up for handing softirq, the performance shouldn't
+be better than threaded irq. Especially, Long found that context
+switch is increased a lot after applying your irq poll patch.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/1e3778cb223e861808ae0daccf353536e7573eed
+http://lists.infradead.org/pipermail/linux-nvme/2019-August/026788.html
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Thanks,
+Ming
