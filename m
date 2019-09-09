@@ -4,177 +4,197 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6F2C4740A
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 18:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C08B2C4740C
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 18:37:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FDAC218AF
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 18:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A009D218AF
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 18:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730961AbfIIS0i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Sep 2019 14:26:38 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52652 "EHLO mx1.redhat.com"
+        id S1727202AbfIIShW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Sep 2019 14:37:22 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:52524 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730561AbfIIS0h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Sep 2019 14:26:37 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4924C18C8900;
-        Mon,  9 Sep 2019 18:26:37 +0000 (UTC)
-Received: from [10.10.121.183] (ovpn-121-183.rdu2.redhat.com [10.10.121.183])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1F13760923;
-        Mon,  9 Sep 2019 18:26:36 +0000 (UTC)
-Subject: Re: [RFC PATCH] Add proc interface to set PF_MEMALLOC flags
-To:     axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Linux-MM <linux-mm@kvack.org>
-References: <20190909162804.5694-1-mchristi@redhat.com>
-From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <5D76995B.1010507@redhat.com>
-Date:   Mon, 9 Sep 2019 13:26:35 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
- Thunderbird/38.6.0
+        id S1726814AbfIIShW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Sep 2019 14:37:22 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id C94B12041CF;
+        Mon,  9 Sep 2019 20:37:19 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 514A03276znE; Mon,  9 Sep 2019 20:37:17 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 8525C204155;
+        Mon,  9 Sep 2019 20:37:16 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v4 12/22] sg: sense buffer rework
+To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        bvanassche@acm.org, hch@infradead.org
+References: <20190829022659.23130-1-dgilbert@interlog.com>
+ <20190829022659.23130-13-dgilbert@interlog.com>
+ <7d6437e7-18ac-742f-0f99-e77e0a265509@suse.de>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <26512bf0-6d6f-18fd-f287-248965ec0cc2@interlog.com>
+Date:   Mon, 9 Sep 2019 14:37:09 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190909162804.5694-1-mchristi@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <7d6437e7-18ac-742f-0f99-e77e0a265509@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.70]); Mon, 09 Sep 2019 18:26:37 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Forgot to cc linux-mm.
+On 2019-09-09 11:01 a.m., Hannes Reinecke wrote:
+> On 8/29/19 4:26 AM, Douglas Gilbert wrote:
+>> The biggest single item in the sg_request object is the sense
+>> buffer array which is SCSI_SENSE_BUFFERSIZE bytes long. That
+>> constant started out at 18 bytes 20 years ago and is 96 bytes
+>> now and might grow in the future. On the other hand the sense
+>> buffer is only used by a small number of SCSI commands: those
+>> that fail and those that want to return more information
+>> other than a SCSI status of GOOD.
+>>
+>> Set up a small mempool called "sg_sense" that is only used as
+>> required and released back to the mempool as soon as practical.
+>>
+>> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+>> ---
+>>   drivers/scsi/sg.c | 86 ++++++++++++++++++++++++++++++++++++++++-------
+>>   1 file changed, 73 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index 2e476e74130b..ebb9d4f53177 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -72,6 +72,10 @@ static char *sg_version_date = "20190606";
+>>    */
+>>   #define SG_MAX_CDB_SIZE 252
+>>   
+>> +static struct kmem_cache *sg_sense_cache;
+>> +#define SG_MEMPOOL_MIN_NR 4
+>> +static mempool_t *sg_sense_pool;
+>> +
+>>   #define uptr64(val) ((void __user *)(uintptr_t)(val))
+>>   #define cuptr64(val) ((const void __user *)(uintptr_t)(val))
+>>   
+>> @@ -176,7 +180,6 @@ struct sg_request {	/* active SCSI command or inactive on free list (fl) */
+>>   	spinlock_t req_lck;
+>>   	struct sg_scatter_hold sgat_h;	/* hold buffer, perhaps scatter list */
+>>   	struct sg_slice_hdr3 s_hdr3;  /* subset of sg_io_hdr */
+>> -	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
+>>   	u32 duration;		/* cmd duration in milliseconds */
+>>   	u32 rq_flags;		/* hold user supplied flags */
+>>   	u32 rq_info;		/* info supplied by v3 and v4 interfaces */
+>> @@ -188,6 +191,7 @@ struct sg_request {	/* active SCSI command or inactive on free list (fl) */
+>>   	u8 cmd_opcode;		/* first byte of SCSI cdb */
+>>   	u64 start_ns;		/* starting point of command duration calc */
+>>   	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
+>> +	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
+>>   	struct sg_fd *parentfp;	/* pointer to owning fd, even when on fl */
+>>   	struct request *rq;	/* released in sg_rq_end_io(), bio kept */
+>>   	struct bio *bio;	/* kept until this req -->SG_RS_INACTIVE */
+>> @@ -845,18 +849,21 @@ sg_copy_sense(struct sg_request *srp)
+>>   	    (driver_byte(srp->rq_result) & DRIVER_SENSE)) {
+>>   		int sb_len = min_t(int, SCSI_SENSE_BUFFERSIZE, srp->sense_len);
+>>   		int mx_sb_len;
+>> +		u8 *sbp = srp->sense_bp;
+>>   		void __user *up;
+>>   
+>> +		srp->sense_bp = NULL;
+>>   		up = (void __user *)srp->s_hdr3.sbp;
+>>   		mx_sb_len = srp->s_hdr3.mx_sb_len;
+>> -		if (up && mx_sb_len > 0) {
+>> +		if (up && mx_sb_len > 0 && sbp) {
+>>   			sb_len = min_t(int, sb_len, mx_sb_len);
+>>   			/* Additional sense length field */
+>> -			sb_len_wr = 8 + (int)srp->sense_b[7];
+>> +			sb_len_wr = 8 + (int)sbp[7];
+>>   			sb_len_wr = min_t(int, sb_len, sb_len_wr);
+>> -			if (copy_to_user(up, srp->sense_b, sb_len_wr))
+>> +			if (copy_to_user(up, sbp, sb_len_wr))
+>>   				sb_len_wr = -EFAULT;
+>>   		}
+>> +		mempool_free(sbp, sg_sense_pool);
+>>   	}
+>>   	return sb_len_wr;
+>>   }
+>> @@ -963,8 +970,14 @@ sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+>>   	h2p->driver_status = driver_byte(rq_result);
+>>   	if ((CHECK_CONDITION & status_byte(rq_result)) ||
+>>   	    (DRIVER_SENSE & driver_byte(rq_result))) {
+>> -		memcpy(h2p->sense_buffer, srp->sense_b,
+>> -		       sizeof(h2p->sense_buffer));
+>> +		if (srp->sense_bp) {
+>> +			u8 *sbp = srp->sense_bp;
+>> +
+>> +			srp->sense_bp = NULL;
+>> +			memcpy(h2p->sense_buffer, sbp,
+>> +			       sizeof(h2p->sense_buffer));
+>> +			mempool_free(sbp, sg_sense_pool);
+>> +		}
+>>   	}
+>>   	switch (host_byte(rq_result)) {
+>>   	/*
+>> @@ -999,17 +1012,21 @@ sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
+>>   
+>>   	/* Now copy the result back to the user buffer.  */
+>>   	if (count >= SZ_SG_HEADER) {
+>> -		if (copy_to_user(buf, h2p, SZ_SG_HEADER))
+>> -			return -EFAULT;
+>> +		if (copy_to_user(buf, h2p, SZ_SG_HEADER)) {
+>> +			res = -EFAULT;
+>> +			goto fini;
+>> +		}
+>>   		buf += SZ_SG_HEADER;
+>>   		if (count > h2p->reply_len)
+>>   			count = h2p->reply_len;
+>>   		if (count > SZ_SG_HEADER) {
+>> -			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER))
+>> -				return -EFAULT;
+>> +			res = sg_rd_append(srp, buf, count - SZ_SG_HEADER);
+>> +			if (res)
+>> +				goto fini;
+>>   		}
+>>   	} else
+>>   		res = (h2p->result == 0) ? 0 : -EIO;
+>> +fini:
+>>   	atomic_set(&srp->rq_st, SG_RS_DONE_RD);
+>>   	sg_finish_scsi_blk_rq(srp);
+>>   	sg_deact_request(sfp, srp);
+>> @@ -1971,8 +1988,17 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+>>   	srp->duration = sg_calc_rq_dur(srp);
+>>   	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
+>>   		sg_check_sense(sdp, srp, slen);
+>> -	if (slen > 0)
+>> -		memcpy(srp->sense_b, scsi_rp->sense, slen);
+>> +	if (slen > 0) {
+>> +		if (scsi_rp->sense) {
+>> +			srp->sense_bp = mempool_alloc(sg_sense_pool,
+>> +						      GFP_ATOMIC);
+>> +			if (srp->sense_bp)
+>> +				memcpy(srp->sense_bp, scsi_rp->sense, slen);
+>> +		} else {
+>> +			pr_warn("%s: scsi_request::sense==NULL\n", __func__);
+>> +			slen = 0;
+>> +		}
+>> +	}
+>>   	srp->sense_len = slen;
+>>   	if (unlikely(test_bit(SG_FRQ_IS_ORPHAN, srp->frq_bm))) {
+>>   		spin_lock(&srp->req_lck);
+> That looks ... odd.
+> What happens if 'mempool_alloc()' fails?
+> Shouldn't we set 'slen' to '0' here, too?
 
-On 09/09/2019 11:28 AM, Mike Christie wrote:
-> There are several storage drivers like dm-multipath, iscsi, and nbd that
-> have userspace components that can run in the IO path. For example,
-> iscsi and nbd's userspace deamons may need to recreate a socket and/or
-> send IO on it, and dm-multipath's daemon multipathd may need to send IO
-> to figure out the state of paths and re-set them up.
-> 
-> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-> memalloc_*_save/restore functions to control the allocation behavior,
-> but for userspace we would end up hitting a allocation that ended up
-> writing data back to the same device we are trying to allocate for.
-> 
-> This patch allows the userspace deamon to set the PF_MEMALLOC* flags
-> through procfs. It currently only supports PF_MEMALLOC_NOIO, but
-> depending on what other drivers and userspace file systems need, for
-> the final version I can add the other flags for that file or do a file
-> per flag or just do a memalloc_noio file.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  Documentation/filesystems/proc.txt |  6 ++++
->  fs/proc/base.c                     | 53 ++++++++++++++++++++++++++++++
->  2 files changed, 59 insertions(+)
-> 
-> diff --git a/Documentation/filesystems/proc.txt b/Documentation/filesystems/proc.txt
-> index 99ca040e3f90..b5456a61a013 100644
-> --- a/Documentation/filesystems/proc.txt
-> +++ b/Documentation/filesystems/proc.txt
-> @@ -46,6 +46,7 @@ Table of Contents
->    3.10  /proc/<pid>/timerslack_ns - Task timerslack value
->    3.11	/proc/<pid>/patch_state - Livepatch patch operation state
->    3.12	/proc/<pid>/arch_status - Task architecture specific information
-> +  3.13  /proc/<pid>/memalloc - Control task's memory reclaim behavior
->  
->    4	Configuring procfs
->    4.1	Mount options
-> @@ -1980,6 +1981,11 @@ Example
->   $ cat /proc/6753/arch_status
->   AVX512_elapsed_ms:      8
->  
-> +3.13 /proc/<pid>/memalloc - Control task's memory reclaim behavior
-> +-----------------------------------------------------------------------
-> +A value of "noio" indicates that when a task allocates memory it will not
-> +reclaim memory that requires starting phisical IO.
-> +
->  Description
->  -----------
->  
-> diff --git a/fs/proc/base.c b/fs/proc/base.c
-> index ebea9501afb8..c4faa3464602 100644
-> --- a/fs/proc/base.c
-> +++ b/fs/proc/base.c
-> @@ -1223,6 +1223,57 @@ static const struct file_operations proc_oom_score_adj_operations = {
->  	.llseek		= default_llseek,
->  };
->  
-> +static ssize_t memalloc_read(struct file *file, char __user *buf, size_t count,
-> +			     loff_t *ppos)
-> +{
-> +	struct task_struct *task;
-> +	ssize_t rc = 0;
-> +
-> +	task = get_proc_task(file_inode(file));
-> +	if (!task)
-> +		return -ESRCH;
-> +
-> +	if (task->flags & PF_MEMALLOC_NOIO)
-> +		rc = simple_read_from_buffer(buf, count, ppos, "noio", 4);
-> +	put_task_struct(task);
-> +	return rc;
-> +}
-> +
-> +static ssize_t memalloc_write(struct file *file, const char __user *buf,
-> +			      size_t count, loff_t *ppos)
-> +{
-> +	struct task_struct *task;
-> +	char buffer[5];
-> +	int rc = count;
-> +
-> +	memset(buffer, 0, sizeof(buffer));
-> +	if (count != sizeof(buffer) - 1)
-> +		return -EINVAL;
-> +
-> +	if (copy_from_user(buffer, buf, count))
-> +		return -EFAULT;
-> +	buffer[count] = '\0';
-> +
-> +	task = get_proc_task(file_inode(file));
-> +	if (!task)
-> +		return -ESRCH;
-> +
-> +	if (!strcmp(buffer, "noio")) {
-> +		task->flags |= PF_MEMALLOC_NOIO;
-> +	} else {
-> +		rc = -EINVAL;
-> +	}
-> +
-> +	put_task_struct(task);
-> +	return rc;
-> +}
-> +
-> +static const struct file_operations proc_memalloc_operations = {
-> +	.read		= memalloc_read,
-> +	.write		= memalloc_write,
-> +	.llseek		= default_llseek,
-> +};
-> +
->  #ifdef CONFIG_AUDIT
->  #define TMPBUFLEN 11
->  static ssize_t proc_loginuid_read(struct file * file, char __user * buf,
-> @@ -3097,6 +3148,7 @@ static const struct pid_entry tgid_base_stuff[] = {
->  #ifdef CONFIG_PROC_PID_ARCH_STATUS
->  	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
->  #endif
-> +	REG("memalloc", S_IRUGO|S_IWUSR, proc_memalloc_operations),
->  };
->  
->  static int proc_tgid_base_readdir(struct file *file, struct dir_context *ctx)
-> @@ -3487,6 +3539,7 @@ static const struct pid_entry tid_base_stuff[] = {
->  #ifdef CONFIG_PROC_PID_ARCH_STATUS
->  	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
->  #endif
-> +	REG("memalloc", S_IRUGO|S_IWUSR, proc_memalloc_operations),
->  };
->  
->  static int proc_tid_base_readdir(struct file *file, struct dir_context *ctx)
-> 
+Indeed. Fixed in v5 with a pr_warn() added, like the other failed branch.
+Also make the pr_warn messages more precise.
+
+Doug Gilbert
+
 
