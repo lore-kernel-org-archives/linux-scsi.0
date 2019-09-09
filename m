@@ -2,122 +2,224 @@ Return-Path: <SRS0=Y1L5=XE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED008C00307
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 09:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8AA1C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 11:52:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCA51218AC
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 09:56:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AD7121920
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Sep 2019 11:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729249AbfIIJ4c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Sep 2019 05:56:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41182 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728770AbfIIJ4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Sep 2019 05:56:32 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 885DEAC6E;
-        Mon,  9 Sep 2019 09:56:29 +0000 (UTC)
-Subject: Re: [PATCH] scsi: fcoe: fix null-ptr-deref Read in
- fc_release_transport
-To:     "zhengbin (A)" <zhengbin13@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, Hannes Reinecke <hare@suse.com>,
+        id S2404309AbfIILwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Sep 2019 07:52:50 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50546 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404215AbfIILwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Sep 2019 07:52:49 -0400
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1B8FA5AFE9
+        for <linux-scsi@vger.kernel.org>; Mon,  9 Sep 2019 11:52:49 +0000 (UTC)
+Received: by mail-qk1-f198.google.com with SMTP id w20so14993782qka.18
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Sep 2019 04:52:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=CkP1XKb4Ipu83efc9YeevsDGcjt9KZv3bT0PM57OVrg=;
+        b=FMt7VLUTZouqrhmGC/MvA/aS428pj91gZyTFAIk46lGbINTexsw7vnu2mB/bk+XfCu
+         7Rp0VLbK2joRLdUMwjvUzXluy4MQUEQGD0dWQZV6WiRoupXF1JoLAdF2RV7ggsR0538z
+         DleCo0rw8tIoHwunOTUO1jin7BjbA/yi0KmyJ2L/66nBeyn+hJCMiFv1JTfH7u3Npd1J
+         IwzgG0+AeD5WQdjSj9hbygYYoNl1jYXHEM1EJeTWzakVp1mQj5z3xW4xcO1tylvV41js
+         /x3KkGIHAOuJcvm+uhvxbcEL5xhAU+mY6P4RyG6DngbstJb7szJejexKbfj9kYK7BlzC
+         QGYA==
+X-Gm-Message-State: APjAAAWIjkVdDgY3MI7dyp8XSFFHudZuooOBVeLsuYFUpeNaCuiNMy6x
+        fwc8Oc1l8kN+HORiUojvK8uqS9ORTrAvS89/cb6m5g6ZkFItdxP8Kos8jHUl35hSV3dWq5Xx2Qi
+        1jOCYLXCmtkfhKAne1UFJ+w==
+X-Received: by 2002:a37:883:: with SMTP id 125mr22000412qki.478.1568029968167;
+        Mon, 09 Sep 2019 04:52:48 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqy7UXwA+iMKaHbLkSdYaAE6FdxQnvEHOHNtcbzM4Ddrsbtji5KdKvkwyIDdJQc90sZZ8ST6Hg==
+X-Received: by 2002:a37:883:: with SMTP id 125mr22000394qki.478.1568029967791;
+        Mon, 09 Sep 2019 04:52:47 -0700 (PDT)
+Received: from rhel7lobe ([2600:6c64:4e80:f1:aa45:cafe:5682:368f])
+        by smtp.gmail.com with ESMTPSA id c26sm8175867qtk.93.2019.09.09.04.52.40
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 09 Sep 2019 04:52:43 -0700 (PDT)
+Message-ID: <10d6ef9022a8eb892b3837739276f15dd9c87d47.camel@redhat.com>
+Subject: Re: [PATCH] V2.  bnx2fc: Handle scope bits when array returns BUSY
+ or TASK_SET_FULL
+From:   Laurence Oberman <loberman@redhat.com>
+To:     cdupuis1@gmail.com, QLogic-Storage-Upstream@qlogic.com,
         linux-scsi@vger.kernel.org
-Cc:     yi.zhang@huawei.com
-References: <1566279789-58207-1-git-send-email-zhengbin13@huawei.com>
- <b991ad99-baf6-97cf-fda3-cbaaf9703d3f@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <8f50228d-d74f-03c0-2f40-4ed1df76762b@suse.de>
-Date:   Mon, 9 Sep 2019 11:56:28 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
-MIME-Version: 1.0
-In-Reply-To: <b991ad99-baf6-97cf-fda3-cbaaf9703d3f@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Date:   Mon, 09 Sep 2019 07:52:39 -0400
+In-Reply-To: <99d3265e65c6ca84e06a631caa276710ae9d27e2.camel@gmail.com>
+References: <1567801579-18674-1-git-send-email-loberman@redhat.com>
+         <99d3265e65c6ca84e06a631caa276710ae9d27e2.camel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/4/19 10:51 AM,  zhengbin (A)  wrote:
-> ping
+On Sat, 2019-09-07 at 21:34 -0400, cdupuis1@gmail.com wrote:
+> On Fri, 2019-09-06 at 16:26 -0400, Laurence Oberman wrote:
+> > The qla2xxx driver had this issue as well when the newer array
+> > firmware returned the retry_delay_timer in the fcp_rsp.
+> > The bnx2fc is not handling the masking of the scope bits either
+> > so the retry_delay_timestamp value lands up being a large value
+> > added to the timer timestamp delaying I/O for up to 27 Minutes.
+> > This patch adds similar code to handle this to the
+> > bnx2fc driver to avoid the huge delay.
+> > 
+> > Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> > ---
+> >  drivers/scsi/bnx2fc/bnx2fc_io.c | 23 ++++++++++++++++++++---
+> >  1 file changed, 20 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> > b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> > index 9e50e5b..39f4aeb 100644
+> > --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> > +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> > @@ -1928,6 +1928,7 @@ void bnx2fc_process_scsi_cmd_compl(struct
+> > bnx2fc_cmd *io_req,
+> >  	struct bnx2fc_rport *tgt = io_req->tgt;
+> >  	struct scsi_cmnd *sc_cmd;
+> >  	struct Scsi_Host *host;
+> > +	u16 scope, qualifier = 0;
+> >  
+> >  
+> >  	/* scsi_cmd_cmpl is called with tgt lock held */
+> > @@ -1997,12 +1998,28 @@ void bnx2fc_process_scsi_cmd_compl(struct
+> > bnx2fc_cmd *io_req,
+> >  
+> >  			if (io_req->cdb_status ==
+> > SAM_STAT_TASK_SET_FULL ||
+> >  			    io_req->cdb_status == SAM_STAT_BUSY) {
+> > +				/* Newer array firmware with BUSY or
+> > +				 * TASK_SET_FULL may return a status
+> > that needs
+> > +				 * the scope bits masked.
+> > +				 * Or a huge delay timestamp up to 27
+> > minutes
+> > +				 * can result.
+> > +				*/
+> > +				if (fcp_rsp->retry_delay_timer) {
+> > +					/* Upper 2 bits */
+> > +					scope = fcp_rsp-
+> > > retry_delay_timer
+> > 
+> > +						& 0xC000;
+> > +					/* Lower 14 bits */
+> > +					qualifier = fcp_rsp-
+> > > retry_delay_timer
+> > 
+> > +						& 0x3FFF;
+> > +				}
+> > +				if (scope > 0 && qualifier > 0 &&
+> > +					qualifier <= 0x3FEF) {
+> >  				/* Set the jiffies + retry_delay_timer
+> > * 100ms
+> >  				   for the rport/tgt */
+> > -				tgt->retry_delay_timestamp = jiffies +
+> > -					fcp_rsp->retry_delay_timer * HZ
+> > / 10;
+> > +					tgt->retry_delay_timestamp =
+> > jiffies +
+> > +						(qualifier * HZ / 10);
+> > +				}
+> >  			}
+> > -
+> >  		}
+> >  		if (io_req->fcp_resid)
+> >  			scsi_set_resid(sc_cmd, io_req->fcp_resid);
 > 
-> On 2019/8/20 13:43, zhengbin wrote:
->> In fcoe_if_init, if fc_attach_transport(&fcoe_vport_fc_functions)
->> fails, need to free the previously memory and return fail,
->> otherwise will trigger null-ptr-deref Read in fc_release_transport.
->>
->> fcoe_exit
->>   fcoe_if_exit
->>     fc_release_transport(fcoe_vport_scsi_transport)
->>
->> Reported-by: Hulk Robot <hulkci@huawei.com>
->> Signed-off-by: zhengbin <zhengbin13@huawei.com>
->> ---
->>  drivers/scsi/fcoe/fcoe.c | 16 +++++++++++-----
->>  1 file changed, 11 insertions(+), 5 deletions(-)
->>
-[ .. ]
->>
+> What better thing to be doing than reviewing patches on a Saturday
+> evening.  Looks good though I might suggest moving the indent of the
+> comment in the new if statement.
 > 
+> Reviewed-by: Chad Dupuis <cdupuis1@gmail.com>
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+The qla2xxx driver had this issue as well when the newer array
+firmware returned the retry_delay_timer in the fcp_rsp.
+The bnx2fc is not handling the masking of the scope bits either
+so the retry_delay_timestamp value lands up being a large value
+added to the timer timestamp delaying I/O for up to 27 Minutes.
+This patch adds similar code to handle this to the
+bnx2fc driver to avoid the huge delay.
 
-Hannes
+V2. Indent comments as suggested
+
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+Reported-by: David Jeffery <djeffery@redhat.com>
+
+---
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c
+b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 9e50e5b..39f4aeb 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1928,6 +1928,7 @@ void bnx2fc_process_scsi_cmd_compl(struct
+bnx2fc_cmd *io_req,
+ 	struct bnx2fc_rport *tgt = io_req->tgt;
+ 	struct scsi_cmnd *sc_cmd;
+ 	struct Scsi_Host *host;
++	u16 scope, qualifier = 0;
+ 
+ 
+ 	/* scsi_cmd_cmpl is called with tgt lock held */
+@@ -1997,12 +1998,28 @@ void bnx2fc_process_scsi_cmd_compl(struct
+bnx2fc_cmd *io_req,
+ 
+ 			if (io_req->cdb_status ==
+SAM_STAT_TASK_SET_FULL ||
+ 			    io_req->cdb_status == SAM_STAT_BUSY) {
++				/* Newer array firmware with BUSY or
++				 * TASK_SET_FULL may return a status
+that needs
++				 * the scope bits masked.
++				 * Or a huge delay timestamp up to 27
+minutes
++				 * can result.
++				*/
++				if (fcp_rsp->retry_delay_timer) {
++					/* Upper 2 bits */
++					scope = fcp_rsp-
+>retry_delay_timer
++						& 0xC000;
++					/* Lower 14 bits */
++					qualifier = fcp_rsp-
+>retry_delay_timer
++						& 0x3FFF;
++				}
++				if (scope > 0 && qualifier > 0 &&
++					qualifier <= 0x3FEF) {
+ 					/* Set the jiffies +
+retry_delay_timer * 100ms
+ 				   	for the rport/tgt */
+-				tgt->retry_delay_timestamp = jiffies +
+-					fcp_rsp->retry_delay_timer * HZ
+/ 10;
++					tgt->retry_delay_timestamp =
+jiffies +
++						(qualifier * HZ / 10);
++				}
+ 			}
+-
+ 		}
+ 		if (io_req->fcp_resid)
+ 			scsi_set_resid(sc_cmd, io_req->fcp_resid);
 -- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 247165 (AG München), GF: Felix Imendörffer
+1.8.3.1
+
+
