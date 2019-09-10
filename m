@@ -2,184 +2,104 @@ Return-Path: <SRS0=qYHy=XF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB10C3A5A2
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 10:00:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B30C4740A
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 11:18:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D948520872
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 10:00:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A35D2089F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 11:18:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=shutemov-name.20150623.gappssmtp.com header.i=@shutemov-name.20150623.gappssmtp.com header.b="GxPXDkYL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nv5Oj6uq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391953AbfIJKAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Sep 2019 06:00:04 -0400
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:45832 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388653AbfIJKAD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2019 06:00:03 -0400
-Received: by mail-ed1-f67.google.com with SMTP id f19so16428535eds.12
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2019 03:00:02 -0700 (PDT)
+        id S2392907AbfIJLSH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Sep 2019 07:18:07 -0400
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:39293 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392848AbfIJLSG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2019 07:18:06 -0400
+Received: by mail-qk1-f196.google.com with SMTP id 4so16527437qki.6;
+        Tue, 10 Sep 2019 04:18:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=pUWhX3ThjBsfsGFjHTg5vM8zbxi9HZ/0nZMiaDbj8tw=;
-        b=GxPXDkYLjPwpEyC9jWChtUTWeR0/79A5cu90rpnDmM8on2MRXtnBKzG29ORgLNA6f1
-         txcUcoaQTdyTAiUGkQUZZPJkuD7nugbVl3CoybHPuQAFAMtvHrQNCku4QefgSsIOGT5b
-         GUwbPSSrp+wXw9hrMHdTQNdmUSFac6yQhUk7I67mBDwyM41vxlCITlbm0a6vv00s+fSY
-         qXDIpgTKRMsVg9s5v3fD0Iea3f5IqYCoYeYadWUZdGSt94hYnIyN0FHw7mmmsMZPFsKe
-         4eW7ii0xEN698uaYMy49yVN+Hursc/82AAUIRsnWjFuvJblw4Boic9ulaxPxCxm0f7Y3
-         0oLQ==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=frO/4e4TV6SO1RRZqWT4we5pX4/lanaUDNg2viAs+M8=;
+        b=nv5Oj6uq2Kul7q7iwz0WJZUmQBxNZYQuCmJM1wWz2mpnaISpld8W+mb5BFrlrkjTHC
+         8BGIPSecP45RYl26aOXhk4EUh/xUDoum9Os+LYpHUg0bqOlTrsOlK1C12rhF+EqPlLTN
+         ytzxDTifEbFNVaFZvJcerT1ty3JNdxBWGf0gMM56kRCgIqPHq5MULth5Z9txeY6L1SoP
+         TjOWfrqPN2PwTM3BQOFf+zIYeuDmsuCmv/jAVhEqYLyHEiPnfOhv9FUdWaXaN/VlJ/5S
+         80xdUSGZKKNnGeGx6d5g2/0J6oQX3VVI20/iI+1vBLoWHVpGR7IFXIwIW03fShgmkzkB
+         YsAA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=pUWhX3ThjBsfsGFjHTg5vM8zbxi9HZ/0nZMiaDbj8tw=;
-        b=D97BYoorUviTLXbfJP3lj7sRXVmXXmyBWIY2WQX6ajDZKIZ52EsnnMnxj0XO77hJb4
-         pWpTeEyQmLfbR2EaNLD6lOT6WWK6rAu+ey1l8WTeGPRTk4jPPllf2rLM+cNOPpP8K3DB
-         8HnmxJcBQB/GwLsJ849o78R9eHEEBeuoUf4588D06D3+FH8ESE9xP5cUFcnjuy5zd2lH
-         zJg9m5gwT8dhGirHrh7n2/v6ikiz8rsWI2JhyYNbKRqy6S2zMX8UUCE2WzaDtUABrch1
-         MsAzdz2UeSwB9A3x4l83/YXJMbY+DuYfNORm7HWw5VRNbR0ox2zhUDmoo9L/lXQfrSYd
-         jcXg==
-X-Gm-Message-State: APjAAAV5iQc4WknNNeO2EDI16Mt8F9PzNaZc6pRF+m+zUXa59cN6scuO
-        PCpEJ/rKG03zfuceBPmVwsHzzQ==
-X-Google-Smtp-Source: APXvYqzz4uL9Be0Dv1iBucS5Ebliv1AOhngwcvBEpja1udqCYli84dpW7omCy5uIzxmAlbj9c8Usvw==
-X-Received: by 2002:a17:906:5f84:: with SMTP id a4mr23374522eju.109.1568109601468;
-        Tue, 10 Sep 2019 03:00:01 -0700 (PDT)
-Received: from box.localdomain ([86.57.175.117])
-        by smtp.gmail.com with ESMTPSA id a55sm3486246edd.34.2019.09.10.03.00.00
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 10 Sep 2019 03:00:00 -0700 (PDT)
-Received: by box.localdomain (Postfix, from userid 1000)
-        id E0B701009F6; Tue, 10 Sep 2019 13:00:00 +0300 (+03)
-Date:   Tue, 10 Sep 2019 13:00:00 +0300
-From:   "Kirill A. Shutemov" <kirill@shutemov.name>
-To:     Mike Christie <mchristi@redhat.com>
-Cc:     axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [RFC PATCH] Add proc interface to set PF_MEMALLOC flags
-Message-ID: <20190910100000.mcik63ot6o3dyzjv@box.shutemov.name>
-References: <20190909162804.5694-1-mchristi@redhat.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=frO/4e4TV6SO1RRZqWT4we5pX4/lanaUDNg2viAs+M8=;
+        b=G1kpSYU9ocUDy0OiS7qgWzYAB44KJDQg3b7y3No0iBkOqNW04b8Wee1d5sHc4bFd+5
+         uczpiqpOzGnNb1SmMdx5D9Lb3SHHN/G81TLICSEXDBfdDPdNPZZ3MO20hz4XjUB2bFYy
+         tFcJtcJqqxyDj26d5rZd7O8VO85/2hU5L/Ha00JejTCSs4oJjMW2DsNjGbjGhmXBw+J4
+         mCC1S0/sJhEqFqIa0/SRPfHPQrpVknM6ViF4dqSYvKB83SQm1TZ4tiseTHi31kwTaUfa
+         ss2O58GVvAXCjbmiRibd8gsUaYk91jfYrU9rZ9NnmNZG6Vwk0qT+veLkIkyXJj3fPV59
+         SeAg==
+X-Gm-Message-State: APjAAAXnDSPNrTUcNtTVJC1qX5Smx6nQYMguA2dYeB6NhkbtKrLAodov
+        hrK6/FQWK/8ftW2FwEuEy8/Df2rPbTAYrQ7b4lU=
+X-Google-Smtp-Source: APXvYqxVriuHghKffsomFZFQ7snbX8qOdBWioDf5ZIGKnykMN8oM/e5Cj7MB7MrFUSNQvZDhS0IbEOPHDQTpwEMpn+U=
+X-Received: by 2002:a37:a946:: with SMTP id s67mr29298195qke.470.1568114285444;
+ Tue, 10 Sep 2019 04:18:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190909162804.5694-1-mchristi@redhat.com>
-User-Agent: NeoMutt/20180716
+References: <20190909054219.GA119246@LGEARND20B15>
+In-Reply-To: <20190909054219.GA119246@LGEARND20B15>
+From:   Austin Kim <austindh.kim@gmail.com>
+Date:   Tue, 10 Sep 2019 20:17:59 +0900
+Message-ID: <CADLLry4CjS+1syBCf68BFUbWxZJ8UGcUphinE1Hs7FRvdK0ikg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: dpt_i2o: drop unnecessary comparison statement
+To:     aacraid@microsemi.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 09, 2019 at 11:28:04AM -0500, Mike Christie wrote:
-> There are several storage drivers like dm-multipath, iscsi, and nbd that
-> have userspace components that can run in the IO path. For example,
-> iscsi and nbd's userspace deamons may need to recreate a socket and/or
-> send IO on it, and dm-multipath's daemon multipathd may need to send IO
-> to figure out the state of paths and re-set them up.
-> 
-> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-> memalloc_*_save/restore functions to control the allocation behavior,
-> but for userspace we would end up hitting a allocation that ended up
-> writing data back to the same device we are trying to allocate for.
-> 
-> This patch allows the userspace deamon to set the PF_MEMALLOC* flags
-> through procfs. It currently only supports PF_MEMALLOC_NOIO, but
-> depending on what other drivers and userspace file systems need, for
-> the final version I can add the other flags for that file or do a file
-> per flag or just do a memalloc_noio file.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
+Hello, Maintainers...
+Would you please review this patch and share the feedback?
+
+Thanks,
+Austin Kim
+
+2019=EB=85=84 9=EC=9B=94 9=EC=9D=BC (=EC=9B=94) =EC=98=A4=ED=9B=84 2:42, Au=
+stin Kim <austindh.kim@gmail.com>=EB=8B=98=EC=9D=B4 =EC=9E=91=EC=84=B1:
+>
+> The type of 'chan' is u32 which contain non-negative value.
+> So 'chan < 0' is statment is always false.
+>
+> Remove unnecessary comparison statement
+>
+> Signed-off-by: Austin Kim <austindh.kim@gmail.com>
 > ---
->  Documentation/filesystems/proc.txt |  6 ++++
->  fs/proc/base.c                     | 53 ++++++++++++++++++++++++++++++
->  2 files changed, 59 insertions(+)
-> 
-> diff --git a/Documentation/filesystems/proc.txt b/Documentation/filesystems/proc.txt
-> index 99ca040e3f90..b5456a61a013 100644
-> --- a/Documentation/filesystems/proc.txt
-> +++ b/Documentation/filesystems/proc.txt
-> @@ -46,6 +46,7 @@ Table of Contents
->    3.10  /proc/<pid>/timerslack_ns - Task timerslack value
->    3.11	/proc/<pid>/patch_state - Livepatch patch operation state
->    3.12	/proc/<pid>/arch_status - Task architecture specific information
-> +  3.13  /proc/<pid>/memalloc - Control task's memory reclaim behavior
->  
->    4	Configuring procfs
->    4.1	Mount options
-> @@ -1980,6 +1981,11 @@ Example
->   $ cat /proc/6753/arch_status
->   AVX512_elapsed_ms:      8
->  
-> +3.13 /proc/<pid>/memalloc - Control task's memory reclaim behavior
-> +-----------------------------------------------------------------------
-> +A value of "noio" indicates that when a task allocates memory it will not
-> +reclaim memory that requires starting phisical IO.
-> +
->  Description
->  -----------
->  
-> diff --git a/fs/proc/base.c b/fs/proc/base.c
-> index ebea9501afb8..c4faa3464602 100644
-> --- a/fs/proc/base.c
-> +++ b/fs/proc/base.c
-> @@ -1223,6 +1223,57 @@ static const struct file_operations proc_oom_score_adj_operations = {
->  	.llseek		= default_llseek,
->  };
->  
-> +static ssize_t memalloc_read(struct file *file, char __user *buf, size_t count,
-> +			     loff_t *ppos)
-> +{
-> +	struct task_struct *task;
-> +	ssize_t rc = 0;
-> +
-> +	task = get_proc_task(file_inode(file));
-> +	if (!task)
-> +		return -ESRCH;
-> +
-> +	if (task->flags & PF_MEMALLOC_NOIO)
-> +		rc = simple_read_from_buffer(buf, count, ppos, "noio", 4);
-> +	put_task_struct(task);
-> +	return rc;
-> +}
-> +
-> +static ssize_t memalloc_write(struct file *file, const char __user *buf,
-> +			      size_t count, loff_t *ppos)
-> +{
-> +	struct task_struct *task;
-> +	char buffer[5];
-> +	int rc = count;
-> +
-> +	memset(buffer, 0, sizeof(buffer));
-> +	if (count != sizeof(buffer) - 1)
-> +		return -EINVAL;
-> +
-> +	if (copy_from_user(buffer, buf, count))
-> +		return -EFAULT;
-> +	buffer[count] = '\0';
-> +
-> +	task = get_proc_task(file_inode(file));
-> +	if (!task)
-> +		return -ESRCH;
-> +
-> +	if (!strcmp(buffer, "noio")) {
-> +		task->flags |= PF_MEMALLOC_NOIO;
-> +	} else {
-> +		rc = -EINVAL;
-> +	}
-
-Really? Without any privilege check? So any random user can tap into
-__GFP_NOIO allocations?
-
-NAK.
-
-I don't think that it's great idea in general to expose this low-level
-machinery to userspace. But it's better to get comment from people move
-familiar with reclaim path.
-
--- 
- Kirill A. Shutemov
+>  drivers/scsi/dpt_i2o.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+> index abc74fd..df48ef5 100644
+> --- a/drivers/scsi/dpt_i2o.c
+> +++ b/drivers/scsi/dpt_i2o.c
+> @@ -1120,7 +1120,7 @@ static struct adpt_device* adpt_find_device(adpt_hb=
+a* pHba, u32 chan, u32 id, u6
+>  {
+>         struct adpt_device* d;
+>
+> -       if(chan < 0 || chan >=3D MAX_CHANNEL)
+> +       if(chan >=3D MAX_CHANNEL)
+>                 return NULL;
+>
+>         d =3D pHba->channel[chan].device[id];
+> --
+> 2.6.2
+>
