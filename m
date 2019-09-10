@@ -2,95 +2,154 @@ Return-Path: <SRS0=qYHy=XF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35A7EC4740A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 14:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE14EC49ED8
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 16:06:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10C1421019
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 14:07:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CF91206A1
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 16:06:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731801AbfIJOHl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Sep 2019 10:07:41 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51504 "EHLO mx1.redhat.com"
+        id S2394104AbfIJQGG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Sep 2019 12:06:06 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:39576 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725942AbfIJOHl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Sep 2019 10:07:41 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        id S1730821AbfIJQGG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Sep 2019 12:06:06 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BD7FA30044CE;
-        Tue, 10 Sep 2019 14:07:40 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.35.206.94])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B4F135DA21;
-        Tue, 10 Sep 2019 14:07:38 +0000 (UTC)
-Subject: Re: [RFC PATCH 0/4] iscsi: chap: introduce support for SHA1 and
- SHA3-256
-To:     "Black, David" <David.Black@dell.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     "cleech@redhat.com" <cleech@redhat.com>,
-        "mchristi@redhat.com" <mchristi@redhat.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-References: <20190829155929.27701-1-mlombard@redhat.com>
- <20190903070013.GA12256@infradead.org>
- <CE03DB3D7B45C245BCA0D24327794936306D540B@MX307CL04.corp.emc.com>
-From:   Maurizio Lombardi <mlombard@redhat.com>
-Message-ID: <78692dca-949b-dcf2-3b69-a1755956f216@redhat.com>
-Date:   Tue, 10 Sep 2019 16:07:37 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        by mx1.redhat.com (Postfix) with ESMTPS id 44A1D302C08C;
+        Tue, 10 Sep 2019 16:06:05 +0000 (UTC)
+Received: from [10.10.120.129] (ovpn-120-129.rdu2.redhat.com [10.10.120.129])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 149295D6B2;
+        Tue, 10 Sep 2019 16:06:03 +0000 (UTC)
+Subject: Re: [RFC PATCH] Add proc interface to set PF_MEMALLOC flags
+To:     "Kirill A. Shutemov" <kirill@shutemov.name>
+References: <20190909162804.5694-1-mchristi@redhat.com>
+ <20190910100000.mcik63ot6o3dyzjv@box.shutemov.name>
+Cc:     axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Linux-MM <linux-mm@kvack.org>
+From:   Mike Christie <mchristi@redhat.com>
+Message-ID: <5D77C9EB.90807@redhat.com>
+Date:   Tue, 10 Sep 2019 11:06:03 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
+ Thunderbird/38.6.0
 MIME-Version: 1.0
-In-Reply-To: <CE03DB3D7B45C245BCA0D24327794936306D540B@MX307CL04.corp.emc.com>
-Content-Type: text/plain; charset=iso-8859-2
-Content-Language: en-US
+In-Reply-To: <20190910100000.mcik63ot6o3dyzjv@box.shutemov.name>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Tue, 10 Sep 2019 14:07:40 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Tue, 10 Sep 2019 16:06:05 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello David,
+On 09/10/2019 05:00 AM, Kirill A. Shutemov wrote:
+> On Mon, Sep 09, 2019 at 11:28:04AM -0500, Mike Christie wrote:
+>> There are several storage drivers like dm-multipath, iscsi, and nbd that
+>> have userspace components that can run in the IO path. For example,
+>> iscsi and nbd's userspace deamons may need to recreate a socket and/or
+>> send IO on it, and dm-multipath's daemon multipathd may need to send IO
+>> to figure out the state of paths and re-set them up.
+>>
+>> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
+>> memalloc_*_save/restore functions to control the allocation behavior,
+>> but for userspace we would end up hitting a allocation that ended up
+>> writing data back to the same device we are trying to allocate for.
+>>
+>> This patch allows the userspace deamon to set the PF_MEMALLOC* flags
+>> through procfs. It currently only supports PF_MEMALLOC_NOIO, but
+>> depending on what other drivers and userspace file systems need, for
+>> the final version I can add the other flags for that file or do a file
+>> per flag or just do a memalloc_noio file.
+>>
+>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>> ---
+>>  Documentation/filesystems/proc.txt |  6 ++++
+>>  fs/proc/base.c                     | 53 ++++++++++++++++++++++++++++++
+>>  2 files changed, 59 insertions(+)
+>>
+>> diff --git a/Documentation/filesystems/proc.txt b/Documentation/filesystems/proc.txt
+>> index 99ca040e3f90..b5456a61a013 100644
+>> --- a/Documentation/filesystems/proc.txt
+>> +++ b/Documentation/filesystems/proc.txt
+>> @@ -46,6 +46,7 @@ Table of Contents
+>>    3.10  /proc/<pid>/timerslack_ns - Task timerslack value
+>>    3.11	/proc/<pid>/patch_state - Livepatch patch operation state
+>>    3.12	/proc/<pid>/arch_status - Task architecture specific information
+>> +  3.13  /proc/<pid>/memalloc - Control task's memory reclaim behavior
+>>  
+>>    4	Configuring procfs
+>>    4.1	Mount options
+>> @@ -1980,6 +1981,11 @@ Example
+>>   $ cat /proc/6753/arch_status
+>>   AVX512_elapsed_ms:      8
+>>  
+>> +3.13 /proc/<pid>/memalloc - Control task's memory reclaim behavior
+>> +-----------------------------------------------------------------------
+>> +A value of "noio" indicates that when a task allocates memory it will not
+>> +reclaim memory that requires starting phisical IO.
+>> +
+>>  Description
+>>  -----------
+>>  
+>> diff --git a/fs/proc/base.c b/fs/proc/base.c
+>> index ebea9501afb8..c4faa3464602 100644
+>> --- a/fs/proc/base.c
+>> +++ b/fs/proc/base.c
+>> @@ -1223,6 +1223,57 @@ static const struct file_operations proc_oom_score_adj_operations = {
+>>  	.llseek		= default_llseek,
+>>  };
+>>  
+>> +static ssize_t memalloc_read(struct file *file, char __user *buf, size_t count,
+>> +			     loff_t *ppos)
+>> +{
+>> +	struct task_struct *task;
+>> +	ssize_t rc = 0;
+>> +
+>> +	task = get_proc_task(file_inode(file));
+>> +	if (!task)
+>> +		return -ESRCH;
+>> +
+>> +	if (task->flags & PF_MEMALLOC_NOIO)
+>> +		rc = simple_read_from_buffer(buf, count, ppos, "noio", 4);
+>> +	put_task_struct(task);
+>> +	return rc;
+>> +}
+>> +
+>> +static ssize_t memalloc_write(struct file *file, const char __user *buf,
+>> +			      size_t count, loff_t *ppos)
+>> +{
+>> +	struct task_struct *task;
+>> +	char buffer[5];
+>> +	int rc = count;
+>> +
+>> +	memset(buffer, 0, sizeof(buffer));
+>> +	if (count != sizeof(buffer) - 1)
+>> +		return -EINVAL;
+>> +
+>> +	if (copy_from_user(buffer, buf, count))
+>> +		return -EFAULT;
+>> +	buffer[count] = '\0';
+>> +
+>> +	task = get_proc_task(file_inode(file));
+>> +	if (!task)
+>> +		return -ESRCH;
+>> +
+>> +	if (!strcmp(buffer, "noio")) {
+>> +		task->flags |= PF_MEMALLOC_NOIO;
+>> +	} else {
+>> +		rc = -EINVAL;
+>> +	}
+> 
+> Really? Without any privilege check? So any random user can tap into
+> __GFP_NOIO allocations?
 
-first of all, thank for your reply and your offer to help with this.
-We appreciate this a lot.
+That was a mistake on my part. I will add it in.
 
-
-Dne 4.9.2019 v 01:59 Black, David napsal(a):
-> Christoph,
-> 
->> Adding Dave Black who has helped with IANA interaction in NVMe recently.
-> 
-> I see my cue ... please keep me cc:'d on this conversation, as I'm not on either of the mailing lists.
-> 
->> But we'll need IANA assignments and IETF consensus before adding new
->> algorithms to ensure we have interoperable implementations.
-> 
-> In reverse order ...
-> 
-> -- IETF Consensus: 
-> 
-> My sense of the IETF view on secure hashes is that MD5 and SHA1 are broken, whereas the SHA2 algorithms are proving to be longer-lived (more resistant to attack) than expected, and the SHA3 algorithms are fine.
-> 
-> That suggests that registration of codepoints for both SHA2 and SHA3 would be a good thing to do, as opposed to only SHA3.  I'd suggest starting with either SHA-256 or SHA-512/256 (both are SHA2 hashes) in addition to SHA3-256, as all three have the same 256-bit output size.
-
-Agree. Having SHA-256 would make sense.
-
-> 
-> Figuring out exactly what should be done here (e.g., which SHA2 variant to register) would benefit from some discussion at IETF.  I would start with the Security Area's saag@ietf.org mailing list.  In addition, as iSCSI falls within IETF's Transport Area, the Transport Area Directors ought to be looped in beforehand.  Fortunately, publication of an RFC is not necessary, because ...
-
-Ok, I am going to send an email for the SAAG mailing list to see what they think about it.
-
-> 
-> -- IANA assignments
-> 
-> ... the Registration Procedure for PPP Authentication Algorithms is Expert Review.   The long version of what that means is in Section 4.5 of RFC 8126: https://tools.ietf.org/html/rfc8126#section-4.5.  The short version is that a request for allocation of these codepoints is submitted to IANA, whose designated expert then makes a decision.  It's probably a good idea for that request to state that the intended usage is iSCSI, and say that it's ok to restrict the resulting registrations solely to use by iSCSI.
-> 
-> As Christoph notes, I've helped with IANA interactions at NVMe, and would be likewise willing to help here.  My name is attached to the SHA1 registration, so it would make sense for me to ask for the SHA2 and SHA3 registrations, and I know a number of the people who will be involved in ensuring that the proverbial "right thing" happens, e.g., the Transport Area Directors.
-
-Thank you very much for the help!
-Maurizio Lombardi
