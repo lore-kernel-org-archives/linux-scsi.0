@@ -2,92 +2,80 @@ Return-Path: <SRS0=uqxd=XG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 871D6C49ED7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 02:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B1DECDE27
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 06:32:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E2E82171F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 02:31:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m/wwV3yq"
+	by mail.kernel.org (Postfix) with ESMTP id 3ED1521D7B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 06:32:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726579AbfIKCbr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Sep 2019 22:31:47 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:57466 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726426AbfIKCbr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2019 22:31:47 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8B2Supx134204;
-        Wed, 11 Sep 2019 02:31:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=qomVzkwZbo+ACBSCTS3Y2FRLpO/90hcekpEd1aiRTWs=;
- b=m/wwV3yqPBl6xsL1b4BP7R0+ir0e3Nj/oFaqV95ebr+/5XPoB8XUSVI167kTRJiyKF8q
- K9aksf2EpDhj68OIBSaGqV57OLbyqPJ4TTaUn38fG//rraU04FYwFJRdiludC+LUbEZH
- 3/oJXUelvxG9VYb4XtjBrzg5IbIT9xTI1wqKAvHSn78r33UL8ZvJnkcNripNRRb0VNzl
- JQYlBRHWexTaG/0n+KsIz43aCguR//OYV7SFh+9cnVo/DZ4tqXoxETS+CJok4s0E7Qfr
- kOdKsGTHCtdGzedkkq7MJWIsZ+qgLy8pGkym/YqXVQr8Goc4vnAoe/GtnU27+Iq+iBKI NQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2uw1jy6y3t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Sep 2019 02:31:29 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8B2SZ22143815;
-        Wed, 11 Sep 2019 02:29:28 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2uxj3hwkbs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Sep 2019 02:29:28 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8B2TQN5001969;
-        Wed, 11 Sep 2019 02:29:26 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Sep 2019 19:29:25 -0700
-To:     John Garry <john.garry@huawei.com>
-Cc:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 00/13] hisi_sas: Some misc patches
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1567774537-20003-1-git-send-email-john.garry@huawei.com>
-Date:   Tue, 10 Sep 2019 22:29:23 -0400
-In-Reply-To: <1567774537-20003-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Fri, 6 Sep 2019 20:55:24 +0800")
-Message-ID: <yq1y2yvefb0.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726876AbfIKGcy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Sep 2019 02:32:54 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39509 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726838AbfIKGcy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2019 02:32:54 -0400
+X-UUID: 4e66592c783140c8bbda8526dd1f5ce8-20190911
+X-UUID: 4e66592c783140c8bbda8526dd1f5ce8-20190911
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1938147088; Wed, 11 Sep 2019 14:32:47 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Wed, 11 Sep 2019 14:32:46 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Wed, 11 Sep 2019 14:32:46 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <axboe@kernel.dk>,
+        <jejb@linux.ibm.com>, <matthias.bgg@gmail.com>
+CC:     <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 2/2] scsi: core: remove dummy q->dev check
+Date:   Wed, 11 Sep 2019 14:32:42 +0800
+Message-ID: <1568183562-18241-3-git-send-email-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <1568183562-18241-1-git-send-email-stanley.chu@mediatek.com>
+References: <1568183562-18241-1-git-send-email-stanley.chu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9376 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=881
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909110019
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9376 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=964 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909110019
+X-MTK:  N
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Currently blk_set_runtime_active() is checking if q->dev is null by
+itself, thus remove the same checking in its user: scsi_dev_type_resume().
 
-John,
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+---
+ drivers/scsi/scsi_pm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> This patchset includes support for some more minor features, a bit of
-> tidying, and a few patches to make the driver a bit more robust.
-
-Applied to 5.4/scsi-queue, thanks.
-
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 74ded5f3c236..3717eea37ecb 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -94,8 +94,7 @@ static int scsi_dev_type_resume(struct device *dev,
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+ 
+-			if (sdev->request_queue->dev)
+-				blk_set_runtime_active(sdev->request_queue);
++			blk_set_runtime_active(sdev->request_queue);
+ 		}
+ 	}
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.18.0
+
