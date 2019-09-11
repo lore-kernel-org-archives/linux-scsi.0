@@ -1,100 +1,151 @@
-Return-Path: <SRS0=qYHy=XF=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=uqxd=XG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A3BC49ED7
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 23:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 380D5C49ED9
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 00:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 695AB216F4
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Sep 2019 23:44:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEEAC216F4
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 00:19:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="agIEQzR/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="akA/vbBz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726192AbfIJXo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Sep 2019 19:44:28 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:47033 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725876AbfIJXo2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2019 19:44:28 -0400
-Received: by mail-io1-f68.google.com with SMTP id d17so19749943ios.13;
-        Tue, 10 Sep 2019 16:44:28 -0700 (PDT)
+        id S1726208AbfIKATz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Sep 2019 20:19:55 -0400
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:36144 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726192AbfIKATz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Sep 2019 20:19:55 -0400
+Received: by mail-qt1-f194.google.com with SMTP id o12so23126417qtf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Sep 2019 17:19:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=ZGP+PYUf116KpmFZWCQJ/+W1BpD8OneYbmbPw8KI1DY=;
-        b=agIEQzR/UIcZsX92ydKv9iYSTD0wKkF0DCdfCvbuRl+mJRlsmk4xv6oXdAgiahYN66
-         Y4Q1c3uqGfdg1IWTY8T5VS2bzEO4YTifAiDII2S1ZWE4qCq8jQdhAiMYFsy8Ny7SDa1i
-         RXfYurzoCzrqs+1B+eQquaIosJ9qTs67bacbWDhEbp+bhuDtAJoSJ2fs0ADFREjunWBy
-         UiNXq4j/j6LSfUZc7/Al3xGpHnxht5yshuaAEMNrtlbZPVklWY2XcluBTm1eBpVv4pNu
-         6n0+q3EwwYu6YMWPprH1JbHi2Uu9ZaR2Jluku1++jFb128U92+e23LofkhY5gkwB7hwY
-         Liug==
+        h=message-id:subject:from:to:date:in-reply-to:references:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=YHsllVmM1U5UEmFyW7Jko3c9OqtV1lJpGOTtci4FVvg=;
+        b=akA/vbBzGH+fVg59MpJ2dAC3HL8g6b+UTaPoPy6niZwe2noQYhGUV6sRlR1tRRZubU
+         sdnWpe90bk9x7bBkle8RFpEYuXsWiLjrsxscir3zBXLUlPbtOBwBw8IX95krjI9pvFcO
+         Xxo8rERLg40hy7U1ntrRBYzG2DcZaLdn+x9NtHbMlnoaakreDk4CMPhwwxe36WpJwYZP
+         Do9u44yOodHt+DHlGmWbh8q4OarCDi7BqwegjYzCjHob14lqmChpbVly8YJVIkBUvUWI
+         nhJjgAYgnlXFbv+vkH1GrhiiRyIObGf5LNUgIjTi1staIEcH4JUUtz1qULTOiX5RT8jZ
+         ZJYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=ZGP+PYUf116KpmFZWCQJ/+W1BpD8OneYbmbPw8KI1DY=;
-        b=Vn2eF6QjqBqKG9rCWyHMzAcWxAyjzqoNnmTtmP1drV/AtPZojXG21vO6Yrnrd0w3PE
-         D6Ej3hyD9banePwuxeoxD9PJaOZhH6vDSisM4T6cdycmHACIq7Q4y0wNLMJHmBpfx92C
-         WnE4PkQBXz9XrBkbHT0/qI0csFhmBgKD4B+pbnRSAiIqSIt4WSSTwSpLo/TOL7Ub4fTj
-         pzgVYex3XzJEdoPo2wADo0RBjCbf+JqPDME58Yub8LpfLVerY/I/+jo838cdS9dbfHcN
-         cD1eu4BYssjD887++aPPqQnIKLOMNl4pra1065KqKPtIfrEB1T9nwAqxbcC8/weZWeAn
-         MbFA==
-X-Gm-Message-State: APjAAAVbAnon8+4rQ6lpU3M2lHtSY87bZtAXd06oMDim1otUrO2FXd8d
-        LBElDhZf0bU+XXNO4CU1XdQ=
-X-Google-Smtp-Source: APXvYqzpHFPcs8wqSh6UDjLhtAgV9r92A+H6PKQaASa8MTnRPf9hCZWEZ/wN9o/vH1jWAEJYkcaPtA==
-X-Received: by 2002:a6b:b714:: with SMTP id h20mr37211941iof.302.1568159067609;
-        Tue, 10 Sep 2019 16:44:27 -0700 (PDT)
-Received: from cs-dulles.cs.umn.edu (cs-dulles.cs.umn.edu. [128.101.35.54])
-        by smtp.googlemail.com with ESMTPSA id z20sm19383990iof.38.2019.09.10.16.44.26
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=YHsllVmM1U5UEmFyW7Jko3c9OqtV1lJpGOTtci4FVvg=;
+        b=kAsiGMyVpLwiUxrJb3Z6t0ocS1eOvr4weThl5zXQd6+h15Fr080oMnnXwE7tb4dYAo
+         VcwXInhvYlvOrQimgKvt8JFOhrasZI2M53lSAy98DTdQZKIg2a0lzY4riIDtq12zD6mJ
+         tXKYdWE00g6K0J5V2s3oacjhGL3zmm+YYQYt4i7i0Xo/l/QDsQAX189hwIIu1zjPeWsG
+         R1+vt2/wG/V1htkA79966egp/UjRY8kevVAQ8GNwMKJ2E+1E64Hc99ZtPuWYu9ljVgUe
+         ZPqypLQ87RE2QNLW3/E6qfKQA+BJ2zcVtibo6+tu82ihBeDcq02oQrgWlNL4nxd3OljX
+         70aw==
+X-Gm-Message-State: APjAAAWGal4mL1Q+BBf6H5HCGUEJHhVJUrpGwY0Pfo+oA9wuwQxC52iS
+        SvO3dH4HOr9atypWuxOZles=
+X-Google-Smtp-Source: APXvYqzaFjUPUDJ5QADYBzHO1qUg68NCUP55E9U/lX62SESeJjjTFsrrRFbI9MFtvZev+am++4xTKg==
+X-Received: by 2002:ac8:4548:: with SMTP id z8mr32192663qtn.258.1568161192508;
+        Tue, 10 Sep 2019 17:19:52 -0700 (PDT)
+Received: from localhost.localdomain (pool-96-230-166-208.prvdri.fios.verizon.net. [96.230.166.208])
+        by smtp.gmail.com with ESMTPSA id t9sm8761285qkt.26.2019.09.10.17.19.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Sep 2019 16:44:27 -0700 (PDT)
-From:   Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     emamd001@umn.edu, smccaman@umn.edu, kjlu@umn.edu,
-        Navid Emamdoost <navid.emamdoost@gmail.com>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: bfa: release allocated memory in case of error
-Date:   Tue, 10 Sep 2019 18:44:15 -0500
-Message-Id: <20190910234417.22151-1-navid.emamdoost@gmail.com>
-X-Mailer: git-send-email 2.17.1
-To:     unlisted-recipients:; (no To-header on input)
+        Tue, 10 Sep 2019 17:19:51 -0700 (PDT)
+Message-ID: <cbd790d7bea8b374726e176db04efe37b62309d1.camel@gmail.com>
+Subject: Re: [PATCH] bnx2fc: Handle scope bits when array returns BUSY or
+ TASK_SET_FULL
+From:   cdupuis1@gmail.com
+To:     Laurence Oberman <loberman@redhat.com>,
+        QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+Date:   Tue, 10 Sep 2019 20:19:50 -0400
+In-Reply-To: <1568030756-17428-1-git-send-email-loberman@redhat.com>
+References: <1568030756-17428-1-git-send-email-loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In bfad_im_get_stats if bfa_port_get_stats fails, allocated memory
-needs to be released.
+On Mon, 2019-09-09 at 08:05 -0400, Laurence Oberman wrote:
+> The qla2xxx driver had this issue as well when the newer array
+> firmware returned the retry_delay_timer in the fcp_rsp.
+> The bnx2fc is not handling the masking of the scope bits either
+> so the retry_delay_timestamp value lands up being a large value
+> added to the timer timestamp delaying I/O for up to 27 Minutes.
+> This patch adds similar code to handle this to the
+> bnx2fc driver to avoid the huge delay.
+> 
+> V2. Indent comments as suggested
+> 
+> Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> ---
+>  drivers/scsi/bnx2fc/bnx2fc_io.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> index 9e50e5b..39f4aeb 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_io.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+> @@ -1928,6 +1928,7 @@ void bnx2fc_process_scsi_cmd_compl(struct
+> bnx2fc_cmd *io_req,
+>  	struct bnx2fc_rport *tgt = io_req->tgt;
+>  	struct scsi_cmnd *sc_cmd;
+>  	struct Scsi_Host *host;
+> +	u16 scope, qualifier = 0;
+>  
+>  
+>  	/* scsi_cmd_cmpl is called with tgt lock held */
+> @@ -1997,12 +1998,28 @@ void bnx2fc_process_scsi_cmd_compl(struct
+> bnx2fc_cmd *io_req,
+>  
+>  			if (io_req->cdb_status ==
+> SAM_STAT_TASK_SET_FULL ||
+>  			    io_req->cdb_status == SAM_STAT_BUSY) {
+> +				/* Newer array firmware with BUSY or
+> +				 * TASK_SET_FULL may return a status
+> that needs
+> +				 * the scope bits masked.
+> +				 * Or a huge delay timestamp up to 27
+> minutes
+> +				 * can result.
+> +				*/
+> +				if (fcp_rsp->retry_delay_timer) {
+> +					/* Upper 2 bits */
+> +					scope = fcp_rsp-
+> >retry_delay_timer
+> +						& 0xC000;
+> +					/* Lower 14 bits */
+> +					qualifier = fcp_rsp-
+> >retry_delay_timer
+> +						& 0x3FFF;
+> +				}
+> +				if (scope > 0 && qualifier > 0 &&
+> +					qualifier <= 0x3FEF) {
+>  					/* Set the jiffies + 
+> 					retry_delay_timer * 100ms
+>  				   	for the rport/tgt 
+> 					*/
+> -				tgt->retry_delay_timestamp = jiffies +
+> -					fcp_rsp->retry_delay_timer * HZ
+> / 10;
+> +					tgt->retry_delay_timestamp =
+> jiffies +
+> +						(qualifier * HZ / 10);
+> +				}
+>  			}
+> -
+>  		}
+>  		if (io_req->fcp_resid)
+>  			scsi_set_resid(sc_cmd, io_req->fcp_resid);
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
----
- drivers/scsi/bfa/bfad_attr.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+V2 looks good.
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index 29ab81df75c0..fbfce02e5b93 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -275,8 +275,10 @@ bfad_im_get_stats(struct Scsi_Host *shost)
- 	rc = bfa_port_get_stats(BFA_FCPORT(&bfad->bfa),
- 				fcstats, bfad_hcb_comp, &fcomp);
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--	if (rc != BFA_STATUS_OK)
-+	if (rc != BFA_STATUS_OK) {
-+		kfree(fcstats);
- 		return NULL;
-+	}
- 
- 	wait_for_completion(&fcomp.comp);
- 
--- 
-2.17.1
+Reviewed-by: Chad Dupuis <cdupuis1@gmail.com>
 
