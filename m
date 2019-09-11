@@ -2,122 +2,195 @@ Return-Path: <SRS0=uqxd=XG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B53C49ED6
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 22:13:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E98C49ED6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 23:35:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D21F2087E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 22:13:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F137F2081B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 23:35:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="anYEbfk0"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="h06eJY3a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728923AbfIKWNW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Sep 2019 18:13:22 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:33975 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728556AbfIKWNW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2019 18:13:22 -0400
-Received: by mail-pf1-f196.google.com with SMTP id r12so14613077pfh.1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2019 15:13:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=nf55d0M2fgrTAZT8patiiuxPZwICTFJSYQN2V2QrDmQ=;
-        b=anYEbfk0b5+4asQZViJ4GPOYj9WhTStLmh+ecrhz8v0xdn4zwEPtVsZfof1Lme4QKG
-         b32MZ4jlp1aoNGec5iHuPGezZ3FzV6+R16gp2x0cz7OsJCmV/AthIUpblCcZuw36Gto7
-         mJkKm7YXtOUw2VruFSiLqhQj0OJu9fPbzDsFVuzSNY/cxfPyn9H0FwUDZLL1LMqq00G1
-         oI1QPoTi1nvd0pX87LlIIbwYg89eK2LT1S43DfayBVQKgXroKePJDLEGsZqSvKP18I9I
-         cHuVxbQjxuvEUCu+JKod7gM2xasHWrJxerWu65fq7bPTxfGnDob4I8Jir7+fVc6Xf8Kk
-         JWnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=nf55d0M2fgrTAZT8patiiuxPZwICTFJSYQN2V2QrDmQ=;
-        b=QXYrhwgSIXev+r+lsEBeBxuP4rJuMn4jmlY423oEKDPwCTx0UXlikhttG/XolhhMQ2
-         o8QcszsYym9AxM+IwizaL8ZcgTCyfRuQEtw4XIXP0ocDMCKQq7T1Fb0HSrbkk8WiTHu9
-         i+Ty1jzYesovjdjMUdXvYpOPw4RXoxb/VZmrE3ZzVK5KoHzCx6JetACusrw6xVH6jiHp
-         CP4RSEWOLFlxSpzvzZdhoLK37aef49vfFkMwquZdR1dp1D2xC9zWk2Ri68ZhvuK0bAgX
-         8m+Z0vuPLoN56kZ3Q96hwk5QrDKmwvXNhXWIu/Z80NdDJduq4GgYyx6EU1WsgPm9nlUB
-         9c0A==
-X-Gm-Message-State: APjAAAUZ3tAJurandQIs4rJbwn/Sw1VPjukX3XLsTIDxVlolFfx8BoO4
-        q2O7lhxfLcT+Jqsjj1sIYfM9Kg==
-X-Google-Smtp-Source: APXvYqzPGDfNqvq/dqDwP6b3TOEtC3Bb+5uRpJ4DO9WApq2laqUm31jZznk69DG8lZqgNynRXwxbkg==
-X-Received: by 2002:a65:6284:: with SMTP id f4mr13973604pgv.416.1568239999858;
-        Wed, 11 Sep 2019 15:13:19 -0700 (PDT)
-Received: from [192.168.1.188] ([23.158.160.160])
-        by smtp.gmail.com with ESMTPSA id r1sm18455579pgv.70.2019.09.11.15.13.17
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 11 Sep 2019 15:13:18 -0700 (PDT)
-Subject: Re: [PATCH v1 1/2] block: bypass blk_set_runtime_active for
- uninitialized q->dev
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, matthias.bgg@gmail.com
-Cc:     linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, kuohong.wang@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        andy.teng@mediatek.com
-References: <1568183562-18241-1-git-send-email-stanley.chu@mediatek.com>
- <1568183562-18241-2-git-send-email-stanley.chu@mediatek.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <66fddf12-0dc4-1c73-affd-f8404e87342f@kernel.dk>
-Date:   Wed, 11 Sep 2019 16:13:16 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <1568183562-18241-2-git-send-email-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8
+        id S1728825AbfIKXfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Sep 2019 19:35:19 -0400
+Received: from mail-eopbgr770124.outbound.protection.outlook.com ([40.107.77.124]:55939
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726525AbfIKXfT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Sep 2019 19:35:19 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=I9I2tB8TkewRvrxLzeY0MXyU9/wiJnG7CL0f1hH5/M4Yrumq+LBY8sYmy0IcRUauNmrbM2F2V8QQ6rkCt30K7UMgI+/bBHIHu7bOwy/FBW1v9Q2VnR70jfHc0VzoC1r1fi/xYMmmv53aC+CF0Cp1HMjrvAuLPJshUAXLy56qfXM3VyxTdaPjrxM+9SkqHV/7bon9dRdmFRIfKSqsSFDjULBHnabRIV7zJWhjiKONRMPy4z7wOMN0ZloovA+Pbff19mjIJapvZdABNKF2KAEJ4PyfRDg0IoUKn9QX2ckYQ3lRR1xWukpctgKa4EFN7KTo9r/OuP1m7yUm90BY7UGZGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LUdyIerOvZn8WQEiEu5WWdzAT1S478LEaLVDQrossB0=;
+ b=DXBKlKCdp/tyQWlYrUaak7Pk1llKcsyV2GxYf6m1j9zL5yetJMYMGqaH/9c2O8/tylZLF1898zo+WP7cScEHqBMDuKJ09D7oyAaMnnqzDRlWPbYLW2S7g7FTeVZN4CZTrV0DCmt63z9THR2IDjVh8jjj6PMp+zZUSnYKzPpSGfVWfUoEIwm0zJ+yq4K0HsAXubwvZb2Ukh3DY8LztdGlYiEGdS9TwNCnTnsKzKd89/tXYHTlsSl45Zrbzlx/cVuVmSttIDwyH/v2q/i+n6epofg/X8WKeQ61uuRUcUTH8gcFJ4W2J2+Q34DzSy8UcLip1vFGmcM2Cgua/VO1SgbNFw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LUdyIerOvZn8WQEiEu5WWdzAT1S478LEaLVDQrossB0=;
+ b=h06eJY3aUUGoYwIJ6l58fHS2Z85q3DIqwLzmCIWkw7DNiCK0DfXd1cKC4tVWxk9qhmnZtPV8nSh2+Zl8T/VOau3oumH8QRV5YW2FO80mG178EQE2cnF/YYKC7Q6dUUHpyEXL9gKuFylKFgswFU1g3E5TGPQ/Zpou47ev6DKLYcY=
+Received: from SN6PR2101MB0942.namprd21.prod.outlook.com (52.132.114.19) by
+ SN6PR2101MB0909.namprd21.prod.outlook.com (52.132.117.10) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2263.10; Wed, 11 Sep 2019 23:35:16 +0000
+Received: from SN6PR2101MB0942.namprd21.prod.outlook.com
+ ([fe80::dd56:aa4f:204f:86a4]) by SN6PR2101MB0942.namprd21.prod.outlook.com
+ ([fe80::dd56:aa4f:204f:86a4%3]) with mapi id 15.20.2263.005; Wed, 11 Sep 2019
+ 23:35:16 +0000
+From:   Dexuan Cui <decui@microsoft.com>
+To:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "sashal@kernel.org" <sashal@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Michael Kelley <mikelley@microsoft.com>
+CC:     Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH] scsi: storvsc: Add the support of hibernation
+Thread-Topic: [PATCH] scsi: storvsc: Add the support of hibernation
+Thread-Index: AQHVaPmQQ30E4hrjgUuSDngi9Du3cA==
+Date:   Wed, 11 Sep 2019 23:35:16 +0000
+Message-ID: <1568244905-66625-1-git-send-email-decui@microsoft.com>
+Reply-To: Dexuan Cui <decui@microsoft.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MWHPR1201CA0005.namprd12.prod.outlook.com
+ (2603:10b6:301:4a::15) To SN6PR2101MB0942.namprd21.prod.outlook.com
+ (2603:10b6:805:4::19)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=decui@microsoft.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 1.8.3.1
+x-originating-ip: [13.77.154.182]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 59cbefb5-c9dd-4a4b-91d4-08d73710b31c
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:SN6PR2101MB0909;
+x-ms-traffictypediagnostic: SN6PR2101MB0909:|SN6PR2101MB0909:
+x-ms-exchange-transport-forked: True
+x-ms-exchange-purlcount: 1
+x-microsoft-antispam-prvs: <SN6PR2101MB09096FC2612C8E959D95AAEEBFB10@SN6PR2101MB0909.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:517;
+x-forefront-prvs: 0157DEB61B
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(136003)(376002)(346002)(39860400002)(396003)(189003)(199004)(3450700001)(6512007)(6306002)(486006)(476003)(2616005)(2201001)(14444005)(256004)(6486002)(86362001)(36756003)(5660300002)(186003)(4326008)(102836004)(6436002)(53936002)(25786009)(26005)(107886003)(10290500003)(316002)(478600001)(2501003)(43066004)(52116002)(14454004)(386003)(6506007)(110136005)(66066001)(99286004)(1511001)(22452003)(6636002)(4720700003)(71200400001)(71190400001)(305945005)(66446008)(66946007)(66476007)(66556008)(64756008)(50226002)(966005)(10090500001)(7736002)(2906002)(81156014)(8676002)(8936002)(81166006)(6116002)(3846002)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR2101MB0909;H:SN6PR2101MB0942.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: s9rujWZM/0rorl9a2CyfBGdzOF+58q0urFMvYQp5Ruf9pA1vY2+KmFgmwx0n230OvF8SJyyfigeZK5PK+BvqR7dPZ6kYjWZLbj8Fq8+7Hezb509N0KAgFFGcXKNq1yCCX4K8E22cP1ghAPDrg4IdsCp9fZJdTcDxNIPEsWu9gTMbHa6A9XTXc59SKdTBP96EpMkJ/JwYjvrqgZ82TWRFO4DRbdUP+b+04pR5f2DQ33xeG5zNGad/lGNfAiaTqyc7swFGa6WdkgGp1EOBKEHGpu0uxvYoLXXK/jvoddUjEBmyalP5nxQoekWzTJ0miaqgKb3Iz21WKwGNP1zlR6VjT/O3XUdD9eraE1jpJ7mGRyW6s5bCcLannS2nbFiWrucWdpMyMfv9fUImDzpMetFLb2lraclLWSZzNi6TKfDc0DA=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59cbefb5-c9dd-4a4b-91d4-08d73710b31c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Sep 2019 23:35:16.2681
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 64LNPdQUhPL7oR6hbsEs/pI8cH/+CiI9sycVPdtUDTFBC400RvYvy9PHUHDWU0U25kN1zOiPQL3H/kbIpSV5ag==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR2101MB0909
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/11/19 12:32 AM, Stanley Chu wrote:
-> Some devices may skip blk_pm_runtime_init() and have null pointer
-> in its request_queue->dev. For example, SCSI devices of UFS Well-Known
-> LUNs.
-> 
-> Currently the null pointer is checked by the user of
-> blk_set_runtime_active(), i.e., scsi_dev_type_resume(). It is better to
-> check it by blk_set_runtime_active() itself instead of by its users.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->   block/blk-pm.c | 3 +++
->   1 file changed, 3 insertions(+)
-> 
-> diff --git a/block/blk-pm.c b/block/blk-pm.c
-> index 0a028c189897..56ed94f7a2a3 100644
-> --- a/block/blk-pm.c
-> +++ b/block/blk-pm.c
-> @@ -207,6 +207,9 @@ EXPORT_SYMBOL(blk_post_runtime_resume);
->    */
->   void blk_set_runtime_active(struct request_queue *q)
->   {
-> +	if (!q->dev)
-> +		return;
-> +
->   	spin_lock_irq(&q->queue_lock);
->   	q->rpm_status = RPM_ACTIVE;
->   	pm_runtime_mark_last_busy(q->dev);
+When we're in storvsc_suspend(), we're sure the SCSI layer has quiesced the
+scsi device by scsi_bus_suspend() -> ... -> scsi_device_quiesce(), so the
+low level SCSI adapter driver only needs to suspend/resume its own state.
 
-I'd prefer just doing:
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
 
-	if (q->dev) {
-		...
-	}
+This patch is basically a pure Hyper-V specific change and it has a
+build dependency on the commit 271b2224d42f ("Drivers: hv: vmbus: Implement
+suspend/resume for VSC drivers for hibernation"), which is on Sasha Levin's
+Hyper-V tree's hyperv-next branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git/log/?h=3Dh=
+yperv-next
 
-instead. Other than that little complaint, looks good to me.
+I request this patch should go through Sasha's tree rather than the
+SCSI tree.
 
--- 
-Jens Axboe
+ drivers/scsi/storvsc_drv.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ed8b9ac..9fbf604 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1727,6 +1727,13 @@ enum {
+=20
+ MODULE_DEVICE_TABLE(vmbus, id_table);
+=20
++static const struct { guid_t guid; } fc_guid =3D { HV_SYNTHFC_GUID };
++
++static bool hv_dev_is_fc(struct hv_device *hv_dev)
++{
++	return guid_equal(&fc_guid.guid, &hv_dev->dev_type);
++}
++
+ static int storvsc_probe(struct hv_device *device,
+ 			const struct hv_vmbus_device_id *dev_id)
+ {
+@@ -1935,11 +1942,45 @@ static int storvsc_remove(struct hv_device *dev)
+ 	return 0;
+ }
+=20
++static int storvsc_suspend(struct hv_device *hv_dev)
++{
++	struct storvsc_device *stor_device =3D hv_get_drvdata(hv_dev);
++	struct Scsi_Host *host =3D stor_device->host;
++	struct hv_host_device *host_dev =3D shost_priv(host);
++
++	storvsc_wait_to_drain(stor_device);
++
++	drain_workqueue(host_dev->handle_error_wq);
++
++	vmbus_close(hv_dev->channel);
++
++	memset(stor_device->stor_chns, 0,
++	       num_possible_cpus() * sizeof(void *));
++
++	kfree(stor_device->stor_chns);
++	stor_device->stor_chns =3D NULL;
++
++	cpumask_clear(&stor_device->alloced_cpus);
++
++	return 0;
++}
++
++static int storvsc_resume(struct hv_device *hv_dev)
++{
++	int ret;
++
++	ret =3D storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
++				     hv_dev_is_fc(hv_dev));
++	return ret;
++}
++
+ static struct hv_driver storvsc_drv =3D {
+ 	.name =3D KBUILD_MODNAME,
+ 	.id_table =3D id_table,
+ 	.probe =3D storvsc_probe,
+ 	.remove =3D storvsc_remove,
++	.suspend =3D storvsc_suspend,
++	.resume =3D storvsc_resume,
+ 	.driver =3D {
+ 		.probe_type =3D PROBE_PREFER_ASYNCHRONOUS,
+ 	},
+--=20
+1.8.3.1
 
