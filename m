@@ -3,104 +3,117 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9C7ECDE20
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 15:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A83C5ACAE
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 15:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE524207FC
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 15:23:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5835E2087E
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 15:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728271AbfIKPXX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Sep 2019 11:23:23 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44502 "EHLO mx1.redhat.com"
+        id S1728644AbfIKPom (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Sep 2019 11:44:42 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53446 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726510AbfIKPXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Sep 2019 11:23:23 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S1728266AbfIKPol (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Sep 2019 11:44:41 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C7BEF1DA2;
-        Wed, 11 Sep 2019 15:23:22 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 61BBAA371AF;
+        Wed, 11 Sep 2019 15:44:41 +0000 (UTC)
 Received: from [10.10.125.194] (ovpn-125-194.rdu2.redhat.com [10.10.125.194])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9212C60BEC;
-        Wed, 11 Sep 2019 15:23:21 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 176E35D6A5;
+        Wed, 11 Sep 2019 15:44:38 +0000 (UTC)
 Subject: Re: [RFC PATCH] Add proc interface to set PF_MEMALLOC flags
-To:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <20190909162804.5694-1-mchristi@redhat.com>
- <5D76995B.1010507@redhat.com>
- <ee39d997-ee07-22c7-3e59-a436cef4d587@I-love.SAKURA.ne.jp>
-Cc:     axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Linux-MM <linux-mm@kvack.org>
+To:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
+        Hillf Danton <hdanton@sina.com>
+References: <20190911031348.9648-1-hdanton@sina.com>
+ <c48cd3d8-699d-a614-b12d-1ddef71691f3@I-love.SAKURA.ne.jp>
+Cc:     "Kirill A. Shutemov" <kirill@shutemov.name>, axboe@kernel.dk,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, Linux-MM <linux-mm@kvack.org>
 From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <5D791169.2090807@redhat.com>
-Date:   Wed, 11 Sep 2019 10:23:21 -0500
+Message-ID: <5D791666.7080302@redhat.com>
+Date:   Wed, 11 Sep 2019 10:44:38 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
  Thunderbird/38.6.0
 MIME-Version: 1.0
-In-Reply-To: <ee39d997-ee07-22c7-3e59-a436cef4d587@I-love.SAKURA.ne.jp>
+In-Reply-To: <c48cd3d8-699d-a614-b12d-1ddef71691f3@I-love.SAKURA.ne.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.71]); Wed, 11 Sep 2019 15:23:23 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Wed, 11 Sep 2019 15:44:41 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/10/2019 05:12 PM, Tetsuo Handa wrote:
-> On 2019/09/10 3:26, Mike Christie wrote:
->> Forgot to cc linux-mm.
+On 09/11/2019 05:07 AM, Tetsuo Handa wrote:
+> On 2019/09/11 12:13, Hillf Danton wrote:
 >>
->> On 09/09/2019 11:28 AM, Mike Christie wrote:
->>> There are several storage drivers like dm-multipath, iscsi, and nbd that
->>> have userspace components that can run in the IO path. For example,
->>> iscsi and nbd's userspace deamons may need to recreate a socket and/or
->>> send IO on it, and dm-multipath's daemon multipathd may need to send IO
->>> to figure out the state of paths and re-set them up.
+>> On Tue, 10 Sep 2019 11:06:03 -0500 From: Mike Christie <mchristi@redhat.com>
 >>>
->>> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
->>> memalloc_*_save/restore functions to control the allocation behavior,
->>> but for userspace we would end up hitting a allocation that ended up
->>> writing data back to the same device we are trying to allocate for.
+>>>> Really? Without any privilege check? So any random user can tap into
+>>>> __GFP_NOIO allocations?
 >>>
->>> This patch allows the userspace deamon to set the PF_MEMALLOC* flags
->>> through procfs. It currently only supports PF_MEMALLOC_NOIO, but
->>> depending on what other drivers and userspace file systems need, for
->>> the final version I can add the other flags for that file or do a file
->>> per flag or just do a memalloc_noio file.
+>>> That was a mistake on my part. I will add it in.
+>>>
+>> You may alternatively madvise a nutcracker as long as you would have
+>> added a sledgehammer under /proc instead of a gavel.
+>>
+>> --- a/include/uapi/asm-generic/mman-common.h
+>> +++ b/include/uapi/asm-generic/mman-common.h
+>> @@ -45,6 +45,7 @@
+>>  #define MADV_SEQUENTIAL	2		/* expect sequential page references */
+>>  #define MADV_WILLNEED	3		/* will need these pages */
+>>  #define MADV_DONTNEED	4		/* don't need these pages */
+>> +#define MADV_NOIO	5		/* set PF_MEMALLOC_NOIO */
+>>  
+>>  /* common parameters: try to keep these consistent across architectures */
+>>  #define MADV_FREE	8		/* free pages only if memory pressure */
+>> --- a/mm/madvise.c
+>> +++ b/mm/madvise.c
+>> @@ -716,6 +716,7 @@ madvise_behavior_valid(int behavior)
+>>  	case MADV_WILLNEED:
+>>  	case MADV_DONTNEED:
+>>  	case MADV_FREE:
+>> +	case MADV_NOIO:
+>>  #ifdef CONFIG_KSM
+>>  	case MADV_MERGEABLE:
+>>  	case MADV_UNMERGEABLE:
+>> @@ -813,6 +814,11 @@ SYSCALL_DEFINE3(madvise, unsigned long,
+>>  	if (!madvise_behavior_valid(behavior))
+>>  		return error;
+>>  
+>> +	if (behavior == MADV_NOIO) {
+>> +		current->flags |= PF_MEMALLOC_NOIO;
 > 
-> Interesting patch. But can't we instead globally mask __GFP_NOFS / __GFP_NOIO
-> than playing games with per a thread masking (which suffers from inability to
-> propagate current thread's mask to other threads indirectly involved)?
-
-If I understood you, then that had been discussed in the past:
-
-https://www.spinics.net/lists/linux-fsdevel/msg149035.html
-
-We only need this for specific threads which implement part of a storage
-driver in userspace.
-
+> Yes, for "modifying p->flags when p != current" is not permitted.
 > 
->>> +static ssize_t memalloc_write(struct file *file, const char __user *buf,
->>> +			      size_t count, loff_t *ppos)
->>> +{
->>> +	struct task_struct *task;
->>> +	char buffer[5];
->>> +	int rc = count;
->>> +
->>> +	memset(buffer, 0, sizeof(buffer));
->>> +	if (count != sizeof(buffer) - 1)
->>> +		return -EINVAL;
->>> +
->>> +	if (copy_from_user(buffer, buf, count))
+> But I guess that there is a problem. Setting PF_MEMALLOC_NOIO causes
+> current_gfp_context() to mask __GFP_IO | __GFP_FS, but the OOM killer cannot
+> be invoked when __GFP_FS is masked. As a result, any userspace thread which
+> has PF_MEMALLOC_NOIO cannot invoke the OOM killer. If the userspace thread
+> which uses PF_MEMALLOC_NOIO is involved in memory reclaiming activities,
+> the memory reclaiming activities won't be able to make forward progress when
+> the userspace thread triggered e.g. a page fault. Can the "userspace components
+> that can run in the IO path" survive without any memory allocation?
 > 
-> copy_from_user() / copy_to_user() might involve memory allocation
-> via page fault which has to be done under the mask? Moreover, since
-> just open()ing this file can involve memory allocation, do we forbid
-> open("/proc/thread-self/memalloc") ?
 
-I was having the daemons set the flag when they initialize.
+Yes and no, when they can they will have preallocated the resources they
+need to make forward progress similar to how kernel storage drivers do.
+However for some resources, like in the network layer, both userspace
+and kernel drivers are not able to preallocate and may fail.
+
+
+>> +		return 0;
+>> +	}
+>> +
+>>  	if (start & ~PAGE_MASK)
+>>  		return error;
+>>  	len = (len_in + ~PAGE_MASK) & PAGE_MASK;
+> 
+
