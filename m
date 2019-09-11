@@ -2,72 +2,80 @@ Return-Path: <SRS0=uqxd=XG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3446ECDE27
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 06:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D36ECDE20
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 08:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA8ED21D7B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 06:32:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E5022085B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Sep 2019 08:23:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbfIKGc4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Sep 2019 02:32:56 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:54018 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726838AbfIKGc4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2019 02:32:56 -0400
-X-UUID: 6f2aa10be2f24e81bca5c14ee9595d3a-20190911
-X-UUID: 6f2aa10be2f24e81bca5c14ee9595d3a-20190911
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 964923953; Wed, 11 Sep 2019 14:32:52 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs01n2.mediatek.inc (172.21.101.79) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Wed, 11 Sep 2019 14:32:46 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Wed, 11 Sep 2019 14:32:46 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <matthias.bgg@gmail.com>
-CC:     <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v1] fixup null q->dev checking in both block and scsi layer
-Date:   Wed, 11 Sep 2019 14:32:40 +0800
-Message-ID: <1568183562-18241-1-git-send-email-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
+        id S1727137AbfIKIXu convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Sep 2019 04:23:50 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:53360 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726018AbfIKIXu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2019 04:23:50 -0400
+Received: by mail-wm1-f66.google.com with SMTP id q18so2318168wmq.3;
+        Wed, 11 Sep 2019 01:23:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=7iC288htQQShWEzvGgwOYDZwehD1Nka894QH5xX/9cI=;
+        b=bIbVJ5HE3gQwAEeK7mWeYFOcSozt87POGxCQbIw99379d/CS8fd7gOBXclZT7GirQs
+         LWdvwP9jjdSwcjKBhXSKSfzTwdG0Ish3sE8Lm92vmhEnm7uNMCyh9dXl+3redKxjB01O
+         GY2WhQdkZu8qo+ELm2+jWK8LRDHF8DKrYHPW0hMgmeOiktLLbNuKm5dH7x+KVpk/btU/
+         dHu5EqbspB4t5tN+XpuQKEAN6fi9EDPuIyS6G4BksWB+jDID3/jZ7SCb2bjcbw1t1/EO
+         TPrDdhPY9y1YqqJkAzhVTL23VNHkJFDXrUfS9yARhahPK1vzfRtNJSeWej33Iy6MhRDK
+         yDpQ==
+X-Gm-Message-State: APjAAAUn8vBYPcXEDyJzjyMm3dbVvFwmvuHlgaRfGKqU/9VTlUMZ4CPe
+        /1HNL/UhNgV1UZ1lTAh0WMmmCjWjc7c=
+X-Google-Smtp-Source: APXvYqzUwDcbcQE58BGg+dWRNRxA/vR89ms+O87wrc5oL3XiHLhR8v5MoMDUEg0gRuW1m/BiGRujoA==
+X-Received: by 2002:a1c:1d8d:: with SMTP id d135mr2959578wmd.7.1568190227313;
+        Wed, 11 Sep 2019 01:23:47 -0700 (PDT)
+Received: from [10.0.4.250] (195-23-252-147.net.novis.pt. [195.23.252.147])
+        by smtp.gmail.com with ESMTPSA id s1sm30205463wrg.80.2019.09.11.01.23.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Sep 2019 01:23:46 -0700 (PDT)
+Subject: Re: [RFC PATCH] Add proc interface to set PF_MEMALLOC flags
+To:     Mike Christie <mchristi@redhat.com>, axboe@kernel.dk,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20190909162804.5694-1-mchristi@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <3e32b453-0350-0a09-9b1b-b0c49e2609df@acm.org>
+Date:   Wed, 11 Sep 2019 09:23:45 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 132F359E13791AB27648D710E93C0462C44FA0D70584A38ED65C1DB61DF7ABA02000:8
-X-MTK:  N
+In-Reply-To: <20190909162804.5694-1-mchristi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8BIT
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some devices may skip blk_pm_runtime_init() and have null pointer
-in its request_queue->dev. For example, SCSI devices of UFS Well-Known
-LUNs.
+On 9/9/19 5:28 PM, Mike Christie wrote:
+> There are several storage drivers like dm-multipath, iscsi, and nbd that
+> have userspace components that can run in the IO path. For example,
+> iscsi and nbd's userspace deamons may need to recreate a socket and/or
+> send IO on it, and dm-multipath's daemon multipathd may need to send IO
+> to figure out the state of paths and re-set them up.
+> 
+> [ ... ]
 
-Currently the null pointer is checked by the user of
-blk_set_runtime_active(), i.e., scsi_dev_type_resume(). It is better to
-check it by blk_set_runtime_active() itself instead of by its users.
+Should the linux-api mailing list be Cc-ed for a patch like this one?
+See also https://www.kernel.org/doc/man-pages/linux-api-ml.html.
 
-Stanley Chu (2):
-  block: bypass blk_set_runtime_active for uninitialized q->dev
-  scsi: core: remove dummy q->dev check
+Thanks,
 
- block/blk-pm.c         | 3 +++
- drivers/scsi/scsi_pm.c | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
--- 
-2.18.0
+Bart.
 
