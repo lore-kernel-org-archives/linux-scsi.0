@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED72DC4CEC5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA335C4CEC5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:22:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2258206A5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:21:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8202C20830
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:22:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Yu9MPqKt"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="FUPK7Okd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733001AbfILPVU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 11:21:20 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27206 "EHLO
+        id S1733001AbfILPW1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 11:22:27 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31204 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1732699AbfILPVU (ORCPT
+        by vger.kernel.org with ESMTP id S1732699AbfILPW0 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Sep 2019 11:21:20 -0400
+        Thu, 12 Sep 2019 11:22:26 -0400
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x8CFFGj1029075;
-        Thu, 12 Sep 2019 08:20:18 -0700
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x8CFKPBt022303;
+        Thu, 12 Sep 2019 08:20:25 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=EtgFqclSbiTpkC/Q09gr7XDBSwk9ysdcfjOdzXLI9Gg=;
- b=Yu9MPqKtJ/dEz/9TQ297euy+elZMo3TUKJjhcrzpAbAdhuhC0AcKE2J73MbMeDn9Fm1f
- mfIyU2zhrdqj/B0z7g+mHuBbRgbAoi86NnUDoSjjNGXcV2lH9rYOwKO108+nWAOhyDvx
- GiAz8uSF2XLyAvln+0GX5JmNhM2FOowRcycur8gFKQ0/dhcZrZIuT9aUcEVL7xS7D3ui
- xApiE7OXTIDhwEmeCP+z6bgbDck4p9bqFZdsbarQXHaIJhac24QpP6BgE0Nlc5Brgx/c
- vRIT3rWLK4q+Fqt9CZvRKtmoyoEO6/SWFt7Rm1/UBWbcDQNGMDgfkGlNyKY9IvUDgblG kA== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2uxshkfyp4-1
+ content-type; s=pfpt0818; bh=9f2/nX7i5ENX6341kDyVATfy0Nk3wp8SV+Pz1XirF+4=;
+ b=FUPK7Okd9kdlwz++rIEjGst4cmxPaiIgeTX54WYKVkKzNLp/qYiy4Eeb0w5QzOSneaou
+ +IPA28bIYycNFRf+vtvN4gP+ugakaL6ZftqLI1QTmP4VZunR4Vnx+2L+cCja7eKFZlFK
+ 53wiGalcMQ+bneF6rf7QNffSEtE8cV2OWvkv7h8/kgOxWm/scU7W0ootQlLoI60gorm5
+ 7A+fbGW/6ZneJfFPr0+HItGyr8da78yLnssBsXRr5kG44wcVAwUczNqS8zRZsE/L3Z43
+ jgD3tbTle3zXdsTH3G9vMiWqbXJmhO6OHqOkG0E4sKidKgxoLRf2XM7IexacJrP9okau +Q== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2uxshkfypg-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 12 Sep 2019 08:20:18 -0700
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 12 Sep
- 2019 08:20:16 -0700
+        Thu, 12 Sep 2019 08:20:25 -0700
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 12 Sep
+ 2019 08:20:20 -0700
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
- Transport; Thu, 12 Sep 2019 08:20:17 -0700
+ Transport; Thu, 12 Sep 2019 08:20:20 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D653C3F7040;
-        Thu, 12 Sep 2019 08:20:16 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 0E9413F7040;
+        Thu, 12 Sep 2019 08:20:20 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x8CFKG1e002646;
-        Thu, 12 Sep 2019 08:20:16 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x8CFKJgO002650;
+        Thu, 12 Sep 2019 08:20:19 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x8CFKGsD002645;
-        Thu, 12 Sep 2019 08:20:16 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x8CFKJBF002649;
+        Thu, 12 Sep 2019 08:20:19 -0700
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 09/14] qla2xxx: Add error handling for PLOGI ELS passthrough
-Date:   Thu, 12 Sep 2019 08:19:44 -0700
-Message-ID: <20190912151949.2348-10-hmadhani@marvell.com>
+Subject: [PATCH 10/14] qla2xxx: Set remove flag for all VP
+Date:   Thu, 12 Sep 2019 08:19:45 -0700
+Message-ID: <20190912151949.2348-11-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20190912151949.2348-1-hmadhani@marvell.com>
 References: <20190912151949.2348-1-hmadhani@marvell.com>
@@ -73,135 +73,71 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-Add error handling logic to ELS Passthrough relating to NVME
-devices. Current code does not parse error code to take proper
-recovery action, instead it re-login with the same login parameters
-that encountered the error. Ex: nport handle collision.
+During driver unload, the remove flag will be set for all
+scsi_qla_host/NPIV. This allows each NPIV to see the flag
+instead of reaching for base_vha to search for it.
 
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 95 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 92 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 5c279449ca1c..840c3bf2a364 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2765,6 +2765,10 @@ qla2x00_els_dcmd2_sp_done(void *ptr, int res)
- 	struct scsi_qla_host *vha = sp->vha;
- 	struct event_arg ea;
- 	struct qla_work_evt *e;
-+	struct fc_port *conflict_fcport;
-+	port_id_t cid;	/* conflict Nport id */
-+	u32 *fw_status = sp->u.iocb_cmd.u.els_plogi.fw_status;
-+	u16 lid;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 27a22839c23d..45b2daa3ad9d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3508,6 +3508,29 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return ret;
+ }
  
- 	ql_dbg(ql_dbg_disc, vha, 0x3072,
- 	    "%s ELS done rc %d hdl=%x, portid=%06x %8phC\n",
-@@ -2776,14 +2780,99 @@ qla2x00_els_dcmd2_sp_done(void *ptr, int res)
- 	if (sp->flags & SRB_WAKEUP_ON_COMP)
- 		complete(&lio->u.els_plogi.comp);
- 	else {
--		if (res) {
--			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
--		} else {
-+		switch (fw_status[0]) {
-+		case CS_DATA_UNDERRUN:
-+		case CS_COMPLETE:
- 			memset(&ea, 0, sizeof(ea));
- 			ea.fcport = fcport;
- 			ea.rc = res;
- 			ea.event = FCME_ELS_PLOGI_DONE;
- 			qla2x00_fcport_event_handler(vha, &ea);
-+			break;
-+		case CS_IOCB_ERROR:
-+			switch (fw_status[1]) {
-+			case LSC_SCODE_PORTID_USED:
-+				lid = fw_status[2] & 0xffff;
-+				qlt_find_sess_invalidate_other(vha,
-+				    wwn_to_u64(fcport->port_name),
-+				    fcport->d_id, lid, &conflict_fcport);
-+				if (conflict_fcport) {
-+					/*
-+					 * Another fcport shares the same
-+					 * loop_id & nport id; conflict
-+					 * fcport needs to finish cleanup
-+					 * before this fcport can proceed
-+					 * to login.
-+					 */
-+					conflict_fcport->conflict = fcport;
-+					fcport->login_pause = 1;
-+					ql_dbg(ql_dbg_disc, vha, 0x20ed,
-+					    "%s %d %8phC pid %06x inuse with lid %#x post gidpn\n",
-+					    __func__, __LINE__,
-+					    fcport->port_name,
-+					    fcport->d_id.b24, lid);
-+				} else {
-+					ql_dbg(ql_dbg_disc, vha, 0x20ed,
-+					    "%s %d %8phC pid %06x inuse with lid %#x sched del\n",
-+					    __func__, __LINE__,
-+					    fcport->port_name,
-+					    fcport->d_id.b24, lid);
-+					qla2x00_clear_loop_id(fcport);
-+					set_bit(lid, vha->hw->loop_id_map);
-+					fcport->loop_id = lid;
-+					fcport->keep_nport_handle = 0;
-+					qlt_schedule_sess_for_deletion(fcport);
-+				}
-+				break;
++static void __qla_set_remove_flag(scsi_qla_host_t *base_vha)
++{
++	scsi_qla_host_t *vp;
++	unsigned long flags;
++	struct qla_hw_data *ha;
 +
-+			case LSC_SCODE_NPORT_USED:
-+				cid.b.domain = (fw_status[2] >> 16) & 0xff;
-+				cid.b.area   = (fw_status[2] >>  8) & 0xff;
-+				cid.b.al_pa  = fw_status[2] & 0xff;
-+				cid.b.rsvd_1 = 0;
++	if (!base_vha)
++		return;
 +
-+				ql_dbg(ql_dbg_disc, vha, 0x20ec,
-+				    "%s %d %8phC lid %#x in use with pid %06x post gnl\n",
-+				    __func__, __LINE__, fcport->port_name,
-+				    fcport->loop_id, cid.b24);
-+				set_bit(fcport->loop_id,
-+				    vha->hw->loop_id_map);
-+				fcport->loop_id = FC_NO_LOOP_ID;
-+				qla24xx_post_gnl_work(vha, fcport);
-+				break;
++	ha = base_vha->hw;
 +
-+			case LSC_SCODE_NOXCB:
-+				vha->hw->exch_starvation++;
-+				if (vha->hw->exch_starvation > 5) {
-+					ql_log(ql_log_warn, vha, 0xd046,
-+					    "Exchange starvation. Resetting RISC\n");
-+					vha->hw->exch_starvation = 0;
-+					set_bit(ISP_ABORT_NEEDED,
-+					    &vha->dpc_flags);
-+					qla2xxx_wake_dpc(vha);
-+				}
-+				/* fall through */
-+			default:
-+				ql_dbg(ql_dbg_disc, vha, 0x20eb,
-+				    "%s %8phC cmd error fw_status 0x%x 0x%x 0x%x\n",
-+				    __func__, sp->fcport->port_name,
-+				    fw_status[0], fw_status[1], fw_status[2]);
++	spin_lock_irqsave(&ha->vport_slock, flags);
++	list_for_each_entry(vp, &ha->vp_list, list)
++		set_bit(PFLG_DRIVER_REMOVING, &vp->pci_flags);
 +
-+				fcport->flags &= ~FCF_ASYNC_SENT;
-+				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-+				break;
-+			}
-+			break;
++	/*
++	 * Indicate device removal to prevent future board_disable
++	 * and wait until any pending board_disable has completed.
++	 */
++	set_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags);
++	spin_unlock_irqrestore(&ha->vport_slock, flags);
++}
 +
-+		default:
-+			ql_dbg(ql_dbg_disc, vha, 0x20eb,
-+			    "%s %8phC cmd error 2 fw_status 0x%x 0x%x 0x%x\n",
-+			    __func__, sp->fcport->port_name,
-+			    fw_status[0], fw_status[1], fw_status[2]);
-+
-+			sp->fcport->flags &= ~FCF_ASYNC_SENT;
-+			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-+			break;
- 		}
+ static void
+ qla2x00_shutdown(struct pci_dev *pdev)
+ {
+@@ -3524,7 +3547,7 @@ qla2x00_shutdown(struct pci_dev *pdev)
+ 	 * Prevent future board_disable and wait
+ 	 * until any pending board_disable has completed.
+ 	 */
+-	set_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags);
++	__qla_set_remove_flag(vha);
+ 	cancel_work_sync(&ha->board_disable);
  
- 		e = qla2x00_alloc_work(vha, QLA_EVT_UNMAP);
+ 	if (!atomic_read(&pdev->enable_cnt))
+@@ -3680,10 +3703,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	ha = base_vha->hw;
+ 	ql_log(ql_log_info, base_vha, 0xb079,
+ 	    "Removing driver\n");
+-
+-	/* Indicate device removal to prevent future board_disable and wait
+-	 * until any pending board_disable has completed. */
+-	set_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags);
++	__qla_set_remove_flag(base_vha);
+ 	cancel_work_sync(&ha->board_disable);
+ 
+ 	/*
 -- 
 2.12.0
 
