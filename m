@@ -2,103 +2,93 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647A6C5ACAE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE643C49ED9
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4157F20856
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC25E20856
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725809AbfILFh0 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 01:37:26 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:42971 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbfILFh0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 01:37:26 -0400
-Received: by mail-wr1-f67.google.com with SMTP id q14so26920775wrm.9
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2019 22:37:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VUGqX89aN/h9WiQvlTwAysK/8trN7MZD6p8i7Ooppvw=;
-        b=HW4MZxLNCnV+BXJivlPX7leKPtVQG1FQlmVlkyMQJb5Lmuep0SKrziHHMYlpvQJc7g
-         KNP+ukpo7xC4gMkEWr18Rysy6Sb9S263facMRopBwtWg9gShf1dG84jkYaC1fQvREzJs
-         YlqvNcXKPf9ersNy0wzrlq2KpSn8SzeGW2HPQTlNR8kqWKIJv64S9xfL1O/lOJ/lKS0Z
-         rg/yZgN5H11K1oc0OeUoIprcjjC1EfRn5oFfibaKD8/4YjWJV53LmsNJA3hvY+tTO4W6
-         xNAT+HMXa83yB/nQRdZ4jnkTl7iWC6SHlSl8WcsduLywn467hk8V8Zqk3urcOWdL0eWf
-         YPhA==
-X-Gm-Message-State: APjAAAW5K4gcGdJo/8kRk1XWAUN6MeDKTzkX06AgExnwyN0lGhSCrYqA
-        KcynrI+5vYosgIT/Q40R0j+moe+x7v4=
-X-Google-Smtp-Source: APXvYqxFIvw/HAVCjWCmggFb8h8HjZbkgFamPzPjeICkY3tjEynbf2/WGPizzav4506s8DwGCp74jQ==
-X-Received: by 2002:adf:ea8a:: with SMTP id s10mr4006569wrm.57.1568266644113;
-        Wed, 11 Sep 2019 22:37:24 -0700 (PDT)
-Received: from [10.0.4.250] (195-23-252-147.net.novis.pt. [195.23.252.147])
-        by smtp.gmail.com with ESMTPSA id 189sm7772258wma.6.2019.09.11.22.37.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Sep 2019 22:37:23 -0700 (PDT)
-Subject: Re: [PATCH 0/4] scsi: qla2xxx: Bug fixes
-To:     Roman Bolshakov <r.bolshakov@yadro.com>, linux-scsi@vger.kernel.org
-Cc:     Quinn Tran <qtran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-References: <20190912003919.8488-1-r.bolshakov@yadro.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
-Date:   Thu, 12 Sep 2019 06:37:22 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1725971AbfILFhm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 01:37:42 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:26570 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725794AbfILFhm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 01:37:42 -0400
+X-UUID: ac9febee49994d14859fb0a10dba9ce3-20190912
+X-UUID: ac9febee49994d14859fb0a10dba9ce3-20190912
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 476330481; Thu, 12 Sep 2019 13:37:35 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 12 Sep 2019 13:37:31 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 12 Sep 2019 13:37:31 +0800
+Message-ID: <1568266651.16730.13.camel@mtkswgap22>
+Subject: RE: [PATCH v1 2/3] scsi: ufs: override auto suspend tunables for ufs
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Avri Altman <Avri.Altman@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>,
+        "sthumma@codeaurora.org" <sthumma@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "evgreen@chromium.org" <evgreen@chromium.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>,
+        "subhashj@codeaurora.org" <subhashj@codeaurora.org>,
+        "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>
+Date:   Thu, 12 Sep 2019 13:37:31 +0800
+In-Reply-To: <MN2PR04MB6991D63EEF50367BE2CB062CFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1568194890-24439-1-git-send-email-stanley.chu@mediatek.com>
+         <1568194890-24439-3-git-send-email-stanley.chu@mediatek.com>
+         <MN2PR04MB6991D63EEF50367BE2CB062CFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-In-Reply-To: <20190912003919.8488-1-r.bolshakov@yadro.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8BIT
+X-MTK:  N
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/12/19 1:39 AM, Roman Bolshakov wrote:
-> This series has a few bug fixes for the driver.
-> 
-> Note, #1 only fixes the crash in the kernel. The complete fix for clean
-> ACL deletion from initiator side is in works and requires a discussion.
-> 
-> As of now initiator is not aware that target no longer wants talking to
-> it, that implies unneeded timeout. It might be fixed by making LOGO
-> explicit on session deletion but it's an issue I want to raise first
-> before making the change. Whether we need implicit LOGO in qla2xxx,
-> explicit or use both.
-> 
-> Also, an unsolicited ABTS from a port without session would still result
-> in BA_RJT response instead of frame discard and LOGO ELS, as specified
-> in FCP (12.3.3 Target FCP_Port response to Exchange termination):
-> 
->    When an ABTS-LS is received at the target FCP_Port, it shall abort
->    the designated Exchange and return one of the following responses:
-> 
->    a) the target FCP_Port shall discard the ABTS-LS and transmit a LOGO
->       ELS if the Nx_Port issuing the ABTS-LS is not currently logged in
->       (i.e., no N_Port Login exists);
-> 
-> FWIW, the target driver can receive ABTS as part of ABORT TASK/LUN
-> RESET/CLEAR TASK SET TMFs and in case of failed sequence retransmission
-> requests, exchange or sequence errors. IIRC, some initiators requeue
-> SCSI commands if BA_RJT is received. Therefore, a timely LOGO will
-> prevent a perceived session freeze on the initiators.
+Hi Avri,
 
-Hi Roman,
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> > 30b752c61b97..d253a018a73b 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -88,6 +88,9 @@
+> >  /* Interrupt aggregation default timeout, unit: 40us */
+> >  #define INT_AGGR_DEF_TO        0x02
+> > 
+> > +/* default delay of autosuspend: 2000 ms */ #define
+> Typo?
+> 
 
-Has this patch series been prepared against Linus' master branch,
-against Martin's 5.3/scsi-fixes or against Martin's 5.4/scsi-queue
-branch? I'm asking this because some patches in this series look similar
-to patches that are already present in the 5.4/scsi-queue branch.
+This is wired because it looks fine in both my local patch and in
+patchwork website: https://patchwork.kernel.org/patch/11140759/
+
+Anyway I will try to fix and check it carefully in v2.
 
 Thanks,
-
-Bart.
+Stanley
 
