@@ -2,104 +2,95 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 760F1C47404
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 12:37:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20F77C4CEC5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:12:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47D7A20830
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 12:37:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB40B20856
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:12:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YoYgJhi2"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="HnE6QibG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731633AbfILMhc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 08:37:32 -0400
-Received: from mail-io1-f47.google.com ([209.85.166.47]:36794 "EHLO
-        mail-io1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731283AbfILMhc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 08:37:32 -0400
-Received: by mail-io1-f47.google.com with SMTP id b136so54127236iof.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2019 05:37:32 -0700 (PDT)
+        id S1731952AbfILNMf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 09:12:35 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:44627 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731283AbfILNMe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 09:12:34 -0400
+Received: by mail-pg1-f195.google.com with SMTP id i18so13461416pgl.11
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2019 06:12:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=ba/oGUCd/as9CWRgyWo+aUAu4ppkvGP4MMOgYdJfLLI=;
-        b=YoYgJhi2GRbiJ/hACXrrImTVS6g90hDiYar5Y4RenCA/cu6y0xKBrZjL5vkrrI2tBD
-         Jf569f/DmMGmlDrKKyl9KQo8GWXqqmPkfWVeGkXXcXHpakSyaESZWgfXDPRdrDvqywrq
-         0B1pY+t+O08WqiEuBubrlNYOJCjQtsfz65nyxZP9y81qlYuZw+lkuK/IhjesUSTX2P30
-         ZUA3jenSDgQCC4VdOKccMJTBDxHT2V20Dy0pFEy+14EzSDTvvdXE3wtBEhq9it1QoCJH
-         MR2I4SptmXJQR1y7SNZUCqxHPhvcLZaPM2P4H/WQnT6DxPi+zGmWZOXaLr3WSs6aQbZm
-         J7wA==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=eDPbVXqU+y+RmPn4/ZLvHXxFmtHPu9FG57Z6VOzUMvY=;
+        b=HnE6QibGc8QbXvgR7z4lNSDL09+NmGKGy1fRXULhjvG0xbmEdafAJkCDi0302zxTwt
+         qBPwDfRYcQB7pUUuEdBpFzdGMwGnMo4BwjofoqTRT2+qK7/5cCDO40UvT4ULFlUtOzWU
+         z5aajg2c+ulNJSH3EudIAIulziEwBpZphkcXIGpikHIGOXTeYK99PrDs43X1xUeKmjc4
+         vRVE60SnTPpsjQrfNkCwMLRLNhm38Eu7xU6Qo/5AeJ+CJE1ve6p8qsbZ7Tmna+66s5N6
+         cbui7ZzWXNWy377MilRPai/306n+XaMMeck8va3DiwUhi3Vh+LNL9HVtJocbHL8yNGyV
+         HGcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=ba/oGUCd/as9CWRgyWo+aUAu4ppkvGP4MMOgYdJfLLI=;
-        b=WiJsOx5CqBhoO1Ku9HWc6Z8+8hNWHN1nEVVRq+iV06JWK1GCs/1huljml8GW9C8gm4
-         hQxZOu7ytlW1jbhLdzOtUWEpr2XE3lD910s/8TXE0H9Dt0ZbKunXqaIOfGPkjR5760qv
-         0LVEH17Tk6jO9AbN1MBcN5r5x/3K5qGAn+PTpIdTtw/+OCac4ed2QgeZ567OyGHsRDyS
-         N42DwJnkX65JG0fANBW6Zex1brEwCswfhzWKcyJs4Je4IsySOC+x4INFWdt/C+RhMApQ
-         M01iCZCzZdlOzSparu5tfA3Y7sAkk1yohD4V7afuIdr9cMB80xz7tY9jLcYlVvE6DP/y
-         0sgw==
-X-Gm-Message-State: APjAAAXxPjVIlR4XBk/XOkGVhDNrIy6ImKouJJygMLuRMvAiKp5yB84z
-        wJQjoFX5aVrHDBvU0DkNT/2zvcNeDkXGMv97c24=
-X-Google-Smtp-Source: APXvYqyWYg9kCk0JIJf5kv0KSWgfTzl+RR8CroDur6k+jlmdbDg/kM2wYdQ9iWfIywwAq7C3MQgjY9fBEVej2u23VeE=
-X-Received: by 2002:a02:7797:: with SMTP id g145mr43778102jac.60.1568291851943;
- Thu, 12 Sep 2019 05:37:31 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=eDPbVXqU+y+RmPn4/ZLvHXxFmtHPu9FG57Z6VOzUMvY=;
+        b=rBSze6mDW4nSDLz766u+44b2EbO6MzCfByEGpYDkbGkE7ojlqMNpqTgppEyLEPet7G
+         sl6B5dA7V8RflOJMp63eJtp1r5iNg1okoEck/0e6douIcuM9rw4yU0tjOjXlfG4ZXK9Q
+         ZZVdrI9E3oGjS1S8TZnTE/Adsjr0o/up6s9T6ncO11eQPdZ8WpK2gJsSTK61xu5SKA1m
+         D4lN9R0thz38/uC5IDzUo4wEKnSIKgvsDzdiKjLl5Ee3900qmwPy2d1QxOCQ6X+xVnAr
+         558CDqhVNi6tqMIyn+ZL1snisD1xrBHwWIVuZp/KAQPyBCZ5xjR9v13UGURc++7qi/mG
+         /f5A==
+X-Gm-Message-State: APjAAAXofwghsyObVuvCKO7pDEKmdtAnDPGVxwR4kw1dZFTZTVsciUe0
+        VTqJpi5fz8JmL5x+dW9o2T/fCg==
+X-Google-Smtp-Source: APXvYqy5IRnkfN40k2/B7q313u2BRWeMvX80jlePX/MlMV1tGW/e5n3Y99EGn/AhhLeBvPK61j8c0Q==
+X-Received: by 2002:a62:2787:: with SMTP id n129mr10490181pfn.45.1568293952678;
+        Thu, 12 Sep 2019 06:12:32 -0700 (PDT)
+Received: from ?IPv6:2600:380:4b2e:3b64:29ff:2f14:b019:100? ([2600:380:4b2e:3b64:29ff:2f14:b019:100])
+        by smtp.gmail.com with ESMTPSA id m13sm24678837pgn.57.2019.09.12.06.12.29
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 12 Sep 2019 06:12:31 -0700 (PDT)
+Subject: Re: [PATCH v2] fixup null q->dev checking in both block and scsi
+ layer
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, matthias.bgg@gmail.com
+Cc:     linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, kuohong.wang@mediatek.com,
+        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        andy.teng@mediatek.com
+References: <1568277328-4597-1-git-send-email-stanley.chu@mediatek.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <2a285805-cdf3-fe7a-0d1a-9f53f821d025@kernel.dk>
+Date:   Thu, 12 Sep 2019 07:12:28 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-References: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
- <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
-In-Reply-To: <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
-From:   Andrey Melnikov <temnota.am@gmail.com>
-Date:   Thu, 12 Sep 2019 15:37:20 +0300
-Message-ID: <CA+PODjpG7NLTH8wp9qw08ACj4=8sUusmkZv6X7QWHtdbNJ1S0Q@mail.gmail.com>
-Subject: Re: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT
-To:     Zhong Li <lizhongfs@gmail.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1568277328-4597-1-git-send-email-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=D1=87=D1=82, 12 =D1=81=D0=B5=D0=BD=D1=82. 2019 =D0=B3. =D0=B2 07:56, Zhong=
- Li <lizhongfs@gmail.com>:
->
->
-> > On Aug 29, 2019, at 11:49 PM, Andrey Melnikov <temnota.am@gmail.com> wr=
-ote:
-> >
-> > Hello.
-> >
-> > This patch break exposing individual RAID disks from adaptec raid
-> > controller. I need access to this disc's for S.M.A.R.T monitoring.
->
-> Hello Andrey,
->
-> Do you have any more details about how/why it is broken?
+On 9/12/19 2:35 AM, Stanley Chu wrote:
+> Some devices may skip blk_pm_runtime_init() and have null pointer in
+> its request_queue->dev. For example, SCSI devices of UFS Well-Known
+> LUNs.
+> 
+> Currently the null pointer is checked by the user of
+> blk_set_runtime_active(), i.e., scsi_dev_type_resume(). It is better
+> to check it by blk_set_runtime_active() itself instead of by its
+> users.
 
-adaptec report hidden luns with PQ=3D1, PDT=3D0 - now it skipped.
+Applied, thanks.
 
-[   32.609143] scsi host6: aacraid
-[   32.609566] scsi 6:0:0:0: Direct-Access     Adaptec  srv
-  V1.0 PQ: 0 ANSI: 2
-[   32.609881] scsi 6:0:1:0: Direct-Access     Adaptec  zbx
-  V1.0 PQ: 0 ANSI: 2
-[   32.639942] scsi 6:1:4:0: Direct-Access     ATA      WDC
-WD2003FZEX-0 01.0 PQ: 1 ANSI: 5
-[   32.640810] scsi 6:1:5:0: Direct-Access     ATA      WDC
-WD2003FZEX-0 01.0 PQ: 1 ANSI: 5
-[   32.641559] scsi 6:1:6:0: Direct-Access     ATA      WDC
-WD2003FZEX-0 01.0 PQ: 1 ANSI: 5
-[   32.642266] scsi 6:1:7:0: Direct-Access     ATA      WDC
-WD2003FZEX-0 01.0 PQ: 1 ANSI: 5
+-- 
+Jens Axboe
 
-
-> > Please find other way to workaround bugs in IBM/2145 controller.
->
