@@ -2,117 +2,127 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F99AC4CEC5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 14:04:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44538C4CEC6
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EAD520856
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 14:04:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B81F2081B
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:19:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="erliXtGI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732348AbfILOEK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 10:04:10 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:43871 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731816AbfILOEK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 10:04:10 -0400
-Received: by mail-pf1-f196.google.com with SMTP id d15so16057825pfo.10;
-        Thu, 12 Sep 2019 07:04:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=UW+vGhhaDwB8JUulVCeUl6DUls9Tf7byS++5Ic4BMgo=;
-        b=IbImnIaLuQTkNHaup7cO4iFl/4wtq1LhVLxPzuAOwvBu0FDAk7pJweK/GP5gB0i5BM
-         ZY0UC3zjiL15oYOzQYpe+OiKIb9nG+W7PIB0o900S0oYNCvcH09EL9HDWqZnfHtVtCEQ
-         2x9yfi3hRa2FX/Swn3a4fXph/nuAsjymGAzlKafFxsrsEqCHHx6Ki+GA5mFh6i44l0m8
-         HvGVd4N8CwjsjGA44wkI1N5LlPq/DfiZVjdOsMv6m7tVE8liMtWrjYXxFIHB3Tx0qvu+
-         Lq0ox/cbO6hCoum0+kyAnGK/ItGdBM3Rh63dC71ms9/HikN4jjaSSsPuRA8zB9FMM8e/
-         5ddQ==
-X-Gm-Message-State: APjAAAW0e4A9gMPet9kw4xHs58deINjSAKSTQgJzyUYjqBU0elO15mOQ
-        k5AE+DT5vG3KwwKu+OHwjSU=
-X-Google-Smtp-Source: APXvYqxtVNhYO4w3FacKlb3XkfXk4WXO2cF+kGey0owBt4cG6OUwFWyvIIVkp/ooVH7793FzuO5+mA==
-X-Received: by 2002:a63:d30c:: with SMTP id b12mr39057704pgg.235.1568297049432;
-        Thu, 12 Sep 2019 07:04:09 -0700 (PDT)
-Received: from [172.19.249.100] ([38.98.37.138])
-        by smtp.gmail.com with ESMTPSA id m24sm29696055pfa.37.2019.09.12.07.03.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Sep 2019 07:04:08 -0700 (PDT)
-Subject: Re: [PATCH 3/3] scsi: core: change function comments to kernel-doc
- style
-To:     =?UTF-8?Q?Andr=c3=a9_Almeida?= <andrealmeid@collabora.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Cc:     corbet@lwn.net, kernel@collabora.com, krisman@collabora.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-References: <20190911203735.1332398-1-andrealmeid@collabora.com>
- <20190911203735.1332398-3-andrealmeid@collabora.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <19eb6b7f-0a62-0e2a-c108-27887b825767@acm.org>
-Date:   Thu, 12 Sep 2019 15:03:44 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1732993AbfILPTz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 11:19:55 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56266 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732699AbfILPTz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Sep 2019 11:19:55 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x8CFFC7l029058;
+        Thu, 12 Sep 2019 08:19:51 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=ZaEwXx937+3LNdT0+7A5jIE7n9223b+MO4jenDB2/qg=;
+ b=erliXtGIxybPgx0IV+nxukaEQv2ArnWDdSsloyh869B2mRhq8fz8RMaB+3EHLhZlWdmV
+ YAnBGPwpEmIyTnot/gbktv/KooyAuNcW8IKCdfzXYoDmchd+mXsZC8WWqMGHmnWxs764
+ S15/Coj/Ssr3ze7PM2h0xirfsY7iFS5ZEaF2yabj4+kaoixSbD19TrSxyMqbahNEQljy
+ Y7Va7nJjoOWIT8rIuyXYIciN9C0ZXhxkFGY8UZfwB6x3InRbVNdMZ0XMRbpUlhqJIqgc
+ +iA/wrSYYxI7KGQ73ofpZsiePqGq7qN10iRHGPIrfP/jVX6cO6I3vs/08X94BajNEgD3 XQ== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2uxshkfyke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 12 Sep 2019 08:19:50 -0700
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 12 Sep
+ 2019 08:19:49 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
+ Transport; Thu, 12 Sep 2019 08:19:49 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id C550B3F703F;
+        Thu, 12 Sep 2019 08:19:49 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x8CFJnTQ002383;
+        Thu, 12 Sep 2019 08:19:49 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x8CFJnB2002382;
+        Thu, 12 Sep 2019 08:19:49 -0700
+From:   Himanshu Madhani <hmadhani@marvell.com>
+To:     <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH 00/14] qla2xxx: Bug fixes for the driver. 
+Date:   Thu, 12 Sep 2019 08:19:35 -0700
+Message-ID: <20190912151949.2348-1-hmadhani@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <20190911203735.1332398-3-andrealmeid@collabora.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.70,1.0.8
+ definitions=2019-09-12_08:2019-09-11,2019-09-12 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/11/19 9:37 PM, André Almeida wrote:
-> +/**
-> + * scsi_queue_insert - Insert a command in the midlevel queue.
-> + * @cmd:    command that we are adding to queue.
-> + * @reason: why we are inserting command to queue.
->   *
-> - * Returns:     Nothing.
-> + * We do this for one of two cases. Either the host is busy and it cannot accept
-> + * any more commands for the time being, or the device returned QUEUE_FULL and
-> + * can accept no more commands.
->   *
-> - * Notes:       We do this for one of two cases.  Either the host is busy
-> - *              and it cannot accept any more commands for the time being,
-> - *              or the device returned QUEUE_FULL and can accept no more
-> - *              commands.
-> - * Notes:       This could be called either from an interrupt context or a
-> - *              normal process context.
-> + * Context: This could be called either from an interrupt context or a normal
-> + * process context.
->   */
+Hi Martin,
 
-What is the midlevel queue? I don't know anyone who still uses that
-terminology today. Since the switch to scsi-mq we have software queues
-(if no I/O scheduler has been configured), scheduler queue(s) (if an I/O
-scheduler has been configured) and hardware queues.
+This series has fixes for N2N handling and unload path for driver
+when NPIV is configured. Also included are patches for capturing
+firmware dump when firmware posts MPI heartbeat stop event. 
+We have also enhanced handling of FCP/FC-NVMe when target advertises
+both capabilites under same WWNN. 
 
-> +/**
-> + * scsi_io_completion - Completion processing for block device I/O requests.
-> + * @cmd:	command that is finished.
+Please apply this series for 5.4/scsi-quueue at your earliest convenience.
 
-That looks inconsistent: the function description refers to block device
-I/O requests while what is being completed is a SCSI command.
-
-> + * We will finish off the specified number of sectors.  If we are done, the
-> + * command block will be released and the queue function will be goosed. If we
-> + * are not done then we have to figure out what to do next:
-> + *
-> + *   a) We can call scsi_requeue_command().  The request
-> + *	will be unprepared and put back on the queue.  Then
-> + *	a new command will be created for it.  This should
-> + *	be used if we made forward progress, or if we want
-> + *	to switch from READ(10) to READ(6) for example.
-
-I am not aware of any function in the kernel tree that has the name
-scsi_requeue_command().
+Note: Series submitted earlier today (9/12/2019) by Roman Bolshakov
+      (https://marc.info/?l=linux-scsi&m=156824878713514&w=2)
+      is still being reviewed and I do not see any conflict with
+      this series. Please hold off on merging that series until review is
+      complete.
 
 Thanks,
+Himanshu
 
-Bart.
+Himanshu Madhani (3):
+  qla2xxx: Silence fwdump template message
+  qla2xxx: Improve logging for scan thread
+  qla2xxx: Update driver version to 10.01.00.20-k
+
+Michael Hernandez (1):
+  qla2xxx: Dual FCP-NVMe target port support
+
+Quinn Tran (10):
+  qla2xxx: Fix unbound sleep in fcport delete path.
+  qla2xxx: Fix stale mem access on driver unload
+  qla2xxx: Optimize NPIV tear down process
+  qla2xxx: Fix N2N link reset
+  qla2xxx: Fix N2N link up fail
+  qla2xxx: Fix Nport ID display value
+  qla2xxx: Add error handling for PLOGI ELS passthrough
+  qla2xxx: Set remove flag for all VP
+  qla2xxx: Check for MB timeout while capturing ISP27/28xx FW dump
+  qla2xxx: Capture FW dump on MPI heartbeat stop event
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   6 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  30 ++++++-
+ drivers/scsi/qla2xxx/qla_fw.h      |   2 +
+ drivers/scsi/qla2xxx/qla_gs.c      |  67 ++++++++-------
+ drivers/scsi/qla2xxx/qla_init.c    | 167 +++++++++++++++++++++++++------------
+ drivers/scsi/qla2xxx/qla_inline.h  |  12 +++
+ drivers/scsi/qla2xxx/qla_iocb.c    | 102 ++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  31 +++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |  34 ++++++--
+ drivers/scsi/qla2xxx/qla_mid.c     |  32 ++++---
+ drivers/scsi/qla2xxx/qla_os.c      |  63 ++++++++++----
+ drivers/scsi/qla2xxx/qla_target.c  |  26 +++---
+ drivers/scsi/qla2xxx/qla_tmpl.c    |  29 ++++++-
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 14 files changed, 453 insertions(+), 150 deletions(-)
+
+-- 
+2.12.0
 
