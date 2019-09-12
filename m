@@ -2,142 +2,92 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 540BDC49ED6
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 02:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AB2C49ED9
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 04:56:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D0172085B
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 02:25:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2011D20856
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 04:56:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LUVwinm0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727477AbfILCZC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Sep 2019 22:25:02 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:29785 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726952AbfILCZC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Sep 2019 22:25:02 -0400
-X-UUID: e0c776e483ff4f23b6e1d48ff1c158b4-20190912
-X-UUID: e0c776e483ff4f23b6e1d48ff1c158b4-20190912
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1841125873; Thu, 12 Sep 2019 10:24:56 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 12 Sep 2019 10:24:54 +0800
-Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 12 Sep 2019 10:24:54 +0800
-Message-ID: <1568255094.16730.10.camel@mtkswgap22>
-Subject: RE: [PATCH v1 1/3] scsi: core: allow auto suspend override by
- low-level driver
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Avri Altman <Avri.Altman@wdc.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>,
-        "sthumma@codeaurora.org" <sthumma@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "evgreen@chromium.org" <evgreen@chromium.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "marc.w.gonzalez@free.fr" <marc.w.gonzalez@free.fr>,
-        "subhashj@codeaurora.org" <subhashj@codeaurora.org>,
-        "vivek.gautam@codeaurora.org" <vivek.gautam@codeaurora.org>,
-        Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?= 
-        <kuohong.wang@mediatek.com>,
-        Peter Wang =?UTF-8?Q?=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29?= 
-        <peter.wang@mediatek.com>,
-        Chun-Hung Wu =?UTF-8?Q?=28=E5=B7=AB=E9=A7=BF=E5=AE=8F=29?= 
-        <Chun-hung.Wu@mediatek.com>,
-        "Andy Teng ( =?ISO-8859-1?Q?=1B$B{}G!9(=1B(B?=)" 
-        <Andy.Teng@mediatek.com>
-Date:   Thu, 12 Sep 2019 10:24:54 +0800
-In-Reply-To: <MN2PR04MB6991142450EEF05E2AF2D8DFFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1568194890-24439-1-git-send-email-stanley.chu@mediatek.com>
-         <1568194890-24439-2-git-send-email-stanley.chu@mediatek.com>
-         <MN2PR04MB6991142450EEF05E2AF2D8DFFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726483AbfILE4q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 00:56:46 -0400
+Received: from mail-pf1-f177.google.com ([209.85.210.177]:40826 "EHLO
+        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725765AbfILE4q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 00:56:46 -0400
+Received: by mail-pf1-f177.google.com with SMTP id x127so15132995pfb.7
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Sep 2019 21:56:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=GR7/tfUQexbSQFmNr1QEzkshtDfnzk9wlGaK/m84iow=;
+        b=LUVwinm0QtrBY/NtbxMyfLfLrHG0VCKDRa3T6vOhVV0+6hfDwm4VaH9QFeqTZ0dm82
+         g/nZQN+4oZRLimvnQ/Y356r5/dd1MhnNC+uZkGl4zNk+VsUV8cNCqd/dcufI9aIdKO7k
+         UlBkwBJk6KCIYWG+hCaAaCUsFaawq2LIZHSx7tLj9qp6RxIpmpWHgVmToVGWCjK90qZs
+         +lSSRADnOS4uHJEJ8j/uTPqKVDo0s0dQm7s+NuEOWgePEJ2hRJtCm0naPfHOMtnizhPa
+         8Kp4/qHipNdjVLe3MowxifiLMW0QBxqv3LP7Bkg7QysfxO+bePcO8dxx4jLa1RS9dGkP
+         LE/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=GR7/tfUQexbSQFmNr1QEzkshtDfnzk9wlGaK/m84iow=;
+        b=jPcTMrWg8e5sPb5vArGz9SR39PG7rE+3qzTe9JrIj1xcF1aN1TnzUsvciVFaXbxTEe
+         BE6Fk4kFg0aTBeztsT+ksAupRlTrzejrhKPnSYsPIvjSDMacwIAkmaVdTfq3bvJTfu3q
+         BwtwuCm9yFoJ8uh3qFeowmseH0A+v1DueuneA/sy4PYRl5lVWip+EFi9fdIkF2v5LY4A
+         AwPVdM4NFf+ZeTj1qFq6mydir02rBcAZ5eyPYFpQELvRh/+2jbnHbdsC1iUv8H2ns49v
+         F62VGZIRUXGCLUnXW24snqzlAcRcqjhR/uCU1k1DAv/RRgoI8FE6ZjwbMOdJtJIkyv0k
+         cluA==
+X-Gm-Message-State: APjAAAVO/6eQLocXcQXnzQGPBDlnnHHr7adh8w12Ogy1IA5G4OkWk8qk
+        h35QflJqIsiQHhqFVyKO5LI=
+X-Google-Smtp-Source: APXvYqwk62hRZ3+Gq49x+bmAqUQMJaIgaaG82z8WbUjkgyzZkr/DVyUIWsfoiMuppZB9YTWm4nUKQg==
+X-Received: by 2002:a17:90a:30e8:: with SMTP id h95mr9663889pjb.44.1568264205398;
+        Wed, 11 Sep 2019 21:56:45 -0700 (PDT)
+Received: from ibm-users-mbp-3.cn.ibm.com ([103.49.135.195])
+        by smtp.gmail.com with ESMTPSA id d5sm10750054pfn.160.2019.09.11.21.56.43
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 11 Sep 2019 21:56:44 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Subject: Re: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to
+ SCSI_SCAN_TARGET_PRESENT
+From:   Zhong Li <lizhongfs@gmail.com>
+In-Reply-To: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
+Date:   Thu, 12 Sep 2019 12:56:40 +0800
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
 Content-Transfer-Encoding: 7bit
-MIME-Version: 1.0
-X-TM-SNTS-SMTP: FFB581AF885F6D0D8BCF8806218FBBFE49DD31A95CC1CEB7B6B3B7B30AF6FD832000:8
-X-MTK:  N
+Message-Id: <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
+References: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
+To:     Andrey Melnikov <temnota.am@gmail.com>
+X-Mailer: Apple Mail (2.3445.104.11)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri,
 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c index
-> > 149d406aacc9..2218d57c4c0c 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -3371,6 +3371,9 @@ static int sd_probe(struct device *dev)
-> >         }
-> > 
-> >         blk_pm_runtime_init(sdp->request_queue, dev);
-> > +       if (sdp->rpm_autosuspend_delay > 0)
-> > +               pm_runtime_set_autosuspend_delay(dev, 
-> > +
-> Redundant line ?
+> On Aug 29, 2019, at 11:49 PM, Andrey Melnikov <temnota.am@gmail.com> wrote:
+> 
+> Hello.
+> 
+> This patch break exposing individual RAID disks from adaptec raid
+> controller. I need access to this disc's for S.M.A.R.T monitoring.
 
-checkpatch reported "WARNING:LONG_LINE:line over 80 characters" when I
-made this as oneline : (
+Hello Andrey, 
 
-> > + sdp->rpm_autosuspend_delay);
-> Don't you need to call now pm_runtime_use_autosuspend() ?
+Do you have any more details about how/why it is broken? 
 
-dev->power.user_autosuspend was set by blk_pm_runtime_init() above, thus
-pm_runtime_use_autosuspend() is not necessary here.
+Thanks, Zhong 
 
 > 
-> >         device_add_disk(dev, gd, NULL);
-> >         if (sdkp->capacity)
-> >                 sd_dif_config_host(sdkp); diff --git a/include/scsi/scsi_device.h
-> > b/include/scsi/scsi_device.h index 202f4d6a4342..133b282fae5a 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -199,7 +199,7 @@ struct scsi_device {
-> >         unsigned broken_fua:1;          /* Don't set FUA bit */
-> >         unsigned lun_in_cdb:1;          /* Store LUN bits in CDB[1] */
-> >         unsigned unmap_limit_for_ws:1;  /* Use the UNMAP limit for WRITE
-> > SAME */
-> > -
-> > +       int rpm_autosuspend_delay;
-> Can suspend be negative?
-
-Yes, however negative delay value will block rpm.
-
-Here we just use the same type as parameter "delay" of
-pm_runtime_set_autosuspend() even though we do not set it as negative
-value in this version.
-
-But thank you so much to remind me that
-pm_runtime_set_autosuspend_delay() can accept "zero" delay so we shall
-allow "zero" sdev->rpm_autosuspend_delay as well.
-
-I will fix it in v2.
-
-> 
-> >         atomic_t disk_events_disable_depth; /* disable depth for disk events */
-> > 
-> >         DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /*
-> > supported events */
-> > --
-> > 2.18.0
-> 
-
-Thanks,
-Stanley
-
+> Please find other way to workaround bugs in IBM/2145 controller.
 
