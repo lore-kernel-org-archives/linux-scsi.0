@@ -2,36 +2,38 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE643C49ED9
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3CF5C49ED9
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:39:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC25E20856
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:37:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B11DB208E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 05:39:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725971AbfILFhm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 01:37:42 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:26570 "EHLO
+        id S1726215AbfILFjf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 01:39:35 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:18166 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725794AbfILFhm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 01:37:42 -0400
-X-UUID: ac9febee49994d14859fb0a10dba9ce3-20190912
-X-UUID: ac9febee49994d14859fb0a10dba9ce3-20190912
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        with ESMTP id S1726157AbfILFjf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 01:39:35 -0400
+X-UUID: 91465c4520cd4888bff19885c7e4dc82-20190912
+X-UUID: 91465c4520cd4888bff19885c7e4dc82-20190912
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <stanley.chu@mediatek.com>)
         (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 476330481; Thu, 12 Sep 2019 13:37:35 +0800
+        with ESMTP id 1676963458; Thu, 12 Sep 2019 13:39:27 +0800
 Received: from mtkcas08.mediatek.inc (172.21.101.126) by
  mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 12 Sep 2019 13:37:31 +0800
+ 15.0.1395.4; Thu, 12 Sep 2019 13:39:25 +0800
 Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 12 Sep 2019 13:37:31 +0800
-Message-ID: <1568266651.16730.13.camel@mtkswgap22>
-Subject: RE: [PATCH v1 2/3] scsi: ufs: override auto suspend tunables for ufs
+ Transport; Thu, 12 Sep 2019 13:39:25 +0800
+Message-ID: <1568266766.16730.15.camel@mtkswgap22>
+Subject: RE: [PATCH v1 3/3] scsi: ufs-mediatek: enable auto suspend
+ capability
 From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     Avri Altman <Avri.Altman@wdc.com>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
@@ -55,11 +57,11 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
         "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
         "andy.teng@mediatek.com" <andy.teng@mediatek.com>
-Date:   Thu, 12 Sep 2019 13:37:31 +0800
-In-Reply-To: <MN2PR04MB6991D63EEF50367BE2CB062CFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
+Date:   Thu, 12 Sep 2019 13:39:26 +0800
+In-Reply-To: <MN2PR04MB6991A6F223D9C711A3D00B21FCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
 References: <1568194890-24439-1-git-send-email-stanley.chu@mediatek.com>
-         <1568194890-24439-3-git-send-email-stanley.chu@mediatek.com>
-         <MN2PR04MB6991D63EEF50367BE2CB062CFCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
+         <1568194890-24439-4-git-send-email-stanley.chu@mediatek.com>
+         <MN2PR04MB6991A6F223D9C711A3D00B21FCB10@MN2PR04MB6991.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
@@ -72,23 +74,40 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Avri,
 
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> > 30b752c61b97..d253a018a73b 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -88,6 +88,9 @@
-> >  /* Interrupt aggregation default timeout, unit: 40us */
-> >  #define INT_AGGR_DEF_TO        0x02
+On Wed, 2019-09-11 at 10:58 +0000, Avri Altman wrote:
 > > 
-> > +/* default delay of autosuspend: 2000 ms */ #define
-> Typo?
+> > Enable auto suspend capability in MediaTek UFS driver.
+> > 
+> > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 > 
+> > ---
+> >  drivers/scsi/ufs/ufs-mediatek.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> > index 0f6ff33ce52e..b7b177c6194c 100644
+> > --- a/drivers/scsi/ufs/ufs-mediatek.c
+> > +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> > @@ -117,6 +117,11 @@ static int ufs_mtk_setup_clocks(struct ufs_hba
+> > *hba, bool on,
+> >         return ret;
+> >  }
+> > 
+> > +static void ufs_mtk_set_caps(struct ufs_hba *hba) {
+> > +       hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND; }
+> Even a one-liner deserve new line for its closing brackets
 
-This is wired because it looks fine in both my local patch and in
-patchwork website: https://patchwork.kernel.org/patch/11140759/
+The wired format is just happening the same as
+[PATCH v1 2/3] scsi: ufs: override auto suspend tunables for ufs
 
-Anyway I will try to fix and check it carefully in v2.
+It looks fine in patchwork website:
+https://patchwork.kernel.org/patch/11140757/
+
+I'll try to fix it in v2.
 
 Thanks,
 Stanley
+
+
 
