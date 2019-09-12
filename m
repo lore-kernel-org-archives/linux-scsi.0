@@ -2,58 +2,62 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86691C49ED6
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 00:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED70C49ED6
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 00:39:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 450682082C
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 00:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30F1C208E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 00:39:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="fru8xbLO"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="BogG0yYE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728265AbfILAjp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Sep 2019 20:39:45 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:56088 "EHLO mta-01.yadro.com"
+        id S1728536AbfILAjs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Sep 2019 20:39:48 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:56102 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726157AbfILAjp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Sep 2019 20:39:45 -0400
+        id S1726157AbfILAjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Sep 2019 20:39:48 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 199AB435D1;
-        Thu, 12 Sep 2019 00:39:44 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 7C6F5435D5;
+        Thu, 12 Sep 2019 00:39:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received; s=mta-01; t=1568248782; x=
-        1570063183; bh=fHvihKOHj1qbemTeTqK/LE+pZRsoDI9HMxQg4y6g8Hk=; b=f
-        ru8xbLOgxgRr0yzGlvBBBTSTM6s5sJxVDSQ9XfcITWLxfy2Y0nKHxH4z/KdwmTHE
-        PqEslVAjyhMEKV+8ur5ip8VahmGIzNfPBctIAHL6UD+Y8d+rRqugbjpAdvzYXqV1
-        xuuWlnmDxgcpU6C/0OYm2rkIJi+Mh87sIf0gFO8SDs=
+        :references:in-reply-to:x-mailer:message-id:date:date:subject
+        :subject:from:from:received:received:received; s=mta-01; t=
+        1568248785; x=1570063186; bh=Z3rnI2RPv/4SD5cZvIOO8hxpI5GaHwztBil
+        7r7WFUgA=; b=BogG0yYEXRJbTfLl6may6zIjll7fR/nLLqVm4AkQJzxvLR97t3q
+        LBFHOwR1wmmmqm2clYx6dBeg6UBITChNcTt0PQk1+hYYobdmHUdHIYDjzYdukNcC
+        +b0lGIj+Wrp0uNHtXm8IjptYOoOtZnnkkqfx+NRUrXzv5NXA4KieNm2k=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id gBxYp8q9squ5; Thu, 12 Sep 2019 03:39:42 +0300 (MSK)
+        with ESMTP id GtBGaZt3B_OZ; Thu, 12 Sep 2019 03:39:45 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id F36FF412D6;
-        Thu, 12 Sep 2019 03:39:41 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1F699412D6;
+        Thu, 12 Sep 2019 03:39:45 +0300 (MSK)
 Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 12
- Sep 2019 03:39:41 +0300
+ Sep 2019 03:39:44 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     Roman Bolshakov <r.bolshakov@yadro.com>,
         Quinn Tran <qtran@marvell.com>,
         Himanshu Madhani <hmadhani@marvell.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 0/4] scsi: qla2xxx: Bug fixes
-Date:   Thu, 12 Sep 2019 03:39:15 +0300
-Message-ID: <20190912003919.8488-1-r.bolshakov@yadro.com>
+        Bart Van Assche <bvanassche@acm.org>,
+        <stable@vger.kernel.org>
+Subject: [PATCH 1/4] scsi: qla2xxx: Ignore NULL pointer in tcm_qla2xxx_free_mcmd
+Date:   Thu, 12 Sep 2019 03:39:16 +0300
+Message-ID: <20190912003919.8488-2-r.bolshakov@yadro.com>
 X-Mailer: git-send-email 2.22.0
+In-Reply-To: <20190912003919.8488-1-r.bolshakov@yadro.com>
+References: <20190912003919.8488-1-r.bolshakov@yadro.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -65,50 +69,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+If ABTS cannot be completed in target mode, the driver attempts to free
+related management command and crashes:
 
-This series has a few bug fixes for the driver.
+  NIP [d000000019181ee8] tcm_qla2xxx_free_mcmd+0x40/0x80 [tcm_qla2xxx]
+  LR [d00000001dc1e6f8] qlt_response_pkt+0x190/0xa10 [qla2xxx]
+  Call Trace:
+  [c000003fff27bb50] [c000003fff27bc10] 0xc000003fff27bc10 (unreliable)
+  [c000003fff27bb70] [d00000001dc1e6f8] qlt_response_pkt+0x190/0xa10 [qla2xxx]
+  [c000003fff27bc10] [d00000001dbc2be0] qla24xx_process_response_queue+0x5d8/0xbd0 [qla2xxx]
+  [c000003fff27bd50] [d00000001dbc632c] qla24xx_msix_rsp_q+0x64/0x150 [qla2xxx]
+  [c000003fff27bde0] [c000000000187200] __handle_irq_event_percpu+0x90/0x310
+  [c000003fff27bea0] [c0000000001874b8] handle_irq_event_percpu+0x38/0x90
+  [c000003fff27bee0] [c000000000187574] handle_irq_event+0x64/0xb0
+  [c000003fff27bf10] [c00000000018cd38] handle_fasteoi_irq+0xe8/0x280
+  [c000003fff27bf40] [c000000000185ccc] generic_handle_irq+0x4c/0x70
+  [c000003fff27bf60] [c000000000016cec] __do_irq+0x7c/0x1d0
+  [c000003fff27bf90] [c00000000002a530] call_do_irq+0x14/0x24
+  [c00000207d2cba90] [c000000000016edc] do_IRQ+0x9c/0x130
+  [c00000207d2cbae0] [c000000000008bf4] hardware_interrupt_common+0x114/0x120
+  --- interrupt: 501 at arch_local_irq_restore+0x74/0x90
+      LR = arch_local_irq_restore+0x74/0x90
+  [c00000207d2cbdd0] [c0000000001c64fc] tick_broadcast_oneshot_control+0x4c/0x60 (unreliable)
+  [c00000207d2cbdf0] [c0000000007ac840] cpuidle_enter_state+0xf0/0x450
+  [c00000207d2cbe50] [c00000000016b81c] call_cpuidle+0x4c/0x90
+  [c00000207d2cbe70] [c00000000016bc30] do_idle+0x2b0/0x330
+  [c00000207d2cbec0] [c00000000016beec] cpu_startup_entry+0x3c/0x50
+  [c00000207d2cbef0] [c00000000004a06c] start_secondary+0x63c/0x670
+  [c00000207d2cbf90] [c00000000000aa6c] start_secondary_prolog+0x10/0x14
 
-Note, #1 only fixes the crash in the kernel. The complete fix for clean
-ACL deletion from initiator side is in works and requires a discussion.
+The crash can be triggered by ACL deletion when there's active I/O.
 
-As of now initiator is not aware that target no longer wants talking to
-it, that implies unneeded timeout. It might be fixed by making LOGO
-explicit on session deletion but it's an issue I want to raise first
-before making the change. Whether we need implicit LOGO in qla2xxx,
-explicit or use both.
+During ACL deletion, qla2xxx performs implicit LOGO that's invisible for
+the initiator. Only the driver and firmware are aware of the logout.
+Therefore the initiator continues to send SCSI commands and the target
+always responds with SAM STATUS BUSY as it can't find the session.
 
-Also, an unsolicited ABTS from a port without session would still result
-in BA_RJT response instead of frame discard and LOGO ELS, as specified
-in FCP (12.3.3 Target FCP_Port response to Exchange termination):
+The command times out after a while and initiator invokes ABORT TASK TMF
+for the command. The TMF is mapped to ABTS-LS in FCP. The target can't
+find session for S_ID originating ABTS-LS so it never allocates mcmd.
+And since N_Port handle was deleted after LOGO, it is no longer valid
+and ABTS Response IOCB is returned from firmware with status 31. Then
+free_mcmd is invoked on NULL pointer and the kernel crashes.
 
-   When an ABTS-LS is received at the target FCP_Port, it shall abort
-   the designated Exchange and return one of the following responses:
+[ 7734.578642] qla2xxx [0000:00:0c.0]-e837:6: ABTS_RECV_24XX: instance 0
+[ 7734.578644] qla2xxx [0000:00:0c.0]-f811:6: qla_target(0): task abort (s_id=1:2:0, tag=1209504, param=0)
+[ 7734.578645] find_sess_by_s_id: 0x010200
+[ 7734.578645] Unable to locate s_id: 0x010200
+[ 7734.578646] qla2xxx [0000:00:0c.0]-f812:6: qla_target(0): task abort for non-existent session
+[ 7734.578648] qla2xxx [0000:00:0c.0]-e806:6: Sending task mgmt ABTS response (ha=c0000000d5819000, atio=c0000000d3fd4700, status=4
+[ 7734.578730] qla2xxx [0000:00:0c.0]-e838:6: ABTS_RESP_24XX: compl_status 31
+[ 7734.578732] qla2xxx [0000:00:0c.0]-e863:6: qla_target(0): ABTS_RESP_24XX failed 31 (subcode 19:a)
+[ 7734.578740] Unable to handle kernel paging request for data at address 0x00000200
 
-   a) the target FCP_Port shall discard the ABTS-LS and transmit a LOGO
-      ELS if the Nx_Port issuing the ABTS-LS is not currently logged in
-      (i.e., no N_Port Login exists);
-
-FWIW, the target driver can receive ABTS as part of ABORT TASK/LUN
-RESET/CLEAR TASK SET TMFs and in case of failed sequence retransmission
-requests, exchange or sequence errors. IIRC, some initiators requeue
-SCSI commands if BA_RJT is received. Therefore, a timely LOGO will
-prevent a perceived session freeze on the initiators.
-
-Thanks,
-Roman
-
-Roman Bolshakov (4):
-  scsi: qla2xxx: Ignore NULL pointer in tcm_qla2xxx_free_mcmd
-  scsi: qla2xxx: Initialize free_work before flushing it
-  scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
-  scsi: qla2xxx: Change discovery state before PLOGI
-
- drivers/scsi/qla2xxx/qla_init.c    | 2 ++
- drivers/scsi/qla2xxx/qla_target.c  | 2 --
+Fixes: 6b0431d6fa20b ("scsi: qla2xxx: Fix out of order Termination and ABTS response")
+Cc: Quinn Tran <qtran@marvell.com>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+---
  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
- 3 files changed, 4 insertions(+), 2 deletions(-)
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 042a24314edc..bab2073c1f72 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -246,6 +246,8 @@ static void tcm_qla2xxx_complete_mcmd(struct work_struct *work)
+  */
+ static void tcm_qla2xxx_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
+ {
++	if (!mcmd)
++		return;
+ 	INIT_WORK(&mcmd->free_work, tcm_qla2xxx_complete_mcmd);
+ 	queue_work(tcm_qla2xxx_free_wq, &mcmd->free_work);
+ }
 -- 
 2.22.0
 
