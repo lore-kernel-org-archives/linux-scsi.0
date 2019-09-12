@@ -2,113 +2,118 @@ Return-Path: <SRS0=buB8=XH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEA3C4CEC5
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B500C4CEC6
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:49:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC8C620856
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:46:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DCAB2075C
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 13:49:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="FY8kGL9z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731786AbfILNqo convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 09:46:44 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:39863 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731283AbfILNqo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Sep 2019 09:46:44 -0400
-Received: by mail-pg1-f193.google.com with SMTP id u17so13519835pgi.6
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Sep 2019 06:46:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=MtP0RfUzuHL3kYu6wQIB2IyKy3GyiWExYLlefQaqSxM=;
-        b=F+9GATi6kNo5CwF8Pvvonzmdq8W7Myv9qSXtzFeLNWatysgCd4ErhWeF/gQVYow/e7
-         fZAWxwW/b/5KqLabbu9yOTeKjmlFSyEud8DSGAV+gV7t0am2seJ9+39Z8SabOCUwFkHV
-         yZ4MOobJWkSBFw02ZAer2VwMOZaeVVKhPbjzgbXDfIqE9NgHgmoUMvHHGAwh8sTJ1qd3
-         xYjA5yU9UsCdpvv3OU4kNxPb0Fk0i4+ctYmtDkJ4EVzg5e2T37s4AXbjuxT7iWufNHQR
-         t+4lAjClRtKRIJpTkatFYy6kVXB0b9ZbUeTK4VuGmdg/O1FZe3w48EiY4A1FyjRqelI3
-         0wRA==
-X-Gm-Message-State: APjAAAXa0J/sW10cq3iPAwUfYXhhYXACdFDjEYAGkm9AqBp2bj/Bz8oc
-        zeW9RES3WGQYCkfLcHifdxE=
-X-Google-Smtp-Source: APXvYqxmdAigtAb9pUd7aKFtSeVu9hhQjWy0OIHyx/CmemFWJrp9WOdk6Xv0QiSC31lz7H8JyY+OmQ==
-X-Received: by 2002:a17:90a:b38a:: with SMTP id e10mr48202pjr.91.1568296002281;
-        Thu, 12 Sep 2019 06:46:42 -0700 (PDT)
-Received: from [172.19.249.100] ([38.98.37.138])
-        by smtp.gmail.com with ESMTPSA id em21sm22269pjb.31.2019.09.12.06.46.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Sep 2019 06:46:41 -0700 (PDT)
-Subject: Re: [PATCH v2 3/3] scsi: ufs-mediatek: enable auto suspend capability
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, pedrom.sousa@synopsys.com,
-        sthumma@codeaurora.org, jejb@linux.ibm.com
-Cc:     linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, matthias.bgg@gmail.com,
-        evgreen@chromium.org, beanhuo@micron.com, marc.w.gonzalez@free.fr,
-        subhashj@codeaurora.org, vivek.gautam@codeaurora.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <1568270135-32442-1-git-send-email-stanley.chu@mediatek.com>
- <1568270135-32442-4-git-send-email-stanley.chu@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <160452c7-c53c-155c-49a9-4365166032a8@acm.org>
-Date:   Thu, 12 Sep 2019 14:46:15 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1732084AbfILNtf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 09:49:35 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:48564 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731791AbfILNte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Sep 2019 09:49:34 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 0030C435D6;
+        Thu, 12 Sep 2019 13:49:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        user-agent:in-reply-to:content-disposition:content-type
+        :content-type:mime-version:references:message-id:subject:subject
+        :from:from:date:date:received:received:received; s=mta-01; t=
+        1568296172; x=1570110573; bh=W4GGB2bc1IYsC2LTssEtP/jT9RBiRZUPcZZ
+        pMHSk/qg=; b=FY8kGL9z2gWLBxN/CN0oJRxsSil8J2E2WYME7R5KA1+I9vT/9WG
+        REo5tpAFa6Qlj83SVFjVq5XbF4hlU29cXYvMGCsxShrpMeVcSdACJ/x2exkToOID
+        wFmXpQhMkARjV8VBxakn/3yzDXKnpZObeH3/K5LWaJhsBycwTrIyukzo=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id hHmW4X1HThIZ; Thu, 12 Sep 2019 16:49:32 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 48A0241203;
+        Thu, 12 Sep 2019 16:49:31 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 12
+ Sep 2019 16:49:30 +0300
+Date:   Thu, 12 Sep 2019 16:49:30 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <linux-scsi@vger.kernel.org>, Quinn Tran <qtran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Subject: Re: [PATCH 0/4] scsi: qla2xxx: Bug fixes
+Message-ID: <20190912133605.age2zo7jxdbe4jiq@SPB-NB-133.local>
+References: <20190912003919.8488-1-r.bolshakov@yadro.com>
+ <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <1568270135-32442-4-git-send-email-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
+User-Agent: NeoMutt/20180716
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/12/19 7:35 AM, Stanley Chu wrote:
-> Enable auto suspend capability in MediaTek UFS driver.
+On Thu, Sep 12, 2019 at 06:37:22AM +0100, Bart Van Assche wrote:
+> On 9/12/19 1:39 AM, Roman Bolshakov wrote:
+> > This series has a few bug fixes for the driver.
+> > 
+> > Note, #1 only fixes the crash in the kernel. The complete fix for clean
+> > ACL deletion from initiator side is in works and requires a discussion.
+> > 
+> > As of now initiator is not aware that target no longer wants talking to
+> > it, that implies unneeded timeout. It might be fixed by making LOGO
+> > explicit on session deletion but it's an issue I want to raise first
+> > before making the change. Whether we need implicit LOGO in qla2xxx,
+> > explicit or use both.
+> > 
+> > Also, an unsolicited ABTS from a port without session would still result
+> > in BA_RJT response instead of frame discard and LOGO ELS, as specified
+> > in FCP (12.3.3 Target FCP_Port response to Exchange termination):
+> > 
+> >    When an ABTS-LS is received at the target FCP_Port, it shall abort
+> >    the designated Exchange and return one of the following responses:
+> > 
+> >    a) the target FCP_Port shall discard the ABTS-LS and transmit a LOGO
+> >       ELS if the Nx_Port issuing the ABTS-LS is not currently logged in
+> >       (i.e., no N_Port Login exists);
+> > 
+> > FWIW, the target driver can receive ABTS as part of ABORT TASK/LUN
+> > RESET/CLEAR TASK SET TMFs and in case of failed sequence retransmission
+> > requests, exchange or sequence errors. IIRC, some initiators requeue
+> > SCSI commands if BA_RJT is received. Therefore, a timely LOGO will
+> > prevent a perceived session freeze on the initiators.
 > 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> ---
->  drivers/scsi/ufs/ufs-mediatek.c | 7 +++++++
->  1 file changed, 7 insertions(+)
+> Hi Roman,
 > 
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index 0f6ff33ce52e..b7b177c6194c 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.c
-> +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -117,6 +117,11 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
->  	return ret;
->  }
->  
-> +static void ufs_mtk_set_caps(struct ufs_hba *hba)
-> +{
-> +	hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
-> +}
-> +
->  /**
->   * ufs_mtk_init - find other essential mmio bases
->   * @hba: host controller instance
-> @@ -147,6 +152,8 @@ static int ufs_mtk_init(struct ufs_hba *hba)
->  	if (err)
->  		goto out_variant_clear;
->  
-> +	ufs_mtk_set_caps(hba);
-> +
->  	/*
->  	 * ufshcd_vops_init() is invoked after
->  	 * ufshcd_setup_clock(true) in ufshcd_hba_init() thus
+> Has this patch series been prepared against Linus' master branch,
+> against Martin's 5.3/scsi-fixes or against Martin's 5.4/scsi-queue
+> branch? I'm asking this because some patches in this series look similar
+> to patches that are already present in the 5.4/scsi-queue branch.
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
-Please inline the ufs_mtk_set_caps() function. Introducing single line
-functions like is done in this patch doesn't improve readability.
+Hi Bart,
 
-Thanks,
+To be honest it was prepared against next-20190904 but it applies to
+5.4/scsi-queue cleanly. The fixes made two weeks ago look promising but
+are related to stuck PRLI and unhandled RSCN while #4 is related to
+stuck PLOGI after qla_post_els_plogi_work.
 
-Bart.
-
+Thank you,
+Roman
