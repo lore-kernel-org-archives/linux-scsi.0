@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F01A9C4CEC6
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD5F8C4CEC5
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:20:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3F202081B
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2FEA2081B
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Sep 2019 15:20:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="wwxC5rJK"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="HqSyUNw2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733032AbfILPUM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Sep 2019 11:20:12 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17264 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732699AbfILPUM (ORCPT
+        id S1733034AbfILPUN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Sep 2019 11:20:13 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34536 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732699AbfILPUN (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Sep 2019 11:20:12 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x8CFHAhZ011748;
-        Thu, 12 Sep 2019 08:20:08 -0700
+        Thu, 12 Sep 2019 11:20:13 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x8CFFK5C029086;
+        Thu, 12 Sep 2019 08:20:11 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=5H4O76p/I0rAfSjrMRZqbonf2odcdT+60zewOwuRawI=;
- b=wwxC5rJKmHgb5tzHZ7aS4A3K2i0+u0c3aNVXshz5V1TEI5UmxLIT2kjjb1qwI7meCnnx
- V/s6xBH0K5aUL6im0g4I6UNxbpNDuK1hzbnigdwCiG+OtOku/l3esjYp/LKxFnXE7zJ/
- +TKDg0D8qgPnNQvYgKgqyk/sigYlAvBDLOQQYT6PtcVTAHIP/RwHt4krfQ7ESeh+G22h
- n3AHaGlKGL8KLv30iPLXFAM2o0jzbY6VNL3W1cFfF9rps6Kb47msViVmCQo8JMO1dk16
- UUdyF5GuSc6rUyD/mpmZBIAXTZotGCj9BnAJhlP0mg118PIj7sBG2XOwLR6qcPnvCg4I kA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2uvc2jy5pj-1
+ content-type; s=pfpt0818; bh=WRtbKm8J0uekj9KkiUqJoFEDXEFdAz6ncYByKPeWGK0=;
+ b=HqSyUNw2kWIoAe2+c77wplyfzPKZknlHAjvi/GpPoaVDGjxAtsiTawK8vRQDP09PMyXv
+ tQBzCJ2hYrKARnygBk6m7mMu8nGrq3B5qeqpgPZPOEx44JFb3xcDqhkjOVkhRTUoUEQN
+ t/WGuyAdDae8l7Z98EaiNZc9dC5t9oc6qTwZjjtpAjPl3yasr5RdjWT8pXJJ2nLbCfox
+ XInS5IroKgGhwQDpM+ShygNo5BLjXR87CJnBj5fjXRFr3zwqQur8qeh7CRQa+caOSRzq
+ Q4eP26r21yLAViRFlJaebGJYeEI1tUbr7Glk1KZyvpRWTBEcoAe4GrR3L4l3fsPAkvbg Aw== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2uxshkfynf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 12 Sep 2019 08:20:08 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 12 Sep
- 2019 08:20:07 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
- Transport; Thu, 12 Sep 2019 08:20:06 -0700
+        Thu, 12 Sep 2019 08:20:11 -0700
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 12 Sep
+ 2019 08:20:10 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1367.3 via Frontend
+ Transport; Thu, 12 Sep 2019 08:20:10 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id CB6053F7040;
-        Thu, 12 Sep 2019 08:20:06 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 347073F7040;
+        Thu, 12 Sep 2019 08:20:10 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x8CFK65d002585;
-        Thu, 12 Sep 2019 08:20:06 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id x8CFKA4C002589;
+        Thu, 12 Sep 2019 08:20:10 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x8CFK67J002584;
-        Thu, 12 Sep 2019 08:20:06 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id x8CFKADk002588;
+        Thu, 12 Sep 2019 08:20:10 -0700
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 06/14] qla2xxx: Fix N2N link up fail
-Date:   Thu, 12 Sep 2019 08:19:41 -0700
-Message-ID: <20190912151949.2348-7-hmadhani@marvell.com>
+Subject: [PATCH 07/14] qla2xxx: Fix Nport ID display value
+Date:   Thu, 12 Sep 2019 08:19:42 -0700
+Message-ID: <20190912151949.2348-8-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20190912151949.2348-1-hmadhani@marvell.com>
 References: <20190912151949.2348-1-hmadhani@marvell.com>
@@ -73,55 +73,34 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-During link up/bounce, qla driver would do command flush as
-part of cleanup.  In this case, the flush can intefere with FW state.
-This patch allows FW to be in control of link up.
+For N2N, the NPort ID is assigned by driver in the PLOGI ELS.
+According to FW Spec the byte order for SID is not the same as
+DID.
 
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 2 ++
- drivers/scsi/qla2xxx/qla_os.c  | 6 ++----
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 3c297ad4247f..9575ba34c7b1 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3893,6 +3893,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 				fcport->dm_login_expire = jiffies + 2*HZ;
- 				fcport->scan_state = QLA_FCPORT_FOUND;
- 				fcport->n2n_flag = 1;
-+				fcport->keep_nport_handle = 1;
- 				if (vha->flags.nvme_enabled)
- 					fcport->fc4f_nvme = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 1886de92034c..5c279449ca1c 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2696,9 +2696,10 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 	els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	els_iocb->port_id[1] = sp->fcport->d_id.b.area;
+ 	els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+-	els_iocb->s_id[0] = vha->d_id.b.al_pa;
+-	els_iocb->s_id[1] = vha->d_id.b.area;
+-	els_iocb->s_id[2] = vha->d_id.b.domain;
++	/* For SID the byte order is different than DID */
++	els_iocb->s_id[1] = vha->d_id.b.al_pa;
++	els_iocb->s_id[2] = vha->d_id.b.area;
++	els_iocb->s_id[0] = vha->d_id.b.domain;
+ 	els_iocb->control_flags = 0;
  
-@@ -4038,6 +4039,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 			fcport->login_retry = vha->hw->login_retry_count;
- 			fcport->plogi_nack_done_deadline = jiffies + HZ;
- 			fcport->scan_state = QLA_FCPORT_FOUND;
-+			fcport->keep_nport_handle = 1;
- 			fcport->n2n_flag = 1;
- 			fcport->d_id.b.domain =
- 				rptid_entry->u.f2.remote_nport_id[2];
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index a9ad3bd8f8cf..836709ecc1be 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5160,11 +5160,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 			if (dfcp)
- 				qlt_schedule_sess_for_deletion(tfcp);
- 
--
--			if (N2N_TOPO(vha->hw))
--				fcport->flags &= ~FCF_FABRIC_DEVICE;
--
- 			if (N2N_TOPO(vha->hw)) {
-+				fcport->flags &= ~FCF_FABRIC_DEVICE;
-+				fcport->keep_nport_handle = 1;
- 				if (vha->flags.nvme_enabled) {
- 					fcport->fc4f_nvme = 1;
- 					fcport->n2n_flag = 1;
+ 	if (elsio->u.els_logo.els_cmd == ELS_DCMD_PLOGI) {
 -- 
 2.12.0
 
