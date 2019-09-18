@@ -2,175 +2,116 @@ Return-Path: <SRS0=DHhn=XN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A66FAC4CEC4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD93C4CEC4
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:32:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6966320665
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:26:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="WiBQRrIE"
+	by mail.kernel.org (Postfix) with ESMTP id 76B8021907
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:32:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1568820775;
+	bh=6fG+7cFY8qKmNTeE0/oK7OzO5e+bx/UyTCd8HlUszGk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=H++WVhjJ3K2Cuz0pRhViatu+/PIaiOM5h1lqxxQjg1KAcMMtv/oG3SXWnEufBxlSg
+	 9V+zJvf7TRwmldnW7Rhe0/y4FVRFyqMwzeKTEdieOKiS5Db3568TNBg5C59W7OeDCJ
+	 fN2v9vDDOj80uAtyAZEX7r4w0MzsnYRLB+4K7uus=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727814AbfIRP0E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Sep 2019 11:26:04 -0400
-Received: from mail-wm1-f52.google.com ([209.85.128.52]:55002 "EHLO
-        mail-wm1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727131AbfIRP0D (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2019 11:26:03 -0400
-Received: by mail-wm1-f52.google.com with SMTP id p7so587115wmp.4
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2019 08:26:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:cc:date:references:in-reply-to
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=o1NiwpQlQxFIhsf58RvC/ULPrZbQtdSFpgyYFWJaHCQ=;
-        b=WiBQRrIEUJeVM6cyYkZ0SmPJNWZVqPf/KNMohqc3PAK57lOwADgQ9BxJxpEByEqyyZ
-         eeeXXHBfPgTZYkcFNT3a9vn075CBxJCI15Gj1cPvba7G8ErIPTehbfABQXBoRA0wfxjg
-         /e76T5fekhRJs3EzzWa+yFGTm4//+aq2ttYOUnLZioy39GmjYr+JjWFcGKsm0YqC3a8G
-         Nw2X2fMAcHd6vkDtwbnIv2hj2Ag7vZiivX7NGqHKyvAdgIIovTnlb1OMn5R5rLXijpQJ
-         z6Vn5IzoL3rQJ+ZlpO2u/MgFXlLW+NzcvK5y91wxRWGgfikrfF5L3eYu0Covzf8XjEjG
-         HDlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:references
-         :in-reply-to:user-agent:mime-version:content-transfer-encoding;
-        bh=o1NiwpQlQxFIhsf58RvC/ULPrZbQtdSFpgyYFWJaHCQ=;
-        b=jEHco4Ixe0+zzeg78qrkBp/SzRNDx5/wB2vf1qGjcmpWTPse/s/ttdUcDNaYzVznoh
-         sT6IUfXY5f4I6O5F9MW3s/zCqOUnzGmuZYjb2UAIo/OhUH1qOjDf4aAC+fZxgaZvplfD
-         6zEj3sEifEb8lqDLQVTxATq6KCpvWngQxuxfegLyq7vdIEumhT/mrT7mLKZ6nvLei7Cw
-         AS2U65ZHR4OJLHc9qv9c3oLq3rfxqIq//6CAc3Ub/onAOcAyvZNfmP0LBwsp6nXWv4on
-         pG66dMF7FOTM6ETwdrD14Z/l5GzYoLDPhc6aKe0ksOBolE/a2kFPtgKsq+bGmH3fBH7O
-         u0yw==
-X-Gm-Message-State: APjAAAW21zVAx3kJFyZtmOBAwCb2twVBoqvQ+Cf+DUzhYzom0O2Sf/76
-        oeWo2bmsrLffAcSsTwRZT7H8Ug==
-X-Google-Smtp-Source: APXvYqyw+BlI4Ri0DL++5YpcsZEmmsrpnrj0lAwP7P7XMb2/knuTamZZd+9VxB8KQfqwRl7En6ZjnA==
-X-Received: by 2002:a7b:c401:: with SMTP id k1mr3320554wmi.62.1568820360951;
-        Wed, 18 Sep 2019 08:26:00 -0700 (PDT)
-Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
-        by smtp.gmail.com with ESMTPSA id g24sm8402997wrb.35.2019.09.18.08.25.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Sep 2019 08:26:00 -0700 (PDT)
-Message-ID: <2196cc828e6d0651e6502a6dedeaeb14444cfe19.camel@unipv.it>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-From:   Andrea Vai <andrea.vai@unipv.it>
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     Johannes Thumshirn <jthumshirn@suse.de>,
-        Jens Axboe <axboe@kernel.dk>, linux-usb@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-Date:   Wed, 18 Sep 2019 17:25:44 +0200
-References: <ba1d4fe53258c7a710174723c99e002a4d9eecb0.camel@unipv.it>
-         <Pine.LNX.4.44L0.1908261219060.1662-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1908261219060.1662-100000@iolanthe.rowland.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S2387466AbfIRPcy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Sep 2019 11:32:54 -0400
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:54890 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729640AbfIRPcy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2019 11:32:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sirena.org.uk; s=20170815-heliosphere; h=In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6fG+7cFY8qKmNTeE0/oK7OzO5e+bx/UyTCd8HlUszGk=; b=ZzuVXWgde4+duuEB1OGFxwXyL
+        zT5zbMFJfP50QtwClsnUB+7Mvd48Bl4ixy1YiIPOVwLntpL1zltX+RHsgjOc6wv4dWoBgou8UMZZQ
+        ScL36uk7mVmpeTbMJjtwoaDJXR5hAOJ8M/NEUgx79e2ESUepbiZtd4qtYE9t6vTQWxB6E=;
+Received: from cpc102320-sgyl38-2-0-cust46.18-2.cable.virginm.net ([82.37.168.47] helo=ypsilon.sirena.org.uk)
+        by heliosphere.sirena.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <broonie@sirena.co.uk>)
+        id 1iAbwI-0005tn-Oo; Wed, 18 Sep 2019 15:32:18 +0000
+Received: by ypsilon.sirena.org.uk (Postfix, from userid 1000)
+        id B53AB2742927; Wed, 18 Sep 2019 16:32:17 +0100 (BST)
+Date:   Wed, 18 Sep 2019 16:32:17 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     Steffen Maier <maier@linux.ibm.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <tom.leiming@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: core: fix missing .cleanup_rq for SCSI hosts
+ without request batching
+Message-ID: <20190918153217.GN2596@sirena.co.uk>
+References: <20190807144948.28265-1-maier@linux.ibm.com>
+ <20190807144948.28265-2-maier@linux.ibm.com>
+ <CACVXFVM0tFj8CmcHON04_KjxR=QErCbUx0abJgG2W9OBb7akZA@mail.gmail.com>
+ <yq136iccsbw.fsf@oracle.com>
+ <bec80a65-9a8c-54a9-fe70-876fcbe3d592@linux.ibm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="0NB0lE7sNnW8+0qW"
+Content-Disposition: inline
+In-Reply-To: <bec80a65-9a8c-54a9-fe70-876fcbe3d592@linux.ibm.com>
+X-Cookie: The devil finds work for idle glands.
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il giorno lun 26 ago 2019 alle ore 18:33 Alan Stern <
-stern@rowland.harvard.edu> ha scritto:
-> [...]
-> In fact, even the traces where the file doesn't exist beforehand
-> show 
-> some delays.  Just not as many delays as the traces where the file
-> does 
-> exist.  And again, each delay is in the middle of a write command,
-> not 
-> between commands.
-> 
-> I suppose changes to the upper software layers could affect which
-> blocks are assigned when a new file is written.  Perhaps one kernel
-> re-uses the same old blocks that had been previously occupied and
-> the
-> other kernel allocates a completely new set of blocks.  That might
-> change the drive's behavior.  The quick way to tell is to record two
-> usbmon traces, one under the "good" kernel and one under the "bad"  
-> kernel, where each test involves writing over a file that already
-> exists (say, 50 MB) -- the same file for both tests.  The block
-> numbers
-> will appear in the traces.
 
-ok, I performed 10 tests for each kernel, so we have 20 traces.
- 
-> Also, I wonder if the changing the size of the data transfers would
-> make any difference.  This is easy to try; just write "64" to
-> /sys/block/sd?/queue/max_sectors_kb (where the ? is the appropriate
-> drive letter) after the drive is plugged in but before the test
-> starts.
+--0NB0lE7sNnW8+0qW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-ok, so I duplicated the tests above for the "64" case (it was
-initially set as "120", if it is relevant to know), leading to 40 tests named as
+On Wed, Sep 18, 2019 at 05:09:50PM +0200, Steffen Maier wrote:
+> On 8/8/19 4:18 AM, Martin K. Petersen wrote:
 
-bad.mon.out_50000000_64_TIMESTAMP
-bad.mon.out_50000000_non64_TIMESTAMP
-good.mon.out_50000000_64_TIMESTAMP
-good.mon.out_50000000_non64_TIMESTAMP
+> > I'll set up an amalgamated for-next branch tomorrow.
 
-where "64" denotes the ones done with that value in max_sectors_kb,
-and "not64" the ones without it (as far as I can tell, it has been
-always "120").
+> Martin, is it possible that you re-wrote your for-next and it now no longer
+> contains a merged 5.4/scsi-postmerge with those fixes?
+> At least I cannot find the fix code in next-20190917 and it fails again for me.
 
-So, we have 40 traces total. Each set of 10 trials is identified by
-a text file, which contains the output log of the test script (and the
-timestamps), also available in the download zipfile.
+Well, there's no sign of a branch called postmerge in the SCSI history
+recently and I've not run into any SCSI-related conflicts so...
 
-Just to summarize here the times, they are respectively (number
-expressed  in seconds):
+--0NB0lE7sNnW8+0qW
+Content-Type: application/pgp-signature; name="signature.asc"
 
-BAD:
-  Logs: log_10trials_50MB_BAD_NonCanc_64.txt,
-log_10trials_50MB_BAD_NonCanc_non64.txt
-  64: 34, 34, 35, 39, 37, 32, 42, 44, 43, 40
-  not64: 61, 71, 59, 71, 62, 75, 62, 70, 62, 68
-GOOD:
-  Logs: log_10trials_50MB_GOOD_NonCanc_64.txt,
-log_10trials_50MB_GOOD_NonCanc_non64.txt
-  64: 34, 32, 35, 34, 35, 33, 34, 33, 33, 33
-  not64: 32, 30, 32, 31, 31, 30, 32, 30, 32, 31
+-----BEGIN PGP SIGNATURE-----
 
-Finally, one note about the workaround proposed by Alan, "delete the
-file before copying". My original problem occurred while using a
-backup software (dar - see http://dar.linux.free.fr/). So, I tried now
-to do the backup by deleting the existing file beforehand, and it
-still takes a lot of time with bad kernel: a 900 file backup takes
-~160sec with GOOD kernel, and >40min with BAD kernel. I also tried the
-"64" tweak in the BAD kernel and it becomes ~300s. Then, I also tried
-the "64" case with good kernel, and became ~140s. Detailed data:
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAl2CTgAACgkQJNaLcl1U
+h9DyCQgAhI9PE5cah3tJXlfm2IgfE6DGqrY+ZgkKfYQRbESZUGGvH0C8ZHzfdF9s
+ew1oLds2WQCiwXttdV/OQrmwkkHibCqk7ZruKQJpmIDN9CmRPnO1EHunK1UFVuli
+YGsRLI1Lp/gzfAzbaoA7BihFFKukgTxrZYcH9SfERbpf/raKMrEB9HUbyFDeBBKN
+btGkV2DjeLMwQxiwQLTNDZ8NQ9oUwkaX1kGOv3CilW2qDkueaghQnMpyw05kuddR
+4F5rE8+vA4jHJssZOqsoUJiNFzc9lloTdKeUDd4tR0qgY/thaG+RA2OVgh1XR1x1
+wYZjyEIwrB4FhNOMDMiIl6jcM6uoqw==
+=63JF
+-----END PGP SIGNATURE-----
 
-GOOD (not "64): 155s, 151s
-GOOD ("64"): 142s, 141s
-
-BAD (not "64"): 47minutes, 43minutes
-BAD ("64"): 315s, 288s, 268s, 239s, 302s
-
-The command ran is:
-$ SECONDS=0; rm /run/media/andrea/BAK_ANDVAI/aero.1.dar && dar -c /run/media/andrea/BAK_ANDVAI/aero -R /home/andrea/Musica/MP3/Aerosmith && umount /run/media/andrea/BAK_ANDVAI; echo "Ci ho messo: $SECONDS secondi."
-
-Speculations:
-- It seems the "64" value plays a role, more evident on "bad" kernels
-(~halves the time) and less (but still existing?) on "good" kernels;
-- dar with the bad kernel, with the "delete beforehand" action, is
-still an order of magnitude slower than with the good kernel (so, it
-behaves the same way as in the "overwrite" case). Maybe it depends on
-the way dar itself writes data... I don't know if you can understand
-it, or we should ask for a light to the dar developer(s) about it.
-
-You can grab the traces at
-
-http://fisica.unipv.it/transfer/usbmon_logs_2.zip
-
-Thanks, and bye
-Andrea
-
+--0NB0lE7sNnW8+0qW--
