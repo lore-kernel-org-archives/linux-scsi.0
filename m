@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CC6C4CEC9
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 13:39:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B616BC4CEC4
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 13:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C9192196F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 13:39:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83D2421925
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 13:39:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="fJmggcoj"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="DkaJsqsv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729678AbfIRNjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Sep 2019 09:39:16 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:48900 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729366AbfIRNjQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2019 09:39:16 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8IDcxka008986;
-        Wed, 18 Sep 2019 08:38:59 -0500
+        id S1730770AbfIRNjV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Sep 2019 09:39:21 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:53984 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730220AbfIRNjU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2019 09:39:20 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8IDd3Q0063141;
+        Wed, 18 Sep 2019 08:39:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1568813939;
-        bh=GZj/q05tMCRtelXeBh7SIXT1Q35bIE60XbTSje8iEJU=;
+        s=ti-com-17Q1; t=1568813943;
+        bh=vkbh30yrcTCJfdINM2lP7OAypyq1xtHtfVYZDkgedpI=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=fJmggcojKGfON++5HiiMlIImBKf1aezggSLmWHN0d8s6abY+J/EZtCsK6B09pj4dc
-         YLyLEWHU/jEA+/wTwo6FGT07hVHU/x3HGmisQcjzg8bJ8u4bsCesKNyv8HhZAZfQD9
-         hZIntqnlPJaV28U/Ah1ZXFRb/ihbJGQ3uVCr1yus=
-Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8IDcxUa023542
+        b=DkaJsqsvrA56bw6yvKDhdB7f/dpGcLTj2F7l5rJpC6belqMlpY6HRUoaPGZ745n+T
+         brAerETOSwQDssM4dNfqjp2TpkE9dZUSuhKJ2Cgje4BmDCD88SLgCdGZ4CbnCxIuoH
+         Lx1DZfbt9nwmc6wf+4mFgLK3/7QBH+UncwLBHFLA=
+Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8IDd35g029671
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 18 Sep 2019 08:38:59 -0500
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 18 Sep 2019 08:39:03 -0500
+Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Wed, 18
- Sep 2019 08:38:58 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2019 08:38:59 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Wed, 18 Sep 2019 08:38:58 -0500
+ Frontend Transport; Wed, 18 Sep 2019 08:38:59 -0500
 Received: from a0132425.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8IDcocE047879;
-        Wed, 18 Sep 2019 08:38:55 -0500
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8IDcocF047879;
+        Wed, 18 Sep 2019 08:38:59 -0500
 From:   Vignesh Raghavendra <vigneshr@ti.com>
 To:     Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>, <jejb@linux.ibm.com>,
@@ -56,9 +56,9 @@ CC:     Alim Akhtar <alim.akhtar@samsung.com>,
         Janek Kotas <jank@cadence.com>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         Vignesh Raghavendra <vigneshr@ti.com>, <nsekhar@ti.com>
-Subject: [PATCH 1/2] dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for TI UFS wrapper
-Date:   Wed, 18 Sep 2019 19:09:20 +0530
-Message-ID: <20190918133921.25844-2-vigneshr@ti.com>
+Subject: [PATCH 2/2] scsi: ufs: Add driver for TI wrapper for Cadence UFS IP
+Date:   Wed, 18 Sep 2019 19:09:21 +0530
+Message-ID: <20190918133921.25844-3-vigneshr@ti.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20190918133921.25844-1-vigneshr@ti.com>
 References: <20190918133921.25844-1-vigneshr@ti.com>
@@ -71,65 +71,145 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add binding documentation of TI wrapper for Cadence UFS Controller.
+TI's J721e SoC has a Cadence UFS IP with a TI specific wrapper. This is
+a minimal driver to configure the wrapper. It releases the UFS slave
+device out of reset and sets up registers to indicate PHY reference
+clock input frequency before probing child Cadence UFS driver.
 
 Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
 ---
- .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 45 +++++++++++++++++++
- 1 file changed, 45 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+ drivers/scsi/ufs/Kconfig        | 10 ++++
+ drivers/scsi/ufs/Makefile       |  1 +
+ drivers/scsi/ufs/ti-j721e-ufs.c | 90 +++++++++++++++++++++++++++++++++
+ 3 files changed, 101 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ti-j721e-ufs.c
 
-diff --git a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 0b845ab7c3bf..d14c2243e02a 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -132,6 +132,16 @@ config SCSI_UFS_HISI
+ 	  Select this if you have UFS controller on Hisilicon chipset.
+ 	  If unsure, say N.
+ 
++config SCSI_UFS_TI_J721E
++	tristate "TI glue layer for Cadence UFS Controller"
++	depends on OF && HAS_IOMEM && (ARCH_K3 || COMPILE_TEST)
++	help
++	  This selects driver for TI glue layer for Cadence UFS Host
++	  Controller IP.
++
++	  Selects this if you have TI platform with UFS controller.
++	  If unsure, say N.
++
+ config SCSI_UFS_BSG
+ 	bool "Universal Flash Storage BSG device node"
+ 	depends on SCSI_UFSHCD
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 2a9097939bcb..94c6c5d7334b 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -11,3 +11,4 @@ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+ obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
++obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
 new file mode 100644
-index 000000000000..dabd7c795fbe
+index 000000000000..a653bf1902f3
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
-@@ -0,0 +1,45 @@
-+# SPDX-License-Identifier: GPL-2.0
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ufs/ti,j721e-ufs.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
++++ b/drivers/scsi/ufs/ti-j721e-ufs.c
+@@ -0,0 +1,90 @@
++// SPDX-License-Identifier: GPL-2.0
++//
++// Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
++//
 +
-+title: TI J721e UFS Host Controller Glue Driver
++#include <linux/clk.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
 +
-+maintainers:
-+  - Vignesh Raghavendra <vigneshr@ti.com>
++#define UFS_SS_CTRL		0x4
++#define UFS_SS_RST_N_PCS	BIT(0)
++#define UFS_SS_CLK_26MHZ	BIT(4)
 +
-+properties:
-+  compatible:
-+    items:
-+      - const: ti,j721e-ufs
++static int ti_j721e_ufs_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	unsigned long clk_rate;
++	void __iomem *regbase;
++	struct clk *clk;
++	u32 reg = 0;
++	int ret;
 +
-+  reg:
-+    maxItems: 1
-+    description: address of TI UFS glue registers
++	regbase = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(regbase))
++		return PTR_ERR(regbase);
 +
-+  clocks:
-+    maxItems: 1
-+    description: phandle to the M-PHY clock
++	/* Select MPHY refclk frequency */
++	clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(clk)) {
++		dev_err(dev, "Cannot claim MPHY clock.\n");
++		return PTR_ERR(clk);
++	}
++	clk_rate = clk_get_rate(clk);
++	if (clk_rate == 26000000)
++		reg |= UFS_SS_CLK_26MHZ;
++	devm_clk_put(dev, clk);
 +
-+  power-domains:
-+    maxItems: 1
++	pm_runtime_enable(dev);
++	ret = pm_runtime_get_sync(dev);
++	if (ret < 0) {
++		pm_runtime_put_noidle(dev);
++		return ret;
++	}
 +
-+required:
-+  - compatible
-+  - reg
-+  - clocks
-+  - power-domains
++	/*  Take UFS slave device out of reset */
++	reg |= UFS_SS_RST_N_PCS;
++	writel(reg, regbase + UFS_SS_CTRL);
 +
-+examples:
-+  - |
-+    ufs_wrapper: ufs-wrapper@4e80000 {
-+       compatible = "ti,j721e-ufs";
-+       reg = <0x0 0x4e80000 0x0 0x100>;
-+       power-domains = <&k3_pds 277>;
-+       clocks = <&k3_clks 277 1>;
-+       assigned-clocks = <&k3_clks 277 1>;
-+       assigned-clock-parents = <&k3_clks 277 4>;
-+       #address-cells = <2>;
-+       #size-cells = <2>;
-+    };
++	ret = of_platform_populate(pdev->dev.of_node, NULL, NULL,
++				   dev);
++	if (ret) {
++		dev_err(dev, "failed to populate child nodes %d\n", ret);
++		pm_runtime_put_sync(dev);
++	}
++
++	return ret;
++}
++
++static int ti_j721e_ufs_remove(struct platform_device *pdev)
++{
++	of_platform_depopulate(&pdev->dev);
++	pm_runtime_put_sync(&pdev->dev);
++
++	return 0;
++}
++
++static const struct of_device_id ti_j721e_ufs_of_match[] = {
++	{
++		.compatible = "ti,j721e-ufs",
++	},
++	{ },
++};
++
++static struct platform_driver ti_j721e_ufs_driver = {
++	.probe	= ti_j721e_ufs_probe,
++	.remove	= ti_j721e_ufs_remove,
++	.driver	= {
++		.name   = "ti-j721e-ufs",
++		.of_match_table = ti_j721e_ufs_of_match,
++	},
++};
++module_platform_driver(ti_j721e_ufs_driver);
++
++MODULE_AUTHOR("Vignesh Raghavendra <vigneshr@ti.com>");
++MODULE_DESCRIPTION("TI UFS host controller glue driver");
++MODULE_LICENSE("GPL v2");
 -- 
 2.23.0
 
