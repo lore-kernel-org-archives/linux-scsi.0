@@ -2,80 +2,117 @@ Return-Path: <SRS0=DHhn=XN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44234C4CEC4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:33:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 601A3C4CEC9
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24D3621925
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:33:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4146621924
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:37:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730466AbfIROdK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Sep 2019 10:33:10 -0400
-Received: from mga11.intel.com ([192.55.52.93]:55750 "EHLO mga11.intel.com"
+        id S1730029AbfIROhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Sep 2019 10:37:48 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34886 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727056AbfIROdK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Sep 2019 10:33:10 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 18 Sep 2019 07:33:09 -0700
-X-IronPort-AV: E=Sophos;i="5.64,520,1559545200"; 
-   d="scan'208";a="194077289"
-Received: from paasikivi.fi.intel.com ([10.237.72.42])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 18 Sep 2019 07:33:07 -0700
-Received: from punajuuri.localdomain (punajuuri.localdomain [192.168.240.130])
-        by paasikivi.fi.intel.com (Postfix) with ESMTP id C050720204;
-        Wed, 18 Sep 2019 17:33:05 +0300 (EEST)
-Received: from sailus by punajuuri.localdomain with local (Exim 4.92)
-        (envelope-from <sakari.ailus@linux.intel.com>)
-        id 1iAb1K-0002LB-CE; Wed, 18 Sep 2019 17:33:26 +0300
-From:   Sakari Ailus <sakari.ailus@linux.intel.com>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, Joe Perches <joe@perches.com>,
-        Petr Mladek <pmladek@suse.com>, linux-kernel@vger.kernel.org,
-        rafael@kernel.org,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Subject: [PATCH v8 09/13] lib/vsprintf: Add a note on re-using %pf or %pF
-Date:   Wed, 18 Sep 2019 17:33:26 +0300
-Message-Id: <20190918143326.8956-1-sakari.ailus@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190918133419.7969-10-sakari.ailus@linux.intel.com>
-References: <20190918133419.7969-10-sakari.ailus@linux.intel.com>
+        id S1725902AbfIROhs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Sep 2019 10:37:48 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BB26AA3D38D;
+        Wed, 18 Sep 2019 14:37:47 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5FA5A1001B36;
+        Wed, 18 Sep 2019 14:37:37 +0000 (UTC)
+Date:   Wed, 18 Sep 2019 22:37:33 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Sagi Grimberg <sagi@grimberg.me>
+Cc:     Keith Busch <keith.busch@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
+        Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
+Message-ID: <20190918143732.GA19364@ming.t460p>
+References: <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
+ <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
+ <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
+ <20190905090617.GB4432@ming.t460p>
+ <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
+ <20190906014819.GB27116@ming.t460p>
+ <ffefcfa0-09b6-9af5-f94e-8e7ddd2eef16@linaro.org>
+ <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
+ <20190907000100.GC12290@ming.t460p>
+ <f5685543-8cd5-6c6a-5b80-c77ef09c6b3b@grimberg.me>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f5685543-8cd5-6c6a-5b80-c77ef09c6b3b@grimberg.me>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Wed, 18 Sep 2019 14:37:48 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a note warning of re-use of obsolete %pf or %pF extensions.
+On Mon, Sep 09, 2019 at 08:10:07PM -0700, Sagi Grimberg wrote:
+> Hey Ming,
+> 
+> > > > Ok, so the real problem is per-cpu bounded tasks.
+> > > > 
+> > > > I share Thomas opinion about a NAPI like approach.
+> > > 
+> > > We already have that, its irq_poll, but it seems that for this
+> > > use-case, we get lower performance for some reason. I'm not
+> > > entirely sure why that is, maybe its because we need to mask interrupts
+> > > because we don't have an "arm" register in nvme like network devices
+> > > have?
+> > 
+> > Long observed that IOPS drops much too by switching to threaded irq. If
+> > softirqd is waken up for handing softirq, the performance shouldn't
+> > be better than threaded irq.
+> 
+> Its true that it shouldn't be any faster, but what irqpoll already has
+> and we don't need to reinvent is a proper budgeting mechanism that
+> needs to occur when multiple devices map irq vectors to the same cpu
+> core.
+> 
+> irqpoll already maintains a percpu list and dispatch the ->poll with
+> a budget that the backend enforces and irqpoll multiplexes between them.
+> Having this mechanism in irq (hard or threaded) context sounds
+> unnecessary a bit.
+> 
+> It seems like we're attempting to stay in irq context for as long as we
+> can instead of scheduling to softirq/thread context if we have more than
+> a minimal amount of work to do. Without at least understanding why
+> softirq/thread degrades us so much this code seems like the wrong
+> approach to me. Interrupt context will always be faster, but it is
+> not a sufficient reason to spend as much time as possible there, is it?
 
-Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Suggested-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
----
- lib/vsprintf.c | 2 ++
- 1 file changed, 2 insertions(+)
+If extra latency is added in IO completion path, this latency will be
+introduced in the submission path, because the hw queue depth is fixed,
+which is often small. Especially in case of multiple submission vs.
+single(shared) completion, the whole hw queue tags can be exhausted
+easily. 
 
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index b00b57f9f911f..ef094e6124798 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -2008,6 +2008,8 @@ static char *kobject_string(char *buf, char *end, void *ptr,
-  * - 'S' For symbolic direct pointers (or function descriptors) with offset
-  * - 's' For symbolic direct pointers (or function descriptors) without offset
-  * - '[Ss]R' as above with __builtin_extract_return_addr() translation
-+ * - '[Ff]' Obsolete and now unsupported extension for printing direct pointers
-+ *	    or function descriptors. Be careful when re-using %pf or %pF!
-  * - 'B' For backtraced symbolic direct pointers with offset
-  * - 'R' For decoded struct resource, e.g., [mem 0x0-0x1f 64bit pref]
-  * - 'r' For raw struct resource, e.g., [mem 0x0-0x1f flags 0x201]
--- 
-2.20.1
+I guess no such effect for networking IO.
 
+> 
+> We should also keep in mind, that the networking stack has been doing
+> this for years, I would try to understand why this cannot work for nvme
+> before dismissing.
+
+The above may be one reason.
+
+Thanks,
+Ming
