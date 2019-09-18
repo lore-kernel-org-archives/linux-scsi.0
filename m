@@ -2,139 +2,135 @@ Return-Path: <SRS0=DHhn=XN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D05C4CEC4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:35:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E05B4C4CEC4
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 16:30:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E70421907
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE0D021907
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 16:30:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731670AbfIRPfZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Sep 2019 11:35:25 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3094 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730667AbfIRPfS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Sep 2019 11:35:18 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x8IFWEgJ100280
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2019 11:35:17 -0400
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2v3nwfbvgq-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2019 11:35:17 -0400
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Wed, 18 Sep 2019 16:35:14 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 18 Sep 2019 16:35:08 +0100
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x8IFZ7e259703518
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Sep 2019 15:35:07 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EAD8E5205A;
-        Wed, 18 Sep 2019 15:35:06 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 458B352063;
-        Wed, 18 Sep 2019 15:35:06 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Omar Sandoval <osandov@fb.com>, linux-block@vger.kernel.org,
-        linux-next@vger.kernel.org, Mark Brown <broonie@kernel.org>,
-        dm-devel@redhat.com
-Subject: [PATCH] compat_ioctl: fix reimplemented SG_IO handling causing -EINVAL from sg_io()
-Date:   Wed, 18 Sep 2019 17:34:45 +0200
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-x-cbid: 19091815-0020-0000-0000-0000036E9CA7
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19091815-0021-0000-0000-000021C4468C
-Message-Id: <20190918153445.1241-1-maier@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-09-18_08:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1909180152
+        id S1730808AbfIRQaS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Sep 2019 12:30:18 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:53732 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1727109AbfIRQaS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Sep 2019 12:30:18 -0400
+Received: (qmail 5907 invoked by uid 2102); 18 Sep 2019 12:30:17 -0400
+Received: from localhost (sendmail-bs@127.0.0.1)
+  by localhost with SMTP; 18 Sep 2019 12:30:17 -0400
+Date:   Wed, 18 Sep 2019 12:30:17 -0400 (EDT)
+From:   Alan Stern <stern@rowland.harvard.edu>
+X-X-Sender: stern@iolanthe.rowland.org
+To:     Andrea Vai <andrea.vai@unipv.it>
+cc:     Johannes Thumshirn <jthumshirn@suse.de>,
+        Jens Axboe <axboe@kernel.dk>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: Slow I/O on USB media after commit f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+In-Reply-To: <2196cc828e6d0651e6502a6dedeaeb14444cfe19.camel@unipv.it>
+Message-ID: <Pine.LNX.4.44L0.1909181213141.1507-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_cmd_ioctl() had hdr as on stack auto variable and called
-copy_{from,to}_user with the address operator &hdr and sizeof(hdr).
+On Wed, 18 Sep 2019, Andrea Vai wrote:
 
-After the refactoring, {get,put}_sg_io_hdr() takes a pointer &hdr.
-So the copy_{from,to}_user within the new helper functions should
-just take the given pointer argument hdr and sizeof(*hdr).
+> > Also, I wonder if the changing the size of the data transfers would
+> > make any difference.  This is easy to try; just write "64" to
+> > /sys/block/sd?/queue/max_sectors_kb (where the ? is the appropriate
+> > drive letter) after the drive is plugged in but before the test
+> > starts.
+> 
+> ok, so I duplicated the tests above for the "64" case (it was
+> initially set as "120", if it is relevant to know), leading to 40 tests named as
+> 
+> bad.mon.out_50000000_64_TIMESTAMP
+> bad.mon.out_50000000_non64_TIMESTAMP
+> good.mon.out_50000000_64_TIMESTAMP
+> good.mon.out_50000000_non64_TIMESTAMP
+> 
+> where "64" denotes the ones done with that value in max_sectors_kb,
+> and "not64" the ones without it (as far as I can tell, it has been
+> always "120").
+> 
+> So, we have 40 traces total. Each set of 10 trials is identified by
+> a text file, which contains the output log of the test script (and the
+> timestamps), also available in the download zipfile.
+> 
+> Just to summarize here the times, they are respectively (number
+> expressed  in seconds):
+> 
+> BAD:
+>   Logs: log_10trials_50MB_BAD_NonCanc_64.txt,
+> log_10trials_50MB_BAD_NonCanc_non64.txt
+>   64: 34, 34, 35, 39, 37, 32, 42, 44, 43, 40
+>   not64: 61, 71, 59, 71, 62, 75, 62, 70, 62, 68
+> GOOD:
+>   Logs: log_10trials_50MB_GOOD_NonCanc_64.txt,
+> log_10trials_50MB_GOOD_NonCanc_non64.txt
+>   64: 34, 32, 35, 34, 35, 33, 34, 33, 33, 33
+>   not64: 32, 30, 32, 31, 31, 30, 32, 30, 32, 31
 
-I saw -EINVAL from sg_io() done by /usr/lib/udev/scsi_id which could
-in turn no longer whitelist SCSI disks for devicemapper multipath.
+The improvement from using "64" with the bad kernel is quite large.  
+That alone would be a big help for you.
 
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 4f45155c29fd ("compat_ioctl: reimplement SG_IO handling")
----
+However, I did see what appears to be a very significant difference 
+between the bad and good kernel traces.  It has to do with the order in 
+which the blocks are accessed.
 
-Arnd, I'm not sure about the sizeof(hdr32) change in the compat part in
-put_sg_io_hdr().
+Here is an extract from one of the bad traces.  I have erased all the 
+information except for the columns containing the block numbers to be 
+written:
 
-This is for next, probably via Arnd's y2038/y2038,
-and it fixes next-20190917 for me regarding SCSI generic.
+00019628 00
+00019667 00
+00019628 80
+00019667 80
+00019629 00
+00019668 00
+00019629 80
+00019668 80
 
- block/scsi_ioctl.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Here is the equivalent portion from one of the good traces:
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index cbeb629ee917..650bade5ea5a 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -607,14 +607,14 @@ int put_sg_io_hdr(const struct sg_io_hdr *hdr, void __user *argp)
- 			.info		 = hdr->info,
- 		};
- 
--		if (copy_to_user(argp, &hdr32, sizeof(hdr)))
-+		if (copy_to_user(argp, &hdr32, sizeof(hdr32)))
- 			return -EFAULT;
- 
- 		return 0;
- 	}
- #endif
- 
--	if (copy_to_user(argp, &hdr, sizeof(hdr)))
-+	if (copy_to_user(argp, hdr, sizeof(*hdr)))
- 		return -EFAULT;
- 
- 	return 0;
-@@ -659,7 +659,7 @@ int get_sg_io_hdr(struct sg_io_hdr *hdr, const void __user *argp)
- 	}
- #endif
- 
--	if (copy_from_user(&hdr, argp, sizeof(hdr)))
-+	if (copy_from_user(hdr, argp, sizeof(*hdr)))
- 		return -EFAULT;
- 
- 	return 0;
--- 
-2.17.1
+00019628 00
+00019628 80
+00019629 00
+00019629 80
+0001962a 00
+0001962a 80
+0001962b 00
+0001962b 80
+
+Notice that under the good kernel, the block numbers increase
+monotonically in a single sequence.  But under the bad kernel, the
+block numbers are not monotonic -- it looks like there are two separate
+threads each with its own strictly increasing sequence.
+
+This is exactly the sort of difference one might expect to see from
+the commit f664a3cc17b7 ("scsi: kill off the legacy IO path") you
+identified as the cause of the problem.  With multiqueue I/O, it's not 
+surprising to see multiple sequences of block numbers.
+
+Add it's not at all surprising that a consumer-grade USB storage device 
+might do a much worse job of handling non-sequential writes than 
+sequential ones.
+
+Which leads to a simple question for the SCSI or block-layer 
+maintainers:  Is there a sysfs setting Andrea can tweak which will 
+effectively restrict a particular disk device down to a single I/O
+queue, forcing sequential access?
+
+Alan Stern
 
