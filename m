@@ -6,113 +6,127 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 601A3C4CEC9
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 299BEC4CEC9
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:10:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4146621924
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 14:37:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04AE1218AE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Sep 2019 15:10:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730029AbfIROhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Sep 2019 10:37:48 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:34886 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725902AbfIROhs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Sep 2019 10:37:48 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BB26AA3D38D;
-        Wed, 18 Sep 2019 14:37:47 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5FA5A1001B36;
-        Wed, 18 Sep 2019 14:37:37 +0000 (UTC)
-Date:   Wed, 18 Sep 2019 22:37:33 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Sagi Grimberg <sagi@grimberg.me>
-Cc:     Keith Busch <keith.busch@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        id S1730959AbfIRPKD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Sep 2019 11:10:03 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44168 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728079AbfIRPKD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Sep 2019 11:10:03 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x8IF49mm073030
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2019 11:10:02 -0400
+Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2v3pk4h8b5-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Sep 2019 11:10:01 -0400
+Received: from localhost
+        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
+        Wed, 18 Sep 2019 16:09:59 +0100
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp07.uk.ibm.com (192.168.101.137) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Wed, 18 Sep 2019 16:09:53 +0100
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x8IF9pud50724936
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Sep 2019 15:09:51 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 774F3A4040;
+        Wed, 18 Sep 2019 15:09:51 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C0E36A4055;
+        Wed, 18 Sep 2019 15:09:50 +0000 (GMT)
+Received: from oc4120165700.ibm.com (unknown [9.152.98.33])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 18 Sep 2019 15:09:50 +0000 (GMT)
+Subject: Re: [PATCH 1/2] scsi: core: fix missing .cleanup_rq for SCSI hosts
+ without request batching
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ming Lei <tom.leiming@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Mark Brown <broonie@kernel.org>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
-        Long Li <longli@microsoft.com>,
-        John Garry <john.garry@huawei.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
-Message-ID: <20190918143732.GA19364@ming.t460p>
-References: <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
- <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
- <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
- <20190905090617.GB4432@ming.t460p>
- <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
- <20190906014819.GB27116@ming.t460p>
- <ffefcfa0-09b6-9af5-f94e-8e7ddd2eef16@linaro.org>
- <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
- <20190907000100.GC12290@ming.t460p>
- <f5685543-8cd5-6c6a-5b80-c77ef09c6b3b@grimberg.me>
+        Hannes Reinecke <hare@suse.com>, Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Mike Snitzer <snitzer@redhat.com>
+References: <20190807144948.28265-1-maier@linux.ibm.com>
+ <20190807144948.28265-2-maier@linux.ibm.com>
+ <CACVXFVM0tFj8CmcHON04_KjxR=QErCbUx0abJgG2W9OBb7akZA@mail.gmail.com>
+ <yq136iccsbw.fsf@oracle.com>
+From:   Steffen Maier <maier@linux.ibm.com>
+Date:   Wed, 18 Sep 2019 17:09:50 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f5685543-8cd5-6c6a-5b80-c77ef09c6b3b@grimberg.me>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Wed, 18 Sep 2019 14:37:48 +0000 (UTC)
+In-Reply-To: <yq136iccsbw.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+x-cbid: 19091815-0028-0000-0000-0000039F8818
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19091815-0029-0000-0000-000024618C14
+Message-Id: <bec80a65-9a8c-54a9-fe70-876fcbe3d592@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-09-18_08:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1908290000 definitions=main-1909180148
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 09, 2019 at 08:10:07PM -0700, Sagi Grimberg wrote:
-> Hey Ming,
+On 8/8/19 4:18 AM, Martin K. Petersen wrote:
 > 
-> > > > Ok, so the real problem is per-cpu bounded tasks.
-> > > > 
-> > > > I share Thomas opinion about a NAPI like approach.
-> > > 
-> > > We already have that, its irq_poll, but it seems that for this
-> > > use-case, we get lower performance for some reason. I'm not
-> > > entirely sure why that is, maybe its because we need to mask interrupts
-> > > because we don't have an "arm" register in nvme like network devices
-> > > have?
-> > 
-> > Long observed that IOPS drops much too by switching to threaded irq. If
-> > softirqd is waken up for handing softirq, the performance shouldn't
-> > be better than threaded irq.
+> Ming,
 > 
-> Its true that it shouldn't be any faster, but what irqpoll already has
-> and we don't need to reinvent is a proper budgeting mechanism that
-> needs to occur when multiple devices map irq vectors to the same cpu
-> core.
+>>> +       .cleanup_rq     = scsi_cleanup_rq,
+>>>          .busy           = scsi_mq_lld_busy,
+>>>          .map_queues     = scsi_map_queues,
+>>>   };
+>>
+>> This one is a cross-tree thing, either scsi/5.4/scsi-queue needs to
+>> pull for-5.4/block, or do it after both land linus tree.
 > 
-> irqpoll already maintains a percpu list and dispatch the ->poll with
-> a budget that the backend enforces and irqpoll multiplexes between them.
-> Having this mechanism in irq (hard or threaded) context sounds
-> unnecessary a bit.
-> 
-> It seems like we're attempting to stay in irq context for as long as we
-> can instead of scheduling to softirq/thread context if we have more than
-> a minimal amount of work to do. Without at least understanding why
-> softirq/thread degrades us so much this code seems like the wrong
-> approach to me. Interrupt context will always be faster, but it is
-> not a sufficient reason to spend as much time as possible there, is it?
+> I'll set up an amalgamated for-next branch tomorrow.
 
-If extra latency is added in IO completion path, this latency will be
-introduced in the submission path, because the hw queue depth is fixed,
-which is often small. Especially in case of multiple submission vs.
-single(shared) completion, the whole hw queue tags can be exhausted
-easily. 
+Martin, is it possible that you re-wrote your for-next and it now no longer 
+contains a merged 5.4/scsi-postmerge with those fixes?
+At least I cannot find the fix code in next-20190917 and it fails again for me.
 
-I guess no such effect for networking IO.
 
-> 
-> We should also keep in mind, that the networking stack has been doing
-> this for years, I would try to understand why this cannot work for nvme
-> before dismissing.
+-- 
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
 
-The above may be one reason.
+Linux on IBM Z Development
 
-Thanks,
-Ming
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Matthias Hartmann
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
+
