@@ -2,166 +2,589 @@ Return-Path: <SRS0=4FRQ=XO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C65DFC4CEC4
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 21:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE32FC49ED7
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 22:47:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9873E21920
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 21:11:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B52B206C2
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 22:47:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gd9fLnon";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="lE2bjEfu"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="vzgVRP/P";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="vzgVRP/P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733012AbfISVLn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Sep 2019 17:11:43 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:25945 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732924AbfISVLn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 17:11:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1568927501; x=1600463501;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=W1AcZAx52vEfDw8WGLLP1KHzjOsjeBYyEzUWjN5aiHE=;
-  b=gd9fLnonZ+bZoU0O582hN0n9mX8jmOrFBBQwytNnA0WCBLBwjJwZyKTH
-   217L1Eyww9sK2v3cSYEOYYTXR1AKmc+bYEqwaPl4iWe5oURAnlxkLEwen
-   UBnMk3HGktgznX/qerWgGlfYZ5rw8HSVLiEjV8cHtevyeW4PXVbj1Oem0
-   J1CNFrIxyXyPB5QukCf4lx0x2ktXjywmTo+StRg3suIxCNqXBkXt6ilW1
-   oMuZ15E8sjO8z8gKSkr06WYwp6U46jy6GqDi5/8OmZ5ej+x2c4rZ1Ijut
-   ikDj3ASETuODb+bLo+JdiFXIEwg4kntrukW0gMqmIoRrwDkh1uVB/OEf7
-   A==;
-IronPort-SDR: 54a2iq2FNE0Mipp3U28MVjiUOfBaKz2smBJA2RMckMqJ0zmdI5eQp4YeAf8PHLu+T0cEWUtit5
- r9J+RVRhHQKa7qwOGd0jiur9a5F72XyuW0EpyNBWtGjLHvIn9ufYHIMvsZFCUTwkbvCFGojy6g
- kt3t2rg+dFP1S3TZNc/y/FMHTGWZ51zwzmzVDF4xFEEzETHnzfxDWPJVgeokgxCXv73NyVBipp
- Mh0yKu5KxB3WOLOOjBNgeEYdASvmKt8pu8q3PRGXAlFeRuAnQ1ExNYPcDL6UKlvEzakgs+WN7X
- B40=
-X-IronPort-AV: E=Sophos;i="5.64,526,1559491200"; 
-   d="scan'208";a="225495370"
-Received: from mail-co1nam05lp2059.outbound.protection.outlook.com (HELO NAM05-CO1-obe.outbound.protection.outlook.com) ([104.47.48.59])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2019 05:11:40 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=J0KWDtNbMHgRj14xKwkj+TfIYK0yL9lZYTayQGlxo6VwCfEmre3JX/rnhggXGSW4okD8NXC0+m3G1wVSH44RCL5MgAAOEF+Jfjh5rlm/mYU01AWF7jj4Z0MS+oDoEp+YpVubEcfsBYh44I+4x2bfdRgaCgDuKGGuh8B+z0D7CXHd+qsny1XpFfp4BMgpgoo4KZFjqvdVe+WmgeNBipz2RGLhla5i3CQKr1qz6vnkIKUIBJoyheXGUK21pefnTAC7VIu5+yusocBA2f1zqjNhc4foA29R2gfVbH2jhhk45eH/UNeQ/bHQSOOJyRsRDfQAja6lg5L+vPGgX7suRy7geg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pp2Vk5UyAWnC31AzV7r2yfddNMBBt2vW0DIMQ0d69UA=;
- b=BW2u0LEtWo8iRbzhht9No6n8aFDYTSR5q4yP31IS7zP6Fw3LkPU+WGH/WObKmENhW3yaHGu+WqcOF130Pc/pTWF8hqlXeYouljZZH7ZEwj8AYn5llWMXi/FzAzEz/5jvfRGRSfocMG1azGVvDdqJ0Vx+vhkk2IGTFdMq5Ts95FIdkZwJC4eXqwLXDTnyUtkfOUvtn+hZyJPEP9LXiZd2j79GC95xyMJRk7RcF3PM+2j0w+Bjxb56GInXx9UkZ4wzmGL+TH/MsHr0WVSV5LijPNEUCDpBEvMyQO5TMA6kAgiGt+75btor9GH4GXY8p/ZpBlNMAk5h8WwO7yMKHiEq6g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pp2Vk5UyAWnC31AzV7r2yfddNMBBt2vW0DIMQ0d69UA=;
- b=lE2bjEfuJ5FR57dWjlfqzwH/KTehVmgspQI+QKiqVqSq/l8H5T9O29rFfweYOGDuT69B6y3bFtAG/a5YYx4e/JrJvMqbS5q1k7QZSt3OaL9+7wFDiF5tLds0013dPfiNoRg+YomA0vxzIPr9TWlh21H//i60NtTszBXInX20jwY=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4455.namprd04.prod.outlook.com (52.135.238.149) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2284.19; Thu, 19 Sep 2019 21:11:39 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117%3]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
- 21:11:39 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>
-Subject: Re: [RFC PATCH 0/2] blk-mq I/O scheduling fixes
-Thread-Topic: [RFC PATCH 0/2] blk-mq I/O scheduling fixes
-Thread-Index: AQHVbxKAhx4vysnHSkm7uztjC//ffQ==
-Date:   Thu, 19 Sep 2019 21:11:38 +0000
-Message-ID: <BYAPR04MB5816D32ED736029EC31B9DFAE7890@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190919094547.67194-1-hare@suse.de>
- <1bde2781-9958-9bf1-2d89-8c4f9f0d8cba@kernel.dk>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.44.250]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 496b1721-ddb0-4933-48fc-08d73d45f66b
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR04MB4455;
-x-ms-traffictypediagnostic: BYAPR04MB4455:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB4455CCC3402E0E778BE92D24E7890@BYAPR04MB4455.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-forefront-prvs: 016572D96D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(376002)(396003)(136003)(366004)(346002)(54164003)(199004)(189003)(53754006)(76116006)(9686003)(64756008)(102836004)(66556008)(66446008)(14444005)(71200400001)(486006)(476003)(74316002)(71190400001)(91956017)(305945005)(52536014)(55016002)(256004)(229853002)(6246003)(446003)(4326008)(66946007)(66476007)(7736002)(5660300002)(8936002)(99286004)(86362001)(7696005)(14454004)(76176011)(3846002)(26005)(66066001)(25786009)(81156014)(6506007)(6436002)(81166006)(8676002)(186003)(6116002)(33656002)(478600001)(2906002)(54906003)(110136005)(53546011)(316002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4455;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: VyV/0Z9x/qYwERonTNZ6XBidk1eFzgoYkv19gWfuyqrOJURs6FHlPGx/ssWsryTwk1U2EntK9iXOw6ReVIx3n3RNZ17umc1dghZzV9TNbGxBsVAXeDZ0rUSwrZvIgr29ZctCG2lhjNuMjbO4LEbbFUmjzsnYvS+uW6SNFJV33jS8Y2yA4gEhI3Z5/QsvFVULy4vI6eSygUuyGJ/NbF+4DT43FMEAr08zqeA1i1yjuuSZ/ew+gf18Qp0sjnKProYQPft3TvxClDJ5g4kVhY58qZPZalyrjwYec2ws4/fBRU7ztXvCJCJZgZeElnnT6g5kPTHRor2ksx0bBYxEuy6Wb6bLihiuElI0AAsZoKj5/l7KD6NGNKDv2XLkCjuWXY0SWphmUBIt7zb2ptM27eGLcZxcX45QAPLTUod/asOebWE=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 496b1721-ddb0-4933-48fc-08d73d45f66b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 21:11:38.9939
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: El3QgJ07uCItkcSFSvmBFljXfsNqkoZEdmp76ycQlSRRh8qoNMHpTSzDwDtMOjYEQJBbN5RAyhtkmzFfoo4Jhw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4455
+        id S2393559AbfISWrc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Sep 2019 18:47:32 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51544 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2389023AbfISWrc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Sep 2019 18:47:32 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 84A3C8EE236;
+        Thu, 19 Sep 2019 15:47:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1568933251;
+        bh=ghyOWEL9SPud/nTuEqj3UJtVs9KYNtVDvJWLnL0VSiE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=vzgVRP/P7kBNUwC49Gca7XUwqmrIURGxVkRXdX9BTnIn40tK9lQARXvlKtZwKKf0q
+         IZzIRWtyneYRqeWAF1WADE1IhlbssPfj48x2St40so7b7WsB5Tyytrp0FgRcGI3KWT
+         HAZptsaDWaSCgcu99yQPyqf7dcTGPpjOYQTIFChw=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id IYXvt3rRoZGN; Thu, 19 Sep 2019 15:47:31 -0700 (PDT)
+Received: from jarvis.lan (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E52098EE0ED;
+        Thu, 19 Sep 2019 15:47:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1568933251;
+        bh=ghyOWEL9SPud/nTuEqj3UJtVs9KYNtVDvJWLnL0VSiE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=vzgVRP/P7kBNUwC49Gca7XUwqmrIURGxVkRXdX9BTnIn40tK9lQARXvlKtZwKKf0q
+         IZzIRWtyneYRqeWAF1WADE1IhlbssPfj48x2St40so7b7WsB5Tyytrp0FgRcGI3KWT
+         HAZptsaDWaSCgcu99yQPyqf7dcTGPpjOYQTIFChw=
+Message-ID: <1568933249.25516.10.camel@HansenPartnership.com>
+Subject: [GIT PULL] first round of SCSI updates for the 5.3+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Thu, 19 Sep 2019 15:47:29 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019/09/19 19:48, Jens Axboe wrote:=0A=
-> On 9/19/19 3:45 AM, Hannes Reinecke wrote:=0A=
->> Hi all,=0A=
->>=0A=
->> Damien pointed out that there are some areas in the blk-mq I/O=0A=
->> scheduling algorithm which have a distinct legacy feel to it,=0A=
->> and prohibit multiqueue I/O schedulers from working properly.=0A=
->> These two patches should clear up this situation, but as it's=0A=
->> not quite clear what the original intention of the code was=0A=
->> I'll be posting them as an RFC.=0A=
->>=0A=
->> So as usual, comments and reviews are welcome.=0A=
->>=0A=
->> Hannes Reinecke (2):=0A=
->>    blk-mq: fixup request re-insert in blk_mq_try_issue_list_directly()=
-=0A=
->>    blk-mq: always call into the scheduler in blk_mq_make_request()=0A=
->>=0A=
->>   block/blk-mq.c | 9 ++-------=0A=
->>   1 file changed, 2 insertions(+), 7 deletions(-)=0A=
-> =0A=
-> Not quite sure what to do with this... Did you test them at all?=0A=
-=0A=
-Yes, Hans tested but on one device type only and the bug in patch 1 went=0A=
-undetected with the test case. Patch 2 does solve our specific problem whic=
-h is=0A=
-that sync write were bypassing the elevator (mq-deadline), causing unaligne=
-d=0A=
-write errors with a multi-queue zoned device.=0A=
-=0A=
-> One is obviously broken and would crash the kernel, the other=0A=
-> is/was a performance optimization done not that long ago.=0A=
-> =0A=
-> Just going to ignore this series for now.=0A=
-=0A=
-Yes, please do. This was hacked quickly with Hannes yesterday and Hannes se=
-nt=0A=
-this as an RFC. We now got plenty of comments (thanks to all who provided=
-=0A=
-feedback !) and will work on a proper patch series backed by more testing.=
-=0A=
-=0A=
-Best regards.=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+This is mostly update of the usual drivers: qla2xxx, ufs, smartpqi,
+lpfc, hisi_sas, qedf, mpt3sas; plus a whole load of minor updates.  The
+only core change this time around is the addition of request batching
+for virtio.  Since batching requires an additional flag to use, it
+should be invisible to the rest of the drivers.
+
+We also have a couple of conflicts based on previously submitted fixes
+through our tree in lpfc_sli4.h and qla_os.c, due to concurrent
+changes, so the resolution is pretty easy.  Just in case it's also
+available in this for-next tree:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/commit/?h=for-next&id=1a1de384df1d6acef5576901923345d03be7c877
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Andrew Vasquez (2):
+      scsi: qla2xxx: Use common update-firmware-options routine for ISP27xx+
+      scsi: qla2xxx: Correct error handling during initialization failures
+
+Andy Shevchenko (1):
+      scsi: scsi_debugfs: Use for_each_set_bit to simplify code
+
+Anil Varughese (2):
+      scsi: ufs: Disable local LCC in .link_startup_notify() in Cadence UFS
+      scsi: ufs: Configure clock in .hce_enable_notify() in Cadence UFS
+
+Arun Easi (2):
+      scsi: qedf: Fix crash during sg_reset
+      scsi: qla2xxx: Fix NVMe port discovery after a short device port loss
+
+Avri Altman (1):
+      scsi: ufs: uapi: Fix SPDX license identifier
+
+Bart Van Assche (62):
+      scsi: qla2xxx: Fix a recently introduced kernel warning
+      scsi: qla2xxx: Fix a NULL pointer dereference
+      scsi: qla2xxx: Simplify qla24xx_async_abort_cmd()
+      scsi: qla2xxx: Remove two superfluous if-tests
+      scsi: qla2xxx: Introduce qla2x00_els_dcmd2_free()
+      scsi: qla2xxx: Inline the qla2x00_fcport_event_handler() function
+      scsi: qla2xxx: Report invalid mailbox status codes
+      scsi: qla2xxx: Remove superfluous sts_entry_* casts
+      scsi: qla2xxx: Let the compiler check the type of the SCSI command context pointer
+      scsi: qla2xxx: Complain if sp->done() is not called from the completion path
+      scsi: qla2xxx: Make sure that aborted commands are freed
+      scsi: qla2xxx: Introduce qla2xxx_get_next_handle()
+      scsi: qla2xxx: Modify NVMe include directives
+      scsi: qla2xxx: Make qlt_handle_abts_completion() more robust
+      scsi: qla2xxx: Fix a race condition between aborting and completing a SCSI command
+      scsi: qla2xxx: Introduce the function qla2xxx_init_sp()
+      scsi: qla2xxx: Enable type checking for the SRB free and done callback functions
+      scsi: qla2xxx: Rework key encoding in qlt_find_host_by_d_id()
+      scsi: qla2xxx: Set the responder mode if appropriate for ELS pass-through IOCBs
+      scsi: qla2xxx: Make it explicit that ELS pass-through IOCBs use little endian
+      scsi: qla2xxx: Check secondary image if reading the primary image fails
+      scsi: qla2xxx: Change the return type of qla24xx_read_flash_data()
+      scsi: qla2xxx: Introduce the be_id_t and le_id_t data types for FC src/dst IDs
+      scsi: qla2xxx: Complain if a soft reset fails
+      scsi: qla2xxx: Use memcpy() and strlcpy() instead of strcpy() and strncpy()
+      scsi: qla2xxx: Check the PCI info string output buffer size
+      scsi: qla2xxx: Complain if waiting for pending commands times out
+      scsi: qla2xxx: Declare fourth qla2x00_set_model_info() argument const
+      scsi: qla2xxx: Always check the qla2x00_wait_for_hba_online() return value
+      scsi: qla2xxx: Suppress multiple Coverity complaint about out-of-bounds accesses
+      scsi: qla2xxx: Suppress a Coveritiy complaint about integer overflow
+      scsi: qla2xxx: Remove unreachable code from qla83xx_idc_lock()
+      scsi: qla2xxx: Fix qla24xx_process_bidir_cmd()
+      scsi: qla2xxx: Simplify a debug statement
+      scsi: qla2xxx: Remove dead code
+      scsi: qla2xxx: Complain if parsing the version string fails
+      scsi: qla2xxx: Complain if a mailbox command times out
+      scsi: qla2xxx: Use strlcpy() instead of strncpy()
+      scsi: qla2xxx: Do not corrupt vha->plogi_ack_list
+      scsi: qla2xxx: Report the firmware status code if a mailbox command fails
+      scsi: qla2xxx: Fix session lookup in qlt_abort_work()
+      scsi: qla2xxx: Simplify qla24xx_abort_sp_done()
+      scsi: qla2xxx: Remove two superfluous tests
+      scsi: qla2xxx: Remove a superfluous pointer check
+      scsi: qla2xxx: Simplify qlt_lport_dump()
+      scsi: qla2xxx: Reduce the number of casts in GID list code
+      scsi: qla2xxx: Verify locking assumptions at runtime
+      scsi: qla2xxx: Change data_dsd into an array
+      scsi: qla2xxx: Declare qla_tgt_cmd.cdb const
+      scsi: qla2xxx: Reduce the scope of three local variables in qla2xxx_queuecommand()
+      scsi: qla2xxx: Change the return type of qla2x00_update_ms_fdmi_iocb() into void
+      scsi: qla2xxx: Declare the fourth ql_dump_buffer() argument const
+      scsi: qla2xxx: Remove a superfluous forward declaration
+      scsi: qla2xxx: Remove an include directive from qla_mr.c
+      scsi: qla2xxx: Include the <asm/unaligned.h> header file from qla_dsd.h
+      scsi: qla2xxx: Use tabs instead of spaces for indentation
+      scsi: qla2xxx: Improve Linux kernel coding style conformance
+      scsi: qla2xxx: Really fix qla2xxx_eh_abort()
+      scsi: qla2xxx: Make qla2x00_abort_srb() again decrease the sp reference count
+      scsi: core: Reduce memory required for SCSI logging
+      scsi: core: Complain if scsi_target_block() fails
+      scsi: core: Make scsi_internal_device_unblock_nowait() reject invalid new_state
+
+Bean Huo (1):
+      scsi: ufs: change msleep to usleep_range
+
+Bjorn Andersson (3):
+      scsi: arm64: dts: qcom: sdm845: Specify UFS device-reset GPIO
+      scsi: ufs-qcom: Implement device_reset vops
+      scsi: ufs: Introduce vops for resetting device
+
+Chandrakanth Patil (1):
+      scsi: megaraid_sas: Introduce module parameter for default queue depth
+
+Christophe JAILLET (1):
+      scsi: pmcraid: Fix a typo - pcmraid --> pmcraid
+
+Chuhong Yuan (1):
+      scsi: qla2xxx: Replace vmalloc + memset with vzalloc
+
+Colin Ian King (6):
+      scsi: qla2xxx: fix spelling mistake "initializatin" -> "initialization"
+      scsi: fcoe: remove redundant call to skb_transport_header
+      scsi: bfa: remove redundant assignment to variable error
+      scsi: fnic: remove redundant assignment of variable rc
+      scsi: sym53c8xx_2: remove redundant assignment to retv
+      scsi: pm80xx: remove redundant assignments to variable rc
+
+Damien Le Moal (1):
+      scsi: sd: Improve unaligned completion resid message
+
+Dan Carpenter (1):
+      scsi: mpt3sas: clean up a couple sizeof() uses
+
+Dave Carroll (1):
+      scsi: smartpqi: add module param to hide vsep
+
+Don Brace (2):
+      scsi: smartpqi: bump version
+      scsi: smartpqi: update copyright
+
+Frederick Lawler (2):
+      scsi: esas2r: Prefer pcie_capability_read_word()
+      scsi: csiostor: Prefer pcie_capability_read_word()
+
+Fuqian Huang (2):
+      scsi: lpfc: use spin_lock_irqsave in IRQ context
+      scsi: lpfc: remove redundant code
+
+Gilbert Wu (5):
+      scsi: smartpqi: add new pci ids
+      scsi: smartpqi: add gigabyte controller
+      scsi: smartpqi: add bay identifier
+      scsi: smartpqi: add pci ids for fiberhome controller
+      scsi: smartpqi: add module param for exposure order
+
+Govindarajulu Varadarajan (1):
+      scsi: fnic: fix msix interrupt allocation
+
+Gustavo A. R. Silva (7):
+      scsi: fas216: Mark expected switch fall-throughs
+      scsi: wd33c93: Mark expected switch fall-through
+      scsi: sun3_scsi: Mark expected switch fall-throughs
+      scsi: qlogicpti: Mark expected switch fall-throughs
+      scsi: ibmvfc: Mark expected switch fall-throughs
+      scsi: ibmvscsi_tgt: Mark expected switch fall-throughs
+      scsi: cxlflash: Mark expected switch fall-throughs
+
+Hannes Reinecke (1):
+      scsi: qedf: Use discovery list to traverse rports
+
+Hariprasad Kelam (1):
+      scsi: lpfc: remove NULL check before some freeing functions
+
+Helge Deller (1):
+      scsi: ncr53c8xx: Mark expected switch fall-through
+
+Himanshu Madhani (5):
+      scsi: qla2xxx: Update driver version to 10.01.00.19-k
+      scsi: qla2xxx: Fix driver reload for ISP82xx
+      scsi: qla2xxx: Fix message indicating vectors used by driver
+      scsi: qla2xxx: Update driver version to 10.01.00.18-k
+      scsi: qla2xxx: Fix DMA unmap leak
+
+James Smart (46):
+      scsi: lpfc: Fix reset recovery paths that are not recovering
+      scsi: lpfc: fix 12.4.0.0 GPF at boot
+      scsi: lpfc: Remove bg debugfs buffers
+      scsi: lpfc: Resolve checker warning for lpfc_new_io_buf()
+      scsi: lpfc: Update lpfc version to 12.4.0.0
+      scsi: lpfc: Merge per-protocol WQ/CQ pairs into single per-cpu pair
+      scsi: lpfc: Add NVMe sequence level error recovery support
+      scsi: lpfc: Support dynamic unbounded SGL lists on G7 hardware.
+      scsi: lpfc: Add MDS driver loopback diagnostics support
+      scsi: lpfc: Add first and second level hardware revisions to sysfs reporting
+      scsi: lpfc: Migrate to %px and %pf in kernel print calls
+      scsi: lpfc: Add simple unlikely optimizations to reduce NVME latency
+      scsi: lpfc: Fix coverity warnings
+      scsi: lpfc: Fix nvme first burst module parameter description
+      scsi: lpfc: Fix BlockGuard enablement on FCoE adapters
+      scsi: lpfc: Fix reported physical link speed on a disabled trunked link
+      scsi: lpfc: Fix Max Frame Size value shown in fdmishow output
+      scsi: lpfc: Fix upcall to bsg done in non-success cases
+      scsi: lpfc: Fix sli4 adapter initialization with MSI
+      scsi: lpfc: Fix nvme sg_seg_cnt display if HBA does not support NVME
+      scsi: lpfc: Fix nvme target mode ABTSing a received ABTS
+      scsi: lpfc: Fix hang when downloading fw on port enabled for nvme
+      scsi: lpfc: Fix too many sg segments spamming in kernel log
+      scsi: lpfc: Fix crash due to port reset racing vs adapter error handling
+      scsi: lpfc: Fix deadlock on host_lock during cable pulls
+      scsi: lpfc: Fix error in remote port address change
+      scsi: lpfc: Fix driver nvme rescan logging
+      scsi: lpfc: Fix sg_seg_cnt for HBAs that don't support NVME
+      scsi: lpfc: Fix propagation of devloss_tmo setting to nvme transport
+      scsi: lpfc: Fix loss of remote port after devloss due to lack of RPIs
+      scsi: lpfc: Fix devices that don't return after devloss followed by rediscovery
+      scsi: lpfc: Fix null ptr oops updating lpfc_devloss_tmo via sysfs attribute
+      scsi: lpfc: Fix FLOGI handling across multiple link up/down conditions
+      scsi: lpfc: Fix oops when fewer hdwqs than cpus
+      scsi: lpfc: Fix irq raising in lpfc_sli_hba_down
+      scsi: lpfc: Fix Oops in nvme_register with target logout/login
+      scsi: lpfc: Fix issuing init_vpi mbox on SLI-3 card
+      scsi: lpfc: Fix ADISC reception terminating login state if a NVME target
+      scsi: lpfc: Fix discovery when target has no GID_FT information
+      scsi: lpfc: Fix port relogin failure due to GID_FT interaction
+      scsi: lpfc: Fix leak of ELS completions on adapter reset
+      scsi: lpfc: Fix failure to clear non-zero eq_delay after io rate reduction
+      scsi: lpfc: Fix crash on driver unload in wq free
+      scsi: lpfc: Fix ELS field alignments
+      scsi: lpfc: Fix PLOGI failure with high remoteport count
+      scsi: lpfc: Limit xri count for kdump environment
+
+John Garry (4):
+      scsi: hisi_sas: Drop SMP resp frame DMA mapping
+      scsi: hisi_sas: Drop kmap_atomic() in SMP command completion
+      scsi: hisi_sas: Drop hisi_sas_hw.get_free_slot
+      scsi: hisi_sas: Make max IPTT count equal for all hw revisions
+
+John Pittman (1):
+      scsi: fnic: print port speed only at driver init or speed change
+
+Li Zhong (1):
+      scsi: target: tcmu: clean the nl_cmd of the udev when nl send fails
+
+Luo Jiaxing (13):
+      scsi: hisi_sas: Add hisi_sas_debugfs_alloc() to centralise allocation
+      scsi: hisi_sas: Remove some unused function arguments
+      scsi: hisi_sas: Remove hisi_sas_hw.slot_complete
+      scsi: hisi_sas: Remove sleep after issue phy reset if sas_smp_phy_control() fails
+      scsi: hisi_sas: Directly return when running I_T_nexus reset if phy disabled
+      scsi: hisi_sas: Use true/false as input parameter of sas_phy_reset()
+      scsi: hisi_sas: add debugfs auto-trigger for internal abort time out
+      scsi: hisi_sas: Consolidate internal abort calls in LU reset operation
+      scsi: hisi_sas: Modify return type of debugfs functions
+      scsi: hisi_sas: Fix out of bound at debug_I_T_nexus_reset()
+      scsi: hisi_sas: Snapshot AXI and RAS register at debugfs
+      scsi: hisi_sas: Snapshot HW cache of IOST and ITCT at debugfs
+      scsi: hisi_sas: Fix pointer usage error in show debugfs IOST/ITCT
+
+Mahesh Rajashekhara (1):
+      scsi: smartpqi: correct hang when deleting 32 lds
+
+Martin Wilck (3):
+      scsi: scsi_dh_rdac: zero cdb in send_mode_select()
+      scsi: qla2xxx: cleanup trace buffer initialization
+      scsi: qla2xxx: qla2x00_alloc_fw_dump: set ha->eft
+
+Masahiro Yamada (1):
+      scsi: use __u{8,16,32,64} instead of uint{8,16,32,64}_t in uapi headers
+
+Matt Lupfer (1):
+      scsi: virtio_scsi: unplug LUNs when events missed
+
+Minwoo Im (1):
+      scsi: mpt3sas: support target smid for [abort|query] task
+
+Murthy Bhat (2):
+      scsi: smartpqi: correct REGNEWD return status
+      scsi: smartpqi: add sysfs entries
+
+Nilesh Javali (1):
+      scsi: qedf: Update module description string
+
+Nishka Dasgupta (1):
+      scsi: ufs-qcom: Make structure ufs_hba_qcom_vops constant
+
+Paolo Bonzini (2):
+      scsi: virtio_scsi: implement request batching
+      scsi: core: add support for request batching
+
+Qian Cai (1):
+      scsi: megaraid_sas: Fix a compilation warning
+
+Quinn Tran (13):
+      scsi: qla2xxx: Fix stale session
+      scsi: qla2xxx: Fix stuck login session
+      scsi: qla2xxx: Fix flash read for Qlogic ISPs
+      scsi: qla2xxx: Allow NVMe IO to resume with short cable pull
+      scsi: qla2xxx: Fix hang in fcport delete path
+      scsi: qla2xxx: Retry fabric Scan on IOCB queue full
+      scsi: qla2xxx: Fix premature timer expiration
+      scsi: qla2xxx: Fix Relogin to prevent modifying scan_state flag
+      scsi: qla2xxx: Reject EH_{abort|device_reset|target_request}
+      scsi: qla2xxx: Skip FW dump on LOOP initialization error
+      scsi: qla2xxx: Use Correct index for Q-Pair array
+      scsi: qla2xxx: Fix abort timeout race condition.
+      scsi: qla2xxx: Fix different size DMA Alloc/Unmap
+
+Sakari Ailus (1):
+      scsi: lpfc: Convert existing %pf users to %ps
+
+Saurav Kashyap (11):
+      scsi: qedf: Update the version to 8.42.3.0
+      scsi: qedf: Fix race betwen fipvlan request and response path
+      scsi: qedf: Decrease the LL2 MTU size to 2500
+      scsi: qedf: Check for module unloading bit before processing link update AEN
+      scsi: qedf: Initiator fails to re-login to switch after link down
+      scsi: qedf: Add debug information for unsolicited processing
+      scsi: qedf: Add support for 20 Gbps speed
+      scsi: qedf: Interpret supported caps value correctly
+      scsi: qedf: Add shutdown callback handler
+      scsi: qedf: Stop sending fipvlan request on unload
+      scsi: qedf: Print message during bailout conditions
+
+Sergei Shtylyov (3):
+      scsi: fdomain_isa: use CFG1_IRQ_MASK
+      scsi: fdomain: use BSTAT_{MSG|CMD|IO} in fdomain_work()
+      scsi: fdomain: use BCTL_RST in fdomain_reset()
+
+Sreekanth Reddy (1):
+      scsi: mpt3sas: Introduce module parameter to override queue depth
+
+Stanley Chu (5):
+      scsi: ufs: fix broken hba->outstanding_tasks
+      scsi: ufs: Add history of fatal events
+      scsi: ufs: Do not reset error history during host reset
+      scsi: ufs: Add fatal and auto-hibern8 error history
+      scsi: ufs: Change names related to error history
+
+Suganath Prabu (12):
+      scsi: mpt3sas: Update driver version to 31.100.00.00
+      scsi: mpt3sas: Run SAS DEVICE STATUS CHANGE EVENT from ISR
+      scsi: mpt3sas: Reduce the performance drop
+      scsi: mpt3sas: Handle fault during HBA initialization
+      scsi: mpt3sas: Add sysfs to know supported features
+      scsi: mpt3sas: Support MEMORY MOVE Tool box command
+      scsi: mpt3sas: Allow ioctls to blocked access status NVMe
+      scsi: mpt3sas: Enumerate SES of a managed PCIe switch
+      scsi: mpt3sas: Update MPI headers to 2.6.8 spec
+      scsi: mpt3sas: Gracefully handle online firmware update
+      scsi: mpt3sas: memset request frame before reusing
+      scsi: mpt3sas: Add support for PCIe Lane margin
+
+Tomas Winkler (1):
+      scsi: ufs: revamp string descriptor reading
+
+Xiang Chen (11):
+      scsi: hisi_sas: Fix the conflict between device gone and host reset
+      scsi: hisi_sas: Add BIST support for phy loopback
+      scsi: hisi_sas: Remove redundant work declaration
+      scsi: hisi_sas: Assign NCQ tag for all NCQ commands
+      scsi: hisi_sas: Update all the registers after suspend and resume
+      scsi: hisi_sas: Retry 3 times TMF IO for SAS disks when init device
+      scsi: hisi_sas: replace "%p" with "%pK"
+      scsi: hisi_sas: Remove some unnecessary code
+      scsi: hisi_sas: Drop free_irq() when devm_request_irq() failed
+      scsi: hisi_sas: Make slot buf minimum allocation of PAGE_SIZE
+      scsi: hisi_sas: Don't bother clearing status buffer IU in task prep
+
+YueHaibing (8):
+      scsi: ufs-hisi: use devm_platform_ioremap_resource() to simplify code
+      scsi: ufshcd: use devm_platform_ioremap_resource() to simplify code
+      scsi: hisi_sas: use devm_platform_ioremap_resource() to simplify code
+      scsi: ufs: Use kmemdup in ufshcd_read_string_desc()
+      scsi: megaraid_sas: Make a bunch of functions static
+      scsi: aic94xx: Remove unnecessary null check
+      scsi: qla2xxx: Remove unnecessary null check
+      scsi: lpfc: Remove unnecessary null check before kfree
+
+zhengbin (6):
+      scsi: fcoe: fix null-ptr-deref Read in fc_release_transport
+      scsi: bnx2fc: remove set but not used variables 'task','port','orig_task'
+      scsi: bnx2fc: remove set but not used variables 'lport','host'
+      scsi: bnx2fc: remove set but not used variable 'fh'
+      scsi: ufs: remove set but not used variable 'val'
+      scsi: hisi_sas: remove set but not used variable 'irq_value'
+
+And the diffstat:
+
+.../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |   2 +
+ arch/arm64/boot/dts/qcom/sdm845-db845c.dts         |   2 +
+ arch/arm64/boot/dts/qcom/sdm845-mtp.dts            |   2 +
+ drivers/scsi/aic94xx/aic94xx_init.c                |   9 +-
+ drivers/scsi/arm/fas216.c                          |   8 +
+ drivers/scsi/bfa/bfad_im.c                         |   2 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c                  |   2 -
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c                   |  16 -
+ drivers/scsi/bnx2fc/bnx2fc_io.c                    |   7 -
+ drivers/scsi/csiostor/csio_wr.c                    |   8 +-
+ drivers/scsi/cxlflash/main.c                       |  12 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c         |   2 +
+ drivers/scsi/esas2r/esas2r_init.c                  |  13 +-
+ drivers/scsi/esas2r/esas2r_ioctl.c                 |  14 +-
+ drivers/scsi/fcoe/fcoe.c                           |  17 +-
+ drivers/scsi/fdomain.c                             |   6 +-
+ drivers/scsi/fdomain_isa.c                         |   5 +-
+ drivers/scsi/fnic/fnic_debugfs.c                   |   4 +-
+ drivers/scsi/fnic/fnic_fcs.c                       |  14 +-
+ drivers/scsi/fnic/fnic_isr.c                       |   4 +-
+ drivers/scsi/fnic/fnic_trace.c                     |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                   |  54 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              | 982 ++++++++++++++++-----
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |  48 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             |  92 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             | 307 +++++--
+ drivers/scsi/ibmvscsi/ibmvfc.c                     |   3 +
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c           |   3 +
+ drivers/scsi/lpfc/lpfc.h                           |  11 +-
+ drivers/scsi/lpfc/lpfc_attr.c                      |  76 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                       |  29 +-
+ drivers/scsi/lpfc/lpfc_crtn.h                      |  13 +-
+ drivers/scsi/lpfc/lpfc_ct.c                        |  68 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c                   | 228 +----
+ drivers/scsi/lpfc/lpfc_debugfs.h                   |  61 +-
+ drivers/scsi/lpfc/lpfc_disc.h                      |   3 +
+ drivers/scsi/lpfc/lpfc_els.c                       | 116 ++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                   | 181 ++--
+ drivers/scsi/lpfc/lpfc_hw.h                        |   6 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                       |  34 +
+ drivers/scsi/lpfc/lpfc_init.c                      | 926 +++++++++----------
+ drivers/scsi/lpfc/lpfc_mem.c                       |  65 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c                 |  43 +-
+ drivers/scsi/lpfc/lpfc_nvme.c                      | 389 +++++---
+ drivers/scsi/lpfc/lpfc_nvmet.c                     |  28 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                      | 591 ++++++++-----
+ drivers/scsi/lpfc/lpfc_sli.c                       | 533 ++++++++---
+ drivers/scsi/lpfc/lpfc_sli.h                       |  11 +-
+ drivers/scsi/lpfc/lpfc_sli4.h                      |  50 +-
+ drivers/scsi/lpfc/lpfc_version.h                   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c                     |   8 +-
+ drivers/scsi/megaraid/megaraid_sas.h               |   1 +
+ drivers/scsi/megaraid/megaraid_sas_base.c          | 112 ++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c        |  29 +-
+ drivers/scsi/mpt3sas/mpi/mpi2.h                    |   5 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h               |  10 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_image.h              |  39 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_pci.h                |  13 +-
+ drivers/scsi/mpt3sas/mpi/mpi2_tool.h               |  13 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c                | 175 +++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h                |  30 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c                 | 178 +++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c               | 196 ++--
+ drivers/scsi/ncr53c8xx.c                           |   4 +
+ drivers/scsi/pm8001/pm8001_sas.c                   |  13 +-
+ drivers/scsi/pmcraid.c                             |   2 +-
+ drivers/scsi/qedf/qedf.h                           |   1 +
+ drivers/scsi/qedf/qedf_debugfs.c                   |  16 +-
+ drivers/scsi/qedf/qedf_els.c                       |  38 +-
+ drivers/scsi/qedf/qedf_fip.c                       |  33 +-
+ drivers/scsi/qedf/qedf_io.c                        |  67 +-
+ drivers/scsi/qedf/qedf_main.c                      | 178 ++--
+ drivers/scsi/qedf/qedf_version.h                   |   8 +-
+ drivers/scsi/qla2xxx/qla_attr.c                    |  12 +-
+ drivers/scsi/qla2xxx/qla_bsg.c                     |  23 +-
+ drivers/scsi/qla2xxx/qla_dbg.c                     |   3 +-
+ drivers/scsi/qla2xxx/qla_def.h                     | 132 ++-
+ drivers/scsi/qla2xxx/qla_dfs.c                     |   9 +-
+ drivers/scsi/qla2xxx/qla_dsd.h                     |   2 +
+ drivers/scsi/qla2xxx/qla_fw.h                      |   8 +-
+ drivers/scsi/qla2xxx/qla_gbl.h                     |  33 +-
+ drivers/scsi/qla2xxx/qla_gs.c                      | 254 +++---
+ drivers/scsi/qla2xxx/qla_init.c                    | 550 +++++-------
+ drivers/scsi/qla2xxx/qla_inline.h                  |  28 +-
+ drivers/scsi/qla2xxx/qla_iocb.c                    | 226 ++---
+ drivers/scsi/qla2xxx/qla_isr.c                     |  29 +-
+ drivers/scsi/qla2xxx/qla_mbx.c                     |  26 +-
+ drivers/scsi/qla2xxx/qla_mid.c                     |   4 +-
+ drivers/scsi/qla2xxx/qla_mr.c                      |  67 +-
+ drivers/scsi/qla2xxx/qla_nvme.c                    |  32 +-
+ drivers/scsi/qla2xxx/qla_nvme.h                    |   5 +-
+ drivers/scsi/qla2xxx/qla_nx.c                      |  22 +-
+ drivers/scsi/qla2xxx/qla_nx.h                      |  14 +-
+ drivers/scsi/qla2xxx/qla_nx2.c                     |   2 +-
+ drivers/scsi/qla2xxx/qla_os.c                      | 237 +++--
+ drivers/scsi/qla2xxx/qla_sup.c                     |  16 +-
+ drivers/scsi/qla2xxx/qla_target.c                  | 212 ++---
+ drivers/scsi/qla2xxx/qla_target.h                  |  35 +-
+ drivers/scsi/qla2xxx/qla_tmpl.c                    |   7 +-
+ drivers/scsi/qla2xxx/qla_version.h                 |   2 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c                 |  27 +-
+ drivers/scsi/qlogicpti.c                           |  10 +
+ drivers/scsi/scsi_debugfs.c                        |   5 +-
+ drivers/scsi/scsi_lib.c                            |  52 +-
+ drivers/scsi/scsi_logging.c                        |  48 +-
+ drivers/scsi/sd.c                                  |   1 +
+ drivers/scsi/smartpqi/Kconfig                      |   2 +
+ drivers/scsi/smartpqi/smartpqi.h                   |  20 +-
+ drivers/scsi/smartpqi/smartpqi_init.c              | 236 ++++-
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c     | 102 ++-
+ drivers/scsi/sun3_scsi.c                           |   2 +
+ drivers/scsi/sym53c8xx_2/sym_nvram.c               |   2 +-
+ drivers/scsi/ufs/cdns-pltfrm.c                     |  40 +-
+ drivers/scsi/ufs/ufs-hisi.c                        |   4 +-
+ drivers/scsi/ufs/ufs-qcom.c                        |  41 +-
+ drivers/scsi/ufs/ufs-qcom.h                        |   4 +
+ drivers/scsi/ufs/ufs-sysfs.c                       |  18 +-
+ drivers/scsi/ufs/ufs.h                             |   2 +-
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |   4 +-
+ drivers/scsi/ufs/ufshcd.c                          | 281 +++---
+ drivers/scsi/ufs/ufshcd.h                          |  57 +-
+ drivers/scsi/virtio_scsi.c                         |  88 +-
+ drivers/scsi/wd33c93.c                             |   1 +
+ drivers/target/target_core_user.c                  |  20 +
+ include/linux/nvme-fc-driver.h                     |   2 +
+ include/scsi/scsi_cmnd.h                           |   1 +
+ include/scsi/scsi_dbg.h                            |   2 -
+ include/scsi/scsi_host.h                           |  16 +-
+ include/uapi/scsi/scsi_bsg_fc.h                    |  54 +-
+ include/uapi/scsi/scsi_bsg_ufs.h                   |   2 +-
+ include/uapi/scsi/scsi_netlink.h                   |  20 +-
+ include/uapi/scsi/scsi_netlink_fc.h                |  17 +-
+ 132 files changed, 5764 insertions(+), 3680 deletions(-)
+
+James
+
