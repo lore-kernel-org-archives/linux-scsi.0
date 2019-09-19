@@ -2,113 +2,220 @@ Return-Path: <SRS0=4FRQ=XO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59324C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 15:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB97C49ED7
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 16:14:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 155B3208C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 15:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A31D2053B
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 16:14:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="PMw3sAb7"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="KebYHbK3";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="GKjeRBll"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391412AbfISPtJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Sep 2019 11:49:09 -0400
-Received: from mail-eopbgr750079.outbound.protection.outlook.com ([40.107.75.79]:44060
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2390076AbfISPtJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Sep 2019 11:49:09 -0400
+        id S2391809AbfISQOA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Sep 2019 12:14:00 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:31211 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388133AbfISQOA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 12:14:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1568909638; x=1600445638;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=VvUF9KolcfVTVhPVNcH/xcrtf8S37z8ghg98lO+0jEI=;
+  b=KebYHbK3DS4TLRUy++V5adUQ57pHGPxMwJ2n9CNEjbGYJM0ydtfTQ5pf
+   Hk/EkvuIFi3pVfsj+6vUiy0x568pL96jFqHl/XjyrTNcMGpgha1gGB1zA
+   ekKoFSo/pcHDkKM9TNwOU5FPCf3SuSD5btUz60sauPHwOODB48YCjUpar
+   XMG1w+yCu1twOK4vaXst71rkD2jJY8RYmnI9l74rsaNFtsD0rbPK+iWAE
+   97oziaPdrKsadvVH0IK0jNVkWq+obwKtvZkqZCnsePrdOjisHMg0DDWOU
+   1+NLtlDO+AHrs7llZ/8m9WYFgLjf1DV5wH9U1Qb7XGDv1ZGV7RgDp+x6P
+   w==;
+IronPort-SDR: UwqTdEN0YU+Hb7AlSgmF36W9j6uS5TSy/eLJbiALXdKi+HmPxiTvUnBwePQe05/sTFb8l35k18
+ jDCc0g+jCLqc4iDEcgFZXIRLLo3UmqmhVlQc0egIyKLUCMMKZ1ctXohCzmNSjKbTo5/GQWVC0D
+ L4bAVbwF605jyrrPsI6v+gDJA/PrpS16Ar957G9GK7Txvl9SteXEtM5Po55Bl0wPSl3GH6GtRM
+ pdBLlVzLMXyC516/+oTqdG+ws6xcyFQn5Fd88NBRxATIvJwIllIfyoDbvuhswAbwQ2oOXnUIgX
+ fSY=
+X-IronPort-AV: E=Sophos;i="5.64,524,1559491200"; 
+   d="scan'208";a="225471958"
+Received: from mail-sn1nam02lp2056.outbound.protection.outlook.com (HELO NAM02-SN1-obe.outbound.protection.outlook.com) ([104.47.36.56])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2019 00:13:57 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VtF/22bxoETlyl43njw3PS0CSu4Qf37FlBA1435ppVZy45BjU42755f8amtlpfmmlsUl+kXJz+55pF8Zh851QCB3kefOZchNkFPCxn9gcBcm/ULRU9Y+OzDMv5cxHzAsopbKBOLptUDh0sE5IaeEbFnWCl9V/AYgztQjTZY+5f+8j67fY/C0T3EVj3ffDZhmxgcKkFgMbQF0Ydb1mETE9TnoqlIlmTBfzyYK5JzAWnnOCj47m+dt/RgYyKpjfX6HCVgQP8ILC8fEhf98Mmu9wS4+LOwLOxyWnynewpPxB9hUX3PJ1Z94tWz0hFnk1FBqfITdJVEDUbu0gx4ZUG3qJQ==
+ b=aW1Y6q/RTsKBoVN2sT/sNUaArlxG3MJGpHBs0GIlmKNJ8mEm7EIjM4S37ZBA4wZKSbdHLGiMiTxED9NEotVIqiJ5l+mlnW3BYzXDafjVBmSatL6yAMDgmz5cU9G1+5YfXneJbV+NGdDE5/TbIcsSDzWAZSi6AlWQHBZI8ofP3csXwQDgY/JyUNINdwXiTV7Z7duqXJAnwNB8X6xnFvoaz0mcZOpmxR+opNfl5BB9pJ7Z0rC2A2u0BbMbcqTFMTYEvr8Y5l66CbBHWcxX2Ojvqci4zjNOqe0S1VXpvRcfOtnTep8OP+62Zp4kme2Knipq4xGCw0Ao6+G0/bFKcoqhLQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qux+O7/PIqdrn4LUY39DdBOlZFLBu1Y5kGMlGfsBkKw=;
- b=BscqZ2ZZfrvwnq8yxNyjqd3uHdZg+BB0lAR7LgIoTk1doVLRB2LXzpQ58odKh+p17ay6uGU4YcIGMhEzE1OPqHHPKNh4P3/upsnuWwBM3wda0YUVvFMXIP2UBeAuWRbOzNPDw03V4tlcDaqS1tcuVsl+4DyBvWQenTpVmUlTzzrSNmSmh5bpjemc+jmw49Cw6Kni96uZKclBv+FbmZ/u5SD6rqCS27igSOsS3Dh8vnzwicgs+r4LQg8MnLCMLRs0KHzwYSx3AT40l5CNNE/aLo4s+huRvq4bI6SCngmbk06xhaoMLX0xjaRNjkY8nX08svcm3Nh1S96YgjjkPnBJyg==
+ bh=1qAKAUkdUeSFjdjZOnEPDaEcgn2eptb5Yv0ysr727JM=;
+ b=LUxxasgyIYfTrU/Bb4LhBrZptC3fnZUm1y8L/qPmQiYZKYTCEPde7w+2Gw0BfRsVctDgGVp+xDhsiokgucKA+ipj25TClCBM9aAQI/tCf+i9CNHIg7HFXOaWKnrEo9/yKq7Meon1fBuslGVJQ+OY9eM8NYEPazcNfx/1MBdzdPWg1sJBasmQpDsUeJsi31ADGRXOxlWqhj6PrPD9QvwqBj/fwVX9rJPQyf17N5jZ/CJvTrOwdGPIqB1/WQ3Q+lWBIlwni7clJMKFbKb+1lGo7KRNY6Pcr9Rj1N5go4t/I/Mj9c25OyPipTHkcDfAUwL7ae0RlwwwW5vWmdpSp7XsuQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qux+O7/PIqdrn4LUY39DdBOlZFLBu1Y5kGMlGfsBkKw=;
- b=PMw3sAb7HnDm81IHLKxKPkNfv9XsdPmLuZjdF6+oODXs4BuIxX/n4CORn1XczZROHAyJL4+EST0B2kCSk4RMohPDsuZTThsFR+l1P4ysX1G5rVb8GqV2eUPJRBHfIYWoO3ST9NABpdc9cdUeRew7MH9c8HmRLQbo+AXfoMiRC/Y=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB5540.namprd08.prod.outlook.com (20.176.28.204) with Microsoft SMTP
+ bh=1qAKAUkdUeSFjdjZOnEPDaEcgn2eptb5Yv0ysr727JM=;
+ b=GKjeRBllt3ZOoLjdQ3dlu1VaQ/btd5ktVfrEkZ3CbJTaFaW3fX4/b/g2wqhVn6mUIVeVMATRyoiwwb2fQH9sJaLB4P1d7dkap4vwXWIKhfh6XDiYqbshnmdvf0gyiioQHkHRYNJNcvCQPgF5LYZVHnNiUPKxnVKX/N+7zJvPTs0=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB3782.namprd04.prod.outlook.com (52.135.214.142) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2263.21; Thu, 19 Sep 2019 15:49:06 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::1c5f:b47c:d1c3:c30c]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::1c5f:b47c:d1c3:c30c%7]) with mapi id 15.20.2263.023; Thu, 19 Sep 2019
- 15:49:06 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Stanley Chu <stanley.chu@mediatek.com>,
+ 15.20.2263.13; Thu, 19 Sep 2019 16:13:56 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::9821:67e1:9799:b117]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::9821:67e1:9799:b117%3]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
+ 16:13:56 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>
+CC:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-CC:     "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>
-Subject: RE: [EXT] [PATCH v1] scsi: ufs: skip shutdown if hba is not powered
-Thread-Topic: [EXT] [PATCH v1] scsi: ufs: skip shutdown if hba is not powered
-Thread-Index: AQHVbdhzTeX/aZpSQEmPmvu/XpmQPacyzhAg
-Date:   Thu, 19 Sep 2019 15:49:06 +0000
-Message-ID: <BN7PR08MB5684156E52798096FBC61BDEDB890@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <1568780438-28753-1-git-send-email-stanley.chu@mediatek.com>
-In-Reply-To: <1568780438-28753-1-git-send-email-stanley.chu@mediatek.com>
-Accept-Language: en-150, en-US
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH 2/2] blk-mq: always call into the scheduler in
+ blk_mq_make_request()
+Thread-Topic: [PATCH 2/2] blk-mq: always call into the scheduler in
+ blk_mq_make_request()
+Thread-Index: AQHVbs8K3cwX+YB3YkG6oq7+AYxM/w==
+Date:   Thu, 19 Sep 2019 16:13:56 +0000
+Message-ID: <BYAPR04MB5816CE9F237CF189E56AF420E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20190919094547.67194-1-hare@suse.de>
+ <20190919094547.67194-3-hare@suse.de>
+ <BYAPR04MB5816F1F98D8F408D23C1AF47E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20190919142344.GB11207@ming.t460p>
+ <935518233f147da073414dcbcdb2abb5@mail.gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.81.111]
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [79.98.72.135]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4d9084bf-ab6e-4abe-4c23-08d73d18e776
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:BN7PR08MB5540;
-x-ms-traffictypediagnostic: BN7PR08MB5540:|BN7PR08MB5540:|BN7PR08MB5540:
-x-microsoft-antispam-prvs: <BN7PR08MB5540AC187991CFD8F9800CE6DB890@BN7PR08MB5540.namprd08.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 0dfee997-43f1-4b70-bae2-08d73d1c5f3a
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR04MB3782;
+x-ms-traffictypediagnostic: BYAPR04MB3782:
 x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:2887;
+x-microsoft-antispam-prvs: <BYAPR04MB3782487E420F89E8107CE7A1E7890@BYAPR04MB3782.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
 x-forefront-prvs: 016572D96D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(396003)(366004)(346002)(39860400002)(136003)(376002)(199004)(189003)(7696005)(71200400001)(81156014)(81166006)(74316002)(6436002)(7416002)(71190400001)(8676002)(6506007)(6116002)(102836004)(2906002)(3846002)(26005)(55236004)(186003)(558084003)(486006)(76176011)(2501003)(305945005)(229853002)(14454004)(11346002)(54906003)(6246003)(4326008)(476003)(256004)(66946007)(66556008)(66446008)(76116006)(33656002)(316002)(64756008)(9686003)(2201001)(52536014)(110136005)(7736002)(86362001)(66476007)(446003)(55016002)(8936002)(5660300002)(66066001)(478600001)(25786009)(99286004);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB5540;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(39860400002)(376002)(346002)(366004)(396003)(189003)(51914003)(199004)(33656002)(81166006)(81156014)(6246003)(486006)(8676002)(71190400001)(71200400001)(55016002)(14444005)(256004)(9686003)(26005)(4326008)(76116006)(66066001)(91956017)(2906002)(446003)(66446008)(66946007)(64756008)(66556008)(66476007)(186003)(8936002)(476003)(14454004)(316002)(7736002)(6116002)(25786009)(102836004)(6436002)(99286004)(3846002)(86362001)(229853002)(6506007)(110136005)(54906003)(74316002)(7416002)(305945005)(53546011)(7696005)(5660300002)(76176011)(478600001)(52536014);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB3782;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 8k2U69pMVV75B70gvmmlVo09GzqGOVhjMdWBs37k5ushXN3SXVxEC1EaCr7WMx6rFHXCvmRV7zKKLBPeCfCLgzMASu4jwETyLV0z7zi3QgZpSMMqUXQAjI6/1jNlVQkLGvU4iOxv8ewGDCaf+M3fSekn0ZnqLCiXekC/vfp1/BlnlqGzTnfzcei3yfn8f7cTmxrdgpLsSgF2TGP3KFRNz5+4vXdJTWz+h89urN/KrCDRy4zpm01Pkx0xx1lL5nN6KxwB48aYJ2NHV6fqRhH65gCP+8IIh517igY9GUaCiktRLJ45yyAWXlWrknu6O+G3EdpGB7fVfgFulURCYTkRMtAoSHukYvB2OSsrwNiCn1A4xTDjV7df9Q+22bsK942dbrRZi4tGLP0NNSJUQbmp46+2wGqWDvqLsBXoenasGgU=
+x-microsoft-antispam-message-info: U24iuwNcjGupPiMf/95Vz1Ynq4ZhFSXW4bJv37NgEo/RaQ+W0IZXR2nIe0pgN3egTqP8adHDYrZNqFx6oJLTdvqBrU9nyZ0le1CF6MQDN0eWNS0jD2/sIeGnWM/uOPTk0FkK+xNmkmFhkRO2aDCtGIoNG3qTySTZNlETPezH+Mb5jxBrJBlEvAZafcfelMbUV7Dtp4WIcb/6IpKVsBD6ba0vWVIsBMzcUsgTRAzgLB0rfmFTT846eZ9u7suI4bXJWrDqEwG+09VaBHOi5isqLCCiLxaNV+VfZZndFMvAZK6PGsJsP41gkLuVEfalS/E6LtP6QLjSIjfSuqLWU/FbArUFIlVfguexhMydEvks6A787mogXCUJ5rGpUXmhEw907P43lwbOBeajzLEUFSGQvMvymh8R1IHpnj4NbgkK1h0=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4d9084bf-ab6e-4abe-4c23-08d73d18e776
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 15:49:06.6424
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0dfee997-43f1-4b70-bae2-08d73d1c5f3a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 16:13:56.0698
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: epgbumimcOIeL1tT6Vw1uPvQK6Z2iRncx23AznirCe1cl8adOB2XBTn/p+aR3qxnDcaG1YV8zVkcRAX1ubxBxA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB5540
+X-MS-Exchange-CrossTenant-userprincipalname: ujvP631waIKtMXAseQTJcYDWEZR7wZAHIW/76C7WIkPHeF7z5GYDYew9evDVJTRoUyYKnNB7lM7LBnQBzZRXiA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB3782
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->To solve this issue, simply add checking to skip shutdown for above kind o=
-f
->situation.
->
->Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
+On 2019/09/19 17:48, Kashyap Desai wrote:=0A=
+>>>> -	} else if (plug && (q->nr_hw_queues =3D=3D 1 || q->mq_ops-=0A=
+>>> commit_rqs)) {=0A=
+>>>> +	} else if (plug && q->mq_ops->commit_rqs) {=0A=
+>>>>  		/*=0A=
+>>>>  		 * Use plugging if we have a ->commit_rqs() hook as well,=0A=
+> as=0A=
+>>>>  		 * we know the driver uses bd->last in a smart fashion.=0A=
+>>>> @@ -2020,9 +2019,6 @@ static blk_qc_t blk_mq_make_request(struct=0A=
+>> request_queue *q, struct bio *bio)=0A=
+>>>>  			blk_mq_try_issue_directly(data.hctx,=0A=
+> same_queue_rq,=0A=
+>>>>  					&cookie);=0A=
+>>>>  		}=0A=
+>>>> -	} else if ((q->nr_hw_queues > 1 && is_sync) || (!q->elevator &&=0A=
+>>>> -			!data.hctx->dispatch_busy)) {=0A=
+>>>> -		blk_mq_try_issue_directly(data.hctx, rq, &cookie);=0A=
+> Hannes -=0A=
+> =0A=
+> Earlier check prior to "commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8"=
+=0A=
+> was only (q->nr_hw_queues > 1 && is_sync).=0A=
+> I am not sure if check of nr_hw_queues are required or not at this place,=
+=0A=
+> but other part of check (!q->elevator && !data.hctx->dispatch_busy) to=0A=
+> qualify for direct dispatch is required for higher performance.=0A=
+> =0A=
+> Recent MegaRaid and MPT HBA Aero series controller is capable of doing=0A=
+> ~3.0 M IOPs and for such high performance using single hardware queue,=0A=
+>  commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8 is very important.=0A=
+=0A=
+Kashyap, Ming,=0A=
+=0A=
+Thanks for the information. We will restore this case.=0A=
+=0A=
+> =0A=
+> Kashyap=0A=
+> =0A=
+> =0A=
+>>>=0A=
+>>> It may be worth mentioning that blk_mq_sched_insert_request() will do=
+=0A=
+>>> a direct insert of the request using __blk_mq_insert_request(). But=0A=
+>>> that insert is slightly different from what=0A=
+>>> blk_mq_try_issue_directly() does with=0A=
+>>> __blk_mq_issue_directly() as the request in that case is passed along=
+=0A=
+>>> to the device using queue->mq_ops->queue_rq() while=0A=
+>>> __blk_mq_insert_request() will put the request in ctx->rq_lists[type].=
+=0A=
+>>>=0A=
+>>> This removes the optimized case !q->elevator &&=0A=
+>>> !data.hctx->dispatch_busy, but I am not sure of the actual performance=
+=0A=
+>>> impact yet. We may want to patch=0A=
+>>> blk_mq_sched_insert_request() to handle that case.=0A=
+>>=0A=
+>> The optimization did improve IOPS of single queue SCSI SSD a lot, see=0A=
+>>=0A=
+>> commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8=0A=
+>> Author: Ming Lei <ming.lei@redhat.com>=0A=
+>> Date:   Tue Jul 10 09:03:31 2018 +0800=0A=
+>>=0A=
+>>     blk-mq: issue directly if hw queue isn't busy in case of 'none'=0A=
+>>=0A=
+>>     In case of 'none' io scheduler, when hw queue isn't busy, it isn't=
+=0A=
+>>     necessary to enqueue request to sw queue and dequeue it from=0A=
+>>     sw queue because request may be submitted to hw queue asap without=
+=0A=
+>>     extra cost, meantime there shouldn't be much request in sw queue,=0A=
+>>     and we don't need to worry about effect on IO merge.=0A=
+>>=0A=
+>>     There are still some single hw queue SCSI HBAs(HPSA, megaraid_sas,=
+=0A=
+> ...)=0A=
+>>     which may connect high performance devices, so 'none' is often=0A=
+> required=0A=
+>>     for obtaining good performance.=0A=
+>>=0A=
+>>     This patch improves IOPS and decreases CPU unilization on=0A=
+> megaraid_sas,=0A=
+>>     per Kashyap's test.=0A=
+>>=0A=
+>>=0A=
+>> Thanks,=0A=
+>> Ming=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
