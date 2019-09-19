@@ -3,130 +3,147 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7A5C4CEC4
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 12:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82B5CC4CECE
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 12:57:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8755521929
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 12:54:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58629218AF
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 12:57:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=lenovonetapp.partner.onmschina.cn header.i=@lenovonetapp.partner.onmschina.cn header.b="gbx2f8Om"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="amfogpvs";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="DvQ2u2Vv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389510AbfISMym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Sep 2019 08:54:42 -0400
-Received: from mail-bjbon0153.outbound.protection.partner.outlook.cn ([42.159.36.153]:50830
-        "EHLO cn01-BJB-obe.outbound.protection.partner.outlook.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2389361AbfISMym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Sep 2019 08:54:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=lenovonetapp.partner.onmschina.cn;
- s=selector1-lenovonetapp-partner-onmschina-cn;
+        id S2388618AbfISM5Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Sep 2019 08:57:16 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:56011 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727980AbfISM5Q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 08:57:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1568897835; x=1600433835;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=POt2XX5Qu6Y7l/GoGnwvu1QXK/TRGL3CIaFKgHE7UWo=;
+  b=amfogpvsUo8q1VPT0sbPyQ87xjrbxKpdlI6u7q/49Ksj6Ogyf30LCMGN
+   SeUyawwx5DB3i0Shj3B819qCUchl2Twpek8mNCq1e8Ccfr3AxTlcu3Fxv
+   RWUaI+OR4rQuLMxHhTjY0QRT6YuKCqQgzz1zkeovez+lzR5ct062OQRRA
+   OP4mt6vu2JldNEUYIvOXWmak/aosOAugZgaKOocFmwCML5AaRKYK1ZcYT
+   afZjQd8xZoijlSsfIBpLZa6Gfu9UIrNNw/5N2Aj5WiUBEjaD43iSBoQIt
+   8DmtIAYphtBI06vUmTW9nz/9ERThzUz1ZJ4/aD/A7SpzQ2TDVxFNESXaI
+   A==;
+IronPort-SDR: FrmAdRGK1CQJTWZzbIpBqQ5DmoaeDngqvJbjfhOqZH0caosdtGItqeo9amWQGGghlgrBcUoE69
+ R2SmS15G+x9Vsb+VFO2muuPDe3quyXhWpgoKpWIkdHuS375UqoBbPxYYJ/n1g1Vq9H/v165AkK
+ Eh4dY6Jz5QJcqeaGRA0Cml+CKzRCfwDM2xRMaDwb4elqoYzkoIQEVFi7oqr6vAci6K8yb1RZ+9
+ Q8UE4vktrpc8qX3KtlUOR1PdBITzOBWv/kdvvxGkbVH8jqdcowV9nqWEY1jzASwqmTMsYLUrrP
+ sdY=
+X-IronPort-AV: E=Sophos;i="5.64,523,1559491200"; 
+   d="scan'208";a="123106568"
+Received: from mail-bn3nam04lp2057.outbound.protection.outlook.com (HELO NAM04-BN3-obe.outbound.protection.outlook.com) ([104.47.46.57])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2019 20:57:14 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=PfnW2QdZ7mGjuU7d6oMybx+ou2hQTkVGGEq/bmYeeRUuq05zVQu+ZofDt3Ib6khMgRbRo++Uv1CHpXWnhcQTnYgsEYahwoHDjAf5W9prdw5Hkb/Ro4tXIbiu45oBMpwa18s7fOE6kWag/+QFi+dntwSXqt0BCjpf5PMexsfHTcYSADbzPGU38alTT20HbLKrQVfmeum/WgAh/3EVFfVZue0UQ8lhOstuz36Sjn4cTxAYGrL3RPk1DgIE6HenN+UirFpVMVt8BRbuSynYTau/zTXt2PBae7+OKlRmcOOcAOkZSmmn5Xa8DUf0YZAh0waUKiFa9Hj5gHNyF/IBifZEjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wQyGL354vsWdn8qjAggm6smVu94Svtic0Y0rEOz8YcI=;
- b=gbx2f8Om1UMd2F7wflbnO8+Lq7ctuUl0ux8/rb0cYyK7S4WcVsAvAj2CiYJzkVsjgN1pWcf1CIpKE8SfHKJ5GQTYTjUoWYdrYt0IcAeyYTrYWYwEy1jE3tm8tFGj77F+ZPl+DVyqYmfcgZ4SK6Sl9GBT8GFlTNGAYPY2m+icwEE=
-Received: from BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn (10.41.52.28) by
- BJXPR01MB120.CHNPR01.prod.partner.outlook.cn (10.41.51.150) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2263.24; Thu, 19 Sep 2019 12:54:36 +0000
-Received: from BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn ([10.41.52.28])
- by BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn ([10.41.52.28]) with mapi id
- 15.20.2263.028; Thu, 19 Sep 2019 12:54:36 +0000
-From:   "Liu, Sunny" <ping.liu@lenovonetapp.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
+ bh=SNMr/eVU3rSND+ZmKRImIDaB0gFlFipMpD37suJ/xI4=;
+ b=ZuiQjxBvrtUK+qVnhxY3F0+wVESNG9637aTiG+GaWCMyl4jGr5MZouWDYsg7AJQ2lP+xUj5CFgr9E4yIu2c1xS39W6o5f+DPZBk3cJY9/CQ4CqEu3w5qT96a+SllE9Q6JbYW8X0Fe1fCS8PIxtELQriKHkLhCLnVFKtuRo/YzrsiA14DjNRb0sSefhRZCFbnjMcCUpT24q4eZkU+xyQMkdM/4S3GtDGnvL76V+ns7FBundc2SsdkjtAAFxrL1pPxxbOqTItZL54wD5eTJTZqztNgKhjJDbC9MOo0slMazpvV+PpZi4CYPfXssUXhOFy0vvidDcJ+sqUgQoKHj0GjYA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=SNMr/eVU3rSND+ZmKRImIDaB0gFlFipMpD37suJ/xI4=;
+ b=DvQ2u2VvLg02rm3Rv3I8DeyicqsBF1cizM9YBOCyac41st3CC6GQQdXrX6fQK/67OaH0N9+9IWhBLN/9NDzH/lWPKNgkgn+pIfYmIdn07ob3M1ZI3nGs2tyv+jplsfP4cG1d1ASQnfS9Yi+wUqYg1EgqW8WX6YXU3pbLuOtauzw=
+Received: from SN6PR04MB3886.namprd04.prod.outlook.com (52.135.81.151) by
+ SN6PR04MB5455.namprd04.prod.outlook.com (20.177.254.23) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2263.21; Thu, 19 Sep 2019 12:57:09 +0000
+Received: from SN6PR04MB3886.namprd04.prod.outlook.com
+ ([fe80::b869:4231:8ab3:24bc]) by SN6PR04MB3886.namprd04.prod.outlook.com
+ ([fe80::b869:4231:8ab3:24bc%6]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
+ 12:57:09 +0000
+From:   Hans Holmberg <Hans.Holmberg@wdc.com>
+To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>
-Subject: RE: [RFC PATCH 0/2] blk-mq I/O scheduling fixes
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: Re: [RFC PATCH 0/2] blk-mq I/O scheduling fixes
 Thread-Topic: [RFC PATCH 0/2] blk-mq I/O scheduling fixes
-Thread-Index: AQHVbtGFuMDJ5zGly0SY3b+3bKFWXacy8wGQ
-Date:   Thu, 19 Sep 2019 12:54:36 +0000
-Message-ID: <BJXPR01MB02962BBB166016D8B1FB28B4F4890@BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn>
+Thread-Index: AQHVbum/gL9AYsauPEqAkOhCDfLySQ==
+Date:   Thu, 19 Sep 2019 12:57:09 +0000
+Message-ID: <SN6PR04MB3886E534864F4909E690672BEB890@SN6PR04MB3886.namprd04.prod.outlook.com>
 References: <20190919094547.67194-1-hare@suse.de>
- <BJXPR01MB02964BA1F5E67B7B6CB39EE7F4890@BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn>
- <BYAPR04MB581634BD1F85CA9768AC780FE7890@BYAPR04MB5816.namprd04.prod.outlook.com>
- <BJXPR01MB0296594F3E478B5BFD4DA2ABF4890@BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn>
- <BYAPR04MB5816266B5EEBA1E800E73116E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
-In-Reply-To: <BYAPR04MB5816266B5EEBA1E800E73116E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
-Accept-Language: zh-CN, en-US
+Accept-Language: en-GB, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=ping.liu@lenovonetapp.com; 
-x-originating-ip: [36.112.23.34]
+ smtp.mailfrom=Hans.Holmberg@wdc.com; 
+x-originating-ip: [85.230.191.167]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9921eaa5-81a7-488d-580e-08d73d0086f6
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(4600270)(4652040)(97021020)(8989299)(711020)(4605104)(1401327)(97022020)(4603075)(4627221)(201702281549075)(8990200)(7048125)(7024125)(7027125)(7023125)(4601075);SRVR:BJXPR01MB120;
-x-ms-traffictypediagnostic: BJXPR01MB120:
-x-microsoft-antispam-prvs: <BJXPR01MB120B987EFF57E867C06C263F4890@BJXPR01MB120.CHNPR01.prod.partner.outlook.cn>
-x-forefront-prvs: 016572D96D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(376002)(366004)(346002)(39850400004)(199004)(189003)(328002)(329002)(13464003)(5660300002)(54906003)(478600001)(6246003)(95416001)(8676002)(7696005)(86362001)(53546011)(229853002)(26005)(55016002)(9686003)(6116002)(102836004)(2906002)(305945005)(486006)(14454004)(446003)(76176011)(66066001)(63696004)(4326008)(186003)(76116006)(66556008)(33656002)(71190400001)(71200400001)(3846002)(66476007)(11346002)(110136005)(64756008)(66946007)(66446008)(476003)(81156014)(7736002)(316002)(8936002);DIR:OUT;SFP:1102;SCL:1;SRVR:BJXPR01MB120;H:BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: lenovonetapp.com does not
- designate permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: t4LS8v1p+JV+gXz0UKuZfGbrfliQgeEDjKxDtKJvVDkqO/w9dZZXgG/ZMzM3cvgBCMkOWd/izydxo7AjdPOUko5Y+uk5uP6DfBn7jqtvYPeYHtBZ2Xi6lR7fp5xi7WTFTp0IPVRlr8iu1uOlimpVJnWRodlk21xU0ht6zJo4BVVGkRDekcnO+kqBsAI/7wskzsrj1mipJYa8mbO6p3fgDzdV3+zBgyhWb3IJWwbE4VjLQ1B3FGGKDyRK7c1u0fjtBT0XiKQ5jkdfe1wdQklsn8xDoqCT1AYbPZzPS3H3mppamg/R60PVaVRgffcKVL41HLZm13DoX1is6/WzL2P4hVeT4HYgwb8z0oYpsPcsHtzo6zHSX6A6zs+MtYLvpPosypOaBduORwKg5s+hqcZv39eFpt8l0rvYuN/7rjZ3dxk=
+x-ms-office365-filtering-correlation-id: a0084802-4b1d-4e72-89f7-08d73d00e216
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600167)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:SN6PR04MB5455;
+x-ms-traffictypediagnostic: SN6PR04MB5455:
 x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+x-microsoft-antispam-prvs: <SN6PR04MB5455721E33A0C22DF52E6DC0EB890@SN6PR04MB5455.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 016572D96D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(346002)(366004)(136003)(376002)(39860400002)(199004)(189003)(53754006)(66446008)(6246003)(91956017)(4744005)(6116002)(14444005)(76116006)(33656002)(186003)(316002)(3846002)(66066001)(66946007)(4326008)(305945005)(66476007)(8676002)(55016002)(9686003)(64756008)(5660300002)(2906002)(7696005)(7736002)(86362001)(81166006)(25786009)(81156014)(6436002)(76176011)(229853002)(66556008)(71190400001)(74316002)(71200400001)(476003)(446003)(486006)(478600001)(53546011)(54906003)(6506007)(110136005)(99286004)(52536014)(256004)(26005)(102836004)(14454004)(8936002);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB5455;H:SN6PR04MB3886.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: o6UfzVQZ0OkKR/2BcX8ccx0mkxQxbwnR11qMcSnuCcqaGTl/Mpzwh2psBoSmYTyRfsJtvmZl518P7M166gLFZ0z20eayVj37c982JrFynAb1lh1ezigCv/+ttvDwYzQAnWcvhVe5OHfdjSC0/Qc3ZThnwq1gZ1p0i59IZO8evGhGbqrQFFaoSj5lXts+BWDL7ldRsMztiFtdeq6E0R95KkTGTuPjsDrApisYpAt1zwQYpd4SxJkFkssb5wn/fOMoWgO37hfnndrMKy6vG+C/MaI0AfWkbkKk1ID/E+SVr/kOOeY+GHWQSxMrf3pZPuTdynpiD4akkrDvnJ8i2Y+0KnU43zTk4m31DLAoEkFDUtImksap0pipjYx6oPzc+lk59c7r5GkyFskfVOfFyveo4RlK9G47YN5FKX02VdJEwYo=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: lenovonetapp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9921eaa5-81a7-488d-580e-08d73d0086f6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 12:54:36.7931
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a0084802-4b1d-4e72-89f7-08d73d00e216
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 12:57:09.7657
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 927e186b-5306-4888-8faf-367d5292e481
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: +81N23AupJkpNzApfW8v7NDYsvyi5kDW7F/hzZWLB0PfYiq2565vwp+BA7UZYh1XFUIawJE9o+ujZKkzSL2OIvmfSltvgho4om/+eDPf3pg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BJXPR01MB120
+X-MS-Exchange-CrossTenant-userprincipalname: 657SVMb37saSt9N3w6O+WA9lzSNFaURHbM2I+AwJ+5IyY3xSAugDVTCg1l63xh2sVcY4zOl7ntLelBaNngHSZw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB5455
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-U2lyLA0KDQpUaGUgSEREIGlzIGhhcmR3YXJlIFJhaWQgNSB3aXRoIDUzMC04aSByYWlkIGNhcmQu
-DQpJIHRyaWVkIDFtIHNlcSB3cml0ZSB3aXRoIG51bWpvYnM9MSwgdGhlIGRhdGEgc2ltaWxhciBh
-cyBrZXJuZWwgMy4xMC4wLCB3aGF0ZXZlciBtcS1kZWFkbGluZSBvciBCRlEgZWxldmF0b3IuDQpJ
-ZiB5b3UgbmVlZCBkZXRhaWwgdGVzdGluZyBkYXRhIHdpdGggbnVtam9icz0xLCBJIGNhbiBkbyBp
-dC4gT3IgYW55IGluZm8geW91IG5lZWQsIHN1Y2ggYXMgdHdvIHByb2Nlc3Mgd2l0aCAxIHRocmVh
-ZC4NCg0KVGhhbmsgeW91Lg0KDQpCZXN0UmVnYXJkcywNClN1bm55TGl1KMH1xrwpDQpMZW5vdm9O
-ZXRBcHAgDQqxsb6pytC6o7Xtx/jO97Gxzfq2q8K3MTC6xdS6MrrFwqVMMy1FMS0wMQ0KTDMtRTEt
-MDEsQnVpbGRpbmcgTm8uMiwgTGVub3ZvIEhRIFdlc3QgTm8uMTAgWGlCZWlXYW5nIEVhc3QgUmQu
-LA0KSGFpZGlhbiBEaXN0cmljdCwgQmVpamluZyAxMDAwOTQsIFBSQw0KVGVsOiArODYgMTU5MTA2
-MjIzNjgNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LWJsb2NrLW93
-bmVyQHZnZXIua2VybmVsLm9yZyA8bGludXgtYmxvY2stb3duZXJAdmdlci5rZXJuZWwub3JnPiBP
-biBCZWhhbGYgT2YgRGFtaWVuIExlIE1vYWwNClNlbnQ6IDIwMTnE6jnUwjE5yNUgMjA6NDUNClRv
-OiBMaXUsIFN1bm55IDxwaW5nLmxpdUBsZW5vdm9uZXRhcHAuY29tPjsgSGFubmVzIFJlaW5lY2tl
-IDxoYXJlQHN1c2UuZGU+OyBKZW5zIEF4Ym9lIDxheGJvZUBrZXJuZWwuZGs+DQpDYzogbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFydGluLnBldGVyc2Vu
-QG9yYWNsZS5jb20+OyBKYW1lcyBCb3R0b21sZXkgPGphbWVzLmJvdHRvbWxleUBoYW5zZW5wYXJ0
-bmVyc2hpcC5jb20+OyBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT47IGxpbnV4LWJsb2Nr
-QHZnZXIua2VybmVsLm9yZzsgSGFucyBIb2xtYmVyZyA8SGFucy5Ib2xtYmVyZ0B3ZGMuY29tPg0K
-U3ViamVjdDogUmU6IFtSRkMgUEFUQ0ggMC8yXSBibGstbXEgSS9PIHNjaGVkdWxpbmcgZml4ZXMN
-Cg0KT24gMjAxOS8wOS8xOSAxMjo1OSwgTGl1LCBTdW5ueSB3cm90ZToNCj4gVGhhbmsgdmVyeSBt
-dWNoIGZvciB5b3VyIHF1aWNrbHkgYWR2aWNlLg0KPiANCj4gVGhlIHByb2JsZW0gZHJpdmUgaXMg
-c2F0YSBIREQgNzIwMHJwbSBpbiByYWlkIDUuDQoNClNvcnJ5LCBJIHJlYWQgIlNERCIgd2hlcmUg
-eW91IGhhZCB3cml0dGVuICJIREQiIDopIElzIHRoaXMgYSBoYXJkd2FyZSBSQUlEID8gT3IgaXMg
-dGhpcyB1c2luZyBkbS9tZCByYWlkID8NCg0KPiBJZiB1c2luZyBGaW8gbGliYWlvIGlvZGVwdGg9
-MTI4IG51bWpvYj0yLCB0aGUgYmFkIHBlcmZvcm1hbmNlIHdpbGwgYmUgDQo+IGFzIGJlbG93IGlu
-IHJlZC4gQnV0IHRoZXJlIGlzIG5vIHByb2JsZW0gd2l0aCBudW1qb2I9MS4gSW4gb3VyIA0KPiBz
-b2x1dGlvbiwgKm11bHRpcGxlDQo+IHRocmVhZHMqIHNob3VsZCBiZSB1c2VkLg0KDQpZb3VyIGRh
-dGEgZG9lcyBub3QgaGF2ZSB0aGUgbnVtam9icz0xIGNhc2UgZm9yIGtlcm5lbCA1LjIuOS4gWW91
-IHNob3VsZCBydW4gdGhhdCBmb3IgY29tcGFyaXNvbiB3aXRoIHRoZSBudW1qb2JzPTIgY2FzZSBv
-biB0aGUgc2FtZSBrZXJuZWwuDQoNCj4gRnJvbSB0aGUgdGVzdGluZyByZXN1bHQsIEJGUSBsb3ct
-bGF0ZW5jeSBoYWQgZ29vZCBwZXJmb3JtYW5jZSwgYnV0IGl0IA0KPiBzdGlsbCBoYXMgcHJvYmxl
-bSBpbiAxbSBzZXEgd3JpdGUuDQo+IA0KPiBUaGUgZGF0YSBpcyBjb21lIGZyb20gY2VudG9zIDcu
-NiAoa2VybmVsIDMuMTAuMC05NzUpIGFuZCBrZXJuZWwgNS4yLjkgDQo+IHdpdGggQkZRIGFuZCBi
-Y2FjaGUgZW5hYmxlZC4gTm8gYmNhY2hlIGNvbmZpZ3VyZS4NCj4gDQo+IElzIHRoZXJlIGFueSBw
-YXJhbWV0ZXIgY2FuIHNvbHZlIHRoZSAxbSBhbmQgdXBwZXIgc2VxIHdyaXRlIHByb2JsZW0gDQo+
-IHdpdGggbXVsdGlwbGUgdGhyZWFkcz8NCg0KTm90IHN1cmUgd2hhdCB0aGUgcHJvYmxlbSBpcyBo
-ZXJlLiBZb3UgY291bGQgbG9vayBhdCBhIGJsa3RyYWNlIG9mIGVhY2ggY2FzZSB0byBzZWUgaWYg
-dGhlcmUgaXMgYW55IG1ham9yIGRpZmZlcmVuY2UgaW4gdGhlIGNvbW1hbmQgcGF0dGVybnMgc2Vu
-dCB0byB0aGUgZGlza3Mgb2YgeW91ciBhcnJheSwgaW4gcGFydGljdWxhciBjb21tYW5kIHNpemUu
-DQoNCi0tDQpEYW1pZW4gTGUgTW9hbA0KV2VzdGVybiBEaWdpdGFsIFJlc2VhcmNoDQo=
+On 2019-09-19 11:45, Hannes Reinecke wrote:=0A=
+> Hi all,=0A=
+> =0A=
+> Damien pointed out that there are some areas in the blk-mq I/O=0A=
+> scheduling algorithm which have a distinct legacy feel to it,=0A=
+> and prohibit multiqueue I/O schedulers from working properly.=0A=
+> These two patches should clear up this situation, but as it's=0A=
+> not quite clear what the original intention of the code was=0A=
+> I'll be posting them as an RFC.=0A=
+> =0A=
+> So as usual, comments and reviews are welcome.=0A=
+> =0A=
+> Hannes Reinecke (2):=0A=
+>    blk-mq: fixup request re-insert in blk_mq_try_issue_list_directly()=0A=
+>    blk-mq: always call into the scheduler in blk_mq_make_request()=0A=
+> =0A=
+>   block/blk-mq.c | 9 ++-------=0A=
+>   1 file changed, 2 insertions(+), 7 deletions(-)=0A=
+> =0A=
+=0A=
+I tested this patch set in qemu and confirmed that write locking for ZBD =
+=0A=
+now works again.=0A=
+=0A=
+The bypass of the scheduler(in case (q->nr_hw_queues > 1 && is_sync) is =0A=
+the culprit, and with this removed, we're good again for zoned block =0A=
+devices.=0A=
+=0A=
+Cheers,=0A=
+Hans=0A=
