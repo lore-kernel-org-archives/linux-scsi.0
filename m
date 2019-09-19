@@ -2,194 +2,127 @@ Return-Path: <SRS0=4FRQ=XO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61654C49ED7
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 10:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21A9AC3A5A6
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 10:32:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37BEF21907
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 10:22:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAD27207FC
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 10:32:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OokzBXbn";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="mbwNMkPL"
+	dkim=pass (1024-bit key) header.d=lenovonetapp.partner.onmschina.cn header.i=@lenovonetapp.partner.onmschina.cn header.b="JqU+qHay"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388940AbfISKV7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Sep 2019 06:21:59 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:45009 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388742AbfISKV7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 06:21:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1568888518; x=1600424518;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=deV528byAINl2K68ZSD8ncC44+0XeLDJ2+y/QLx91ZM=;
-  b=OokzBXbni7ynhGJ+MVc0bR/UECOE1/dHQk7oMyQhuMMyjdD1pD4/HDug
-   LGsQdamJTXm4dML3RF3MnOApbLhj16duyeISjt4yQyL+yM2tdX3AXcz6r
-   P3dpiF213l4g0pM/exDG0v/b8zlQJSsBC847cFDBPrpJ0yiHYkdAiUwRx
-   xuX0dS4QkV/BqfxTmKlePl+LxjvEUBiyJOOu02uMsTTR56bXppcLvDnXb
-   InjzAKnqCddgXOcnLLq2ACRh+7FJ6QojJD9rbptr5MEmfwV8fGNSLEOaB
-   j1KBDEL8A5Jhp6cBfqDBGsR+UGv3VNXRT0kgBUI1Gu/uy8a7UJ03NB4Fe
-   w==;
-IronPort-SDR: NHdeY8gq3m6jdlzyD8V8R8wtutMfK6y7/sWqsgn+XbVZUC3Y+sXNAYNi1GzrFiB+JpLWc3ijO3
- EW2v1yRqb0NLnenA4BAiksIj9H+woiprQt9Hp2vE1y0qoatCoSxwhijJm62+491TxOEliyXvoA
- kGgugDajEk7qa05hcBYYMLNzQ3dCc3PVSGqCI/HvzqfROpjBOmmAd1BLvW0PCIR8bUosdQD1Xg
- KthORkD+MIOA1l6p3hMTMczkMRnQvfcDgou2HgtUgtz+gFd4VkFxIYducbQSXBVVXdXzkJuocT
- Wcg=
-X-IronPort-AV: E=Sophos;i="5.64,523,1559491200"; 
-   d="scan'208";a="119437310"
-Received: from mail-co1nam03lp2056.outbound.protection.outlook.com (HELO NAM03-CO1-obe.outbound.protection.outlook.com) ([104.47.40.56])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Sep 2019 18:21:57 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OLSqmRA2LnBZHjQQc25AIbyJzl0u1qhr5OBI5dF8mUkF9/Ol9uR3UgboSqH4upeWRviVjuMZFYyKgxfNXQdM9rKT9D2MIS9nJwPHJOxaZFA5v2t5/ryCbEdYU3n+RRLcmQ03U/JDgVTmqwEymMHvjTuugSGYNhLjl2FiS0qK8VIk+mAgXJMZLzG4rWgVXc9kOkpVDr8te7Srm93k5JrnwFemnvRCGaey7TExtG4nncZQhbkMf06xowQwHlGOHe40+oGfzJiMfx+YQr1/X2O4uAOQhG3AP+QWmEZky1Zyy/qJcqcDpEOi7zkIUhY4mMHDUEni/l47VKesAVlPdD7yCw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=b/lBDu5kQpITmrR5c//+vxicNV0IOhKXURNC5DtQLVk=;
- b=Q5xPb2KmP20jkvcbbzru66wt8qvKrHm/ANd5iyQy4JI28fvYmlNLCCyUtAxBjzbrEnN9J3xnnrbacIroWPTW+gN/pGvBakq4nsrk18JWb/9BU8NmjXJ5Y5Uaf5P1VelasUMGEPRgDL9xyfJWBY3dFxyw24FVLOc+UJW5lGoKVlNduYXyPZb7JNYl1BK8LDb9cQfIL2y0tXUx5FgfZQZj3b39IVYuhxm8X1hhRRBuXNJ9S6pwo0xNewZoVExVreL6qEbADitkv1uZB77CF5VbyM1CP5DwDq7R/OzFnUpEl0ojxqrvIaNZLHJ9ebqOdkc5VxWDmY3dwO2MW7p22yhtWw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1732030AbfISKcX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Sep 2019 06:32:23 -0400
+Received: from mail-bjbon0143.outbound.protection.partner.outlook.cn ([42.159.36.143]:29578
+        "EHLO cn01-BJB-obe.outbound.protection.partner.outlook.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728519AbfISKcX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Sep 2019 06:32:23 -0400
+X-Greylist: delayed 1092 seconds by postgrey-1.27 at vger.kernel.org; Thu, 19 Sep 2019 06:29:18 EDT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ d=lenovonetapp.partner.onmschina.cn;
+ s=selector1-lenovonetapp-partner-onmschina-cn;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=b/lBDu5kQpITmrR5c//+vxicNV0IOhKXURNC5DtQLVk=;
- b=mbwNMkPLgFFqR1sPj9Ctu2U/59JA0FzFCDFmvy38R7/EqGxSZFi0QAy+jEI8OVIuvyJG3OXv+JJSWvxelRLG/SmhuYzr93aYtwp022+WDyu41KwDT4S7Q3A4y5M2zSblAKYDGlHD8Ip/L+lXv0BEAdJh3/hL0+zZbKK9vXS8PiE=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4486.namprd04.prod.outlook.com (52.135.237.223) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2284.20; Thu, 19 Sep 2019 10:21:54 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117%3]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
- 10:21:54 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+ bh=0A8hvNDeZiTleZ0B0ViIDEkC4Ms72QO9EnNn5b8wMI0=;
+ b=JqU+qHay12Ung8x0ELxIE/N+5PvGTrYJhTfg/Fg+7sJMUwXucSXx0qD2HO4AsBNrWBAZeCUG19q9zDA0cPpTAlUUmQq98g6+aqvlDRk0YXhL1vTCIBDIWlUIkm0W5H+j7SKSPvvb8EdrGvITwqUSZkfDsI/k7m0mFC06LZ/HryU=
+Received: from BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn (10.41.52.28) by
+ BJXPR01MB165.CHNPR01.prod.partner.outlook.cn (10.41.52.15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2263.17; Thu, 19 Sep 2019 09:56:45 +0000
+Received: from BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn ([10.41.52.28])
+ by BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn ([10.41.52.28]) with mapi id
+ 15.20.2263.028; Thu, 19 Sep 2019 09:56:45 +0000
+From:   "Liu, Sunny" <ping.liu@lenovonetapp.com>
 To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 2/2] blk-mq: always call into the scheduler in
- blk_mq_make_request()
-Thread-Topic: [PATCH 2/2] blk-mq: always call into the scheduler in
- blk_mq_make_request()
-Thread-Index: AQHVbs8K3cwX+YB3YkG6oq7+AYxM/w==
-Date:   Thu, 19 Sep 2019 10:21:54 +0000
-Message-ID: <BYAPR04MB5816F1F98D8F408D23C1AF47E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+        Hans Holmberg <hans.holmberg@wdc.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>
+Subject: RE: [RFC PATCH 0/2]  blk-mq I/O scheduling fixes
+Thread-Topic: [RFC PATCH 0/2]  blk-mq I/O scheduling fixes
+Thread-Index: AQHVbs8LyY2G9x3K8EyyFDHixOiOBKcywVSA
+Date:   Thu, 19 Sep 2019 09:56:45 +0000
+Message-ID: <BJXPR01MB02964BA1F5E67B7B6CB39EE7F4890@BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn>
 References: <20190919094547.67194-1-hare@suse.de>
- <20190919094547.67194-3-hare@suse.de>
-Accept-Language: en-US
+In-Reply-To: <20190919094547.67194-1-hare@suse.de>
+Accept-Language: zh-CN, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [193.86.95.52]
+ smtp.mailfrom=ping.liu@lenovonetapp.com; 
+x-originating-ip: [36.112.23.34]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4a25a270-e152-4e4c-8d47-08d73ceb31ae
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600167)(711020)(4605104)(1401327)(4618075)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:BYAPR04MB4486;
-x-ms-traffictypediagnostic: BYAPR04MB4486:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB44865859DDAC0A4DBCA6B03FE7890@BYAPR04MB4486.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3513;
+x-ms-office365-filtering-correlation-id: da9285b2-e192-4137-1dab-08d73ce7ae22
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(4600270)(4652040)(97021020)(8989299)(711020)(4605104)(1401327)(97022020)(4603075)(4627221)(201702281549075)(8990200)(7048125)(7024125)(7027125)(7023125)(4601075);SRVR:BJXPR01MB165;
+x-ms-traffictypediagnostic: BJXPR01MB165:
+x-microsoft-antispam-prvs: <BJXPR01MB165B0711860E5424BAB610BF4890@BJXPR01MB165.CHNPR01.prod.partner.outlook.cn>
 x-forefront-prvs: 016572D96D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(396003)(376002)(136003)(346002)(366004)(199004)(189003)(7736002)(74316002)(55016002)(9686003)(25786009)(305945005)(6506007)(66946007)(53546011)(55236004)(76176011)(66476007)(66556008)(102836004)(66446008)(64756008)(2906002)(256004)(99286004)(14444005)(5024004)(7696005)(76116006)(91956017)(3846002)(446003)(14454004)(6246003)(476003)(478600001)(486006)(86362001)(5660300002)(186003)(26005)(6116002)(71190400001)(6436002)(8936002)(66066001)(71200400001)(54906003)(110136005)(33656002)(316002)(81166006)(229853002)(4326008)(81156014)(52536014)(8676002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4486;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(376002)(39850400004)(396003)(366004)(346002)(53754006)(328002)(329002)(13464003)(199004)(189003)(76176011)(11346002)(446003)(486006)(59450400001)(6116002)(3846002)(476003)(26005)(102836004)(95416001)(4326008)(66066001)(53546011)(7696005)(55016002)(9686003)(6246003)(86362001)(33656002)(76116006)(54906003)(66556008)(66476007)(71190400001)(71200400001)(478600001)(8676002)(81156014)(316002)(5660300002)(110136005)(305945005)(8936002)(186003)(229853002)(2906002)(7736002)(14454004)(66946007)(63696004)(66446008)(64756008);DIR:OUT;SFP:1102;SCL:1;SRVR:BJXPR01MB165;H:BJXPR01MB0296.CHNPR01.prod.partner.outlook.cn;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: lenovonetapp.com does not
+ designate permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: IC0oFMiYyMEtzddK1d2kGV4tIZWFkEvLyO1MaHxEBRk3Dty/mwAj2K/4MgdQ+gZCJ4jMqMBE3IgKep4y9RHBETfZCg0iPs7tyT480pP488Vxqw2fv4c6ntaJo263OCc0NLk0cgP8IcKw093iU3bN3xLpbnlIcJ6Kel3tKcrsDPUaB8vMMZAGUAN6iKD+DN1dp/ttVitwigeCRBp3JkEMrH9OoxwmUyCHBz0nfkbkr9HZMw5wRHjOnj+fenwvjdcxomMUhMvOJR4eBAYmEebSUGjOV/QjFBuzNkjXCUbddK84JAPGy/Y4QSydM1CMvlhV7yhkLe5lN5ZRdItQQIqbIO9jm7UYC0b+NhVr9+MIceRhVPy09QSXDoQx0A9dtk4ivuPWFF+ayavlJY5xkQiSB+oAHihBuRnuiW3KnRgZ10I=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+x-microsoft-antispam-message-info: LNz3PO0/bKPSW//H3PjYj/KBJU1aBchpjh+xsQ1jg7wmYT9M8gOVd0na9XN9NgZsogW54KO0d1iSbNXdESXsgJ5OMWKMaMj268/l2ECbeLxqIaZoiPwTzUGAoaIxnpZEJN+8mUiem2lYvQCZzdA4qUmnXPiguB1dsDv2bqq1nF/etOQegMVt32YELB60qe8WSFNYKSxpTAybTxfUrHuCWuG61Pr91/paDORcTJMWY6k0zB3rVGGkW2zr4LKTWanDnRTknt6Dfk4PZncVijKOcgDdXl566mUql1bUotIcVInbvnD2SYuJ3pTeQDxv0mMICK/uzbOwT2VwyvIrbUH/K1CfhtsdcSVl3bRowkCVkN/GHL2DtkHsg0ruOiGwMzpsu8lMEVPQE0xRSujdXcUu1Ci5+VBzd2tLtnpypdBMVAA=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4a25a270-e152-4e4c-8d47-08d73ceb31ae
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 10:21:54.4318
+X-OriginatorOrg: lenovonetapp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: da9285b2-e192-4137-1dab-08d73ce7ae22
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 09:56:45.2228
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: 927e186b-5306-4888-8faf-367d5292e481
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: s3oY9Ozpl34Vfb9pv2vf9mswJtl0DDQgjo+YibrP6vxsVNHr4gK07OQnU+vmH5MhPlQRUrYvLM7Lvlhc26bwYQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4486
+X-MS-Exchange-CrossTenant-userprincipalname: g9nfs7ocOy1PlwgIaqBYs9iXvZmgjLrWMcttHcGF7e06vREIAgP3FaxKTdyLvv+oz4UYTa+MwHgiI23WEojYSWh5uapiCKJAI5GzCSytj4o=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BJXPR01MB165
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019/09/19 11:45, Hannes Reinecke wrote:=0A=
-> From: Hannes Reinecke <hare@suse.com>=0A=
-> =0A=
-> A scheduler might be attached even for devices exposing more than=0A=
-> one hardware queue, so the check for the number of hardware queue=0A=
-> is pointless and should be removed.=0A=
-> =0A=
-> Signed-off-by: Hannes Reinecke <hare@suse.com>=0A=
-> ---=0A=
->  block/blk-mq.c | 6 +-----=0A=
->  1 file changed, 1 insertion(+), 5 deletions(-)=0A=
-> =0A=
-> diff --git a/block/blk-mq.c b/block/blk-mq.c=0A=
-> index 44ff3c1442a4..faab542e4836 100644=0A=
-> --- a/block/blk-mq.c=0A=
-> +++ b/block/blk-mq.c=0A=
-> @@ -1931,7 +1931,6 @@ static void blk_add_rq_to_plug(struct blk_plug *plu=
-g, struct request *rq)=0A=
->  =0A=
->  static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio =
-*bio)=0A=
->  {=0A=
-> -	const int is_sync =3D op_is_sync(bio->bi_opf);=0A=
->  	const int is_flush_fua =3D op_is_flush(bio->bi_opf);=0A=
->  	struct blk_mq_alloc_data data =3D { .flags =3D 0};=0A=
->  	struct request *rq;=0A=
-> @@ -1977,7 +1976,7 @@ static blk_qc_t blk_mq_make_request(struct request_=
-queue *q, struct bio *bio)=0A=
->  		/* bypass scheduler for flush rq */=0A=
->  		blk_insert_flush(rq);=0A=
->  		blk_mq_run_hw_queue(data.hctx, true);=0A=
-> -	} else if (plug && (q->nr_hw_queues =3D=3D 1 || q->mq_ops->commit_rqs))=
- {=0A=
-> +	} else if (plug && q->mq_ops->commit_rqs) {=0A=
->  		/*=0A=
->  		 * Use plugging if we have a ->commit_rqs() hook as well, as=0A=
->  		 * we know the driver uses bd->last in a smart fashion.=0A=
-> @@ -2020,9 +2019,6 @@ static blk_qc_t blk_mq_make_request(struct request_=
-queue *q, struct bio *bio)=0A=
->  			blk_mq_try_issue_directly(data.hctx, same_queue_rq,=0A=
->  					&cookie);=0A=
->  		}=0A=
-> -	} else if ((q->nr_hw_queues > 1 && is_sync) || (!q->elevator &&=0A=
-> -			!data.hctx->dispatch_busy)) {=0A=
-> -		blk_mq_try_issue_directly(data.hctx, rq, &cookie);=0A=
-=0A=
-It may be worth mentioning that blk_mq_sched_insert_request() will do a dir=
-ect=0A=
-insert of the request using __blk_mq_insert_request(). But that insert is=
-=0A=
-slightly different from what blk_mq_try_issue_directly() does with=0A=
-__blk_mq_issue_directly() as the request in that case is passed along to th=
-e=0A=
-device using queue->mq_ops->queue_rq() while __blk_mq_insert_request() will=
- put=0A=
-the request in ctx->rq_lists[type].=0A=
-=0A=
-This removes the optimized case !q->elevator && !data.hctx->dispatch_busy, =
-but I=0A=
-am not sure of the actual performance impact yet. We may want to patch=0A=
-blk_mq_sched_insert_request() to handle that case.=0A=
-=0A=
->  	} else {=0A=
->  		blk_mq_sched_insert_request(rq, false, true, true);=0A=
->  	}=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+SGVsbG8gU2lyLA0KDQpJIGhhdmUgYSBxdWVzdGlvbiBhYm91dCB0aGUgSS9PIHNjaGVkdWxlciBp
+biBrZXJuZWwgNS4yLjkNCg0KaW4gdGhlIG5ldyBrZXJuZWwsIHdoaWNoIEkvTyBzY2hlZHVsZXIg
+c2hvdWxkIGJlIHVzZWQgYnkgbGVnYWN5IHJvdGF0aW5nIGRyaXZlPyBTdWNoIGFzIHNhdGEgSERE
+Pw0KRHVyaW5nIEZJTyB0ZXN0aW5nIHdpdGggbGliYWlvLCBJIGhhZCBjcmVhdGUgbXVsdGlwbGUg
+dGhyZWFkIGluIHRoZSB0ZXN0aW5nLCBhbmQgdGhlbiBmb3VuZCA1MTJrIGFuZCBiaWdnZXIgc2Vx
+dWVudCB3cml0ZSBoYWQgYmFkIHBlcmZvcm1hbmNlIHJlc3VsdC4gRXZlbiBJIGhhZCBlbmFibGUg
+YW5kIHVzZSBCRlEgc2NoZWR1bGVyLg0KDQpUaGVyZSBoYXMgbm8gc3Egc2NoZWR1bGVyIGFueW1v
+cmUsIG9ubHkgaGFzIG5vbmUsIG1xLWRlYWRsaW5lLCBreWJlciBhbmQgQkZRLg0KTXEtZGVhZGxp
+bmUgYW5kIGt5YmVyIGlzIGZvciBmYXN0IGJsb2NrIGRldmljZS4gT25seSB0aGUgQkZRIGxvb2tz
+IGJldHRlciBwZXJmb3JtYW5jZSwgYnV0IGl0IGNhbid0IGtlZXAgdGhlIGdvb2QgYmVoYXZpb3Ig
+ZHVyaW5nIDUxMmsgb3IgYmlnZ2VyIDEwMCUgc2VxIHdyaXRlLg0KDQpDb3VsZCB5b3UgZ2l2ZSBt
+ZSBzb21lIGFkdmljZXMgd2hhdCBwYXJhbWV0ZXIgc2hvdWxkIEkgY2hhbmdlIGZvciBtdWx0aXBs
+ZSB0aHJlYWQgYmlnZ2VyIGZpbGUgc2VxIHdyaXRpbmc/DQoNClRoYW5rcyBhbGwgb2YgeW91Lg0K
+DQpCZXN0UmVnYXJkcywNClN1bm55TGl1KMH1xrwpDQpMZW5vdm9OZXRBcHAgDQqxsb6pytC6o7Xt
+x/jO97Gxzfq2q8K3MTC6xdS6MrrFwqVMMy1FMS0wMQ0KTDMtRTEtMDEsQnVpbGRpbmcgTm8uMiwg
+TGVub3ZvIEhRIFdlc3QgTm8uMTAgWGlCZWlXYW5nIEVhc3QgUmQuLA0KSGFpZGlhbiBEaXN0cmlj
+dCwgQmVpamluZyAxMDAwOTQsIFBSQw0KVGVsOiArODYgMTU5MTA2MjIzNjgNCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LWJsb2NrLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyA8bGludXgtYmxvY2stb3duZXJAdmdlci5rZXJuZWwub3JnPiBPbiBCZWhhbGYgT2YgSGFubmVz
+IFJlaW5lY2tlDQpTZW50OiAyMDE5xOo51MIxOcjVIDE3OjQ2DQpUbzogSmVucyBBeGJvZSA8YXhi
+b2VAa2VybmVsLmRrPg0KQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBNYXJ0aW4gSy4g
+UGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPjsgSmFtZXMgQm90dG9tbGV5IDxq
+YW1lcy5ib3R0b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tPjsgQ2hyaXN0b3BoIEhlbGx3aWcg
+PGhjaEBsc3QuZGU+OyBsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmc7IEhhbnMgSG9sbWJlcmcg
+PGhhbnMuaG9sbWJlcmdAd2RjLmNvbT47IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2FsQHdk
+Yy5jb20+OyBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4NClN1YmplY3Q6IFtSRkMgUEFU
+Q0ggMC8yXSBibGstbXEgSS9PIHNjaGVkdWxpbmcgZml4ZXMNCg0KSGkgYWxsLA0KDQpEYW1pZW4g
+cG9pbnRlZCBvdXQgdGhhdCB0aGVyZSBhcmUgc29tZSBhcmVhcyBpbiB0aGUgYmxrLW1xIEkvTyBz
+Y2hlZHVsaW5nIGFsZ29yaXRobSB3aGljaCBoYXZlIGEgZGlzdGluY3QgbGVnYWN5IGZlZWwgdG8g
+aXQsIGFuZCBwcm9oaWJpdCBtdWx0aXF1ZXVlIEkvTyBzY2hlZHVsZXJzIGZyb20gd29ya2luZyBw
+cm9wZXJseS4NClRoZXNlIHR3byBwYXRjaGVzIHNob3VsZCBjbGVhciB1cCB0aGlzIHNpdHVhdGlv
+biwgYnV0IGFzIGl0J3Mgbm90IHF1aXRlIGNsZWFyIHdoYXQgdGhlIG9yaWdpbmFsIGludGVudGlv
+biBvZiB0aGUgY29kZSB3YXMgSSdsbCBiZSBwb3N0aW5nIHRoZW0gYXMgYW4gUkZDLg0KDQpTbyBh
+cyB1c3VhbCwgY29tbWVudHMgYW5kIHJldmlld3MgYXJlIHdlbGNvbWUuDQoNCkhhbm5lcyBSZWlu
+ZWNrZSAoMik6DQogIGJsay1tcTogZml4dXAgcmVxdWVzdCByZS1pbnNlcnQgaW4gYmxrX21xX3Ry
+eV9pc3N1ZV9saXN0X2RpcmVjdGx5KCkNCiAgYmxrLW1xOiBhbHdheXMgY2FsbCBpbnRvIHRoZSBz
+Y2hlZHVsZXIgaW4gYmxrX21xX21ha2VfcmVxdWVzdCgpDQoNCiBibG9jay9ibGstbXEuYyB8IDkg
+KystLS0tLS0tDQogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMo
+LSkNCg0KLS0NCjIuMTYuNA0KDQo=
