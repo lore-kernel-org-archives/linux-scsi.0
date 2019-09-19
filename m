@@ -2,115 +2,145 @@ Return-Path: <SRS0=4FRQ=XO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7028C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 14:52:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ECD6C3A5A6
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 15:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C8BC2067B
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 14:52:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3007221848
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Sep 2019 15:48:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="CNZa4G4O"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="H1uh6tTe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390690AbfISOwZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Sep 2019 10:52:25 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:45895 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388551AbfISOwY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 10:52:24 -0400
-Received: by mail-ed1-f68.google.com with SMTP id h33so3430967edh.12
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Sep 2019 07:52:22 -0700 (PDT)
+        id S2391408AbfISPsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Sep 2019 11:48:45 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:36903 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391407AbfISPsp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Sep 2019 11:48:45 -0400
+Received: by mail-io1-f68.google.com with SMTP id b19so8894703iob.4
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Sep 2019 08:48:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=78lFw348P85UPBgL3HJNM7ArrmsbksumtiCiSWqaTR8=;
-        b=CNZa4G4OD6PHbK85JSwKhfnuA2XWsgvhc4wXPVHKgzeWtc4q2VkdhaoKl7xNtbbtzt
-         KAtZbFMVU4xeLOJr2KZinrNcPqsu/0d+YQRAWOgAVCsn7FWShNKeHMNpuL+Oh5nkB+rt
-         NZe23zFSsUorE3TnmyPYGDvIyokUK+O4DMw+Aih/3oqUdETS0z6jIxCyCBPxFgSUs2/y
-         WVdlvCoemycR1qbrjjo3u3vcav0qj9qhZChRq04zrtEQvzJXHl8WNuCT2EQ+n2ben4Hr
-         F4ZWPRJiJGSebAKjW6789jvA2+ubwNegkHPnw/6f3860F+5L9PB2U09qo5MDE9+C8eKn
-         Jaxw==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=sGuJwTkUKZTTIppFydy4dVb0dOofTQ9YNUC+RHizbW4=;
+        b=H1uh6tTeQvcqRMiDMacwkAvJybDmAwzqWhpza18jAgIg5oGePBgBU81TLXMgPleCjc
+         0LUay4sMWS/8zUKWQ0UzLm2vEhMkmSXhWu65U/dDNawYbFnPcgUTBoBpKRQdz0rNem/L
+         GfNyHnzFzR/cx2dbbHoj7s1WOEa4TDTqzd7qc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=78lFw348P85UPBgL3HJNM7ArrmsbksumtiCiSWqaTR8=;
-        b=HSw4K330T0cIAhyf7oY7GxheZql9ufeZfnpR60KrKr6tARu53oFgT2UIGVBQuXeLYq
-         KTKIIxQ151SlzxFTSOkvBbSRvGXtNI3o4pk/AEzKSgqZ9RQJodvQVPyuK/gRZPWi5oTn
-         RegXPM+SByn2F/i8FNo4oXif31uiXIz6pqE8FHVBDvc0YNQ31H8pzsNfajJ1xErGUQdQ
-         bsScZF7Qp06tE6kVhqHS3DNRB892Z7ksGWJxoH/DXFeMNjTeca1g4zyEmOy2GJ5UxiCw
-         MEOH83cMydMujL1Bx/TCHgGLHvDjy1uXhdN6OCNVAokykuMNXwbO8+wWH56jyZpwx1tV
-         3dCA==
-X-Gm-Message-State: APjAAAUCTYp750HM52kAq67Vm0XhD+e0BcVR9xI/srb4yFB8TKvIHVdL
-        3Ax2BMwf6o1Fn+trd8rasRXPuA==
-X-Google-Smtp-Source: APXvYqzSM/CiprUBhOqWB7LRdK9taFV5rRaDvNj1XoDR61PfHV2W/PP9LfEW7kVOxxWOti0tnU8YeQ==
-X-Received: by 2002:aa7:d789:: with SMTP id s9mr16659745edq.62.1568904741577;
-        Thu, 19 Sep 2019 07:52:21 -0700 (PDT)
-Received: from ?IPv6:2a02:247f:ffff:2540:15ef:65f0:201c:bd82? ([2001:1438:4010:2540:15ef:65f0:201c:bd82])
-        by smtp.gmail.com with ESMTPSA id ch11sm1044595ejb.48.2019.09.19.07.52.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 19 Sep 2019 07:52:20 -0700 (PDT)
-Subject: Re: [PATCH 1/2] blk-mq: fixup request re-insert in
- blk_mq_try_issue_list_directly()
-To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-scsi@vger.kernel.org,
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=sGuJwTkUKZTTIppFydy4dVb0dOofTQ9YNUC+RHizbW4=;
+        b=aZdN2b6g/z5xu3mrqyWZc0h0N2TKz1/7d719YxSpNyYzog/wnKdEzSjTxIGuQWkiBr
+         Kz/1GcAAQjUQ0kyIUMk+njcZTGvmPPJZD3FpaCdBMrl5ukl096OKW38/EYDjogvyl1nD
+         R1HzcdDYbvtfOq+svXF5nP9lMnKgno2ww7y3s+ogRlITBtdsWH3XslddveU7K2265Ddk
+         ubpNocj7jyrExvsBuAo7WBburYeitDmfhTyZdMWajP65gpjsoiGMJLpAHyJPLtrBEDp5
+         OhPGZIPHpintA4XhpNUct/VIBCRhvbNQs7EpdGe9Cqa0kCe76P1Ypm13FE4j2XA6tMXK
+         byqw==
+X-Gm-Message-State: APjAAAVz8eCbwovsXsfrPhaMqGwak8PKu9CX5KnAl/zC++XJiJmRmCu/
+        io3h1PFtfDVoSY9TTO8EwaFd/4CfLAa11LQHd0llPg==
+X-Google-Smtp-Source: APXvYqzaL1CHa3QCLMAu2cD0hKlff+E6KljbvzgfOrcVWHCNl2MlYP33C8nXYgRiO/7fp3C8dpzr6DrJiTnKySnMfz0=
+X-Received: by 2002:a02:69cd:: with SMTP id e196mr13266694jac.84.1568908124519;
+ Thu, 19 Sep 2019 08:48:44 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20190919094547.67194-1-hare@suse.de> <20190919094547.67194-3-hare@suse.de>
+ <BYAPR04MB5816F1F98D8F408D23C1AF47E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20190919142344.GB11207@ming.t460p>
+In-Reply-To: <20190919142344.GB11207@ming.t460p>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQF0tjPls8xLc25lED+FK+pMiE7AYwF9UPQwAaQlFP8BKIXAuafSRYEw
+Date:   Thu, 19 Sep 2019 21:18:41 +0530
+Message-ID: <935518233f147da073414dcbcdb2abb5@mail.gmail.com>
+Subject: RE: [PATCH 2/2] blk-mq: always call into the scheduler in blk_mq_make_request()
+To:     Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
-        Hans Holmberg <hans.holmberg@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
         Hannes Reinecke <hare@suse.com>
-References: <20190919094547.67194-1-hare@suse.de>
- <20190919094547.67194-2-hare@suse.de>
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Message-ID: <a277ea45-ef1b-0876-0548-90b67dfc016b@cloud.ionos.com>
-Date:   Thu, 19 Sep 2019 16:52:20 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20190919094547.67194-2-hare@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+> > > -	} else if (plug && (q->nr_hw_queues == 1 || q->mq_ops-
+> >commit_rqs)) {
+> > > +	} else if (plug && q->mq_ops->commit_rqs) {
+> > >  		/*
+> > >  		 * Use plugging if we have a ->commit_rqs() hook as well,
+as
+> > >  		 * we know the driver uses bd->last in a smart fashion.
+> > > @@ -2020,9 +2019,6 @@ static blk_qc_t blk_mq_make_request(struct
+> request_queue *q, struct bio *bio)
+> > >  			blk_mq_try_issue_directly(data.hctx,
+same_queue_rq,
+> > >  					&cookie);
+> > >  		}
+> > > -	} else if ((q->nr_hw_queues > 1 && is_sync) || (!q->elevator &&
+> > > -			!data.hctx->dispatch_busy)) {
+> > > -		blk_mq_try_issue_directly(data.hctx, rq, &cookie);
+Hannes -
+
+Earlier check prior to "commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8"
+was only (q->nr_hw_queues > 1 && is_sync).
+I am not sure if check of nr_hw_queues are required or not at this place,
+but other part of check (!q->elevator && !data.hctx->dispatch_busy) to
+qualify for direct dispatch is required for higher performance.
+
+Recent MegaRaid and MPT HBA Aero series controller is capable of doing
+~3.0 M IOPs and for such high performance using single hardware queue,
+ commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8 is very important.
+
+Kashyap
 
 
-On 9/19/19 11:45 AM, Hannes Reinecke wrote:
-> From: Hannes Reinecke <hare@suse.com>
+> >
+> > It may be worth mentioning that blk_mq_sched_insert_request() will do
+> > a direct insert of the request using __blk_mq_insert_request(). But
+> > that insert is slightly different from what
+> > blk_mq_try_issue_directly() does with
+> > __blk_mq_issue_directly() as the request in that case is passed along
+> > to the device using queue->mq_ops->queue_rq() while
+> > __blk_mq_insert_request() will put the request in ctx->rq_lists[type].
+> >
+> > This removes the optimized case !q->elevator &&
+> > !data.hctx->dispatch_busy, but I am not sure of the actual performance
+> > impact yet. We may want to patch
+> > blk_mq_sched_insert_request() to handle that case.
 >
-> When blk_mq_request_issue_directly() returns BLK_STS_RESOURCE we
-> need to requeue the I/O, but adding it to the global request list
-> will mess up with the passed-in request list. So re-add the request
-> to the original list and leave it to the caller to handle situations
-> where the list wasn't completely emptied.
+> The optimization did improve IOPS of single queue SCSI SSD a lot, see
 >
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->   block/blk-mq.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> commit 6ce3dd6eec114930cf2035a8bcb1e80477ed79a8
+> Author: Ming Lei <ming.lei@redhat.com>
+> Date:   Tue Jul 10 09:03:31 2018 +0800
 >
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index b038ec680e84..44ff3c1442a4 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -1899,8 +1899,7 @@ void blk_mq_try_issue_list_directly(struct blk_mq_hw_ctx *hctx,
->   		if (ret != BLK_STS_OK) {
->   			if (ret == BLK_STS_RESOURCE ||
->   					ret == BLK_STS_DEV_RESOURCE) {
-> -				blk_mq_request_bypass_insert(rq,
-> -							list_empty(list));
-> +				list_add(list, &rq->queuelist);
-
-Just curious, maybe the above should be "list_add(&rq->queuelist, list)".
-
-Thanks,
-Guoqing
+>     blk-mq: issue directly if hw queue isn't busy in case of 'none'
+>
+>     In case of 'none' io scheduler, when hw queue isn't busy, it isn't
+>     necessary to enqueue request to sw queue and dequeue it from
+>     sw queue because request may be submitted to hw queue asap without
+>     extra cost, meantime there shouldn't be much request in sw queue,
+>     and we don't need to worry about effect on IO merge.
+>
+>     There are still some single hw queue SCSI HBAs(HPSA, megaraid_sas,
+...)
+>     which may connect high performance devices, so 'none' is often
+required
+>     for obtaining good performance.
+>
+>     This patch improves IOPS and decreases CPU unilization on
+megaraid_sas,
+>     per Kashyap's test.
+>
+>
+> Thanks,
+> Ming
