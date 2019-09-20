@@ -2,86 +2,103 @@ Return-Path: <SRS0=xi/P=XP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8815DC49ED7
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Sep 2019 13:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F805C49ED7
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Sep 2019 17:09:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F2AC20717
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Sep 2019 13:41:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15B042086A
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Sep 2019 17:09:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728002AbfITNlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Sep 2019 09:41:22 -0400
-Received: from wind.enjellic.com ([76.10.64.91]:43266 "EHLO wind.enjellic.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726924AbfITNlW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Sep 2019 09:41:22 -0400
-Received: from wind.enjellic.com (localhost [127.0.0.1])
-        by wind.enjellic.com (8.15.2/8.15.2) with ESMTP id x8KDfFbW025206;
-        Fri, 20 Sep 2019 08:41:15 -0500
-Received: (from greg@localhost)
-        by wind.enjellic.com (8.15.2/8.15.2/Submit) id x8KDfE8L025205;
-        Fri, 20 Sep 2019 08:41:14 -0500
-Date:   Fri, 20 Sep 2019 08:41:14 -0500
-From:   "Dr. G.W. Wettstein" <greg@wind.enjellic.com>
-Message-Id: <201909201341.x8KDfE8L025205@wind.enjellic.com>
-In-Reply-To: Himanshu Madhani <hmadhani@marvell.com>
-       "Re: [EXT] SRR response handling." (Sep 16,  4:14pm)
-Reply-To: greg@enjellic.com
-X-Mailer: Mail User's Shell (7.2.6-ESD1.0 03/31/2012)
-To:     Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>
-Subject: Re: [EXT] SRR response handling.
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-X-Greylist: Sender passed SPF test, not delayed by milter-greylist-4.2.3 (wind.enjellic.com [127.0.0.1]); Fri, 20 Sep 2019 08:41:15 -0500 (CDT)
+        id S2392002AbfITRJy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Sep 2019 13:09:54 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:50456 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391955AbfITRJy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Sep 2019 13:09:54 -0400
+Received: by mail-wm1-f67.google.com with SMTP id 5so3298283wmg.0;
+        Fri, 20 Sep 2019 10:09:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cfxFfQGUkBcjDLVOdYbMW4OGTPS6aOIfBZ/xv+D9EV8=;
+        b=NktxVWczbCF04tpwqXtY8rVRuxRUw6PmudofqxzVOVQ33RpD6jf5L1H4Gkb5eb50dE
+         MhdjwSUDYw++54RgTiwsAN+I7b+OzTYV8WQTRaCV3yvbRCzrBtvv/xEtOIG+9kYecF2u
+         Fldn13McAOdY15XJ+EfGGwQ6VsrBAtvF8K1HJA3EXQrdUi3qYvErEIkN2azkyZheJqlx
+         6nyl6vIqy2Al/kL8wsOXHTMTrXS4bm3Jr74CTu0xGW2YTRLDwLigeBtdINwe+NcVhMrq
+         /3FNHvVueAL4/YcmJG4WJPVw78u54XoFcazhSa+Bz8h63in5vbS5eew8zJVARR2/mVKa
+         zCGg==
+X-Gm-Message-State: APjAAAVudo/Mq8MnM+f0DQcpac6/nUIFIaXuwjGUikMoXTP4puOwIqvS
+        K+Ni67li97374vWjHzgWIWk=
+X-Google-Smtp-Source: APXvYqy8dyp35r2taAzQm5OQLG1ObLmax7stbIj278cwtbNZj3zbQZo+lNJuvh0+dpDPAdbtrpx2fQ==
+X-Received: by 2002:a7b:caa9:: with SMTP id r9mr4516694wml.14.1568999392829;
+        Fri, 20 Sep 2019 10:09:52 -0700 (PDT)
+Received: from ?IPv6:2600:1700:65a0:78e0:514:7862:1503:8e4d? ([2600:1700:65a0:78e0:514:7862:1503:8e4d])
+        by smtp.gmail.com with ESMTPSA id y3sm3012481wrw.83.2019.09.20.10.09.49
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 20 Sep 2019 10:09:52 -0700 (PDT)
+Subject: Re: [PATCH 1/4] softirq: implement IRQ flood detection mechanism
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Keith Busch <keith.busch@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>,
+        Long Li <longli@microsoft.com>,
+        John Garry <john.garry@huawei.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>
+References: <dd96def4-1121-afbe-2431-9e516a06850c@linaro.org>
+ <6f3b6557-1767-8c80-f786-1ea667179b39@acm.org>
+ <2a8bd278-5384-d82f-c09b-4fce236d2d95@linaro.org>
+ <20190905090617.GB4432@ming.t460p>
+ <6a36ccc7-24cd-1d92-fef1-2c5e0f798c36@linaro.org>
+ <20190906014819.GB27116@ming.t460p>
+ <ffefcfa0-09b6-9af5-f94e-8e7ddd2eef16@linaro.org>
+ <6eb2a745-7b92-73ce-46f5-cc6a5ef08abc@grimberg.me>
+ <20190907000100.GC12290@ming.t460p>
+ <f5685543-8cd5-6c6a-5b80-c77ef09c6b3b@grimberg.me>
+ <20190918143732.GA19364@ming.t460p>
+From:   Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <1f01c041-cc6e-e27e-7691-63c903d1fed7@grimberg.me>
+Date:   Fri, 20 Sep 2019 10:09:47 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20190918143732.GA19364@ming.t460p>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sep 16,  4:14pm, Himanshu Madhani wrote:
-} Subject: Re: [EXT] SRR response handling.
 
-> Hello Dr Greg, 
+>> It seems like we're attempting to stay in irq context for as long as we
+>> can instead of scheduling to softirq/thread context if we have more than
+>> a minimal amount of work to do. Without at least understanding why
+>> softirq/thread degrades us so much this code seems like the wrong
+>> approach to me. Interrupt context will always be faster, but it is
+>> not a sufficient reason to spend as much time as possible there, is it?
+> 
+> If extra latency is added in IO completion path, this latency will be
+> introduced in the submission path, because the hw queue depth is fixed,
+> which is often small. Especially in case of multiple submission vs.
+> single(shared) completion, the whole hw queue tags can be exhausted
+> easily.
 
-Good morning Himanshu, I hope your week has gone well.
+This is why the patch is reaping the first batch from hard-irq, but only
+if it has more will defer to softirq. So I'm not sure the short QD use
+case applies here...
 
->> We are looking forward to your reflections on the expected behavior of
->> the initiators if a target doesn't process the SRR.
+> I guess no such effect for networking IO.
 
-> Still waiting on internal update before I respond with more
-> details. Thanks for the patience.
-
-Very good, I was just going to send you a note so your timing on this
-was good.
-
-We are still holding geographically dispersed mirrors open until we
-can get a better understanding of what to expect from this situation.
-
-We are also intrigued, from a technical perspective, since we may be
-one of the few sites that can actually generate this phenomenon.
-
-> - Himanshu
-
-Thanks for taking the time out of your schedule to update us, we will
-stand by for further information from your teams.
-
-Best wishes for a pleasant weekend.
-
-Dr. Greg
-
-}-- End of excerpt from Himanshu Madhani
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686            EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"For future reference - don't anybody else try to send patches as vi
- scripts, please. Yes, it's manly, but let's face it, so is
- bungee-jumping with the cord tied to your testicles."
-                                -- Linus Torvalds
-                                   linux-kernel
+Maybe, maybe not...
