@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0FD7C4740C
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35701C3A5A2
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A67A20B7C
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04BCA214AF
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i0xePn7o"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b4YMndch"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727480AbfIVD72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Sep 2019 23:59:28 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:39153 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727479AbfIVD71 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:27 -0400
-Received: by mail-ot1-f67.google.com with SMTP id s22so9403850otr.6
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:27 -0700 (PDT)
+        id S1727484AbfIVD73 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Sep 2019 23:59:29 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:46965 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727479AbfIVD73 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:29 -0400
+Received: by mail-ot1-f66.google.com with SMTP id f21so9360517otl.13
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=BKepWG1TifCcSv/9ZE3y9Mcnwboi1o+mrkXYo5hCMOU=;
-        b=i0xePn7oJCybup2FUJJ9xYU6gIhgRWo75jl3if+0uVwU5RxzdVB6M3OazuLCiQn2NG
-         Nl0/ENStTLyPIYB4E/aR9dh57IJ3GzWksGwd7+Qs47aphOI3YQjuU8AxBGDwewmMXJg8
-         sB/fL6Lwhwm+o6ZigtqLFFrsbtciG55nEt1/MxQF2m/1uGBIEoX+zUmC+nIiceY5T1st
-         P50o4zt49Wfb8hFf22UMPsagDTQ0+Wye4GnQtakGS9a9sVCnIbsWWKlM5RsF1rheIUIZ
-         tGuybw5C1tAQHEwU5+uGAJRA5uBKQei1tHKkHYE2ShzqOrr5sT0gE6ET+wZBYaYhDLKe
-         p+EA==
+        bh=VyUAGnIWBo1GovlEDBAz1tIsd1rFbUZofkW0bqw8uOA=;
+        b=b4YMndcheffH8S0oAojyMXv8hPdzuOjQRdqTxykcQ7MRPLPqlY2B9wXAzl3F1b1XKX
+         VfrHdV5EF0rcHsB6yR/a2teoboy83uih8BODWiCqKdABJ3jsyDbYPD3VI7gT2fWIDrmR
+         ecWkGND9NGVUjEmppMjdFb1eqgI5LxS5wG9Kvsw5DJ+Rz4sf4JvRCZH7gpiWIZC9ijYg
+         2tenOlbexpSnLiTXAfSGxSYq4V1zmeJJvDHz71OdQwz0qGINOufN9hqchHBqZjwepc/u
+         v5zHCkeX0R5qIdTiciqyNojLYDvkTNIcqmtscTpDtIhUW35Agu3EM3q3otD42wmQNLGS
+         0Gcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=BKepWG1TifCcSv/9ZE3y9Mcnwboi1o+mrkXYo5hCMOU=;
-        b=hTi8KJ9FKX42UsdiRkFc4espY8SAI6usEqTu8JQqxFI81CeFAAlKju216gk5v4pBc2
-         ovrVdgGY6YIz/+nqLze7W2JvlL6XsBvbakLgCdwk0Z79OETFxFD7TJOOGd+7aDbUpzvt
-         PKM+TgiSOO/RMCcZtf83d3j7t0PRNGzA3ZjjccKNokWIUv1SDmLIhYrnw7ZrzTVSfw7Y
-         g9gDddJL5nZhOqB1LfxB45ZIOE/b2k8iznA7Vs4DAHJ1j1M9jycMcLgueouwNV/ViTiU
-         PJaD4yGy3bDCgte8cR7yI4gNlXJRSthSPcLPHuTlUYpbSNx5DZwIvAJWCbw1oaI8jtQ5
-         0V/g==
-X-Gm-Message-State: APjAAAXdY88EmQv0FFp0r3/ttCxZVUuyPYx1j4bprGRfoiQR7K4NPUYf
-        kcj/4gCHk/ezw3Jbg4TpIFd/O/3l
-X-Google-Smtp-Source: APXvYqzEf0GuHOnuA6zsmgSs0SjwEmKQjglBdLyt2Z7EMh8MZUUf48wOxqsEhiey7Vfpr3J2nYTWbQ==
-X-Received: by 2002:a9d:6d82:: with SMTP id x2mr13529501otp.42.1569124766521;
-        Sat, 21 Sep 2019 20:59:26 -0700 (PDT)
+        bh=VyUAGnIWBo1GovlEDBAz1tIsd1rFbUZofkW0bqw8uOA=;
+        b=W7F0BdQ3MebUFcDHEBUug7atHBAxh9WBq/eEZ1/Mp3RUuy1LliIvhLQyybto2BnXBq
+         hQNbRAjL7S98FqonCpmhRAM+AHIL/Jg7V4wzOFQmVfaT0LOYwujvhjxsoFomTM8e9EwE
+         dqsHYl57sxbV/WaqEiFDoiIg4pUIceJsmqEaZt1bWXEXr8vE4ABI5tJxnNOk1VJqJkz5
+         EEQnfctJmQ3VOpobEMzejHqdV5YKT4VeRvp864Xlhfebx1NMXw6EVsTvL7basUb02KCZ
+         7nNZ2tCkWUxcBco1sI/fr+d70gBig1DZLf3udE+M8yxlahvGfDXuxDIQ+qTwIlns9Gzf
+         HDYA==
+X-Gm-Message-State: APjAAAVVqPbgnKzobGKcXFPjTBZMlmW6C7A7/xgtbmGyng3/h14IagvW
+        w+img6E0oQNePKpflMLPhDcxaKa7
+X-Google-Smtp-Source: APXvYqwqJhCM8L3xin2glgXtuJmHQ39ji0NpQA7wPmZZyEYb8bhfj2DwOEdkzwR/Qz8Lc02nPIussg==
+X-Received: by 2002:a9d:5c06:: with SMTP id o6mr1427681otk.266.1569124767715;
+        Sat, 21 Sep 2019 20:59:27 -0700 (PDT)
 Received: from os42.localdomain (ip68-5-145-143.oc.oc.cox.net. [68.5.145.143])
-        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.25
+        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.26
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 21 Sep 2019 20:59:26 -0700 (PDT)
+        Sat, 21 Sep 2019 20:59:27 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 10/20] lpfc: Fix NVMe ABTS in response to receiving an ABTS
-Date:   Sat, 21 Sep 2019 20:58:56 -0700
-Message-Id: <20190922035906.10977-11-jsmart2021@gmail.com>
+Subject: [PATCH 11/20] lpfc: Fix coverity errors on NULL pointer checks
+Date:   Sat, 21 Sep 2019 20:58:57 -0700
+Message-Id: <20190922035906.10977-12-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190922035906.10977-1-jsmart2021@gmail.com>
 References: <20190922035906.10977-1-jsmart2021@gmail.com>
@@ -69,215 +69,136 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the port, running as a nvme target, receives an ABTS, it
-submits commands to the adapter to Abort i/o outstanding in the
-adapter. The Abort command formatting routine left a command
-field set to zero, which instructs the adapter to generate
-an ABTS on the wire as part of cleaning up the I/O. This is
-common operation for an initiator, but not for a target.
+Coverity flagged several scenarios where checking of null
+pointer values wasn't consistent.
 
-Fix the driver to check whether an ABTS had been received for
-the I/O, and if so, change the Abort command formatting so that
-the ABTS generation is disabled (IA=1). No need to ABTS it when
-the other side already has.
-
-Also refactored the code such that there is a single routine
-being used for nvme or nvmet ABORT requests, and IA is an
-argument.
+Fix the code to that be consistent on checking.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_crtn.h  |  1 +
- drivers/scsi/lpfc/lpfc_hw4.h   |  1 +
- drivers/scsi/lpfc/lpfc_nvme.c  | 73 ++++++++++++++++++++++++------------------
- drivers/scsi/lpfc/lpfc_nvmet.c | 34 ++------------------
- 4 files changed, 46 insertions(+), 63 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c   |  5 +++++
+ drivers/scsi/lpfc/lpfc_nvmet.c | 19 +++++++++++++++----
+ drivers/scsi/lpfc/lpfc_scsi.c  |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c   |  9 ++++++---
+ 4 files changed, 27 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index b2ad8c750486..6e09fd98a922 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -586,6 +586,7 @@ void lpfc_release_io_buf(struct lpfc_hba *phba, struct lpfc_io_buf *ncmd,
- void lpfc_nvme_cmd_template(void);
- void lpfc_nvmet_cmd_template(void);
- void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn);
-+void lpfc_nvme_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt);
- extern int lpfc_enable_nvmet_cnt;
- extern unsigned long long lpfc_enable_nvmet[];
- extern int lpfc_no_hba_reset_cnt;
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index bd533475c86a..f70fb7629c82 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4659,6 +4659,7 @@ struct create_xri_wqe {
- 	uint32_t rsvd_12_15[4];         /* word 12-15 */
- };
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index d5303994bfd6..55ab37572e92 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4291,6 +4291,11 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
  
-+#define INHIBIT_ABORT 1
- #define T_REQUEST_TAG 3
- #define T_XRI_TAG 1
+ 	irsp = &rspiocb->iocb;
  
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index a227e36cbdc2..5af944b97c4c 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -196,6 +196,46 @@ lpfc_nvme_cmd_template(void)
- }
++	if (!vport) {
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
++				 "3177 ELS response failed\n");
++		goto out;
++	}
+ 	if (cmdiocb->context_un.mbox)
+ 		mbox = cmdiocb->context_un.mbox;
  
- /**
-+ * lpfc_nvme_prep_abort_wqe - set up 'abort' work queue entry.
-+ * @pwqeq: Pointer to command iocb.
-+ * @xritag: Tag that  uniqely identifies the local exchange resource.
-+ * @opt: Option bits -
-+ *		bit 0 = inhibit sending abts on the link
-+ *
-+ * This function is called with hbalock held.
-+ **/
-+void
-+lpfc_nvme_prep_abort_wqe(struct lpfc_iocbq *pwqeq, u16 xritag, u8 opt)
-+{
-+	union lpfc_wqe128 *wqe = &pwqeq->wqe;
-+
-+	/* WQEs are reused.  Clear stale data and set key fields to
-+	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
-+	 */
-+	memset(wqe, 0, sizeof(*wqe));
-+
-+	if (opt & INHIBIT_ABORT)
-+		bf_set(abort_cmd_ia, &wqe->abort_cmd, 1);
-+	/* Abort specified xri tag, with the mask deliberately zeroed */
-+	bf_set(abort_cmd_criteria, &wqe->abort_cmd, T_XRI_TAG);
-+
-+	bf_set(wqe_cmnd, &wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
-+
-+	/* Abort the IO associated with this outstanding exchange ID. */
-+	wqe->abort_cmd.wqe_com.abort_tag = xritag;
-+
-+	/* iotag for the wqe completion. */
-+	bf_set(wqe_reqtag, &wqe->abort_cmd.wqe_com, pwqeq->iotag);
-+
-+	bf_set(wqe_qosd, &wqe->abort_cmd.wqe_com, 1);
-+	bf_set(wqe_lenloc, &wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
-+
-+	bf_set(wqe_cmd_type, &wqe->abort_cmd.wqe_com, OTHER_COMMAND);
-+	bf_set(wqe_wqec, &wqe->abort_cmd.wqe_com, 1);
-+	bf_set(wqe_cqid, &wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
-+}
-+
-+/**
-  * lpfc_nvme_create_queue -
-  * @lpfc_pnvme: Pointer to the driver's nvme instance data
-  * @qidx: An cpu index used to affinitize IO queues and MSIX vectors.
-@@ -1791,7 +1831,6 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	struct lpfc_iocbq *abts_buf;
- 	struct lpfc_iocbq *nvmereq_wqe;
- 	struct lpfc_nvme_fcpreq_priv *freqpriv;
--	union lpfc_wqe128 *abts_wqe;
- 	unsigned long flags;
- 	int ret_val;
- 
-@@ -1912,37 +1951,7 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
- 	/* Ready - mark outstanding as aborted by driver. */
- 	nvmereq_wqe->iocb_flag |= LPFC_DRIVER_ABORTED;
- 
--	/* Complete prepping the abort wqe and issue to the FW. */
--	abts_wqe = &abts_buf->wqe;
--
--	/* WQEs are reused.  Clear stale data and set key fields to
--	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
--	 */
--	memset(abts_wqe, 0, sizeof(*abts_wqe));
--	bf_set(abort_cmd_criteria, &abts_wqe->abort_cmd, T_XRI_TAG);
--
--	/* word 7 */
--	bf_set(wqe_cmnd, &abts_wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
--	bf_set(wqe_class, &abts_wqe->abort_cmd.wqe_com,
--	       nvmereq_wqe->iocb.ulpClass);
--
--	/* word 8 - tell the FW to abort the IO associated with this
--	 * outstanding exchange ID.
--	 */
--	abts_wqe->abort_cmd.wqe_com.abort_tag = nvmereq_wqe->sli4_xritag;
--
--	/* word 9 - this is the iotag for the abts_wqe completion. */
--	bf_set(wqe_reqtag, &abts_wqe->abort_cmd.wqe_com,
--	       abts_buf->iotag);
--
--	/* word 10 */
--	bf_set(wqe_qosd, &abts_wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_lenloc, &abts_wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
--
--	/* word 11 */
--	bf_set(wqe_cmd_type, &abts_wqe->abort_cmd.wqe_com, OTHER_COMMAND);
--	bf_set(wqe_wqec, &abts_wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_cqid, &abts_wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
-+	lpfc_nvme_prep_abort_wqe(abts_buf, nvmereq_wqe->sli4_xritag, 0);
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abts_buf->iocb_flag |= LPFC_IO_NVME;
 diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 9884228800a5..121dbdcbb583 100644
+index 121dbdcbb583..c9481a618b85 100644
 --- a/drivers/scsi/lpfc/lpfc_nvmet.c
 +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -3239,9 +3239,9 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- {
- 	struct lpfc_nvmet_tgtport *tgtp;
- 	struct lpfc_iocbq *abts_wqeq;
--	union lpfc_wqe128 *abts_wqe;
- 	struct lpfc_nodelist *ndlp;
- 	unsigned long flags;
-+	u8 opt;
- 	int rc;
+@@ -1958,12 +1958,10 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	uint32_t *payload;
+ 	uint32_t size, oxid, sid, rc;
  
- 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
-@@ -3280,8 +3280,8 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- 		return 0;
+-	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
+-	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
+ 
+-	if (!phba->targetport) {
++	if (!nvmebuf || !phba->targetport) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
+-				"6154 LS Drop IO x%x\n", oxid);
++				"6154 LS Drop IO\n");
+ 		oxid = 0;
+ 		size = 0;
+ 		sid = 0;
+@@ -1971,6 +1969,9 @@ lpfc_nvmet_unsol_ls_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		goto dropit;
  	}
- 	abts_wqeq = ctxp->abort_wqeq;
--	abts_wqe = &abts_wqeq->wqe;
- 	ctxp->state = LPFC_NVMET_STE_ABORT;
-+	opt = (ctxp->flag & LPFC_NVMET_ABTS_RCV) ? INHIBIT_ABORT : 0;
- 	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
  
- 	/* Announce entry to new IO submit field. */
-@@ -3327,35 +3327,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
- 	/* Ready - mark outstanding as aborted by driver. */
- 	abts_wqeq->iocb_flag |= LPFC_DRIVER_ABORTED;
++	fc_hdr = (struct fc_frame_header *)(nvmebuf->hbuf.virt);
++	oxid = be16_to_cpu(fc_hdr->fh_ox_id);
++
+ 	tgtp = (struct lpfc_nvmet_tgtport *)phba->targetport->private;
+ 	payload = (uint32_t *)(nvmebuf->dbuf.virt);
+ 	size = bf_get(lpfc_rcqe_length,  &nvmebuf->cq_event.cqe.rcqe_cmpl);
+@@ -2401,6 +2402,11 @@ lpfc_nvmet_unsol_ls_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	d_buf = piocb->context2;
+ 	nvmebuf = container_of(d_buf, struct hbq_dmabuf, dbuf);
  
--	/* WQEs are reused.  Clear stale data and set key fields to
--	 * zero like ia, iaab, iaar, xri_tag, and ctxt_tag.
--	 */
--	memset(abts_wqe, 0, sizeof(*abts_wqe));
--
--	/* word 3 */
--	bf_set(abort_cmd_criteria, &abts_wqe->abort_cmd, T_XRI_TAG);
--
--	/* word 7 */
--	bf_set(wqe_ct, &abts_wqe->abort_cmd.wqe_com, 0);
--	bf_set(wqe_cmnd, &abts_wqe->abort_cmd.wqe_com, CMD_ABORT_XRI_CX);
--
--	/* word 8 - tell the FW to abort the IO associated with this
--	 * outstanding exchange ID.
--	 */
--	abts_wqe->abort_cmd.wqe_com.abort_tag = ctxp->wqeq->sli4_xritag;
--
--	/* word 9 - this is the iotag for the abts_wqe completion. */
--	bf_set(wqe_reqtag, &abts_wqe->abort_cmd.wqe_com,
--	       abts_wqeq->iotag);
--
--	/* word 10 */
--	bf_set(wqe_qosd, &abts_wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_lenloc, &abts_wqe->abort_cmd.wqe_com, LPFC_WQE_LENLOC_NONE);
--
--	/* word 11 */
--	bf_set(wqe_cmd_type, &abts_wqe->abort_cmd.wqe_com, OTHER_COMMAND);
--	bf_set(wqe_wqec, &abts_wqe->abort_cmd.wqe_com, 1);
--	bf_set(wqe_cqid, &abts_wqe->abort_cmd.wqe_com, LPFC_WQE_CQ_ID_DEFAULT);
-+	lpfc_nvme_prep_abort_wqe(abts_wqeq, ctxp->wqeq->sli4_xritag, opt);
++	if (!nvmebuf) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
++				"3015 LS Drop IO\n");
++		return;
++	}
+ 	if (phba->nvmet_support == 0) {
+ 		lpfc_in_buf_free(phba, &nvmebuf->dbuf);
+ 		return;
+@@ -2429,6 +2435,11 @@ lpfc_nvmet_unsol_fcp_event(struct lpfc_hba *phba,
+ 			   uint64_t isr_timestamp,
+ 			   uint8_t cqflag)
+ {
++	if (!nvmebuf) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
++				"3167 NVMET FCP Drop IO\n");
++		return;
++	}
+ 	if (phba->nvmet_support == 0) {
+ 		lpfc_rq_buf_free(phba, &nvmebuf->hbuf);
+ 		return;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index c2773c07657d..f06f63e58596 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3814,7 +3814,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
  
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abts_wqeq->hba_wqidx = ctxp->wqeq->hba_wqidx;
+ 	/* Sanity check on return of outstanding command */
+ 	cmd = lpfc_cmd->pCmd;
+-	if (!cmd) {
++	if (!cmd || !phba) {
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+ 				 "2621 IO completion: Not an active IO\n");
+ 		spin_unlock(&lpfc_cmd->buf_lock);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 313441a3c4cf..939efee6b5dd 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2674,7 +2674,8 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
+ 					"(%d):0323 Unknown Mailbox command "
+ 					"x%x (x%x/x%x) Cmpl\n",
+-					pmb->vport ? pmb->vport->vpi : 0,
++					pmb->vport ? pmb->vport->vpi :
++					LPFC_VPORT_UNKNOWN,
+ 					pmbox->mbxCommand,
+ 					lpfc_sli_config_mbox_subsys_get(phba,
+ 									pmb),
+@@ -2695,7 +2696,8 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
+ 					"(%d):0305 Mbox cmd cmpl "
+ 					"error - RETRYing Data: x%x "
+ 					"(x%x/x%x) x%x x%x x%x\n",
+-					pmb->vport ? pmb->vport->vpi : 0,
++					pmb->vport ? pmb->vport->vpi :
++					LPFC_VPORT_UNKNOWN,
+ 					pmbox->mbxCommand,
+ 					lpfc_sli_config_mbox_subsys_get(phba,
+ 									pmb),
+@@ -2703,7 +2705,8 @@ lpfc_sli_handle_mb_event(struct lpfc_hba *phba)
+ 									pmb),
+ 					pmbox->mbxStatus,
+ 					pmbox->un.varWords[0],
+-					pmb->vport->port_state);
++					pmb->vport ? pmb->vport->port_state :
++					LPFC_VPORT_UNKNOWN);
+ 				pmbox->mbxStatus = 0;
+ 				pmbox->mbxOwner = OWN_HOST;
+ 				rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
 -- 
 2.13.7
 
