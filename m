@@ -5,62 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E97A3C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18136C3A5A2
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD2B120B7C
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E07F420820
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gBo3dmqb"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SSbXkltY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727489AbfIVD7a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Sep 2019 23:59:30 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:43665 "EHLO
+        id S1727494AbfIVD7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Sep 2019 23:59:31 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:34471 "EHLO
         mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727482AbfIVD73 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:29 -0400
-Received: by mail-ot1-f66.google.com with SMTP id o44so932271ota.10
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:29 -0700 (PDT)
+        with ESMTP id S1727487AbfIVD7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:30 -0400
+Received: by mail-ot1-f66.google.com with SMTP id m19so7562656otp.1
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=iLeIj0WGimlt6/z5APbjhpJoZj8auUfK6x3Y1RpGnzY=;
-        b=gBo3dmqbJy8cmSh7OziO74raIDMkTC2ABHjTQ8Mc1ajJPf3HJfRvoec6CyCuSZogHW
-         PGl7kfjCzg9+MmcZ6YW+mLxckRjkjVn5P2v0VY2ANEAd+u7GMtqAflpwEHrc1jVWQaLU
-         K4jPpyoIM7EHQ5iAzADnogYvl5zS+xURAyupBAPaSjiogIk7vvtGLKgfTsc6j6H66D4m
-         7I65ScPPA+X+V0V6d62/CcWfMIy6q+Dr3OYV0hzgup0vPMjIxFbhS/uoS3Ad9CRIG8f9
-         CHFCysffJdJgU25cxj5oiFMbztGuIxnAdzj8WoiNyziM3uIGR4hGpGd0/jdskx4MnSCZ
-         J9sQ==
+        bh=WnLRLaRN9xIz2iTBWwNidQHrVKtJC5KwZgudUdPGF6s=;
+        b=SSbXkltYqyOIcLCfLnYPm33oDvLPE7ASdosEftt+vS8vTF64k3eQG9HZb4oqVKolM1
+         tppwOtXgE298y5r7QG+MCVx/LoqDUv46VY05AtsbQXOd3L4kQv8eYLvk9v7KRNkEDb1u
+         412QhTyxklkbAAU295L/cwe82BYyPBdIzKv3MyuWUFnMFmWbxb8dyI/rFGLlu2zSPy1x
+         exOJ15oZH9jcnBx4lgqSdCt1K2aFUf1535vIzt4kRdtL40NRG2KWzge9zvN+Fjy2b251
+         x89N4xREc9TSdHQaMROT9TbKOXcP3roriv6Swr1WA/FYIjZeJvvS35FH1QX6oMDgeGjM
+         8EEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=iLeIj0WGimlt6/z5APbjhpJoZj8auUfK6x3Y1RpGnzY=;
-        b=pQ4g8wweetakDvQtyCWduiq6KxdDnPY6a8G5B6yvbtAsdgcGhMoUaTtrb9iSwkpC96
-         dVWRUkfgO9rOoUDDnP0XytNAQn21/K79WblOQWXItoOGQuFl8UuvXQxSX3Ft2QZJ+eNu
-         Wyt6wwr6U8rPmTFUf7XWlIu4h8im22KiPjwV/PeiG4N6bvPwOfi1p8T36uSly8wCAm6A
-         cwYpJ3U47A9Xu2F9JJLJ13swWlxAXdBJ1ArD6L8HL8oWyMFqEO/1JpmUOl6R8xGHmn2G
-         MrRV5X1TfjAFMqy2afZxyRdcYwVsPUvW5QbPelcCVf/D4Jk8Glhm1MEnvrDYz3SqhGru
-         TvBA==
-X-Gm-Message-State: APjAAAWgrfGiHK1WzP23LdGl7WkIJcDhFRXArDAO/CBxooAA3SU8OFgT
-        0mVLJPbP85ysfg0l2VuxwjHNaMVJ
-X-Google-Smtp-Source: APXvYqz28ccYTu2K+PFJkB1aLhApAGNnv92CJECIZKyqo82vg+vDj5KxL/flmcnCkO9hRQQlY3KGbQ==
-X-Received: by 2002:a9d:3f26:: with SMTP id m35mr17527018otc.66.1569124768861;
-        Sat, 21 Sep 2019 20:59:28 -0700 (PDT)
+        bh=WnLRLaRN9xIz2iTBWwNidQHrVKtJC5KwZgudUdPGF6s=;
+        b=XXos6N8pmSxj/aWclQtMhWCtCSKhdvS0BxZFdcRdNeqAYIJN6WThpq0Bug9zzCEXMQ
+         8UrJbQ3cCObKGWgWGOXlKRjyQbIiMfuKs4a6M2eQUE9kvzDvr26XfoTR57tmdGC1/Z1g
+         cTxaakKRd8yqKGvZr0nidm+lwhVknCS7Cd3rhKFbEtWEd5R4GcJqE9UP0Xe5bb9wwZL4
+         fTACOe6HlduhCUfMfqMUJWOShKIFwBkEC8pRlZiHU1AfNDQMNVB1tpSWL//eMXzGm39B
+         qkzFCUsx/KSoF8TCmS2mBsamdTkBrhnYus3cVdpTU6kq2fxNoEK6P4Lur65F5sKQxLrC
+         heoA==
+X-Gm-Message-State: APjAAAXWkGhXuHokqlKvxmONTUaJaAv8hPN98e0ggnBeVVzVDmsnudRO
+        YHGrm2eDN0mmQbIvfGWcvMKmFI2g
+X-Google-Smtp-Source: APXvYqxd9r1jRLVKlPtOYdaNYS2tkBNrOOTTGvGIEE9bOlrI1GO1LSIHz4bFRIwAtc1+4iO8opIRfQ==
+X-Received: by 2002:a9d:774b:: with SMTP id t11mr4513255otl.319.1569124769887;
+        Sat, 21 Sep 2019 20:59:29 -0700 (PDT)
 Received: from os42.localdomain (ip68-5-145-143.oc.oc.cox.net. [68.5.145.143])
-        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.27
+        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.28
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 21 Sep 2019 20:59:28 -0700 (PDT)
+        Sat, 21 Sep 2019 20:59:29 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 12/20] lpfc: Fix host hang at boot or slow boot
-Date:   Sat, 21 Sep 2019 20:58:58 -0700
-Message-Id: <20190922035906.10977-13-jsmart2021@gmail.com>
+Subject: [PATCH 13/20] lpfc: Fix list corruption in lpfc_sli_get_iocbq
+Date:   Sat, 21 Sep 2019 20:58:59 -0700
+Message-Id: <20190922035906.10977-14-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190922035906.10977-1-jsmart2021@gmail.com>
 References: <20190922035906.10977-1-jsmart2021@gmail.com>
@@ -69,109 +69,108 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Scenarios were seen where a host hung when the system booted
-or the host was very slow in booting. The link would not come
-up and no luns were visible to the host.
+After study, it was determined there was a double free of a CT
+iocb during execution of lpfc_offline_prep and lpfc_offline.
+The prep routine issued an abort for some CT iocbs, but the
+aborts did not complete fast enough for a subsequent routine
+that waits for completion. Thus the driver proceeded to
+lpfc_offline, which releases any pending iocbs. Unfortunately,
+the completions for the aborts were then received which re-released
+the ct iocbs.
 
-After investigation, this was found to be due to the introduction
-of a new ACQE that adapter may generate to report a adapter hw
-warning. The ACQE was delivered to the driver very early in
-adapter initialization, when the driver did not expect command
-completion. As part of handling this unexpected interrupt the
-an EQEs are consumed and discarded and the EQ rearmed. The issue
-is the CQ that cause the EQE and thus the interrupt was not
-processed and the CQ was left unarmed. Meaning it would no longer
-generate a new interrupt condition. Subsequent mailbox commands
-used to initialize the adapter use the same CQ, and as there was
-no completion interrupt generated, the driver never saw the
-mailbox commands complete and it would wait long command timeouts.
+Turns out the issue for why the aborts didn't complete fast
+enough was not their time on the wire/in the adapter. It was the
+lpfc_work_done routine, which requires the adapter state to be UP
+before it calls lpfc_sli_handle_slow_ring_event() to process the
+completions. The issue is the prep routine takes the link down
+as part of it's processing.
 
-Fix by having the early flush routine also process the related CQ
-and rearm the CQ.
+To fix, the following was performed:
+- Prevent the offline routine from releasing iocbs that have had aborts
+  issued on them. Defer to the abort completions. Also means the
+  driver fully waits for the completions.
+  Given this change, the recognition of "driver-generated" status
+  which then releases the iocb is no longer valid. As such, the change
+  made in the commit 296012285c90 is reverted.
+  As recognition of "driver-generated" status is no longer valid,
+  this patch reverts the changes made in
+  commit 296012285c90 ("scsi: lpfc: Fix leak of ELS completions on adapter reset").
+- Modify lpfc_work_done to allow slow path completions so that
+  the abort completions aren't ignored.
+- Updated the fdmi path to recognize a CT request that fails
+  due to the port being unusable. This stops FDMI retries. FDMI
+  will be restarted on next link up.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 42 ++++++++++++++++++++++++++++++++++++------
- 1 file changed, 36 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c      | 6 ++++++
+ drivers/scsi/lpfc/lpfc_els.c     | 3 +++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 5 ++++-
+ drivers/scsi/lpfc/lpfc_sli.c     | 3 ---
+ 4 files changed, 13 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 25e86706e207..f883fac2d2b1 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1868,6 +1868,12 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT) {
+ 			switch ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK)) {
+ 			case IOERR_SLI_ABORTED:
++			case IOERR_SLI_DOWN:
++				/* Driver aborted this IO.  No retry as error
++				 * is likely Offline->Online or some adapter
++				 * error.  Recovery will try again.
++				 */
++				break;
+ 			case IOERR_ABORT_IN_PROGRESS:
+ 			case IOERR_SEQUENCE_TIMEOUT:
+ 			case IOERR_ILLEGAL_FRAME:
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 55ab37572e92..bd8109b2a083 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8019,6 +8019,9 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 		if (piocb->vport != vport)
+ 			continue;
+ 
++		if (piocb->iocb_flag & LPFC_DRIVER_ABORTED)
++			continue;
++
+ 		/* On the ELS ring we can have ELS_REQUESTs or
+ 		 * GEN_REQUESTs waiting for a response.
+ 		 */
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index f483b3aea22b..808ad666bb1b 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -700,7 +700,10 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 			if (!(phba->hba_flag & HBA_SP_QUEUE_EVT))
+ 				set_bit(LPFC_DATA_READY, &phba->data_flags);
+ 		} else {
+-			if (phba->link_state >= LPFC_LINK_UP ||
++			/* Driver could have abort request completed in queue
++			 * when link goes down.  Allow for this transition.
++			 */
++			if (phba->link_state >= LPFC_LINK_DOWN ||
+ 			    phba->link_flag & LS_MDS_LOOPBACK) {
+ 				pring->flag &= ~LPFC_DEFERRED_RING_EVENT;
+ 				lpfc_sli_handle_slow_ring_event(phba, pring,
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 939efee6b5dd..412cd8c56d90 100644
+index 412cd8c56d90..ff261c0c738a 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -87,6 +87,10 @@ static void lpfc_sli4_hba_handle_eqe(struct lpfc_hba *phba,
- 				     struct lpfc_eqe *eqe);
- static bool lpfc_sli4_mbox_completions_pending(struct lpfc_hba *phba);
- static bool lpfc_sli4_process_missed_mbox_completions(struct lpfc_hba *phba);
-+static struct lpfc_cqe *lpfc_sli4_cq_get(struct lpfc_queue *q);
-+static void __lpfc_sli4_consume_cqe(struct lpfc_hba *phba,
-+				    struct lpfc_queue *cq,
-+				    struct lpfc_cqe *cqe);
+@@ -11090,9 +11090,6 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				irsp->ulpStatus, irsp->un.ulpWord[4]);
  
- static IOCB_t *
- lpfc_get_iocb_from_iocbq(struct lpfc_iocbq *iocbq)
-@@ -467,21 +471,47 @@ __lpfc_sli4_consume_eqe(struct lpfc_hba *phba, struct lpfc_queue *eq,
- }
- 
- static void
--lpfc_sli4_eq_flush(struct lpfc_hba *phba, struct lpfc_queue *eq)
-+lpfc_sli4_eqcq_flush(struct lpfc_hba *phba, struct lpfc_queue *eq)
- {
--	struct lpfc_eqe *eqe;
--	uint32_t count = 0;
-+	struct lpfc_eqe *eqe = NULL;
-+	u32 eq_count = 0, cq_count = 0;
-+	struct lpfc_cqe *cqe = NULL;
-+	struct lpfc_queue *cq = NULL, *childq = NULL;
-+	int cqid = 0;
- 
- 	/* walk all the EQ entries and drop on the floor */
- 	eqe = lpfc_sli4_eq_get(eq);
- 	while (eqe) {
-+		/* Get the reference to the corresponding CQ */
-+		cqid = bf_get_le32(lpfc_eqe_resource_id, eqe);
-+		cq = NULL;
-+
-+		list_for_each_entry(childq, &eq->child_list, list) {
-+			if (childq->queue_id == cqid) {
-+				cq = childq;
-+				break;
-+			}
-+		}
-+		/* If CQ is valid, iterate through it and drop all the CQEs */
-+		if (cq) {
-+			cqe = lpfc_sli4_cq_get(cq);
-+			while (cqe) {
-+				__lpfc_sli4_consume_cqe(phba, cq, cqe);
-+				cq_count++;
-+				cqe = lpfc_sli4_cq_get(cq);
-+			}
-+			/* Clear and re-arm the CQ */
-+			phba->sli4_hba.sli4_write_cq_db(phba, cq, cq_count,
-+			    LPFC_QUEUE_REARM);
-+			cq_count = 0;
-+		}
- 		__lpfc_sli4_consume_eqe(phba, eq, eqe);
--		count++;
-+		eq_count++;
- 		eqe = lpfc_sli4_eq_get(eq);
+ 		spin_unlock_irq(&phba->hbalock);
+-		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
+-		    irsp->un.ulpWord[4] == IOERR_SLI_ABORTED)
+-			lpfc_sli_release_iocbq(phba, abort_iocb);
  	}
- 
- 	/* Clear and re-arm the EQ */
--	phba->sli4_hba.sli4_write_eq_db(phba, eq, count, LPFC_QUEUE_REARM);
-+	phba->sli4_hba.sli4_write_eq_db(phba, eq, eq_count, LPFC_QUEUE_REARM);
- }
- 
- static int
-@@ -14236,7 +14266,7 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 		spin_lock_irqsave(&phba->hbalock, iflag);
- 		if (phba->link_state < LPFC_LINK_DOWN)
- 			/* Flush, clear interrupt, and rearm the EQ */
--			lpfc_sli4_eq_flush(phba, fpeq);
-+			lpfc_sli4_eqcq_flush(phba, fpeq);
- 		spin_unlock_irqrestore(&phba->hbalock, iflag);
- 		return IRQ_NONE;
- 	}
+ release_iocb:
+ 	lpfc_sli_release_iocbq(phba, cmdiocb);
 -- 
 2.13.7
 
