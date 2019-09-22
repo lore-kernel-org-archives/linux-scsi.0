@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAF5C3A5A6
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6EADC3A5A6
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F02120B7C
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C46C20820
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Sep 2019 03:59:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CvlhPXSo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uXdJdDzx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727482AbfIVD7g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Sep 2019 23:59:36 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:34163 "EHLO
+        id S1727517AbfIVD7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Sep 2019 23:59:37 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:44523 "EHLO
         mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727507AbfIVD7f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:35 -0400
-Received: by mail-oi1-f193.google.com with SMTP id 83so5020207oii.1
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:35 -0700 (PDT)
+        with ESMTP id S1727507AbfIVD7g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Sep 2019 23:59:36 -0400
+Received: by mail-oi1-f193.google.com with SMTP id w6so4977231oie.11
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Sep 2019 20:59:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=oE2JYBGf1mtJ/lU1wpxt0+8lKO3AfmVlBAc2nIOYMU0=;
-        b=CvlhPXSoqmLJCoDK4nlumud9XkR5A1YrwdQLFUg/JzDYKwPtNB5fL3b50zR1glkDHR
-         Oo9QePVDlveC64ABf0Yupket9RhfCcEBElzaj5TSP6PVV6EChRjTYyhBpKghGZgemQFR
-         xMRT4LkE5gJ3TwaGHw49TLDEAlWUq6WO/0TpRzkYSjsFwF3JFS5qYRQzIHrm7xPpRpZH
-         1kI5WIdTSxuyaDDeZvxF+/zkzn0UJ2GHAaUKRBOOTnz6HydkSSZmKyJJuFvwt/F2CcCL
-         UiQE1tl5K6iuOmRY8RRL7BYVCbzFAkCFOs/qT4YtwW3u6AEoB4ffM9YmL/BwRWFkfoum
-         eLqQ==
+        bh=pP6X7HhOkL/7T56luGU90DfrPanvWh/Hx11DKJn/5QQ=;
+        b=uXdJdDzxUORDvDf9C/JkYIQ4/oqTi1+noNgqrqZpAP0prdFXlunk561QeucxRpgp5H
+         8PD0CJT1GKA6AqCxI0KAJODESmfVdgn7FYCAMl+wBsZ5Ol7AZhEMQSH9STdLTBEUj1zU
+         ADbB2um0lUMYS74kEj0PaOfpXxr62BfNZMhHo6FA4H+DHETUH5TJlvEchrfPNXiHJtPv
+         pMsjAfBEs4NGG1VWftFz5Okh3LL2UuftogwyjeDD7kVHuFMUN0SoTxObUXqN5xcDSu4E
+         0SCcpHY+xgDdf7xXto82hTlKe4vW4nzsYp0hWQWP1TytC5qAHXzivY+oW1FXwVP0Ls29
+         LfJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=oE2JYBGf1mtJ/lU1wpxt0+8lKO3AfmVlBAc2nIOYMU0=;
-        b=FXnmi6NXIPMRLhDiYWJ33CrOtC6qDIvWSieAop8WoQPZ/b5tYM4PFV6Olu/mQwJuz+
-         trbACbmt4gI05tBphKJzzJj2/pQyWBP4BOsdwZcA4AnHpgOaCCjyBT0VZYA60cBCRhZj
-         2ghdpdRebk6gK5iKU2IUfUjU7y3+qj+kA6APZKoHLOlN9/WkyNVxEWbYx6+brJLClyi2
-         HZLCqbthyqOI7w1sTv4pslTG0geV820Z+QaEucN6jIOtDjKmT1pTq0dlSCaP2elrepZO
-         NnJm4+Wdy8ORgB4DLKMSkbpUVCX6b4hTK6bl92If2zEihXVk/0fmGmZao6hsHct/lrWW
-         IK/A==
-X-Gm-Message-State: APjAAAVkkis2CYiGqBTKx/2mGTzQH8GZOEPXQGOO57mbUEH3+H05jdKb
-        ASON0Zn/U39KRENJnjr6Up6fUWbo
-X-Google-Smtp-Source: APXvYqws6jJ4u3VtBDQWxbTOV6RL0BhHRuW2b69Fq4gtCnq7QH+sz29A+79jIOLJaid3GUCOoMFQsg==
-X-Received: by 2002:aca:2118:: with SMTP id 24mr9138468oiz.95.1569124774821;
-        Sat, 21 Sep 2019 20:59:34 -0700 (PDT)
+        bh=pP6X7HhOkL/7T56luGU90DfrPanvWh/Hx11DKJn/5QQ=;
+        b=OXLvKyakN9B9MONoiNu/yuDyj48s61OunHzOjPX/fk8UO8w3X2kkK3sDsq3brpRHhP
+         fNmVbBiVwQMVw49T73697J6KKmRPD+o2vOljSGvlENu6XYSsxumGAwfl/5wqBRbRpayZ
+         0fHFOByetK63Q8YaL2Gv7i2rQYxN+36jlzR1LGdOcoOxN2YSbjhaCknUSNKwaVJyPudg
+         teDbInMSurXJnzrcnGFzq3FCBFMvt/sZLK3pPOHIvw48GLiFySI3HdhXt4JpVoN3zQOl
+         pL686rtEYjUSp4zgz6odg1gzAUNnVpJWyrUvutB8QU5FGzcQXAQAh4HZ6Ogj9hFBRXS9
+         9Jhw==
+X-Gm-Message-State: APjAAAXy081uqy61/CtSqyonbKB9gx71CVxsDbzdSnVzZh4F7h/igIPL
+        reDysxGktc9BVp58314dXceJFdBU
+X-Google-Smtp-Source: APXvYqy6b6hRR6y2MF2AbTNQScsTFkW06pRqn6DIUbRfuwgWw8Ec1XDaeBheFnlTsM1urEU/rttdaQ==
+X-Received: by 2002:aca:d60c:: with SMTP id n12mr8760924oig.149.1569124775763;
+        Sat, 21 Sep 2019 20:59:35 -0700 (PDT)
 Received: from os42.localdomain (ip68-5-145-143.oc.oc.cox.net. [68.5.145.143])
-        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.33
+        by smtp.gmail.com with ESMTPSA id a9sm2395889otc.75.2019.09.21.20.59.34
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 21 Sep 2019 20:59:34 -0700 (PDT)
+        Sat, 21 Sep 2019 20:59:35 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 18/20] lpfc: Complete removal of FCoE T10diff support on SLI-4 adapters
-Date:   Sat, 21 Sep 2019 20:59:04 -0700
-Message-Id: <20190922035906.10977-19-jsmart2021@gmail.com>
+Subject: [PATCH 19/20] lpfc: cleanup: remove unused fcp_txcmlpq_cnt
+Date:   Sat, 21 Sep 2019 20:59:05 -0700
+Message-Id: <20190922035906.10977-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20190922035906.10977-1-jsmart2021@gmail.com>
 References: <20190922035906.10977-1-jsmart2021@gmail.com>
@@ -69,50 +69,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T10DIF support on SLI-4-based FCoE adapters is not supported.
-A prior commit in the 12.4.0.0 stream added device recognition
-that would prevent T10diff enablement. However, it didn't contain
-a complete device list. Thus some SLI-4 FCoE adapters still had
-T10DIF enabled.
+Local variable fcp_txcmplq_cnt is initialized to 0 and then displayed
+in lpfc driver message 0387.
 
-Fix by expanding the device list that identifies FCoE devices.
+Presumed residual (or unused) code from previous commit.
+
+Removed fcp_txcmplq_cnt.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 79a192479755..e4c89e56c632 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -7083,11 +7083,22 @@ struct fc_function_template lpfc_vport_transport_functions = {
- static void
- lpfc_get_hba_function_mode(struct lpfc_hba *phba)
- {
--	/* If it's a SkyHawk FCoE adapter */
--	if (phba->pcidev->device == PCI_DEVICE_ID_SKYHAWK)
-+	/* If the adapter supports FCoE mode */
-+	switch (phba->pcidev->device) {
-+	case PCI_DEVICE_ID_SKYHAWK:
-+	case PCI_DEVICE_ID_SKYHAWK_VF:
-+	case PCI_DEVICE_ID_LANCER_FCOE:
-+	case PCI_DEVICE_ID_LANCER_FCOE_VF:
-+	case PCI_DEVICE_ID_ZEPHYR_DCSP:
-+	case PCI_DEVICE_ID_HORNET:
-+	case PCI_DEVICE_ID_TIGERSHARK:
-+	case PCI_DEVICE_ID_TOMCAT:
- 		phba->hba_flag |= HBA_FCOE_MODE;
--	else
-+		break;
-+	default:
-+	/* for others, clear the flag */
- 		phba->hba_flag &= ~HBA_FCOE_MODE;
-+	}
- }
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 09e275e3bcd8..379c37451645 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -13260,7 +13260,6 @@ lpfc_sli4_sp_handle_els_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 	struct lpfc_sli_ring *pring = cq->pring;
+ 	int txq_cnt = 0;
+ 	int txcmplq_cnt = 0;
+-	int fcp_txcmplq_cnt = 0;
  
- /**
+ 	/* Check for response status */
+ 	if (unlikely(bf_get(lpfc_wcqe_c_status, wcqe))) {
+@@ -13282,9 +13281,8 @@ lpfc_sli4_sp_handle_els_wcqe(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 			txcmplq_cnt++;
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 			"0387 NO IOCBQ data: txq_cnt=%d iocb_cnt=%d "
+-			"fcp_txcmplq_cnt=%d, els_txcmplq_cnt=%d\n",
++			"els_txcmplq_cnt=%d\n",
+ 			txq_cnt, phba->iocb_cnt,
+-			fcp_txcmplq_cnt,
+ 			txcmplq_cnt);
+ 		return false;
+ 	}
 -- 
 2.13.7
 
