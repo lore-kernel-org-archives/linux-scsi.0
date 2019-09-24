@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05812C4320D
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84941C432C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEF4F222C8
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:55:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5655820673
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:57:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569344144;
-	bh=z73psTK34fbmksqrLT4/YfS8TjnQVVU5eQzrEgt7u9Y=;
+	s=default; t=1569344250;
+	bh=6A2J0Sovo7K25g67n+DgoXjOaF/bFbMsDKsHLCMcda8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AG/NDAQIqqsNiz+6PEtdh82yzrxhxkDV3yAJrFbGz6x34PcU5n2KBJNS8RL0FtMNN
-	 DYmVOpuB2IXuoQx58i9keyjiFU8yxS7dvSNE4qGWFC/3sP898k7UJsR+p/abZxN44d
-	 dzgGPpVpS8nHuuuJZs9qmodxlPZeroT7wZS+BbDg=
+	b=aCsmEjNhP/aous1w/Q3e+VypsVeQFw4RJ8RoCR9Ewa0oiHQ0SY7EpSw+AAP48hfVu
+	 w/HxqEGmaTU/AhTQo4/yjxDlHLROVxCtRQTcI01jNS7evWhM4p/cEgbTgMHNTV199P
+	 5MEu7ILCyW3wcr2rDYdWlo3cIDK3ZPhrK0WwuN0Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410768AbfIXQua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Sep 2019 12:50:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43306 "EHLO mail.kernel.org"
+        id S2410117AbfIXQsm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Sep 2019 12:48:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2410760AbfIXQu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:50:29 -0400
+        id S2410543AbfIXQsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Sep 2019 12:48:41 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EE063222C3;
-        Tue, 24 Sep 2019 16:50:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38253217D9;
+        Tue, 24 Sep 2019 16:48:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569343828;
-        bh=z73psTK34fbmksqrLT4/YfS8TjnQVVU5eQzrEgt7u9Y=;
+        s=default; t=1569343720;
+        bh=6A2J0Sovo7K25g67n+DgoXjOaF/bFbMsDKsHLCMcda8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rMXRBx12ubTUkNGTcnDgWd8Xgjuw0b9JPFbH+sAqeh9zbtb4vzwH5qCo9BbUeHPKo
-         rhdHu25WQ5jUbSfAfxeJ52aTde+nchhB1qCUu7Or/Ta0ctDSxaG1VEfh2R87oZ6ZgY
-         fmnMGQKwI7LVhYkaTSmb8gHzkjodwfzla89w7CDo=
+        b=HNALtdo4CfiAouAavAB18+s1Jd0OSsg4Dj+MT0EuA/V5/6Ta9GYOKsBTQG3AMmJCg
+         PW9a+OkYZZ6kbYY34q5bIV/MG3ZVBJhpFNF7tp4lvY5XNLE0Y+5MGTIlCKYzQ2OXYG
+         6TJDNZ681DSTmnLhKsC3N+my9+jsCNU/woNgStLY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -48,12 +48,12 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 48/50] scsi: core: Reduce memory required for SCSI logging
-Date:   Tue, 24 Sep 2019 12:48:45 -0400
-Message-Id: <20190924164847.27780-48-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 66/70] scsi: core: Reduce memory required for SCSI logging
+Date:   Tue, 24 Sep 2019 12:45:45 -0400
+Message-Id: <20190924164549.27058-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190924164847.27780-1-sashal@kernel.org>
-References: <20190924164847.27780-1-sashal@kernel.org>
+In-Reply-To: <20190924164549.27058-1-sashal@kernel.org>
+References: <20190924164549.27058-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -89,10 +89,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-index bd70339c1242e..03d9855a6afd7 100644
+index 39b8cc4574b49..c6ed0b12e8071 100644
 --- a/drivers/scsi/scsi_logging.c
 +++ b/drivers/scsi/scsi_logging.c
-@@ -16,57 +16,15 @@
+@@ -15,57 +15,15 @@
  #include <scsi/scsi_eh.h>
  #include <scsi/scsi_dbg.h>
  
