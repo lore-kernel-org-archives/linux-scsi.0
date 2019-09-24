@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E90DBC4360C
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A8DC432C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:53:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C09C1222C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:51:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44D4F21BE5
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:53:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569343899;
-	bh=lyaSHlybl3saQoS0Vm8qn2d3taxZeJAkBJEs05fm3uA=;
+	s=default; t=1569343990;
+	bh=/wtT50R0UKvcqlogRMTdX1nI/luz4NZEppunw+LMaHs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=2P7fctU3AjnKAadA2KqygOYyaO/udZguMT+kCl04UKdVvEMMZO1y9teY7wfhit+x8
-	 j6hoPjxSruZsHepT8lVfJaPpOdAQJb5JczeMqPH6UQMowKIVeleGVmT/aVYljRTQLi
-	 bnVJQTfLo0K5jZ4VJVyrI47FIlL+6dzoLeQAmVtI=
+	b=IGif043AOVSZY9S9nuqhCeX83W7nN9fVNfhcpIoDXz3eefS+1AnyGpEsWm46ErQT+
+	 mCiS8e0RTyMo/FF6MAu8XCYWRQEG+OHbsDua1G72P6N2vMs4yybqKv+MymcjFgpEfk
+	 5Fdw1uf+e4oZBxIQP0bqLQabSnRjRCK1z4nwaXIk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404789AbfIXQvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Sep 2019 12:51:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44774 "EHLO mail.kernel.org"
+        id S2633377AbfIXQwt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Sep 2019 12:52:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2410947AbfIXQv3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:51:29 -0400
+        id S2441767AbfIXQws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Sep 2019 12:52:48 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DF19F222BD;
-        Tue, 24 Sep 2019 16:51:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6E3CA222C2;
+        Tue, 24 Sep 2019 16:52:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569343888;
-        bh=lyaSHlybl3saQoS0Vm8qn2d3taxZeJAkBJEs05fm3uA=;
+        s=default; t=1569343967;
+        bh=/wtT50R0UKvcqlogRMTdX1nI/luz4NZEppunw+LMaHs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IQXLV6uyTh8k9HkcwwqRf1soenR+hoGu/rJYUogHOxW+CX70S/OpZqRWZ0nWs276K
-         P4GF1lMOvpVmdJ7CX36ZI/NKbAWVlLwczCK+xWZ9PKy6RTOKwH+oxw8nQbx9flvf7g
-         ddBb9ckjpE1/iYNi5vYdooPqrTYAGg8VFJNprOL8=
+        b=2iibv+4OJZlRztBwd1+A3uLaG7vfCHvnGqHCViwQaXx+xxQfhcdFMxrV46IeQosX+
+         imwDp6qNn4AiWNNiArrGL1uaazlauBhmssrzhqK+HIg/X2KxV5xhK8mTLWsNdsqdmx
+         pixY3wd9wJErh0xLHpxNpsROUaZ2Ypm6yK6A+eig=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -48,12 +48,12 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 27/28] scsi: core: Reduce memory required for SCSI logging
-Date:   Tue, 24 Sep 2019 12:50:30 -0400
-Message-Id: <20190924165031.28292-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 14/14] scsi: core: Reduce memory required for SCSI logging
+Date:   Tue, 24 Sep 2019 12:52:12 -0400
+Message-Id: <20190924165214.28857-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190924165031.28292-1-sashal@kernel.org>
-References: <20190924165031.28292-1-sashal@kernel.org>
+In-Reply-To: <20190924165214.28857-1-sashal@kernel.org>
+References: <20190924165214.28857-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -154,10 +154,10 @@ index bd70339c1242e..03d9855a6afd7 100644
  
  static inline const char *scmd_name(const struct scsi_cmnd *scmd)
 diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
-index 04e0679767f63..2b5dfae782722 100644
+index f8170e90b49d2..bbe71a6361db9 100644
 --- a/include/scsi/scsi_dbg.h
 +++ b/include/scsi/scsi_dbg.h
-@@ -6,8 +6,6 @@ struct scsi_cmnd;
+@@ -5,8 +5,6 @@ struct scsi_cmnd;
  struct scsi_device;
  struct scsi_sense_hdr;
  
