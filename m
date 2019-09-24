@@ -2,150 +2,170 @@ Return-Path: <SRS0=Cwhq=XT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 628B2C4320D
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E90DBC4360C
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:51:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38F5221655
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:06:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C09C1222C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 16:51:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569343899;
+	bh=lyaSHlybl3saQoS0Vm8qn2d3taxZeJAkBJEs05fm3uA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=2P7fctU3AjnKAadA2KqygOYyaO/udZguMT+kCl04UKdVvEMMZO1y9teY7wfhit+x8
+	 j6hoPjxSruZsHepT8lVfJaPpOdAQJb5JczeMqPH6UQMowKIVeleGVmT/aVYljRTQLi
+	 bnVJQTfLo0K5jZ4VJVyrI47FIlL+6dzoLeQAmVtI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439179AbfIXQGn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Sep 2019 12:06:43 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:63086 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2438070AbfIXQGn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:06:43 -0400
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x8OFki5Z169382
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2019 12:06:39 -0400
-Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2v7ky95acm-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Sep 2019 12:06:38 -0400
-Received: from localhost
-        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Tue, 24 Sep 2019 17:06:33 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp02.uk.ibm.com (192.168.101.132) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 24 Sep 2019 17:06:32 +0100
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x8OG6UaZ21299342
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Sep 2019 16:06:30 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6865A4204B;
-        Tue, 24 Sep 2019 16:06:30 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 11B6642047;
-        Tue, 24 Sep 2019 16:06:30 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 24 Sep 2019 16:06:30 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
-Subject: [PATCH] zfcp: fix reaction on bit error theshold notification with adapter close
-Date:   Tue, 24 Sep 2019 18:06:16 +0200
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-x-cbid: 19092416-0008-0000-0000-0000031A6E51
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19092416-0009-0000-0000-00004A3902C3
-Message-Id: <20190924160616.15301-1-maier@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-09-24_06:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1909240147
+        id S2404789AbfIXQvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Sep 2019 12:51:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44774 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2410947AbfIXQv3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Sep 2019 12:51:29 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DF19F222BD;
+        Tue, 24 Sep 2019 16:51:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569343888;
+        bh=lyaSHlybl3saQoS0Vm8qn2d3taxZeJAkBJEs05fm3uA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=IQXLV6uyTh8k9HkcwwqRf1soenR+hoGu/rJYUogHOxW+CX70S/OpZqRWZ0nWs276K
+         P4GF1lMOvpVmdJ7CX36ZI/NKbAWVlLwczCK+xWZ9PKy6RTOKwH+oxw8nQbx9flvf7g
+         ddBb9ckjpE1/iYNi5vYdooPqrTYAGg8VFJNprOL8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Jan Palus <jpalus@fastmail.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 27/28] scsi: core: Reduce memory required for SCSI logging
+Date:   Tue, 24 Sep 2019 12:50:30 -0400
+Message-Id: <20190924165031.28292-27-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190924165031.28292-1-sashal@kernel.org>
+References: <20190924165031.28292-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Kernel message explanation:
+From: Bart Van Assche <bvanassche@acm.org>
 
- * Description:
- * The FCP channel reported that its bit error threshold has been exceeded.
- * These errors might result from a problem with the physical components
- * of the local fibre link into the FCP channel.
- * The problem might be damage or malfunction of the cable or
- * cable connection between the FCP channel and
- * the adjacent fabric switch port or the point-to-point peer.
- * Find details about the errors in the HBA trace for the FCP device.
- * The zfcp device driver closed down the FCP device
- * to limit the performance impact from possible I/O command timeouts.
- * User action:
- * Check for problems on the local fibre link, ensure that fibre optics are
- * clean and functional, and all cables are properly plugged.
- * After the repair action, you can manually recover the FCP device by
- * writing "0" into its "failed" sysfs attribute.
- * If recovery through sysfs is not possible, set the CHPID of the device
- * offline and back online on the service element.
+[ Upstream commit dccc96abfb21dc19d69e707c38c8ba439bba7160 ]
 
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: <stable@vger.kernel.org> #2.6.30+
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+The data structure used for log messages is so large that it can cause a
+boot failure. Since allocations from that data structure can fail anyway,
+use kmalloc() / kfree() instead of that data structure.
+
+See also https://bugzilla.kernel.org/show_bug.cgi?id=204119.
+See also commit ded85c193a39 ("scsi: Implement per-cpu logging buffer") # v4.0.
+
+Reported-by: Jan Palus <jpalus@fastmail.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Jan Palus <jpalus@fastmail.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
+ drivers/scsi/scsi_logging.c | 48 +++----------------------------------
+ include/scsi/scsi_dbg.h     |  2 --
+ 2 files changed, 3 insertions(+), 47 deletions(-)
 
-Martin, James,
-
-an important zfcp fix for v5.4-rc.
-It applies to Martin's 5.4/scsi-fixes or to James' fixes branch.
-
-
- drivers/s390/scsi/zfcp_fsf.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 296bbc3c4606..cf63916814cc 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -27,6 +27,11 @@
+diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
+index bd70339c1242e..03d9855a6afd7 100644
+--- a/drivers/scsi/scsi_logging.c
++++ b/drivers/scsi/scsi_logging.c
+@@ -16,57 +16,15 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dbg.h>
  
- struct kmem_cache *zfcp_fsf_qtcb_cache;
- 
-+static bool ber_stop = true;
-+module_param(ber_stop, bool, 0600);
-+MODULE_PARM_DESC(ber_stop,
-+		 "Shuts down FCP devices for FCP channels that report a bit-error count in excess of its threshold (default on)");
-+
- static void zfcp_fsf_request_timeout_handler(struct timer_list *t)
+-#define SCSI_LOG_SPOOLSIZE 4096
+-
+-#if (SCSI_LOG_SPOOLSIZE / SCSI_LOG_BUFSIZE) > BITS_PER_LONG
+-#warning SCSI logging bitmask too large
+-#endif
+-
+-struct scsi_log_buf {
+-	char buffer[SCSI_LOG_SPOOLSIZE];
+-	unsigned long map;
+-};
+-
+-static DEFINE_PER_CPU(struct scsi_log_buf, scsi_format_log);
+-
+ static char *scsi_log_reserve_buffer(size_t *len)
  {
- 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
-@@ -236,10 +241,15 @@ static void zfcp_fsf_status_read_handler(struct zfcp_fsf_req *req)
- 	case FSF_STATUS_READ_SENSE_DATA_AVAIL:
- 		break;
- 	case FSF_STATUS_READ_BIT_ERROR_THRESHOLD:
--		dev_warn(&adapter->ccw_device->dev,
--			 "The error threshold for checksum statistics "
--			 "has been exceeded\n");
- 		zfcp_dbf_hba_bit_err("fssrh_3", req);
-+		if (ber_stop) {
-+			dev_warn(&adapter->ccw_device->dev,
-+				 "All paths over this FCP device are disused because of excessive bit errors\n");
-+			zfcp_erp_adapter_shutdown(adapter, 0, "fssrh_b");
-+		} else {
-+			dev_warn(&adapter->ccw_device->dev,
-+				 "The error threshold for checksum statistics has been exceeded\n");
-+		}
- 		break;
- 	case FSF_STATUS_READ_LINK_DOWN:
- 		zfcp_fsf_status_read_link_down(req);
+-	struct scsi_log_buf *buf;
+-	unsigned long map_bits = sizeof(buf->buffer) / SCSI_LOG_BUFSIZE;
+-	unsigned long idx = 0;
+-
+-	preempt_disable();
+-	buf = this_cpu_ptr(&scsi_format_log);
+-	idx = find_first_zero_bit(&buf->map, map_bits);
+-	if (likely(idx < map_bits)) {
+-		while (test_and_set_bit(idx, &buf->map)) {
+-			idx = find_next_zero_bit(&buf->map, map_bits, idx);
+-			if (idx >= map_bits)
+-				break;
+-		}
+-	}
+-	if (WARN_ON(idx >= map_bits)) {
+-		preempt_enable();
+-		return NULL;
+-	}
+-	*len = SCSI_LOG_BUFSIZE;
+-	return buf->buffer + idx * SCSI_LOG_BUFSIZE;
++	*len = 128;
++	return kmalloc(*len, GFP_ATOMIC);
+ }
+ 
+ static void scsi_log_release_buffer(char *bufptr)
+ {
+-	struct scsi_log_buf *buf;
+-	unsigned long idx;
+-	int ret;
+-
+-	buf = this_cpu_ptr(&scsi_format_log);
+-	if (bufptr >= buf->buffer &&
+-	    bufptr < buf->buffer + SCSI_LOG_SPOOLSIZE) {
+-		idx = (bufptr - buf->buffer) / SCSI_LOG_BUFSIZE;
+-		ret = test_and_clear_bit(idx, &buf->map);
+-		WARN_ON(!ret);
+-	}
+-	preempt_enable();
++	kfree(bufptr);
+ }
+ 
+ static inline const char *scmd_name(const struct scsi_cmnd *scmd)
+diff --git a/include/scsi/scsi_dbg.h b/include/scsi/scsi_dbg.h
+index 04e0679767f63..2b5dfae782722 100644
+--- a/include/scsi/scsi_dbg.h
++++ b/include/scsi/scsi_dbg.h
+@@ -6,8 +6,6 @@ struct scsi_cmnd;
+ struct scsi_device;
+ struct scsi_sense_hdr;
+ 
+-#define SCSI_LOG_BUFSIZE 128
+-
+ extern void scsi_print_command(struct scsi_cmnd *);
+ extern size_t __scsi_format_command(char *, size_t,
+ 				   const unsigned char *, size_t);
 -- 
-2.17.1
+2.20.1
 
