@@ -3,82 +3,76 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE6BC432C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 09:44:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA24BC432C1
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 10:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AABDA214D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 09:44:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85CCB214AF
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Sep 2019 10:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504388AbfIXJoe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Sep 2019 05:44:34 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:43186 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2504385AbfIXJoe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2019 05:44:34 -0400
-Received: by mail-lj1-f196.google.com with SMTP id n14so1171577ljj.10;
-        Tue, 24 Sep 2019 02:44:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=qWmkYOt5baX4aQhfwtcn7sK3MbxZygEY/vjhPk+RANo=;
-        b=my1sFslfglrChUW8BP+LY2FgUGJhFzu0gGbqOwcTkkY6bJDYPtGbsHOeMTVKW7u44F
-         cvYXEKBuIMP2Affg1ToBji7xOJRIo9xt4FlEQixq1vdIr0b5T4duosOtAbBbskr5lMGI
-         F/1KSsutkiax9EvNAilMPJIHFpKmOSeqprgzO9YCxerBSLFiQrTlUdVntfqR8z6mP4d1
-         WVb5yUSkMU2c4hv1iIkDUegV82HLWv1IZT/7df2jGvgudT4ntxkEBpHP65t4WCHU0prV
-         xAH/28g1LB2p4wDuPXdZ/7/41iP62Pa4dKRaGitvykJeYqxOHPhyLVbiqyll4EBuRXxL
-         Kmew==
-X-Gm-Message-State: APjAAAV8uECy2WFsFpgV3ejhURktHCw/tDCxKNK+o82e9Q+WQFNnJWeV
-        71NKpUcJlJ/hF/B0v4SKw25XOskPBkA=
-X-Google-Smtp-Source: APXvYqy7yqmHPXCMavncOwv48hYUCpyjzwtT4Hi6SFKa1Kz7OZBX5JuIRCa9xsfDJta7eL/dwSNAXg==
-X-Received: by 2002:a2e:a41b:: with SMTP id p27mr1374496ljn.104.1569318271776;
-        Tue, 24 Sep 2019 02:44:31 -0700 (PDT)
-Received: from [10.10.124.58] (99-48-196-88.sta.estpak.ee. [88.196.48.99])
-        by smtp.gmail.com with ESMTPSA id v1sm332317lfe.34.2019.09.24.02.44.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Sep 2019 02:44:31 -0700 (PDT)
-Subject: Re: [PATCH v3 18/26] scsi: pm80xx: Use PCI_STD_NUM_BARS
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-        linux-scsi@vger.kernel.org, Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20190916204158.6889-1-efremov@linux.com>
- <20190916204158.6889-19-efremov@linux.com> <yq1wody4eml.fsf@oracle.com>
-From:   Denis Efremov <efremov@linux.com>
-Message-ID: <2c240ad0-80b1-3c2e-72a9-a3139f2eae14@linux.com>
-Date:   Tue, 24 Sep 2019 12:44:30 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.0
-MIME-Version: 1.0
-In-Reply-To: <yq1wody4eml.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S2389466AbfIXK55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Sep 2019 06:57:57 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:43515 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2388652AbfIXK55 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Sep 2019 06:57:57 -0400
+X-UUID: 6b4dcb537e034f2fac2ed0db970a76ec-20190924
+X-UUID: 6b4dcb537e034f2fac2ed0db970a76ec-20190924
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1038858326; Tue, 24 Sep 2019 18:57:51 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 24 Sep 2019 18:57:49 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 24 Sep 2019 18:57:49 +0800
+Message-ID: <1569322670.16730.28.camel@mtkswgap22>
+Subject: Re: [PATCH v4 2/8] block: Add encryption context to struct bio
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Satya Tangirala <satyat@google.com>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        "Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?=" 
+        <kuohong.wang@mediatek.com>, Kim Boojin <boojin.kim@samsung.com>
+Date:   Tue, 24 Sep 2019 18:57:50 +0800
+In-Reply-To: <20190821075714.65140-3-satyat@google.com>
+References: <20190821075714.65140-1-satyat@google.com>
+         <20190821075714.65140-3-satyat@google.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi Satya,
 
-On 24.09.2019 05:22, Martin K. Petersen wrote:
-> 
-> Denis,
-> 
->> Replace the magic constant (6) with define PCI_STD_NUM_BARS
->> representing the number of PCI BARs.
-> 
-> Applied to 5.4/scsi-fixes. Thanks!
-> 
+On Wed, 2019-08-21 at 15:57 +0800, Satya Tangirala wrote:
+> @@ -827,16 +839,31 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+>  	if (rq->ioprio != bio_prio(bio))
+>  		return false;
+>  
+> +	/* Only merge if the crypt contexts are compatible */
+> +	if (!bio_crypt_ctx_compatible(bio, rq->bio))
+> +		return false;
+> +
 
-This constant PCI_STD_NUM_BARS is introduced in the first patch [01/26].
-I'm afraid that this patch without the first one will break the compilation.
-This patchset is dedicated to Bjorn's tree. Sorry for confusing you.
+Since bio_crypt_ctx_compatible() lacks of consideration of inode, I am
+not sure if here may lead to incorrect merge decision, especially for
+f2fs which does not allow merging different files.
 
 Thanks,
-Denis
+Stanley
+
