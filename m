@@ -2,122 +2,206 @@ Return-Path: <SRS0=jwuq=XU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB0ABC4360D
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Sep 2019 19:36:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E3AC432C2
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Sep 2019 20:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFA8521D7B
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Sep 2019 19:36:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CC6321D7B
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Sep 2019 20:11:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="DvUJcXMI"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="CFRfStqX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392362AbfIYTgg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Sep 2019 15:36:36 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:53970 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392351AbfIYTgg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Sep 2019 15:36:36 -0400
-Received: by mail-wm1-f68.google.com with SMTP id i16so11276wmd.3
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Sep 2019 12:36:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=p94V9WRq+daHmYvAmIQ2PfZGdypfLEo3xdi9TUiERwg=;
-        b=DvUJcXMILkhs3VkmO9VYg2lxH7dOTcZH/sXcPK/V65T/YsZoW96ej0R5pEWSmD5gkQ
-         xpsvemA9aLsIoM6L9yXuKZGjLrkm4aI8zlC+oZqHWwZXcT1/Ti/R3lwSa5VT/tGPrXi2
-         E2ydllx2XpuA7pFFOQB94FuptwLg79fmz7yHIAaS3ZtS/Q1HuL4P5ahBNHOdGNjyro4g
-         y7XFfrxJ9x2G8f5XSB7AgR59vBhYvSbkDJZeYnboFkMZ/ipNXz8TSD7QjPKafjY4O7pS
-         +jThqiHP0WqT/wBaZcctmzqxBH07OU8uN/LT6HhNJ9vzk1C6RjEas3cEWhqiXcDPu2B3
-         hf0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=p94V9WRq+daHmYvAmIQ2PfZGdypfLEo3xdi9TUiERwg=;
-        b=p8YvKyWD7Pc2hQ6iUVL5K6FjjkiB7/xWPHmcToFIeOCQoKRw9wF+f7FB2DRdferPuk
-         ZEjQY8zhVyhLEI2JxS1ikxwwmpkosOdcOPt+U8SfeJnIyYqddDCqN5citpjzNUGZcV+W
-         mPZo5qzf6pS5xVuPvU0hjnjFl6yT2RXptqXefWQyb2x+4huadTuINVbne7P4immCSJtZ
-         D5cm/ewW/61c5I8z8UV8CKFT3eBFl5KQYjk4bQ9QsK8Q8l/1Jy02NDxmA612srDdbBj8
-         v6YeYP6P7lDUXzhvKet9osT2YsEIawqv2e9NtDF25eWkZ7/y2Hl1qit4N0VjkwyPPk6m
-         H9/w==
-X-Gm-Message-State: APjAAAUl48+xcGeJdyURjMW9MkHfCbCOo3dx8Hij2UK9w6S5YxyCEROR
-        yxPgV4ZL0mki9LhUwOqeDrNBxQ==
-X-Google-Smtp-Source: APXvYqy4vpxu6+iGfcndZrsDJb6j61BDy/2VyWQivm9qKdyDf8G6TF/ZHUk6aiJ71Eb1f6boQItpeQ==
-X-Received: by 2002:a1c:66c2:: with SMTP id a185mr9113888wmc.2.1569440192871;
-        Wed, 25 Sep 2019 12:36:32 -0700 (PDT)
-Received: from [172.20.9.27] ([83.167.33.93])
-        by smtp.gmail.com with ESMTPSA id l18sm7626wrc.18.2019.09.25.12.36.31
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 25 Sep 2019 12:36:32 -0700 (PDT)
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Andrea Vai <andrea.vai@unipv.it>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>
-References: <Pine.LNX.4.44L0.1909251524520.6072-300000@netrider.rowland.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <c304abca-3ac2-fb19-1328-340ca4f18f80@kernel.dk>
-Date:   Wed, 25 Sep 2019 21:36:31 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1909251524520.6072-300000@netrider.rowland.org>
-Content-Type: text/plain; charset=windows-1252
+        id S2392850AbfIYULM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Sep 2019 16:11:12 -0400
+Received: from mail-eopbgr800097.outbound.protection.outlook.com ([40.107.80.97]:12768
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731229AbfIYULM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Sep 2019 16:11:12 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YNeKu2ctkqmAVAubEJ2G+JNH+o3mnF9fRiy/exkKXLjoBd6FCAMaVfr/KBOBHWUItbbKcwxGXYxBsGy58NZyhPxDrpzRZmHjbludIenjFWGqleLwGDoF4GzMtR2vdcqRU1nhRoSbz+eGwk0RFU4MKMXe0ZIMobCoJnIhw85qDvgP4JKdOyNxe05YO4JEMU1Pniqs+9Kq05S/7nnS1pnRvSAbeiUHG0WMh29aCQIlEt5ucrkGnBFIsjYCvp0/jYep91PeKGKmvsEOmA+P/QVxX9Yyi27lTENbFx/4q16kSJp/7Hb+FSfePgvIH9Pw/2mdd6+XkdX9mSrUok6Bm/OMVg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EsJJYknjTnXGyRqEgKnV6qvmK0ALFhZXB2GGvm+ar3g=;
+ b=knp9AM2xfWIilPqlMf5bAvxTkuc+ZcexCH+EH48tJaCzk7eqcYdHcvG4Nq+RNWOnua8QVBjpri5PJLQw76C7ZITsNsUsBpBR7VAOjPDVHcEtehL77AWGQK2H8Pd87ZNARIX+EOL08oAl1He5lX4q9w5Z73cbKys63yKVEHfCqHO+M0KQBG6WjGhDDEP6+x+OZj0Yk2MzzPE0ROHpgP3LJl6w6DwGPdGppDHDnNBYQmaTvlnWisxahpX48bvjtu5ZtlgvLvq6jP9Dv6MsWQncQLsBG9AjqPPj0I8xR2Iu5PBOyjpfHOeocyYbg+cKbH9x4yG6EjntepKa83x3tUsfQQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EsJJYknjTnXGyRqEgKnV6qvmK0ALFhZXB2GGvm+ar3g=;
+ b=CFRfStqXd8FVXgEuy+u+AhSxMPlg6NH/L8qmMnuvS2wR7r63lWr/N0qobDrXpznvLewKbdGqt7d4JjfUiDK6J5qoCdGjw1WCHL0WXHpPrp6LfsjNrcU/gT8+6QRHlR1Gapo9vmIaJRjrmzrSNsEJBw8uSoD6RcZGQtwGarf98fY=
+Received: from SN6PR2101MB0942.namprd21.prod.outlook.com (52.132.114.19) by
+ SN6PR2101MB0910.namprd21.prod.outlook.com (52.132.117.11) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2284.13; Wed, 25 Sep 2019 20:11:09 +0000
+Received: from SN6PR2101MB0942.namprd21.prod.outlook.com
+ ([fe80::7d1a:ddb:3473:b383]) by SN6PR2101MB0942.namprd21.prod.outlook.com
+ ([fe80::7d1a:ddb:3473:b383%9]) with mapi id 15.20.2327.004; Wed, 25 Sep 2019
+ 20:11:09 +0000
+From:   Dexuan Cui <decui@microsoft.com>
+To:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "sashal@kernel.org" <sashal@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Michael Kelley <mikelley@microsoft.com>
+CC:     Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH v2] scsi: storvsc: Add the support of hibernation
+Thread-Topic: [PATCH v2] scsi: storvsc: Add the support of hibernation
+Thread-Index: AQHVc91eXIfIc+ZZsUmqXD4Fs9njvQ==
+Date:   Wed, 25 Sep 2019 20:11:08 +0000
+Message-ID: <1569442244-16726-1-git-send-email-decui@microsoft.com>
+Reply-To: Dexuan Cui <decui@microsoft.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MWHPR13CA0015.namprd13.prod.outlook.com
+ (2603:10b6:300:16::25) To SN6PR2101MB0942.namprd21.prod.outlook.com
+ (2603:10b6:805:4::19)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=decui@microsoft.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 1.8.3.1
+x-originating-ip: [13.77.154.182]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a84682fc-557b-412a-cd74-08d741f48076
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:SN6PR2101MB0910;
+x-ms-traffictypediagnostic: SN6PR2101MB0910:|SN6PR2101MB0910:
+x-ms-exchange-transport-forked: True
+x-ms-exchange-purlcount: 1
+x-microsoft-antispam-prvs: <SN6PR2101MB0910DF2E71D86B49F71000B7BF870@SN6PR2101MB0910.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:883;
+x-forefront-prvs: 01713B2841
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(366004)(376002)(136003)(396003)(346002)(199004)(189003)(102836004)(256004)(36756003)(4326008)(966005)(316002)(7736002)(6636002)(6512007)(71190400001)(43066004)(6306002)(2501003)(107886003)(26005)(99286004)(110136005)(2616005)(66066001)(10090500001)(186003)(8676002)(22452003)(81166006)(4720700003)(71200400001)(81156014)(8936002)(50226002)(66446008)(64756008)(66556008)(66946007)(14444005)(1511001)(478600001)(2906002)(2201001)(66476007)(6436002)(14454004)(25786009)(305945005)(3450700001)(476003)(86362001)(486006)(6116002)(3846002)(6486002)(52116002)(5660300002)(10290500003)(6506007)(386003)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR2101MB0910;H:SN6PR2101MB0942.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: PlDfNWFhIWht7OH7ToLEDRxUb7vstjNuIXMVEaEsomQHe2g28fC/rpMBN2hv/DrZvCf9S5H9uScq/DwBkFvXqfxtE1WXkDIHa3lPiqsBm3ZxUwgt61qJVUNoj2OSakdplWj6pgxgUJ1J2D5vmWwzu4HP1HsqiNCP17ZrL09RYvRSGUbyXmdaL1ZJJUPwElqxcqCMLzPdxvfJiGL9WkjiI63CVq6FxfZ2rbzoT8i0py8gg0wk8u2JBqF5c0Z24NjxFaRyRjmybCm8U4O6nKXtDcGLlbDRjT5txtVXCdQsnDe4X2PWt+16lD2ns2NSvgMtgVfBETaLJSNMxIgVbGRoJEESzRxCtAkrVBMR+Sb96fTli3zzFns0exJpvZcZQsyiG4B2jLFYK8YkUV1wIqSkiPOUQLjrpeqzPltAnDdm95unObbjlrWFCqnCgWem/qqV31KBjQ5qRNNekX/n1UquCw==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a84682fc-557b-412a-cd74-08d741f48076
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Sep 2019 20:11:08.6725
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: MErrASbf8C30NssXuDSJD9UmCspXEjQyISbu6bCHn3VgFK34x0rTBvqsUFzaqKdKkyVqiQgC6JzZTp5C1Ecncw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR2101MB0910
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/25/19 9:30 PM, Alan Stern wrote:
-> On Fri, 20 Sep 2019, Andrea Vai wrote:
-> 
->> Il giorno gio, 19/09/2019 alle 14.14 +0000, Damien Le Moal ha scritto:
->>> On 2019/09/19 16:01, Alan Stern wrote:
->>> [...]
->>>> No doubt Andrea will be happy to test your fix when it's ready.
->>
->> Yes, of course.
->>
->>>
->>> Hannes posted an RFC series:
->>>
->>> https://www.spinics.net/lists/linux-scsi/msg133848.html
->>>
->>> Andrea can try it.
->>
->> Ok, but I would need some instructions please, because I am not able
->> to understand how to "try it". Sorry for that.
-> 
-> I have attached the two patches to this email.  You should start with a
-> recent kernel source tree and apply the patches by doing:
-> 
-> 	git apply patch1 patch2
-> 
-> or something similar.  Then build a kernel from the new source code and
-> test it.
-> 
-> Ultimately, if nobody can find a way to restore the sequential I/O
-> behavior we had prior to commit f664a3cc17b7, that commit may have to
-> be reverted.
+When we're in storvsc_suspend(), we're sure the SCSI layer has quiesced the
+scsi device by scsi_bus_suspend() -> ... -> scsi_device_quiesce(), so the
+low level SCSI adapter driver only needs to suspend/resume its own state.
 
-Don't use patch1, it's buggy. patch2 should be enough to test the theory.
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
--- 
-Jens Axboe
+---
+
+This patch is basically a pure Hyper-V specific change and it has a
+build dependency on the commit 271b2224d42f ("Drivers: hv: vmbus: Implement
+suspend/resume for VSC drivers for hibernation"), which is on Sasha Levin's
+Hyper-V tree's hyperv-next branch:
+https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git/log/?h=3Dh=
+yperv-next
+
+I request this patch should go through Sasha's tree rather than the
+SCSI tree.
+
+In v2:
+	Added Acked-by from Martin.
+
+	@Sasha: I think the patch can go through the hyper-v tree, since
+                we have the Ack from Martin. :-)
+
+	No other change.
+
+
+ drivers/scsi/storvsc_drv.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ed8b9ac..9fbf604 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1727,6 +1727,13 @@ enum {
+=20
+ MODULE_DEVICE_TABLE(vmbus, id_table);
+=20
++static const struct { guid_t guid; } fc_guid =3D { HV_SYNTHFC_GUID };
++
++static bool hv_dev_is_fc(struct hv_device *hv_dev)
++{
++	return guid_equal(&fc_guid.guid, &hv_dev->dev_type);
++}
++
+ static int storvsc_probe(struct hv_device *device,
+ 			const struct hv_vmbus_device_id *dev_id)
+ {
+@@ -1935,11 +1942,45 @@ static int storvsc_remove(struct hv_device *dev)
+ 	return 0;
+ }
+=20
++static int storvsc_suspend(struct hv_device *hv_dev)
++{
++	struct storvsc_device *stor_device =3D hv_get_drvdata(hv_dev);
++	struct Scsi_Host *host =3D stor_device->host;
++	struct hv_host_device *host_dev =3D shost_priv(host);
++
++	storvsc_wait_to_drain(stor_device);
++
++	drain_workqueue(host_dev->handle_error_wq);
++
++	vmbus_close(hv_dev->channel);
++
++	memset(stor_device->stor_chns, 0,
++	       num_possible_cpus() * sizeof(void *));
++
++	kfree(stor_device->stor_chns);
++	stor_device->stor_chns =3D NULL;
++
++	cpumask_clear(&stor_device->alloced_cpus);
++
++	return 0;
++}
++
++static int storvsc_resume(struct hv_device *hv_dev)
++{
++	int ret;
++
++	ret =3D storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
++				     hv_dev_is_fc(hv_dev));
++	return ret;
++}
++
+ static struct hv_driver storvsc_drv =3D {
+ 	.name =3D KBUILD_MODNAME,
+ 	.id_table =3D id_table,
+ 	.probe =3D storvsc_probe,
+ 	.remove =3D storvsc_remove,
++	.suspend =3D storvsc_suspend,
++	.resume =3D storvsc_resume,
+ 	.driver =3D {
+ 		.probe_type =3D PROBE_PREFER_ASYNCHRONOUS,
+ 	},
+--=20
+1.8.3.1
 
