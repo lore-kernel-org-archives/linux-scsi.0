@@ -6,28 +6,27 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BEEFC432C2
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:43:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 824BDC432C2
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC93E222C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:43:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F892222BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727381AbfIZJn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Sep 2019 05:43:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43746 "EHLO mx1.suse.de"
+        id S1727682AbfIZJpP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Sep 2019 05:45:15 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44306 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725911AbfIZJn1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Sep 2019 05:43:27 -0400
+        id S1727450AbfIZJpP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Sep 2019 05:45:15 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id F246AACA4;
-        Thu, 26 Sep 2019 09:43:24 +0000 (UTC)
-Subject: Re: [PATCH] scsi: qla2xxx: Remove WARN_ON_ONCE in
- qla2x00_status_cont_entry()
-To:     Daniel Wagner <dwagner@suse.de>, qla2xxx-upstream@qlogic.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20190926074637.77721-1-dwagner@suse.de>
+        by mx1.suse.de (Postfix) with ESMTP id 1ECE6AD4E;
+        Thu, 26 Sep 2019 09:45:11 +0000 (UTC)
+Subject: Re: [PATCH] scsi: Add sysfs attributes for VPD pages 0h and 89h
+To:     Ryan Attard <ryanattard@ryanattard.info>, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+References: <20190925180251.49980-1-ryanattard@ryanattard.info>
+ <20190925180251.49980-2-ryanattard@ryanattard.info>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -73,12 +72,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <f9db33a2-a1cb-5917-aa81-04a5d1f388db@suse.de>
-Date:   Thu, 26 Sep 2019 11:43:24 +0200
+Message-ID: <c0da4ac9-4a3e-5599-bc92-2bdc6c0e58a3@suse.de>
+Date:   Thu, 26 Sep 2019 11:45:10 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20190926074637.77721-1-dwagner@suse.de>
+In-Reply-To: <20190925180251.49980-2-ryanattard@ryanattard.info>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,35 +86,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/26/19 9:46 AM, Daniel Wagner wrote:
-> Commit 88263208dd23 ("scsi: qla2xxx: Complain if sp->done() is not
-> called from the completion path") introduced the WARN_ON_ONCE in
-> qla2x00_status_cont_entry(). The assumption was that there is only one
-> status continuations element. According to the firmware documentation
-> it is possible that multiple status continuations are emitted by the
-> firmware.
+On 9/25/19 8:02 PM, Ryan Attard wrote:
+> Add sysfs attributes for the ATA information page and
+> Supported VPD Pages page.
 > 
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
+> Signed-off-by: Ryan Attard <ryanattard@ryanattard.info>
 > ---
->  drivers/scsi/qla2xxx/qla_isr.c | 2 --
->  1 file changed, 2 deletions(-)
+>  drivers/scsi/scsi.c        |  4 ++++
+>  drivers/scsi/scsi_sysfs.c  | 19 +++++++++++++++++++
+>  include/scsi/scsi_device.h |  2 ++
+>  3 files changed, 25 insertions(+)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index 4c26630c1c3e..009fd5a33fcd 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -2837,8 +2837,6 @@ qla2x00_status_cont_entry(struct rsp_que *rsp, sts_cont_entry_t *pkt)
->  	if (sense_len == 0) {
->  		rsp->status_srb = NULL;
->  		sp->done(sp, cp->result);
-> -	} else {
-> -		WARN_ON_ONCE(true);
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a7e4fba724b7..088b8ca473e6 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -485,10 +485,14 @@ void scsi_attach_vpd(struct scsi_device *sdev)
+>  		return;
+>  
+>  	for (i = 4; i < vpd_buf->len; i++) {
+> +		if (vpd_buf->data[i] == 0x0)
+> +			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
+>  		if (vpd_buf->data[i] == 0x80)
+>  			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
+>  		if (vpd_buf->data[i] == 0x83)
+>  			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
+> +		if (vpd_buf->data[i] == 0x89)
+> +			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
 >  	}
+>  	kfree(vpd_buf);
+>  }
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 8ce12ffcbb7a..eb6764f92c93 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -429,6 +429,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	struct device *parent;
+>  	struct list_head *this, *tmp;
+>  	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
+> +	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
+>  	unsigned long flags;
+>  
+>  	sdev = container_of(work, struct scsi_device, ew.work);
+> @@ -458,16 +459,24 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	sdev->request_queue = NULL;
+>  
+>  	mutex_lock(&sdev->inquiry_mutex);
+> +	rcu_swap_protected(sdev->vpd_pg0, vpd_pg0,
+> +			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
+>  			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
+>  			   lockdep_is_held(&sdev->inquiry_mutex));
+> +	rcu_swap_protected(sdev->vpd_pg89, vpd_pg89,
+> +			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	mutex_unlock(&sdev->inquiry_mutex);
+>  
+> +	if (vpd_pg0)
+> +		kfree_rcu(vpd_pg0, rcu);
+>  	if (vpd_pg83)
+>  		kfree_rcu(vpd_pg83, rcu);
+>  	if (vpd_pg80)
+>  		kfree_rcu(vpd_pg80, rcu);
+> +	if (vpd_pg89)
+> +		kfree_rcu(vpd_pg89, rcu);
+>  	kfree(sdev->inquiry);
+>  	kfree(sdev);
+>  
+> @@ -840,6 +849,8 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
+>  
+>  sdev_vpd_pg_attr(pg83);
+>  sdev_vpd_pg_attr(pg80);
+> +sdev_vpd_pg_attr(pg89);
+> +sdev_vpd_pg_attr(pg0);
+>  
+>  static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
+>  			    struct bin_attribute *bin_attr,
+> @@ -1136,12 +1147,18 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+>  	struct scsi_device *sdev = to_scsi_device(dev);
+>  
+>  
+> +	if (attr == &dev_attr_vpd_pg0 && !sdev->vpd_pg0)
+> +		return 0;
+> +
+>  	if (attr == &dev_attr_vpd_pg80 && !sdev->vpd_pg80)
+>  		return 0;
+>  
+>  	if (attr == &dev_attr_vpd_pg83 && !sdev->vpd_pg83)
+>  		return 0;
+>  
+> +	if (attr == &dev_attr_vpd_pg89 && !sdev->vpd_pg89)
+> +		return 0;
+> +
+>  	return S_IRUGO;
 >  }
 >  
+> @@ -1183,8 +1200,10 @@ static struct attribute *scsi_sdev_attrs[] = {
+>  };
+>  
+>  static struct bin_attribute *scsi_sdev_bin_attrs[] = {
+> +	&dev_attr_vpd_pg0,
+>  	&dev_attr_vpd_pg83,
+>  	&dev_attr_vpd_pg80,
+> +	&dev_attr_vpd_pg89,
+>  	&dev_attr_inquiry,
+>  	NULL
+>  };
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 571ddb49b926..5e91b0d00393 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -137,6 +137,8 @@ struct scsi_device {
+>  #define SCSI_VPD_PG_LEN                255
+>  	struct scsi_vpd __rcu *vpd_pg83;
+>  	struct scsi_vpd __rcu *vpd_pg80;
+> +	struct scsi_vpd __rcu *vpd_pg89;
+> +	struct scsi_vpd __rcu *vpd_pg0;
+>  	unsigned char current_tag;	/* current tag */
+>  	struct scsi_target      *sdev_target;   /* used only for single_lun */
+>  
 > 
-Not that I can speak for firmware documentation, but:
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
