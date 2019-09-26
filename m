@@ -2,217 +2,116 @@ Return-Path: <SRS0=YGqw=XV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824BDC432C2
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D731CC432C2
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 10:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F892222BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 09:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0179217F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 10:52:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727682AbfIZJpP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Sep 2019 05:45:15 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44306 "EHLO mx1.suse.de"
+        id S1726135AbfIZKwB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Sep 2019 06:52:01 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60134 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727450AbfIZJpP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Sep 2019 05:45:15 -0400
+        id S1725975AbfIZKwB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Sep 2019 06:52:01 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 1ECE6AD4E;
-        Thu, 26 Sep 2019 09:45:11 +0000 (UTC)
-Subject: Re: [PATCH] scsi: Add sysfs attributes for VPD pages 0h and 89h
-To:     Ryan Attard <ryanattard@ryanattard.info>, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-References: <20190925180251.49980-1-ryanattard@ryanattard.info>
- <20190925180251.49980-2-ryanattard@ryanattard.info>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <c0da4ac9-4a3e-5599-bc92-2bdc6c0e58a3@suse.de>
-Date:   Thu, 26 Sep 2019 11:45:10 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        by mx1.suse.de (Postfix) with ESMTP id 76427AE91;
+        Thu, 26 Sep 2019 10:51:59 +0000 (UTC)
+Message-ID: <767fe8f1a50b10d430c30886031251c8f9e4c2dd.camel@suse.de>
+Subject: Re: [PATCH v2 04/14] qla2xxx: Optimize NPIV tear down process
+From:   Martin Wilck <mwilck@suse.de>
+To:     Himanshu Madhani <hmadhani@marvell.com>,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        Quinn Tran <qutran@marvell.com>
+Cc:     linux-scsi@vger.kernel.org
+Date:   Thu, 26 Sep 2019 12:52:02 +0200
+In-Reply-To: <20190912180918.6436-5-hmadhani@marvell.com>
+References: <20190912180918.6436-1-hmadhani@marvell.com>
+         <20190912180918.6436-5-hmadhani@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 
 MIME-Version: 1.0
-In-Reply-To: <20190925180251.49980-2-ryanattard@ryanattard.info>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/25/19 8:02 PM, Ryan Attard wrote:
-> Add sysfs attributes for the ATA information page and
-> Supported VPD Pages page.
+On Thu, 2019-09-12 at 11:09 -0700, Himanshu Madhani wrote:
+> From: Quinn Tran <qutran@marvell.com>
 > 
-> Signed-off-by: Ryan Attard <ryanattard@ryanattard.info>
+> In the case of NPIV port is being torn down, this patch will
+> set a flag to indicate VPORT_DELETE. This would prevent relogin
+> to be triggered.
+> 
+> Signed-off-by: Quinn Tran <qutran@marvell.com>
+> Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 > ---
->  drivers/scsi/scsi.c        |  4 ++++
->  drivers/scsi/scsi_sysfs.c  | 19 +++++++++++++++++++
->  include/scsi/scsi_device.h |  2 ++
->  3 files changed, 25 insertions(+)
+>  drivers/scsi/qla2xxx/qla_attr.c   |  2 ++
+>  drivers/scsi/qla2xxx/qla_def.h    |  1 +
+>  drivers/scsi/qla2xxx/qla_gs.c     |  3 ++-
+>  drivers/scsi/qla2xxx/qla_mid.c    | 32 ++++++++++++++++++++++-------
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c     |  7 ++++++-
+>  drivers/scsi/qla2xxx/qla_target.c |  1 +
+>  6 files changed, 34 insertions(+), 12 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index a7e4fba724b7..088b8ca473e6 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -485,10 +485,14 @@ void scsi_attach_vpd(struct scsi_device *sdev)
->  		return;
+> --- a/drivers/scsi/qla2xxx/qla_mid.c
+> +++ b/drivers/scsi/qla2xxx/qla_mid.c
+> @@ -66,6 +66,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
+>  	uint16_t vp_id;
+>  	struct qla_hw_data *ha = vha->hw;
+>  	unsigned long flags = 0;
+> +	u8 i;
 >  
->  	for (i = 4; i < vpd_buf->len; i++) {
-> +		if (vpd_buf->data[i] == 0x0)
-> +			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
->  		if (vpd_buf->data[i] == 0x80)
->  			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
->  		if (vpd_buf->data[i] == 0x83)
->  			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
-> +		if (vpd_buf->data[i] == 0x89)
-> +			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
->  	}
->  	kfree(vpd_buf);
->  }
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 8ce12ffcbb7a..eb6764f92c93 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -429,6 +429,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->  	struct device *parent;
->  	struct list_head *this, *tmp;
->  	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
-> +	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
->  	unsigned long flags;
->  
->  	sdev = container_of(work, struct scsi_device, ew.work);
-> @@ -458,16 +459,24 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->  	sdev->request_queue = NULL;
->  
->  	mutex_lock(&sdev->inquiry_mutex);
-> +	rcu_swap_protected(sdev->vpd_pg0, vpd_pg0,
-> +			   lockdep_is_held(&sdev->inquiry_mutex));
->  	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
->  			   lockdep_is_held(&sdev->inquiry_mutex));
->  	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
->  			   lockdep_is_held(&sdev->inquiry_mutex));
-> +	rcu_swap_protected(sdev->vpd_pg89, vpd_pg89,
-> +			   lockdep_is_held(&sdev->inquiry_mutex));
->  	mutex_unlock(&sdev->inquiry_mutex);
->  
-> +	if (vpd_pg0)
-> +		kfree_rcu(vpd_pg0, rcu);
->  	if (vpd_pg83)
->  		kfree_rcu(vpd_pg83, rcu);
->  	if (vpd_pg80)
->  		kfree_rcu(vpd_pg80, rcu);
-> +	if (vpd_pg89)
-> +		kfree_rcu(vpd_pg89, rcu);
->  	kfree(sdev->inquiry);
->  	kfree(sdev);
->  
-> @@ -840,6 +849,8 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
->  
->  sdev_vpd_pg_attr(pg83);
->  sdev_vpd_pg_attr(pg80);
-> +sdev_vpd_pg_attr(pg89);
-> +sdev_vpd_pg_attr(pg0);
->  
->  static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
->  			    struct bin_attribute *bin_attr,
-> @@ -1136,12 +1147,18 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
->  	struct scsi_device *sdev = to_scsi_device(dev);
->  
->  
-> +	if (attr == &dev_attr_vpd_pg0 && !sdev->vpd_pg0)
-> +		return 0;
-> +
->  	if (attr == &dev_attr_vpd_pg80 && !sdev->vpd_pg80)
->  		return 0;
->  
->  	if (attr == &dev_attr_vpd_pg83 && !sdev->vpd_pg83)
->  		return 0;
->  
-> +	if (attr == &dev_attr_vpd_pg89 && !sdev->vpd_pg89)
-> +		return 0;
-> +
->  	return S_IRUGO;
->  }
->  
-> @@ -1183,8 +1200,10 @@ static struct attribute *scsi_sdev_attrs[] = {
->  };
->  
->  static struct bin_attribute *scsi_sdev_bin_attrs[] = {
-> +	&dev_attr_vpd_pg0,
->  	&dev_attr_vpd_pg83,
->  	&dev_attr_vpd_pg80,
-> +	&dev_attr_vpd_pg89,
->  	&dev_attr_inquiry,
->  	NULL
->  };
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 571ddb49b926..5e91b0d00393 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -137,6 +137,8 @@ struct scsi_device {
->  #define SCSI_VPD_PG_LEN                255
->  	struct scsi_vpd __rcu *vpd_pg83;
->  	struct scsi_vpd __rcu *vpd_pg80;
-> +	struct scsi_vpd __rcu *vpd_pg89;
-> +	struct scsi_vpd __rcu *vpd_pg0;
->  	unsigned char current_tag;	/* current tag */
->  	struct scsi_target      *sdev_target;   /* used only for single_lun */
->  
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+>  	mutex_lock(&ha->vport_lock);
+>  	/*
+> @@ -75,8 +76,9 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
+>  	 * ensures no active vp_list traversal while the vport is
+> removed
+>  	 * from the queue)
+>  	 */
+> -	wait_event_timeout(vha->vref_waitq, !atomic_read(&vha-
+> >vref_count),
+> -	    10*HZ);
+> +	for (i = 0; i < 10 && atomic_read(&vha->vref_count); i++)
+> +		wait_event_timeout(vha->vref_waitq,
+> +		    atomic_read(&vha->vref_count), HZ);
 
-Cheers,
+Are you missing a negation in this last line?
+Also, what's the point of adding this loop? 
 
-Hannes
--- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 247165 (AG München), GF: Felix Imendörffer
+
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -1115,9 +1115,14 @@ static inline int
+> test_fcport_count(scsi_qla_host_t *vha)
+>  void
+>  qla2x00_wait_for_sess_deletion(scsi_qla_host_t *vha)
+>  {
+> +	u8 i;
+> +
+>  	qla2x00_mark_all_devices_lost(vha, 0);
+>  
+> -	wait_event_timeout(vha->fcport_waitQ, test_fcport_count(vha),
+> 10*HZ);
+> +	for (i = 0; i < 10; i++)
+> +		wait_event_timeout(vha->fcport_waitQ,
+> test_fcport_count(vha),
+> +		    HZ);
+> +
+>  	flush_workqueue(vha->hw->wq);
+>  }
+
+Perhaps here, the loop should be exited if test_fcport_count(vha) gets
+TRUE? And again, why is the loop necessary?
+
+Regards
+Martin
+
+
