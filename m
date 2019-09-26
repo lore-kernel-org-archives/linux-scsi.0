@@ -2,107 +2,99 @@ Return-Path: <SRS0=YGqw=XV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B08C4360C
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 23:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24EE3C4360C
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 23:57:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 494F8207E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 23:26:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="khFTh82D"
+	by mail.kernel.org (Postfix) with ESMTP id EEC53206BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 23:57:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728270AbfIZX0Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Sep 2019 19:26:25 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:59708 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726593AbfIZX0Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2019 19:26:24 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QNJus7133520;
-        Thu, 26 Sep 2019 23:26:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=zMRcyjg9Ib9Y0L3wY0EgQLeSsYjfcQVSQOaWEYjiZn4=;
- b=khFTh82DpP6RnqRNe811iuGeeScu9iaP/yd4/ZD/yv+4+jhxgAdmcG8fZeFeHfqO2hsg
- SYecCkQMrvsm3yCZ2thLVG9pt2e43UZ128V/sgCKg9psH8IWgjEIvAVyDAG2cyhz+yht
- UvfO7UrZn009uzUk134wbl2ho8IAUlH+QHs/Xm/tL9N42ZV0bAdUWnCvPwuQ21ON36h/
- WODR/9ZpSscjr2mugbbImSHrfsjtc3lsKvNFkAAXO8JcjH0/2CAGCWJ13w+XFu7NA4yr
- Rn+dMryA3xDs5+ArHwYMVa0lpwQdk0SR95aq6RjevwZbj0iZVW/mozwLtKpjZuuVfb8k Ow== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2v5b9u6u4f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 23:26:22 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QNNgk8005649;
-        Thu, 26 Sep 2019 23:26:21 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2v91bu3m0v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 23:26:21 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8QNQKxv028111;
-        Thu, 26 Sep 2019 23:26:20 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 26 Sep 2019 16:26:20 -0700
-To:     Andrey Melnikov <temnota.am@gmail.com>
-Cc:     Zhong Li <lizhongfs@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
-        <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
-        <CA+PODjpG7NLTH8wp9qw08ACj4=8sUusmkZv6X7QWHtdbNJ1S0Q@mail.gmail.com>
-Date:   Thu, 26 Sep 2019 19:26:18 -0400
-In-Reply-To: <CA+PODjpG7NLTH8wp9qw08ACj4=8sUusmkZv6X7QWHtdbNJ1S0Q@mail.gmail.com>
-        (Andrey Melnikov's message of "Thu, 12 Sep 2019 15:37:20 +0300")
-Message-ID: <yq1h84y1vxh.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1729044AbfIZX5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Sep 2019 19:57:18 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:51097 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1729009AbfIZX5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2019 19:57:17 -0400
+Received: (qmail 26841 invoked by uid 500); 26 Sep 2019 19:57:16 -0400
+Received: from localhost (sendmail-bs@127.0.0.1)
+  by localhost with SMTP; 26 Sep 2019 19:57:16 -0400
+Date:   Thu, 26 Sep 2019 19:57:16 -0400 (EDT)
+From:   Alan Stern <stern@rowland.harvard.edu>
+X-X-Sender: stern@netrider.rowland.org
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-usb@vger.kernel.org>,
+        <usb-storage@lists.one-eyed-alien.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: [PATCH 0/2] Fix SCSI & USB Storage CHECK CONDITION handling
+In-Reply-To: <20190926220844.26631-1-damien.lemoal@wdc.com>
+Message-ID: <Pine.LNX.4.44L0.1909261943230.24988-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=804
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909260184
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=883 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909260184
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Fri, 27 Sep 2019, Damien Le Moal wrote:
 
-Andrey,
+> If a non-passthrough command is terminated with a CHECK CONDITION, the
+> scsi error recovery code reuses the failed command scsi_cmnd structure
+> to process error recovery request sense. To preserve information
+> regarding the failed command, the functions scsi_eh_prep_cmnd() and
+> scsi_eh_restore_cmnd() respectively save and restore the original
+> command information. However, the resid field of the failed command
+> request structure is not preserved and reused for the request sense
+> handling, leading to the original command having an incorrect resid
+> when:
+> A) The command is not retried and terminated with an error
+> B) The command completes after retry and the underlying LLD does not set
+>    resid for a fully completed command (resid=0)
+> 
+> The first patch of this series addresses case (A) above by adding resid
+> as part of the command information saved using struct scsi_eh_save.
 
->> > This patch break exposing individual RAID disks from adaptec raid
->> > controller. I need access to this disc's for S.M.A.R.T monitoring.
->
-> adaptec report hidden luns with PQ=1, PDT=0 - now it skipped.
+Good catch.
 
->> > Please find other way to workaround bugs in IBM/2145 controller.
+> Case B can be observed with a WD My Book USB disks when a read or write
+> command is sent to the disk while the disk is in deep sleep mode
+> (spun down) due to a long period of inactivity (~30min).
+> In such case, the following command sequence happen:
+> 1) The read or write command is terminated after a few seconds with
+>    CHECK CONDITION and an asc/ascq of 04/01 (LOGICAL UNIT IS IN PROCESS
+>    OF BECOMING READY)
+> 2) In response to this failure, the USB mass storage driver triggers
+>    autosense processing, reusing the command descriptor to issue a
+>    request sense command with a 96B sense buffer size. The reply
+>    to this command gives a NOT READY / LOGICAL UNIT IS IN PROCESS
+>    OF BECOMING READY sense of 18B, resulting in a resid of 78B.
+> 3) The original command is retried and failed again, with step 2
+>    repeated, until the drive spins up and becomes ready.
+> 4) When the original command completes after the drive has become ready,
+>    the request sense command resid of 78B is seen by the scsi disk
+>    driver sd_done() function and wrongly generates a warning about the
+>    unaligned value reported.
 
-Spent some time on this today and I'm in agreement with Zhong's
-interpretation of the SCSI spec.
+But with the 1/1 patch in place, 4 won't happen any more, right?  
+sd_done() will see the resid from the successful read or write.
 
-What puzzles me is that aacraid already supports the no_uld_attach
-feature so I'm not sure why it also sets PQ=1 for physical devices?
+> This problem is fixed in patch 2 by always setting a command resid to 0
+> when there is no residual in usb_stor_Bulk_transport(). Note that
+> usb_stor_CB_transport() does not need changes since usb_stor_bulk_srb()
+> always sets the resid for a completed command, regardless of the
+> residual value.
 
-We could either have a SCSI host flag to override the behavior or
-consider masking PQ in the driver. Unfortunately, I don't have any
-aacraid controllers I can test with in my test setup so I'd have to
-synthesize a setup with scsi_debug.
+Exactly the same reasoning shows that usb_stor_Bulk_transport() also
+does not need changes, doesn't it?  Which means that patch 2/2 is 
+unnecessary.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Alan Stern
+
+PS: The correct term is "residue", not "residual".  I know that the 
+code sometimes uses the wrong word.
+
