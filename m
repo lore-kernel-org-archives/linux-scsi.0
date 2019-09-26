@@ -2,118 +2,102 @@ Return-Path: <SRS0=YGqw=XV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A08EAC4360C
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 22:08:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FC2CC4360C
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 22:52:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 754362054F
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 22:08:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14D7D207FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Sep 2019 22:52:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Gv4RwGk2"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kvLY2wYN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728889AbfIZWIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Sep 2019 18:08:50 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:22768 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbfIZWIu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2019 18:08:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1569535730; x=1601071730;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Hgy6DAPZl0jWum/D86Hr5Fth9vxPUwrThvnxsFiiasc=;
-  b=Gv4RwGk2SHc8W1yMbMk46SSozKpO8eYiSZ9MSHy8wDsDMUhik0LA7jJ1
-   8bZY8AT8NWKQj7ilPZE4SCa+66Ug89Jxge9Sd34C0Td/mDCaY+15sn6vk
-   +la6buQb2COL2Z0tReTA7H3z3xEln1lqAL2uOSaYnjSoPkM+zH6+/q1aY
-   mzoVKxBQoWCeHUV3nCQOfsJJ26IQBISQdMJhLAT4OYJwvN/bd/vExeDC/
-   4Lx9BJHsKMyeQbpSdgE98WzhLyJQAHlMG56t4ZcrrsCpqGrjEZgrg5xMv
-   +wD7+dDNktbIWx1uhx2by/OI4FDveLKyh8bqWXnQcr8bykNP9yQ3hRtfi
-   w==;
-IronPort-SDR: dZkOm3eoQWFJ/9gTuwRCHp4o5Dv8I6ATHsk9rkGX4PtOkuSlL2lCaBtv/e4CpSkZXwEPZDUUM3
- /jrZb8fwni4pKjJID48BgTtnazfTOuWuddf92/it0yAAYyIozV6W78IbK9wE3hSM4OQRe7S/On
- HVeuIQTxOhPa6fWKnzBI63FLl1ZAxG7jWRlg0E4R7JdU8dU9GOg4L5jUUaf+5gUY5KERa3T7IZ
- xGtm0haYwyGmsFrW6DC+E7VD7P1f31vfn2LeQdcdCahzsVdd2vjLKUyAHkRPZRO9vXWSjFd4XN
- Od0=
-X-IronPort-AV: E=Sophos;i="5.64,553,1559491200"; 
-   d="scan'208";a="123681607"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2019 06:08:49 +0800
-IronPort-SDR: pmijeaBlyYfn0ErJ/LU8MQX69Qqm1+TIlo1PfZsqkHmRJAlQ2nuGewRDLHwLxq+L7pb4qj7SXf
- 5YjeDKr6mrcm6quX/ViG0zHbbeZ5WyHeTxgNFTrr4gEkx9WYFba62dADbkYxldPVJvG1v+jNoc
- B4LvPRxfdwnjMQwGD0Edj6N82Y4hyebpBXCPduem2WBZFaoq7St29lFpQSdOs87seFiNE2oSyB
- 7OuQ5x+VdCs8x57fYsOSvNAmjL3O7KG2E9Uh5kJzEgHYwtLWi3Q+ymAJA9TGgUm+F/bvaT7kRU
- 85o5blztRiCFMT9qldkvUnY1
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2019 15:05:09 -0700
-IronPort-SDR: 9zpNuZr0vL+FQiZahPvvSOPlN/37C3hgKudFHglsD3aYQMXbBOTAvOgQZtxQYOVkVyoGd4V+vU
- b8ppPc7GBwbaTEHjhxMZGC3GB0kPBYiIaZM2GiSMOZLYhuyq1IWQ8WUQuvryFTAgOrO59St5Kz
- df6w8FlhBblJxXY6vHra7k08n8U14WXc5r9d4SUmtiqSAdcs6stpMMtMd2eYTwolGRWWKaSL9l
- 8gNAtVAHexT2wvTsuRXmFfwrp4zeerBFR3Et7DDRm2EZMGmdQrmC/R7l/U1uY0jLPhQKG3wkD4
- qwg=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 26 Sep 2019 15:08:48 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: [PATCH 2/2] usb: Clear scsi command resid when residue is 0
-Date:   Fri, 27 Sep 2019 07:08:44 +0900
-Message-Id: <20190926220844.26631-3-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190926220844.26631-1-damien.lemoal@wdc.com>
-References: <20190926220844.26631-1-damien.lemoal@wdc.com>
+        id S1728706AbfIZWwI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Sep 2019 18:52:08 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38810 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728564AbfIZWwH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Sep 2019 18:52:07 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QMmqAE108680;
+        Thu, 26 Sep 2019 22:51:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=D2CwgQsbiGCjO4mkdfUAM40E41fLHHYcnso3Cx++n8Q=;
+ b=kvLY2wYNe0sibiKZEwHz9J3YqUTBY9dzOmvqeRC8wsZFyc04Pi5I+OohcKUhZeq7pbYe
+ G4QQeWAjDiSWizTbyyca02Wwtajuq7FrSBbCukzNjHJisSJqffOhKxsZkaT75TceoL1i
+ aCsIP3GjRSH7+deh2MbgBJN0eKV0YZbLnCEL9MLFx+fPDQcviZvix/focMz5WFCvfH+f
+ YzcT81NWRz9PwiS2XvSnfGdr6eD15GY/OAoAuVrfq9rofFw87GPbsmp/TZtkDs/zIbgQ
+ 61gIKj/Ulv/orSjZDky3XkdrLlVeVD17iKvyXFJm+tWK53yfuQalUv2bThLRWjeNTAuU Pg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2v5cgrenn8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 26 Sep 2019 22:51:57 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QMm9hK142397;
+        Thu, 26 Sep 2019 22:51:57 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2v8yjxpqnw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 26 Sep 2019 22:51:56 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8QMpsWI030809;
+        Thu, 26 Sep 2019 22:51:54 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 26 Sep 2019 15:51:53 -0700
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Denis Efremov <efremov@linux.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Andrew Murray <andrew.murray@arm.com>,
+        linux-scsi@vger.kernel.org, Jack Wang <jinpu.wang@cloud.ionos.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v3 18/26] scsi: pm80xx: Use PCI_STD_NUM_BARS
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190916204158.6889-1-efremov@linux.com>
+        <20190916204158.6889-19-efremov@linux.com>
+        <yq1wody4eml.fsf@oracle.com> <20190926022933.GB238374@google.com>
+Date:   Thu, 26 Sep 2019 18:51:51 -0400
+In-Reply-To: <20190926022933.GB238374@google.com> (Bjorn Helgaas's message of
+        "Wed, 25 Sep 2019 21:29:33 -0500")
+Message-ID: <yq1lfua1xiw.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=574
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909260180
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=656 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909260180
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A scsi command terminated with CHECK CONDITION is hijacked to execute
-request sense with the original command information preserved and
-restored respectively with scsi_eh_prep_cmnd() and
-scsi_eh_restore_cmnd() in usb_stor_invoke_transport(). This means that
-if the original command is retried, the command resid may not be 0,
-indicating the residual at the time of the previous failed execution. If
-the command is retried and fully succeed, the residual of 0 should thus
-be set, always, to avoid reporting to the upper layer an incorrect
-non-zero residual.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/usb/storage/transport.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Bjorn,
 
-diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
-index 96cb0409dd89..c69fcbe467ef 100644
---- a/drivers/usb/storage/transport.c
-+++ b/drivers/usb/storage/transport.c
-@@ -1287,6 +1287,15 @@ int usb_stor_Bulk_transport(struct scsi_cmnd *srb, struct us_data *us)
- 			scsi_set_resid(srb, max(scsi_get_resid(srb),
- 			                                       (int) residue));
- 		}
-+	} else if (!residue) {
-+		/*
-+		 * The command may have been retried after a CHECK CONDITION
-+		 * failure and autosense execution, which can result in resid
-+		 * to indicate the residual at the time of the failure instead
-+		 * of 0. Clear the resid here to indicate that the command
-+		 * fully completed.
-+		 */
-+		scsi_set_resid(srb, 0);
- 	}
- 
- 	/* based on the status code, we report good or bad */
+> I think this depends on a previous patch that actually adds the
+> PCI_STD_NUM_BARS definition.  It will probably be easier if I apply
+> the whole series via the PCI tree.
+
+Looks like my mail about this getting dropped due to the missing
+definition got lost in transit. In any case, feel free to take this
+through the PCI tree.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
 -- 
-2.21.0
-
+Martin K. Petersen	Oracle Linux Engineering
