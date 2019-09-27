@@ -2,98 +2,139 @@ Return-Path: <SRS0=gVs6=XW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B75D0C4360C
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 14:11:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0127C4360C
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 14:16:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C7B921841
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 14:11:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AB0E2146E
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 14:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbfI0OLk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Sep 2019 10:11:40 -0400
-Received: from iolanthe.rowland.org ([192.131.102.54]:32912 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726540AbfI0OLk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 10:11:40 -0400
-Received: (qmail 2212 invoked by uid 2102); 27 Sep 2019 10:11:39 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 27 Sep 2019 10:11:39 -0400
-Date:   Fri, 27 Sep 2019 10:11:39 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@iolanthe.rowland.org
-To:     Douglas Gilbert <dgilbert@interlog.com>
-cc:     Damien Le Moal <damien.lemoal@wdc.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-usb@vger.kernel.org>,
-        <usb-storage@lists.one-eyed-alien.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [PATCH 0/2] Fix SCSI & USB Storage CHECK CONDITION handling
-In-Reply-To: <631aa72f-4eee-bb5d-a81c-62df3a5a09e8@interlog.com>
-Message-ID: <Pine.LNX.4.44L0.1909271004470.1698-100000@iolanthe.rowland.org>
+        id S1727213AbfI0OQp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Sep 2019 10:16:45 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58560 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726540AbfI0OQp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Sep 2019 10:16:45 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id D1577AFCD;
+        Fri, 27 Sep 2019 14:16:42 +0000 (UTC)
+Subject: Re: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to
+ SCSI_SCAN_TARGET_PRESENT
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Andrey Melnikov <temnota.am@gmail.com>
+Cc:     Zhong Li <lizhongfs@gmail.com>, linux-scsi@vger.kernel.org
+References: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
+ <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
+ <CA+PODjpG7NLTH8wp9qw08ACj4=8sUusmkZv6X7QWHtdbNJ1S0Q@mail.gmail.com>
+ <yq1h84y1vxh.fsf@oracle.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <aa9016ff-af17-f18b-abf8-ffb73438c394@suse.de>
+Date:   Fri, 27 Sep 2019 16:16:42 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <yq1h84y1vxh.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 26 Sep 2019, Douglas Gilbert wrote:
-
-> On 2019-09-26 7:57 p.m., Alan Stern wrote:
-
-> > PS: The correct term is "residue", not "residual".  I know that the
-> > code sometimes uses the wrong word.
+On 9/27/19 1:26 AM, Martin K. Petersen wrote:
 > 
-> Digging into my T10 document archive I found this cam3r03.pdf :
+> Andrey,
 > 
->    − cam_resid;
->      The data residual length member contains the difference in twos
->      complement form of the number of data bytes transferred by the
->      HA for the SCSI command compared with the number of bytes
->      requested by the CCB cam_dxfer_len member. This is calculated
->      by the total number of bytes requested to be transferred by the
->      CCB minus the actual number of bytes transferred by the HA.
+>>>> This patch break exposing individual RAID disks from adaptec raid
+>>>> controller. I need access to this disc's for S.M.A.R.T monitoring.
+>>
+>> adaptec report hidden luns with PQ=1, PDT=0 - now it skipped.
 > 
-> CAM is a now withdrawn T10 standard from the 1990s that was influential
-> at the time. FreeBSD's SCSI subsystem is (still) based on CAM.
-
-I was going by my old copy of X3T9.2 Project 375D Rev 10L, Working 
-Draft, "Information technology - Small Computer System Interface - 2", 
-from back in 1996.  Yes, it's thoroughly out of date, but you would 
-think that the nomenclature would still be accurate.  At any rate, it 
-includes 24 instances of the word "residue" and no instances of 
-"residual".
-
-On the other hand, my copy of X3T10/792D Rev 12b, draft proposed, 
-"Information technology - SCSI-2 Common access method transport and 
-SCSI interface module", dated 1995, contains 24 instances of "residual" 
-and only 2 instances of "residue".
-
-So I guess this was never defined precisely.
-
-> For a more recent standard/draft there is fcp5r00.pdf that uses the
-> term "residual value" when defining its fcp_resid.
+>>>> Please find other way to workaround bugs in IBM/2145 controller.
 > 
-> The only reference to the term "residue" that I found is in CAM: an
-> optional message: IGNORE WIDE RESIDUE .
+> Spent some time on this today and I'm in agreement with Zhong's
+> interpretation of the SCSI spec.
 > 
-> So I would leave the naming up to the patch author. It is pretty
-> clear what is being referred to in either case.
-
-True enough.
-
-Alan Stern
-
-> Doug Gilbert
+> What puzzles me is that aacraid already supports the no_uld_attach
+> feature so I'm not sure why it also sets PQ=1 for physical devices?
 > 
+> We could either have a SCSI host flag to override the behavior or
+> consider masking PQ in the driver. Unfortunately, I don't have any
+> aacraid controllers I can test with in my test setup so I'd have to
+> synthesize a setup with scsi_debug.
 > 
-> P.S. I prefer "residual" because it is more flexible being both
-> an adjective and a noun.
-> [Ref: https://www.lexico.com/en/definition/residual]
+Well, the aacraid _is_ a strange beast.
+Depending on the hardware it might even run fully emulated, with no SCSI
+commands being handled at all by the firmware.
+(But who am I to complain, the mylex one was even worse ...)
+Additionally it has two pecularities:
+1) all underlying devices are exported to the OS; of course they have to
+be properly masked etc to avoid udev to latch on those devices. I also
+was under the impression that the 'no_uld_attach' should be sufficient
+here, but then that only avoids the 'sd' driver to become attached to
+it. The actual SCSI device is still visible, so one _might_ be tempted
+to use the 'sg' device and export it to things like qemu. Which of
+course should be avoided.
+And my guess here is that setting the PQ flag here is precisely for this
+kind of things.
+2) all RAID devices have the 'removable' flag set. This was done to
+support online resize of the RAID device, but then I'm not sure if it's
+still required. I for once would be happy to see that go.
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
