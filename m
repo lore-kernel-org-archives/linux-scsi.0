@@ -2,166 +2,142 @@ Return-Path: <SRS0=gVs6=XW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F6BC4360C
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 16:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99536C4360C
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 17:45:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EB9920872
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 16:34:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7560821655
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 17:45:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727656AbfI0Qe1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Sep 2019 12:34:27 -0400
-Received: from iolanthe.rowland.org ([192.131.102.54]:56148 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1727447AbfI0Qe1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 12:34:27 -0400
-Received: (qmail 4664 invoked by uid 2102); 27 Sep 2019 12:34:26 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 27 Sep 2019 12:34:26 -0400
-Date:   Fri, 27 Sep 2019 12:34:26 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@iolanthe.rowland.org
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "usb-storage@lists.one-eyed-alien.net" 
-        <usb-storage@lists.one-eyed-alien.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [PATCH 0/2] Fix SCSI & USB Storage CHECK CONDITION handling
-In-Reply-To: <BYAPR04MB5816017131A10A32CC54D756E7810@BYAPR04MB5816.namprd04.prod.outlook.com>
-Message-ID: <Pine.LNX.4.44L0.1909271218200.2054-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+        id S1726676AbfI0Rp0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Sep 2019 13:45:26 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:32850 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726321AbfI0RpZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Sep 2019 13:45:25 -0400
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8B24F81F0D
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2019 17:45:25 +0000 (UTC)
+Received: by mail-io1-f70.google.com with SMTP id r13so13803841ioj.22
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2019 10:45:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=V7uKVOUP48sjqm3uZXCLKF4/Ns/Wlt7x8/p5qhE25yM=;
+        b=ANRyyUshEJmGZW5RzF4w6oAcQ9xMZsmqtiwDRQe2dgxg48Y3uv9QQ8xTLyw6Gh/rui
+         IGjX1kPjLW5H8iNIyLYjBzW2hA2UGI30nGMK3TT2T/Y3YDklic/2p34Am+i0L3ER3NkJ
+         woWsZdui3oD4AqIz35BfBEDV/CTjPERSMxuG6ND/cZciY8BWF1Q0QTwMzB7VdVbqvm9h
+         aAFxsYs4/mi8T1rDBoEYnfKwPvm8H9njwYQjZn4ksW/pQvXE71Dl/3mwXJaePm3siE0C
+         AvCxZzLheF3p33OttJn2XflUf+vm0Qsw+oI5E19ysCVTeBukDdbxA1Ohu2JD/86wRyjk
+         m51A==
+X-Gm-Message-State: APjAAAVqhWOA5Me8gVOBqTHcI0fORL5DCQohVbigKWMLBdtlzunLpmtT
+        wafKanjaW5Rkh/paQ5z/N/fdOF5dUSKs0FHYuAIlxeXpzDqSQnouAGJDUSInaxWkzLsKh2l5e5Z
+        OXFnuMcGmEivQgf0ylyzV8g==
+X-Received: by 2002:a6b:7b01:: with SMTP id l1mr9667885iop.292.1569606324581;
+        Fri, 27 Sep 2019 10:45:24 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqxn9P3vvJuZThbXqohEVpw39+J3Lm89eYktjf2LzDdXdg38hErbsCdidVqxqFGbfNDqBwekMw==
+X-Received: by 2002:a6b:7b01:: with SMTP id l1mr9667854iop.292.1569606324228;
+        Fri, 27 Sep 2019 10:45:24 -0700 (PDT)
+Received: from rhel7lobe ([2600:6c64:4e80:f1:aa45:cafe:5682:368f])
+        by smtp.gmail.com with ESMTPSA id b7sm2529587iod.42.2019.09.27.10.45.22
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 27 Sep 2019 10:45:23 -0700 (PDT)
+Message-ID: <3a8ee584f9846fba94d98d0e6941fefdcbed5d71.camel@redhat.com>
+Subject: Re: [PATCH] scsi: core: Log SCSI command age with errors
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Martin Wilck <mwilck@suse.de>,
+        "Milan P. Gandhi" <mgandhi@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Date:   Fri, 27 Sep 2019 13:45:21 -0400
+In-Reply-To: <471732f03049a1528df1d144013d723041f0a419.camel@suse.de>
+References: <20190923060122.GA9603@machine1>
+         <471732f03049a1528df1d144013d723041f0a419.camel@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-2.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 27 Sep 2019, Damien Le Moal wrote:
-
-> On 2019/09/26 16:57, Alan Stern wrote:
-> > On Fri, 27 Sep 2019, Damien Le Moal wrote:
+On Fri, 2019-09-27 at 17:26 +0200, Martin Wilck wrote:
+> On Mon, 2019-09-23 at 11:31 +0530,  Milan P. Gandhi wrote:
+> > Couple of users had requested to print the SCSI command age along 
+> > with command failure errors. This is a small change, but allows 
+> > users to get more important information about the command that was 
+> > failed, it would help the users in debugging the command failures:
 > > 
-> >> If a non-passthrough command is terminated with a CHECK CONDITION, the
-> >> scsi error recovery code reuses the failed command scsi_cmnd structure
-> >> to process error recovery request sense. To preserve information
-> >> regarding the failed command, the functions scsi_eh_prep_cmnd() and
-> >> scsi_eh_restore_cmnd() respectively save and restore the original
-> >> command information. However, the resid field of the failed command
-> >> request structure is not preserved and reused for the request sense
-> >> handling, leading to the original command having an incorrect resid
-> >> when:
-> >> A) The command is not retried and terminated with an error
-> >> B) The command completes after retry and the underlying LLD does not set
-> >>    resid for a fully completed command (resid=0)
-> >>
-> >> The first patch of this series addresses case (A) above by adding resid
-> >> as part of the command information saved using struct scsi_eh_save.
+> > Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> > ---
+> > diff --git a/drivers/scsi/scsi_logging.c
+> > b/drivers/scsi/scsi_logging.c
+> > index ecc5918e372a..ca2182bc53c6 100644
+> > --- a/drivers/scsi/scsi_logging.c
+> > +++ b/drivers/scsi/scsi_logging.c
+> > @@ -437,6 +437,7 @@ void scsi_print_result(const struct scsi_cmnd
+> > *cmd, const char *msg,
+> >  	const char *mlret_string = scsi_mlreturn_string(disposition);
+> >  	const char *hb_string = scsi_hostbyte_string(cmd->result);
+> >  	const char *db_string = scsi_driverbyte_string(cmd->result);
+> > +	unsigned long cmd_age = (jiffies - cmd->jiffies_at_alloc) / HZ;
+> 
+> This comes down to pretty coarse time resolution, does it not? More
+> often than not, the time difference shown will be 0. I'd recommend at
+> least millisecond resolution.
+> 
+> >  
+> >  	logbuf = scsi_log_reserve_buffer(&logbuf_len);
+> >  	if (!logbuf)
+> > @@ -478,10 +479,15 @@ void scsi_print_result(const struct scsi_cmnd
+> > *cmd, const char *msg,
+> >  
+> >  	if (db_string)
+> >  		off += scnprintf(logbuf + off, logbuf_len - off,
+> > -				 "driverbyte=%s", db_string);
+> > +				 "driverbyte=%s ", db_string);
+> >  	else
+> >  		off += scnprintf(logbuf + off, logbuf_len - off,
+> > -				 "driverbyte=0x%02x", driver_byte(cmd-
+> > > result));
 > > 
-> > Good catch.
-> > 
-> >> Case B can be observed with a WD My Book USB disks when a read or write
-> >> command is sent to the disk while the disk is in deep sleep mode
-> >> (spun down) due to a long period of inactivity (~30min).
-> >> In such case, the following command sequence happen:
-> >> 1) The read or write command is terminated after a few seconds with
-> >>    CHECK CONDITION and an asc/ascq of 04/01 (LOGICAL UNIT IS IN PROCESS
-> >>    OF BECOMING READY)
-> >> 2) In response to this failure, the USB mass storage driver triggers
-> >>    autosense processing, reusing the command descriptor to issue a
-> >>    request sense command with a 96B sense buffer size. The reply
-> >>    to this command gives a NOT READY / LOGICAL UNIT IS IN PROCESS
-> >>    OF BECOMING READY sense of 18B, resulting in a resid of 78B.
-> >> 3) The original command is retried and failed again, with step 2
-> >>    repeated, until the drive spins up and becomes ready.
-> >> 4) When the original command completes after the drive has become ready,
-> >>    the request sense command resid of 78B is seen by the scsi disk
-> >>    driver sd_done() function and wrongly generates a warning about the
-> >>    unaligned value reported.
-> > 
-> > But with the 1/1 patch in place, 4 won't happen any more, right?  
-> > sd_done() will see the resid from the successful read or write.
+> > +				 "driverbyte=0x%02x ",
+> > +				 driver_byte(cmd->result));
+> > +
+> > +	off += scnprintf(logbuf + off, logbuf_len - off,
+> > +			 "cmd-age=%lus", cmd_age);
 > 
-> No it will not because the USB driver does not set the residue when the value
-> returned for the command is 0, that is, when the command succeeds after the disk
-> spins up. E.g., in my test, I used a 4096B read at LBA 0. With patch 1 only, I
-> see a residue of 4096 since the command is entirely failed with CHECK CONDITION
-> until the drive spins up and becomes ready, at which point the resid becomes 0
-> but is not set with scsi_set_resid(). Without patch 1 nor 2, I see a residue of
-> 78B which is the residue from the request sense executed between retries of the
-> read command.
-
-I don't doubt your results.  But you need to do a better job of 
-explaining how the existing code leads to those results.
-
-For example, you said the driver does not set the command's residue 
-when the command succeeds.  But in fact, one of the first things 
-usb_stor_invoke_transport() does -- before it begins transmitting the 
-command -- is
-
-	scsi_set_resid(srb, 0);
-
-So if the command is successful, even if the transport layer routine 
-doesn't set the residue explicitly, the value should still be 0.
-
-So if you see the residue not getting set properly, you should explain 
-exactly how that happens.
-
-> Patch 2 is needed to make sure that the residue is set to 0 when the command
-> fully completes. If there is no failure/request sense/retry dance, resid is
-> already 0 (initialized value) so there is no problem. The problem shows up only
-> for CHECK CONDITION + retry patterns. Tests confirm this. Only patch 1 does not
-> solve the problem.
-
-But the residue gets reset to 0 every time before the command is
-retried, doesn't it?
-
-Unless for your device, the driver doesn't run 
-usb_stor_invoke_transport().  The only way that can happen is if you 
-use one of the modular subdrivers -- in which case the bug lies in that 
-subdriver and should be fixed there, not in transport.c.
-
-> >> This problem is fixed in patch 2 by always setting a command resid to 0
-> >> when there is no residual in usb_stor_Bulk_transport(). Note that
-> >> usb_stor_CB_transport() does not need changes since usb_stor_bulk_srb()
-> >> always sets the resid for a completed command, regardless of the
-> >> residual value.
-> > 
-> > Exactly the same reasoning shows that usb_stor_Bulk_transport() also
-> > does not need changes, doesn't it?  Which means that patch 2/2 is 
-> > unnecessary.
+> This is certainly helpful in some situations. Yet I am unsure if it
+> should *always* be printed. I wouldn't say it's as important as the 
+> other stuff scsi_print_result() provides. After all, by activating
+> MLQUEUE+MLCOMPLETE, the time on-wire can be extracted with better
+> accuracy from currently available logs. 
 > 
-> In usb_stor_Bulk_transport(), since scsi_set_resid() is only called under the
+> So perhaps make this depend on a module parameter?
 > 
-> if (residue && !(us->fflags & US_FL_IGNORE_RESIDUE))
+> Also, we should carefully ponder if we want to put this on the same
+> line as the driver byte, as users may have created scripts for
+> parsing
+> this output.
 > 
-> condition, resid is not set if it is 0.
+> Regards,
+> Martin
+> 
+> 
+Hi Martin
 
-But usb_stor_Bulk_transport() calls usb_stor_bulk_srb(), which does set
-the residue, as you realize:
+Agreed about log extraction, but turning that on with a busy workload
+in a production environment is not practical. We cant do it with
+systems with 1000's of luns and 1000's of IOPS/sec.
+Also second resolution is good enough for the debug we want to see.
 
-> Whereas in usb_stor_CB_transport(), through the call to usb_stor_bulk_srb(),
-> resid is always set, unconditionally, with:
-> 
-> scsi_set_resid(srb, scsi_bufflen(srb) - partial);
-> 
-> where partial is the command length for a fully completed command (the variable
-> name is misleading), leading to resid being set to 0 as needed for successful
-> commands.
-> 
-> Please let me know if I missed something. I can reproduce the problem 100% of
-> the time, even though it is painful due to the 30min wait between tests to wait
-> for the drive going to sleep (if I force a sleep power state, the problem does
-> not happen due to power control the drive USB bridge FW, I am guessing, which
-> will wake up the disk before the command is sent).
-
-Please investigate a little more closely into what's going wrong and
-present more details so that others can understand it too.
-
-Alan Stern
+Regards
+Laurence
 
