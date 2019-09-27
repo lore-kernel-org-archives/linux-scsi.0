@@ -2,73 +2,61 @@ Return-Path: <SRS0=gVs6=XW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5D8C4360C
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 22:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE553C388F4
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 23:40:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B9842054F
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 22:16:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MiMu5vGa"
+	by mail.kernel.org (Postfix) with ESMTP id A2194217D9
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 23:40:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728334AbfI0WQG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Sep 2019 18:16:06 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:24948 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfI0WQF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 18:16:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1569622565; x=1601158565;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=0+RS/WQ72uYjuEOJgGNw9I8eOFw7oExgvMwrLdBMfrM=;
-  b=MiMu5vGaVs6uER205Kv449WeJC5hU6WFwOSBsQ7WwvKvg7GDAKztfNeg
-   9ah5AzfuEESkzVmw+f6eA+R8cGaczje8SOzyrDxD9JAZS4id2fDG9tD0m
-   rJ3kXsUPG1lmcFbGJebztOFIkCxzw5FUp3yIF3JjDPTqxygv1WqLnwDpF
-   XxvyJhXuz9sbm3jCoIGVXrgT102i8w6t9i6rW0E76bXA3U8CKDgeIGfTT
-   UU0WSDww3URvevuNM4W5WJ39Bwj4IlFgH86N/laAcFt0bph+Savf5UCQe
-   kvMAVccS/IIWg6NFKBbDmAFl5UUVhC/nM9G/la4Up7jbEXjdvCGub3x6s
-   w==;
-IronPort-SDR: v59weQC5YtCsiI7Y8s9hlkUZ7YOIqzBMIk9xHcyDBOo8pQzRC9i3W3Q/TzG6XX5EnjzAcy/4gm
- irLK0G7PAEPlfMQLNB1U0FLZoLbrtw5GA+j+YxllUxuBNCCsGYTUh/3QNKsBeWqis+fn2IfaE7
- X8m+NDH3mJ6oMpGHYpfN0KVGk7QknCtAkHTCQC/jUA/kFgm9kpnusd3249FZRsqjA0uiQeICrE
- tDPPC3cyii6toOaBxD+c14DbM9pF3ODWEU/0Udi0+QiWRJ7gE/G1xshtyIfryp2kkTJp93XRMC
- FXM=
-X-IronPort-AV: E=Sophos;i="5.64,557,1559491200"; 
-   d="scan'208";a="226192875"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Sep 2019 06:16:05 +0800
-IronPort-SDR: pI4+ODXcV9r+uKCq1AearHABR0226SdXqKxjlijGO6tPANJQ3+XURt/rXAEygHoeqdEcMa9qzw
- Qj0JdDkqYAroiqVTAQEb+8ClUo5IrIY5iDGozI5tnWou300twIgyZRMSXLHwBb0C9H0lMUKnIJ
- oBLCfKy47pCMf9+CyNF3SnmpfpnNSTCQ8gGxuya0wVURXQiHpmIH36lP8FRqMd1lN7IX4rGAyA
- VfY/I8i1omjBeQJlkmgF0yThkmgYoNp1nFCJ1+fOgYfBl10iZahtpYpkWfLmm//tnH5b2iE0+7
- FWagZtnSr9Xnfj2z+106FUK2
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2019 15:12:23 -0700
-IronPort-SDR: tZdmX3bdUZlvjWOiFTNad9aNGZL0A5zV+zzeyCfY2O0S9QYZEuUhbSKv8slyrY2npbGOKRuTp3
- xd4FOF0O5B7SSbq6rd7DIAMl3ga4rkV9CNJa7Y/N7wLYS8Y8AhxGCOPP707ckJctwLX+EpXsZq
- GenmHR0riYJld8fS5PRl1S8v55QRoXb+cAhzU3VlHiSjCbLFx0d8uAJbjEQfuaZb08Ou3YNt4W
- 8jOWeL3vWhdWlOmn+6brOhbiD7Zuslbvs+rOP7/6e5m8CxsgpjzIN/UVkpIeYfLjfpL4fytZ9V
- /OY=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Sep 2019 15:16:03 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: [PATCH V2] scsi: save/restore command resid for error handling
-Date:   Sat, 28 Sep 2019 07:16:02 +0900
-Message-Id: <20190927221602.27080-1-damien.lemoal@wdc.com>
+        id S1728294AbfI0Xkv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Sep 2019 19:40:51 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:35217 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725990AbfI0Xkv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 19:40:51 -0400
+Received: by mail-lf1-f67.google.com with SMTP id w6so3114025lfl.2;
+        Fri, 27 Sep 2019 16:40:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=/vjA3feuVjhECJGCJlv7w7hKdoWzVAzTRzB0psX8g5s=;
+        b=cyYcyUamH/ZJxf1UPzvn/4gz0YorW7s+CfbhnVmploaBcmV29oJLvYo3uJwU0mjY58
+         3LWWSqUd8ot/ev0O7q3aZAJpUR1POuZMfY2vKm0V3xuUf7ZeMNZjutuJHIavuOa4azPF
+         XRNkWfLv6RBEMZcJX4IfJT5Z74EzX4Zvlb9ZknQvFacosYbT+VGJcv4Mq2iJhNU6D/Rt
+         hRwKC4wEfDeURwXeCr6uxvYfkyWO2U6rV+P7GGXXdtoEHmqk5vLIgYXe3uF8HCavjLaD
+         wG703e3baIwYGGDSZILhLVcOM/afcTqJG6Ume4iYUaX9aFh0llteu5a4JB4M53kygSxa
+         6Acw==
+X-Gm-Message-State: APjAAAXafwV/kRJo63q6NYOpyM5CSiynf+c+Iq9sebobZLx66zGoXoeb
+        pT2b/y18TMmkWfo3zr3cjKE=
+X-Google-Smtp-Source: APXvYqzJjAsZOxffDP6X1PyAJObAmIHMhsLPPyKIAwdxjZFuFJU1hlQRv1yAEhIhnnum3sSXraXujg==
+X-Received: by 2002:ac2:568c:: with SMTP id 12mr4300543lfr.133.1569627646034;
+        Fri, 27 Sep 2019 16:40:46 -0700 (PDT)
+Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
+        by smtp.googlemail.com with ESMTPSA id x25sm778810ljb.60.2019.09.27.16.40.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Sep 2019 16:40:45 -0700 (PDT)
+From:   Denis Efremov <efremov@linux.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        x86@kernel.org, linux-s390@vger.kernel.org,
+        linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, kvm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-usb@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-serial@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: [PATCH RESEND v3 00/26] Add definition for the number of standard PCI BARs
+Date:   Sat, 28 Sep 2019 02:40:26 +0300
+Message-Id: <20190927234026.23342-1-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190916204158.6889-3-efremov@linux.com>
+References: <20190916204158.6889-3-efremov@linux.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -76,75 +64,104 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a non-passthrough command is terminated with CHECK CONDITION,
-request sense is executed by hijacking the command descriptor. Since
-scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd() do not save/restore the
-original command resid, the value returned on failure of the original
-command is lost and replaced with the value set by the execution of the
-request sense command. This value may in many instances be unaligned to
-the device sector size, causing sd_done() to print a warning message
-about the incorrect unaligned resid before the command is retried or
-aborted.
+Code that iterates over all standard PCI BARs typically uses
+PCI_STD_RESOURCE_END, but this is error-prone because it requires
+"i <= PCI_STD_RESOURCE_END" rather than something like
+"i < PCI_STD_NUM_BARS". We could add such a definition and use it the same
+way PCI_SRIOV_NUM_BARS is used. The patchset also replaces constant (6)
+with new define PCI_STD_NUM_BARS where appropriate and removes local
+declarations for the number of PCI BARs.
 
-Fix this problem by saving the original command resid in struct
-scsi_eh_save using scsi_eh_prep_cmnd() and restoring it in
-scsi_eh_restore_cmnd(). In addition, to make sure that the request sense
-command is executed with a correctly initialized command structure, also
-reset resid to 0 in scsi_eh_prep_cmnd() after saving the original
-command resid value in struct scsi_eh_save.
+Changes in v3:
+  - Updated commits description.
+  - Refactored "< PCI_ROM_RESOURCE" with "< PCI_STD_NUM_BARS" in loops.
+  - Refactored "<= BAR_5" with "< PCI_STD_NUM_BARS" in loops.
+  - Removed local define GASKET_NUM_BARS.
+  - Removed local define PCI_NUM_BAR_RESOURCES.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
+Changes in v2:
+  - Reversed checks in pci_iomap_range,pci_iomap_wc_range.
+  - Refactored loops in vfio_pci to keep PCI_STD_RESOURCES.
+  - Added 2 new patches to replace the magic constant with new define.
+  - Splitted net patch in v1 to separate stmmac and dwc-xlgmac patches.
 
-Changes from V1:
-* Dropped patch 2
-* Add resid reset in scsi_eh_prep_cmnd()
+Denis Efremov (26):
+  PCI: Add define for the number of standard PCI BARs
+  PCI: hv: Use PCI_STD_NUM_BARS
+  PCI: dwc: Use PCI_STD_NUM_BARS
+  PCI: endpoint: Use PCI_STD_NUM_BARS
+  misc: pci_endpoint_test: Use PCI_STD_NUM_BARS
+  s390/pci: Use PCI_STD_NUM_BARS
+  x86/PCI: Loop using PCI_STD_NUM_BARS
+  alpha/PCI: Use PCI_STD_NUM_BARS
+  ia64: Use PCI_STD_NUM_BARS
+  stmmac: pci: Loop using PCI_STD_NUM_BARS
+  net: dwc-xlgmac: Loop using PCI_STD_NUM_BARS
+  ixgb: use PCI_STD_NUM_BARS
+  e1000: Use PCI_STD_NUM_BARS
+  rapidio/tsi721: Loop using PCI_STD_NUM_BARS
+  efifb: Loop using PCI_STD_NUM_BARS
+  fbmem: use PCI_STD_NUM_BARS
+  vfio_pci: Loop using PCI_STD_NUM_BARS
+  scsi: pm80xx: Use PCI_STD_NUM_BARS
+  ata: sata_nv: Use PCI_STD_NUM_BARS
+  staging: gasket: Use PCI_STD_NUM_BARS
+  serial: 8250_pci: Use PCI_STD_NUM_BARS
+  pata_atp867x: Use PCI_STD_NUM_BARS
+  memstick: use PCI_STD_NUM_BARS
+  USB: core: Use PCI_STD_NUM_BARS
+  usb: pci-quirks: Use PCI_STD_NUM_BARS
+  devres: use PCI_STD_NUM_BARS
 
- drivers/scsi/scsi_error.c | 3 +++
- include/scsi/scsi_eh.h    | 1 +
- 2 files changed, 4 insertions(+)
+ arch/alpha/kernel/pci-sysfs.c                 |  8 ++---
+ arch/ia64/sn/pci/pcibr/pcibr_dma.c            |  4 +--
+ arch/s390/include/asm/pci.h                   |  5 +--
+ arch/s390/include/asm/pci_clp.h               |  6 ++--
+ arch/s390/pci/pci.c                           | 16 +++++-----
+ arch/s390/pci/pci_clp.c                       |  6 ++--
+ arch/x86/pci/common.c                         |  2 +-
+ arch/x86/pci/intel_mid_pci.c                  |  2 +-
+ drivers/ata/pata_atp867x.c                    |  2 +-
+ drivers/ata/sata_nv.c                         |  2 +-
+ drivers/memstick/host/jmb38x_ms.c             |  2 +-
+ drivers/misc/pci_endpoint_test.c              |  8 ++---
+ drivers/net/ethernet/intel/e1000/e1000.h      |  1 -
+ drivers/net/ethernet/intel/e1000/e1000_main.c |  2 +-
+ drivers/net/ethernet/intel/ixgb/ixgb.h        |  1 -
+ drivers/net/ethernet/intel/ixgb/ixgb_main.c   |  2 +-
+ .../net/ethernet/stmicro/stmmac/stmmac_pci.c  |  4 +--
+ .../net/ethernet/synopsys/dwc-xlgmac-pci.c    |  2 +-
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  2 +-
+ .../pci/controller/dwc/pci-layerscape-ep.c    |  2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c     |  2 +-
+ .../pci/controller/dwc/pcie-designware-plat.c |  2 +-
+ drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
+ drivers/pci/controller/pci-hyperv.c           | 10 +++---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 10 +++---
+ drivers/pci/pci-sysfs.c                       |  4 +--
+ drivers/pci/pci.c                             | 13 ++++----
+ drivers/pci/proc.c                            |  4 +--
+ drivers/pci/quirks.c                          |  4 +--
+ drivers/rapidio/devices/tsi721.c              |  2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c              |  2 +-
+ drivers/scsi/pm8001/pm8001_init.c             |  2 +-
+ drivers/staging/gasket/gasket_constants.h     |  3 --
+ drivers/staging/gasket/gasket_core.c          | 12 +++----
+ drivers/staging/gasket/gasket_core.h          |  4 +--
+ drivers/tty/serial/8250/8250_pci.c            |  8 ++---
+ drivers/usb/core/hcd-pci.c                    |  2 +-
+ drivers/usb/host/pci-quirks.c                 |  2 +-
+ drivers/vfio/pci/vfio_pci.c                   | 11 ++++---
+ drivers/vfio/pci/vfio_pci_config.c            | 32 ++++++++++---------
+ drivers/vfio/pci/vfio_pci_private.h           |  4 +--
+ drivers/video/fbdev/core/fbmem.c              |  4 +--
+ drivers/video/fbdev/efifb.c                   |  2 +-
+ include/linux/pci-epc.h                       |  2 +-
+ include/linux/pci.h                           |  2 +-
+ include/uapi/linux/pci_regs.h                 |  1 +
+ lib/devres.c                                  |  2 +-
+ 47 files changed, 112 insertions(+), 115 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 1c470e31ae81..f53828bf7ad7 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -967,6 +967,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	ses->data_direction = scmd->sc_data_direction;
- 	ses->sdb = scmd->sdb;
- 	ses->result = scmd->result;
-+	ses->resid = scsi_get_resid(scmd);
- 	ses->underflow = scmd->underflow;
- 	ses->prot_op = scmd->prot_op;
- 	ses->eh_eflags = scmd->eh_eflags;
-@@ -977,6 +978,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	memset(scmd->cmnd, 0, BLK_MAX_CDB);
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
- 	scmd->result = 0;
-+	scsi_set_resid(scmd, 0);
- 
- 	if (sense_bytes) {
- 		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
-@@ -1029,6 +1031,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	scmd->sc_data_direction = ses->data_direction;
- 	scmd->sdb = ses->sdb;
- 	scmd->result = ses->result;
-+	scsi_set_resid(scmd, ses->resid);
- 	scmd->underflow = ses->underflow;
- 	scmd->prot_op = ses->prot_op;
- 	scmd->eh_eflags = ses->eh_eflags;
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 3810b340551c..9caa9b262a32 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -32,6 +32,7 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
- struct scsi_eh_save {
- 	/* saved state */
- 	int result;
-+	unsigned int resid;
- 	int eh_eflags;
- 	enum dma_data_direction data_direction;
- 	unsigned underflow;
 -- 
 2.21.0
 
