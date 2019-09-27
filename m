@@ -2,97 +2,135 @@ Return-Path: <SRS0=gVs6=XW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D6C5C388F3
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 15:39:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A38C4360C
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 15:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 247D2217D9
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 15:39:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E90E217D9
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Sep 2019 15:48:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m7jFLR0D"
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="F8Vqnjtp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727934AbfI0PjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Sep 2019 11:39:04 -0400
-Received: from mail-wr1-f53.google.com ([209.85.221.53]:36802 "EHLO
-        mail-wr1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727207AbfI0PjE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 11:39:04 -0400
-Received: by mail-wr1-f53.google.com with SMTP id y19so3542143wrd.3;
-        Fri, 27 Sep 2019 08:39:02 -0700 (PDT)
+        id S1727975AbfI0PsF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Sep 2019 11:48:05 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:43791 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727273AbfI0PsE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Sep 2019 11:48:04 -0400
+Received: by mail-wr1-f65.google.com with SMTP id q17so3560426wrx.10
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Sep 2019 08:48:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=57IhBJyef1fR/FRADa/1UwQsGQlMxqvGVBiiCpQwIqk=;
-        b=m7jFLR0Del8V/jHv+RvdbJmXMac0aO0Q0joIoDHiDG84oXYYEfhOoy/KVWHC5pxjOE
-         QYqp/AId6qBCgDMNVdWYVCY7P8PzxYJuxjASqCmthvRxyyVC3tlkxUR7CUVZS8AA6S9v
-         YM34EO8ubqKasw+PXhg2epK0kCtOHW8HvgnlIIjYrgo8O7pQZRVyZFwW7Me7uZIVITfJ
-         4d9fVTFkANNx9924ep7WK4TPlS2EmOr1p/mEEx4kyYHgVe7mNlz/qtmwmOHaB08CE7Ip
-         HRXiz67OxDLW6G0WsCozy7NcuELNpglsNfFlwyXdqmi5btXyeP6tc9tpoCkMyhyXXBfy
-         YEMw==
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=zNygO4nZbG8/YUnKqk0A4+s04ZnimyIFx8+zQJsWWR4=;
+        b=F8VqnjtpiQva2+8AhZMoRXjcWPOver4Ozp+Fmt9VtUyPEWb/LpHpJtDk98njMH4c1b
+         JAnXTsRwPfq/nAFMr+GMFYrVh9Jlg7Eexywbr79iG+uhaD33bni+cL5e1DIphP5SFfkX
+         m7Ov0oTJHe/5ytGcZz+Zs7V6VSfTN5LgbHyZ4G0oo3/4N2o2ulnI77qF4HGFcBcUtGaO
+         g+GG4TGLoc1b2ztrkFCIDX5gAESCBtn83CdIDsxqJpJtrkSCjrzLpvo0q2Lcqf8NPz+z
+         xDAgwZDqFCzhuq7ZseYRGkscyeVF+/7TAtr5xkRggHhyeROYeP7DKXEjNzYacZcu9vBN
+         GGxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=57IhBJyef1fR/FRADa/1UwQsGQlMxqvGVBiiCpQwIqk=;
-        b=nCAEuocWA0oHpwoiefogpXPcFPSBWWnc48HA7CX8mB8wtlpDfkUuI+vTk+Iyw1RHHa
-         BkHY5hDQ4FmQdFIwyUxl5/eur+p8dMQvAwsWwThIkpbVmSaIdENbeLwL3aZc4a4EPo3I
-         X4dYplaCLoWw7D+opGl7XdHz4sn73GUKeiLvrb29CNch0dB8p74xW63djWrYeaiuowQ3
-         iKIHWtqrb6K7elBxyftaOItQLlsCdV8vY9gPHhBlbL61gE9NnJRGXgfQaLE4RvhBzeZr
-         btLwZZFoj73TDALqfe1tybgoU1CvIcmnieB3FZbLnXlsODFMEzpI7amKg7k+NG3XlMSH
-         1o8Q==
-X-Gm-Message-State: APjAAAWHnWuvUO897x+K0Jjf14CwJ6vvJZQDziW22+9KIxygueg7XGJ6
-        JSJPmjYiZ/iVvOktTbV3Iso4khAla3llgP/pBt2unKG4UmE=
-X-Google-Smtp-Source: APXvYqxDV8sMU5SQznT74ajo8QblefGao1hVZEK2w6azCI3vZmIw7UR3vijg/vNNHL+NjxsHb4skXmcfgqTwwSmT5Yw=
-X-Received: by 2002:a5d:5352:: with SMTP id t18mr3693775wrv.72.1569598741857;
- Fri, 27 Sep 2019 08:39:01 -0700 (PDT)
-MIME-Version: 1.0
-From:   Richard Weinberger <richard.weinberger@gmail.com>
-Date:   Fri, 27 Sep 2019 17:38:50 +0200
-Message-ID: <CAFLxGvw0HF9dxars5737Vgi+-ufXoBXgMmR_uqtVWyAs3vYyHg@mail.gmail.com>
-Subject: st: EIO upon almost full tape?
-To:     Kai.Makisara@kolumbus.fi
-Cc:     linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=zNygO4nZbG8/YUnKqk0A4+s04ZnimyIFx8+zQJsWWR4=;
+        b=VhSUi7RjGeanrn93T6ZMzrFF7glC5Pfr/zf9I/8XJAlrTIQkZyE8sTGcWRzidQQHSJ
+         zxHE/sPffOpnC9LG+gkMRL2iVZPshV++/Imiq7iubLb5ZwBXyn0XWOOgdpWRW82iMVm7
+         Zop3B5An3ObWm0pOEkkYWky09HU71nqT+itnKgrN6z9XfEnhEthFuvPpEzlA0viDYB8X
+         yElTwKewqe4HXauDV/Imak9W0Ics58zzQSkl1LTNVHBpSIDQ8YyCQMEKWt3E0HvNwK1K
+         nutExtdBOqvMEUgO6CNoD25Ud6a3Z//3tMmFkisrWm09Sinu4SBLiyI1pDjYcyoAKAj2
+         1oXA==
+X-Gm-Message-State: APjAAAW2nkUDsmLd04Bb6pSYlnOp5ak7kIH8qK+TNcVSGy9nqUYvLWL3
+        v2tSpDg5kWroYGRFwpRL1laZvA==
+X-Google-Smtp-Source: APXvYqxuA47datR0fG5sqPH/xVEdbMeYEzLdcJBN/sv+dgRVDt75FvmhFNkEeny4Wq/b0dGjWdt3Ug==
+X-Received: by 2002:a05:600c:290c:: with SMTP id i12mr8057771wmd.77.1569599281150;
+        Fri, 27 Sep 2019 08:48:01 -0700 (PDT)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id x6sm11316605wmf.38.2019.09.27.08.47.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Sep 2019 08:48:00 -0700 (PDT)
+Message-ID: <237f37abfe8a6985f7ff26d5f199a33c18685f90.camel@unipv.it>
+Subject: Re: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Alan Stern <stern@rowland.harvard.edu>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>
+Date:   Fri, 27 Sep 2019 17:47:59 +0200
+In-Reply-To: <c304abca-3ac2-fb19-1328-340ca4f18f80@kernel.dk>
+References: <Pine.LNX.4.44L0.1909251524520.6072-300000@netrider.rowland.org>
+         <c304abca-3ac2-fb19-1328-340ca4f18f80@kernel.dk>
 Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi!
+Il giorno mer, 25/09/2019 alle 21.36 +0200, Jens Axboe ha scritto:
+> On 9/25/19 9:30 PM, Alan Stern wrote:
+> [...]
+> > 
+> > I have attached the two patches to this email.  You should start
+> with a
+> > recent kernel source tree and apply the patches by doing:
+> > 
+> > 	git apply patch1 patch2
+> > 
+> > or something similar.  Then build a kernel from the new source
+> code and
+> > test it.
+> > 
+> > Ultimately, if nobody can find a way to restore the sequential I/O
+> > behavior we had prior to commit f664a3cc17b7, that commit may have
+> to
+> > be reverted.
+> 
+> Don't use patch1, it's buggy. patch2 should be enough to test the
+> theory.
 
-Recently I got access to a tape library and as a side project I try to
-turn it into something useful.
-First tests showed that it seems to work fine until it tried to fill a tape:
+Sorry, but if I cd into the "linux" directory and run the command
 
-dd if=/dev/urandom of=/dev/st0 ibs=1M obs=512K
+# git apply -v patch2
 
-After around 1.8TiB dd terminates with EIO and in dmesg I see:
-[535116.858716] st 0:0:0:0: [st0] Sense Key : Medium Error [current]
-[535116.858720] st 0:0:0:0: [st0] Add. Sense: Write error
-[535116.874357] st 0:0:0:0: [st0] Sense Key : Medium Error [current]
-[535116.874370] st 0:0:0:0: [st0] Add. Sense: Write error
-[535116.874373] st 0:0:0:0: [st0] Error on write filemark.
+the result is that the patch cannot be applied correctly:
 
-After a reinsert of the tape it works fine again. But any other attempt
-to fill it results into EIO. Every single time after ~1.8TiB (-/+
-10GiB) have been written.
+------------------------------------------------------------------------------
+Controllo della patch block/blk-mq.c in corso...
+error: durante la ricerca per:
+?
+static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)?
+{?
+	const int is_sync = op_is_sync(bio->bi_opf);?
+	const int is_flush_fua = op_is_flush(bio->bi_opf);?
+	struct blk_mq_alloc_data data = { .flags = 0};?
+	struct request *rq;?
 
-I expected to terminate dd after around 2.5TiB with ENOSPC.
+error: patch non riuscita: block/blk-mq.c:1931
+error: block/blk-mq.c: la patch non si applica correttamente
+------------------------------------------------------------------------------
 
-First I thought the tape is bad, but even with a new one I face the same issue.
-Tape is LTO-6 and drive a IBM ULTRIUM-HH6.
+The "linux" directory is the one generated by a fresh git clone:
 
-Is my test wrong? There is a high chance that I'm doing something
-horrible wrong,
-I fear I'm a little too young for tape drives. ;-)
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 
-Maybe the tape drive is faulty but why is it always failing after 1.8TiB?
-According to the tape library the drive is good and passes all self-tests.
-And yes, I have a cleaning tape in my library too.
+What am I doing wrong?
 
--- 
-Thanks,
-//richard
+Thanks, and bye
+Andrea
+
