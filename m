@@ -7,88 +7,93 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF0CC352A9
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:28:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC7FC32793
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C210E2133F
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:28:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF91120842
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:36:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dRnFXvLH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ahcjE+zs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729874AbfJAD2r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Sep 2019 23:28:47 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44862 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728134AbfJAD2r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:28:47 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913P4xu099322;
-        Tue, 1 Oct 2019 03:28:31 GMT
+        id S1727320AbfJADgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Sep 2019 23:36:33 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:60788 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726157AbfJADgd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:36:33 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913YisA149006;
+        Tue, 1 Oct 2019 03:36:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=6y/OCOEAXI6Iy6zbVDQ9FeH4AdUNae/fKFFy/jp2zqs=;
- b=dRnFXvLHn4L1YxWt+2yqU8JucE2qAZCDUxPfYtpeh3WIFhlWOpBjKbwugQ2hBQQ0eHKw
- krEp/4kuoYL7k84N6L7e0IwvGZyrX+AIoJ8xWH9GouLpMuwz7LG6JyqXJRebITaaSdfl
- tA+ZXFVKBEbb5HrIJ7NZ6Xsi6iFeXXPoeIoK+2qYe9JKWZRcPu5zGLlRNDXLx4dGvksn
- b5vMt99S1bwRAl2+OqzeUP22O1e+zmR+BCsPp1rVcj3G3SHb58cRYCQvd2Rw8rkTxMU3
- k6hBgFfohGI3awret+MZT6S9l23wcW3NuivBoP6Iqe51g2oUKZO+Hn23lmEZtssas4cK Pw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2v9yfq2xhb-1
+ bh=7kIF+U2fEr8Xor0GAijaSJqUd6owDJUXOVGRYo8n0Mc=;
+ b=ahcjE+zsWGC07ap0DkOgNg4D6S07QOV8Oo14h7yUg4QoXxQBi7drM3EbjqjFCkj/+EAj
+ N2WbU7e0DpSM0qm9x+BoYeh4UYfE6G0NNX8EBvJJq3fuKox9/mxoWOzHU3dUxckUygmk
+ UgxXV3uPHXYQDVBg84eW2GEFoaqv3YEPgONrAQ5kiEIIS3OmtxCIBjWRfAoS32YiWpKg
+ 26w9FY4RsfNy25iR9luPNL10+h2LJY73xb9SMPBYOPtQ3EbA38zDdmfh3YDUk0E/9wGv
+ N/7ZS/yJJILBQqP6GtyGU4oHxtoz07E9V3FT9tJTU9YSbG0aMNWfXkjz3kbyO5Lbi8qP uQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2v9xxuk042-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:28:31 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913SUxr118612;
-        Tue, 1 Oct 2019 03:28:30 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2vbnqbwsuh-1
+        Tue, 01 Oct 2019 03:36:20 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913XsNb099032;
+        Tue, 1 Oct 2019 03:36:19 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2vbsm14x1j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:28:29 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x913RwJ3012620;
-        Tue, 1 Oct 2019 03:28:00 GMT
+        Tue, 01 Oct 2019 03:36:19 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x913aGoW024809;
+        Tue, 1 Oct 2019 03:36:16 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 30 Sep 2019 20:27:58 -0700
-To:     Austin Kim <austindh.kim@gmail.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        varun@chelsio.com, axboe@kernel.dk, davem@davemloft.net
-Subject: Re: [PATCH] scsi: libcxgbi: remove unused function to stop warning
+        with ESMTP ; Mon, 30 Sep 2019 20:36:16 -0700
+To:     Oliver Neukum <oneukum@suse.com>
+Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        stern@rowland.harvard.edu
+Subject: Re: [PATCH] scsi: ignore a failure to synchronize cache due to lack of authorization
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20190924093716.GA78230@LGEARND20B15>
-Date:   Mon, 30 Sep 2019 23:27:55 -0400
-In-Reply-To: <20190924093716.GA78230@LGEARND20B15> (Austin Kim's message of
-        "Tue, 24 Sep 2019 18:37:16 +0900")
-Message-ID: <yq1pnjhw3es.fsf@oracle.com>
+References: <20190903101840.16483-1-oneukum@suse.com>
+Date:   Mon, 30 Sep 2019 23:36:14 -0400
+In-Reply-To: <20190903101840.16483-1-oneukum@suse.com> (Oliver Neukum's
+        message of "Tue, 3 Sep 2019 12:18:39 +0200")
+Message-ID: <yq1lfu5w30x.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=953
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=740
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910010033
+ engine=8.0.1-1908290000 definitions=main-1910010034
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=827 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910010032
+ definitions=main-1910010034
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Austin,
+Oliver,
 
-> Since 'commit fc8d0590d914 ("libcxgbi: Add ipv6 api to driver")' was 
-> introduced, there is no call to csk_print_port() 
-> and csk_print_ip() is made.
+> I've got a report about a UAS drive enclosure reporting back Sense:
+> Logical unit access not authorized if the drive it holds is password
+> protected. While the drive is obviously unusable in that state as a
+> mass storage device, it still exists as a sd device and when the
+> system is asked to perform a suspend of the drive, it will be sent a
+> SYNCHRONIZE CACHE. If that fails due to password protection, the error
+> must be ignored.  --- drivers/scsi/sd.c | 3 ++- 1 file changed, 2
+> insertions(+), 1 deletion(-)
 
-Applied to 5.5/scsi-queue. Thanks!
+Applied to 5.4/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
