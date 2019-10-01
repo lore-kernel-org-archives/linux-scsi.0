@@ -2,160 +2,142 @@ Return-Path: <SRS0=Efrx=X2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1229C388F3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 10:50:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11164C352AA
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 12:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A090021920
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 10:50:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD89F21A4C
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 12:08:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569931712;
+	bh=XCHUW0sFiehsHWOdWkwoD3qJu53YikewXF18yEas9ow=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ceM9llySzdEBHkmvw+IYfn6SNIm+WMD5kmi79WNa9y3/OMI1Nq1M8QFmhvbLN8Xye
+	 VGuJc680CCv/7yyUZS7F7vA5pJ14BIzzHwTvuR6BgDONgYC2+c29mRUgdcJTnGGnL8
+	 iiogmVWFAuAmtmKQRGla1KBOymi3Fge5NM3tRPP0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730872AbfJAKuO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Oct 2019 06:50:14 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52190 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730580AbfJAKuO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2019 06:50:14 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x91Ah8VM097305
-        for <linux-scsi@vger.kernel.org>; Tue, 1 Oct 2019 06:50:13 -0400
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vc28cp7s9-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Oct 2019 06:50:12 -0400
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Tue, 1 Oct 2019 11:50:10 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 1 Oct 2019 11:50:07 +0100
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x91Ao6iU45088796
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 1 Oct 2019 10:50:06 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1721EAE05A;
-        Tue,  1 Oct 2019 10:50:06 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BE31AAE058;
-        Tue,  1 Oct 2019 10:50:05 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue,  1 Oct 2019 10:50:05 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>, stable@vger.kernel.org
-Subject: [PATCH v2] zfcp: fix reaction on bit error theshold notification with adapter close
-Date:   Tue,  1 Oct 2019 12:49:49 +0200
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <yq1d0fhw2ex.fsf@oracle.com>
-References: <yq1d0fhw2ex.fsf@oracle.com>
-X-TM-AS-GCONF: 00
-x-cbid: 19100110-4275-0000-0000-0000036CD799
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19100110-4276-0000-0000-0000387F6188
-Message-Id: <20191001104949.42810-1-maier@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-01_05:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1910010100
+        id S1726846AbfJAMI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Oct 2019 08:08:29 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:44997 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725821AbfJAMI3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2019 08:08:29 -0400
+Received: by mail-ot1-f65.google.com with SMTP id 21so11262884otj.11;
+        Tue, 01 Oct 2019 05:08:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=bsKuMui1/xIoRg9sgW3QW1zBNcxnt/Bx1wXQKc1PEYw=;
+        b=K+DuMYxe5AFY6jMyR9GF4N/ICs9VhMRnq90JOIv0ry1NQuDP5Ayj4xOjHkoVivOlyY
+         Oxj0TJH6/durEsLzVzRDEqgvrlZb8YddkZXJXJnzWmHf2RUWUkqsA9o4PEp9yKvp6tsS
+         tEMWPwVcVACb0CS4L6k/eqiCep7ru4vL/yizEyYvqdcYe+B1077pQJK8KdcQdl4UwaBF
+         mC67LbPi4VeWKjI/5XW4pqaErKDkmQs0K4dILmLACEpigDyYYR55uaF26dUJV0wLkJyu
+         qC52oP2fstIIn9RXK6kqxaXJ8dWisNCZ8p4zawx+DASRS6FHuHf9U9UzHDF4Su7wNty/
+         RShQ==
+X-Gm-Message-State: APjAAAUuIhQMEEVrv0F8q1940zeVBau+oBy30eD8ThrmPYsokqQVYYZl
+        nOVfk1BIbx34+YUeJARbWw==
+X-Google-Smtp-Source: APXvYqzmhKuiodn2k2rjYHtIY+sxnIt9AOC3JK/zLBpGlQPeOA32z0qruE+A+HepzhYskR0Jx1n7iw==
+X-Received: by 2002:a9d:19a8:: with SMTP id k37mr17930702otk.172.1569931708065;
+        Tue, 01 Oct 2019 05:08:28 -0700 (PDT)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id z3sm2524158otk.45.2019.10.01.05.08.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Oct 2019 05:08:27 -0700 (PDT)
+Date:   Tue, 1 Oct 2019 07:08:26 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Vignesh Raghavendra <vigneshr@ti.com>
+Cc:     Mark Rutland <mark.rutland@arm.com>, jejb@linux.ibm.com,
+        Martin K Petersen <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Janek Kotas <jank@cadence.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        nsekhar@ti.com
+Subject: Re: [PATCH 1/2] dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for
+ TI UFS wrapper
+Message-ID: <20191001120826.GA4214@bogus>
+References: <20190918133921.25844-1-vigneshr@ti.com>
+ <20190918133921.25844-2-vigneshr@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190918133921.25844-2-vigneshr@ti.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On excessive bit errors for the FCP channel ingress fibre path, the channel
-notifies us. Previously, we only emitted a kernel message and a trace record.
-Since performance can become suboptimal with I/O timeouts due to
-bit errors, we now stop using an FCP device by default on channel
-notification so multipath on top can timely failover to other paths.
-A new module parameter zfcp.ber_stop can be used to get zfcp old behavior.
+On Wed, Sep 18, 2019 at 07:09:20PM +0530, Vignesh Raghavendra wrote:
+> Add binding documentation of TI wrapper for Cadence UFS Controller.
+> 
+> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+> ---
+>  .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 45 +++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> new file mode 100644
+> index 000000000000..dabd7c795fbe
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> @@ -0,0 +1,45 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/ti,j721e-ufs.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: TI J721e UFS Host Controller Glue Driver
+> +
+> +maintainers:
+> +  - Vignesh Raghavendra <vigneshr@ti.com>
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - const: ti,j721e-ufs
+> +
+> +  reg:
+> +    maxItems: 1
+> +    description: address of TI UFS glue registers
+> +
+> +  clocks:
+> +    maxItems: 1
+> +    description: phandle to the M-PHY clock
+> +
+> +  power-domains:
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - power-domains
+> +
+> +examples:
+> +  - |
+> +    ufs_wrapper: ufs-wrapper@4e80000 {
+> +       compatible = "ti,j721e-ufs";
+> +       reg = <0x0 0x4e80000 0x0 0x100>;
+> +       power-domains = <&k3_pds 277>;
+> +       clocks = <&k3_clks 277 1>;
+> +       assigned-clocks = <&k3_clks 277 1>;
+> +       assigned-clock-parents = <&k3_clks 277 4>;
+> +       #address-cells = <2>;
+> +       #size-cells = <2>;
 
-User explanation of new kernel message:
- * Description:
- * The FCP channel reported that its bit error threshold has been exceeded.
- * These errors might result from a problem with the physical components
- * of the local fibre link into the FCP channel.
- * The problem might be damage or malfunction of the cable or
- * cable connection between the FCP channel and
- * the adjacent fabric switch port or the point-to-point peer.
- * Find details about the errors in the HBA trace for the FCP device.
- * The zfcp device driver closed down the FCP device
- * to limit the performance impact from possible I/O command timeouts.
- * User action:
- * Check for problems on the local fibre link, ensure that fibre optics are
- * clean and functional, and all cables are properly plugged.
- * After the repair action, you can manually recover the FCP device by
- * writing "0" into its "failed" sysfs attribute.
- * If recovery through sysfs is not possible, set the CHPID of the device
- * offline and back online on the service element.
+Based on the driver you expect to have a child node here with the UFS 
+controller? You need to show that and have a schema for it.
 
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: <stable@vger.kernel.org> #2.6.30+
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
----
-
-Martin, James,
-
-an important zfcp fix for v5.4-rc.
-It applies to Martin's 5.4/scsi-fixes or to James' fixes branch.
-
-Changes since v1:
-* Martin's review comments: describe code change and new module parameter
-
-
- drivers/s390/scsi/zfcp_fsf.c | 16 +++++++++++++---
- 2 files changed, 37 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index e31c6b47af97..1e279220f073 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -29,6 +29,11 @@
- 
- struct kmem_cache *zfcp_fsf_qtcb_cache;
- 
-+static bool ber_stop = true;
-+module_param(ber_stop, bool, 0600);
-+MODULE_PARM_DESC(ber_stop,
-+		 "Shuts down FCP devices for FCP channels that report a bit-error count in excess of its threshold (default on)");
-+
- static void zfcp_fsf_request_timeout_handler(struct timer_list *t)
- {
- 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
-@@ -238,10 +243,15 @@ static void zfcp_fsf_status_read_handler(struct zfcp_fsf_req *req)
- 	case FSF_STATUS_READ_SENSE_DATA_AVAIL:
- 		break;
- 	case FSF_STATUS_READ_BIT_ERROR_THRESHOLD:
--		dev_warn(&adapter->ccw_device->dev,
--			 "The error threshold for checksum statistics "
--			 "has been exceeded\n");
- 		zfcp_dbf_hba_bit_err("fssrh_3", req);
-+		if (ber_stop) {
-+			dev_warn(&adapter->ccw_device->dev,
-+				 "All paths over this FCP device are disused because of excessive bit errors\n");
-+			zfcp_erp_adapter_shutdown(adapter, 0, "fssrh_b");
-+		} else {
-+			dev_warn(&adapter->ccw_device->dev,
-+				 "The error threshold for checksum statistics has been exceeded\n");
-+		}
- 		break;
- 	case FSF_STATUS_READ_LINK_DOWN:
- 		zfcp_fsf_status_read_link_down(req);
--- 
-2.17.1
-
+> +    };
+> -- 
+> 2.23.0
+> 
