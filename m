@@ -7,99 +7,90 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB0D6C32792
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:02:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6EEFC32792
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:05:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B5D12087F
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:02:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABC162087F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:05:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cAUQHJBn"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="r74kGM8n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732118AbfJADC3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Sep 2019 23:02:29 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:49022 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727459AbfJADC2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:02:28 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x912wgD1123860;
-        Tue, 1 Oct 2019 03:01:55 GMT
+        id S1732629AbfJADF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Sep 2019 23:05:26 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:58992 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731164AbfJADF0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:05:26 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9133ll6129155;
+        Tue, 1 Oct 2019 03:05:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=njwwrnTifs8mrKE8jnEn5CkrqleEPai9Gly5Yeav8D0=;
- b=cAUQHJBnGzWF7MI4SCB1phb0aN5MTzD42w+hscUrp5YyNRo0SBAeDZk7p6XUlx9A1YvJ
- a5fFO5Xf2uJqyeg+74iX3oia29430BC8/AeBFGmwwJs8+JN5RZxKxgg7wm6vjZu20YbQ
- 7/fva448QrBWI+oM1APP7CNCXfqhJD8QgJ9/SxoJiI3StDqrLPB0ZWiiillxyvrRUJ4D
- 4tipgv2m8KYHQgMnBQfi7Z8N6W1JGpHtNPJHzmtwUDM7GRGx9HPXlr5G6hcYCxCo8yXz
- c/HFJsggWJCdai0yZ/zGCogwfyTOeTeyoxXq3BQ+hT9qMPpMPEPtWIijsBKelYZAqGcg aA== 
+ bh=eITAOOwKjJja+W4v1U/cL6ydjEO1kNXle3KHTuD3GhM=;
+ b=r74kGM8nR2RfFdonZGO8j8KCmAGH0BB5M13H6FMIqPJH6mf+JVHtk0x90qpCUyDc3sud
+ hwpp+rvBTMwM5FM8X8thzEUsc/NY+3JXxqa690Kfbj6PsAr4GloqS1VoNYND4VPDJ+Mu
+ HQBu8MxI1i3eoUyVQmk0d5H5z3/vQ+o03+rhNA/tqgrif4tUA8eHrSFoSHUz9pGFeDJf
+ zuFaXGOuKp3q4BKkqe9lobhy3Sk7T6mUWqIiXBMwqMyclDgfWwCjRPdoYHf14pexSvPj
+ wD4ZvrYWSWe9VaCuWdp4ZOW7w5g5Lq/wuu+vqTga3yDvJO8YDyWLIxKskRpiCvxFyUXm Rw== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2va05rjtda-1
+        by userp2130.oracle.com with ESMTP id 2v9xxujwtf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:01:55 +0000
+        Tue, 01 Oct 2019 03:05:20 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x912whdC038056;
-        Tue, 1 Oct 2019 03:01:54 GMT
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9133d7q046677;
+        Tue, 1 Oct 2019 03:05:20 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2vbsm13ssp-1
+        by aserp3030.oracle.com with ESMTP id 2vbsm13wkn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:01:54 +0000
+        Tue, 01 Oct 2019 03:05:19 +0000
 Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9131nkm005437;
-        Tue, 1 Oct 2019 03:01:49 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9135IWq006943;
+        Tue, 1 Oct 2019 03:05:19 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 30 Sep 2019 20:01:49 -0700
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <pedrom.sousa@synopsys.com>, <sthumma@codeaurora.org>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kernel-team@android.com>,
-        <matthias.bgg@gmail.com>, <evgreen@chromium.org>,
-        <beanhuo@micron.com>, <marc.w.gonzalez@free.fr>,
-        <subhashj@codeaurora.org>, <vivek.gautam@codeaurora.org>,
-        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>
-Subject: Re: [PATCH v4 0/3] scsi: core: allow auto suspend override by low-level driver
+        with ESMTP ; Mon, 30 Sep 2019 20:05:18 -0700
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     QLogic-Storage-Upstream@cavium.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: qedf: Add port_id getter
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <1568649411-5127-1-git-send-email-stanley.chu@mediatek.com>
-Date:   Mon, 30 Sep 2019 23:01:45 -0400
-In-Reply-To: <1568649411-5127-1-git-send-email-stanley.chu@mediatek.com>
-        (Stanley Chu's message of "Mon, 16 Sep 2019 23:56:48 +0800")
-Message-ID: <yq1o8z1xj6u.fsf@oracle.com>
+References: <MN2PR18MB25273EBD439B3458D6088610D2840@MN2PR18MB2527.namprd18.prod.outlook.com>
+        <20190924072906.23737-1-dwagner@suse.de>
+Date:   Mon, 30 Sep 2019 23:05:16 -0400
+In-Reply-To: <20190924072906.23737-1-dwagner@suse.de> (Daniel Wagner's message
+        of "Tue, 24 Sep 2019 09:29:06 +0200")
+Message-ID: <yq1k19pxj0z.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=893
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910010029
+ engine=8.0.1-1908290000 definitions=main-1910010030
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=973 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910010030
+ definitions=main-1910010031
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Daniel,
 
-> Until now the scsi mid-layer forbids runtime suspend till userspace
-> enables it. This is mainly to quarantine some disks with broken
-> runtime power management or have high latencies executing suspend
-> resume callbacks. If the userspace doesn't enable the runtime suspend
-> the underlying hardware will be always on even when it is not doing
-> any useful work and thus wasting power.
+> Add qedf_get_host_port_id() to the transport template.
+>
+> The fc_transport_template initializes the port_id member to the
+> default value of -1. The new getter ensures that the sysfs entry shows
+> the current value and not the default one, e.g by using 'lsscsi -H -t'
 
-Applied to 5.5/scsi-queue, thank you!
+Applied to 5.5/scsi-queue, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
