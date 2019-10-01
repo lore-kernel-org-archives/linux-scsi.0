@@ -2,77 +2,91 @@ Return-Path: <SRS0=Efrx=X2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1591FC352AA
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC6FECE587
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E185E21783
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:38:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17287215EA
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:51:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569955138;
-	bh=aKf91XR6JvMxLueo2TS8zQiXeT9A/x7VMo135oAwuig=;
+	s=default; t=1569955914;
+	bh=TkSQARMmhlWTbc5qvm3pp5gUetrJdVs8ct3fom+VhaY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=i5CWOm1FrPR+X3m39X9nPNg08nBMrldl1abX4eHJQqCUODDTdRvibUzdf4lGKK9JW
-	 ki4/vPi+cBQuXRREZICjj3JXJxnyakDnjchHb7yqbGOgbDI4OH+FqVNJp7/D37sJT+
-	 agLRdClpz2kkuYqgLJssJVVDIzj3dlvXLZiKUrsw=
+	b=aoLxfz1caksa3Ubc8IzPmeu4CwiPkZmc2RwSIdlAbE7gT+2bQEn3zHQrQWs5eok22
+	 BungE94vfGPbQNKS/oQK5PSIxrJx5d8NLJdOrGT7MJaI1c1l1XkIt9kvPRHreJMw4Y
+	 xl6uglS7TQqW2v0xJeZGMfq1Hw+11LK5trwd6QmA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726240AbfJASiy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Oct 2019 14:38:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59924 "EHLO mail.kernel.org"
+        id S1726094AbfJASvu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Oct 2019 14:51:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37680 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725919AbfJASiy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Oct 2019 14:38:54 -0400
+        id S1725875AbfJASvu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Oct 2019 14:51:50 -0400
 Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 76B672133F;
-        Tue,  1 Oct 2019 18:38:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2F0D120B7C;
+        Tue,  1 Oct 2019 18:51:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569955133;
-        bh=aKf91XR6JvMxLueo2TS8zQiXeT9A/x7VMo135oAwuig=;
+        s=default; t=1569955909;
+        bh=TkSQARMmhlWTbc5qvm3pp5gUetrJdVs8ct3fom+VhaY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZuXkiaROFJoI6oXe+BcXrLaPgpC7sGZqhXV/w5YFDQFtqnS6C7arSyCZQmvb1G2H5
-         LOwi+IixflbF6IJTQGnFQUza/0iZdTghdy3XlfugK5ShPQ32eXYh3CSfwGItH0I71S
-         O4o4KOK8duAr5ndH49JIIpCAumc9/jBlIKFFpdxM=
-Date:   Tue, 1 Oct 2019 14:38:52 -0400
+        b=Th+fan2bzyZ59Eo3C+edluzWkQORg8a8jpiH5KceQJdAsaiy7JscHoN6yIdKHpmsV
+         RRC5Leg+MDq0sKIuBvPW8zaO6++kjd0bVq8+zwPH5XEumYqva0lrRGcZ4zVO3zTLYo
+         iS7cE5mIQclvepYaJpBZM80Ths7WNJ7cATClcNTM=
+Date:   Tue, 1 Oct 2019 14:51:48 -0400
 From:   Sasha Levin <sashal@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Dexuan Cui <decui@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
+To:     Dexuan Cui <decui@microsoft.com>
+Cc:     KY Srinivasan <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Michael Kelley <mikelley@microsoft.com>
-Subject: Re: [PATCH] scsi: storvsc: Add the support of hibernation
-Message-ID: <20191001183852.GB8171@sasha-vm>
-References: <1568244905-66625-1-git-send-email-decui@microsoft.com>
- <yq1zhj7byph.fsf@oracle.com>
+Subject: Re: [PATCH v2] scsi: storvsc: Add the support of hibernation
+Message-ID: <20191001185148.GH8171@sasha-vm>
+References: <1569442244-16726-1-git-send-email-decui@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <yq1zhj7byph.fsf@oracle.com>
+In-Reply-To: <1569442244-16726-1-git-send-email-decui@microsoft.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 13, 2019 at 06:47:38PM -0400, Martin K. Petersen wrote:
+On Wed, Sep 25, 2019 at 08:11:08PM +0000, Dexuan Cui wrote:
+>When we're in storvsc_suspend(), we're sure the SCSI layer has quiesced the
+>scsi device by scsi_bus_suspend() -> ... -> scsi_device_quiesce(), so the
+>low level SCSI adapter driver only needs to suspend/resume its own state.
 >
->Dexuan,
->
->> When we're in storvsc_suspend(), we're sure the SCSI layer has
->> quiesced the scsi device by scsi_bus_suspend() -> ... ->
->> scsi_device_quiesce(), so the low level SCSI adapter driver only needs
->> to suspend/resume its own state.
->
+>Signed-off-by: Dexuan Cui <decui@microsoft.com>
 >Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+>
+>---
+>
+>This patch is basically a pure Hyper-V specific change and it has a
+>build dependency on the commit 271b2224d42f ("Drivers: hv: vmbus: Implement
+>suspend/resume for VSC drivers for hibernation"), which is on Sasha Levin's
+>Hyper-V tree's hyperv-next branch:
+>https://git.kernel.org/pub/scm/linux/kernel/git/hyperv/linux.git/log/?h=hyperv-next
+>
+>I request this patch should go through Sasha's tree rather than the
+>SCSI tree.
+>
+>In v2:
+>	Added Acked-by from Martin.
+>
+>	@Sasha: I think the patch can go through the hyper-v tree, since
+>                we have the Ack from Martin. :-)
 
 Queued up for hyperv-next, thanks!
 
