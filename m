@@ -2,129 +2,102 @@ Return-Path: <SRS0=Efrx=X2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B51BC388F3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 00:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9162FC388F3
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 01:54:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A1952168B
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 00:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 696E52087F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 01:54:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NvC/iXBe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727326AbfJAAmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Sep 2019 20:42:53 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:58866 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbfJAAmw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 20:42:52 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 8D90B27E62;
-        Mon, 30 Sep 2019 20:42:48 -0400 (EDT)
-Date:   Tue, 1 Oct 2019 10:42:48 +1000 (AEST)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [PATCH V2] scsi: save/restore command resid for error handling
-In-Reply-To: <20190927221602.27080-1-damien.lemoal@wdc.com>
-Message-ID: <alpine.LNX.2.21.1910011011410.13@nippy.intranet>
-References: <20190927221602.27080-1-damien.lemoal@wdc.com>
+        id S1726590AbfJAByN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Sep 2019 21:54:13 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38494 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726106AbfJAByN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 21:54:13 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x911nVBc036692;
+        Tue, 1 Oct 2019 01:54:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=4k2uGXye/BjhzSgVMI1K16vPqlYtUAnVQrfMtQxbxbo=;
+ b=NvC/iXBe4G7x8PMGKBVGomJMys4bzrheUqcZUGnPMsUD6fnBq7aOYfkR33utl1FLuLiD
+ rR3k1mEWxu2VIiRq/gBYULlh2x7AVdXB3R5qKcfWpQny7f0YhcBFLqeesDUEU8IbAq8j
+ WNWshem1QOR03Rc+6fl9Q+3E6ENrgF7nlj6062m6FFqxjW9e7rzcfD+KW2MKMWMsVa5r
+ RCWKSu8vEW5TXrTlZGi7ivMZ6RSWtBH291yE6zs/GCl2iWawHE9YVndT+aREnRNMMauN
+ Si3K65VA2njWWctpHGo6NtyrEtpF5Dm59kncDEUoInE3B/RR+jjln6zuJajfz5SbHPiU Jg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2v9yfq2q6w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Oct 2019 01:54:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x911s2WG005865;
+        Tue, 1 Oct 2019 01:54:08 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vbqcyypd9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Oct 2019 01:54:06 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x911riJA000706;
+        Tue, 1 Oct 2019 01:53:44 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 30 Sep 2019 18:53:44 -0700
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Andrey Melnikov <temnota.am@gmail.com>,
+        Zhong Li <lizhongfs@gmail.com>, linux-scsi@vger.kernel.org
+Subject: Re: [RFC,v2] scsi: scan: map PQ=1, PDT=other values to SCSI_SCAN_TARGET_PRESENT
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <CA+PODjqrRzyJnOKoabMOV4EPByNnL1LgTi+QAKENP3NwUq5YCw@mail.gmail.com>
+        <8A2392BA-EDD4-4F66-9F76-B43C8F6EA4FB@gmail.com>
+        <CA+PODjpG7NLTH8wp9qw08ACj4=8sUusmkZv6X7QWHtdbNJ1S0Q@mail.gmail.com>
+        <yq1h84y1vxh.fsf@oracle.com>
+        <aa9016ff-af17-f18b-abf8-ffb73438c394@suse.de>
+Date:   Mon, 30 Sep 2019 21:53:42 -0400
+In-Reply-To: <aa9016ff-af17-f18b-abf8-ffb73438c394@suse.de> (Hannes Reinecke's
+        message of "Fri, 27 Sep 2019 16:16:42 +0200")
+Message-ID: <yq14l0t1ba1.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=619
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910010018
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=706 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910010017
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 28 Sep 2019, Damien Le Moal wrote:
 
-> When a non-passthrough command is terminated with CHECK CONDITION,
-> request sense is executed by hijacking the command descriptor. Since
-> scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd() do not save/restore the
-> original command resid, the value returned on failure of the original
-> command is lost and replaced with the value set by the execution of the
-> request sense command. This value may in many instances be unaligned to
-> the device sector size, causing sd_done() to print a warning message
-> about the incorrect unaligned resid before the command is retried or
-> aborted.
-> 
-> Fix this problem by saving the original command resid in struct
-> scsi_eh_save using scsi_eh_prep_cmnd() and restoring it in
-> scsi_eh_restore_cmnd(). In addition, to make sure that the request sense
-> command is executed with a correctly initialized command structure, also
-> reset resid to 0 in scsi_eh_prep_cmnd() after saving the original
-> command resid value in struct scsi_eh_save.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> ---
-> 
-> Changes from V1:
-> * Dropped patch 2
-> * Add resid reset in scsi_eh_prep_cmnd()
-> 
->  drivers/scsi/scsi_error.c | 3 +++
->  include/scsi/scsi_eh.h    | 1 +
->  2 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 1c470e31ae81..f53828bf7ad7 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -967,6 +967,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
->  	ses->data_direction = scmd->sc_data_direction;
->  	ses->sdb = scmd->sdb;
->  	ses->result = scmd->result;
-> +	ses->resid = scsi_get_resid(scmd);
->  	ses->underflow = scmd->underflow;
->  	ses->prot_op = scmd->prot_op;
->  	ses->eh_eflags = scmd->eh_eflags;
-> @@ -977,6 +978,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
->  	memset(scmd->cmnd, 0, BLK_MAX_CDB);
->  	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
->  	scmd->result = 0;
-> +	scsi_set_resid(scmd, 0);
->  
->  	if (sense_bytes) {
->  		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
-> @@ -1029,6 +1031,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
->  	scmd->sc_data_direction = ses->data_direction;
->  	scmd->sdb = ses->sdb;
->  	scmd->result = ses->result;
-> +	scsi_set_resid(scmd, ses->resid);
+Hannes,
 
-When saving and restoring state, perhaps it makes more sense to bypass the 
-higher level getter/setter API? Open-coded assignment statements are 
-already prevalent here, rather than calls to e.g. scsi_set_prot_op(), 
-set_msg_byte() etc. (There may be no code elsewhere that could tell the 
-difference, but we can't use "private" members to prove it, unlike C++.)
+> 1) all underlying devices are exported to the OS; of course they have
+> to be properly masked etc to avoid udev to latch on those devices. I
+> also was under the impression that the 'no_uld_attach' should be
+> sufficient here, but then that only avoids the 'sd' driver to become
+> attached to it. The actual SCSI device is still visible, so one
+> _might_ be tempted to use the 'sg' device and export it to things like
+> qemu. Which of course should be avoided.
 
->  	scmd->underflow = ses->underflow;
->  	scmd->prot_op = ses->prot_op;
->  	scmd->eh_eflags = ses->eh_eflags;
-> diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-> index 3810b340551c..9caa9b262a32 100644
-> --- a/include/scsi/scsi_eh.h
-> +++ b/include/scsi/scsi_eh.h
-> @@ -32,6 +32,7 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
->  struct scsi_eh_save {
->  	/* saved state */
->  	int result;
-> +	unsigned int resid;
-
-There seems to be an inconsistency here. A signed int would be consistent 
-with the getter and setter helpers. Whereas, if you open-coded the 
-assignments instead, your unsigned int would make sense because 
-scsi_request.resid_len really is an unsigned int.
+Well, yes. But in this case the bug report was that sg devices were no
+longer available for smartmontools to monitor.
 
 -- 
-
->  	int eh_eflags;
->  	enum dma_data_direction data_direction;
->  	unsigned underflow;
-> 
+Martin K. Petersen	Oracle Linux Engineering
