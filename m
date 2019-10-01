@@ -2,106 +2,105 @@ Return-Path: <SRS0=Efrx=X2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B33C352AA
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 15:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9066ECE587
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:27:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA6F821855
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 15:42:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569944532;
-	bh=k0W7e2si2Vcx0gzomk1QiHlnoTpUZarg+lyFE5CNArg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=af4dPzgBhLhf82dltpzcLwQTD45ZbjCu2x+c84UvKQYM5vSG5izHwQoTFNQdBujIW
-	 slP5ntlUJDShN8nMAzhWGYWnxSrugu8VmbRLO34xqFmdNo5vIBUSiqO2m/qayLBMYE
-	 JlbusI3KvKgTuqNvSnV6mbyVzplnjDpOWVURfxqU=
+	by mail.kernel.org (Postfix) with ESMTP id A1CFE215EA
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 18:27:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i7IknPeH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389468AbfJAPmM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Oct 2019 11:42:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727302AbfJAPmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Oct 2019 11:42:11 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B00352086A;
-        Tue,  1 Oct 2019 15:42:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569944531;
-        bh=k0W7e2si2Vcx0gzomk1QiHlnoTpUZarg+lyFE5CNArg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QEeD2au9hZKSmGTMJEvCv0/W91JbZIahSo/L5PKLMeNcK9Vk8Ov0I6pzy/rEOS5v/
-         5Jshb/XjslEJTsZJRrx+g+XQN3oVFKa+w0hldEW3rOZyK80e9p2bDksdq8+MPoB17x
-         N5LHM94n5hxWVo+ggHILwM07rhYla7CPMxgJQddM=
-Date:   Tue, 1 Oct 2019 17:42:08 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Steffen Maier <maier@linux.ibm.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        id S1732058AbfJAS1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Oct 2019 14:27:01 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:51768 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729444AbfJAS1B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2019 14:27:01 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x91IJA5v137656;
+        Tue, 1 Oct 2019 18:26:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=Bp0nYLDxS7dpUSfySpK5uXb+Schf0NiemjtVBNnZ9Xg=;
+ b=i7IknPeHLhRI9uKkAxm7LguR7q5cqhYTANRQJ4IULI8cOGFFMlSZQosnwOHd8SHHH1LE
+ euvFVY8aZDqVezxFb0tzrG39WRoS4RA1uTAoQxzpVgrdU5szTsCiuSKhgzLAXXhSK1Ij
+ FKSpgSW3JyhcfvkPk1DIb3enK1maJx6Qw+HnUMQ5NGSjsQZi1D3iGJRh+yvh0Mr8jAKX
+ /aHUeB5XFhlvdveSe7kV9rqP47SaAZ5FekCkVQz9r6/jC61GONxc2l7vttmdMl+M/COU
+ bC4I4qajL2u3396sP+O69QWu+PGA5yM/tjePRYr1A/H7SZA1pWDZ/3PGb8NZh3C0CJTP JA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2va05rqxmf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Oct 2019 18:26:57 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x91IMdZG118288;
+        Tue, 1 Oct 2019 18:26:56 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vbqd1am21-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 01 Oct 2019 18:26:56 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x91IQtge000586;
+        Tue, 1 Oct 2019 18:26:55 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 01 Oct 2019 11:26:54 -0700
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     Steffen Maier <maier@linux.ibm.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
         Benjamin Block <bblock@linux.ibm.com>,
         Heiko Carstens <heiko.carstens@de.ibm.com>,
         Vasily Gorbik <gor@linux.ibm.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v2] zfcp: fix reaction on bit error theshold notification
- with adapter close
-Message-ID: <20191001154208.GB3523275@kroah.com>
+Subject: Re: [PATCH v2] zfcp: fix reaction on bit error theshold notification with adapter close
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
 References: <yq1d0fhw2ex.fsf@oracle.com>
- <20191001104949.42810-1-maier@linux.ibm.com>
- <20191001141408.GB3129841@kroah.com>
- <71b8fc68-23a8-a591-1018-f290d6e3312a@linux.ibm.com>
+        <20191001104949.42810-1-maier@linux.ibm.com>
+        <20191001141408.GB3129841@kroah.com>
+        <71b8fc68-23a8-a591-1018-f290d6e3312a@linux.ibm.com>
+        <20191001154208.GB3523275@kroah.com>
+Date:   Tue, 01 Oct 2019 14:26:48 -0400
+In-Reply-To: <20191001154208.GB3523275@kroah.com> (Greg KH's message of "Tue,
+        1 Oct 2019 17:42:08 +0200")
+Message-ID: <yq1tv8stj87.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <71b8fc68-23a8-a591-1018-f290d6e3312a@linux.ibm.com>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9397 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=755
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910010148
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9397 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=837 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910010148
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 01, 2019 at 05:07:50PM +0200, Steffen Maier wrote:
-> On 10/1/19 4:14 PM, Greg KH wrote:
-> > On Tue, Oct 01, 2019 at 12:49:49PM +0200, Steffen Maier wrote:
-> > > On excessive bit errors for the FCP channel ingress fibre path, the channel
-> > > notifies us. Previously, we only emitted a kernel message and a trace record.
-> > > Since performance can become suboptimal with I/O timeouts due to
-> > > bit errors, we now stop using an FCP device by default on channel
-> > > notification so multipath on top can timely failover to other paths.
-> > > A new module parameter zfcp.ber_stop can be used to get zfcp old behavior.
-> > 
-> > Ugh, module parameters?  This isn't the 1990's anymore :(
-> > 
-> > Why not just make this a dynamic sysfs variable, that way you properly
-> > can set this on whatever device you want, not just "all or nothing"?
-> 
-> Since we can see many more (virtual) FCP devices than we want to actually
-> use, we defer probing. It means, we only start allocating structures and
-> sysfs entries on setting an FCP "online" for the first time. Setting online
-> works through another sysfs attribute owned by our ccw bus code component
-> called "cio". IIRC, setting online does not emit a uevent. On setting
-> online, the (add) uevent of hot-/coldplug of an FCP device had already
-> happened, so we could not easily have end users craft udev rules to
-> automatically/persistently configure a new sysfs attribute (which is
-> FCP-device-specific and appears late) to disable the new code behavior.
-> 
-> Not sure if that could ever become a problem for end users: Even if we were
-> to write into a new sysfs attribute, the attribute only appears during
-> setting online so this might race with starting to actually use the FCP
-> device with the new default behavior and could potentially disable I/O paths
-> before the sysfs attribute write could become effective to disable the new
-> behavor.
 
-Ok, then why make this a module option that you will have to support for
-the next 20+ years anyway if you feel this fix is the correct way that
-it should be done instead?
+Greg,
 
-module options are tough to manage and support, only add them as a very
-last thing, when all other options have been ruled out.
+> Ok, then why make this a module option that you will have to support
+> for the next 20+ years anyway if you feel this fix is the correct way
+> that it should be done instead?
 
-thanks,
+I agree.
 
-greg k-h
+Why not just shut FCP down unconditionally on excessive bit errors?
+What's the benefit of allowing things to continue? Are you hoping things
+will eventually recover in a single-path scenario?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
