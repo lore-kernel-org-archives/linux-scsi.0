@@ -7,64 +7,60 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 190D8C32793
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:49:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCD5C352A9
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:54:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4F5920815
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:49:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85A9620815
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 03:54:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PPCXvtHH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TcbLcixz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727848AbfJADte (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Sep 2019 23:49:34 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39112 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726590AbfJADtd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:49:33 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913nHx1157299;
-        Tue, 1 Oct 2019 03:49:31 GMT
+        id S1727720AbfJADyp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Sep 2019 23:54:45 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50682 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726691AbfJADyp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Sep 2019 23:54:45 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913sMDe162027;
+        Tue, 1 Oct 2019 03:54:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=o52ZS8bDMOxNE/hV3H09BNTrRlOTKrbZtQurBYCFd6g=;
- b=PPCXvtHHaMc42duGnj926pJUdf+XMoA03frMUZx2vPlCxJWJeBtQyplZhjFq41AN/pz7
- 4OEMyaG4Eo3fm3ySoGOuBZ9Vm7lw+7G+Vg45FENK9dMQ18o4I9oOJFajRRDWr8Hu6BEB
- jct5HV7D/biI6UYMJq/vN61PPDn7VwDT7eCWL42YB9s/FCSKxXyTg6O/oVsi+27uwFZT
- Kq+x1K45XTmKY2Q4DckJyorAs65Mt8cmMP7aUTtpoACuWDu5GhHOAMMJxc3ZgZ4MILKU
- ZFkMPkafcoqEpTh1tOi1BnFVULBptqXGFBR9QIWTOytGV8dphJg8UVcE0D2QGJ3zrA9/ hw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2va05rjx7v-1
+ bh=P0SIhqwVwF4KrzRiTFbotP1NB2jWE6iKzbCzwOdMV9w=;
+ b=TcbLcixzA7OH5HESl/IOX243jp3sSpZuV0g1ttZW8ERoUfAVl7QJ7CuMeqWFstA/fP5l
+ JgQDHPj9H3nOmbfDAHGeFQ/3Cd2NcIlNviX4XtuYrvfhiUSz7AxjmLSN2d0m1mhlbVUk
+ 4G8tz2Pk5VKAs/AEwHfLOI67ecrFBPz7pN+qDhQCM0rrGhPZ68zIhA/LAtNaF38lWqyu
+ /3AxkZzkWhaxEkWdEsw38G5GK+kqdbnfIfnJ09X0475oELtIqp3F+yL0tyo2GVYRzv7f
+ vFuzPkUZWEonA6fW2GOA/KR46i5NeyXUziB2f/GGnCIxbtpKbfl/hJtdAcxf3fgjffNc Rw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2v9xxuk1qs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:49:30 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913m170122355;
-        Tue, 1 Oct 2019 03:49:30 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2vbsm15bg4-1
+        Tue, 01 Oct 2019 03:54:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x913mw3q005632;
+        Tue, 1 Oct 2019 03:54:34 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2vbqd03hjp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 03:49:29 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x913nSfA031680;
-        Tue, 1 Oct 2019 03:49:29 GMT
+        Tue, 01 Oct 2019 03:54:34 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x913sVuK026024;
+        Tue, 1 Oct 2019 03:54:33 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 30 Sep 2019 20:49:28 -0700
-To:     Steffen Maier <maier@linux.ibm.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>, stable@vger.kernel.org
-Subject: Re: [PATCH] zfcp: fix reaction on bit error theshold notification with adapter close
+        with ESMTP ; Mon, 30 Sep 2019 20:54:30 -0700
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v2] scsi: qla2xxx: Remove WARN_ON_ONCE in qla2x00_status_cont_entry()
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20190924160616.15301-1-maier@linux.ibm.com>
-Date:   Mon, 30 Sep 2019 23:49:26 -0400
-In-Reply-To: <20190924160616.15301-1-maier@linux.ibm.com> (Steffen Maier's
-        message of "Tue, 24 Sep 2019 18:06:16 +0200")
-Message-ID: <yq1d0fhw2ex.fsf@oracle.com>
+References: <20190927073031.62296-1-dwagner@suse.de>
+Date:   Mon, 30 Sep 2019 23:54:28 -0400
+In-Reply-To: <20190927073031.62296-1-dwagner@suse.de> (Daniel Wagner's message
+        of "Fri, 27 Sep 2019 09:30:31 +0200")
+Message-ID: <yq18sq5w26j.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -78,44 +74,23 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=150
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910010037
+ definitions=main-1910010038
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Steffen,
+Daniel,
 
-> Kernel message explanation:
->
->  * Description:
->  * The FCP channel reported that its bit error threshold has been exceeded.
->  * These errors might result from a problem with the physical components
->  * of the local fibre link into the FCP channel.
->  * The problem might be damage or malfunction of the cable or
->  * cable connection between the FCP channel and
->  * the adjacent fabric switch port or the point-to-point peer.
->  * Find details about the errors in the HBA trace for the FCP device.
->  * The zfcp device driver closed down the FCP device
->  * to limit the performance impact from possible I/O command timeouts.
->  * User action:
->  * Check for problems on the local fibre link, ensure that fibre optics are
->  * clean and functional, and all cables are properly plugged.
->  * After the repair action, you can manually recover the FCP device by
->  * writing "0" into its "failed" sysfs attribute.
->  * If recovery through sysfs is not possible, set the CHPID of the device
->  * offline and back online on the service element.
+> Commit 88263208dd23 ("scsi: qla2xxx: Complain if sp->done() is not
+> called from the completion path") introduced the WARN_ON_ONCE in
+> qla2x00_status_cont_entry(). The assumption was that there is only one
+> status continuations element. According to the firmware documentation
+> it is possible that multiple status continuations are emitted by the
+> firmware.
 
-This commentary does not read like a patch description. It makes no
-mention of the actual kernel changes and the introduced module
-parameter.
-
-> +static bool ber_stop = true;
-> +module_param(ber_stop, bool, 0600);
-> +MODULE_PARM_DESC(ber_stop,
-> +		 "Shuts down FCP devices for FCP channels that report a bit-error count in excess of its threshold (default on)");
-> +
+Applied to 5.4/scsi-fixes. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
