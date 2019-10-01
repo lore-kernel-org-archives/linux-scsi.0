@@ -2,137 +2,152 @@ Return-Path: <SRS0=Efrx=X2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C81C388F3
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 04:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DDAECE589
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 07:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87EF320842
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 04:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A90C4218DE
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Oct 2019 07:48:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N1OyaYLw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ifEyUNqq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725817AbfJAE3i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Oct 2019 00:29:38 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52656 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725535AbfJAE3h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2019 00:29:37 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x914TOsi185775;
-        Tue, 1 Oct 2019 04:29:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=Bz8c7y4f1RSpAFnZe8DRnShmhPSB64cUQi8eotXgtbk=;
- b=N1OyaYLwmelIdj8skimA/5GFrKlmJtXt47uFNbHbAmENX9m4+b9WeVoGT1yUFbopEZh3
- HZHOnkRd1/W/oTTgRYFUrHbAc99zMJP3c0+YBeqwFwaskRhf0ivFmlw4IAbkjd8eh1pA
- Ye1376T6/kCwGPS2/AZxQpIhXMhz+rJoGw6044JGcm/+kP8WRBMHfrerHBxZRwOJSa3n
- cCCzlsMukIeFEwKDQPnfv3ZtW+18O/4kys21/FNdE+6gzct4M/EdGH/UEjo30xtBvgd1
- 93LjhRyJDnzE/rDl3iX5c15mbw/ViaXcur9gX7ZV8tQi8Wr8xY2wCtYyTSBQl97Pi3su 0g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2va05rk2gr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 04:29:25 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x914TOsM011548;
-        Tue, 1 Oct 2019 04:29:25 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2vbmpxna44-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Oct 2019 04:29:25 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x914SsrL010534;
-        Tue, 1 Oct 2019 04:28:55 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 30 Sep 2019 21:28:54 -0700
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, hare@suse.de
-Subject: Re: [PATCH v2] scsi_debug: randomize command duration option + %p
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20190927140425.18958-1-dgilbert@interlog.com>
-        <743e705b-1314-c8cb-1a75-acc5029ee890@acm.org>
-        <74305c57-1d8e-5829-9bcf-db02fc97a7fb@interlog.com>
-Date:   Tue, 01 Oct 2019 00:28:52 -0400
-In-Reply-To: <74305c57-1d8e-5829-9bcf-db02fc97a7fb@interlog.com> (Douglas
-        Gilbert's message of "Mon, 30 Sep 2019 22:42:39 -0400")
-Message-ID: <yq1v9t9um0r.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1730344AbfJAHsm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Oct 2019 03:48:42 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:38051 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725777AbfJAHsm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Oct 2019 03:48:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1569916123; x=1601452123;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=v2Q56QGsThDWkYp0lqGTwVCLnA1aCvxt50v5W5nlbbA=;
+  b=ifEyUNqqTH/V/+COa+RPFPe9mXRNaERLr3kYeHoO9Dzh2QFV6cnkDcGC
+   zLD0YlJtkAiVY5rRKzR4RCrK2ecalG/Pf1dLhz3RiuMiJRyaGj2wJN1pg
+   ZyhvpiWs+bmql2j7gFa4iavmuMtiX3fTy+j6DzWy5gb1RJ469bfBD2213
+   eD3+xnGhpGjtTM8sByeMTQpPrpWfJIX+v/nNmTSdM/xwORh7QBq9OV9SP
+   aug/3onU3zbnpRxWfsVcpLHVjL9Ia/bO/8ZTq0VuHPgxlUaV4Qhr21np7
+   LZBhJ1qVc7BxojMZL+46lwjuSdugejQ9bTknAe6shT+PG7K1U3a7n2CsQ
+   Q==;
+IronPort-SDR: 5MdZO5ofO5/5F5JCxr0WGQa6mdGENXCy753d1NPjypZPt8bAGBe7kvhNuy0mpoFmLSJaDVUwjS
+ 9lULi4qV7Fi/lQlTuGtX+vALOK/A+omdgQ7xrzK2wQXiHaJ+LJpYiepGtiiWup/cbDmYw8xbyv
+ RONaYJ1HS00M6Wcl9wc6d7fUXIq4mTu4RRYBMnRvxQajM6kG4vSuFv0ZU68GNfxQkfuFPyocE3
+ zD/HKW/asuAmRMk0KDRyvUlQKY9R6yi+YD2F74W8N4OeRzLW8sW1D+qqRb4MIAbgtRVsH/oOg8
+ ySY=
+X-IronPort-AV: E=Sophos;i="5.64,570,1559491200"; 
+   d="scan'208";a="123953338"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Oct 2019 15:48:42 +0800
+IronPort-SDR: 8+gLYXzig78BDfDrf4tlrsg5yfSGI/WCAGhmp/6U+/h8RdJ+dZlVInSYb/ya9Y9jXuIJzjfzRX
+ 86GCJsAyhNAo3mHTKWRn+QhAJd4cMRlyQcj46yDRk94WgWzhvyA1OolSrxNXWEaErzFhb0J7eM
+ XmKN/t3iB325oWOzoXZXRrxLyncJj8s3zW25vF9a637MVJVU6HwyoIlawQOFzw9yagTefJdyDV
+ qQGDhisHdV4h+62u+5TZFEzgELpcqW6ZfYglP9wAJ5+g4ksavm3cFUjFpRF8x6WF4dCE2MgfYn
+ 1XDlyERAAnS9bAU1vsA8SGhk
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2019 00:44:54 -0700
+IronPort-SDR: b310TOzOTn06o9J5QoAFs5lXe1YHdnXbrqk87NAsItAyW8ZpnedNhxP+VHfT4HC7dndSf5FBzt
+ 8Oq9e+xkA3XmBJbSQntxsxgOCn5DbFFIQoJys+aXOBOPbZKc4YcNaIWlKCuWM+2lBI93xJjIGW
+ bpQF6xaFKH8ULiaaolAG6Idpe5oqlBelM1aOHxyO1xbpBO6FLgLQITIKmojRD2EsqVIfRhxPSa
+ uzNjZVuI+ru5fSmtdd1aPUwTuosklKMI0CUTf/N/JzgQPGLq6JHLBIPhokPgrg7GxDR64qUCCX
+ 3mI=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 01 Oct 2019 00:48:41 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: [PATCH V3] scsi: save/restore command resid for error handling
+Date:   Tue,  1 Oct 2019 16:48:39 +0900
+Message-Id: <20191001074839.1994-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910010044
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910010044
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+When a non-passthrough command is terminated with CHECK CONDITION,
+request sense is executed by hijacking the command descriptor. Since
+scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd() do not save/restore the
+original command resid, the value returned on failure of the original
+command is lost and replaced with the value set by the execution of the
+request sense command. This value may in many instances be unaligned to
+the device sector size, causing sd_done() to print a warning message
+about the incorrect unaligned resid before the command is retried.
 
-Doug,
+Fix this problem by saving the original command residual in struct
+scsi_eh_save using scsi_eh_prep_cmnd() and restoring it in
+scsi_eh_restore_cmnd(). In addition, to make sure that the request sense
+command is executed with a correctly initialized command structure, also
+reset the residual to 0 in scsi_eh_prep_cmnd() after saving the original
+command value in struct scsi_eh_save.
 
->> Since sdebug_random is either 0 or 1, is the "? 1 : 0" part necessary?
->
-> No.
-> Why didn't you complain when MKP wrote that? That is where I cut and
-> pasted that code from (sdebug_removable).
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+Changes from V2:
+* Open code resid save/restore to keep the functions style
+* rename struct scsi_eh_save resid field to resid_len to match struct
+  scsi_request field name
 
-[...]
+Changes from V1:
+* Dropped patch 2
+* Add resid reset in scsi_eh_prep_cmnd()
 
-> Again, copy and paste from MKP's code (which no doubt was a copy +
-> paste from my earlier code).
+ drivers/scsi/scsi_error.c | 3 +++
+ include/scsi/scsi_eh.h    | 1 +
+ 2 files changed, 4 insertions(+)
 
-I'll be the first to admit that I make mistakes and almost always
-blindly copy surrounding plumbing when I hack on scsi_debug. However, I
-am not responsible for the commit that introduced any of this code.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1c470e31ae81..ae2fa170f6ad 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -967,6 +967,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
+ 	ses->data_direction = scmd->sc_data_direction;
+ 	ses->sdb = scmd->sdb;
+ 	ses->result = scmd->result;
++	ses->resid_len = scmd->req.resid_len;
+ 	ses->underflow = scmd->underflow;
+ 	ses->prot_op = scmd->prot_op;
+ 	ses->eh_eflags = scmd->eh_eflags;
+@@ -977,6 +978,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
+ 	memset(scmd->cmnd, 0, BLK_MAX_CDB);
+ 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
+ 	scmd->result = 0;
++	scmd->req.resid_len = 0;
+ 
+ 	if (sense_bytes) {
+ 		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
+@@ -1029,6 +1031,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
+ 	scmd->sc_data_direction = ses->data_direction;
+ 	scmd->sdb = ses->sdb;
+ 	scmd->result = ses->result;
++	scmd->req.resid_len = ses->resid_len;
+ 	scmd->underflow = ses->underflow;
+ 	scmd->prot_op = ses->prot_op;
+ 	scmd->eh_eflags = ses->eh_eflags;
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 3810b340551c..6bd5ed695a5e 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -32,6 +32,7 @@ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
+ struct scsi_eh_save {
+ 	/* saved state */
+ 	int result;
++	unsigned int resid_len;
+ 	int eh_eflags;
+ 	enum dma_data_direction data_direction;
+ 	unsigned underflow;
+-- 
+2.21.0
 
-Also, in defense of the original author, our coding practices were
-obviously different when this was written many years ago.
-
->>> @@ -5338,7 +5373,7 @@ static int __init scsi_debug_init(void)
->>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dif_size =3D sde=
-bug_store_sectors * sizeof(struct t10_pi_tuple);
->>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dif_storep =3D v=
-malloc(dif_size);
->>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("dif_storep %u bytes=
- @ %p\n", dif_size, dif_storep);
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("dif_storep %u bytes=
- @ %pK\n", dif_size, dif_storep);
->>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (dif_storep =
-=3D=3D NULL) {
->>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 pr_err("out of mem. (DIX)\n");
->>
->> Is it useful to print the kernel pointer 'dif_storep'?
->
-> Ask MKP, it's his code. All I do know is that doing a printk("%p" ...)
-> is useless in lk 5.3 (and probably lk 5.2). Taking the above snippet,
-> if vmalloc() returned NULL then the existing pr_err() would print out
-> a random number rather than <null>. Sick ...
-
-This used to be somewhat useful for debugging purposes in combination
-with the ability to dump the buffer to inspect the PI. In this day and
-age with obfuscated kernel pointers, not so much. I suggest just
-removing the line. Or--if people feel the size is valuable
-information--just zap the pointer. Also, since this is unrelated to the
-duration randomization it should be a separate patch.
-
-Thanks!
-
---=20
-Martin K. Petersen	Oracle Linux Engineering
