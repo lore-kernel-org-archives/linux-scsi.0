@@ -2,117 +2,111 @@ Return-Path: <SRS0=749Z=X4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A40C10F14
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 01:43:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE65EC47404
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 02:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99473222C2
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 01:43:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570067022;
-	bh=674sHQEd1wluZlpmpGS4UprpGUXEIOiNdSfx4wnH0Vw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=snGhLjLs+ocSw7oB6dQZBYuXjt2QvoquJQPRB6fYNI4v/jVCFJLgr95MD6ANKXwd6
-	 AjE59FKBtu1vSlRRlRQL6YyAs4mYOXBV3ScMUaVq9Y9jA0DwgqWyZ9Lx0P9MWegtt1
-	 /t1uKCEQRJKvlk+X3NFBrVrpjQ+J8iFYqg2Mxl+8=
+	by mail.kernel.org (Postfix) with ESMTP id 861A9222C2
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 02:31:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="vCbxFpke"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727613AbfJCBnm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Oct 2019 21:43:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727273AbfJCBnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Oct 2019 21:43:13 -0400
-Received: from paulmck-ThinkPad-P72.home (50-39-105-78.bvtn.or.frontiernet.net [50.39.105.78])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E127B222C8;
-        Thu,  3 Oct 2019 01:43:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570066993;
-        bh=674sHQEd1wluZlpmpGS4UprpGUXEIOiNdSfx4wnH0Vw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mhlZM0t9VUSt50XzFkt/IP1tuY5mku4MD4KrTjlETK9iTuEeduxMqFNUJjebxX4Cx
-         MTep+XQa5SE7NRRfIkugNjmwvh3vc4+kYIqk/lxCEQYmoZNnx+GOhnjnq9lNmF/uSz
-         bZfftureC0kb/3jyxCPXzkqbEKpGUp/vGZYl8cRE=
-From:   paulmck@kernel.org
-To:     rcu@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, mingo@kernel.org,
-        jiangshanlai@gmail.com, dipankar@in.ibm.com,
-        akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
-        josh@joshtriplett.org, tglx@linutronix.de, peterz@infradead.org,
-        rostedt@goodmis.org, dhowells@redhat.com, edumazet@google.com,
-        fweisbec@gmail.com, oleg@redhat.com, joel@joelfernandes.org,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH tip/core/rcu 4/9] drivers/scsi: Replace rcu_swap_protected() with rcu_replace()
-Date:   Wed,  2 Oct 2019 18:43:05 -0700
-Message-Id: <20191003014310.13262-4-paulmck@kernel.org>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20191003014153.GA13156@paulmck-ThinkPad-P72>
-References: <20191003014153.GA13156@paulmck-ThinkPad-P72>
+        id S1727739AbfJCCbg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Oct 2019 22:31:36 -0400
+Received: from conssluserg-04.nifty.com ([210.131.2.83]:28054 "EHLO
+        conssluserg-04.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727315AbfJCCbg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Oct 2019 22:31:36 -0400
+Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com [209.85.222.51]) (authenticated)
+        by conssluserg-04.nifty.com with ESMTP id x932VA5s016359;
+        Thu, 3 Oct 2019 11:31:10 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-04.nifty.com x932VA5s016359
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1570069871;
+        bh=Sj8hxll43sIAFFhXKFoQaRTifri22XaxlFEIaoPCHe4=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=vCbxFpkeS+kCNTY3x5Ew86/PvS4QNKBan00mUGzlPJHMHPV4xuiIwMA5k7MCaxxew
+         qY053iVGk/MlogSIvLNl0ema8lu8Qv1zgx/9jrdulb/OqsZ+jFkYzOShbFeytY3AuR
+         n1sRnBxSJT95wgezDGH8OnRSEt2QBVSMq40ZsUpTCVfE+qwpY+FWUH4B7DPv9MDckz
+         CgxjmHlON4ZlLlhywCOZ2TDlEFbSv/cqViv7SxYDSIUCnuBWH4cOzNet1LfMMv8yPz
+         2/w7X5UBvreLS3Y0f3pFxQ6w609tzJXW1IY+8Nv7G5ImMePWxMz6UqD4Rx2ISALwsd
+         jCFnGKttsMKiQ==
+X-Nifty-SrcIP: [209.85.222.51]
+Received: by mail-ua1-f51.google.com with SMTP id b14so403793uap.6;
+        Wed, 02 Oct 2019 19:31:10 -0700 (PDT)
+X-Gm-Message-State: APjAAAWaHYL32xYFU9ikcG88oMWlWsEosIR9JCDmyBPKMgVkrDH030yz
+        ErzQH94Eing5H7esPrqz052yhQlTxLWC8IyCQUg=
+X-Google-Smtp-Source: APXvYqx2gjVyf0+CTjlkXwx2p3NsidAi0dZiMXhNgnEPzUCy8wzPGrZwXT1CTDtUGx6b/ps5GYkNbwiV4iVikUKuS5I=
+X-Received: by 2002:a9f:21f6:: with SMTP id 109mr1467923uac.109.1570069869643;
+ Wed, 02 Oct 2019 19:31:09 -0700 (PDT)
+MIME-Version: 1.0
+References: <20190728164643.16335-1-yamada.masahiro@socionext.com>
+In-Reply-To: <20190728164643.16335-1-yamada.masahiro@socionext.com>
+From:   Masahiro Yamada <yamada.masahiro@socionext.com>
+Date:   Thu, 3 Oct 2019 11:30:33 +0900
+X-Gmail-Original-Message-ID: <CAK7LNATbahbn4W_71F8dZynXNb7Kbr5ZHb7mTV2_4oZok5AK=w@mail.gmail.com>
+Message-ID: <CAK7LNATbahbn4W_71F8dZynXNb7Kbr5ZHb7mTV2_4oZok5AK=w@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ch: add include guard to chio.h
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Paul E. McKenney" <paulmck@kernel.org>
+Hi,
 
-This commit replaces the use of rcu_swap_protected() with the more
-intuitively appealing rcu_replace() as a step towards removing
-rcu_swap_protected().
+On Mon, Jul 29, 2019 at 1:47 AM Masahiro Yamada
+<yamada.masahiro@socionext.com> wrote:
+>
+> Add a header include guard just in case.
+>
+> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+> ---
 
-Link: https://lore.kernel.org/lkml/CAHk-=wiAsJLw1egFEE=Z7-GGtM6wcvtyytXZA1+BHqta4gg6Hw@mail.gmail.com/
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
----
- drivers/scsi/scsi.c       | 4 ++--
- drivers/scsi/scsi_sysfs.c | 8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Ping?
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1f5b5c8..6a38d4a 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -434,8 +434,8 @@ static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
- 		return;
- 
- 	mutex_lock(&sdev->inquiry_mutex);
--	rcu_swap_protected(*sdev_vpd_buf, vpd_buf,
--			   lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_buf = rcu_replace(*sdev_vpd_buf, vpd_buf,
-+			      lockdep_is_held(&sdev->inquiry_mutex));
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
- 	if (vpd_buf)
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 64c96c7..8d17779 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -466,10 +466,10 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	sdev->request_queue = NULL;
- 
- 	mutex_lock(&sdev->inquiry_mutex);
--	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
--			   lockdep_is_held(&sdev->inquiry_mutex));
--	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
--			   lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_pg80 = rcu_replace(sdev->vpd_pg80, vpd_pg80,
-+			       lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_pg83 = rcu_replace(sdev->vpd_pg83, vpd_pg83,
-+			       lockdep_is_held(&sdev->inquiry_mutex));
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
- 	if (vpd_pg83)
+
+>  include/uapi/linux/chio.h | 11 ++++-------
+>  1 file changed, 4 insertions(+), 7 deletions(-)
+>
+> diff --git a/include/uapi/linux/chio.h b/include/uapi/linux/chio.h
+> index 689fc93fafda..e1cad4c319ee 100644
+> --- a/include/uapi/linux/chio.h
+> +++ b/include/uapi/linux/chio.h
+> @@ -3,6 +3,9 @@
+>   * ioctl interface for the scsi media changer driver
+>   */
+>
+> +#ifndef _UAPI_LINUX_CHIO_H
+> +#define _UAPI_LINUX_CHIO_H
+> +
+>  /* changer element types */
+>  #define CHET_MT   0    /* media transport element (robot) */
+>  #define CHET_ST   1    /* storage element (media slots) */
+> @@ -160,10 +163,4 @@ struct changer_set_voltag {
+>  #define CHIOSVOLTAG    _IOW('c',18,struct changer_set_voltag)
+>  #define CHIOGVPARAMS   _IOR('c',19,struct changer_vendor_params)
+>
+> -/* ---------------------------------------------------------------------- */
+> -
+> -/*
+> - * Local variables:
+> - * c-basic-offset: 8
+> - * End:
+> - */
+> +#endif /* _UAPI_LINUX_CHIO_H */
+> --
+> 2.17.1
+>
+
+
 -- 
-2.9.5
-
+Best Regards
+Masahiro Yamada
