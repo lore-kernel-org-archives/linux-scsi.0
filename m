@@ -2,95 +2,153 @@ Return-Path: <SRS0=749Z=X4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03307C32792
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 21:19:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A96C32792
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 21:56:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC4FD2133F
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 21:19:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nCGIXYs/"
+	by mail.kernel.org (Postfix) with ESMTP id 685442133F
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Oct 2019 21:56:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1570139809;
+	bh=a0zhymasp/hcnWziFjewvLwlQhwUUnZXeZx7TlhgjFQ=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=sRW5EEyhu5LB7wkhhknM/OBP1F4+OhMFE88MU3nf6/50lGbomZt11j8TNSHnAXlRL
+	 1iG91VS/iq0q9xQ9d78naMbaH+oCkhztWdukJ7Dc8zr9M/M18vi4Md6UFzrNQg+WAS
+	 R52avLyV649NTtgfgxtAbOTiUPrjfVx3PRai1WIw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731536AbfJCVTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Oct 2019 17:19:38 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56020 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727789AbfJCVTi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Oct 2019 17:19:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:
-        Subject:Sender:Reply-To:Cc:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=s1b1QGPWo7eGlMVA47KnxB99j3OasMbsofXzn7s2rTQ=; b=nCGIXYs/zPbQi81jAlWV8Cyrh
-        oGXU1BMSQ/V1yShigPjKIADfQv8WKVH74v1w2STKF49cDsdrdU7eovb2BFMS92xFEgMIR7P2IZu7h
-        Ep7e3MZIdA2BoPtENP9Aveo+cXefE/JKr5u0UdbjLY0+4xnmLdfEZEWtmmfIxKjkZqrNzCWXx5QWD
-        oOz7nllUqE0+TiZVf0SBfj6UsXcQ36tIvVeLcJIVG5vQssSv6fowXcjm7o/NefoqI5VuM4BxkjkW4
-        YjY/wiVpxvs/PMye/oVplA1w33nI0mOBF576aCA+wKCfD5ro+W2qwJ45UZsVmQLxeegWRcFJy9RMi
-        zh2qdqsqQ==;
-Received: from [2601:1c0:6280:3f0::9a1f]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iG8Vd-0001Ce-TT; Thu, 03 Oct 2019 21:19:37 +0000
-Subject: Re: SCSI device probing non-deterministic in 5.3
-To:     Bradley LaBoon <blaboon@linode.com>, linux-kernel@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>
-References: <d2ff27ce-67b0-735e-8652-0e925d5f756c@linode.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <f6d6622d-a9a0-d7de-b5af-b7a885ee1b61@infradead.org>
-Date:   Thu, 3 Oct 2019 14:19:37 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1730403AbfJCV4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Oct 2019 17:56:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41884 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726002AbfJCV4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Oct 2019 17:56:45 -0400
+Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9895221848;
+        Thu,  3 Oct 2019 21:56:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1570139803;
+        bh=a0zhymasp/hcnWziFjewvLwlQhwUUnZXeZx7TlhgjFQ=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=IpcCM34itfN9W3MKuCyJ/SlZLLHX59Rc0SEDmM/VcBzjlujAttBsOEWT1Q5++P6ix
+         aCfyMUefRnfgY2WjwKNVPASpsAk76I/4K7Mu/dOK3OKRPwsEOzJb5GH2NOa0tCjW7h
+         dNhCJf0OxOOM5fRgzpTxVi1OtfnsUufQHZp2rIKo=
+Received: by mail-qk1-f176.google.com with SMTP id p10so3951602qkg.8;
+        Thu, 03 Oct 2019 14:56:43 -0700 (PDT)
+X-Gm-Message-State: APjAAAWAJeNgVXOkzIZEcqJwbZP2pBXP8JXlCjHnS6bFZjLJAZUm8Fif
+        PGDQVNZ6YUPcW+UD+HBaFKWIMb4a1PfNvMgaew==
+X-Google-Smtp-Source: APXvYqzkCkG9sTUc93JQfOkxaoIams6ADVfZwuYaOyxkHS+6SnSz1nJtjdqbkB6SH+yWk1CpAWOxH0uhNL2yeuI2j38=
+X-Received: by 2002:a37:682:: with SMTP id 124mr6718413qkg.393.1570139802662;
+ Thu, 03 Oct 2019 14:56:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <d2ff27ce-67b0-735e-8652-0e925d5f756c@linode.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190918133921.25844-1-vigneshr@ti.com> <20190918133921.25844-2-vigneshr@ti.com>
+ <20191001120826.GA4214@bogus> <c3490572-8230-3e41-0916-097091386b21@ti.com>
+In-Reply-To: <c3490572-8230-3e41-0916-097091386b21@ti.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Thu, 3 Oct 2019 16:56:31 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq+=8Xrti5FQ-Tmdivb5QvXxBzNxgbYiU+KChiNjkOreaA@mail.gmail.com>
+Message-ID: <CAL_Jsq+=8Xrti5FQ-Tmdivb5QvXxBzNxgbYiU+KChiNjkOreaA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for
+ TI UFS wrapper
+To:     Vignesh Raghavendra <vigneshr@ti.com>
+Cc:     Mark Rutland <mark.rutland@arm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Martin K Petersen <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Janek Kotas <jank@cadence.com>, devicetree@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        SCSI <linux-scsi@vger.kernel.org>, Sekhar Nori <nsekhar@ti.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[add linux-scsi mailing list]
+On Tue, Oct 1, 2019 at 7:18 AM Vignesh Raghavendra <vigneshr@ti.com> wrote:
+>
+>
+>
+> On 01/10/19 5:38 PM, Rob Herring wrote:
+> > On Wed, Sep 18, 2019 at 07:09:20PM +0530, Vignesh Raghavendra wrote:
+> >> Add binding documentation of TI wrapper for Cadence UFS Controller.
+> >>
+> >> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+> >> ---
+> >>  .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 45 +++++++++++++++++++
+> >>  1 file changed, 45 insertions(+)
+> >>  create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> >> new file mode 100644
+> >> index 000000000000..dabd7c795fbe
+> >> --- /dev/null
+> >> +++ b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> >> @@ -0,0 +1,45 @@
+> >> +# SPDX-License-Identifier: GPL-2.0
+> >> +%YAML 1.2
+> >> +---
+> >> +$id: http://devicetree.org/schemas/ufs/ti,j721e-ufs.yaml#
+> >> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> >> +
+> >> +title: TI J721e UFS Host Controller Glue Driver
+> >> +
+> >> +maintainers:
+> >> +  - Vignesh Raghavendra <vigneshr@ti.com>
+> >> +
+> >> +properties:
+> >> +  compatible:
+> >> +    items:
+> >> +      - const: ti,j721e-ufs
+> >> +
+> >> +  reg:
+> >> +    maxItems: 1
+> >> +    description: address of TI UFS glue registers
+> >> +
+> >> +  clocks:
+> >> +    maxItems: 1
+> >> +    description: phandle to the M-PHY clock
+> >> +
+> >> +  power-domains:
+> >> +    maxItems: 1
+> >> +
+> >> +required:
+> >> +  - compatible
+> >> +  - reg
+> >> +  - clocks
+> >> +  - power-domains
+> >> +
+> >> +examples:
+> >> +  - |
+> >> +    ufs_wrapper: ufs-wrapper@4e80000 {
+> >> +       compatible = "ti,j721e-ufs";
+> >> +       reg = <0x0 0x4e80000 0x0 0x100>;
+> >> +       power-domains = <&k3_pds 277>;
+> >> +       clocks = <&k3_clks 277 1>;
+> >> +       assigned-clocks = <&k3_clks 277 1>;
+> >> +       assigned-clock-parents = <&k3_clks 277 4>;
+> >> +       #address-cells = <2>;
+> >> +       #size-cells = <2>;
+> >
+> > Based on the driver you expect to have a child node here with the UFS
+> > controller? You need to show that and have a schema for it.
+> >
+>
+> Yes, Cadence UFS controller node will be the child node. Its bindings
+> are documented at: Documentation/devicetree/bindings/ufs/cdns,ufshc.txt
+> (which in turn refers to
+> Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt)
+>
+> But they are not in .yaml yet. How would you suggest to reference that?
+> Or should I just write plain text DT binding doc given that subsystem is
+> not converted to yaml?
 
-On 10/3/19 1:32 PM, Bradley LaBoon wrote:
-> Hello, LKML!
-> 
-> Beginning with kernel 5.3 the order in which SCSI devices are probed and
-> named has become non-deterministic. This is a result of a patch that was
-> submitted to add asynchronous device probing (specifically, commit
-> f049cf1a7b6737c75884247c3f6383ef104d255a). Previously, devices would
-> always be probed in the order in which they exist on the bus, resulting
-> in the first device being named 'sda', the second device 'sdb', and so on.
-> 
-> This is important in the case of mass VM deployments where many VMs are
-> created from a single base image. Partition UUIDs cannot be used in the
-> fstab of such an image because the UUIDs will be different for each VM
-> and are not known in advance. Normally you can't rely on device names
-> being consistent between boots, but with QEMU you can set the bus order
-> of each block device and thus we currently use that to control the
-> device order in the guest. With the introduction of the aforementioned
-> patch this is no longer possible and the device ordering is different on
-> every boot, resulting in the guest booting into an emergency shell
-> unless the devices randomly happen to be loaded in the expected order.
-> 
-> I have created a patch which reverts back to the previous behavior, but
-> I wanted to open this topic to discussion before posting it. I'm not
-> totally familiar with the low-level details of SCSI device probing, so I
-> don't know if the non-deterministic device order was the intended
-> behavior of the patch or just a side-effect. If that is the intended
-> behavior then is there perhaps some other way to ensure a consistent
-> device ordering for a guest VM?
-> 
-> I am not subscribed to the list, so please CC me on any replies.
-> 
-> Thank you!
-> Bradley LaBoon
-> 
+I guess for now just define the child node and refer to the text
+document. Or feel free to convert the above 2 docs to schema. :)
 
-
--- 
-~Randy
+Rob
