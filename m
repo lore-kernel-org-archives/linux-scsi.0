@@ -8,59 +8,58 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E4DC3E8AB
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B91FEC47404
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 163362133F
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:44:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D1D2222C0
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:56:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rwi8lQdZ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ri3WTsPp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726511AbfJEHof (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Oct 2019 03:44:35 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:42174 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725862AbfJEHof (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Oct 2019 03:44:35 -0400
-Received: by mail-pf1-f194.google.com with SMTP id q12so5283649pff.9
-        for <linux-scsi@vger.kernel.org>; Sat, 05 Oct 2019 00:44:34 -0700 (PDT)
+        id S1727190AbfJEH4F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Oct 2019 03:56:05 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:45186 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725862AbfJEH4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Oct 2019 03:56:05 -0400
+Received: by mail-pl1-f194.google.com with SMTP id u12so4224739pls.12
+        for <linux-scsi@vger.kernel.org>; Sat, 05 Oct 2019 00:56:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id;
-        bh=sN9f19VIE1OPsvOKEMTP4zPFWWu7rjTp/bqAcExE/h0=;
-        b=rwi8lQdZF/QvulqGtkGrbEtYAlzI+cLdTocOsd0S4AFdEAXbXvuhAl0/WxgWQBgE90
-         Fs/xLFsDXbbEeYEoofFho2BrjE6s/8yd0M9EfpWnwafVo4NaP4Q/U5XFmRkiutY+AMVY
-         6tuLcPitWs3iNfW9IJl2R1rw3TRKMBTGJ3xrzboX3PJT5MmOFLYkeRTX04BTuJoRdgfo
-         Wpaq5Vidn1n65IEQ4dlfolx++RBClD9Vs3o8SiO/R0hXaURw73D5dcy/otFAaWOwyYui
-         fLv3IQ1l+VUyF5IvRC+ff/6sgoeio3GEiJY4v9jX7WP+u81YcXHekXKuMk5BIrkBofY+
-         QQdg==
+        bh=IQ6+F9XQNmIkqfflKyzKzZ34SfBhOGzml56NDDvgJgE=;
+        b=Ri3WTsPpoqycddA9NOIWXbB98XPi8NpP0Jf0744u4QcKozqEDdj2nKfwfwtffyqgQf
+         ZecFtvDDKq3xDJQhmZbnTAMwtfDjQXUrkYwMR1EQ3C3n9hzBIdrpQ2KLuG5PEei4+tso
+         9m5+S7dq7APvEEMy8nbPsyg1XUpSiP08ogXtoTxm8FlnC68TJnkgz/GwtwvrPsLXNeVh
+         0dIfUUxka9H+b6cLBjwYdPFeypjSU0vAP2Oq08bYF/CHD4njzFn7qBT7xVegvdVnNbQb
+         TiCgSQkTI0dj+cCNGBu2CAvS3RM9Wm2eLzvtl3XyweJcDWpHUNnNKiSzAZKsfCYLr5Ih
+         UcpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=sN9f19VIE1OPsvOKEMTP4zPFWWu7rjTp/bqAcExE/h0=;
-        b=VWeTFd8tnCley6HfVqxYMOXA5lpY68fJxIttFBQOzdvn8kIDwFJHcuswUeVIbQbw8q
-         JuEBT5ThK9kjLs3utDDHH0ppz2g6NewiLAsET2F12ZrySOVIZ3udIT79srYG+JCYot24
-         2cDX0/d2KpdzRWGtSDv86ggDtvKdL8AvtOPoPAg3WLvIT98XaCBveJlRJJ8WQqA+1+VE
-         ZhLQqFNeezSEoysZOVl+UtLj1yEKexfB9FZOBhURYD024DvFtFwWi4bCne7tP+fAX0KR
-         lxldAmKPp8l6jrT/gJhHKi6gt9qjlniuGp2KpfjYzdpk1reViS4/O2wQqmy8QAwL5eUx
-         YPPg==
-X-Gm-Message-State: APjAAAWgJLKScwWzrdXTeR0831W0/sZauCKfqRSz3swfRa1hO1hla7Xr
-        JnfZeFEkSyjtlohih3sgbp4=
-X-Google-Smtp-Source: APXvYqw6sZ5hH+W2lr2/QTClsn5/EgQ192xcnd5b/YQF1T+4f2xc9eq9jydZdLLpA6dBV4dG+6ULYw==
-X-Received: by 2002:a63:e512:: with SMTP id r18mr19413837pgh.117.1570261474087;
-        Sat, 05 Oct 2019 00:44:34 -0700 (PDT)
+        bh=IQ6+F9XQNmIkqfflKyzKzZ34SfBhOGzml56NDDvgJgE=;
+        b=fzqyNBuTY957QWc6WN/j8bVy6HLBNgcu+wT+TyzR8c0vcV73dhGSP6GrZsf9LVpKiM
+         x7PSLYo2zo43Go2u7pETQqjDrnbrWhP6kGfGP39DEHgnMo7uOGmGkD5gioD1r+sCglqx
+         6CIP6ZmTLWfwxNRBYTuNbTF79PAX6zIATmn5D37Coruhq4rr88Az1Magk7vRD2qge1SB
+         MfTlybERIR8eeCtLzezPcczUagnWWTFnrzeiJ+LhJB6FqzyTI2nDf978p1CVK1K5X8Vu
+         hr12J/5YUCBsaBweK3ApFjQuF8ZArb0lG5yJeWxhxsYK8PV8Kn0ub88R0P7nE0oXxLkI
+         0EcQ==
+X-Gm-Message-State: APjAAAXbE9yVluhpgPkFZ+f1ESYCgeerNwRj3yJT0qW+kbje8Ks4OlKO
+        fmTuMP4jWVxAJz5MvvnPQnU=
+X-Google-Smtp-Source: APXvYqyeOL2A7pYQ+vDCptua92lhuBvWsO9GbwRhyf/AbEfCH4cgPGRQy4PNVweGw826H4i/PR9YXA==
+X-Received: by 2002:a17:902:a706:: with SMTP id w6mr19297687plq.138.1570262164920;
+        Sat, 05 Oct 2019 00:56:04 -0700 (PDT)
 Received: from localhost.localdomain ([2401:4900:1950:559a:117f:4889:e0ff:3af])
-        by smtp.gmail.com with ESMTPSA id 127sm9184783pfw.6.2019.10.05.00.44.31
+        by smtp.gmail.com with ESMTPSA id 14sm9673099pfn.21.2019.10.05.00.56.02
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 05 Oct 2019 00:44:33 -0700 (PDT)
+        Sat, 05 Oct 2019 00:56:04 -0700 (PDT)
 From:   aliasgar.surti500@gmail.com
-To:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
+To:     QLogic-Storage-Upstream@qlogic.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc:     Aliasgar Surti <aliasgar.surti500@gmail.com>
-Subject: [PATCH] drivers:scsi:bfa: removed unnecessary semicolon
-Date:   Sat,  5 Oct 2019 13:14:18 +0530
-Message-Id: <20191005074418.17320-1-aliasgar.surti500@gmail.com>
+Subject: [PATCH] drivers:scsi:bnx2fc: removed unnecessary semicolon
+Date:   Sat,  5 Oct 2019 13:25:51 +0530
+Message-Id: <20191005075551.25209-1-aliasgar.surti500@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -74,31 +73,31 @@ single file. Removed the same.
 
 Signed-off-by: Aliasgar Surti <aliasgar.surti500@gmail.com>
 ---
- drivers/scsi/bfa/bfa_fcs_rport.c | 4 ++--
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index 82801b366500..fc294e1950a6 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -1575,7 +1575,7 @@ bfa_fcs_rport_sm_nsdisc_sent(struct bfa_fcs_rport_s *rport,
- 			bfa_timer_start(rport->fcs->bfa, &rport->timer,
- 					bfa_fcs_rport_timeout, rport,
- 					bfa_fcs_rport_del_timeout);
--		};
-+		}
- 		break;
- 
- 	case RPSM_EVENT_DELETE:
-@@ -2449,7 +2449,7 @@ bfa_fcs_rport_hal_online_action(struct bfa_fcs_rport_s *rport)
- 		bfa_fcs_itnim_brp_online(rport->itnim);
- 		if (!BFA_FCS_PID_IS_WKA(rport->pid))
- 			bfa_fcs_rpf_rport_online(rport);
--	};
-+	}
- 
- 	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
- 	wwn2str(rpwwn_buf, rport->pwwn);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index b4bfab5edf8f..ffb59df6a69b 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -942,7 +942,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 				 */
+ 				if (interface->enabled)
+ 					fcoe_ctlr_link_up(ctlr);
+-			};
++			}
+ 		} else if (fcoe_ctlr_link_down(ctlr)) {
+ 			switch (cdev->enabled) {
+ 			case FCOE_CTLR_DISABLED:
+@@ -962,7 +962,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 				put_cpu();
+ 				fcoe_clean_pending_queue(lport);
+ 				wait_for_upload = 1;
+-			};
++			}
+ 		}
+ 	}
+ 	mutex_unlock(&bnx2fc_dev_lock);
 -- 
 2.17.1
 
