@@ -2,91 +2,68 @@ Return-Path: <SRS0=qHo0=X6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 539F2C47404
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 16:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F2FC4740A
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 20:05:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B8FB222C8
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 16:06:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59E4E222C8
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 20:05:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570291618;
-	bh=T1nHprUQcw7db03Tr0L1cjg240dgz2UCviMisD8YUjw=;
-	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:List-ID:
-	 From;
-	b=MERV0l71xeo+NcZZvwIUE252l30SD77nI4Dg2Gh+eZUOwOCb77j2UgimSZR/CfZ9V
-	 Gc9CxHaOOP3s6jyreKhKOd8fProjtlo9HtYf+Ym+p0CA4WKwpHNbk99HzkHgYT9bb2
-	 6ca3kWIz2exxTxeDWrdKLTQXOFvJzhFG/3n8LZYw=
+	s=default; t=1570305936;
+	bh=oxbOdxHcUxUWx2zWBS7kJctmNnM1ALr/0CzL2DSyvXA=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=cW4P2wgxm8kK8nZGLnyyM915AUur1GpSTZ+WYiRXch2XpWm4JL197Y0BJhGLF6uWu
+	 XDWa54rOMgG6liAG+9lXWQRJeFZ/B0ZNpIBPpcEr8wlRoLgXHmPvMgc8CJhjNrxkUn
+	 Q1SuFfJ25DrLlGKBnEqbhZh4cYlq0evZRGaKXL1o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726636AbfJEQGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Oct 2019 12:06:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36492 "EHLO mail.kernel.org"
+        id S1730591AbfJEUF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Oct 2019 16:05:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53516 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725826AbfJEQGz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 5 Oct 2019 12:06:55 -0400
-Received: from paulmck-ThinkPad-P72 (50-39-105-78.bvtn.or.frontiernet.net [50.39.105.78])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 839AE222C0;
-        Sat,  5 Oct 2019 16:06:54 +0000 (UTC)
+        id S1730076AbfJEUFO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 5 Oct 2019 16:05:14 -0400
+Subject: Re: [GIT PULL] SCSI fixes for 5.4-rc1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570291614;
-        bh=T1nHprUQcw7db03Tr0L1cjg240dgz2UCviMisD8YUjw=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=IFgvwm+xrX1y8pkbT8yzUzzxbE/USHRjLeyngP1jR71Q2c51v8M8WroTrDKXxYnDq
-         oa+LJZ9trhGoGTbPTsrNL3EbnZcxVv/imfMXl5GWfAZCrrN3vBLx/wFYgUzCCUkNiU
-         f6D8XBi0UcYYyouK3opx+XrEfbljTQyyDyCU94lM=
-Date:   Sat, 5 Oct 2019 09:06:53 -0700
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     rcu@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mingo@kernel.org, jiangshanlai@gmail.com, dipankar@in.ibm.com,
-        akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
-        josh@joshtriplett.org, tglx@linutronix.de, peterz@infradead.org,
-        rostedt@goodmis.org, dhowells@redhat.com, edumazet@google.com,
-        fweisbec@gmail.com, oleg@redhat.com, joel@joelfernandes.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH tip/core/rcu 4/9] drivers/scsi: Replace
- rcu_swap_protected() with rcu_replace()
-Message-ID: <20191005160653.GD2689@paulmck-ThinkPad-P72>
-Reply-To: paulmck@kernel.org
-References: <20191003014153.GA13156@paulmck-ThinkPad-P72>
- <20191003014310.13262-4-paulmck@kernel.org>
- <yq1zhihqn1g.fsf@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq1zhihqn1g.fsf@oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        s=default; t=1570305914;
+        bh=oxbOdxHcUxUWx2zWBS7kJctmNnM1ALr/0CzL2DSyvXA=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=ilxxug3D2QqMpb7RSaMo5L1a9wkatmR3UVqXdXGcB+ab5l7qp2V/gl2z22kc4mIkT
+         Y1frKeTvMTatZ0sB43OeXNQDa8S7aHm9F7J14nJL7WSk+MR08zv8ziBurprDOBlaQo
+         hSM3+WOIIT6Y5W8lLoD4P0ZMpnjvCpse0C0Hdl6k=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <1570250655.17537.18.camel@HansenPartnership.com>
+References: <1570250655.17537.18.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <1570250655.17537.18.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 0aabb6b699f72dca96988d3f428e222f932dc889
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 126195c972a2adba8cae12a65cdee155440a4525
+Message-Id: <157030591442.15791.1282877858778600053.pr-tracker-bot@kernel.org>
+Date:   Sat, 05 Oct 2019 20:05:14 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 03, 2019 at 10:09:31PM -0400, Martin K. Petersen wrote:
-> 
-> Paul,
-> 
-> No objections from me.
+The pull request you sent on Fri, 04 Oct 2019 21:44:15 -0700:
 
-Thank you, Martin!  I have applied your Acked-by, but please let me
-know if that over-interprets your "No objections" above.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> > +	vpd_pg80 = rcu_replace(sdev->vpd_pg80, vpd_pg80,
-> > +			       lockdep_is_held(&sdev->inquiry_mutex));
-> > +	vpd_pg83 = rcu_replace(sdev->vpd_pg83, vpd_pg83,
-> > +			       lockdep_is_held(&sdev->inquiry_mutex));
-> 
-> Just a heads-up that we have added a couple of additional VPD pages so
-> my 5.5 tree will need additional calls to be updated to rcu_replace().
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/126195c972a2adba8cae12a65cdee155440a4525
 
-I do not intend to actually remove rcu_swap_protected() until 5.6 for
-exactly this sort of thing.  My plan is to take another pass through
-the tree after 5.5 comes out, and these will be caught at that time.
+Thank you!
 
-Does that work for you?
-
-							Thanx, Paul
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
