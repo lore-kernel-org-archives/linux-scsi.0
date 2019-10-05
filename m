@@ -2,102 +2,91 @@ Return-Path: <SRS0=qHo0=X6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B91FEC47404
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:56:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 539F2C47404
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 16:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D1D2222C0
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 07:56:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ri3WTsPp"
+	by mail.kernel.org (Postfix) with ESMTP id 2B8FB222C8
+	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 16:06:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1570291618;
+	bh=T1nHprUQcw7db03Tr0L1cjg240dgz2UCviMisD8YUjw=;
+	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:List-ID:
+	 From;
+	b=MERV0l71xeo+NcZZvwIUE252l30SD77nI4Dg2Gh+eZUOwOCb77j2UgimSZR/CfZ9V
+	 Gc9CxHaOOP3s6jyreKhKOd8fProjtlo9HtYf+Ym+p0CA4WKwpHNbk99HzkHgYT9bb2
+	 6ca3kWIz2exxTxeDWrdKLTQXOFvJzhFG/3n8LZYw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727190AbfJEH4F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Oct 2019 03:56:05 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:45186 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725862AbfJEH4F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Oct 2019 03:56:05 -0400
-Received: by mail-pl1-f194.google.com with SMTP id u12so4224739pls.12
-        for <linux-scsi@vger.kernel.org>; Sat, 05 Oct 2019 00:56:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=IQ6+F9XQNmIkqfflKyzKzZ34SfBhOGzml56NDDvgJgE=;
-        b=Ri3WTsPpoqycddA9NOIWXbB98XPi8NpP0Jf0744u4QcKozqEDdj2nKfwfwtffyqgQf
-         ZecFtvDDKq3xDJQhmZbnTAMwtfDjQXUrkYwMR1EQ3C3n9hzBIdrpQ2KLuG5PEei4+tso
-         9m5+S7dq7APvEEMy8nbPsyg1XUpSiP08ogXtoTxm8FlnC68TJnkgz/GwtwvrPsLXNeVh
-         0dIfUUxka9H+b6cLBjwYdPFeypjSU0vAP2Oq08bYF/CHD4njzFn7qBT7xVegvdVnNbQb
-         TiCgSQkTI0dj+cCNGBu2CAvS3RM9Wm2eLzvtl3XyweJcDWpHUNnNKiSzAZKsfCYLr5Ih
-         UcpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=IQ6+F9XQNmIkqfflKyzKzZ34SfBhOGzml56NDDvgJgE=;
-        b=fzqyNBuTY957QWc6WN/j8bVy6HLBNgcu+wT+TyzR8c0vcV73dhGSP6GrZsf9LVpKiM
-         x7PSLYo2zo43Go2u7pETQqjDrnbrWhP6kGfGP39DEHgnMo7uOGmGkD5gioD1r+sCglqx
-         6CIP6ZmTLWfwxNRBYTuNbTF79PAX6zIATmn5D37Coruhq4rr88Az1Magk7vRD2qge1SB
-         MfTlybERIR8eeCtLzezPcczUagnWWTFnrzeiJ+LhJB6FqzyTI2nDf978p1CVK1K5X8Vu
-         hr12J/5YUCBsaBweK3ApFjQuF8ZArb0lG5yJeWxhxsYK8PV8Kn0ub88R0P7nE0oXxLkI
-         0EcQ==
-X-Gm-Message-State: APjAAAXbE9yVluhpgPkFZ+f1ESYCgeerNwRj3yJT0qW+kbje8Ks4OlKO
-        fmTuMP4jWVxAJz5MvvnPQnU=
-X-Google-Smtp-Source: APXvYqyeOL2A7pYQ+vDCptua92lhuBvWsO9GbwRhyf/AbEfCH4cgPGRQy4PNVweGw826H4i/PR9YXA==
-X-Received: by 2002:a17:902:a706:: with SMTP id w6mr19297687plq.138.1570262164920;
-        Sat, 05 Oct 2019 00:56:04 -0700 (PDT)
-Received: from localhost.localdomain ([2401:4900:1950:559a:117f:4889:e0ff:3af])
-        by smtp.gmail.com with ESMTPSA id 14sm9673099pfn.21.2019.10.05.00.56.02
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 05 Oct 2019 00:56:04 -0700 (PDT)
-From:   aliasgar.surti500@gmail.com
-To:     QLogic-Storage-Upstream@qlogic.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     Aliasgar Surti <aliasgar.surti500@gmail.com>
-Subject: [PATCH] drivers:scsi:bnx2fc: removed unnecessary semicolon
-Date:   Sat,  5 Oct 2019 13:25:51 +0530
-Message-Id: <20191005075551.25209-1-aliasgar.surti500@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726636AbfJEQGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 5 Oct 2019 12:06:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725826AbfJEQGz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 5 Oct 2019 12:06:55 -0400
+Received: from paulmck-ThinkPad-P72 (50-39-105-78.bvtn.or.frontiernet.net [50.39.105.78])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 839AE222C0;
+        Sat,  5 Oct 2019 16:06:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1570291614;
+        bh=T1nHprUQcw7db03Tr0L1cjg240dgz2UCviMisD8YUjw=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=IFgvwm+xrX1y8pkbT8yzUzzxbE/USHRjLeyngP1jR71Q2c51v8M8WroTrDKXxYnDq
+         oa+LJZ9trhGoGTbPTsrNL3EbnZcxVv/imfMXl5GWfAZCrrN3vBLx/wFYgUzCCUkNiU
+         f6D8XBi0UcYYyouK3opx+XrEfbljTQyyDyCU94lM=
+Date:   Sat, 5 Oct 2019 09:06:53 -0700
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     rcu@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mingo@kernel.org, jiangshanlai@gmail.com, dipankar@in.ibm.com,
+        akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
+        josh@joshtriplett.org, tglx@linutronix.de, peterz@infradead.org,
+        rostedt@goodmis.org, dhowells@redhat.com, edumazet@google.com,
+        fweisbec@gmail.com, oleg@redhat.com, joel@joelfernandes.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH tip/core/rcu 4/9] drivers/scsi: Replace
+ rcu_swap_protected() with rcu_replace()
+Message-ID: <20191005160653.GD2689@paulmck-ThinkPad-P72>
+Reply-To: paulmck@kernel.org
+References: <20191003014153.GA13156@paulmck-ThinkPad-P72>
+ <20191003014310.13262-4-paulmck@kernel.org>
+ <yq1zhihqn1g.fsf@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1zhihqn1g.fsf@oracle.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Aliasgar Surti <aliasgar.surti500@gmail.com>
+On Thu, Oct 03, 2019 at 10:09:31PM -0400, Martin K. Petersen wrote:
+> 
+> Paul,
+> 
+> No objections from me.
 
-There is use of unneeded semicolon on multiple places in
-single file. Removed the same.
+Thank you, Martin!  I have applied your Acked-by, but please let me
+know if that over-interprets your "No objections" above.
 
-Signed-off-by: Aliasgar Surti <aliasgar.surti500@gmail.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> > +	vpd_pg80 = rcu_replace(sdev->vpd_pg80, vpd_pg80,
+> > +			       lockdep_is_held(&sdev->inquiry_mutex));
+> > +	vpd_pg83 = rcu_replace(sdev->vpd_pg83, vpd_pg83,
+> > +			       lockdep_is_held(&sdev->inquiry_mutex));
+> 
+> Just a heads-up that we have added a couple of additional VPD pages so
+> my 5.5 tree will need additional calls to be updated to rcu_replace().
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index b4bfab5edf8f..ffb59df6a69b 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -942,7 +942,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 				 */
- 				if (interface->enabled)
- 					fcoe_ctlr_link_up(ctlr);
--			};
-+			}
- 		} else if (fcoe_ctlr_link_down(ctlr)) {
- 			switch (cdev->enabled) {
- 			case FCOE_CTLR_DISABLED:
-@@ -962,7 +962,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 				put_cpu();
- 				fcoe_clean_pending_queue(lport);
- 				wait_for_upload = 1;
--			};
-+			}
- 		}
- 	}
- 	mutex_unlock(&bnx2fc_dev_lock);
--- 
-2.17.1
+I do not intend to actually remove rcu_swap_protected() until 5.6 for
+exactly this sort of thing.  My plan is to take another pass through
+the tree after 5.5 comes out, and these will be caught at that time.
 
+Does that work for you?
+
+							Thanx, Paul
