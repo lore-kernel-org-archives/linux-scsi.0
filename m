@@ -1,69 +1,348 @@
-Return-Path: <SRS0=qHo0=X6=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=mamv=X7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F2FC4740A
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 20:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99515C4360C
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Oct 2019 07:44:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59E4E222C8
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Oct 2019 20:05:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570305936;
-	bh=oxbOdxHcUxUWx2zWBS7kJctmNnM1ALr/0CzL2DSyvXA=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=cW4P2wgxm8kK8nZGLnyyM915AUur1GpSTZ+WYiRXch2XpWm4JL197Y0BJhGLF6uWu
-	 XDWa54rOMgG6liAG+9lXWQRJeFZ/B0ZNpIBPpcEr8wlRoLgXHmPvMgc8CJhjNrxkUn
-	 Q1SuFfJ25DrLlGKBnEqbhZh4cYlq0evZRGaKXL1o=
+	by mail.kernel.org (Postfix) with ESMTP id 627022077B
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Oct 2019 07:44:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730591AbfJEUF0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Oct 2019 16:05:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53516 "EHLO mail.kernel.org"
+        id S1726336AbfJFHos (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Oct 2019 03:44:48 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:46896 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730076AbfJEUFO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 5 Oct 2019 16:05:14 -0400
-Subject: Re: [GIT PULL] SCSI fixes for 5.4-rc1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570305914;
-        bh=oxbOdxHcUxUWx2zWBS7kJctmNnM1ALr/0CzL2DSyvXA=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=ilxxug3D2QqMpb7RSaMo5L1a9wkatmR3UVqXdXGcB+ab5l7qp2V/gl2z22kc4mIkT
-         Y1frKeTvMTatZ0sB43OeXNQDa8S7aHm9F7J14nJL7WSk+MR08zv8ziBurprDOBlaQo
-         hSM3+WOIIT6Y5W8lLoD4P0ZMpnjvCpse0C0Hdl6k=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1570250655.17537.18.camel@HansenPartnership.com>
-References: <1570250655.17537.18.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1570250655.17537.18.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 0aabb6b699f72dca96988d3f428e222f932dc889
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 126195c972a2adba8cae12a65cdee155440a4525
-Message-Id: <157030591442.15791.1282877858778600053.pr-tracker-bot@kernel.org>
-Date:   Sat, 05 Oct 2019 20:05:14 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1726207AbfJFHor (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 6 Oct 2019 03:44:47 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id CC7A9368CF;
+        Sun,  6 Oct 2019 07:44:46 +0000 (UTC)
+Received: from localhost (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 03646600CC;
+        Sun,  6 Oct 2019 07:44:42 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Omar Sandoval <osandov@fb.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Laurence Oberman <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH V2] scsi: core: avoid host-wide host_busy counter for scsi_mq
+Date:   Sun,  6 Oct 2019 15:44:32 +0800
+Message-Id: <20191006074432.23993-1-ming.lei@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Sun, 06 Oct 2019 07:44:47 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 04 Oct 2019 21:44:15 -0700:
+It isn't necessary to check the host depth in scsi_queue_rq() any more
+since it has been respected by blk-mq before calling scsi_queue_rq() via
+getting driver tag.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Lots of LUNs may attach to same host and per-host IOPS may reach millions,
+so we should avoid expensive atomic operations on the host-wide counter in
+the IO path.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/126195c972a2adba8cae12a65cdee155440a4525
+This patch implements scsi_host_busy() via blk_mq_tagset_busy_iter()
+with one scsi command state for reading the count of busy IOs for scsi_mq.
 
-Thank you!
+It is observed that IOPS is increased by 15% in IO test on scsi_debug (32
+LUNs, 32 submit queues, 1024 can_queue, libaio/dio) in a dual-socket
+system.
 
+V2:
+	- introduce SCMD_STATE_INFLIGHT for getting accurate host busy
+	via blk_mq_tagset_busy_iter()
+	- verified that original Jens's report[1] is fixed
+	- verified that SCSI timeout/abort works fine
+
+
+[1] https://www.spinics.net/lists/linux-scsi/msg122867.html
+[2] V1 & its revert:
+
+d772a65d8a6c Revert "scsi: core: avoid host-wide host_busy counter for scsi_mq"
+23aa8e69f2c6 Revert "scsi: core: fix scsi_host_queue_ready"
+265d59aacbce scsi: core: fix scsi_host_queue_ready
+328728630d9f scsi: core: avoid host-wide host_busy counter for scsi_mq
+
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Omar Sandoval <osandov@fb.com>,
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Laurence Oberman <loberman@redhat.com>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/hosts.c     | 25 ++++++++++++++++++++++++-
+ drivers/scsi/scsi.c      |  2 +-
+ drivers/scsi/scsi_lib.c  | 35 +++++++++++++++++------------------
+ drivers/scsi/scsi_priv.h |  2 +-
+ include/scsi/scsi_cmnd.h |  1 +
+ include/scsi/scsi_host.h |  1 -
+ 6 files changed, 44 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 55522b7162d3..8b3881f6652b 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -38,6 +38,7 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_cmnd.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -554,13 +555,35 @@ struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_host_get);
+ 
++struct scsi_host_mq_in_flight {
++	int cnt;
++};
++
++static bool scsi_host_check_in_flight(struct request *rq, void *data,
++				      bool reserved)
++{
++	struct scsi_host_mq_in_flight *in_flight = data;
++	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
++
++	if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
++		in_flight->cnt++;
++
++	return true;
++}
++
+ /**
+  * scsi_host_busy - Return the host busy counter
+  * @shost:	Pointer to Scsi_Host to inc.
+  **/
+ int scsi_host_busy(struct Scsi_Host *shost)
+ {
+-	return atomic_read(&shost->host_busy);
++	struct scsi_host_mq_in_flight in_flight = {
++		.cnt = 0,
++	};
++
++	blk_mq_tagset_busy_iter(&shost->tag_set, scsi_host_check_in_flight,
++			&in_flight);
++	return in_flight.cnt;
+ }
+ EXPORT_SYMBOL(scsi_host_busy);
+ 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 1f5b5c8a7f72..ddc4ec6ea2a1 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -186,7 +186,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
+ 
+-	scsi_device_unbusy(sdev);
++	scsi_device_unbusy(sdev, cmd);
+ 
+ 	/*
+ 	 * Clear the flags that say that the device/target/host is no longer
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dc210b9d4896..c76b6d2e120d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -189,7 +189,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+ 	 * active on the host/device.
+ 	 */
+ 	if (unbusy)
+-		scsi_device_unbusy(device);
++		scsi_device_unbusy(device, cmd);
+ 
+ 	/*
+ 	 * Requeue this command.  It will go before all other commands
+@@ -329,12 +329,12 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+  * host_failed counter or that it notices the shost state change made by
+  * scsi_eh_scmd_add().
+  */
+-static void scsi_dec_host_busy(struct Scsi_Host *shost)
++static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ {
+ 	unsigned long flags;
+ 
+ 	rcu_read_lock();
+-	atomic_dec(&shost->host_busy);
++	clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 	if (unlikely(scsi_host_in_recovery(shost))) {
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		if (shost->host_failed || shost->host_eh_scheduled)
+@@ -344,12 +344,12 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost)
+ 	rcu_read_unlock();
+ }
+ 
+-void scsi_device_unbusy(struct scsi_device *sdev)
++void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scsi_target *starget = scsi_target(sdev);
+ 
+-	scsi_dec_host_busy(shost);
++	scsi_dec_host_busy(shost, cmd);
+ 
+ 	if (starget->can_queue > 0)
+ 		atomic_dec(&starget->target_busy);
+@@ -430,9 +430,6 @@ static inline bool scsi_target_is_busy(struct scsi_target *starget)
+ 
+ static inline bool scsi_host_is_busy(struct Scsi_Host *shost)
+ {
+-	if (shost->can_queue > 0 &&
+-	    atomic_read(&shost->host_busy) >= shost->can_queue)
+-		return true;
+ 	if (atomic_read(&shost->host_blocked) > 0)
+ 		return true;
+ 	if (shost->host_self_blocked)
+@@ -1139,6 +1136,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
+ 	unsigned long jiffies_at_alloc;
+ 	int retries;
++	bool in_flight;
+ 
+ 	if (!blk_rq_is_scsi(rq) && !(flags & SCMD_INITIALIZED)) {
+ 		flags |= SCMD_INITIALIZED;
+@@ -1147,6 +1145,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 
+ 	jiffies_at_alloc = cmd->jiffies_at_alloc;
+ 	retries = cmd->retries;
++	in_flight = test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 	/* zero out the cmd, except for the embedded scsi_request */
+ 	memset((char *)cmd + sizeof(cmd->req), 0,
+ 		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
+@@ -1158,6 +1157,8 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+ 	cmd->jiffies_at_alloc = jiffies_at_alloc;
+ 	cmd->retries = retries;
++	if (in_flight)
++		set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 
+ 	scsi_add_cmd_to_list(cmd);
+ }
+@@ -1367,16 +1368,14 @@ static inline int scsi_target_queue_ready(struct Scsi_Host *shost,
+  */
+ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				   struct Scsi_Host *shost,
+-				   struct scsi_device *sdev)
++				   struct scsi_device *sdev,
++				   struct scsi_cmnd *cmd)
+ {
+-	unsigned int busy;
+-
+ 	if (scsi_host_in_recovery(shost))
+ 		return 0;
+ 
+-	busy = atomic_inc_return(&shost->host_busy) - 1;
+ 	if (atomic_read(&shost->host_blocked) > 0) {
+-		if (busy)
++		if (scsi_host_busy(shost) > 0)
+ 			goto starved;
+ 
+ 		/*
+@@ -1390,8 +1389,6 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 				     "unblocking host at zero depth\n"));
+ 	}
+ 
+-	if (shost->can_queue > 0 && busy >= shost->can_queue)
+-		goto starved;
+ 	if (shost->host_self_blocked)
+ 		goto starved;
+ 
+@@ -1403,6 +1400,8 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 		spin_unlock_irq(shost->host_lock);
+ 	}
+ 
++	set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
++
+ 	return 1;
+ 
+ starved:
+@@ -1411,7 +1410,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+ 	spin_unlock_irq(shost->host_lock);
+ out_dec:
+-	scsi_dec_host_busy(shost);
++	scsi_dec_host_busy(shost, cmd);
+ 	return 0;
+ }
+ 
+@@ -1665,7 +1664,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	ret = BLK_STS_RESOURCE;
+ 	if (!scsi_target_queue_ready(shost, sdev))
+ 		goto out_put_budget;
+-	if (!scsi_host_queue_ready(q, shost, sdev))
++	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+ 		goto out_dec_target_busy;
+ 
+ 	if (!(req->rq_flags & RQF_DONTPREP)) {
+@@ -1697,7 +1696,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	return BLK_STS_OK;
+ 
+ out_dec_host_busy:
+-	scsi_dec_host_busy(shost);
++	scsi_dec_host_busy(shost, cmd);
+ out_dec_target_busy:
+ 	if (scsi_target(sdev)->can_queue > 0)
+ 		atomic_dec(&scsi_target(sdev)->target_busy);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index cc2859d76d81..3bff9f7aa684 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -87,7 +87,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+ extern void scsi_add_cmd_to_list(struct scsi_cmnd *cmd);
+ extern void scsi_del_cmd_from_list(struct scsi_cmnd *cmd);
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+-extern void scsi_device_unbusy(struct scsi_device *sdev);
++extern void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 91bd749a02f7..9c22e85902ec 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -63,6 +63,7 @@ struct scsi_pointer {
+ 
+ /* for scmd->state */
+ #define SCMD_STATE_COMPLETE	0
++#define SCMD_STATE_INFLIGHT	1
+ 
+ struct scsi_cmnd {
+ 	struct scsi_request req;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 31e0d6ca1eba..b3fa32df40f8 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -551,7 +551,6 @@ struct Scsi_Host {
+ 	/* Area to keep a shared tag map */
+ 	struct blk_mq_tag_set	tag_set;
+ 
+-	atomic_t host_busy;		   /* commands actually active on low-level */
+ 	atomic_t host_blocked;
+ 
+ 	unsigned int host_failed;	   /* commands that failed.
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.20.1
+
