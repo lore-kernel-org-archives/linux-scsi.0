@@ -2,91 +2,128 @@ Return-Path: <SRS0=5MTk=YA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D928ECE58C
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Oct 2019 20:54:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8056FC47404
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Oct 2019 22:31:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F00C20835
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Oct 2019 20:54:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D7E6206C0
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Oct 2019 22:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728702AbfJGUyh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Oct 2019 16:54:37 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40950 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728273AbfJGUyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Oct 2019 16:54:37 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x97KqPrs035748;
-        Mon, 7 Oct 2019 16:54:30 -0400
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2vgc9013v0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 07 Oct 2019 16:54:30 -0400
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x97KnURr016023;
-        Mon, 7 Oct 2019 20:54:29 GMT
-Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
-        by ppma05wdc.us.ibm.com with ESMTP id 2vejt740hr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 07 Oct 2019 20:54:29 +0000
-Received: from b01ledav006.gho.pok.ibm.com (b01ledav006.gho.pok.ibm.com [9.57.199.111])
-        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x97KsSis47317368
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 7 Oct 2019 20:54:28 GMT
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B8196AC05B;
-        Mon,  7 Oct 2019 20:54:28 +0000 (GMT)
-Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AD35CAC059;
-        Mon,  7 Oct 2019 20:54:27 +0000 (GMT)
-Received: from jarvis.ext.hansenpartnership.com (unknown [9.85.184.117])
-        by b01ledav006.gho.pok.ibm.com (Postfix) with ESMTP;
-        Mon,  7 Oct 2019 20:54:27 +0000 (GMT)
-Message-ID: <1570481667.4242.4.camel@linux.ibm.com>
-Subject: Re: Potential NULL pointer deference in scsi: scsi_transport_spi
-From:   James Bottomley <jejb@linux.ibm.com>
-To:     Yizhuo Zhai <yzhai003@ucr.edu>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Chengyu Song <csong@cs.ucr.edu>,
-        Zhiyun Qian <zhiyunq@cs.ucr.edu>
-Date:   Mon, 07 Oct 2019 13:54:27 -0700
-In-Reply-To: <CABvMjLSoa6WfdmvwCCPgAUtc1ZmQ8+14xrDnz5Q8MrpFstMDsg@mail.gmail.com>
-References: <CABvMjLSoa6WfdmvwCCPgAUtc1ZmQ8+14xrDnz5Q8MrpFstMDsg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
+        id S1728983AbfJGWbU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Oct 2019 18:31:20 -0400
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:28978 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728654AbfJGWbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Oct 2019 18:31:20 -0400
+Authentication-Results: esa3.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=don.brace@microsemi.com; spf=None smtp.helo=postmaster@email.microchip.com
+Received-SPF: Pass (esa3.microchip.iphmx.com: domain of
+  don.brace@microsemi.com designates 198.175.253.82 as
+  permitted sender) identity=mailfrom;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
+  envelope-from="don.brace@microsemi.com";
+  x-sender="don.brace@microsemi.com"; x-conformance=spf_only;
+  x-record-type="v=spf1"; x-record-text="v=spf1
+  ip4:68.232.147.0/24 ip4:68.232.148.0/22 ip4:68.232.152.0/23
+  ip4:68.232.154.0/24 ip4:216.71.150.0/24 ip4:216.71.151.0/24
+  ip4:216.71.152.0/23 ip4:216.71.154.0/24 ip4:198.175.253.41
+  ip4:198.175.253.82 include:servers.mcsv.net -all"
+Received-SPF: None (esa3.microchip.iphmx.com: no sender
+  authenticity information available from domain of
+  postmaster@email.microchip.com) identity=helo;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
+  envelope-from="don.brace@microsemi.com";
+  x-sender="postmaster@email.microchip.com";
+  x-conformance=spf_only
+X-Ironport-Dmarc-Check-Result: validskip
+IronPort-SDR: xCzj/EH2wIi2beRmlls8kDfDw4tEzranqeeXSFQqTAeOde+e/EreZTtrxASiMaEiWUopBuZD6p
+ dID1s5azIpjoXOVQ5zJLEDU9ngcWlilj9QzM+dp2HXNlSa0G8FmOdBJ1vXaz8/sbc0YRFvvgUe
+ jomRNRfbhQxvnrQvrOd7fRwwNfO/+X2BElMui+y9MrJUa2tCOOyHHXIhadajEadNjOleQPGn2d
+ LOq7kXRT57c3/Hw6qQ9y7LZbPFmCzYoRjszcV5y/cLREUyD9Wga2E7auPTT5nQNZwQxaCd60Cq
+ Nww=
+X-IronPort-AV: E=Sophos;i="5.67,269,1566889200"; 
+   d="scan'208";a="52063884"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 07 Oct 2019 15:31:18 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Mon, 7 Oct 2019 15:31:17 -0700
+Received: from [127.0.1.1] (10.10.85.251) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.1713.5 via Frontend
+ Transport; Mon, 7 Oct 2019 15:31:16 -0700
+Subject: [PATCH 00/10] smartpqi updates
+From:   Don Brace <don.brace@microsemi.com>
+To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
+        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
+        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
+        <POSWALD@suse.com>, <shunyong.yang@hxt-semitech.com>
+CC:     <linux-scsi@vger.kernel.org>
+Date:   Mon, 7 Oct 2019 17:31:17 -0500
+Message-ID: <157048745695.11757.6602264644727193780.stgit@brunhilda>
+User-Agent: StGit/0.19
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-07_03:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=921 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1910070184
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2019-10-07 at 13:30 -0700, Yizhuo Zhai wrote:
-> Hi All:
-> 
-> drivers/scsi/scsi_transport_spi.c:
-> 
-> Inside function store_spi_transport_period(), dev_to_shost()
-> could return NULL
+These patches are based on Linus's tree
 
-No, it can't.  The device model ensures that a SCSI target or device
-must be parented to a host.
+The changes are:
+smartpqi-fix-controller-lockup-observed-during-force-reboot
+ - correct issue with reboot -f
+smartpqi-fix-call-trace-in-device-discovery
+ - correct tear down of sas transport devices.
+smartpqi-add-inquiry-timeouts
+ - add support for timeout in pqi RAID IUs.
+smartpqi-fix-LUN-reset-when-fw-bkgnd-thread-is-hung
+ - add timeouts to device resets.
+smartpqi-change-TMF-timeout-from-60-to-30-seconds
+ - decrease timeout for resets, resets are retried.
+smartpqi-correct-syntax-issue
+ - correct if statement.
+smartpqi-fix-problem-with-unique-ID-for-physical-device
+ - stop getting unique id from VPD page 0x83
+smartpqi-remove-unused-manifest-constants
+ - remove unused constants
+smartpqi-align-driver-syntax-with-oob
+ - format changes, no functional changes.
+ - bring kernel.org driver format in-line with out
+   of box driver.
+smartpqi-bump-version
 
-James
+---
 
-> , however, the return value shost is not
-> checked and get used. This could potentially be unsafe.
-> 
+Don Brace (1):
+      smartpqi: bump version
 
+Kevin Barnett (6):
+      smartpqi: fix controller lockup observed during force reboot
+      smartpqi: change TMF timeout from 60 to 30 seconds
+      smartpqi: correct syntax issue
+      smartpqi: fix problem with unique ID for physical device
+      smartpqi: remove unused manifest constants
+      smartpqi-align-driver-syntax-with-oob
+
+Murthy Bhat (2):
+      smartpqi: fix call trace in device discovery
+      smartpqi: fix LUN reset when fw bkgnd thread is hung
+
+koshyaji (1):
+      smartpqi: add inquiry timeouts
+
+
+ drivers/scsi/smartpqi/smartpqi.h               |   77 ++--
+ drivers/scsi/smartpqi/smartpqi_init.c          |  429 ++++++++++++++----------
+ drivers/scsi/smartpqi/smartpqi_sas_transport.c |   22 -
+ 3 files changed, 289 insertions(+), 239 deletions(-)
+
+--
+Signature
