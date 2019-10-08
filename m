@@ -2,164 +2,218 @@ Return-Path: <SRS0=0ZI3=YB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2849BC10F14
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 10:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A763C4360C
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 11:30:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0164120673
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 10:10:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F6BC20673
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 11:30:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730170AbfJHKKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Oct 2019 06:10:09 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57620 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730106AbfJHKKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Oct 2019 06:10:09 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EFAF251EF1;
-        Tue,  8 Oct 2019 10:10:08 +0000 (UTC)
-Received: from localhost (ovpn-8-31.pek2.redhat.com [10.72.8.31])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 46D9C5C219;
-        Tue,  8 Oct 2019 10:10:02 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Omar Sandoval <osandov@fb.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [RFC PATCH V3 2/2] scsi: core: don't limit per-LUN queue depth for SSD
-Date:   Tue,  8 Oct 2019 18:09:45 +0800
-Message-Id: <20191008100945.24951-3-ming.lei@redhat.com>
-In-Reply-To: <20191008100945.24951-1-ming.lei@redhat.com>
-References: <20191008100945.24951-1-ming.lei@redhat.com>
+        id S1730677AbfJHLay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Oct 2019 07:30:54 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40578 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729876AbfJHLaw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Oct 2019 07:30:52 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id C468AB184;
+        Tue,  8 Oct 2019 11:30:47 +0000 (UTC)
+Subject: Re: [PATCH v2] scsi: Add sysfs attributes for VPD pages 0h and 89h
+To:     Ryan Attard <ryanattard@ryanattard.info>, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+References: <20190926162216.56591-1-ryanattard@ryanattard.info>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <6b8e7487-6592-4fd5-c98d-ff8db22c8258@suse.de>
+Date:   Tue, 8 Oct 2019 13:30:47 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
+In-Reply-To: <20190926162216.56591-1-ryanattard@ryanattard.info>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Tue, 08 Oct 2019 10:10:09 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI core uses the atomic variable of sdev->device_busy to track
-in-flight IO requests dispatched to this scsi device. IO request may be
-submitted from any CPU, so the cost for maintaining the shared atomic
-counter can be very big on big NUMA machine with lots of CPU cores.
+On 9/26/19 6:22 PM, Ryan Attard wrote:
+> Add sysfs attributes for the ATA information page and
+> Supported VPD Pages page.
+> 
+> Signed-off-by: Ryan Attard <ryanattard@ryanattard.info>
+> ---
+>  drivers/scsi/scsi.c        |  4 ++++
+>  drivers/scsi/scsi_sysfs.c  | 19 +++++++++++++++++++
+>  include/scsi/scsi_device.h |  2 ++
+>  3 files changed, 25 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index a7e4fba724b7..088b8ca473e6 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -485,10 +485,14 @@ void scsi_attach_vpd(struct scsi_device *sdev)
+>  		return;
+>  
+>  	for (i = 4; i < vpd_buf->len; i++) {
+> +		if (vpd_buf->data[i] == 0x0)
+> +			scsi_update_vpd_page(sdev, 0x0, &sdev->vpd_pg0);
+>  		if (vpd_buf->data[i] == 0x80)
+>  			scsi_update_vpd_page(sdev, 0x80, &sdev->vpd_pg80);
+>  		if (vpd_buf->data[i] == 0x83)
+>  			scsi_update_vpd_page(sdev, 0x83, &sdev->vpd_pg83);
+> +		if (vpd_buf->data[i] == 0x89)
+> +			scsi_update_vpd_page(sdev, 0x89, &sdev->vpd_pg89);
+>  	}
+>  	kfree(vpd_buf);
+>  }
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 8ce12ffcbb7a..eb6764f92c93 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -429,6 +429,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	struct device *parent;
+>  	struct list_head *this, *tmp;
+>  	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
+> +	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
+>  	unsigned long flags;
+>  
+>  	sdev = container_of(work, struct scsi_device, ew.work);
+> @@ -458,16 +459,24 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	sdev->request_queue = NULL;
+>  
+>  	mutex_lock(&sdev->inquiry_mutex);
+> +	rcu_swap_protected(sdev->vpd_pg0, vpd_pg0,
+> +			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
+>  			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
+>  			   lockdep_is_held(&sdev->inquiry_mutex));
+> +	rcu_swap_protected(sdev->vpd_pg89, vpd_pg89,
+> +			   lockdep_is_held(&sdev->inquiry_mutex));
+>  	mutex_unlock(&sdev->inquiry_mutex);
+>  
+> +	if (vpd_pg0)
+> +		kfree_rcu(vpd_pg0, rcu);
+>  	if (vpd_pg83)
+>  		kfree_rcu(vpd_pg83, rcu);
+>  	if (vpd_pg80)
+>  		kfree_rcu(vpd_pg80, rcu);
+> +	if (vpd_pg89)
+> +		kfree_rcu(vpd_pg89, rcu);
+>  	kfree(sdev->inquiry);
+>  	kfree(sdev);
+>  
+> @@ -840,6 +849,8 @@ static struct bin_attribute dev_attr_vpd_##_page = {		\
+>  
+>  sdev_vpd_pg_attr(pg83);
+>  sdev_vpd_pg_attr(pg80);
+> +sdev_vpd_pg_attr(pg89);
+> +sdev_vpd_pg_attr(pg0);
+>  
+>  static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
+>  			    struct bin_attribute *bin_attr,
+> @@ -1136,12 +1147,18 @@ static umode_t scsi_sdev_bin_attr_is_visible(struct kobject *kobj,
+>  	struct scsi_device *sdev = to_scsi_device(dev);
+>  
+>  
+> +	if (attr == &dev_attr_vpd_pg0 && !sdev->vpd_pg0)
+> +		return 0;
+> +
+>  	if (attr == &dev_attr_vpd_pg80 && !sdev->vpd_pg80)
+>  		return 0;
+>  
+>  	if (attr == &dev_attr_vpd_pg83 && !sdev->vpd_pg83)
+>  		return 0;
+>  
+> +	if (attr == &dev_attr_vpd_pg89 && !sdev->vpd_pg89)
+> +		return 0;
+> +
+>  	return S_IRUGO;
+>  }
+>  
+> @@ -1183,8 +1200,10 @@ static struct attribute *scsi_sdev_attrs[] = {
+>  };
+>  
+>  static struct bin_attribute *scsi_sdev_bin_attrs[] = {
+> +	&dev_attr_vpd_pg0,
+>  	&dev_attr_vpd_pg83,
+>  	&dev_attr_vpd_pg80,
+> +	&dev_attr_vpd_pg89,
+>  	&dev_attr_inquiry,
+>  	NULL
+>  };
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 571ddb49b926..f4f176c79fae 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -135,8 +135,10 @@ struct scsi_device {
+>  	const char * rev;		/* ... "nullnullnullnull" before scan */
+>  
+>  #define SCSI_VPD_PG_LEN                255
+> +	struct scsi_vpd __rcu *vpd_pg0;
+>  	struct scsi_vpd __rcu *vpd_pg83;
+>  	struct scsi_vpd __rcu *vpd_pg80;
+> +	struct scsi_vpd __rcu *vpd_pg89;
+>  	unsigned char current_tag;	/* current tag */
+>  	struct scsi_target      *sdev_target;   /* used only for single_lun */
+>  
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-sdev->queue_depth is usually used for two purposes: 1) improve IO merge;
-2) fair IO request scattered among all LUNs.
+Cheers,
 
-blk-mq already provides fair request allocation among all active shared
-request queues(LUNs), see hctx_may_queue().
-
-NVMe doesn't have such per-request-queue(namespace) queue depth, so it
-is reasonable to ignore the limit for SCSI SSD too. Also IO merge won't
-play big role for reaching top SSD performance.
-
-With this patch, big cost for tracking in-flight per-LUN requests via
-atomic variable can be saved.
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Omar Sandoval <osandov@fb.com>,
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Laurence Oberman <loberman@redhat.com>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi_lib.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b6f66dcb15a5..0f8e7a522060 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
- 	if (starget->can_queue > 0)
- 		atomic_dec(&starget->target_busy);
- 
--	atomic_dec(&sdev->device_busy);
-+	if (!blk_queue_nonrot(sdev->request_queue))
-+		atomic_dec(&sdev->device_busy);
- }
- 
- static void scsi_kick_queue(struct request_queue *q)
-@@ -410,7 +411,8 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
- 
- static inline bool scsi_device_is_busy(struct scsi_device *sdev)
- {
--	if (atomic_read(&sdev->device_busy) >= sdev->queue_depth)
-+	if (!blk_queue_nonrot(sdev->request_queue) &&
-+			atomic_read(&sdev->device_busy) >= sdev->queue_depth)
- 		return true;
- 	if (atomic_read(&sdev->device_blocked) > 0)
- 		return true;
-@@ -1283,8 +1285,10 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
- 				  struct scsi_device *sdev)
- {
- 	unsigned int busy;
-+	bool bypass = blk_queue_nonrot(sdev->request_queue);
- 
--	busy = atomic_inc_return(&sdev->device_busy) - 1;
-+	if (!bypass)
-+		busy = atomic_inc_return(&sdev->device_busy) - 1;
- 	if (atomic_read(&sdev->device_blocked)) {
- 		if (busy)
- 			goto out_dec;
-@@ -1298,12 +1302,16 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
- 				   "unblocking device at zero depth\n"));
- 	}
- 
-+	if (bypass)
-+		return 1;
-+
- 	if (busy >= sdev->queue_depth)
- 		goto out_dec;
- 
- 	return 1;
- out_dec:
--	atomic_dec(&sdev->device_busy);
-+	if (!bypass)
-+		atomic_dec(&sdev->device_busy);
- 	return 0;
- }
- 
-@@ -1624,7 +1632,8 @@ static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
- 	struct request_queue *q = hctx->queue;
- 	struct scsi_device *sdev = q->queuedata;
- 
--	atomic_dec(&sdev->device_busy);
-+	if (!blk_queue_nonrot(sdev->request_queue))
-+		atomic_dec(&sdev->device_busy);
- }
- 
- static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-@@ -1706,7 +1715,8 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	case BLK_STS_OK:
- 		break;
- 	case BLK_STS_RESOURCE:
--		if (atomic_read(&sdev->device_busy) ||
-+		if ((!blk_queue_nonrot(sdev->request_queue) &&
-+		     atomic_read(&sdev->device_busy)) ||
- 		    scsi_device_blocked(sdev))
- 			ret = BLK_STS_DEV_RESOURCE;
- 		break;
+Hannes
 -- 
-2.20.1
-
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
