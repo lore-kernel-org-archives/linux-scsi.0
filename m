@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F6BECE59A
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 07:50:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97D3FA3728
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 07:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1A952067B
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 07:50:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C0732053B
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Oct 2019 07:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730452AbfJHHud (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Oct 2019 03:50:33 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:34856 "EHLO smtp.infotech.no"
+        id S1730461AbfJHHui (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Oct 2019 03:50:38 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:34832 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730393AbfJHHu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Oct 2019 03:50:29 -0400
+        id S1730414AbfJHHu2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Oct 2019 03:50:28 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1C45A20425C;
+        by smtp.infotech.no (Postfix) with ESMTP id 3ACC1204248;
         Tue,  8 Oct 2019 09:50:24 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id QBCL4jX7r7TO; Tue,  8 Oct 2019 09:50:23 +0200 (CEST)
+        with ESMTP id IAKZiqahTugX; Tue,  8 Oct 2019 09:50:24 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (unknown [82.134.31.172])
-        by smtp.infotech.no (Postfix) with ESMTPA id 97A8A204199;
+        by smtp.infotech.no (Postfix) with ESMTPA id A641C204269;
         Tue,  8 Oct 2019 09:50:23 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v5 14/23] sg: split sg_read
-Date:   Tue,  8 Oct 2019 09:50:13 +0200
-Message-Id: <20191008075022.30055-15-dgilbert@interlog.com>
+Subject: [PATCH v5 16/23] sg: rework sg_vma_fault
+Date:   Tue,  8 Oct 2019 09:50:15 +0200
+Message-Id: <20191008075022.30055-17-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191008075022.30055-1-dgilbert@interlog.com>
 References: <20191008075022.30055-1-dgilbert@interlog.com>
@@ -44,361 +44,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-As sg_read() is getting quite long, split out the v1 and v2
-processing into sg_rd_v1v2(). Rename sg_new_read() to
-sg_v3_receive() as the v3 interface is now older than the v4
-interface which is being added in a later patch.
+Simple refactoring of the sg_vma_fault() function.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 273 +++++++++++++++++++++++-----------------------
- 1 file changed, 135 insertions(+), 138 deletions(-)
+ drivers/scsi/sg.c | 33 +++++++++++++++++++++++----------
+ 1 file changed, 23 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 90753f7759c7..cbd75e34ca4b 100644
+index 903faafaeff9..befcbfbcece1 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -760,17 +760,12 @@ sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
+@@ -1389,14 +1389,16 @@ sg_fasync(int fd, struct file *filp, int mode)
+ 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
  }
  
- static ssize_t
--sg_new_read(struct sg_fd *sfp, char __user *buf, size_t count,
--	    struct sg_request *srp)
-+sg_v3_receive(struct sg_fd *sfp, char __user *buf, struct sg_request *srp)
++/* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
+ static vm_fault_t
+ sg_vma_fault(struct vm_fault *vmf)
  {
- 	struct sg_io_hdr *hp = &srp->header;
- 	int err = 0, err2;
- 	int len;
- 
--	if (count < SZ_SG_IO_HDR) {
--		err = -EINVAL;
--		goto err_out;
--	}
- 	hp->sb_len_wr = 0;
- 	if ((hp->mx_sb_len > 0) && hp->sbp) {
- 		if ((CHECK_CONDITION & hp->masked_status) ||
-@@ -791,14 +786,15 @@ sg_new_read(struct sg_fd *sfp, char __user *buf, size_t count,
- 	}
- 	if (hp->masked_status || hp->host_status || hp->driver_status)
- 		hp->info |= SG_INFO_CHECK;
--	if (copy_to_user(buf, hp, SZ_SG_IO_HDR)) {
-+	if (copy_to_user(buf, hp, SZ_SG_IO_HDR))
- 		err = -EFAULT;
--		goto err_out;
--	}
-+
- err_out:
- 	err2 = sg_finish_scsi_blk_rq(srp);
-+	if (err2)
-+		err = err ? err : err2;
- 	sg_remove_request(sfp, srp);
--	return err ? : err2 ? : count;
-+	return err ? err : 0;
- }
- 
- static int
-@@ -813,164 +809,165 @@ srp_done(struct sg_fd *sfp, struct sg_request *srp)
- 	return ret;
- }
- 
--static ssize_t
--sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
-+static int
-+sg_rd_v1v2(void __user *buf, int count, struct sg_fd *sfp,
-+	   struct sg_request *srp)
- {
--	struct sg_device *sdp;
+-	struct vm_area_struct *vma = vmf->vma;
 -	struct sg_fd *sfp;
--	struct sg_request *srp;
--	int req_pack_id = -1;
--	int ret = 0;
--	struct sg_io_hdr *hp;
--	struct sg_header *old_hdr = NULL;
--
--	/*
--	 * This could cause a response to be stranded. Close the associated
--	 * file descriptor to free up any resources being held.
--	 */
--	ret = sg_check_file_access(filp, __func__);
--	if (ret)
--		return ret;
--
--	sfp = filp->private_data;
--	sdp = sfp->parentdp;
--	SG_LOG(3, sfp, "%s: read() count=%d\n", __func__, (int)count);
--	ret = sg_allow_if_err_recovery(sdp, false);
--	if (ret)
--		return ret;
--
--	if (sfp->force_packid && (count >= SZ_SG_HEADER)) {
--		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
--		if (!old_hdr)
--			return -ENOMEM;
--		if (copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
--			ret = -EFAULT;
--			goto free_old_hdr;
--		}
--		if (old_hdr->reply_len < 0) {
--			if (count >= SZ_SG_IO_HDR) {
--				struct sg_io_hdr *new_hdr;
--
--				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
--				if (!new_hdr) {
--					ret = -ENOMEM;
--					goto free_old_hdr;
--				}
--				ret = copy_from_user(new_hdr, buf,
--						     SZ_SG_IO_HDR);
--				req_pack_id = new_hdr->pack_id;
--				kfree(new_hdr);
--				if (ret) {
--					ret = -EFAULT;
--					goto free_old_hdr;
--				}
--			}
--		} else
--			req_pack_id = old_hdr->pack_id;
--	}
--	srp = sg_get_rq_mark(sfp, req_pack_id);
--	if (!srp) {		/* now wait on packet to arrive */
--		if (SG_IS_DETACHING(sdp)) {
--			ret = -ENODEV;
--			goto free_old_hdr;
--		}
--		if (filp->f_flags & O_NONBLOCK) {
--			ret = -EAGAIN;
--			goto free_old_hdr;
--		}
--		ret = wait_event_interruptible
--				(sfp->read_wait,
--				 (SG_IS_DETACHING(sdp) ||
--				  (srp = sg_get_rq_mark(sfp, req_pack_id))));
--		if (SG_IS_DETACHING(sdp)) {
--			ret = -ENODEV;
--			goto free_old_hdr;
--		}
--		if (ret) {
--			/* -ERESTARTSYS as signal hit process */
--			goto free_old_hdr;
--		}
--	}
--	if (srp->header.interface_id != '\0') {
--		ret = sg_new_read(sfp, buf, count, srp);
--		goto free_old_hdr;
--	}
--
--	hp = &srp->header;
--	if (old_hdr == NULL) {
--		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
--		if (!old_hdr) {
--			ret = -ENOMEM;
--			goto free_old_hdr;
--		}
--	}
--	memset(old_hdr, 0, SZ_SG_HEADER);
--	old_hdr->reply_len = (int) hp->timeout;
--	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
--	old_hdr->pack_id = hp->pack_id;
--	old_hdr->twelve_byte =
--	    ((srp->data.cmd_opcode >= 0xc0) && (hp->cmd_len == 12)) ? 1 : 0;
--	old_hdr->target_status = hp->masked_status;
--	old_hdr->host_status = hp->host_status;
--	old_hdr->driver_status = hp->driver_status;
--	if ((hp->masked_status & CHECK_CONDITION) ||
--	    (hp->driver_status & DRIVER_SENSE))
--		memcpy(old_hdr->sense_buffer, srp->sense_b,
--		       sizeof(old_hdr->sense_buffer));
--	switch (hp->host_status) {
-+	int res = 0;
-+	struct sg_io_hdr *sh3p = &srp->header;
-+	struct sg_header *h2p;
-+	struct sg_header a_v2hdr;
-+
-+	h2p = &a_v2hdr;
-+	memset(h2p, 0, SZ_SG_HEADER);
-+	h2p->reply_len = (int)sh3p->timeout;
-+	h2p->pack_len = h2p->reply_len; /* old, strange behaviour */
-+	h2p->pack_id = sh3p->pack_id;
-+	h2p->twelve_byte = (srp->data.cmd_opcode >= 0xc0 &&
-+			    sh3p->cmd_len == 12);
-+	h2p->target_status = sh3p->masked_status;
-+	h2p->host_status = sh3p->host_status;
-+	h2p->driver_status = sh3p->driver_status;
-+	if ((CHECK_CONDITION & h2p->target_status) ||
-+	    (DRIVER_SENSE & sh3p->driver_status)) {
-+		memcpy(h2p->sense_buffer, srp->sense_b,
-+		       sizeof(h2p->sense_buffer));
-+	}
-+	switch (h2p->host_status) {
- 	/*
--	 * This setup of 'result' is for backward compatibility and is best
--	 * ignored by the user who should use target, host + driver status
-+	 * This foolowing setting of 'result' is for backward compatibility
-+	 * and is best ignored by the user who should use target, host and
-+	 * driver status.
- 	 */
- 	case DID_OK:
- 	case DID_PASSTHROUGH:
- 	case DID_SOFT_ERROR:
--		old_hdr->result = 0;
-+		h2p->result = 0;
- 		break;
- 	case DID_NO_CONNECT:
- 	case DID_BUS_BUSY:
- 	case DID_TIME_OUT:
--		old_hdr->result = EBUSY;
-+		h2p->result = EBUSY;
- 		break;
- 	case DID_BAD_TARGET:
- 	case DID_ABORT:
- 	case DID_PARITY:
- 	case DID_RESET:
- 	case DID_BAD_INTR:
--		old_hdr->result = EIO;
-+		h2p->result = EIO;
- 		break;
- 	case DID_ERROR:
--		old_hdr->result = (srp->sense_b[0] == 0 &&
--				  hp->masked_status == GOOD) ? 0 : EIO;
-+		h2p->result = (h2p->target_status == GOOD) ? 0 : EIO;
- 		break;
- 	default:
--		old_hdr->result = EIO;
-+		h2p->result = EIO;
- 		break;
- 	}
- 
- 	/* Now copy the result back to the user buffer.  */
- 	if (count >= SZ_SG_HEADER) {
--		if (copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
--			ret = -EFAULT;
--			goto free_old_hdr;
--		}
-+		if (copy_to_user(buf, h2p, SZ_SG_HEADER))
-+			return -EFAULT;
- 		buf += SZ_SG_HEADER;
--		if (count > old_hdr->reply_len)
--			count = old_hdr->reply_len;
-+		if (count > h2p->reply_len)
-+			count = h2p->reply_len;
- 		if (count > SZ_SG_HEADER) {
--			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER)) {
--				ret = -EFAULT;
--				goto free_old_hdr;
--			}
-+			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER))
-+				return -EFAULT;
- 		}
- 	} else
--		count = (old_hdr->result == 0) ? 0 : -EIO;
-+		res = (h2p->result == 0) ? 0 : -EIO;
- 	sg_finish_scsi_blk_rq(srp);
- 	sg_remove_request(sfp, srp);
--	ret = count;
--free_old_hdr:
--	kfree(old_hdr);
--	return ret;
-+	return res;
-+}
-+
-+static ssize_t
-+sg_read(struct file *filp, char __user *p, size_t count, loff_t *ppos)
-+{
-+	bool could_be_v3;
-+	bool non_block = !!(filp->f_flags & O_NONBLOCK);
-+	int want_id = -1;
-+	int hlen, ret;
++	int k, length;
+ 	unsigned long offset, len, sa;
++	struct vm_area_struct *vma = vmf->vma;
+ 	struct sg_scatter_hold *rsv_schp;
+-	int k, length;
 +	struct sg_device *sdp;
 +	struct sg_fd *sfp;
-+	struct sg_request *srp;
-+	struct sg_header *h2p = NULL;
-+	struct sg_io_hdr a_sg_io_hdr;
-+
-+	/*
-+	 * This could cause a response to be stranded. Close the associated
-+	 * file descriptor to free up any resources being held.
-+	 */
-+	ret = sg_check_file_access(filp, __func__);
-+	if (ret)
-+		return ret;
-+
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	SG_LOG(3, sfp, "%s: read() count=%d\n", __func__, (int)count);
-+	ret = sg_allow_if_err_recovery(sdp, false);
-+	if (ret)
-+		return ret;
-+
-+	could_be_v3 = (count >= SZ_SG_IO_HDR);
-+	hlen = could_be_v3 ? SZ_SG_IO_HDR : SZ_SG_HEADER;
-+	h2p = (struct sg_header *)&a_sg_io_hdr;
-+
-+	if (sfp->force_packid && count >= hlen) {
-+		/*
-+		 * Even though this is a user space read() system call, this
-+		 * code is cheating to fetch the pack_id.
-+		 * Only need first three 32 bit ints to determine interface.
-+		 */
-+		if (unlikely(copy_from_user(h2p, p, 3 * sizeof(int))))
-+			return -EFAULT;
-+		if (h2p->reply_len < 0 && could_be_v3) {
-+			struct sg_io_hdr *v3_hdr = (struct sg_io_hdr *)h2p;
-+
-+			if (likely(v3_hdr->interface_id == 'S')) {
-+				struct sg_io_hdr __user *h3_up;
-+
-+				h3_up = (struct sg_io_hdr __user *)p;
-+				ret = get_user(want_id, &h3_up->pack_id);
-+				if (unlikely(ret))
-+					return ret;
-+			} else if (v3_hdr->interface_id == 'Q') {
-+				pr_info_once("sg: %s: v4 interface%s here\n",
-+					     __func__, " disallowed");
-+				return -EPERM;
-+			} else {
-+				return -EPERM;
-+			}
-+		} else { /* for v1+v2 interfaces, this is the 3rd integer */
-+			want_id = h2p->pack_id;
-+		}
-+	}
-+	srp = sg_get_rq_mark(sfp, want_id);
-+	if (!srp) {		/* now wait on packet to arrive */
-+		if (SG_IS_DETACHING(sdp))
-+			return -ENODEV;
-+		if (non_block) /* O_NONBLOCK or v3::flags & SGV4_FLAG_IMMED */
-+			return -EAGAIN;
-+		ret = wait_event_interruptible
-+				(sfp->read_wait,
-+				 (SG_IS_DETACHING(sdp) ||
-+				  (srp = sg_get_rq_mark(sfp, want_id))));
-+		if (SG_IS_DETACHING(sdp))
-+			return -ENODEV;
-+		if (ret)	/* -ERESTARTSYS as signal hit process */
-+			return ret;
-+	}
-+	if (srp->header.interface_id == '\0') {
-+		ret = sg_rd_v1v2(p, (int)count, sfp, srp);
-+	} else {
-+		if ((int)count < SZ_SG_IO_HDR)
-+			return -EINVAL;
-+		ret = sg_v3_receive(sfp, p, srp);
-+	}
-+	if (ret < 0)
-+		SG_LOG(1, sfp, "%s: negated errno: %d\n", __func__, ret);
-+	return ret < 0 ? ret : (int)count;
- }
+ 	const char *nbp = "==NULL, bad";
  
- static int
-@@ -1043,7 +1040,7 @@ sg_ctl_sg_io(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 	if (srp->done) {
- 		srp->done = 2;
- 		spin_unlock_irq(&sfp->rq_list_lock);
--		res = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
-+		res = sg_v3_receive(sfp, p, srp);
- 		return (res < 0) ? res : 0;
+ 	if (!vma) {
+@@ -1408,20 +1410,31 @@ sg_vma_fault(struct vm_fault *vmf)
+ 		pr_warn("%s: sfp%s\n", __func__, nbp);
+ 		goto out_err;
  	}
- 	srp->orphan = 1;
++	sdp = sfp->parentdp;
++	if (sdp && unlikely(SG_IS_DETACHING(sdp))) {
++		SG_LOG(1, sfp, "%s: device detaching\n", __func__);
++		goto out_err;
++	}
+ 	rsv_schp = &sfp->reserve;
+ 	offset = vmf->pgoff << PAGE_SHIFT;
+-	if (offset >= rsv_schp->buflen)
+-		return VM_FAULT_SIGBUS;
++	if (offset >= (unsigned int)rsv_schp->buflen) {
++		SG_LOG(1, sfp, "%s: offset[%lu] >= rsv.buflen\n", __func__,
++		       offset);
++		goto out_err;
++	}
+ 	sa = vma->vm_start;
+ 	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
+ 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+-	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; k++) {
++	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
+ 		len = vma->vm_end - sa;
+-		len = (len < length) ? len : length;
++		len = min_t(int, len, (int)length);
+ 		if (offset < len) {
+-			struct page *page = nth_page(rsv_schp->pages[k],
+-						     offset >> PAGE_SHIFT);
+-			get_page(page);	/* increment page count */
++			struct page *page;
++			struct page *pp;
++
++			pp = rsv_schp->pages[k];
++			page = nth_page(pp, offset >> PAGE_SHIFT);
++			get_page(page); /* increment page count */
+ 			vmf->page = page;
+ 			return 0; /* success */
+ 		}
 -- 
 2.23.0
 
