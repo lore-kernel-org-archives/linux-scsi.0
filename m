@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68EA7ECE58D
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04EA9C47404
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3995F2067B
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:30:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3363206BB
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:31:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570642255;
-	bh=KZRpUOb3mPBcUo8o24araf8SxsKewq/8Rl1F83Gkluk=;
+	s=default; t=1570642265;
+	bh=ETaAvzsQEiP4oZJWvRcthsJ/ZN8IdDXxzwucysDt7Ko=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0ZTmqDY106+d4jBJBgq+N4fMUI8VdocnDfuBINqh4jmlYo/fk70+zwldt3C78BdCk
-	 0bI3JNnTGA7JaxpSlw/bHMhHxG7TLkD9poZgaOnB+F1NZ9VQJMoJ4V2rzYNxYpwcVy
-	 32OuPd537lGCno26KbegaMTYdiHrjniB9/+IhEhA=
+	b=B8EL5dboPW1CCfRHTFJvftBo93qPv1+BeZerEEaj1jtQon89c1f4p+/P4jSfdZzs1
+	 QHMZ/oUg7opWsxzfUgWPYNYAQiLzk8hTxg9nXHiFjx4xTtI/zEpws9Hb2+f1Mpnlv1
+	 ARqzcsChDlyWrzc5pUc5PvqYjzMCMzeX8avlAj4w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732119AbfJIRYG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:24:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48566 "EHLO mail.kernel.org"
+        id S1732805AbfJIRbC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 13:31:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48534 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732105AbfJIRYF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1732103AbfJIRYF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 9 Oct 2019 13:24:05 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E745E21D7D;
+        by mail.kernel.org (Postfix) with ESMTPSA id 951D32190F;
         Wed,  9 Oct 2019 17:24:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570641845;
-        bh=KZRpUOb3mPBcUo8o24araf8SxsKewq/8Rl1F83Gkluk=;
+        s=default; t=1570641844;
+        bh=ETaAvzsQEiP4oZJWvRcthsJ/ZN8IdDXxzwucysDt7Ko=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XZiRyk+4HQuG/Njpo0YStNBvcM9VfKC98/ajyiK1Qasa1pcNZhthkkUxqmQwYrvAM
-         CcOe4CADxdHVY+zq5dizc3yIRJk02++OiPMbVY2zMDEIeQdGs59KSnj0rP7Ge9cEHF
-         u3qqrbE5QlpX3tRecI+eB43Ddi1VVOflHwWRISPM=
+        b=oH1MmBoyd/FRGiwMeTSjP26YT+zhbQ9azCsOpsFizZucevrAKxe7FS/0Uhoz+Nqp9
+         iUiN2MUnaLegi/hdDfVOAkZe/ytAnl1Tmd87j5uMDs69MkZ2c063CmlF/oFsjYfewg
+         iHGjN9U8OqWPDefSYMvsy9VmQvKTlgizLXvlUU3s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/26] scsi: qla2xxx: Fix unbound sleep in fcport delete path.
-Date:   Wed,  9 Oct 2019 13:05:37 -0400
-Message-Id: <20191009170558.32517-5-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 04/26] scsi: megaraid: disable device when probe failed after enabled device
+Date:   Wed,  9 Oct 2019 13:05:36 -0400
+Message-Id: <20191009170558.32517-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191009170558.32517-1-sashal@kernel.org>
 References: <20191009170558.32517-1-sashal@kernel.org>
@@ -59,45 +60,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit c3b6a1d397420a0fdd97af2f06abfb78adc370df ]
+[ Upstream commit 70054aa39a013fa52eff432f2223b8bd5c0048f8 ]
 
-There are instances, though rare, where a LOGO request cannot be sent out
-and the thread in free session done can wait indefinitely. Fix this by
-putting an upper bound to sleep.
+For pci device, need to disable device when probe failed after enabled
+device.
 
-Link: https://lore.kernel.org/r/20190912180918.6436-3-hmadhani@marvell.com
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Link: https://lore.kernel.org/r/1567818450-173315-1-git-send-email-chenxiang66@hisilicon.com
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/megaraid.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 7a1cc0b25e594..d6dc320f81a7a 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1023,6 +1023,7 @@ void qlt_free_session_done(struct work_struct *work)
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 8c7154143a4eb..a84878fbf45d2 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4189,11 +4189,11 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		 */
+ 		if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ &&
+ 		    pdev->subsystem_device == 0xC000)
+-		   	return -ENODEV;
++			goto out_disable_device;
+ 		/* Now check the magic signature byte */
+ 		pci_read_config_word(pdev, PCI_CONF_AMISIG, &magic);
+ 		if (magic != HBA_SIGNATURE_471 && magic != HBA_SIGNATURE)
+-			return -ENODEV;
++			goto out_disable_device;
+ 		/* Ok it is probably a megaraid */
+ 	}
  
- 	if (logout_started) {
- 		bool traced = false;
-+		u16 cnt = 0;
- 
- 		while (!READ_ONCE(sess->logout_completed)) {
- 			if (!traced) {
-@@ -1032,6 +1033,9 @@ void qlt_free_session_done(struct work_struct *work)
- 				traced = true;
- 			}
- 			msleep(100);
-+			cnt++;
-+			if (cnt > 200)
-+				break;
- 		}
- 
- 		ql_dbg(ql_dbg_disc, vha, 0xf087,
 -- 
 2.20.1
 
