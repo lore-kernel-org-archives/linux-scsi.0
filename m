@@ -2,103 +2,96 @@ Return-Path: <SRS0=LfzD=YC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE4D7ECE58E
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BE05C47404
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:05:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC72F218AC
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:01:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA18620679
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:05:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731686AbfJIQBr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 12:01:47 -0400
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:33784 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730708AbfJIQBr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 12:01:47 -0400
-Received: by mail-qt1-f195.google.com with SMTP id r5so4199294qtd.0;
-        Wed, 09 Oct 2019 09:01:46 -0700 (PDT)
+        id S1731263AbfJIQF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 12:05:29 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:43745 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731083AbfJIQF3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 12:05:29 -0400
+Received: by mail-pl1-f196.google.com with SMTP id f21so1252543plj.10
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2019 09:05:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZWFHkd6ek0BtHyg9BV3fh9tCSDHEofWpBNJTTKARQwo=;
-        b=kaUhu2nWdn12oM/CzR/8uNlhivq7ptWPXCXwRV3MGgWwJR6U9CGEs7zcoDFHQLrjfM
-         RGN1nv86kty9QqzmMzZ0N2YAIUwOvwN3/InyILq43nJrkKuxeOPBTha0vhaT4Oi1XqN7
-         LQkULD5xSeQas+PY9+ar+ebSOqsDKz91t+uhqF+hqdsgyt+me9kVj3ubn2v9Mp1Pl6j9
-         izL7CG0HJTYxVVVw+u+2fQrPrONiiiTIjUIPnCsNKEfLfTArt/LUnuPp4iDhxCwau3dB
-         kDiaVq3L6dzuDx0aNcR2w+XxmlJ3/YL/u0H6M83QXyTV3Lzn/B+pwj3rYwMAIkJdmKgJ
-         IzCg==
-X-Gm-Message-State: APjAAAWuhvpsq7iUgR+XO/mgZbRe/VAe3ux21SFZVYtoSmpOzo+KSft2
-        XBDxl2R31/iDGgNlD5dKynHEsbJpPWvOxWG48Co=
-X-Google-Smtp-Source: APXvYqxJLyCeHAUAU1azpG4v5iXs9SXOmBMoaRvC78sbGAuHi5eUtVSvqkcf9ThEOBLk2iBn+of79sDp2hHG8oqoBW0=
-X-Received: by 2002:ac8:729a:: with SMTP id v26mr4380259qto.18.1570636905814;
- Wed, 09 Oct 2019 09:01:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190918153445.1241-1-maier@linux.ibm.com>
-In-Reply-To: <20190918153445.1241-1-maier@linux.ibm.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 9 Oct 2019 18:01:29 +0200
-Message-ID: <CAK8P3a1HBog84Wvdgm1ccz1gRJRxHm8ucsxwUTTqh02gOt9WbQ@mail.gmail.com>
-Subject: Re: [PATCH] compat_ioctl: fix reimplemented SG_IO handling causing
- -EINVAL from sg_io()
-To:     Steffen Maier <maier@linux.ibm.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=QphEkQSPlY1RyrvBtQE0I45inaEiV8ZcNZrtsy7nikI=;
+        b=gY508dTAc4r8Ir8YlqpMgEBFWhouR/jMd2DrQ5kvpHlxWSiLOAaQIV0/2maQ12Vyn4
+         UzWUzi18cblHWuRhWCZbFAFC31m4Adi4zm1/UBQ48bGXdjXiCI98wS/1FCNRIRHoUYMf
+         zi4sfcns+xuWYyxZR7SysxvPvceDSUBsDygk98DIhEmVoiB/38yfGkd47/rc2qlD8Mj3
+         VVB7sjZkGJU/+hjtQnOJC0nlFpull2JrEXP2ZFCS27+eri3H7TdMvJBr9MwvZIEU8Tqk
+         vx+FnhENkg1QgVvIFZDOdLTn3qWFEGnGQLDquDdCJOErqPvxKWaV1Rgec2nAgYkADV6W
+         b6AQ==
+X-Gm-Message-State: APjAAAXjEHjFkW4tipZQg52RCC+yJnzT5DZ/cO89jIffNbN5bep4cEOf
+        bmHwrDyIK7RbTWtlNOSgI/U=
+X-Google-Smtp-Source: APXvYqygSZjTCV1IaLLjF7lE1kLNMRISJO3M3ZzqQ9uKX4RllmjBRrg1BJWGhV2Lr7DFNuWKme7E0A==
+X-Received: by 2002:a17:902:9305:: with SMTP id bc5mr4032801plb.238.1570637128554;
+        Wed, 09 Oct 2019 09:05:28 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id a8sm2701567pff.5.2019.10.09.09.05.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 09 Oct 2019 09:05:27 -0700 (PDT)
+Subject: Re: [RFC PATCH V4 2/2] scsi: core: don't limit per-LUN queue depth
+ for SSD
+To:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Omar Sandoval <osandov@fb.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Mark Brown <broonie@kernel.org>, dm-devel@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Laurence Oberman <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+References: <20191009093241.21481-1-ming.lei@redhat.com>
+ <20191009093241.21481-3-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <75fe51d7-714f-8a51-89b5-aeeb7d318fdc@acm.org>
+Date:   Wed, 9 Oct 2019 09:05:26 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
+MIME-Version: 1.0
+In-Reply-To: <20191009093241.21481-3-ming.lei@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 5:35 PM Steffen Maier <maier@linux.ibm.com> wrote:
->
-> scsi_cmd_ioctl() had hdr as on stack auto variable and called
-> copy_{from,to}_user with the address operator &hdr and sizeof(hdr).
->
-> After the refactoring, {get,put}_sg_io_hdr() takes a pointer &hdr.
-> So the copy_{from,to}_user within the new helper functions should
-> just take the given pointer argument hdr and sizeof(*hdr).
->
-> I saw -EINVAL from sg_io() done by /usr/lib/udev/scsi_id which could
-> in turn no longer whitelist SCSI disks for devicemapper multipath.
->
-> Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-> Fixes: 4f45155c29fd ("compat_ioctl: reimplement SG_IO handling")
-> ---
->
-> Arnd, I'm not sure about the sizeof(hdr32) change in the compat part in
-> put_sg_io_hdr().
->
-> This is for next, probably via Arnd's y2038/y2038,
-> and it fixes next-20190917 for me regarding SCSI generic.
+On 10/9/19 2:32 AM, Ming Lei wrote:
+> @@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+>   	if (starget->can_queue > 0)
+>   		atomic_dec(&starget->target_busy);
+>   
+> -	atomic_dec(&sdev->device_busy);
+> +	if (!blk_queue_nonrot(sdev->request_queue))
+> +		atomic_dec(&sdev->device_busy);
+>   }
+>   
 
-Hi Steffen,
+Hi Ming,
 
-Sorry for the long delay. I ended up not sending my pull request for
-v5.4, so the bug is not there. I have now rebased my branch
-on top of v5.4-rc2 and plan to send it for the v5.5 merge window.
+Does this patch impact the meaning of the queue_depth sysfs attribute 
+(see also sdev_store_queue_depth()) and also the queue depth ramp 
+up/down mechanism (see also scsi_handle_queue_ramp_up())? Have you 
+considered to enable/disable busy tracking per LUN depending on whether 
+or not sdev->queue_depth < shost->can_queue?
 
-I have folded your bugfix into my original patch, hope that's ok with
-you. Tomorrow's linux-next should be fixed.
+The megaraid and mpt3sas drivers read sdev->device_busy directly. Is the 
+current version of this patch compatible with these drivers?
 
-    Arnd
+Thanks,
+
+Bart.
