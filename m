@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEB0EECE58C
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:28:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15173C47404
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0377206BB
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:28:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D365B20679
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:28:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570642112;
-	bh=LW+VhAvO5inmcOI9PKMnX5A3MCYkSC9vy+BBhmlKkKE=;
+	s=default; t=1570642118;
+	bh=u2PERKJ5Oo1DyMWofqCOrqYj+rOF3pYWR+5pcYdb3lI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p9kX8L/t4n3Ho6XDoxOmDQA5OhtaZ0NwwALT3IHwWvsDt6cuzelcV9b2DWHW3dB9/
-	 MkZCoARFqP5JfWP5NoZzcU3WedEySrD7rAGUDyEu2tYYrejApKhOr9yxLce9REYudk
-	 0Der7tCsP9pIxAfhc6E1vzDlaCq51mCxIjZ8bjKY=
+	b=0SwCy3ZMSDuI3SEIP0JHLNZcV8v4shHf01aR9TO76BzKtWyA5jDy0qndqWfuEo6jT
+	 p2qyAjuDszj2iVF4CChtjYCdxOwLf1qGyRlplXNwCxWpZjqwdQpbvtHtx5lmT7eGBd
+	 h9eCN7H5KgLMNYa7orm7OYNa6fYeDF9fBociow8I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732382AbfJIR21 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:28:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49036 "EHLO mail.kernel.org"
+        id S1732552AbfJIR2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 13:28:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49020 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732284AbfJIRYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1732114AbfJIRYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 9 Oct 2019 13:24:24 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0D9A621920;
-        Wed,  9 Oct 2019 17:24:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9B36C218AC;
+        Wed,  9 Oct 2019 17:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570641864;
-        bh=LW+VhAvO5inmcOI9PKMnX5A3MCYkSC9vy+BBhmlKkKE=;
+        s=default; t=1570641863;
+        bh=u2PERKJ5Oo1DyMWofqCOrqYj+rOF3pYWR+5pcYdb3lI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G6K36boCtDzdPHMH0qXNrFtCyY8muapBHJnze+O4pMVlarS4OSoAut+woG6IDZrp4
-         ArMXrcs5hLCV1hc4x4X1kd9jaquHDgiww5t0ncTCQSI2etCvFimPsoDUebwxYNiNx8
-         rZ6e110mfpkpGuxPVT7x+btfHUNZldVenv1QHAOs=
+        b=j8lA5hRPONR1JZhMAjbwiuu5/82AnjVj+spkDaRiDZJO0zEhYe7+poX0nwKfBlGbV
+         Mf+e4YouehFkUIHm8jM3yr/lngBtOcwJSXqwXQp6qAZmHRV8zVrHY37qJzva81JbgE
+         J6Cz5NrP5IXwyC4amN17sgDeivo9XYQMX1wYecyQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 03/21] scsi: megaraid: disable device when probe failed after enabled device
-Date:   Wed,  9 Oct 2019 13:05:56 -0400
-Message-Id: <20191009170615.32750-3-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 02/21] scsi: ufs: skip shutdown if hba is not powered
+Date:   Wed,  9 Oct 2019 13:05:55 -0400
+Message-Id: <20191009170615.32750-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191009170615.32750-1-sashal@kernel.org>
 References: <20191009170615.32750-1-sashal@kernel.org>
@@ -60,39 +59,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-[ Upstream commit 70054aa39a013fa52eff432f2223b8bd5c0048f8 ]
+[ Upstream commit f51913eef23f74c3bd07899dc7f1ed6df9e521d8 ]
 
-For pci device, need to disable device when probe failed after enabled
-device.
+In some cases, hba may go through shutdown flow without successful
+initialization and then make system hang.
 
-Link: https://lore.kernel.org/r/1567818450-173315-1-git-send-email-chenxiang66@hisilicon.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
+For example, if ufshcd_change_power_mode() gets error and leads to
+ufshcd_hba_exit() to release resources of the host, future shutdown flow
+may hang the system since the host register will be accessed in unpowered
+state.
+
+To solve this issue, simply add checking to skip shutdown for above kind of
+situation.
+
+Link: https://lore.kernel.org/r/1568780438-28753-1-git-send-email-stanley.chu@mediatek.com
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Acked-by: Bean Huo <beanhuo@micron.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 9b6f5d024dbae..f5c09bbf93741 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -4221,11 +4221,11 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		 */
- 		if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ &&
- 		    pdev->subsystem_device == 0xC000)
--		   	return -ENODEV;
-+			goto out_disable_device;
- 		/* Now check the magic signature byte */
- 		pci_read_config_word(pdev, PCI_CONF_AMISIG, &magic);
- 		if (magic != HBA_SIGNATURE_471 && magic != HBA_SIGNATURE)
--			return -ENODEV;
-+			goto out_disable_device;
- 		/* Ok it is probably a megaraid */
- 	}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 60c9184bad3be..07cae5ea608c7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7755,6 +7755,9 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 
++	if (!hba->is_powered)
++		goto out;
++
+ 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
+ 		goto out;
  
 -- 
 2.20.1
