@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4AEC47404
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C28DBECE58C
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:32:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE01E206BB
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:32:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91E0E218AC
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:32:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570642345;
-	bh=WTkKy8s4ac7duYl64OPSqQAgvDeJDiVxDqId02GUUs4=;
+	s=default; t=1570642347;
+	bh=NGjSbI2cPKdmC/6lFM2rFaIZI5zwvy98Jj9zrIDJtwQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UgVvnSrn3ICnJ00oUqSXkB8AP4pbcgVKu4eBxZevaCfPX84TooUzE+ge5f+UM0CcI
-	 vy5OFs64fDPG5mr3I2WcIKynbUFu1VatHSOVAnxMx3fGjb48kS0Iz+YK12Se04bk0D
-	 IQyZiNCjFedlQ5k9avgC4yz93NLqXc+TAYptffuU=
+	b=lOw7ArDUcUNeBwpWuuKiPEZqNGKt0DwzSBWAJzojd2wTsgsqf84C8xl0W2yDtni93
+	 uZ4nTPBDntOFw95iiFPgziUPfZjvdOd3bz+kkDMAjZ9BaehKTJwkYeU3wuM+NTMjJs
+	 l2l9wUjETXncSid4IhPqGrSdnaaayx91WLTsNYKk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732029AbfJIRX6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1732018AbfJIRX6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 9 Oct 2019 13:23:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48058 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:48098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731993AbfJIRX4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1731995AbfJIRX4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 9 Oct 2019 13:23:56 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 84E2D21A4A;
+        by mail.kernel.org (Postfix) with ESMTPSA id C1FC121E6F;
         Wed,  9 Oct 2019 17:23:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1570641835;
-        bh=WTkKy8s4ac7duYl64OPSqQAgvDeJDiVxDqId02GUUs4=;
+        bh=NGjSbI2cPKdmC/6lFM2rFaIZI5zwvy98Jj9zrIDJtwQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ntfBWaGHGorr8xzsHTAnrL+qQtquqDm107BxBObpY0N3Ncfg7JmTOG3HB89EDFlj9
-         qVUDOlYl/rlPn+UnAFrR5EKzX9tfB/9gXKQIcK3n8uG2C5X5X81TuG+JwIOYZKzPqK
-         OVzqN5ReMXc31n3LMfmVgT8Kq8YryJlMjiIg1xaQ=
+        b=mtcXeumk0OpqU8h4QJ80STM8ly13tm5W/AZ9zKqWI4ErAvFjxm9JvSSQfLLFwaR3m
+         QLPid6223wgtDoPlvft720tcFnI7t9nT3YQAwYA/uSnBzjjF9Yrt+srIdshrGoCzqU
+         lyMPgU1nkqT5UWxpQGvGIFEWfDkxqLao5qz7tvzA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 08/68] scsi: megaraid: disable device when probe failed after enabled device
-Date:   Wed,  9 Oct 2019 13:04:47 -0400
-Message-Id: <20191009170547.32204-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.3 09/68] scsi: qla2xxx: Silence fwdump template message
+Date:   Wed,  9 Oct 2019 13:04:48 -0400
+Message-Id: <20191009170547.32204-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191009170547.32204-1-sashal@kernel.org>
 References: <20191009170547.32204-1-sashal@kernel.org>
@@ -60,40 +58,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Himanshu Madhani <hmadhani@marvell.com>
 
-[ Upstream commit 70054aa39a013fa52eff432f2223b8bd5c0048f8 ]
+[ Upstream commit 248a445adfc8c33ffd67cf1f2e336578e34f9e21 ]
 
-For pci device, need to disable device when probe failed after enabled
-device.
+Print if fwdt template is present or not, only when
+ql2xextended_error_logging is enabled.
 
-Link: https://lore.kernel.org/r/1567818450-173315-1-git-send-email-chenxiang66@hisilicon.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/20190912180918.6436-2-hmadhani@marvell.com
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 45a66048801be..ff6d4aa924213 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -4183,11 +4183,11 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		 */
- 		if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ &&
- 		    pdev->subsystem_device == 0xC000)
--		   	return -ENODEV;
-+			goto out_disable_device;
- 		/* Now check the magic signature byte */
- 		pci_read_config_word(pdev, PCI_CONF_AMISIG, &magic);
- 		if (magic != HBA_SIGNATURE_471 && magic != HBA_SIGNATURE)
--			return -ENODEV;
-+			goto out_disable_device;
- 		/* Ok it is probably a megaraid */
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index afcd9a8858845..3fbe909744a8f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3268,7 +3268,7 @@ try_eft:
  
+ 		for (j = 0; j < 2; j++, fwdt++) {
+ 			if (!fwdt->template) {
+-				ql_log(ql_log_warn, vha, 0x00ba,
++				ql_dbg(ql_dbg_init, vha, 0x00ba,
+ 				    "-> fwdt%u no template\n", j);
+ 				continue;
+ 			}
 -- 
 2.20.1
 
