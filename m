@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C1D0ECE58D
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C56C47404
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6CC752190F
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0F9721924
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570641970;
-	bh=nQzPg6Cjllqir6rtER6d5XGo+HSHjtmHJ9eSyOdluEg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=1cI6C0Oasy6WfM/epv7NONRvmgeDMuPrMS49E4gVTEdkxZ3ushWWzW7cYLKdTek3y
-	 6vDS7+kEUXyVCWB3cuiglgourOep232aNLzJfoeGhfsy58dVpyZ7wC4LMxfxhwgGJ7
-	 mEIT45zvNnpdnKTa+nnusYhJ+ckmr5CwwYlVzUog=
+	s=default; t=1570641987;
+	bh=VTE3iNMsGVPx5aIFWaap7QbAngR+xbH2tN1CHoJh/kE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=ht7iSI9eABB1+BHuKAsB/gRtGnadayp0N31QDKWrP+tre5b9qA4IUnsSqxTzS1ooe
+	 8t7do6+p7ZLQdgH5em1O7Tel8ne2b2MpDdMJ+Aici80qhltaSPyiomobPrVnyjmw/9
+	 /D1LRRoSOxH53Hiq7SI86PppYBBDsxKp0H53FGcE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732685AbfJIR0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:26:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49878 "EHLO mail.kernel.org"
+        id S1731924AbfJIRYq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 13:24:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49542 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732481AbfJIRYw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Oct 2019 13:24:52 -0400
+        id S1732414AbfJIRYm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Oct 2019 13:24:42 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1FA59206BB;
-        Wed,  9 Oct 2019 17:24:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7930021D80;
+        Wed,  9 Oct 2019 17:24:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570641892;
-        bh=nQzPg6Cjllqir6rtER6d5XGo+HSHjtmHJ9eSyOdluEg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=uTfkfjuKpxoY2rQfUIyc/2qrwYy5j9e6LsPCWFl0lenQtNYMELLBLChEa7BcJ48rM
-         IeyR+W1SwmVaM9w5L4RGz+6fN4MdjtchVSlO3xciCytM3z3PekozhW78G8YLnZwOq0
-         FvNWTD/y5K7HLeYaEZNGulaM6bsDnQlMbsX3cCeg=
+        s=default; t=1570641881;
+        bh=VTE3iNMsGVPx5aIFWaap7QbAngR+xbH2tN1CHoJh/kE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nOw+4INSOqTL/h/toRKzmATdFkCjNsrSj40IJUoomLeTj9eXeY9BTMvxuq4fuckzV
+         rM99FIREO9VP3oq+bn72A/FYyQiLmQawRj8YamTBmPU1GxyIyT6O6TWa5VQ3JAlXSD
+         4Tf2zCEBtrjQi+sK3wo95kVLPvbXpRIi2YU43Rtw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 01/11] scsi: ufs: skip shutdown if hba is not powered
-Date:   Wed,  9 Oct 2019 13:06:35 -0400
-Message-Id: <20191009170646.696-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 03/13] scsi: qla2xxx: Fix unbound sleep in fcport delete path.
+Date:   Wed,  9 Oct 2019 13:06:22 -0400
+Message-Id: <20191009170635.536-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191009170635.536-1-sashal@kernel.org>
+References: <20191009170635.536-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,44 +59,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit f51913eef23f74c3bd07899dc7f1ed6df9e521d8 ]
+[ Upstream commit c3b6a1d397420a0fdd97af2f06abfb78adc370df ]
 
-In some cases, hba may go through shutdown flow without successful
-initialization and then make system hang.
+There are instances, though rare, where a LOGO request cannot be sent out
+and the thread in free session done can wait indefinitely. Fix this by
+putting an upper bound to sleep.
 
-For example, if ufshcd_change_power_mode() gets error and leads to
-ufshcd_hba_exit() to release resources of the host, future shutdown flow
-may hang the system since the host register will be accessed in unpowered
-state.
-
-To solve this issue, simply add checking to skip shutdown for above kind of
-situation.
-
-Link: https://lore.kernel.org/r/1568780438-28753-1-git-send-email-stanley.chu@mediatek.com
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
+Link: https://lore.kernel.org/r/20190912180918.6436-3-hmadhani@marvell.com
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/qla_target.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index fd8bbd2b5d0eb..504d367961528 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5371,6 +5371,9 @@ int ufshcd_shutdown(struct ufs_hba *hba)
- {
- 	int ret = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 11f45cb998927..d13e91e164258 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -572,6 +572,7 @@ static void qlt_free_session_done(struct work_struct *work)
  
-+	if (!hba->is_powered)
-+		goto out;
-+
- 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
- 		goto out;
+ 	if (logout_started) {
+ 		bool traced = false;
++		u16 cnt = 0;
  
+ 		while (!ACCESS_ONCE(sess->logout_completed)) {
+ 			if (!traced) {
+@@ -581,6 +582,9 @@ static void qlt_free_session_done(struct work_struct *work)
+ 				traced = true;
+ 			}
+ 			msleep(100);
++			cnt++;
++			if (cnt > 200)
++				break;
+ 		}
+ 
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf087,
 -- 
 2.20.1
 
