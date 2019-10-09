@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BE05C47404
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C069EECE58C
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:14:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA18620679
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:05:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 957A52190F
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Oct 2019 16:14:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731263AbfJIQF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 12:05:29 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:43745 "EHLO
+        id S1731636AbfJIQOv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 12:14:51 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:38663 "EHLO
         mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731083AbfJIQF3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 12:05:29 -0400
-Received: by mail-pl1-f196.google.com with SMTP id f21so1252543plj.10
-        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2019 09:05:29 -0700 (PDT)
+        with ESMTP id S1731626AbfJIQOv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 12:14:51 -0400
+Received: by mail-pl1-f196.google.com with SMTP id w8so1276393plq.5
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Oct 2019 09:14:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=QphEkQSPlY1RyrvBtQE0I45inaEiV8ZcNZrtsy7nikI=;
-        b=gY508dTAc4r8Ir8YlqpMgEBFWhouR/jMd2DrQ5kvpHlxWSiLOAaQIV0/2maQ12Vyn4
-         UzWUzi18cblHWuRhWCZbFAFC31m4Adi4zm1/UBQ48bGXdjXiCI98wS/1FCNRIRHoUYMf
-         zi4sfcns+xuWYyxZR7SysxvPvceDSUBsDygk98DIhEmVoiB/38yfGkd47/rc2qlD8Mj3
-         VVB7sjZkGJU/+hjtQnOJC0nlFpull2JrEXP2ZFCS27+eri3H7TdMvJBr9MwvZIEU8Tqk
-         vx+FnhENkg1QgVvIFZDOdLTn3qWFEGnGQLDquDdCJOErqPvxKWaV1Rgec2nAgYkADV6W
-         b6AQ==
-X-Gm-Message-State: APjAAAXjEHjFkW4tipZQg52RCC+yJnzT5DZ/cO89jIffNbN5bep4cEOf
-        bmHwrDyIK7RbTWtlNOSgI/U=
-X-Google-Smtp-Source: APXvYqygSZjTCV1IaLLjF7lE1kLNMRISJO3M3ZzqQ9uKX4RllmjBRrg1BJWGhV2Lr7DFNuWKme7E0A==
-X-Received: by 2002:a17:902:9305:: with SMTP id bc5mr4032801plb.238.1570637128554;
-        Wed, 09 Oct 2019 09:05:28 -0700 (PDT)
+        bh=Q8UUtSwD4Ge2E7y2l4PAoEGhp6rAeMWVIXkHn1/AF8M=;
+        b=k8d/hJLeK3wYasCbkPy+tfq4ubN1nNmTIMtbi2z0BSZdAmkS2ew7YPVUhwGuomf3wE
+         YVa3cQNY24hvsWEnMUsQZH30L/AiQO8pEC5vBXEV9i6nCMQUcWuh9EX1pnhHBhVXLncI
+         7SGuJTlN4GyD/YypLiveJY8p91zgNnfy3WF477ZYjfOdRjnPrJ50KLNzw41UdFvwkLwA
+         0POjVkm78qnv3XaljTd6KyPjQ27NiCi2DG+haqc2Tc+zrRTdUqNmwDcIHSz3raO34NUE
+         nF0IXSCINM/1cDgix/uXRw/Dg+zVHgPZXjjZRkhF8YyTtbj9Ia/iO5RdvxqE2hqeKqYa
+         IEkQ==
+X-Gm-Message-State: APjAAAWSjwOdPHwnnZtOuUfQl3ZZ/1rd8oKxl2lAjnZkM6TncRD1jP5+
+        8C7Y8HA9PTNmHdbD9L7PZV8=
+X-Google-Smtp-Source: APXvYqz5IKyJoS9f5tvilQESUa4lZZwqO8CI++KA7oaY5qHeqXevY5v2bZ/w3s/2g/HDZfNNdsn4cQ==
+X-Received: by 2002:a17:902:6b05:: with SMTP id o5mr3946193plk.33.1570637688972;
+        Wed, 09 Oct 2019 09:14:48 -0700 (PDT)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id a8sm2701567pff.5.2019.10.09.09.05.27
+        by smtp.gmail.com with ESMTPSA id 22sm2807532pfo.131.2019.10.09.09.14.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Oct 2019 09:05:27 -0700 (PDT)
-Subject: Re: [RFC PATCH V4 2/2] scsi: core: don't limit per-LUN queue depth
- for SSD
+        Wed, 09 Oct 2019 09:14:48 -0700 (PDT)
+Subject: Re: [PATCH V4 1/2] scsi: core: avoid host-wide host_busy counter for
+ scsi_mq
 To:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
@@ -54,14 +54,14 @@ Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         Laurence Oberman <loberman@redhat.com>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20191009093241.21481-1-ming.lei@redhat.com>
- <20191009093241.21481-3-ming.lei@redhat.com>
+ <20191009093241.21481-2-ming.lei@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <75fe51d7-714f-8a51-89b5-aeeb7d318fdc@acm.org>
-Date:   Wed, 9 Oct 2019 09:05:26 -0700
+Message-ID: <55c68a97-4393-fa63-e2da-d41a48237f96@acm.org>
+Date:   Wed, 9 Oct 2019 09:14:46 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20191009093241.21481-3-ming.lei@redhat.com>
+In-Reply-To: <20191009093241.21481-2-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -71,27 +71,12 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/9/19 2:32 AM, Ming Lei wrote:
-> @@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
->   	if (starget->can_queue > 0)
->   		atomic_dec(&starget->target_busy);
->   
-> -	atomic_dec(&sdev->device_busy);
-> +	if (!blk_queue_nonrot(sdev->request_queue))
-> +		atomic_dec(&sdev->device_busy);
->   }
->   
+> Cc: Bart Van Assche <bart.vanassche@wdc.com>
 
-Hi Ming,
+As one can see in the .mailmap file in the kernel tree I use my @acm.org 
+email address for kernel contributions. The above email address is no 
+longer valid since I left WDC more than a year ago.
 
-Does this patch impact the meaning of the queue_depth sysfs attribute 
-(see also sdev_store_queue_depth()) and also the queue depth ramp 
-up/down mechanism (see also scsi_handle_queue_ramp_up())? Have you 
-considered to enable/disable busy tracking per LUN depending on whether 
-or not sdev->queue_depth < shost->can_queue?
+Otherwise this patch looks fine to me. Hence:
 
-The megaraid and mpt3sas drivers read sdev->device_busy directly. Is the 
-current version of this patch compatible with these drivers?
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
