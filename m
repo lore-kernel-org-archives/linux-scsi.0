@@ -2,118 +2,88 @@ Return-Path: <SRS0=UT6l=YD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7711C4360C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94CEDC10F14
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:33:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B993720B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:32:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DBF72190F
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:33:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bYuLU9t8"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ygWd8wTj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733206AbfJJIcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Oct 2019 04:32:01 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:62789 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729932AbfJJIcB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2019 04:32:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1570696320; x=1602232320;
-  h=from:to:cc:subject:date:message-id;
-  bh=8W9YAqRHao26ckZMHtY8ZQIxisHMTa8clE3FZOTy9bw=;
-  b=bYuLU9t8aSLIguo/DFFrr4KC6w5S5fn17hzVb+716MFbb7Pl2QfSEj0G
-   fg5SrEHpUlqFDckvw/nKbjv4LYZA0dPODzhXZZzL1CPGOEox2fr5o+wC/
-   L/1Xf5J0Igcp4ywJUFzo7dAxOHE6hnScHu1HkEyYxyqqVpvGjuvaYWnHq
-   hL/0JlR+7+zu3/9SF/XgBwOJkW4mRpG6MlPbnxb0VVKSysm6mKTHeAmH6
-   hLM+2bmnjUveDXInHkp0jVel3A7WwzrtWs2pIIq2AQ2QIhSIG9Ku10EXh
-   8GcHz1yqzTaw/bifsz/1H7MvJySFX6Qk95D2WuKp5N33bPS0azgk4V8pI
-   Q==;
-IronPort-SDR: 94sNE4nX6p87g2cS8k8/a66/E6F353brDST/PX09OsWlb/UBdZ4Cjg3HBCfcricISbGrmYXaUw
- DZEDCuLmzTcHh/t67eAzYMomPlCyCTDWH6Pn3d91Qml36HBDfBnwobmfY5GZONho+65QipH0TM
- nD10NCYGqAbD3gK2cMapsyHkDRmsF2L8M+2y0DzbygmIoe3ibuanWhmfzi9Q4Y9A73HZM8SOfa
- Pxjqv8H/5ClR8sb3d/yqjtn4rYYkKkrABFt8GmVENSgXXgdXfMtSPRvmDkVrlPLbuHfmVmJjTx
- CU8=
-X-IronPort-AV: E=Sophos;i="5.67,279,1566835200"; 
-   d="scan'208";a="121813444"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Oct 2019 16:32:00 +0800
-IronPort-SDR: 8iv+4QwaUtZAGCG8TF7/iy32El7OuQLE7mvZHJQTn9TrnP/WEFy6wnw4Zf7PHmgpp2WdEhV0r0
- nnbYC3coY4l/arMkuQ3jMfzHaWpbQjv04cc0lQIbZBBDiWPShBUueHxlE/eh5b+jPny1YgxKIF
- fmyxUwmWoBRCzwKPIUHRKYPrgw5fMfkuA39buS5yYZuJp8+3l5ROqkaIRlRhqp6yRMtzQHqnQt
- ZGS0rgirwrxOKDifTnqM/ogxKQnBM57xPoAB8xd48xcTygCMQkqKRDnveWs6qzW4Y4sBeCYQGM
- ZIdIHdbwVdA11MJVXJm8l/Oh
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Oct 2019 01:27:58 -0700
-IronPort-SDR: YGGVg2A3ajXG5P9aGPKXcTXZAn58ZT5AoLObNX3/PN6xmuOwHmzJGFdhowC/UQ6CHlGx9mGRos
- Bmup3igGRgjX5CcWsJliYp95BM4+8MTjnZoxmhPMEaOhgM4XoUGhRcUakx3Yixo83RcoZGoc6w
- YLlbFp/cNR3YT0ypgLBWUhcWjFWsmx9Vki1tQmseAGximYW9N/WjlTWUAXRTj7tjuCiSgPVRiT
- 7bsHgsf3RYVsNa9EMUfTRKwu0ucMR/KmUfUyVOBe6wQ6GDc84Q8FdzNmMtfSb9hTdU+p/DTNbB
- EBc=
-WDCIronportException: Internal
-Received: from ile422988.sdcorp.global.sandisk.com ([10.0.231.246])
-  by uls-op-cesaip01.wdc.com with ESMTP; 10 Oct 2019 01:31:58 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        id S1733120AbfJJIdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Oct 2019 04:33:53 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:36716 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731959AbfJJIdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2019 04:33:53 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x9A8Xf31125164;
+        Thu, 10 Oct 2019 03:33:41 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1570696421;
+        bh=tW8o9gxC95fgEDnTV9WdqRE00YYAAn4u4FGFLXvP/Ss=;
+        h=From:To:CC:Subject:Date;
+        b=ygWd8wTj4BOfn9mmSo6TD3b1PFBgiC0x67zavLb/yckCeyEIXACNi01rKz1WoXvF6
+         rptPDKqy5M/a2YXytXAmcl3ZkcSz2Nbkz2+sox65jUta5sBgPpjnxBhZXiKMlnmSrA
+         6xPhdCQBEnrCbdGWahd1oiczW+Nx39erMMepQ2+o=
+Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x9A8XfCe043929
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Oct 2019 03:33:41 -0500
+Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 10
+ Oct 2019 03:33:37 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
+ Frontend Transport; Thu, 10 Oct 2019 03:33:40 -0500
+Received: from a0132425.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id x9A8XaSZ019061;
+        Thu, 10 Oct 2019 03:33:37 -0500
+From:   Vignesh Raghavendra <vigneshr@ti.com>
+To:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, <jejb@linux.ibm.com>,
+        Martin K Petersen <martin.petersen@oracle.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Alex Lemberg <alex.lemberg@wdc.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH] scsi: ufs-bsg: Wake the device before sending raw upiu commands
-Date:   Thu, 10 Oct 2019 11:31:07 +0300
-Message-Id: <1570696267-8487-1-git-send-email-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.7.4
+        Janek Kotas <jank@cadence.com>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH v2 0/2] scsi: ufs: Add driver for TI wrapper for Cadence UFS IP
+Date:   Thu, 10 Oct 2019 14:03:55 +0530
+Message-ID: <20191010083357.28982-1-vigneshr@ti.com>
+X-Mailer: git-send-email 2.23.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi async probe process is calling blk_pm_runtime_init for each
-lun, and then those request queues are monitored by the block layer pm
-engine (blk-pm.c).  This is however, not the case for scsi-passthrough
-queues, created by bsg_setup_queue().
+This series add DT bindings and driver for TI wrapper for Cadence UFS
+IP that is present on TI's J721e SoC
 
-So the ufs-bsg driver might send various commands, disregarding the pm
-status of the device. This is wrong, regardless if its request queue is
-pm-aware or not.
+Vignesh Raghavendra (2):
+  dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for TI UFS wrapper
+  scsi: ufs: Add driver for TI wrapper for Cadence UFS IP
 
-Fixes: df032bf27a41 (scsi: ufs: Add a bsg endpoint that supports UPIUs)
+ .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 68 ++++++++++++++
+ drivers/scsi/ufs/Kconfig                      | 10 +++
+ drivers/scsi/ufs/Makefile                     |  1 +
+ drivers/scsi/ufs/ti-j721e-ufs.c               | 90 +++++++++++++++++++
+ 4 files changed, 169 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+ create mode 100644 drivers/scsi/ufs/ti-j721e-ufs.c
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reported-by:  Yuliy Izrailov <yuliy.izrailov@wdc.com>
----
- drivers/scsi/ufs/ufs_bsg.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
-index a9344eb..dc2f6d2 100644
---- a/drivers/scsi/ufs/ufs_bsg.c
-+++ b/drivers/scsi/ufs/ufs_bsg.c
-@@ -98,6 +98,8 @@ static int ufs_bsg_request(struct bsg_job *job)
- 
- 	bsg_reply->reply_payload_rcv_len = 0;
- 
-+	pm_runtime_get_sync(hba->dev);
-+
- 	msgcode = bsg_request->msgcode;
- 	switch (msgcode) {
- 	case UPIU_TRANSACTION_QUERY_REQ:
-@@ -135,6 +137,8 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		break;
- 	}
- 
-+	pm_runtime_put_sync(hba->dev);
-+
- 	if (!desc_buff)
- 		goto out;
- 
 -- 
-2.7.4
+2.23.0
 
