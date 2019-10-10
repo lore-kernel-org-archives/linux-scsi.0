@@ -7,73 +7,72 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 923A5C47404
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 02:28:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7FCCECE596
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 02:29:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 645F1206C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 02:28:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E6EB206C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 02:29:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pVlpWsb3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Duug+yMM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726621AbfJJC2q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 22:28:46 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55068 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726465AbfJJC2p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 22:28:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A2SfLe069286;
-        Thu, 10 Oct 2019 02:28:41 GMT
+        id S1732623AbfJJC3f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Oct 2019 22:29:35 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36244 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726675AbfJJC3e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 22:29:34 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A2SdVR046703;
+        Thu, 10 Oct 2019 02:29:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=OMKO+flb98xcphMu8mOLakZYOK+k4wTPKBq9wBO2vC8=;
- b=pVlpWsb3VNko0fPlT39fa2Y95nAnxG7EM7DjgdYO9rh34jF9d5zkLhF0YcsrcivGx2cz
- f93gFGMpkuhXWQrgneMyr+f5aHSm/lbGoj9yVIocNQpTMKjwPhufZPJH4oAhaZMM/J6F
- C9D1T/3EvFez5bSY8z0I9M4wZOY93mIl8BIdE4DCm/uq3CU49Aj2IqFdHdgoUVjmGMi0
- T0hfcYGz4KGwHy1CcdLugy4GGzx4X+MRn0hMXh6fJZ0ir5wRE1VWnQuPfD7zA/Qw1lGA
- BHRbBFydcSXGy2uIxHx2XKw6VbtsSkjsrPDXztZwXSPoxoP2tZvsY1Hg/foTIVxD4twy OQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2vektrqysg-1
+ bh=FNfvGZdgq5lIUJoQDdpUhmnVPaLVwiJ2+grwStiga/g=;
+ b=Duug+yMMeRHswVU2m+GvfufhTf5ZIknDswr5/NN4d0/C/DYeBc5+40NxmpMjSuTT4gqz
+ IjevoryT5aoDlHnj7WiOad6rT8NFtFqPX5bQa7GJtc7ErE5GCOPFy+P8V5vIds6owwaJ
+ MoJYV3rwDRbK2xJsUuGzpuz5eU6sx0HOEXII1a7eV0YoHCpmWtcxDT0aQ4dpXrL5MWJ5
+ XbeDUK/Bf8I1RV0N/GHEjFmZwMIJy15o0/otCPxPQtyYMUN0pzqFVBIfMGDzsRUr5uVm
+ 0VArNetwQnffgVsTDHxtHUsDhIIwfT5VE2zwkSYPBRvWc7rFHGGugVoR59rgmAdnMmew EA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2vek4qr6tp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Oct 2019 02:28:41 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A2SbqV001100;
-        Thu, 10 Oct 2019 02:28:41 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2vh5cc2sp6-1
+        Thu, 10 Oct 2019 02:29:32 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A2Rttf008585;
+        Thu, 10 Oct 2019 02:29:32 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2vh8k1wquv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Oct 2019 02:28:41 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9A2RslD009120;
-        Thu, 10 Oct 2019 02:27:56 GMT
+        Thu, 10 Oct 2019 02:29:32 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9A2TUBr025895;
+        Thu, 10 Oct 2019 02:29:31 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Oct 2019 19:27:54 -0700
-To:     Himanshu Madhani <hmadhani@marvell.com>
-Cc:     <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v2 08/14] qla2xxx: Dual FCP-NVMe target port support
+        with ESMTP ; Wed, 09 Oct 2019 19:29:30 -0700
+To:     Allen Pais <allen.pais@oracle.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] qla2xxx: fix a potential NULL pointer dereference
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20190912180918.6436-1-hmadhani@marvell.com>
-        <20190912180918.6436-9-hmadhani@marvell.com>
-Date:   Wed, 09 Oct 2019 22:27:48 -0400
-In-Reply-To: <20190912180918.6436-9-hmadhani@marvell.com> (Himanshu Madhani's
-        message of "Thu, 12 Sep 2019 11:09:12 -0700")
-Message-ID: <yq1r23ljpwb.fsf@oracle.com>
+References: <1568824618-4366-1-git-send-email-allen.pais@oracle.com>
+Date:   Wed, 09 Oct 2019 22:29:28 -0400
+In-Reply-To: <1568824618-4366-1-git-send-email-allen.pais@oracle.com> (Allen
+        Pais's message of "Wed, 18 Sep 2019 22:06:58 +0530")
+Message-ID: <yq1mue9jptj.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=723
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1910100022
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=800 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
  definitions=main-1910100022
 Sender: linux-scsi-owner@vger.kernel.org
@@ -82,14 +81,12 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Himanshu,
+Allen,
 
-> Some storage arrays advertise FCP LUNs and NVMe namespaces behind the
-> same WWN.  The driver now offer's a user option by way of NVRAM
-> parameter to allow users to choose, on a per port basis, the kind of
-> FC-4 type they would like to prioritize for login.
+> alloc_workqueue is not checked for errors and as a result,
+> a potential NULL dereference could occur.
 
-Applied patches 8-14 to 5.5/scsi-queue. Thanks!
+Applied to 5.4/scsi-fixes, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
