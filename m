@@ -2,95 +2,118 @@ Return-Path: <SRS0=UT6l=YD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15E58ECE58D
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 03:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7711C4360C
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:32:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF48620B7C
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 03:40:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B993720B7C
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Oct 2019 08:32:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BefK9p8d"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bYuLU9t8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732858AbfJJDk5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Oct 2019 23:40:57 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:41736 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726823AbfJJDkz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Oct 2019 23:40:55 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A3URs3086893;
-        Thu, 10 Oct 2019 03:40:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=rOzUSONeDV81oLc9GIPlFqdjJahMsRpOb2XTtkJaKQw=;
- b=BefK9p8dWi88hfb5QFn9qQGSODn6qphmInRJZ0dgMdv4Id1obcwn0qu9navgCcqppvuy
- aAR4G3aCNBiMQjuHRd1M+Lq7ANVw+kUxreIxqVyP9O6l+NF9ahYeVdAkgRZIToYGEhbM
- wV1sVqlpYwKZ8t5MgCiMVHEEjUdUEa6Iy+GcXA4SlK1/WoWI/Pj7BGsB5iOLDu7cjIwb
- CPzxDSk69AnH3LMIQj7TqxnpG9d71Y/n5xzvDjqSe6IhJdAGwRcOFy+jMv4U2mfoPheQ
- YqSPr06uDgi0MfbnpOanveXD+cglSKWE86yj2SbPR3hs65GexHYPpUimGXobuXxe/6Tz rA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vek4qrchw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Oct 2019 03:40:39 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9A3TEMC141019;
-        Thu, 10 Oct 2019 03:40:38 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2vhrxcp3fb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Oct 2019 03:40:38 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9A3eZsa029205;
-        Thu, 10 Oct 2019 03:40:35 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Oct 2019 20:40:35 -0700
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Rob Turk <robtu@rtist.nl>, Hannes Reinecke <hare@suse.de>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] ch: Make it again possible to open a ch device two or more times
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191009173536.247889-1-bvanassche@acm.org>
-Date:   Wed, 09 Oct 2019 23:40:32 -0400
-In-Reply-To: <20191009173536.247889-1-bvanassche@acm.org> (Bart Van Assche's
-        message of "Wed, 9 Oct 2019 10:35:36 -0700")
-Message-ID: <yq1d0f5i7yn.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=770
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910100031
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=873 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910100031
+        id S1733206AbfJJIcB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Oct 2019 04:32:01 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:62789 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729932AbfJJIcB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Oct 2019 04:32:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1570696320; x=1602232320;
+  h=from:to:cc:subject:date:message-id;
+  bh=8W9YAqRHao26ckZMHtY8ZQIxisHMTa8clE3FZOTy9bw=;
+  b=bYuLU9t8aSLIguo/DFFrr4KC6w5S5fn17hzVb+716MFbb7Pl2QfSEj0G
+   fg5SrEHpUlqFDckvw/nKbjv4LYZA0dPODzhXZZzL1CPGOEox2fr5o+wC/
+   L/1Xf5J0Igcp4ywJUFzo7dAxOHE6hnScHu1HkEyYxyqqVpvGjuvaYWnHq
+   hL/0JlR+7+zu3/9SF/XgBwOJkW4mRpG6MlPbnxb0VVKSysm6mKTHeAmH6
+   hLM+2bmnjUveDXInHkp0jVel3A7WwzrtWs2pIIq2AQ2QIhSIG9Ku10EXh
+   8GcHz1yqzTaw/bifsz/1H7MvJySFX6Qk95D2WuKp5N33bPS0azgk4V8pI
+   Q==;
+IronPort-SDR: 94sNE4nX6p87g2cS8k8/a66/E6F353brDST/PX09OsWlb/UBdZ4Cjg3HBCfcricISbGrmYXaUw
+ DZEDCuLmzTcHh/t67eAzYMomPlCyCTDWH6Pn3d91Qml36HBDfBnwobmfY5GZONho+65QipH0TM
+ nD10NCYGqAbD3gK2cMapsyHkDRmsF2L8M+2y0DzbygmIoe3ibuanWhmfzi9Q4Y9A73HZM8SOfa
+ Pxjqv8H/5ClR8sb3d/yqjtn4rYYkKkrABFt8GmVENSgXXgdXfMtSPRvmDkVrlPLbuHfmVmJjTx
+ CU8=
+X-IronPort-AV: E=Sophos;i="5.67,279,1566835200"; 
+   d="scan'208";a="121813444"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Oct 2019 16:32:00 +0800
+IronPort-SDR: 8iv+4QwaUtZAGCG8TF7/iy32El7OuQLE7mvZHJQTn9TrnP/WEFy6wnw4Zf7PHmgpp2WdEhV0r0
+ nnbYC3coY4l/arMkuQ3jMfzHaWpbQjv04cc0lQIbZBBDiWPShBUueHxlE/eh5b+jPny1YgxKIF
+ fmyxUwmWoBRCzwKPIUHRKYPrgw5fMfkuA39buS5yYZuJp8+3l5ROqkaIRlRhqp6yRMtzQHqnQt
+ ZGS0rgirwrxOKDifTnqM/ogxKQnBM57xPoAB8xd48xcTygCMQkqKRDnveWs6qzW4Y4sBeCYQGM
+ ZIdIHdbwVdA11MJVXJm8l/Oh
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Oct 2019 01:27:58 -0700
+IronPort-SDR: YGGVg2A3ajXG5P9aGPKXcTXZAn58ZT5AoLObNX3/PN6xmuOwHmzJGFdhowC/UQ6CHlGx9mGRos
+ Bmup3igGRgjX5CcWsJliYp95BM4+8MTjnZoxmhPMEaOhgM4XoUGhRcUakx3Yixo83RcoZGoc6w
+ YLlbFp/cNR3YT0ypgLBWUhcWjFWsmx9Vki1tQmseAGximYW9N/WjlTWUAXRTj7tjuCiSgPVRiT
+ 7bsHgsf3RYVsNa9EMUfTRKwu0ucMR/KmUfUyVOBe6wQ6GDc84Q8FdzNmMtfSb9hTdU+p/DTNbB
+ EBc=
+WDCIronportException: Internal
+Received: from ile422988.sdcorp.global.sandisk.com ([10.0.231.246])
+  by uls-op-cesaip01.wdc.com with ESMTP; 10 Oct 2019 01:31:58 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Alex Lemberg <alex.lemberg@wdc.com>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs-bsg: Wake the device before sending raw upiu commands
+Date:   Thu, 10 Oct 2019 11:31:07 +0300
+Message-Id: <1570696267-8487-1-git-send-email-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The scsi async probe process is calling blk_pm_runtime_init for each
+lun, and then those request queues are monitored by the block layer pm
+engine (blk-pm.c).  This is however, not the case for scsi-passthrough
+queues, created by bsg_setup_queue().
 
-Bart,
+So the ufs-bsg driver might send various commands, disregarding the pm
+status of the device. This is wrong, regardless if its request queue is
+pm-aware or not.
 
-> Clearing ch->device in ch_release() is wrong because that pointer must
-> remain valid until ch_remove() is called. This patch fixes the
-> following crash the second time a ch device is opened:
+Fixes: df032bf27a41 (scsi: ufs: Add a bsg endpoint that supports UPIUs)
 
-Applied to 5.4/scsi-fixes, thank you!
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+Reported-by:  Yuliy Izrailov <yuliy.izrailov@wdc.com>
+---
+ drivers/scsi/ufs/ufs_bsg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
+index a9344eb..dc2f6d2 100644
+--- a/drivers/scsi/ufs/ufs_bsg.c
++++ b/drivers/scsi/ufs/ufs_bsg.c
+@@ -98,6 +98,8 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 
++	pm_runtime_get_sync(hba->dev);
++
+ 	msgcode = bsg_request->msgcode;
+ 	switch (msgcode) {
+ 	case UPIU_TRANSACTION_QUERY_REQ:
+@@ -135,6 +137,8 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		break;
+ 	}
+ 
++	pm_runtime_put_sync(hba->dev);
++
+ 	if (!desc_buff)
+ 		goto out;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
+
