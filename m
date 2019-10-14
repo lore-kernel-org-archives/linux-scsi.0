@@ -1,114 +1,131 @@
-Return-Path: <SRS0=mfkc=YF=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=CnLx=YH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3A11C47404
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Oct 2019 03:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D088ECE587
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 12:16:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B352221835
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Oct 2019 03:18:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80124206A3
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 12:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727072AbfJLDSH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 11 Oct 2019 23:18:07 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:54768 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727014AbfJLDSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Oct 2019 23:18:07 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 134F739EEE64CA84714C;
-        Sat, 12 Oct 2019 11:18:05 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS410-HUB.china.huawei.com
- (10.3.19.210) with Microsoft SMTP Server id 14.3.439.0; Sat, 12 Oct 2019
- 11:17:55 +0800
-From:   zhengbin <zhengbin13@huawei.com>
-To:     <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
-CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
-Subject: [PATCH v3] scsi: core: fix uninit-value access of variable sshdr
-Date:   Sat, 12 Oct 2019 11:25:06 +0800
-Message-ID: <1570850706-12063-1-git-send-email-zhengbin13@huawei.com>
-X-Mailer: git-send-email 2.7.4
+        id S1731261AbfJNMQV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Oct 2019 08:16:21 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:37215 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730314AbfJNMQU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2019 08:16:20 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1iJzGn-0001jU-Ao; Mon, 14 Oct 2019 12:16:13 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>,
+        Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>,
+        Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: fix unintended sign extension on left shifts
+Date:   Mon, 14 Oct 2019 13:16:13 +0100
+Message-Id: <20191014121613.21999-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-kmsan report a warning in 5.1-rc4:
+From: Colin Ian King <colin.king@canonical.com>
 
-BUG: KMSAN: uninit-value in sr_get_events drivers/scsi/sr.c:207 [inline]
-BUG: KMSAN: uninit-value in sr_check_events+0x2cf/0x1090 drivers/scsi/sr.c:243
-CPU: 1 PID: 13858 Comm: syz-executor.0 Tainted: G    B             5.1.0-rc4+ #8
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x173/0x1d0 lib/dump_stack.c:113
- kmsan_report+0x131/0x2a0 mm/kmsan/kmsan.c:619
- __msan_warning+0x7a/0xf0 mm/kmsan/kmsan_instr.c:310
- sr_get_events drivers/scsi/sr.c:207 [inline]
- sr_check_events+0x2cf/0x1090 drivers/scsi/sr.c:243
+Shifting a u8 left will cause the value to be promoted to an integer. If
+the top bit of the u8 is set then the following conversion to an u64 will
+sign extend the value causing the upper 32 bits to be set in the result.
 
-The reason is as follows:
-sr_get_events
-  struct scsi_sense_hdr sshdr;  -->uninit
-  scsi_execute_req              -->If fail, will not set sshdr
-  scsi_sense_valid(&sshdr)      -->access sshdr
+Fix this by casting the u8 value to a u64 before the shift.
 
-We can init sshdr in sr_get_events, but there have many callers of
-scsi_execute, scsi_execute_req, we have to troubleshoot all callers,
-the simpler way is init sshdr in __scsi_execute.
-
-BTW: sr_do_ioctl should check whether sshdr is valid, fix this
-
-Signed-off-by: zhengbin <zhengbin13@huawei.com>
+Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-v1->v2: modify the comments suggested by Bart
-v2->v3: fix bug in sr_do_ioctl
- drivers/scsi/scsi_lib.c | 7 +++++++
- drivers/scsi/sr_ioctl.c | 5 +++++
- 2 files changed, 12 insertions(+)
+ drivers/scsi/scsi_trace.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5447738..d5e29c5 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -255,6 +255,13 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	struct scsi_request *rq;
- 	int ret = DRIVER_ERROR << 24;
-
-+	/*
-+	 * Zero-initialize sshdr for those callers that check the *sshdr
-+	 * contents even if no sense data is available.
-+	 */
-+	if (sshdr)
-+		memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
-+
- 	req = blk_get_request(sdev->request_queue,
- 			data_direction == DMA_TO_DEVICE ?
- 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index ffcf902..335cfdd 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -206,6 +206,11 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
-
- 	/* Minimal error checking.  Ignore cases we know about, and report the rest. */
- 	if (driver_byte(result) != 0) {
-+		if (!scsi_sense_valid(sshdr)) {
-+			err = -EIO;
-+			goto out;
-+		}
-+
- 		switch (sshdr->sense_key) {
- 		case UNIT_ATTENTION:
- 			SDev->changed = 1;
---
-2.7.4
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 0f17e7dac1b0..1d3a5a2dc229 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -38,7 +38,7 @@ scsi_trace_rw10(struct trace_seq *p, unsigned char *cdb, int len)
+ 	const char *ret = trace_seq_buffer_ptr(p);
+ 	sector_t lba = 0, txlen = 0;
+ 
+-	lba |= (cdb[2] << 24);
++	lba |= ((u64)cdb[2] << 24);
+ 	lba |= (cdb[3] << 16);
+ 	lba |= (cdb[4] << 8);
+ 	lba |=  cdb[5];
+@@ -63,11 +63,11 @@ scsi_trace_rw12(struct trace_seq *p, unsigned char *cdb, int len)
+ 	const char *ret = trace_seq_buffer_ptr(p);
+ 	sector_t lba = 0, txlen = 0;
+ 
+-	lba |= (cdb[2] << 24);
++	lba |= ((u64)cdb[2] << 24);
+ 	lba |= (cdb[3] << 16);
+ 	lba |= (cdb[4] << 8);
+ 	lba |=  cdb[5];
+-	txlen |= (cdb[6] << 24);
++	txlen |= ((u64)cdb[6] << 24);
+ 	txlen |= (cdb[7] << 16);
+ 	txlen |= (cdb[8] << 8);
+ 	txlen |=  cdb[9];
+@@ -90,11 +90,11 @@ scsi_trace_rw16(struct trace_seq *p, unsigned char *cdb, int len)
+ 	lba |= ((u64)cdb[3] << 48);
+ 	lba |= ((u64)cdb[4] << 40);
+ 	lba |= ((u64)cdb[5] << 32);
+-	lba |= (cdb[6] << 24);
++	lba |= ((u64)cdb[6] << 24);
+ 	lba |= (cdb[7] << 16);
+ 	lba |= (cdb[8] << 8);
+ 	lba |=  cdb[9];
+-	txlen |= (cdb[10] << 24);
++	txlen |= ((u64)cdb[10] << 24);
+ 	txlen |= (cdb[11] << 16);
+ 	txlen |= (cdb[12] << 8);
+ 	txlen |=  cdb[13];
+@@ -140,7 +140,7 @@ scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
+ 	lba |= ((u64)cdb[13] << 48);
+ 	lba |= ((u64)cdb[14] << 40);
+ 	lba |= ((u64)cdb[15] << 32);
+-	lba |= (cdb[16] << 24);
++	lba |= ((u64)cdb[16] << 24);
+ 	lba |= (cdb[17] << 16);
+ 	lba |= (cdb[18] << 8);
+ 	lba |=  cdb[19];
+@@ -148,7 +148,7 @@ scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
+ 	ei_lbrt |= (cdb[21] << 16);
+ 	ei_lbrt |= (cdb[22] << 8);
+ 	ei_lbrt |=  cdb[23];
+-	txlen |= (cdb[28] << 24);
++	txlen |= ((u64)cdb[28] << 24);
+ 	txlen |= (cdb[29] << 16);
+ 	txlen |= (cdb[30] << 8);
+ 	txlen |=  cdb[31];
+@@ -201,7 +201,7 @@ scsi_trace_service_action_in(struct trace_seq *p, unsigned char *cdb, int len)
+ 	lba |= ((u64)cdb[3] << 48);
+ 	lba |= ((u64)cdb[4] << 40);
+ 	lba |= ((u64)cdb[5] << 32);
+-	lba |= (cdb[6] << 24);
++	lba |= ((u64)cdb[6] << 24);
+ 	lba |= (cdb[7] << 16);
+ 	lba |= (cdb[8] << 8);
+ 	lba |=  cdb[9];
+-- 
+2.20.1
 
