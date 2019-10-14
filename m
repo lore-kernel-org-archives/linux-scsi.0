@@ -2,72 +2,88 @@ Return-Path: <SRS0=CnLx=YH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3C5ECE587
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 12:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20720C4CECE
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 15:58:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FCDB2067B
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 12:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04B422133F
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 15:58:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730221AbfJNM4e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Oct 2019 08:56:34 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:38350 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729752AbfJNM4e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2019 08:56:34 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1iJztl-0004PE-5Z; Mon, 14 Oct 2019 12:56:29 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Hannes Reinecke <hare@suse.com>,
+        id S1731960AbfJNP6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Oct 2019 11:58:07 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:44063 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726304AbfJNP6G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2019 11:58:06 -0400
+Received: by mail-pf1-f195.google.com with SMTP id q21so10615228pfn.11;
+        Mon, 14 Oct 2019 08:58:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0z7F7bJ7/hu+WTeZGPgI6D7KPNJezuJIyaVC8SWKK1E=;
+        b=YskcesWD2beDyuMKTK8N/YROcojIIBT8xID79EK5u2yBwQ76mqb5U2cGHTgEx8iQUS
+         sLuYN2/xPZjoKByNVH2KotiL0DmDaoQVJujWIpIvCZ2cUM2Ele+O4a5DSno/0z/b8B3/
+         rF9zd0p/qLe1pVM1fOQudcXxewRWCcc6jXeigZ+QMuDSsUnVl3NRV9eW8LdCkhVhCCQ2
+         EpfE+qNJ6wDrbSukDHE7JGVlLZsPv9tjMOIbqETVhgE5482f+7cXAcGZcT0BNKFzYIlZ
+         TRBY7kaVyHWp+Svkk3TDIPDZGaLZAyu4ljrKRWvZWTbkXowxnOPqeOnE9m96tweey2xi
+         rrHw==
+X-Gm-Message-State: APjAAAUGZ2xlZJoxglv9yioUtrS82g64635ucvtplS7DWz12lq0Efd6b
+        uTmJBDQqJNrzjYveKIfQ95b462sg
+X-Google-Smtp-Source: APXvYqzjcEd43LyeZWsfCYRMvopdQ15WkebUad1/EyHRqDoR7f0gEEzovBnFPtYbHY9dYzRCBsMWFw==
+X-Received: by 2002:a65:6394:: with SMTP id h20mr33411699pgv.272.1571068685537;
+        Mon, 14 Oct 2019 08:58:05 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id 127sm16623066pfy.56.2019.10.14.08.58.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 14 Oct 2019 08:58:04 -0700 (PDT)
+Subject: Re: [PATCH] scsi: fix unintended sign extension on left shifts
+To:     Colin King <colin.king@canonical.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>,
+        Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>,
+        Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>,
         linux-scsi@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: fix unintended sign extension on left shifts
-Date:   Mon, 14 Oct 2019 13:56:28 +0100
-Message-Id: <20191014125628.30856-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.20.1
+References: <20191014121613.21999-1-colin.king@canonical.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <0e2a6d4c-b346-cb1b-7941-e247a0d0f8b2@acm.org>
+Date:   Mon, 14 Oct 2019 08:58:03 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191014121613.21999-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On 10/14/19 5:16 AM, Colin King wrote:
+> diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+> index 0f17e7dac1b0..1d3a5a2dc229 100644
+> --- a/drivers/scsi/scsi_trace.c
+> +++ b/drivers/scsi/scsi_trace.c
+> @@ -38,7 +38,7 @@ scsi_trace_rw10(struct trace_seq *p, unsigned char *cdb, int len)
+>   	const char *ret = trace_seq_buffer_ptr(p);
+>   	sector_t lba = 0, txlen = 0;
+>   
+> -	lba |= (cdb[2] << 24);
+> +	lba |= ((u64)cdb[2] << 24);
+>   	lba |= (cdb[3] << 16);
+>   	lba |= (cdb[4] << 8);
+>   	lba |=  cdb[5];
 
-Shifting a u8 left will cause the value to be promoted to an integer. If
-the top bit of the u8 is set then the following conversion to an u64 will
-sign extend the value causing the upper 32 bits to be set in the result.
+Have you considered to use get/put_unaligned_be*() instead of making the 
+above change?
 
-Fix this by casting the u8 value to a u64 before the shift.  The commit
-this fixes is pre-git history.
+Thanks,
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 7e5044bf05c0..fa440c1b9baa 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -622,7 +622,7 @@ ahd_inq(struct ahd_softc *ahd, u_int port)
- 	return ((ahd_inb(ahd, port))
- 	      | (ahd_inb(ahd, port+1) << 8)
- 	      | (ahd_inb(ahd, port+2) << 16)
--	      | (ahd_inb(ahd, port+3) << 24)
-+	      | (((uint64_t)ahd_inb(ahd, port+3)) << 24)
- 	      | (((uint64_t)ahd_inb(ahd, port+4)) << 32)
- 	      | (((uint64_t)ahd_inb(ahd, port+5)) << 40)
- 	      | (((uint64_t)ahd_inb(ahd, port+6)) << 48)
--- 
-2.20.1
-
+Bart.
