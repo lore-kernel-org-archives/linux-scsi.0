@@ -2,115 +2,91 @@ Return-Path: <SRS0=CnLx=YH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2FF4C4CECE
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 18:04:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B1B2ECE587
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 18:09:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D422C20873
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 18:04:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6045221721
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Oct 2019 18:09:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571076593;
+	bh=kxOR5mvGUK8Zh/oO1V7wxtTn96WeSMQoYIN8UyT+rns=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=w5bwK7wfELsYWGlG0FDxycoYsXSxl9GdS83AzPQqMUrzvvJnaRA34vYwinpOu8iFM
+	 qE2dZOQ4Q8DaGVyS4aZNZ7DojE0ft8OVouPZCaH3SBN0XX0fFM3v4uujVQ0HLmeTXH
+	 Drkme0VMFNCRZlYDnKUzDXwSS4ZbxM6o9orQWIkg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732352AbfJNSE0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Oct 2019 14:04:26 -0400
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:35160 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730878AbfJNSE0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2019 14:04:26 -0400
-Authentication-Results: esa6.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=don.brace@microsemi.com; spf=None smtp.helo=postmaster@email.microchip.com
-Received-SPF: Pass (esa6.microchip.iphmx.com: domain of
-  don.brace@microsemi.com designates 198.175.253.82 as
-  permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
-  envelope-from="don.brace@microsemi.com";
-  x-sender="don.brace@microsemi.com"; x-conformance=spf_only;
-  x-record-type="v=spf1"; x-record-text="v=spf1
-  ip4:68.232.147.0/24 ip4:68.232.148.0/22 ip4:68.232.152.0/23
-  ip4:68.232.154.0/24 ip4:216.71.150.0/24 ip4:216.71.151.0/24
-  ip4:216.71.152.0/23 ip4:216.71.154.0/24 ip4:198.175.253.41
-  ip4:198.175.253.82 include:servers.mcsv.net -all"
-Received-SPF: None (esa6.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
-  envelope-from="don.brace@microsemi.com";
-  x-sender="postmaster@email.microchip.com";
-  x-conformance=spf_only
-X-Ironport-Dmarc-Check-Result: validskip
-IronPort-SDR: F9A+6/ktoBQnp7b1IdRfs6H3hI3G/4/Yt5gX/q1dOCvypyQejYVLxxM3R3cA8EX2fLON9tOHFC
- hg0WOl44Dj9kA7r2W0Az0Fp7xpzyaPo4uQOm8fhkd+C8gatoZ5Gkeus/luNy0TSWbAuMJMYyf5
- vmaKZw98BRnQlx1rpJGxjrbz9Uv9A0z7CqabVG5HpIfv2RLM11avyvlrrBu12DC52u+A7PkVLX
- agjeSePC03PRZ2ajdDpklKXxxt3tZ4vXQ13ZZakcUYupng2zLzglHjPt6aMyloU7xgk4B0EoS2
- 0kc=
-X-IronPort-AV: E=Sophos;i="5.67,296,1566889200"; 
-   d="scan'208";a="49992413"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Oct 2019 11:03:59 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Mon, 14 Oct 2019 11:03:59 -0700
-Received: from [127.0.1.1] (10.10.85.251) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1713.5 via Frontend
- Transport; Mon, 14 Oct 2019 11:03:58 -0700
-Subject: [PATCH] hpsa: add missing hunks in reset-patch
-From:   Don Brace <don.brace@microsemi.com>
-To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
-        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
-        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
-        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
-        <POSWALD@suse.com>, <shunyong.yang@hxt-semitech.com>
-CC:     <linux-scsi@vger.kernel.org>
-Date:   Mon, 14 Oct 2019 13:03:58 -0500
-Message-ID: <157107623870.17997.11208813089704833029.stgit@brunhilda>
-User-Agent: StGit/0.19
+        id S1732955AbfJNSJu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Oct 2019 14:09:50 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:46752 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732710AbfJNSJt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Oct 2019 14:09:49 -0400
+Received: by mail-ot1-f65.google.com with SMTP id 89so14555409oth.13;
+        Mon, 14 Oct 2019 11:09:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=63o5PcHaDJUmkAXGwWJp9biK2A6MeDJVIPuekW55gGQ=;
+        b=ZoLHEj/XiRbtX1bniFmHdb03RnIj+usQvsJSM49CWvFYe70r0UrCYnNQz3VXlEZuNc
+         SoIWqHUCJfRX6cNGAt6scfnaH5OClWp3TtTU9LOKuu0bGjJICMhcTvUu53g8NYdVRlk0
+         aE3ApLuWHHS5QP3bbTjgfntvGbmzbCkgf6HOKuTlN7NPUwoyFl2CfjiZpWRAYGjPB0tU
+         q8RuycaDWy562F1hxeI418rLUdN5EEVdGD8SbNvOWNc84toeLOdWwe7FUgo7OQh5ZnJD
+         cuULo/eIuG0jEjeqiPcIvoZMQVrm3Oc6gJ9jLo5jQX/LQRCnr2mtVPDw7xoepNMbIf4i
+         4Opw==
+X-Gm-Message-State: APjAAAXGTMqYx35kbv0UwUX5Nzntvh4Kcsgyb6yNBUvJejyCyOZUlR70
+        S9XMUlJgAiYr4MS7Apah0w==
+X-Google-Smtp-Source: APXvYqyr2RmoUKIYmcnbAUSCFIfE6p1qnvVMPgpyHtdQ2kdChxIgS9ZhVEHvmg5e7YvJGI9H9K+GDA==
+X-Received: by 2002:a9d:684c:: with SMTP id c12mr26129585oto.341.1571076588764;
+        Mon, 14 Oct 2019 11:09:48 -0700 (PDT)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id 109sm5884056otc.52.2019.10.14.11.09.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Oct 2019 11:09:48 -0700 (PDT)
+Date:   Mon, 14 Oct 2019 13:09:47 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Vignesh Raghavendra <vigneshr@ti.com>
+Cc:     Mark Rutland <mark.rutland@arm.com>, jejb@linux.ibm.com,
+        Martin K Petersen <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Janek Kotas <jank@cadence.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Vignesh Raghavendra <vigneshr@ti.com>, nsekhar@ti.com
+Subject: Re: [PATCH v2 1/2] dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding
+ for TI UFS wrapper
+Message-ID: <20191014180947.GA881@bogus>
+References: <20191010083357.28982-1-vigneshr@ti.com>
+ <20191010083357.28982-2-vigneshr@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191010083357.28982-2-vigneshr@ti.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-- correct returning from reset before outstanding
-  commands are completed for the device.
+On Thu, 10 Oct 2019 14:03:56 +0530, Vignesh Raghavendra wrote:
+> Add binding documentation of TI wrapper for Cadence UFS Controller.
+> 
+> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+> ---
+> 
+> v2:
+> Define Cadence UFS controller as child node of the wrapper as suggested
+> by Rob H
+> 
+>  .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 68 +++++++++++++++++++
+>  1 file changed, 68 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+> 
 
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/hpsa.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ac39ed79ccaa..216e557f703e 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5477,6 +5477,8 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
-+	c->device = dev;
-+
- 	enqueue_cmd_and_start_io(h, c);
- 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
- 	return 0;
-@@ -5548,6 +5550,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
- 		hpsa_cmd_init(h, c->cmdindex, c);
- 		c->cmd_type = CMD_SCSI;
- 		c->scsi_cmd = cmd;
-+		c->device = dev;
- 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
- 		if (rc < 0)     /* scsi_dma_map failed. */
- 			rc = SCSI_MLQUEUE_HOST_BUSY;
-@@ -5555,6 +5558,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
- 		hpsa_cmd_init(h, c->cmdindex, c);
- 		c->cmd_type = CMD_SCSI;
- 		c->scsi_cmd = cmd;
-+		c->device = dev;
- 		rc = hpsa_scsi_ioaccel_direct_map(h, c);
- 		if (rc < 0)     /* scsi_dma_map failed. */
- 			rc = SCSI_MLQUEUE_HOST_BUSY;
-
+Reviewed-by: Rob Herring <robh@kernel.org>
