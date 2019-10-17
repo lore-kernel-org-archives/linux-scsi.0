@@ -2,112 +2,84 @@ Return-Path: <SRS0=lSD6=YK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BEA2ECE58D
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 18:30:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 272B4ECE58D
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF0B320854
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 18:30:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="duMPaPU8"
+	by mail.kernel.org (Postfix) with ESMTP id E97E320640
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387797AbfJQSaL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Oct 2019 14:30:11 -0400
-Received: from mail-vs1-f67.google.com ([209.85.217.67]:43797 "EHLO
-        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731227AbfJQSaL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2019 14:30:11 -0400
-Received: by mail-vs1-f67.google.com with SMTP id b1so2251056vsr.10
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Oct 2019 11:30:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=fN8trqoI71X2Nttkb04NtlI/5fVLxViifqs/z8wZWC4=;
-        b=duMPaPU8wKgwAYjqXGgY7shKApkyJXWSv4310sI67+XBdJGUoKMC0WH6LH7FZ83nV6
-         ViMbCUd5Q5H3wm36cYuHnky3HbJwVsvekiIbWj7H2LZSkszL9vnpM9j7TXlYZVZsNM15
-         sWIkZEsAdcSOxLHCH2DQ0ky1XakupdiI2L+eU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=fN8trqoI71X2Nttkb04NtlI/5fVLxViifqs/z8wZWC4=;
-        b=fefBWEUKVSw72x7ZZuVTj6Kd2N64YQ1tiNXzB26l6BosFvOLuG/gqhLVOFlTHTgzwb
-         WeEw3RhY/kkh9hDyhDbcNVcKv+YwLuAfmkBZ4YzHeHepxmUhfX+MgVuhH66MnbVe6JYE
-         HLp9TDMmQV6jBzKB7ICAjYq5+j8XbKGgLlsF/OWZjMKS+HR5/5ps44LIQcOgVs1wMtYO
-         niaulVGlF/jA7XdjKV8wHT33HQ+1dNLN5+SNlWgLaKP41q1xgkzuLm5WkbmkHfXfJ3zX
-         0ta4YqZU0uoR7M/NwMAiZpSMuxK5rzkt+tSIx3ROwhn9jRbqJ5EEy1toYddzc4LhLPFN
-         FHAg==
-X-Gm-Message-State: APjAAAUv1fbH4kAd/89XgMbHvOKybVsnmvTJ4knHHWeXzbFvEm1FT2VU
-        f5aUxHocG8sJPA/te6YWPprs7qnEE0GvKYH4+yzV1Q==
-X-Google-Smtp-Source: APXvYqyPeEVkIq+aJ7RQdMoM2j78EnSppF5pCW4No+frymDh45yP5PCKTbe1p9ch6djGEHg3XHmZ6CkskLAKYbwuQCw=
-X-Received: by 2002:a67:ad0c:: with SMTP id t12mr3011580vsl.82.1571337010296;
- Thu, 17 Oct 2019 11:30:10 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20191009093241.21481-1-ming.lei@redhat.com> <20191009093241.21481-3-ming.lei@redhat.com>
- <75fe51d7-714f-8a51-89b5-aeeb7d318fdc@acm.org>
-In-Reply-To: <75fe51d7-714f-8a51-89b5-aeeb7d318fdc@acm.org>
+        id S2392579AbfJQThB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Oct 2019 15:37:01 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44990 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728856AbfJQThA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2019 15:37:00 -0400
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iLBZz-0006VG-Aq; Thu, 17 Oct 2019 19:36:59 +0000
+Date:   Thu, 17 Oct 2019 20:36:59 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [RFC][PATCHES] drivers/scsi/sg.c uaccess cleanups/fixes
+Message-ID: <20191017193659.GA18702@ZenIV.linux.org.uk>
+References: <CAHk-=wgOWxqwqCFuP_Bw=Hxxf9njeHJs0OLNGNc63peNd=kRqw@mail.gmail.com>
+ <20191010195504.GI26530@ZenIV.linux.org.uk>
+ <CAHk-=wgWRQo0m7TUCK4T_J-3Vqte+p-FWzvT3CB1jJHgX-KctA@mail.gmail.com>
+ <20191011001104.GJ26530@ZenIV.linux.org.uk>
+ <CAHk-=wgg3jzkk-jObm1FLVYGS8JCTiKppEnA00_QX7Wsm5ieLQ@mail.gmail.com>
+ <20191013181333.GK26530@ZenIV.linux.org.uk>
+ <CAHk-=wgrWGyACBM8N8KP7Pu_2VopuzM4A12yQz6Eo=X2Jpwzcw@mail.gmail.com>
+ <20191013191050.GL26530@ZenIV.linux.org.uk>
+ <CAHk-=wjJNE9hOKuatqh6SFf4nd65LG4ZR3gQSgg+rjSpVxe89w@mail.gmail.com>
+ <20191016202540.GQ26530@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQJ+aAV5wNbUGIJ6nkm2Ot6VMXRpiQIhodcgAyzU6Wil4tFUMA==
-Date:   Fri, 18 Oct 2019 00:00:07 +0530
-Message-ID: <75fd79dc441f2100719c545110ec9aa2@mail.gmail.com>
-Subject: RE: [RFC PATCH V4 2/2] scsi: core: don't limit per-LUN queue depth
- for SSD
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        Bart Van Assche <bart.vanassche@wdc.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191016202540.GQ26530@ZenIV.linux.org.uk>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> On 10/9/19 2:32 AM, Ming Lei wrote:
-> > @@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device *sdev,
-> struct scsi_cmnd *cmd)
-> >   	if (starget->can_queue > 0)
-> >   		atomic_dec(&starget->target_busy);
-> >
-> > -	atomic_dec(&sdev->device_busy);
-> > +	if (!blk_queue_nonrot(sdev->request_queue))
-> > +		atomic_dec(&sdev->device_busy);
-> >   }
-> >
->
-> Hi Ming,
->
-> Does this patch impact the meaning of the queue_depth sysfs attribute (see
-> also sdev_store_queue_depth()) and also the queue depth ramp up/down
-> mechanism (see also scsi_handle_queue_ramp_up())? Have you considered to
-> enable/disable busy tracking per LUN depending on whether or not sdev-
-> >queue_depth < shost->can_queue?
->
-> The megaraid and mpt3sas drivers read sdev->device_busy directly. Is the
-> current version of this patch compatible with these drivers?
+On Wed, Oct 16, 2019 at 09:25:40PM +0100, Al Viro wrote:
 
-We need to know per scsi device outstanding in mpt3sas and megaraid_sas
-driver.
-Can we get supporting API from block layer (through SML)  ? something
-similar to "atomic_read(&hctx->nr_active)" which can be derived from
-sdev->request_queue->hctx ?
-At least for those driver which is nr_hw_queue = 1, it will be useful and we
-can avoid sdev->device_busy dependency.
+> FWIW, callers of __copy_from_user() remaining in the generic code:
 
+> 6) drivers/scsi/sg.c nest: sg_read() ones are memdup_user() in disguise
+> (i.e. fold with immediately preceding kmalloc()s).  sg_new_write() -
+> fold with access_ok() into copy_from_user() (for both call sites).
+> sg_write() - lose access_ok(), use copy_from_user() (both call sites)
+> and get_user() (instead of the solitary __get_user() there).
 
-Kashyap
->
-> Thanks,
->
-> Bart.
+Turns out that there'd been outright redundant access_ok() calls (not
+even warranted by __copy_...) *and* several __put_user()/__get_user()
+with no checking of return value (access_ok() was there, handling of
+unmapped addresses wasn't).  The latter go back at least to 2.1.early...
+
+I've got a series that presumably fixes and cleans the things up
+in that area; it didn't get any serious testing (the kernel builds
+and boots, smartctl works as well as it used to, but that's not
+worth much - all it says is that SG_IO doesn't fail terribly;
+I don't have any test setup for really working with /dev/sg*).
+
+IOW, it needs more review and testing - this is _not_ a pull request.
+It's in vfs.git#work.sg; individual patches are in followups.
+Shortlog/diffstat:
+Al Viro (8):
+      sg_ioctl(): fix copyout handling
+      sg_new_write(): replace access_ok() + __copy_from_user() with copy_from_user()
+      sg_write(): __get_user() can fail...
+      sg_read(): simplify reading ->pack_id of userland sg_io_hdr_t
+      sg_new_write(): don't bother with access_ok
+      sg_read(): get rid of access_ok()/__copy_..._user()
+      sg_write(): get rid of access_ok()/__copy_from_user()/__get_user()
+      SG_IO: get rid of access_ok()
+
+ drivers/scsi/sg.c | 98 ++++++++++++++++++++++++++++++++----------------------------------------------------------------
+ 1 file changed, 32 insertions(+), 66 deletions(-)
+
