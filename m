@@ -2,84 +2,101 @@ Return-Path: <SRS0=lSD6=YK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 272B4ECE58D
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:37:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B430ECE58E
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:39:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E97E320640
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:37:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DABEA20650
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 19:39:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392579AbfJQThB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Oct 2019 15:37:01 -0400
-Received: from zeniv.linux.org.uk ([195.92.253.2]:44990 "EHLO
+        id S2439958AbfJQTjq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Oct 2019 15:39:46 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:45066 "EHLO
         ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728856AbfJQThA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2019 15:37:00 -0400
+        with ESMTP id S2437753AbfJQTjq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2019 15:39:46 -0400
 Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iLBZz-0006VG-Aq; Thu, 17 Oct 2019 19:36:59 +0000
-Date:   Thu, 17 Oct 2019 20:36:59 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RFC][PATCHES] drivers/scsi/sg.c uaccess cleanups/fixes
-Message-ID: <20191017193659.GA18702@ZenIV.linux.org.uk>
-References: <CAHk-=wgOWxqwqCFuP_Bw=Hxxf9njeHJs0OLNGNc63peNd=kRqw@mail.gmail.com>
- <20191010195504.GI26530@ZenIV.linux.org.uk>
- <CAHk-=wgWRQo0m7TUCK4T_J-3Vqte+p-FWzvT3CB1jJHgX-KctA@mail.gmail.com>
- <20191011001104.GJ26530@ZenIV.linux.org.uk>
- <CAHk-=wgg3jzkk-jObm1FLVYGS8JCTiKppEnA00_QX7Wsm5ieLQ@mail.gmail.com>
- <20191013181333.GK26530@ZenIV.linux.org.uk>
- <CAHk-=wgrWGyACBM8N8KP7Pu_2VopuzM4A12yQz6Eo=X2Jpwzcw@mail.gmail.com>
- <20191013191050.GL26530@ZenIV.linux.org.uk>
- <CAHk-=wjJNE9hOKuatqh6SFf4nd65LG4ZR3gQSgg+rjSpVxe89w@mail.gmail.com>
- <20191016202540.GQ26530@ZenIV.linux.org.uk>
+        id 1iLBce-0006fW-06; Thu, 17 Oct 2019 19:39:44 +0000
+From:   Al Viro <viro@ZenIV.linux.org.uk>
+To:     linux-scsi@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+Subject: [RFC PATCH 6/8] sg_read(): get rid of access_ok()/__copy_..._user()
+Date:   Thu, 17 Oct 2019 20:39:23 +0100
+Message-Id: <20191017193925.25539-6-viro@ZenIV.linux.org.uk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191017193925.25539-1-viro@ZenIV.linux.org.uk>
+References: <20191017193659.GA18702@ZenIV.linux.org.uk>
+ <20191017193925.25539-1-viro@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191016202540.GQ26530@ZenIV.linux.org.uk>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 16, 2019 at 09:25:40PM +0100, Al Viro wrote:
+From: Al Viro <viro@zeniv.linux.org.uk>
 
-> FWIW, callers of __copy_from_user() remaining in the generic code:
+Use copy_..._user() instead, both in sg_read() and in sg_read_oxfer().
+And don't open-code memdup_user()...
 
-> 6) drivers/scsi/sg.c nest: sg_read() ones are memdup_user() in disguise
-> (i.e. fold with immediately preceding kmalloc()s).  sg_new_write() -
-> fold with access_ok() into copy_from_user() (for both call sites).
-> sg_write() - lose access_ok(), use copy_from_user() (both call sites)
-> and get_user() (instead of the solitary __get_user() there).
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ drivers/scsi/sg.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-Turns out that there'd been outright redundant access_ok() calls (not
-even warranted by __copy_...) *and* several __put_user()/__get_user()
-with no checking of return value (access_ok() was there, handling of
-unmapped addresses wasn't).  The latter go back at least to 2.1.early...
-
-I've got a series that presumably fixes and cleans the things up
-in that area; it didn't get any serious testing (the kernel builds
-and boots, smartctl works as well as it used to, but that's not
-worth much - all it says is that SG_IO doesn't fail terribly;
-I don't have any test setup for really working with /dev/sg*).
-
-IOW, it needs more review and testing - this is _not_ a pull request.
-It's in vfs.git#work.sg; individual patches are in followups.
-Shortlog/diffstat:
-Al Viro (8):
-      sg_ioctl(): fix copyout handling
-      sg_new_write(): replace access_ok() + __copy_from_user() with copy_from_user()
-      sg_write(): __get_user() can fail...
-      sg_read(): simplify reading ->pack_id of userland sg_io_hdr_t
-      sg_new_write(): don't bother with access_ok
-      sg_read(): get rid of access_ok()/__copy_..._user()
-      sg_write(): get rid of access_ok()/__copy_from_user()/__get_user()
-      SG_IO: get rid of access_ok()
-
- drivers/scsi/sg.c | 98 ++++++++++++++++++++++++++++++++----------------------------------------------------------------
- 1 file changed, 32 insertions(+), 66 deletions(-)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 3702f66493f7..9f6534a025cd 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -429,16 +429,10 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+ 				      "sg_read: count=%d\n", (int) count));
+ 
+-	if (!access_ok(buf, count))
+-		return -EFAULT;
+ 	if (sfp->force_packid && (count >= SZ_SG_HEADER)) {
+-		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
+-		if (!old_hdr)
+-			return -ENOMEM;
+-		if (__copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
+-			retval = -EFAULT;
+-			goto free_old_hdr;
+-		}
++		old_hdr = memdup_user(buf, SZ_SG_HEADER);
++		if (IS_ERR(old_hdr))
++			return PTR_ERR(old_hdr);
+ 		if (old_hdr->reply_len < 0) {
+ 			if (count >= SZ_SG_IO_HDR) {
+ 				sg_io_hdr_t __user *p = (void __user *)buf;
+@@ -529,7 +523,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 
+ 	/* Now copy the result back to the user buffer.  */
+ 	if (count >= SZ_SG_HEADER) {
+-		if (__copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
++		if (copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
+ 			retval = -EFAULT;
+ 			goto free_old_hdr;
+ 		}
+@@ -1960,12 +1954,12 @@ sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
+ 	num = 1 << (PAGE_SHIFT + schp->page_order);
+ 	for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
+ 		if (num > num_read_xfer) {
+-			if (__copy_to_user(outp, page_address(schp->pages[k]),
++			if (copy_to_user(outp, page_address(schp->pages[k]),
+ 					   num_read_xfer))
+ 				return -EFAULT;
+ 			break;
+ 		} else {
+-			if (__copy_to_user(outp, page_address(schp->pages[k]),
++			if (copy_to_user(outp, page_address(schp->pages[k]),
+ 					   num))
+ 				return -EFAULT;
+ 			num_read_xfer -= num;
+-- 
+2.11.0
 
