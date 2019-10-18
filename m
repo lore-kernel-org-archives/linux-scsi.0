@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19239CA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E83EDCA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1D0F2089C
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA94921925
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iUsM18tz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jRccxiu+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502466AbfJRVSy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 17:18:54 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:46589 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390763AbfJRVSy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:18:54 -0400
-Received: by mail-pf1-f194.google.com with SMTP id q5so4597447pfg.13
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:18:53 -0700 (PDT)
+        id S2502684AbfJRVS4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 17:18:56 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42948 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2502569AbfJRVS4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:18:56 -0400
+Received: by mail-pf1-f195.google.com with SMTP id q12so4607517pff.9
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:18:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=N9ZseVEmM9t+gHHV703eyBm0leXWfFeAgBEe61flxh8=;
-        b=iUsM18tz0On52Vy13dRsn3udWnZVdqFnkAIkIvTrwb4SBZWeumztpD6KCywdQCPHkE
-         q0DWJ9RtTxtD4z7+b+DMHLCCBONchRoedeKyyG4kZs7WvXcCHIkP4EyB38D98XCvD8x3
-         XFGx/2yySNu/3PU28GAzoJNAb4v4m8fJHEGnGrvmKWvGd9TH3NKl+++gFI31vWSzGR3o
-         FMJ26WwP4EC1PJjB+sCSIhY65E94XAAAi8dbDuNAYdYOjwrPPD6ngPhSeRvOunKR+tek
-         sEo/bF/bit0k71a4b9R1BwmRnqX0WP4TPlz48XBYg8Gzzdrefk4wzisxbResg164bF9T
-         ayLg==
+        bh=HKef3HxtXxhBLCOgGld2cB9eaIlFnU6PeUXrVClrPdU=;
+        b=jRccxiu+wJkxCJaMgTdlRG2kDGAHxocERc1hGHHCNrR9VutOsKwo2kTnTvr8hXOkCC
+         AKNrbQXm/sHxhwrKcBrVLe+vWTjmzBDkisxCu4icp6IN+pUv3js5i1oOtZGNTcrYgMKU
+         JrM73xHB7RRMIv362A5RzCbOP3XORF8OJKd4zc+KCsjPkWrCnN/iAJIAqFDo/5lLTYRl
+         M4o5qDrRNNiWcKXo/AF7S+j8DbB8LQxA2bQ8+AsgodGkkuLIwPLRtiXxQK7Zp6Gye2Ra
+         30wewP4ucTrB+DdBaizMsUXfiTIr4vuv7KWQO9IRYx0JjfH209XJhpDybaBDIAYCKhZo
+         OY/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=N9ZseVEmM9t+gHHV703eyBm0leXWfFeAgBEe61flxh8=;
-        b=aUogy7QTW3CYIWGHi6s98diZR0/19VffGUA0xjc71LPUTUZXRNKKzkxRQ2kxruJ+TQ
-         NRpY5Ts/nqxzDdlMM8TaLwv0HpyDBNPFTxFkXQSyw73KHlft9kk5REw6ydpTCKP6uzr/
-         e4mdD0uaWXtKPOqBWPsdf2HFFzQwTWnj5k6OJIZcFUwkFIJVSsfWZ07XxndY6Bxn8tuT
-         Uido9mmhxSDNKkOGKvRmf7CVl52PGuDbj/0kbXeCK62a8M+lSszDw1aDAWJ7lOKwefkx
-         kNczoHg6cvdAA/+dspB59ez4Eb/35D/jCRqfdEzbQenDCAksu8wkhXyiBL1pSiLeuE8S
-         h+SA==
-X-Gm-Message-State: APjAAAXF8lazjyOYZXmYmIHiqc+1/sshULSwrLW413PIt4vZLjfPcBPk
-        83qaTHspKgDKPNvn0CtEf9yNoxwS
-X-Google-Smtp-Source: APXvYqzsZAZdRkqIsBz0ygRdMeK1nAWPNsaIE5lOWGjLFamjB8PEQGJy5GF0Oo3XdhUgYUq+uuMlrg==
-X-Received: by 2002:a17:90a:ac06:: with SMTP id o6mr13548270pjq.133.1571433533054;
-        Fri, 18 Oct 2019 14:18:53 -0700 (PDT)
+        bh=HKef3HxtXxhBLCOgGld2cB9eaIlFnU6PeUXrVClrPdU=;
+        b=elIHyl1Qnj+3OZ+qZiuAaoNu1KuUf18AYp+lQHwXd2n1+pMCL7ifWlQJURWDtOxPaa
+         6OZDTNEUJCbsgKglTQbVOfe+d38T2luvbnzEM+hilL4Uodanfx8HOApKCcPdeoX2mR99
+         aU1soBcB1x9RN1oNRHaOCaQ/fmCGQIsnCZErJ1m5q0YTzvLDaWUtq2rhVLJscj+eTInf
+         C5xVOta3z6DRfI92W0B/qyUMLtREzGqQTnJ41s9bIC9vg6Nektjwem1679Stj/n7cg5c
+         R4jFCyOXRqJUgvXHpbejvyQqr/HCAOP4qY5zRsehj2Ijx8ENxcUHYgOArjBpm/6aEajH
+         n2XQ==
+X-Gm-Message-State: APjAAAV0hAm3mQeQYPDdT6b3/q0xrjlwXYeTfxfT1v0G5g336eV0d7hM
+        OP8aPfi6gvNJ+LyklcQjdekAcNXP
+X-Google-Smtp-Source: APXvYqwGqjUi00LBu918Sf8pYR8nQahbEwaQ2rgBl1OmDqXsZsKBfqs3KfOoBj+0td04/prhGh5vGA==
+X-Received: by 2002:a63:1351:: with SMTP id 17mr12111127pgt.249.1571433535150;
+        Fri, 18 Oct 2019 14:18:55 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.18.51
+        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.18.53
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 18 Oct 2019 14:18:52 -0700 (PDT)
+        Fri, 18 Oct 2019 14:18:54 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 02/16] lpfc: Fix reporting of read-only fw error errors
-Date:   Fri, 18 Oct 2019 14:18:18 -0700
-Message-Id: <20191018211832.7917-3-jsmart2021@gmail.com>
+Subject: [PATCH 03/16] lpfc: Fix lockdep errors in sli_ringtx_put
+Date:   Fri, 18 Oct 2019 14:18:19 -0700
+Message-Id: <20191018211832.7917-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191018211832.7917-1-jsmart2021@gmail.com>
 References: <20191018211832.7917-1-jsmart2021@gmail.com>
@@ -69,143 +69,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the adapter FW is administratively set to
-RO mode, a FW update triggered by the driver's sysfs
-attribute will fail. Currently, the driver's logging
-mechanism does not properly parse the adapter return
-codes and print a meaningful message.  This oversite
-prevents quick diagnosis in the field.
+Fix lockdep error in __lpfc_sli_ringtx_put():
+The hbalock is valid for sli3, but not for sli4.
+Change lockdep to look at ring lock if sli4.
 
-Parse the adapter return codes for Write_Object
-and write an appropriate message to the system console.
+Also update comment in __lpfc_sli_issue_iocb_s4()
+to reflect proper lock. note: lockdep check is
+already correct.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  |  1 +
- drivers/scsi/lpfc/lpfc_init.c | 69 ++++++++++++++++++++++++++++++-------------
- 2 files changed, 50 insertions(+), 20 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 6095e3cfddd3..1cd3016f7783 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -2320,6 +2320,7 @@ struct lpfc_mbx_redisc_fcf_tbl {
- #define ADD_STATUS_OPERATION_ALREADY_ACTIVE		0x67
- #define ADD_STATUS_FW_NOT_SUPPORTED			0xEB
- #define ADD_STATUS_INVALID_REQUEST			0x4B
-+#define ADD_STATUS_FW_DOWNLOAD_HW_DISABLED              0x58
- 
- struct lpfc_mbx_sli4_config {
- 	struct mbox_header header;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index d2cb3b0d1849..1d14aa22f973 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12320,35 +12320,57 @@ lpfc_sli4_get_iocb_cnt(struct lpfc_hba *phba)
- }
- 
- 
--static void
-+static int
- lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
- 	uint32_t magic_number, uint32_t ftype, uint32_t fid, uint32_t fsize,
- 	const struct firmware *fw)
- {
--	if ((offset == ADD_STATUS_FW_NOT_SUPPORTED) ||
-+	int rc;
-+
-+	/* Three cases:  (1) FW was not supported on the detected adapter.
-+	 * (2) FW update has been locked out administratively.
-+	 * (3) Some other error during FW update.
-+	 * In each case, an unmaskable message is written to the console
-+	 * for admin diagnosis.
-+	 */
-+	if (offset == ADD_STATUS_FW_NOT_SUPPORTED ||
- 	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC &&
- 	     magic_number != MAGIC_NUMER_G6) ||
- 	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC &&
--	     magic_number != MAGIC_NUMER_G7))
-+	     magic_number != MAGIC_NUMER_G7)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3030 This firmware version is not supported on "
--			"this HBA model. Device:%x Magic:%x Type:%x "
--			"ID:%x Size %d %zd\n",
--			phba->pcidev->device, magic_number, ftype, fid,
--			fsize, fw->size);
--	else
-+				"3030 This firmware version is not supported on"
-+				" this HBA model. Device:%x Magic:%x Type:%x "
-+				"ID:%x Size %d %zd\n",
-+				phba->pcidev->device, magic_number, ftype, fid,
-+				fsize, fw->size);
-+		rc = -EINVAL;
-+	} else if (offset == ADD_STATUS_FW_DOWNLOAD_HW_DISABLED) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3021 Firmware downloads have been prohibited "
-+				"by a system configuration setting on "
-+				"Device:%x Magic:%x Type:%x ID:%x Size %d "
-+				"%zd\n",
-+				phba->pcidev->device, magic_number, ftype, fid,
-+				fsize, fw->size);
-+		rc = -EACCES;
-+	} else {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3022 FW Download failed. Device:%x Magic:%x Type:%x "
--			"ID:%x Size %d %zd\n",
--			phba->pcidev->device, magic_number, ftype, fid,
--			fsize, fw->size);
-+				"3022 FW Download failed. Add Status x%x "
-+				"Device:%x Magic:%x Type:%x ID:%x Size %d "
-+				"%zd\n",
-+				offset, phba->pcidev->device, magic_number,
-+				ftype, fid, fsize, fw->size);
-+		rc = -EIO;
-+	}
-+	return rc;
- }
- 
--
- /**
-  * lpfc_write_firmware - attempt to write a firmware image to the port
-  * @fw: pointer to firmware image returned from request_firmware.
-- * @phba: pointer to lpfc hba data structure.
-+ * @context: pointer to firmware image returned from request_firmware.
-+ * @ret: return value this routine provides to the caller.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 379c37451645..3a6520187ee5 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -9004,7 +9004,8 @@ lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to address of newly added command iocb.
   *
+- * This function is called with hbalock held to add a command
++ * This function is called with hbalock held for SLI3 ports or
++ * the ring lock held for SLI4 ports to add a command
+  * iocb to the txq when SLI layer cannot submit the command iocb
+  * to the ring.
   **/
- static void
-@@ -12417,8 +12439,12 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 			rc = lpfc_wr_object(phba, &dma_buffer_list,
- 				    (fw->size - offset), &offset);
- 			if (rc) {
--				lpfc_log_write_firmware_error(phba, offset,
--					magic_number, ftype, fid, fsize, fw);
-+				rc = lpfc_log_write_firmware_error(phba, offset,
-+								   magic_number,
-+								   ftype,
-+								   fid,
-+								   fsize,
-+								   fw);
- 				goto release_out;
- 			}
- 		}
-@@ -12438,9 +12464,12 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 	}
- 	release_firmware(fw);
- out:
--	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3024 Firmware update done: %d.\n", rc);
--	return;
-+	if (rc < 0)
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3062 Firmware update error, status %d.\n", rc);
+@@ -9012,7 +9013,10 @@ void
+ __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		    struct lpfc_iocbq *piocb)
+ {
+-	lockdep_assert_held(&phba->hbalock);
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		lockdep_assert_held(&pring->ring_lock);
 +	else
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3024 Firmware update success: size %d.\n", rc);
++		lockdep_assert_held(&phba->hbalock);
+ 	/* Insert the caller's iocb in the txq tail for later processing. */
+ 	list_add_tail(&piocb->list, &pring->txq);
  }
- 
- /**
+@@ -9903,7 +9907,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq,
+  * __lpfc_sli_issue_iocb_s4 is used by other functions in the driver to issue
+  * an iocb command to an HBA with SLI-4 interface spec.
+  *
+- * This function is called with hbalock held. The function will return success
++ * This function is called with ringlock held. The function will return success
+  * after it successfully submit the iocb to firmware or after adding to the
+  * txq.
+  **/
 -- 
 2.13.7
 
