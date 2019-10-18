@@ -2,98 +2,119 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8370ECA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 08:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02960CA9EA4
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 09:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 577C021897
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 08:54:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VDIFG3rR"
+	by mail.kernel.org (Postfix) with ESMTP id D9C7821897
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 09:38:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733205AbfJRIyV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 04:54:21 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:36562 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731444AbfJRIyU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 04:54:20 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9I2dIMw132639;
-        Fri, 18 Oct 2019 02:41:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=6pqyrIv3f9cOfHiZ/l0SMfNyGHEl0Rc+AgdlmuG5jvQ=;
- b=VDIFG3rRA0YXxuEmOm1gHGR5qKWdp/DU2IsCXmccDRgGlzKFSGOO2PLeo3q/G3LimlsX
- n/Fk/lKnHRdwYRSRPdiX1B9Z3i+sRwU4OKFdAZPRF1nez5iO4fWptKxl2CSqKxcSNZUa
- jdqIIFF1dDhFFYFtHui3E7P2FZmdyDZ2/ZNN2n+3OAMuEkdTtNSHtOtpILrOP0dFNaZ5
- X/FjEl5zItp3007waj/K0f5AZtmFBewV1Jdn+CpQKDCy6TdI3E9utZ0xK9Kk0GQs3M7/
- nwdyyCWPJAvLPXHqCEcxWTox63liO8Zr9acKYsf3zrAtWtxRpKtB1iXCijs2XK+bxcEl jg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2vq0q40ux2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Oct 2019 02:41:05 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9I2cMs1065697;
-        Fri, 18 Oct 2019 02:41:05 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2vq0ed4eqv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Oct 2019 02:41:05 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9I2f4um030984;
-        Fri, 18 Oct 2019 02:41:04 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 18 Oct 2019 02:41:04 +0000
-To:     zhengbin <zhengbin13@huawei.com>
-Cc:     <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <yi.zhang@huawei.com>
-Subject: Re: [PATCH v4 2/2] scsi: core: fix uninit-value access of variable sshdr
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1571293177-117087-1-git-send-email-zhengbin13@huawei.com>
-        <1571293177-117087-3-git-send-email-zhengbin13@huawei.com>
-Date:   Thu, 17 Oct 2019 22:40:59 -0400
-In-Reply-To: <1571293177-117087-3-git-send-email-zhengbin13@huawei.com>
-        (zhengbin's message of "Thu, 17 Oct 2019 14:19:37 +0800")
-Message-ID: <yq1y2xiixms.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S2404365AbfJRJig (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 05:38:36 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51944 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727917AbfJRJig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 05:38:36 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 693F2B1D5;
+        Fri, 18 Oct 2019 09:38:34 +0000 (UTC)
+Date:   Fri, 18 Oct 2019 11:38:30 +0200
+From:   Joerg Roedel <jroedel@suse.de>
+To:     Qian Cai <cai@lca.pw>
+Cc:     Jerry Snitselaar <jsnitsel@redhat.com>, don.brace@microsemi.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com, esc.storagedev@microsemi.com,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: [PATCH] iommu/amd: Check PM_LEVEL_SIZE() condition in locked section
+Message-ID: <20191018093830.GA26328@suse.de>
+References: <20191016225859.j3jq6pt73mn56chn@cantor>
+ <577A2A6B-3012-4CDE-BE57-3E0D628572CB@lca.pw>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9413 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=867
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910180025
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9413 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=954 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910180025
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <577A2A6B-3012-4CDE-BE57-3E0D628572CB@lca.pw>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Oct 17, 2019 at 07:36:51AM -0400, Qian Cai wrote:
+> 
+> 
+> > On Oct 16, 2019, at 6:59 PM, Jerry Snitselaar <jsnitsel@redhat.com> wrote:
+> > 
+> > I guess the mode level 6 check is really for other potential callers
+> > increase_address_space, none exist at the moment, and the condition
+> > of the while loop in alloc_pte should fail if the mode level is 6.
+> 
+> Because there is no locking around iommu_map_page(), if there are
+> several concurrent callers of it for the same domain, could it be that
+> it silently corrupt data due to invalid access?
 
-zhengbin,
+No, that can't happen because increase_address_space locks the domain
+before actually doing anything. So the address space can't grow above
+domain->mode == 6. But what can happen is that the WARN_ON_ONCE triggers
+in there and that the address space is increased multiple times when
+only one increase would be sufficient.
 
-> We can init sshdr in sr_get_events, but there have many callers of
-> scsi_execute, scsi_execute_req, we have to troubleshoot all callers,
-> the simpler way is init sshdr in __scsi_execute.
+To fix this we just need to check the PM_LEVEL_SIZE() condition again
+when we hold the lock:
 
-There aren't that many callers. I'd prefer to make sure that everybody
-is handling DRIVER_SENSE and scsi_sense_valid() correctly. Looks like
-we're generally OK, but please verify.
+From e930e792a998e89dfd4feef15fbbf289c45124dc Mon Sep 17 00:00:00 2001
+From: Joerg Roedel <jroedel@suse.de>
+Date: Fri, 18 Oct 2019 11:34:22 +0200
+Subject: [PATCH] iommu/amd: Check PM_LEVEL_SIZE() condition in locked section
 
-Thanks!
+The increase_address_space() function has to check the PM_LEVEL_SIZE()
+condition again under the domain->lock to avoid a false trigger of the
+WARN_ON_ONCE() and to avoid that the address space is increase more
+often than necessary.
 
+Reported-by: Qian Cai <cai@lca.pw>
+Fixes: 754265bcab78 ("iommu/amd: Fix race in increase_address_space()")
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/iommu/amd_iommu.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 2369b8af81f3..a0639e511ffe 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -1463,6 +1463,7 @@ static void free_pagetable(struct protection_domain *domain)
+  * to 64 bits.
+  */
+ static bool increase_address_space(struct protection_domain *domain,
++				   unsigned long address,
+ 				   gfp_t gfp)
+ {
+ 	unsigned long flags;
+@@ -1471,8 +1472,8 @@ static bool increase_address_space(struct protection_domain *domain,
+ 
+ 	spin_lock_irqsave(&domain->lock, flags);
+ 
+-	if (WARN_ON_ONCE(domain->mode == PAGE_MODE_6_LEVEL))
+-		/* address space already 64 bit large */
++	if (address <= PM_LEVEL_SIZE(domain->mode) ||
++	    WARN_ON_ONCE(domain->mode == PAGE_MODE_6_LEVEL))
+ 		goto out;
+ 
+ 	pte = (void *)get_zeroed_page(gfp);
+@@ -1505,7 +1506,7 @@ static u64 *alloc_pte(struct protection_domain *domain,
+ 	BUG_ON(!is_power_of_2(page_size));
+ 
+ 	while (address > PM_LEVEL_SIZE(domain->mode))
+-		*updated = increase_address_space(domain, gfp) || *updated;
++		*updated = increase_address_space(domain, address, gfp) || *updated;
+ 
+ 	level   = domain->mode - 1;
+ 	pte     = &domain->pt_root[PM_LEVEL_INDEX(level, address)];
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.16.4
+
