@@ -2,31 +2,31 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 374BACA9EA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11B72CA9EA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:20:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19BB5222C5
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:18:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE2C0222C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:20:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403841AbfJRKS4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 06:18:56 -0400
-Received: from mx2.suse.de ([195.135.220.15]:57364 "EHLO mx1.suse.de"
+        id S2389953AbfJRKUn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 06:20:43 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58820 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387890AbfJRKSz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 06:18:55 -0400
+        id S2387890AbfJRKUn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 06:20:43 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id BA80EACC3;
-        Fri, 18 Oct 2019 10:18:53 +0000 (UTC)
-Subject: Re: [PATCH v5 17/23] sg: rework sg_mmap
+        by mx1.suse.de (Postfix) with ESMTP id EF997ACC3;
+        Fri, 18 Oct 2019 10:20:40 +0000 (UTC)
+Subject: Re: [PATCH v5 18/23] sg: replace sg_allow_access
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20191008075022.30055-1-dgilbert@interlog.com>
- <20191008075022.30055-18-dgilbert@interlog.com>
+ <20191008075022.30055-19-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -72,12 +72,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <74bdee88-8ca8-5d9f-6050-1c488b018613@suse.de>
-Date:   Fri, 18 Oct 2019 12:18:53 +0200
+Message-ID: <672381d6-e511-a9b1-8b84-375a4280ec8d@suse.de>
+Date:   Fri, 18 Oct 2019 12:20:40 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191008075022.30055-18-dgilbert@interlog.com>
+In-Reply-To: <20191008075022.30055-19-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,72 +87,16 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/8/19 9:50 AM, Douglas Gilbert wrote:
-> Simple rework of the sg_mmap() function.
+> Replace the sg_allow_access() function with sg_fetch_cmnd()
+> which does a little more. Change sg_finish_scsi_blk_rq() from an
+> int to a void returning function. Rename sg_remove_request()
+> to sg_deact_request(). Other changes, mainly cosmetic.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/sg.c | 25 +++++++++++++++----------
->  1 file changed, 15 insertions(+), 10 deletions(-)
+>  drivers/scsi/sg.c | 149 +++++++++++++++++++++++++---------------------
+>  1 file changed, 80 insertions(+), 69 deletions(-)
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index befcbfbcece1..2ad86aaaf74d 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1449,14 +1449,15 @@ static const struct vm_operations_struct sg_mmap_vm_ops = {
->  	.fault = sg_vma_fault,
->  };
->  
-> +/* Entry point for mmap(2) system call */
->  static int
->  sg_mmap(struct file *filp, struct vm_area_struct *vma)
->  {
-> -	struct sg_fd *sfp;
-> -	unsigned long req_sz, len, sa;
-> -	struct sg_scatter_hold *rsv_schp;
->  	int k, length;
->  	int ret = 0;
-> +	unsigned long req_sz, len, sa;
-> +	struct sg_scatter_hold *rsv_schp;
-> +	struct sg_fd *sfp;
->  
->  	if (!filp || !vma)
->  		return -ENXIO;
-> @@ -1469,19 +1470,23 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
->  	SG_LOG(3, sfp, "%s: vm_start=%p, len=%d\n", __func__,
->  	       (void *)vma->vm_start, (int)req_sz);
->  	if (vma->vm_pgoff)
-> -		return -EINVAL;	/* want no offset */
-> -	rsv_schp = &sfp->reserve;
-> +		return -EINVAL; /* only an offset of 0 accepted */
-> +	/* Check reserve request is inactive and has large enough buffer */
->  	mutex_lock(&sfp->f_mutex);
-> -	if (req_sz > rsv_schp->buflen) {
-> -		ret = -ENOMEM;	/* cannot map more than reserved buffer */
-> +	if (sfp->res_in_use) {
-> +		ret = -EBUSY;
-> +		goto out;
-> +	}
-> +	rsv_schp = &sfp->reserve;
-> +	if (req_sz > (unsigned long)rsv_schp->buflen) {
-> +		ret = -ENOMEM;
->  		goto out;
->  	}
-> -
->  	sa = vma->vm_start;
->  	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
-> -	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; k++) {
-> +	for (k = 0; k < rsv_schp->num_sgat && sa < vma->vm_end; ++k) {
->  		len = vma->vm_end - sa;
-> -		len = (len < length) ? len : length;
-> +		len = min_t(unsigned long, len, (unsigned long)length);
->  		sa += len;
->  	}
->  
-> 
-Some comment regarding kernel-doc applies here, too.
-Anc the change in the 'for' condition above appears to be rather cosmetic...
-
-Otherwise:
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
