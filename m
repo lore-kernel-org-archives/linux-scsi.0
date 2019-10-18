@@ -2,93 +2,90 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F54CA9EA9
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1384ACA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00F4320872
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:00:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="piDmvKdx"
+	by mail.kernel.org (Postfix) with ESMTP id D17EA222C2
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:05:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571436331;
+	bh=xJzzJtZXbRm1xh6ZE8XImO/6+f842hylKe/AxX4lWSQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=zqa8JJNuhU/8UlBrmAkyAPvlFxv8fqo91fzSOl9vKWeYI1NjD+4hOtbfbksM03ReQ
+	 xTFmNT9RG91lIr0Rml1CAVOLwtk2rC2j8a455Qv/j4eGbnTyYQ/bRx4VWHfHUUPQi1
+	 9Pv+9ebl4E37SZFJqxtHyLs+1XJFBxXGEzAysH1Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726393AbfJRWAV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 18:00:21 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55084 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726258AbfJRWAV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 18:00:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ILsWTJ086675;
-        Fri, 18 Oct 2019 22:00:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=oIXMUgijEE7y4qWQFymThn8iY/Hvr2ojgKSft1IuDyY=;
- b=piDmvKdxJ5TnfUlXn6c421JbfpL6LXLCDkdUf5X6UIJ8h32bLEazGQyPl+ZBiKKW7n1q
- OxCBnnqvzIaM2P3p67D9ywIRIoBtUJjQtvsr2St3ldPSTbgTxUQmm6EasYVVg2XnP4Ep
- o/EtcBSMFmPPjI2nRCQYxul+sQBrlVJxkqhctJWrfuhUVtnfKudLDvLQdcLM0GxVsiz5
- TutkJKO5WJjA0/G0GknC93l8FF+T5sJC4BfqFmX0xp+/462zMzdhKD8ENBFt0HT8yCD6
- eqbwkS+bvftUHl7ioXEIMCBiuu32ionniYpKPQsHUNI3ex0EBPYD9EOq1i9pSZSkul4R YQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2vq0q468rn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Oct 2019 22:00:15 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ILt11n097336;
-        Fri, 18 Oct 2019 22:00:15 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2vq0eexd3m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Oct 2019 22:00:14 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9IM0Bee021712;
-        Fri, 18 Oct 2019 22:00:11 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 18 Oct 2019 22:00:11 +0000
-To:     Daniel Wagner <dwagner@suse.de>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        id S1729785AbfJRWFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 18:05:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37358 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729541AbfJRWF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 18:05:29 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 82E06222C2;
+        Fri, 18 Oct 2019 22:05:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1571436329;
+        bh=xJzzJtZXbRm1xh6ZE8XImO/6+f842hylKe/AxX4lWSQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UVxIlyy0tnwPVHgCTgVEGsru1HEzNRBsKhdO995E6OJj82c9kfKqmu97b5FcrIk0K
+         c06T2Ei5LFqFA+7OPbim34k0QfBry5kYUVLCDE1tx0OdrPl2sF425kQ5jGHXeBkBzQ
+         uAlGjtYW0wqSRCKG2UxhFGgKfnDPs7ixnsSR9lCw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: Check queue pointer before use
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191018162111.8798-1-dwagner@suse.de>
-Date:   Fri, 18 Oct 2019 18:00:09 -0400
-In-Reply-To: <20191018162111.8798-1-dwagner@suse.de> (Daniel Wagner's message
-        of "Fri, 18 Oct 2019 18:21:11 +0200")
-Message-ID: <yq1imolhfyu.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 003/100] scsi: lpfc: Fix a duplicate 0711 log message number.
+Date:   Fri, 18 Oct 2019 18:03:48 -0400
+Message-Id: <20191018220525.9042-3-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191018220525.9042-1-sashal@kernel.org>
+References: <20191018220525.9042-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=500
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910180193
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=599 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910180193
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: James Smart <jsmart2021@gmail.com>
 
-Daniel,
+[ Upstream commit 2c4c91415a05677acc5c8131a5eb472d4aa96ae1 ]
 
-> The queue pointer might not be valid. The rest of the code checks the
-> pointer before accessing it. lpfc_sli4_process_missed_mbox_completions
-> is the only place where the check is missing.
+Renumber one of the 0711 log messages so there isn't a duplication.
 
-Applied to 5.4/scsi-fixes, thanks!
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 200b5bca1f5f4..666495f21c246 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4161,7 +4161,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 	/* If pCmd was set to NULL from abort path, do not call scsi_done */
+ 	if (xchg(&lpfc_cmd->pCmd, NULL) == NULL) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
+-				 "0711 FCP cmd already NULL, sid: 0x%06x, "
++				 "5688 FCP cmd already NULL, sid: 0x%06x, "
+ 				 "did: 0x%06x, oxid: 0x%04x\n",
+ 				 vport->fc_myDID,
+ 				 (pnode) ? pnode->nlp_DID : 0,
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.20.1
+
