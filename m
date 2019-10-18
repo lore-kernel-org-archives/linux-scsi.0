@@ -2,113 +2,102 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCF1CCA9EA9
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D55CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:24:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0EB421852
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:21:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571437273;
-	bh=YL/GOslPbKzWPVIGCvbmtekbS/5Pr6SFRznL14kivv0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vKQz6GNpbhQGPOjrfVKbfMrUuQrRfveB7w/nh4zcxM/4S1uicP/9nWvprEEc90Z6j
-	 7ACvVIYfV78OZuapSzsQ4fl9TmNzKl8/PMd2F/r8eLK6WEfF+mU43UZT7da26GcEfs
-	 x89l67v2ppWOO41hAIKgoSSxKNLkgAwAVrL6H5YU=
+	by mail.kernel.org (Postfix) with ESMTP id 2744B21852
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:24:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ptRZ+mlU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404355AbfJRWVI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 18:21:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38424 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731506AbfJRWG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 18:06:27 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 97D792245A;
-        Fri, 18 Oct 2019 22:06:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571436387;
-        bh=YL/GOslPbKzWPVIGCvbmtekbS/5Pr6SFRznL14kivv0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cSM9Gd2j4TvvyQfbl8tJjTxUYw66fUkL01oXnpZRQW+fPynuEsrl8L4a2MrL7sEVs
-         EynnaFMDvHqpFNp7BN4+YHfEts1Mg7sHrTzWjs89ls1ZJOgFekz38b1FUv6YIWRqEP
-         Lc8nfIX6SRV6qAm4/hlKLpGJxgZAe8YtRbmzix4Q=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+        id S2405680AbfJRWY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 18:24:58 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58752 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728750AbfJRWEs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 18:04:48 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9IM3uHc093434;
+        Fri, 18 Oct 2019 22:04:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=vGDAIs2HHm8/8dMbQ1HmhFNvicQUZlzI7JtzxZuXHw4=;
+ b=ptRZ+mlUHUH22LAOP8gCzn3GN9LMnSXKVqzqqeBW2ewqE5SfajDWaqMkc+W08y0nkmI2
+ WJoACtCUkNUvyHQEnMYAUCeefjKNZMYUnXE7luptUYznslxuxV4WGNOiurDv9YU6TU6Y
+ BSEFZG5BrXIbAi2xxr2VMzuYE7sPISnvocKeKq5ZQCy8xLkrxNbAGPMqzmbOss6fztdd
+ BUQQH7BAO7S5ore5Ta/lpC/2uwiw4HIX3s2fwjuTI0N5B8mWtgcjnZlz8m6Dxs3oIFRE
+ HqYtEXL7iNo6VgewiYoFA+GP3SxZxDkaCDZ9akHhTGGL+STQMh26gj1hrxXsHElt2gr8 cA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2vq0q46965-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Oct 2019 22:04:41 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9IM2jS8115614;
+        Fri, 18 Oct 2019 22:04:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2vq0eexkc7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Oct 2019 22:04:40 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9IM4dYF017814;
+        Fri, 18 Oct 2019 22:04:39 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 18 Oct 2019 22:04:39 +0000
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 039/100] scsi: lpfc: Correct localport timeout duration error
-Date:   Fri, 18 Oct 2019 18:04:24 -0400
-Message-Id: <20191018220525.9042-39-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191018220525.9042-1-sashal@kernel.org>
-References: <20191018220525.9042-1-sashal@kernel.org>
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org,
+        Avi Shchislowski <avi.shchislowski@wdc.com>,
+        Alex Lemberg <alex.lemberg@wdc.com>
+Subject: Re: [PATCH] scsi: ufs-bsg: Wake the device before sending raw upiu commands
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <1570696267-8487-1-git-send-email-avri.altman@wdc.com>
+Date:   Fri, 18 Oct 2019 18:04:36 -0400
+In-Reply-To: <1570696267-8487-1-git-send-email-avri.altman@wdc.com> (Avri
+        Altman's message of "Thu, 10 Oct 2019 11:31:07 +0300")
+Message-ID: <yq1eez9hfrf.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=858
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910180194
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=940 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910180194
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 2a0fb340fcc816975b8b0f2fef913d11999c39cf ]
+Avri,
 
-Current code incorrectly specifies a completion wait timeout duration in 5
-jiffies, when it should have been 5 seconds.
+> The scsi async probe process is calling blk_pm_runtime_init for each
+> lun, and then those request queues are monitored by the block layer pm
+> engine (blk-pm.c).  This is however, not the case for scsi-passthrough
+> queues, created by bsg_setup_queue().
+>
+> So the ufs-bsg driver might send various commands, disregarding the pm
+> status of the device. This is wrong, regardless if its request queue
+> is pm-aware or not.
 
-Fix the adjust for units for the completion timeout call.
+Applied to 5.4/scsi-fixes, thanks!
 
-[mkp: manual merge]
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 6 +++++-
- drivers/scsi/lpfc/lpfc_nvmet.h | 2 ++
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index e2575c8ec93e8..22efefcc6cd84 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1713,7 +1713,11 @@ lpfc_nvmet_destroy_targetport(struct lpfc_hba *phba)
- 		}
- 		tgtp->tport_unreg_cmp = &tport_unreg_cmp;
- 		nvmet_fc_unregister_targetport(phba->targetport);
--		wait_for_completion_timeout(&tport_unreg_cmp, 5);
-+		if (!wait_for_completion_timeout(tgtp->tport_unreg_cmp,
-+					msecs_to_jiffies(LPFC_NVMET_WAIT_TMO)))
-+			lpfc_printf_log(phba, KERN_ERR, LOG_NVME,
-+					"6179 Unreg targetport %p timeout "
-+					"reached.\n", phba->targetport);
- 		lpfc_nvmet_cleanup_io_context(phba);
- 	}
- 	phba->targetport = NULL;
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.h b/drivers/scsi/lpfc/lpfc_nvmet.h
-index 0ec1082ce7ef6..3b170284a0e59 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.h
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.h
-@@ -31,6 +31,8 @@
- #define LPFC_NVMET_MRQ_AUTO		0
- #define LPFC_NVMET_MRQ_MAX		16
- 
-+#define LPFC_NVMET_WAIT_TMO		(5 * MSEC_PER_SEC)
-+
- /* Used for NVME Target */
- struct lpfc_nvmet_tgtport {
- 	struct lpfc_hba *phba;
 -- 
-2.20.1
-
+Martin K. Petersen	Oracle Linux Engineering
