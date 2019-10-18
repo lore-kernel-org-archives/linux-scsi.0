@@ -2,31 +2,31 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2830FCA9EA3
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43357CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:17:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A765222C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 223A5222C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391411AbfJRKQR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 06:16:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55794 "EHLO mx1.suse.de"
+        id S2389953AbfJRKRT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 06:17:19 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56584 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732465AbfJRKQR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 06:16:17 -0400
+        id S2388560AbfJRKRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 06:17:19 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id B4121AAF1;
-        Fri, 18 Oct 2019 10:16:14 +0000 (UTC)
-Subject: Re: [PATCH v5 15/23] sg: sg_common_write add structure for arguments
+        by mx1.suse.de (Postfix) with ESMTP id 50ED4AD09;
+        Fri, 18 Oct 2019 10:17:17 +0000 (UTC)
+Subject: Re: [PATCH v5 16/23] sg: rework sg_vma_fault
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20191008075022.30055-1-dgilbert@interlog.com>
- <20191008075022.30055-16-dgilbert@interlog.com>
+ <20191008075022.30055-17-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -72,12 +72,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <9e2631d8-c2b3-0d16-41dd-584995740cad@suse.de>
-Date:   Fri, 18 Oct 2019 12:16:14 +0200
+Message-ID: <b42ad2fd-4908-2397-1e74-7243dc70c26f@suse.de>
+Date:   Fri, 18 Oct 2019 12:17:16 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191008075022.30055-16-dgilbert@interlog.com>
+In-Reply-To: <20191008075022.30055-17-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,15 +87,40 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/8/19 9:50 AM, Douglas Gilbert wrote:
-> As the number of arguments to sg_common_write() starts to grow
-> (more in later patches) add a structure to hold most of these
-> arguments.
+> Simple refactoring of the sg_vma_fault() function.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/sg.c | 47 ++++++++++++++++++++++++++++++++---------------
->  1 file changed, 32 insertions(+), 15 deletions(-)
+>  drivers/scsi/sg.c | 33 +++++++++++++++++++++++----------
+>  1 file changed, 23 insertions(+), 10 deletions(-)
 > 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 903faafaeff9..befcbfbcece1 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1389,14 +1389,16 @@ sg_fasync(int fd, struct file *filp, int mode)
+>  	return fasync_helper(fd, filp, mode, &sfp->async_qp);
+>  }
+>  
+> +/* Note: the error return: VM_FAULT_SIGBUS causes a "bus error" */
+>  static vm_fault_t
+>  sg_vma_fault(struct vm_fault *vmf)
+>  {
+> -	struct vm_area_struct *vma = vmf->vma;
+> -	struct sg_fd *sfp;
+> +	int k, length;
+>  	unsigned long offset, len, sa;
+> +	struct vm_area_struct *vma = vmf->vma;
+>  	struct sg_scatter_hold *rsv_schp;
+> -	int k, length;
+> +	struct sg_device *sdp;
+> +	struct sg_fd *sfp;
+>  	const char *nbp = "==NULL, bad";
+>  
+>  	if (!vma) {
+Of course, one would prefer normal kernel-doc style for the comment ...
+
+Otherwise:
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
