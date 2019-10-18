@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1384ACA9EA9
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA55CA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:17:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D17EA222C2
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A46E520679
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 22:17:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571436331;
-	bh=xJzzJtZXbRm1xh6ZE8XImO/6+f842hylKe/AxX4lWSQ=;
+	s=default; t=1571437029;
+	bh=3csVmTOHNGTB+c9xUv/fHEeweHnvr5OV6v+ydEEUMDo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zqa8JJNuhU/8UlBrmAkyAPvlFxv8fqo91fzSOl9vKWeYI1NjD+4hOtbfbksM03ReQ
-	 xTFmNT9RG91lIr0Rml1CAVOLwtk2rC2j8a455Qv/j4eGbnTyYQ/bRx4VWHfHUUPQi1
-	 9Pv+9ebl4E37SZFJqxtHyLs+1XJFBxXGEzAysH1Q=
+	b=Ty7JKFwOoayPBNLdno324Y78YjtUsj+RWJ+UQs+zXalbMTYsAbSKF47WWu42MsmW/
+	 gX7QeuGJA46L3qVZrhMqKn0VrFbxvYrJhnRPERWX0P61n1AS2JkQzm15PJ6E+9CiyJ
+	 yOhl5gEnBbF00RzKjZTV09k9JDvE7e2PSFd8frp4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729785AbfJRWFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 18:05:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37358 "EHLO mail.kernel.org"
+        id S2393234AbfJRWRB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 18:17:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729541AbfJRWF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 18:05:29 -0400
+        id S2387430AbfJRWH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 18:07:56 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 82E06222C2;
-        Fri, 18 Oct 2019 22:05:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84612222D1;
+        Fri, 18 Oct 2019 22:07:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571436329;
-        bh=xJzzJtZXbRm1xh6ZE8XImO/6+f842hylKe/AxX4lWSQ=;
+        s=default; t=1571436476;
+        bh=3csVmTOHNGTB+c9xUv/fHEeweHnvr5OV6v+ydEEUMDo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UVxIlyy0tnwPVHgCTgVEGsru1HEzNRBsKhdO995E6OJj82c9kfKqmu97b5FcrIk0K
-         c06T2Ei5LFqFA+7OPbim34k0QfBry5kYUVLCDE1tx0OdrPl2sF425kQ5jGHXeBkBzQ
-         uAlGjtYW0wqSRCKG2UxhFGgKfnDPs7ixnsSR9lCw=
+        b=UtpwT+NJQ000CGAj3zB4FB8nZvH5H6I4HYqA1AtwkooSYKHpy4ipWs+TCObEgWlyr
+         3im/NQlgWJNygbqYLc9z4taAA0LjIXdbw66wcerGbekhVds4IwIBzQXbtnSGsTt7up
+         W3KbEiV/6VfxJm5K47LHSrWV52Z3FHKKin55aoFo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 003/100] scsi: lpfc: Fix a duplicate 0711 log message number.
-Date:   Fri, 18 Oct 2019 18:03:48 -0400
-Message-Id: <20191018220525.9042-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 02/56] scsi: lpfc: Fix a duplicate 0711 log message number.
+Date:   Fri, 18 Oct 2019 18:06:59 -0400
+Message-Id: <20191018220753.10002-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191018220525.9042-1-sashal@kernel.org>
-References: <20191018220525.9042-1-sashal@kernel.org>
+In-Reply-To: <20191018220753.10002-1-sashal@kernel.org>
+References: <20191018220753.10002-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 200b5bca1f5f4..666495f21c246 100644
+index 4ade13d72deb3..07cb671bb8550 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4161,7 +4161,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+@@ -4152,7 +4152,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
  	/* If pCmd was set to NULL from abort path, do not call scsi_done */
  	if (xchg(&lpfc_cmd->pCmd, NULL) == NULL) {
  		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
