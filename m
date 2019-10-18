@@ -2,109 +2,116 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C498DCA9EA9
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 16:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7F64CA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DB7920663
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 16:36:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98BC12089C
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:18:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JqjIkhRx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OfRtkO9c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405960AbfJRQgM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 12:36:12 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:42730 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405934AbfJRQgM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 12:36:12 -0400
-Received: by mail-pf1-f195.google.com with SMTP id q12so4208367pff.9
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 09:36:10 -0700 (PDT)
+        id S2440269AbfJRVSv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 17:18:51 -0400
+Received: from mail-pg1-f182.google.com ([209.85.215.182]:43062 "EHLO
+        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390763AbfJRVSv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:18:51 -0400
+Received: by mail-pg1-f182.google.com with SMTP id i32so4009021pgl.10
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:18:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=Bye135gwA1svZblRSZCCqjJ0pb5KXJ36Pgiefcf2DQY=;
-        b=JqjIkhRx2SvqMM1489kPjibumhUQKoZNWSY3TZ/nKULBQFgG5OQSKI2BCTJJ7D5Uih
-         wPwEy/nlsOwbvqwLjuUTvjy+u7C74Nh/PmLWkqrTif8X2y2SorrUynVHI92/JZ8WXGFE
-         JumSiErFubDM+PEttZ9RQmguyAda29gp1fPX0=
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=JxH1HXqcadeC4Tc0Scs85to3iorK+sJnq1VcWHO+a1s=;
+        b=OfRtkO9cA+P2/KY0/1ZeHvQl7Nu/K2rLu9aU668Jjs2d6B+BDlt096dBzIfqzexpx+
+         esjnSmdr2G7+NPOzIZjQMYQqstwW+c2bSngWj3B/XekFGBU69YA8eIfKebliDjy5Uwhd
+         kemchhrjighhznXHcDHDATkiVG+ZipIxZndyDWYEVrVSq6Jm9HryW4b1UBeuM6cYdqS8
+         cez8Rr1tZBwRAWD/RZ7Bfo615F3QKobOrYF9zIqOOSW+ogTzLQJf+VXa5fZf4B+IZg82
+         xs9l/8Uz+QIP4rkCdbRbtX2c0vU2pH6uuQbno38COK4nUTLlTjrmopBljf3sg0TGrzpp
+         ry4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=Bye135gwA1svZblRSZCCqjJ0pb5KXJ36Pgiefcf2DQY=;
-        b=Mr6uapKvZUvMGNpugTfLwDzidsbkvx7fTZwjd9E8t7SotraX9LmmR4AwMSGXZ0V0n2
-         v2DLjUdP58XfHRUG0w1nKV9rPCfdM2Ef59WViD+26+8GyKKMxvndmrYtHuAU8f2EBfVT
-         0XTcWoi0pPOehZIUDy28eqw7150H5g7IvhHhtnfhF8N/PEl7BMs/1iugrdVCMEcSk8cy
-         4kFOpXw2pzCFts8mIBxFWeYsmH6qb0rDzY8sJq4OdQlhSsvnh6HGhB02ypXLhUvDkcvU
-         o22cN3fLs/6025FeoShu8zHzSWPDmt3EZC3evgXnfDWiEyjPbjHOuei4C1a09J3bHqAP
-         h/Uw==
-X-Gm-Message-State: APjAAAVEbcIczwlCas138CiaYCRMVBuM7J7/1576iHmY94tGNqWqd6fY
-        CdCcTBBSOBWzDPLT25qukDFiyA==
-X-Google-Smtp-Source: APXvYqzD/qt6MHkD1pK6flLL5LHVVOJ2Ajha+rl3DPyHpe600uM4wBypQgjk0Zslwx2Zxy0J0/N8tw==
-X-Received: by 2002:aa7:9842:: with SMTP id n2mr7883881pfq.258.1571416570119;
-        Fri, 18 Oct 2019 09:36:10 -0700 (PDT)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e127sm7457161pfe.37.2019.10.18.09.36.04
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 18 Oct 2019 09:36:07 -0700 (PDT)
-Subject: Re: [PATCH] lpfc: remove left-over BUILD_NVME defines
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org,
-        Martin George <martin.george@netapp.com>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        Hannes Reinecke <hare@suse.com>,
-        James Smart <james.smart@broadcom.com>,
-        stable <stable@vger.kernel.org>
-References: <20191017150019.75769-1-hare@suse.de> <yq1eezake0f.fsf@oracle.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <0e739a86-a462-9d44-9ef9-24a4488c0d87@broadcom.com>
-Date:   Fri, 18 Oct 2019 09:36:02 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <yq1eezake0f.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=JxH1HXqcadeC4Tc0Scs85to3iorK+sJnq1VcWHO+a1s=;
+        b=m8pMtKGD6bzuo3NRZ4iQBrjH1ZL/JKJlHFGd/otfsH0UcTiHGvIOhZmtyaYd842RdK
+         I4amKpcODmlXK4x2WFZXm/fOQU3dnh4kmS/rBG0RLfIA3v+bmLBx9F7plCXzMZpSufXT
+         2PXIAM7fMEQuVNfuxyaMuc3o9EYXNJTB5Ifn6fm8xAlhzhsM7/YrSX5uXfLuD6Hz/5Cr
+         7PzdsT8vVPTiY605+bEDBhwLHRfrBrkTOVAlODQLPSf/faSKxYToKAEeKL8UogsIwsVe
+         2/eONlH1WS+S8IfNFYnNGC+d7OjJ1keqVJA7e7PP3aS4E295W8eqmpcZ8YP44ezGlDuf
+         f8GQ==
+X-Gm-Message-State: APjAAAXHW/AkSl+uNnC6i4h5cS148TGgjI6qhQ/a6v0etTrIepzcAvN4
+        LHxQaFvnvoZe4RxVmlyCBt6S5R7J
+X-Google-Smtp-Source: APXvYqwMe3RrKdCOMK5cc8o73g9uFLD69aBwxejX5CjwjVrC0C/eYTp+FQ7b419OYadej3adOBtwbg==
+X-Received: by 2002:a17:90a:d141:: with SMTP id t1mr13323283pjw.103.1571433528806;
+        Fri, 18 Oct 2019 14:18:48 -0700 (PDT)
+Received: from pallmd1.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.18.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 18 Oct 2019 14:18:48 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/16] lpfc: Update lpfc to revision 12.6.0.0
+Date:   Fri, 18 Oct 2019 14:18:16 -0700
+Message-Id: <20191018211832.7917-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/17/2019 7:01 PM, Martin K. Petersen wrote:
-> Hannes,
->
->> The BUILD_NVME define never got defined anywhere, causing NVMe
->> commands to be treated as SCSI commands when freeing the buffers.
->> This was causing a stuck discovery and a horrible crash in
->> lpfc_set_rrq_active() later on.
-> Applied to 5.4/scsi-fixes, thanks!
->
+Update lpfc to revision 12.6.0.0
 
-The offending patches that introduced the define are:
+This patch contains a set fixes, optimizations, and a handful of
+new additions. 
 
- From 12.2.0.0:
-scsi: lpfc: Move SCSI and NVME Stats to hardware queue structures
-commit    4c47efc140fa926f00aa59c248458d95bd7b5eab
- From 12.4.0.0:
-scsi: lpfc: Merge per-protocol WQ/CQ pairs into single per-cpu pair
-commit    c00f62e6c5468ed0673c583f1ff284274e817410
+The patches were cut against Martin's 5.5/scsi-queue tree
 
-The 12.2 patch just misses some stats - no big deal.
-But the 12.4 patch introduces a logic error, and is in the head of the 
-stable tree.
+James Smart (16):
+  lpfc: fix lpfc_nvmet_mrq to be bound by hdw queue count
+  lpfc: Fix reporting of read-only fw error errors
+  lpfc: Fix lockdep errors in sli_ringtx_put
+  lpfc: Fix SLI3 hba in loop mode not discovering devices
+  lpfc: Fix bad ndlp ptr in xri aborted handling
+  lpfc: Fix hardlockup in lpfc_abort_handler
+  lpfc: fix coverity error of dereference after null check
+  lpfc: Slight fast-path Performance optimizations
+  lpfc: Remove lock contention target write path
+  lpfc: Revise interrupt coalescing for missing scenarios
+  lpfc: Make FW logging dynamically configurable
+  lpfc: Add log macros to allow print by serverity or verbocity setting
+  lpfc: Add FA-WWN Async Event reporting
+  lpfc: Add FC-AL support to lpe32000 models
+  lpfc: Add additional discovery log messages
+  lpfc: Update lpfc version to 12.6.0.0
 
-I assume that 5.4/scsi-fixes will get merged into 5.4 pre-release, and 
-that the stable tree will rebase to pick it up ?
+ drivers/scsi/lpfc/lpfc.h           |  11 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |  92 +++++++++++++-
+ drivers/scsi/lpfc/lpfc_bsg.c       |  18 ++-
+ drivers/scsi/lpfc/lpfc_ct.c        |  22 +++-
+ drivers/scsi/lpfc/lpfc_debugfs.c   | 117 +++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_els.c       |  14 ++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  39 +++++-
+ drivers/scsi/lpfc/lpfc_hw4.h       |  15 ++-
+ drivers/scsi/lpfc/lpfc_init.c      | 242 +++++++++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_logmsg.h    |  17 +++
+ drivers/scsi/lpfc/lpfc_mbox.c      |   1 +
+ drivers/scsi/lpfc/lpfc_mem.c       |   3 -
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   4 +-
+ drivers/scsi/lpfc/lpfc_nvme.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c     |  46 ++-----
+ drivers/scsi/lpfc/lpfc_nvmet.h     |   2 -
+ drivers/scsi/lpfc/lpfc_scsi.c      |  33 ++---
+ drivers/scsi/lpfc/lpfc_sli.c       |  40 ++++--
+ drivers/scsi/lpfc/lpfc_sli.h       |   3 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |   2 +
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 21 files changed, 567 insertions(+), 158 deletions(-)
 
--- james
-
+-- 
+2.13.7
 
