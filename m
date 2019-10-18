@@ -2,133 +2,180 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F10F0CA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 14:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F4BBCA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 14:48:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D068E222C6
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 14:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3932321D7C
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 14:48:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XwpQPnbE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2634011AbfJROYm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 10:24:42 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35420 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731923AbfJROYm (ORCPT
+        id S2410349AbfJROsM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 10:48:12 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:60269 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2408588AbfJROsM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 10:24:42 -0400
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9IEJ9Ko006828
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 10:24:41 -0400
-Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vq0hab37c-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 10:24:37 -0400
-Received: from localhost
-        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Fri, 18 Oct 2019 15:24:33 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp02.uk.ibm.com (192.168.101.132) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Fri, 18 Oct 2019 15:24:29 +0100
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x9IEOSTX43188264
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Oct 2019 14:24:28 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 52B88A4055;
-        Fri, 18 Oct 2019 14:24:28 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 14C06A404D;
-        Fri, 18 Oct 2019 14:24:28 +0000 (GMT)
-Received: from oc4120165700.ibm.com (unknown [9.152.98.163])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 18 Oct 2019 14:24:28 +0000 (GMT)
-Subject: Re: [PATCH] scsi: fixup scsi_device_from_queue()
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Martin Wilck <martin.wilck@suse.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-References: <20191018140355.108106-1-hare@suse.de>
-From:   Steffen Maier <maier@linux.ibm.com>
-Date:   Fri, 18 Oct 2019 16:24:27 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        Fri, 18 Oct 2019 10:48:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1571410090;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+xUWPDHliBoxc0ihU+NKk1qsJN/0TLVezwKKP1i/PSI=;
+        b=XwpQPnbEtf3ilv0j2DNlwQK8EFvVQtAmfdUbFyWITxKJzAlt6WDJJ5DK3Mh+GJhHnqeNl8
+        ctHBNLbTlue3YmQsVkCbjKJoxejEipUHQgvdqmnDn+ehNYEsVjIVmkESoyzf9B/tPvP8Zo
+        pJlY5gNZJEZSOKrieCBg6IYfjUOWKTs=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-149-kWCwFF5_NSaKSqu_hlLqlw-1; Fri, 18 Oct 2019 10:48:08 -0400
+Received: by mail-il1-f199.google.com with SMTP id e15so1903005ilq.23
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 07:48:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:reply-to
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=0SSL2373lC6DgsMmmsDZmA6zvnlA8UickiHBAjdntOQ=;
+        b=p7sQorHVau9ink8QwdtyRmyHOBjjfzk7iIeEQEy0683S0pLzb1EbyPq6xiFEDdwC+l
+         +Zmi8uDNzKxEnIVSJF9czbMbffsyZxMwNjIf04nq2vHNLdiSTipAHdLc20dEmvHXrd7L
+         CnW5gmf5CMkBjwwQ9qsQkAjjhYpR9JrAJ8HQ6Qljwdlt33Skh/f7bEIAtklNQGTjPPgL
+         xd31Sy2w8y0ZFbOG5jq0aj5/licQHcwq1pd8hiemzJ8qM0O0DAqlRJ5o51wlczq4JJku
+         xKC06D0P1kdTJb4n0soatr3XnXwBeqTnEvEN5rCYQtDpddfbR+DRutSzeZ6ruLyenVv/
+         Klwg==
+X-Gm-Message-State: APjAAAWYnXETDq9DpcKe7kXB39HyBUfvUwHa1BYmzpDSCyt3b/PZMGYM
+        PnJ9Mz1KV4dg3phre28Mx0onqzil+JnlktSS0V5ODSkDzd3vmqA2kwOHoc+G8zMij/qUtIRxq6D
+        gg8qdB7QCKjTKbyYvki7jqA==
+X-Received: by 2002:a92:c2:: with SMTP id 185mr10527384ila.92.1571410088307;
+        Fri, 18 Oct 2019 07:48:08 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwWbRwj/fjTBeTuKTGQTT7Fu5ra8qoDURv6eP3usXETnKzvD8vxqCt0UkKoNoyNlAsUsHb8gQ==
+X-Received: by 2002:a92:c2:: with SMTP id 185mr10527353ila.92.1571410088007;
+        Fri, 18 Oct 2019 07:48:08 -0700 (PDT)
+Received: from localhost (ip70-163-223-149.ph.ph.cox.net. [70.163.223.149])
+        by smtp.gmail.com with ESMTPSA id l3sm1778016ioj.7.2019.10.18.07.48.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 18 Oct 2019 07:48:07 -0700 (PDT)
+Date:   Fri, 18 Oct 2019 07:48:05 -0700
+From:   Jerry Snitselaar <jsnitsel@redhat.com>
+To:     Joerg Roedel <jroedel@suse.de>
+Cc:     Qian Cai <cai@lca.pw>, don.brace@microsemi.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com, esc.storagedev@microsemi.com,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH] iommu/amd: Check PM_LEVEL_SIZE() condition in locked
+ section
+Message-ID: <20191018144805.ici3ewsvonlgketl@cantor>
+Reply-To: Jerry Snitselaar <jsnitsel@redhat.com>
+Mail-Followup-To: Joerg Roedel <jroedel@suse.de>, Qian Cai <cai@lca.pw>,
+        don.brace@microsemi.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
+        esc.storagedev@microsemi.com, linux-kernel@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+References: <20191016225859.j3jq6pt73mn56chn@cantor>
+ <577A2A6B-3012-4CDE-BE57-3E0D628572CB@lca.pw>
+ <20191018093830.GA26328@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20191018140355.108106-1-hare@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-x-cbid: 19101814-0008-0000-0000-000003234E35
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19101814-0009-0000-0000-00004A427052
-Message-Id: <a77b6501-3ce8-69f7-9f30-2c4d9de3175e@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-18_04:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1910180134
+In-Reply-To: <20191018093830.GA26328@suse.de>
+User-Agent: NeoMutt/20180716
+X-MC-Unique: kWCwFF5_NSaKSqu_hlLqlw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hannes, this is already in 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=5.4/scsi-postmerge 
-from 
-https://lore.kernel.org/linux-block/20190807144948.28265-1-maier@linux.ibm.com/T/ 
-and Martin just sent a pull request to Linus 
-https://lore.kernel.org/linux-scsi/yq1pniui429.fsf@oracle.com/T/#m91f5b9098c369dc0d9bfef84aa53ee35533a31be
+On Fri Oct 18 19, Joerg Roedel wrote:
+>On Thu, Oct 17, 2019 at 07:36:51AM -0400, Qian Cai wrote:
+>>
+>>
+>> > On Oct 16, 2019, at 6:59 PM, Jerry Snitselaar <jsnitsel@redhat.com> wr=
+ote:
+>> >
+>> > I guess the mode level 6 check is really for other potential callers
+>> > increase_address_space, none exist at the moment, and the condition
+>> > of the while loop in alloc_pte should fail if the mode level is 6.
+>>
+>> Because there is no locking around iommu_map_page(), if there are
+>> several concurrent callers of it for the same domain, could it be that
+>> it silently corrupt data due to invalid access?
+>
+>No, that can't happen because increase_address_space locks the domain
+>before actually doing anything. So the address space can't grow above
+>domain->mode =3D=3D 6. But what can happen is that the WARN_ON_ONCE trigge=
+rs
+>in there and that the address space is increased multiple times when
+>only one increase would be sufficient.
+>
+>To fix this we just need to check the PM_LEVEL_SIZE() condition again
+>when we hold the lock:
+>
+>From e930e792a998e89dfd4feef15fbbf289c45124dc Mon Sep 17 00:00:00 2001
+>From: Joerg Roedel <jroedel@suse.de>
+>Date: Fri, 18 Oct 2019 11:34:22 +0200
+>Subject: [PATCH] iommu/amd: Check PM_LEVEL_SIZE() condition in locked sect=
+ion
+>
+>The increase_address_space() function has to check the PM_LEVEL_SIZE()
+>condition again under the domain->lock to avoid a false trigger of the
+>WARN_ON_ONCE() and to avoid that the address space is increase more
+>often than necessary.
+>
+>Reported-by: Qian Cai <cai@lca.pw>
+>Fixes: 754265bcab78 ("iommu/amd: Fix race in increase_address_space()")
+>Signed-off-by: Joerg Roedel <jroedel@suse.de>
+>---
+> drivers/iommu/amd_iommu.c | 7 ++++---
+> 1 file changed, 4 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+>index 2369b8af81f3..a0639e511ffe 100644
+>--- a/drivers/iommu/amd_iommu.c
+>+++ b/drivers/iommu/amd_iommu.c
+>@@ -1463,6 +1463,7 @@ static void free_pagetable(struct protection_domain =
+*domain)
+>  * to 64 bits.
+>  */
+> static bool increase_address_space(struct protection_domain *domain,
+>+=09=09=09=09   unsigned long address,
+> =09=09=09=09   gfp_t gfp)
+> {
+> =09unsigned long flags;
+>@@ -1471,8 +1472,8 @@ static bool increase_address_space(struct protection=
+_domain *domain,
+>
+> =09spin_lock_irqsave(&domain->lock, flags);
+>
+>-=09if (WARN_ON_ONCE(domain->mode =3D=3D PAGE_MODE_6_LEVEL))
+>-=09=09/* address space already 64 bit large */
+>+=09if (address <=3D PM_LEVEL_SIZE(domain->mode) ||
+>+=09    WARN_ON_ONCE(domain->mode =3D=3D PAGE_MODE_6_LEVEL))
+> =09=09goto out;
+>
+> =09pte =3D (void *)get_zeroed_page(gfp);
+>@@ -1505,7 +1506,7 @@ static u64 *alloc_pte(struct protection_domain *doma=
+in,
+> =09BUG_ON(!is_power_of_2(page_size));
+>
+> =09while (address > PM_LEVEL_SIZE(domain->mode))
+>-=09=09*updated =3D increase_address_space(domain, gfp) || *updated;
+>+=09=09*updated =3D increase_address_space(domain, address, gfp) || *updat=
+ed;
+>
+> =09level   =3D domain->mode - 1;
+> =09pte     =3D &domain->pt_root[PM_LEVEL_INDEX(level, address)];
+>--=20
+>2.16.4
+>
 
-On 10/18/19 4:03 PM, Hannes Reinecke wrote:
-> After commit 8930a6c20791 ("scsi: core: add support for request batching")
-> scsi_device_from_queue() will not work for devices implementing the
-> new scsi_mq_ops_no_commit template.
-> Hence multipath is not able to detect the underlying scsi devices
-> and multipath startup will fail.
-> 
-> Fixes: 8930a6c20791 ("scsi: core: add support for request batching")
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->   drivers/scsi/scsi_lib.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index c1c2998297b2..cd3e21a0098c 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1924,7 +1924,8 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
->   {
->   	struct scsi_device *sdev = NULL;
-> 
-> -	if (q->mq_ops == &scsi_mq_ops)
-> +	if (q->mq_ops == &scsi_mq_ops ||
-> +	    q->mq_ops == &scsi_mq_ops_no_commit)
->   		sdev = q->queuedata;
->   	if (!sdev || !get_device(&sdev->sdev_gendev))
->   		sdev = NULL;
-> 
-
-
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Reviewed-by: Jerry Snitselaar <jsnitsel@redhat.com>
 
