@@ -2,31 +2,31 @@ Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0A5CA9EA1
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEABCA9EA1
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:29:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C6B52064B
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:27:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 581A32064B
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 10:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408166AbfJRK1u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 06:27:50 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36872 "EHLO mx1.suse.de"
+        id S2408081AbfJRK3I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 06:29:08 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37170 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729479AbfJRK1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Oct 2019 06:27:50 -0400
+        id S1729479AbfJRK3H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 18 Oct 2019 06:29:07 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8782AAD6B;
-        Fri, 18 Oct 2019 10:27:48 +0000 (UTC)
-Subject: Re: [PATCH v5 21/23] sg: sg_find_srp_by_id
+        by mx1.suse.de (Postfix) with ESMTP id 99F54B090;
+        Fri, 18 Oct 2019 10:29:05 +0000 (UTC)
+Subject: Re: [PATCH v5 22/23] sg: sg_fill_request_element
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20191008075022.30055-1-dgilbert@interlog.com>
- <20191008075022.30055-22-dgilbert@interlog.com>
+ <20191008075022.30055-23-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -72,12 +72,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <fa17884d-7fff-02d9-26c8-6ea7ace63ef8@suse.de>
-Date:   Fri, 18 Oct 2019 12:27:47 +0200
+Message-ID: <628154d9-7a7f-6647-1c8c-d599a1709b7b@suse.de>
+Date:   Fri, 18 Oct 2019 12:29:05 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191008075022.30055-22-dgilbert@interlog.com>
+In-Reply-To: <20191008075022.30055-23-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,46 +87,18 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 10/8/19 9:50 AM, Douglas Gilbert wrote:
-> Replace sg_get_rq_mark() with sg_find_srp_by_id() and
-> sg_get_ready_srp(). Add sg_chk_mmap() to check flags and
-> reserve buffer available for mmap() based requests. Add
-> sg_copy_sense() and sg_rec_v3_state() which is just
-> refactoring. Add sg_calc_rq_dur() and sg_get_dur() in
-> preparation for optional nanosecond duration timing.
+> Replace sg_fill_request_table() with sg_fill_request_element().
+> Reduce the size of the sg_rq_end_io() function by breaking out
+> some sense buffer checks into sg_check_sense(). Reduce the
+> size of the sg_start_req() function with sg_set_map_data()
+> helper. All code refactoring, no logical change.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->  drivers/scsi/sg.c | 293 +++++++++++++++++++++++++++++++---------------
->  1 file changed, 200 insertions(+), 93 deletions(-)
+>  drivers/scsi/sg.c | 211 ++++++++++++++++++++++++++--------------------
+>  1 file changed, 118 insertions(+), 93 deletions(-)
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 4e6f6fb2a54e..7f3a4b937a5a 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -158,16 +158,20 @@ struct sg_fd;
->  
->  struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
->  	struct list_head entry;	/* list entry */
-> -	struct sg_fd *parentfp;	/* NULL -> not in use */
->  	struct sg_scatter_hold data;	/* hold buffer, perhaps scatter list */
->  	struct sg_io_hdr header;  /* scsi command+info, see <scsi/sg.h> */
->  	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
-> +	u32 duration;		/* cmd duration in milliseconds */
->  	char res_used;		/* 1 -> using reserve buffer, 0 -> not ... */
->  	char orphan;		/* 1 -> drop on sight, 0 -> normal */
->  	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
->  	/* done protected by rq_list_lock */
->  	char done;		/* 0->before bh, 1->before read, 2->read */
->  	atomic_t rq_st;		/* request state, holds a enum sg_rq_state */
-> +	u8 cmd_opcode;          /* first byte of SCSI cdb */
-> +	u64 start_ns;           /* starting point of command duration calc */
-> +	unsigned long frq_bm[1];        /* see SG_FRQ_* defines above */
-> +	struct sg_fd *parentfp; /* pointer to owning fd, even when on fl */
->  	struct request *rq;	/* released in sg_rq_end_io(), bio kept */
->  	struct bio *bio;	/* kept until this req -->SG_RS_INACTIVE */
->  	struct execute_work ew_orph;	/* harvest orphan request */
-
-cmd_opcode is used where?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
