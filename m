@@ -1,115 +1,97 @@
-Return-Path: <SRS0=lSD6=YK=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=K+7G=YL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2895FA372A
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 21:44:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA310CA9EC8
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 01:53:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0174222C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Oct 2019 21:44:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 785B321D7D
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 01:53:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hyqepSL4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2395408AbfJQVok (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Oct 2019 17:44:40 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:53199 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2395390AbfJQVok (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Oct 2019 17:44:40 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id E019A204172;
-        Thu, 17 Oct 2019 23:44:36 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id iBIv1JiQyBJZ; Thu, 17 Oct 2019 23:44:29 +0200 (CEST)
-Received: from [10.200.28.124] (unknown [213.52.86.138])
-        by smtp.infotech.no (Postfix) with ESMTPA id 178E6204163;
-        Thu, 17 Oct 2019 23:44:28 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [RFC][PATCHES] drivers/scsi/sg.c uaccess cleanups/fixes
-To:     Al Viro <viro@zeniv.linux.org.uk>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <CAHk-=wgOWxqwqCFuP_Bw=Hxxf9njeHJs0OLNGNc63peNd=kRqw@mail.gmail.com>
- <20191010195504.GI26530@ZenIV.linux.org.uk>
- <CAHk-=wgWRQo0m7TUCK4T_J-3Vqte+p-FWzvT3CB1jJHgX-KctA@mail.gmail.com>
- <20191011001104.GJ26530@ZenIV.linux.org.uk>
- <CAHk-=wgg3jzkk-jObm1FLVYGS8JCTiKppEnA00_QX7Wsm5ieLQ@mail.gmail.com>
- <20191013181333.GK26530@ZenIV.linux.org.uk>
- <CAHk-=wgrWGyACBM8N8KP7Pu_2VopuzM4A12yQz6Eo=X2Jpwzcw@mail.gmail.com>
- <20191013191050.GL26530@ZenIV.linux.org.uk>
- <CAHk-=wjJNE9hOKuatqh6SFf4nd65LG4ZR3gQSgg+rjSpVxe89w@mail.gmail.com>
- <20191016202540.GQ26530@ZenIV.linux.org.uk>
- <20191017193659.GA18702@ZenIV.linux.org.uk>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <e595be1f-8e7e-7e4b-018d-c2364bd36766@interlog.com>
-Date:   Thu, 17 Oct 2019 23:44:28 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S2406929AbfJRBxp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Oct 2019 21:53:45 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:49958 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727350AbfJRBxp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Oct 2019 21:53:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9I1nAA4100776;
+        Fri, 18 Oct 2019 01:53:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=hHnqh6qyHEoayazyXNT5OE70o/N+c+h0wRrJAxYG2qg=;
+ b=hyqepSL4ZGxqV4HMgs4veVIKlwhPTAUIgA9Si3WEB1yVd2WVXlXPRGOgR1KAy1DwdaDk
+ GiTbYUafoaSJ13vO09eHK6e9AlwPon7tNfHum8PTDtiTYUfdwk23AAw0SRfnzHU1vDLt
+ oAwTTFIqjT1KTzUZ9XSWC4HXe1Dwyvedn51P3XHSNtmcpEOg9RoleLxDQaoE2N0m+K9t
+ 0tTApw7UzqY36xidh98ZGdRjeFK+q3JjHPs1Ht6QZmcIGBXG/F8VCOhkWU9dD1pglyYx
+ zTdjKayHac59p8IIQf/FpNXq9r4BYx2m+pSSzpAxRyjLcN9TPNuZvt2C+cetaghk9omr 0g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vq0q40q4m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Oct 2019 01:53:14 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9I1qxTO021211;
+        Fri, 18 Oct 2019 01:53:13 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vq0ev5a1y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Oct 2019 01:53:13 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9I1r4D3005559;
+        Fri, 18 Oct 2019 01:53:05 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 18 Oct 2019 01:53:03 +0000
+To:     Don Brace <don.brace@microsemi.com>
+Cc:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <bader.alisaleh@microchip.com>, <gerry.morong@microchip.com>,
+        <mahesh.rajashekhara@microchip.com>, <hch@infradead.org>,
+        <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
+        <POSWALD@suse.com>, <shunyong.yang@hxt-semitech.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] hpsa: add missing hunks in reset-patch
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <157107623870.17997.11208813089704833029.stgit@brunhilda>
+Date:   Thu, 17 Oct 2019 21:52:59 -0400
+In-Reply-To: <157107623870.17997.11208813089704833029.stgit@brunhilda> (Don
+        Brace's message of "Mon, 14 Oct 2019 13:03:58 -0500")
+Message-ID: <yq1mudykef8.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20191017193659.GA18702@ZenIV.linux.org.uk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9413 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=971
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910180017
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9413 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910180016
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-17 9:36 p.m., Al Viro wrote:
-> On Wed, Oct 16, 2019 at 09:25:40PM +0100, Al Viro wrote:
-> 
->> FWIW, callers of __copy_from_user() remaining in the generic code:
-> 
->> 6) drivers/scsi/sg.c nest: sg_read() ones are memdup_user() in disguise
->> (i.e. fold with immediately preceding kmalloc()s).  sg_new_write() -
->> fold with access_ok() into copy_from_user() (for both call sites).
->> sg_write() - lose access_ok(), use copy_from_user() (both call sites)
->> and get_user() (instead of the solitary __get_user() there).
-> 
-> Turns out that there'd been outright redundant access_ok() calls (not
-> even warranted by __copy_...) *and* several __put_user()/__get_user()
-> with no checking of return value (access_ok() was there, handling of
-> unmapped addresses wasn't).  The latter go back at least to 2.1.early...
-> 
-> I've got a series that presumably fixes and cleans the things up
-> in that area; it didn't get any serious testing (the kernel builds
-> and boots, smartctl works as well as it used to, but that's not
-> worth much - all it says is that SG_IO doesn't fail terribly;
-> I don't have any test setup for really working with /dev/sg*).
-> 
-> IOW, it needs more review and testing - this is _not_ a pull request.
-> It's in vfs.git#work.sg; individual patches are in followups.
-> Shortlog/diffstat:
-> Al Viro (8):
->        sg_ioctl(): fix copyout handling
->        sg_new_write(): replace access_ok() + __copy_from_user() with copy_from_user()
->        sg_write(): __get_user() can fail...
->        sg_read(): simplify reading ->pack_id of userland sg_io_hdr_t
->        sg_new_write(): don't bother with access_ok
->        sg_read(): get rid of access_ok()/__copy_..._user()
->        sg_write(): get rid of access_ok()/__copy_from_user()/__get_user()
->        SG_IO: get rid of access_ok()
-> 
->   drivers/scsi/sg.c | 98 ++++++++++++++++++++++++++++++++----------------------------------------------------------------
->   1 file changed, 32 insertions(+), 66 deletions(-)
 
-Al,
-I am aware of these and have a 23 part patchset on the linux-scsi list
-for review (see https://marc.info/?l=linux-scsi&m=157052102631490&w=2 )
-that amongst other things fixes all of these. It also re-adds the
-functionality removed from the bsg driver last year. Unfortunately that
-review process is going very slowly, so I have no objections if you
-apply these now.
+Don,
 
-It is unlikely that these changes will introduce any bugs (they didn't in
-my testing). If you want to do more testing you may find the sg3_utils
-package helpful, especially in the testing directory:
-     https://github.com/hreinecke/sg3_utils
+> - correct returning from reset before outstanding
+>   commands are completed for the device.
 
-Doug Gilbert
+Applied to 5.4/scsi-fixes, thanks!
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
