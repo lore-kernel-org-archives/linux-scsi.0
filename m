@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00768CA9EAB
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65A22CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9A712089C
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D68A2089C
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vJs5Daeg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cabcoxN8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503023AbfJRVTM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 17:19:12 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:34894 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502466AbfJRVTM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:19:12 -0400
-Received: by mail-pf1-f194.google.com with SMTP id 205so4619495pfw.2
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:19:11 -0700 (PDT)
+        id S2503028AbfJRVTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 17:19:15 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:45164 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2502466AbfJRVTO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:19:14 -0400
+Received: by mail-pf1-f193.google.com with SMTP id y72so4598223pfb.12
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:19:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GOFcf4eRhVQiqMYL+TG4stH9Od9veSUGc3DLLx0Y+cA=;
-        b=vJs5DaegoKjjoRYlZhsx0cn+TkRnJ4rRF+NrxfQozwiUq7Lm3Pw9EAykM6aa/V+5vt
-         PzUjtvvlpUxhmxtR3UnKT+GuLR++J3kdacrlikQJ8vKXM/G6s1KKd3/kXr9/TYvOyKc+
-         FPuVhAd67nl9NYRPQz7n+IzUYOk044uQw5VRF82sHqD28CaBKTjup/x35CyWWJePFA7k
-         NhbAttUwqv+8YlF982I772OpFfTPp0ksel7n6Ox2RYWW23WTg781AZ3qXrlDNiGs7m7L
-         cE1ZZytys8SqisLv0UsgS3M4W+h//qdkF593Pb8cUlZPz/2hc0U5CjXVfNcXm2m4LtZr
-         rTYQ==
+        bh=vBRUhSKbRvPUMdJRZt7tcEK76G3r/xM6LzBMXROg9M8=;
+        b=cabcoxN8kK9yDLKv1rNDWGiDG4Ne8H2a4JrwgXCQyIsZlKQM2kmCrG9laBo25lpECc
+         KfSvyVisnzHnROFmsQCBrresOJbNBrr7QloWMz4qB1buhCHPCZY4YtU1mXCZRcOLlbig
+         NUftjBLXHB2ixNBnJxUKJYnony8xpi0tjZbG0vkyzCxj1yu/KgtfZqkiNkP+rSf75Pi7
+         LQE0x0BZqVq6edfDNl/t46U5rRusvx/WjiiK02uSTeRlqvBnjR+WHNqzh8W2U4JRlZKS
+         wiuMRhALePCMxkrAf/rk8gzScjYfEICavBG+W3jwqKIcLAtcG6cl/AojfF6cP0IruERj
+         /Phg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=GOFcf4eRhVQiqMYL+TG4stH9Od9veSUGc3DLLx0Y+cA=;
-        b=ASsi9LX0OUnEHIoq8LDluHx8TvPF6kUBudP4dXsU5J/yB+oEswcJKRveW+S8CLnaz1
-         U0JpNv0bnCv1svVx8CcEpoyiifnkt3qiUfQIbiTdVdLoCaaBjTXELeMhY14pv7EH/vHg
-         X2xUQDkgFQNK6HOrGNDciIwaPaA90InzawCesLDSnvMyygtvLY/aGazwird7PmP8rlRi
-         +YaEuj5OvXcprVAPUiED9J6Ez7NCjcCjArg99bhq0a6Nr3095j5BjjOp6ZmWR4PPnn9/
-         3Z6OHwiDXWkpkmy8Iox1Yw00oNzKO6mfJqMAiQYbzSamxDBm808tpRt9qDrSB7KaM7b7
-         z1gQ==
-X-Gm-Message-State: APjAAAUHgbv16DpnEOrkofFfy+GfF5gnEqJTmYDUogtEHyvyNkbP8mJu
-        M/aAOHzafyICzNctQjrBfK0lY2NF
-X-Google-Smtp-Source: APXvYqz1ozb6nhamUu++VnXOl0dgnAHzNO+vHaEAbN6+G58MLiglbmQ9DPyRb2Gj0mILVZL99Ytl9w==
-X-Received: by 2002:a17:90a:3608:: with SMTP id s8mr13713115pjb.44.1571433551315;
-        Fri, 18 Oct 2019 14:19:11 -0700 (PDT)
+        bh=vBRUhSKbRvPUMdJRZt7tcEK76G3r/xM6LzBMXROg9M8=;
+        b=jLeBhAGrIQa32Kr0W374dayfszAg1p2rIGas+peAibrPYdXGAGQ1li+TJFaR/dOZWx
+         jU+EUJWL2LfB1IPS6wdhPNmiBKQLJHZ15St6WWMkfxIXvzZZ0totqqlgf5TB3FzUoc4H
+         yBn4pQGpfXVJshRt9DOtK4488MUxcAilKWjBEZgtJdJOaOjm7EnJofGHjYPSlckvtFhK
+         RBlwHhd1X29yBKUjRRdL32rMlRc2GSw6xGbASXo7klmGx36F4+Tau4NXqVIQjzexGnDv
+         bHacuTVEY+nsTx82TRtf59oGiIvjtjdu/Z5O5zug5bRuKqS1xfjOH9p6pQU3NDyY5lp4
+         UVBQ==
+X-Gm-Message-State: APjAAAVwLvJxiV8M461c1gItf8j8qfeKakG276dqDfnkdl7c7DXzqYs0
+        BTsQr0aWxQCsgZJ1LB7Xi6JwKDSu
+X-Google-Smtp-Source: APXvYqyV/pr7Rxg+NlO3vUH1EIZeSbjNeODvI6V43EOlX3p0AvAxUvT4QH9npyTFlVdtG1nC5xE9CA==
+X-Received: by 2002:a62:60c6:: with SMTP id u189mr9143087pfb.4.1571433553452;
+        Fri, 18 Oct 2019 14:19:13 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.19.09
+        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.19.11
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 18 Oct 2019 14:19:10 -0700 (PDT)
+        Fri, 18 Oct 2019 14:19:13 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 10/16] lpfc: Revise interrupt coalescing for missing scenarios
-Date:   Fri, 18 Oct 2019 14:18:26 -0700
-Message-Id: <20191018211832.7917-11-jsmart2021@gmail.com>
+Subject: [PATCH 11/16] lpfc: Make FW logging dynamically configurable
+Date:   Fri, 18 Oct 2019 14:18:27 -0700
+Message-Id: <20191018211832.7917-12-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191018211832.7917-1-jsmart2021@gmail.com>
 References: <20191018211832.7917-1-jsmart2021@gmail.com>
@@ -69,174 +69,403 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The existing "auto eq delay" mechanism was sometimes skipping over
-an eq, not ramping the coalescing down under light load fast enough,
-and in other cases never kicked in as cpu sharing by multiple vectors
-didn't quite add up right.
+Currently, the FW logging facility is a load/boot time parameter
+which requires the driver to be unloaded/reloaded or the system
+rebooted in order to change it's configuration.
 
-Tweak the interrupt mechanism such that:
-- Add a flag to the eq to force checking for colaescing values
-  when being serviced in the interrupt handler.  The flag will
-  be set by any CQ bound to the EQ whenever the number of CQ
-  elements process in a single scan meets or exceeds the hardware
-  queue notify level. E.g. there's a significant number of
-  completions happening.
-- In the heartbeat work item that checks coalescing:
- - Replace the structure that was counting the number of EQs
-   that interrupted on a single cpu with a new structure that
-   looks at the EQ to see whether EQ currently has a coalescing
-   value (thus it should be re-evaluate) or was marked by the
-   new flag indicating heavy completions.
- - When a cpu, which may be servicing multiple vectors, had
-   at least 1 EQ that should be checked, a new coalescing delay
-   is calculated based on the number of interrupts that occurred
-   on the cpu.
- - The new coalescing value is then applied to the EQs that
-   had interrupted on the cpu.
+Convert the logging facility to allow dynamic enablement and
+configuration. Specifically:
+- Convert the feature so that it can be enabled dynamically via an
+  attribute.  Additionally, the size of the buffer can be configured
+  dynamically.
+- Add locks around states that now may be changing.
+- Tie the feature into debugfs so that the logs can be read at
+  any time.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  |  1 -
- drivers/scsi/lpfc/lpfc_init.c | 51 ++++++++++++++++++-------------------------
- drivers/scsi/lpfc/lpfc_sli.c  |  3 ++-
- drivers/scsi/lpfc/lpfc_sli4.h |  1 +
- 4 files changed, 24 insertions(+), 32 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         |   9 ++-
+ drivers/scsi/lpfc/lpfc_attr.c    |  48 +++++++++++++++-
+ drivers/scsi/lpfc/lpfc_bsg.c     |  18 ++++--
+ drivers/scsi/lpfc/lpfc_debugfs.c | 117 ++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c     |  22 +++++++-
+ 5 files changed, 204 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 1cd3016f7783..ac86b80230e7 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -210,7 +210,6 @@ struct lpfc_sli_intf {
- #define LPFC_MAX_IMAX          5000000
- #define LPFC_DEF_IMAX          0
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index dabb5eac5fed..884d6076d7aa 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -605,6 +605,12 @@ struct lpfc_epd_pool {
+ 	spinlock_t lock;	/* lock for expedite pool */
+ };
  
--#define LPFC_IMAX_THRESHOLD    1000
- #define LPFC_MAX_AUTO_EQ_DELAY 120
- #define LPFC_EQ_DELAY_STEP     15
- #define LPFC_EQD_ISR_TRIGGER   20000
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 8292b66e4b07..316a2c2beb0c 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1235,10 +1235,9 @@ lpfc_hb_eq_delay_work(struct work_struct *work)
- 					     struct lpfc_hba, eq_delay_work);
- 	struct lpfc_eq_intr_info *eqi, *eqi_new;
- 	struct lpfc_queue *eq, *eq_next;
--	unsigned char *eqcnt = NULL;
-+	unsigned char *ena_delay = NULL;
- 	uint32_t usdelay;
- 	int i;
--	bool update = false;
++enum ras_state {
++	INACTIVE,
++	REG_INPROGRESS,
++	ACTIVE
++};
++
+ struct lpfc_ras_fwlog {
+ 	uint8_t *fwlog_buff;
+ 	uint32_t fw_buffcount; /* Buffer size posted to FW */
+@@ -621,7 +627,7 @@ struct lpfc_ras_fwlog {
+ 	bool ras_enabled;   /* Ras Enabled for the function */
+ #define LPFC_RAS_DISABLE_LOGGING 0x00
+ #define LPFC_RAS_ENABLE_LOGGING 0x01
+-	bool ras_active;    /* RAS logging running state */
++	enum ras_state state;    /* RAS logging running state */
+ };
  
- 	if (!phba->cfg_auto_imax || phba->pport->load_flag & FC_UNLOADING)
- 		return;
-@@ -1247,44 +1246,36 @@ lpfc_hb_eq_delay_work(struct work_struct *work)
- 	    phba->pport->fc_flag & FC_OFFLINE_MODE)
- 		goto requeue;
- 
--	eqcnt = kcalloc(num_possible_cpus(), sizeof(unsigned char),
--			GFP_KERNEL);
--	if (!eqcnt)
-+	ena_delay = kcalloc(phba->sli4_hba.num_possible_cpu, sizeof(*ena_delay),
-+			    GFP_KERNEL);
-+	if (!ena_delay)
- 		goto requeue;
- 
--	if (phba->cfg_irq_chann > 1) {
--		/* Loop thru all IRQ vectors */
--		for (i = 0; i < phba->cfg_irq_chann; i++) {
--			/* Get the EQ corresponding to the IRQ vector */
--			eq = phba->sli4_hba.hba_eq_hdl[i].eq;
--			if (!eq)
--				continue;
--			if (eq->q_mode) {
--				update = true;
--				break;
--			}
--			if (eqcnt[eq->last_cpu] < 2)
--				eqcnt[eq->last_cpu]++;
-+	for (i = 0; i < phba->cfg_irq_chann; i++) {
-+		/* Get the EQ corresponding to the IRQ vector */
-+		eq = phba->sli4_hba.hba_eq_hdl[i].eq;
-+		if (!eq)
-+			continue;
-+		if (eq->q_mode || eq->q_flag & HBA_EQ_DELAY_CHK) {
-+			eq->q_flag &= ~HBA_EQ_DELAY_CHK;
-+			ena_delay[eq->last_cpu] = 1;
- 		}
--	} else
--		update = true;
+ struct lpfc_hba {
+@@ -1053,6 +1059,7 @@ struct lpfc_hba {
+ #ifdef LPFC_HDWQ_LOCK_STAT
+ 	struct dentry *debug_lockstat;
+ #endif
++	struct dentry *debug_ras_log;
+ 	atomic_t nvmeio_trc_cnt;
+ 	uint32_t nvmeio_trc_size;
+ 	uint32_t nvmeio_trc_output_idx;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 266a71b01c47..ba504cc6e8ed 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -5932,7 +5932,53 @@ LPFC_ATTR_RW(enable_mds_diags, 0, 0, 1, "Enable MDS Diagnostics");
+  *	[1-4] = Multiple of 1/4th Mb of host memory for FW logging
+  * Value range [0..4]. Default value is 0
+  */
+-LPFC_ATTR_RW(ras_fwlog_buffsize, 0, 0, 4, "Host memory for FW logging");
++LPFC_ATTR(ras_fwlog_buffsize, 0, 0, 4, "Host memory for FW logging");
++lpfc_param_show(ras_fwlog_buffsize);
++
++static ssize_t
++lpfc_ras_fwlog_buffsize_set(struct lpfc_hba  *phba, uint val)
++{
++	int ret = 0;
++	enum ras_state state;
++
++	if (!lpfc_rangecheck(val, 0, 4))
++		return -EINVAL;
++
++	if (phba->cfg_ras_fwlog_buffsize == val)
++		return 0;
++
++	if (phba->cfg_ras_fwlog_func == PCI_FUNC(phba->pcidev->devfn))
++		return -EINVAL;
++
++	spin_lock_irq(&phba->hbalock);
++	state = phba->ras_fwlog.state;
++	spin_unlock_irq(&phba->hbalock);
++
++	if (state == REG_INPROGRESS) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI, "6147 RAS Logging "
++				"registration is in progress\n");
++		return -EBUSY;
 +	}
++
++	/* For disable logging: stop the logs and free the DMA.
++	 * For ras_fwlog_buffsize size change we still need to free and
++	 * reallocate the DMA in lpfc_sli4_ras_fwlog_init.
++	 */
++	phba->cfg_ras_fwlog_buffsize = val;
++	if (state == ACTIVE) {
++		lpfc_ras_stop_fwlog(phba);
++		lpfc_sli4_ras_dma_free(phba);
++	}
++
++	lpfc_sli4_ras_init(phba);
++	if (phba->ras_fwlog.ras_enabled)
++		ret = lpfc_sli4_ras_fwlog_init(phba, phba->cfg_ras_fwlog_level,
++					       LPFC_RAS_ENABLE_LOGGING);
++	return ret;
++}
++
++lpfc_param_store(ras_fwlog_buffsize);
++static DEVICE_ATTR_RW(lpfc_ras_fwlog_buffsize);
  
- 	for_each_present_cpu(i) {
- 		eqi = per_cpu_ptr(phba->sli4_hba.eq_info, i);
--		if (!update && eqcnt[i] < 2) {
--			eqi->icnt = 0;
--			continue;
-+		if (ena_delay[i]) {
-+			usdelay = (eqi->icnt >> 10) * LPFC_EQ_DELAY_STEP;
-+			if (usdelay > LPFC_MAX_AUTO_EQ_DELAY)
-+				usdelay = LPFC_MAX_AUTO_EQ_DELAY;
-+		} else {
-+			usdelay = 0;
+ /*
+  * lpfc_ras_fwlog_level: Firmware logging verbosity level
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 39a736b887b1..d4e1b120cc9e 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -5435,10 +5435,12 @@ lpfc_bsg_get_ras_config(struct bsg_job *job)
+ 		bsg_reply->reply_data.vendor_reply.vendor_rsp;
+ 
+ 	/* Current logging state */
+-	if (ras_fwlog->ras_active == true)
++	spin_lock_irq(&phba->hbalock);
++	if (ras_fwlog->state == ACTIVE)
+ 		ras_reply->state = LPFC_RASLOG_STATE_RUNNING;
+ 	else
+ 		ras_reply->state = LPFC_RASLOG_STATE_STOPPED;
++	spin_unlock_irq(&phba->hbalock);
+ 
+ 	ras_reply->log_level = phba->ras_fwlog.fw_loglevel;
+ 	ras_reply->log_buff_sz = phba->cfg_ras_fwlog_buffsize;
+@@ -5495,10 +5497,13 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
+ 
+ 	if (action == LPFC_RASACTION_STOP_LOGGING) {
+ 		/* Check if already disabled */
+-		if (ras_fwlog->ras_active == false) {
++		spin_lock_irq(&phba->hbalock);
++		if (ras_fwlog->state != ACTIVE) {
++			spin_unlock_irq(&phba->hbalock);
+ 			rc = -ESRCH;
+ 			goto ras_job_error;
  		}
++		spin_unlock_irq(&phba->hbalock);
  
--		usdelay = (eqi->icnt / LPFC_IMAX_THRESHOLD) *
--			   LPFC_EQ_DELAY_STEP;
--		if (usdelay > LPFC_MAX_AUTO_EQ_DELAY)
--			usdelay = LPFC_MAX_AUTO_EQ_DELAY;
--
- 		eqi->icnt = 0;
+ 		/* Disable logging */
+ 		lpfc_ras_stop_fwlog(phba);
+@@ -5509,8 +5514,10 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
+ 		 * FW-logging with new log-level. Return status
+ 		 * "Logging already Running" to caller.
+ 		 **/
+-		if (ras_fwlog->ras_active)
++		spin_lock_irq(&phba->hbalock);
++		if (ras_fwlog->state != INACTIVE)
+ 			action_status = -EINPROGRESS;
++		spin_unlock_irq(&phba->hbalock);
  
- 		list_for_each_entry_safe(eq, eq_next, &eqi->list, cpu_list) {
--			if (eq->last_cpu != i) {
-+			if (unlikely(eq->last_cpu != i)) {
- 				eqi_new = per_cpu_ptr(phba->sli4_hba.eq_info,
- 						      eq->last_cpu);
- 				list_move_tail(&eq->cpu_list, &eqi_new->list);
-@@ -1296,7 +1287,7 @@ lpfc_hb_eq_delay_work(struct work_struct *work)
- 		}
+ 		/* Enable logging */
+ 		rc = lpfc_sli4_ras_fwlog_init(phba, log_level,
+@@ -5626,10 +5633,13 @@ lpfc_bsg_get_ras_fwlog(struct bsg_job *job)
+ 		goto ras_job_error;
+ 
+ 	/* Logging to be stopped before reading */
+-	if (ras_fwlog->ras_active == true) {
++	spin_lock_irq(&phba->hbalock);
++	if (ras_fwlog->state == ACTIVE) {
++		spin_unlock_irq(&phba->hbalock);
+ 		rc = -EINPROGRESS;
+ 		goto ras_job_error;
  	}
++	spin_unlock_irq(&phba->hbalock);
  
--	kfree(eqcnt);
-+	kfree(ena_delay);
+ 	if (job->request_len <
+ 	    sizeof(struct fc_bsg_request) +
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 8d34be60d379..ab124f7d50d6 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2078,6 +2078,96 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+ }
+ #endif
  
- requeue:
- 	queue_delayed_work(phba->wq, &phba->eq_delay_work,
++int
++lpfc_debugfs_ras_log_data(struct lpfc_hba *phba, char *buffer, int size)
++{
++	int copied = 0;
++	struct lpfc_dmabuf *dmabuf, *next;
++
++	spin_lock_irq(&phba->hbalock);
++	if (phba->ras_fwlog.state != ACTIVE) {
++		spin_unlock_irq(&phba->hbalock);
++		return -EINVAL;
++	}
++	spin_unlock_irq(&phba->hbalock);
++
++	list_for_each_entry_safe(dmabuf, next,
++				 &phba->ras_fwlog.fwlog_buff_list, list) {
++		memcpy(buffer + copied, dmabuf->virt, LPFC_RAS_MAX_ENTRY_SIZE);
++		copied += LPFC_RAS_MAX_ENTRY_SIZE;
++		if (size > copied)
++			break;
++	}
++	return copied;
++}
++
++static int
++lpfc_debugfs_ras_log_release(struct inode *inode, struct file *file)
++{
++	struct lpfc_debug *debug = file->private_data;
++
++	vfree(debug->buffer);
++	kfree(debug);
++
++	return 0;
++}
++
++/**
++ * lpfc_debugfs_ras_log_open - Open the RAS log debugfs buffer
++ * @inode: The inode pointer that contains a vport pointer.
++ * @file: The file pointer to attach the log output.
++ *
++ * Description:
++ * This routine is the entry point for the debugfs open file operation. It gets
++ * the vport from the i_private field in @inode, allocates the necessary buffer
++ * for the log, fills the buffer from the in-memory log for this vport, and then
++ * returns a pointer to that log in the private_data field in @file.
++ *
++ * Returns:
++ * This function returns zero if successful. On error it will return a negative
++ * error value.
++ **/
++static int
++lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
++{
++	struct lpfc_hba *phba = inode->i_private;
++	struct lpfc_debug *debug;
++	int size;
++	int rc = -ENOMEM;
++
++	spin_lock_irq(&phba->hbalock);
++	if (phba->ras_fwlog.state != ACTIVE) {
++		spin_unlock_irq(&phba->hbalock);
++		rc = -EINVAL;
++		goto out;
++	}
++	spin_unlock_irq(&phba->hbalock);
++	debug = kmalloc(sizeof(*debug), GFP_KERNEL);
++	if (!debug)
++		goto out;
++
++	size = LPFC_RAS_MIN_BUFF_POST_SIZE * phba->cfg_ras_fwlog_buffsize;
++	debug->buffer = vmalloc(size);
++	if (!debug->buffer)
++		goto free_debug;
++
++	debug->len = lpfc_debugfs_ras_log_data(phba, debug->buffer, size);
++	if (debug->len < 0) {
++		rc = -EINVAL;
++		goto free_buffer;
++	}
++	file->private_data = debug;
++
++	return 0;
++
++free_buffer:
++	vfree(debug->buffer);
++free_debug:
++	kfree(debug);
++out:
++	return rc;
++}
++
+ /**
+  * lpfc_debugfs_dumpHBASlim_open - Open the Dump HBA SLIM debugfs buffer
+  * @inode: The inode pointer that contains a vport pointer.
+@@ -5286,6 +5376,16 @@ static const struct file_operations lpfc_debugfs_op_lockstat = {
+ };
+ #endif
+ 
++#undef lpfc_debugfs_ras_log
++static const struct file_operations lpfc_debugfs_ras_log = {
++	.owner =        THIS_MODULE,
++	.open =         lpfc_debugfs_ras_log_open,
++	.llseek =       lpfc_debugfs_lseek,
++	.read =         lpfc_debugfs_read,
++	.release =      lpfc_debugfs_ras_log_release,
++};
++#endif
++
+ #undef lpfc_debugfs_op_dumpHBASlim
+ static const struct file_operations lpfc_debugfs_op_dumpHBASlim = {
+ 	.owner =        THIS_MODULE,
+@@ -5457,7 +5557,6 @@ static const struct file_operations lpfc_idiag_op_extAcc = {
+ 	.release =      lpfc_idiag_cmd_release,
+ };
+ 
+-#endif
+ 
+ /* lpfc_idiag_mbxacc_dump_bsg_mbox - idiag debugfs dump bsg mailbox command
+  * @phba: Pointer to HBA context object.
+@@ -5707,6 +5806,19 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			goto debug_failed;
+ 		}
+ 
++		/* RAS log */
++		snprintf(name, sizeof(name), "ras_log");
++		phba->debug_ras_log =
++			debugfs_create_file(name, 0644,
++					    phba->hba_debugfs_root,
++					    phba, &lpfc_debugfs_ras_log);
++		if (!phba->debug_ras_log) {
++			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
++					 "6148 Cannot create debugfs"
++					 " ras_log\n");
++			goto debug_failed;
++		}
++
+ 		/* Setup hbqinfo */
+ 		snprintf(name, sizeof(name), "hbqinfo");
+ 		phba->debug_hbqinfo =
+@@ -6117,6 +6229,9 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
+ 		debugfs_remove(phba->debug_hbqinfo); /* hbqinfo */
+ 		phba->debug_hbqinfo = NULL;
+ 
++		debugfs_remove(phba->debug_ras_log);
++		phba->debug_ras_log = NULL;
++
+ #ifdef LPFC_HDWQ_LOCK_STAT
+ 		debugfs_remove(phba->debug_lockstat); /* lockstat */
+ 		phba->debug_lockstat = NULL;
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index bb0e155eb32c..0e6674bd15c6 100644
+index 0e6674bd15c6..294f041961a8 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -13640,6 +13640,7 @@ __lpfc_sli4_process_cq(struct lpfc_hba *phba, struct lpfc_queue *cq,
- 			phba->sli4_hba.sli4_write_cq_db(phba, cq, consumed,
- 						LPFC_QUEUE_NOARM);
- 			consumed = 0;
-+			cq->assoc_qp->q_flag |= HBA_EQ_DELAY_CHK;
- 		}
+@@ -6219,11 +6219,16 @@ lpfc_ras_stop_fwlog(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_ras_fwlog *ras_fwlog = &phba->ras_fwlog;
  
- 		if (count == LPFC_NVMET_CQ_NOTIFY)
-@@ -14278,7 +14279,7 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
- 	fpeq->last_cpu = raw_smp_processor_id();
+-	ras_fwlog->ras_active = false;
++	spin_lock_irq(&phba->hbalock);
++	ras_fwlog->state = INACTIVE;
++	spin_unlock_irq(&phba->hbalock);
  
- 	if (icnt > LPFC_EQD_ISR_TRIGGER &&
--	    phba->cfg_irq_chann == 1 &&
-+	    fpeq->q_flag & HBA_EQ_DELAY_CHK &&
- 	    phba->cfg_auto_imax &&
- 	    fpeq->q_mode != LPFC_MAX_AUTO_EQ_DELAY &&
- 	    phba->sli.sli_flag & LPFC_SLI_USE_EQDR)
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 0d4882a9e634..c9e068ca0fec 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -199,6 +199,7 @@ struct lpfc_queue {
- 	uint8_t q_flag;
- #define HBA_NVMET_WQFULL	0x1 /* We hit WQ Full condition for NVMET */
- #define HBA_NVMET_CQ_NOTIFY	0x1 /* LPFC_NVMET_CQ_NOTIFY CQEs this EQE */
-+#define HBA_EQ_DELAY_CHK	0x2 /* EQ is a candidate for coalescing */
- #define LPFC_NVMET_CQ_NOTIFY	4
- 	void __iomem *db_regaddr;
- 	uint16_t dpp_enable;
+ 	/* Disable FW logging to host memory */
+ 	writel(LPFC_CTL_PDEV_CTL_DDL_RAS,
+ 	       phba->sli4_hba.conf_regs_memmap_p + LPFC_CTL_PDEV_CTL_OFFSET);
++
++	/* Wait 10ms for firmware to stop using DMA buffer */
++	usleep_range(10 * 1000, 20 * 1000);
+ }
+ 
+ /**
+@@ -6259,7 +6264,9 @@ lpfc_sli4_ras_dma_free(struct lpfc_hba *phba)
+ 		ras_fwlog->lwpd.virt = NULL;
+ 	}
+ 
+-	ras_fwlog->ras_active = false;
++	spin_lock_irq(&phba->hbalock);
++	ras_fwlog->state = INACTIVE;
++	spin_unlock_irq(&phba->hbalock);
+ }
+ 
+ /**
+@@ -6361,7 +6368,9 @@ lpfc_sli4_ras_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 		goto disable_ras;
+ 	}
+ 
+-	ras_fwlog->ras_active = true;
++	spin_lock_irq(&phba->hbalock);
++	ras_fwlog->state = ACTIVE;
++	spin_unlock_irq(&phba->hbalock);
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+ 
+ 	return;
+@@ -6393,6 +6402,10 @@ lpfc_sli4_ras_fwlog_init(struct lpfc_hba *phba,
+ 	uint32_t len = 0, fwlog_buffsize, fwlog_entry_count;
+ 	int rc = 0;
+ 
++	spin_lock_irq(&phba->hbalock);
++	ras_fwlog->state = INACTIVE;
++	spin_unlock_irq(&phba->hbalock);
++
+ 	fwlog_buffsize = (LPFC_RAS_MIN_BUFF_POST_SIZE *
+ 			  phba->cfg_ras_fwlog_buffsize);
+ 	fwlog_entry_count = (fwlog_buffsize/LPFC_RAS_MAX_ENTRY_SIZE);
+@@ -6452,6 +6465,9 @@ lpfc_sli4_ras_fwlog_init(struct lpfc_hba *phba,
+ 	mbx_fwlog->u.request.lwpd.addr_lo = putPaddrLow(ras_fwlog->lwpd.phys);
+ 	mbx_fwlog->u.request.lwpd.addr_hi = putPaddrHigh(ras_fwlog->lwpd.phys);
+ 
++	spin_lock_irq(&phba->hbalock);
++	ras_fwlog->state = REG_INPROGRESS;
++	spin_unlock_irq(&phba->hbalock);
+ 	mbox->vport = phba->pport;
+ 	mbox->mbox_cmpl = lpfc_sli4_ras_mbox_cmpl;
+ 
 -- 
 2.13.7
 
