@@ -5,62 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3860FCA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01C98CA9EA9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F38292089C
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7C1E2089C
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Oct 2019 21:19:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XMIa2Stl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mYMGKwgM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503037AbfJRVTW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Oct 2019 17:19:22 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:40863 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502466AbfJRVTW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:19:22 -0400
-Received: by mail-pg1-f196.google.com with SMTP id e13so4017256pga.7
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:19:20 -0700 (PDT)
+        id S2503048AbfJRVTX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Oct 2019 17:19:23 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:38699 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2502466AbfJRVTX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Oct 2019 17:19:23 -0400
+Received: by mail-pf1-f194.google.com with SMTP id h195so4612345pfe.5
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Oct 2019 14:19:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=+sLyWXhJT27YEDiChxsHss7rBbTeSrvjMFoj3ugxkYE=;
-        b=XMIa2Stl/iHlAJMS3lzkDrrxRKiP8jHTIQGVSA//1S9i2Go0tvuus4SNjTxvnkNlV7
-         8eS8ygndQxZPx3kleLUsA+tuLgY2db2F7bE1xQby9QDeptcuGmEnLVKUMXs3riufY6lY
-         skpVtAWZQlYr6b5b6B3S06ZQIbZKqz+1Y/BeSw9Ur9n42v8VAeLvm58UfR4zqrYqirW/
-         9NA9m7I4J4i2LDTxFGZdMvpAtJhtiDGjCQP/IVM2H90gw13kqUUUQShXnrYH0lUWG5U+
-         Rzj/dBuRz7RRi/5yYN5Rpx+YqZj+kjMAEDUbmJnS+OxcH4Qu8Oz5yEL5q7NBXximBzwl
-         ipqg==
+        bh=0+Cu0VgmMOtIHukmQ1s3wFRwpxnU/ckQw9vK0ORWLl0=;
+        b=mYMGKwgMwHYbTDALUUqvJOTb6qbPRawrtJ+SAqcfMIQ+Ohr+tyuY6R0T0h8PCK4Ied
+         Y5kBTefLrf5GiiciU4DkoeXTtLcmJGS4JY8eeXr4W+Jso7LsVbaQFfwPrTE2rXVAfYxQ
+         56xLr54nXB3piJIN1H807gHgCFHBXe1i9odUDbHTCsOsMFqHHDT3PCFecqG/oJyVu6nE
+         dlUNSrFyOB0wRmN64RI4Bn0F+sReNQvxW65OM2iKV1T3VPkMTyVYjzxL1XQjpkbYWCBq
+         NQzvMxTtdH2snlFxFPhtEUxYxQDgnZs24dAxDStbKzDdxHI87TY8QFaO/VU38eRhObAJ
+         2Ixw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=+sLyWXhJT27YEDiChxsHss7rBbTeSrvjMFoj3ugxkYE=;
-        b=rZYoani4Weh9Zcxtn+iTSnniAgxLbzKoLU0kuHTMBg/tPWs1vsnU2e8AtpXyWl8xVA
-         4LN1BOVvAXHYduieQBQmYxV70i4glTN2Zn7yHXDlUCAeHpxf0d3z+YmNInyUIk/tDoVf
-         dJJj9jsbBY/XATc1zJK+bNivRQY7gG9aEyL2wkWw8YQHcD3UDBradXE1IjnBWUHD+pZm
-         iyVECan7qJo7BoJyeHPgv3OR8v1aY1Kq+h7wEOKh0/D28glRYMNoYtAcvObJpkr+zMIw
-         SEfJ2pUB/uJK+XTVvaC9WApLbPDu58cCCi0/9S7WSduX3K/dgUq+ZFun8GkHapjU3A20
-         Hwbg==
-X-Gm-Message-State: APjAAAWujcQCqHjHbfJujmqxRw4th3UALhFxDAJkzA4pMWBsGhLm73/U
-        AAF1EF+BUl1iy8fNO/8p8TgTUEYo
-X-Google-Smtp-Source: APXvYqwj0FdlPgCIen0t7l2dng9ikT1QV8F+5fQ3PBvGcd0c0hlmu33JEcieENH341uZcbM/l2xLCg==
-X-Received: by 2002:aa7:9f8d:: with SMTP id z13mr12236817pfr.119.1571433559867;
-        Fri, 18 Oct 2019 14:19:19 -0700 (PDT)
+        bh=0+Cu0VgmMOtIHukmQ1s3wFRwpxnU/ckQw9vK0ORWLl0=;
+        b=aVRddlpwxnGl6lzmCMjF8J35mXK+m7ZLmcNwYpaCQ4aJJ0qTZQcA5/FPo0zg/+kf7C
+         bMknFW3g2uqgupqSh5XzwbKJfb5zqNbiullMJ3Hh1hEYSCLBjtDKYCh9yNvXw1tByikV
+         /pbPTiAxkOrhoojz2vQU0Zl9KypJUnRNeGuoIUi0IZ9ZtRtFXsZEmWS599d0WDVwNKgf
+         UA7B2hR6hnyf8eUT1XN0dIl/VY10ZOMJN49j0u7ceyxpWtmqDYv98UBGwok/+O26hFgp
+         aSeXxpB/5Kra6ElW5TGd0dtjJQQox6Hztk97UzRMIUbwKrRKAuYFtISP18pBclob52TJ
+         Gd8A==
+X-Gm-Message-State: APjAAAWTj/pCuPS/DVMl85Qj1VwaGjXUVoAEqQQfl+uarNVoIv803hM8
+        4P2CPXKO9l//3OnBArS3x23uOVRl
+X-Google-Smtp-Source: APXvYqxgjPpd9cIhkhxTQ9o4O/WYNCDjbux8bIbRXUdtVSIhhzlWV7lDimHNf1MM3z0p6N9BAVmHzQ==
+X-Received: by 2002:a17:90a:9e2:: with SMTP id 89mr13473696pjo.67.1571433562108;
+        Fri, 18 Oct 2019 14:19:22 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.19.18
+        by smtp.gmail.com with ESMTPSA id 22sm7538878pfo.131.2019.10.18.14.19.20
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 18 Oct 2019 14:19:19 -0700 (PDT)
+        Fri, 18 Oct 2019 14:19:21 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 14/16] lpfc: Add FC-AL support to lpe32000 models
-Date:   Fri, 18 Oct 2019 14:18:30 -0700
-Message-Id: <20191018211832.7917-15-jsmart2021@gmail.com>
+Subject: [PATCH 15/16] lpfc: Add additional discovery log messages
+Date:   Fri, 18 Oct 2019 14:18:31 -0700
+Message-Id: <20191018211832.7917-16-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191018211832.7917-1-jsmart2021@gmail.com>
 References: <20191018211832.7917-1-jsmart2021@gmail.com>
@@ -69,278 +69,189 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the past, the lpe32000 models, based their main support being for
-32G, and as FC-AL is not supported in the FC standards past 8G, did
-not support FC-AL operation.
+When debugging a recent discovery customer problem it was very
+hard to tell what was happening with the existing discovery log
+messages. To fully debug the issue additional log messages were
+necessary.
 
-This patch adds private-loop FC-AL support for the LPE32000 adapters
-when a link is 8G or below. To avoid conditions where link rate may
-change, which would cause non-connectivity to the AL device, FC-AL
-mode must become a persistent setting and the link kept at a speed
-supporting FC-AL.
-
-the patch:
-- adds a pls attribute indicating whether the adapter properly
-  supports FC-AL.
-- adds support for the adapter to indicate that topology should
-  be fixed and the topology types to be configured.
-- adds a pt attribute to report the persistent topology if present.
+Add or extend log messages so that sufficient information is
+present for debugging.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 +
- drivers/scsi/lpfc/lpfc_attr.c | 38 +++++++++++++++++-
- drivers/scsi/lpfc/lpfc_hw4.h  | 12 ++++++
- drivers/scsi/lpfc/lpfc_init.c | 90 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_mbox.c |  1 +
- drivers/scsi/lpfc/lpfc_sli4.h |  1 +
- 6 files changed, 142 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_ct.c      | 22 +++++++++++++++++++---
+ drivers/scsi/lpfc/lpfc_els.c     | 10 ++++++++--
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 39 +++++++++++++++++++++++++++++++++++----
+ 3 files changed, 62 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 884d6076d7aa..4559f1700c6d 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -731,6 +731,7 @@ struct lpfc_hba {
- #define HBA_FCOE_MODE		0x4 /* HBA function in FCoE Mode */
- #define HBA_SP_QUEUE_EVT	0x8 /* Slow-path qevt posted to worker thread*/
- #define HBA_POST_RECEIVE_BUFFER 0x10 /* Rcv buffers need to be posted */
-+#define HBA_PERSISTENT_TOPO	0x20 /* Persistent topology support in hba */
- #define ELS_XRI_ABORT_EVENT	0x40
- #define ASYNC_EVENT		0x80
- #define LINK_DISABLED		0x100 /* Link disabled by user */
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index ba504cc6e8ed..e738c1529d2d 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3535,6 +3535,31 @@ LPFC_ATTR_R(enable_rrq, 2, 0, 2,
- LPFC_ATTR_R(suppress_link_up, LPFC_INITIALIZE_LINK, LPFC_INITIALIZE_LINK,
- 		LPFC_DELAY_INIT_LINK_INDEFINITELY,
- 		"Suppress Link Up at initialization");
-+
-+static ssize_t
-+lpfc_pls_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host  *shost = class_to_shost(dev);
-+	struct lpfc_hba   *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-+
-+	return scnprintf(buf, PAGE_SIZE, "%d\n",
-+			 phba->sli4_hba.pc_sli4_params.pls);
-+}
-+static DEVICE_ATTR(pls, 0444,
-+			 lpfc_pls_show, NULL);
-+
-+static ssize_t
-+lpfc_pt_show(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host  *shost = class_to_shost(dev);
-+	struct lpfc_hba   *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-+
-+	return scnprintf(buf, PAGE_SIZE, "%d\n",
-+			 (phba->hba_flag & HBA_PERSISTENT_TOPO) ? 1 : 0);
-+}
-+static DEVICE_ATTR(pt, 0444,
-+			 lpfc_pt_show, NULL);
-+
- /*
- # lpfc_cnt: Number of IOCBs allocated for ELS, CT, and ABTS
- #       1 - (1024)
-@@ -4095,7 +4120,16 @@ lpfc_topology_store(struct device *dev, struct device_attribute *attr,
- 				val);
- 			return -EINVAL;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index f883fac2d2b1..99c9bb249758 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -763,9 +763,11 @@ lpfc_cmpl_ct_cmd_gid_ft(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		    cpu_to_be16(SLI_CT_RESPONSE_FS_ACC)) {
+ 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 					 "0208 NameServer Rsp Data: x%x x%x "
+-					 "sz x%x\n",
++					 "x%x x%x sz x%x\n",
+ 					 vport->fc_flag,
+ 					 CTreq->un.gid.Fc4Type,
++					 vport->num_disc_nodes,
++					 vport->gidft_inp,
+ 					 irsp->un.genreq64.bdl.bdeSize);
+ 
+ 			lpfc_ns_rsp(vport,
+@@ -961,9 +963,13 @@ lpfc_cmpl_ct_cmd_gid_pt(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		if (CTrsp->CommandResponse.bits.CmdRsp ==
+ 		    cpu_to_be16(SLI_CT_RESPONSE_FS_ACC)) {
+ 			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+-					 "4105 NameServer Rsp Data: x%x x%x\n",
++					 "4105 NameServer Rsp Data: x%x x%x "
++					 "x%x x%x sz x%x\n",
+ 					 vport->fc_flag,
+-					 CTreq->un.gid.Fc4Type);
++					 CTreq->un.gid.Fc4Type,
++					 vport->num_disc_nodes,
++					 vport->gidft_inp,
++					 irsp->un.genreq64.bdl.bdeSize);
+ 
+ 			lpfc_ns_rsp(vport,
+ 				    outp,
+@@ -1025,6 +1031,11 @@ lpfc_cmpl_ct_cmd_gid_pt(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
  		}
--		if ((phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC ||
-+		/*
-+		 * The 'topology' is not a configurable parameter if :
-+		 *   - persistent topology enabled
-+		 *   - G7 adapters
-+		 *   - G6 with no private loop support
-+		 */
+ 		vport->gidft_inp--;
+ 	}
 +
-+		if (((phba->hba_flag & HBA_PERSISTENT_TOPO) ||
-+		     (!phba->sli4_hba.pc_sli4_params.pls &&
-+		     phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC) ||
- 		     phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC) &&
- 		    val == 4) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
-@@ -6117,6 +6151,8 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_lpfc_req_fw_upgrade,
- 	&dev_attr_lpfc_suppress_link_up,
- 	&dev_attr_iocb_hw,
-+	&dev_attr_pls,
-+	&dev_attr_pt,
- 	&dev_attr_txq_hw,
- 	&dev_attr_txcmplq_hw,
- 	&dev_attr_lpfc_fips_level,
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 818a0f4325af..d40bfe5aa21f 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -2809,6 +2809,15 @@ struct lpfc_mbx_read_config {
- #define lpfc_mbx_rd_conf_trunk_SHIFT		12
- #define lpfc_mbx_rd_conf_trunk_MASK		0x0000000F
- #define lpfc_mbx_rd_conf_trunk_WORD		word2
-+#define lpfc_mbx_rd_conf_pt_SHIFT		20
-+#define lpfc_mbx_rd_conf_pt_MASK		0x00000003
-+#define lpfc_mbx_rd_conf_pt_WORD		word2
-+#define lpfc_mbx_rd_conf_tf_SHIFT		22
-+#define lpfc_mbx_rd_conf_tf_MASK		0x00000001
-+#define lpfc_mbx_rd_conf_tf_WORD		word2
-+#define lpfc_mbx_rd_conf_ptv_SHIFT		23
-+#define lpfc_mbx_rd_conf_ptv_MASK		0x00000001
-+#define lpfc_mbx_rd_conf_ptv_WORD		word2
- #define lpfc_mbx_rd_conf_topology_SHIFT		24
- #define lpfc_mbx_rd_conf_topology_MASK		0x000000FF
- #define lpfc_mbx_rd_conf_topology_WORD		word2
-@@ -3479,6 +3488,9 @@ struct lpfc_sli4_parameters {
- #define cfg_bv1s_SHIFT                          10
- #define cfg_bv1s_MASK                           0x00000001
- #define cfg_bv1s_WORD                           word19
-+#define cfg_pvl_SHIFT				13
-+#define cfg_pvl_MASK				0x00000001
-+#define cfg_pvl_WORD				word19
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++			 "6450 GID_PT cmpl inp %d disc %d\n",
++			 vport->gidft_inp, vport->num_disc_nodes);
++
+ 	/* Link up / RSCN discovery */
+ 	if ((vport->num_disc_nodes == 0) &&
+ 	    (vport->gidft_inp == 0)) {
+@@ -1159,6 +1170,11 @@ lpfc_cmpl_ct_cmd_gff_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* Link up / RSCN discovery */
+ 	if (vport->num_disc_nodes)
+ 		vport->num_disc_nodes--;
++
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++			 "6451 GFF_ID cmpl inp %d disc %d\n",
++			 vport->gidft_inp, vport->num_disc_nodes);
++
+ 	if (vport->num_disc_nodes == 0) {
+ 		/*
+ 		 * The driver has cycled through all Nports in the RSCN payload.
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 2235a45999a8..9a1b7f331718 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -5265,6 +5265,11 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
+ 			}
+ 		}
+ 	}
++
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++			 "6452 Discover PLOGI %d flag x%x\n",
++			 sentplogi, vport->fc_flag);
++
+ 	if (sentplogi) {
+ 		lpfc_set_disctmo(vport);
+ 	}
+@@ -6668,9 +6673,10 @@ lpfc_els_handle_rscn(struct lpfc_vport *vport)
  
- #define cfg_nsler_SHIFT                         12
- #define cfg_nsler_MASK                          0x00000001
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index d821adbb0047..686677dd52a4 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8239,6 +8239,94 @@ lpfc_destroy_bootstrap_mbox(struct lpfc_hba *phba)
- 	memset(&phba->sli4_hba.bmbx, 0, sizeof(struct lpfc_bmbx));
- }
+ 	/* RSCN processed */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+-			 "0215 RSCN processed Data: x%x x%x x%x x%x\n",
++			 "0215 RSCN processed Data: x%x x%x x%x x%x x%x x%x\n",
+ 			 vport->fc_flag, 0, vport->fc_rscn_id_cnt,
+-			 vport->port_state);
++			 vport->port_state, vport->num_disc_nodes,
++			 vport->gidft_inp);
  
-+static const char * const lpfc_topo_to_str[] = {
-+	"Loop then P2P",
-+	"Loopback",
-+	"P2P Only",
-+	"Unsupported",
-+	"Loop Only",
-+	"Unsupported",
-+	"P2P then Loop",
-+};
+ 	/* To process RSCN, first compare RSCN data with NameServer */
+ 	vport->fc_ns_retry = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 808ad666bb1b..40075b391546 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5404,6 +5404,13 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
+ 		if (!ndlp)
+ 			return NULL;
+ 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
 +
-+/**
-+ * lpfc_map_topology - Map the topology read from READ_CONFIG
-+ * @phba: pointer to lpfc hba data structure.
-+ * @rdconf: pointer to read config data
-+ *
-+ * This routine is invoked to map the topology values as read
-+ * from the read config mailbox command. If the persistent
-+ * topology feature is supported, the firmware will provide the
-+ * saved topology information to be used in INIT_LINK
-+ *
-+ **/
-+#define	LINK_FLAGS_DEF	0x0
-+#define	LINK_FLAGS_P2P	0x1
-+#define	LINK_FLAGS_LOOP	0x2
-+static void
-+lpfc_map_topology(struct lpfc_hba *phba, struct lpfc_mbx_read_config *rd_config)
-+{
-+	u8 ptv, tf, pt;
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++				 "6453 Setup New Node 2B_DISC x%x "
++				 "Data:x%x x%x x%x\n",
++				 ndlp->nlp_DID, ndlp->nlp_flag,
++				 ndlp->nlp_state, vport->fc_flag);
 +
-+	ptv = bf_get(lpfc_mbx_rd_conf_ptv, rd_config);
-+	tf = bf_get(lpfc_mbx_rd_conf_tf, rd_config);
-+	pt = bf_get(lpfc_mbx_rd_conf_pt, rd_config);
+ 		spin_lock_irq(shost->host_lock);
+ 		ndlp->nlp_flag |= NLP_NPR_2B_DISC;
+ 		spin_unlock_irq(shost->host_lock);
+@@ -5417,6 +5424,12 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
+ 					 "0014 Could not enable ndlp\n");
+ 			return NULL;
+ 		}
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++				 "6454 Setup Enabled Node 2B_DISC x%x "
++				 "Data:x%x x%x x%x\n",
++				 ndlp->nlp_DID, ndlp->nlp_flag,
++				 ndlp->nlp_state, vport->fc_flag);
 +
-+	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+			"2027 Read Config Data : ptv:0x%x, tf:0x%x pt:0x%x",
-+			 ptv, tf, pt);
-+	if (!ptv) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
-+				"2019 FW does not support persistent topology "
-+				"Using driver parameter defined value [%s]",
-+				lpfc_topo_to_str[phba->cfg_topology]);
-+		return;
-+	}
-+	/* FW supports persistent topology - override module parameter value */
-+	phba->hba_flag |= HBA_PERSISTENT_TOPO;
-+	switch (phba->pcidev->device) {
-+	case PCI_DEVICE_ID_LANCER_G7_FC:
-+		if (tf || (pt == LINK_FLAGS_LOOP)) {
-+			/* Invalid values from FW - use driver params */
-+			phba->hba_flag &= ~HBA_PERSISTENT_TOPO;
-+		} else {
-+			/* Prism only supports PT2PT topology */
-+			phba->cfg_topology = FLAGS_TOPOLOGY_MODE_PT_PT;
-+		}
-+		break;
-+	case PCI_DEVICE_ID_LANCER_G6_FC:
-+		if (!tf) {
-+			phba->cfg_topology = ((pt == LINK_FLAGS_LOOP)
-+					? FLAGS_TOPOLOGY_MODE_LOOP
-+					: FLAGS_TOPOLOGY_MODE_PT_PT);
-+		} else {
-+			phba->hba_flag &= ~HBA_PERSISTENT_TOPO;
-+		}
-+		break;
-+	default:	/* G5 */
-+		if (tf) {
-+			/* If topology failover set - pt is '0' or '1' */
-+			phba->cfg_topology = (pt ? FLAGS_TOPOLOGY_MODE_PT_LOOP :
-+					      FLAGS_TOPOLOGY_MODE_LOOP_PT);
-+		} else {
-+			phba->cfg_topology = ((pt == LINK_FLAGS_P2P)
-+					? FLAGS_TOPOLOGY_MODE_PT_PT
-+					: FLAGS_TOPOLOGY_MODE_LOOP);
-+		}
-+		break;
-+	}
-+	if (phba->hba_flag & HBA_PERSISTENT_TOPO) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+				"2020 Using persistent topology value [%s]",
-+				lpfc_topo_to_str[phba->cfg_topology]);
-+	} else {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
-+				"2021 Invalid topology values from FW "
-+				"Using driver parameter defined value [%s]",
-+				lpfc_topo_to_str[phba->cfg_topology]);
-+	}
-+}
-+
- /**
-  * lpfc_sli4_read_config - Get the config parameters.
-  * @phba: pointer to lpfc hba data structure.
-@@ -8350,6 +8438,7 @@ lpfc_sli4_read_config(struct lpfc_hba *phba)
- 		phba->max_vpi = (phba->sli4_hba.max_cfg_param.max_vpi > 0) ?
- 				(phba->sli4_hba.max_cfg_param.max_vpi - 1) : 0;
- 		phba->max_vports = phba->max_vpi;
-+		lpfc_map_topology(phba, rd_config);
- 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 				"2003 cfg params Extents? %d "
- 				"XRI(B:%d M:%d), "
-@@ -11542,6 +11631,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	sli4_params->cqav = bf_get(cfg_cqav, mbx_sli4_parameters);
- 	sli4_params->wqsize = bf_get(cfg_wqsize, mbx_sli4_parameters);
- 	sli4_params->bv1s = bf_get(cfg_bv1s, mbx_sli4_parameters);
-+	sli4_params->pls = bf_get(cfg_pvl, mbx_sli4_parameters);
- 	sli4_params->sgl_pages_max = bf_get(cfg_sgl_page_cnt,
- 					    mbx_sli4_parameters);
- 	sli4_params->wqpcnt = bf_get(cfg_wqpcnt, mbx_sli4_parameters);
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 8abe933bad09..d1773c01d2b3 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -515,6 +515,7 @@ lpfc_init_link(struct lpfc_hba * phba,
+ 		spin_lock_irq(shost->host_lock);
+ 		ndlp->nlp_flag |= NLP_NPR_2B_DISC;
+ 		spin_unlock_irq(shost->host_lock);
+@@ -5436,6 +5449,12 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
+ 			 */
+ 			lpfc_cancel_retry_delay_tmo(vport, ndlp);
  
- 	if ((phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC ||
- 	     phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC) &&
-+	    !(phba->sli4_hba.pc_sli4_params.pls) &&
- 	    mb->un.varInitLnk.link_flags & FLAGS_TOPOLOGY_MODE_LOOP) {
- 		mb->un.varInitLnk.link_flags = FLAGS_TOPOLOGY_MODE_PT_PT;
- 		phba->cfg_topology = FLAGS_TOPOLOGY_MODE_PT_PT;
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index c9e068ca0fec..bbe24c19b1d9 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -514,6 +514,7 @@ struct lpfc_pc_sli4_params {
- 	uint8_t cqav;
- 	uint8_t wqsize;
- 	uint8_t bv1s;
-+	uint8_t pls;
- #define LPFC_WQ_SZ64_SUPPORT	1
- #define LPFC_WQ_SZ128_SUPPORT	2
- 	uint8_t wqpcnt;
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++					 "6455 Setup RSCN Node 2B_DISC x%x "
++					 "Data:x%x x%x x%x\n",
++					 ndlp->nlp_DID, ndlp->nlp_flag,
++					 ndlp->nlp_state, vport->fc_flag);
++
+ 			/* NVME Target mode waits until rport is known to be
+ 			 * impacted by the RSCN before it transitions.  No
+ 			 * active management - just go to NPR provided the
+@@ -5458,9 +5477,21 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
+ 			spin_lock_irq(shost->host_lock);
+ 			ndlp->nlp_flag |= NLP_NPR_2B_DISC;
+ 			spin_unlock_irq(shost->host_lock);
+-		} else
++		} else {
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++					 "6456 Skip Setup RSCN Node x%x "
++					 "Data:x%x x%x x%x\n",
++					 ndlp->nlp_DID, ndlp->nlp_flag,
++					 ndlp->nlp_state, vport->fc_flag);
+ 			ndlp = NULL;
++		}
+ 	} else {
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++				 "6457 Setup Active Node 2B_DISC x%x "
++				 "Data:x%x x%x x%x\n",
++				 ndlp->nlp_DID, ndlp->nlp_flag,
++				 ndlp->nlp_state, vport->fc_flag);
++
+ 		/* If the initiator received a PLOGI from this NPort or if the
+ 		 * initiator is already in the process of discovery on it,
+ 		 * there's no need to try to discover it again.
+@@ -5612,10 +5643,10 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 
+ 	/* Start Discovery state <hba_state> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+-			 "0202 Start Discovery hba state x%x "
+-			 "Data: x%x x%x x%x\n",
++			 "0202 Start Discovery port state x%x "
++			 "flg x%x Data: x%x x%x x%x\n",
+ 			 vport->port_state, vport->fc_flag, vport->fc_plogi_cnt,
+-			 vport->fc_adisc_cnt);
++			 vport->fc_adisc_cnt, vport->fc_npr_cnt);
+ 
+ 	/* First do ADISCs - if any */
+ 	num_sent = lpfc_els_disc_adisc(vport);
 -- 
 2.13.7
 
