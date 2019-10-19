@@ -2,167 +2,112 @@ Return-Path: <SRS0=fvsq=YM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52390CA9EAB
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 08:59:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0747DCA9EAB
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 13:06:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B8EB222C2
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 08:59:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hIbYwfZ/"
+	by mail.kernel.org (Postfix) with ESMTP id D244F21925
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 13:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728323AbfJSI72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Oct 2019 04:59:28 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37586 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728270AbfJSI72 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Oct 2019 04:59:28 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9J8xNA3121416;
-        Sat, 19 Oct 2019 08:59:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=0/eTYgKMfcByarnMdtpllDVRCHrlR/j9HrDm4SXKZqM=;
- b=hIbYwfZ/2W+yKjmyRpgHIWVjV5t84x9pbVUxwyBrOS1HawbZbGBm0sSrTWzEuJLprZXd
- mgzWty+fDjlFm9oSM5ZUTjn6HPJde/I2yyopI1GUHmLSCs78SPP6EelVj+MgDHnmMoyt
- CJvhDVg+AOWRTLpdTG5thxchtyCUeUJSZSKUgbmjYWU3Vk07dCtdOLWm0tMUFRVlvY1/
- dng/qHh2szfwbsFp9GSjUc6abF8KTfDtMVE/9k9llgO6AcP1xWzoZk9NRvV7qnPAIiP5
- v1Mpr0CuJNeJb8C1s0i3AOtrGIykS3DjyI/NeEso1qcV3iCBR787VtIJiKCsE/AEGItC +w== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2vqtep8r1g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Oct 2019 08:59:23 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9J8wNPA147162;
-        Sat, 19 Oct 2019 08:59:22 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2vqsu7j9r4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Oct 2019 08:59:22 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9J8xKAP017388;
-        Sat, 19 Oct 2019 08:59:21 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 19 Oct 2019 08:59:20 +0000
-Date:   Sat, 19 Oct 2019 11:59:13 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Naresh Kumar Inna <naresh@chelsio.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: csiostor: Don't enable IRQs too early
-Message-ID: <20191019085913.GA14245@mwanda>
+        id S1725868AbfJSNGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Oct 2019 09:06:54 -0400
+Received: from mout.perfora.net ([74.208.4.197]:57719 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725828AbfJSNGy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 19 Oct 2019 09:06:54 -0400
+X-Greylist: delayed 301 seconds by postgrey-1.27 at vger.kernel.org; Sat, 19 Oct 2019 09:06:53 EDT
+Received: from marcel-pc.lan ([81.221.67.182]) by mrelay.perfora.net
+ (mreueus004 [74.208.5.2]) with ESMTPSA (Nemesis) id 1MPGuf-1igW2N1Yr7-00PgmW;
+ Sat, 19 Oct 2019 15:01:50 +0200
+Message-ID: <f59161ee331a715f0a4996058ece6ce9363708ae.camel@ziswiler.com>
+Subject: Linux Firmware Update of a HPE Ultrium 5 Tape Drive
+From:   Marcel Ziswiler <marcel@ziswiler.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Doug Gilbert <dgilbert@interlog.com>
+Date:   Sat, 19 Oct 2019 15:01:48 +0200
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910190079
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910190079
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V03:K1:0g+k3StFg4GpsUk8ddYyfj5c+h3tKZ5kT/nrc6n0Q+wORbZ48U+
+ 9XmJHpUmf0qwB2q+PeFp9+63K8SjhBsAS+4lADpAnAcfU0jmyWekPu35ynpa4wjISl7X6un
+ J1pdD6XwRjOZh0xCgSGZCpSE7sltBT9IFC1SfKsRewls46fkDnCy0V5brzMekbEQt5lBfIl
+ IlIuT4WoAdX6FpkNP1htg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:SmcfyW4gSHo=:yfMcI4j+BziMqKLsHB3iOq
+ QuTzkNI2RN4xP3MsxyL/S4dgSDZy3LHinhdgGMjwR5ZZPVyo62GVc9qz21bA/z8w33LQl4m4k
+ 7J9m8JIB0btHkLzujCKna0ACnfgYm20EhyAmuTevAKbO4fj4vs0IwWalKq16wPE9tdihxoRVc
+ Zl/dpsewHIiPVKkIWhDP2tp+v3nVpd1bsQzE4Yv5H1hgJglwdTawkrXq4o5c1UM2Tf7Q7a9td
+ o6xO2ze3e6ksCzmGh58eRkmIjN5QYPibgkyKzbsDhU7df3CotQgcF/rs7zQkC7KZYO+dPTVqU
+ c7ZYhdvAjjr/MqmoXq6dTTy7wi63MyzWpdzY3iXMHljQODXEDWklfoXVt+VYbyDIoMRqqzbw8
+ PRD3saGTitU0aVHTLfBk7CTBg+c/Lhzwyfm0EQEO+dwqhyPRSAYWi6zKB5vTC0zNKlKlfMzNT
+ /DBY7MiK8utAB0ohiaHea2tzvh0ocMT85v0lo99btLWe7LccBZK1No7h32WjSDC0Xtje0Ewkm
+ 9tv3ObVD0YP7IYCs/zLDTiEWhuaiZkHZTpzv2XNZn+GBHfN2u8m9IbJYT/1zGzxKPd/9coGyp
+ V84507hJ6IP0d5u1g7T0ZINMtfsvJAH+XoS/rWzHQaw4E/w/Ee/8aw3CpzBtmfUg9Fte7IkgD
+ Lxfg9uGO4nlXui5Cr3O2UJKlT0XLe7AapuRlP08l28piqkrfUY1Aj1qdp8ikHb9e/G19f2thZ
+ my5S0jstMlYkiZYoLEZX6uukJ6TkWCBOiYcqcRdoAI7LohhMo3bBSGSsMShrkENXVPEyCQhsC
+ VBuwhVM1MhL8GFLAOPq7w0SGSwDx+IDE4GoyOv00T4lFfTMNvRrX8tCG2hfRg57O3WNI75ET/
+ 5a/bmLZi+HeOhWSFZqwmdqEoGyGJpkL1EHTBKO9Wo=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These are called with IRQs disabled from csio_mgmt_tmo_handler() so we
-can't call spin_unlock_irq() or it will enable IRQs prematurely.
+Hi
 
-Fixes: a3667aaed569 ("[SCSI] csiostor: Chelsio FCoE offload driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/csiostor/csio_lnode.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+Since quite a while I wanted to update the firmware on my good olde
+tape drive. However, I do not have any contract all newer HPE downloads
+require. Searching the web I stumbled over some old messages [1] and
+[2] from Doug Gilbert which paved the way to easily do such firmware
+update.
 
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
-index 66e58f0a75dc..23cbe4cda760 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -301,6 +301,7 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	struct fc_fdmi_port_name *port_name;
- 	uint8_t buf[64];
- 	uint8_t *fc4_type;
-+	unsigned long flags;
- 
- 	if (fdmi_req->wr_status != FW_SUCCESS) {
- 		csio_ln_dbg(ln, "WR error:%x in processing fdmi rhba cmd\n",
-@@ -385,13 +386,13 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	len = (uint32_t)(pld - (uint8_t *)cmd);
- 
- 	/* Submit FDMI RPA request */
--	spin_lock_irq(&hw->lock);
-+	spin_lock_irqsave(&hw->lock, flags);
- 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_done,
- 				FCOE_CT, &fdmi_req->dma_buf, len)) {
- 		CSIO_INC_STATS(ln, n_fdmi_err);
- 		csio_ln_dbg(ln, "Failed to issue fdmi rpa req\n");
- 	}
--	spin_unlock_irq(&hw->lock);
-+	spin_unlock_irqrestore(&hw->lock, flags);
- }
- 
- /*
-@@ -412,6 +413,7 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	struct fc_fdmi_rpl *reg_pl;
- 	struct fs_fdmi_attrs *attrib_blk;
- 	uint8_t buf[64];
-+	unsigned long flags;
- 
- 	if (fdmi_req->wr_status != FW_SUCCESS) {
- 		csio_ln_dbg(ln, "WR error:%x in processing fdmi dprt cmd\n",
-@@ -491,13 +493,13 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	attrib_blk->numattrs = htonl(numattrs);
- 
- 	/* Submit FDMI RHBA request */
--	spin_lock_irq(&hw->lock);
-+	spin_lock_irqsave(&hw->lock, flags);
- 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_rhba_cbfn,
- 				FCOE_CT, &fdmi_req->dma_buf, len)) {
- 		CSIO_INC_STATS(ln, n_fdmi_err);
- 		csio_ln_dbg(ln, "Failed to issue fdmi rhba req\n");
- 	}
--	spin_unlock_irq(&hw->lock);
-+	spin_unlock_irqrestore(&hw->lock, flags);
- }
- 
- /*
-@@ -512,6 +514,7 @@ csio_ln_fdmi_dhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	void *cmd;
- 	struct fc_fdmi_port_name *port_name;
- 	uint32_t len;
-+	unsigned long flags;
- 
- 	if (fdmi_req->wr_status != FW_SUCCESS) {
- 		csio_ln_dbg(ln, "WR error:%x in processing fdmi dhba cmd\n",
-@@ -542,13 +545,13 @@ csio_ln_fdmi_dhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
- 	len += sizeof(*port_name);
- 
- 	/* Submit FDMI request */
--	spin_lock_irq(&hw->lock);
-+	spin_lock_irqsave(&hw->lock, flags);
- 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_dprt_cbfn,
- 				FCOE_CT, &fdmi_req->dma_buf, len)) {
- 		CSIO_INC_STATS(ln, n_fdmi_err);
- 		csio_ln_dbg(ln, "Failed to issue fdmi dprt req\n");
- 	}
--	spin_unlock_irq(&hw->lock);
-+	spin_unlock_irqrestore(&hw->lock, flags);
- }
- 
- /**
--- 
-2.20.1
+I have an EH957A/EH957B HP StoreEver LTO-5 Ultrium 3000 SAS internal
+half-height tape drive which had the standalone Z64D firmware e.g.
+reporting the following upon boot (dmesg):
+
+[10062376.346530] scsi 0:0:1:0: Sequential-Access HP       Ultrium 5-
+SCSI   Z64D PQ: 0 ANSI: 6
+...
+[10062376.378197] st 0:0:1:0: Attached scsi generic sg3 type 1
+
+The later message reporting sg3 is important to know for the commands
+below.
+
+The non-paywalled firmware is actually available within some EXE file
+[3] which may be easily unzipped.
+
+Pages 228 and 229 of the HP LTO Ultrium Tape Drives Technical Reference
+Manual Volume 3: Host Interface Guide, LTO 5 drives [4] talks about how
+the WRITE BUFFER 3Bh command may be used to update the firmware by
+first sending it using mode 4 and then initiating the update using mode
+5. Luckily, the sg3_utils come with some convenience tools easily
+allowing to do just that:
+
+sudo sg_write_buffer -b 4k -I Z6ED_019_233.E -m 4 /dev/sg3
+sudo sg_write_buffer -m 5 /dev/sg3
+
+And - TADA - my drive is updated:
+
+[10067140.872255] scsi 0:0:2:0: Sequential-Access HP       Ultrium 5-
+SCSI   Z6ED PQ: 0 ANSI: 6
+
+Thanks Doug Gilbert for the usefull insights into SCSI tape drive
+operation details. Keep up the good work!
+
+[1] 
+https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg69571.html
+
+[2] https://patchwork.kernel.org/patch/7946871/#17063991
+
+[3] 
+https://downloads.hpe.com/pub/softlib2/software1/sc-windows/p368283668/v124587/cp031432.exe
+
+[4] 
+https://docs.oracle.com/cd/E21419_04/en/LTO5_Vol3_E5b/LTO5_Vol3_E5b.pdf
+
+Cheers
+
+Marcel
 
