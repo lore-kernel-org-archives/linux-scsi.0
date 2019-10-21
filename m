@@ -1,107 +1,133 @@
-Return-Path: <SRS0=fvsq=YM=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=OG9y=YO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B3D3CA9EAB
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 15:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF45CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 01:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2567721744
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Oct 2019 15:56:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7110B2064A
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 01:50:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725972AbfJSP4A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Oct 2019 11:56:00 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59438 "EHLO mx1.suse.de"
+        id S1726718AbfJUBuU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 20 Oct 2019 21:50:20 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:48662 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725924AbfJSP4A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Oct 2019 11:56:00 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id EF5A5AC59;
-        Sat, 19 Oct 2019 15:55:58 +0000 (UTC)
-Subject: Re: [RFC PATCH 0/3] lpfc: nodelist pointer cleanup
-To:     James Smart <james.smart@broadcom.com>
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20191018075010.55653-1-hare@suse.de>
- <ced4e239-40b2-508a-f52a-1b7baf674f04@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <6decf1ca-0cbb-3d86-8500-78ae36c69012@suse.de>
-Date:   Sat, 19 Oct 2019 17:55:58 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.1
+        id S1726696AbfJUBuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 20 Oct 2019 21:50:20 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 8FE927B08909C3ACA811;
+        Mon, 21 Oct 2019 09:50:17 +0800 (CST)
+Received: from [127.0.0.1] (10.184.213.217) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.439.0; Mon, 21 Oct 2019
+ 09:50:07 +0800
+Subject: Re: [PATCH v5 00/13] scsi: core: fix uninit-value access of variable
+ sshdr
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+CC:     <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <yi.zhang@huawei.com>,
+        <yanaijie@huawei.com>, Johannes Thumshirn <jthumshirn@suse.de>
+References: <1571387071-28853-1-git-send-email-zhengbin13@huawei.com>
+ <f9c663fe-6359-fc7b-e9f5-cf173f6fafbe@suse.de> <yq1lftii2yi.fsf@oracle.com>
+From:   "zhengbin (A)" <zhengbin13@huawei.com>
+Message-ID: <b09013a1-648e-7cfc-9751-fc955161aba4@huawei.com>
+Date:   Mon, 21 Oct 2019 09:49:57 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-In-Reply-To: <ced4e239-40b2-508a-f52a-1b7baf674f04@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <yq1lftii2yi.fsf@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.184.213.217]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/19 11:45 PM, James Smart wrote:
-> On 10/18/2019 12:50 AM, Hannes Reinecke wrote:
->> Hi James,
->>
->> trying to figure this annoying lpfc_set_rrq_active() bug
->> I've found the nodelist pointer handling in the lpfc io buffers
->> a bit strange; there's a 'ndlp' pointer, but for scsi the nodelist
->> is primarily accessed via the 'rdata' pointer (although not everywhere).
->> For NVMe it's primarily the 'ndlp' pointer, apparently, but the
->> usage is quite confusing.
->> So here's a patchset to straighten things up; it primarily moves
->> the anonymous protocol-specific structure in the io buffer to a named
->> one, and always accesses the nodelist through the protocol-specific
->> rport data structure.
->>
->> It also has the nice side-effect that the protocol-specific areas are
->> aligned now, so clearing the 'rdata' pointer on the scsi side will
->> be equivalent to clearing the 'rport' pointer on the nvme side.
->> And it reduces the size of the io buffer.
->>
->> Let me know what you think.
->>
->> Hannes Reinecke (3):
->>    lpfc: use named structure for combined I/O buffer
->>    lpfc: access nodelist through scsi-specific rdata pointer
->>    lpfc: access nvme nodelist through nvme rport structure
->>
->>   drivers/scsi/lpfc/lpfc_init.c |   2 +-
->>   drivers/scsi/lpfc/lpfc_nvme.c |  56 ++++++------
->>   drivers/scsi/lpfc/lpfc_scsi.c | 196 
->> +++++++++++++++++++++---------------------
->>   drivers/scsi/lpfc/lpfc_sli.c  |  26 +++---
->>   drivers/scsi/lpfc/lpfc_sli.h  |   6 +-
->>   5 files changed, 143 insertions(+), 143 deletions(-)
->>
-> 
-> Well, the problem I think you are trying to solve is ultimately the root 
-> issue that is solved by this patch in the just-posted 12.6.0.0 patch set:
-> [PATCH 05/16] lpfc: Fix bad ndlp ptr in xri aborted handling
-> 
-> As such, I'd like to see if the 12.6.0.0 patch resolves the issue before 
-> going through all the shifting in your patches.
-> Note: the failing routine can change as it's totally dependent on where 
-> the bogus pointer value takes you.  The key is the 
-> lpfc_sli4_sp_handle_abort_xri_wcqe() routine on the stack.
-> 
-Fair enough.
 
-I'll be giving your patchset a spin once submitted.
+On 2019/10/18 21:43, Martin K. Petersen wrote:
+> Hannes,
+>
+>> The one thing which I patently don't like is the ambivalence between
+>> DRIVER_SENSE and scsi_sense_valid().  What shall we do if only _one_
+>> of them is set?  IE what would be the correct way of action if
+>> DRIVER_SENSE is not set, but we have a valid sense code?  Or the other
+>> way around?
+> I agree, it's a mess.
+>
+> (Sorry, zhengbin, you opened a can of worms. This is some of our oldest
+> and most arcane code in SCSI)
+>
+>> But more important, from a quick glance not all drivers set the
+>> DRIVER_SENSE bit; so for things like hpsa or smartpqi the sense code is
+>> never evaluated after this patchset.
+> And yet we appear to have several code paths where sense evaluation is
+> contingent on DRIVER_SENSE. So no matter what, behavior might
+> change if we enforce consistent semantics. *sigh*
 
-Cheers,
+So what should we do to prevent unit-value access of sshdr?
 
-Hannes
--- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                              +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+1. still init sshdr in __scsi_execute?
+
+@@ -255,6 +255,13 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	struct scsi_request *rq;
+ 	int ret = DRIVER_ERROR << 24;
+
++	/*
++	 * Zero-initialize sshdr for those callers that check the *sshdr
++	 * contents even if no sense data is available.
++	 */
++	if (sshdr)
++		memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
++
+ 	req = blk_get_request(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+ 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
+
+2. init sshdr in callers of scsi_execute, instead of check the result of scsi_execute and check
+whether sshdr is valid? for example:
+@@ -506,6 +506,7 @@ int scsi_report_opcode(struct scsi_device *sdev, unsigned char *buffer,
+        put_unaligned_be32(len, &cmd[6]);
+        memset(buffer, 0, len);
+
++       memset(&sshdr, 0 ,sizeof(sshdr));
+        result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
+                                  &sshdr, 30 * HZ, 3, NULL)
+
+Besides, should sd_pr_command init sshdr?? cause sd_pr_command  have checked the result of scsi_execute 
+and check whether sshdr is valid.
+
+
+3. get rid of DRIVER_* completely? even this, we should init sshdr first. 
+
+
+sshdr is just 8 bytes, init it does not affect performance
+
+My advice is 2.
+
+>
+>> I _really_ would prefer to ditch the 'DRIVER_SENSE' bit, and rely on
+>> scsi_sense_valid() only.
+> I would really like to get rid of DRIVER_* completely. Except for
+> DRIVER_SENSE, few are actually in use:
+>
+> DRIVER_OK: 	0
+> DRIVER_BUSY:	0
+> DRIVER_SOFT:	0
+> DRIVER_MEDIA:	0
+> DRIVER_ERROR:	6
+> DRIVER_INVALID:	4
+> DRIVER_TIMEOUT:	1
+> DRIVER_SENSE:	58
+>
+> Johannes: Whatever happened to your efforts at cleaning all this up? Do
+> you have a patch series or a working tree we could use as starting
+> point?
+>
+
