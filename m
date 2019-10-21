@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE69CA9EB5
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 377EFCA9EB9
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D4272070B
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0407C2070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727944AbfJUJxl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 05:53:41 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48842 "EHLO mx1.suse.de"
+        id S1727937AbfJUJxj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 05:53:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48872 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727882AbfJUJxe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Oct 2019 05:53:34 -0400
+        id S1727904AbfJUJxf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Oct 2019 05:53:35 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D5103BAB8;
-        Mon, 21 Oct 2019 09:53:28 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 052B1BABE;
+        Mon, 21 Oct 2019 09:53:29 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/24] scsi: change status_byte() to return the standard SCSI status
-Date:   Mon, 21 Oct 2019 11:53:04 +0200
-Message-Id: <20191021095322.137969-7-hare@suse.de>
+Subject: [PATCH 05/24] scsi: use standard SAM status codes
+Date:   Mon, 21 Oct 2019 11:53:03 +0200
+Message-Id: <20191021095322.137969-6-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191021095322.137969-1-hare@suse.de>
 References: <20191021095322.137969-1-hare@suse.de>
@@ -39,334 +39,359 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of returning the linux-special status (which is shifted
-by 1 to the right) change the status_byte() macro to return the
-correct SCSI standard status.
-And audit all callers to handle this change.
+Use standard SAM status codes and omit the explicit shift to convert
+to linus-specific ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/53c700.c        |  6 +++---
- drivers/scsi/NCR5380.c       |  2 +-
- drivers/scsi/arm/acornscsi.c | 10 ++++-----
- drivers/scsi/arm/fas216.c    | 10 ++++-----
- drivers/scsi/dc395x.c        |  8 +++-----
- drivers/scsi/scsi.c          |  2 +-
- drivers/scsi/scsi_error.c    | 48 ++++++++++++++++++++++----------------------
- drivers/scsi/scsi_lib.c      |  2 +-
- drivers/scsi/sg.c            |  4 ++--
- include/scsi/scsi.h          |  2 +-
- 10 files changed, 46 insertions(+), 48 deletions(-)
+ drivers/ata/libata-scsi.c             |  2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c   |  2 +-
+ drivers/scsi/3w-9xxx.c                |  5 +++--
+ drivers/scsi/3w-sas.c                 |  3 ++-
+ drivers/scsi/3w-xxxx.c                |  4 ++--
+ drivers/scsi/arcmsr/arcmsr_hba.c      |  4 ++--
+ drivers/scsi/bfa/bfad_im.c            |  2 +-
+ drivers/scsi/dc395x.c                 | 18 +++++-------------
+ drivers/scsi/dpt_i2o.c                |  2 +-
+ drivers/scsi/gdth.c                   | 12 ++++++------
+ drivers/scsi/megaraid.c               | 10 +++++-----
+ drivers/scsi/megaraid/megaraid_mbox.c | 12 ++++++------
+ 12 files changed, 35 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 0068963bb933..432f904e8d13 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -954,8 +954,8 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 						  NCR_700_FINISHED_TAG_NEGOTIATION);
- 			
- 		/* check for contingent allegiance contitions */
--		if(status_byte(hostdata->status[0]) == CHECK_CONDITION ||
--		   status_byte(hostdata->status[0]) == COMMAND_TERMINATED) {
-+		if(status_byte(hostdata->status[0]) == SAM_STAT_CHECK_CONDITION ||
-+		   status_byte(hostdata->status[0]) == SAM_STAT_COMMAND_TERMINATED) {
- 			struct NCR_700_command_slot *slot =
- 				(struct NCR_700_command_slot *)SCp->host_scribble;
- 			if(slot->flags == NCR_700_FLAG_AUTOSENSE) {
-@@ -1021,7 +1021,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 			// Currently rely on the mid layer evaluation
- 			// of the tag queuing capability
- 			//
--			//if(status_byte(hostdata->status[0]) == GOOD &&
-+			//if(status_byte(hostdata->status[0]) == SAM_STAT_GOOD &&
- 			//   SCp->cmnd[0] == INQUIRY && SCp->use_sg == 0) {
- 			//	/* Piggy back the tag queueing support
- 			//	 * on this command */
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 536426f25e86..5559d39a00b7 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -522,7 +522,7 @@ static void complete_cmd(struct Scsi_Host *instance,
- 
- 	if (hostdata->sensing == cmd) {
- 		/* Autosense processing ends here */
--		if (status_byte(cmd->result) != GOOD) {
-+		if (status_byte(cmd->result) != SAM_STAT_GOOD) {
- 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
- 		} else {
- 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index 7e69e481ccac..53b857859310 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -834,11 +834,11 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
- 
- 		if (xfer_warn) {
- 		    switch (status_byte(SCpnt->result)) {
--		    case CHECK_CONDITION:
--		    case COMMAND_TERMINATED:
--		    case BUSY:
--		    case QUEUE_FULL:
--		    case RESERVATION_CONFLICT:
-+		    case SAM_STAT_CHECK_CONDITION:
-+		    case SAM_STAT_COMMAND_TERMINATED:
-+		    case SAM_STAT_BUSY:
-+		    case SAM_STAT_TASK_SET_FULL:
-+		    case SAM_STAT_RESERVATION_CONFLICT:
- 			break;
- 
- 		    default:
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 6c68c2303638..a860f89de4ae 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2056,18 +2056,18 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
- 		goto done;
- 
- 	/*
--	 * If the command returned CHECK_CONDITION or COMMAND_TERMINATED
--	 * status, request the sense information.
-+	 * If the command returned SAM_STAT_CHECK_CONDITION or
-+	 * SAM_STAT_COMMAND_TERMINATED status, request the sense information.
- 	 */
--	if (status_byte(SCpnt->result) == CHECK_CONDITION ||
--	    status_byte(SCpnt->result) == COMMAND_TERMINATED)
-+	if (status_byte(SCpnt->result) == SAM_STAT_CHECK_CONDITION ||
-+	    status_byte(SCpnt->result) == SAM_STAT_COMMAND_TERMINATED)
- 		goto request_sense;
- 
- 	/*
- 	 * If the command did not complete with GOOD status,
- 	 * we are all done here.
- 	 */
--	if (status_byte(SCpnt->result) != GOOD)
-+	if (status_byte(SCpnt->result) != SAM_STAT_GOOD)
- 		goto done;
- 
- 	/*
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index a56893bc681e..e79db03196f7 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3292,10 +3292,10 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		/*
- 		 * target status..........................
- 		 */
--		if (status_byte(status) == CHECK_CONDITION) {
-+		if (status_byte(status) == SAM_STAT_CHECK_CONDITION) {
- 			request_sense(acb, dcb, srb);
- 			return;
--		} else if (status_byte(status) == QUEUE_FULL) {
-+		} else if (status_byte(status) == SAM_STAT_TASK_SET_FULL) {
- 			tempcnt = (u8)list_size(&dcb->srb_going_list);
- 			dprintkl(KERN_INFO, "QUEUE_FULL for dev <%02i-%i> with %i cmnds\n",
- 			     dcb->target_id, dcb->target_lun, tempcnt);
-@@ -3361,10 +3361,8 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		    && dir != PCI_DMA_NONE && ptr && (ptr->Vers & 0x07) >= 2)
- 			dcb->inquiry7 = ptr->Flags;
- 
--	/*if( srb->cmd->cmnd[0] == INQUIRY && */
--	/*  (host_byte(cmd->result) == DID_OK || status_byte(cmd->result) & CHECK_CONDITION) ) */
- 		if ((cmd->result == (DID_OK << 16) ||
--		     status_byte(cmd->result) == CHECK_CONDITION)) {
-+		     status_byte(cmd->result) == SAM_STAT_CHECK_CONDITION)) {
- 			if (!dcb->init_tcq_flag) {
- 				add_dev(acb, dcb, ptr);
- 				dcb->init_tcq_flag = 1;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 4f76841a7038..59443e0184fd 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -158,7 +158,7 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 		    (level > 1)) {
- 			scsi_print_result(cmd, "Done", disposition);
- 			scsi_print_command(cmd);
--			if (status_byte(cmd->result) == CHECK_CONDITION)
-+			if (status_byte(cmd->result) == SAM_STAT_CHECK_CONDITION)
- 				scsi_print_sense(cmd);
- 			if (level > 3)
- 				scmd_printk(KERN_INFO, cmd,
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae2fa170f6ad..bfaac355454b 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -732,31 +732,31 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	 * anything special.
- 	 */
- 	switch (status_byte(scmd->result)) {
--	case GOOD:
-+	case SAM_STAT_GOOD:
- 		scsi_handle_queue_ramp_up(scmd->device);
- 		/* FALLTHROUGH */
--	case COMMAND_TERMINATED:
-+	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
--	case CHECK_CONDITION:
-+	case SAM_STAT_CHECK_CONDITION:
- 		return scsi_check_sense(scmd);
--	case CONDITION_GOOD:
--	case INTERMEDIATE_GOOD:
--	case INTERMEDIATE_C_GOOD:
-+	case SAM_STAT_CONDITION_MET:
-+	case SAM_STAT_INTERMEDIATE:
-+	case SAM_STAT_INTERMEDIATE_CONDITION_MET:
- 		/*
- 		 * who knows?  FIXME(eric)
- 		 */
- 		return SUCCESS;
--	case RESERVATION_CONFLICT:
-+	case SAM_STAT_RESERVATION_CONFLICT:
- 		if (scmd->cmnd[0] == TEST_UNIT_READY)
- 			/* it is a success, we probed the device and
- 			 * found it */
- 			return SUCCESS;
- 		/* otherwise, we failed to send the command */
- 		return FAILED;
--	case QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
- 		scsi_handle_queue_full(scmd->device);
- 		/* fall through */
--	case BUSY:
-+	case SAM_STAT_BUSY:
- 		return NEEDS_RETRY;
- 	default:
- 		return FAILED;
-@@ -1237,7 +1237,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
- 					     current->comm));
- 			break;
- 		}
--		if (status_byte(scmd->result) != CHECK_CONDITION)
-+		if (status_byte(scmd->result) != SAM_STAT_CHECK_CONDITION)
- 			/*
- 			 * don't request sense if there's no check condition
- 			 * status because the error we're processing isn't one
-@@ -1735,14 +1735,14 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
- 		return (scmd->request->cmd_flags & REQ_FAILFAST_DEV);
- 	case DID_ERROR:
- 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
--		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-+		    status_byte(scmd->result) == SAM_STAT_RESERVATION_CONFLICT)
- 			return 0;
- 		/* fall through */
- 	case DID_SOFT_ERROR:
- 		return (scmd->request->cmd_flags & REQ_FAILFAST_DRIVER);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 76d0f9de767b..b197d2fbe3f8 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -856,7 +856,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 		if (cmd->request->rq_flags & RQF_QUIET)
+ 			qc->flags |= ATA_QCFLAG_QUIET;
+ 	} else {
+-		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
++		cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+ 		cmd->scsi_done(cmd);
  	}
  
--	if (status_byte(scmd->result) != CHECK_CONDITION)
-+	if (status_byte(scmd->result) != SAM_STAT_CHECK_CONDITION)
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index b5960351bec0..4570e3c79ea5 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -2404,7 +2404,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+ 		 * to reduce queue depth temporarily.
+ 		 */
+ 		scmnd->result = len == -ENOMEM ?
+-			DID_OK << 16 | QUEUE_FULL << 1 : DID_ERROR << 16;
++			DID_OK << 16 | SAM_STAT_TASK_SET_FULL : DID_ERROR << 16;
+ 		goto err_iu;
+ 	}
+ 
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index 3337b1e80412..ada77c136f8b 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1018,7 +1018,8 @@ static int twa_fill_sense(TW_Device_Extension *tw_dev, int request_id, int copy_
+ 
+ 	if (copy_sense) {
+ 		memcpy(tw_dev->srb[request_id]->sense_buffer, full_command_packet->header.sense_data, TW_SENSE_DATA_LENGTH);
+-		tw_dev->srb[request_id]->result = (full_command_packet->command.newcommand.status << 1);
++		tw_dev->srb[request_id]->result =
++			full_command_packet->command.newcommand.status;
+ 		retval = TW_ISR_DONT_RESULT;
+ 		goto out;
+ 	}
+@@ -1342,7 +1343,7 @@ static irqreturn_t twa_interrupt(int irq, void *dev_instance)
+ 				/* If error, command failed */
+ 				if (error == 1) {
+ 					/* Ask for a host reset */
+-					cmd->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					cmd->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 				}
+ 
+ 				/* Report residual bytes for single sgl */
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index dda6fa857709..d11f62c60877 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -891,7 +891,8 @@ static int twl_fill_sense(TW_Device_Extension *tw_dev, int i, int request_id, in
+ 
+ 	if (copy_sense) {
+ 		memcpy(tw_dev->srb[request_id]->sense_buffer, header->sense_data, TW_SENSE_DATA_LENGTH);
+-		tw_dev->srb[request_id]->result = (full_command_packet->command.newcommand.status << 1);
++		tw_dev->srb[request_id]->result =
++			full_command_packet->command.newcommand.status;
+ 		goto out;
+ 	}
+ out:
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 2b1e0d503020..79eca8f1fd05 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -429,7 +429,7 @@ static int tw_decode_sense(TW_Device_Extension *tw_dev, int request_id, int fill
+ 					/* Additional sense code qualifier */
+ 					tw_dev->srb[request_id]->sense_buffer[13] = tw_sense_table[i][3];
+ 
+-					tw_dev->srb[request_id]->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					tw_dev->srb[request_id]->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 					return TW_ISR_DONT_RESULT; /* Special case for isr to not over-write result */
+ 				}
+ 			}
+@@ -2164,7 +2164,7 @@ static irqreturn_t tw_interrupt(int irq, void *dev_instance)
+ 				/* If error, command failed */
+ 				if (error == 1) {
+ 					/* Ask for a host reset */
+-					tw_dev->srb[request_id]->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++					tw_dev->srb[request_id]->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 				}
+ 
+ 				/* Now complete the io */
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 88053b15c363..89eda0c79349 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1271,7 +1271,7 @@ static void arcmsr_report_sense_info(struct CommandControlBlock *ccb)
+ 
+ 	struct scsi_cmnd *pcmd = ccb->pcmd;
+ 	struct SENSE_DATA *sensebuffer = (struct SENSE_DATA *)pcmd->sense_buffer;
+-	pcmd->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++	pcmd->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+ 	if (sensebuffer) {
+ 		int sense_data_length =
+ 			sizeof(struct SENSE_DATA) < SCSI_SENSE_BUFFERSIZE
+@@ -3110,7 +3110,7 @@ static int arcmsr_queue_command_lck(struct scsi_cmnd *cmd,
+ 	if (!ccb)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	if (arcmsr_build_ccb( acb, ccb, cmd ) == FAILED) {
+-		cmd->result = (DID_ERROR << 16) | (RESERVATION_CONFLICT << 1);
++		cmd->result = (DID_ERROR << 16) | SAM_STAT_RESERVATION_CONFLICT;
+ 		cmd->scsi_done(cmd);
  		return 0;
+ 	}
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 6b5841b1c06e..e3cbe5d20aca 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -150,7 +150,7 @@ bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dtsk;
+ 	wait_queue_head_t *wq;
  
- check_type:
-@@ -1846,7 +1846,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		return SUCCESS;
- 	case DID_ERROR:
- 		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
--		    status_byte(scmd->result) == RESERVATION_CONFLICT)
-+		    status_byte(scmd->result) == SAM_STAT_RESERVATION_CONFLICT)
- 			/*
- 			 * execute reservation conflict processing code
- 			 * lower down
-@@ -1884,14 +1884,14 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 	 * check the status byte to see if this indicates anything special.
- 	 */
- 	switch (status_byte(scmd->result)) {
--	case QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
- 		scsi_handle_queue_full(scmd->device);
- 		/*
- 		 * the case of trying to send too many commands to a
- 		 * tagged queueing device.
- 		 */
- 		/* FALLTHROUGH */
--	case BUSY:
-+	case SAM_STAT_BUSY:
- 		/*
- 		 * device can't talk to us at the moment.  Should only
- 		 * occur (SAM-3) when the task queue is empty, so will cause
-@@ -1899,16 +1899,16 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * device.
- 		 */
- 		return ADD_TO_MLQUEUE;
--	case GOOD:
-+	case SAM_STAT_GOOD:
- 		if (scmd->cmnd[0] == REPORT_LUNS)
- 			scmd->device->sdev_target->expecting_lun_change = 0;
- 		scsi_handle_queue_ramp_up(scmd->device);
- 		/* FALLTHROUGH */
--	case COMMAND_TERMINATED:
-+	case SAM_STAT_COMMAND_TERMINATED:
- 		return SUCCESS;
--	case TASK_ABORTED:
-+	case SAM_STAT_TASK_ABORTED:
- 		goto maybe_retry;
--	case CHECK_CONDITION:
-+	case SAM_STAT_CHECK_CONDITION:
- 		rtn = scsi_check_sense(scmd);
- 		if (rtn == NEEDS_RETRY)
- 			goto maybe_retry;
-@@ -1917,16 +1917,16 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 * to collect the sense and redo the decide
- 		 * disposition */
- 		return rtn;
--	case CONDITION_GOOD:
--	case INTERMEDIATE_GOOD:
--	case INTERMEDIATE_C_GOOD:
--	case ACA_ACTIVE:
-+	case SAM_STAT_CONDITION_MET:
-+	case SAM_STAT_INTERMEDIATE:
-+	case SAM_STAT_INTERMEDIATE_CONDITION_MET:
-+	case SAM_STAT_ACA_ACTIVE:
- 		/*
- 		 * who knows?  FIXME(eric)
- 		 */
- 		return SUCCESS;
+-	cmnd->SCp.Status |= tsk_status << 1;
++	cmnd->SCp.Status |= tsk_status;
+ 	set_bit(IO_DONE_BIT, (unsigned long *)&cmnd->SCp.Status);
+ 	wq = (wait_queue_head_t *) cmnd->SCp.ptr;
+ 	cmnd->SCp.ptr = NULL;
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 13fbb2eab842..a56893bc681e 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -168,7 +168,6 @@
+ #define RES_DRV			0xFF000000	/* DRIVER_ codes */
  
--	case RESERVATION_CONFLICT:
-+	case SAM_STAT_RESERVATION_CONFLICT:
- 		sdev_printk(KERN_INFO, scmd->device,
- 			    "reservation conflict\n");
- 		set_host_byte(scmd, DID_NEXUS_FAILURE);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index dc210b9d4896..a0db8d8766a8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2180,7 +2180,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			data->block_descriptor_length = buffer[3];
+ #define MK_RES(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt))
+-#define MK_RES_LNX(drv,did,msg,tgt) ((int)(drv)<<24 | (int)(did)<<16 | (int)(msg)<<8 | (int)(tgt)<<1)
+ 
+ #define SET_RES_TARGET(who,tgt) { who &= ~RES_TARGET; who |= (int)(tgt); }
+ #define SET_RES_TARGET_LNX(who,tgt) { who &= ~RES_TARGET_LNX; who |= (int)(tgt) << 1; }
+@@ -3228,7 +3227,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		 */
+ 		srb->flag &= ~AUTO_REQSENSE;
+ 		srb->adapter_status = 0;
+-		srb->target_status = CHECK_CONDITION << 1;
++		srb->target_status = SAM_STAT_CHECK_CONDITION;
+ 		if (debug_enabled(DBG_1)) {
+ 			switch (cmd->sense_buffer[2] & 0x0f) {
+ 			case NOT_READY:
+@@ -3275,22 +3274,15 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 					*((unsigned int *)(cmd->sense_buffer + 3)));
  		}
- 		data->header_length = header_length;
--	} else if ((status_byte(result) == CHECK_CONDITION) &&
-+	} else if ((status_byte(result) == SAM_STAT_CHECK_CONDITION) &&
- 		   scsi_sense_valid(sshdr) &&
- 		   sshdr->sense_key == UNIT_ATTENTION && retry_count) {
- 		retry_count--;
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index cce757506383..e88fb3daebcc 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1349,8 +1349,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 	if (0 != result) {
- 		struct scsi_sense_hdr sshdr;
  
--		srp->header.status = 0xff & result;
--		srp->header.masked_status = status_byte(result);
-+		srp->header.status = status_byte(result);
-+		srp->header.masked_status = status_byte(result) >> 1;
- 		srp->header.msg_status = msg_byte(result);
- 		srp->header.host_status = host_byte(result);
- 		srp->header.driver_status = driver_byte(result);
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 5339baadc082..de52632c6022 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -207,7 +207,7 @@ static inline int scsi_is_wlun(u64 lun)
-  *      host_byte   = set by low-level driver to indicate status.
-  *      driver_byte = set by mid-level.
-  */
--#define status_byte(result) (((result) >> 1) & 0x7f)
-+#define status_byte(result) (((result)) & 0xff)
- #define msg_byte(result)    (((result) >> 8) & 0xff)
- #define host_byte(result)   (((result) >> 16) & 0xff)
- #define driver_byte(result) (((result) >> 24) & 0xff)
+-		if (status == (CHECK_CONDITION << 1)) {
++		if (status == SAM_STAT_CHECK_CONDITION) {
+ 			cmd->result = DID_BAD_TARGET << 16;
+ 			goto ckc_e;
+ 		}
+ 		dprintkdbg(DBG_0, "srb_done: AUTO_REQSENSE2\n");
+ 
+-		if (srb->total_xfer_length
+-		    && srb->total_xfer_length >= cmd->underflow)
+-			cmd->result =
+-			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+-				       srb->end_message, CHECK_CONDITION);
+-		/*SET_RES_DID(cmd->result,DID_OK) */
+-		else
+-			cmd->result =
+-			    MK_RES_LNX(DRIVER_SENSE, DID_OK,
+-				       srb->end_message, CHECK_CONDITION);
++		cmd->result =
++		    MK_RES(DRIVER_SENSE, DID_OK,
++			   srb->end_message, SAM_STAT_CHECK_CONDITION);
+ 
+ 		goto ckc_e;
+ 	}
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index abc74fd474dc..83576fd694c4 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -2656,7 +2656,7 @@ static void adpt_fail_posted_scbs(adpt_hba* pHba)
+ 		unsigned long flags;
+ 		spin_lock_irqsave(&d->list_lock, flags);
+ 		list_for_each_entry(cmd, &d->cmd_list, list) {
+-			cmd->result = (DID_OK << 16) | (QUEUE_FULL <<1);
++			cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+ 			cmd->scsi_done(cmd);
+ 		}
+ 		spin_unlock_irqrestore(&d->list_lock, flags);
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index fe03410268e6..d23e277c1b85 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -1677,7 +1677,7 @@ static void gdth_next(gdth_ha_str *ha)
+                 memset((char*)nscp->sense_buffer,0,16);
+                 nscp->sense_buffer[0] = 0x70;
+                 nscp->sense_buffer[2] = NOT_READY;
+-                nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++		nscp->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+                 if (!nscp_cmndinfo->wait_for_completion)
+                     nscp_cmndinfo->wait_for_completion++;
+                 else
+@@ -1722,7 +1722,7 @@ static void gdth_next(gdth_ha_str *ha)
+                     memset((char*)nscp->sense_buffer,0,16);
+                     nscp->sense_buffer[0] = 0x70;
+                     nscp->sense_buffer[2] = UNIT_ATTENTION;
+-                    nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++		    nscp->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+                     if (!nscp_cmndinfo->wait_for_completion)
+                         nscp_cmndinfo->wait_for_completion++;
+                     else
+@@ -1774,7 +1774,7 @@ static void gdth_next(gdth_ha_str *ha)
+                     memset((char*)nscp->sense_buffer,0,16);
+                     nscp->sense_buffer[0] = 0x70;
+                     nscp->sense_buffer[2] = UNIT_ATTENTION;
+-                    nscp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++		    nscp->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+                     if (!nscp_cmndinfo->wait_for_completion)
+                         nscp_cmndinfo->wait_for_completion++;
+                     else
+@@ -2802,7 +2802,7 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, u8 index,
+                 memset((char*)scp->sense_buffer,0,16);
+                 scp->sense_buffer[0] = 0x70;
+                 scp->sense_buffer[2] = NOT_READY;
+-                scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++		scp->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+             } else if (service == CACHESERVICE) {
+                 if (ha->status == S_CACHE_UNKNOWN &&
+                     (ha->hdr[t].cluster_type & 
+@@ -2812,11 +2812,11 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, u8 index,
+                 }
+                 memset((char*)scp->sense_buffer,0,16);
+                 if (ha->status == (u16)S_CACHE_RESERV) {
+-                    scp->result = (DID_OK << 16) | (RESERVATION_CONFLICT << 1);
++                    scp->result = (DID_OK << 16) | SAM_STAT_RESERVATION_CONFLICT;
+                 } else {
+                     scp->sense_buffer[0] = 0x70;
+                     scp->sense_buffer[2] = NOT_READY;
+-                    scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
++                    scp->result = (DID_OK << 16) | SAM_STAT_CHECK_CONDITION;
+                 }
+                 if (!cmndinfo->internal_command) {
+                     ha->dvr.size = sizeof(ha->dvr.eu.sync);
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index ff6d4aa92421..21e190c38b97 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1581,7 +1581,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 
+ 				cmd->result = (DRIVER_SENSE << 24) |
+ 					(DID_OK << 16) |
+-					(CHECK_CONDITION << 1);
++					SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->m_out.cmd == MEGA_MBOXCMD_EXTPTHRU) {
+@@ -1591,11 +1591,11 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 
+ 					cmd->result = (DRIVER_SENSE << 24) |
+ 						(DID_OK << 16) |
+-						(CHECK_CONDITION << 1);
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					cmd->sense_buffer[0] = 0x70;
+ 					cmd->sense_buffer[2] = ABORTED_COMMAND;
+-					cmd->result |= (CHECK_CONDITION << 1);
++					cmd->result |= SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			}
+ 			break;
+@@ -1613,7 +1613,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 			 */
+ 			if( cmd->cmnd[0] == TEST_UNIT_READY ) {
+ 				cmd->result |= (DID_ERROR << 16) |
+-					(RESERVATION_CONFLICT << 1);
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ 			/*
+@@ -1625,7 +1625,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+ 					 cmd->cmnd[0] == RELEASE) ) {
+ 
+ 				cmd->result |= (DID_ERROR << 16) |
+-					(RESERVATION_CONFLICT << 1);
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ #endif
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index f6ac819e6e96..dc58c5ff31e4 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1577,7 +1577,7 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
+ 				scp->sense_buffer[0] = 0x70;
+ 				scp->sense_buffer[2] = ILLEGAL_REQUEST;
+ 				scp->sense_buffer[12] = MEGA_INVALID_FIELD_IN_CDB;
+-				scp->result = CHECK_CONDITION << 1;
++				scp->result = SAM_STAT_CHECK_CONDITION;
+ 				return NULL;
+ 			}
+ 
+@@ -2302,7 +2302,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 						14);
+ 
+ 				scp->result = DRIVER_SENSE << 24 |
+-					DID_OK << 16 | CHECK_CONDITION << 1;
++					DID_OK << 16 | SAM_STAT_CHECK_CONDITION;
+ 			}
+ 			else {
+ 				if (mbox->cmd == MBOXCMD_EXTPTHRU) {
+@@ -2312,11 +2312,11 @@ megaraid_mbox_dpc(unsigned long devp)
+ 
+ 					scp->result = DRIVER_SENSE << 24 |
+ 						DID_OK << 16 |
+-						CHECK_CONDITION << 1;
++						SAM_STAT_CHECK_CONDITION;
+ 				} else {
+ 					scp->sense_buffer[0] = 0x70;
+ 					scp->sense_buffer[2] = ABORTED_COMMAND;
+-					scp->result = CHECK_CONDITION << 1;
++					scp->result = SAM_STAT_CHECK_CONDITION;
+ 				}
+ 			}
+ 			break;
+@@ -2334,7 +2334,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 			 */
+ 			if (scp->cmnd[0] == TEST_UNIT_READY) {
+ 				scp->result = DID_ERROR << 16 |
+-					RESERVATION_CONFLICT << 1;
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else
+ 			/*
+@@ -2345,7 +2345,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 					 scp->cmnd[0] == RELEASE)) {
+ 
+ 				scp->result = DID_ERROR << 16 |
+-					RESERVATION_CONFLICT << 1;
++					SAM_STAT_RESERVATION_CONFLICT;
+ 			}
+ 			else {
+ 				scp->result = DID_BAD_TARGET << 16 | status;
 -- 
 2.16.4
 
