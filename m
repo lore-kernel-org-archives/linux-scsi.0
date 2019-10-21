@@ -2,25 +2,25 @@ Return-Path: <SRS0=OG9y=YO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D42CA9EB7
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718E9CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9C8A2070B
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 495672070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727919AbfJUJxd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 05:53:33 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48840 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727885AbfJUJxc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727911AbfJUJxc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 21 Oct 2019 05:53:32 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48764 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727851AbfJUJxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Oct 2019 05:53:31 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D75E8BABB;
+        by mx1.suse.de (Postfix) with ESMTP id A3F19BAB7;
         Mon, 21 Oct 2019 09:53:28 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,85 +28,155 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/24] sg: use SAM status definitions and avoid using masked_status
-Date:   Mon, 21 Oct 2019 11:53:06 +0200
-Message-Id: <20191021095322.137969-9-hare@suse.de>
+Subject: [PATCH RFC 00/24] scsi: Revamp result values
+Date:   Mon, 21 Oct 2019 11:52:58 +0200
+Message-Id: <20191021095322.137969-1-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191021095322.137969-1-hare@suse.de>
-References: <20191021095322.137969-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard SAM status definitions and avoid using masked status
-values.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/sg.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+the 'result' field in the SCSI command is defined as having
+4 fields. The top byte is declared as a 'driver_byte', where the
+driver can signal some internal status back to the midlayer.
+However, there is quite a bit of overlap between the driver_byte
+and the host_byte, resulting in the driver_byte being used in
+very few places, and mostly in legacy drivers.
+Additionally, we have _two_ sets of definitions for the
+last byte (status byte), which can specified either in SAM terms
+or in the linux-specific terms, which are shifted right by one
+from the SAM ones.
+Needless to say, the linux-specific ones are declared obsolete
+for years now.
+And to make the confusion complete, both the status byte and
+the driver byte have a byte for a valid sense code, resulting
+in quite some confusion which of those bits to check.
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index e88fb3daebcc..60ff388d04b9 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -503,7 +503,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	old_hdr->target_status = hp->masked_status;
- 	old_hdr->host_status = hp->host_status;
- 	old_hdr->driver_status = hp->driver_status;
--	if ((CHECK_CONDITION & hp->masked_status) ||
-+	if ((SAM_STAT_CHECK_CONDITION & hp->status) ||
- 	    (DRIVER_SENSE & hp->driver_status))
- 		memcpy(old_hdr->sense_buffer, srp->sense_b,
- 		       sizeof (old_hdr->sense_buffer));
-@@ -529,7 +529,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		break;
- 	case DID_ERROR:
- 		old_hdr->result = (srp->sense_b[0] == 0 && 
--				  hp->masked_status == GOOD) ? 0 : EIO;
-+				  hp->status == SAM_STAT_GOOD) ? 0 : EIO;
- 		break;
- 	default:
- 		old_hdr->result = EIO;
-@@ -574,7 +574,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 	}
- 	hp->sb_len_wr = 0;
- 	if ((hp->mx_sb_len > 0) && hp->sbp) {
--		if ((CHECK_CONDITION & hp->masked_status) ||
-+		if ((SAM_STAT_CHECK_CONDITION & hp->status) ||
- 		    (DRIVER_SENSE & hp->driver_status)) {
- 			int sb_len = SCSI_SENSE_BUFFERSIZE;
- 			sb_len = (hp->mx_sb_len > sb_len) ? sb_len : hp->mx_sb_len;
-@@ -587,7 +587,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 			hp->sb_len_wr = len;
- 		}
- 	}
--	if (hp->masked_status || hp->host_status || hp->driver_status)
-+	if (hp->status || hp->host_status || hp->driver_status)
- 		hp->info |= SG_INFO_CHECK;
- 	if (copy_to_user(buf, hp, SZ_SG_IO_HDR)) {
- 		err = -EFAULT;
-@@ -873,7 +873,7 @@ sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
- 			break;
- 		rinfo[val].req_state = srp->done + 1;
- 		rinfo[val].problem =
--			srp->header.masked_status &
-+			srp->header.status &
- 			srp->header.host_status &
- 			srp->header.driver_status;
- 		if (srp->done)
-@@ -1355,8 +1355,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 		srp->header.host_status = host_byte(result);
- 		srp->header.driver_status = driver_byte(result);
- 		if ((sdp->sgdebug > 0) &&
--		    ((CHECK_CONDITION == srp->header.masked_status) ||
--		     (COMMAND_TERMINATED == srp->header.masked_status)))
-+		    ((SAM_STAT_CHECK_CONDITION == srp->header.status) ||
-+		     (SAM_STAT_COMMAND_TERMINATED == srp->header.status)))
- 			__scsi_print_sense(sdp->device, __func__, sense,
- 					   SCSI_SENSE_BUFFERSIZE);
- 
+This patchset does several things:
+- remove the linux-specific status byte definitions, and use
+  the SAM values throughout
+- replace the driver-byte values with either SAM ones (for sense
+  code checking) or host-byte definitions
+- remove the driver-byte definitions
+
+As usual, comments and reviews are welcome.
+
+Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
+usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
+this patch series.
+
+Hannes Reinecke (24):
+  aic7xxx,aic79xxx: remove driver-defined SAM status definitions
+  bfa: drop driver-defined SCSI status codes
+  wd33c93: use SCSI status
+  acornscsi: use standard defines
+  scsi: use standard SAM status codes
+  scsi: change status_byte() to return the standard SCSI status
+  target_core: Fixup target_complete_cmd() usage
+  sg: use SAM status definitions and avoid using masked_status
+  scsi: Kill obsolete linux-specific status codes
+  scsi: introduce set_status_byte()
+  advansys: kill driver_defined status byte accessors
+  scsi: introduce scsi_build_sense()
+  scsi: Kill DRIVER_SENSE
+  scsi: Kill DRIVER_HARD
+  scsi_error: use DID_TIME_OUT instead of DRIVER_TIMEOUT
+  scsi: Kill DRIVER_TIMEOUT
+  scsi: do not use DRIVER_INVALID
+  st: return error code in st_scsi_execute()
+  scsi_ioctl: return error code when blk_map_user() fails
+  scsi_dh_alua: do not interpret DRIVER_ERROR
+  xen-scsiback: stop using DRIVER_ERROR
+  scsi: stop using DRIVER_ERROR
+  scsi: Kill DRIVER_MEDIA, DRIVER_SOFT, and DRIVER_BUSY
+  scsi: Drop now obsolete driver_byte definitions
+
+ Documentation/scsi/scsi_mid_low_api.txt     |  3 +-
+ block/bsg-lib.c                             |  2 +-
+ block/bsg.c                                 |  2 +-
+ block/scsi_ioctl.c                          |  9 ++--
+ drivers/ata/libata-scsi.c                   | 22 +++-----
+ drivers/infiniband/ulp/srp/ib_srp.c         |  2 +-
+ drivers/message/fusion/mptscsih.c           |  2 +-
+ drivers/s390/scsi/zfcp_scsi.c               |  5 +-
+ drivers/scsi/3w-9xxx.c                      |  5 +-
+ drivers/scsi/3w-sas.c                       |  3 +-
+ drivers/scsi/3w-xxxx.c                      |  7 ++-
+ drivers/scsi/53c700.c                       |  6 +--
+ drivers/scsi/NCR5380.c                      |  4 +-
+ drivers/scsi/advansys.c                     | 78 ++++++++---------------------
+ drivers/scsi/aic7xxx/aic79xx_core.c         |  8 +--
+ drivers/scsi/aic7xxx/aic79xx_osm.c          | 35 ++++++-------
+ drivers/scsi/aic7xxx/aic7xxx_core.c         |  6 +--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c          | 13 +++--
+ drivers/scsi/aic7xxx/aiclib.h               | 15 ------
+ drivers/scsi/arcmsr/arcmsr_hba.c            |  5 +-
+ drivers/scsi/arm/acornscsi.c                | 24 +++------
+ drivers/scsi/arm/fas216.c                   | 10 ++--
+ drivers/scsi/bfa/bfa_fc.h                   | 15 ------
+ drivers/scsi/bfa/bfa_fcpim.c                |  2 +-
+ drivers/scsi/bfa/bfad_im.c                  |  4 +-
+ drivers/scsi/ch.c                           |  5 +-
+ drivers/scsi/constants.c                    | 15 ------
+ drivers/scsi/cxlflash/superpipe.c           | 45 ++++++++---------
+ drivers/scsi/dc395x.c                       | 26 +++-------
+ drivers/scsi/device_handler/scsi_dh_alua.c  |  4 --
+ drivers/scsi/dpt_i2o.c                      |  2 +-
+ drivers/scsi/esp_scsi.c                     |  3 +-
+ drivers/scsi/gdth.c                         | 12 ++---
+ drivers/scsi/hptiop.c                       |  2 +-
+ drivers/scsi/libiscsi.c                     |  5 +-
+ drivers/scsi/lpfc/lpfc_scsi.c               | 30 +++--------
+ drivers/scsi/megaraid.c                     | 22 ++++----
+ drivers/scsi/megaraid/megaraid_mbox.c       | 22 ++++----
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  3 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 -
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  8 +--
+ drivers/scsi/mvumi.c                        | 16 +++---
+ drivers/scsi/myrb.c                         | 61 ++++++----------------
+ drivers/scsi/myrs.c                         |  9 +---
+ drivers/scsi/ps3rom.c                       |  3 +-
+ drivers/scsi/qla2xxx/qla_isr.c              | 15 ++----
+ drivers/scsi/scsi.c                         |  8 +--
+ drivers/scsi/scsi_debug.c                   | 15 +++---
+ drivers/scsi/scsi_error.c                   | 52 +++++++++----------
+ drivers/scsi/scsi_ioctl.c                   |  2 +-
+ drivers/scsi/scsi_lib.c                     | 44 +++++++++++-----
+ drivers/scsi/scsi_logging.c                 | 10 +---
+ drivers/scsi/scsi_scan.c                    |  2 +-
+ drivers/scsi/scsi_transport_spi.c           |  2 +-
+ drivers/scsi/sd.c                           | 42 ++++++++--------
+ drivers/scsi/sd_zbc.c                       |  4 +-
+ drivers/scsi/sg.c                           | 25 ++++-----
+ drivers/scsi/smartpqi/smartpqi_init.c       |  3 +-
+ drivers/scsi/sr.c                           |  2 +-
+ drivers/scsi/sr_ioctl.c                     |  2 +-
+ drivers/scsi/st.c                           |  8 +--
+ drivers/scsi/stex.c                         |  9 ++--
+ drivers/scsi/sym53c8xx_2/sym_glue.c         |  6 +--
+ drivers/scsi/ufs/ufshcd.c                   |  6 +--
+ drivers/scsi/virtio_scsi.c                  |  3 +-
+ drivers/scsi/vmw_pvscsi.c                   | 21 ++++----
+ drivers/scsi/wd33c93.c                      | 21 +++-----
+ drivers/target/loopback/tcm_loop.c          |  1 -
+ drivers/target/target_core_alua.c           |  6 +--
+ drivers/target/target_core_iblock.c         |  2 +-
+ drivers/target/target_core_pr.c             |  8 +--
+ drivers/target/target_core_sbc.c            | 10 ++--
+ drivers/target/target_core_spc.c            | 14 +++---
+ drivers/target/target_core_xcopy.c          |  2 +-
+ drivers/usb/storage/cypress_atacb.c         |  4 +-
+ drivers/xen/xen-scsiback.c                  | 12 ++---
+ include/scsi/scsi.h                         | 19 +------
+ include/scsi/scsi_cmnd.h                    | 12 +++--
+ include/scsi/scsi_proto.h                   | 19 -------
+ include/scsi/sg.h                           |  3 +-
+ include/trace/events/scsi.h                 | 15 +-----
+ 81 files changed, 371 insertions(+), 639 deletions(-)
+
 -- 
 2.16.4
 
