@@ -2,25 +2,25 @@ Return-Path: <SRS0=OG9y=YO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 718E9CA9EBB
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32ED1CA9EB5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 495672070B
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 084422070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 09:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727911AbfJUJxc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 05:53:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48764 "EHLO mx1.suse.de"
+        id S1727807AbfJUJxe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 05:53:34 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48816 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727851AbfJUJxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Oct 2019 05:53:31 -0400
+        id S1727881AbfJUJxd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Oct 2019 05:53:33 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id A3F19BAB7;
+        by mx1.suse.de (Postfix) with ESMTP id D582EBABA;
         Mon, 21 Oct 2019 09:53:28 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,155 +28,242 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC 00/24] scsi: Revamp result values
-Date:   Mon, 21 Oct 2019 11:52:58 +0200
-Message-Id: <20191021095322.137969-1-hare@suse.de>
+Subject: [PATCH 07/24] target_core: Fixup target_complete_cmd() usage
+Date:   Mon, 21 Oct 2019 11:53:05 +0200
+Message-Id: <20191021095322.137969-8-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20191021095322.137969-1-hare@suse.de>
+References: <20191021095322.137969-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+target_complete_cmd() occasionally still uses the linux-specific
+SCSI result values; fix it up to use SAM result values throughout.
 
-the 'result' field in the SCSI command is defined as having
-4 fields. The top byte is declared as a 'driver_byte', where the
-driver can signal some internal status back to the midlayer.
-However, there is quite a bit of overlap between the driver_byte
-and the host_byte, resulting in the driver_byte being used in
-very few places, and mostly in legacy drivers.
-Additionally, we have _two_ sets of definitions for the
-last byte (status byte), which can specified either in SAM terms
-or in the linux-specific terms, which are shifted right by one
-from the SAM ones.
-Needless to say, the linux-specific ones are declared obsolete
-for years now.
-And to make the confusion complete, both the status byte and
-the driver byte have a byte for a valid sense code, resulting
-in quite some confusion which of those bits to check.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/target/target_core_alua.c   |  6 +++---
+ drivers/target/target_core_iblock.c |  2 +-
+ drivers/target/target_core_pr.c     |  8 ++++----
+ drivers/target/target_core_sbc.c    | 10 +++++-----
+ drivers/target/target_core_spc.c    | 14 +++++++-------
+ drivers/target/target_core_xcopy.c  |  2 +-
+ 6 files changed, 21 insertions(+), 21 deletions(-)
 
-This patchset does several things:
-- remove the linux-specific status byte definitions, and use
-  the SAM values throughout
-- replace the driver-byte values with either SAM ones (for sense
-  code checking) or host-byte definitions
-- remove the driver-byte definitions
-
-As usual, comments and reviews are welcome.
-
-Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
-usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
-this patch series.
-
-Hannes Reinecke (24):
-  aic7xxx,aic79xxx: remove driver-defined SAM status definitions
-  bfa: drop driver-defined SCSI status codes
-  wd33c93: use SCSI status
-  acornscsi: use standard defines
-  scsi: use standard SAM status codes
-  scsi: change status_byte() to return the standard SCSI status
-  target_core: Fixup target_complete_cmd() usage
-  sg: use SAM status definitions and avoid using masked_status
-  scsi: Kill obsolete linux-specific status codes
-  scsi: introduce set_status_byte()
-  advansys: kill driver_defined status byte accessors
-  scsi: introduce scsi_build_sense()
-  scsi: Kill DRIVER_SENSE
-  scsi: Kill DRIVER_HARD
-  scsi_error: use DID_TIME_OUT instead of DRIVER_TIMEOUT
-  scsi: Kill DRIVER_TIMEOUT
-  scsi: do not use DRIVER_INVALID
-  st: return error code in st_scsi_execute()
-  scsi_ioctl: return error code when blk_map_user() fails
-  scsi_dh_alua: do not interpret DRIVER_ERROR
-  xen-scsiback: stop using DRIVER_ERROR
-  scsi: stop using DRIVER_ERROR
-  scsi: Kill DRIVER_MEDIA, DRIVER_SOFT, and DRIVER_BUSY
-  scsi: Drop now obsolete driver_byte definitions
-
- Documentation/scsi/scsi_mid_low_api.txt     |  3 +-
- block/bsg-lib.c                             |  2 +-
- block/bsg.c                                 |  2 +-
- block/scsi_ioctl.c                          |  9 ++--
- drivers/ata/libata-scsi.c                   | 22 +++-----
- drivers/infiniband/ulp/srp/ib_srp.c         |  2 +-
- drivers/message/fusion/mptscsih.c           |  2 +-
- drivers/s390/scsi/zfcp_scsi.c               |  5 +-
- drivers/scsi/3w-9xxx.c                      |  5 +-
- drivers/scsi/3w-sas.c                       |  3 +-
- drivers/scsi/3w-xxxx.c                      |  7 ++-
- drivers/scsi/53c700.c                       |  6 +--
- drivers/scsi/NCR5380.c                      |  4 +-
- drivers/scsi/advansys.c                     | 78 ++++++++---------------------
- drivers/scsi/aic7xxx/aic79xx_core.c         |  8 +--
- drivers/scsi/aic7xxx/aic79xx_osm.c          | 35 ++++++-------
- drivers/scsi/aic7xxx/aic7xxx_core.c         |  6 +--
- drivers/scsi/aic7xxx/aic7xxx_osm.c          | 13 +++--
- drivers/scsi/aic7xxx/aiclib.h               | 15 ------
- drivers/scsi/arcmsr/arcmsr_hba.c            |  5 +-
- drivers/scsi/arm/acornscsi.c                | 24 +++------
- drivers/scsi/arm/fas216.c                   | 10 ++--
- drivers/scsi/bfa/bfa_fc.h                   | 15 ------
- drivers/scsi/bfa/bfa_fcpim.c                |  2 +-
- drivers/scsi/bfa/bfad_im.c                  |  4 +-
- drivers/scsi/ch.c                           |  5 +-
- drivers/scsi/constants.c                    | 15 ------
- drivers/scsi/cxlflash/superpipe.c           | 45 ++++++++---------
- drivers/scsi/dc395x.c                       | 26 +++-------
- drivers/scsi/device_handler/scsi_dh_alua.c  |  4 --
- drivers/scsi/dpt_i2o.c                      |  2 +-
- drivers/scsi/esp_scsi.c                     |  3 +-
- drivers/scsi/gdth.c                         | 12 ++---
- drivers/scsi/hptiop.c                       |  2 +-
- drivers/scsi/libiscsi.c                     |  5 +-
- drivers/scsi/lpfc/lpfc_scsi.c               | 30 +++--------
- drivers/scsi/megaraid.c                     | 22 ++++----
- drivers/scsi/megaraid/megaraid_mbox.c       | 22 ++++----
- drivers/scsi/megaraid/megaraid_sas_base.c   |  3 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 -
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  8 +--
- drivers/scsi/mvumi.c                        | 16 +++---
- drivers/scsi/myrb.c                         | 61 ++++++----------------
- drivers/scsi/myrs.c                         |  9 +---
- drivers/scsi/ps3rom.c                       |  3 +-
- drivers/scsi/qla2xxx/qla_isr.c              | 15 ++----
- drivers/scsi/scsi.c                         |  8 +--
- drivers/scsi/scsi_debug.c                   | 15 +++---
- drivers/scsi/scsi_error.c                   | 52 +++++++++----------
- drivers/scsi/scsi_ioctl.c                   |  2 +-
- drivers/scsi/scsi_lib.c                     | 44 +++++++++++-----
- drivers/scsi/scsi_logging.c                 | 10 +---
- drivers/scsi/scsi_scan.c                    |  2 +-
- drivers/scsi/scsi_transport_spi.c           |  2 +-
- drivers/scsi/sd.c                           | 42 ++++++++--------
- drivers/scsi/sd_zbc.c                       |  4 +-
- drivers/scsi/sg.c                           | 25 ++++-----
- drivers/scsi/smartpqi/smartpqi_init.c       |  3 +-
- drivers/scsi/sr.c                           |  2 +-
- drivers/scsi/sr_ioctl.c                     |  2 +-
- drivers/scsi/st.c                           |  8 +--
- drivers/scsi/stex.c                         |  9 ++--
- drivers/scsi/sym53c8xx_2/sym_glue.c         |  6 +--
- drivers/scsi/ufs/ufshcd.c                   |  6 +--
- drivers/scsi/virtio_scsi.c                  |  3 +-
- drivers/scsi/vmw_pvscsi.c                   | 21 ++++----
- drivers/scsi/wd33c93.c                      | 21 +++-----
- drivers/target/loopback/tcm_loop.c          |  1 -
- drivers/target/target_core_alua.c           |  6 +--
- drivers/target/target_core_iblock.c         |  2 +-
- drivers/target/target_core_pr.c             |  8 +--
- drivers/target/target_core_sbc.c            | 10 ++--
- drivers/target/target_core_spc.c            | 14 +++---
- drivers/target/target_core_xcopy.c          |  2 +-
- drivers/usb/storage/cypress_atacb.c         |  4 +-
- drivers/xen/xen-scsiback.c                  | 12 ++---
- include/scsi/scsi.h                         | 19 +------
- include/scsi/scsi_cmnd.h                    | 12 +++--
- include/scsi/scsi_proto.h                   | 19 -------
- include/scsi/sg.h                           |  3 +-
- include/trace/events/scsi.h                 | 15 +-----
- 81 files changed, 371 insertions(+), 639 deletions(-)
-
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 385e4cf9cfa6..b53b6d7f173e 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -123,7 +123,7 @@ target_emulate_report_referrals(struct se_cmd *cmd)
+ 
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -255,7 +255,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 	}
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, rd_len + 4);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, rd_len + 4);
+ 	return 0;
+ }
+ 
+@@ -424,7 +424,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ out:
+ 	transport_kunmap_data_sg(cmd);
+ 	if (!rc)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 6949ea8bc387..bbafa984226e 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -436,7 +436,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 5e931690e697..4fef561b201c 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -234,7 +234,7 @@ target_scsi2_reservation_release(struct se_cmd *cmd)
+ out_unlock:
+ 	spin_unlock(&dev->dev_reservation_lock);
+ out:
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -297,7 +297,7 @@ target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ 	spin_unlock(&dev->dev_reservation_lock);
+ out:
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+@@ -3680,7 +3680,7 @@ target_scsi3_emulate_pr_out(struct se_cmd *cmd)
+ 	}
+ 
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+@@ -4070,7 +4070,7 @@ target_scsi3_emulate_pr_in(struct se_cmd *cmd)
+ 	}
+ 
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index f1e81886122d..6e45924fb3da 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -67,7 +67,7 @@ sbc_emulate_readcapacity(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 8);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8);
+ 	return 0;
+ }
+ 
+@@ -130,7 +130,7 @@ sbc_emulate_readcapacity_16(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 32);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 32);
+ 	return 0;
+ }
+ 
+@@ -202,14 +202,14 @@ sbc_execute_write_same_unmap(struct se_cmd *cmd)
+ 			return ret;
+ 	}
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+ static sense_reason_t
+ sbc_emulate_noop(struct se_cmd *cmd)
+ {
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -1214,7 +1214,7 @@ sbc_execute_unmap(struct se_cmd *cmd)
+ err:
+ 	transport_kunmap_data_sg(cmd);
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 6d4cf2643c0a..84f7fefc2998 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -754,7 +754,7 @@ spc_emulate_inquiry(struct se_cmd *cmd)
+ 	kfree(buf);
+ 
+ 	if (!ret)
+-		target_complete_cmd_with_length(cmd, GOOD, len);
++		target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, len);
+ 	return ret;
+ }
+ 
+@@ -1099,7 +1099,7 @@ static sense_reason_t spc_emulate_modesense(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, length);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, length);
+ 	return 0;
+ }
+ 
+@@ -1117,7 +1117,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ 	int i;
+ 
+ 	if (!cmd->data_length) {
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 		return 0;
+ 	}
+ 
+@@ -1160,7 +1160,7 @@ static sense_reason_t spc_emulate_modeselect(struct se_cmd *cmd)
+ 	transport_kunmap_data_sg(cmd);
+ 
+ 	if (!ret)
+-		target_complete_cmd(cmd, GOOD);
++		target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return ret;
+ }
+ 
+@@ -1193,7 +1193,7 @@ static sense_reason_t spc_emulate_request_sense(struct se_cmd *cmd)
+ 	memcpy(rbuf, buf, min_t(u32, sizeof(buf), cmd->data_length));
+ 	transport_kunmap_data_sg(cmd);
+ 
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+@@ -1260,7 +1260,7 @@ sense_reason_t spc_emulate_report_luns(struct se_cmd *cmd)
+ 		transport_kunmap_data_sg(cmd);
+ 	}
+ 
+-	target_complete_cmd_with_length(cmd, GOOD, 8 + lun_count * 8);
++	target_complete_cmd_with_length(cmd, SAM_STAT_GOOD, 8 + lun_count * 8);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(spc_emulate_report_luns);
+@@ -1268,7 +1268,7 @@ EXPORT_SYMBOL(spc_emulate_report_luns);
+ static sense_reason_t
+ spc_emulate_testunitready(struct se_cmd *cmd)
+ {
+-	target_complete_cmd(cmd, GOOD);
++	target_complete_cmd(cmd, SAM_STAT_GOOD);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 425c1070de08..30475bf73faf 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -1043,7 +1043,7 @@ static sense_reason_t target_rcr_operating_parameters(struct se_cmd *se_cmd)
+ 	put_unaligned_be32(42, &p[0]);
+ 
+ 	transport_kunmap_data_sg(se_cmd);
+-	target_complete_cmd(se_cmd, GOOD);
++	target_complete_cmd(se_cmd, SAM_STAT_GOOD);
+ 
+ 	return TCM_NO_SENSE;
+ }
 -- 
 2.16.4
 
