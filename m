@@ -2,94 +2,109 @@ Return-Path: <SRS0=OG9y=YO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD73CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 22:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D16CA9EAF
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 23:16:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E0162089C
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 22:52:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B05920882
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 23:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730461AbfJUWwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 18:52:41 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56174 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730399AbfJUWwl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Oct 2019 18:52:41 -0400
-Received: from dread.disaster.area (pa49-180-40-48.pa.nsw.optusnet.com.au [49.180.40.48])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0202A363692;
-        Tue, 22 Oct 2019 09:52:35 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iMgXS-00074h-TR; Tue, 22 Oct 2019 09:52:34 +1100
-Date:   Tue, 22 Oct 2019 09:52:34 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Mike Christie <mchristi@redhat.com>
-Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, martin@urbackup.org,
-        Damien.LeMoal@wdc.com
-Subject: Re: [PATCH] Add prctl support for controlling PF_MEMALLOC V2
-Message-ID: <20191021225234.GC2642@dread.disaster.area>
-References: <20191021214137.8172-1-mchristi@redhat.com>
+        id S1730444AbfJUXQk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 19:16:40 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52562 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729606AbfJUXQj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Oct 2019 19:16:39 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 753CF29E53;
+        Mon, 21 Oct 2019 19:16:36 -0400 (EDT)
+Date:   Tue, 22 Oct 2019 10:16:33 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Hannes Reinecke <hare@suse.de>
+cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 03/24] wd33c93: use SCSI status
+In-Reply-To: <20191021095322.137969-4-hare@suse.de>
+Message-ID: <alpine.LNX.2.21.1910220948520.14@nippy.intranet>
+References: <20191021095322.137969-1-hare@suse.de> <20191021095322.137969-4-hare@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191021214137.8172-1-mchristi@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=y881pOMu+B+mZdf5UrsJdA==:117 a=y881pOMu+B+mZdf5UrsJdA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=rSlL4X6sGr0P-yuullEA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Oct 21, 2019 at 04:41:37PM -0500, Mike Christie wrote:
-> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
-> amd nbd that have userspace components that can run in the IO path. For
-> example, iscsi and nbd's userspace deamons may need to recreate a socket
-> and/or send IO on it, and dm-multipath's daemon multipathd may need to
-> send IO to figure out the state of paths and re-set them up.
-> 
-> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-> memalloc_*_save/restore functions to control the allocation behavior,
-> but for userspace we would end up hitting a allocation that ended up
-> writing data back to the same device we are trying to allocate for.
+On Mon, 21 Oct 2019, Hannes Reinecke wrote:
 
-I think this needs to describe the symptoms this results in. i.e.
-that this can result in deadlocking the IO path.
-
-> This patch allows the userspace deamon to set the PF_MEMALLOC* flags
-> with prctl during their initialization so later allocations cannot
-> calling back into them.
+> Use standard SCSI status and drop usage of the linux-specific ones.
 > 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
+>  drivers/scsi/wd33c93.c | 21 ++++++++-------------
+>  1 file changed, 8 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+> index f81046f0e68a..98e04a7b9d63 100644
+> --- a/drivers/scsi/wd33c93.c
+> +++ b/drivers/scsi/wd33c93.c
+> @@ -1176,10 +1176,8 @@ wd33c93_intr(struct Scsi_Host *instance)
+>  			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
+>  				cmd->SCp.Status = lun;
+>  			if (cmd->cmnd[0] == REQUEST_SENSE
+> -			    && cmd->SCp.Status != GOOD)
+> -				cmd->result =
+> -				    (cmd->
+> -				     result & 0x00ffff) | (DID_ERROR << 16);
+> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
+> +				set_host_byte(cmd, DID_ERROR);
 
-....
-> +	case PR_SET_MEMALLOC:
-> +		if (!capable(CAP_SYS_ADMIN))
-> +			return -EPERM;
+This isn't obviously equivalent. Perhaps the set_host_byte() changes 
+should be done in a separate patch to the SAM_STAT_FOO changes (?)
 
-Wouldn't CAP_SYS_RAWIO (because it's required by kernel IO path
-drivers) or CAP_SYS_RESOURCE (controlling memory allocation
-behaviour) be more appropriate here?
+>  			else
+>  				cmd->result =
+>  				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+> @@ -1262,9 +1260,8 @@ wd33c93_intr(struct Scsi_Host *instance)
+>  		    hostdata->connected = NULL;
+>  		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>  		hostdata->state = S_UNCONNECTED;
+> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != GOOD)
+> -			cmd->result =
+> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+> +		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
+> +			set_host_byte(cmd, DID_ERROR);
 
-Which-ever is selected, the use should be added to the list above
-the definition of the capability in include/linux/capability.h...
+Same.
 
-Otherwise looks fine to me.
+>  		else
+>  			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+>  		cmd->scsi_done(cmd);
+> @@ -1294,12 +1291,10 @@ wd33c93_intr(struct Scsi_Host *instance)
+>  			hostdata->connected = NULL;
+>  			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>  			hostdata->state = S_UNCONNECTED;
+> -			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
+> -			    if (cmd->cmnd[0] == REQUEST_SENSE
+> -				&& cmd->SCp.Status != GOOD)
+> -				cmd->result =
+> -				    (cmd->
+> -				     result & 0x00ffff) | (DID_ERROR << 16);
+> +			DB(DB_INTR, printk(":%d", cmd->SCp.Status));
+> +			if (cmd->cmnd[0] == REQUEST_SENSE
+> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
+> +				set_host_byte(cmd->result, DID_ERROR);
 
-Cheers,
+Same.
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+
+>  			else
+>  				cmd->result =
+>  				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+> 
