@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97DAACA9EB0
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A9ECA9EAF
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AC25205ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 625E521783
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728592AbfJUQZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 12:25:28 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:33124 "EHLO huawei.com"
+        id S1727822AbfJUQ0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 12:26:36 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:33126 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726276AbfJUQZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Oct 2019 12:25:28 -0400
+        id S1728292AbfJUQZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Oct 2019 12:25:27 -0400
 Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id EBC81B6BD90BF05A997D;
-        Tue, 22 Oct 2019 00:25:24 +0800 (CST)
+        by Forcepoint Email with ESMTP id 0583C20F66B56A14DC87;
+        Tue, 22 Oct 2019 00:25:25 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.439.0; Tue, 22 Oct 2019 00:25:17 +0800
+ 14.3.439.0; Tue, 22 Oct 2019 00:25:18 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>,
         "John Garry" <john.garry@huawei.com>
-Subject: [PATCH 02/18] scsi: hisi_sas: Set the BIST init value before enabling BIST
-Date:   Tue, 22 Oct 2019 00:21:59 +0800
-Message-ID: <1571674935-108326-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 05/18] scsi: hisi_sas: Add timestamp for a debugfs dump
+Date:   Tue, 22 Oct 2019 00:22:02 +0800
+Message-ID: <1571674935-108326-6-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
 References: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
@@ -46,47 +46,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-If set the BIST init value after enabling BIST, there may be still some
-few error bits. According to the process, need to set the BIST init value
-before enabling BIST.
+It's useful to know when the dump occurred, so add a timestamp file for
+this.
 
-Fixes: 97b151e75861 ("scsi: hisi_sas: Add BIST support for phy loopback")
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      | 2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 7 +++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index cb8d087762db..cc594937fa8d 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3022,11 +3022,6 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
- 		hisi_sas_phy_write32(hisi_hba, phy_id,
- 				     SAS_PHY_BIST_CTRL, reg_val);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 83232e8472fb..7069dae4cec9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -21,6 +21,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/property.h>
+ #include <linux/regmap.h>
++#include <linux/timer.h>
+ #include <scsi/sas_ata.h>
+ #include <scsi/libsas.h>
  
--		mdelay(100);
--		reg_val |= (CFG_RX_BIST_EN_MSK | CFG_TX_BIST_EN_MSK);
--		hisi_sas_phy_write32(hisi_hba, phy_id,
--				     SAS_PHY_BIST_CTRL, reg_val);
--
- 		/* set the bist init value */
- 		hisi_sas_phy_write32(hisi_hba, phy_id,
- 				     SAS_PHY_BIST_CODE,
-@@ -3035,6 +3030,11 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
- 				     SAS_PHY_BIST_CODE1,
- 				     SAS_PHY_BIST_CODE1_INIT);
+@@ -410,6 +411,7 @@ struct hisi_hba {
+ 	struct hisi_sas_iost *debugfs_iost;
+ 	struct hisi_sas_itct *debugfs_itct;
+ 	u64 *debugfs_iost_cache;
++	u64 debugfs_timestamp;
+ 	u64 *debugfs_itct_cache;
  
-+		mdelay(100);
-+		reg_val |= (CFG_RX_BIST_EN_MSK | CFG_TX_BIST_EN_MSK);
-+		hisi_sas_phy_write32(hisi_hba, phy_id,
-+				     SAS_PHY_BIST_CTRL, reg_val);
+ 	struct dentry *debugfs_dir;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index a7bac5dc389a..a983d08c03aa 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -3194,6 +3194,7 @@ static const struct file_operations hisi_sas_debugfs_itct_cache_fops = {
+ 
+ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ {
++	u64 *debugfs_timestamp;
+ 	struct dentry *dump_dentry;
+ 	struct dentry *dentry;
+ 	char name[256];
+@@ -3201,10 +3202,14 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 	int c;
+ 	int d;
+ 
++	debugfs_timestamp = &hisi_hba->debugfs_timestamp;
+ 	/* Create dump dir inside device dir */
+ 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+ 	hisi_hba->debugfs_dump_dentry = dump_dentry;
+ 
++	debugfs_create_u64("timestamp", 0400, dump_dentry,
++			   debugfs_timestamp);
 +
- 		/* clear error bit */
- 		mdelay(100);
- 		hisi_sas_phy_read32(hisi_hba, phy_id, SAS_BIST_ERR_CNT);
+ 	debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
+ 			    &hisi_sas_debugfs_global_fops);
+ 
+@@ -3684,7 +3689,9 @@ void hisi_sas_debugfs_work_handler(struct work_struct *work)
+ {
+ 	struct hisi_hba *hisi_hba =
+ 		container_of(work, struct hisi_hba, debugfs_work);
++	u64 timestamp = local_clock() / NSEC_PER_MSEC;
+ 
++	hisi_hba->debugfs_timestamp = timestamp;
+ 	if (hisi_hba->debugfs_snapshot)
+ 		return;
+ 	hisi_hba->debugfs_snapshot = true;
 -- 
 2.17.1
 
