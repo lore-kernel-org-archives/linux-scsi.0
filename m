@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A9ECA9EAF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA31DCA9EB0
 	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 625E521783
+	by mail.kernel.org (Postfix) with ESMTP id 82C652173B
 	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727822AbfJUQ0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 12:26:36 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:33126 "EHLO huawei.com"
+        id S1728480AbfJUQZ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 12:25:27 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:33122 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728292AbfJUQZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727303AbfJUQZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 21 Oct 2019 12:25:27 -0400
 Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 0583C20F66B56A14DC87;
-        Tue, 22 Oct 2019 00:25:25 +0800 (CST)
+        by Forcepoint Email with ESMTP id F056D2AD5D5169600816;
+        Tue, 22 Oct 2019 00:25:24 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.439.0; Tue, 22 Oct 2019 00:25:18 +0800
+ 14.3.439.0; Tue, 22 Oct 2019 00:25:16 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>,
-        Luo Jiaxing <luojiaxing@huawei.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
         "John Garry" <john.garry@huawei.com>
-Subject: [PATCH 05/18] scsi: hisi_sas: Add timestamp for a debugfs dump
-Date:   Tue, 22 Oct 2019 00:22:02 +0800
-Message-ID: <1571674935-108326-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 01/18] scsi: hisi_sas: Don't create debugfs dump folder twice
+Date:   Tue, 22 Oct 2019 00:21:58 +0800
+Message-ID: <1571674935-108326-2-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
 References: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
@@ -46,75 +46,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Luo Jiaxing <luojiaxing@huawei.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-It's useful to know when the dump occurred, so add a timestamp file for
-this.
+Due to a merge error, we attempt to create 2x debugfs dump folders, which
+fails:
+[  861.101914] debugfs: Directory 'dump' with parent '0000:74:02.0'
+already present!
 
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+This breaks the dump function.
+
+To fix, remove the superfluous attempt to create the folder.
+
+Fixes: 7ec7082c57ec ("scsi: hisi_sas: Add hisi_sas_debugfs_alloc() to centralise allocation")
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h      | 2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c | 7 +++++++
- 2 files changed, 9 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 83232e8472fb..7069dae4cec9 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -21,6 +21,7 @@
- #include <linux/platform_device.h>
- #include <linux/property.h>
- #include <linux/regmap.h>
-+#include <linux/timer.h>
- #include <scsi/sas_ata.h>
- #include <scsi/libsas.h>
- 
-@@ -410,6 +411,7 @@ struct hisi_hba {
- 	struct hisi_sas_iost *debugfs_iost;
- 	struct hisi_sas_itct *debugfs_itct;
- 	u64 *debugfs_iost_cache;
-+	u64 debugfs_timestamp;
- 	u64 *debugfs_itct_cache;
- 
- 	struct dentry *debugfs_dir;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a7bac5dc389a..a983d08c03aa 100644
+index 1a25f0f15fd0..ceba1016b77f 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -3194,6 +3194,7 @@ static const struct file_operations hisi_sas_debugfs_itct_cache_fops = {
+@@ -3712,9 +3712,6 @@ static int hisi_sas_debugfs_alloc(struct hisi_hba *hisi_hba)
+ 	int p, c, d;
+ 	size_t sz;
  
- static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- {
-+	u64 *debugfs_timestamp;
- 	struct dentry *dump_dentry;
- 	struct dentry *dentry;
- 	char name[256];
-@@ -3201,10 +3202,14 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
- 	int c;
- 	int d;
- 
-+	debugfs_timestamp = &hisi_hba->debugfs_timestamp;
- 	/* Create dump dir inside device dir */
- 	dump_dentry = debugfs_create_dir("dump", hisi_hba->debugfs_dir);
- 	hisi_hba->debugfs_dump_dentry = dump_dentry;
- 
-+	debugfs_create_u64("timestamp", 0400, dump_dentry,
-+			   debugfs_timestamp);
-+
- 	debugfs_create_file("global", 0400, dump_dentry, hisi_hba,
- 			    &hisi_sas_debugfs_global_fops);
- 
-@@ -3684,7 +3689,9 @@ void hisi_sas_debugfs_work_handler(struct work_struct *work)
- {
- 	struct hisi_hba *hisi_hba =
- 		container_of(work, struct hisi_hba, debugfs_work);
-+	u64 timestamp = local_clock() / NSEC_PER_MSEC;
- 
-+	hisi_hba->debugfs_timestamp = timestamp;
- 	if (hisi_hba->debugfs_snapshot)
- 		return;
- 	hisi_hba->debugfs_snapshot = true;
+-	hisi_hba->debugfs_dump_dentry =
+-			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+-
+ 	sz = hw->debugfs_reg_array[DEBUGFS_GLOBAL]->count * 4;
+ 	hisi_hba->debugfs_regs[DEBUGFS_GLOBAL] =
+ 				devm_kmalloc(dev, sz, GFP_KERNEL);
 -- 
 2.17.1
 
