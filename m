@@ -4,35 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B9C3CA9EB7
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C89CCA9EAF
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 711CC2084B
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:25:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79AB120873
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Oct 2019 16:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728897AbfJUQZ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Oct 2019 12:25:28 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:33120 "EHLO huawei.com"
+        id S1729987AbfJUQZo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Oct 2019 12:25:44 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:36588 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728375AbfJUQZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Oct 2019 12:25:28 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id E182BFD05BB0DD40C6F4;
-        Tue, 22 Oct 2019 00:25:24 +0800 (CST)
+        id S1729922AbfJUQZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Oct 2019 12:25:43 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 3318C6A206C8BB98CE65;
+        Tue, 22 Oct 2019 00:25:30 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.439.0; Tue, 22 Oct 2019 00:25:17 +0800
+ 14.3.439.0; Tue, 22 Oct 2019 00:25:19 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>,
         "John Garry" <john.garry@huawei.com>
-Subject: [PATCH 03/18] scsi: hisi_sas: use wait_for_completion_timeout() when clearing ITCT
-Date:   Tue, 22 Oct 2019 00:22:00 +0800
-Message-ID: <1571674935-108326-4-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 12/18] scsi: hisi_sas: Add debugfs file structure for IOST cache
+Date:   Tue, 22 Oct 2019 00:22:09 +0800
+Message-ID: <1571674935-108326-13-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
 References: <1571674935-108326-1-git-send-email-john.garry@huawei.com>
@@ -45,186 +46,99 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-When injecting 2bit ecc errors, it will cause confusion inside SAS
-controller which needs host reset to recover it. If a device is gone at
-the same times inject 2bit ecc errors, we may not receive the ITCT
-interrupt so it will wait for completion in clear_itct_v3_hw() all the
-time. And host reset will also not occur because it can't require
-hisi_hba->sem, so the system will be suspended.
+Create a file structure which was used to save the memory address for
+IOST cache at debugfs. This structure is bound to the corresponding debugfs
+file, it can help callback function of debugfs file to get what it need.
 
-To solve the issue, use wait_for_completion_timeout() instead of
-wait_for_completion(), and also don't mark the gone device as
-SAS_PHY_UNUSED when device gone.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |  5 +++--
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  8 ++++++--
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  6 ++++--
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 13 ++++++++++---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 13 ++++++++++---
- 5 files changed, 33 insertions(+), 12 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  6 +++++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 16 ++++++++--------
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 720c4d6be939..83232e8472fb 100644
+index f42f1b34f843..4e32d1b77d16 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -84,6 +84,7 @@
- #define HISI_SAS_PROT_MASK (HISI_SAS_DIF_PROT_MASK | HISI_SAS_DIX_PROT_MASK)
+@@ -351,6 +351,10 @@ struct hisi_sas_debugfs_itct {
+ 	struct hisi_sas_itct *itct;
+ };
  
- #define HISI_SAS_WAIT_PHYUP_TIMEOUT 20
-+#define CLEAR_ITCT_TIMEOUT	20
++struct hisi_sas_debugfs_iost_cache {
++	struct hisi_sas_iost_itct_cache *cache;
++};
++
+ struct hisi_hba {
+ 	/* This must be the first element, used by SHOST_TO_SAS_HA */
+ 	struct sas_ha_struct *p;
+@@ -438,8 +442,8 @@ struct hisi_hba {
+ 	struct hisi_sas_debugfs_dq debugfs_dq[HISI_SAS_MAX_QUEUES];
+ 	struct hisi_sas_debugfs_iost debugfs_iost;
+ 	struct hisi_sas_debugfs_itct debugfs_itct;
+-	u64 *debugfs_iost_cache;
+ 	u64 debugfs_timestamp;
++	struct hisi_sas_debugfs_iost_cache debugfs_iost_cache;
+ 	u64 *debugfs_itct_cache;
  
- struct hisi_hba;
- 
-@@ -296,8 +297,8 @@ struct hisi_sas_hw {
- 	void (*phy_set_linkrate)(struct hisi_hba *hisi_hba, int phy_no,
- 			struct sas_phy_linkrates *linkrates);
- 	enum sas_linkrate (*phy_get_max_linkrate)(void);
--	void (*clear_itct)(struct hisi_hba *hisi_hba,
--			    struct hisi_sas_device *dev);
-+	int (*clear_itct)(struct hisi_hba *hisi_hba,
-+			  struct hisi_sas_device *dev);
- 	void (*free_device)(struct hisi_sas_device *sas_dev);
- 	int (*get_wideport_bitmap)(struct hisi_hba *hisi_hba, int port_id);
- 	void (*dereg_device)(struct hisi_hba *hisi_hba,
+ 	struct dentry *debugfs_dir;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index ceba1016b77f..621eebbeacd6 100644
+index 20fc122e3d04..60bd06b29767 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1045,6 +1045,7 @@ static void hisi_sas_dev_gone(struct domain_device *device)
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(device);
+@@ -2800,7 +2800,7 @@ static void hisi_sas_debugfs_snapshot_itct_reg(struct hisi_hba *hisi_hba)
+ static void hisi_sas_debugfs_snapshot_iost_reg(struct hisi_hba *hisi_hba)
+ {
+ 	int max_command_entries = HISI_SAS_MAX_COMMANDS;
+-	void *cachebuf = hisi_hba->debugfs_iost_cache;
++	void *cachebuf = hisi_hba->debugfs_iost_cache.cache;
+ 	void *databuf = hisi_hba->debugfs_iost.iost;
+ 	struct hisi_sas_iost *iost;
+ 	int i;
+@@ -3088,9 +3088,8 @@ static const struct file_operations hisi_sas_debugfs_iost_fops = {
+ 
+ static int hisi_sas_debugfs_iost_cache_show(struct seq_file *s, void *p)
+ {
+-	struct hisi_hba *hisi_hba = s->private;
+-	struct hisi_sas_iost_itct_cache *iost_cache =
+-		(struct hisi_sas_iost_itct_cache *)hisi_hba->debugfs_iost_cache;
++	struct hisi_sas_debugfs_iost_cache *debugfs_iost_cache = s->private;
++	struct hisi_sas_iost_itct_cache *iost_cache = debugfs_iost_cache->cache;
+ 	u32 cache_size = HISI_SAS_IOST_ITCT_CACHE_DW_SZ * 4;
+ 	int i, tab_idx;
+ 	__le64 *iost;
+@@ -3250,7 +3249,8 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 			    &hisi_hba->debugfs_iost,
+ 			    &hisi_sas_debugfs_iost_fops);
+ 
+-	debugfs_create_file("iost_cache", 0400, dump_dentry, hisi_hba,
++	debugfs_create_file("iost_cache", 0400, dump_dentry,
++			    &hisi_hba->debugfs_iost_cache,
+ 			    &hisi_sas_debugfs_iost_cache_fops);
+ 
+ 	debugfs_create_file("itct", 0400, dump_dentry,
+@@ -3715,7 +3715,7 @@ static void hisi_sas_debugfs_release(struct hisi_hba *hisi_hba)
  	struct device *dev = hisi_hba->dev;
-+	int ret = 0;
- 
- 	dev_info(dev, "dev[%d:%x] is gone\n",
- 		 sas_dev->device_id, sas_dev->dev_type);
-@@ -1056,13 +1057,16 @@ static void hisi_sas_dev_gone(struct domain_device *device)
- 
- 		hisi_sas_dereg_device(hisi_hba, device);
- 
--		hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
-+		ret = hisi_hba->hw->clear_itct(hisi_hba, sas_dev);
- 		device->lldd_dev = NULL;
- 	}
- 
- 	if (hisi_hba->hw->free_device)
- 		hisi_hba->hw->free_device(sas_dev);
--	sas_dev->dev_type = SAS_PHY_UNUSED;
-+
-+	/* Don't mark it as SAS_PHY_UNUSED if failed to clear ITCT */
-+	if (!ret)
-+		sas_dev->dev_type = SAS_PHY_UNUSED;
- 	sas_dev->sas_device = NULL;
- 	up(&hisi_hba->sem);
- }
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index b861a0f14c9d..3af53cc42bd6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -531,8 +531,8 @@ static void setup_itct_v1_hw(struct hisi_hba *hisi_hba,
- 				(0xff00ULL << ITCT_HDR_REJ_OPEN_TL_OFF));
- }
- 
--static void clear_itct_v1_hw(struct hisi_hba *hisi_hba,
--			      struct hisi_sas_device *sas_dev)
-+static int clear_itct_v1_hw(struct hisi_hba *hisi_hba,
-+			    struct hisi_sas_device *sas_dev)
- {
- 	u64 dev_id = sas_dev->device_id;
- 	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
-@@ -551,6 +551,8 @@ static void clear_itct_v1_hw(struct hisi_hba *hisi_hba,
- 	qw0 = le64_to_cpu(itct->qw0);
- 	qw0 &= ~ITCT_HDR_VALID_MSK;
- 	itct->qw0 = cpu_to_le64(qw0);
-+
-+	return 0;
- }
- 
- static int reset_hw_v1_hw(struct hisi_hba *hisi_hba)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 8e96a257e439..61b1e2693b08 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -974,13 +974,14 @@ static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
- 					(0x1ULL << ITCT_HDR_RTOLT_OFF));
- }
- 
--static void clear_itct_v2_hw(struct hisi_hba *hisi_hba,
--			      struct hisi_sas_device *sas_dev)
-+static int clear_itct_v2_hw(struct hisi_hba *hisi_hba,
-+			    struct hisi_sas_device *sas_dev)
- {
- 	DECLARE_COMPLETION_ONSTACK(completion);
- 	u64 dev_id = sas_dev->device_id;
- 	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
- 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	struct device *dev = hisi_hba->dev;
  	int i;
  
- 	sas_dev->completion = &completion;
-@@ -990,13 +991,19 @@ static void clear_itct_v2_hw(struct hisi_hba *hisi_hba,
- 		hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
- 				 ENT_INT_SRC3_ITC_INT_MSK);
+-	devm_kfree(dev, hisi_hba->debugfs_iost_cache);
++	devm_kfree(dev, hisi_hba->debugfs_iost_cache.cache);
+ 	devm_kfree(dev, hisi_hba->debugfs_itct_cache);
+ 	devm_kfree(dev, hisi_hba->debugfs_iost.iost);
  
-+	/* need to set register twice to clear ITCT for v2 hw */
- 	for (i = 0; i < 2; i++) {
- 		reg_val = ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
- 		hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
--		wait_for_completion(sas_dev->completion);
-+		if (!wait_for_completion_timeout(sas_dev->completion,
-+						 CLEAR_ITCT_TIMEOUT * HZ)) {
-+			dev_warn(dev, "failed to clear ITCT\n");
-+			return -ETIMEDOUT;
-+		}
+@@ -3792,8 +3792,8 @@ static int hisi_sas_debugfs_alloc(struct hisi_hba *hisi_hba)
+ 	sz = HISI_SAS_IOST_ITCT_CACHE_NUM *
+ 	     sizeof(struct hisi_sas_iost_itct_cache);
  
- 		memset(itct, 0, sizeof(struct hisi_sas_itct));
- 	}
-+	return 0;
- }
+-	hisi_hba->debugfs_iost_cache = devm_kmalloc(dev, sz, GFP_KERNEL);
+-	if (!hisi_hba->debugfs_iost_cache)
++	hisi_hba->debugfs_iost_cache.cache = devm_kmalloc(dev, sz, GFP_KERNEL);
++	if (!hisi_hba->debugfs_iost_cache.cache)
+ 		goto fail;
  
- static void free_device_v2_hw(struct hisi_sas_device *sas_dev)
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index cc594937fa8d..19a8cfeb8f6e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -795,13 +795,14 @@ static void setup_itct_v3_hw(struct hisi_hba *hisi_hba,
- 					(0x1ULL << ITCT_HDR_RTOLT_OFF));
- }
- 
--static void clear_itct_v3_hw(struct hisi_hba *hisi_hba,
--			      struct hisi_sas_device *sas_dev)
-+static int clear_itct_v3_hw(struct hisi_hba *hisi_hba,
-+			    struct hisi_sas_device *sas_dev)
- {
- 	DECLARE_COMPLETION_ONSTACK(completion);
- 	u64 dev_id = sas_dev->device_id;
- 	struct hisi_sas_itct *itct = &hisi_hba->itct[dev_id];
- 	u32 reg_val = hisi_sas_read32(hisi_hba, ENT_INT_SRC3);
-+	struct device *dev = hisi_hba->dev;
- 
- 	sas_dev->completion = &completion;
- 
-@@ -814,8 +815,14 @@ static void clear_itct_v3_hw(struct hisi_hba *hisi_hba,
- 	reg_val = ITCT_CLR_EN_MSK | (dev_id & ITCT_DEV_MSK);
- 	hisi_sas_write32(hisi_hba, ITCT_CLR, reg_val);
- 
--	wait_for_completion(sas_dev->completion);
-+	if (!wait_for_completion_timeout(sas_dev->completion,
-+					 CLEAR_ITCT_TIMEOUT * HZ)) {
-+		dev_warn(dev, "failed to clear ITCT\n");
-+		return -ETIMEDOUT;
-+	}
-+
- 	memset(itct, 0, sizeof(struct hisi_sas_itct));
-+	return 0;
- }
- 
- static void dereg_device_v3_hw(struct hisi_hba *hisi_hba,
+ 	sz = HISI_SAS_IOST_ITCT_CACHE_NUM *
 -- 
 2.17.1
 
