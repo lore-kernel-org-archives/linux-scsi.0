@@ -2,36 +2,35 @@ Return-Path: <SRS0=5qjn=YP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC0E9CA9EB7
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72677CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:24:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCEE121783
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:10:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EE7F2184C
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731093AbfJVGK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 02:10:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35800 "EHLO mx1.suse.de"
+        id S1729056AbfJVGYX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 02:24:23 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40210 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726082AbfJVGK2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 02:10:28 -0400
+        id S1725788AbfJVGYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Oct 2019 02:24:22 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8F967B424;
-        Tue, 22 Oct 2019 06:10:26 +0000 (UTC)
-Subject: Re: [PATCH 13/24] scsi: Kill DRIVER_SENSE
-To:     Finn Thain <fthain@telegraphics.com.au>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
+        by mx1.suse.de (Postfix) with ESMTP id 00E5AAFE1;
+        Tue, 22 Oct 2019 06:24:20 +0000 (UTC)
+Subject: Re: [PATCH RFC 00/24] scsi: Revamp result values
+To:     dgilbert@interlog.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-14-hare@suse.de>
- <alpine.LNX.2.21.1910221034331.14@nippy.intranet>
+ <8e07f2ba-cdef-6faa-559d-3beabc173edf@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +76,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <a8dc3180-d5b7-43ca-ba98-63caf26e905f@suse.de>
-Date:   Tue, 22 Oct 2019 08:10:26 +0200
+Message-ID: <a27c02cb-0f8f-e000-9329-058f55fd415c@suse.de>
+Date:   Tue, 22 Oct 2019 08:24:20 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.21.1910221034331.14@nippy.intranet>
+In-Reply-To: <8e07f2ba-cdef-6faa-559d-3beabc173edf@interlog.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,43 +90,85 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/22/19 1:44 AM, Finn Thain wrote:
+On 10/21/19 8:32 PM, Douglas Gilbert wrote:
+> On 2019-10-21 5:52 a.m., Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> the 'result' field in the SCSI command is defined as having
+>> 4 fields. The top byte is declared as a 'driver_byte', where the
+>> driver can signal some internal status back to the midlayer.
+>> However, there is quite a bit of overlap between the driver_byte
+>> and the host_byte, resulting in the driver_byte being used in
+>> very few places, and mostly in legacy drivers.
+>> Additionally, we have _two_ sets of definitions for the
+>> last byte (status byte), which can specified either in SAM terms
+>> or in the linux-specific terms, which are shifted right by one
+>> from the SAM ones.
+>> Needless to say, the linux-specific ones are declared obsolete
+>> for years now.
+>> And to make the confusion complete, both the status byte and
+>> the driver byte have a byte for a valid sense code, resulting
+>> in quite some confusion which of those bits to check.
+>>
+>> This patchset does several things:
+>> - remove the linux-specific status byte definitions, and use
+>>    the SAM values throughout
+>> - replace the driver-byte values with either SAM ones (for sense
+>>    code checking) or host-byte definitions
+>> - remove the driver-byte definitions
 > 
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
->> index c40fbea06cc5..649f9610ca72 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->> @@ -1,3 +1,4 @@
->> +
->>  // SPDX-License-Identifier: GPL-2.0-or-later
->>  /*
->>   *  Linux MegaRAID driver for SAS based RAID controllers
+> This is a brave change proposal. The masked_status has been tricked
+> up so it won't break user code. However the driver byte is exposed
+> by the sg v2, v3 and v4 interfaces which means via bsg device nodes,
+> sg devices nodes and many other block storage device nodes (e.g.
+> /dev/sdc and /dev/st1) via:
+>       ioctl(<storage_dev>, SG_IO, ptr_to_v3_interface) .
 > 
-> Typo?
+> So if there is any user space code out there that checks the
+> driver byte (e.g. 'sg_io_hdr::driver_status & DRIVER_SENSE') do we
+> have a problem?
 > 
-Indeed. Will fix it up.
+> If so, we could hack the DRIVER_SENSE case *** by putting it back
+> for the user space to see when the driver (e.g. sg) knows there
+> is sense data. What about the other values?
+> 
+>> As usual, comments and reviews are welcome.
+> 
+> It is hard to make an omelette without breaking some eggs.
+> 
+> Doug Gilbert
+> 
+>> Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
+>> usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
+>> this patch series.
+> 
+> <snip>
+> 
+> *** Here is a snippet from sg3_utils library code:
+> 
+>     if ((SAM_STAT_CHECK_CONDITION == scsi_status) ||
+>         (SAM_STAT_COMMAND_TERMINATED == scsi_status) ||
+>         (SG_LIB_DRIVER_SENSE == masked_driver_status))
+>         return sg_err_category_sense(sense_buffer, sb_len);
+> 
+> Due to the logical OR, as long as SAM_STAT_CHECK_CONDITION is set
+> whenever there is sense, then we don't care about DRIVER_SENSE.
+> 
+> I believe this code comes from the days before auto-sense when say a
+> READ(6) would fail, send back a CHECK_CONDITION and the host would then
+> need to issue a REQUEST SENSE command to get the sense data. However
+> REQUEST SENSE could itself yield a CHECK_CONDITION. Hence DRIVER_SENSE
+> set, SAM_STAT_CHECK_CONDITION clear could be interpreted as the
+> initial command failing and the follow-up REQUEST SENSE succeeded; if
+> they are both set, then both commands failed (e.g. the disk has gone
+> away).
+Well, the easier explanation is that not every driver sets DRIVER_SENSE;
+some do, some don't, relying on CHECK_CONDITION here.
 
->> index 59443e0184fd..d6ecb773c512 100644
->> --- a/drivers/scsi/scsi.c
->> +++ b/drivers/scsi/scsi.c
->> @@ -203,8 +203,8 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
->>  	 * If we have valid sense information, then some kind of recovery
->>  	 * must have taken place.  Make a note of this.
->>  	 */
->> -	if (SCSI_SENSE_VALID(cmd))
->> -		cmd->result |= (DRIVER_SENSE << 24);
->> +	if (SCSI_SENSE_VALID(cmd) && status_byte(cmd->result) == SAM_STAT_GOOD)
->> +		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
-> 
-> This means that a REQUEST SENSE command can never result in SAM_STAT_GOOD, 
-> right? Are there implications for higher layers?
-> 
-Hmm. Blasted REQUEST SENSE.
-Indeed a REQUEST SENSE command should never return with CHECK_CONDITION.
-But then a REQUEST SENSE command returns with the sense code in the
-payload, which equally is not something which is expected.
-
-I'll be having a look here.
+Which also means that any code relying on DRIVER_SENSE alone would break
+even today.
+So really I don't think this should break anything; but if the consensus
+is that we need to fake DRIVER_SENSE for userland ABI stability so be it.
 
 Cheers,
 
