@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF8CACA9EA0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:56:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87456CA9EB7
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:59:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA52E20B7C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:56:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49FEE21D81
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387640AbfJVF46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 01:56:58 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60162 "EHLO mx1.suse.de"
+        id S1731016AbfJVF7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 01:59:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60786 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725788AbfJVF46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 01:56:58 -0400
+        id S1726024AbfJVF7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Oct 2019 01:59:38 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 7A419ABE3;
-        Tue, 22 Oct 2019 05:56:56 +0000 (UTC)
-Subject: Re: [PATCH 10/24] scsi: introduce set_status_byte()
+        by mx1.suse.de (Postfix) with ESMTP id 55DACB15A;
+        Tue, 22 Oct 2019 05:59:36 +0000 (UTC)
+Subject: Re: [PATCH 03/24] wd33c93: use SCSI status
 To:     Finn Thain <fthain@telegraphics.com.au>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
@@ -30,8 +30,8 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-11-hare@suse.de>
- <alpine.LNX.2.21.1910220911390.8@nippy.intranet>
+ <20191021095322.137969-4-hare@suse.de>
+ <alpine.LNX.2.21.1910220948520.14@nippy.intranet>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <31f208de-fad3-647a-6c6f-447a2cc8d45a@suse.de>
-Date:   Tue, 22 Oct 2019 07:56:55 +0200
+Message-ID: <466dee43-09d5-f487-bee2-16d86d6cbb2d@suse.de>
+Date:   Tue, 22 Oct 2019 07:59:36 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.21.1910220911390.8@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.21.1910220948520.14@nippy.intranet>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,35 +91,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/22/19 12:12 AM, Finn Thain wrote:
+On 10/22/19 1:16 AM, Finn Thain wrote:
 > On Mon, 21 Oct 2019, Hannes Reinecke wrote:
 > 
->> To be in-line with the other set_XX_byte() functions.
+>> Use standard SCSI status and drop usage of the linux-specific ones.
 >>
 >> Signed-off-by: Hannes Reinecke <hare@suse.de>
 >> ---
->>  include/scsi/scsi_cmnd.h | 5 +++++
->>  1 file changed, 5 insertions(+)
+>>  drivers/scsi/wd33c93.c | 21 ++++++++-------------
+>>  1 file changed, 8 insertions(+), 13 deletions(-)
 >>
->> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
->> index 91bd749a02f7..6932d91472d5 100644
->> --- a/include/scsi/scsi_cmnd.h
->> +++ b/include/scsi/scsi_cmnd.h
->> @@ -307,6 +307,11 @@ static inline struct scsi_data_buffer *scsi_prot(struct scsi_cmnd *cmd)
->>  #define scsi_for_each_prot_sg(cmd, sg, nseg, __i)		\
->>  	for_each_sg(scsi_prot_sglist(cmd), sg, nseg, __i)
->>  
->> +static inline void set_status_byte(struct scsi_cmnd *cmd, char status)
->> +{
->> +	cmd->result = (cmd->result & 0xffffff00) | status;
+>> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+>> index f81046f0e68a..98e04a7b9d63 100644
+>> --- a/drivers/scsi/wd33c93.c
+>> +++ b/drivers/scsi/wd33c93.c
+>> @@ -1176,10 +1176,8 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
+>>  				cmd->SCp.Status = lun;
+>>  			if (cmd->cmnd[0] == REQUEST_SENSE
+>> -			    && cmd->SCp.Status != GOOD)
+>> -				cmd->result =
+>> -				    (cmd->
+>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
+>> +				set_host_byte(cmd, DID_ERROR);
 > 
-> Is sign-extension desirable here? Do callers need it?
+> This isn't obviously equivalent. Perhaps the set_host_byte() changes 
+> should be done in a separate patch to the SAM_STAT_FOO changes (?)
 > 
-It'll be a theoretical issue, as a status value with the top bit set
-would be invalid anyway.
-But for consistencies sake I'll make it an unsigned char in the next
-iteration.
+Yes, indeed.
+Will be fixing it up in the next round.
 
+>>  			else
+>>  				cmd->result =
+>>  				    cmd->SCp.Status | (cmd->SCp.Message << 8);
+>> @@ -1262,9 +1260,8 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  		    hostdata->connected = NULL;
+>>  		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>  		hostdata->state = S_UNCONNECTED;
+>> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != GOOD)
+>> -			cmd->result =
+>> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+>> +		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
+>> +			set_host_byte(cmd, DID_ERROR);
+> 
+> Same.
+> 
+>>  		else
+>>  			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+>>  		cmd->scsi_done(cmd);
+>> @@ -1294,12 +1291,10 @@ wd33c93_intr(struct Scsi_Host *instance)
+>>  			hostdata->connected = NULL;
+>>  			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
+>>  			hostdata->state = S_UNCONNECTED;
+>> -			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
+>> -			    if (cmd->cmnd[0] == REQUEST_SENSE
+>> -				&& cmd->SCp.Status != GOOD)
+>> -				cmd->result =
+>> -				    (cmd->
+>> -				     result & 0x00ffff) | (DID_ERROR << 16);
+>> +			DB(DB_INTR, printk(":%d", cmd->SCp.Status));
+>> +			if (cmd->cmnd[0] == REQUEST_SENSE
+>> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
+>> +				set_host_byte(cmd->result, DID_ERROR);
+> 
+> Same.
+> 
 Cheers,
 
 Hannes
