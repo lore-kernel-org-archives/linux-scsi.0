@@ -2,27 +2,27 @@ Return-Path: <SRS0=5qjn=YP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09972CA9EA0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C44CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:28:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D119D20700
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 782802184C
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729133AbfJVGZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 02:25:59 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40394 "EHLO mx1.suse.de"
+        id S1728842AbfJVG2y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 02:28:54 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41360 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725788AbfJVGZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 02:25:59 -0400
+        id S1725788AbfJVG2y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Oct 2019 02:28:54 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id B59FBAD69;
-        Tue, 22 Oct 2019 06:25:56 +0000 (UTC)
-Subject: Re: [PATCH 11/24] advansys: kill driver_defined status byte accessors
+        by mx1.suse.de (Postfix) with ESMTP id CBD2AAD69;
+        Tue, 22 Oct 2019 06:28:51 +0000 (UTC)
+Subject: Re: [PATCH 18/24] st: return error code in st_scsi_execute()
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -30,8 +30,8 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-12-hare@suse.de>
- <6e710e3c-1812-4a4d-f9d5-671161db261a@acm.org>
+ <20191021095322.137969-19-hare@suse.de>
+ <3a5ac65a-b765-df88-0613-455f3d4cab46@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <88bb3bdd-f478-16c2-b198-3e6430604e17@suse.de>
-Date:   Tue, 22 Oct 2019 08:25:56 +0200
+Message-ID: <a74e0dce-76c1-75b1-1ac7-5c758e096094@suse.de>
+Date:   Tue, 22 Oct 2019 08:28:51 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <6e710e3c-1812-4a4d-f9d5-671161db261a@acm.org>
+In-Reply-To: <3a5ac65a-b765-df88-0613-455f3d4cab46@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,68 +91,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/19 6:37 PM, Bart Van Assche wrote:
+On 10/21/19 6:41 PM, Bart Van Assche wrote:
 > On 10/21/19 2:53 AM, Hannes Reinecke wrote:
->> @@ -6021,43 +6015,28 @@ static void adv_isr_callback(ADV_DVC_VAR
->> *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
->>                   ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
->>                   ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
->>                             SCSI_SENSE_BUFFERSIZE);
->> -                /*
->> -                 * Note: The 'status_byte()' macro used by
->> -                 * target drivers defined in scsi.h shifts the
->> -                 * status byte returned by host drivers right
->> -                 * by 1 bit.  This is why target drivers also
->> -                 * use right shifted status byte definitions.
->> -                 * For instance target drivers use
->> -                 * CHECK_CONDITION, defined to 0x1, instead of
->> -                 * the SCSI defined check condition value of
->> -                 * 0x2. Host drivers are supposed to return
->> -                 * the status byte as it is defined by SCSI.
->> -                 */
->> -                scp->result = DRIVER_BYTE(DRIVER_SENSE) |
->> -                    STATUS_BYTE(scsiqp->scsi_status);
->> -            } else {
->> -                scp->result = STATUS_BYTE(scsiqp->scsi_status);
->>               }
->> +            scp->result = status_byte(scsiqp->scsi_status);
->>               break;
+>> We should return the actual error code in st_scsi_execute(),
+>> avoiding the need to use DRIVER_ERROR.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/st.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+>> index e3266a64a477..5f38369cc62f 100644
+>> --- a/drivers/scsi/st.c
+>> +++ b/drivers/scsi/st.c
+>> @@ -549,7 +549,7 @@ static int st_scsi_execute(struct st_request
+>> *SRpnt, const unsigned char *cmd,
+>>               data_direction == DMA_TO_DEVICE ?
+>>               REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
+>>       if (IS_ERR(req))
+>> -        return DRIVER_ERROR << 24;
+>> +        return PTR_ERR(req);
+>>       rq = scsi_req(req);
+>>       req->rq_flags |= RQF_QUIET;
+>>   @@ -560,7 +560,7 @@ static int st_scsi_execute(struct st_request
+>> *SRpnt, const unsigned char *cmd,
+>>                         GFP_KERNEL);
+>>           if (err) {
+>>               blk_put_request(req);
+>> -            return DRIVER_ERROR << 24;
+>> +            return err;
+>>           }
+>>       }
 > 
-> Did you really want to delete the code that sets DRIVER_SENSE?
+> The patch description looks confusing to me. Is it perhaps because the
+> caller compares the st_scsi_execute() return value with zero and doesn't
+> use the return value in any other way that it is fine to return an
+> integer error code instead of a SCSI status?
 > 
-Yes. SAM_STAT_CHECK_CONDITION is already set, and the whole point of
-this patchset was to drop the DRIVER_SENSE usage.
+Yes. The caller does:
 
->> @@ -6789,47 +6768,30 @@ static void asc_isr_callback(ASC_DVC_VAR
->> *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
->>                   ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
->>                   ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
->>                             SCSI_SENSE_BUFFERSIZE);
->> -                /*
->> -                 * Note: The 'status_byte()' macro used by
->> -                 * target drivers defined in scsi.h shifts the
->> -                 * status byte returned by host drivers right
->> -                 * by 1 bit.  This is why target drivers also
->> -                 * use right shifted status byte definitions.
->> -                 * For instance target drivers use
->> -                 * CHECK_CONDITION, defined to 0x1, instead of
->> -                 * the SCSI defined check condition value of
->> -                 * 0x2. Host drivers are supposed to return
->> -                 * the status byte as it is defined by SCSI.
->> -                 */
->> -                scp->result = DRIVER_BYTE(DRIVER_SENSE) |
->> -                    STATUS_BYTE(qdonep->d3.scsi_stat);
->> -            } else {
->> -                scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
->>               }
->> +            scp->result = status_byte(qdonep->d3.scsi_stat);
->>               break;
-> 
-> Same comment here: did you really want to delete the code that sets
-> DRIVER_SENSE?
-> 
-See above: yes.
-That was kinda the point of this patchset.
+	ret = st_scsi_execute(SRpnt, cmd, direction, NULL, bytes, timeout,
+			      retries);
+	if (ret) {
+		/* could not allocate the buffer or request was too large */
+		(STp->buffer)->syscall_result = (-EBUSY);
+		(STp->buffer)->last_SRpnt = NULL;
+
+So it's immaterial _what_ we return here as long as it's non-zero.
 
 Cheers,
 
