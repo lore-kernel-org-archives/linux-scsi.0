@@ -6,31 +6,32 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72677CA9EA0
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09972CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:26:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EE7F2184C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:24:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D119D20700
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:25:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729056AbfJVGYX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 02:24:23 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40210 "EHLO mx1.suse.de"
+        id S1729133AbfJVGZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 02:25:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40394 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725788AbfJVGYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 02:24:22 -0400
+        id S1725788AbfJVGZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Oct 2019 02:25:59 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 00E5AAFE1;
-        Tue, 22 Oct 2019 06:24:20 +0000 (UTC)
-Subject: Re: [PATCH RFC 00/24] scsi: Revamp result values
-To:     dgilbert@interlog.com,
+        by mx1.suse.de (Postfix) with ESMTP id B59FBAD69;
+        Tue, 22 Oct 2019 06:25:56 +0000 (UTC)
+Subject: Re: [PATCH 11/24] advansys: kill driver_defined status byte accessors
+To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <8e07f2ba-cdef-6faa-559d-3beabc173edf@interlog.com>
+ <20191021095322.137969-12-hare@suse.de>
+ <6e710e3c-1812-4a4d-f9d5-671161db261a@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -76,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <a27c02cb-0f8f-e000-9329-058f55fd415c@suse.de>
-Date:   Tue, 22 Oct 2019 08:24:20 +0200
+Message-ID: <88bb3bdd-f478-16c2-b198-3e6430604e17@suse.de>
+Date:   Tue, 22 Oct 2019 08:25:56 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <8e07f2ba-cdef-6faa-559d-3beabc173edf@interlog.com>
+In-Reply-To: <6e710e3c-1812-4a4d-f9d5-671161db261a@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,85 +91,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/19 8:32 PM, Douglas Gilbert wrote:
-> On 2019-10-21 5:52 a.m., Hannes Reinecke wrote:
->> Hi all,
->>
->> the 'result' field in the SCSI command is defined as having
->> 4 fields. The top byte is declared as a 'driver_byte', where the
->> driver can signal some internal status back to the midlayer.
->> However, there is quite a bit of overlap between the driver_byte
->> and the host_byte, resulting in the driver_byte being used in
->> very few places, and mostly in legacy drivers.
->> Additionally, we have _two_ sets of definitions for the
->> last byte (status byte), which can specified either in SAM terms
->> or in the linux-specific terms, which are shifted right by one
->> from the SAM ones.
->> Needless to say, the linux-specific ones are declared obsolete
->> for years now.
->> And to make the confusion complete, both the status byte and
->> the driver byte have a byte for a valid sense code, resulting
->> in quite some confusion which of those bits to check.
->>
->> This patchset does several things:
->> - remove the linux-specific status byte definitions, and use
->>    the SAM values throughout
->> - replace the driver-byte values with either SAM ones (for sense
->>    code checking) or host-byte definitions
->> - remove the driver-byte definitions
+On 10/21/19 6:37 PM, Bart Van Assche wrote:
+> On 10/21/19 2:53 AM, Hannes Reinecke wrote:
+>> @@ -6021,43 +6015,28 @@ static void adv_isr_callback(ADV_DVC_VAR
+>> *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+>>                   ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+>>                   ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+>>                             SCSI_SENSE_BUFFERSIZE);
+>> -                /*
+>> -                 * Note: The 'status_byte()' macro used by
+>> -                 * target drivers defined in scsi.h shifts the
+>> -                 * status byte returned by host drivers right
+>> -                 * by 1 bit.  This is why target drivers also
+>> -                 * use right shifted status byte definitions.
+>> -                 * For instance target drivers use
+>> -                 * CHECK_CONDITION, defined to 0x1, instead of
+>> -                 * the SCSI defined check condition value of
+>> -                 * 0x2. Host drivers are supposed to return
+>> -                 * the status byte as it is defined by SCSI.
+>> -                 */
+>> -                scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+>> -                    STATUS_BYTE(scsiqp->scsi_status);
+>> -            } else {
+>> -                scp->result = STATUS_BYTE(scsiqp->scsi_status);
+>>               }
+>> +            scp->result = status_byte(scsiqp->scsi_status);
+>>               break;
 > 
-> This is a brave change proposal. The masked_status has been tricked
-> up so it won't break user code. However the driver byte is exposed
-> by the sg v2, v3 and v4 interfaces which means via bsg device nodes,
-> sg devices nodes and many other block storage device nodes (e.g.
-> /dev/sdc and /dev/st1) via:
->       ioctl(<storage_dev>, SG_IO, ptr_to_v3_interface) .
+> Did you really want to delete the code that sets DRIVER_SENSE?
 > 
-> So if there is any user space code out there that checks the
-> driver byte (e.g. 'sg_io_hdr::driver_status & DRIVER_SENSE') do we
-> have a problem?
-> 
-> If so, we could hack the DRIVER_SENSE case *** by putting it back
-> for the user space to see when the driver (e.g. sg) knows there
-> is sense data. What about the other values?
-> 
->> As usual, comments and reviews are welcome.
-> 
-> It is hard to make an omelette without breaking some eggs.
-> 
-> Doug Gilbert
-> 
->> Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
->> usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
->> this patch series.
-> 
-> <snip>
-> 
-> *** Here is a snippet from sg3_utils library code:
-> 
->     if ((SAM_STAT_CHECK_CONDITION == scsi_status) ||
->         (SAM_STAT_COMMAND_TERMINATED == scsi_status) ||
->         (SG_LIB_DRIVER_SENSE == masked_driver_status))
->         return sg_err_category_sense(sense_buffer, sb_len);
-> 
-> Due to the logical OR, as long as SAM_STAT_CHECK_CONDITION is set
-> whenever there is sense, then we don't care about DRIVER_SENSE.
-> 
-> I believe this code comes from the days before auto-sense when say a
-> READ(6) would fail, send back a CHECK_CONDITION and the host would then
-> need to issue a REQUEST SENSE command to get the sense data. However
-> REQUEST SENSE could itself yield a CHECK_CONDITION. Hence DRIVER_SENSE
-> set, SAM_STAT_CHECK_CONDITION clear could be interpreted as the
-> initial command failing and the follow-up REQUEST SENSE succeeded; if
-> they are both set, then both commands failed (e.g. the disk has gone
-> away).
-Well, the easier explanation is that not every driver sets DRIVER_SENSE;
-some do, some don't, relying on CHECK_CONDITION here.
+Yes. SAM_STAT_CHECK_CONDITION is already set, and the whole point of
+this patchset was to drop the DRIVER_SENSE usage.
 
-Which also means that any code relying on DRIVER_SENSE alone would break
-even today.
-So really I don't think this should break anything; but if the consensus
-is that we need to fake DRIVER_SENSE for userland ABI stability so be it.
+>> @@ -6789,47 +6768,30 @@ static void asc_isr_callback(ASC_DVC_VAR
+>> *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+>>                   ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+>>                   ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+>>                             SCSI_SENSE_BUFFERSIZE);
+>> -                /*
+>> -                 * Note: The 'status_byte()' macro used by
+>> -                 * target drivers defined in scsi.h shifts the
+>> -                 * status byte returned by host drivers right
+>> -                 * by 1 bit.  This is why target drivers also
+>> -                 * use right shifted status byte definitions.
+>> -                 * For instance target drivers use
+>> -                 * CHECK_CONDITION, defined to 0x1, instead of
+>> -                 * the SCSI defined check condition value of
+>> -                 * 0x2. Host drivers are supposed to return
+>> -                 * the status byte as it is defined by SCSI.
+>> -                 */
+>> -                scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+>> -                    STATUS_BYTE(qdonep->d3.scsi_stat);
+>> -            } else {
+>> -                scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
+>>               }
+>> +            scp->result = status_byte(qdonep->d3.scsi_stat);
+>>               break;
+> 
+> Same comment here: did you really want to delete the code that sets
+> DRIVER_SENSE?
+> 
+See above: yes.
+That was kinda the point of this patchset.
 
 Cheers,
 
