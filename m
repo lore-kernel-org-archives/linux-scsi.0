@@ -2,27 +2,27 @@ Return-Path: <SRS0=5qjn=YP=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87456CA9EB7
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A97C4CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49FEE21D81
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 05:59:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85A2B2089E
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 06:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731016AbfJVF7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 01:59:39 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60786 "EHLO mx1.suse.de"
+        id S2387651AbfJVGAV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 02:00:21 -0400
+Received: from mx2.suse.de ([195.135.220.15]:32892 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726024AbfJVF7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 01:59:38 -0400
+        id S2387625AbfJVGAV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Oct 2019 02:00:21 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 55DACB15A;
-        Tue, 22 Oct 2019 05:59:36 +0000 (UTC)
-Subject: Re: [PATCH 03/24] wd33c93: use SCSI status
+        by mx1.suse.de (Postfix) with ESMTP id C9CF8B243;
+        Tue, 22 Oct 2019 06:00:18 +0000 (UTC)
+Subject: Re: [PATCH 05/24] scsi: use standard SAM status codes
 To:     Finn Thain <fthain@telegraphics.com.au>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
@@ -30,8 +30,8 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-4-hare@suse.de>
- <alpine.LNX.2.21.1910220948520.14@nippy.intranet>
+ <20191021095322.137969-6-hare@suse.de>
+ <alpine.LNX.2.21.1910220956400.14@nippy.intranet>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <466dee43-09d5-f487-bee2-16d86d6cbb2d@suse.de>
-Date:   Tue, 22 Oct 2019 07:59:36 +0200
+Message-ID: <de4e4432-e63b-2593-65ba-c3727a5e195a@suse.de>
+Date:   Tue, 22 Oct 2019 08:00:18 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.21.1910220948520.14@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.21.1910220956400.14@nippy.intranet>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,72 +91,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/22/19 1:16 AM, Finn Thain wrote:
+On 10/22/19 1:17 AM, Finn Thain wrote:
 > On Mon, 21 Oct 2019, Hannes Reinecke wrote:
 > 
->> Use standard SCSI status and drop usage of the linux-specific ones.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/scsi/wd33c93.c | 21 ++++++++-------------
->>  1 file changed, 8 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
->> index f81046f0e68a..98e04a7b9d63 100644
->> --- a/drivers/scsi/wd33c93.c
->> +++ b/drivers/scsi/wd33c93.c
->> @@ -1176,10 +1176,8 @@ wd33c93_intr(struct Scsi_Host *instance)
->>  			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
->>  				cmd->SCp.Status = lun;
->>  			if (cmd->cmnd[0] == REQUEST_SENSE
->> -			    && cmd->SCp.Status != GOOD)
->> -				cmd->result =
->> -				    (cmd->
->> -				     result & 0x00ffff) | (DID_ERROR << 16);
->> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
->> +				set_host_byte(cmd, DID_ERROR);
+>> Use standard SAM status codes and omit the explicit shift to convert
+>> to linus-specific ones.
 > 
-> This isn't obviously equivalent. Perhaps the set_host_byte() changes 
-> should be done in a separate patch to the SAM_STAT_FOO changes (?)
+> "Linux-specific".
 > 
-Yes, indeed.
-Will be fixing it up in the next round.
+Indeed, it was Linus who did that :-)
+Will be fixing it up.
 
->>  			else
->>  				cmd->result =
->>  				    cmd->SCp.Status | (cmd->SCp.Message << 8);
->> @@ -1262,9 +1260,8 @@ wd33c93_intr(struct Scsi_Host *instance)
->>  		    hostdata->connected = NULL;
->>  		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
->>  		hostdata->state = S_UNCONNECTED;
->> -		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != GOOD)
->> -			cmd->result =
->> -			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
->> +		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
->> +			set_host_byte(cmd, DID_ERROR);
-> 
-> Same.
-> 
->>  		else
->>  			cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
->>  		cmd->scsi_done(cmd);
->> @@ -1294,12 +1291,10 @@ wd33c93_intr(struct Scsi_Host *instance)
->>  			hostdata->connected = NULL;
->>  			hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
->>  			hostdata->state = S_UNCONNECTED;
->> -			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
->> -			    if (cmd->cmnd[0] == REQUEST_SENSE
->> -				&& cmd->SCp.Status != GOOD)
->> -				cmd->result =
->> -				    (cmd->
->> -				     result & 0x00ffff) | (DID_ERROR << 16);
->> +			DB(DB_INTR, printk(":%d", cmd->SCp.Status));
->> +			if (cmd->cmnd[0] == REQUEST_SENSE
->> +			    && cmd->SCp.Status != SAM_STAT_GOOD)
->> +				set_host_byte(cmd->result, DID_ERROR);
-> 
-> Same.
-> 
 Cheers,
 
 Hannes
