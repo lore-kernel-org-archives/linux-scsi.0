@@ -6,49 +6,42 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F951CA9EB9
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 12:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC6DCA9EA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 14:54:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 503F8218AE
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 12:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41CAC218AE
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Oct 2019 14:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388277AbfJVMfc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Oct 2019 08:35:32 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35556 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388095AbfJVMfb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Oct 2019 08:35:31 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9MCX8Oa107789
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Oct 2019 08:35:30 -0400
-Received: from e06smtp05.uk.ibm.com (e06smtp05.uk.ibm.com [195.75.94.101])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vt1f2156q-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Oct 2019 08:35:30 -0400
-Received: from localhost
-        by e06smtp05.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Tue, 22 Oct 2019 13:35:27 +0100
-Received: from b06avi18626390.portsmouth.uk.ibm.com (9.149.26.192)
-        by e06smtp05.uk.ibm.com (192.168.101.135) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 22 Oct 2019 13:35:25 +0100
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x9MCYqks40763716
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 12:34:52 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0CEE94C050;
-        Tue, 22 Oct 2019 12:35:25 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BA8E14C052;
-        Tue, 22 Oct 2019 12:35:24 +0000 (GMT)
-Received: from oc4120165700.ibm.com (unknown [9.152.97.37])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 22 Oct 2019 12:35:24 +0000 (GMT)
-Subject: Re: [PATCH 06/24] scsi: change status_byte() to return the standard
- SCSI status
+        id S1732186AbfJVOyT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Oct 2019 10:54:19 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:39678 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732116AbfJVOyT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Oct 2019 10:54:19 -0400
+Received: by mail-pg1-f196.google.com with SMTP id p12so10102247pgn.6
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Oct 2019 07:54:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=HUL/8CqD916Eqb8YpI3ZJg+uip38SxmzIa0zN1DmvmE=;
+        b=ewpYOb6yfVW8kHYBIRxvH35TUn2DA02FVw2wCKXrdwBpM0QBB9+yHGMjg1tokoUoeG
+         8ru23LwGIk9RNuUHQzTtNjczq8Saq1h1gBSJhvC7X91eccjKQcISR4jKh+QDhTXcuUWs
+         SEOa5O9z5kZykU/ItwIOUru9qXsu+mn9UHSGlAEp2zkUp1FM9naoEQypgM8TPh8gasRv
+         Ng8zPs+p8CsZwX/yKvGAFO1Wb+kPbJZkbgFdhCJuPyKnAQh/2YbNbDSLEXZb6ZfeFCYA
+         AYeu03zM8FPOePwrxZ7MCFHwjFajWDjzA1U9/lEcip53HxIiGBXMO4PtLU3DmGUw+EYm
+         x3ng==
+X-Gm-Message-State: APjAAAWPam+CmsoG3qulkAGMqQWGtegNuPufZ8ASjBDRHhjB41soh48k
+        wy9sKt6eSrOhgV+hVNW4W7B62byE
+X-Google-Smtp-Source: APXvYqwfTnjksRZodj+CGlNRFD4g+ATAhCpffI9i2HLGECvlEpEmAg/fvv4w6iJUvRJ4J9fkzLrT8w==
+X-Received: by 2002:aa7:838f:: with SMTP id u15mr4858098pfm.189.1571756057711;
+        Tue, 22 Oct 2019 07:54:17 -0700 (PDT)
+Received: from localhost.localdomain ([2601:647:4000:c3:ccbd:2d81:281:ddbd])
+        by smtp.gmail.com with ESMTPSA id 2sm20648176pfo.91.2019.10.22.07.54.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Oct 2019 07:54:16 -0700 (PDT)
+Subject: Re: [PATCH 18/24] st: return error code in st_scsi_execute()
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -56,83 +49,100 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Johannes Thumshirn <jthumshirn@suse.de>,
         linux-scsi@vger.kernel.org
 References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-7-hare@suse.de>
-From:   Steffen Maier <maier@linux.ibm.com>
-Date:   Tue, 22 Oct 2019 14:35:24 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+ <20191021095322.137969-19-hare@suse.de>
+ <3a5ac65a-b765-df88-0613-455f3d4cab46@acm.org>
+ <a74e0dce-76c1-75b1-1ac7-5c758e096094@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <e193b539-d1dd-6cd6-162d-f8a619ba304a@acm.org>
+Date:   Tue, 22 Oct 2019 07:54:15 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
-In-Reply-To: <20191021095322.137969-7-hare@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <a74e0dce-76c1-75b1-1ac7-5c758e096094@suse.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-x-cbid: 19102212-0020-0000-0000-0000037C8120
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19102212-0021-0000-0000-000021D2BD84
-Message-Id: <f550062f-45e1-66f9-4452-f1d3c6473092@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-22_03:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1910220115
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/19 11:53 AM, Hannes Reinecke wrote:
-> Instead of returning the linux-special status (which is shifted
-> by 1 to the right) change the status_byte() macro to return the
-> correct SCSI standard status.
-> And audit all callers to handle this change.
+On 2019-10-21 23:28, Hannes Reinecke wrote:
+> On 10/21/19 6:41 PM, Bart Van Assche wrote:
+>> On 10/21/19 2:53 AM, Hannes Reinecke wrote:
+>>> We should return the actual error code in st_scsi_execute(),
+>>> avoiding the need to use DRIVER_ERROR.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>>> ---
+>>>   drivers/scsi/st.c | 4 ++--
+>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+>>> index e3266a64a477..5f38369cc62f 100644
+>>> --- a/drivers/scsi/st.c
+>>> +++ b/drivers/scsi/st.c
+>>> @@ -549,7 +549,7 @@ static int st_scsi_execute(struct st_request
+>>> *SRpnt, const unsigned char *cmd,
+>>>               data_direction == DMA_TO_DEVICE ?
+>>>               REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
+>>>       if (IS_ERR(req))
+>>> -        return DRIVER_ERROR << 24;
+>>> +        return PTR_ERR(req);
+>>>       rq = scsi_req(req);
+>>>       req->rq_flags |= RQF_QUIET;
+>>>   @@ -560,7 +560,7 @@ static int st_scsi_execute(struct st_request
+>>> *SRpnt, const unsigned char *cmd,
+>>>                         GFP_KERNEL);
+>>>           if (err) {
+>>>               blk_put_request(req);
+>>> -            return DRIVER_ERROR << 24;
+>>> +            return err;
+>>>           }
+>>>       }
+>>
+>> The patch description looks confusing to me. Is it perhaps because the
+>> caller compares the st_scsi_execute() return value with zero and doesn't
+>> use the return value in any other way that it is fine to return an
+>> integer error code instead of a SCSI status?
+>>
+> Yes. The caller does:
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/53c700.c        |  6 +++---
->   drivers/scsi/NCR5380.c       |  2 +-
->   drivers/scsi/arm/acornscsi.c | 10 ++++-----
->   drivers/scsi/arm/fas216.c    | 10 ++++-----
->   drivers/scsi/dc395x.c        |  8 +++-----
->   drivers/scsi/scsi.c          |  2 +-
->   drivers/scsi/scsi_error.c    | 48 ++++++++++++++++++++++----------------------
->   drivers/scsi/scsi_lib.c      |  2 +-
->   drivers/scsi/sg.c            |  4 ++--
->   include/scsi/scsi.h          |  2 +-
->   10 files changed, 46 insertions(+), 48 deletions(-)
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 5339baadc082..de52632c6022 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -207,7 +207,7 @@ static inline int scsi_is_wlun(u64 lun)
->    *      host_byte   = set by low-level driver to indicate status.
->    *      driver_byte = set by mid-level.
->    */
-> -#define status_byte(result) (((result) >> 1) & 0x7f)
-> +#define status_byte(result) (((result)) & 0xff)
-
-drop the now unnecessary additional parentheses pair around (result)?:
-
-+#define status_byte(result) ((result) & 0xff)
-
->   #define msg_byte(result)    (((result) >> 8) & 0xff)
->   #define host_byte(result)   (((result) >> 16) & 0xff)
->   #define driver_byte(result) (((result) >> 24) & 0xff)
+> 	ret = st_scsi_execute(SRpnt, cmd, direction, NULL, bytes, timeout,
+> 			      retries);
+> 	if (ret) {
+> 		/* could not allocate the buffer or request was too large */
+> 		(STp->buffer)->syscall_result = (-EBUSY);
+> 		(STp->buffer)->last_SRpnt = NULL;
 > 
+> So it's immaterial _what_ we return here as long as it's non-zero.
 
+Please make this clear in the patch description. I think that will make
+this patch easier to review.
 
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
+Thanks,
 
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
-
+Bart.
