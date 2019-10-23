@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3FA3CA9EBD
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0F7CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8238821A4A
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0F6621928
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CqdQ7ycP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o44BTAU0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436614AbfJWV4g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 17:56:36 -0400
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:52074 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406008AbfJWV4f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:35 -0400
-Received: by mail-wm1-f51.google.com with SMTP id q70so527455wme.1
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:32 -0700 (PDT)
+        id S2436622AbfJWV4k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 17:56:40 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:40695 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2436618AbfJWV4k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:40 -0400
+Received: by mail-wr1-f67.google.com with SMTP id o28so23698469wro.7
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gvotvZxdeBb7D8zXJs8CJ78v0NKMwozZ/M9rs790T2s=;
-        b=CqdQ7ycPR2hoEqWyPpMbaMhdI2NOXSu9z/mP1S1wmDi8HCu02YQvNP6QQ3U3lW/DCg
-         R0vkxy4n8YWb9EMxGYe3tk7WAVHKEscU1uOuSmFXnZANQVsR4pA2hwa3b4dvr0Klpj0I
-         6JfMr339DeY3+vYI1btxBI4zcdUzmft8YJ3AD34rXA3j/750iCdKKclcA3c2dgOAc6A5
-         +3srYbH6LYnvpFS9SttCdFgkKu07RqU77lUTWgmyEEn23FzLbgLjSN2+CWUcIPsPFMbs
-         y3x6iYf5DxXruJvkvRNWoyuseuis+k2OuO9Dr+M8iZn2iSHtbH5QTa5N+qPCTbNojoY8
-         ZQNw==
+        bh=Nn+f/P6KWd9+LIWXW6ztvkeWul84qk3yM+DlJ3wTr80=;
+        b=o44BTAU0Hudp2iDk51aG+tIrvXOHcvw7GnvQ1PWXpMRG/HDnOUWVU2yFO6F+jO3y1s
+         q5t9EceCGdktay07PgcuQa8m5rdVLFW6Ch6BTOO9Tvg3hO0Vf0xnBOBKvAliAvyHyjnG
+         pILLCYf7uT6AlsFJrX+EMZYTznf3hFGEdjgk9Z8PHFeSsVlsQtnM0tBDK7srrf6e+1Z0
+         L/UpDeB1exktkJgULP94PSJ4WYQvOoU13QD8oudJ2RSQlMyzktst6GdiebzHeqSuEFr6
+         ROi1VgqkfV8A9qlPC004SuWm5bAmC5W1ICZYgAfTYpIwsC6hPY/+04eMImpzkvI5tNDP
+         QhYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gvotvZxdeBb7D8zXJs8CJ78v0NKMwozZ/M9rs790T2s=;
-        b=FwXOGmjHtZXCgHrmgNDkhieM3YbGZPnk7Asn8Y9FNmTBEO8SsCjR+xW2pt0JE80gx1
-         SgTAnwZFUt6vENFWKt5zAh7gnAiiOC5ufZo3rF5Pgn9oHBI2ifo5+5bQjZCDNOTvgRej
-         Pv8mSdycoA5lN0Xb+FGsCi+kZqeRdxh5zonsHEXdUBvTDP0EdcB3a0IV4PneKOCLVGBZ
-         U6W+VoRcS9UBbAI9AmlHUddDSeDe+gSa3+0oAq0CXbWtCNBd1kbMfg9pzvrfSUouEtY3
-         Y1SteOV9RCYr1yXevYiy34UK8dYwVU9XGSvJJRatLX6i+hPEqs9r9npRCBfbs69aXDJN
-         wA/w==
-X-Gm-Message-State: APjAAAUjdmk1Es3Rm7xAL/PvwG6UmbNdeh2jQwckupcBfAdn8y/tJf4z
-        kkR3HHjXQbZJ/YBJzra4i130/TSf
-X-Google-Smtp-Source: APXvYqzP+NJLJ2PLp5D25dsOGhHdu3xFw9+Iz8ZLxRrB9n+mStX7lSmiSSeONXhEd9TaR6fNtiqRtw==
-X-Received: by 2002:a1c:f602:: with SMTP id w2mr1737027wmc.83.1571867790013;
-        Wed, 23 Oct 2019 14:56:30 -0700 (PDT)
+        bh=Nn+f/P6KWd9+LIWXW6ztvkeWul84qk3yM+DlJ3wTr80=;
+        b=Q7XZYO6GbArNok8onuqC3RLzxVmcz6mylW8ujcRfFlxPjh+FHYwaE6+q8h/Eap5+qH
+         ElNgLRXnRP/CJfGiWluqLaFiHYwXLdLCKWlmk89UOPgs+pCAus6pSNE+nUx6RRVEnhx5
+         L2yQQ+9SBeuQwkLqvoR5bi5kkfO+nF7BLQoqh0Un2upVZ189lg84bfdgjUMUCcuycMZ2
+         /4OJkQltgwB6gMTCZK6vM5LJSynj6MLaoJJrxE/2Hy1vgymNi0/+eZMWAO/EDZzOY3gY
+         SsS7Hkn/tkjNIn2pcKg/BPJF+30Fed0DnvqyJbPcU9I+v7LeKfjybnVgs3DC+74ZzmZf
+         JHdw==
+X-Gm-Message-State: APjAAAWyXJcp3CdaA4L8vWBZgRnEuUG+ikrxCIKbneKbqsiMC5MwVJ6l
+        avAhdPKkfBOH7CGyD3gS2UGEAXd5
+X-Google-Smtp-Source: APXvYqwpkbdD6aVPb9V/V/Ai53rvkfqms+Z6tG46eQ/f7nYZglJwgxJpJW/X9w6oL6Y6AjQBB0dtVQ==
+X-Received: by 2002:adf:9486:: with SMTP id 6mr751273wrr.28.1571867796633;
+        Wed, 23 Oct 2019 14:56:36 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.28
+        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.35
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 23 Oct 2019 14:56:29 -0700 (PDT)
+        Wed, 23 Oct 2019 14:56:36 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH 14/32] elx: libefc: FC node ELS and state handling
-Date:   Wed, 23 Oct 2019 14:55:39 -0700
-Message-Id: <20191023215557.12581-15-jsmart2021@gmail.com>
+Subject: [PATCH 18/32] elx: efct: RQ buffer, memory pool allocation and deallocation APIs
+Date:   Wed, 23 Oct 2019 14:55:43 -0700
+Message-Id: <20191023215557.12581-19-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191023215557.12581-1-jsmart2021@gmail.com>
 References: <20191023215557.12581-1-jsmart2021@gmail.com>
@@ -73,2081 +73,1289 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch continues the libefc library population.
+This patch continues the efct driver population.
 
-This patch adds library interface definitions for:
-- FC node PRLI handling and state management
+This patch adds driver definitions for:
+RQ data buffer allocation and deallocate.
+Memory pool allocation and deallocation APIs.
+Mailbox command submission and completion routines.
 
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/elx/libefc/efc_device.c | 1977 ++++++++++++++++++++++++++++++++++
- drivers/scsi/elx/libefc/efc_device.h |   72 ++
- 2 files changed, 2049 insertions(+)
- create mode 100644 drivers/scsi/elx/libefc/efc_device.c
- create mode 100644 drivers/scsi/elx/libefc/efc_device.h
+ drivers/scsi/elx/efct/efct_hw.c    | 447 +++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h    |   7 +
+ drivers/scsi/elx/efct/efct_utils.c | 662 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_utils.h | 113 +++++++
+ 4 files changed, 1229 insertions(+)
+ create mode 100644 drivers/scsi/elx/efct/efct_utils.c
+ create mode 100644 drivers/scsi/elx/efct/efct_utils.h
 
-diff --git a/drivers/scsi/elx/libefc/efc_device.c b/drivers/scsi/elx/libefc/efc_device.c
+diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+index ecb3ccbf7c4c..ea23bb33e11d 100644
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -23,6 +23,14 @@ target_wqe_timer_cb(struct timer_list *);
+ static void
+ shutdown_target_wqe_timer(struct efct_hw_s *hw);
+ 
++static int
++efct_hw_command_process(struct efct_hw_s *, int, u8 *, size_t);
++static int
++efct_hw_command_cancel(struct efct_hw_s *);
++static int
++efct_hw_mq_process(struct efct_hw_s *, int, struct sli4_queue_s *);
++
++
+ static enum efct_hw_rtn_e
+ efct_hw_link_event_init(struct efct_hw_s *hw)
+ {
+@@ -1296,3 +1304,442 @@ efct_get_wwn(struct efct_hw_s *hw, enum efct_hw_property_e prop)
+ 
+ 	return value;
+ }
++
++/**
++ * @brief Allocate an efct_hw_rx_buffer_t array.
++ *
++ * @par Description
++ * An efct_hw_rx_buffer_t array is allocated, along with the required DMA mem.
++ *
++ * @param hw Pointer to HW object.
++ * @param rqindex RQ index for this buffer.
++ * @param count Count of buffers in array.
++ * @param size Size of buffer.
++ *
++ * @return Returns the pointer to the allocated efc_hw_rq_buffer_s array.
++ */
++static struct efc_hw_rq_buffer_s *
++efct_hw_rx_buffer_alloc(struct efct_hw_s *hw, u32 rqindex, u32 count,
++			u32 size)
++{
++	struct efct_s *efct = hw->os;
++	struct efc_hw_rq_buffer_s *rq_buf = NULL;
++	struct efc_hw_rq_buffer_s *prq;
++	u32 i;
++
++	if (count != 0) {
++		rq_buf = kmalloc_array(count, sizeof(*rq_buf), GFP_ATOMIC);
++		if (!rq_buf)
++			return NULL;
++		memset(rq_buf, 0, sizeof(*rq_buf) * count);
++
++		for (i = 0, prq = rq_buf; i < count; i ++, prq++) {
++			prq->rqindex = rqindex;
++			prq->dma.size = size;
++			prq->dma.virt = dma_alloc_coherent(&efct->pcidev->dev,
++							   prq->dma.size,
++							   &prq->dma.phys,
++							   GFP_DMA);
++			if (!prq->dma.virt) {
++				efc_log_err(hw->os, "DMA allocation failed\n");
++				kfree(rq_buf);
++				rq_buf = NULL;
++				break;
++			}
++		}
++	}
++	return rq_buf;
++}
++
++/**
++ * @brief Free an efct_hw_rx_buffer_t array.
++ *
++ * @par Description
++ * The efct_hw_rx_buffer_t array is freed, along with allocated DMA memory.
++ *
++ * @param hw Pointer to HW object.
++ * @param rq_buf Pointer to efct_hw_rx_buffer_t array.
++ * @param count Count of buffers in array.
++ *
++ * @return None.
++ */
++static void
++efct_hw_rx_buffer_free(struct efct_hw_s *hw,
++		       struct efc_hw_rq_buffer_s *rq_buf,
++			u32 count)
++{
++	struct efct_s *efct = hw->os;
++	u32 i;
++	struct efc_hw_rq_buffer_s *prq;
++
++	if (rq_buf) {
++		for (i = 0, prq = rq_buf; i < count; i++, prq++) {
++			dma_free_coherent(&efct->pcidev->dev,
++					  prq->dma.size, prq->dma.virt,
++					  prq->dma.phys);
++			memset(&prq->dma, 0, sizeof(struct efc_dma_s));
++		}
++
++		kfree(rq_buf);
++	}
++}
++
++/**
++ * @brief Allocate the RQ data buffers.
++ *
++ * @param hw Pointer to HW object.
++ *
++ * @return Returns 0 on success, or a non-zero value on failure.
++ */
++enum efct_hw_rtn_e
++efct_hw_rx_allocate(struct efct_hw_s *hw)
++{
++	struct efct_s *efct = hw->os;
++	u32 i;
++	int rc = EFCT_HW_RTN_SUCCESS;
++	u32 rqindex = 0;
++	struct hw_rq_s *rq;
++	u32 hdr_size = EFCT_HW_RQ_SIZE_HDR;
++	u32 payload_size = hw->config.rq_default_buffer_size;
++
++	rqindex = 0;
++
++	for (i = 0; i < hw->hw_rq_count; i++) {
++		rq = hw->hw_rq[i];
++
++		/* Allocate header buffers */
++		rq->hdr_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
++						      rq->entry_count,
++						      hdr_size);
++		if (!rq->hdr_buf) {
++			efc_log_err(efct,
++				     "efct_hw_rx_buffer_alloc hdr_buf failed\n");
++			rc = EFCT_HW_RTN_ERROR;
++			break;
++		}
++
++		efc_log_debug(hw->os,
++			       "rq[%2d] rq_id %02d header  %4d by %4d bytes\n",
++			      i, rq->hdr->id, rq->entry_count, hdr_size);
++
++		rqindex++;
++
++		/* Allocate payload buffers */
++		rq->payload_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
++							  rq->entry_count,
++							  payload_size);
++		if (!rq->payload_buf) {
++			efc_log_err(efct,
++				     "efct_hw_rx_buffer_alloc fb_buf failed\n");
++			rc = EFCT_HW_RTN_ERROR;
++			break;
++		}
++		efc_log_debug(hw->os,
++			       "rq[%2d] rq_id %02d default %4d by %4d bytes\n",
++			      i, rq->data->id, rq->entry_count, payload_size);
++		rqindex++;
++	}
++
++	return rc ? EFCT_HW_RTN_ERROR : EFCT_HW_RTN_SUCCESS;
++}
++
++/**
++ * @brief Post the RQ data buffers to the chip.
++ *
++ * @param hw Pointer to HW object.
++ *
++ * @return Returns 0 on success, or a non-zero value on failure.
++ */
++enum efct_hw_rtn_e
++efct_hw_rx_post(struct efct_hw_s *hw)
++{
++	u32 i;
++	u32 idx;
++	u32 rq_idx;
++	int rc = 0;
++
++	/*
++	 * In RQ pair mode, we MUST post the header and payload buffer at the
++	 * same time.
++	 */
++	for (rq_idx = 0, idx = 0; rq_idx < hw->hw_rq_count; rq_idx++) {
++		struct hw_rq_s *rq = hw->hw_rq[rq_idx];
++
++		for (i = 0; i < rq->entry_count - 1; i++) {
++			struct efc_hw_sequence_s *seq;
++
++			seq = efct_array_get(hw->seq_pool, idx++);
++			if (!seq) {
++				rc = -1;
++				break;
++			}
++			seq->header = &rq->hdr_buf[i];
++			seq->payload = &rq->payload_buf[i];
++			rc = efct_hw_sequence_free(hw, seq);
++			if (rc)
++				break;
++		}
++		if (rc)
++			break;
++	}
++
++	return rc;
++}
++
++/**
++ * @brief Free the RQ data buffers.
++ *
++ * @param hw Pointer to HW object.
++ *
++ */
++void
++efct_hw_rx_free(struct efct_hw_s *hw)
++{
++	struct hw_rq_s *rq;
++	u32 i;
++
++	/* Free hw_rq buffers */
++	for (i = 0; i < hw->hw_rq_count; i++) {
++		rq = hw->hw_rq[i];
++		if (rq) {
++			efct_hw_rx_buffer_free(hw, rq->hdr_buf,
++					       rq->entry_count);
++			rq->hdr_buf = NULL;
++			efct_hw_rx_buffer_free(hw, rq->payload_buf,
++					       rq->entry_count);
++			rq->payload_buf = NULL;
++		}
++	}
++}
++
++/**
++ * @brief Submit queued (pending) mbx commands.
++ *
++ * @par Description
++ * Submit queued mailbox commands.
++ * --- Assumes that hw->cmd_lock is held ---
++ *
++ * @param hw Hardware context.
++ *
++ * @return Returns 0 on success, or a negative error code value on failure.
++ */
++static int
++efct_hw_cmd_submit_pending(struct efct_hw_s *hw)
++{
++	struct efct_command_ctx_s *ctx = NULL;
++	int rc = 0;
++
++	/* Assumes lock held */
++
++	/* Only submit MQE if there's room */
++	while (hw->cmd_head_count < (EFCT_HW_MQ_DEPTH - 1) &&
++	       !list_empty(&hw->cmd_pending)) {
++		ctx = list_first_entry(&hw->cmd_pending,
++				       struct efct_command_ctx_s, list_entry);
++		if (!ctx)
++			break;
++
++		list_del(&ctx->list_entry);
++
++		INIT_LIST_HEAD(&ctx->list_entry);
++		list_add_tail(&ctx->list_entry, &hw->cmd_head);
++		hw->cmd_head_count++;
++		if (sli_mq_write(&hw->sli, hw->mq, ctx->buf) < 0) {
++			efc_log_test(hw->os,
++				      "sli_queue_write failed: %d\n", rc);
++			rc = -1;
++			break;
++		}
++	}
++	return rc;
++}
++
++/**
++ * @ingroup io
++ * @brief Issue a SLI command.
++ *
++ * @par Description
++ * Send a mailbox command to the hardware, and either wait for a completion
++ * (EFCT_CMD_POLL) or get an optional asynchronous completion (EFCT_CMD_NOWAIT).
++ *
++ * @param hw Hardware context.
++ * @param cmd Buffer containing a formatted command and results.
++ * @param opts Command options:
++ *  - EFCT_CMD_POLL - Cmd executes synchronously &
++ *		      busy-waits for the completion.
++ *  - EFCT_CMD_NOWAIT - Cmd executes asynchronously. Uses callback.
++ * @param cb Function callback used for asynchronous mode. May be NULL.
++ * @n Prototype is <tt>(*cb)(void *arg, u8 *cmd)</tt>.
++ * @n @n @b Note: If the
++ * callback function pointer is NULL, the results of the command are silently
++ * discarded, allowing this pointer to exist solely on the stack.
++ * @param arg Argument passed to an asynchronous callback.
++ *
++ * @return Returns 0 on success, or a non-zero value on failure.
++ */
++enum efct_hw_rtn_e
++efct_hw_command(struct efct_hw_s *hw, u8 *cmd, u32 opts, void *cb,
++		void *arg)
++{
++	enum efct_hw_rtn_e rc = EFCT_HW_RTN_ERROR;
++	unsigned long flags = 0;
++	void *bmbx = NULL;
++
++	/*
++	 * If the chip is in an error state (UE'd) then reject this mailbox
++	 *  command.
++	 */
++	if (sli_fw_error_status(&hw->sli) > 0) {
++		efc_log_crit(hw->os,
++			      "Chip is in an error state - reset needed\n");
++		efc_log_crit(hw->os,
++			      "status=%#x error1=%#x error2=%#x\n",
++			sli_reg_read_status(&hw->sli),
++			sli_reg_read_err1(&hw->sli),
++			sli_reg_read_err2(&hw->sli));
++
++		return EFCT_HW_RTN_ERROR;
++	}
++
++	if (opts == EFCT_CMD_POLL) {
++		spin_lock_irqsave(&hw->cmd_lock, flags);
++		bmbx = hw->sli.bmbx.virt;
++
++		memset(bmbx, 0, SLI4_BMBX_SIZE);
++		memcpy(bmbx, cmd, SLI4_BMBX_SIZE);
++
++		if (sli_bmbx_command(&hw->sli) == 0) {
++			rc = EFCT_HW_RTN_SUCCESS;
++			memcpy(cmd, bmbx, SLI4_BMBX_SIZE);
++		}
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++	} else if (opts == EFCT_CMD_NOWAIT) {
++		struct efct_command_ctx_s	*ctx = NULL;
++
++		ctx = kmalloc(sizeof(*ctx), GFP_ATOMIC);
++		if (!ctx)
++			return EFCT_HW_RTN_NO_RESOURCES;
++
++		memset(ctx, 0, sizeof(struct efct_command_ctx_s));
++
++		if (hw->state != EFCT_HW_STATE_ACTIVE) {
++			efc_log_err(hw->os,
++				     "Can't send command, HW state=%d\n",
++				    hw->state);
++			kfree(ctx);
++			return EFCT_HW_RTN_ERROR;
++		}
++
++		if (cb) {
++			ctx->cb = cb;
++			ctx->arg = arg;
++		}
++		ctx->buf = cmd;
++		ctx->ctx = hw;
++
++		spin_lock_irqsave(&hw->cmd_lock, flags);
++
++			/* Add to pending list */
++			INIT_LIST_HEAD(&ctx->list_entry);
++			list_add_tail(&ctx->list_entry, &hw->cmd_pending);
++
++			/* Submit as much of the pending list as we can */
++			if (efct_hw_cmd_submit_pending(hw) == 0)
++				rc = EFCT_HW_RTN_SUCCESS;
++
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++	}
++
++	return rc;
++}
++
++static int
++efct_hw_command_process(struct efct_hw_s *hw, int status, u8 *mqe,
++			size_t size)
++{
++	struct efct_command_ctx_s *ctx = NULL;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&hw->cmd_lock, flags);
++	if (!list_empty(&hw->cmd_head)) {
++		ctx = list_first_entry(&hw->cmd_head,
++				       struct efct_command_ctx_s, list_entry);
++		list_del(&ctx->list_entry);
++	}
++	if (!ctx) {
++		efc_log_err(hw->os, "no command context?!?\n");
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++		return -1;
++	}
++
++	hw->cmd_head_count--;
++
++	/* Post any pending requests */
++	efct_hw_cmd_submit_pending(hw);
++
++	spin_unlock_irqrestore(&hw->cmd_lock, flags);
++
++	if (ctx->cb) {
++		if (ctx->buf)
++			memcpy(ctx->buf, mqe, size);
++
++		ctx->cb(hw, status, ctx->buf, ctx->arg);
++	}
++
++	memset(ctx, 0, sizeof(struct efct_command_ctx_s));
++	kfree(ctx);
++
++	return 0;
++}
++
++/**
++ * @brief Process entries on the given mailbox queue.
++ *
++ * @param hw Hardware context.
++ * @param status CQE status.
++ * @param mq Pointer to the mailbox queue object.
++ *
++ * @return Returns 0 on success, or a non-zero value on failure.
++ */
++static int
++efct_hw_mq_process(struct efct_hw_s *hw,
++		   int status, struct sli4_queue_s *mq)
++{
++	u8		mqe[SLI4_BMBX_SIZE];
++
++	if (!sli_mq_read(&hw->sli, mq, mqe))
++		efct_hw_command_process(hw, status, mqe, mq->size);
++
++	return 0;
++}
++
++static int
++efct_hw_command_cancel(struct efct_hw_s *hw)
++{
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&hw->cmd_lock, flags);
++
++	/*
++	 * Manually clean up remaining commands. Note: since this calls
++	 * efct_hw_command_process(), we'll also process the cmd_pending
++	 * list, so no need to manually clean that out.
++	 */
++	while (!list_empty(&hw->cmd_head)) {
++		u8		mqe[SLI4_BMBX_SIZE] = { 0 };
++		struct efct_command_ctx_s *ctx =
++	list_first_entry(&hw->cmd_head, struct efct_command_ctx_s, list_entry);
++
++		efc_log_test(hw->os, "hung command %08x\n",
++			      !ctx ? U32_MAX :
++			      (!ctx->buf ? U32_MAX :
++			       *((u32 *)ctx->buf)));
++		spin_unlock_irqrestore(&hw->cmd_lock, flags);
++		efct_hw_command_process(hw, -1, mqe, SLI4_BMBX_SIZE);
++		spin_lock_irqsave(&hw->cmd_lock, flags);
++	}
++
++	spin_unlock_irqrestore(&hw->cmd_lock, flags);
++
++	return 0;
++}
+diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+index 9636e6dbe259..161f9001a5c6 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
++++ b/drivers/scsi/elx/efct/efct_hw.h
+@@ -1023,4 +1023,11 @@ efct_hw_set_ptr(struct efct_hw_s *hw, enum efct_hw_property_e prop,
+ extern uint64_t
+ efct_get_wwn(struct efct_hw_s *hw, enum efct_hw_property_e prop);
+ 
++enum efct_hw_rtn_e efct_hw_rx_allocate(struct efct_hw_s *hw);
++enum efct_hw_rtn_e efct_hw_rx_post(struct efct_hw_s *hw);
++void efct_hw_rx_free(struct efct_hw_s *hw);
++extern enum efct_hw_rtn_e
++efct_hw_command(struct efct_hw_s *hw, u8 *cmd, u32 opts, void *cb,
++		void *arg);
++
+ #endif /* __EFCT_H__ */
+diff --git a/drivers/scsi/elx/efct/efct_utils.c b/drivers/scsi/elx/efct/efct_utils.c
 new file mode 100644
-index 000000000000..f7c1428ced6a
+index 000000000000..3c2deca23420
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_device.c
-@@ -0,0 +1,1977 @@
++++ b/drivers/scsi/elx/efct/efct_utils.c
+@@ -0,0 +1,662 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 + */
 +
-+/*
-+ * device_sm Node State Machine: Remote Device States
-+ */
++#include "efct_driver.h"
++#include "efct_utils.h"
 +
-+#include "efc.h"
-+#include "efc_device.h"
-+#include "efc_fabric.h"
++#define DEFAULT_SLAB_LEN		(64 * 1024)
 +
-+static void *__efc_d_common(const char *funcname, struct efc_sm_ctx_s *ctx,
-+			    enum efc_sm_event_e evt, void *arg);
-+static void *__efc_d_wait_del_node(struct efc_sm_ctx_s *ctx,
-+				   enum efc_sm_event_e evt, void *arg);
-+static void *__efc_d_wait_del_ini_tgt(struct efc_sm_ctx_s *ctx,
-+				      enum efc_sm_event_e evt, void *arg);
++struct pool_hdr_s {
++	struct list_head list_entry;
++};
 +
-+/**
-+ * @ingroup device_sm
-+ * @brief Send response to PRLI.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * For device nodes, this function sends a PRLI response.
-+ *
-+ * @param io Pointer to a SCSI IO object.
-+ * @param ox_id OX_ID of PRLI
-+ *
-+ * @return Returns None.
-+ */
++struct efct_array_s {
++	void *os;
 +
-+void
-+efc_d_send_prli_rsp(struct efc_node_s *node, uint16_t ox_id)
-+{
-+	struct efc_lport *efc = node->efc;
-+	/* If the back-end doesn't want to talk to this initiator,
-+	 * we send an LS_RJT
-+	 */
-+	if (node->sport->enable_tgt &&
-+	    (efc->tt.scsi_validate_node(efc, node) == 0)) {
-+		node_printf(node, "PRLI rejected by target-server\n");
++	u32 size;
++	u32 count;
 +
-+		efc->tt.send_ls_rjt(efc, node, ox_id,
-+				    ELS_RJT_UNAB, ELS_EXPL_NONE, 0);
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+	} else {
-+		/*
-+		 * sm: / process PRLI payload, send PRLI acc
-+		 */
-+		efc->tt.els_send_resp(efc, node, ELS_PRLI, ox_id);
++	u32 n_rows;
++	u32 elems_per_row;
++	u32 bytes_per_row;
 +
-+		/* Immediately go to ready state to avoid window where we're
-+		 * waiting for the PRLI LS_ACC to complete while holding
-+		 * FCP_CMNDs
-+		 */
-+		efc_node_transition(node, __efc_d_device_ready, NULL);
-+	}
-+}
++	void **array_rows;
++	u32 array_rows_len;
++};
++
++static u32 slab_len = DEFAULT_SLAB_LEN;
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Initiate node shutdown
++ * @brief Void pointer array structure
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * This structure describes an object consisting of an array of void
++ * pointers.   The object is allocated with a maximum array size, entries
++ * are then added to the array with while maintaining an entry count.   A set of
++ * iterator APIs are included to allow facilitate cycling through the array
++ * entries in a circular fashion.
 + *
-+ * @return Returns NULL.
 + */
-+
-+void *
-+__efc_d_initiate_shutdown(struct efc_sm_ctx_s *ctx,
-+			  enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		/* assume no wait needed */
-+		int rc = EFC_SCSI_CALL_COMPLETE;
-+
-+		efc->tt.scsi_io_alloc_disable(efc, node);
-+
-+		/* make necessary delete upcall(s) */
-+		if (node->init && !node->targ) {
-+			efc_log_info(node->efc,
-+				     "[%s] delete (initiator) WWPN %s WWNN %s\n",
-+				node->display_name,
-+				node->wwpn, node->wwnn);
-+			efc_node_transition(node,
-+					    __efc_d_wait_del_node,
-+					     NULL);
-+			if (node->sport->enable_tgt)
-+				rc = efc->tt.scsi_del_node(efc, node,
-+					EFC_SCSI_INITIATOR_DELETED);
-+
-+			if (rc == EFC_SCSI_CALL_COMPLETE)
-+				efc_node_post_event(node,
-+					EFC_EVT_NODE_DEL_INI_COMPLETE, NULL);
-+
-+		} else if (node->targ && !node->init) {
-+			efc_log_info(node->efc,
-+				     "[%s] delete (target) WWPN %s WWNN %s\n",
-+				node->display_name,
-+				node->wwpn, node->wwnn);
-+			efc_node_transition(node,
-+					    __efc_d_wait_del_node,
-+					     NULL);
-+			if (node->sport->enable_ini)
-+				rc = efc->tt.scsi_del_node(efc, node,
-+					EFC_SCSI_TARGET_DELETED);
-+
-+			if (rc == EFC_SCSI_CALL_COMPLETE)
-+				efc_node_post_event(node,
-+					EFC_EVT_NODE_DEL_TGT_COMPLETE, NULL);
-+
-+		} else if (node->init && node->targ) {
-+			efc_log_info(node->efc,
-+				     "[%s] delete (I+T) WWPN %s WWNN %s\n",
-+				node->display_name, node->wwpn, node->wwnn);
-+			efc_node_transition(node, __efc_d_wait_del_ini_tgt,
-+					    NULL);
-+			if (node->sport->enable_tgt)
-+				rc = efc->tt.scsi_del_node(efc, node,
-+						EFC_SCSI_INITIATOR_DELETED);
-+
-+			if (rc == EFC_SCSI_CALL_COMPLETE)
-+				efc_node_post_event(node,
-+					EFC_EVT_NODE_DEL_INI_COMPLETE, NULL);
-+			/* assume no wait needed */
-+			rc = EFC_SCSI_CALL_COMPLETE;
-+			if (node->sport->enable_ini)
-+				rc = efc->tt.scsi_del_node(efc, node,
-+						EFC_SCSI_TARGET_DELETED);
-+
-+			if (rc == EFC_SCSI_CALL_COMPLETE)
-+				efc_node_post_event(node,
-+					EFC_EVT_NODE_DEL_TGT_COMPLETE, NULL);
-+		}
-+
-+		/* we've initiated the upcalls as needed, now kick off the node
-+		 * detach to precipitate the aborting of outstanding exchanges
-+		 * associated with said node
-+		 *
-+		 * Beware: if we've made upcall(s), we've already transitioned
-+		 * to a new state by the time we execute this.
-+		 * consider doing this before the upcalls?
-+		 */
-+		if (node->attached) {
-+			/* issue hw node free; don't care if succeeds right
-+			 * away or sometime later, will check node->attached
-+			 * later in shutdown process
-+			 */
-+			rc = efc->tt.hw_node_detach(efc, &node->rnode);
-+			if (rc != EFC_HW_RTN_SUCCESS &&
-+			    rc != EFC_HW_RTN_SUCCESS_SYNC)
-+				node_printf(node,
-+					    "Failed freeing HW node, rc=%d\n",
-+					rc);
-+		}
-+
-+		/* if neither initiator nor target, proceed to cleanup */
-+		if (!node->init && !node->targ) {
-+			/*
-+			 * node has either been detached or is in
-+			 * the process of being detached,
-+			 * call common node's initiate cleanup function
-+			 */
-+			efc_node_initiate_cleanup(node);
-+		}
-+		break;
-+	}
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		/* Ignore, this can happen if an ELS is
-+		 * aborted while in a delay/retry state
-+		 */
-+		break;
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+	return NULL;
-+}
++struct efct_varray_s {
++	void *os;
++	u32 array_count;	/*>> maximum entry count in array */
++	void **array;		/*>> pointer to allocated array memory */
++	u32 entry_count;	/*>> number of entries added to the array */
++	uint next_index;	/*>> iterator next index */
++	spinlock_t lock;	/*>> iterator lock */
++};
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Common device event handler.
++ * @brief Set array slab allocation length
 + *
-+ * <h3 class="desc">Description</h3>
-+ * For device nodes, this event handler manages default and common events.
++ * The slab length is the maximum allocation length that the array uses.
++ * The default 64k slab length may be overridden using this function.
 + *
-+ * @param funcname Function name text.
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+static void *
-+__efc_d_common(const char *funcname, struct efc_sm_ctx_s *ctx,
-+	       enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = NULL;
-+	struct efc_lport *efc = NULL;
-+
-+	efc_assert(ctx, NULL);
-+	node = ctx->app;
-+	efc_assert(node, NULL);
-+	efc = node->efc;
-+	efc_assert(efc, NULL);
-+
-+	switch (evt) {
-+	/* Handle shutdown events */
-+	case EFC_EVT_SHUTDOWN:
-+		efc_log_debug(efc, "[%s] %-20s %-20s\n", node->display_name,
-+			      funcname, efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+		efc_log_debug(efc, "[%s] %-20s %-20s\n",
-+			      node->display_name, funcname,
-+				efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_EXPLICIT_LOGO;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		efc_log_debug(efc, "[%s] %-20s %-20s\n", node->display_name,
-+			      funcname, efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_IMPLICIT_LOGO;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+
-+	default:
-+		/* call default event handler common to all nodes */
-+		__efc_node_common(funcname, ctx, evt, arg);
-+		break;
-+	}
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine:
-+ * Wait for a domain-attach completion in loop topology.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * State waits for a domain-attached completion while in loop topology.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_wait_loop(struct efc_sm_ctx_s *ctx,
-+		  enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_ATTACH_OK: {
-+		/* send PLOGI automatically if initiator */
-+		efc_node_init_device(node, true);
-+		break;
-+	}
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief state: wait for node resume event
-+ *
-+ * State is entered when a node is in I+T mode and sends a
-+ * delete initiator/target
-+ * call to the target-server/initiator-client and needs to
-+ * wait for that work to complete.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg per event optional argument
-+ *
-+ * @return returns NULL
-+ */
-+
-+static void *
-+__efc_d_wait_del_ini_tgt(struct efc_sm_ctx_s *ctx,
-+			 enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		/* Fall through */
-+
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		/* These are expected events. */
-+		break;
-+
-+	case EFC_EVT_NODE_DEL_INI_COMPLETE:
-+	case EFC_EVT_NODE_DEL_TGT_COMPLETE:
-+		efc_node_transition(node, __efc_d_wait_del_node, NULL);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+		/* Can happen as ELS IO IO's complete */
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		/* fall through */
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		break;
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief state: Wait for node resume event.
-+ *
-+ * State is entered when a node sends a delete initiator/target call to the
-+ * target-server/initiator-client and needs to wait for that work to complete.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+static void *
-+__efc_d_wait_del_node(struct efc_sm_ctx_s *ctx,
-+		      enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		/* Fall through */
-+
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+	case EFC_EVT_ALL_CHILD_NODES_FREE:
-+		/* These are expected events. */
-+		break;
-+
-+	case EFC_EVT_NODE_DEL_INI_COMPLETE:
-+	case EFC_EVT_NODE_DEL_TGT_COMPLETE:
-+		/*
-+		 * node has either been detached or is in the process
-+		 * of being detached,
-+		 * call common node's initiate cleanup function
-+		 */
-+		efc_node_initiate_cleanup(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+		/* Can happen as ELS IO IO's complete */
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		/* fall through */
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		break;
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @brief Save the OX_ID for sending LS_ACC sometime later.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * When deferring the response to an ELS request, the OX_ID of the request
-+ * is saved using this function.
-+ *
-+ * @param io Pointer to a SCSI IO object.
-+ * @param hdr Pointer to the FC header.
-+ * @param ls Defines the type of ELS to send: LS_ACC, LS_ACC for PLOGI;
-+ * or LSS_ACC for PRLI.
-+ *
-+ * @return None.
-+ */
-+
-+void
-+efc_send_ls_acc_after_attach(struct efc_node_s *node,
-+			     struct fc_frame_header *hdr,
-+			     enum efc_node_send_ls_acc_e ls)
-+{
-+	u16 ox_id = be16_to_cpu(hdr->fh_ox_id);
-+
-+	efc_assert(node->send_ls_acc == EFC_NODE_SEND_LS_ACC_NONE);
-+
-+	node->ls_acc_oxid = ox_id;
-+	node->send_ls_acc = ls;
-+	node->ls_acc_did = ntoh24(hdr->fh_d_id);
-+}
-+
-+/**
-+ * @brief Process the PRLI payload.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * The PRLI payload is processed; the initiator/target
-+ * capabilities of the
-+ * remote node are extracted and saved in the node object.
-+ *
-+ * @param node Pointer to the node object.
-+ * @param prli Pointer to the PRLI payload.
-+ *
-+ * @return None.
-+ */
-+
-+void
-+efc_process_prli_payload(struct efc_node_s *node, void *prli)
-+{
-+	struct fc_els_spp *sp = prli + sizeof(struct fc_els_prli);
-+
-+	node->init = (sp->spp_flags & FCP_SPPF_INIT_FCN) != 0;
-+	node->targ = (sp->spp_flags & FCP_SPPF_TARG_FCN) != 0;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for the PLOGI accept to complete.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_wait_plogi_acc_cmpl(struct efc_sm_ctx_s *ctx,
-+			    enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_OK:	/* PLOGI ACC completions */
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		efc_node_transition(node, __efc_d_port_logged_in, NULL);
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for the LOGO response.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_wait_logo_rsp(struct efc_sm_ctx_s *ctx,
-+		      enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_OK:
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-+		/* LOGO response received, sent shutdown */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_LOGO,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		node_printf(node,
-+			    "LOGO sent (evt=%s), shutdown node\n",
-+			efc_sm_event_name(evt));
-+		/* sm: / post explicit logout */
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+				    NULL);
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+	return NULL;
-+}
-+
-+/**
-+ * @brief Initialize device node.
-+ *
-+ * Initialize device node. If a node is an initiator,
-+ * then send a PLOGI and transition
-+ * to __efc_d_wait_plogi_rsp, otherwise transition to __efc_d_init.
-+ *
-+ * @param node Pointer to the node object.
-+ * @param send_plogi Boolean indicating to send PLOGI command or not.
++ * @param len new slab length.
 + *
 + * @return none
 + */
-+
 +void
-+efc_node_init_device(struct efc_node_s *node, bool send_plogi)
++efct_array_set_slablen(u32 len)
 +{
-+	node->send_plogi = send_plogi;
-+	if ((node->efc->nodedb_mask & EFC_NODEDB_PAUSE_NEW_NODES) &&
-+	    (node->rnode.fc_id != FC_FID_DOM_MGR)) {
-+		node->nodedb_state = __efc_d_init;
-+		efc_node_transition(node, __efc_node_paused, NULL);
-+	} else {
-+		efc_node_transition(node, __efc_d_init, NULL);
++	slab_len = len;
++}
++
++/**
++ * @brief Allocate an array object
++ *
++ * An array object of size and number of elements is allocated
++ *
++ * @param os OS handle
++ * @param size size of array elements in bytes
++ * @param count number of elements in array
++ *
++ * @return pointer to array object or NULL
++ */
++struct efct_array_s *
++efct_array_alloc(void *os, u32 size, u32 count)
++{
++	struct efct_array_s *array = NULL;
++	u32 i;
++
++	/* Fail if the item size exceeds slab_len - caller should increase
++	 * slab_size, or not use this API.
++	 */
++	if (size > slab_len) {
++		pr_err("Error: size exceeds slab length\n");
++		return NULL;
++	}
++
++	array = kmalloc(sizeof(*array), GFP_KERNEL);
++	if (!array)
++		return NULL;
++
++	memset(array, 0, sizeof(*array));
++	array->os = os;
++	array->size = size;
++	array->count = count;
++	array->elems_per_row = slab_len / size;
++	array->n_rows = (count + array->elems_per_row - 1) /
++			array->elems_per_row;
++	array->bytes_per_row = array->elems_per_row * array->size;
++
++	array->array_rows_len = array->n_rows * sizeof(*array->array_rows);
++	array->array_rows = kmalloc(array->array_rows_len, GFP_ATOMIC);
++	if (!array->array_rows) {
++		efct_array_free(array);
++		return NULL;
++	}
++	memset(array->array_rows, 0, array->array_rows_len);
++	for (i = 0; i < array->n_rows; i++) {
++		array->array_rows[i] = kmalloc(array->bytes_per_row,
++					       GFP_KERNEL);
++		if (!array->array_rows[i]) {
++			efct_array_free(array);
++			return NULL;
++		}
++		memset(array->array_rows[i], 0, array->bytes_per_row);
++	}
++
++	return array;
++}
++
++/**
++ * @brief Free an array object
++ *
++ * Frees a prevously allocated array object
++ *
++ * @param array pointer to array object
++ *
++ * @return none
++ */
++void
++efct_array_free(struct efct_array_s *array)
++{
++	u32 i;
++
++	if (array) {
++		if (array->array_rows) {
++			for (i = 0; i < array->n_rows; i++)
++				kfree(array->array_rows[i]);
++
++			kfree(array->array_rows);
++		}
++		kfree(array);
 +	}
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Initial node state for an initiator or
-+ * a target.
++ * @brief Return reference to an element of an array object
 + *
-+ * <h3 class="desc">Description</h3>
-+ * This state is entered when a node is instantiated, either having been
-+ * discovered from a name services query, or having received a PLOGI/FLOGI.
++ * Return the address of an array element given an index
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ * - EFC_EVT_ENTER: (uint8_t *) - 1 to send a PLOGI on
-+ * entry (initiator-only); 0 indicates a PLOGI is
-+ * not sent on entry (initiator-only). Not applicable for a target.
++ * @param array pointer to array object
++ * @param idx array element index
 + *
-+ * @return Returns NULL.
++ * @return rointer to array element, or NULL if index out of range
 + */
-+
-+void *
-+__efc_d_init(struct efc_sm_ctx_s *ctx, enum efc_sm_event_e evt, void *arg)
++void *efct_array_get(struct efct_array_s *array, u32 idx)
 +{
-+	int rc;
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
++	void *entry = NULL;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
++	if (idx < array->count) {
++		u32 row = idx / array->elems_per_row;
++		u32 offset = idx % array->elems_per_row;
 +
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		/* check if we need to send PLOGI */
-+		if (node->send_plogi) {
-+			/* only send if we have initiator capability,
-+			 * and domain is attached
-+			 */
-+			if (node->sport->enable_ini &&
-+			    node->sport->domain->attached) {
-+				efc->tt.els_send(efc, node, ELS_PLOGI,
-+					EFC_FC_FLOGI_TIMEOUT_SEC,
-+					EFC_FC_ELS_DEFAULT_RETRIES);
-+
-+				efc_node_transition(node,
-+						    __efc_d_wait_plogi_rsp,
-+						    NULL);
-+			} else {
-+				node_printf(node,
-+					    "not sending plogi sport.ini=%d,",
-+						node->sport->enable_ini);
-+				node_printf(node, "domain attached=%d\n",
-+					    node->sport->domain->attached);
-+			}
-+		}
-+		break;
-+	case EFC_EVT_PLOGI_RCVD: {
-+		/* T, or I+T */
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+		u32 d_id = ntoh24(hdr->fh_d_id);
-+
-+		efc_node_save_sparms(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+					     EFC_NODE_SEND_LS_ACC_PLOGI);
-+
-+		/* domain already attached */
-+		if (node->sport->domain->attached) {
-+			rc = efc_node_attach(node);
-+			efc_node_transition(node,
-+					    __efc_d_wait_node_attach, NULL);
-+			if (rc == EFC_HW_RTN_SUCCESS_SYNC) {
-+				efc_node_post_event(node,
-+						    EFC_EVT_NODE_ATTACH_OK,
-+						    NULL);
-+			}
-+			break;
-+		}
-+
-+		/* domain not attached; several possibilities: */
-+		switch (node->sport->topology) {
-+		case EFC_SPORT_TOPOLOGY_P2P:
-+			/* we're not attached and sport is p2p,
-+			 * need to attach
-+			 */
-+			efc_domain_attach(node->sport->domain, d_id);
-+			efc_node_transition(node,
-+					    __efc_d_wait_domain_attach,
-+					    NULL);
-+			break;
-+		case EFC_SPORT_TOPOLOGY_FABRIC:
-+			/* we're not attached and sport is fabric, domain
-+			 * attach should have already been requested as part
-+			 * of the fabric state machine, wait for it
-+			 */
-+			efc_node_transition(node, __efc_d_wait_domain_attach,
-+					    NULL);
-+			break;
-+		case EFC_SPORT_TOPOLOGY_UNKNOWN:
-+			/* Two possibilities:
-+			 * 1. received a PLOGI before our FLOGI has completed
-+			 *    (possible since completion comes in on another
-+			 *    CQ), thus we don't know what we're connected to
-+			 *    yet; transition to a state to wait for the
-+			 *    fabric node to tell us;
-+			 * 2. PLOGI received before link went down and we
-+			 * haven't performed domain attach yet.
-+			 * Note: we cannot distinguish between 1. and 2.
-+			 * so have to assume PLOGI
-+			 * was received after link back up.
-+			 */
-+			node_printf(node,
-+				    "received PLOGI, unknown topology did=0x%x\n",
-+				d_id);
-+			efc_node_transition(node,
-+					    __efc_d_wait_topology_notify,
-+					    NULL);
-+			break;
-+		default:
-+			node_printf(node,
-+				    "received PLOGI, with unexpected topology %d\n",
-+				node->sport->topology);
-+			efc_assert(false, NULL);
-+			break;
-+		}
-+		break;
++		entry = ((u8 *)array->array_rows[row]) +
++			 (offset * array->size);
 +	}
++	return entry;
++}
 +
-+	case EFC_EVT_FDISC_RCVD: {
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		break;
-+	}
++/**
++ * @brief Return number of elements in an array
++ *
++ * Return the number of elements in an array
++ *
++ * @param array pointer to array object
++ *
++ * @return returns count of elements in an array
++ */
++u32
++efct_array_get_count(struct efct_array_s *array)
++{
++	return array->count;
++}
 +
-+	case EFC_EVT_FLOGI_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+		u32 d_id = ntoh24(hdr->fh_d_id);
++/**
++ * @brief Return size of array elements in bytes
++ *
++ * Returns the size in bytes of each array element
++ *
++ * @param array pointer to array object
++ *
++ * @return size of array element
++ */
++u32
++efct_array_get_size(struct efct_array_s *array)
++{
++	return array->size;
++}
 +
-+		/* sm: / save sparams, send FLOGI acc */
-+		memcpy(node->sport->domain->flogi_service_params,
-+		       cbdata->payload->dma.virt,
-+		       sizeof(struct fc_els_flogi));
++/**
++ * @brief Allocate a void pointer array
++ *
++ * A void pointer array of given length is allocated.
++ *
++ * @param os OS handle
++ * @param array_count Array size
++ *
++ * @return returns a pointer to the efct_varray_s object, other NULL on error
++ */
++struct efct_varray_s *
++efct_varray_alloc(void *os, u32 array_count)
++{
++	struct efct_varray_s *va;
 +
-+		/* send FC LS_ACC response, override s_id */
-+		efc_fabric_set_topology(node, EFC_SPORT_TOPOLOGY_P2P);
-+		efc->tt.send_flogi_p2p_acc(efc, node,
-+				be16_to_cpu(hdr->fh_ox_id), d_id);
-+		if (efc_p2p_setup(node->sport)) {
-+			node_printf(node,
-+				    "p2p setup failed, shutting down node\n");
-+			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
++	va = kmalloc(sizeof(*va), GFP_ATOMIC);
++	if (va) {
++		memset(va, 0, sizeof(*va));
++		va->os = os;
++		va->array_count = array_count;
++		va->array = kmalloc_array(va->array_count, sizeof(*va->array),
++					  GFP_KERNEL);
++		if (va->array) {
++			va->next_index = 0;
++			spin_lock_init(&va->lock);
 +		} else {
-+			efc_node_transition(node,
-+					    __efc_p2p_wait_flogi_acc_cmpl,
-+					    NULL);
++			kfree(va);
++			va = NULL;
 +		}
-+
-+		break;
 +	}
-+
-+	case EFC_EVT_LOGO_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		if (!node->sport->domain->attached) {
-+			/* most likely a frame left over from before a link
-+			 * down; drop and
-+			 * shut node down w/ "explicit logout" so pending
-+			 * frames are processed
-+			 */
-+			node_printf(node, "%s domain not attached, dropping\n",
-+				    efc_sm_event_name(evt));
-+			efc_node_post_event(node,
-+					    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+					    NULL);
-+			break;
-+		}
-+		efc->tt.els_send_resp(efc, node, ELS_LOGO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		efc_node_transition(node, __efc_d_wait_logo_acc_cmpl, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_PRLI_RCVD:
-+	case EFC_EVT_PRLO_RCVD:
-+	case EFC_EVT_PDISC_RCVD:
-+	case EFC_EVT_ADISC_RCVD:
-+	case EFC_EVT_RSCN_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		if (!node->sport->domain->attached) {
-+			/* most likely a frame left over from before a link
-+			 * down; drop and shut node down w/ "explicit logout"
-+			 * so pending frames are processed
-+			 */
-+			node_printf(node, "%s domain not attached, dropping\n",
-+				    efc_sm_event_name(evt));
-+
-+			efc_node_post_event(node,
-+					    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+					    NULL);
-+			break;
-+		}
-+		node_printf(node, "%s received, sending reject\n",
-+			    efc_sm_event_name(evt));
-+		efc->tt.send_ls_rjt(efc, node, be16_to_cpu(hdr->fh_ox_id),
-+				    ELS_RJT_UNAB, ELS_EXPL_PLOGI_REQD, 0);
-+
-+		break;
-+	}
-+
-+	case EFC_EVT_FCP_CMD_RCVD: {
-+		/* note: problem, we're now expecting an ELS REQ completion
-+		 * from both the LOGO and PLOGI
-+		 */
-+		if (!node->sport->domain->attached) {
-+			/* most likely a frame left over from before a
-+			 * link down; drop and
-+			 * shut node down w/ "explicit logout" so pending
-+			 * frames are processed
-+			 */
-+			node_printf(node, "%s domain not attached, dropping\n",
-+				    efc_sm_event_name(evt));
-+			efc_node_post_event(node,
-+					    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+					    NULL);
-+			break;
-+		}
-+
-+		/* Send LOGO */
-+		node_printf(node, "FCP_CMND received, send LOGO\n");
-+		if (efc->tt.els_send(efc, node, ELS_LOGO,
-+				     EFC_FC_FLOGI_TIMEOUT_SEC,
-+			EFC_FC_ELS_DEFAULT_RETRIES) == NULL) {
-+			/*
-+			 * failed to send LOGO, go ahead and cleanup node
-+			 * anyways
-+			 */
-+			node_printf(node, "Failed to send LOGO\n");
-+			efc_node_post_event(node,
-+					    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+					    NULL);
-+		} else {
-+			/* sent LOGO, wait for response */
-+			efc_node_transition(node,
-+					    __efc_d_wait_logo_rsp, NULL);
-+		}
-+		break;
-+	}
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		/* don't care about domain_attach_ok */
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
++	return va;
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait on a response for a sent PLOGI.
++ * @brief Free a void pointer array
 + *
-+ * <h3 class="desc">Description</h3>
-+ * State is entered when an initiator-capable node has sent
-+ * a PLOGI and is waiting for a response.
++ * The void pointer array object is free'd
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * @param va Pointer to void pointer array
 + *
-+ * @return Returns NULL.
++ * @return none
 + */
-+
-+void *
-+__efc_d_wait_plogi_rsp(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg)
++void
++efct_varray_free(struct efct_varray_s *va)
 +{
-+	int rc;
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_PLOGI_RCVD: {
-+		/* T, or I+T */
-+		/* received PLOGI with svc parms, go ahead and attach node
-+		 * when PLOGI that was sent ultimately completes, it'll be a
-+		 * no-op
-+		 *
-+		 * If there is an outstanding PLOGI sent, can we set a flag
-+		 * to indicate that we don't want to retry it if it times out?
-+		 */
-+		efc_node_save_sparms(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+				EFC_NODE_SEND_LS_ACC_PLOGI);
-+		/* sm: domain->attached / efc_node_attach */
-+		rc = efc_node_attach(node);
-+		efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+			efc_node_post_event(node,
-+					    EFC_EVT_NODE_ATTACH_OK, NULL);
-+
-+		break;
++	if (va) {
++		kfree(va->array);
++		kfree(va);
 +	}
-+
-+	case EFC_EVT_PRLI_RCVD:
-+		/* I, or I+T */
-+		/* sent PLOGI and before completion was seen, received the
-+		 * PRLI from the remote node (WCQEs and RCQEs come in on
-+		 * different queues and order of processing cannot be assumed)
-+		 * Save OXID so PRLI can be sent after the attach and continue
-+		 * to wait for PLOGI response
-+		 */
-+		efc_process_prli_payload(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+				EFC_NODE_SEND_LS_ACC_PRLI);
-+		efc_node_transition(node, __efc_d_wait_plogi_rsp_recvd_prli,
-+				    NULL);
-+		break;
-+
-+	case EFC_EVT_LOGO_RCVD: /* why don't we do a shutdown here?? */
-+	case EFC_EVT_PRLO_RCVD:
-+	case EFC_EVT_PDISC_RCVD:
-+	case EFC_EVT_FDISC_RCVD:
-+	case EFC_EVT_ADISC_RCVD:
-+	case EFC_EVT_RSCN_RCVD:
-+	case EFC_EVT_SCR_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		node_printf(node, "%s received, sending reject\n",
-+			    efc_sm_event_name(evt));
-+
-+		efc->tt.send_ls_rjt(efc, node, be16_to_cpu(hdr->fh_ox_id),
-+				    ELS_RJT_UNAB, ELS_EXPL_PLOGI_REQD, 0);
-+
-+		break;
-+	}
-+
-+	case EFC_EVT_SRRS_ELS_REQ_OK:	/* PLOGI response received */
-+		/* Completion from PLOGI sent */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		/* sm: / save sparams, efc_node_attach */
-+		efc_node_save_sparms(node, cbdata->els_rsp.virt);
-+		rc = efc_node_attach(node);
-+		efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+			efc_node_post_event(node,
-+					    EFC_EVT_NODE_ATTACH_OK, NULL);
-+
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:	/* PLOGI response received */
-+		/* PLOGI failed, shutdown the node */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+		/* Our PLOGI was rejected, this is ok in some cases */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		break;
-+
-+	case EFC_EVT_FCP_CMD_RCVD: {
-+		/* not logged in yet and outstanding PLOGI so don't send LOGO,
-+		 * just drop
-+		 */
-+		node_printf(node, "FCP_CMND received, drop\n");
-+		break;
-+	}
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Waiting on a response for a
-+ *        sent PLOGI.
++ * @brief Add an entry to a void pointer array
 + *
-+ * <h3 class="desc">Description</h3>
-+ * State is entered when an initiator-capable node has sent
-+ * a PLOGI and is waiting for a response. Before receiving the
-+ * response, a PRLI was received, implying that the PLOGI was
-+ * successful.
++ * An entry is added to the void pointer array
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * @param va Pointer to void pointer array
++ * @param entry Pointer to entry to add
 + *
-+ * @return Returns NULL.
++ * @return returns 0 if entry was added, -1 if there is no more space in the
++ * array
++ */
++int
++efct_varray_add(struct efct_varray_s *va, void *entry)
++{
++	u32 rc = -1;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&va->lock, flags);
++		if (va->entry_count < va->array_count) {
++			va->array[va->entry_count++] = entry;
++			rc = 0;
++		}
++	spin_unlock_irqrestore(&va->lock, flags);
++
++	return rc;
++}
++
++/**
++ * @brief Reset the void pointer array iterator
++ *
++ * The next index value of the void pointer array iterator is cleared.
++ *
++ * @param va Pointer to void pointer array
++ *
++ * @return none
++ */
++void
++efct_varray_iter_reset(struct efct_varray_s *va)
++{
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&va->lock, flags);
++		va->next_index = 0;
++	spin_unlock_irqrestore(&va->lock, flags);
++}
++
++/**
++ * @brief Return next entry from a void pointer array
++ *
++ * The next entry in the void pointer array is returned.
++ *
++ * @param va Pointer to void point array
++ *
++ * Note: takes the void pointer array lock
++ *
++ * @return returns next void pointer entry
++ */
++void *
++efct_varray_iter_next(struct efct_varray_s *va)
++{
++	void *rval = NULL;
++	unsigned long flags = 0;
++
++	if (va) {
++		spin_lock_irqsave(&va->lock, flags);
++			rval = _efct_varray_iter_next(va);
++		spin_unlock_irqrestore(&va->lock, flags);
++	}
++	return rval;
++}
++
++/**
++ * @brief Return next entry from a void pointer array
++ *
++ * The next entry in the void pointer array is returned.
++ *
++ * @param va Pointer to void point array
++ *
++ * Note: doesn't take the void pointer array lock
++ *
++ * @return returns next void pointer entry
++ */
++void *
++_efct_varray_iter_next(struct efct_varray_s *va)
++{
++	void *rval;
++
++	rval = va->array[va->next_index];
++	if (++va->next_index >= va->entry_count)
++		va->next_index = 0;
++	return rval;
++}
++
++/**
++ * @brief Return entry count for a void pointer array
++ *
++ * The entry count for a void pointer array is returned
++ *
++ * @param va Pointer to void pointer array
++ *
++ * @return returns entry count
++ */
++u32
++efct_varray_get_count(struct efct_varray_s *va)
++{
++	u32 rc;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&va->lock, flags);
++		rc = va->entry_count;
++	spin_unlock_irqrestore(&va->lock, flags);
++	return rc;
++}
++
++/**
++ * The efct_pool_s data structure consists of:
++ *
++ *	pool->a		An efct_array_s.
++ *	pool->freelist	A linked list of free items.
++ *
++ *	When a pool is allocated using efct_pool_alloc(), the caller
++ *	provides the size in bytes of each memory pool item (size), and
++ *	a count of items (count). Since efct_pool_alloc() has no visibility
++ *	into the object the caller is allocating, a link for the linked list
++ *	is "pre-pended".  Thus when allocating the efct_array_s, the size used
++ *	is the size of the pool_hdr_s plus the requestedmemory pool item size.
++ *
++ *	array item layout:
++ *
++ *		pool_hdr_s
++ *		pool data[size]
++ *
++ *	The address of the pool data is returned when allocated (using
++ *	efct_pool_get(), or efct_pool_get_instance()), and received when being
++ *	freed (using efct_pool_put(). So the address returned by the array item
++ *	(efct_array_get()) must be offset by the size of pool_hdr_s.
 + */
 +
-+void *
-+__efc_d_wait_plogi_rsp_recvd_prli(struct efc_sm_ctx_s *ctx,
-+				  enum efc_sm_event_e evt, void *arg)
++/**
++ * @brief Allocate a memory pool.
++ *
++ * A memory pool of given size and item count is allocated.
++ *
++ * @param os OS handle.
++ * @param size Size in bytes of item.
++ * @param count Number of items in a memory pool.
++ *
++ * @return Returns pointer to allocated memory pool, or NULL.
++ */
++struct efct_pool_s *
++efct_pool_alloc(void *os, u32 size, u32 count)
 +{
-+	int rc;
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
++	struct efct_pool_s *pool;
++	struct pool_hdr_s *pool_entry;
++	u32 i;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
++	pool = kmalloc(sizeof(*pool), GFP_KERNEL);
++	if (!pool)
++		return NULL;
 +
-+	node_sm_trace();
++	memset(pool, 0, sizeof(*pool));
++	pool->os = os;
 +
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
++	/* Allocate an array where each array item is the size of a pool_hdr_s
++	 * plus the requested memory item size (size)
++	 */
++	pool->a = efct_array_alloc(os, size + sizeof(struct pool_hdr_s),
++				   count);
++	if (!pool->a) {
++		efct_pool_free(pool);
++		return NULL;
++	}
++
++	INIT_LIST_HEAD(&pool->freelist);
++	for (i = 0; i < count; i++) {
++		pool_entry = (struct pool_hdr_s *)efct_array_get(pool->a, i);
++		INIT_LIST_HEAD(&pool_entry->list_entry);
++		list_add_tail(&pool_entry->list_entry, &pool->freelist);
++	}
++
++	spin_lock_init(&pool->lock);
++
++	return pool;
++}
++
++/**
++ * @brief Reset a memory pool.
++ *
++ * Place all pool elements on the free list, and zero them.
++ *
++ * @param pool Pointer to the pool object.
++ *
++ * @return None.
++ */
++void
++efct_pool_reset(struct efct_pool_s *pool)
++{
++	u32 i;
++	u32 count = efct_array_get_count(pool->a);
++	u32 size = efct_array_get_size(pool->a);
++	unsigned long flags = 0;
++	struct pool_hdr_s *pool_entry;
++
++	spin_lock_irqsave(&pool->lock, flags);
++
++	/*
++	 * Remove all the entries from the free list, otherwise we will
++	 * encountered linked list asserts when they are re-added.
++	 */
++	while (!list_empty(&pool->freelist)) {
++		pool_entry = list_first_entry(&pool->freelist,
++					      struct pool_hdr_s, list_entry);
++		list_del(&pool_entry->list_entry);
++	}
++
++	/* Reset the free list */
++	INIT_LIST_HEAD(&pool->freelist);
++
++	/* Return all elements to the free list and zero the elements */
++	for (i = 0; i < count; i++) {
++		pool_entry = (struct pool_hdr_s *)efct_array_get(pool->a, i);
++		memset(pool_entry, 0, size - sizeof(struct pool_hdr_s));
++		INIT_LIST_HEAD(&pool_entry->list_entry);
++		list_add_tail(&pool_entry->list_entry, &pool->freelist);
++	}
++	spin_unlock_irqrestore(&pool->lock, flags);
++}
++
++/**
++ * @brief Free a previously allocated memory pool.
++ *
++ * The memory pool is freed.
++ *
++ * @param pool Pointer to memory pool.
++ *
++ * @return None.
++ */
++void
++efct_pool_free(struct efct_pool_s *pool)
++{
++	if (pool) {
++		if (pool->a)
++			efct_array_free(pool->a);
++		kfree(pool);
++	}
++}
++
++/**
++ * @brief Allocate a memory pool item
++ *
++ * A memory pool item is taken from the free list and returned.
++ *
++ * @param pool Pointer to memory pool.
++ *
++ * @return Pointer to allocated item, otherwise NULL if there are
++ * no unallocated items.
++ */
++void *
++efct_pool_get(struct efct_pool_s *pool)
++{
++	struct pool_hdr_s *h = NULL;
++	void *item = NULL;
++	unsigned long flags = 0;
++
++	spin_lock_irqsave(&pool->lock, flags);
++
++	if (!list_empty(&pool->freelist)) {
++		h = list_first_entry(&pool->freelist, struct pool_hdr_s,
++				     list_entry);
++	}
++
++	if (h) {
++		list_del(&h->list_entry);
 +		/*
-+		 * Since we've received a PRLI, we have a port login and will
-+		 * just need to wait for the PLOGI response to do the node
-+		 * attach and then we can send the LS_ACC for the PRLI. If,
-+		 * during this time, we receive FCP_CMNDs (which is possible
-+		 * since we've already sent a PRLI and our peer may have
-+		 * accepted). At this time, we are not waiting on any other
-+		 * unsolicited frames to continue with the login process. Thus,
-+		 * it will not hurt to hold frames here.
++		 * Return the array item address offset by the size of
++		 * pool_hdr_s
 +		 */
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_OK:	/* PLOGI response received */
-+		/* Completion from PLOGI sent */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		/* sm: / save sparams, efc_node_attach */
-+		efc_node_save_sparms(node, cbdata->els_rsp.virt);
-+		rc = efc_node_attach(node);
-+		efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+			efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK,
-+					    NULL);
-+
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL:	/* PLOGI response received */
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+		/* PLOGI failed, shutdown the node */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PLOGI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
++		item = &h[1];
 +	}
 +
-+	return NULL;
++	spin_unlock_irqrestore(&pool->lock, flags);
++	return item;
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for a domain attach.
++ * @brief free memory pool item
 + *
-+ * <h3 class="desc">Description</h3>
-+ * Waits for a domain-attach complete ok event.
++ * A memory pool item is freed.
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * @param pool Pointer to memory pool.
++ * @param item Pointer to item to free.
 + *
-+ * @return Returns NULL.
++ * @return None.
 + */
-+
-+void *
-+__efc_d_wait_domain_attach(struct efc_sm_ctx_s *ctx,
-+			   enum efc_sm_event_e evt, void *arg)
++void
++efct_pool_put(struct efct_pool_s *pool, void *item)
 +{
-+	int rc;
-+	struct efc_node_s *node = ctx->app;
++	struct pool_hdr_s *h;
++	unsigned long flags = 0;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
++	spin_lock_irqsave(&pool->lock, flags);
 +
-+	node_sm_trace();
++	/* Fetch the address of the array item, which is the item address
++	 * negatively offset by size of pool_hdr_s (note the index of [-1]
++	 */
++	h = &((struct pool_hdr_s *)item)[-1];
 +
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
++	INIT_LIST_HEAD(&h->list_entry);
++	list_add_tail(&h->list_entry, &pool->freelist);
 +
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		efc_assert(node->sport->domain->attached, NULL);
-+		/* sm: / efc_node_attach */
-+		rc = efc_node_attach(node);
-+		efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+			efc_node_post_event(node, EFC_EVT_NODE_ATTACH_OK,
-+					    NULL);
-+
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+	return NULL;
++	spin_unlock_irqrestore(&pool->lock, flags);
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for topology
-+ *        notification
++ * @brief free memory pool item
 + *
-+ * <h3 class="desc">Description</h3>
-+ * Waits for topology notification from fabric node, then
-+ * attaches domain and node.
++ * A memory pool item is freed to head of list.
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * @param pool Pointer to memory pool.
++ * @param item Pointer to item to free.
 + *
-+ * @return Returns NULL.
++ * @return None.
 + */
-+
-+void *
-+__efc_d_wait_topology_notify(struct efc_sm_ctx_s *ctx,
-+			     enum efc_sm_event_e evt, void *arg)
++void
++efct_pool_put_head(struct efct_pool_s *pool, void *item)
 +{
-+	int rc;
-+	struct efc_node_s *node = ctx->app;
++	struct pool_hdr_s *h;
++	unsigned long flags = 0;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
++	spin_lock_irqsave(&pool->lock, flags);
 +
-+	node_sm_trace();
++	/* Fetch the address of the array item, which is the item address
++	 * negatively offset by size of pool_hdr_s (note the index of [-1]
++	 */
++	h = &((struct pool_hdr_s *)item)[-1];
 +
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
++	INIT_LIST_HEAD(&h->list_entry);
++	list_add(&h->list_entry, &pool->freelist);
 +
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SPORT_TOPOLOGY_NOTIFY: {
-+		enum efc_sport_topology_e topology =
-+					(enum efc_sport_topology_e)arg;
-+
-+		efc_assert(!node->sport->domain->attached, NULL);
-+
-+		efc_assert(node->send_ls_acc == EFC_NODE_SEND_LS_ACC_PLOGI,
-+			   NULL);
-+		node_printf(node, "topology notification, topology=%d\n",
-+			    topology);
-+
-+		/* At the time the PLOGI was received, the topology was unknown,
-+		 * so we didn't know which node would perform the domain attach:
-+		 * 1. The node from which the PLOGI was sent (p2p) or
-+		 * 2. The node to which the FLOGI was sent (fabric).
-+		 */
-+		if (topology == EFC_SPORT_TOPOLOGY_P2P) {
-+			/* if this is p2p, need to attach to the domain using
-+			 * the d_id from the PLOGI received
-+			 */
-+			efc_domain_attach(node->sport->domain,
-+					  node->ls_acc_did);
-+		}
-+		/* else, if this is fabric, the domain attach
-+		 * should be performed by the fabric node (node sending FLOGI);
-+		 * just wait for attach to complete
-+		 */
-+
-+		efc_node_transition(node, __efc_d_wait_domain_attach, NULL);
-+		break;
-+	}
-+	case EFC_EVT_DOMAIN_ATTACH_OK:
-+		efc_assert(node->sport->domain->attached, NULL);
-+		node_printf(node, "domain attach ok\n");
-+		/* sm: / efc_node_attach */
-+		rc = efc_node_attach(node);
-+		efc_node_transition(node, __efc_d_wait_node_attach, NULL);
-+		if (rc == EFC_HW_RTN_SUCCESS_SYNC)
-+			efc_node_post_event(node,
-+					    EFC_EVT_NODE_ATTACH_OK, NULL);
-+
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+	return NULL;
++	spin_unlock_irqrestore(&pool->lock, flags);
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for a node attach
-+ * when found by a remote node.
++ * @brief Return memory pool item count.
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * Returns the allocated number of items.
 + *
-+ * @return Returns NULL.
++ * @param pool Pointer to memory pool.
++ *
++ * @return Returns count of allocated items.
 + */
-+
-+void *
-+__efc_d_wait_node_attach(struct efc_sm_ctx_s *ctx,
-+			 enum efc_sm_event_e evt, void *arg)
++u32
++efct_pool_get_count(struct efct_pool_s *pool)
 +{
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
++	u32 count;
++	unsigned long flags = 0;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_NODE_ATTACH_OK:
-+		node->attached = true;
-+		switch (node->send_ls_acc) {
-+		case EFC_NODE_SEND_LS_ACC_PLOGI: {
-+			/* sm: send_plogi_acc is set / send PLOGI acc */
-+			/* Normal case for T, or I+T */
-+			efc->tt.els_send_resp(efc, node, ELS_PLOGI,
-+							node->ls_acc_oxid);
-+			efc_node_transition(node,
-+					    __efc_d_wait_plogi_acc_cmpl,
-+					     NULL);
-+			node->send_ls_acc = EFC_NODE_SEND_LS_ACC_NONE;
-+			node->ls_acc_io = NULL;
-+			break;
-+		}
-+		case EFC_NODE_SEND_LS_ACC_PRLI: {
-+			efc_d_send_prli_rsp(node,
-+					    node->ls_acc_oxid);
-+			node->send_ls_acc = EFC_NODE_SEND_LS_ACC_NONE;
-+			node->ls_acc_io = NULL;
-+			break;
-+		}
-+		case EFC_NODE_SEND_LS_ACC_NONE:
-+		default:
-+			/* Normal case for I */
-+			/* sm: send_plogi_acc is not set / send PLOGI acc */
-+			efc_node_transition(node,
-+					    __efc_d_port_logged_in, NULL);
-+			break;
-+		}
-+		break;
-+
-+	case EFC_EVT_NODE_ATTACH_FAIL:
-+		/* node attach failed, shutdown the node */
-+		node->attached = false;
-+		node_printf(node, "node attach failed\n");
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+
-+	/* Handle shutdown events */
-+	case EFC_EVT_SHUTDOWN:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		efc_node_transition(node, __efc_d_wait_attach_evt_shutdown,
-+				    NULL);
-+		break;
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_EXPLICIT_LOGO;
-+		efc_node_transition(node, __efc_d_wait_attach_evt_shutdown,
-+				    NULL);
-+		break;
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_IMPLICIT_LOGO;
-+		efc_node_transition(node,
-+				    __efc_d_wait_attach_evt_shutdown, NULL);
-+		break;
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
++	spin_lock_irqsave(&pool->lock, flags);
++	count = efct_array_get_count(pool->a);
++	spin_unlock_irqrestore(&pool->lock, flags);
++	return count;
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for a node/domain
-+ * attach then shutdown node.
++ * @brief Return item given an index.
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
++ * A pointer to a memory pool item is returned given an index.
 + *
-+ * @return Returns NULL.
++ * @param pool Pointer to memory pool.
++ * @param idx Index.
++ *
++ * @return Returns pointer to item, or NULL if index is invalid.
 + */
-+
 +void *
-+__efc_d_wait_attach_evt_shutdown(struct efc_sm_ctx_s *ctx,
-+				 enum efc_sm_event_e evt, void *arg)
++efct_pool_get_instance(struct efct_pool_s *pool, u32 idx)
 +{
-+	struct efc_node_s *node = ctx->app;
++	struct pool_hdr_s *h = efct_array_get(pool->a, idx);
 +
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	/* wait for any of these attach events and then shutdown */
-+	case EFC_EVT_NODE_ATTACH_OK:
-+		node->attached = true;
-+		node_printf(node, "Attach evt=%s, proceed to shutdown\n",
-+			    efc_sm_event_name(evt));
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+
-+	case EFC_EVT_NODE_ATTACH_FAIL:
-+		/* node attach failed, shutdown the node */
-+		node->attached = false;
-+		node_printf(node, "Attach evt=%s, proceed to shutdown\n",
-+			    efc_sm_event_name(evt));
-+		efc_node_transition(node, __efc_d_initiate_shutdown, NULL);
-+		break;
-+
-+	/* ignore shutdown events as we're already in shutdown path */
-+	case EFC_EVT_SHUTDOWN:
-+		/* have default shutdown event take precedence */
-+		node->shutdown_reason = EFC_NODE_SHUTDOWN_DEFAULT;
-+		/* fall through */
-+	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-+	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-+		node_printf(node, "%s received\n", efc_sm_event_name(evt));
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
++	if (!h)
 +		return NULL;
-+	}
-+
-+	return NULL;
++	return &h[1];
 +}
 +
 +/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Port is logged in.
++ * @brief Return count of free objects in a pool.
 + *
-+ * <h3 class="desc">Description</h3>
-+ * This state is entered when a remote port has completed port login (PLOGI).
++ * The number of objects on a pool's free list.
 + *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process
-+ * @param arg Per event optional argument
++ * @param pool Pointer to memory pool.
 + *
-+ * @return Returns NULL.
++ * @return Returns count of objects on free list.
 + */
-+void *
-+__efc_d_port_logged_in(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg)
++u32
++efct_pool_get_freelist_count(struct efct_pool_s *pool)
 +{
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
++	u32 count = 0;
++	struct pool_hdr_s *item;
++	unsigned long flags = 0;
 +
-+	efc_node_evt_set(ctx, evt, __func__);
++	spin_lock_irqsave(&pool->lock, flags);
 +
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		/* Normal case for I or I+T */
-+		if (node->sport->enable_ini &&
-+		    !(node->rnode.fc_id != FC_FID_DOM_MGR)) {
-+			/* sm: if enable_ini / send PRLI */
-+			efc->tt.els_send(efc, node, ELS_PRLI,
-+				EFC_FC_ELS_SEND_DEFAULT_TIMEOUT,
-+				EFC_FC_ELS_DEFAULT_RETRIES);
-+			/* can now expect ELS_REQ_OK/FAIL/RJT */
-+		}
-+		break;
-+
-+	case EFC_EVT_FCP_CMD_RCVD: {
-+		break;
++	list_for_each_entry(item, &pool->freelist, list_entry) {
++		count++;
 +	}
 +
-+	case EFC_EVT_PRLI_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		/* Normal for T or I+T */
-+
-+		efc_process_prli_payload(node, cbdata->payload->dma.virt);
-+		efc_d_send_prli_rsp(node, be16_to_cpu(hdr->fh_ox_id));
-+		break;
-+	}
-+
-+	case EFC_EVT_SRRS_ELS_REQ_OK: {	/* PRLI response */
-+		/* Normal case for I or I+T */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PRLI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		/* sm: / process PRLI payload */
-+		efc_process_prli_payload(node, cbdata->els_rsp.virt);
-+		efc_node_transition(node, __efc_d_device_ready, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_SRRS_ELS_REQ_FAIL: {	/* PRLI response failed */
-+		/* I, I+T, assume some link failure, shutdown node */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PRLI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_SRRS_ELS_REQ_RJT: {
-+		/* PRLI rejected by remote
-+		 * Normal for I, I+T (connected to an I)
-+		 * Node doesn't want to be a target, stay here and wait for a
-+		 * PRLI from the remote node
-+		 * if it really wants to connect to us as target
-+		 */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_PRLI,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		break;
-+	}
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_OK: {
-+		/* Normal T, I+T, target-server rejected the process login */
-+		/* This would be received only in the case where we sent
-+		 * LS_RJT for the PRLI, so
-+		 * do nothing.   (note: as T only we could shutdown the node)
-+		 */
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		break;
-+	}
-+
-+	case EFC_EVT_PLOGI_RCVD: {
-+		/*sm: / save sparams, set send_plogi_acc,
-+		 *post implicit logout
-+		 * Save plogi parameters
-+		 */
-+		efc_node_save_sparms(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+				EFC_NODE_SEND_LS_ACC_PLOGI);
-+
-+		/* Restart node attach with new service parameters,
-+		 * and send ACC
-+		 */
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN_IMPLICIT_LOGO,
-+				    NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_LOGO_RCVD: {
-+		/* I, T, I+T */
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		node_printf(node, "%s received attached=%d\n",
-+			    efc_sm_event_name(evt),
-+					node->attached);
-+		/* sm: / send LOGO acc */
-+		efc->tt.els_send_resp(efc, node, ELS_LOGO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		efc_node_transition(node, __efc_d_wait_logo_acc_cmpl, NULL);
-+		break;
-+	}
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
++	spin_unlock_irqrestore(&pool->lock, flags);
++	return count;
 +}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for a LOGO accept.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * Waits for a LOGO accept completion.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process
-+ * @param arg Per event optional argument
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_wait_logo_acc_cmpl(struct efc_sm_ctx_s *ctx,
-+			   enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_s *node = ctx->app;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		efc_node_hold_frames(node);
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		efc_node_accept_frames(node);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_OK:
-+	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-+		/* sm: / post explicit logout */
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		efc_node_post_event(node,
-+				    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO, NULL);
-+		break;
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Device is ready.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_device_ready(struct efc_sm_ctx_s *ctx,
-+		     enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	if (evt != EFC_EVT_FCP_CMD_RCVD)
-+		node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER:
-+		node->fcp_enabled = true;
-+		if (node->init) {
-+			efc_log_info(efc,
-+				     "[%s] found (initiator) WWPN %s WWNN %s\n",
-+				node->display_name,
-+				node->wwpn, node->wwnn);
-+			if (node->sport->enable_tgt)
-+				efc->tt.scsi_new_node(efc, node);
-+		}
-+		if (node->targ) {
-+			efc_log_info(efc,
-+				     "[%s] found (target) WWPN %s WWNN %s\n",
-+				node->display_name,
-+				node->wwpn, node->wwnn);
-+			if (node->sport->enable_ini)
-+				efc->tt.scsi_new_node(efc, node);
-+		}
-+		break;
-+
-+	case EFC_EVT_EXIT:
-+		node->fcp_enabled = false;
-+		break;
-+
-+	case EFC_EVT_PLOGI_RCVD: {
-+		/* sm: / save sparams, set send_plogi_acc, post implicit
-+		 * logout
-+		 * Save plogi parameters
-+		 */
-+		efc_node_save_sparms(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+				EFC_NODE_SEND_LS_ACC_PLOGI);
-+
-+		/*
-+		 * Restart node attach with new service parameters,
-+		 * and send ACC
-+		 */
-+		efc_node_post_event(node,
-+				    EFC_EVT_SHUTDOWN_IMPLICIT_LOGO, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_PRLI_RCVD: {
-+		/* T, I+T: remote initiator is slow to get started */
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		efc_process_prli_payload(node, cbdata->payload->dma.virt);
-+
-+		/* sm: / send PRLI acc */
-+
-+		efc->tt.els_send_resp(efc, node, ELS_PRLI,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		break;
-+	}
-+
-+	case EFC_EVT_PRLO_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+		/* sm: / send PRLO acc */
-+		efc->tt.els_send_resp(efc, node, ELS_PRLO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		/* need implicit logout? */
-+		break;
-+	}
-+
-+	case EFC_EVT_LOGO_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		node_printf(node, "%s received attached=%d\n",
-+			    efc_sm_event_name(evt), node->attached);
-+		/* sm: / send LOGO acc */
-+		efc->tt.els_send_resp(efc, node, ELS_LOGO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		efc_node_transition(node, __efc_d_wait_logo_acc_cmpl, NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_ADISC_RCVD: {
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+		/* sm: / send ADISC acc */
-+		efc->tt.els_send_resp(efc, node, ELS_ADISC,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		break;
-+	}
-+
-+	case EFC_EVT_ABTS_RCVD:
-+		/* sm: / process ABTS */
-+		// This should not happpen
-+		break;
-+
-+	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-+		break;
-+
-+	case EFC_EVT_NODE_REFOUND:
-+		break;
-+
-+	case EFC_EVT_NODE_MISSING:
-+		if (node->sport->enable_rscn)
-+			efc_node_transition(node, __efc_d_device_gone, NULL);
-+
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_OK:
-+		/* T, or I+T, PRLI accept completed ok */
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-+		/* T, or I+T, PRLI accept failed to complete */
-+		efc_assert(node->els_cmpl_cnt, NULL);
-+		node->els_cmpl_cnt--;
-+		node_printf(node, "Failed to send PRLI LS_ACC\n");
-+		break;
-+
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Node is gone (absent from GID_PT).
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * State entered when a node is detected as being gone (absent from GID_PT).
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process
-+ * @param arg Per event optional argument
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_device_gone(struct efc_sm_ctx_s *ctx,
-+		    enum efc_sm_event_e evt, void *arg)
-+{
-+	int rc = EFC_SCSI_CALL_COMPLETE;
-+	int rc_2 = EFC_SCSI_CALL_COMPLETE;
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_ENTER: {
-+		static char const *labels[] = {"none", "initiator", "target",
-+							"initiator+target"};
-+
-+		efc_log_info(efc, "[%s] missing (%s)    WWPN %s WWNN %s\n",
-+			     node->display_name,
-+				labels[(node->targ << 1) | (node->init)],
-+						node->wwpn, node->wwnn);
-+
-+		switch (efc_node_get_enable(node)) {
-+		case EFC_NODE_ENABLE_T_TO_T:
-+		case EFC_NODE_ENABLE_I_TO_T:
-+		case EFC_NODE_ENABLE_IT_TO_T:
-+			rc = efc->tt.scsi_del_node(efc, node,
-+				EFC_SCSI_TARGET_MISSING);
-+			break;
-+
-+		case EFC_NODE_ENABLE_T_TO_I:
-+		case EFC_NODE_ENABLE_I_TO_I:
-+		case EFC_NODE_ENABLE_IT_TO_I:
-+			rc = efc->tt.scsi_del_node(efc, node,
-+				EFC_SCSI_INITIATOR_MISSING);
-+			break;
-+
-+		case EFC_NODE_ENABLE_T_TO_IT:
-+			rc = efc->tt.scsi_del_node(efc, node,
-+				EFC_SCSI_INITIATOR_MISSING);
-+			break;
-+
-+		case EFC_NODE_ENABLE_I_TO_IT:
-+			rc = efc->tt.scsi_del_node(efc, node,
-+						  EFC_SCSI_TARGET_MISSING);
-+			break;
-+
-+		case EFC_NODE_ENABLE_IT_TO_IT:
-+			rc = efc->tt.scsi_del_node(efc, node,
-+				EFC_SCSI_INITIATOR_MISSING);
-+			rc_2 = efc->tt.scsi_del_node(efc, node,
-+				EFC_SCSI_TARGET_MISSING);
-+			break;
-+
-+		default:
-+			rc = EFC_SCSI_CALL_COMPLETE;
-+			break;
-+		}
-+
-+		if (rc == EFC_SCSI_CALL_COMPLETE &&
-+		    rc_2 == EFC_SCSI_CALL_COMPLETE)
-+			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
-+
-+		break;
-+	}
-+	case EFC_EVT_NODE_REFOUND:
-+		/* two approaches, reauthenticate with PLOGI/PRLI, or ADISC */
-+
-+		/* reauthenticate with PLOGI/PRLI */
-+		/* efc_node_transition(node, __efc_d_discovered, NULL); */
-+
-+		/* reauthenticate with ADISC */
-+		/* sm: / send ADISC */
-+		efc->tt.els_send(efc, node, ELS_ADISC,
-+				EFC_FC_FLOGI_TIMEOUT_SEC,
-+				EFC_FC_ELS_DEFAULT_RETRIES);
-+		efc_node_transition(node, __efc_d_wait_adisc_rsp, NULL);
-+		break;
-+
-+	case EFC_EVT_PLOGI_RCVD: {
-+		/* sm: / save sparams, set send_plogi_acc, post implicit
-+		 * logout
-+		 * Save plogi parameters
-+		 */
-+		efc_node_save_sparms(node, cbdata->payload->dma.virt);
-+		efc_send_ls_acc_after_attach(node,
-+					     cbdata->header->dma.virt,
-+				EFC_NODE_SEND_LS_ACC_PLOGI);
-+
-+		/*
-+		 * Restart node attach with new service parameters, and send
-+		 * ACC
-+		 */
-+		efc_node_post_event(node, EFC_EVT_SHUTDOWN_IMPLICIT_LOGO,
-+				    NULL);
-+		break;
-+	}
-+
-+	case EFC_EVT_FCP_CMD_RCVD: {
-+		/* most likely a stale frame (received prior to link down),
-+		 * if attempt to send LOGO, will probably timeout and eat
-+		 * up 20s; thus, drop FCP_CMND
-+		 */
-+		node_printf(node, "FCP_CMND received, drop\n");
-+		break;
-+	}
-+	case EFC_EVT_LOGO_RCVD: {
-+		/* I, T, I+T */
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		node_printf(node, "%s received attached=%d\n",
-+			    efc_sm_event_name(evt), node->attached);
-+		/* sm: / send LOGO acc */
-+		efc->tt.els_send_resp(efc, node, ELS_LOGO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		efc_node_transition(node, __efc_d_wait_logo_acc_cmpl, NULL);
-+		break;
-+	}
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * @ingroup device_sm
-+ * @brief Device node state machine: Wait for the ADISC response.
-+ *
-+ * <h3 class="desc">Description</h3>
-+ * Waits for the ADISC response from the remote node.
-+ *
-+ * @param ctx Remote node state machine context.
-+ * @param evt Event to process.
-+ * @param arg Per event optional argument.
-+ *
-+ * @return Returns NULL.
-+ */
-+
-+void *
-+__efc_d_wait_adisc_rsp(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg)
-+{
-+	struct efc_node_cb_s *cbdata = arg;
-+	struct efc_node_s *node = ctx->app;
-+	struct efc_lport *efc = node->efc;
-+
-+	efc_node_evt_set(ctx, evt, __func__);
-+
-+	node_sm_trace();
-+
-+	switch (evt) {
-+	case EFC_EVT_SRRS_ELS_REQ_OK:
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_ADISC,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		efc_node_transition(node, __efc_d_device_ready, NULL);
-+		break;
-+
-+	case EFC_EVT_SRRS_ELS_REQ_RJT:
-+		/* received an LS_RJT, in this case, send shutdown
-+		 * (explicit logo) event which will unregister the node,
-+		 * and start over with PLOGI
-+		 */
-+		if (efc_node_check_els_req(ctx, evt, arg, ELS_ADISC,
-+					   __efc_d_common, __func__))
-+			return NULL;
-+
-+		efc_assert(node->els_req_cnt, NULL);
-+		node->els_req_cnt--;
-+		/* sm: / post explicit logout */
-+		efc_node_post_event(node,
-+				    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
-+				     NULL);
-+		break;
-+
-+	case EFC_EVT_LOGO_RCVD: {
-+		/* In this case, we have the equivalent of an LS_RJT for
-+		 * the ADISC, so we need to abort the ADISC, and re-login
-+		 * with PLOGI
-+		 */
-+		/* sm: / request abort, send LOGO acc */
-+		struct fc_frame_header *hdr = cbdata->header->dma.virt;
-+
-+		node_printf(node, "%s received attached=%d\n",
-+			    efc_sm_event_name(evt), node->attached);
-+
-+		efc->tt.els_send_resp(efc, node, ELS_LOGO,
-+					be16_to_cpu(hdr->fh_ox_id));
-+		efc_node_transition(node, __efc_d_wait_logo_acc_cmpl, NULL);
-+		break;
-+	}
-+	default:
-+		__efc_d_common(__func__, ctx, evt, arg);
-+		return NULL;
-+	}
-+
-+	return NULL;
-+}
-diff --git a/drivers/scsi/elx/libefc/efc_device.h b/drivers/scsi/elx/libefc/efc_device.h
+diff --git a/drivers/scsi/elx/efct/efct_utils.h b/drivers/scsi/elx/efct/efct_utils.h
 new file mode 100644
-index 000000000000..434308b87826
+index 000000000000..c9743ed37b9b
 --- /dev/null
-+++ b/drivers/scsi/elx/libefc/efc_device.h
-@@ -0,0 +1,72 @@
++++ b/drivers/scsi/elx/efct/efct_utils.h
+@@ -0,0 +1,113 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 + */
 +
-+/*
-+ * Node state machine functions for remote device node sm
++#ifndef __EFCT_UTILS_H__
++#define __EFCT_UTILS_H__
++
++/* Sparse vector structure. */
++struct sparse_vector_s {
++	void *os;
++	u32 max_idx;		/**< maximum index value */
++	void **array;		/**< pointer to 3D array */
++};
++
++#define EFCT_LOG_ENABLE_SCSI_TRACE(efct)                \
++		(((efct) != NULL) ? (((efct)->logmask & (1U << 2)) != 0) : 0)
++#define EFCT_LOG_ENABLE_ELS_TRACE(efct)		\
++		(((efct) != NULL) ? (((efct)->logmask & (1U << 1)) != 0) : 0)
++#define EFCT_LOG_ENABLE_IO_ERRORS(efct)		\
++		(((efct) != NULL) ? (((efct)->logmask & (1U << 6)) != 0) : 0)
++#define EFCT_LOG_ENABLE_LIO_IO_TRACE(efct)	\
++		(((efct) != NULL) ? (((efct)->logmask & (1U << 7)) != 0) : 0)
++#define EFCT_LOG_ENABLE_LIO_TRACE(efct)		\
++		(((efct) != NULL) ? (((efct)->logmask & (1U << 8)) != 0) : 0)
++
++#define SPV_ROWLEN	256
++#define SPV_DIM		3
++
++struct efct_pool_s {
++	void *os;
++	struct efct_array_s *a;
++	struct list_head freelist;
++	/* Protects freelist */
++	spinlock_t lock;
++};
++
++extern void
++efct_array_set_slablen(u32 len);
++extern struct efct_array_s *
++efct_array_alloc(void *os, u32 size, u32 count);
++extern void
++efct_array_free(struct efct_array_s *array);
++extern void *
++efct_array_get(struct efct_array_s *array, u32 idx);
++extern u32
++efct_array_get_count(struct efct_array_s *array);
++extern u32
++efct_array_get_size(struct efct_array_s *array);
++
++extern struct efct_varray_s *
++efct_varray_alloc(void *os, u32 entry_count);
++extern void
++efct_varray_free(struct efct_varray_s *ai);
++extern int
++efct_varray_add(struct efct_varray_s *ai, void *entry);
++extern void
++efct_varray_iter_reset(struct efct_varray_s *ai);
++extern void *
++efct_varray_iter_next(struct efct_varray_s *ai);
++extern void *
++_efct_varray_iter_next(struct efct_varray_s *ai);
++extern void
++efct_varray_unlock(struct efct_varray_s *ai);
++extern u32
++efct_varray_get_count(struct efct_varray_s *ai);
++
++/**
++ * @brief Sparse Vector API
++ *
++ * This is a trimmed down sparse vector implementation tuned to the problem of
++ * 24-bit FC_IDs. In this case, the 24-bit index value is broken down in three
++ * 8-bit values. These values are used to index up to three 256 element arrays.
++ * Arrays are allocated, only when needed. @n @n
++ * The lookup can complete in constant time (3 indexed array references). @n @n
++ * A typical use case would be that the fabric/directory FC_IDs would cause two
++ * rows to be allocated, and the fabric assigned remote nodes would cause two
++ * rows to be allocated, with the root row always allocated. This gives five
++ * rows of 256 x sizeof(void*), resulting in 10k.
++ */
++/*!
++ * @defgroup spv Sparse Vector
 + */
 +
-+#if !defined(__EFCT_DEVICE_H__)
-+#define __EFCT_DEVICE_H__
-+extern void
-+efc_node_init_device(struct efc_node_s *node, bool send_plogi);
-+extern void
-+efc_process_prli_payload(struct efc_node_s *node,
-+			 void *prli);
-+extern void
-+efc_d_send_prli_rsp(struct efc_node_s *node, uint16_t ox_id);
-+extern void
-+efc_send_ls_acc_after_attach(struct efc_node_s *node,
-+			     struct fc_frame_header *hdr,
-+			     enum efc_node_send_ls_acc_e ls);
-+extern void *
-+__efc_d_wait_loop(struct efc_sm_ctx_s *ctx,
-+		  enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_plogi_acc_cmpl(struct efc_sm_ctx_s *ctx,
-+			    enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_init(struct efc_sm_ctx_s *ctx, enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_plogi_rsp(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_plogi_rsp_recvd_prli(struct efc_sm_ctx_s *ctx,
-+				  enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_domain_attach(struct efc_sm_ctx_s *ctx,
-+			   enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_topology_notify(struct efc_sm_ctx_s *ctx,
-+			     enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_node_attach(struct efc_sm_ctx_s *ctx,
-+			 enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_attach_evt_shutdown(struct efc_sm_ctx_s *ctx,
-+				 enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_initiate_shutdown(struct efc_sm_ctx_s *ctx,
-+			  enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_port_logged_in(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_logo_acc_cmpl(struct efc_sm_ctx_s *ctx,
-+			   enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_device_ready(struct efc_sm_ctx_s *ctx,
-+		     enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_device_gone(struct efc_sm_ctx_s *ctx,
-+		    enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_adisc_rsp(struct efc_sm_ctx_s *ctx,
-+		       enum efc_sm_event_e evt, void *arg);
-+extern void *
-+__efc_d_wait_logo_rsp(struct efc_sm_ctx_s *ctx,
-+		      enum efc_sm_event_e evt, void *arg);
++void efct_spv_del(struct sparse_vector_s *spv);
++struct sparse_vector_s *efct_spv_new(void *os);
++void efct_spv_set(struct sparse_vector_s *sv, u32 idx, void *value);
++void *efct_spv_get(struct sparse_vector_s *sv, u32 idx);
 +
-+#endif /* __EFCT_DEVICE_H__ */
++/**
++ * @POOL
++ *
++ */
++extern struct efct_pool_s *
++efct_pool_alloc(void *os, u32 size, u32 count);
++extern void
++efct_pool_reset(struct efct_pool_s *pool);
++extern void
++efct_pool_free(struct efct_pool_s *pool);
++extern void *
++efct_pool_get(struct efct_pool_s *pool);
++extern void
++efct_pool_put(struct efct_pool_s *pool, void *arg);
++extern void
++efct_pool_put_head(struct efct_pool_s *pool, void *arg);
++extern u32
++efct_pool_get_count(struct efct_pool_s *pool);
++extern void *
++efct_pool_get_instance(struct efct_pool_s *pool, u32 instance);
++extern u32
++efct_pool_get_freelist_count(struct efct_pool_s *pool);
++#endif /* __EFCT_UTILS_H__ */
 -- 
 2.13.7
 
