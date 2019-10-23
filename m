@@ -2,108 +2,89 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 904CCCA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:19:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBBDCA9EB6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:34:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70A8B214B2
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:19:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D72721920
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:34:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571834086;
+	bh=3xClPV0s8v1ghovR/t6BdoidIe58oeMF5znszPjzKNA=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=JrPXyEpUbeqXGFZ4YNuFNH85VVCkqsr7zQyaghGQsoxl/ZmbvqaVTfm+Cl4LR+c/v
+	 FGop1XDJdzmkbSsSvcxtuR7RLk9O5uRV6YHw/3/pgcJpMgzwVyPD77pZ5TAJMtQoa8
+	 1SwGqGg1taFm0y2++sfc0lm79BXXlnHGrXwx2LWI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405208AbfJWMTa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 08:19:30 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55594 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726636AbfJWMT3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Oct 2019 08:19:29 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 615F3AD1A;
-        Wed, 23 Oct 2019 12:19:27 +0000 (UTC)
-Date:   Wed, 23 Oct 2019 14:19:24 +0200
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc:     "corbet@lwn.net" <corbet@lwn.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "keescook@chromium.org" <keescook@chromium.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>,
-        "pombredanne@nexb.com" <pombredanne@nexb.com>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
-        "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "tim@cyberelk.net" <tim@cyberelk.net>
-Subject: Re: [PATCH resend 3/6] cdrom: wait for tray to close
-Message-ID: <20191023121924.GD938@kitsune.suse.cz>
-References: <cover.1516985620.git.msuchanek@suse.de>
- <03915a2e64f50ec04ea6d8e6f80e36ecf16e4f0f.1516985620.git.msuchanek@suse.de>
- <1517245546.2687.17.camel@wdc.com>
+        id S2389916AbfJWMeq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 08:34:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35398 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389633AbfJWMeq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Oct 2019 08:34:46 -0400
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E84721906;
+        Wed, 23 Oct 2019 12:34:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1571834085;
+        bh=3xClPV0s8v1ghovR/t6BdoidIe58oeMF5znszPjzKNA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=K+FVun+77VqMLQ8nGcATn/0yVi1n3inqEhcZQ4rc1jdyiC0PppVQiJ4PjjMWOeePi
+         R5cWGYkK6sklP/GF/ctr02RjRgDoGLhJ2YMCyRcPSWJegkegNIcZ4HLkDeMlK5mCAU
+         XqBCMNPVp04XqBvWpTT/Lo3vtifZpJPKPEmbtCbY=
+Received: by mail-qt1-f176.google.com with SMTP id t20so31960766qtr.10;
+        Wed, 23 Oct 2019 05:34:45 -0700 (PDT)
+X-Gm-Message-State: APjAAAWBTzWdKLusNjbjMhpPLVm4yhnVOfberGeOlBIlfY57bTJ75k5f
+        BjngGOGhtL1z0hKV6F2b96FgvGtv87cotZMUas4=
+X-Google-Smtp-Source: APXvYqyCz6o6W8wU2Uf+XdH/NAI350kbDLwzoeIzLourookteh+cPAzdgEuPCvwPhO3ppnfaxZ6DwridLx/5ufit4D0=
+X-Received: by 2002:ac8:714c:: with SMTP id h12mr8873761qtp.231.1571834084324;
+ Wed, 23 Oct 2019 05:34:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1517245546.2687.17.camel@wdc.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20191022140154.436-1-skalluru@marvell.com>
+In-Reply-To: <20191022140154.436-1-skalluru@marvell.com>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Wed, 23 Oct 2019 08:34:32 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA7ka1ar1nX4TFhx0yJvm6i0+gPaZs8s5d667x4ksPjVFQ@mail.gmail.com>
+Message-ID: <CA+5PVA7ka1ar1nX4TFhx0yJvm6i0+gPaZs8s5d667x4ksPjVFQ@mail.gmail.com>
+Subject: Re: [PATCH linux-firmware] bnx2x: Add FW 7.13.15.0.
+To:     Sudarsana Reddy Kalluru <skalluru@marvell.com>
+Cc:     Linux Firmware <linux-firmware@kernel.org>,
+        netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org,
+        arahman@marvell.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 05:05:47PM +0000, Bart Van Assche wrote:
-> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
-> > +static int cdrom_tray_close(struct cdrom_device_info *cdi)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = cdi->ops->tray_move(cdi, 0);
-> > +	if (ret || !cdi->ops->drive_status)
-> > +		return ret;
-> > +
-> > +	return poll_event_interruptible(CDS_TRAY_OPEN !=
-> > +			cdi->ops->drive_status(cdi, CDSL_CURRENT), 500);
-> > +}
-> > +
-> >  static
-> >  int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
-> >  {
-> > @@ -1048,7 +1062,9 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
-> >  			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
-> >  			    cdi->options & CDO_AUTO_CLOSE) {
-> >  				cd_dbg(CD_OPEN, "trying to close the tray\n");
-> > -				ret = cdo->tray_move(cdi, 0);
-> > +				ret = cdrom_tray_close(cdi);
-> > +				if (ret == -ERESTARTSYS)
-> > +					return ret;
-> >  				if (ret) {
-> >  					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
-> >  					/* Ignore the error from the low
-> > @@ -2312,7 +2328,8 @@ static int cdrom_ioctl_closetray(struct cdrom_device_info *cdi)
-> >  
-> >  	if (!CDROM_CAN(CDC_CLOSE_TRAY))
-> >  		return -ENOSYS;
-> > -	return cdi->ops->tray_move(cdi, 0);
-> > +
-> > +	return cdrom_tray_close(cdi);
-> >  }
-> 
-> So this patch changes code that does not wait into code that potentially waits
-> forever? Sorry but I don't think that's ideal. Please make sure that after a
-> certain time (a few seconds?) the loop finishes.
+On Tue, Oct 22, 2019 at 10:02 AM Sudarsana Reddy Kalluru
+<skalluru@marvell.com> wrote:
+>
+> This patch adds new FW for bnx2x, which addresses the following issues:
+> - TCP packet with padding can open TPA aggregation in GRO mode.
+> - Tx Silent Drops could cause HW error when statistics is not enabled for client.
+> - Transmission of tunneled packets over tx-only clients (with cos>0 in this case) followed by load/unload with DCB update (for instance), resulted in a Tx path halt.
+> - FORWARD_SETUP ramrod yielded a FW assert (x_eth_fp_hsi_ver_invalid).
+>
+> The FW also adds support for direct update of RSS indirection table entry.
+>
+> Signed-off-by: Sudarsana Reddy Kalluru <skalluru@marvell.com>
+> Signed-off-by: Ameen Rahman <arahman@marvell.com>
+> ---
+>  WHENCE                       |   3 +++
+>  bnx2x/bnx2x-e1-7.13.15.0.fw  | Bin 0 -> 170168 bytes
+>  bnx2x/bnx2x-e1h-7.13.15.0.fw | Bin 0 -> 178608 bytes
+>  bnx2x/bnx2x-e2-7.13.15.0.fw  | Bin 0 -> 323360 bytes
+>  4 files changed, 3 insertions(+)
+>  create mode 100644 bnx2x/bnx2x-e1-7.13.15.0.fw
+>  create mode 100644 bnx2x/bnx2x-e1h-7.13.15.0.fw
+>  create mode 100644 bnx2x/bnx2x-e2-7.13.15.0.fw
 
-Unfortunately, a few seconds is NOT sufficinet. I have no idea what is
-the upper bound on the time it can take to close the tray taking into
-account all hardware implementations like media changers. For the usual
-desktop units it takes tens of seconds so you would need to wait minutes
-to give some headroom - basically near-eternity.
+Applied and pushed out.
 
-Thanks
-
-Michal
+josh
