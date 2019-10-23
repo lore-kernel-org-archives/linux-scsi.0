@@ -8,66 +8,62 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8C2CA9EB9
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C37A0CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F09A21906
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78B6C20679
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="u08Slv0U"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UuP6H4W8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405936AbfJWV4R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 17:56:17 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:54910 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392064AbfJWV4R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:17 -0400
-Received: by mail-wm1-f68.google.com with SMTP id g7so506564wmk.4
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:12 -0700 (PDT)
+        id S2405980AbfJWV4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 17:56:20 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:33480 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392558AbfJWV4T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:19 -0400
+Received: by mail-wm1-f66.google.com with SMTP id 6so612480wmf.0
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=yPNrGMl3IpxzXkIp+gESFVzsnjOsy+9HkKipQ0SYA9I=;
-        b=u08Slv0UL7P489iDJ7sj8LpSTo/PiMNM5SQG8C+TWFl3kRAEV/nK6D9h5RV3oAgzNY
-         0/LEpOqG5RMzMOG0V3KIFL1EwWmYmfdaKORz/WW72atcq7RYgu39d+DCT9VOFQEmvXDy
-         uP3MKoPFcu4B6hZ8xg8bGWsln2tCRUsYZZS4hiohhOX0Uxtkix7RQnmDmYXRX6YPLp1x
-         uRs0tg1NLUOtg4bacDVzkMgDxvOwjzxpT8v4a2rtMGBRYji/sGTtXhedj3EtuQbqo260
-         SwFZI18sy/uJnY3JLVx8Zlj5TOx0PJHn1k/jL0v6FrjbhvgwRFPpdMX+P6nNBG6hgew0
-         7RjA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=CWxNQvTOtANvBCRfhU/Nkr/8t2wzg795yMBIMobEZeM=;
+        b=UuP6H4W84Kl9zZ7uK8vIfZ2KijDuYb9YOj6LFcS1tqMSP731La1c4s7Fw059Eh3Z/G
+         MR0kmL+9mw27KPan6lZ2t8Ulh4UH1MU4ugKUA5z30ldsocLq41FB+7xZ1/B2RFZx1AyM
+         c6KeWS+g2qJhUIOwkGBcZiWRvSIpItUumaEv1x+qqivBoxiqwiZ3nz7PD6rI7k6gpE3B
+         jNLuCGNcWZkOsyMQK6/+2klmRTyIolOA3GdMRDhWHqswZYT7dCPKYkb0VmupUTtKO16N
+         oy3WCL+VoVZX4eKSlYhm1jtZn5lcV/2Ia4ws8h3jVXeiP39vimwnEsaBcVNTFiVm5IT4
+         LjxQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=yPNrGMl3IpxzXkIp+gESFVzsnjOsy+9HkKipQ0SYA9I=;
-        b=e3Bafb9z6GmFwkMjwE+rCI4cMzwL1+zYkga458UicmLtgmgsrSxPzVFtXHQC5NuBcH
-         dsEhh2G7QYnZJcAKIWTRX+H07VWE96jHWUW6JxLHCPzLQ5S8F+6eM5wpbS1+OaGX1Mib
-         +hjyLo7y4EdS+YMHHtoMUn7dqwPeLMCP8vkj6lUWfQn768W47VXxT/wJZqspNCNoQuEC
-         pHNIzXEwUchhQSlJyuKV8wB33mWnyl553B1WTbVsvFrpUQbadkiumj7/GdTrFz2WApPa
-         2J9TrAoo/DdblrFwxFJqX8b88Zfhbd2hxOQHoP3KRyZ3fQ2hJO43QIBUdiriGGB1a3WL
-         DNrw==
-X-Gm-Message-State: APjAAAVGPe8zDiWQMUsRBR0s7dbC52KdF4tLkn7tx+/INMblq00YCuR6
-        oU3pi7k1V0Xr6yGiynhKDz70shEe
-X-Google-Smtp-Source: APXvYqy6GJiSPPQf1aTI6qHSkTb/IdUpT3KWGhVswuu+sS0PTB2BEce60aMzxb4BqtfJTXoZLFRfvA==
-X-Received: by 2002:a1c:988b:: with SMTP id a133mr1772959wme.22.1571867770335;
-        Wed, 23 Oct 2019 14:56:10 -0700 (PDT)
+         :references;
+        bh=CWxNQvTOtANvBCRfhU/Nkr/8t2wzg795yMBIMobEZeM=;
+        b=bV6TmnZNJqXg1E0Jgwb1Eod+mWmZECn17CMdz1dLG+SE6eEdj5JNboU2FD99P2NPsx
+         8/cNZWYfFvzpnnThs4yb9AYCnjC9S8f4MLrb2sJvUxMZw8I+PmdNank4pZL/DCRnd0DL
+         jbQE7yAWbrMeXRdBbODnFZpCe8RH6bQEK/BPTWxhSa/ODiRikjiP3q8fel3yw6lB/rT4
+         xR5zaZhhmbuKeUJ0MuPJa4CCue8Fdh+iwdwUzkR9Pz/1s4lMuvkAc+6lFC3J1oRwdbVF
+         txZi9FjxtcdxeMVUUsXjwCrDxN4w/otYPk3N3RLrwfS9myc9QjoWOAAD53Sm3lFdI3IS
+         cA/Q==
+X-Gm-Message-State: APjAAAXHkndbjhTWh8T4Dn69osRmcyGHLE+eKKkXqGIh1zr554oOLVOv
+        KcsPnSG5108v9N/ydlFg1NZd6FI4
+X-Google-Smtp-Source: APXvYqzwzeyLgifbO3k1wpAeDGg4h9rVYgzJNxoJgMt2wb/V4myQyg1Srvj4trNL/arUc6mizuRrNA==
+X-Received: by 2002:a1c:f602:: with SMTP id w2mr1736298wmc.83.1571867772117;
+        Wed, 23 Oct 2019 14:56:12 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.08
+        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.10
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 23 Oct 2019 14:56:09 -0700 (PDT)
+        Wed, 23 Oct 2019 14:56:11 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH 02/32] elx: libefc_sli: SLI Descriptors and Queue entries
-Date:   Wed, 23 Oct 2019 14:55:27 -0700
-Message-Id: <20191023215557.12581-3-jsmart2021@gmail.com>
+Subject: [PATCH 03/32] elx: libefc_sli: Data structures and defines for mbox commands
+Date:   Wed, 23 Oct 2019 14:55:28 -0700
+Message-Id: <20191023215557.12581-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191023215557.12581-1-jsmart2021@gmail.com>
 References: <20191023215557.12581-1-jsmart2021@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -75,2082 +71,2018 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 This patch continues the libefc_sli SLI-4 library population.
 
-This patch add SLI-4 Data structures and defines for:
-- Buffer Descriptors (BDEs)
-- Scatter/Gather List elements (SGEs)
-- Queues and their Entry Descriptions for:
-   Event Queues (EQs), Completion Queues (CQs),
-   Receive Queues (RQs), and the Mailbox Queue (MQ).
+This patch adds definitions for SLI-4 mailbox commands
+and responses.
 
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/elx/include/efc_common.h |   26 +
- drivers/scsi/elx/libefc_sli/sli4.h    | 2015 +++++++++++++++++++++++++++++++++
- 2 files changed, 2041 insertions(+)
- create mode 100644 drivers/scsi/elx/include/efc_common.h
+ drivers/scsi/elx/libefc_sli/sli4.h | 1996 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 1996 insertions(+)
 
-diff --git a/drivers/scsi/elx/include/efc_common.h b/drivers/scsi/elx/include/efc_common.h
-new file mode 100644
-index 000000000000..dbabc4f6ee5e
---- /dev/null
-+++ b/drivers/scsi/elx/include/efc_common.h
-@@ -0,0 +1,26 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
-+ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-+ */
-+
-+#if !defined(__EFC_COMMON_H__)
-+#define __EFC_COMMON_H__
-+
-+#define EFC_SUCCESS 0
-+#define EFC_FAIL 1
-+
-+struct efc_dma_s {
-+	void		*virt;	/* virtual address of the memory
-+				 * used by the CPU
-+				 */
-+	void            *alloc;
-+	dma_addr_t	phys;	/* physical or bus address of the memory used
-+				 * by the hardware
-+				 */
-+	size_t		size;	/* size in bytes of the memory */
-+	size_t          len;
-+	struct pci_dev	*pdev;
-+};
-+
-+#endif /* __EFC_COMMON_H__ */
 diff --git a/drivers/scsi/elx/libefc_sli/sli4.h b/drivers/scsi/elx/libefc_sli/sli4.h
-index 1efbd874301a..ebc6a67e9c8c 100644
+index ebc6a67e9c8c..b36d67abf219 100644
 --- a/drivers/scsi/elx/libefc_sli/sli4.h
 +++ b/drivers/scsi/elx/libefc_sli/sli4.h
-@@ -12,6 +12,8 @@
- #ifndef _SLI4_H
- #define _SLI4_H
+@@ -2264,4 +2264,2000 @@ struct sli4_fc_xri_aborted_cqe_s {
+ #define SLI4_ELS_REQUEST64_CMD_NON_FABRIC	0x0c
+ #define SLI4_ELS_REQUEST64_CMD_FABRIC		0x0d
  
-+#include "../include/efc_common.h"
++#define SLI_PAGE_SIZE		(1 << 12)	/* 4096 */
++#define SLI_SUB_PAGE_MASK	(SLI_PAGE_SIZE - 1)
++#define SLI_ROUND_PAGE(b)	(((b) + SLI_SUB_PAGE_MASK) & ~SLI_SUB_PAGE_MASK)
 +
- /*************************************************************************
-  * Common SLI-4 register offsets and field definitions
-  */
-@@ -249,4 +251,2017 @@ struct sli4_reg_s {
- 	u32	off;
- };
- 
-+struct sli4_dmaaddr_s {
-+	__le32 low;
-+	__le32 high;
++#define SLI4_BMBX_TIMEOUT_MSEC		30000
++#define SLI4_FW_READY_TIMEOUT_MSEC	30000
++
++#define SLI4_BMBX_DELAY_US 1000 /* 1 ms */
++#define SLI4_INIT_PORT_DELAY_US 10000 /* 10 ms */
++
++static inline u32
++sli_page_count(size_t bytes, u32 page_size)
++{
++	u32	mask = page_size - 1;
++	u32	shift = 0;
++
++	switch (page_size) {
++	case 4096:
++		shift = 12;
++		break;
++	case 8192:
++		shift = 13;
++		break;
++	case 16384:
++		shift = 14;
++		break;
++	case 32768:
++		shift = 15;
++		break;
++	case 65536:
++		shift = 16;
++		break;
++	default:
++		return 0;
++	}
++
++	return (bytes + mask) >> shift;
++}
++
++/*************************************************************************
++ * SLI-4 mailbox command formats and definitions
++ */
++
++struct sli4_mbox_command_header_s {
++	u8	resvd0;
++	u8	command;
++	__le16	status;	/* Port writes to indicate success/fail */
 +};
 +
-+/* a 3-word BDE with address 1st 2 words, length last word */
-+struct sli4_bufptr_s {
-+	struct sli4_dmaaddr_s addr;
-+	__le32 length;
-+};
++enum {
++	MBX_CMD_CONFIG_LINK	= 0x07,
++	MBX_CMD_DUMP		= 0x17,
++	MBX_CMD_DOWN_LINK	= 0x06,
++	MBX_CMD_INIT_LINK	= 0x05,
++	MBX_CMD_INIT_VFI	= 0xa3,
++	MBX_CMD_INIT_VPI	= 0xa4,
++	MBX_CMD_POST_XRI	= 0xa7,
++	MBX_CMD_RELEASE_XRI	= 0xac,
++	MBX_CMD_READ_CONFIG	= 0x0b,
++	MBX_CMD_READ_STATUS	= 0x0e,
++	MBX_CMD_READ_NVPARMS	= 0x02,
++	MBX_CMD_READ_REV	= 0x11,
++	MBX_CMD_READ_LNK_STAT	= 0x12,
++	MBX_CMD_READ_SPARM64	= 0x8d,
++	MBX_CMD_READ_TOPOLOGY	= 0x95,
++	MBX_CMD_REG_FCFI	= 0xa0,
++	MBX_CMD_REG_FCFI_MRQ	= 0xaf,
++	MBX_CMD_REG_RPI		= 0x93,
++	MBX_CMD_REG_RX_RQ	= 0xa6,
++	MBX_CMD_REG_VFI		= 0x9f,
++	MBX_CMD_REG_VPI		= 0x96,
++	MBX_CMD_RQST_FEATURES	= 0x9d,
++	MBX_CMD_SLI_CONFIG	= 0x9b,
++	MBX_CMD_UNREG_FCFI	= 0xa2,
++	MBX_CMD_UNREG_RPI	= 0x14,
++	MBX_CMD_UNREG_VFI	= 0xa1,
++	MBX_CMD_UNREG_VPI	= 0x97,
++	MBX_CMD_WRITE_NVPARMS	= 0x03,
++	MBX_CMD_CFG_AUTO_XFER_RDY = 0xAD,
 +
-+/* a 3-word BDE with length as first word, address last 2 words */
-+struct sli4_bufptr_len1st_s {
-+	__le32 length0;		/* note byte offset suffix as a sanity check */
-+	struct sli4_dmaaddr_s addr;
++	MBX_STATUS_SUCCESS	= 0x0000,
++	MBX_STATUS_FAILURE	= 0x0001,
++	MBX_STATUS_RPI_NOT_REG	= 0x1400,
 +};
 +
 +/**
-+ * @brief Buffer Descriptor Entry (BDE)
++ * @brief CONFIG_LINK
 + */
 +enum {
-+	SLI4_BDE_MASK_BUFFER_LEN	= 0x00ffffff,
-+	SLI4_BDE_MASK_BDE_TYPE		= 0xff000000,
++	SLI4_CFG_LINK_BBSCN = 0xf00,
++	SLI4_CFG_LINK_CSCN  = 0x1000,
 +};
 +
-+struct sli4_bde_s {
-+	__le32		bde_type_buflen;
-+	union {
-+		struct sli4_dmaaddr_s data;
-+		struct {
-+			__le32	offset;
-+			__le32	rsvd2;
-+		} imm;
-+		struct sli4_dmaaddr_s blp;
-+	} u;
-+};
-+
-+/* Buffer Descriptors */
-+enum {
-+	BDE_TYPE_SHIFT		= 24,	/* Generic 64-bit data */
-+	BDE_TYPE_BDE_64		= 0x00,	/* Generic 64-bit data */
-+	BDE_TYPE_BDE_IMM	= 0x01,	/* Immediate data */
-+	BDE_TYPE_BLP		= 0x40,	/* Buffer List Pointer */
-+};
-+
-+/**
-+ * @brief Scatter-Gather Entry (SGE)
-+ */
-+
-+#define SLI4_SGE_MAX_RESERVED			3
-+
-+enum {
-+	/* DW2 */
-+	SLI4_SGE_DATA_OFFSET_MASK	= 0x07FFFFFF,	/* DW2 */
-+	/*DW2W1*/
-+	SLI4_SGE_TYPE_SHIFT		= 27,
-+	SLI4_SGE_TYPE_MASK		= 0xf << SLI4_SGE_TYPE_SHIFT,
-+	/*SGE Types*/
-+	SLI4_SGE_TYPE_DATA		= 0x00,
-+	SLI4_SGE_TYPE_DIF		= 0x04,	/* Data Integrity Field */
-+	SLI4_SGE_TYPE_LSP		= 0x05,	/* List Segment Pointer */
-+	SLI4_SGE_TYPE_PEDIF		= 0x06,	/* Post Encryption Engine DIF */
-+	SLI4_SGE_TYPE_PESEED		= 0x07,	/* Post Encryption DIF Seed */
-+	SLI4_SGE_TYPE_DISEED		= 0x08,	/* DIF Seed */
-+	SLI4_SGE_TYPE_ENC		= 0x09,	/* Encryption */
-+	SLI4_SGE_TYPE_ATM		= 0x0a,	/* DIF Application Tag Mask */
-+	SLI4_SGE_TYPE_SKIP		= 0x0c,	/* SKIP */
-+
-+	SLI4_SGE_LAST			= (1 << 31),
-+};
-+
-+struct sli4_sge_s {
-+	__le32		buffer_address_high;
-+	__le32		buffer_address_low;
-+	__le32		dw2_flags;
-+	__le32		buffer_length;
-+};
-+
-+/**
-+ * @brief T10 DIF Scatter-Gather Entry (SGE)
-+ */
-+struct sli4_dif_sge_s {
-+	__le32		buffer_address_high;
-+	__le32		buffer_address_low;
-+	__le32		dw2_flags;
++struct sli4_cmd_config_link_s {
++	struct sli4_mbox_command_header_s	hdr;
++	u8		maxbbc;		/* Max buffer-to-buffer credit */
++	u8		rsvd5;
++	u8		rsvd6;
++	u8		rsvd7;
++	u8		alpa;
++	__le16		n_port_id;
++	u8		rsvd11;
 +	__le32		rsvd12;
-+};
-+
-+/**
-+ * @brief Data Integrity Seed (DISEED) SGE
-+ */
-+enum {
-+	/* DW2W1 */
-+	DISEED_SGE_HS			= (1 << 2),
-+	DISEED_SGE_WS			= (1 << 3),
-+	DISEED_SGE_IC			= (1 << 4),
-+	DISEED_SGE_ICS			= (1 << 5),
-+	DISEED_SGE_ATRT			= (1 << 6),
-+	DISEED_SGE_AT			= (1 << 7),
-+	DISEED_SGE_FAT			= (1 << 8),
-+	DISEED_SGE_NA			= (1 << 9),
-+	DISEED_SGE_HI			= (1 << 10),
-+
-+	/* DW3W1 */
-+	DISEED_SGE_BS_MASK		= 0x0007,
-+	DISEED_SGE_AI			= (1 << 3),
-+	DISEED_SGE_ME			= (1 << 4),
-+	DISEED_SGE_RE			= (1 << 5),
-+	DISEED_SGE_CE			= (1 << 6),
-+	DISEED_SGE_NR			= (1 << 7),
-+
-+	DISEED_SGE_OP_RX_SHIFT		= 8,
-+	DISEED_SGE_OP_RX_MASK		= (0xf << DISEED_SGE_OP_RX_SHIFT),
-+	DISEED_SGE_OP_TX_SHIFT		= 12,
-+	DISEED_SGE_OP_TX_MASK		= (0xf << DISEED_SGE_OP_TX_SHIFT),
-+
-+	/* Opcode values */
-+	DISEED_SGE_OP_IN_NODIF_OUT_CRC	= 0x00,
-+	DISEED_SGE_OP_IN_CRC_OUT_NODIF	= 0x01,
-+	DISEED_SGE_OP_IN_NODIF_OUT_CSUM	= 0x02,
-+	DISEED_SGE_OP_IN_CSUM_OUT_NODIF	= 0x03,
-+	DISEED_SGE_OP_IN_CRC_OUT_CRC	= 0x04,
-+	DISEED_SGE_OP_IN_CSUM_OUT_CSUM	= 0x05,
-+	DISEED_SGE_OP_IN_CRC_OUT_CSUM	= 0x06,
-+	DISEED_SGE_OP_IN_CSUM_OUT_CRC	= 0x07,
-+	DISEED_SGE_OP_IN_RAW_OUT_RAW	= 0x08,
-+
-+};
-+
-+#define DISEED_SGE_OP_RX_VALUE(stype)	\
-+	(DISEED_SGE_OP_##stype << DISEED_SGE_OP_RX_SHIFT)
-+#define DISEED_SGE_OP_TX_VALUE(stype)	\
-+	(DISEED_SGE_OP_##stype << DISEED_SGE_OP_TX_SHIFT)
-+
-+struct sli4_diseed_sge_s {
-+	__le32		ref_tag_cmp;
-+	__le32		ref_tag_repl;
-+	__le16		app_tag_repl;
-+	__le16		dw2w1_flags;
-+	__le16		app_tag_cmp;
-+	__le16		dw3w1_flags;
-+};
-+
-+/**
-+ * @brief List Segment Pointer Scatter-Gather Entry (SGE)
-+ */
-+enum {
-+	SLI4_LSP_SGE_SEGLEN	= 0x00ffffff,		/* DW3 */
-+};
-+
-+struct sli4_lsp_sge_s {
-+	__le32		buffer_address_high;
-+	__le32		buffer_address_low;
-+	__le32		dw2_flags;
-+	__le32		dw3_seglen;
-+};
-+
-+/**
-+ * @brief Event Queue Entry
-+ */
-+enum {
-+	SLI4_EQE_VALID	= 1,
-+	SLI4_EQE_MJCODE	= 0xe,
-+	SLI4_EQE_MNCODE	= 0xfff0,
-+};
-+
-+struct sli4_eqe_s {
-+	__le16		dw0w0_flags;
-+	__le16		resource_id;
-+};
-+
-+#define SLI4_MAJOR_CODE_STANDARD	0
-+#define SLI4_MAJOR_CODE_SENTINEL	1
-+
-+/**
-+ * @brief Mailbox Completion Queue Entry
-+ *
-+ * A CQE generated on the completion of a MQE from a MQ.
-+ */
-+enum {
-+	SLI4_MCQE_CONSUMED	= (1 << 27),
-+	SLI4_MCQE_COMPLETED	= (1 << 28),
-+	SLI4_MCQE_AE		= (1 << 30),
-+	SLI4_MCQE_VALID		= (1 << 31),
-+};
-+
-+struct sli4_mcqe_s {
-+	__le16		completion_status;
-+	__le16		extended_status;
-+	__le32		mqe_tag_low;
-+	__le32		mqe_tag_high;
-+	__le32		dw3_flags;
-+};
-+
-+/**
-+ * @brief Asynchronous Completion Queue Entry
-+ *
-+ * A CQE generated asynchronously in response
-+ * to the link or other internal events.
-+ */
-+enum {
-+	SLI4_ACQE_AE	= (1 << 6), /** async event - this is an ACQE */
-+	SLI4_ACQE_VAL	= (1 << 7), /** valid - contents of CQE are valid */
-+};
-+
-+struct sli4_acqe_s {
-+	__le32		event_data[3];
-+	u8		rsvd12;
-+	u8		event_code;
-+	u8		event_type;	/* values are protocol specific */
-+	u8		ae_val;
-+};
-+
-+#define SLI4_ACQE_EVENT_CODE_LINK_STATE		0x01
-+#define SLI4_ACQE_EVENT_CODE_FIP		0x02
-+#define SLI4_ACQE_EVENT_CODE_DCBX		0x03
-+#define SLI4_ACQE_EVENT_CODE_ISCSI		0x04
-+#define SLI4_ACQE_EVENT_CODE_GRP_5		0x05
-+#define SLI4_ACQE_EVENT_CODE_FC_LINK_EVENT	0x10
-+#define SLI4_ACQE_EVENT_CODE_SLI_PORT_EVENT	0x11
-+#define SLI4_ACQE_EVENT_CODE_VF_EVENT		0x12
-+#define SLI4_ACQE_EVENT_CODE_MR_EVENT		0x13
-+
-+enum sli4_qtype_e {
-+	SLI_QTYPE_EQ,
-+	SLI_QTYPE_CQ,
-+	SLI_QTYPE_MQ,
-+	SLI_QTYPE_WQ,
-+	SLI_QTYPE_RQ,
-+	SLI_QTYPE_MAX,			/* must be last */
-+};
-+
-+#define SLI_USER_MQ_COUNT	1	/** User specified max mail queues */
-+#define SLI_MAX_CQ_SET_COUNT	16
-+#define SLI_MAX_RQ_SET_COUNT	16
-+
-+enum sli4_qentry_e {
-+	SLI_QENTRY_ASYNC,
-+	SLI_QENTRY_MQ,
-+	SLI_QENTRY_RQ,
-+	SLI_QENTRY_WQ,
-+	SLI_QENTRY_WQ_RELEASE,
-+	SLI_QENTRY_OPT_WRITE_CMD,
-+	SLI_QENTRY_OPT_WRITE_DATA,
-+	SLI_QENTRY_XABT,
-+	SLI_QENTRY_MAX			/* must be last */
-+};
-+
-+enum {
-+	/* CQ has MQ/Async completion */
-+	SLI4_QUEUE_FLAG_MQ	= (1 << 0),
-+
-+	/* RQ for packet headers */
-+	SLI4_QUEUE_FLAG_HDR	= (1 << 1),
-+
-+	/* RQ index increment by 8 */
-+	SLI4_QUEUE_FLAG_RQBATCH	= (1 << 2),
-+};
-+
-+struct sli4_queue_s {
-+	/* Common to all queue types */
-+	struct efc_dma_s	dma;
-+	spinlock_t	lock;	/* protect the queue operations */
-+	u32	index;		/* current host entry index */
-+	u16	size;		/* entry size */
-+	u16	length;		/* number of entries */
-+	u16	n_posted;	/* number entries posted */
-+	u16	id;		/* Port assigned xQ_ID */
-+	u16	ulp;		/* ULP assigned to this queue */
-+	void __iomem    *db_regaddr;	/* register address for the doorbell */
-+	u8		type;		/* queue type ie EQ, CQ, ... */
-+	u32	proc_limit;	/* limit CQE processed per iteration */
-+	u32	posted_limit;	/* CQE/EQE process before ring doorbel */
-+	u32	max_num_processed;
-+	time_t		max_process_time;
-+	u16	phase;		/* For if_type = 6, this value toggle
-+				 * for each iteration of the queue,
-+				 * a queue entry is valid when a cqe
-+				 * valid bit matches this value
-+				 */
-+
-+	/* Type specific gunk */
-+	union {
-+		u32	r_idx;	/** "read" index (MQ only) */
-+		struct {
-+			u32	dword;
-+		} flag;
-+	} u;
-+};
-+
-+/**
-+ * @brief Generic Command Request header
-+ */
-+enum {
-+	CMD_V0 = 0x00,
-+	CMD_V1 = 0x01,
-+	CMD_V2 = 0x02,
-+};
-+
-+struct sli4_rqst_hdr_s {
-+	u8		opcode;
-+	u8		subsystem;
-+	__le16		rsvd2;
-+	__le32		timeout;
-+	__le32		request_length;
-+	u32		dw3_version;
-+};
-+
-+/**
-+ * @brief Generic Command Response header
-+ */
-+struct sli4_rsp_hdr_s {
-+	u8		opcode;
-+	u8		subsystem;
-+	__le16		rsvd2;
-+	u8		status;
-+	u8		additional_status;
-+	__le16		rsvd6;
-+	__le32		response_length;
-+	__le32		actual_response_length;
-+};
-+
-+#define SLI4_QUEUE_DEFAULT_CQ	U16_MAX /** Use the default CQ */
-+
-+#define SLI4_QUEUE_RQ_BATCH	8
-+
-+#define CFG_RQST_CMDSZ(stype)    sizeof(struct sli4_rqst_##stype##_s)
-+
-+#define CFG_RQST_PYLD_LEN(stype)	\
-+		cpu_to_le32(sizeof(struct sli4_rqst_##stype##_s) -	\
-+			sizeof(struct sli4_rqst_hdr_s))
-+
-+#define CFG_RQST_PYLD_LEN_VAR(stype, varpyld)	\
-+		cpu_to_le32((sizeof(struct sli4_rqst_##stype##_s) +	\
-+			varpyld) - sizeof(struct sli4_rqst_hdr_s))
-+
-+#define SZ_DMAADDR              sizeof(struct sli4_dmaaddr_s)
-+
-+/* Payload length must accommodate both request and response */
-+#define SLI_CONFIG_PYLD_LENGTH(stype)	\
-+	max(sizeof(struct sli4_rqst_##stype##_s),		\
-+		sizeof(struct sli4_rsp_##stype##_s))
-+
-+/**
-+ * @brief COMMON_CREATE_CQ_V2
-+ *
-+ * Create a Completion Queue.
-+ */
-+enum {
-+	/* DW5_flags values*/
-+	CREATE_CQV2_CLSWM_MASK	= 0x00003000,
-+	CREATE_CQV2_NODELAY	= 0x00004000,
-+	CREATE_CQV2_AUTOVALID	= 0x00008000,
-+	CREATE_CQV2_CQECNT_MASK	= 0x18000000,
-+	CREATE_CQV2_VALID	= 0x20000000,
-+	CREATE_CQV2_EVT		= 0x80000000,
-+	/* DW6W1_flags values*/
-+	CREATE_CQV2_ARM		= 0x8000,
-+};
-+
-+struct sli4_rqst_cmn_create_cq_v2_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	u8		page_size;
-+	u8		rsvd19;
-+	__le32		dw5_flags;
-+	__le16		eq_id;
-+	__le16		dw6w1_arm;
-+	__le16		cqe_count;
-+	__le16		rsvd30;
-+	__le32		rsvd32;
-+	struct sli4_dmaaddr_s page_phys_addr[0];
-+};
-+
-+/**
-+ * @brief COMMON_CREATE_CQ_SET_V0
-+ *
-+ * Create a set of Completion Queues.
-+ */
-+enum {
-+	/* DW5_flags values*/
-+	CREATE_CQSETV0_CLSWM_MASK  = 0x00003000,
-+	CREATE_CQSETV0_NODELAY	   = 0x00004000,
-+	CREATE_CQSETV0_AUTOVALID   = 0x00008000,
-+	CREATE_CQSETV0_CQECNT_MASK = 0x18000000,
-+	CREATE_CQSETV0_VALID	   = 0x20000000,
-+	CREATE_CQSETV0_EVT	   = 0x80000000,
-+	/* DW5W1_flags values */
-+	CREATE_CQSETV0_CQE_COUNT   = 0x7fff,
-+	CREATE_CQSETV0_ARM	   = 0x8000,
-+};
-+
-+struct sli4_rqst_cmn_create_cq_set_v0_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	u8		page_size;
-+	u8		rsvd19;
-+	__le32		dw5_flags;
-+	__le16		num_cq_req;
-+	__le16		dw6w1_flags;
-+	__le16		eq_id[16];
-+	struct sli4_dmaaddr_s page_phys_addr[0];
-+};
-+
-+/**
-+ * CQE count.
-+ */
-+enum {
-+	CQ_CNT_SHIFT	= 27,
-+
-+	CQ_CNT_256	= 0,
-+	CQ_CNT_512	= 1,
-+	CQ_CNT_1024	= 2,
-+	CQ_CNT_LARGE	= 3,
-+};
-+#define CQ_CNT_VAL(type) (CQ_CNT_##type << CQ_CNT_SHIFT)
-+
-+#define SLI4_CQE_BYTES			(4 * sizeof(u32))
-+
-+#define SLI4_COMMON_CREATE_CQ_V2_MAX_PAGES 8
-+
-+/**
-+ * @brief Generic Common Create EQ/CQ/MQ/WQ/RQ Queue completion
-+ */
-+struct sli4_rsp_cmn_create_queue_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+	__le16	q_id;
-+	u8	rsvd18;
-+	u8	ulp;
-+	__le32	db_offset;
-+	__le16	db_rs;
-+	__le16	db_fmt;
-+};
-+
-+struct sli4_rsp_cmn_create_queue_set_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+	__le16	q_id;
-+	__le16	num_q_allocated;
-+};
-+
-+/**
-+ * @brief Common Destroy CQ
-+ */
-+struct sli4_rqst_cmn_destroy_cq_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16	cq_id;
-+	__le16	rsvd14;
-+};
-+
-+struct sli4_rsp_cmn_destroy_cq_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+};
-+
-+/**
-+ * @brief COMMON_MODIFY_EQ_DELAY
-+ *
-+ * Modify the delay multiplier for EQs
-+ */
-+struct sli4_rqst_cmn_modify_eq_delay_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le32	num_eq;
-+	struct {
-+		__le32	eq_id;
-+		__le32	phase;
-+		__le32	delay_multiplier;
-+	} eq_delay_record[8];
-+};
-+
-+struct sli4_rsp_cmn_modify_eq_delay_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+};
-+
-+/**
-+ * @brief COMMON_CREATE_EQ
-+ *
-+ * Create an Event Queue.
-+ */
-+enum {
-+	/* DW5 */
-+	CREATE_EQ_AUTOVALID		= (1 << 28),
-+	CREATE_EQ_VALID			= (1 << 29),
-+	CREATE_EQ_EQESZ			= (1 << 31),
-+	/* DW6 */
-+	CREATE_EQ_COUNT			= (7 << 26),
-+	CREATE_EQ_ARM			= (1 << 31),
-+	/* DW7 */
-+	CREATE_EQ_DELAYMULTI_SHIFT	= 13,
-+	CREATE_EQ_DELAYMULTI_MASK	= (0x3FF << CREATE_EQ_DELAYMULTI_SHIFT),
-+	CREATE_EQ_DELAYMULTI		= (32 << CREATE_EQ_DELAYMULTI_SHIFT),
-+};
-+
-+struct sli4_rqst_cmn_create_eq_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16	num_pages;
-+	__le16	rsvd18;
-+	__le32	dw5_flags;
-+	__le32	dw6_flags;
-+	__le32	dw7_delaymulti;
-+	__le32	rsvd32;
-+	struct sli4_dmaaddr_s page_address[8];
-+};
-+
-+struct sli4_rsp_cmn_create_eq_s {
-+	struct sli4_rsp_cmn_create_queue_s q_rsp;
-+};
-+
-+/**
-+ * EQ count.
-+ */
-+enum {
-+	EQ_CNT_SHIFT	= 26,
-+
-+	EQ_CNT_256	= 0,
-+	EQ_CNT_512	= 1,
-+	EQ_CNT_1024	= 2,
-+	EQ_CNT_2048	= 3,
-+	EQ_CNT_4096	= 3,
-+};
-+#define EQ_CNT_VAL(type) (EQ_CNT_##type << EQ_CNT_SHIFT)
-+
-+#define SLI4_EQE_SIZE_4			0
-+#define SLI4_EQE_SIZE_16		1
-+
-+/**
-+ * @brief Common Destroy EQ
-+ */
-+struct sli4_rqst_cmn_destroy_eq_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		eq_id;
-+	__le16		rsvd18;
-+};
-+
-+struct sli4_rsp_cmn_destroy_eq_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+};
-+
-+/**
-+ * @brief COMMON_CREATE_MQ_EXT
-+ *
-+ * Create a Mailbox Queue; accommodate v0 and v1 forms.
-+ */
-+enum {
-+	/* DW6W1 */
-+	CREATE_MQEXT_RINGSIZE		= 0xf,
-+	CREATE_MQEXT_CQID_SHIFT		= 6,
-+	CREATE_MQEXT_CQIDV0_MASK	= 0xffc0,
-+	/* DW7 */
-+	CREATE_MQEXT_VAL		= (1 << 31),
-+	/* DW8 */
-+	CREATE_MQEXT_ACQV		= (1 << 0),
-+	CREATE_MQEXT_ASYNC_CQIDV0	= 0x7fe,
-+};
-+
-+struct sli4_rqst_cmn_create_mq_ext_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	__le16		cq_id_v1;
-+	__le32		async_event_bitmap;
-+	__le16		async_cq_id_v1;
-+	__le16		dw6w1_flags;
-+	__le32		dw7_val;
-+	__le32		dw8_flags;
++	__le32		e_d_tov;
++	__le32		lp_tov;
++	__le32		r_a_tov;
++	__le32		r_t_tov;
++	__le32		al_tov;
 +	__le32		rsvd36;
-+	struct sli4_dmaaddr_s page_phys_addr[0];
-+};
-+
-+
-+struct sli4_rsp_cmn_create_mq_ext_s {
-+	struct sli4_rsp_cmn_create_queue_s q_rsp;
-+};
-+
-+#define SLI4_MQE_SIZE_16		0x05
-+#define SLI4_MQE_SIZE_32		0x06
-+#define SLI4_MQE_SIZE_64		0x07
-+#define SLI4_MQE_SIZE_128		0x08
-+
-+#define SLI4_ASYNC_EVT_LINK_STATE	(1 << 1)
-+#define SLI4_ASYNC_EVT_FIP		(1 << 2)
-+#define SLI4_ASYNC_EVT_GRP5		(1 << 5)
-+#define SLI4_ASYNC_EVT_FC		(1 << 16)
-+#define SLI4_ASYNC_EVT_SLI_PORT		(1 << 17)
-+
-+#define	SLI4_ASYNC_EVT_FC_ALL	\
-+		(SLI4_ASYNC_EVT_LINK_STATE	| \
-+		 SLI4_ASYNC_EVT_FIP		| \
-+		 SLI4_ASYNC_EVT_GRP5		| \
-+		 SLI4_ASYNC_EVT_FC		| \
-+		 SLI4_ASYNC_EVT_SLI_PORT)
-+
-+/**
-+ * @brief Common Destroy MQ
-+ */
-+struct sli4_rqst_cmn_destroy_mq_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		mq_id;
-+	__le16		rsvd18;
-+};
-+
-+struct sli4_rsp_cmn_destroy_mq_s {
-+	struct sli4_rsp_hdr_s	hdr;
++	/*
++	 * Buffer-to-buffer state change number
++	 * Configure BBSCN
++	 */
++	__le32		bbscn_dword;
 +};
 +
 +/**
-+ * @brief COMMON_CREATE_CQ_V0
-+ *
-+ * Create a Completion Queue.
-+ */
-+struct sli4_rqst_cmn_create_cq_v0_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	__le16		rsvd18;
-+	__le32		dw5_flags;
-+	__le32		dw6_flags;
-+	__le32		rsvd28;
-+	__le32		rsvd32;
-+	struct sli4_dmaaddr_s page_phys_addr[0];
-+};
-+
-+/**
-+ * @brief RQ_CREATE
-+ *
-+ * Create a Receive Queue for FC.
++ * @brief DUMP Type 4
 + */
 +enum {
-+	SLI4_RQ_CREATE_DUA		= 0x1,
-+	SLI4_RQ_CREATE_BQU		= 0x2,
-+
-+	SLI4_RQE_SIZE			= 8,
-+	SLI4_RQE_SIZE_8			= 0x2,
-+	SLI4_RQE_SIZE_16		= 0x3,
-+	SLI4_RQE_SIZE_32		= 0x4,
-+	SLI4_RQE_SIZE_64		= 0x5,
-+	SLI4_RQE_SIZE_128		= 0x6,
-+
-+	SLI4_RQ_PAGE_SIZE_4096		= 0x1,
-+	SLI4_RQ_PAGE_SIZE_8192		= 0x2,
-+	SLI4_RQ_PAGE_SIZE_16384		= 0x4,
-+	SLI4_RQ_PAGE_SIZE_32768		= 0x8,
-+	SLI4_RQ_PAGE_SIZE_64536		= 0x10,
-+
-+	SLI4_RQ_CREATE_V0_MAX_PAGES	= 8,
-+	SLI4_RQ_CREATE_V0_MIN_BUF_SIZE	= 128,
-+	SLI4_RQ_CREATE_V0_MAX_BUF_SIZE	= 2048,
++	SLI4_DUMP4_TYPE = 0xf,
 +};
 +
-+struct sli4_rqst_rq_create_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	u8		dua_bqu_byte;
-+	u8		ulp;
-+	__le16		rsvd16;
-+	u8		rqe_count_byte;
-+	u8		rsvd19;
-+	__le32		rsvd20;
-+	__le16		buffer_size;
-+	__le16		cq_id;
-+	__le32		rsvd28;
-+	struct sli4_dmaaddr_s page_phys_addr[SLI4_RQ_CREATE_V0_MAX_PAGES];
-+};
++#define SLI4_WKI_TAG_SAT_TEM 0x1040
 +
-+struct sli4_rsp_rq_create_s {
-+	struct sli4_rsp_cmn_create_queue_s rsp;
-+};
-+
-+/**
-+ * @brief RQ_CREATE_V1
-+ *
-+ * Create a version 1 Receive Queue for FC.
-+ */
-+enum {
-+	SLI4_RQ_CREATE_V1_DNB		= 0x80,
-+	SLI4_RQ_CREATE_V1_MAX_PAGES	= 8,
-+	SLI4_RQ_CREATE_V1_MIN_BUF_SIZE	= 64,
-+	SLI4_RQ_CREATE_V1_MAX_BUF_SIZE	= 2048,
-+};
-+
-+
-+struct sli4_rqst_rq_create_v1_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	u8		rsvd14;
-+	u8		dim_dfd_dnb;
-+	u8		page_size;
-+	u8		rqe_size_byte;
-+	__le16		rqe_count;
-+	__le32		rsvd20;
-+	__le16		rsvd24;
-+	__le16		cq_id;
-+	__le32		buffer_size;
-+	struct sli4_dmaaddr_s page_phys_addr[SLI4_RQ_CREATE_V1_MAX_PAGES];
-+};
-+
-+struct sli4_rsp_rq_create_v1_s {
-+	struct sli4_rsp_cmn_create_queue_s rsp;
-+};
-+
-+/**
-+ * @brief RQ_CREATE_V2
-+ *
-+ * Create a version 2 Receive Queue for FC use.
-+ */
-+enum {
-+	SLI4_RQCREATEV2_DNB = 0x80,
-+};
-+
-+struct sli4_rqst_rq_create_v2_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	u8		rq_count;
-+	u8		dim_dfd_dnb;
-+	u8		page_size;
-+	u8		rqe_size_byte;
-+	__le16		rqe_count;
-+	__le16		hdr_buffer_size;
-+	__le16		payload_buffer_size;
-+	__le16		base_cq_id;
-+	__le16		rsvd26;
-+	__le32		rsvd42;
-+	struct sli4_dmaaddr_s page_phys_addr[0];
-+};
-+
-+struct sli4_rsp_rq_create_v2_s {
-+	struct sli4_rsp_cmn_create_queue_s rsp;
-+};
-+
-+/**
-+ * @brief RQ_DESTROY
-+ *
-+ * Destroy an FC Receive Queue.
-+ */
-+struct sli4_rqst_rq_destroy_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		rq_id;
-+	__le16		rsvd;
-+};
-+
-+struct sli4_rsp_rq_destroy_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+};
-+
-+/**
-+ * Code definitions applicable to all FC CQE types.
-+ */
-+#define SLI4_CQE_CODE_OFFSET		14
-+
-+#define SLI4_CQE_CODE_WORK_REQUEST_COMPLETION	0x01
-+#define SLI4_CQE_CODE_RELEASE_WQE		0x02
-+#define SLI4_CQE_CODE_RQ_ASYNC			0x04
-+#define SLI4_CQE_CODE_XRI_ABORTED		0x05
-+#define SLI4_CQE_CODE_RQ_COALESCING		0x06
-+#define SLI4_CQE_CODE_RQ_CONSUMPTION		0x07
-+#define SLI4_CQE_CODE_MEASUREMENT_REPORTING	0x08
-+#define SLI4_CQE_CODE_RQ_ASYNC_V1		0x09
-+#define SLI4_CQE_CODE_OPTIMIZED_WRITE_CMD	0x0B
-+#define SLI4_CQE_CODE_OPTIMIZED_WRITE_DATA	0x0C
-+
-+/**
-+ * @brief WQ_CREATE
-+ *
-+ * Create a Work Queue for FC.
-+ */
-+#define SLI4_WQ_CREATE_V0_MAX_PAGES	4
-+struct sli4_rqst_wq_create_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	u8		num_pages;
-+	u8		dua_byte;
-+	__le16		cq_id;
-+	struct sli4_dmaaddr_s page_phys_addr[SLI4_WQ_CREATE_V0_MAX_PAGES];
-+	u8		bqu_byte;
-+	u8		ulp;
-+	__le16		rsvd;
-+};
-+
-+struct sli4_rsp_wq_create_s {
-+	struct sli4_rsp_cmn_create_queue_s q_rsp;
-+};
-+
-+/**
-+ * @brief WQ_CREATE_V1
-+ *
-+ * Create a version 1 Work Queue for FC use.
-+ */
-+#define SLI4_WQ_CREATE_V1_MAX_PAGES	8
-+struct sli4_rqst_wq_create_v1_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		num_pages;
-+	__le16		cq_id;
-+	u8		page_size;
-+	u8		wqe_size_byte;
-+	__le16		wqe_count;
-+	__le32		rsvd;
-+	struct	sli4_dmaaddr_s page_phys_addr[SLI4_WQ_CREATE_V1_MAX_PAGES];
-+};
-+
-+struct sli4_rsp_wq_create_v1_s {
-+	struct sli4_rsp_cmn_create_queue_s rsp;
-+};
-+/**
-+ * @brief WQ_DESTROY
-+ *
-+ * Destroy an FC Work Queue.
-+ */
-+struct sli4_rqst_wq_destroy_s {
-+	struct sli4_rqst_hdr_s	hdr;
-+	__le16		wq_id;
-+	__le16		rsvd;
-+};
-+
-+struct sli4_rsp_wq_destroy_s {
-+	struct sli4_rsp_hdr_s	hdr;
-+};
-+
-+/**
-+ * @brief Asynchronouse Event :  Link State ACQE.
-+ */
-+enum {
-+	LINK_TYPE_SHIFT		= 6,
-+	LINK_TYPE_MASK		= 0x03 << LINK_TYPE_SHIFT,
-+	LINK_TYPE_ETHERNET	= 0x00 << LINK_TYPE_SHIFT,
-+	LINK_TYPE_FC		= 0x01 << LINK_TYPE_SHIFT,
-+
-+	PORT_SPEED_NO_LINK	= 0x0,
-+	PORT_SPEED_10_MBPS	= 0x1,
-+	PORT_SPEED_100_MBP	= 0x2,
-+	PORT_SPEED_1_GBPS	= 0x3,
-+	PORT_SPEED_10_GBPS	= 0x4,
-+	PORT_SPEED_20_GBPS	= 0x5,
-+	PORT_SPEED_25_GBPS	= 0x6,
-+	PORT_SPEED_40_GBPS	= 0x7,
-+	PORT_SPEED_100_GBPS	= 0x8,
-+
-+	PORT_LINK_STATUS_PHYSICAL_DOWN	= 0x0,
-+	PORT_LINK_STATUS_PHYSICAL_UP	= 0x1,
-+	PORT_LINK_STATUS_LOGICAL_DOWN	= 0x2,
-+	PORT_LINK_STATUS_LOGICAL_UP	= 0x3,
-+
-+	PORT_DUPLEX_NONE		= 0x0,
-+	PORT_DUPLEX_HWF			= 0x1,
-+	PORT_DUPLEX_FULL		= 0x2,
-+
-+	/*Link Event Type*/
-+	LINK_STATE_PHYSICAL		= 0x00,
-+	LINK_STATE_LOGICAL		= 0x01,
-+};
-+
-+struct sli4_link_state_s {
-+	u8		link_num_type;
-+	u8		port_link_status;
-+	u8		port_duplex;
-+	u8		port_speed;
-+	u8		port_fault;
-+	u8		rsvd5;
-+	__le16		logical_link_speed;
-+	__le32		event_tag;
-+	u8		rsvd12;
-+	u8		event_code;
-+	u8		event_type;
-+	u8		flags;
-+};
-+
-+/**
-+ * @brief Asynchronouse Event :  FC Link Attention Event.
-+ */
-+enum {
-+	LINK_ATTN_TYPE_LINK_UP		= 0x01,
-+	LINK_ATTN_TYPE_LINK_DOWN	= 0x02,
-+	LINK_ATTN_TYPE_NO_HARD_ALPA	= 0x03,
-+
-+	LINK_ATTN_P2P			= 0x01,
-+	LINK_ATTN_FC_AL			= 0x02,
-+	LINK_ATTN_INTERNAL_LOOPBACK	= 0x03,
-+	LINK_ATTN_SERDES_LOOPBACK	= 0x04,
-+
-+	LINK_ATTN_1G			= 0x01,
-+	LINK_ATTN_2G			= 0x02,
-+	LINK_ATTN_4G			= 0x04,
-+	LINK_ATTN_8G			= 0x08,
-+	LINK_ATTN_10G			= 0x0a,
-+	LINK_ATTN_16G			= 0x10,
-+
-+};
-+
-+struct sli4_link_attention_s {
-+	u8		link_number;
-+	u8		attn_type;
-+	u8		topology;
-+	u8		port_speed;
-+	u8		port_fault;
-+	u8		shared_link_status;
-+	__le16		logical_link_speed;
-+	__le32		event_tag;
-+	u8		rsvd12;
-+	u8		event_code;
-+	u8		event_type;
-+	u8		flags;
-+};
-+
-+/**
-+ * @brief FC event types.
-+ */
-+enum {
-+	FC_EVENT_LINK_ATTENTION		= 0x01,
-+	FC_EVENT_SHARED_LINK_ATTENTION	= 0x02,
-+};
-+
-+/**
-+ * @brief FC WQ completion queue entry.
-+ */
-+enum {
-+	SLI4_WCQE_XB = 0x10,
-+	SLI4_WCQE_QX = 0x80,
-+};
-+
-+struct sli4_fc_wcqe_s {
-+	u8		hw_status;
-+	u8		status;
-+	__le16		request_tag;
-+	__le32		wqe_specific_1;
-+	__le32		wqe_specific_2;
-+	u8		rsvd12;
-+	u8		qx_byte;
-+	u8		code;
-+	u8		flags;
-+};
-+
-+/**
-+ * @brief FC WQ consumed CQ queue entry.
-+ */
-+struct sli4_fc_wqec_s {
-+	__le32		rsvd0;
-+	__le32		rsvd1;
-+	__le16		wqe_index;
-+	__le16		wq_id;
-+	__le16		rsvd12;
-+	u8		code;
-+	u8		vld_byte;
-+};
-+
-+/**
-+ * @brief FC Completion Status Codes.
-+ */
-+#define SLI4_FC_WCQE_STATUS_SUCCESS		0x00
-+#define SLI4_FC_WCQE_STATUS_FCP_RSP_FAILURE	0x01
-+#define SLI4_FC_WCQE_STATUS_REMOTE_STOP		0x02
-+#define SLI4_FC_WCQE_STATUS_LOCAL_REJECT	0x03
-+#define SLI4_FC_WCQE_STATUS_NPORT_RJT		0x04
-+#define SLI4_FC_WCQE_STATUS_FABRIC_RJT		0x05
-+#define SLI4_FC_WCQE_STATUS_NPORT_BSY		0x06
-+#define SLI4_FC_WCQE_STATUS_FABRIC_BSY		0x07
-+#define SLI4_FC_WCQE_STATUS_LS_RJT		0x09
-+#define SLI4_FC_WCQE_STATUS_CMD_REJECT		0x0b
-+#define SLI4_FC_WCQE_STATUS_FCP_TGT_LENCHECK	0x0c
-+#define SLI4_FC_WCQE_STATUS_RQ_BUF_LEN_EXCEEDED	0x11
-+#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_BUF_NEEDED 0x12
-+#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_FRM_DISC	0x13
-+#define SLI4_FC_WCQE_STATUS_RQ_DMA_FAILURE	0x14
-+#define SLI4_FC_WCQE_STATUS_FCP_RSP_TRUNCATE	0x15
-+#define SLI4_FC_WCQE_STATUS_DI_ERROR		0x16
-+#define SLI4_FC_WCQE_STATUS_BA_RJT		0x17
-+#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_XRI_NEEDED 0x18
-+#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_XRI_DISC	0x19
-+#define SLI4_FC_WCQE_STATUS_RX_ERROR_DETECT	0x1a
-+#define SLI4_FC_WCQE_STATUS_RX_ABORT_REQUEST	0x1b
-+
-+/**
-+ * @brief DI_ERROR Extended Status
-+ */
-+#define SLI4_FC_DI_ERROR_GE	(1 << 0) /* Guard Error */
-+#define SLI4_FC_DI_ERROR_AE	(1 << 1) /* Application Tag Error */
-+#define SLI4_FC_DI_ERROR_RE	(1 << 2) /* Reference Tag Error */
-+#define SLI4_FC_DI_ERROR_TDPV	(1 << 3) /* Total Data Placed Valid */
-+#define SLI4_FC_DI_ERROR_UDB	(1 << 4) /* Uninitialized DIF Block */
-+#define SLI4_FC_DI_ERROR_EDIR   (1 << 5) /* Error direction */
-+
-+/* WQE DIF field contents */
-+#define SLI4_DIF_DISABLED		0
-+#define SLI4_DIF_PASS_THROUGH		1
-+#define SLI4_DIF_STRIP			2
-+#define SLI4_DIF_INSERT			3
-+
-+/* driver generated status codes; better not overlap
-+ * with chip's status codes!
-+ */
-+#define SLI4_FC_WCQE_STATUS_TARGET_WQE_TIMEOUT  0xff
-+#define SLI4_FC_WCQE_STATUS_SHUTDOWN		0xfe
-+#define SLI4_FC_WCQE_STATUS_DISPATCH_ERROR	0xfd
-+
-+/**
-+ * Work Queue Entry (WQE) types.
-+ */
-+#define SLI4_WQE_ABORT			0x0f
-+#define SLI4_WQE_ELS_REQUEST64		0x8a
-+#define SLI4_WQE_FCP_IBIDIR64		0xac
-+#define SLI4_WQE_FCP_IREAD64		0x9a
-+#define SLI4_WQE_FCP_IWRITE64		0x98
-+#define SLI4_WQE_FCP_ICMND64		0x9c
-+#define SLI4_WQE_FCP_TRECEIVE64		0xa1
-+#define SLI4_WQE_FCP_CONT_TRECEIVE64	0xe5
-+#define SLI4_WQE_FCP_TRSP64		0xa3
-+#define SLI4_WQE_FCP_TSEND64		0x9f
-+#define SLI4_WQE_GEN_REQUEST64		0xc2
-+#define SLI4_WQE_SEND_FRAME		0xe1
-+#define SLI4_WQE_XMIT_BCAST64		0X84
-+#define SLI4_WQE_XMIT_BLS_RSP		0x97
-+#define SLI4_WQE_ELS_RSP64		0x95
-+#define SLI4_WQE_XMIT_SEQUENCE64	0x82
-+#define SLI4_WQE_REQUEUE_XRI		0x93
-+
-+/**
-+ * WQE command types.
-+ */
-+#define SLI4_CMD_FCP_IREAD64_WQE	0x00
-+#define SLI4_CMD_FCP_ICMND64_WQE	0x00
-+#define SLI4_CMD_FCP_IWRITE64_WQE	0x01
-+#define SLI4_CMD_FCP_TRECEIVE64_WQE	0x02
-+#define SLI4_CMD_FCP_TRSP64_WQE		0x03
-+#define SLI4_CMD_FCP_TSEND64_WQE	0x07
-+#define SLI4_CMD_GEN_REQUEST64_WQE	0x08
-+#define SLI4_CMD_XMIT_BCAST64_WQE	0x08
-+#define SLI4_CMD_XMIT_BLS_RSP64_WQE	0x08
-+#define SLI4_CMD_ABORT_WQE		0x08
-+#define SLI4_CMD_XMIT_SEQUENCE64_WQE	0x08
-+#define SLI4_CMD_REQUEUE_XRI_WQE	0x0A
-+#define SLI4_CMD_SEND_FRAME_WQE		0x0a
-+
-+#define SLI4_WQE_SIZE			0x05
-+#define SLI4_WQE_EXT_SIZE		0x06
-+
-+#define SLI4_WQE_BYTES			(16 * sizeof(u32))
-+#define SLI4_WQE_EXT_BYTES		(32 * sizeof(u32))
-+
-+/* Mask for ccp (CS_CTL) */
-+#define SLI4_MASK_CCP	0xfe /* Upper 7 bits of CS_CTL is priority */
-+
-+/**
-+ * @brief Generic WQE
-+ */
-+enum {
-+	SLI4_GEN_WQE_EBDECNT	= (0xf << 0),	/* DW10W0 */
-+	SLI4_GEN_WQE_LEN_LOC	= (0x3 << 7),
-+	SLI4_GEN_WQE_QOSD	= (1 << 9),
-+	SLI4_GEN_WQE_XBL	= (1 << 11),
-+	SLI4_GEN_WQE_HLM	= (1 << 12),
-+	SLI4_GEN_WQE_IOD	= (1 << 13),
-+	SLI4_GEN_WQE_DBDE	= (1 << 14),
-+	SLI4_GEN_WQE_WQES	= (1 << 15),
-+
-+	SLI4_GEN_WQE_PRI	= (0x7),
-+	SLI4_GEN_WQE_PV		= (1 << 3),
-+	SLI4_GEN_WQE_EAT	= (1 << 4),
-+	SLI4_GEN_WQE_XC		= (1 << 5),
-+	SLI4_GEN_WQE_CCPE	= (1 << 7),
-+
-+	SLI4_GEN_WQE_CMDTYPE	= (0xf),
-+	SLI4_GEN_WQE_WQEC	= (1 << 7),
-+};
-+
-+struct sli4_generic_wqe_s {
-+	__le32		cmd_spec0_5[6];
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	__le16		dw10w0_flags;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmdtype_wqec_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+};
-+
-+/**
-+ * @brief WQE used to abort exchanges.
-+ */
-+enum {
-+	SLI4_ABRT_WQE_IR	= 0x02,
-+
-+	SLI4_ABRT_WQE_EBDECNT	= (0xf << 0),	/* DW10W0 */
-+	SLI4_ABRT_WQE_LEN_LOC	= (0x3 << 7),
-+	SLI4_ABRT_WQE_QOSD	= (1 << 9),
-+	SLI4_ABRT_WQE_XBL	= (1 << 11),
-+	SLI4_ABRT_WQE_IOD	= (1 << 13),
-+	SLI4_ABRT_WQE_DBDE	= (1 << 14),
-+	SLI4_ABRT_WQE_WQES	= (1 << 15),
-+
-+	SLI4_ABRT_WQE_PRI	= (0x7),
-+	SLI4_ABRT_WQE_PV	= (1 << 3),
-+	SLI4_ABRT_WQE_EAT	= (1 << 4),
-+	SLI4_ABRT_WQE_XC	= (1 << 5),
-+	SLI4_ABRT_WQE_CCPE	= (1 << 7),
-+
-+	SLI4_ABRT_WQE_CMDTYPE	= (0xf),
-+	SLI4_ABRT_WQE_WQEC	= (1 << 7),
-+};
-+
-+struct sli4_abort_wqe_s {
-+	__le32		rsvd0;
-+	__le32		rsvd4;
-+	__le32		ext_t_tag;
-+	u8		ia_ir_byte;
-+	u8		criteria;
++struct sli4_cmd_dump4_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		type_dword;
++	__le16		wki_selection;
 +	__le16		rsvd10;
-+	__le32		ext_t_mask;
-+	__le32		t_mask;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		t_tag;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	__le16		dw10w0_flags;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmdtype_wqec_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+};
-+
-+#define SLI4_ABORT_CRITERIA_XRI_TAG		0x01
-+#define SLI4_ABORT_CRITERIA_ABORT_TAG		0x02
-+#define SLI4_ABORT_CRITERIA_REQUEST_TAG		0x03
-+#define SLI4_ABORT_CRITERIA_EXT_ABORT_TAG	0x04
-+
-+enum sli4_abort_type_e {
-+	SLI_ABORT_XRI,
-+	SLI_ABORT_ABORT_ID,
-+	SLI_ABORT_REQUEST_ID,
-+	SLI_ABORT_MAX,		/* must be last */
-+};
-+
-+/**
-+ * @brief WQE used to create an ELS request.
-+ */
-+enum {
-+	SLI4_REQ_WQE_QOSD	= 0x2,
-+	SLI4_REQ_WQE_DBDE	= 0x40,
-+	SLI4_REQ_WQE_XBL	= 0x8,
-+	SLI4_REQ_WQE_XC		= 0x20,
-+	SLI4_REQ_WQE_IOD	= 0x20,
-+	SLI4_REQ_WQE_HLM	= 0x10,
-+	SLI4_REQ_WQE_CCPE	= 0x80,
-+	SLI4_REQ_WQE_EAT	= 0x10,
-+	SLI4_REQ_WQE_WQES	= 0x80,
-+	SLI4_REQ_WQE_PU_SHFT	= 4,
-+	SLI4_REQ_WQE_CT_SHFT	= 2,
-+	SLI4_REQ_WQE_CT		= 0xc,
-+	SLI4_REQ_WQE_ELSID_SHFT	= 4,
-+	SLI4_REQ_WQE_SP_SHFT	= 24,
-+	SLI4_REQ_WQE_LEN_LOC_BIT1 = 0x80,
-+	SLI4_REQ_WQE_LEN_LOC_BIT2 = 0x1,
-+};
-+
-+struct sli4_els_request64_wqe_s {
-+	struct sli4_bde_s	els_request_payload;
-+	__le32		els_request_payload_length;
-+	__le32		sid_sp_dword;
-+	__le32		remote_id_dword;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		temporary_rpi;
-+	u8		len_loc1_byte;
-+	u8		qosd_xbl_hlm_iod_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmdtype_elsid_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	struct sli4_bde_s	els_response_payload_bde;
-+	__le32		max_response_payload_length;
-+};
-+
-+/**
-+ * @brief WQE used to create an FCP initiator no data command.
-+ */
-+enum {
-+	SLI4_ICMD_WQE_DBDE	= 0x40,
-+	SLI4_ICMD_WQE_XBL	= 0x8,
-+	SLI4_ICMD_WQE_XC	= 0x20,
-+	SLI4_ICMD_WQE_IOD	= 0x20,
-+	SLI4_ICMD_WQE_HLM	= 0x10,
-+	SLI4_ICMD_WQE_CCPE	= 0x80,
-+	SLI4_ICMD_WQE_EAT	= 0x10,
-+	SLI4_ICMD_WQE_APPID	= 0x10,
-+	SLI4_ICMD_WQE_WQES	= 0x80,
-+	SLI4_ICMD_WQE_PU_SHFT	= 4,
-+	SLI4_ICMD_WQE_CT_SHFT	= 2,
-+	SLI4_ICMD_WQE_BS_SHFT	= 4,
-+	SLI4_ICMD_WQE_LEN_LOC_BIT1 = 0x80,
-+	SLI4_ICMD_WQE_LEN_LOC_BIT2 = 0x1,
-+};
-+
-+struct sli4_fcp_icmnd64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le16		payload_offset_length;
-+	__le16		fcp_cmd_buffer_length;
 +	__le32		rsvd12;
-+	__le32		remote_n_port_id_dword;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		dif_ct_bs_byte;
-+	u8		command;
-+	u8		class_pu_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	u8		len_loc1_byte;
-+	u8		qosd_xbl_hlm_iod_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		rsvd44;
-+	__le32		rsvd48;
-+	__le32		rsvd52;
-+	__le32		rsvd56;
++	__le32		returned_byte_cnt;
++	__le32		resp_data[59];
++};
++
++/* INIT_LINK - initialize the link for a FC port */
++#define FC_TOPOLOGY_FCAL	0
++#define FC_TOPOLOGY_P2P		1
++
++#define SLI4_INIT_LINK_F_LOOP_BACK	(1 << 0)
++#define SLI4_INIT_LINK_F_UNFAIR		(1 << 6)
++#define SLI4_INIT_LINK_F_NO_LIRP	(1 << 7)
++#define SLI4_INIT_LINK_F_LOOP_VALID_CHK	(1 << 8)
++#define SLI4_INIT_LINK_F_NO_LISA	(1 << 9)
++#define SLI4_INIT_LINK_F_FAIL_OVER	(1 << 10)
++#define SLI4_INIT_LINK_F_NO_AUTOSPEED	(1 << 11)
++#define SLI4_INIT_LINK_F_PICK_HI_ALPA	(1 << 15)
++
++#define SLI4_INIT_LINK_F_P2P_ONLY	1
++#define SLI4_INIT_LINK_F_FCAL_ONLY	2
++
++#define SLI4_INIT_LINK_F_FCAL_FAIL_OVER	0
++#define SLI4_INIT_LINK_F_P2P_FAIL_OVER	1
++
++enum {
++	SLI4_INIT_LINK_SEL_RESET_AL_PA = 0xff,
++	SLI4_INIT_LINK_FLAG_LOOPBACK = 0x1,
++	SLI4_INIT_LINK_FLAG_TOPOLOGY = 0x6,
++	SLI4_INIT_LINK_FLAG_UNFAIR   = 0x40,
++	SLI4_INIT_LINK_FLAG_SKIP_LIRP_LILP = 0x80,
++	SLI4_INIT_LINK_FLAG_LOOP_VALIDITY = 0x100,
++	SLI4_INIT_LINK_FLAG_SKIP_LISA = 0x200,
++	SLI4_INIT_LINK_FLAG_EN_TOPO_FAILOVER = 0x400,
++	SLI4_INIT_LINK_FLAG_FIXED_SPEED = 0x800,
++	SLI4_INIT_LINK_FLAG_SEL_HIGHTEST_AL_PA = 0x8000,
++};
++
++struct sli4_cmd_init_link_s {
++	struct sli4_mbox_command_header_s       hdr;
++	__le32	sel_reset_al_pa_dword;
++	__le32	flags0;
++	__le32	link_speed_sel_code;
++#define FC_LINK_SPEED_1G		1
++#define FC_LINK_SPEED_2G		2
++#define FC_LINK_SPEED_AUTO_1_2		3
++#define FC_LINK_SPEED_4G		4
++#define FC_LINK_SPEED_AUTO_4_1		5
++#define FC_LINK_SPEED_AUTO_4_2		6
++#define FC_LINK_SPEED_AUTO_4_2_1	7
++#define FC_LINK_SPEED_8G		8
++#define FC_LINK_SPEED_AUTO_8_1		9
++#define FC_LINK_SPEED_AUTO_8_2		10
++#define FC_LINK_SPEED_AUTO_8_2_1	11
++#define FC_LINK_SPEED_AUTO_8_4		12
++#define FC_LINK_SPEED_AUTO_8_4_1	13
++#define FC_LINK_SPEED_AUTO_8_4_2	14
++#define FC_LINK_SPEED_10G		16
++#define FC_LINK_SPEED_16G		17
++#define FC_LINK_SPEED_AUTO_16_8_4	18
++#define FC_LINK_SPEED_AUTO_16_8		19
++#define FC_LINK_SPEED_32G		20
++#define FC_LINK_SPEED_AUTO_32_16_8	21
++#define FC_LINK_SPEED_AUTO_32_16	22
 +};
 +
 +/**
-+ * @brief WQE used to create an FCP initiator read.
++ * @brief INIT_VFI - initialize the VFI resource
 + */
 +enum {
-+	SLI4_IR_WQE_DBDE	= 0x40,
-+	SLI4_IR_WQE_XBL		= 0x8,
-+	SLI4_IR_WQE_XC		= 0x20,
-+	SLI4_IR_WQE_IOD		= 0x20,
-+	SLI4_IR_WQE_HLM		= 0x10,
-+	SLI4_IR_WQE_CCPE	= 0x80,
-+	SLI4_IR_WQE_EAT		= 0x10,
-+	SLI4_IR_WQE_APPID	= 0x10,
-+	SLI4_IR_WQE_WQES	= 0x80,
-+	SLI4_IR_WQE_PU_SHFT	= 4,
-+	SLI4_IR_WQE_CT_SHFT	= 2,
-+	SLI4_IR_WQE_BS_SHFT	= 4,
-+	SLI4_IR_WQE_LEN_LOC_BIT1 = 0x80,
-+	SLI4_IR_WQE_LEN_LOC_BIT2 = 0x1,
++	SLI4_INIT_VFI_FLAG_VP = 0x1000,		/* DW1W1 */
++	SLI4_INIT_VFI_FLAG_VF = 0x2000,
++	SLI4_INIT_VFI_FLAG_VT = 0x4000,
++	SLI4_INIT_VFI_FLAG_VR = 0x8000,
++
++	SLI4_INIT_VFI_VFID	 = 0x1fff,	/* DW3W0 */
++	SLI4_INIT_VFI_PRI	 = 0xe000,
++
++	SLI4_INIT_VFI_HOP_COUNT = 0xff000000,	/* DW4 */
 +};
 +
-+struct sli4_fcp_iread64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le16		payload_offset_length;
-+	__le16		fcp_cmd_buffer_length;
-+
-+	__le32		total_transfer_length;
-+
-+	__le32		remote_n_port_id_dword;
-+
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+
-+	u8		dif_ct_bs_byte;
-+	u8		command;
-+	u8		class_pu_byte;
-+	u8		timer;
-+
-+	__le32		abort_tag;
-+
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+
-+	u8		len_loc1_byte;
-+	u8		qosd_xbl_hlm_iod_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+
-+	__le32		rsvd44;
-+	/* reserved if performance hints disabled */
-+	struct sli4_bde_s	first_data_bde;
++struct sli4_cmd_init_vfi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		vfi;
++	__le16		flags0_word;
++	__le16		fcfi;
++	__le16		vpi;
++	__le32		vf_id_pri_dword;
++	__le32		hop_cnt_dword;
 +};
 +
 +/**
-+ * @brief WQE used to create an FCP initiator write.
++ * @brief INIT_VPI - initialize the VPI resource
 + */
-+enum {
-+	SLI4_IWR_WQE_DBDE	= 0x40,
-+	SLI4_IWR_WQE_XBL	= 0x8,
-+	SLI4_IWR_WQE_XC		= 0x20,
-+	SLI4_IWR_WQE_IOD	= 0x20,
-+	SLI4_IWR_WQE_HLM	= 0x10,
-+	SLI4_IWR_WQE_DNRX	= 0x10,
-+	SLI4_IWR_WQE_CCPE	= 0x80,
-+	SLI4_IWR_WQE_EAT	= 0x10,
-+	SLI4_IWR_WQE_APPID	= 0x10,
-+	SLI4_IWR_WQE_WQES	= 0x80,
-+	SLI4_IWR_WQE_PU_SHFT	= 4,
-+	SLI4_IWR_WQE_CT_SHFT	= 2,
-+	SLI4_IWR_WQE_BS_SHFT	= 4,
-+	SLI4_IWR_WQE_LEN_LOC_BIT1 = 0x80,
-+	SLI4_IWR_WQE_LEN_LOC_BIT2 = 0x1,
-+};
-+
-+struct sli4_fcp_iwrite64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le16		payload_offset_length;
-+	__le16		fcp_cmd_buffer_length;
-+	__le16		total_transfer_length;
-+	__le16		initial_transfer_length;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		dif_ct_bs_byte;
-+	u8		command;
-+	u8		class_pu_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	u8		len_loc1_byte;
-+	u8		qosd_xbl_hlm_iod_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		remote_n_port_id_dword;
-+	struct sli4_bde_s	first_data_bde;
-+};
-+
-+struct sli4_fcp_128byte_wqe_s {
-+	u32 dw[32];
++struct sli4_cmd_init_vpi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		vpi;
++	__le16		vfi;
 +};
 +
 +/**
-+ * @brief WQE used to create an FCP target receive, and FCP target
-+ * receive continue.
++ * @brief POST_XRI - post XRI resources to the SLI Port
 + */
 +enum {
-+	SLI4_TRCV_WQE_DBDE	= 0x40,
-+	SLI4_TRCV_WQE_XBL	= 0x8,
-+	SLI4_TRCV_WQE_AR	= 0x8,
-+	SLI4_TRCV_WQE_XC	= 0x20,
-+	SLI4_TRCV_WQE_IOD	= 0x20,
-+	SLI4_TRCV_WQE_HLM	= 0x10,
-+	SLI4_TRCV_WQE_DNRX	= 0x10,
-+	SLI4_TRCV_WQE_CCPE	= 0x80,
-+	SLI4_TRCV_WQE_EAT	= 0x10,
-+	SLI4_TRCV_WQE_APPID	= 0x10,
-+	SLI4_TRCV_WQE_WQES	= 0x80,
-+	SLI4_TRCV_WQE_PU_SHFT	= 4,
-+	SLI4_TRCV_WQE_CT_SHFT	= 2,
-+	SLI4_TRCV_WQE_BS_SHFT	= 4,
-+	SLI4_TRCV_WQE_LEN_LOC_BIT2 = 0x1,
++	SLI4_POST_XRI_COUNT	= 0xfff,	/* DW1W1 */
++	SLI4_POST_XRI_FLAG_ENX	= 0x1000,
++	SLI4_POST_XRI_FLAG_DL	= 0x2000,
++	SLI4_POST_XRI_FLAG_DI	= 0x4000,
++	SLI4_POST_XRI_FLAG_VAL	= 0x8000,
 +};
 +
-+struct sli4_fcp_treceive64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		payload_offset_length;
-+	__le32		relative_offset;
-+	/**
-+	 * DWord 5 can either be the task retry identifier (HLM=0) or
-+	 * the remote N_Port ID (HLM=1),the secondary xri tag
-+	 */
-+	union {
-+		__le16		sec_xri_tag;
-+		__le16		rsvd;
-+		__le32		dword;
-+	} dword5;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		dif_ct_bs_byte;
-+	u8		command;
-+	u8		class_ar_pu_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		remote_xid;
-+	u8		lloc1_appid;
-+	u8		qosd_xbl_hlm_iod_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		fcp_data_receive_length;
-+	struct sli4_bde_s	first_data_bde; /* For performance hints */
++struct sli4_cmd_post_xri_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		xri_base;
++	__le16		xri_count_flags;
 +};
 +
 +/**
-+ * @brief WQE used to create an FCP target response.
++ * @brief RELEASE_XRI - Release XRI resources from the SLI Port
 + */
 +enum {
-+	SLI4_TRSP_WQE_AG	= 0x8,
-+	SLI4_TRSP_WQE_DBDE	= 0x40,
-+	SLI4_TRSP_WQE_XBL	= 0x8,
-+	SLI4_TRSP_WQE_XC	= 0x20,
-+	SLI4_TRSP_WQE_HLM	= 0x10,
-+	SLI4_TRSP_WQE_DNRX	= 0x10,
-+	SLI4_TRSP_WQE_CCPE	= 0x80,
-+	SLI4_TRSP_WQE_EAT	= 0x10,
-+	SLI4_TRSP_WQE_APPID	= 0x10,
-+	SLI4_TRSP_WQE_WQES	= 0x80,
++	SLI4_RELEASE_XRI_REL_XRI_CNT	= 0x1f,	/* DW1W0 */
++	SLI4_RELEASE_XRI_COUNT		= 0x1f,	/* DW1W1 */
 +};
 +
-+struct sli4_fcp_trsp64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		fcp_response_length;
-+	__le32		rsvd12;
-+	/**
-+	 * DWord 5 can either be the task retry identifier (HLM=0) or
-+	 * the remote N_Port ID (HLM=1)
-+	 */
-+	__le32		dword5;
-+	__le16		xri_tag;
++struct sli4_cmd_release_xri_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		rel_xri_count_word;
++	__le16		xri_count_word;
++
++	struct {
++		__le16	xri_tag0;
++		__le16	xri_tag1;
++	} xri_tbl[62];
++};
++
++/**
++ * @brief READ_CONFIG - read SLI port configuration parameters
++ */
++struct sli4_cmd_read_config_s {
++	struct sli4_mbox_command_header_s	hdr;
++};
++
++enum {
++	SLI4_READ_CFG_RESP_RESOURCE_EXT = 0x80000000,	/* DW1 */
++	SLI4_READ_CFG_RESP_TOPOLOGY = 0xff000000,	/* DW2 */
++};
++
++struct sli4_rsp_read_config_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		ext_dword;
++	__le32		topology_dword;
++	__le32		resvd8;
++	__le16		e_d_tov;
++	__le16		resvd14;
++	__le32		resvd16;
++	__le16		r_a_tov;
++	__le16		resvd22;
++	__le32		resvd24;
++	__le32		resvd28;
++	__le16		lmt;
++	__le16		resvd34;
++	__le32		resvd36;
++	__le32		resvd40;
++	__le16		xri_base;
++	__le16		xri_count;
++	__le16		rpi_base;
++	__le16		rpi_count;
++	__le16		vpi_base;
++	__le16		vpi_count;
++	__le16		vfi_base;
++	__le16		vfi_count;
++	__le16		resvd60;
++	__le16		fcfi_count;
++	__le16		rq_count;
++	__le16		eq_count;
++	__le16		wq_count;
++	__le16		cq_count;
++	__le32		pad[45];
++};
++
++#define SLI4_READ_CFG_TOPO_FC		0x1	/** FC topology unknown */
++#define SLI4_READ_CFG_TOPO_FC_DA	0x2 /* FC Direct Attach (non FC-AL) */
++#define SLI4_READ_CFG_TOPO_FC_AL	0x3	/** FC-AL topology */
++
++/**
++ * @brief READ_NVPARMS - read SLI port configuration parameters
++ */
++
++enum {
++	SLI4_READ_NVPARAMS_HARD_ALPA	  = 0xff,
++	SLI4_READ_NVPARAMS_PREFERRED_D_ID = 0xffffff00,
++};
++
++struct sli4_cmd_read_nvparms_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		resvd0;
++	__le32		resvd4;
++	__le32		resvd8;
++	__le32		resvd12;
++	u8		wwpn[8];
++	u8		wwnn[8];
++	__le32		hard_alpa_d_id;
++};
++
++/**
++ * @brief WRITE_NVPARMS - write SLI port configuration parameters
++ */
++struct sli4_cmd_write_nvparms_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		resvd0;
++	__le32		resvd4;
++	__le32		resvd8;
++	__le32		resvd12;
++	u8		wwpn[8];
++	u8		wwnn[8];
++	__le32		hard_alpa_d_id;
++};
++
++/**
++ * @brief READ_REV - read the Port revision levels
++ */
++enum {
++	SLI4_READ_REV_FLAG_SLI_LEVEL = 0xf,
++	SLI4_READ_REV_FLAG_FCOEM	= 0x10,
++	SLI4_READ_REV_FLAG_CEEV	= 0x60,
++	SLI4_READ_REV_FLAG_VPD	= 0x2000,
++
++	SLI4_READ_REV_AVAILABLE_LENGTH = 0xffffff,
++};
++
++struct sli4_cmd_read_rev_s {
++	struct sli4_mbox_command_header_s hdr;
++	__le16		resvd0;
++	__le16		flags0_word;
++	__le32		first_hw_rev;
++	__le32		second_hw_rev;
++	__le32		resvd12;
++	__le32		third_hw_rev;
++	u8		fc_ph_low;
++	u8		fc_ph_high;
++	u8		feature_level_low;
++	u8		feature_level_high;
++	__le32		resvd24;
++	__le32		first_fw_id;
++	u8		first_fw_name[16];
++	__le32		second_fw_id;
++	u8		second_fw_name[16];
++	__le32		rsvd18[30];
++	__le32		available_length_dword;
++	struct sli4_dmaaddr_s hostbuf;
++	__le32		returned_vpd_length;
++	__le32		actual_vpd_length;
++};
++
++/**
++ * @brief READ_SPARM64 - read the Port service parameters
++ */
++struct sli4_cmd_read_sparm64_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		resvd0;
++	__le32		resvd4;
++	struct sli4_bde_s	bde_64;
++	__le16		vpi;
++	__le16		resvd22;
++	__le16		port_name_start;
++	__le16		port_name_len;
++	__le16		node_name_start;
++	__le16		node_name_len;
++};
++
++#define SLI4_READ_SPARM64_VPI_DEFAULT	0
++#define SLI4_READ_SPARM64_VPI_SPECIAL	U16_MAX
++
++#define SLI4_READ_SPARM64_WWPN_OFFSET	(4 * sizeof(u32))
++#define SLI4_READ_SPARM64_WWNN_OFFSET	(SLI4_READ_SPARM64_WWPN_OFFSET \
++					+ sizeof(uint64_t))
++/**
++ * @brief READ_TOPOLOGY - read the link event information
++ */
++enum {
++	SLI4_READTOPO_ATTEN_TYPE	= 0xff,		/* DW2 */
++	SLI4_READTOPO_FLAG_IL		= 0x100,
++	SLI4_READTOPO_FLAG_PB_RECVD	= 0x200,
++
++	SLI4_READTOPO_LINKSTATE_RECV	= 0x3,
++	SLI4_READTOPO_LINKSTATE_TRANS	= 0xc,
++	SLI4_READTOPO_LINKSTATE_MACHINE	= 0xf0,
++	SLI4_READTOPO_LINKSTATE_SPEED	= 0xff00,
++	SLI4_READTOPO_LINKSTATE_TF	= 0x40000000,
++	SLI4_READTOPO_LINKSTATE_LU	= 0x80000000,
++
++	SLI4_READTOPO_SCN_BBSCN		= 0xf,		/* DW9W1B0 */
++	SLI4_READTOPO_SCN_CBBSCN	= 0xf0,
++
++	SLI4_READTOPO_R_T_TOV		= 0x1ff,	/* DW10WO */
++	SLI4_READTOPO_AL_TOV		= 0xf000,
++
++	SLI4_READTOPO_PB_FLAG		= 0x80,
++
++	SLI4_READTOPO_INIT_N_PORTID	= 0xffffff,
++};
++
++struct sli4_cmd_read_topology_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		event_tag;
++	__le32		dw2_attentype;
++	u8		topology;
++	u8		lip_type;
++	u8		lip_al_ps;
++	u8		al_pa_granted;
++	struct sli4_bde_s	bde_loop_map;
++	__le32		linkdown_state;
++	__le32		currlink_state;
++	u8		max_bbc;
++	u8		init_bbc;
++	u8		scn_flags;
++	u8		rsvd39;
++	__le16		dw10w0_al_rt_tov;
++	__le16		lp_tov;
++	u8		acquired_al_pa;
++	u8		pb_flags;
++	__le16		specified_al_pa;
++	__le32		dw12_init_n_port_id;
++};
++
++#define SLI4_MIN_LOOP_MAP_BYTES	128
++
++#define SLI4_READ_TOPOLOGY_LINK_UP	0x1
++#define SLI4_READ_TOPOLOGY_LINK_DOWN	0x2
++#define SLI4_READ_TOPOLOGY_LINK_NO_ALPA	0x3
++
++#define SLI4_READ_TOPOLOGY_UNKNOWN	0x0
++#define SLI4_READ_TOPOLOGY_NPORT	0x1
++#define SLI4_READ_TOPOLOGY_FC_AL	0x2
++
++#define SLI4_READ_TOPOLOGY_SPEED_NONE	0x00
++#define SLI4_READ_TOPOLOGY_SPEED_1G	0x04
++#define SLI4_READ_TOPOLOGY_SPEED_2G	0x08
++#define SLI4_READ_TOPOLOGY_SPEED_4G	0x10
++#define SLI4_READ_TOPOLOGY_SPEED_8G	0x20
++#define SLI4_READ_TOPOLOGY_SPEED_10G	0x40
++#define SLI4_READ_TOPOLOGY_SPEED_16G	0x80
++#define SLI4_READ_TOPOLOGY_SPEED_32G	0x90
++
++/**
++ * @brief REG_FCFI - activate a FC Forwarder
++ */
++struct sli4_cmd_reg_fcfi_rq_cfg {
++	u8	r_ctl_mask;
++	u8	r_ctl_match;
++	u8	type_mask;
++	u8	type_match;
++};
++
++enum {
++	SLI4_REGFCFI_VLAN_TAG		= 0xfff,
++	SLI4_REGFCFI_VLANTAG_VALID	= 0x1000,
++};
++
++#define SLI4_CMD_REG_FCFI_NUM_RQ_CFG	4
++struct sli4_cmd_reg_fcfi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		fcf_index;
++	__le16		fcfi;
++	__le16		rqid1;
++	__le16		rqid0;
++	__le16		rqid3;
++	__le16		rqid2;
++	struct sli4_cmd_reg_fcfi_rq_cfg rq_cfg[SLI4_CMD_REG_FCFI_NUM_RQ_CFG];
++	__le32		dw8_vlan;
++};
++
++#define SLI4_CMD_REG_FCFI_MRQ_NUM_RQ_CFG	4
++#define SLI4_CMD_REG_FCFI_MRQ_MAX_NUM_RQ	32
++#define SLI4_CMD_REG_FCFI_SET_FCFI_MODE		0
++#define SLI4_CMD_REG_FCFI_SET_MRQ_MODE		1
++
++enum {
++	SLI4_REGFCFI_MRQ_VLAN_TAG	= 0xfff,
++	SLI4_REGFCFI_MRQ_VLANTAG_VALID	= 0x1000,
++	SLI4_REGFCFI_MRQ_MODE		= 0x2000,
++
++	SLI4_REGFCFI_MRQ_MASK_NUM_PAIRS	= 0xff,
++	SLI4_REGFCFI_MRQ_FILTER_BITMASK = 0xf00,
++	SLI4_REGFCFI_MRQ_RQ_SEL_POLICY	= 0xf000,
++};
++
++struct sli4_cmd_reg_fcfi_mrq_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		fcf_index;
++	__le16		fcfi;
++	__le16		rqid1;
++	__le16		rqid0;
++	__le16		rqid3;
++	__le16		rqid2;
++	struct sli4_cmd_reg_fcfi_rq_cfg
++				rq_cfg[SLI4_CMD_REG_FCFI_MRQ_NUM_RQ_CFG];
++	__le32		dw8_vlan;
++	__le32		dw9_mrqflags;
++};
++
++/**
++ * @brief REG_RPI - register a Remote Port Indicator
++ */
++enum {
++	SLI4_REGRPI_REMOTE_N_PORTID	= 0xffffff,	/* DW2 */
++	SLI4_REGRPI_UPD			= 0x1000000,
++	SLI4_REGRPI_ETOW		= 0x8000000,
++	SLI4_REGRPI_TERP		= 0x20000000,
++	SLI4_REGRPI_CI			= 0x80000000,
++};
++
++struct sli4_cmd_reg_rpi_s {
++	struct sli4_mbox_command_header_s	hdr;
 +	__le16		rpi;
-+	u8		ct_dnrx_byte;
-+	u8		command;
-+	u8		class_ag_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		remote_xid;
-+	u8		lloc1_appid;
-+	u8		qosd_xbl_hlm_dbde_wqes;
-+	u8		eat_xc_ccpe;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		rsvd44;
-+	__le32		rsvd48;
-+	__le32		rsvd52;
-+	__le32		rsvd56;
-+};
-+
-+/**
-+ * @brief WQE used to create an FCP target send (DATA IN).
-+ */
-+enum {
-+	SLI4_TSEND_WQE_XBL	= 0x8,
-+	SLI4_TSEND_WQE_DBDE	= 0x40,
-+	SLI4_TSEND_WQE_IOD	= 0x20,
-+	SLI4_TSEND_WQE_QOSD	= 0x2,
-+	SLI4_TSEND_WQE_HLM	= 0x10,
-+	SLI4_TSEND_WQE_PU_SHFT	= 4,
-+	SLI4_TSEND_WQE_AR	= 0x8,
-+	SLI4_TSEND_CT_SHFT	= 2,
-+	SLI4_TSEND_BS_SHFT	= 4,
-+	SLI4_TSEND_LEN_LOC_BIT2 = 0x1,
-+	SLI4_TSEND_CCPE		= 0x80,
-+	SLI4_TSEND_APPID_VALID	= 0x20,
-+	SLI4_TSEND_WQES		= 0x80,
-+	SLI4_TSEND_XC		= 0x20,
-+	SLI4_TSEND_EAT		= 0x10,
-+};
-+
-+struct sli4_fcp_tsend64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		payload_offset_length;
-+	__le32		relative_offset;
-+	/**
-+	 * DWord 5 can either be the task retry identifier (HLM=0) or
-+	 * the remote N_Port ID (HLM=1)
-+	 */
-+	__le32		dword5;
-+	__le16		xri_tag;
-+	__le16		rpi;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_pu_ar_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		remote_xid;
-+	u8		dw10byte0;
-+	u8		ll_qd_xbl_hlm_iod_dbde;
-+	u8		dw10byte2;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd45;
-+	__le16		cq_id;
-+	__le32		fcp_data_transmit_length;
-+	struct sli4_bde_s	first_data_bde; /* For performance hints */
-+};
-+
-+/**
-+ * @brief WQE used to create a general request.
-+ */
-+enum {
-+	SLI4_GEN_REQ64_WQE_XBL	= 0x8,
-+	SLI4_GEN_REQ64_WQE_DBDE	= 0x40,
-+	SLI4_GEN_REQ64_WQE_IOD	= 0x20,
-+	SLI4_GEN_REQ64_WQE_QOSD	= 0x2,
-+	SLI4_GEN_REQ64_WQE_HLM	= 0x10,
-+	SLI4_GEN_REQ64_CT_SHFT	= 2,
-+};
-+
-+struct sli4_gen_request64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		request_payload_length;
-+	__le32		relative_offset;
-+	u8		rsvd17;
-+	u8		df_ctl;
-+	u8		type;
-+	u8		r_ctl;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	u8		dw10flags0;
-+	u8		dw10flags1;
-+	u8		dw10flags2;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		remote_n_port_id_dword;
-+	__le32		rsvd48;
-+	__le32		rsvd52;
-+	__le32		max_response_payload_length;
-+};
-+
-+/**
-+ * @brief WQE used to create a send frame request.
-+ */
-+enum {
-+	SLI4_SF_WQE_DBDE	= 0x40,
-+	SLI4_SF_PU		= 0x30,
-+	SLI4_SF_CT		= 0xc,
-+	SLI4_SF_QOSD		= 0x2,
-+	SLI4_SF_LEN_LOC_BIT1	= 0x80,
-+	SLI4_SF_LEN_LOC_BIT2	= 0x1,
-+	SLI4_SF_XC		= 0x20,
-+	SLI4_SF_XBL		= 0x8,
-+};
-+
-+struct sli4_send_frame_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		frame_length;
-+	__le32		fc_header_0_1[2];
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		dw7flags0;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	u8		eof;
-+	u8		sof;
-+	u8		dw10flags0;
-+	u8		dw10flags1;
-+	u8		dw10flags2;
-+	u8		ccp;
-+	u8		cmd_type_byte;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		fc_header_2_5[4];
-+};
-+
-+/**
-+ * @brief WQE used to create a transmit sequence.
-+ */
-+enum {
-+	SLI4_SEQ_WQE_DBDE	= 0x4000,
-+	SLI4_SEQ_WQE_XBL	= 0x800,
-+	SLI4_SEQ_WQE_SI		= 0x4,
-+	SLI4_SEQ_WQE_FT		= 0x8,
-+	SLI4_SEQ_WQE_XO		= 0x40,
-+	SLI4_SEQ_WQE_LS		= 0x80,
-+	SLI4_SEQ_WQE_DIF	= 0x3,
-+	SLI4_SEQ_WQE_BS		= 0x70,
-+	SLI4_SEQ_WQE_PU		= 0x30,
-+	SLI4_SEQ_WQE_HLM	= 0x1000,
-+	SLI4_SEQ_WQE_IOD_SHIFT	= 13,
-+	SLI4_SEQ_WQE_CT_SHIFT	= 2,
-+	SLI4_SEQ_WQE_LEN_LOC_SHIFT = 7,
-+};
-+
-+struct sli4_xmit_sequence64_wqe_s {
-+	struct sli4_bde_s	bde;
-+	__le32		remote_n_port_id_dword;
-+	__le32		relative_offset;
-+	u8		dw5flags0;
-+	u8		df_ctl;
-+	u8		type;
-+	u8		r_ctl;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		dw7flags0;
-+	u8		command;
-+	u8		dw7flags1;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		remote_xid;
-+	__le16		dw10w0;
-+	u8		dw10flags0;
-+	u8		ccp;
-+	u8		cmd_type_wqec_byte;
-+	u8		rsvd45;
-+	__le16		cq_id;
-+	__le32		sequence_payload_len;
-+	__le32		rsvd48;
-+	__le32		rsvd52;
-+	__le32		rsvd56;
-+};
-+
-+/**
-+ * @brief WQE used unblock the specified XRI and to release
-+ * it to the SLI Port's free pool.
-+ */
-+enum {
-+	SLI4_REQU_XRI_WQE_XC	= 0x20,
-+	SLI4_REQU_XRI_WQE_QOSD	= 0x2,
-+};
-+
-+struct sli4_requeue_xri_wqe_s {
-+	__le32		rsvd0;
-+	__le32		rsvd4;
-+	__le32		rsvd8;
-+	__le32		rsvd12;
-+	__le32		rsvd16;
-+	__le32		rsvd20;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		rsvd32;
-+	__le16		request_tag;
-+	__le16		rsvd34;
-+	__le16		flags0;
-+	__le16		flags1;
-+	__le16		flags2;
-+	u8		ccp;
-+	u8		cmd_type_wqec_byte;
-+	u8		rsvd42;
-+	__le16		cq_id;
-+	__le32		rsvd44;
-+	__le32		rsvd48;
-+	__le32		rsvd52;
-+	__le32		rsvd56;
-+};
-+
-+/**
-+ * @brief WQE used to send a single frame sequence to broadcast address
-+ * SLI4_BCAST_WQE_DBDE:  dw10 bit15
-+ * BCAST_WQE_CT : dw7 bits 3,4
-+ * BCAST_WQE_LEN_LOC:  dw10 8,9
-+ * BCAST_WQE_IOD:  dw10 bit 13
-+ */
-+enum {
-+	SLI4_BCAST_WQE_DBDE		= 0x4000,
-+	SLI4_BCAST_WQE_CT_SHIFT		= 2,
-+	SLI4_BCAST_WQE_LEN_LOC_SHIFT	= 7,
-+	SLI4_BCAST_WQE_IOD_SHIFT	= 13,
-+};
-+
-+struct sli4_xmit_bcast64_wqe_s {
-+	struct sli4_bde_s	sequence_payload;
-+	__le32		sequence_payload_length;
-+	__le32		rsvd16;
-+	u8		rsvd17;
-+	u8		df_ctl;
-+	u8		type;
-+	u8		r_ctl;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		dw7flags0;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		temporary_rpi;
-+	__le16		dw10w0;
-+	u8		dw10flags1;
-+	u8		ccp;
-+	u8		dw11flags0;
-+	u8		rsvd41;
-+	__le16		cq_id;
-+	__le32		rsvd44;
-+	__le32		rsvd45;
-+	__le32		rsvd46;
-+	__le32		rsvd47;
-+};
-+
-+/**
-+ * @brief WQE used to create a BLS response.
-+ * SLI4_BLS_RSP_WQE_AR : 6th dword, bit 31
-+ * BLS_RSP_WQE_CT:  8th dword, bits 3 and 4
-+ * SLI4_BLS_RSP_WQE_QOSD:  dword 11, bit 10
-+ * SLI4_BLS_RSP_WQE_HLM:  dword 11, bit 13
-+ */
-+enum {
-+	SLI4_BLS_RSP_RID		= 0xffffff,
-+	SLI4_BLS_RSP_WQE_AR		= 0x40000000,
-+	SLI4_BLS_RSP_WQE_CT_SHFT	= 2,
-+	SLI4_BLS_RSP_WQE_QOSD		= 0x2,
-+	SLI4_BLS_RSP_WQE_HLM		= 0x10,
-+};
-+
-+struct sli4_xmit_bls_rsp_wqe_s {
-+	__le32		payload_word0;
-+	__le16		rx_id;
-+	__le16		ox_id;
-+	__le16		high_seq_cnt;
-+	__le16		low_seq_cnt;
-+	__le32		rsvd12;
-+	__le32		local_n_port_id_dword;
-+	__le32		remote_id_dword;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		dw8flags0;
-+	u8		command;
-+	u8		dw8flags1;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		rsvd38;
-+	u8		dw11flags0;
-+	u8		dw11flags1;
-+	u8		dw11flags2;
-+	u8		ccp;
-+	u8		dw12flags0;
-+	u8		rsvd45;
-+	__le16		cq_id;
-+	__le16		temporary_rpi;
-+	u8		rsvd50;
-+	u8		rsvd51;
-+	__le32		rsvd52;
-+	__le32		rsvd56;
-+	__le32		rsvd60;
-+};
-+
-+enum sli_bls_type_e {
-+	SLI4_SLI_BLS_ACC,
-+	SLI4_SLI_BLS_RJT,
-+	SLI4_SLI_BLS_MAX
-+};
-+
-+struct sli_bls_payload_s {
-+	enum sli_bls_type_e	type;
-+	__le16		ox_id;
-+	__le16		rx_id;
-+	union {
-+		struct {
-+			u8		seq_id_validity;
-+			u8		seq_id_last;
-+			u8		rsvd2;
-+			u8		rsvd3;
-+			u16		ox_id;
-+			u16		rx_id;
-+			__le16		low_seq_cnt;
-+			__le16		high_seq_cnt;
-+		} acc;
-+		struct {
-+			u8		vendor_unique;
-+			u8		reason_explanation;
-+			u8		reason_code;
-+			u8		rsvd3;
-+		} rjt;
-+	} u;
-+};
-+
-+/**
-+ * @brief WQE used to create an ELS response.
-+ * flags2 bits: rsvd, qosd, rsvd, xbl, hlm, iod, dbde, wqes
-+ * flags3 bits: pri : 3, pv , eat, xc, rsvd, ccpe
-+ */
-+
-+enum {
-+	SLI4_ELS_SID		= 0xffffff,
-+	SLI4_ELS_RID		= 0xffffff,
-+	SLI4_ELS_DBDE		= 0x40,
-+	SLI4_ELS_XBL		= 0x8,
-+	SLI4_ELS_IOD		= 0x20,
-+	SLI4_ELS_QOSD		= 0x2,
-+	SLI4_ELS_XC		= 0x20,
-+	SLI4_ELS_CT_OFFSET	= 0X2,
-+	SLI4_ELS_SP		= 0X1000000,
-+	SLI4_ELS_HLM		= 0X10,
-+};
-+
-+struct sli4_xmit_els_rsp64_wqe_s {
-+	struct sli4_bde_s	els_response_payload;
-+	__le32		els_response_payload_length;
-+	__le32		sid_dw;
-+	__le32		rid_dw;
-+	__le16		xri_tag;
-+	__le16		context_tag;
-+	u8		ct_byte;
-+	u8		command;
-+	u8		class_byte;
-+	u8		timer;
-+	__le32		abort_tag;
-+	__le16		request_tag;
-+	__le16		ox_id;
-+	u8		flags1;
-+	u8		flags2;
-+	u8		flags3;
-+	u8		flags4;
-+	u8		cmd_type_wqec;
-+	u8		rsvd34;
-+	__le16		cq_id;
-+	__le16		temporary_rpi;
-+	__le16		rsvd38;
-+	u32	rsvd40;
-+	u32	rsvd44;
-+	u32	rsvd48;
-+};
-+
-+/**
-+ * @brief Local Reject Reason Codes.
-+ */
-+#define SLI4_FC_LOCAL_REJECT_MISSING_CONTINUE	0x01
-+#define SLI4_FC_LOCAL_REJECT_SEQUENCE_TIMEOUT	0x02
-+#define SLI4_FC_LOCAL_REJECT_INTERNAL_ERROR	0x03
-+#define SLI4_FC_LOCAL_REJECT_INVALID_RPI	0x04
-+#define SLI4_FC_LOCAL_REJECT_NO_XRI		0x05
-+#define SLI4_FC_LOCAL_REJECT_ILLEGAL_COMMAND	0x06
-+#define SLI4_FC_LOCAL_REJECT_XCHG_DROPPED	0x07
-+#define SLI4_FC_LOCAL_REJECT_ILLEGAL_FIELD	0x08
-+#define SLI4_FC_LOCAL_REJECT_NO_ABORT_MATCH	0x0c
-+#define SLI4_FC_LOCAL_REJECT_TX_DMA_FAILED	0x0d
-+#define SLI4_FC_LOCAL_REJECT_RX_DMA_FAILED	0x0e
-+#define SLI4_FC_LOCAL_REJECT_ILLEGAL_FRAME	0x0f
-+#define SLI4_FC_LOCAL_REJECT_NO_RESOURCES	0x11
-+#define SLI4_FC_LOCAL_REJECT_FCP_CONF_FAILURE	0x12
-+#define SLI4_FC_LOCAL_REJECT_ILLEGAL_LENGTH	0x13
-+#define SLI4_FC_LOCAL_REJECT_UNSUPPORTED_FEATURE 0x14
-+#define SLI4_FC_LOCAL_REJECT_ABORT_IN_PROGRESS	0x15
-+#define SLI4_FC_LOCAL_REJECT_ABORT_REQUESTED	0x16
-+#define SLI4_FC_LOCAL_REJECT_RCV_BUFFER_TIMEOUT	0x17
-+#define SLI4_FC_LOCAL_REJECT_LOOP_OPEN_FAILURE	0x18
-+#define SLI4_FC_LOCAL_REJECT_LINK_DOWN		0x1a
-+#define SLI4_FC_LOCAL_REJECT_CORRUPTED_DATA	0x1b
-+#define SLI4_FC_LOCAL_REJECT_CORRUPTED_RPI	0x1c
-+#define SLI4_FC_LOCAL_REJECT_OUTOFORDER_DATA	0x1d
-+#define SLI4_FC_LOCAL_REJECT_OUTOFORDER_ACK	0x1e
-+#define SLI4_FC_LOCAL_REJECT_DUP_FRAME		0x1f
-+#define SLI4_FC_LOCAL_REJECT_LINK_CONTROL_FRAME	0x20
-+#define SLI4_FC_LOCAL_REJECT_BAD_HOST_ADDRESS	0x21
-+#define SLI4_FC_LOCAL_REJECT_MISSING_HDR_BUFFER	0x23
-+#define SLI4_FC_LOCAL_REJECT_MSEQ_CHAIN_CORRUPTED 0x24
-+#define SLI4_FC_LOCAL_REJECT_ABORTMULT_REQUESTED 0x25
-+#define SLI4_FC_LOCAL_REJECT_BUFFER_SHORTAGE	0x28
-+#define SLI4_FC_LOCAL_REJECT_RCV_XRIBUF_WAITING	0x29
-+#define SLI4_FC_LOCAL_REJECT_INVALID_VPI	0x2e
-+#define SLI4_FC_LOCAL_REJECT_MISSING_XRIBUF	0x30
-+#define SLI4_FC_LOCAL_REJECT_INVALID_RELOFFSET	0x40
-+#define SLI4_FC_LOCAL_REJECT_MISSING_RELOFFSET	0x41
-+#define SLI4_FC_LOCAL_REJECT_INSUFF_BUFFERSPACE	0x42
-+#define SLI4_FC_LOCAL_REJECT_MISSING_SI		0x43
-+#define SLI4_FC_LOCAL_REJECT_MISSING_ES		0x44
-+#define SLI4_FC_LOCAL_REJECT_INCOMPLETE_XFER	0x45
-+#define SLI4_FC_LOCAL_REJECT_SLER_FAILURE	0x46
-+#define SLI4_FC_LOCAL_REJECT_SLER_CMD_RCV_FAILURE 0x47
-+#define SLI4_FC_LOCAL_REJECT_SLER_REC_RJT_ERR	0x48
-+#define SLI4_FC_LOCAL_REJECT_SLER_REC_SRR_RETRY_ERR 0x49
-+#define SLI4_FC_LOCAL_REJECT_SLER_SRR_RJT_ERR	0x4a
-+#define SLI4_FC_LOCAL_REJECT_SLER_RRQ_RJT_ERR	0x4c
-+#define SLI4_FC_LOCAL_REJECT_SLER_RRQ_RETRY_ERR	0x4d
-+#define SLI4_FC_LOCAL_REJECT_SLER_ABTS_ERR	0x4e
-+
-+enum {
-+	SLI4_RACQE_RQ_EL_INDX = 0xfff,
-+	SLI4_RACQE_FCFI = 0x3f,
-+	SLI4_RACQE_HDPL = 0x3f,
-+	SLI4_RACQE_RQ_ID = 0xffc0,
-+};
-+
-+struct sli4_fc_async_rcqe_s {
-+	u8		rsvd0;
-+	u8		status;
-+	__le16		rq_elmt_indx_word;
-+	__le32		rsvd4;
-+	__le16		fcfi_rq_id_word;
-+	__le16		data_placement_length;
-+	u8		sof_byte;
-+	u8		eof_byte;
-+	u8		code;
-+	u8		hdpl_byte;
-+};
-+
-+struct sli4_fc_async_rcqe_v1_s {
-+	u8		rsvd0;
-+	u8		status;
-+	__le16		rq_elmt_indx_word;
-+	u8		fcfi_byte;
-+	u8		rsvd5;
-+	__le16		rsvd6;
-+	__le16		rq_id;
-+	__le16		data_placement_length;
-+	u8		sof_byte;
-+	u8		eof_byte;
-+	u8		code;
-+	u8		hdpl_byte;
-+};
-+
-+#define SLI4_FC_ASYNC_RQ_SUCCESS		0x10
-+#define SLI4_FC_ASYNC_RQ_BUF_LEN_EXCEEDED	0x11
-+#define SLI4_FC_ASYNC_RQ_INSUFF_BUF_NEEDED	0x12
-+#define SLI4_FC_ASYNC_RQ_INSUFF_BUF_FRM_DISC	0x13
-+#define SLI4_FC_ASYNC_RQ_DMA_FAILURE		0x14
-+enum {
-+	SLI4_RCQE_RQ_EL_INDX = 0xfff,
-+};
-+
-+struct sli4_fc_coalescing_rcqe_s {
-+	u8		rsvd0;
-+	u8		status;
-+	__le16		rq_elmt_indx_word;
-+	__le32		rsvd4;
-+	__le16		rq_id;
-+	__le16		sequence_reporting_placement_length;
-+	__le16		rsvd14;
-+	u8		code;
-+	u8		vld_byte;
-+};
-+
-+#define SLI4_FC_COALESCE_RQ_SUCCESS		0x10
-+#define SLI4_FC_COALESCE_RQ_INSUFF_XRI_NEEDED	0x18
-+/*
-+ * @SLI4_OCQE_RQ_EL_INDX: bits 0 to 15 in word1
-+ * @SLI4_OCQE_FCFI: bits 0 to 6 in dw1
-+ * @SLI4_OCQE_OOX: bit 15 in dw1
-+ * @SLI4_OCQE_AGXR: bit 16 in dw1
-+ */
-+enum {
-+	SLI4_OCQE_RQ_EL_INDX = 0x7f,
-+	SLI4_OCQE_FCFI = 0x3f,
-+	SLI4_OCQE_OOX = (1 << 6),
-+	SLI4_OCQE_AGXR = (1 << 7),
-+	SLI4_OCQE_HDPL = 0x3f,
-+};
-+
-+struct sli4_fc_optimized_write_cmd_cqe_s {
-+	u8		rsvd0;
-+	u8		status;
-+	__le16		w1;
-+	u8		flags0;
-+	u8		flags1;
-+	__le16		xri;
-+	__le16		rq_id;
-+	__le16		data_placement_length;
-+	__le16		rpi;
-+	u8		code;
-+	u8		hdpl_vld;
-+};
-+
-+enum {
-+	SLI4_OCQE_XB = (1 << 4),
-+};
-+
-+struct sli4_fc_optimized_write_data_cqe_s {
-+	u8		hw_status;
-+	u8		status;
-+	__le16		xri;
-+	__le32		total_data_placed;
-+	__le32		extended_status;
-+	__le16		rsvd12;
-+	u8		code;
-+	u8		flags;
-+};
-+
-+struct sli4_fc_xri_aborted_cqe_s {
-+	u8		rsvd0;
-+	u8		status;
 +	__le16		rsvd2;
-+	__le32		extended_status;
-+	__le16		xri;
-+	__le16		remote_xid;
-+	__le16		rsvd12;
-+	u8		code;
-+	u8		flags;
++	__le32		dw2_rportid_flags;
++	struct sli4_bde_s	bde_64;
++	__le16		vpi;
++	__le16		rsvd26;
 +};
 +
-+#define SLI4_GENERIC_CONTEXT_RPI	0x0
-+#define SLI4_GENERIC_CONTEXT_VPI	0x1
-+#define SLI4_GENERIC_CONTEXT_VFI	0x2
-+#define SLI4_GENERIC_CONTEXT_FCFI	0x3
++#define SLI4_REG_RPI_BUF_LEN			0x70
 +
-+#define SLI4_GENERIC_CLASS_CLASS_2	0x1
-+#define SLI4_GENERIC_CLASS_CLASS_3	0x2
++/**
++ * @brief REG_VFI - register a Virtual Fabric Indicator
++ */
++enum {
++	SLI4_REGVFI_VP		= 0x1000,	/* DW1 */
++	SLI4_REGVFI_UPD		= 0x2000,
 +
-+#define SLI4_ELS_REQUEST64_DIR_WRITE	0x0
-+#define SLI4_ELS_REQUEST64_DIR_READ	0x1
++	SLI4_REGVFI_LOCAL_N_PORTID = 0xffffff,	/* DW10 */
++};
 +
-+#define SLI4_ELS_REQUEST64_OTHER	0x0
-+#define SLI4_ELS_REQUEST64_LOGO		0x1
-+#define SLI4_ELS_REQUEST64_FDISC	0x2
-+#define SLI4_ELS_REQUEST64_FLOGIN	0x3
-+#define SLI4_ELS_REQUEST64_PLOGI	0x4
++struct sli4_cmd_reg_vfi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		vfi;
++	__le16		dw0w1_flags;
++	__le16		fcfi;
++	__le16		vpi;			/* vp=TRUE */
++	u8		wwpn[8];
++	struct sli4_bde_s sparm;
++	__le32		e_d_tov;
++	__le32		r_a_tov;
++	__le32		dw10_lportid_flags;
++};
 +
-+#define SLI4_ELS_REQUEST64_CMD_GEN		0x08
-+#define SLI4_ELS_REQUEST64_CMD_NON_FABRIC	0x0c
-+#define SLI4_ELS_REQUEST64_CMD_FABRIC		0x0d
++/**
++ * @brief REG_VPI - register a Virtual Port Indicator
++ */
++enum {
++	SLI4_REGVPI_LOCAL_N_PORTID	= 0xffffff,
++	SLI4_REGVPI_UPD			= 0x1000000,
++};
++
++struct sli4_cmd_reg_vpi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le32		dw2_lportid_flags;
++	u8		wwpn[8];
++	__le32		rsvd12;
++	__le16		vpi;
++	__le16		vfi;
++};
++
++/**
++ * @brief REQUEST_FEATURES - request / query SLI features
++ */
++enum {
++	SLI4_REQFEAT_QRY	= 0x1,		/* Dw1 */
++
++	SLI4_REQFEAT_IAAB	= (1 << 0),	/* DW2 & DW3 */
++	SLI4_REQFEAT_NPIV	= (1 << 1),
++	SLI4_REQFEAT_DIF	= (1 << 2),
++	SLI4_REQFEAT_VF		= (1 << 3),
++	SLI4_REQFEAT_FCPI	= (1 << 4),
++	SLI4_REQFEAT_FCPT	= (1 << 5),
++	SLI4_REQFEAT_FCPC	= (1 << 6),
++	SLI4_REQFEAT_RSVD	= (1 << 7),
++	SLI4_REQFEAT_RQD	= (1 << 8),
++	SLI4_REQFEAT_IAAR	= (1 << 9),
++	SLI4_REQFEAT_HLM	= (1 << 10),
++	SLI4_REQFEAT_PERFH	= (1 << 11),
++	SLI4_REQFEAT_RXSEQ	= (1 << 12),
++	SLI4_REQFEAT_RXRI	= (1 << 13),
++	SLI4_REQFEAT_DCL2	= (1 << 14),
++	SLI4_REQFEAT_RSCO	= (1 << 15),
++	SLI4_REQFEAT_MRQP	= (1 << 16),
++};
++
++struct sli4_cmd_request_features_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		dw1_qry;
++	__le32		cmd;
++	__le32		resp;
++};
++
++/**
++ * @brief SLI_CONFIG - submit a configuration command to Port
++ *
++ * Command is either embedded as part of the payload (embed) or located
++ * in a separate memory buffer (mem)
++ */
++enum {
++	SLI4_SLICONF_EMB		= 0x1,		/* DW1 */
++	SLI4_SLICONF_PMDCMD_SHIFT	= 3,
++	SLI4_SLICONF_PMDCMD_MASK	= 0x1F << SLI4_SLICONF_PMDCMD_SHIFT,
++	SLI4_SLICONF_PMDCMD_VAL_1	= 1 << SLI4_SLICONF_PMDCMD_SHIFT,
++	SLI4_SLICONF_PMDCNT		= 0xf8,
++
++	SLI4_SLICONFIG_PMD_LEN	= 0x00ffffff,	/* Config PMD length */
++};
++
++struct sli4_cmd_sli_config_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		dw1_flags;
++	__le32		payload_len;
++	__le32		rsvd12[3];
++	union {
++		u8 embed[58 * sizeof(u32)];
++		struct sli4_bufptr_s mem;
++	} payload;
++};
++
++/**
++ * @brief READ_STATUS - read tx/rx status of a particular port
++ *
++ */
++enum {
++	SLI4_READSTATUS_CLEAR_COUNTERS	= 0x1,	/* DW1 */
++};
++
++struct sli4_cmd_read_status_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		dw1_flags;
++	__le32		rsvd4;
++	__le32		trans_kbyte_cnt;
++	__le32		recv_kbyte_cnt;
++	__le32		trans_frame_cnt;
++	__le32		recv_frame_cnt;
++	__le32		trans_seq_cnt;
++	__le32		recv_seq_cnt;
++	__le32		tot_exchanges_orig;
++	__le32		tot_exchanges_resp;
++	__le32		recv_p_bsy_cnt;
++	__le32		recv_f_bsy_cnt;
++	__le32		no_rq_buf_dropped_frames_cnt;
++	__le32		empty_rq_timeout_cnt;
++	__le32		no_xri_dropped_frames_cnt;
++	__le32		empty_xri_pool_cnt;
++};
++
++/**
++ * @brief READ_LNK_STAT - read link status of a particular port
++ *
++ */
++enum {
++	SLI4_READ_LNKSTAT_REC	= (1 << 0),
++	SLI4_READ_LNKSTAT_GEC	= (1 << 1),
++	SLI4_READ_LNKSTAT_W02OF	= (1 << 2),
++	SLI4_READ_LNKSTAT_W03OF	= (1 << 3),
++	SLI4_READ_LNKSTAT_W04OF	= (1 << 4),
++	SLI4_READ_LNKSTAT_W05OF	= (1 << 5),
++	SLI4_READ_LNKSTAT_W06OF	= (1 << 6),
++	SLI4_READ_LNKSTAT_W07OF	= (1 << 7),
++	SLI4_READ_LNKSTAT_W08OF	= (1 << 8),
++	SLI4_READ_LNKSTAT_W09OF	= (1 << 9),
++	SLI4_READ_LNKSTAT_W10OF = (1 << 10),
++	SLI4_READ_LNKSTAT_W11OF = (1 << 11),
++	SLI4_READ_LNKSTAT_W12OF	= (1 << 12),
++	SLI4_READ_LNKSTAT_W13OF	= (1 << 13),
++	SLI4_READ_LNKSTAT_W14OF	= (1 << 14),
++	SLI4_READ_LNKSTAT_W15OF	= (1 << 15),
++	SLI4_READ_LNKSTAT_W16OF	= (1 << 16),
++	SLI4_READ_LNKSTAT_W17OF	= (1 << 17),
++	SLI4_READ_LNKSTAT_W18OF	= (1 << 18),
++	SLI4_READ_LNKSTAT_W19OF	= (1 << 19),
++	SLI4_READ_LNKSTAT_W20OF	= (1 << 20),
++	SLI4_READ_LNKSTAT_W21OF	= (1 << 21),
++	SLI4_READ_LNKSTAT_CLRC	= (1 << 30),
++	SLI4_READ_LNKSTAT_CLOF	= (1 << 31),
++};
++
++struct sli4_cmd_read_link_stats_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32	dw1_flags;
++	__le32	linkfail_errcnt;
++	__le32	losssync_errcnt;
++	__le32	losssignal_errcnt;
++	__le32	primseq_errcnt;
++	__le32	inval_txword_errcnt;
++	__le32	crc_errcnt;
++	__le32	primseq_eventtimeout_cnt;
++	__le32	elastic_bufoverrun_errcnt;
++	__le32	arbit_fc_al_timeout_cnt;
++	__le32	adv_rx_buftor_to_buf_credit;
++	__le32	curr_rx_buf_to_buf_credit;
++	__le32	adv_tx_buf_to_buf_credit;
++	__le32	curr_tx_buf_to_buf_credit;
++	__le32	rx_eofa_cnt;
++	__le32	rx_eofdti_cnt;
++	__le32	rx_eofni_cnt;
++	__le32	rx_soff_cnt;
++	__le32	rx_dropped_no_aer_cnt;
++	__le32	rx_dropped_no_avail_rpi_rescnt;
++	__le32	rx_dropped_no_avail_xri_rescnt;
++};
++
++/**
++ * @brief Format a WQE with WQ_ID Association performance hint
++ *
++ * @par Description
++ * PHWQ works by over-writing part of Word 10 in the WQE with the WQ ID.
++ *
++ * @param entry Pointer to the WQE.
++ * @param q_id Queue ID.
++ *
++ * @return None.
++ */
++static inline void
++sli_set_wq_id_association(void *entry, u16 q_id)
++{
++	u32 *wqe = entry;
++
++	/*
++	 * Set Word 10, bit 0 to zero
++	 * Set Word 10, bits 15:1 to the WQ ID
++	 */
++	wqe[10] &= cpu_to_le32(~0xffff);
++	wqe[10] |= cpu_to_le16(q_id << 1);
++}
++
++/**
++ * @brief UNREG_FCFI - unregister a FCFI
++ */
++struct sli4_cmd_unreg_fcfi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le16		fcfi;
++	__le16		rsvd6;
++};
++
++/**
++ * @brief UNREG_RPI - unregister one or more RPI
++ */
++enum {
++	UNREG_RPI_DP		= 0x2000,
++	UNREG_RPI_II_SHIFT	= 14,
++	UNREG_RPI_II_MASK	= 0x03 << UNREG_RPI_II_SHIFT,
++	UNREG_RPI_II_RPI	= 0x00 << UNREG_RPI_II_SHIFT,
++	UNREG_RPI_II_VPI	= 0x01 << UNREG_RPI_II_SHIFT,
++	UNREG_RPI_II_VFI	= 0x02 << UNREG_RPI_II_SHIFT,
++	UNREG_RPI_II_FCFI	= 0x03 << UNREG_RPI_II_SHIFT,
++
++	UNREG_RPI_DEST_N_PORTID_MASK = 0x00ffffff,
++};
++
++struct sli4_cmd_unreg_rpi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le16		index;
++	__le16		dw1w1_flags;
++	__le32		dw2_dest_n_portid;
++};
++
++/**
++ * @brief UNREG_VFI - unregister one or more VFI
++ */
++enum {
++	UNREG_VFI_II_SHIFT	= 14,
++	UNREG_VFI_II_MASK	= 0x03 << UNREG_VFI_II_SHIFT,
++	UNREG_VFI_II_VFI	= 0x00 << UNREG_VFI_II_SHIFT,
++	UNREG_VFI_II_FCFI	= 0x03 << UNREG_VFI_II_SHIFT,
++};
++
++struct sli4_cmd_unreg_vfi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le16		index;
++	__le16		dw2_flags;
++};
++
++enum sli4_unreg_type_e {
++	SLI4_UNREG_TYPE_PORT,
++	SLI4_UNREG_TYPE_DOMAIN,
++	SLI4_UNREG_TYPE_FCF,
++	SLI4_UNREG_TYPE_ALL
++};
++
++/**
++ * @brief UNREG_VPI - unregister one or more VPI
++ */
++enum {
++	UNREG_VPI_II_SHIFT	= 14,
++	UNREG_VPI_II_MASK	= 0x03 << UNREG_VPI_II_SHIFT,
++	UNREG_VPI_II_VPI	= 0x00 << UNREG_VPI_II_SHIFT,
++	UNREG_VPI_II_VFI	= 0x02 << UNREG_VPI_II_SHIFT,
++	UNREG_VPI_II_FCFI	= 0x03 << UNREG_VPI_II_SHIFT,
++};
++
++struct sli4_cmd_unreg_vpi_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le16		index;
++	__le16		dw2w0_flags;
++};
++
++/**
++ * @brief AUTO_XFER_RDY - Configure the auto-generate XFER-RDY feature.
++ */
++struct sli4_cmd_config_auto_xfer_rdy_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le32		max_burst_len;
++};
++
++#define SLI4_CONFIG_AUTO_XFERRDY_BLKSIZE	0xffff
++
++struct sli4_cmd_config_auto_xfer_rdy_hp_s {
++	struct sli4_mbox_command_header_s	hdr;
++	__le32		rsvd0;
++	__le32		max_burst_len;
++	__le32		dw3_esoc_flags;
++	__le16		block_size;
++	__le16		rsvd14;
++};
++
++/*************************************************************************
++ * SLI-4 common configuration command formats and definitions
++ */
++
++#define SLI4_CFG_STATUS_SUCCESS			0x00
++#define SLI4_CFG_STATUS_FAILED			0x01
++#define SLI4_CFG_STATUS_ILLEGAL_REQUEST		0x02
++#define SLI4_CFG_STATUS_ILLEGAL_FIELD		0x03
++
++#define SLI4_MGMT_STATUS_FLASHROM_READ_FAILED	0xcb
++
++#define SLI4_CFG_ADD_STATUS_NO_STATUS		0x00
++#define SLI4_CFG_ADD_STATUS_INVALID_OPCODE	0x1e
++
++/**
++ * Subsystem values.
++ */
++#define SLI4_SUBSYSTEM_COMMON			0x01
++#define SLI4_SUBSYSTEM_LOWLEVEL			0x0B
++#define SLI4_SUBSYSTEM_FC			0x0c
++#define SLI4_SUBSYSTEM_DMTF			0x11
++
++#define	SLI4_OPC_LOWLEVEL_SET_WATCHDOG		0X36
++
++/**
++ * Common opcode (OPC) values.
++ */
++enum {
++	CMN_FUNCTION_RESET	= 0x3d,
++	CMN_CREATE_CQ		= 0x0c,
++	CMN_CREATE_CQ_SET	= 0x1d,
++	CMN_DESTROY_CQ		= 0x36,
++	CMN_MODIFY_EQ_DELAY	= 0x29,
++	CMN_CREATE_EQ		= 0x0d,
++	CMN_DESTROY_EQ		= 0x37,
++	CMN_CREATE_MQ_EXT	= 0x5a,
++	CMN_DESTROY_MQ		= 0x35,
++	CMN_GET_CNTL_ATTRIBUTES	= 0x20,
++	CMN_NOP			= 0x21,
++	CMN_GET_RSC_EXTENT_INFO = 0x9a,
++	CMN_GET_SLI4_PARAMS	= 0xb5,
++	CMN_QUERY_FW_CONFIG	= 0x3a,
++	CMN_GET_PORT_NAME	= 0x4d,
++
++	CMN_WRITE_FLASHROM	= 0x07,
++	/* TRANSCEIVER Data */
++	CMN_READ_TRANS_DATA	= 0x49,
++	CMN_GET_CNTL_ADDL_ATTRS = 0x79,
++	CMN_GET_FUNCTION_CFG	= 0xa0,
++	CMN_GET_PROFILE_CFG	= 0xa4,
++	CMN_SET_PROFILE_CFG	= 0xa5,
++	CMN_GET_PROFILE_LIST	= 0xa6,
++	CMN_GET_ACTIVE_PROFILE	= 0xa7,
++	CMN_SET_ACTIVE_PROFILE	= 0xa8,
++	CMN_READ_OBJECT		= 0xab,
++	CMN_WRITE_OBJECT	= 0xac,
++	CMN_DELETE_OBJECT	= 0xae,
++	CMN_READ_OBJECT_LIST	= 0xad,
++	CMN_SET_DUMP_LOCATION	= 0xb8,
++	CMN_SET_FEATURES	= 0xbf,
++	CMN_GET_RECFG_LINK_INFO = 0xc9,
++	CMN_SET_RECNG_LINK_ID	= 0xca,
++};
++
++/**
++ * DMTF opcode (OPC) values.
++ */
++#define DMTF_EXEC_CLP_CMD 0x01
++
++/**
++ * @brief COMMON_FUNCTION_RESET
++ *
++ * Resets the Port, returning it to a power-on state. This configuration
++ * command does not have a payload and should set/expect the lengths to
++ * be zero.
++ */
++struct sli4_rqst_cmn_function_reset_s {
++	struct sli4_rqst_hdr_s	hdr;
++};
++
++struct sli4_rsp_cmn_function_reset_s {
++	struct sli4_rsp_hdr_s	hdr;
++};
++
++
++/**
++ * @brief COMMON_GET_CNTL_ATTRIBUTES
++ *
++ * Query for information about the SLI Port
++ */
++enum {
++	SLI4_CNTL_ATTR_PORTNUM	= 0x3f,		/* Port num and type */
++	SLI4_CNTL_ATTR_PORTTYPE	= 0xc0,
++};
++
++struct sli4_rsp_cmn_get_cntl_attributes_s {
++	struct sli4_rsp_hdr_s	hdr;
++	u8		version_str[32];
++	u8		manufacturer_name[32];
++	__le32		supported_modes;
++	u8		eprom_version_lo;
++	u8		eprom_version_hi;
++	__le16		rsvd17;
++	__le32		mbx_ds_version;
++	__le32		ep_fw_ds_version;
++	u8		ncsi_version_str[12];
++	__le32		def_extended_timeout;
++	u8		model_number[32];
++	u8		description[64];
++	u8		serial_number[32];
++	u8		ip_version_str[32];
++	u8		fw_version_str[32];
++	u8		bios_version_str[32];
++	u8		redboot_version_str[32];
++	u8		driver_version_str[32];
++	u8		fw_on_flash_version_str[32];
++	__le32		functionalities_supported;
++	__le16		max_cdb_length;
++	u8		asic_revision;
++	u8		generational_guid0;
++	__le32		generational_guid1_12[3];
++	__le16		generational_guid13_14;
++	u8		generational_guid15;
++	u8		hba_port_count;
++	__le16		default_link_down_timeout;
++	u8		iscsi_version_min_max;
++	u8		multifunctional_device;
++	u8		cache_valid;
++	u8		hba_status;
++	u8		max_domains_supported;
++	u8		port_num_type_flags;
++	__le32		firmware_post_status;
++	__le32		hba_mtu;
++	u8		iscsi_features;
++	u8		rsvd121[3];
++	__le16		pci_vendor_id;
++	__le16		pci_device_id;
++	__le16		pci_sub_vendor_id;
++	__le16		pci_sub_system_id;
++	u8		pci_bus_number;
++	u8		pci_device_number;
++	u8		pci_function_number;
++	u8		interface_type;
++	__le64		unique_identifier;
++	u8		number_of_netfilters;
++	u8		rsvd122[3];
++};
++
++/**
++ * @brief COMMON_GET_CNTL_ATTRIBUTES
++ *
++ * This command queries the controller information from the Flash ROM.
++ */
++struct sli4_rqst_cmn_get_cntl_addl_attributes_s {
++	struct sli4_rqst_hdr_s	hdr;
++};
++
++struct sli4_rsp_cmn_get_cntl_addl_attributes_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le16		ipl_file_number;
++	u8		ipl_file_version;
++	u8		rsvd4;
++	u8		on_die_temperature;
++	u8		rsvd5[3];
++	__le32		driver_advanced_features_supported;
++	__le32		rsvd7[4];
++	char		universal_bios_version[32];
++	char		x86_bios_version[32];
++	char		efi_bios_version[32];
++	char		fcode_version[32];
++	char		uefi_bios_version[32];
++	char		uefi_nic_version[32];
++	char		uefi_fcode_version[32];
++	char		uefi_iscsi_version[32];
++	char		iscsi_x86_bios_version[32];
++	char		pxe_x86_bios_version[32];
++	u8		default_wwpn[8];
++	u8		ext_phy_version[32];
++	u8		fc_universal_bios_version[32];
++	u8		fc_x86_bios_version[32];
++	u8		fc_efi_bios_version[32];
++	u8		fc_fcode_version[32];
++	u8		ext_phy_crc_label[8];
++	u8		ipl_file_name[16];
++	u8		rsvd139[72];
++};
++
++/**
++ * @brief COMMON_NOP
++ *
++ * This command does not do anything; it only returns
++ * the payload in the completion.
++ */
++struct sli4_rqst_cmn_nop_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32			context[2];
++};
++
++struct sli4_rsp_cmn_nop_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32			context[2];
++};
++
++/**
++ * @brief COMMON_GET_RESOURCE_EXTENT_INFO
++ */
++struct sli4_rqst_cmn_get_resource_extent_info_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le16	resource_type;
++	__le16	rsvd16;
++};
++
++#define SLI4_RSC_TYPE_ISCSI_INI_XRI	0x0c
++#define SLI4_RSC_TYPE_VFI		0x20
++#define SLI4_RSC_TYPE_VPI		0x21
++#define SLI4_RSC_TYPE_RPI		0x22
++#define SLI4_RSC_TYPE_XRI		0x23
++
++struct sli4_rsp_cmn_get_resource_extent_info_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le16	resource_extent_count;
++	__le16	resource_extent_size;
++};
++
++#define SLI4_128BYTE_WQE_SUPPORT	0x02
++/**
++ * @brief COMMON_GET_SLI4_PARAMETERS
++ */
++
++#define GET_Q_CNT_METHOD(val)\
++	((val & RSP_GET_PARAM_Q_CNT_MTHD_MASK)\
++	>> RSP_GET_PARAM_Q_CNT_MTHD_SHFT)
++#define GET_Q_CREATE_VERSION(val)\
++	((val & RSP_GET_PARAM_QV_MASK)\
++	>> RSP_GET_PARAM_QV_SHIFT)
++
++enum {
++	/*GENERIC*/
++	RSP_GET_PARAM_Q_CNT_MTHD_SHFT	= 24,
++	RSP_GET_PARAM_Q_CNT_MTHD_MASK	= (0xF << 24),
++	RSP_GET_PARAM_QV_SHIFT		= 14,
++	RSP_GET_PARAM_QV_MASK		= (3 << 14),
++
++	/* DW4 */
++	RSP_GET_PARAM_PROTO_TYPE_MASK	= 0xFF,
++	/* DW5 */
++	RSP_GET_PARAM_FT		= (1 << 0),
++	RSP_GET_PARAM_SLI_REV_MASK	= (0xF << 4),
++	RSP_GET_PARAM_SLI_FAM_MASK	= (0xF << 8),
++	RSP_GET_PARAM_IF_TYPE_MASK	= (0xF << 12),
++	RSP_GET_PARAM_SLI_HINT1_MASK	= (0xFF << 16),
++	RSP_GET_PARAM_SLI_HINT2_MASK	= (0x1F << 24),
++	/* DW6 */
++	RSP_GET_PARAM_EQ_PAGE_CNT_MASK	= (0xF << 0),
++	RSP_GET_PARAM_EQE_SZS_MASK	= (0xF << 8),
++	RSP_GET_PARAM_EQ_PAGE_SZS_MASK	= (0xFF << 16),
++	/* DW8 */
++	RSP_GET_PARAM_CQ_PAGE_CNT_MASK	= (0xF << 0),
++	RSP_GET_PARAM_CQE_SZS_MASK	= (0xF << 8),
++	RSP_GET_PARAM_CQ_PAGE_SZS_MASK	= (0xFF << 16),
++	/* DW10 */
++	RSP_GET_PARAM_MQ_PAGE_CNT_MASK	= (0xF << 0),
++	RSP_GET_PARAM_MQ_PAGE_SZS_MASK	= (0xFF << 16),
++	/* DW12 */
++	RSP_GET_PARAM_WQ_PAGE_CNT_MASK	= (0xF << 0),
++	RSP_GET_PARAM_WQE_SZS_MASK	= (0xF << 8),
++	RSP_GET_PARAM_WQ_PAGE_SZS_MASK	= (0xFF << 16),
++	/* DW14 */
++	RSP_GET_PARAM_RQ_PAGE_CNT_MASK	= (0xF << 0),
++	RSP_GET_PARAM_RQE_SZS_MASK	= (0xF << 8),
++	RSP_GET_PARAM_RQ_PAGE_SZS_MASK	= (0xFF << 16),
++	/* DW15W1*/
++	RSP_GET_PARAM_RQ_DB_WINDOW_MASK	= 0xF000,
++	/* DW16 */
++	RSP_GET_PARAM_FC		= (1 << 0),
++	RSP_GET_PARAM_EXT		= (1 << 1),
++	RSP_GET_PARAM_HDRR		= (1 << 2),
++	RSP_GET_PARAM_SGLR		= (1 << 3),
++	RSP_GET_PARAM_FBRR		= (1 << 4),
++	RSP_GET_PARAM_AREG		= (1 << 5),
++	RSP_GET_PARAM_TGT		= (1 << 6),
++	RSP_GET_PARAM_TERP		= (1 << 7),
++	RSP_GET_PARAM_ASSI		= (1 << 8),
++	RSP_GET_PARAM_WCHN		= (1 << 9),
++	RSP_GET_PARAM_TCCA		= (1 << 10),
++	RSP_GET_PARAM_TRTY		= (1 << 11),
++	RSP_GET_PARAM_TRIR		= (1 << 12),
++	RSP_GET_PARAM_PHOFF		= (1 << 13),
++	RSP_GET_PARAM_PHON		= (1 << 14),
++	RSP_GET_PARAM_PHWQ		= (1 << 15),
++	RSP_GET_PARAM_BOUND_4GA		= (1 << 16),
++	RSP_GET_PARAM_RXC		= (1 << 17),
++	RSP_GET_PARAM_HLM		= (1 << 18),
++	RSP_GET_PARAM_IPR		= (1 << 19),
++	RSP_GET_PARAM_RXRI		= (1 << 20),
++	RSP_GET_PARAM_SGLC		= (1 << 21),
++	RSP_GET_PARAM_TIMM		= (1 << 22),
++	RSP_GET_PARAM_TSMM		= (1 << 23),
++	RSP_GET_PARAM_OAS		= (1 << 25),
++	RSP_GET_PARAM_LC		= (1 << 26),
++	RSP_GET_PARAM_AGXF		= (1 << 27),
++	RSP_GET_PARAM_LOOPBACK_MASK	= (0xF << 28),
++	/* DW18 */
++	RSP_GET_PARAM_SGL_PAGE_CNT_MASK = (0xF << 0),
++	RSP_GET_PARAM_SGL_PAGE_SZS_MASK = (0xFF << 8),
++	RSP_GET_PARAM_SGL_PP_ALIGN_MASK = (0xFF << 16)
++};
++
++struct sli4_rqst_cmn_get_sli4_params_s {
++	struct sli4_rqst_hdr_s	hdr;
++};
++
++struct sli4_rsp_cmn_get_sli4_params_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		dw4_protocol_type;
++	__le32		dw5_sli;
++	__le32		dw6_eq_page_cnt;
++	__le16		eqe_count_mask;
++	__le16		rsvd26;
++	__le32		dw8_cq_page_cnt;
++	__le16		cqe_count_mask;
++	__le16		rsvd34;
++	__le32		dw10_mq_page_cnt;
++	__le16		mqe_count_mask;
++	__le16		rsvd42;
++	__le32		dw12_wq_page_cnt;
++	__le16		wqe_count_mask;
++	__le16		rsvd50;
++	__le32		dw14_rq_page_cnt;
++	__le16		rqe_count_mask;
++	__le16		dw15w1_rq_db_window;
++	__le32		dw16_loopback_scope;
++	__le32		sge_supported_length;
++	__le32		dw18_sgl_page_cnt;
++	__le16		min_rq_buffer_size;
++	__le16		rsvd75;
++	__le32		max_rq_buffer_size;
++	__le16		physical_xri_max;
++	__le16		physical_rpi_max;
++	__le16		physical_vpi_max;
++	__le16		physical_vfi_max;
++	__le32		rsvd88;
++	__le16		frag_num_field_offset;
++	__le16		frag_num_field_size;
++	__le16		sgl_index_field_offset;
++	__le16		sgl_index_field_size;
++	__le32		chain_sge_initial_value_lo;
++	__le32		chain_sge_initial_value_hi;
++};
++
++/**
++ * @brief COMMON_QUERY_FW_CONFIG
++ *
++ * This command retrieves firmware configuration parameters and adapter
++ * resources available to the driver.
++ */
++struct sli4_rqst_cmn_query_fw_config_s {
++	struct sli4_rqst_hdr_s	hdr;
++};
++
++#define SLI4_FUNCTION_MODE_INI_MODE 0x40
++#define SLI4_FUNCTION_MODE_TGT_MODE 0x80
++#define SLI4_FUNCTION_MODE_DUA_MODE      0x800
++
++#define SLI4_ULP_MODE_INI           0x40
++#define SLI4_ULP_MODE_TGT           0x80
++
++struct sli4_rsp_cmn_query_fw_config_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		config_number;
++	__le32		asic_rev;
++	__le32		physical_port;
++	__le32		function_mode;
++	__le32		ulp0_mode;
++	__le32		ulp0_nic_wqid_base;
++	__le32		ulp0_nic_wq_total; /* Dword 10 */
++	__le32		ulp0_toe_wqid_base;
++	__le32		ulp0_toe_wq_total;
++	__le32		ulp0_toe_rqid_base;
++	__le32		ulp0_toe_rq_total;
++	__le32		ulp0_toe_defrqid_base;
++	__le32		ulp0_toe_defrq_total;
++	__le32		ulp0_lro_rqid_base;
++	__le32		ulp0_lro_rq_total;
++	__le32		ulp0_iscsi_icd_base;
++	__le32		ulp0_iscsi_icd_total; /* Dword 20 */
++	__le32		ulp1_mode;
++	__le32		ulp1_nic_wqid_base;
++	__le32		ulp1_nic_wq_total;
++	__le32		ulp1_toe_wqid_base;
++	__le32		ulp1_toe_wq_total;
++	__le32		ulp1_toe_rqid_base;
++	__le32		ulp1_toe_rq_total;
++	__le32		ulp1_toe_defrqid_base;
++	__le32		ulp1_toe_defrq_total;
++	__le32		ulp1_lro_rqid_base;  /* Dword 30 */
++	__le32		ulp1_lro_rq_total;
++	__le32		ulp1_iscsi_icd_base;
++	__le32		ulp1_iscsi_icd_total;
++	__le32		function_capabilities;
++	__le32		ulp0_cq_base;
++	__le32		ulp0_cq_total;
++	__le32		ulp0_eq_base;
++	__le32		ulp0_eq_total;
++	__le32		ulp0_iscsi_chain_icd_base;
++	__le32		ulp0_iscsi_chain_icd_total;  /* Dword 40 */
++	__le32		ulp1_iscsi_chain_icd_base;
++	__le32		ulp1_iscsi_chain_icd_total;
++};
++
++/**
++ * @brief COMMON_GET_PORT_NAME
++ */
++/*Port Types*/
++enum {
++	PORT_TYPE_ETH	= 0,
++	PORT_TYPE_FC	= 1,
++};
++
++struct sli4_rqst_cmn_get_port_name_s {
++	struct sli4_rqst_hdr_s	hdr;
++	u8      port_type;
++	u8      rsvd4[3];
++};
++
++struct sli4_rsp_cmn_get_port_name_s {
++	struct sli4_rsp_hdr_s	hdr;
++	char		port_name[4];
++};
++
++/**
++ * @brief COMMON_WRITE_FLASHROM
++ */
++struct sli4_rqst_cmn_write_flashrom_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		flash_rom_access_opcode;
++	__le32		flash_rom_access_operation_type;
++	__le32		data_buffer_size;
++	__le32		offset;
++	u8		data_buffer[4];
++};
++
++#define SLI4_MGMT_FLASHROM_OPCODE_FLASH			0x01
++#define SLI4_MGMT_FLASHROM_OPCODE_SAVE			0x02
++#define SLI4_MGMT_FLASHROM_OPCODE_CLEAR			0x03
++#define SLI4_MGMT_FLASHROM_OPCODE_REPORT		0x04
++#define SLI4_MGMT_FLASHROM_OPCODE_IMAGE_INFO		0x05
++#define SLI4_MGMT_FLASHROM_OPCODE_IMAGE_CRC		0x06
++#define SLI4_MGMT_FLASHROM_OPCODE_OFFSET_BASED_FLASH	0x07
++#define SLI4_MGMT_FLASHROM_OPCODE_OFFSET_BASED_SAVE	0x08
++#define SLI4_MGMT_PHY_FLASHROM_OPCODE_FLASH		0x09
++#define SLI4_MGMT_PHY_FLASHROM_OPCODE_SAVE		0x0a
++
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_ISCSI		0x00
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_REDBOOT		0x01
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_BIOS		0x02
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_PXE_BIOS		0x03
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_CODE_CONTROL	0x04
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_IPSEC_CFG		0x05
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_INIT_DATA		0x06
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_ROM_OFFSET	0x07
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_FC_BIOS		0x08
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_ISCSI_BAK		0x09
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_FC_ACT		0x0a
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_FC_BAK		0x0b
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_CODE_CTRL_P	0x0c
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_NCSI		0x0d
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_NIC		0x0e
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_DCBX		0x0f
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_PXE_BIOS_CFG	0x10
++#define SLI4_FLASH_ROM_ACCESS_OP_TYPE_ALL_CFG_DATA	0x11
++
++/**
++ * @brief COMMON_READ_TRANSCEIVER_DATA
++ *
++ * This command reads SFF transceiver data(Format is defined
++ * by the SFF-8472 specification).
++ */
++struct sli4_rqst_cmn_read_transceiver_data_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		page_number;
++	__le32		port;
++};
++
++struct sli4_rsp_cmn_read_transceiver_data_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		page_number;
++	__le32		port;
++	__le32		page_data[32];
++	__le32		page_data_2[32];
++};
++
++/**
++ * @brief COMMON_READ_OBJECT
++ */
++
++enum {
++	SLI4_REQ_DESIRE_READLEN = 0xFFFFFF
++};
++
++struct sli4_rqst_cmn_read_object_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		desired_read_length_dword;
++	__le32		read_offset;
++	u8		object_name[104];
++	__le32		host_buffer_descriptor_count;
++	struct sli4_bde_s	host_buffer_descriptor[0];
++};
++
++enum {
++	RSP_COM_READ_OBJ_EOF = 0x80000000
++
++};
++
++struct sli4_rsp_cmn_read_object_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		actual_read_length;
++	__le32		eof_dword;
++};
++
++/**
++ * @brief COMMON_WRITE_OBJECT
++ */
++
++enum {
++	SLI4_RQ_DES_WRITE_LEN = 0xFFFFFF,
++	SLI4_RQ_DES_WRITE_LEN_NOC = 0x40000000,
++	SLI4_RQ_DES_WRITE_LEN_EOF = 0x80000000
++
++};
++
++struct sli4_rqst_cmn_write_object_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		desired_write_len_dword;
++	__le32		write_offset;
++	u8		object_name[104];
++	__le32		host_buffer_descriptor_count;
++	struct sli4_bde_s	host_buffer_descriptor[0];
++};
++
++enum {
++	RSP_CHANGE_STATUS = 0xFF
++
++};
++
++struct sli4_rsp_cmn_write_object_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		actual_write_length;
++	__le32		change_status_dword;
++};
++
++/**
++ * @brief COMMON_DELETE_OBJECT
++ */
++struct sli4_rqst_cmn_delete_object_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		rsvd4;
++	__le32		rsvd5;
++	u8		object_name[104];
++};
++
++/**
++ * @brief COMMON_READ_OBJECT_LIST
++ */
++
++enum {
++	SLI4_RQ_OBJ_LIST_READ_LEN = 0xFFFFFF
++
++};
++
++struct sli4_rqst_cmn_read_object_list_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		desired_read_length_dword;
++	__le32		read_offset;
++	u8		object_name[104];
++	__le32		host_buffer_descriptor_count;
++	struct sli4_bde_s	host_buffer_descriptor[0];
++};
++
++/**
++ * @brief COMMON_SET_DUMP_LOCATION
++ */
++
++enum {
++	SLI4_RQ_COM_SET_DUMP_BUFFER_LEN = 0xFFFFFF,
++	SLI4_RQ_COM_SET_DUMP_FDB = 0x20000000,
++	SLI4_RQ_COM_SET_DUMP_BLP = 0x40000000,
++	SLI4_RQ_COM_SET_DUMP_QRY = 0x80000000,
++
++};
++
++struct sli4_rqst_cmn_set_dump_location_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		buffer_length_dword;
++	__le32		buf_addr_low;
++	__le32		buf_addr_high;
++};
++
++enum {
++	RSP_SET_DUMP_BUFFER_LEN = 0xFFFFFF
++
++};
++
++struct sli4_rsp_cmn_set_dump_location_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		buffer_length_dword;
++};
++
++/**
++ * @brief COMMON_SET_SET_FEATURES
++ */
++#define SLI4_SET_FEATURES_DIF_SEED			0x01
++#define SLI4_SET_FEATURES_XRI_TIMER			0x03
++#define SLI4_SET_FEATURES_MAX_PCIE_SPEED		0x04
++#define SLI4_SET_FEATURES_FCTL_CHECK			0x05
++#define SLI4_SET_FEATURES_FEC				0x06
++#define SLI4_SET_FEATURES_PCIE_RECV_DETECT		0x07
++#define SLI4_SET_FEATURES_DIF_MEMORY_MODE		0x08
++#define SLI4_SET_FEATURES_DISABLE_SLI_PORT_PAUSE_STATE	0x09
++#define SLI4_SET_FEATURES_ENABLE_PCIE_OPTIONS		0x0A
++#define SLI4_SET_FEAT_CFG_AUTO_XFER_RDY_T10PI	0x0C
++#define SLI4_SET_FEATURES_ENABLE_MULTI_RECEIVE_QUEUE	0x0D
++#define SLI4_SET_FEATURES_SET_FTD_XFER_HINT		0x0F
++#define SLI4_SET_FEATURES_SLI_PORT_HEALTH_CHECK		0x11
++
++struct sli4_rqst_cmn_set_features_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		feature;
++	__le32		param_len;
++	__le32		params[8];
++};
++
++struct sli4_rqst_cmn_set_features_dif_seed_s {
++	__le16		seed;
++	__le16		rsvd16;
++};
++
++enum {
++	SLI4_RQ_COM_SET_T10_PI_MEM_MODEL = 0x1
++
++};
++
++struct sli4_rqst_cmn_set_features_t10_pi_mem_model_s {
++	__le32		tmm_dword;
++};
++
++enum {
++	SLI4_RQ_MULTIRQ_ISR = 0x1,
++	SLI4_RQ_MULTIRQ_AUTOGEN_XFER_RDY = 0x2,
++
++	SLI4_RQ_MULTIRQ_NUM_RQS = 0xFF,
++	SLI4_RQ_MULTIRQ_RQ_SELECT = 0xF00
++};
++
++struct sli4_rqst_cmn_set_features_multirq_s {
++	__le32		auto_gen_xfer_dword; /* Include Sequence Reporting */
++					/* Auto Generate XFER-RDY Enabled */
++	__le32		num_rqs_dword;
++};
++
++enum {
++	SLI4_SETFEAT_XFERRDY_T10PI_RTC	= (1 << 0),	/* DW0 */
++	SLI4_SETFEAT_XFERRDY_T10PI_ATV	= (1 << 1),
++	SLI4_SETFEAT_XFERRDY_T10PI_TMM	= (1 << 2),
++	SLI4_SETFEAT_XFERRDY_T10PI_PTYPE = (0x7 << 4),
++	SLI4_SETFEAT_XFERRDY_T10PI_BLKSIZ = (0x7 << 7),
++};
++
++struct sli4_rqst_cmn_set_features_xfer_rdy_t10pi_s {
++	__le32		dw0_flags;
++	__le16		app_tag;
++	__le16		rsvd6;
++};
++
++enum {
++	SLI4_RQ_HEALTH_CHECK_ENABLE = 0x1,
++	SLI4_RQ_HEALTH_CHECK_QUERY = 0x2
++
++};
++
++struct sli4_rqst_cmn_set_features_health_check_s {
++	__le32		health_check_dword;
++};
++
++struct sli4_rqst_cmn_set_features_set_fdt_xfer_hint_s {
++	__le32		fdt_xfer_hint;
++};
++
++/**
++ * @brief DMTF_EXEC_CLP_CMD
++ */
++struct sli4_rqst_dmtf_exec_clp_cmd_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le32		cmd_buf_length;
++	__le32		resp_buf_length;
++	__le32		cmd_buf_addr_low;
++	__le32		cmd_buf_addr_high;
++	__le32		resp_buf_addr_low;
++	__le32		resp_buf_addr_high;
++};
++
++struct sli4_rsp_dmtf_exec_clp_cmd_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32		rsvd4;
++	__le32		resp_length;
++	__le32		rsvd6;
++	__le32		rsvd7;
++	__le32		rsvd8;
++	__le32		rsvd9;
++	__le32		clp_status;
++	__le32		clp_detailed_status;
++};
++
++#define SLI4_PROTOCOL_FC			0x10
++#define SLI4_PROTOCOL_DEFAULT			0xff
++
++struct sli4_rspource_descriptor_v1_s {
++	u8		descriptor_type;
++	u8		descriptor_length;
++	__le16		rsvd16;
++	__le32		type_specific[0];
++};
++
++enum {
++	SLI4_PCIE_DESC_IMM = 0x4000,
++	SLI4_PCIE_DESC_NOSV = 0x8000,
++
++	SLI4_PCIE_DESC_PF_NO = 0x3FF0000,
++
++	SLI4_PCIE_DESC_MISSN_ROLE = 0xFF,
++	SLI4_PCIE_DESC_PCHG = 0x8000000,
++	SLI4_PCIE_DESC_SCHG = 0x10000000,
++	SLI4_PCIE_DESC_XCHG = 0x20000000,
++	SLI4_PCIE_DESC_XROM = 0xC0000000
++};
++
++struct sli4_pcie_resource_descriptor_v1_s {
++	u8		descriptor_type;
++	u8		descriptor_length;
++	__le16		imm_nosv_dword;
++	__le32		pf_number_dword;
++	__le32		rsvd3;
++	u8		sriov_state;
++	u8		pf_state;
++	u8		pf_type;
++	u8		rsvd4;
++	__le16		number_of_vfs;
++	__le16		rsvd5;
++	__le32		mission_roles_dword;
++	__le32		rsvd7[16];
++};
++
++/**
++ * @brief COMMON_GET_FUNCTION_CONFIG
++ */
++struct sli4_rqst_cmn_get_function_config_s {
++	struct sli4_rqst_hdr_s  hdr;
++};
++
++struct sli4_rsp_cmn_get_function_config_s {
++	struct sli4_rsp_hdr_s  hdr;
++	__le32		desc_count;
++	__le32		desc[54];
++};
++
++/**
++ * @brief COMMON_GET_PROFILE_CONFIG
++ */
++
++enum {
++	SLI4_RQ_GET_PROFILE_ID = 0XFF,
++	SLI4_RQ_GET_PROFILE_TYPE = 0x300
++};
++
++struct sli4_rqst_cmn_get_profile_config_s {
++	struct sli4_rqst_hdr_s  hdr;
++	__le32		profile_id_dword;
++};
++
++struct sli4_rsp_cmn_get_profile_config_s {
++	struct sli4_rsp_hdr_s  hdr;
++	__le32			desc_count;
++	__le32			desc[0];
++};
++
++/**
++ * @brief COMMON_SET_PROFILE_CONFIG
++ */
++
++enum {
++	SLI4_RQ_SET_PROFILE_ID = 0XFF,
++	SLI4_RQ_SET_PROFILE_ISAP = 0x80000000
++
++};
++
++struct sli4_rqst_cmn_set_profile_config_s {
++	struct sli4_rqst_hdr_s  hdr;
++	__le32		profile_id_dword;
++	__le32		desc_count;
++	__le32		desc[0];
++};
++
++struct sli4_rsp_cmn_set_profile_config_s {
++	struct sli4_rsp_hdr_s  hdr;
++};
++
++/**
++ * @brief Profile Descriptor for profile functions
++ */
++struct sli4_profile_descriptor_s {
++	u8		profile_id;
++	u8		rsvd8;
++	u8		profile_index;
++	u8		rsvd24;
++	__le32		profile_description[128];
++};
++
++/*
++ * We don't know in advance how many descriptors there are.  We have
++ * to pick a number that we think will be big enough and ask for that
++ * many.
++ */
++
++#define MAX_PROD_DES	40
++
++/**
++ * @brief COMMON_GET_PROFILE_LIST
++ */
++
++enum {
++	SLI4_RQ_PROFILE_INDEX = 0XFF
++
++};
++
++struct sli4_rqst_cmn_get_profile_list_s {
++	struct sli4_rqst_hdr_s  hdr;
++	__le32	start_profile_index_dword;
++};
++
++struct sli4_rsp_cmn_get_profile_list_s {
++	struct sli4_rsp_hdr_s  hdr;
++	__le32		profile_descriptor_count;
++	struct sli4_profile_descriptor_s profile_descriptor[MAX_PROD_DES];
++};
++
++/**
++ * @brief COMMON_GET_ACTIVE_PROFILE
++ */
++struct sli4_rqst_cmn_get_active_profile_s {
++	struct sli4_rqst_hdr_s  hdr;
++};
++
++struct sli4_rsp_cmn_get_active_profile_s {
++	struct sli4_rsp_hdr_s  hdr;
++	u8		active_profile_id;
++	u8		rsvd0;
++	u8		next_profile_id;
++	u8		rsvd1;
++};
++
++/**
++ * @brief COMMON_SET_ACTIVE_PROFILE
++ */
++
++enum {
++	SLI4_REQ_SETACTIVE_PROF_ID = 0xFF,
++	SLI4_REQ_SETACTIVE_PROF_FD = 0x80000000
++};
++
++struct sli4_rqst_cmn_set_active_profile_s {
++	struct sli4_rqst_hdr_s  hdr;
++	__le32	active_profile_id_dword;
++};
++
++struct sli4_rsp_cmn_set_active_profile_s {
++	struct sli4_rsp_hdr_s  hdr;
++};
++
++/**
++ * @brief Link Config Descriptor for link config functions
++ */
++struct sli4_link_config_descriptor_s {
++	u8		link_config_id;
++	u8		rsvd1[3];
++	__le32		config_description[8];
++};
++
++#define MAX_LINK_DES	10
++
++/**
++ * @brief COMMON_GET_RECONFIG_LINK_INFO
++ */
++struct sli4_rqst_cmn_get_reconfig_link_info_s {
++	struct sli4_rqst_hdr_s  hdr;
++};
++
++struct sli4_rsp_cmn_get_reconfig_link_info_s {
++	struct sli4_rsp_hdr_s  hdr;
++	u8		active_link_config_id;
++	u8		rsvd17;
++	u8		next_link_config_id;
++	u8		rsvd19;
++	__le32		link_configuration_descriptor_count;
++	struct sli4_link_config_descriptor_s    desc[MAX_LINK_DES];
++};
++
++/**
++ * @brief COMMON_SET_RECONFIG_LINK_ID
++ */
++enum {
++	SLI4_SET_RECONFIG_LINKID_NEXT	= 0xff,
++	SLI4_SET_RECONFIG_LINKID_FD	= (1 << 31),
++};
++
++struct sli4_rqst_cmn_set_reconfig_link_id_s {
++	struct sli4_rqst_hdr_s  hdr;
++	__le32		dw4_flags;
++};
++
++struct sli4_rsp_cmn_set_reconfig_link_id_s {
++	struct sli4_rsp_hdr_s  hdr;
++};
++
++struct sli4_rqst_lowlevel_set_watchdog_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le16		watchdog_timeout;
++	__le16		rsvd18;
++};
++
++struct sli4_rsp_lowlevel_set_watchdog_s {
++	struct sli4_rsp_hdr_s	hdr;
++	__le32			rsvd;
++};
++
++/*
++ * Maximum value for a FCFI
++ *
++ * Note that although most commands provide a 16 bit field for the FCFI,
++ * the FC/FCoE Asynchronous Recived CQE format only provides 6 bits for
++ * the returned FCFI. Then effectively, the FCFI cannot be larger than
++ * 1 << 6 or 64.
++ */
++#define SLI4_MAX_FCFI	64
++
++/**
++ * FC opcode (OPC) values.
++ */
++#define SLI4_OPC_WQ_CREATE		0x1
++#define SLI4_OPC_WQ_DESTROY		0x2
++#define SLI4_OPC_POST_SGL_PAGES		0x3
++#define SLI4_OPC_RQ_CREATE		0x5
++#define SLI4_OPC_RQ_DESTROY		0x6
++#define SLI4_OPC_READ_FCF_TABLE		0x8
++#define SLI4_OPC_POST_HDR_TEMPLATES	0xb
++#define SLI4_OPC_REDISCOVER_FCF		0x10
++
++/* Use the default CQ associated with the WQ */
++#define SLI4_CQ_DEFAULT 0xffff
++
++/**
++ * @brief POST_SGL_PAGES
++ *
++ * Register the scatter gather list (SGL) memory and associate it with an XRI.
++ */
++struct sli4_rqst_post_sgl_pages_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le16		xri_start;
++	__le16		xri_count;
++	struct {
++		__le32		page0_low;
++		__le32		page0_high;
++		__le32		page1_low;
++		__le32		page1_high;
++	} page_set[10];
++};
++
++struct sli4_rsp_post_sgl_pages_s {
++	struct sli4_rsp_hdr_s	hdr;
++};
++
++/**
++ * @brief POST_HDR_TEMPLATES
++ */
++struct sli4_rqst_post_hdr_templates_s {
++	struct sli4_rqst_hdr_s	hdr;
++	__le16		rpi_offset;
++	__le16		page_count;
++	struct sli4_dmaaddr_s page_descriptor[0];
++};
++
++#define SLI4_HDR_TEMPLATE_SIZE	64
++
++/** The XRI associated with this IO is already active */
++#define SLI4_IO_CONTINUATION		(1 << 0)
++/** Automatically generate a good RSP frame */
++#define SLI4_IO_AUTO_GOOD_RESPONSE	(1 << 1)
++#define SLI4_IO_NO_ABORT		(1 << 2)
++/** Set the DNRX bit because no auto xref rdy buffer is posted */
++#define SLI4_IO_DNRX			(1 << 3)
++
++
++
++enum sli4_callback_e {
++	SLI4_CB_LINK,
++	SLI4_CB_MAX			/* must be last */
++};
++
++enum sli4_link_status_e {
++	SLI_LINK_STATUS_UP,
++	SLI_LINK_STATUS_DOWN,
++	SLI_LINK_STATUS_NO_ALPA,
++	SLI_LINK_STATUS_MAX,
++};
++
++enum sli4_link_topology_e {
++	SLI_LINK_TOPO_NPORT = 1,	/** fabric or point-to-point */
++	SLI_LINK_TOPO_LOOP,
++	SLI_LINK_TOPO_LOOPBACK_INTERNAL,
++	SLI_LINK_TOPO_LOOPBACK_EXTERNAL,
++	SLI_LINK_TOPO_NONE,
++	SLI_LINK_TOPO_MAX,
++};
++
++enum sli4_link_medium_e {
++	SLI_LINK_MEDIUM_ETHERNET,
++	SLI_LINK_MEDIUM_FC,
++	SLI_LINK_MEDIUM_MAX,
++};
++
++/*Driver specific structures*/
++
++struct sli4_link_event_s {
++	enum sli4_link_status_e	status;		/* link up/down */
++	enum sli4_link_topology_e	topology;
++	enum sli4_link_medium_e	medium;		/* Ethernet / FC */
++	u32		speed;		/* Mbps */
++	u8		*loop_map;
++	u32		fc_id;
++};
++
++enum sli4_resource_e {
++	SLI_RSRC_VFI,
++	SLI_RSRC_VPI,
++	SLI_RSRC_RPI,
++	SLI_RSRC_XRI,
++	SLI_RSRC_FCFI,
++	SLI_RSRC_MAX			/* must be last */
++};
++
++struct sli4_extent_s {
++	u32	number;	/* number of extents */
++	u32	size; /* no of element in each extent */
++	u32	n_alloc;  /* no of elements allocated */
++	u32	*base;
++	unsigned long	*use_map; /* shows resource in use */
++	u32	map_size; /* no of bits in bitmap */
++};
++
++struct sli4_queue_info_s {
++	u16	max_qcount[SLI_QTYPE_MAX];
++	u32	max_qentries[SLI_QTYPE_MAX];
++	u16	count_mask[SLI_QTYPE_MAX];
++	u16	count_method[SLI_QTYPE_MAX];
++	u32	qpage_count[SLI_QTYPE_MAX];
++};
++
++struct sli4_s {
++	void	*os;
++	struct pci_dev	*pcidev;
++#define	SLI_PCI_MAX_REGS		6
++	void __iomem *reg[SLI_PCI_MAX_REGS];
++
++	u32	sli_rev;	/* SLI revision number */
++	u32	sli_family;
++	u32	if_type;	/* SLI Interface type */
++
++	u16	asic_type;
++	u16	asic_rev;
++
++	u16	e_d_tov;
++	u16	r_a_tov;
++	struct sli4_queue_info_s qinfo;
++	u16	link_module_type;
++	u8	rq_batch;
++	u16	rq_min_buf_size;
++	u32	rq_max_buf_size;
++	u8	topology;
++	u8	wwpn[8];	/* WW Port Name */
++	u8	wwnn[8];	/* WW Node Name */
++	u32	fw_rev[2];
++	u8	fw_name[2][16];
++	char	ipl_name[16];
++	u32	hw_rev[3];
++	u8	port_number;
++	char	port_name[2];
++	char	modeldesc[64];
++	char	bios_version_string[32];
++	/*
++	 * Tracks the port resources using extents metaphor. For
++	 * devices that don't implement extents (i.e.
++	 * has_extents == FALSE), the code models each resource as
++	 * a single large extent.
++	 */
++	struct sli4_extent_s	extent[SLI_RSRC_MAX];
++	u32	features;
++	u32	has_extents:1,
++		auto_reg:1,
++		auto_xfer_rdy:1,
++		hdr_template_req:1,
++		perf_hint:1,
++		perf_wq_id_association:1,
++		cq_create_version:2,
++		mq_create_version:2,
++		high_login_mode:1,
++		sgl_pre_registered:1,
++		sgl_pre_registration_required:1,
++		t10_dif_inline_capable:1,
++		t10_dif_separate_capable:1;
++	u32	sge_supported_length;
++	u32	sgl_page_sizes;
++	u32	max_sgl_pages;
++	u32	wqe_size;
++
++	/*
++	 * Callback functions
++	 */
++	int	(*link)(void *ctx, void *event);
++	void	*link_arg;
++
++	struct efc_dma_s	bmbx;
++
++	/* Save pointer to physical memory descriptor for non-embedded
++	 * SLI_CONFIG commands for BMBX dumping purposes
++	 */
++	struct efc_dma_s	*bmbx_non_emb_pmd;
++
++	struct efc_dma_s	vpd_data;
++	u32	vpd_length;
++};
 +
  #endif /* !_SLI4_H */
 -- 
