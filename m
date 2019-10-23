@@ -2,89 +2,149 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBBDCA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B28CA9EB6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D72721920
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:34:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571834086;
-	bh=3xClPV0s8v1ghovR/t6BdoidIe58oeMF5znszPjzKNA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=JrPXyEpUbeqXGFZ4YNuFNH85VVCkqsr7zQyaghGQsoxl/ZmbvqaVTfm+Cl4LR+c/v
-	 FGop1XDJdzmkbSsSvcxtuR7RLk9O5uRV6YHw/3/pgcJpMgzwVyPD77pZ5TAJMtQoa8
-	 1SwGqGg1taFm0y2++sfc0lm79BXXlnHGrXwx2LWI=
+	by mail.kernel.org (Postfix) with ESMTP id B35F020640
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389916AbfJWMeq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 08:34:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35398 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389633AbfJWMeq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Oct 2019 08:34:46 -0400
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1E84721906;
-        Wed, 23 Oct 2019 12:34:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571834085;
-        bh=3xClPV0s8v1ghovR/t6BdoidIe58oeMF5znszPjzKNA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=K+FVun+77VqMLQ8nGcATn/0yVi1n3inqEhcZQ4rc1jdyiC0PppVQiJ4PjjMWOeePi
-         R5cWGYkK6sklP/GF/ctr02RjRgDoGLhJ2YMCyRcPSWJegkegNIcZ4HLkDeMlK5mCAU
-         XqBCMNPVp04XqBvWpTT/Lo3vtifZpJPKPEmbtCbY=
-Received: by mail-qt1-f176.google.com with SMTP id t20so31960766qtr.10;
-        Wed, 23 Oct 2019 05:34:45 -0700 (PDT)
-X-Gm-Message-State: APjAAAWBTzWdKLusNjbjMhpPLVm4yhnVOfberGeOlBIlfY57bTJ75k5f
-        BjngGOGhtL1z0hKV6F2b96FgvGtv87cotZMUas4=
-X-Google-Smtp-Source: APXvYqyCz6o6W8wU2Uf+XdH/NAI350kbDLwzoeIzLourookteh+cPAzdgEuPCvwPhO3ppnfaxZ6DwridLx/5ufit4D0=
-X-Received: by 2002:ac8:714c:: with SMTP id h12mr8873761qtp.231.1571834084324;
- Wed, 23 Oct 2019 05:34:44 -0700 (PDT)
+        id S2391898AbfJWMxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 08:53:17 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49374 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2391880AbfJWMxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Oct 2019 08:53:16 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id CECD2B67E;
+        Wed, 23 Oct 2019 12:53:14 +0000 (UTC)
+From:   Michal Suchanek <msuchanek@suse.de>
+To:     linux-scsi@vger.kernel.org
+Cc:     Michal Suchanek <msuchanek@suse.de>,
+        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH v2 8/8] scsi: sr: wait for the medium to become ready
+Date:   Wed, 23 Oct 2019 14:52:47 +0200
+Message-Id: <94dc98dc67b1d183d04c338c7978efa0556db6ac.1571834862.git.msuchanek@suse.de>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <cover.1571834862.git.msuchanek@suse.de>
+References: <cover.1571834862.git.msuchanek@suse.de>
 MIME-Version: 1.0
-References: <20191022140154.436-1-skalluru@marvell.com>
-In-Reply-To: <20191022140154.436-1-skalluru@marvell.com>
-From:   Josh Boyer <jwboyer@kernel.org>
-Date:   Wed, 23 Oct 2019 08:34:32 -0400
-X-Gmail-Original-Message-ID: <CA+5PVA7ka1ar1nX4TFhx0yJvm6i0+gPaZs8s5d667x4ksPjVFQ@mail.gmail.com>
-Message-ID: <CA+5PVA7ka1ar1nX4TFhx0yJvm6i0+gPaZs8s5d667x4ksPjVFQ@mail.gmail.com>
-Subject: Re: [PATCH linux-firmware] bnx2x: Add FW 7.13.15.0.
-To:     Sudarsana Reddy Kalluru <skalluru@marvell.com>
-Cc:     Linux Firmware <linux-firmware@kernel.org>,
-        netdev <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org,
-        arahman@marvell.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 22, 2019 at 10:02 AM Sudarsana Reddy Kalluru
-<skalluru@marvell.com> wrote:
->
-> This patch adds new FW for bnx2x, which addresses the following issues:
-> - TCP packet with padding can open TPA aggregation in GRO mode.
-> - Tx Silent Drops could cause HW error when statistics is not enabled for client.
-> - Transmission of tunneled packets over tx-only clients (with cos>0 in this case) followed by load/unload with DCB update (for instance), resulted in a Tx path halt.
-> - FORWARD_SETUP ramrod yielded a FW assert (x_eth_fp_hsi_ver_invalid).
->
-> The FW also adds support for direct update of RSS indirection table entry.
->
-> Signed-off-by: Sudarsana Reddy Kalluru <skalluru@marvell.com>
-> Signed-off-by: Ameen Rahman <arahman@marvell.com>
-> ---
->  WHENCE                       |   3 +++
->  bnx2x/bnx2x-e1-7.13.15.0.fw  | Bin 0 -> 170168 bytes
->  bnx2x/bnx2x-e1h-7.13.15.0.fw | Bin 0 -> 178608 bytes
->  bnx2x/bnx2x-e2-7.13.15.0.fw  | Bin 0 -> 323360 bytes
->  4 files changed, 3 insertions(+)
->  create mode 100644 bnx2x/bnx2x-e1-7.13.15.0.fw
->  create mode 100644 bnx2x/bnx2x-e1h-7.13.15.0.fw
->  create mode 100644 bnx2x/bnx2x-e2-7.13.15.0.fw
+Use the autoclose IOCLT provided by cdrom driver to wait for drive to
+close in open_finish, and attempt to open once more after the door
+closes.
 
-Applied and pushed out.
+Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+---
+ drivers/scsi/sr.c | 54 ++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 42 insertions(+), 12 deletions(-)
 
-josh
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 8090c5bdec09..34d9a818b9e0 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -521,29 +521,58 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ 	return ret;
+ }
+ 
+-static int sr_block_open(struct block_device *bdev, fmode_t mode)
++static int __sr_block_open(struct block_device *bdev, fmode_t mode)
+ {
+-	struct scsi_cd *cd;
+-	struct scsi_device *sdev;
+-	int ret = -ENXIO;
+-
+-	cd = scsi_cd_get(bdev->bd_disk);
+-	if (!cd)
+-		goto out;
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++	int ret;
+ 
+-	sdev = cd->device;
+-	scsi_autopm_get_device(sdev);
+ 	check_disk_change(bdev);
+ 
+ 	mutex_lock(&sr_mutex);
+ 	ret = cdrom_open(&cd->cdi, bdev, mode);
+ 	mutex_unlock(&sr_mutex);
+ 
++	return ret;
++}
++
++static int sr_block_open(struct block_device *bdev, fmode_t mode)
++{
++	struct scsi_cd *cd = scsi_cd_get(bdev->bd_disk);
++	struct scsi_device *sdev;
++	int ret;
++
++	if (!cd)
++		return -ENXIO;
++
++	sdev = cd->device;
++	scsi_autopm_get_device(sdev);
++	ret = __sr_block_open(bdev, mode);
+ 	scsi_autopm_put_device(sdev);
+-	if (ret)
++
++	if (ret == -ERESTARTSYS)
+ 		scsi_cd_put(cd);
+ 
+-out:
++	return ret;
++}
++
++static int sr_block_open_finish(struct block_device *bdev, fmode_t mode,
++				int ret)
++{
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++
++	/* wait for drive to get ready */
++	if ((ret == -ENOMEDIUM) && !(mode & FMODE_NDELAY)) {
++		struct scsi_device *sdev = cd->device;
++		/*
++		 * Cannot use sr_block_ioctl because it locks sr_mutex blocking
++		 * out any processes trying to access the drive
++		 */
++		scsi_autopm_get_device(sdev);
++		cdrom_ioctl(&cd->cdi, bdev, mode, CDROM_AUTOCLOSE, 0);
++		ret = __sr_block_open(bdev, mode);
++		scsi_autopm_put_device(sdev);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -639,6 +668,7 @@ static const struct block_device_operations sr_bdops =
+ {
+ 	.owner		= THIS_MODULE,
+ 	.open		= sr_block_open,
++	.open_finish	= sr_block_open_finish,
+ 	.release	= sr_block_release,
+ 	.ioctl		= sr_block_ioctl,
+ 	.check_events	= sr_block_check_events,
+-- 
+2.23.0
+
