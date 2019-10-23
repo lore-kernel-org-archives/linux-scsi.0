@@ -7,85 +7,119 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D82C3CA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F3E2CA9EB6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:40:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B80FD21872
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AF2D21872
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405105AbfJWQjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 12:39:55 -0400
+        id S2392546AbfJWQjy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 12:39:54 -0400
 Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:34133 "EHLO
         alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389276AbfJWQjy (ORCPT
+        by vger.kernel.org with ESMTP id S1732359AbfJWQjy (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 23 Oct 2019 12:39:54 -0400
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Oct 2019 09:39:53 -0700
-IronPort-SDR: mz+7h+OMI2ZZzTJNYiSIiPnZ+ZG1mjzsBPpUklpGAlY0DxT8efTlRrD9pMsJlhl1LjTnc5ViLw
- jWuuPWdF7G/KtV6HCIvF7f9zCcM1/zAhUZ+6s+DxXf9WaL8735LK8QS4MqTeOf1YDlz/WyJD5a
- BuXeBHVYtY5bxIr710jiT7hS2ZmVN1NNxU0Y2mXiz4uL9vanZ3hTk67qr/ArilKed2iKHF0K8c
- FDiGmMq69mwL9Mx1QYM5GCMBkFiHScJBa/gIvIDUtPYQnwfAwIoYHxx+d62W/bMIsTs3N0Ojp6
- m3hC8/tmmJFX9fpGwj6hH+ND
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Oct 2019 09:39:52 -0700
+IronPort-SDR: M3iuOL4eGpUFYcFjLzrb+bYBg/KCRcLevKQnJ3+PYFf+Bs94thfVRpJIq3Kkc5JGH80Yag7XH6
+ y2yOaa3AvAkhHtje1lweRvIJXfWIJq5gy6qF1omaCf04mvO4rWmUq6Jd8Os8uInwCz7sYqo6ha
+ L6P8O95cegIhs6D5NcC9TnrxD0G/aqZAcobyj03UVbprdpdUgK6pmR2vYb/No7/sYufbAWX/X7
+ 9Ln/TLU2EJPJnk1vEyWAJtkDKn5xm3lCqy3dta/qESvDcLG1CEfDMmDMXQMo78h9oOVegFYsdN
+ lbrI2TY3h0fqcT1UcH/50k8L
 Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
-  by ironmsg01-sd.qualcomm.com with ESMTP; 23 Oct 2019 09:39:52 -0700
+  by ironmsg02-sd.qualcomm.com with ESMTP; 23 Oct 2019 09:39:52 -0700
 Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
-        id 98C1F2135F; Wed, 23 Oct 2019 09:39:52 -0700 (PDT)
+        id 75EDA2135A; Wed, 23 Oct 2019 09:39:52 -0700 (PDT)
 From:   Asutosh Das <asutoshd@codeaurora.org>
 To:     cang@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com,
         jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com,
         Asutosh Das <asutoshd@codeaurora.org>,
-        Andy Gross <agross@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 2/2] scsi: ufs-qcom: enter and exit hibern8 during clock scaling
-Date:   Wed, 23 Oct 2019 09:39:42 -0700
-Message-Id: <1571848785-27698-2-git-send-email-asutoshd@codeaurora.org>
+Subject: [PATCH v2 1/2] scsi: ufs: export hibern8 entry and exit
+Date:   Wed, 23 Oct 2019 09:39:41 -0700
+Message-Id: <1571848785-27698-1-git-send-email-asutoshd@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1571848785-27698-1-git-send-email-asutoshd@codeaurora.org>
-References: <1571848785-27698-1-git-send-email-asutoshd@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Qualcomm controller needs to be in hibern8 before scaling clocks.
-This change puts the controller in hibern8 state before scaling
-and brings it out after scaling of clocks.
+Qualcomm controllers need to be in hibern8 before scaling up
+or down the clocks. Hence, export the hibern8 entry and exit
+functions.
 
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 8 ++++----
+ drivers/scsi/ufs/ufshcd.h | 3 ++-
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index a5b7148..d117088 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1305,6 +1305,9 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 	int err = 0;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c28c144..57d9315 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -250,8 +250,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+-static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+-static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+ static void ufshcd_resume_clkscaling(struct ufs_hba *hba);
+@@ -3904,7 +3902,7 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 	return ret;
+ }
  
- 	if (status == PRE_CHANGE) {
-+		err = ufshcd_uic_hibern8_enter(hba);
-+		if (err)
-+			return err;
- 		if (scale_up)
- 			err = ufs_qcom_clk_scale_up_pre_change(hba);
- 		else
-@@ -1324,6 +1327,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 				    dev_req_params->hs_rate,
- 				    false);
- 		ufs_qcom_update_bus_bw_vote(host);
-+		ufshcd_uic_hibern8_exit(hba);
- 	}
+-static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
++int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ {
+ 	int ret = 0, retries;
  
+@@ -3916,8 +3914,9 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
  out:
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
+ 
+-static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
++int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ {
+ 	struct uic_command uic_cmd = {0};
+ 	int ret;
+@@ -3943,6 +3942,7 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_exit);
+ 
+ static void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
+ {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index e0fe247..1e3daf5 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1107,5 +1107,6 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
+ 
+ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 		     const char *prefix);
+-
++int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
++int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ #endif /* End of Header */
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
