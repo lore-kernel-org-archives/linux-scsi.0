@@ -2,199 +2,226 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1CC0CA9EBB
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2DECA9EB9
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE96521906
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB4E720679
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R0V7DxSa"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rJll4yvh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405561AbfJWVpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 17:45:10 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:48680 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2392676AbfJWVpK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Oct 2019 17:45:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571867109;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0D4EQ8thGQKRRU/Fz2c1O7VtA1gRTINZXqgRy6HfSuk=;
-        b=R0V7DxSapSFPev4UGzimkxUEIrMclUZodFMOePwyBjdC3PkoEX9IHO8CiV/9e3ccXmQ+JC
-        4A7d90Cfe7WgzZmiok371uhmCno8Tx+Mt6X3tW1OKYEj5fCZSYkXuFHlMG9NatkMTXLOVE
-        xRIUi6+z9xhMdPFbyJ284vd00qkuzMc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-240-m8GaqF_nOUal1pqA5AbW-g-1; Wed, 23 Oct 2019 17:45:05 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0FAFE100550E;
-        Wed, 23 Oct 2019 21:45:03 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 401405DA8D;
-        Wed, 23 Oct 2019 21:44:55 +0000 (UTC)
-Message-ID: <6759dfc6c5c721b5060d75e6c5f5a0b1dbb9a80b.camel@redhat.com>
-Subject: Re: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation
- bug
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Michal =?ISO-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Date:   Wed, 23 Oct 2019 17:44:54 -0400
-In-Reply-To: <20191023162313.GE938@kitsune.suse.cz>
-References: <cover.1571834862.git.msuchanek@suse.de>
-         <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
-         <08f1e291-0196-2402-1947-c0cdaaf534da@suse.de>
-         <20191023162313.GE938@kitsune.suse.cz>
-Mime-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: m8GaqF_nOUal1pqA5AbW-g-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+        id S2405976AbfJWV4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 17:56:10 -0400
+Received: from mail-wm1-f46.google.com ([209.85.128.46]:53916 "EHLO
+        mail-wm1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405936AbfJWV4J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:09 -0400
+Received: by mail-wm1-f46.google.com with SMTP id i13so515387wmd.3
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=2reZ1oPdWCPytpJRKhUeiiRyT6O/ALezpDPrLcQPFhA=;
+        b=rJll4yvhEOpCwu8hrHwdIEEJb0yeIBxnXre7ORwXR3dLVC6LNoh8USTXYBwZWu0MDR
+         MR+bWwNDg5aL84hcLmglMdCGCcQlhwt99E+u2+A7d8SLgRfQZgXMj48jY5i+oyW3AxxI
+         VOLYSTN6lKfCWerif6UQe5e4km8C6U3+brLpFtWDb+yuWKGFgcU8NwC4OI7/FC4jikwH
+         OSvSP76QHkr5G0p1H1ybaUr5Qs/eBdz9jWqRDQm/+ZOU5n1UMZTr0Cuj2W2Ad4KpAbPH
+         CjrdLaBUAsUtTjpNsccxzrZcdZ5VWSmoZ3rw9gOHI4AEvJr5AB7NCXRS9U7UEp61G30T
+         TLxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=2reZ1oPdWCPytpJRKhUeiiRyT6O/ALezpDPrLcQPFhA=;
+        b=pMatVO0UOz3V6p6vH34CcNqQ27ra71Ao23BKtwvUDlpGn1n8BgClhVqAjXv80re46D
+         EA5UOhvrswcOFAyB/T5AzmfT25F6b2j+Pa4Zapuot41krTtqsUsm/kV2527DiUmYQkfM
+         96wHXV9LJvSEQm/b2M7derQCV0uP3pQa9Jw9WtqXtxvvmymRzUBznlZXOxl7QKNXrbHB
+         MRZVKFnKK05LaAxpuVFwvZFN/PpRdOI3j9pzUlMDtPp6Kue/uLnzgxPOZmT+oic3fnJX
+         lQydeaGalqEcvZCdxYIxSGw7nzSblWwWwzE0J7/yW+ot4t6s8x9U67i6ApUK7jlbR73a
+         NQAg==
+X-Gm-Message-State: APjAAAUjbhBdFW4b1jY7VYvA6ifUOYJGG3Y2HfjXkya/aKG1r6Pt7H2D
+        b+t+S1zW3eHL8mk/IveeOOcviiyn
+X-Google-Smtp-Source: APXvYqzjwLmypQ3AVGp0PVD8WwMAypHHegBjnxSyzowrTS4uiObA+wDcBXZolf4PEdlt5AdUuE7qKQ==
+X-Received: by 2002:a1c:a657:: with SMTP id p84mr1674926wme.35.1571867767003;
+        Wed, 23 Oct 2019 14:56:07 -0700 (PDT)
+Received: from pallmd1.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.05
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 23 Oct 2019 14:56:06 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/32] [NEW] efct: Broadcom (Emulex) FC Target driver
+Date:   Wed, 23 Oct 2019 14:55:25 -0700
+Message-Id: <20191023215557.12581-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2019-10-23 at 18:23 +0200, Michal Such=C3=A1nek wrote:
-> On Wed, Oct 23, 2019 at 04:13:15PM +0200, Hannes Reinecke wrote:
-> > On 10/23/19 2:52 PM, Michal Suchanek wrote:
-> > > The WMware ESXi cdrom identifies itself as:
-> > > sr 0:0:0:0: [sr0] scsi3-mmc drive: vendor: "NECVMWarVMware SATA CD001=
-.00"
-> > > model: "VMware SATA CD001.00"
-> > > with the following get_capabilities print in sr.c:
-> > >         sr_printk(KERN_INFO, cd,
-> > >                   "scsi3-mmc drive: vendor: \"%s\" model: \"%s\"\n",
-> > >                   cd->device->vendor, cd->device->model);
-> > >=20
-> > > So the model looks like reliable identification while vendor does not=
-.
-> > >=20
-> > > The drive claims to have a tray and claims to be able to close it.
-> > > However, the UI has no notion of a tray - when medium is ejected it i=
-s
-> > > dropped in the floor and the user must select a medium again before t=
-he
-> > > drive can be re-loaded.  On the kernel side the tray_move call to clo=
-se
-> > > the tray succeeds but the drive state does not change as a result of =
-the
-> > > call.
-> > >=20
-> > > The drive does not in fact emulate the tray state. There are two ways=
- to
-> > > get the medium state. One is the SCSI status:
-> > >=20
-> > > Physical drive:
-> > >=20
-> > > Fixed format, current; Sense key: Not Ready
-> > > Additional sense: Medium not present - tray open
-> > > Raw sense data (in hex):
-> > >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 02 00 00
-> > >         00 00
-> > >=20
-> > > Fixed format, current; Sense key: Not Ready
-> > > Additional sense: Medium not present - tray closed
-> > >  Raw sense data (in hex):
-> > >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 01 00 00
-> > >         00 00
-> > >=20
-> > > VMware ESXi:
-> > >=20
-> > > Fixed format, current; Sense key: Not Ready
-> > > Additional sense: Medium not present
-> > >   Info fld=3D0x0 [0]
-> > >  Raw sense data (in hex):
-> > >         f0 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
-> > >         00 00
-> > >=20
-> > > So the tray state is not reported here. Other is medium status which =
-the
-> > > kernel prefers if available. Adding a print here gives:
-> > >=20
-> > > cdrom: get_media_event success: code =3D 0, door_open =3D 1, medium_p=
-resent =3D 0
-> > >=20
-> > > door_open is interpreted as open tray. This is fine so long as tray_m=
-ove
-> > > would close the tray when requested or report an error which never
-> > > happens on VMware ESXi servers (5.5 and 6.5 tested).
-> > >=20
-> > > This is a popular virtualization platform so a workaround is worthwhi=
-le.
-> > >=20
-> > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > ---
-> > >  drivers/scsi/sr.c | 6 ++++++
-> > >  1 file changed, 6 insertions(+)
-> > >=20
-> > > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> > > index 4664fdf75c0f..8090c5bdec09 100644
-> > > --- a/drivers/scsi/sr.c
-> > > +++ b/drivers/scsi/sr.c
-> > > @@ -867,6 +867,7 @@ static void get_capabilities(struct scsi_cd *cd)
-> > >  =09unsigned int ms_len =3D 128;
-> > >  =09int rc, n;
-> > > =20
-> > > +=09static const char *model_vmware =3D "VMware";
-> > >  =09static const char *loadmech[] =3D
-> > >  =09{
-> > >  =09=09"caddy",
-> > > @@ -922,6 +923,11 @@ static void get_capabilities(struct scsi_cd *cd)
-> > >  =09=09  buffer[n + 4] & 0x20 ? "xa/form2 " : "",=09/* can read xa/fr=
-om2 */
-> > >  =09=09  buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data =
-*/
-> > >  =09=09  loadmech[buffer[n + 6] >> 5]);
-> > > +=09if (!strncmp(cd->device->model, model_vmware, strlen(model_vmware=
-))) {
-> > > +=09=09buffer[n + 6] &=3D ~(0xff << 5);
-> > > +=09=09sr_printk(KERN_INFO, cd,
-> > > +=09=09=09  "VMware ESXi bug workaround: tray -> caddy\n");
-> > > +=09}
-> > >  =09if ((buffer[n + 6] >> 5) =3D=3D 0)
-> > >  =09=09/* caddy drives can't close tray... */
-> > >  =09=09cd->cdi.mask |=3D CDC_CLOSE_TRAY;
-> > >=20
-> >=20
-> > This looks something which should be handled via a blacklist flag, not
-> > some inline hack which everyone forgets about it...
->=20
-> AFAIK we used to have a blacklist but don't have anymore. So either it
-> has to be resurrected for this one flag or an inline hack should be good
-> enough.
->=20
+This patch set is a request to incorporate the new Broadcom
+(Emulex) FC target driver, efct, into the kernel source tree.
 
-I agree with Hannes.  We should have a blacklist flag for this.
-Putting inline code in the sr driver that special cases on a particular
-device model string is not clean.  The "VMware ESXi bug workaround" message
-is not particularly descriptive either.
+The driver source has been Announced a couple of times, the last
+version on 12/18/2018. The driver has been hosted on gitlab for
+review has had contributions from the community.
+  gitlab (git@gitlab.com:jsmart/efct-Emulex_FC_Target.git)
 
--Ewan
+The driver integrates into the source tree at the (new) drivers/scsi/elx
+subdirectory.
+
+The driver consists of the following components:
+- A libefc_sli subdirectory: This subdirectory contains a library that
+  encapsulates common definitions and routines for an Emulex SLI-4
+  adapter.
+- A libefc subdirectory: This subdirectory contains a library of
+  common routines. Of major import is a number of routines that
+  implement a FC Discovery engine for target mode.
+- An efct subdirectory: This subdirectory contains the efct target
+  mode device driver. The driver utilizes the above librarys and
+  plugs into the SCSI LIO interfaces. The driver is SCSI only at
+  this time.
+
+The patches populate the libraries and device driver and can only
+be compiled as a complete set.
+
+This driver is completely independent from the lpfc device driver
+and there is no overlap on PCI ID's.
+
+The patches have been cut against the 5.5/scsi-queue branch.
+
+Thank you to those that have contributed to the driver in the past.
+
+Review comments welcome!
+
+-- james
+
+
+James Smart (32):
+  elx: libefc_sli: SLI-4 register offsets and field definitions
+  elx: libefc_sli: SLI Descriptors and Queue entries
+  elx: libefc_sli: Data structures and defines for mbox commands
+  elx: libefc_sli: queue create/destroy/parse routines
+  elx: libefc_sli: Populate and post different WQEs
+  elx: libefc_sli: bmbx routines and SLI config commands
+  elx: libefc_sli: APIs to setup SLI library
+  elx: libefc: Generic state machine framework
+  elx: libefc: Emulex FC discovery library APIs and definitions
+  elx: libefc: FC Domain state machine interfaces
+  elx: libefc: SLI and FC PORT state machine interfaces
+  elx: libefc: Remote node state machine interfaces
+  elx: libefc: Fabric node state machine interfaces
+  elx: libefc: FC node ELS and state handling
+  elx: efct: Data structures and defines for hw operations
+  elx: efct: Driver initialization routines
+  elx: efct: Hardware queues creation and deletion
+  elx: efct: RQ buffer, memory pool allocation and deallocation APIs
+  elx: efct: Hardware IO and SGL initialization
+  elx: efct: Hardware queues processing
+  elx: efct: Unsolicited FC frame processing routines
+  elx: efct: Extended link Service IO handling
+  elx: efct: SCSI IO handling routines
+  elx: efct: LIO backend interface routines
+  elx: efct: Hardware IO submission routines
+  elx: efct: link statistics and SFP data
+  elx: efct: xport and hardware teardown routines
+  elx: efct: IO timeout handling routines
+  elx: efct: Firmware update, async link processing
+  elx: efct: scsi_transport_fc host interface support
+  elx: efct: Add Makefile and Kconfig for efct driver
+  elx: efct: Tie into kernel Kconfig and build process
+
+ MAINTAINERS                            |    8 +
+ drivers/scsi/Kconfig                   |    2 +
+ drivers/scsi/Makefile                  |    1 +
+ drivers/scsi/elx/Kconfig               |    8 +
+ drivers/scsi/elx/Makefile              |   30 +
+ drivers/scsi/elx/efct/efct_driver.c    | 1243 +++++
+ drivers/scsi/elx/efct/efct_driver.h    |  154 +
+ drivers/scsi/elx/efct/efct_els.c       | 2676 +++++++++++
+ drivers/scsi/elx/efct/efct_els.h       |  139 +
+ drivers/scsi/elx/efct/efct_hw.c        | 7866 ++++++++++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h        | 1275 ++++++
+ drivers/scsi/elx/efct/efct_hw_queues.c | 1964 ++++++++
+ drivers/scsi/elx/efct/efct_hw_queues.h |   66 +
+ drivers/scsi/elx/efct/efct_io.c        |  288 ++
+ drivers/scsi/elx/efct/efct_io.h        |  219 +
+ drivers/scsi/elx/efct/efct_lio.c       | 2643 +++++++++++
+ drivers/scsi/elx/efct/efct_lio.h       |  371 ++
+ drivers/scsi/elx/efct/efct_scsi.c      | 1970 ++++++++
+ drivers/scsi/elx/efct/efct_scsi.h      |  401 ++
+ drivers/scsi/elx/efct/efct_unsol.c     | 1156 +++++
+ drivers/scsi/elx/efct/efct_unsol.h     |   49 +
+ drivers/scsi/elx/efct/efct_utils.c     |  662 +++
+ drivers/scsi/elx/efct/efct_utils.h     |  113 +
+ drivers/scsi/elx/efct/efct_xport.c     | 1728 +++++++
+ drivers/scsi/elx/efct/efct_xport.h     |  216 +
+ drivers/scsi/elx/include/efc_common.h  |   44 +
+ drivers/scsi/elx/libefc/efc.h          |  188 +
+ drivers/scsi/elx/libefc/efc_device.c   | 1977 ++++++++
+ drivers/scsi/elx/libefc/efc_device.h   |   72 +
+ drivers/scsi/elx/libefc/efc_domain.c   | 1393 ++++++
+ drivers/scsi/elx/libefc/efc_domain.h   |   57 +
+ drivers/scsi/elx/libefc/efc_fabric.c   | 2252 +++++++++
+ drivers/scsi/elx/libefc/efc_fabric.h   |  116 +
+ drivers/scsi/elx/libefc/efc_lib.c      |  263 ++
+ drivers/scsi/elx/libefc/efc_node.c     | 1878 ++++++++
+ drivers/scsi/elx/libefc/efc_node.h     |  196 +
+ drivers/scsi/elx/libefc/efc_sm.c       |  275 ++
+ drivers/scsi/elx/libefc/efc_sm.h       |  171 +
+ drivers/scsi/elx/libefc/efc_sport.c    | 1157 +++++
+ drivers/scsi/elx/libefc/efc_sport.h    |   52 +
+ drivers/scsi/elx/libefc/efclib.h       |  796 ++++
+ drivers/scsi/elx/libefc_sli/sli4.c     | 7522 ++++++++++++++++++++++++++++++
+ drivers/scsi/elx/libefc_sli/sli4.h     | 4845 ++++++++++++++++++++
+ 43 files changed, 48502 insertions(+)
+ create mode 100644 drivers/scsi/elx/Kconfig
+ create mode 100644 drivers/scsi/elx/Makefile
+ create mode 100644 drivers/scsi/elx/efct/efct_driver.c
+ create mode 100644 drivers/scsi/elx/efct/efct_driver.h
+ create mode 100644 drivers/scsi/elx/efct/efct_els.c
+ create mode 100644 drivers/scsi/elx/efct/efct_els.h
+ create mode 100644 drivers/scsi/elx/efct/efct_hw.c
+ create mode 100644 drivers/scsi/elx/efct/efct_hw.h
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.h
+ create mode 100644 drivers/scsi/elx/efct/efct_io.c
+ create mode 100644 drivers/scsi/elx/efct/efct_io.h
+ create mode 100644 drivers/scsi/elx/efct/efct_lio.c
+ create mode 100644 drivers/scsi/elx/efct/efct_lio.h
+ create mode 100644 drivers/scsi/elx/efct/efct_scsi.c
+ create mode 100644 drivers/scsi/elx/efct/efct_scsi.h
+ create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
+ create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
+ create mode 100644 drivers/scsi/elx/efct/efct_utils.c
+ create mode 100644 drivers/scsi/elx/efct/efct_utils.h
+ create mode 100644 drivers/scsi/elx/efct/efct_xport.c
+ create mode 100644 drivers/scsi/elx/efct/efct_xport.h
+ create mode 100644 drivers/scsi/elx/include/efc_common.h
+ create mode 100644 drivers/scsi/elx/libefc/efc.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_device.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_device.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_domain.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_domain.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_fabric.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_lib.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_node.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_node.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
+ create mode 100644 drivers/scsi/elx/libefc/efc_sport.c
+ create mode 100644 drivers/scsi/elx/libefc/efc_sport.h
+ create mode 100644 drivers/scsi/elx/libefc/efclib.h
+ create mode 100644 drivers/scsi/elx/libefc_sli/sli4.c
+ create mode 100644 drivers/scsi/elx/libefc_sli/sli4.h
+
+-- 
+2.13.7
 
