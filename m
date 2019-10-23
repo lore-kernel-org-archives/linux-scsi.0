@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CB4CA9EB9
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F28ACA9EBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B2F5205ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE7F205ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:56:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOrK3zF3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BSOCjjs9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436641AbfJWV44 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 17:56:56 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:39824 "EHLO
+        id S2436642AbfJWV45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 17:56:57 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:41205 "EHLO
         mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436638AbfJWV44 (ORCPT
+        with ESMTP id S2436617AbfJWV44 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 17:56:56 -0400
-Received: by mail-wr1-f66.google.com with SMTP id a11so7625607wra.6
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:54 -0700 (PDT)
+Received: by mail-wr1-f66.google.com with SMTP id p4so23714985wrm.8
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 14:56:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=eBCoXUNNBsOs/vwsPSFmwq98aaZ8ZGOQ3Iaa+a9RxcQ=;
-        b=DOrK3zF3v2Dt6w90ErlL+5DULxbfKoKtHh/QLHT2LQsUjFZlM1Xa2JOEBEeX6wR3Fx
-         EFVT5Y0IEhERvGKU6UCacPk8m8exVLHGy61lHvVlYUxD4vYSJG1uwZmIjgsE0Czy160F
-         63N11Hqy9ZqJ+itA/+/ovJJf0ezqVmZ8RaP5jJSM2UAtPwLfD19jsUp3xAki0+LE5gDX
-         BSQ1MYLWJZl7JsukYEiny0OP9A2l7RiGEIxyiaVgYMAFhcgKSkbXiMg5DNokS6nVYFKR
-         3Gkun6IFgvbmhl3VMmZ9f96LBTcuUdYGMUrgB3OrT2FrJObptls7b9N7SofjRBoIF18S
-         shGQ==
+        bh=SNrncpX+W/Bj9Hy+5hlXxGVNDKGNL6/Q148Qan/Irq4=;
+        b=BSOCjjs9RvzydRT4xPe1hziXZIFvQ1UbLdliLMhXlbRGYBk41xk2yh7DX5PpTWWVjS
+         F9FSKiPnnOZ5GMBuhTAS955893jwhKcL/Mk0vLO0Ef/Rdm8ULBvTAkJcRqai+8omRedH
+         QUj4XbJgvFeLYd4nkZH9T2Xze+PUgr5fD1g9ctyu2ij0yPat/9TQ8+z6hIeXksTsdOS0
+         8hgFv9cL4vmfMkEpXNTt5gJ56q5dzOv2F+gLHZp1Bfs1sR1Gc9DmAAQiwR+8S3j/Bupg
+         mxcu6s4Um771WFzOVrVb75RrWyWK3/Xy/nY0Idvb9F5K5eCgSsGbEXhlAcCfZx0RYemA
+         NrTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=eBCoXUNNBsOs/vwsPSFmwq98aaZ8ZGOQ3Iaa+a9RxcQ=;
-        b=f4vkrO8YG4j4VUCOkO4kq4NMvBNfLWj11hjQpzvkGo6ZCryb5QRib5X7rLTiTlXE3I
-         UxQzCWZZDJGUHo9nSRlSrltfruXso1sjwNvWkrxPKy55vo9vXrQyE6m8VOrJYU3Kc8ah
-         DkyCS/tG3ctzJy8t+Uo27Z/Q74Cz9BVmWVQWDK/SGqmYOJGhzyVW7p2/tpPEGWa0P4+O
-         YOU1ZkX+cb9oUAI8p2FPb7K1TzAXtOWOUiuSFgQuxHBPr6k3YOPZlWVS1wgkGYA9rk3P
-         J96YhIX7g20v5a4cP5TM1suEkQt7BUxZMfzrz/qoSZ45XbhYVZCauk9q0/AM5KU53ZBT
-         Uhjw==
-X-Gm-Message-State: APjAAAW9eOB03cl1yUPnHyJtxLn8+nQEjrHycD/RtqLr5l98y9IYG+Vg
-        z9CvX/xXsa/O0Zu2Lz3j8OnsUkIS
-X-Google-Smtp-Source: APXvYqx0TgLhG2EeQW302JxMTMTy9nuA6LnQq5WAMXP2rdQipZMapGgVtKYaIbDt5pLSqd/7P+ZUNg==
-X-Received: by 2002:adf:fe81:: with SMTP id l1mr720439wrr.165.1571867813655;
-        Wed, 23 Oct 2019 14:56:53 -0700 (PDT)
+        bh=SNrncpX+W/Bj9Hy+5hlXxGVNDKGNL6/Q148Qan/Irq4=;
+        b=JGabDPmZoJwOX6q81YzYQ8X7/SEUIGbGAciVlKZjHb1cq9Z4JTy0uLvNWCqzhb09U1
+         ZtDYX6ba0OPAgdeRXDQjDrBBAuqrZT8KDXlDfghB7u5+cpfbjiKpXJQRY3D5xqDzpTU+
+         SGKY+zCjs8Mni/CV8GV0NucOLgE1fxmF8TY3Z/5nfPEND/QC0Xrk+4o71VlSBey2vh3K
+         aYpvYpOaL/CZIjnXtVuw6Ng8ZdoJcGs5mRcLps6IrTNcaXf951BMvupFcHUAD9CjuZSh
+         T1Z+DAbA3oFG/vjYRJvKRU2cVCDWj13x/T9QscdsohXBOqffSJIi9CHwvC1n4bl3vlPT
+         jHTQ==
+X-Gm-Message-State: APjAAAWvQ2V9K3gCvX6nnvvb6oC7DYDEjQ/gWWLtkzZpsRa7G7q5PEnH
+        lBT3fls1WctTyodqpAlfAbqbWwp5
+X-Google-Smtp-Source: APXvYqzyVw2AjmgXb3BYQaOgcluRTcZNklTFq+gfdiXHz5mxYBpRTqOk/GEQiqz9t4yxX4XLLtJ0Dw==
+X-Received: by 2002:adf:ecc7:: with SMTP id s7mr730231wro.305.1571867810235;
+        Wed, 23 Oct 2019 14:56:50 -0700 (PDT)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.52
+        by smtp.gmail.com with ESMTPSA id h17sm796775wme.6.2019.10.23.14.56.48
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 23 Oct 2019 14:56:53 -0700 (PDT)
+        Wed, 23 Oct 2019 14:56:49 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH 28/32] elx: efct: IO timeout handling routines
-Date:   Wed, 23 Oct 2019 14:55:53 -0700
-Message-Id: <20191023215557.12581-29-jsmart2021@gmail.com>
+Subject: [PATCH 26/32] elx: efct: link statistics and SFP data
+Date:   Wed, 23 Oct 2019 14:55:51 -0700
+Message-Id: <20191023215557.12581-27-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191023215557.12581-1-jsmart2021@gmail.com>
 References: <20191023215557.12581-1-jsmart2021@gmail.com>
@@ -72,231 +72,672 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 This patch continues the efct driver population.
 
 This patch adds driver definitions for:
-Add support for a WQE timer to handle the wqe and IO timeouts.
+Routines to retrieve link stats and SFP transceiver data.
 
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/elx/efct/efct_hw.c | 209 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 209 insertions(+)
+ drivers/scsi/elx/efct/efct_hw.c | 593 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h |  39 +++
+ 2 files changed, 632 insertions(+)
 
 diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index 48cdbeebd058..751edbd2ddf9 100644
+index 5e0ecd621f91..f01a54d874b1 100644
 --- a/drivers/scsi/elx/efct/efct_hw.c
 +++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -5716,3 +5716,212 @@ efct_hw_get_num_eq(struct efct_hw_s *hw)
- {
- 	return hw->eq_count;
+@@ -14,6 +14,50 @@
+ 
+ #define EFCT_HW_REQUE_XRI_REGTAG	65534
+ 
++struct efct_hw_sfp_cb_arg {
++	void (*cb)(int status, u32 bytes_written,
++		   u32 *data, void *arg);
++	void *arg;
++	struct efc_dma_s payload;
++};
++
++struct efct_hw_temp_cb_arg {
++	void (*cb)(int status, u32 curr_temp,
++		   u32 crit_temp_thrshld,
++		   u32 warn_temp_thrshld,
++		   u32 norm_temp_thrshld,
++		   u32 fan_off_thrshld,
++		   u32 fan_on_thrshld,
++		   void *arg);
++	void *arg;
++};
++
++struct efct_hw_link_stat_cb_arg {
++	void (*cb)(int status,
++		   u32 num_counters,
++		struct efct_hw_link_stat_counts_s *counters,
++		void *arg);
++	void *arg;
++};
++
++struct efct_hw_host_stat_cb_arg {
++	void (*cb)(int status,
++		   u32 num_counters,
++		struct efct_hw_host_stat_counts_s *counters,
++		void *arg);
++	void *arg;
++};
++
++static int
++efct_hw_cb_sfp(struct efct_hw_s *, int, u8 *, void  *);
++static int
++efct_hw_cb_temp(struct efct_hw_s *, int, u8 *, void  *);
++static int
++efct_hw_cb_link_stat(struct efct_hw_s *, int, u8 *, void  *);
++static int
++efct_hw_cb_host_stat(struct efct_hw_s *hw, int status,
++		     u8 *mqe, void  *arg);
++
+ /* HW global data */
+ struct efct_hw_global_s hw_global;
+ static void
+@@ -4624,3 +4668,552 @@ efct_hw_io_get_count(struct efct_hw_s *hw,
+ 
+ 	return count;
  }
 +
 +/**
-+ * @brief HW async call context structure.
-+ */
-+struct efct_hw_async_call_ctx_s {
-+	efct_hw_async_cb_t callback;
-+	void *arg;
-+	u8 cmd[SLI4_BMBX_SIZE];
-+};
-+
-+/**
-+ * @brief HW async callback handler
++ * @brief Called when the READ_TRANSCEIVER_DATA command completes.
 + *
 + * @par Description
-+ * This function is called when the NOP mbox cmd completes.  The callback stored
-+ * in the requesting context is invoked.
++ * Get the number of bytes read out of the response, free the mailbox that was
++ * malloc'd by efct_hw_get_sfp(), then call the callback and pass the status
++ * and bytes written.
 + *
-+ * @param hw Pointer to HW object.
-+ * @param status Completion status.
-+ * @param mqe Pointer to mailbox completion queue entry.
-+ * @param arg Caller-provided argument.
++ * @param hw Hardware context.
++ * @param status Status field from the mbox completion.
++ * @param mqe Mailbox response structure.
++ * @param arg Pointer to a callback function that signals the caller that the
++ * command is done.
++ * The callback function prototype is
++ * void cb(int status, u32 bytes_written, u32 *data, void *arg).
 + *
-+ * @return None.
++ * @return Returns 0.
 + */
-+static void
-+efct_hw_async_cb(struct efct_hw_s *hw, int status, u8 *mqe, void *arg)
-+{
-+	struct efct_hw_async_call_ctx_s *ctx = arg;
-+
-+	if (ctx) {
-+		if (ctx->callback)
-+			(*ctx->callback)(hw, status, mqe, ctx->arg);
-+
-+		kfree(ctx);
-+	}
-+}
-+
-+/**
-+ * @brief Make an async callback using NOP mailbox command
-+ *
-+ * @par Description
-+ * Post a NOP mbox cmd; the callback with argument is invoked upon completion
-+ * while in the event processing context.
-+ *
-+ * @param hw Pointer to HW object.
-+ * @param callback Pointer to callback function.
-+ * @param arg Caller-provided callback.
-+ *
-+ * @return Returns 0 on success, or a negative error code value on failure.
-+ */
-+int
-+efct_hw_async_call(struct efct_hw_s *hw,
-+		   efct_hw_async_cb_t callback, void *arg)
-+{
-+	int rc = 0;
-+	struct efct_hw_async_call_ctx_s *ctx;
-+
-+	/*
-+	 * Allocate a callback context (which includes the mbox cmd buffer),
-+	 * we need this to be persistent as the mbox cmd submission may be
-+	 * queued and executed later execution.
-+	 */
-+	ctx = kmalloc(sizeof(*ctx), GFP_ATOMIC);
-+	if (!ctx)
-+		return EFCT_HW_RTN_NO_MEMORY;
-+
-+	memset(ctx, 0, sizeof(*ctx));
-+	ctx->callback = callback;
-+	ctx->arg = arg;
-+
-+	/* Build and send a NOP mailbox command */
-+	if (!sli_cmd_common_nop(&hw->sli, ctx->cmd,
-+			       sizeof(ctx->cmd), 0) == 0) {
-+		efc_log_err(hw->os, "COMMON_NOP format failure\n");
-+		kfree(ctx);
-+		rc = -1;
-+	}
-+
-+	if (efct_hw_command(hw, ctx->cmd, EFCT_CMD_NOWAIT, efct_hw_async_cb,
-+			    ctx)) {
-+		efc_log_err(hw->os, "COMMON_NOP command failure\n");
-+		kfree(ctx);
-+		rc = -1;
-+	}
-+	return rc;
-+}
-+
 +static int
-+target_wqe_timer_nop_cb(struct efct_hw_s *hw, int status,
-+			u8 *mqe, void *arg)
++efct_hw_cb_sfp(struct efct_hw_s *hw, int status, u8 *mqe, void  *arg)
 +{
-+	struct efct_hw_io_s *io = NULL;
-+	struct efct_hw_io_s *io_next = NULL;
-+	u64 ticks_current = jiffies_64;
-+	u32 sec_elapsed;
-+	struct sli4_mbox_command_header_s *hdr =
-+				(struct sli4_mbox_command_header_s *)mqe;
-+	unsigned long flags = 0;
++	struct efct_hw_sfp_cb_arg *cb_arg = arg;
++	struct efc_dma_s *payload = &cb_arg->payload;
++	struct sli4_rsp_cmn_read_transceiver_data_s *mbox_rsp;
++	struct efct_s *efct = hw->os;
++	u32 bytes_written;
 +
-+	if (status || le16_to_cpu(hdr->status)) {
-+		efc_log_debug(hw->os, "bad status st=%x hdr=%x\n",
-+			       status,
-+			       le16_to_cpu(hdr->status));
-+		/* go ahead and proceed with wqe timer checks... */
-+	}
-+
-+	/* loop through active WQE list and check for timeouts */
-+	spin_lock_irqsave(&hw->io_lock, flags);
-+	list_for_each_entry_safe(io, io_next, &hw->io_timed_wqe, wqe_link) {
-+		sec_elapsed = ((u32)(ticks_current - io->submit_ticks) / HZ);
-+
-+		/*
-+		 * If elapsed time > timeout, abort it. No need to check type
-+		 * since it wouldn't be on this list unless it was a target WQE
-+		 */
-+		if (sec_elapsed > io->tgt_wqe_timeout) {
-+			efc_log_test(hw->os,
-+				      "IO timeout xri=0x%x tag=0x%x type=%d\n",
-+				     io->indicator, io->reqtag, io->type);
-+
-+			/*
-+			 * remove from active_wqe list so won't try to abort
-+			 * again
-+			 */
-+			list_del(&io->list_entry);
-+
-+			/* save status of timed_out for when abort completes */
-+			io->status_saved = true;
-+			io->saved_status =
-+					 SLI4_FC_WCQE_STATUS_TARGET_WQE_TIMEOUT;
-+			io->saved_ext = 0;
-+			io->saved_len = 0;
-+
-+			/* now abort outstanding IO */
-+			efct_hw_io_abort(hw, io, false, NULL, NULL);
++	mbox_rsp =
++	(struct sli4_rsp_cmn_read_transceiver_data_s *)payload->virt;
++	bytes_written = le32_to_cpu(mbox_rsp->hdr.response_length);
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (!status && mbox_rsp->hdr.status)
++				status = mbox_rsp->hdr.status;
++			cb_arg->cb(status, bytes_written, mbox_rsp->page_data,
++				   cb_arg->arg);
 +		}
-+		/*
-+		 * need to go through entire list since each IO could have a
-+		 * different timeout value
-+		 */
-+	}
-+	spin_unlock_irqrestore(&hw->io_lock, flags);
 +
-+	/* if we're not in the middle of shutting down, schedule next timer */
-+	if (!hw->active_wqe_timer_shutdown) {
-+		timer_setup(&hw->wqe_timer,
-+			    &target_wqe_timer_cb, 0);
-+
-+		mod_timer(&hw->wqe_timer,
-+			  jiffies +
-+			  msecs_to_jiffies(EFCT_HW_WQ_TIMER_PERIOD_MS));
++		dma_free_coherent(&efct->pcidev->dev,
++				  cb_arg->payload.size, cb_arg->payload.virt,
++				  cb_arg->payload.phys);
++		memset(&cb_arg->payload, 0, sizeof(struct efc_dma_s));
++		kfree(cb_arg);
 +	}
-+	hw->in_active_wqe_timer = false;
++
++	kfree(mqe);
 +	return 0;
 +}
 +
-+static void
-+target_wqe_timer_cb(struct timer_list *t)
++/**
++ * @ingroup io
++ * @brief Function to retrieve the SFP information.
++ *
++ * @param hw Hardware context.
++ * @param page The page of SFP data to retrieve (0xa0 or 0xa2).
++ * @param cb Function call upon completion of sending the data (may be NULL).
++ * @param arg Argument to pass to IO completion function.
++ *
++ * @return Returns EFCT_HW_RTN_SUCCESS, EFCT_HW_RTN_ERROR, or
++ * EFCT_HW_RTN_NO_MEMORY.
++ */
++enum efct_hw_rtn_e
++efct_hw_get_sfp(struct efct_hw_s *hw, u16 page,
++		void (*cb)(int, u32, u32 *, void *), void *arg)
 +{
-+	struct efct_hw_s *hw = from_timer(hw, t, wqe_timer);
++	enum efct_hw_rtn_e rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_sfp_cb_arg *cb_arg;
++	u8 *mbxdata;
++	struct efct_s *efct = hw->os;
++	struct efc_dma_s *dma;
 +
-+	/*
-+	 * delete existing timer; will kick off new timer after checking wqe
-+	 * timeouts
-+	 */
-+	hw->in_active_wqe_timer = true;
-+	del_timer(&hw->wqe_timer);
++	/* mbxdata holds the header of the command */
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
 +
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
 +	/*
-+	 * Forward timer callback to execute in the mailbox completion
-+	 * processing context
++	 * cb_arg holds the data that will be passed to the callback on
++	 * completion
 +	 */
-+	if (efct_hw_async_call(hw, target_wqe_timer_nop_cb, hw))
-+		efc_log_test(hw->os, "efct_hw_async_call failed\n");
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++	memset(cb_arg, 0, sizeof(struct efct_hw_sfp_cb_arg));
++
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
++
++	/* payload holds the non-embedded portion */
++	dma = &cb_arg->payload;
++	dma->size = sizeof(struct sli4_rsp_cmn_read_transceiver_data_s);
++	dma->virt = dma_alloc_coherent(&efct->pcidev->dev,
++				       dma->size, &dma->phys, GFP_DMA);
++	if (!dma->virt) {
++		kfree(cb_arg);
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	/* Send the HW command */
++	if (!sli_cmd_common_read_transceiver_data(&hw->sli, mbxdata,
++						 SLI4_BMBX_SIZE, page,
++						 &cb_arg->payload))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_sfp, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		efc_log_test(hw->os,
++			      "READ_TRANSCEIVER_DATA failed with status %d\n",
++			     rc);
++		dma_free_coherent(&efct->pcidev->dev,
++				  cb_arg->payload.size, cb_arg->payload.virt,
++				  cb_arg->payload.phys);
++		memset(&cb_arg->payload, 0, sizeof(struct efc_dma_s));
++		kfree(cb_arg);
++		kfree(mbxdata);
++	}
++
++	return rc;
 +}
 +
-+static void
-+shutdown_target_wqe_timer(struct efct_hw_s *hw)
++/**
++ * @brief Function to retrieve the temperature information.
++ *
++ * @param hw Hardware context.
++ * @param cb Function call upon completion of sending the data (may be NULL).
++ * @param arg Argument to pass to IO completion function.
++ *
++ * @return Returns EFCT_HW_RTN_SUCCESS, EFCT_HW_RTN_ERROR, or
++ * EFCT_HW_RTN_NO_MEMORY.
++ */
++enum efct_hw_rtn_e
++efct_hw_get_temperature(struct efct_hw_s *hw,
++			void (*cb)(int status,
++				   u32 curr_temp,
++				u32 crit_temp_thrshld,
++				u32 warn_temp_thrshld,
++				u32 norm_temp_thrshld,
++				u32 fan_off_thrshld,
++				u32 fan_on_thrshld,
++				void *arg),
++			void *arg)
 +{
-+	u32	iters = 100;
++	enum efct_hw_rtn_e rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_temp_cb_arg *cb_arg;
++	u8 *mbxdata;
 +
-+	if (hw->config.emulate_tgt_wqe_timeout) {
-+		/*
-+		 * request active wqe timer shutdown, then wait for it to
-+		 * complete
-+		 */
-+		hw->active_wqe_timer_shutdown = true;
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
 +
-+		/*
-+		 * delete WQE timer and wait for timer handler to complete
-+		 * (if necessary)
-+		 */
-+		del_timer(&hw->wqe_timer);
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
 +
-+		/* now wait for timer handler to complete (if necessary) */
-+		while (hw->in_active_wqe_timer && iters) {
-+			/*
-+			 * if we happen to have just sent NOP mbox cmn, make
-+			 * sure completions are being processed
-+			 */
-+			efct_hw_flush(hw);
-+			iters--;
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
++
++	/* Send the HW command */
++	if (!sli_cmd_dump_type4(&hw->sli, mbxdata, SLI4_BMBX_SIZE,
++			       SLI4_WKI_TAG_SAT_TEM))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_temp, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		efc_log_test(hw->os, "DUMP_TYPE4 failed\n");
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
++}
++
++/**
++ * @brief Called when the DUMP command completes.
++ *
++ * @par Description
++ * Get the temperature data out of the response, free the mailbox that was
++ * malloc'd by efct_hw_get_temperature(), then call the callback and pass the
++ * status and data.
++ *
++ * @param hw Hardware context.
++ * @param status Status field from the mbox completion.
++ * @param mqe Mailbox response structure.
++ * @param arg Pointer to a callback function that signals the caller that the
++ * command is done.
++ * The callback function prototype is defined by efct_hw_temp_cb_t.
++ *
++ * @return Returns 0.
++ */
++static int
++efct_hw_cb_temp(struct efct_hw_s *hw, int status, u8 *mqe, void  *arg)
++{
++	struct sli4_cmd_dump4_s *mbox_rsp = (struct sli4_cmd_dump4_s *)mqe;
++	struct efct_hw_temp_cb_arg *cb_arg = arg;
++	u32 curr_temp = le32_to_cpu(mbox_rsp->resp_data[0]); /* word 5 */
++	u32 crit_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[1]); /* word 6 */
++	u32 warn_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[2]); /* word 7 */
++	u32 norm_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[3]); /* word 8 */
++	u32 fan_off_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[4]);   /* word 9 */
++	u32 fan_on_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[5]);    /* word 10 */
++
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status,
++				   curr_temp,
++				   crit_temp_thrshld,
++				   warn_temp_thrshld,
++				   norm_temp_thrshld,
++				   fan_off_thrshld,
++				   fan_on_thrshld,
++				   cb_arg->arg);
 +		}
 +
-+		if (iters == 0)
-+			efc_log_test(hw->os,
-+				      "Failed to shutdown active wqe timer\n");
++		kfree(cb_arg);
 +	}
++	kfree(mqe);
++
++	return 0;
 +}
++
++/**
++ * @brief Function to retrieve the link statistics.
++ *
++ * @param hw Hardware context.
++ * @param req_ext_counters If TRUE, then the extended counters will be
++ * requested.
++ * @param clear_overflow_flags If TRUE, then overflow flags will be cleared.
++ * @param clear_all_counters If TRUE, the counters will be cleared.
++ * @param cb Function call upon completion of sending the data (may be NULL).
++ * @param arg Argument to pass to IO completion function.
++ *
++ * @return Returns EFCT_HW_RTN_SUCCESS, EFCT_HW_RTN_ERROR, ori
++ * EFCT_HW_RTN_NO_MEMORY.
++ */
++enum efct_hw_rtn_e
++efct_hw_get_link_stats(struct efct_hw_s *hw,
++		       u8 req_ext_counters,
++		       u8 clear_overflow_flags,
++		       u8 clear_all_counters,
++		       void (*cb)(int status,
++				  u32 num_counters,
++			struct efct_hw_link_stat_counts_s *counters,
++			void *arg),
++		       void *arg)
++{
++	enum efct_hw_rtn_e rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_link_stat_cb_arg *cb_arg;
++	u8 *mbxdata;
++
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
++
++	/* Send the HW command */
++	if (!sli_cmd_read_link_stats(&hw->sli, mbxdata, SLI4_BMBX_SIZE,
++				    req_ext_counters,
++				    clear_overflow_flags,
++				    clear_all_counters))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_link_stat, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
++}
++
++/**
++ * @brief Called when the READ_LINK_STAT command completes.
++ *
++ * @par Description
++ * Get the counters out of the response, free the mailbox that was malloc'd
++ * by efct_hw_get_link_stats(), then call the callback and pass the status and
++ * data.
++ *
++ * @param hw Hardware context.
++ * @param status Status field from the mbox completion.
++ * @param mqe Mailbox response structure.
++ * @param arg Pointer to a callback function that signals the caller that the
++ * command is done.
++ * The callback function prototype is defined by efct_hw_link_stat_cb_t.
++ *
++ * @return Returns 0.
++ */
++static int
++efct_hw_cb_link_stat(struct efct_hw_s *hw, int status,
++		     u8 *mqe, void  *arg)
++{
++	struct sli4_cmd_read_link_stats_s *mbox_rsp;
++	struct efct_hw_link_stat_cb_arg *cb_arg = arg;
++	struct efct_hw_link_stat_counts_s counts[EFCT_HW_LINK_STAT_MAX];
++	u32 num_counters;
++	u32 mbox_rsp_flags = 0;
++
++	mbox_rsp = (struct sli4_cmd_read_link_stats_s *)mqe;
++	mbox_rsp_flags = le32_to_cpu(mbox_rsp->dw1_flags);
++	num_counters = (mbox_rsp_flags & SLI4_READ_LNKSTAT_GEC) ? 20 : 13;
++	memset(counts, 0, sizeof(struct efct_hw_link_stat_counts_s) *
++				 EFCT_HW_LINK_STAT_MAX);
++
++	counts[EFCT_HW_LINK_STAT_LINK_FAILURE_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W02OF);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SYNC_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W03OF);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SIGNAL_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W04OF);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W05OF);
++	counts[EFCT_HW_LINK_STAT_INVALID_XMIT_WORD_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W06OF);
++	counts[EFCT_HW_LINK_STAT_CRC_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W07OF);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_TIMEOUT_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W08OF);
++	counts[EFCT_HW_LINK_STAT_ELASTIC_BUFFER_OVERRUN_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W09OF);
++	counts[EFCT_HW_LINK_STAT_ARB_TIMEOUT_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W10OF);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_RCV_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W11OF);
++	counts[EFCT_HW_LINK_STAT_CURR_RCV_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W12OF);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_XMIT_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W13OF);
++	counts[EFCT_HW_LINK_STAT_CURR_XMIT_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W14OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFA_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W15OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFDTI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W16OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFNI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W17OF);
++	counts[EFCT_HW_LINK_STAT_RCV_SOFF_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W18OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_AER_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W19OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_RPI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W20OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_XRI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W21OF);
++	counts[EFCT_HW_LINK_STAT_LINK_FAILURE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->linkfail_errcnt);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SYNC_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->losssync_errcnt);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SIGNAL_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->losssignal_errcnt);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->primseq_errcnt);
++	counts[EFCT_HW_LINK_STAT_INVALID_XMIT_WORD_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->inval_txword_errcnt);
++	counts[EFCT_HW_LINK_STAT_CRC_COUNT].counter =
++		le32_to_cpu(mbox_rsp->crc_errcnt);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_TIMEOUT_COUNT].counter =
++		le32_to_cpu(mbox_rsp->primseq_eventtimeout_cnt);
++	counts[EFCT_HW_LINK_STAT_ELASTIC_BUFFER_OVERRUN_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->elastic_bufoverrun_errcnt);
++	counts[EFCT_HW_LINK_STAT_ARB_TIMEOUT_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->arbit_fc_al_timeout_cnt);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_RCV_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->adv_rx_buftor_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_CURR_RCV_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->curr_rx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_XMIT_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->adv_tx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_CURR_XMIT_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->curr_tx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFA_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofa_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFDTI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofdti_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFNI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofni_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_SOFF_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_soff_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_AER_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_aer_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_RPI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_avail_rpi_rescnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_XRI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_avail_xri_rescnt);
++
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status, num_counters, counts, cb_arg->arg);
++		}
++
++		kfree(cb_arg);
++	}
++	kfree(mqe);
++
++	return 0;
++}
++
++/**
++ * @brief Function to retrieve the link and host statistics.
++ *
++ * @param hw Hardware context.
++ * @param cc clear counters, if TRUE all counters will be cleared.
++ * @param cb Function call upon completion of receiving the data.
++ * @param arg Argument to pass to pointer fc hosts statistics structure.
++ *
++ * @return Returns EFCT_HW_RTN_SUCCESS, EFCT_HW_RTN_ERROR, or
++ * EFCT_HW_RTN_NO_MEMORY.
++ */
++enum efct_hw_rtn_e
++efct_hw_get_host_stats(struct efct_hw_s *hw, u8 cc,
++		       void (*cb)(int status,
++				  u32 num_counters,
++				  struct efct_hw_host_stat_counts_s *counters,
++				  void *arg),
++		       void *arg)
++{
++	enum efct_hw_rtn_e rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_host_stat_cb_arg *cb_arg;
++	u8 *mbxdata;
++
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	 cb_arg->cb = cb;
++	 cb_arg->arg = arg;
++
++	 /* Send the HW command to get the host stats */
++	if (!sli_cmd_read_status(&hw->sli, mbxdata, SLI4_BMBX_SIZE, cc))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_host_stat, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		efc_log_test(hw->os, "READ_HOST_STATS failed\n");
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
++}
++
++/**
++ * @brief Called when the READ_STATUS command completes.
++ *
++ * @par Description
++ * Get the counters out of the response, free the mailbox that was malloc'd
++ * by efct_hw_get_host_stats(), then call the callback and pass
++ * the status and data.
++ *
++ * @param hw Hardware context.
++ * @param status Status field from the mbox completion.
++ * @param mqe Mailbox response structure.
++ * @param arg Pointer to a callback function that signals the caller that the
++ * command is done.
++ * The callback function prototype is defined by
++ * efct_hw_host_stat_cb_t.
++ *
++ * @return Returns 0.
++ */
++static int
++efct_hw_cb_host_stat(struct efct_hw_s *hw, int status,
++		     u8 *mqe, void  *arg)
++{
++	struct sli4_cmd_read_status_s *mbox_rsp =
++					(struct sli4_cmd_read_status_s *)mqe;
++	struct efct_hw_host_stat_cb_arg *cb_arg = arg;
++	struct efct_hw_host_stat_counts_s counts[EFCT_HW_HOST_STAT_MAX];
++	u32 num_counters = EFCT_HW_HOST_STAT_MAX;
++
++	memset(counts, 0, sizeof(struct efct_hw_host_stat_counts_s) *
++		   EFCT_HW_HOST_STAT_MAX);
++
++	counts[EFCT_HW_HOST_STAT_TX_KBYTE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_kbyte_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_KBYTE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_kbyte_cnt);
++	counts[EFCT_HW_HOST_STAT_TX_FRAME_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_frame_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_FRAME_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_frame_cnt);
++	counts[EFCT_HW_HOST_STAT_TX_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_seq_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_seq_cnt);
++	counts[EFCT_HW_HOST_STAT_TOTAL_EXCH_ORIG].counter =
++		 le32_to_cpu(mbox_rsp->tot_exchanges_orig);
++	counts[EFCT_HW_HOST_STAT_TOTAL_EXCH_RESP].counter =
++		 le32_to_cpu(mbox_rsp->tot_exchanges_resp);
++	counts[EFCT_HW_HOSY_STAT_RX_P_BSY_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_p_bsy_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_F_BSY_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_f_bsy_cnt);
++	counts[EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_RQ_BUF_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->no_rq_buf_dropped_frames_cnt);
++	counts[EFCT_HW_HOST_STAT_EMPTY_RQ_TIMEOUT_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->empty_rq_timeout_cnt);
++	counts[EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_XRI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->no_xri_dropped_frames_cnt);
++	counts[EFCT_HW_HOST_STAT_EMPTY_XRI_POOL_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->empty_xri_pool_cnt);
++
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status, num_counters, counts, cb_arg->arg);
++		}
++
++		kfree(cb_arg);
++	}
++	kfree(mqe);
++
++	return 0;
++}
+diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+index 7f1c4091d91a..b372250c4408 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
++++ b/drivers/scsi/elx/efct/efct_hw.h
+@@ -1130,5 +1130,44 @@ efct_hw_srrs_send(struct efct_hw_s *hw, enum efct_hw_io_type_e type,
+ 		  union efct_hw_io_param_u *iparam,
+ 		  efct_hw_srrs_cb_t cb,
+ 		  void *arg);
++/* Function for retrieving SFP data */
++extern enum efct_hw_rtn_e
++efct_hw_get_sfp(struct efct_hw_s *hw, u16 page,
++		void (*cb)(int, u32, u32 *, void *), void *arg);
++
++/* Function for retrieving temperature data */
++extern enum efct_hw_rtn_e
++efct_hw_get_temperature(struct efct_hw_s *hw,
++			void (*efct_hw_temp_cb_t)(int status,
++						  u32 curr_temp,
++				u32 crit_temp_thrshld,
++				u32 warn_temp_thrshld,
++				u32 norm_temp_thrshld,
++				u32 fan_off_thrshld,
++				u32 fan_on_thrshld,
++				void *arg),
++			void *arg);
++
++/* Function for retrieving link statistics */
++extern enum efct_hw_rtn_e
++efct_hw_get_link_stats(struct efct_hw_s *hw,
++		       u8 req_ext_counters,
++		u8 clear_overflow_flags,
++		u8 clear_all_counters,
++		void (*efct_hw_link_stat_cb_t)(int status,
++					       u32 num_counters,
++			struct efct_hw_link_stat_counts_s *counters,
++			void *arg),
++		void *arg);
++/* Function for retrieving host statistics */
++extern enum efct_hw_rtn_e
++efct_hw_get_host_stats(struct efct_hw_s *hw,
++		       u8 cc,
++		void (*efct_hw_host_stat_cb_t)(int status,
++					       u32 num_counters,
++			struct efct_hw_host_stat_counts_s *counters,
++			void *arg),
++		void *arg);
++
+ 
+ #endif /* __EFCT_H__ */
 -- 
 2.13.7
 
