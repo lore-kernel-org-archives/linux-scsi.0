@@ -2,91 +2,199 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25265C47E49
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 17:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1CC0CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E998F21929
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 17:35:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571852138;
-	bh=nU+t6hJBerEGHVpX83l9jQCd8/P6S+syZ7EgEoM54YM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Ku/cEuISmkddbFVSphfIdDrm7ssaxEPbmOQVaGI9l6tPiFyWAfOmLL/L6VxjIY5wT
-	 z8INXNL9EirmVddJgt5FC5QbPmOSvlnM7wAutT37p6EqsqdyWVniFBe9kKk3Gm+iza
-	 vqJOTWewtLLtSjNopGwnKyP4m9zSdVFtPjAvIWrQ=
+	by mail.kernel.org (Postfix) with ESMTP id AE96521906
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 21:45:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R0V7DxSa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730584AbfJWRf1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 13:35:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46004 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730453AbfJWRf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Oct 2019 13:35:27 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8E590AD29;
-        Wed, 23 Oct 2019 17:35:25 +0000 (UTC)
-Date:   Wed, 23 Oct 2019 19:35:24 +0200
-From:   Michal Hocko <mhocko@kernel.org>
-To:     Mike Christie <mchristi@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        martin@urbackup.org, Damien.LeMoal@wdc.com
-Subject: Re: [PATCH] Add prctl support for controlling PF_MEMALLOC V2
-Message-ID: <20191023173524.GM17610@dhcp22.suse.cz>
-References: <20191021214137.8172-1-mchristi@redhat.com>
- <20191022112446.GA8213@dhcp22.suse.cz>
- <5DAF2AA0.5030500@redhat.com>
- <20191022163310.GS9379@dhcp22.suse.cz>
- <20191022204344.GB2044@dread.disaster.area>
- <20191023071146.GE754@dhcp22.suse.cz>
- <5DB08D81.8050300@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5DB08D81.8050300@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S2405561AbfJWVpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 17:45:10 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:48680 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2392676AbfJWVpK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Oct 2019 17:45:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1571867109;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0D4EQ8thGQKRRU/Fz2c1O7VtA1gRTINZXqgRy6HfSuk=;
+        b=R0V7DxSapSFPev4UGzimkxUEIrMclUZodFMOePwyBjdC3PkoEX9IHO8CiV/9e3ccXmQ+JC
+        4A7d90Cfe7WgzZmiok371uhmCno8Tx+Mt6X3tW1OKYEj5fCZSYkXuFHlMG9NatkMTXLOVE
+        xRIUi6+z9xhMdPFbyJ284vd00qkuzMc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-240-m8GaqF_nOUal1pqA5AbW-g-1; Wed, 23 Oct 2019 17:45:05 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0FAFE100550E;
+        Wed, 23 Oct 2019 21:45:03 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 401405DA8D;
+        Wed, 23 Oct 2019 21:44:55 +0000 (UTC)
+Message-ID: <6759dfc6c5c721b5060d75e6c5f5a0b1dbb9a80b.camel@redhat.com>
+Subject: Re: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation
+ bug
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Michal =?ISO-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Date:   Wed, 23 Oct 2019 17:44:54 -0400
+In-Reply-To: <20191023162313.GE938@kitsune.suse.cz>
+References: <cover.1571834862.git.msuchanek@suse.de>
+         <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
+         <08f1e291-0196-2402-1947-c0cdaaf534da@suse.de>
+         <20191023162313.GE938@kitsune.suse.cz>
+Mime-Version: 1.0
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-MC-Unique: m8GaqF_nOUal1pqA5AbW-g-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed 23-10-19 12:27:29, Mike Christie wrote:
-> On 10/23/2019 02:11 AM, Michal Hocko wrote:
-> > On Wed 23-10-19 07:43:44, Dave Chinner wrote:
-> >> On Tue, Oct 22, 2019 at 06:33:10PM +0200, Michal Hocko wrote:
-> > 
-> > Thanks for more clarifiation regarding PF_LESS_THROTTLE.
-> > 
-> > [...]
-> >>> PF_IO_FLUSHER would mean that the user
-> >>> context is a part of the IO path and therefore there are certain reclaim
-> >>> recursion restrictions.
-> >>
-> >> If PF_IO_FLUSHER just maps to PF_LESS_THROTTLE|PF_MEMALLOC_NOIO,
-> >> then I'm not sure we need a new definition. Maybe that's the ptrace
-> >> flag name, but in the kernel we don't need a PF_IO_FLUSHER process
-> >> flag...
-> > 
-> > Yes, the internal implementation would do something like that. I was
-> > more interested in the user space visible API at this stage. Something
-> > generic enough because exporting MEMALLOC flags is just a bad idea IMHO
-> > (especially PF_MEMALLOC).
-> 
-> Do you mean we would do something like:
-> 
-> prctl()
-> ....
-> case PF_SET_IO_FLUSHER:
->         current->flags |= PF_MEMALLOC_NOIO;
-> ....
+On Wed, 2019-10-23 at 18:23 +0200, Michal Such=C3=A1nek wrote:
+> On Wed, Oct 23, 2019 at 04:13:15PM +0200, Hannes Reinecke wrote:
+> > On 10/23/19 2:52 PM, Michal Suchanek wrote:
+> > > The WMware ESXi cdrom identifies itself as:
+> > > sr 0:0:0:0: [sr0] scsi3-mmc drive: vendor: "NECVMWarVMware SATA CD001=
+.00"
+> > > model: "VMware SATA CD001.00"
+> > > with the following get_capabilities print in sr.c:
+> > >         sr_printk(KERN_INFO, cd,
+> > >                   "scsi3-mmc drive: vendor: \"%s\" model: \"%s\"\n",
+> > >                   cd->device->vendor, cd->device->model);
+> > >=20
+> > > So the model looks like reliable identification while vendor does not=
+.
+> > >=20
+> > > The drive claims to have a tray and claims to be able to close it.
+> > > However, the UI has no notion of a tray - when medium is ejected it i=
+s
+> > > dropped in the floor and the user must select a medium again before t=
+he
+> > > drive can be re-loaded.  On the kernel side the tray_move call to clo=
+se
+> > > the tray succeeds but the drive state does not change as a result of =
+the
+> > > call.
+> > >=20
+> > > The drive does not in fact emulate the tray state. There are two ways=
+ to
+> > > get the medium state. One is the SCSI status:
+> > >=20
+> > > Physical drive:
+> > >=20
+> > > Fixed format, current; Sense key: Not Ready
+> > > Additional sense: Medium not present - tray open
+> > > Raw sense data (in hex):
+> > >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 02 00 00
+> > >         00 00
+> > >=20
+> > > Fixed format, current; Sense key: Not Ready
+> > > Additional sense: Medium not present - tray closed
+> > >  Raw sense data (in hex):
+> > >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 01 00 00
+> > >         00 00
+> > >=20
+> > > VMware ESXi:
+> > >=20
+> > > Fixed format, current; Sense key: Not Ready
+> > > Additional sense: Medium not present
+> > >   Info fld=3D0x0 [0]
+> > >  Raw sense data (in hex):
+> > >         f0 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
+> > >         00 00
+> > >=20
+> > > So the tray state is not reported here. Other is medium status which =
+the
+> > > kernel prefers if available. Adding a print here gives:
+> > >=20
+> > > cdrom: get_media_event success: code =3D 0, door_open =3D 1, medium_p=
+resent =3D 0
+> > >=20
+> > > door_open is interpreted as open tray. This is fine so long as tray_m=
+ove
+> > > would close the tray when requested or report an error which never
+> > > happens on VMware ESXi servers (5.5 and 6.5 tested).
+> > >=20
+> > > This is a popular virtualization platform so a workaround is worthwhi=
+le.
+> > >=20
+> > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+> > > ---
+> > >  drivers/scsi/sr.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > >=20
+> > > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> > > index 4664fdf75c0f..8090c5bdec09 100644
+> > > --- a/drivers/scsi/sr.c
+> > > +++ b/drivers/scsi/sr.c
+> > > @@ -867,6 +867,7 @@ static void get_capabilities(struct scsi_cd *cd)
+> > >  =09unsigned int ms_len =3D 128;
+> > >  =09int rc, n;
+> > > =20
+> > > +=09static const char *model_vmware =3D "VMware";
+> > >  =09static const char *loadmech[] =3D
+> > >  =09{
+> > >  =09=09"caddy",
+> > > @@ -922,6 +923,11 @@ static void get_capabilities(struct scsi_cd *cd)
+> > >  =09=09  buffer[n + 4] & 0x20 ? "xa/form2 " : "",=09/* can read xa/fr=
+om2 */
+> > >  =09=09  buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data =
+*/
+> > >  =09=09  loadmech[buffer[n + 6] >> 5]);
+> > > +=09if (!strncmp(cd->device->model, model_vmware, strlen(model_vmware=
+))) {
+> > > +=09=09buffer[n + 6] &=3D ~(0xff << 5);
+> > > +=09=09sr_printk(KERN_INFO, cd,
+> > > +=09=09=09  "VMware ESXi bug workaround: tray -> caddy\n");
+> > > +=09}
+> > >  =09if ((buffer[n + 6] >> 5) =3D=3D 0)
+> > >  =09=09/* caddy drives can't close tray... */
+> > >  =09=09cd->cdi.mask |=3D CDC_CLOSE_TRAY;
+> > >=20
+> >=20
+> > This looks something which should be handled via a blacklist flag, not
+> > some inline hack which everyone forgets about it...
+>=20
+> AFAIK we used to have a blacklist but don't have anymore. So either it
+> has to be resurrected for this one flag or an inline hack should be good
+> enough.
+>=20
 
-yes, along with PF_LESS_THROTTLE.
+I agree with Hannes.  We should have a blacklist flag for this.
+Putting inline code in the sr driver that special cases on a particular
+device model string is not clean.  The "VMware ESXi bug workaround" message
+is not particularly descriptive either.
 
--- 
-Michal Hocko
-SUSE Labs
+-Ewan
+
