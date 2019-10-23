@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B28CA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D915CA9EB7
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B35F020640
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FF4820640
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391898AbfJWMxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 08:53:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49374 "EHLO mx1.suse.de"
+        id S2391888AbfJWMxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 08:53:16 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49342 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2391880AbfJWMxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2391871AbfJWMxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 23 Oct 2019 08:53:16 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id CECD2B67E;
-        Wed, 23 Oct 2019 12:53:14 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id D14C3B676;
+        Wed, 23 Oct 2019 12:53:10 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -40,9 +40,9 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v2 8/8] scsi: sr: wait for the medium to become ready
-Date:   Wed, 23 Oct 2019 14:52:47 +0200
-Message-Id: <94dc98dc67b1d183d04c338c7978efa0556db6ac.1571834862.git.msuchanek@suse.de>
+Subject: [PATCH v2 3/8] cdrom: wait for the tray to close
+Date:   Wed, 23 Oct 2019 14:52:42 +0200
+Message-Id: <1696675e9998df6eee537908903628abf666e3fd.1571834862.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <cover.1571834862.git.msuchanek@suse.de>
 References: <cover.1571834862.git.msuchanek@suse.de>
@@ -53,98 +53,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the autoclose IOCLT provided by cdrom driver to wait for drive to
-close in open_finish, and attempt to open once more after the door
-closes.
+The scsi command to close the tray only starts the motor and does not
+wait for the tray to close. Wait until the state chages from TRAY_OPEN
+so users do not race with the tray closing.
+
+This looks like inifinte wait but unless the drive is broken it either
+closes the tray shortly or reports an error when it detects the tray is
+blocked. At worst the wait can be interrupted by the user.
+
+Also wait for the drive to become ready once the tray closes.
 
 Signed-off-by: Michal Suchanek <msuchanek@suse.de>
 ---
- drivers/scsi/sr.c | 54 ++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 42 insertions(+), 12 deletions(-)
+v2:
+ - check drive_status exists before using it
+ - rename tray_close -> cdrom_tray_close
+ - also wait for drive to become ready after tray closes
+ - do not wait in cdrom_ioctl_closetray
+---
+ drivers/cdrom/cdrom.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 8090c5bdec09..34d9a818b9e0 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -521,29 +521,58 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
- 	return ret;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index f504ca70f93f..c0fc9a02b70c 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -1045,6 +1045,18 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	       tracks->cdi, tracks->xa);
  }
  
--static int sr_block_open(struct block_device *bdev, fmode_t mode)
-+static int __sr_block_open(struct block_device *bdev, fmode_t mode)
- {
--	struct scsi_cd *cd;
--	struct scsi_device *sdev;
--	int ret = -ENXIO;
--
--	cd = scsi_cd_get(bdev->bd_disk);
--	if (!cd)
--		goto out;
-+	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
-+	int ret;
- 
--	sdev = cd->device;
--	scsi_autopm_get_device(sdev);
- 	check_disk_change(bdev);
- 
- 	mutex_lock(&sr_mutex);
- 	ret = cdrom_open(&cd->cdi, bdev, mode);
- 	mutex_unlock(&sr_mutex);
- 
-+	return ret;
-+}
-+
-+static int sr_block_open(struct block_device *bdev, fmode_t mode)
++static int cdrom_tray_close(struct cdrom_device_info *cdi)
 +{
-+	struct scsi_cd *cd = scsi_cd_get(bdev->bd_disk);
-+	struct scsi_device *sdev;
 +	int ret;
 +
-+	if (!cd)
-+		return -ENXIO;
++	ret = cdi->ops->tray_move(cdi, 0);
++	if (ret || !cdi->ops->drive_status)
++		return ret;
 +
-+	sdev = cd->device;
-+	scsi_autopm_get_device(sdev);
-+	ret = __sr_block_open(bdev, mode);
- 	scsi_autopm_put_device(sdev);
--	if (ret)
-+
-+	if (ret == -ERESTARTSYS)
- 		scsi_cd_put(cd);
- 
--out:
-+	return ret;
++	return poll_event_interruptible(CDS_TRAY_OPEN !=
++			cdi->ops->drive_status(cdi, CDSL_CURRENT), 500);
 +}
 +
-+static int sr_block_open_finish(struct block_device *bdev, fmode_t mode,
-+				int ret)
-+{
-+	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
-+
-+	/* wait for drive to get ready */
-+	if ((ret == -ENOMEDIUM) && !(mode & FMODE_NDELAY)) {
-+		struct scsi_device *sdev = cd->device;
-+		/*
-+		 * Cannot use sr_block_ioctl because it locks sr_mutex blocking
-+		 * out any processes trying to access the drive
-+		 */
-+		scsi_autopm_get_device(sdev);
-+		cdrom_ioctl(&cd->cdi, bdev, mode, CDROM_AUTOCLOSE, 0);
-+		ret = __sr_block_open(bdev, mode);
-+		scsi_autopm_put_device(sdev);
-+	}
-+
- 	return ret;
- }
- 
-@@ -639,6 +668,7 @@ static const struct block_device_operations sr_bdops =
+ static
+ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
  {
- 	.owner		= THIS_MODULE,
- 	.open		= sr_block_open,
-+	.open_finish	= sr_block_open_finish,
- 	.release	= sr_block_release,
- 	.ioctl		= sr_block_ioctl,
- 	.check_events	= sr_block_check_events,
+@@ -1063,7 +1075,9 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
+ 			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
+ 			    cdi->options & CDO_AUTO_CLOSE) {
+ 				cd_dbg(CD_OPEN, "trying to close the tray\n");
+-				ret=cdo->tray_move(cdi,0);
++				ret = cdrom_tray_close(cdi);
++				if (ret == -ERESTARTSYS)
++					return ret;
+ 				if (ret) {
+ 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
+ 					/* Ignore the error from the low
+@@ -1086,6 +1100,15 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
+ 			}
+ 			cd_dbg(CD_OPEN, "the tray is now closed\n");
+ 		}
++		/* the door should be closed now, check for the disc */
++		if (ret == CDS_DRIVE_NOT_READY) {
++			int poll_res = poll_event_interruptible(
++				CDS_DRIVE_NOT_READY !=
++				(ret = cdo->drive_status(cdi, CDSL_CURRENT)),
++				500);
++			if (poll_res == -ERESTARTSYS)
++				return poll_res;
++		}
+ 		if (ret != CDS_DISC_OK)
+ 			return -ENOMEDIUM;
+ 	}
 -- 
 2.23.0
 
