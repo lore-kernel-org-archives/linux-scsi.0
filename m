@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D915CA9EB7
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE4ECA9EB7
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FF4820640
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D2902173B
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 12:53:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391888AbfJWMxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 08:53:16 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49342 "EHLO mx1.suse.de"
+        id S2391921AbfJWMx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 08:53:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49442 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2391871AbfJWMxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2391046AbfJWMxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 23 Oct 2019 08:53:16 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D14C3B676;
-        Wed, 23 Oct 2019 12:53:10 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 0BE11B67D;
+        Wed, 23 Oct 2019 12:53:14 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -40,9 +40,9 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v2 3/8] cdrom: wait for the tray to close
-Date:   Wed, 23 Oct 2019 14:52:42 +0200
-Message-Id: <1696675e9998df6eee537908903628abf666e3fd.1571834862.git.msuchanek@suse.de>
+Subject: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation bug
+Date:   Wed, 23 Oct 2019 14:52:46 +0200
+Message-Id: <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <cover.1571834862.git.msuchanek@suse.de>
 References: <cover.1571834862.git.msuchanek@suse.de>
@@ -53,77 +53,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi command to close the tray only starts the motor and does not
-wait for the tray to close. Wait until the state chages from TRAY_OPEN
-so users do not race with the tray closing.
+The WMware ESXi cdrom identifies itself as:
+sr 0:0:0:0: [sr0] scsi3-mmc drive: vendor: "NECVMWarVMware SATA CD001.00"
+model: "VMware SATA CD001.00"
+with the following get_capabilities print in sr.c:
+        sr_printk(KERN_INFO, cd,
+                  "scsi3-mmc drive: vendor: \"%s\" model: \"%s\"\n",
+                  cd->device->vendor, cd->device->model);
 
-This looks like inifinte wait but unless the drive is broken it either
-closes the tray shortly or reports an error when it detects the tray is
-blocked. At worst the wait can be interrupted by the user.
+So the model looks like reliable identification while vendor does not.
 
-Also wait for the drive to become ready once the tray closes.
+The drive claims to have a tray and claims to be able to close it.
+However, the UI has no notion of a tray - when medium is ejected it is
+dropped in the floor and the user must select a medium again before the
+drive can be re-loaded.  On the kernel side the tray_move call to close
+the tray succeeds but the drive state does not change as a result of the
+call.
+
+The drive does not in fact emulate the tray state. There are two ways to
+get the medium state. One is the SCSI status:
+
+Physical drive:
+
+Fixed format, current; Sense key: Not Ready
+Additional sense: Medium not present - tray open
+Raw sense data (in hex):
+        70 00 02 00 00 00 00 0a  00 00 00 00 3a 02 00 00
+        00 00
+
+Fixed format, current; Sense key: Not Ready
+Additional sense: Medium not present - tray closed
+ Raw sense data (in hex):
+        70 00 02 00 00 00 00 0a  00 00 00 00 3a 01 00 00
+        00 00
+
+VMware ESXi:
+
+Fixed format, current; Sense key: Not Ready
+Additional sense: Medium not present
+  Info fld=0x0 [0]
+ Raw sense data (in hex):
+        f0 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
+        00 00
+
+So the tray state is not reported here. Other is medium status which the
+kernel prefers if available. Adding a print here gives:
+
+cdrom: get_media_event success: code = 0, door_open = 1, medium_present = 0
+
+door_open is interpreted as open tray. This is fine so long as tray_move
+would close the tray when requested or report an error which never
+happens on VMware ESXi servers (5.5 and 6.5 tested).
+
+This is a popular virtualization platform so a workaround is worthwhile.
 
 Signed-off-by: Michal Suchanek <msuchanek@suse.de>
 ---
-v2:
- - check drive_status exists before using it
- - rename tray_close -> cdrom_tray_close
- - also wait for drive to become ready after tray closes
- - do not wait in cdrom_ioctl_closetray
----
- drivers/cdrom/cdrom.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+ drivers/scsi/sr.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index f504ca70f93f..c0fc9a02b70c 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1045,6 +1045,18 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
- 	       tracks->cdi, tracks->xa);
- }
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 4664fdf75c0f..8090c5bdec09 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -867,6 +867,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	unsigned int ms_len = 128;
+ 	int rc, n;
  
-+static int cdrom_tray_close(struct cdrom_device_info *cdi)
-+{
-+	int ret;
-+
-+	ret = cdi->ops->tray_move(cdi, 0);
-+	if (ret || !cdi->ops->drive_status)
-+		return ret;
-+
-+	return poll_event_interruptible(CDS_TRAY_OPEN !=
-+			cdi->ops->drive_status(cdi, CDSL_CURRENT), 500);
-+}
-+
- static
- int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- {
-@@ -1063,7 +1075,9 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
- 			    cdi->options & CDO_AUTO_CLOSE) {
- 				cd_dbg(CD_OPEN, "trying to close the tray\n");
--				ret=cdo->tray_move(cdi,0);
-+				ret = cdrom_tray_close(cdi);
-+				if (ret == -ERESTARTSYS)
-+					return ret;
- 				if (ret) {
- 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
- 					/* Ignore the error from the low
-@@ -1086,6 +1100,15 @@ int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 			}
- 			cd_dbg(CD_OPEN, "the tray is now closed\n");
- 		}
-+		/* the door should be closed now, check for the disc */
-+		if (ret == CDS_DRIVE_NOT_READY) {
-+			int poll_res = poll_event_interruptible(
-+				CDS_DRIVE_NOT_READY !=
-+				(ret = cdo->drive_status(cdi, CDSL_CURRENT)),
-+				500);
-+			if (poll_res == -ERESTARTSYS)
-+				return poll_res;
-+		}
- 		if (ret != CDS_DISC_OK)
- 			return -ENOMEDIUM;
- 	}
++	static const char *model_vmware = "VMware";
+ 	static const char *loadmech[] =
+ 	{
+ 		"caddy",
+@@ -922,6 +923,11 @@ static void get_capabilities(struct scsi_cd *cd)
+ 		  buffer[n + 4] & 0x20 ? "xa/form2 " : "",	/* can read xa/from2 */
+ 		  buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data */
+ 		  loadmech[buffer[n + 6] >> 5]);
++	if (!strncmp(cd->device->model, model_vmware, strlen(model_vmware))) {
++		buffer[n + 6] &= ~(0xff << 5);
++		sr_printk(KERN_INFO, cd,
++			  "VMware ESXi bug workaround: tray -> caddy\n");
++	}
+ 	if ((buffer[n + 6] >> 5) == 0)
+ 		/* caddy drives can't close tray... */
+ 		cd->cdi.mask |= CDC_CLOSE_TRAY;
 -- 
 2.23.0
 
