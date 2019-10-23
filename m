@@ -2,148 +2,254 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6901DCA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 07:46:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE8D5CA9EB6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 08:52:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33E89214B2
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 07:46:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NeCLbHbR"
+	by mail.kernel.org (Postfix) with ESMTP id 8C285205C9
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 08:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389996AbfJWHqw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 03:46:52 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:44414 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389298AbfJWHqw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Oct 2019 03:46:52 -0400
-Received: by mail-io1-f68.google.com with SMTP id w12so23740676iol.11
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 00:46:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=q0e/9CxeRutenKBmdJQpC7NiIqVlkcA6K4uzWSSUi8o=;
-        b=NeCLbHbRvUyx7yGz1U2/4vdlveC7nhhDzlVkUiECah5jYsMNrAaddvWXUsFusfEB9C
-         nwBT4HxZ40Fjv58rr+/B1crAgtR+rTYIvarKszija0l1Hke8V1Jkq0kGrPAOTYI1Ha4S
-         Wjyhsl8HoZ/eNYxCsnH2DdAByvBGQhbIA6ejo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=q0e/9CxeRutenKBmdJQpC7NiIqVlkcA6K4uzWSSUi8o=;
-        b=dwctyX4JBQsWzdAw6W+r1JDQBQhONc0qVfsP+VtD5CdhlHzsnadvvE6pK9pGQB4f8v
-         XuLJZyWCYTMGrtv7sGCF8svbBFsiuAuE3iE6NH7FkFqa+m9FdoXbGGnnGbObpb2LoTl0
-         O+3mIKUM+iYQCG7VZLUqkJFf2qI/CQaCOzmEOcevlsUJbLOXxb3ipTe3R34iQ9srMin2
-         GX6i29d365sXRyO4wYCDLt470QKiyaCEk5Lc4HyMbjF0EBL8/5HRL0OqWLc9XHcc/+BW
-         Nci2yokT8HyjJLxLKx+POjuBdy6ZfCGfCWA+miFm15/Ma/Zkdw+d3RUcHDc1ojxEAo0/
-         L+wg==
-X-Gm-Message-State: APjAAAWK3QZeS6aN/2UZAwasVlaZ7cVskAT524xFGSheedCdJQYbjlap
-        NYLI65gMVK8HhpGutuAyPk9RNKRWDMhj2auws5D1Tw==
-X-Google-Smtp-Source: APXvYqz+pfOnKk1jk3VI/4TsKC0C1gckdkoFyC4BM6MkevRLO/JvZEpW5SHEOyyZ4TdKnY89493XVCOToRJpBznh9Bw=
-X-Received: by 2002:a6b:e30f:: with SMTP id u15mr1854804ioc.96.1571816811517;
- Wed, 23 Oct 2019 00:46:51 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20191009093241.21481-1-ming.lei@redhat.com> <20191009093241.21481-3-ming.lei@redhat.com>
- <75fe51d7-714f-8a51-89b5-aeeb7d318fdc@acm.org> <75fd79dc441f2100719c545110ec9aa2@mail.gmail.com>
- <20191023012838.GB18083@ming.t460p>
-In-Reply-To: <20191023012838.GB18083@ming.t460p>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQJ+aAV5wNbUGIJ6nkm2Ot6VMXRpiQIhodcgAyzU6WgBsIy1CAFrdb8spdLE/MA=
-Date:   Wed, 23 Oct 2019 13:16:48 +0530
-Message-ID: <1c40066e1f3361f2b6c8f90b4115ad01@mail.gmail.com>
-Subject: RE: [RFC PATCH V4 2/2] scsi: core: don't limit per-LUN queue depth
- for SSD
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        id S2390367AbfJWIwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 04:52:50 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2050 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2390034AbfJWIwu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Oct 2019 04:52:50 -0400
+Received: from lhreml709-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 824ECBABE9C0E9A229A4;
+        Wed, 23 Oct 2019 09:52:48 +0100 (IST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml709-cah.china.huawei.com (10.201.108.32) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Wed, 23 Oct 2019 09:52:48 +0100
+Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 23 Oct
+ 2019 09:52:47 +0100
+Subject: Re: [PATCH V4 1/2] scsi: core: avoid host-wide host_busy counter for
+ scsi_mq
+To:     Ming Lei <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         Jens Axboe <axboe@kernel.dk>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
         Hannes Reinecke <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        Bart Van Assche <bart.vanassche@wdc.com>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+        "Laurence Oberman" <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+References: <20191009093241.21481-1-ming.lei@redhat.com>
+ <20191009093241.21481-2-ming.lei@redhat.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <7d95de12-6114-c0d7-8b21-d36b2ea020fc@huawei.com>
+Date:   Wed, 23 Oct 2019 09:52:41 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20191009093241.21481-2-ming.lei@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.45]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-V4 2/2] scsi: core: don't limit per-LUN queue depth
-> for SSD
->
-> On Fri, Oct 18, 2019 at 12:00:07AM +0530, Kashyap Desai wrote:
-> > > On 10/9/19 2:32 AM, Ming Lei wrote:
-> > > > @@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device
-> > > > *sdev,
-> > > struct scsi_cmnd *cmd)
-> > > >   	if (starget->can_queue > 0)
-> > > >   		atomic_dec(&starget->target_busy);
-> > > >
-> > > > -	atomic_dec(&sdev->device_busy);
-> > > > +	if (!blk_queue_nonrot(sdev->request_queue))
-> > > > +		atomic_dec(&sdev->device_busy);
-> > > >   }
-> > > >
-> > >
-> > > Hi Ming,
-> > >
-> > > Does this patch impact the meaning of the queue_depth sysfs
-> > > attribute (see also sdev_store_queue_depth()) and also the queue
-> > > depth ramp up/down mechanism (see also
-> scsi_handle_queue_ramp_up())?
-> > > Have you considered to enable/disable busy tracking per LUN
-> > > depending on whether or not sdev-
-> > > >queue_depth < shost->can_queue?
-> > >
-> > > The megaraid and mpt3sas drivers read sdev->device_busy directly. Is
-> > > the current version of this patch compatible with these drivers?
-> >
-> > We need to know per scsi device outstanding in mpt3sas and
-> > megaraid_sas driver.
->
-> Is the READ done in fast path or slow path? If it is on slow path, it
-should be
-> easy to do via blk_mq_in_flight_rw().
+On 09/10/2019 10:32, Ming Lei wrote:
+> It isn't necessary to check the host depth in scsi_queue_rq() any more
+> since it has been respected by blk-mq before calling scsi_queue_rq() via
+> getting driver tag.
+> 
+> Lots of LUNs may attach to same host and per-host IOPS may reach millions,
+> so we should avoid expensive atomic operations on the host-wide counter in
+> the IO path.
+> 
+> This patch implements scsi_host_busy() via blk_mq_tagset_busy_iter()
+> with one scsi command state for reading the count of busy IOs for scsi_mq.
+> 
+> It is observed that IOPS is increased by 15% in IO test on scsi_debug (32
+> LUNs, 32 submit queues, 1024 can_queue, libaio/dio) in a dual-socket
+> system.
+> 
+> V2:
+> 	- introduce SCMD_STATE_INFLIGHT for getting accurate host busy
+> 	via blk_mq_tagset_busy_iter()
+> 	- verified that original Jens's report[1] is fixed
+> 	- verified that SCSI timeout/abort works fine
+> 
+> [1] https://www.spinics.net/lists/linux-scsi/msg122867.html
+> [2] V1 & its revert:
+> 
+> d772a65d8a6c Revert "scsi: core: avoid host-wide host_busy counter for scsi_mq"
+> 23aa8e69f2c6 Revert "scsi: core: fix scsi_host_queue_ready"
+> 265d59aacbce scsi: core: fix scsi_host_queue_ready
+> 328728630d9f scsi: core: avoid host-wide host_busy counter for scsi_mq
+> 
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Ewan D. Milne <emilne@redhat.com>
+> Cc: Omar Sandoval <osandov@fb.com>,
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+> Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Laurence Oberman <loberman@redhat.com>
+> Cc: Bart Van Assche <bart.vanassche@wdc.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>   drivers/scsi/hosts.c     | 19 ++++++++++++++++++-
+>   drivers/scsi/scsi.c      |  2 +-
+>   drivers/scsi/scsi_lib.c  | 35 +++++++++++++++++------------------
+>   drivers/scsi/scsi_priv.h |  2 +-
+>   include/scsi/scsi_cmnd.h |  1 +
+>   include/scsi/scsi_host.h |  1 -
+>   6 files changed, 38 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 55522b7162d3..1d669e47b692 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -38,6 +38,7 @@
+>   #include <scsi/scsi_device.h>
+>   #include <scsi/scsi_host.h>
+>   #include <scsi/scsi_transport.h>
+> +#include <scsi/scsi_cmnd.h>
 
-READ is done in fast path.
+alphabetic ordering could be maintained
 
->
-> > Can we get supporting API from block layer (through SML)  ? something
-> > similar to "atomic_read(&hctx->nr_active)" which can be derived from
-> > sdev->request_queue->hctx ?
-> > At least for those driver which is nr_hw_queue = 1, it will be useful
-> > and we can avoid sdev->device_busy dependency.
->
-> If you mean to add new atomic counter, we just move the .device_busy
-into
-> blk-mq, that can become new bottleneck.
+>   
+>   #include "scsi_priv.h"
+>   #include "scsi_logging.h"
+> @@ -554,13 +555,29 @@ struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
+>   }
+>   EXPORT_SYMBOL(scsi_host_get);
+>   
+> +static bool scsi_host_check_in_flight(struct request *rq, void *data,
+> +				      bool reserved)
+> +{
+> +	int *count = data;
+> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+> +
+> +	if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
+> +		(*count)++;
+> +
+> +	return true;
+> +}
+> +
+>   /**
+>    * scsi_host_busy - Return the host busy counter
 
-How about below ? We define and use below API instead of
-"atomic_read(&scp->device->device_busy) >" and it is giving expected
-value. I have not captured performance impact on max IOPs profile.
+is this comment accurate now?
 
-Inline unsigned long sdev_nr_inflight_request(struct request_queue *q)
-{
-        struct blk_mq_hw_ctx *hctx;
-        unsigned long nr_requests = 0;
-        int i;
+>    * @shost:	Pointer to Scsi_Host to inc.
+>    **/
+>   int scsi_host_busy(struct Scsi_Host *shost)
+>   {
+> -	return atomic_read(&shost->host_busy);
+> +	int cnt = 0;
+> +
+> +	blk_mq_tagset_busy_iter(&shost->tag_set,
+> +				scsi_host_check_in_flight, &cnt);
 
-        queue_for_each_hw_ctx(q, hctx, i)
-                nr_requests += atomic_read(&hctx->nr_active);
+When I check blk_mq_tagset_busy_iter(), it does not seem to lock the 
+tags for all hw queues against preemption for the counting, so how can 
+we guarantee that this count will be always accurate?
 
-        return nr_requests;
-}
+Or it never can be and you just don't care?
 
-Kashyap
+> +	return cnt;
+>   }
+>   EXPORT_SYMBOL(scsi_host_busy);
+>   
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 1f5b5c8a7f72..ddc4ec6ea2a1 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -186,7 +186,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+>   	struct scsi_driver *drv;
+>   	unsigned int good_bytes;
+>   
+> -	scsi_device_unbusy(sdev);
+> +	scsi_device_unbusy(sdev, cmd);
+>   
+>   	/*
+>   	 * Clear the flags that say that the device/target/host is no longer
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index dc210b9d4896..b6f66dcb15a5 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -189,7 +189,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+>   	 * active on the host/device.
+>   	 */
+>   	if (unbusy)
+> -		scsi_device_unbusy(device);
+> +		scsi_device_unbusy(device, cmd);
+>   
+>   	/*
+>   	 * Requeue this command.  It will go before all other commands > @@ -329,12 +329,12 @@ static void scsi_init_cmd_errh(struct scsi_cmnd 
+*cmd)
 
->
->
-> thanks,
-> Ming
+
+The comment for scsi_dec_host_busy() is "Decrement the host_busy counter 
+and ", so does this need to be fixed up?
+
+I'm guessing that there's lots more places like this...
+
+>    * host_failed counter or that it notices the shost state change made by
+>    * scsi_eh_scmd_add().
+>    */
+
+
+> -static void scsi_dec_host_busy(struct Scsi_Host *shost)
+> +static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+>   {
+>   	unsigned long flags;
+>   
+>   	rcu_read_lock();
+> -	atomic_dec(&shost->host_busy);
+> +	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+>   	if (unlikely(scsi_host_in_recovery(shost))) {
+>   		spin_lock_irqsave(shost->host_lock, flags);
+>   		if (shost->host_failed || shost->host_eh_scheduled)
+> @@ -344,12 +344,12 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost)
+>   	rcu_read_unlock();
+>   }
+>   
+> -void scsi_device_unbusy(struct scsi_device *sdev)
+> +void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+>   {
+>   	struct Scsi_Host *shost = sdev->host;
+>   	struct scsi_target *starget = scsi_target(sdev);
+>   
+> -	scsi_dec_host_busy(shost);
+> +	scsi_dec_host_busy(shost, cmd);
+>   
+>   	if (starget->can_queue > 0)
+>   		atomic_dec(&starget->target_busy);
+> @@ -430,9 +430,6 @@ static inline bool scsi_target_is_busy(struct scsi_target *starget)
+>   
+>   static inline bool scsi_host_is_busy(struct Scsi_Host *shost)
+>   {
+> -	if (shost->can_queue > 0 &&
+> -	    atomic_read(&shost->host_busy) >= shost->can_queue)
+> -		return true;
+
+Do we still honour "do not send more than can_queue 
+commands to the adapter", regardless of how many queues the LLDD exposes?
+
+>   	if (atomic_read(&shost->host_blocked) > 0)
+>   		return true;
+>   	if (shost->host_self_blocked)
+> @@ -1139,6 +1136,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+>   	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
+>   	unsigned long jiffies_at_alloc;
+>   	int retries;
+> +	bool in_flight;
+Thanks,
+John
