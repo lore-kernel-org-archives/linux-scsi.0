@@ -2,154 +2,90 @@ Return-Path: <SRS0=dT41=YQ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 924F5CA9EB6
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D82C3CA9EB6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:39:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 724DF2084C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:23:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B80FD21872
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Oct 2019 16:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407220AbfJWQXS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Oct 2019 12:23:18 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44266 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2407111AbfJWQXS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Oct 2019 12:23:18 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id A4BC9B4AA;
-        Wed, 23 Oct 2019 16:23:15 +0000 (UTC)
-Date:   Wed, 23 Oct 2019 18:23:13 +0200
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Jens Axboe <axboe@kernel.dk>,
+        id S2405105AbfJWQjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Oct 2019 12:39:55 -0400
+Received: from alexa-out-sd-01.qualcomm.com ([199.106.114.38]:34133 "EHLO
+        alexa-out-sd-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2389276AbfJWQjy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Oct 2019 12:39:54 -0400
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 23 Oct 2019 09:39:53 -0700
+IronPort-SDR: mz+7h+OMI2ZZzTJNYiSIiPnZ+ZG1mjzsBPpUklpGAlY0DxT8efTlRrD9pMsJlhl1LjTnc5ViLw
+ jWuuPWdF7G/KtV6HCIvF7f9zCcM1/zAhUZ+6s+DxXf9WaL8735LK8QS4MqTeOf1YDlz/WyJD5a
+ BuXeBHVYtY5bxIr710jiT7hS2ZmVN1NNxU0Y2mXiz4uL9vanZ3hTk67qr/ArilKed2iKHF0K8c
+ FDiGmMq69mwL9Mx1QYM5GCMBkFiHScJBa/gIvIDUtPYQnwfAwIoYHxx+d62W/bMIsTs3N0Ojp6
+ m3hC8/tmmJFX9fpGwj6hH+ND
+Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 23 Oct 2019 09:39:52 -0700
+Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
+        id 98C1F2135F; Wed, 23 Oct 2019 09:39:52 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     cang@codeaurora.org, rnayak@codeaurora.org, vinholikatti@gmail.com,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation
- bug
-Message-ID: <20191023162313.GE938@kitsune.suse.cz>
-References: <cover.1571834862.git.msuchanek@suse.de>
- <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
- <08f1e291-0196-2402-1947-c0cdaaf534da@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <08f1e291-0196-2402-1947-c0cdaaf534da@suse.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2 2/2] scsi: ufs-qcom: enter and exit hibern8 during clock scaling
+Date:   Wed, 23 Oct 2019 09:39:42 -0700
+Message-Id: <1571848785-27698-2-git-send-email-asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1571848785-27698-1-git-send-email-asutoshd@codeaurora.org>
+References: <1571848785-27698-1-git-send-email-asutoshd@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 23, 2019 at 04:13:15PM +0200, Hannes Reinecke wrote:
-> On 10/23/19 2:52 PM, Michal Suchanek wrote:
-> > The WMware ESXi cdrom identifies itself as:
-> > sr 0:0:0:0: [sr0] scsi3-mmc drive: vendor: "NECVMWarVMware SATA CD001.00"
-> > model: "VMware SATA CD001.00"
-> > with the following get_capabilities print in sr.c:
-> >         sr_printk(KERN_INFO, cd,
-> >                   "scsi3-mmc drive: vendor: \"%s\" model: \"%s\"\n",
-> >                   cd->device->vendor, cd->device->model);
-> > 
-> > So the model looks like reliable identification while vendor does not.
-> > 
-> > The drive claims to have a tray and claims to be able to close it.
-> > However, the UI has no notion of a tray - when medium is ejected it is
-> > dropped in the floor and the user must select a medium again before the
-> > drive can be re-loaded.  On the kernel side the tray_move call to close
-> > the tray succeeds but the drive state does not change as a result of the
-> > call.
-> > 
-> > The drive does not in fact emulate the tray state. There are two ways to
-> > get the medium state. One is the SCSI status:
-> > 
-> > Physical drive:
-> > 
-> > Fixed format, current; Sense key: Not Ready
-> > Additional sense: Medium not present - tray open
-> > Raw sense data (in hex):
-> >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 02 00 00
-> >         00 00
-> > 
-> > Fixed format, current; Sense key: Not Ready
-> > Additional sense: Medium not present - tray closed
-> >  Raw sense data (in hex):
-> >         70 00 02 00 00 00 00 0a  00 00 00 00 3a 01 00 00
-> >         00 00
-> > 
-> > VMware ESXi:
-> > 
-> > Fixed format, current; Sense key: Not Ready
-> > Additional sense: Medium not present
-> >   Info fld=0x0 [0]
-> >  Raw sense data (in hex):
-> >         f0 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
-> >         00 00
-> > 
-> > So the tray state is not reported here. Other is medium status which the
-> > kernel prefers if available. Adding a print here gives:
-> > 
-> > cdrom: get_media_event success: code = 0, door_open = 1, medium_present = 0
-> > 
-> > door_open is interpreted as open tray. This is fine so long as tray_move
-> > would close the tray when requested or report an error which never
-> > happens on VMware ESXi servers (5.5 and 6.5 tested).
-> > 
-> > This is a popular virtualization platform so a workaround is worthwhile.
-> > 
-> > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > ---
-> >  drivers/scsi/sr.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> > index 4664fdf75c0f..8090c5bdec09 100644
-> > --- a/drivers/scsi/sr.c
-> > +++ b/drivers/scsi/sr.c
-> > @@ -867,6 +867,7 @@ static void get_capabilities(struct scsi_cd *cd)
-> >  	unsigned int ms_len = 128;
-> >  	int rc, n;
-> >  
-> > +	static const char *model_vmware = "VMware";
-> >  	static const char *loadmech[] =
-> >  	{
-> >  		"caddy",
-> > @@ -922,6 +923,11 @@ static void get_capabilities(struct scsi_cd *cd)
-> >  		  buffer[n + 4] & 0x20 ? "xa/form2 " : "",	/* can read xa/from2 */
-> >  		  buffer[n + 5] & 0x01 ? "cdda " : "", /* can read audio data */
-> >  		  loadmech[buffer[n + 6] >> 5]);
-> > +	if (!strncmp(cd->device->model, model_vmware, strlen(model_vmware))) {
-> > +		buffer[n + 6] &= ~(0xff << 5);
-> > +		sr_printk(KERN_INFO, cd,
-> > +			  "VMware ESXi bug workaround: tray -> caddy\n");
-> > +	}
-> >  	if ((buffer[n + 6] >> 5) == 0)
-> >  		/* caddy drives can't close tray... */
-> >  		cd->cdi.mask |= CDC_CLOSE_TRAY;
-> > 
-> This looks something which should be handled via a blacklist flag, not
-> some inline hack which everyone forgets about it...
+Qualcomm controller needs to be in hibern8 before scaling clocks.
+This change puts the controller in hibern8 state before scaling
+and brings it out after scaling of clocks.
 
-AFAIK we used to have a blacklist but don't have anymore. So either it
-has to be resurrected for this one flag or an inline hack should be good
-enough.
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index a5b7148..d117088 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1305,6 +1305,9 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 	int err = 0;
+ 
+ 	if (status == PRE_CHANGE) {
++		err = ufshcd_uic_hibern8_enter(hba);
++		if (err)
++			return err;
+ 		if (scale_up)
+ 			err = ufs_qcom_clk_scale_up_pre_change(hba);
+ 		else
+@@ -1324,6 +1327,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 				    dev_req_params->hs_rate,
+ 				    false);
+ 		ufs_qcom_update_bus_bw_vote(host);
++		ufshcd_uic_hibern8_exit(hba);
+ 	}
+ 
+ out:
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Michal
