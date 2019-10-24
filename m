@@ -2,371 +2,693 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A78A7CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 21:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32933CA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 22:27:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6474121BE5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 21:24:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e+/fPu2/"
+	by mail.kernel.org (Postfix) with ESMTP id DD1AD2166E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 22:27:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729088AbfJXVYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 17:24:53 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:26050 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729074AbfJXVYw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 17:24:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571952291;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8i8bOiz7H+lGIEzyBV740toibEL/95OmwhdMVstbw04=;
-        b=e+/fPu2/xAUBUvbExmmVHzgRuxB7bFkNMFkuD+CipqvAuo59saX7TmMPKsnpG3j0FrXNO1
-        /Ernqd2IfTD+NJEilvASfeENapV7nA0M+lK/fVzweQ8FC+SorqS4AeyLOO4Qwv9dwYcoos
-        sLWqTopRSWpWAUp7ZIoj9+1IHiU1Qf0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-318-bR9J9BNpP7icFJ18KFylEw-1; Thu, 24 Oct 2019 17:24:47 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D64BE107AD31;
-        Thu, 24 Oct 2019 21:24:45 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 93A5B5D713;
-        Thu, 24 Oct 2019 21:24:33 +0000 (UTC)
-Date:   Fri, 25 Oct 2019 05:24:28 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH V4 1/2] scsi: core: avoid host-wide host_busy counter for
- scsi_mq
-Message-ID: <20191024212427.GA26168@ming.t460p>
-References: <20191009093241.21481-1-ming.lei@redhat.com>
- <20191009093241.21481-2-ming.lei@redhat.com>
- <7d95de12-6114-c0d7-8b21-d36b2ea020fc@huawei.com>
- <20191024005828.GB15426@ming.t460p>
- <19e73b4d-77c7-e776-fee4-8b9f078c2be5@huawei.com>
+        id S1731317AbfJXW1v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 18:27:51 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44852 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727635AbfJXW1v (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 18:27:51 -0400
+Received: by mail-pg1-f194.google.com with SMTP id e10so152182pgd.11
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2019 15:27:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3h4nkOce9sdlsxxmSUSZYX1nqTOhbAr4t2hUvvzQrGw=;
+        b=A+1lje3Tog2F/TE7cxMLi4Kp0qk/kaOPmaNiqX9t/NpDumr6roDHTXPOTtmaJeQZKn
+         /ZdQyaoZaTehV2Q9WeqaziXu2zPFOnmPmKd08ZW9oXa6MGEByorepja4CfUV6/rnfZ+a
+         Q7RqUH4abH/iyexuiWBOQ9SNtztcrEEPuzkbdTjpBxYM56PNQqmSKjsEWdVorsEVfTDd
+         lfITcISMKTFOuTFiVX88O4JrWiIvno2im/Hb6KHg27CCL6QWn/Fq347eg7t1oK6wGnA0
+         vvPcAVCk7+sJg60sOxeQMUj/uYvVuNxStNUZePQOXhZR4wiJnc8SjbE8DM0fVSpN2abF
+         RoRw==
+X-Gm-Message-State: APjAAAXLiSJSX2VEWAN6POanSmBdieS26POSBrNxHJKPAX4aSxrLvy/i
+        adiUQggvXRNxsrwFTV9msTc=
+X-Google-Smtp-Source: APXvYqwl1AWZZzKaqw+8VF4QUdMTAdtcsR0tw/8ie/UNnMzHDW+Tx/RPNry4tdPVf0gNlWslW8QSmQ==
+X-Received: by 2002:a63:778f:: with SMTP id s137mr388034pgc.147.1571956069722;
+        Thu, 24 Oct 2019 15:27:49 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id s202sm28771925pfs.24.2019.10.24.15.27.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Oct 2019 15:27:48 -0700 (PDT)
+Subject: Re: [PATCH 24/32] elx: efct: LIO backend interface routines
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20191023215557.12581-1-jsmart2021@gmail.com>
+ <20191023215557.12581-25-jsmart2021@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <5eae53c2-daee-f1f3-8586-e92fd61a5544@acm.org>
+Date:   Thu, 24 Oct 2019 15:27:47 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <19e73b4d-77c7-e776-fee4-8b9f078c2be5@huawei.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: bR9J9BNpP7icFJ18KFylEw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+In-Reply-To: <20191023215557.12581-25-jsmart2021@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 10:19:21AM +0100, John Garry wrote:
-> On 24/10/2019 01:58, Ming Lei wrote:
-> > On Wed, Oct 23, 2019 at 09:52:41AM +0100, John Garry wrote:
-> > > On 09/10/2019 10:32, Ming Lei wrote:
-> > > > It isn't necessary to check the host depth in scsi_queue_rq() any m=
-ore
-> > > > since it has been respected by blk-mq before calling scsi_queue_rq(=
-) via
-> > > > getting driver tag.
-> > > >=20
-> > > > Lots of LUNs may attach to same host and per-host IOPS may reach mi=
-llions,
-> > > > so we should avoid expensive atomic operations on the host-wide cou=
-nter in
-> > > > the IO path.
-> > > >=20
-> > > > This patch implements scsi_host_busy() via blk_mq_tagset_busy_iter(=
-)
-> > > > with one scsi command state for reading the count of busy IOs for s=
-csi_mq.
-> > > >=20
-> > > > It is observed that IOPS is increased by 15% in IO test on scsi_deb=
-ug (32
-> > > > LUNs, 32 submit queues, 1024 can_queue, libaio/dio) in a dual-socke=
-t
-> > > > system.
-> > > >=20
-> > > > V2:
-> > > > =09- introduce SCMD_STATE_INFLIGHT for getting accurate host busy
-> > > > =09via blk_mq_tagset_busy_iter()
-> > > > =09- verified that original Jens's report[1] is fixed
-> > > > =09- verified that SCSI timeout/abort works fine
-> > > >=20
-> > > > [1] https://www.spinics.net/lists/linux-scsi/msg122867.html
-> > > > [2] V1 & its revert:
-> > > >=20
-> > > > d772a65d8a6c Revert "scsi: core: avoid host-wide host_busy counter =
-for scsi_mq"
-> > > > 23aa8e69f2c6 Revert "scsi: core: fix scsi_host_queue_ready"
-> > > > 265d59aacbce scsi: core: fix scsi_host_queue_ready
-> > > > 328728630d9f scsi: core: avoid host-wide host_busy counter for scsi=
-_mq
-> > > >=20
->=20
-> [not trimming]
->=20
-> > > > Cc: Jens Axboe <axboe@kernel.dk>
-> > > > Cc: Ewan D. Milne <emilne@redhat.com>
-> > > > Cc: Omar Sandoval <osandov@fb.com>,
-> > > > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-> > > > Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
-> > > > Cc: Christoph Hellwig <hch@lst.de>,
-> > > > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> > > > Cc: Hannes Reinecke <hare@suse.de>
-> > > > Cc: Laurence Oberman <loberman@redhat.com>
-> > > > Cc: Bart Van Assche <bart.vanassche@wdc.com>
-> > > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > > > ---
-> > > >    drivers/scsi/hosts.c     | 19 ++++++++++++++++++-
-> > > >    drivers/scsi/scsi.c      |  2 +-
-> > > >    drivers/scsi/scsi_lib.c  | 35 +++++++++++++++++-----------------=
--
-> > > >    drivers/scsi/scsi_priv.h |  2 +-
-> > > >    include/scsi/scsi_cmnd.h |  1 +
-> > > >    include/scsi/scsi_host.h |  1 -
-> > > >    6 files changed, 38 insertions(+), 22 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> > > > index 55522b7162d3..1d669e47b692 100644
-> > > > --- a/drivers/scsi/hosts.c
-> > > > +++ b/drivers/scsi/hosts.c
-> > > > @@ -38,6 +38,7 @@
-> > > >    #include <scsi/scsi_device.h>
-> > > >    #include <scsi/scsi_host.h>
-> > > >    #include <scsi/scsi_transport.h>
-> > > > +#include <scsi/scsi_cmnd.h>
-> > >=20
-> > > alphabetic ordering could be maintained
-> > >=20
-> > > >    #include "scsi_priv.h"
-> > > >    #include "scsi_logging.h"
-> > > > @@ -554,13 +555,29 @@ struct Scsi_Host *scsi_host_get(struct Scsi_H=
-ost *shost)
-> > > >    }
-> > > >    EXPORT_SYMBOL(scsi_host_get);
-> > > > +static bool scsi_host_check_in_flight(struct request *rq, void *da=
-ta,
-> > > > +=09=09=09=09      bool reserved)
-> > > > +{
-> > > > +=09int *count =3D data;
-> > > > +=09struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
-> > > > +
-> > > > +=09if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
-> > > > +=09=09(*count)++;
-> > > > +
-> > > > +=09return true;
-> > > > +}
-> > > > +
-> > > >    /**
-> > > >     * scsi_host_busy - Return the host busy counter
-> > >=20
-> > > is this comment accurate now?
-> >=20
-> > Nothing changed wrt. the above comment, I will explain below.
->=20
-> I mean that the host does not maintain a dedicated "busy counter" any lon=
-ger
-> (that was Scsi_Host.host_busy), so could be reworded accordingly.
+On 10/23/19 2:55 PM, James Smart wrote:
+> diff --git a/drivers/scsi/elx/efct/efct_lio.c b/drivers/scsi/elx/efct/efct_lio.c
+> new file mode 100644
+> index 000000000000..c2661ab3e9c3
+> --- /dev/null
+> +++ b/drivers/scsi/elx/efct/efct_lio.c
+> @@ -0,0 +1,2643 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +#include "efct_driver.h"
+> +
+> +#include <scsi/scsi.h>
+> +#include <scsi/scsi_host.h>
+> +#include <scsi/scsi_device.h>
+> +#include <scsi/scsi_cmnd.h>
+> +#include <scsi/scsi_tcq.h>
+> +#include <target/target_core_base.h>
+> +#include <target/target_core_fabric.h>
 
-It is still a counter in logical.
+Please do not include SCSI initiator header files in a SCSI target 
+driver. See also commit ba929992522b ("target: Minimize SCSI header 
+#include directives").
 
->=20
-> >=20
-> > >=20
-> > > >     * @shost:=09Pointer to Scsi_Host to inc.
-> > > >     **/
-> > > >    int scsi_host_busy(struct Scsi_Host *shost)
-> > > >    {
-> > > > -=09return atomic_read(&shost->host_busy);
-> > > > +=09int cnt =3D 0;
-> > > > +
-> > > > +=09blk_mq_tagset_busy_iter(&shost->tag_set,
-> > > > +=09=09=09=09scsi_host_check_in_flight, &cnt);
-> > >=20
-> > > When I check blk_mq_tagset_busy_iter(), it does not seem to lock the =
-tags
-> > > for all hw queues against preemption for the counting, so how can we
-> > > guarantee that this count will be always accurate?
-> > >=20
-> > > Or it never can be and you just don't care?
-> >=20
-> > When the atomic variable of .host_busy is used, there isn't any host lo=
-ck
-> > to sync updating the variable and reading the variable, so nothing
-> > changed wrt. its usage given atomic variable can be updated when readin=
-g the
-> > variable.
-> >=20
-> > That means it depends on its users. If the user doesn't care it, no loc=
-k
-> > is needed, otherwise user will deal with that, such as
-> > scsi_eh_scmd_add() and scsi_eh_inc_host_failed(), the host is put into
-> > SHOST_RECOVERY state first to prevent new requests from being queued,
-> > then read the counter in RCU callback via call_rcu().
-> >=20
-> > >=20
-> > > > +=09return cnt;
-> > > >    }
-> > > >    EXPORT_SYMBOL(scsi_host_busy);
-> > > > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > > > index 1f5b5c8a7f72..ddc4ec6ea2a1 100644
-> > > > --- a/drivers/scsi/scsi.c
-> > > > +++ b/drivers/scsi/scsi.c
-> > > > @@ -186,7 +186,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
-> > > >    =09struct scsi_driver *drv;
-> > > >    =09unsigned int good_bytes;
-> > > > -=09scsi_device_unbusy(sdev);
-> > > > +=09scsi_device_unbusy(sdev, cmd);
-> > > >    =09/*
-> > > >    =09 * Clear the flags that say that the device/target/host is no=
- longer
-> > > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > > index dc210b9d4896..b6f66dcb15a5 100644
-> > > > --- a/drivers/scsi/scsi_lib.c
-> > > > +++ b/drivers/scsi/scsi_lib.c
-> > > > @@ -189,7 +189,7 @@ static void __scsi_queue_insert(struct scsi_cmn=
-d *cmd, int reason, bool unbusy)
-> > > >    =09 * active on the host/device.
-> > > >    =09 */
-> > > >    =09if (unbusy)
-> > > > -=09=09scsi_device_unbusy(device);
-> > > > +=09=09scsi_device_unbusy(device, cmd);
-> > > >    =09/*
-> > > >    =09 * Requeue this command.  It will go before all other command=
-s > @@
-> > > > -329,12 +329,12 @@ static void scsi_init_cmd_errh(struct scsi_cmnd
-> > > *cmd)
-> > >=20
-> > >=20
-> > > The comment for scsi_dec_host_busy() is "Decrement the host_busy coun=
-ter and
-> > > ", so does this need to be fixed up?
-> >=20
-> > Yeah, will fix it in next version.
-> >=20
-> > >=20
-> > > I'm guessing that there's lots more places like this...
-> >=20
-> > I just run a grep, looks not found others.
-> >=20
-> > >=20
-> > > >     * host_failed counter or that it notices the shost state change=
- made by
-> > > >     * scsi_eh_scmd_add().
-> > > >     */
-> > >=20
-> > >=20
-> > > > -static void scsi_dec_host_busy(struct Scsi_Host *shost)
-> > > > +static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scs=
-i_cmnd *cmd)
-> > > >    {
-> > > >    =09unsigned long flags;
-> > > >    =09rcu_read_lock();
-> > > > -=09atomic_dec(&shost->host_busy);
-> > > > +=09__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
-> > > >    =09if (unlikely(scsi_host_in_recovery(shost))) {
-> > > >    =09=09spin_lock_irqsave(shost->host_lock, flags);
-> > > >    =09=09if (shost->host_failed || shost->host_eh_scheduled)
-> > > > @@ -344,12 +344,12 @@ static void scsi_dec_host_busy(struct Scsi_Ho=
-st *shost)
-> > > >    =09rcu_read_unlock();
-> > > >    }
-> > > > -void scsi_device_unbusy(struct scsi_device *sdev)
-> > > > +void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd=
- *cmd)
-> > > >    {
-> > > >    =09struct Scsi_Host *shost =3D sdev->host;
-> > > >    =09struct scsi_target *starget =3D scsi_target(sdev);
-> > > > -=09scsi_dec_host_busy(shost);
-> > > > +=09scsi_dec_host_busy(shost, cmd);
-> > > >    =09if (starget->can_queue > 0)
-> > > >    =09=09atomic_dec(&starget->target_busy);
-> > > > @@ -430,9 +430,6 @@ static inline bool scsi_target_is_busy(struct s=
-csi_target *starget)
-> > > >    static inline bool scsi_host_is_busy(struct Scsi_Host *shost)
-> > > >    {
-> > > > -=09if (shost->can_queue > 0 &&
-> > > > -=09    atomic_read(&shost->host_busy) >=3D shost->can_queue)
-> > > > -=09=09return true;
-> > >=20
-> > > Do we still honour "do not send more than can_queue commands to the
-> > > adapter", regardless of how many queues the LLDD exposes?
-> >=20
-> > What we should honour is that 'do not send more than can_queue commands
-> > to each hw queue', that is exactly guaranteed by blk-mq.
->=20
-> In scsi_host.h, we have for scsi_host_template.can_queue: "It is set to t=
-he
-> maximum number of simultaneous commands a given host adapter will accept.=
-",
-> so that should be honoured.
+> +#define	FABRIC_NAME		"efct"
+> +#define FABRIC_NAME_NPIV	"efct_npiv"
 
-That words should have been changed to:
+Some time ago Christoph Hellwig asked not to use the prefix "fabric" but 
+to use the prefix "target" instead.
 
-"It is set to the maximum number of simultaneous commands a given host adap=
-ter's
-hw queue will accept."
+ > +#define	FABRIC_SNPRINTF_LEN	32
 
->=20
-> And Scsi_host.nr_hw_queues: "it is assumed that each hardware queue has a
-> queue depth of can_queue. In other words, the total queue depth per host =
-is
-> nr_hw_queues * can_queue."
+"FABRIC_SNPRINTF_LEN" is a bad choice for the name for this constant. 
+Please change this into a name that refers to what the purpose of this 
+constant is (wwn string?) instead of how that string is generated.
 
-The above is correct.
+> +#define	FABRIC_SNPRINTF(str, len, pre, wwn)	snprintf(str, len, \
+> +		"%s%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", pre,  \
+> +	    (u8)((wwn >> 56) & 0xff), (u8)((wwn >> 48) & 0xff),    \
+> +	    (u8)((wwn >> 40) & 0xff), (u8)((wwn >> 32) & 0xff),    \
+> +	    (u8)((wwn >> 24) & 0xff), (u8)((wwn >> 16) & 0xff),    \
+> +	    (u8)((wwn >>  8) & 0xff), (u8)((wwn & 0xff)))
 
->=20
-> I don't read "total queue depth per host" same as "maximum number of
-> simultaneous commands a given host adapter will accept". If anything, the
-> nr_hw_queues comment is ambiguous.
->=20
-> >=20
-> > The point is simple, because each hw queue has its own independent tags=
-,
-> > that is why I mentioned your Hisilicon SAS can't be converted to MQ
-> > easily cause this hardware has only single shared tags.
->=20
-> Please be aware that HiSilicon SAS HW would not be unique for SCSI HBAs i=
-n
-> this regard, in that the unique hostwide tag is not just for HBA HW IO
-> management, but also is used as the tag for SCSI TMFs.
+Please convert this macro into a function and choose a better name, e.g. 
+efct_format_wwn().
 
-Right.
+> +#define	ARRAY2WWN(w, a)	(w = ((((u64)(a)[0]) << 56) | (((u64)(a)[1]) << 48) | \
+> +			    (((u64)(a)[2]) << 40) | (((u64)(a)[3]) << 32) | \
+> +			    (((u64)(a)[4]) << 24) | (((u64)(a)[5]) << 16) | \
+> +			    (((u64)(a)[6]) <<  8) | (((u64)(a)[7]))))
 
->=20
-> Just checking mpt3sas seems similar:
->=20
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/scsi/mpt3sas/mpt3sas_scsih.c#n2918
->=20
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/d=
-rivers/scsi/mpt3sas/mpt3sas_base.c#n3546
+Is this perhaps an open-coded version of get_unaligned_be64()?
 
-Not only mpt3sas, there are also HPSA and more. And these drivers have to
-support single hw queue of blk-mq, instead of real MQ. And the reason is th=
-at
-these HBA has single tags.
+> +/* Per-target data for virtual targets */
+> +struct efct_lio_vport_data_t {
+> +	struct list_head list_entry;
+> +	bool initiator_mode;
+> +	bool target_mode;
+> +	u64 phy_wwpn;
+> +	u64 phy_wwnn;
+> +	u64 vport_wwpn;
+> +	u64 vport_wwnn;
+> +	struct efct_lio_vport *lio_vport;
+> +};
+> +
+> +/* Per-target data for virtual targets */
+> +struct efct_lio_vport_list_t {
+> +	struct list_head list_entry;
+> +	struct efct_lio_vport *lio_vport;
+> +};
 
+Two times the same comment for two different data structures? 
+Additionally, what is a "virtual target"?
+
+> +/* local prototypes */
+> +static char *efct_lio_get_npiv_fabric_wwn(struct se_portal_group *);
+> +static char *efct_lio_get_fabric_wwn(struct se_portal_group *);
+> +static u16 efct_lio_get_tag(struct se_portal_group *);
+> +static u16 efct_lio_get_npiv_tag(struct se_portal_group *);
+> +static int efct_lio_check_demo_mode(struct se_portal_group *);
+> +static int efct_lio_check_demo_mode_cache(struct se_portal_group *);
+> +static int efct_lio_check_demo_write_protect(struct se_portal_group *);
+> +static int efct_lio_check_prod_write_protect(struct se_portal_group *);
+> +static int efct_lio_npiv_check_demo_write_protect(struct se_portal_group *);
+> +static int efct_lio_npiv_check_prod_write_protect(struct se_portal_group *);
+> +static u32 efct_lio_tpg_get_inst_index(struct se_portal_group *);
+> +static int efct_lio_check_stop_free(struct se_cmd *se_cmd);
+> +static void efct_lio_aborted_task(struct se_cmd *se_cmd);
+> +static void efct_lio_release_cmd(struct se_cmd *);
+> +static void efct_lio_close_session(struct se_session *);
+> +static u32 efct_lio_sess_get_index(struct se_session *);
+> +static int efct_lio_write_pending(struct se_cmd *);
+> +static void efct_lio_set_default_node_attrs(struct se_node_acl *);
+> +static int efct_lio_get_cmd_state(struct se_cmd *);
+> +static int efct_lio_queue_data_in(struct se_cmd *);
+> +static int efct_lio_queue_status(struct se_cmd *);
+> +static void efct_lio_queue_tm_rsp(struct se_cmd *);
+> +static struct se_wwn *efct_lio_make_sport(struct target_fabric_configfs *,
+> +					  struct config_group *, const char *);
+> +static void efct_lio_drop_sport(struct se_wwn *);
+> +static void efct_lio_npiv_drop_sport(struct se_wwn *);
+> +static int efct_lio_parse_wwn(const char *, u64 *, u8 npiv);
+> +static int efct_lio_parse_npiv_wwn(const char *name, size_t size,
+> +				   u64 *wwpn, u64 *wwnn);
+> +static struct se_portal_group *efct_lio_make_tpg(struct se_wwn *,
+> +						 const char *);
+> +static struct se_portal_group *efct_lio_npiv_make_tpg(struct se_wwn *,
+> +						      const char *);
+> +static void efct_lio_drop_tpg(struct se_portal_group *);
+> +static struct se_wwn *efct_lio_npiv_make_sport(struct target_fabric_configfs *,
+> +					       struct config_group *,
+> +					       const char *);
+> +static int
+> +efct_lio_parse_npiv_wwn(const char *name, size_t size, u64 *wwpn, u64 *wwnn);
+> +static void efct_lio_npiv_drop_tpg(struct se_portal_group *);
+> +static int efct_lio_async_worker(struct efct_s *efct);
+> +static void efct_lio_sg_unmap(struct efct_io_s *io);
+> +static int efct_lio_abort_tgt_cb(struct efct_io_s *io,
+> +				 enum efct_scsi_io_status_e scsi_status,
+> +				    u32 flags, void *arg);
+> +
+> +static int efct_lio_init_nodeacl(struct se_node_acl *, const char *);
+> +
+> +static int efct_lio_check_demo_mode_login_only(struct se_portal_group *);
+> +static int efct_lio_npiv_check_demo_mode_login_only(struct se_portal_group *);
+
+Please reorder the code in this file such that most or all of these 
+function declarations disappear.
+
+> +static ssize_t
+> +efct_lio_wwn_version_show(struct config_item *item, char *page)
+> +{
+> +	return sprintf(page, "Emulex EFCT fabric module version %s\n",
+> +		       __stringify(EFCT_LIO_VERSION));
+> +}
+
+Version numbers are not useful in upstream code. Please remove this 
+attribute and also the EFCT_LIO_VERSION constant.
+
+> +static struct efct_lio_tpg *
+> +efct_get_vport_tpg(struct efc_node_s *node)
+> +{
+> +	struct efct_s *efct;
+> +	u64 wwpn = node->sport->wwpn;
+> +	struct efct_lio_vport_list_t *vport, *next;
+> +	struct efct_lio_vport *lio_vport = NULL;
+> +	struct efct_lio_tpg *tpg = NULL;
+> +	unsigned long flags = 0;
+> +
+> +	efct = node->efc->base;
+> +	spin_lock_irqsave(&efct->tgt_efct.efct_lio_lock, flags);
+> +		list_for_each_entry_safe(vport, next,
+> +				 &efct->tgt_efct.vport_list, list_entry) {
+> +			lio_vport = vport->lio_vport;
+> +			if (wwpn && lio_vport &&
+> +			    lio_vport->npiv_wwpn == wwpn) {
+> +				efc_log_test(efct, "found tpg on vport\n");
+> +				tpg = lio_vport->tpg;
+> +				break;
+> +			}
+> +		}
+> +	spin_unlock_irqrestore(&efct->tgt_efct.efct_lio_lock, flags);
+> +	return tpg;
+> +}
+
+The indentation in this function is wrong. list_for_each_entry() should 
+occur at the same level as spin_lock_irqsave().
+
+> +/* local static data */
+
+ > +/* local static data */
+
+Are these comments useful?
+
+> +#define LIO_IOFMT "[%04x][i:%0*x t:%0*x h:%04x][c:%02x]"
+> +#define LIO_TMFIOFMT "[%04x][i:%0*x t:%0*x h:%04x][f:%02x]"
+> +#define LIO_IOFMT_ITT_SIZE(efct)	4
+> +
+> +#define efct_lio_io_printf(io, fmt, ...) \
+> +	efc_log_debug(io->efct, "[%s]" LIO_IOFMT " " fmt,	\
+> +	io->node->display_name, io->instance_index,		\
+> +	LIO_IOFMT_ITT_SIZE(io->efct), io->init_task_tag,		\
+> +	LIO_IOFMT_ITT_SIZE(io->efct), io->tgt_task_tag, io->hw_tag,\
+> +	(io->tgt_io.cdb ? io->tgt_io.cdb[0] : 0xFF), ##__VA_ARGS__)
+> +#define efct_lio_tmfio_printf(io, fmt, ...) \
+> +	efc_log_debug(io->efct, "[%s]" LIO_TMFIOFMT " " fmt,\
+> +	io->node->display_name, io->instance_index,		\
+> +	LIO_IOFMT_ITT_SIZE(io->efct), io->init_task_tag,		\
+> +	LIO_IOFMT_ITT_SIZE(io->efct), io->tgt_task_tag, io->hw_tag,\
+> +	io->tgt_io.tmf,  ##__VA_ARGS__)
+
+Please remove the LIO_IOFMT, LIO_TMFIOFMT and LIO_IOFMT_ITT_SIZE macros 
+and expand these macros where these are used. I think that will make the 
+above logging functions much more easy to read.
+
+> +#define efct_lio_io_state_trace(io, value) (io->tgt_io.state |= value)
+
+This macro has "trace" in its name but does not trace anything. Please 
+either remove this macro or choose a better name.
+
+> +static int  efct_lio_tgt_session_data(struct efct_s *efct, u64 wwpn,
+> +				      char *buf, int size)
+> +{
+> +	struct efc_sli_port_s *sport = NULL;
+> +	struct efc_node_s *node = NULL;
+> +	struct efc_lport *efc = efct->efcport;
+> +	u16 loop_id = 0;
+> +	int off = 0, rc = 0;
+> +
+> +	if (!efc->domain) {
+> +		efc_log_err(efct, "failed to find efct/domain\n");
+> +		return -1;
+> +	}
+> +
+> +	list_for_each_entry(sport, &efc->domain->sport_list, list_entry) {
+> +		if (sport->wwpn == wwpn) {
+> +			list_for_each_entry(node, &sport->node_list,
+> +					    list_entry) {
+> +				/* Dump sessions only remote NPORT
+> +				 * sessions
+> +				 */
+> +				if (efct_lio_node_is_initiator(node)) {
+> +					rc = snprintf(buf + off,
+> +						      size - off,
+> +						"0x%016llx,0x%08x,0x%04x\n",
+> +						be64_to_cpup((__force __be64 *)
+> +								node->wwpn),
+> +						node->rnode.fc_id,
+> +						loop_id);
+> +					if (rc < 0)
+> +						break;
+> +					off += rc;
+> +				}
+> +			}
+> +		}
+> +	}
+> +
+> +	buf[size - 1] = '\0';
+> +	return 0;
+> +}
+
+Please use get_unaligned_be64() instead of using __force casts.
+
+> +static const struct file_operations efct_debugfs_session_fops = {
+> +	.owner		= THIS_MODULE,
+> +	.open		= efct_debugfs_session_open,
+> +	.release	= efct_debugfs_session_close,
+> +	.read		= efct_debugfs_session_read,
+> +	.write		= efct_debugfs_session_write,
+> +	.llseek		= default_llseek,
+> +};
+> +
+> +static const struct file_operations efct_npiv_debugfs_session_fops = {
+> +	.owner		= THIS_MODULE,
+> +	.open		= efct_npiv_debugfs_session_open,
+> +	.release	= efct_debugfs_session_close,
+> +	.read		= efct_debugfs_session_read,
+> +	.write		= efct_debugfs_session_write,
+> +	.llseek		= default_llseek,
+> +};
+
+Since the information that is exported through debugfs (logged in 
+initiators) is information that is also useful for other target drivers, 
+I think this functionality should be implemented in the target core 
+instead of in this target driver.
+
+> +/* command has been aborted, cleanup here */
+> +static void efct_lio_aborted_task(struct se_cmd *se_cmd)
+> +{
+> +	int rc;
+> +	struct efct_scsi_tgt_io_s *ocp = container_of(se_cmd,
+> +						     struct efct_scsi_tgt_io_s,
+> +						     cmd);
+> +	struct efct_io_s *io = container_of(ocp, struct efct_io_s, tgt_io);
+> +
+> +	efct_lio_io_trace(io, "%s\n", __func__);
+> +	efct_lio_io_state_trace(io, EFCT_LIO_STATE_TFO_ABORTED_TASK);
+> +
+> +	if (!(se_cmd->transport_state & CMD_T_ABORTED) || ocp->rsp_sent)
+> +		return;
+> +
+> +	/*
+> +	 * if io is non-null, take a reference out on it so it isn't
+> +	 * freed until the abort operation is complete.
+> +	 */
+> +	if (kref_get_unless_zero(&io->ref) == 0) {
+> +		/* command no longer active */
+> +		struct efct_s *efct = io->efct;
+> +
+> +		efc_log_test(efct,
+> +			      "success: command no longer active (exists=%d)\n",
+> +			     (io != NULL));
+> +		return;
+> +	}
+> +
+> +	efct_lio_io_printf(io, "CMD_T_ABORTED set, aborting=%d\n",
+> +			   ocp->aborting);
+> +	ocp->aborting = true;
+> +	/* set to non-success so data moves won't continue */
+> +	ocp->err = EFCT_SCSI_STATUS_ABORTED;
+> +
+> +	/* wait until abort is complete; once we return, LIO will call
+> +	 * queue_tm_rsp() which will send response to TMF
+> +	 */
+> +	init_completion(&io->tgt_io.done);
+> +
+> +	rc = efct_scsi_tgt_abort_io(io, efct_lio_abort_tgt_cb, NULL);
+> +	if (rc == 0) {
+> +		/* wait for abort to complete before returning */
+> +		rc = wait_for_completion_timeout(&io->tgt_io.done,
+> +						 usecs_to_jiffies(10000000));
+> +
+> +		/* done with reference on aborted IO */
+> +		kref_put(&io->ref, io->release);
+> +
+> +		if (rc) {
+> +			efct_lio_io_printf(io,
+> +					   "abort completed successfully\n");
+> +			/* check if TASK_ABORTED status should be sent
+> +			 * for this IO
+> +			 */
+> +		} else {
+> +			efct_lio_io_printf(io,
+> +					   "timeout waiting for abort completed\n");
+> +		}
+> +	} else {
+> +		efct_lio_io_printf(io, "Failed to abort\n");
+> +	}
+> +}
+
+The .aborted_task() callback function must not wait until the aborted 
+command has finished but instead must free the resources owned by the 
+aborted command.
+
+The comment "check if TASK_ABORTED status should be sent for this IO" is 
+wrong. .aborted_task() is only called if no response will be sent to the 
+initiator.
+
+> +/**
+> + * @brief Housekeeping for LIO SG mapping.
+> + *
+> + * @param io Pointer to IO context.
+> + *
+> + * @return count Count returned by pci_map_sg.
+> + */
+
+The above comment follows the Doxygen syntax. Kernel function headers 
+must use the kernel-doc syntax. See also 
+Documentation/process/kernel-docs.rst.
+
+> +static struct se_wwn *
+> +efct_lio_make_sport(struct target_fabric_configfs *tf,
+> +		    struct config_group *group, const char *name)
+> +{
+> +	struct efct_lio_sport *lio_sport;
+> +	struct efct_s *efct;
+> +	int efctidx, ret;
+> +	u64 wwpn;
+> +	char *sessions_name;
+> +
+> +	ret = efct_lio_parse_wwn(name, &wwpn, 0);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+> +
+> +	/* Now search for the HBA that has this WWPN */
+> +	for (efctidx = 0; efctidx < MAX_EFCT_DEVICES; efctidx++) {
+> +		u64 pwwn;
+> +		u8 pn[8];
+> +
+> +		efct = efct_devices[efctidx];
+> +		if (!efct)
+> +			continue;
+> +		memcpy(pn, efct_hw_get_ptr(&efct->hw, EFCT_HW_WWN_PORT),
+> +		       sizeof(pn));
+> +		ARRAY2WWN(pwwn, pn);
+> +		if (pwwn == wwpn)
+> +			break;
+> +	}
+> +	if (efctidx == MAX_EFCT_DEVICES) {
+> +		pr_err("cannot find EFCT for wwpn %s\n", name);
+> +		return ERR_PTR(-ENXIO);
+> +	}
+> +	efct = efct_devices[efctidx];
+> +	lio_sport = kzalloc(sizeof(*lio_sport), GFP_KERNEL);
+> +	if (!lio_sport)
+> +		return ERR_PTR(-ENOMEM);
+> +	lio_sport->efct = efct;
+> +	lio_sport->wwpn = wwpn;
+> +	FABRIC_SNPRINTF(lio_sport->wwpn_str, sizeof(lio_sport->wwpn_str),
+> +			"naa.", wwpn);
+> +	efct->tgt_efct.lio_sport = lio_sport;
+> +
+> +	sessions_name = kasprintf(GFP_KERNEL, "efct-sessions-%d",
+> +				  efct->instance_index);
+> +	if (sessions_name && efct->sess_debugfs_dir)
+> +		lio_sport->sessions = debugfs_create_file(sessions_name,
+> +							  0644,
+> +						efct->sess_debugfs_dir,
+> +						lio_sport,
+> +						&efct_debugfs_session_fops);
+> +	kfree(sessions_name);
+> +
+> +	return &lio_sport->sport_wwn;
+> +}
+> +
+> +static struct se_wwn *
+> +efct_lio_npiv_make_sport(struct target_fabric_configfs *tf,
+> +			 struct config_group *group, const char *name)
+> +{
+> +	struct efct_lio_vport *lio_vport;
+> +	struct efct_s *efct;
+> +	int efctidx, ret = -1;
+> +	u64 p_wwpn, npiv_wwpn, npiv_wwnn;
+> +	char *p, tmp[128];
+> +	struct efct_lio_vport_list_t *vport_list;
+> +	char *sessions_name;
+> +	struct fc_vport *new_fc_vport;
+> +	struct fc_vport_identifiers vport_id;
+> +	unsigned long flags = 0;
+> +
+> +	snprintf(tmp, 128, "%s", name);
+> +
+> +	p = strchr(tmp, '@');
+> +
+> +	if (!p) {
+> +		pr_err("Unable to find separator operator(@)\n");
+> +		return ERR_PTR(ret);
+> +	}
+> +	*p++ = '\0';
+> +
+> +	ret = efct_lio_parse_wwn(tmp, &p_wwpn, 0);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+> +
+> +	ret = efct_lio_parse_npiv_wwn(p, strlen(p) + 1, &npiv_wwpn, &npiv_wwnn);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+> +
+> +	 /* Now search for the HBA that has this WWPN */
+> +	for (efctidx = 0; efctidx < MAX_EFCT_DEVICES; efctidx++) {
+> +		u64 pwwn;
+> +		u8 pn[8];
+> +
+> +		efct = efct_devices[efctidx];
+> +		if (!efct)
+> +			continue;
+> +		if (!efct->xport->req_wwpn) {
+> +			memcpy(pn, efct_hw_get_ptr(&efct->hw,
+> +				   EFCT_HW_WWN_PORT), sizeof(pn));
+> +			ARRAY2WWN(pwwn, pn);
+> +		} else {
+> +			pwwn = efct->xport->req_wwpn;
+> +		}
+> +		if (pwwn == p_wwpn)
+> +			break;
+> +	}
+> +	if (efctidx == MAX_EFCT_DEVICES) {
+> +		pr_err("cannot find EFCT for base wwpn %s\n", name);
+> +		return ERR_PTR(-ENXIO);
+> +	}
+> +	efct = efct_devices[efctidx];
+> +	lio_vport = kzalloc(sizeof(*lio_vport), GFP_KERNEL);
+> +	if (!lio_vport)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	lio_vport->efct = efct;
+> +	lio_vport->wwpn = p_wwpn;
+> +	lio_vport->npiv_wwpn = npiv_wwpn;
+> +	lio_vport->npiv_wwnn = npiv_wwnn;
+> +
+> +	FABRIC_SNPRINTF(lio_vport->wwpn_str, sizeof(lio_vport->wwpn_str),
+> +			"naa.", npiv_wwpn);
+> +
+> +	vport_list = kmalloc(sizeof(*vport_list), GFP_KERNEL);
+> +	if (!vport_list) {
+> +		kfree(lio_vport);
+> +		return ERR_PTR(-ENOMEM);
+> +	}
+> +
+> +	memset(vport_list, 0, sizeof(struct efct_lio_vport_list_t));
+> +	vport_list->lio_vport = lio_vport;
+> +	spin_lock_irqsave(&efct->tgt_efct.efct_lio_lock, flags);
+> +	INIT_LIST_HEAD(&vport_list->list_entry);
+> +	list_add_tail(&vport_list->list_entry, &efct->tgt_efct.vport_list);
+> +	spin_unlock_irqrestore(&efct->tgt_efct.efct_lio_lock, flags);
+> +
+> +	sessions_name = kasprintf(GFP_KERNEL, "sessions-npiv-%d",
+> +				  efct->instance_index);
+> +	if (sessions_name && efct->sess_debugfs_dir)
+> +		lio_vport->sessions = debugfs_create_file(sessions_name,
+> +							  0644,
+> +					   efct->sess_debugfs_dir,
+> +					   lio_vport,
+> +					   &efct_npiv_debugfs_session_fops);
+> +	kfree(sessions_name);
+> +	memset(&vport_id, 0, sizeof(vport_id));
+> +	vport_id.port_name = npiv_wwpn;
+> +	vport_id.node_name = npiv_wwnn;
+> +	vport_id.roles = FC_PORT_ROLE_FCP_INITIATOR;
+> +	vport_id.vport_type = FC_PORTTYPE_NPIV;
+> +	vport_id.disable = false;
+> +
+> +	new_fc_vport = fc_vport_create(efct->shost, 0, &vport_id);
+> +	if (!new_fc_vport) {
+> +		efc_log_err(efct, "fc_vport_create failed\n");
+> +		kfree(lio_vport);
+> +		kfree(vport_list);
+> +		return ERR_PTR(-ENOMEM);
+> +	}
+> +
+> +	lio_vport->fc_vport = new_fc_vport;
+> +
+> +	return &lio_vport->vport_wwn;
+> +}
+
+Please rework efct_lio_make_sport() and efct_lio_npiv_make_sport() such 
+that the amount of duplicate code is reduced significantly.
+
+> +
+> +	/* Create kernel worker thread to service async requests
+> +	 * (new/delete initiator, new cmd/tmf). Previously, a worker thread
+> +	 * was needed to make upcalls into LIO because the HW completion
+> +	 * context ran in an interrupt context (tasklet).
+> +	 * This is no longer necessary now that HW completions run in a
+> +	 * kernel thread context. However, performance is much better when
+> +	 * these types of reqs have their own thread.
+> +	 *
+> +	 * Note: We've seen better performance when IO completion (non-async)
+> +	 * upcalls into LIO are not given an additional kernel thread.
+> +	 * Thus,make such upcalls directly from the HW completion kernel thread
+> +	 */
+> +
+> +	worker = &efct->tgt_efct.async_worker;
+> +	efct_mqueue_init(efct, &worker->wq);
+> +
+> +	worker->thread = kthread_create((int(*)(void *)) efct_lio_async_worker,
+> +					efct, "efct_lio_async_worker");
+> +
+> +	if (IS_ERR(worker->thread)) {
+> +		efc_log_err(efct, "kthread_create failed: %ld\n",
+> +			     PTR_ERR(worker->thread));
+> +		worker->thread = NULL;
+> +		return -1;
+> +	}
+> +
+> +	wake_up_process(worker->thread);
+
+Please use the kernel workqueue infrastructure instead of duplicating it.
+
+> +/**
+> + * @brief Worker thread for LIO commands.
+> + *
+> + * @par Description
+> + * This thread is used to make LIO upcalls associated with
+> + * asynchronous requests (i.e. new commands received, register
+> + * sessions, unregister sessions).
+> + *
+> + * @param mythread Pointer to the thread object.
+> + *
+> + * @return Always returns 0.
+> + */
+> +static int efct_lio_async_worker(struct efct_s *efct)
+> +{
+> +	struct efct_lio_wq_data_s *wq_data;
+> +	struct efc_node_s *node;
+> +	struct se_session *se_sess;
+> +	int done = 0;
+> +	bool free_data = true;
+> +	struct efct_scsi_tgt_io_s *ocp;
+> +	int dir, rc = 0;
+> +	struct efct_io_s *io;
+> +	struct efct_io_s *tmfio;
+> +	struct efct_scsi_tgt_node_s *tgt_node = NULL;
+> +
+> +	while (!done) {
+> +		/* Poll with a timeout, to keep the kernel from complaining
+> +		 * of not periodically running
+> +		 */
+> +		wq_data = efct_mqueue_get(&efct->tgt_efct.async_worker.wq,
+> +					  10000000);
+> +		if (kthread_should_stop())
+> +			break;
+> +
+> +		if (!wq_data)
+> +			continue;
+> +
+> [ ... ]
+> +		}
+> +		if (free_data)
+> +			kfree(wq_data);
+> +	}
+> +
+> +	complete(&efct->tgt_efct.async_worker.done);
+> +
+> +	return 0;
+> +}
+
+Same comment here: please use the kernel workqueue infrastructure 
+instead of duplicating it.
+
+> +#define scsi_pack_result(key, code, qualifier) (((key & 0xff) << 16) | \
+> +				((code && 0xff) << 8) | (qualifier & 0xff))
+
+Where is this macro used? I haven't found any uses of this macro in this 
+patch.
+
+> +#define FABRIC_SNPRINTF_LEN     32
+
+Please choose a better name for this constant. Or even better, leave out 
+this define entirely and use sizeof().
+
+> +static inline int
+> +efct_mqueue_init(struct efct_s *efct, struct efct_mqueue_s *q)
+> +{
+> +	memset(q, 0, sizeof(*q));
+> +	q->efct = efct;
+> +	spin_lock_init(&q->lock);
+> +	init_completion(&q->prod);
+> +	INIT_LIST_HEAD(&q->queue);
+> +	return 0;
+> +}
+
+Functions that are not in the hot path should be defined in a .c file 
+instead of in a header file.
 
 Thanks,
-Ming
 
+Bart.
