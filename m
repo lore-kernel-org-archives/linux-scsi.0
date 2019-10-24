@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B33D8CA9EBB
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:25:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40864CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:25:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78E432070B
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:25:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14C2521A4A
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:25:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502592AbfJXOY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 10:24:57 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:32828 "EHLO huawei.com"
+        id S2502805AbfJXOZD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 10:25:03 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:32906 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2409404AbfJXOY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 10:24:56 -0400
+        id S2409403AbfJXOYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 10:24:55 -0400
 Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 3F24D3117FE96FF371F1;
+        by Forcepoint Email with ESMTP id 55BE0C3025B729EED883;
         Thu, 24 Oct 2019 22:24:50 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.439.0; Thu, 24 Oct 2019 22:24:40 +0800
+ 14.3.439.0; Thu, 24 Oct 2019 22:24:41 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>, <hare@suse.com>,
         <ming.lei@redhat.com>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH 1/6] scsi: hisi_sas: Use sbitmap for IPTT management
-Date:   Thu, 24 Oct 2019 22:21:16 +0800
-Message-ID: <1571926881-75524-2-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 6/6] scsi: hisi_sas: Expose multiple hw queues for v3 as experimental
+Date:   Thu, 24 Oct 2019 22:21:21 +0800
+Message-ID: <1571926881-75524-7-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1571926881-75524-1-git-send-email-john.garry@huawei.com>
 References: <1571926881-75524-1-git-send-email-john.garry@huawei.com>
@@ -44,351 +44,249 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Using sbitmap will be more efficient in scenarios where we generate the
-IPTT in the driver, so make the transition.
+Since we're not ready to expose mutliple queues to the upper layer always
+due to CPU hotplug issue, add a new interim experimental command line
+option to support it.
 
-For non-v2 hw, we only use the sbitmap to manage reserved tags.
+We still need to keep supporting auto_affine_msi_experimental, since
+people are now replying the performance it provides, even though it is
+unsafe.
 
-For v2 hw, we use separate sbitmap sets to manage SAS/SMP and SATA tags.
-
-Using separate SATA sbitmaps for v2 hw was suggested by Hannes Reinecke.
+If auto_affine_msi_experimental and expose_mq_experimental are both set,
+then auto_affine_msi_experimental takes preference.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       |   7 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  |  82 +++++++------------
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 107 +++++++++++++++++--------
- 3 files changed, 109 insertions(+), 87 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas.h       |  2 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 55 ++++++++++++++++----------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 51 +++++++++++++++++++++---
+ 3 files changed, 83 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 233c73e01246..fbfaa92765cf 100644
+index 4eb8f1c53f78..884f2426d753 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas.h
 +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -279,6 +279,8 @@ struct hisi_sas_hw {
- 			   struct hisi_sas_device *device);
- 	int (*slot_index_alloc)(struct hisi_hba *hisi_hba,
- 				struct domain_device *device);
-+	void (*slot_index_free)(struct hisi_hba *hisi_hba, int slot_idx);
-+	int (*bitmaps_alloc)(struct hisi_hba *hisi_hba);
- 	struct hisi_sas_device *(*alloc_dev)(struct domain_device *device);
- 	void (*sl_notify_ssp)(struct hisi_hba *hisi_hba, int phy_no);
- 	void (*start_delivery)(struct hisi_sas_dq *dq);
-@@ -388,10 +390,9 @@ struct hisi_hba {
- 	struct timer_list timer;
- 	struct workqueue_struct *wq;
+@@ -8,6 +8,8 @@
+ #define _HISI_SAS_H_
  
--	int slot_index_count;
- 	int last_slot_index;
- 	int last_dev_id;
--	unsigned long *slot_index_tags;
-+	struct sbitmap slot_index_tags;
- 	unsigned long reject_stp_links_msk;
- 
- 	/* SCSI/SAS glue */
-@@ -424,6 +425,8 @@ struct hisi_hba {
- 	unsigned long flags;
- 	const struct hisi_sas_hw *hw;	/* Low level hw interface */
- 	unsigned long sata_dev_bitmap[BITS_TO_LONGS(HISI_SAS_MAX_DEVICES)];
-+	struct sbitmap sata_slot_index_tags[HISI_SAS_MAX_DEVICES];
-+	int sbitmap_alloc_hint;
- 	struct work_struct rst_work;
- 	struct work_struct debugfs_work;
- 	u32 phy_state;
+ #include <linux/acpi.h>
++#include <linux/blk-mq.h>
++#include <linux/blk-mq-pci.h>
+ #include <linux/clk.h>
+ #include <linux/debugfs.h>
+ #include <linux/dmapool.h>
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index a7af9483b678..f4937da9baf8 100644
+index 53802c1cc1d0..c8c96a46acfd 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -156,65 +156,36 @@ EXPORT_SYMBOL_GPL(hisi_sas_stop_phys);
- 
- static void hisi_sas_slot_index_clear(struct hisi_hba *hisi_hba, int slot_idx)
- {
--	void *bitmap = hisi_hba->slot_index_tags;
-+	struct sbitmap *slot_index_tags = &hisi_hba->slot_index_tags;
- 
--	clear_bit(slot_idx, bitmap);
-+	sbitmap_clear_bit(slot_index_tags, slot_idx);
- }
- 
- static void hisi_sas_slot_index_free(struct hisi_hba *hisi_hba, int slot_idx)
- {
--	unsigned long flags;
--
--	if (hisi_hba->hw->slot_index_alloc ||
--	    slot_idx >= HISI_SAS_UNRESERVED_IPTT) {
--		spin_lock_irqsave(&hisi_hba->lock, flags);
--		hisi_sas_slot_index_clear(hisi_hba, slot_idx);
--		spin_unlock_irqrestore(&hisi_hba->lock, flags);
--	}
--}
--
--static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
--{
--	void *bitmap = hisi_hba->slot_index_tags;
--
--	set_bit(slot_idx, bitmap);
-+	if (hisi_hba->hw->slot_index_free)
-+		hisi_hba->hw->slot_index_free(hisi_hba, slot_idx);
-+	else if (slot_idx >= HISI_SAS_UNRESERVED_IPTT)
-+		hisi_sas_slot_index_clear(hisi_hba,
-+					  slot_idx - HISI_SAS_UNRESERVED_IPTT);
- }
- 
- static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
- 				     struct scsi_cmnd *scsi_cmnd)
- {
-+	struct sbitmap *slot_index_tags = &hisi_hba->slot_index_tags;
- 	int index;
--	void *bitmap = hisi_hba->slot_index_tags;
--	unsigned long flags;
- 
- 	if (scsi_cmnd)
- 		return scsi_cmnd->request->tag;
- 
--	spin_lock_irqsave(&hisi_hba->lock, flags);
--	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
--				   hisi_hba->last_slot_index + 1);
--	if (index >= hisi_hba->slot_index_count) {
--		index = find_next_zero_bit(bitmap,
--				hisi_hba->slot_index_count,
--				HISI_SAS_UNRESERVED_IPTT);
--		if (index >= hisi_hba->slot_index_count) {
--			spin_unlock_irqrestore(&hisi_hba->lock, flags);
--			return -SAS_QUEUE_FULL;
--		}
--	}
--	hisi_sas_slot_index_set(hisi_hba, index);
--	hisi_hba->last_slot_index = index;
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
-+	index = sbitmap_get(slot_index_tags, hisi_hba->sbitmap_alloc_hint,
-+			    false);
-+	if (index == -1)
-+		return index;
-+	hisi_hba->sbitmap_alloc_hint = (index + 1) % slot_index_tags->depth;
- 
--	return index;
--}
--
--static void hisi_sas_slot_index_init(struct hisi_hba *hisi_hba)
--{
--	int i;
--
--	for (i = 0; i < hisi_hba->slot_index_count; ++i)
--		hisi_sas_slot_index_clear(hisi_hba, i);
-+	return index + HISI_SAS_UNRESERVED_IPTT;
- }
- 
- void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
-@@ -481,7 +452,7 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 				scsi_cmnd = task->uldd_task;
- 			}
- 		}
--		rc  = hisi_sas_slot_index_alloc(hisi_hba, scsi_cmnd);
-+		rc = hisi_sas_slot_index_alloc(hisi_hba, scsi_cmnd);
+@@ -389,9 +389,11 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 	struct hisi_sas_slot *slot;
+ 	struct hisi_sas_cmd_hdr	*cmd_hdr_base;
+ 	struct asd_sas_port *sas_port = device->port;
++	struct Scsi_Host *shost = hisi_hba->shost;
+ 	struct device *dev = hisi_hba->dev;
+ 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
+ 	int n_elem = 0, n_elem_dif = 0, n_elem_req = 0;
++	struct scsi_cmnd *scmd = NULL;
+ 	struct hisi_sas_dq *dq;
+ 	unsigned long flags;
+ 	int wr_q_index;
+@@ -407,13 +409,38 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 		return -ECOMM;
  	}
+ 
+-	if (hisi_hba->reply_map) {
+-		int cpu = raw_smp_processor_id();
+-		unsigned int dq_index = hisi_hba->reply_map[cpu];
++	if (task->uldd_task) {
++		struct ata_queued_cmd *qc;
+ 
+-		*dq_pointer = dq = &hisi_hba->dq[dq_index];
+-	} else {
++		if (dev_is_sata(device)) {
++			qc = task->uldd_task;
++			scmd = qc->scsicmd;
++		} else {
++			scmd = task->uldd_task;
++		}
++	}
++
++	/* We have to move to just a single mode: expose multiple queues */
++	if (!hisi_hba->reply_map && !shost->nr_hw_queues) {
+ 		*dq_pointer = dq = sas_dev->dq;
++	} else {
++		if (hisi_hba->reply_map) {
++			int cpu = raw_smp_processor_id();
++			unsigned int dq_index = hisi_hba->reply_map[cpu];
++
++			*dq_pointer = dq = &hisi_hba->dq[dq_index];
++		} else {
++			if (scmd) {
++				unsigned int dq_index;
++				u32 blk_tag;
++
++				blk_tag = blk_mq_unique_tag(scmd->request);
++				dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
++				*dq_pointer = dq = &hisi_hba->dq[dq_index];
++			} else {
++				*dq_pointer = dq = sas_dev->dq;
++			}
++		}
+ 	}
+ 
+ 	port = to_hisi_sas_port(sas_port);
+@@ -438,22 +465,10 @@ static int hisi_sas_task_prep(struct sas_task *task,
+ 	}
+ 
+ 	if (hisi_hba->hw->slot_index_alloc)
+-		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device, NULL);
+-	else {
+-		struct scsi_cmnd *scsi_cmnd = NULL;
+-
+-		if (task->uldd_task) {
+-			struct ata_queued_cmd *qc;
++		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device, scmd);
++	else
++		rc = hisi_sas_slot_index_alloc(hisi_hba, scmd);
+ 
+-			if (dev_is_sata(device)) {
+-				qc = task->uldd_task;
+-				scsi_cmnd = qc->scsicmd;
+-			} else {
+-				scsi_cmnd = task->uldd_task;
+-			}
+-		}
+-		rc = hisi_sas_slot_index_alloc(hisi_hba, scsi_cmnd);
+-	}
  	if (rc < 0)
  		goto err_out_dif_dma_unmap;
-@@ -1957,7 +1928,10 @@ hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, int device_id,
- 	port = to_hisi_sas_port(sas_port);
  
- 	/* simply get a slot and send abort command */
--	rc = hisi_sas_slot_index_alloc(hisi_hba, NULL);
-+	if (hisi_hba->hw->slot_index_alloc)
-+		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
-+	else
-+		rc = hisi_sas_slot_index_alloc(hisi_hba, NULL);
- 	if (rc < 0)
- 		goto err_out;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 29119d0b27a7..03ba0416f910 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -512,6 +512,11 @@ module_param(auto_affine_msi_experimental, bool, 0444);
+ MODULE_PARM_DESC(auto_affine_msi_experimental, "Enable auto-affinity of MSI IRQs as experimental:\n"
+ 		 "default is off");
  
-@@ -2309,7 +2283,7 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba)
- 	struct device *dev = hisi_hba->dev;
- 	int i, j, s, max_command_entries = HISI_SAS_MAX_COMMANDS;
- 	int max_command_entries_ru, sz_slot_buf_ru;
--	int blk_cnt, slots_per_blk;
-+	int blk_cnt, slots_per_blk, rc;
- 
- 	sema_init(&hisi_hba->sem, 1);
- 	spin_lock_init(&hisi_hba->lock);
-@@ -2415,10 +2389,13 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba)
- 	if (!hisi_hba->breakpoint)
- 		goto err_out;
- 
--	hisi_hba->slot_index_count = max_command_entries;
--	s = hisi_hba->slot_index_count / BITS_PER_BYTE;
--	hisi_hba->slot_index_tags = devm_kzalloc(dev, s, GFP_KERNEL);
--	if (!hisi_hba->slot_index_tags)
-+	if (hisi_hba->hw->bitmaps_alloc)
-+		rc = hisi_hba->hw->bitmaps_alloc(hisi_hba);
-+	else
-+		rc = sbitmap_init_node(&hisi_hba->slot_index_tags,
-+				       HISI_SAS_RESERVED_IPTT, -1,
-+				       GFP_KERNEL, dev_to_node(dev));
-+	if (rc)
- 		goto err_out;
- 
- 	s = sizeof(struct hisi_sas_initial_fis) * HISI_SAS_MAX_PHYS;
-@@ -2435,7 +2412,6 @@ int hisi_sas_alloc(struct hisi_hba *hisi_hba)
- 	if (!hisi_hba->sata_breakpoint)
- 		goto err_out;
- 
--	hisi_sas_slot_index_init(hisi_hba);
- 	hisi_hba->last_slot_index = HISI_SAS_UNRESERVED_IPTT;
- 
- 	hisi_hba->wq = create_singlethread_workqueue(dev_name(dev));
-@@ -2460,6 +2436,10 @@ void hisi_sas_free(struct hisi_hba *hisi_hba)
- 		del_timer_sync(&phy->timer);
- 	}
- 
-+	sbitmap_free(&hisi_hba->slot_index_tags);
-+	for (i = 0; i < HISI_SAS_MAX_DEVICES; i++)
-+		sbitmap_free(&hisi_hba->sata_slot_index_tags[i]);
++static bool expose_mq_experimental;
++module_param(expose_mq_experimental, bool, 0444);
++MODULE_PARM_DESC(expose_mq_experimental, "Expose multiple hw queues to upper layer as experimental:\n"
++		 "default is off");
 +
- 	if (hisi_hba->wq)
- 		destroy_workqueue(hisi_hba->wq);
- }
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 61b1e2693b08..683e1b99c9ae 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -763,59 +763,96 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
- 	return readl(regs);
- }
- 
--/* This function needs to be protected from pre-emption. */
-+static int bitmaps_alloc_v2_hw(struct hisi_hba *hisi_hba)
-+{
-+	struct device *dev = hisi_hba->dev;
-+	int sata_idx, i;
-+
-+	if (sbitmap_init_node(&hisi_hba->slot_index_tags,
-+			      HISI_SAS_MAX_COMMANDS / 2, -1,
-+			      GFP_KERNEL, dev_to_node(hisi_hba->dev)))
-+		return -ENOMEM;
-+
-+	for (sata_idx = 0; sata_idx < HISI_MAX_SATA_SUPPORT_V2_HW; sata_idx++) {
-+		if (sbitmap_init_node(&hisi_hba->sata_slot_index_tags[sata_idx],
-+				      32, -1, GFP_KERNEL, dev_to_node(dev)))
-+			goto free_slot_index_tags;
-+	}
-+
-+	return 0;
-+
-+free_slot_index_tags:
-+	sbitmap_free(&hisi_hba->slot_index_tags);
-+	for (i = 0; i < HISI_MAX_SATA_SUPPORT_V2_HW; i++)
-+		sbitmap_free(&hisi_hba->sata_slot_index_tags[sata_idx]);
-+
-+	return -ENOMEM;
-+}
-+
- static int
- slot_index_alloc_quirk_v2_hw(struct hisi_hba *hisi_hba,
- 			     struct domain_device *device)
+ static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
  {
-+	struct sbitmap *slot_index_tags;
- 	int sata_dev = dev_is_sata(device);
--	void *bitmap = hisi_hba->slot_index_tags;
- 	struct hisi_sas_device *sas_dev = device->lldd_dev;
- 	int sata_idx = sas_dev->sata_idx;
--	int start, end;
--	unsigned long flags;
-+	int start;
-+
-+	if (sata_dev) {
-+		int start;
-+		int base = 64 * (sata_idx + 1);
+ 	void __iomem *regs = hisi_hba->regs + off;
+@@ -558,6 +563,11 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi_hba,
  
--	if (!sata_dev) {
--		/*
--		 * STP link SoC bug workaround: index starts from 1.
--		 * additionally, we can only allocate odd IPTT(1~4095)
--		 * for SAS/SMP device.
--		 */
--		start = 1;
--		end = hisi_hba->slot_index_count;
--	} else {
- 		if (sata_idx >= HISI_MAX_SATA_SUPPORT_V2_HW)
- 			return -EINVAL;
--
- 		/*
- 		 * For SATA device: allocate even IPTT in this interval
- 		 * [64*(sata_idx+1), 64*(sata_idx+2)], then each SATA device
- 		 * own 32 IPTTs. IPTT 0 shall not be used duing to STP link
- 		 * SoC bug workaround. So we ignore the first 32 even IPTTs.
- 		 */
--		start = 64 * (sata_idx + 1);
--		end = 64 * (sata_idx + 2);
--	}
+ static int bitmaps_alloc_v3_hw(struct hisi_hba *hisi_hba)
+ {
++	if (expose_mq_experimental)
++		return sbitmap_init_node(&hisi_hba->slot_index_tags,
++					 HISI_SAS_MAX_COMMANDS, -1,
++					 GFP_KERNEL,
++					 dev_to_node(hisi_hba->dev));
+ 	return sbitmap_init_node(&hisi_hba->slot_index_tags,
+ 				 HISI_SAS_UNRESERVED_IPTT, -1,
+ 				 GFP_KERNEL, dev_to_node(hisi_hba->dev));
+@@ -570,6 +580,10 @@ static int slot_index_alloc_v3_hw(struct hisi_hba *hisi_hba,
+ 	struct sbitmap *slot_index_tags = &hisi_hba->slot_index_tags;
+ 	int index;
  
--	spin_lock_irqsave(&hisi_hba->lock, flags);
--	while (1) {
--		start = find_next_zero_bit(bitmap,
--					hisi_hba->slot_index_count, start);
--		if (start >= end) {
--			spin_unlock_irqrestore(&hisi_hba->lock, flags);
--			return -SAS_QUEUE_FULL;
--		}
--		/*
--		  * SAS IPTT bit0 should be 1, and SATA IPTT bit0 should be 0.
--		  */
--		if (sata_dev ^ (start & 1))
--			break;
--		start++;
-+		slot_index_tags = &hisi_hba->sata_slot_index_tags[sata_idx];
++	if (expose_mq_experimental)
++		return sbitmap_get(slot_index_tags,
++				   hisi_hba->sbitmap_alloc_hint, false);
 +
-+		start = sbitmap_get(slot_index_tags, 0, true);
-+		if (start == -1)
-+			return -ENOMEM;
-+		start *= 2;
-+		return start + base;
+ 	if (scmd)
+ 		return scmd->request->tag;
+ 
+@@ -583,7 +597,10 @@ static void slot_index_free_v3_hw(struct hisi_hba *hisi_hba, int slot_idx)
+ {
+ 	struct sbitmap *slot_index_tags = &hisi_hba->slot_index_tags;
+ 
+-	if (slot_idx >= HISI_SAS_UNRESERVED_IPTT)
++	if (expose_mq_experimental) {
++		sbitmap_clear_bit(slot_index_tags, slot_idx);
++		hisi_hba->sbitmap_alloc_hint = slot_idx;
++	} else if (slot_idx >= HISI_SAS_UNRESERVED_IPTT)
+ 		sbitmap_clear_bit(slot_index_tags,
+ 				  slot_idx - HISI_SAS_UNRESERVED_IPTT);
+ }
+@@ -2414,8 +2431,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 	struct device *dev = hisi_hba->dev;
+ 	int vectors;
+ 	int max_msi = HISI_SAS_MSI_COUNT_V3_HW, min_msi;
++	struct Scsi_Host *shost = hisi_hba->shost;
+ 
+-	if (auto_affine_msi_experimental) {
++	if (auto_affine_msi_experimental || expose_mq_experimental) {
+ 		struct irq_affinity desc = {
+ 			.pre_vectors = BASE_VECTORS_V3_HW,
+ 		};
+@@ -2434,7 +2452,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 							 &desc);
+ 		if (vectors < 0)
+ 			return -ENOENT;
+-		setup_reply_map_v3_hw(hisi_hba, vectors - BASE_VECTORS_V3_HW);
++		if (auto_affine_msi_experimental)
++			setup_reply_map_v3_hw(hisi_hba,
++					      vectors - BASE_VECTORS_V3_HW);
+ 	} else {
+ 		min_msi = max_msi;
+ 		vectors = pci_alloc_irq_vectors(hisi_hba->pci_dev, min_msi,
+@@ -2444,6 +2464,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
  	}
  
--	set_bit(start, bitmap);
--	spin_unlock_irqrestore(&hisi_hba->lock, flags);
--	return start;
-+	slot_index_tags = &hisi_hba->slot_index_tags;
-+	start = sbitmap_get(slot_index_tags, hisi_hba->sbitmap_alloc_hint,
-+			    true);
-+	if (start == -1)
-+		return -ENOMEM;
+ 	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
++	if (expose_mq_experimental)
++		shost->nr_hw_queues = hisi_hba->cq_nvecs;
 +
-+	/*
-+	 * SAS/SMP IPTT bit0 should be 1, and SATA IPTT bit0 should be 0.
-+	 */
-+	return (start * 2) + 1;
-+}
-+
-+static void slot_index_free_quirk_v2_hw(struct hisi_hba *hisi_hba, int slot_idx)
-+{
-+	struct sbitmap *slot_index_tags;
-+
-+	if (slot_idx & 1) {
-+		int start = (slot_idx - 1) / 2;
-+
-+		slot_index_tags = &hisi_hba->slot_index_tags;
-+		sbitmap_clear_bit(&hisi_hba->slot_index_tags, start);
-+		hisi_hba->sbitmap_alloc_hint = (start + 1) %
-+					       slot_index_tags->depth;
-+	} else {
-+		int sata_idx = (slot_idx / 64) - 1;
-+		int base = 64 * (sata_idx + 1);
-+
-+		slot_index_tags = &hisi_hba->sata_slot_index_tags[sata_idx];
-+		slot_idx -= base;
-+		slot_idx /= 2;
-+		sbitmap_clear_bit(slot_index_tags, slot_idx);
-+	}
+ 	return 0;
  }
  
- static bool sata_index_alloc_v2_hw(struct hisi_hba *hisi_hba, int *idx)
-@@ -3559,6 +3596,8 @@ static const struct hisi_sas_hw hisi_sas_v2_hw = {
- 	.hw_init = hisi_sas_v2_init,
- 	.setup_itct = setup_itct_v2_hw,
- 	.slot_index_alloc = slot_index_alloc_quirk_v2_hw,
-+	.slot_index_free = slot_index_free_quirk_v2_hw,
-+	.bitmaps_alloc = bitmaps_alloc_v2_hw,
- 	.alloc_dev = alloc_dev_quirk_v2_hw,
- 	.sl_notify_ssp = sl_notify_ssp_v2_hw,
- 	.get_wideport_bitmap = get_wideport_bitmap_v2_hw,
+@@ -3096,6 +3119,17 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
+ 	return 0;
+ }
+ 
++static int hisi_sas_map_queues(struct Scsi_Host *shost)
++{
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
++
++	if (expose_mq_experimental)
++		return blk_mq_pci_map_queues(qmap, hisi_hba->pci_dev,
++					     BASE_VECTORS_V3_HW);
++	return blk_mq_map_queues(qmap);
++}
++
+ static struct scsi_host_template sht_v3_hw = {
+ 	.name			= DRV_NAME,
+ 	.module			= THIS_MODULE,
+@@ -3104,6 +3138,7 @@ static struct scsi_host_template sht_v3_hw = {
+ 	.slave_configure	= hisi_sas_slave_configure,
+ 	.scan_finished		= hisi_sas_scan_finished,
+ 	.scan_start		= hisi_sas_scan_start,
++	.map_queues		= hisi_sas_map_queues,
+ 	.change_queue_depth	= sas_change_queue_depth,
+ 	.bios_param		= sas_bios_param,
+ 	.this_id		= -1,
+@@ -3265,8 +3300,14 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_lun = ~0;
+ 	shost->max_channel = 1;
+ 	shost->max_cmd_len = 16;
+-	shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
+-	shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
++
++	if (expose_mq_experimental) {
++		shost->can_queue = HISI_SAS_MAX_COMMANDS;
++		shost->cmd_per_lun = HISI_SAS_MAX_COMMANDS;
++	} else {
++		shost->can_queue = HISI_SAS_UNRESERVED_IPTT;
++		shost->cmd_per_lun = HISI_SAS_UNRESERVED_IPTT;
++	}
+ 
+ 	sha->sas_ha_name = DRV_NAME;
+ 	sha->dev = dev;
 -- 
 2.17.1
 
