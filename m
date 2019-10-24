@@ -2,88 +2,211 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 149B3CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 15:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DECD9CA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:22:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7F8120684
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 15:46:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jLvVxr0n"
+	by mail.kernel.org (Postfix) with ESMTP id BC32720650
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:22:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2409741AbfJXPqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 11:46:05 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:45880 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2409743AbfJXPqF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 11:46:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571931954;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=18a488PSJwMd7T57NULIJXU2mWIgp50hhEIjxQCIqZ4=;
-        b=jLvVxr0nYenUvqbmFAFXCZjc8ai8cWwQhe4PF+cmBgNVY/rRsMdIhyoraH59U7rL93d95Y
-        Wk6I1lO4djMqUWs/5p11h1RCgp+mAEBFmcX7PdK8iM6vDGV9gz4+O13lBif/zHDierVafC
-        dYZrJewwCXgbSagAl6Qr0nVQf8AhR8U=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-87-s1jboasqN_SoxcxN2TFTgQ-1; Thu, 24 Oct 2019 11:45:35 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2F12610055BF;
-        Thu, 24 Oct 2019 15:28:37 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.43.2.65])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 32BC0100164D;
-        Thu, 24 Oct 2019 15:28:36 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, sathya.prakash@broadcom.com
-Subject: [PATCH 1/1] mpt3sas: change allocation option
-Date:   Thu, 24 Oct 2019 17:28:35 +0200
-Message-Id: <20191024152835.6177-1-thenzl@redhat.com>
+        id S2439796AbfJXQWI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 12:22:08 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40756 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1733261AbfJXQWI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 12:22:08 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id A720FB4E7;
+        Thu, 24 Oct 2019 16:22:05 +0000 (UTC)
+Date:   Thu, 24 Oct 2019 18:22:02 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: Re: [PATCH 01/32] elx: libefc_sli: SLI-4 register offsets and field
+ definitions
+Message-ID: <20191024162202.z3g5g4cwjbzotd5a@beryllium.lan>
+References: <20191023215557.12581-1-jsmart2021@gmail.com>
+ <20191023215557.12581-2-jsmart2021@gmail.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: s1jboasqN_SoxcxN2TFTgQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191023215557.12581-2-jsmart2021@gmail.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From an interrupt handler path memory may be allocated using
-GFP_KERNEL, replace it with GFP_ATOMIC.
-_base_interrupt->_scsih_io_done->_scsih_smart_predicted_fault
+Hi,
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Oct 23, 2019 at 02:55:26PM -0700, James Smart wrote:
+> +/*************************************************************************
+> + * Common SLI-4 register offsets and field definitions
+> + */
+> +
+> +/* SLI_INTF - SLI Interface Definition Register */
+> +#define SLI4_INTF_REG		0x0058
+> +enum {
+> +	SLI4_INTF_REV_SHIFT = 4,
+> +	SLI4_INTF_REV_MASK = 0x0F << SLI4_INTF_REV_SHIFT,
+> +
+> +	SLI4_INTF_REV_S3 = 3 << SLI4_INTF_REV_SHIFT,
+> +	SLI4_INTF_REV_S4 = 4 << SLI4_INTF_REV_SHIFT,
+> +
+> +	SLI4_INTF_FAMILY_SHIFT = 8,
+> +	SLI4_INTF_FAMILY_MASK  = 0x0F << SLI4_INTF_FAMILY_SHIFT,
+> +
+> +	SLI4_FAMILY_CHECK_ASIC_TYPE = 0xf << SLI4_INTF_FAMILY_SHIFT,
+> +
+> +	SLI4_INTF_IF_TYPE_SHIFT = 12,
+> +	SLI4_INTF_IF_TYPE_MASK = 0x0F << SLI4_INTF_IF_TYPE_SHIFT,
+> +
+> +	SLI4_INTF_IF_TYPE_2 = 2 << SLI4_INTF_IF_TYPE_SHIFT,
+> +	SLI4_INTF_IF_TYPE_6 = 6 << SLI4_INTF_IF_TYPE_SHIFT,
+> +
+> +	SLI4_INTF_VALID_SHIFT = 29,
+> +	SLI4_INTF_VALID_MASK = 0x0F << SLI4_INTF_VALID_SHIFT,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mp=
-t3sas_scsih.c
-index 3f0797e6f..a038be8a0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5161,7 +5161,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *=
-ioc, u16 handle)
- =09/* insert into event log */
- =09sz =3D offsetof(Mpi2EventNotificationReply_t, EventData) +
- =09     sizeof(Mpi2EventDataSasDeviceStatusChange_t);
--=09event_reply =3D kzalloc(sz, GFP_KERNEL);
-+=09event_reply =3D kzalloc(sz, GFP_ATOMIC);
- =09if (!event_reply) {
- =09=09ioc_err(ioc, "failure at %s:%d/%s()!\n",
- =09=09=09__FILE__, __LINE__, __func__);
---=20
-2.20.1
+Should this a 32 bit value? This overflows to 34 bits.
 
+> +
+> +	SLI4_INTF_VALID_VALUE = 6 << SLI4_INTF_VALID_SHIFT,
+> +};
+
+Just style question: what is the benefit using anonymous enums?  The
+only reason I came up was that gdb could show the name of the
+value. Though a quick test didn't work if the value is passed into a
+function. Maybe I did something wrong.
+
+I am asking because register number is a define and then the shift and
+mask are enums.
+
+> +
+> +/* ASIC_ID - SLI ASIC Type and Revision Register */
+> +#define SLI4_ASIC_ID_REG	0x009c
+> +enum {
+> +	SLI4_ASIC_GEN_SHIFT = 8,
+> +	SLI4_ASIC_GEN_MASK = 0xFF << SLI4_ASIC_GEN_SHIFT,
+> +	SLI4_ASIC_GEN_5 = 0x0b << SLI4_ASIC_GEN_SHIFT,
+> +	SLI4_ASIC_GEN_6 = 0x0c << SLI4_ASIC_GEN_SHIFT,
+> +	SLI4_ASIC_GEN_7 = 0x0d << SLI4_ASIC_GEN_SHIFT,
+> +};
+> +
+> +enum {
+> +	SLI4_ASIC_REV_A0 = 0x00,
+> +	SLI4_ASIC_REV_A1 = 0x01,
+> +	SLI4_ASIC_REV_A2 = 0x02,
+> +	SLI4_ASIC_REV_A3 = 0x03,
+> +	SLI4_ASIC_REV_B0 = 0x10,
+> +	SLI4_ASIC_REV_B1 = 0x11,
+> +	SLI4_ASIC_REV_B2 = 0x12,
+> +	SLI4_ASIC_REV_C0 = 0x20,
+> +	SLI4_ASIC_REV_C1 = 0x21,
+> +	SLI4_ASIC_REV_C2 = 0x22,
+> +	SLI4_ASIC_REV_D0 = 0x30,
+> +};
+> +
+> +/* BMBX - Bootstrap Mailbox Register */
+> +#define SLI4_BMBX_REG		0x0160
+> +#define SLI4_BMBX_MASK_HI	0x3
+> +#define SLI4_BMBX_MASK_LO	0xf
+> +#define SLI4_BMBX_RDY		(1 << 0)
+> +#define SLI4_BMBX_HI		(1 << 1)
+> +#define SLI4_BMBX_WRITE_HI(r)	((upper_32_bits(r) & ~SLI4_BMBX_MASK_HI) | \
+> +					SLI4_BMBX_HI)
+> +#define SLI4_BMBX_WRITE_LO(r)	(((upper_32_bits(r) & SLI4_BMBX_MASK_HI) \
+> +				<< 30) | (((r) & ~SLI4_BMBX_MASK_LO) >> 2))
+
+Could you break the line differently so that the expression is a bit
+simpler to read (there is a version below which does this
+(SLI4_EQ_DOORBELL))?
+
+> +#define SLI4_BMBX_SIZE				256
+> +
+> +/* SLIPORT_CONTROL - SLI Port Control Register */
+> +#define SLI4_PORT_CTRL_REG		0x0408
+> +#define SLI4_PORT_CTRL_IP		(1 << 27)
+> +#define SLI4_PORT_CTRL_IDIS		(1 << 22)
+> +#define SLI4_PORT_CTRL_FDD		(1 << 31)
+> +
+> +/* SLI4_SLIPORT_ERROR - SLI Port Error Register */
+> +#define SLI4_PORT_ERROR1		0x040c
+> +#define SLI4_PORT_ERROR2		0x0410
+> +
+> +/* EQCQ_DOORBELL - EQ and CQ Doorbell Register */
+> +#define SLI4_EQCQ_DB_REG		0x120
+> +enum {
+> +	SLI4_EQ_ID_LO_MASK = 0x01FF,
+> +
+> +	SLI4_CQ_ID_LO_MASK = 0x03FF,
+> +
+> +	SLI4_EQCQ_CI_EQ = 0x0200,
+> +
+> +	SLI4_EQCQ_QT_EQ = 0x00000400,
+> +	SLI4_EQCQ_QT_CQ = 0x00000000,
+> +
+> +	SLI4_EQCQ_ID_HI_SHIFT = 11,
+> +	SLI4_EQCQ_ID_HI_MASK = 0xF800,
+> +
+> +	SLI4_EQCQ_NUM_SHIFT = 16,
+> +	SLI4_EQCQ_NUM_MASK = 0x1FFF0000,
+> +
+> +	SLI4_EQCQ_ARM = 0x20000000,
+> +	SLI4_EQCQ_UNARM = 0x00000000,
+> +
+> +};
+> +
+> +#define SLI4_EQ_DOORBELL(n, id, a)\
+> +	((id & SLI4_EQ_ID_LO_MASK) | SLI4_EQCQ_QT_EQ |\
+> +	(((id >> 9) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
+> +	((n << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | \
+> +	a | SLI4_EQCQ_CI_EQ)
+> +
+> +#define SLI4_CQ_DOORBELL(n, id, a)\
+> +	((id & SLI4_CQ_ID_LO_MASK) | SLI4_EQCQ_QT_CQ |\
+> +	(((id >> 10) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
+> +	((n << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | a)
+> +
+> +/* EQ_DOORBELL - EQ Doorbell Register for IF_TYPE = 6*/
+> +#define SLI4_IF6_EQ_DB_REG	0x120
+> +enum {
+> +	SLI4_IF6_EQ_ID_MASK = 0x0FFF,
+> +
+> +	SLI4_IF6_EQ_NUM_SHIFT = 16,
+> +	SLI4_IF6_EQ_NUM_MASK = 0x1FFF0000,
+> +};
+> +
+> +#define SLI4_IF6_EQ_DOORBELL(n, id, a)\
+> +	((id & SLI4_IF6_EQ_ID_MASK) | \
+> +	((n << SLI4_IF6_EQ_NUM_SHIFT) & SLI4_IF6_EQ_NUM_MASK) | a)
+> +
+> +/* CQ_DOORBELL - CQ Doorbell Register for IF_TYPE = 6*/
+> +#define SLI4_IF6_CQ_DB_REG	0xC0
+> +enum {
+> +	SLI4_IF6_CQ_ID_MASK = 0xFFFF,
+> +
+> +	SLI4_IF6_CQ_NUM_SHIFT = 16,
+> +	SLI4_IF6_CQ_NUM_MASK = 0x1FFF0000,
+> +};
+> +
+> +#define SLI4_IF6_CQ_DOORBELL(n, id, a)\
+> +	((id & SLI4_IF6_CQ_ID_MASK) | \
+> +	((n << SLI4_IF6_CQ_NUM_SHIFT) & SLI4_IF6_CQ_NUM_MASK) | a)
+
+There is sometimes a space before '\' and sometimes not. Just my OCD,
+sorry...
+
+> +/**
+> + * @brief MQ_DOORBELL - MQ Doorbell Register
+> + */
+> +#define SLI4_MQ_DB_REG		0x0140	/* register offset */
+
+Are the other registers defines also all offsets? Just wondering if
+the comment is pointing out that these values are special or not.
+
+Thanks,
+Daniel
