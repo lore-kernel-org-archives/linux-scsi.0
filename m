@@ -7,67 +7,66 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8969CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:14:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D531CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:15:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD19F21929
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:14:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7478F20663
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:15:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HG8N+ROI"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cFmQQmfl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410264AbfJXSOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 14:14:45 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:35971 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404839AbfJXSOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 14:14:44 -0400
-Received: by mail-wm1-f67.google.com with SMTP id c22so3532533wmd.1
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2019 11:14:41 -0700 (PDT)
+        id S2436810AbfJXSPg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 14:15:36 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:46964 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2408089AbfJXSPf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 14:15:35 -0400
+Received: by mail-wr1-f65.google.com with SMTP id n15so16349788wrw.13
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2019 11:15:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=6pv6yVJxjSqE+XGDw69AG9mgT/MsqGxKR3hOZjY1Ub0=;
-        b=HG8N+ROILLBfBx8GyXXl/sg3z+2bLorpdsjBgCKIgfLd/uz/CzoMvrXr2imC6ixz/r
-         LBPzjzYbKZPVIQG3WsAHBqxsDpIZdI6CkhBfdVdi/PUTHG6ACAboOQmYNVra7VQ7gcNd
-         EcH/2o2IYxAU8fR8nLEuMgoBkZp3RYC+DdEh0=
+        bh=J2ir4XLA19BNjmSyUtsG7BoFC3h+5yshsn0Pcu0yv9s=;
+        b=cFmQQmflpmhWqyGTh8Xwv4h3dqDANp/ERbzTV8iFVRmpZnjl2ZfcmBXbDFpSEKLcuj
+         7Kao2lLXFHNA/kztMlJghYNUCGzKUwW0AqH/BCf1aWkFxJOhSa/tRMwGjYS7ydpgm70R
+         23CAgIZgW7kH4aZR00iqNWeD9ICZ7uXD5IeWc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=6pv6yVJxjSqE+XGDw69AG9mgT/MsqGxKR3hOZjY1Ub0=;
-        b=BWofR9Xe4sn5Kke/bvkRpw4Rzi65aTRi5eoitHAHklabRGeFNnoYYLczjXxk8CzlTF
-         PKAEtFHFAJ706oLtUJ/gasHQ497m0oKb1DPQHTHE0XkJsmmj3PqgOgPwVLTOA9HFd29P
-         2qGMrfY10sawJ5yaPtZNqw3AX4koDULiO/n/IVScmupBR9V486zOQ9YtZF+E+BuzdErF
-         zc3SDCJ4XfGhMRcgrwZOQvpiaxNYZQY2+zXJaYcJUFvBbdRtV2KadU8vnwC6uPLW7JPW
-         SItkyuvUEO5SwkKs5LX0miEY8AA0W6OvDXrChG3/k3GRnP3ohUOaYdiQQ6/apWoMi3TK
-         VvMA==
-X-Gm-Message-State: APjAAAVajOUzHToSjshgXqWW7OpnfOuhelF4ioWddolV5PjoE682mLRi
-        EMj4SqLKHssPbzgJZZAT/EYKPw==
-X-Google-Smtp-Source: APXvYqye5zyY+tKlF6HHX3kxHOfX6xt/1KjD8QojNykF/+mKn2uYxR0H0ACnpSonbJdsqhZ/OQ/I/w==
-X-Received: by 2002:a05:600c:21d7:: with SMTP id x23mr6027389wmj.6.1571940881004;
-        Thu, 24 Oct 2019 11:14:41 -0700 (PDT)
+        bh=J2ir4XLA19BNjmSyUtsG7BoFC3h+5yshsn0Pcu0yv9s=;
+        b=EuO7K8372Tad2+YT2IWiiWsA+jYAxg10VI0EuUkDeB6FI9qbsue5c4S1f+QTnn2tMo
+         PAB6aFbMzxHk1ztbEC/1dSC7JziBDcC9DYDWn0FdpU3ngPY6bLHP+6mr7Jt/Dn0dIMbk
+         WMd6wluwY5CrofqaPXgfYbTxROc5VBYGNZRw3/6U3VR7XHLFsKjoJldQ2Zlk6yRs6Xnc
+         vnLzJsifjuIMb828Vh4dHm/29E8zR04cSSM60GYrR/KH7hyMv2JA7yJ8eHj82TSYEQsp
+         y0SOPfyzZat2noLx4ctnaMEPYOGUx0r1yPSiKB0gY0L5V+WLa9UysgsgmRPc/lDgjqCG
+         9MlA==
+X-Gm-Message-State: APjAAAUO8MvznLXKEVfFJtUL4xB1Bm5Kg2XRIDVmV4U4Iao5tCMv4l3X
+        8jTu53NDAka9KvfOPhKHbxTO/A==
+X-Google-Smtp-Source: APXvYqxbtmW8aM8LOaqQPAafbInsxvQYZGbhtuk5G4fyhXOLOuM665cIJOMPyoQgbh/yOLZBwxOwnw==
+X-Received: by 2002:adf:f54c:: with SMTP id j12mr4255462wrp.182.1571940933431;
+        Thu, 24 Oct 2019 11:15:33 -0700 (PDT)
 Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id h17sm4636995wme.6.2019.10.24.11.14.38
+        by smtp.gmail.com with ESMTPSA id d199sm3602260wmd.35.2019.10.24.11.15.31
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Oct 2019 11:14:40 -0700 (PDT)
-Subject: Re: [PATCH] scsi: lpfc: lpfc_attr.c: Fix Use plain integer as NULL
+        Thu, 24 Oct 2019 11:15:32 -0700 (PDT)
+Subject: Re: [PATCH] scsi: lpfc: lpfc_nvmet.c: Fix Use plain integer as NULL
  pointer
 To:     Saurav Girepunje <saurav.girepunje@gmail.com>,
         dick.kennedy@broadcom.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Cc:     saurav.girepunje@hotmail.com,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-References: <20191024025726.GA31421@saurav>
+Cc:     saurav.girepunje@hotmail.com
+References: <20191024030857.GA12097@saurav>
 From:   James Smart <james.smart@broadcom.com>
-Message-ID: <643cce28-6b64-0bfc-254a-52cc3efa0830@broadcom.com>
-Date:   Thu, 24 Oct 2019 11:14:37 -0700
+Message-ID: <c08db818-8c35-e4a0-2ff3-53820075d859@broadcom.com>
+Date:   Thu, 24 Oct 2019 11:15:30 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20191024025726.GA31421@saurav>
+In-Reply-To: <20191024030857.GA12097@saurav>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -76,29 +75,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/23/2019 7:57 PM, Saurav Girepunje wrote:
+
+
+On 10/23/2019 8:09 PM, Saurav Girepunje wrote:
 > Replace assignment of 0 to pointer with NULL assignment.
 >
 > Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
 > ---
->   drivers/scsi/lpfc/lpfc_attr.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/scsi/lpfc/lpfc_nvmet.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index ea62322ffe2b..f7df95963a63 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -1641,7 +1641,7 @@ lpfc_set_trunking(struct lpfc_hba *phba, char *buff_out)
->   {
->   	LPFC_MBOXQ_t *mbox = NULL;
->   	unsigned long val = 0;
-> -	char *pval = 0;
-> +	char *pval = NULL;
->   	int rc = 0;
+> diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+> index faa596f9e861..f6ebfe05224c 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvmet.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+> @@ -3364,7 +3364,7 @@ lpfc_nvmet_sol_fcp_issue_abort(struct lpfc_hba *phba,
+>   	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
+>   	abts_wqeq->hba_wqidx = ctxp->wqeq->hba_wqidx;
+>   	abts_wqeq->wqe_cmpl = lpfc_nvmet_sol_fcp_abort_cmp;
+> -	abts_wqeq->iocb_cmpl = 0;
+> +	abts_wqeq->iocb_cmpl = NULL;
+>   	abts_wqeq->iocb_flag |= LPFC_IO_NVME;
+>   	abts_wqeq->context2 = ctxp;
+>   	abts_wqeq->vport = phba->pport;
+> @@ -3499,7 +3499,7 @@ lpfc_nvmet_unsol_ls_issue_abort(struct lpfc_hba *phba,
 >   
->   	if (!strncmp("enable", buff_out,
+>   	spin_lock_irqsave(&phba->hbalock, flags);
+>   	abts_wqeq->wqe_cmpl = lpfc_nvmet_xmt_ls_abort_cmp;
+> -	abts_wqeq->iocb_cmpl = 0;
+> +	abts_wqeq->iocb_cmpl = NULL;
+>   	abts_wqeq->iocb_flag |=  LPFC_IO_NVME_LS;
+>   	rc = lpfc_sli4_issue_wqe(phba, ctxp->hdwq, abts_wqeq);
+>   	spin_unlock_irqrestore(&phba->hbalock, flags);
 
-thanks
+Thanks
 
 Reviewed-by: James Smart <james.smart@broadcom.com>
 
