@@ -2,68 +2,82 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D46FCA9EBC
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 07:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFB0CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7209521872
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 07:20:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571901640;
-	bh=r05zpQk+sGKJ+mNeJX+ppyOhDDxn3H2zrZFPWNX+S/0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=EaRF5J4NQFVaZkepZUM8CE/+HlMqCBJXfvV98cRHyuqBIAzL5EDsPWAIeDcTG2nGO
-	 9ABL129cGjMYQPDK3fTS84oGRzJJBQb8yyGuiu9nDYiH7DUnJUmRN0xSinKXhbaw83
-	 eymCCEYic8zTNuAiJnc7eBD3k49FO05hWqtBLcxE=
+	by mail.kernel.org (Postfix) with ESMTP id 8547920684
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:50:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406801AbfJXHUj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 03:20:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45582 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404514AbfJXHUj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 03:20:39 -0400
-Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CF5C420684;
-        Thu, 24 Oct 2019 07:20:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571901638;
-        bh=r05zpQk+sGKJ+mNeJX+ppyOhDDxn3H2zrZFPWNX+S/0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ViesRoFXjszl5pcUhVwBax8DbhS4gg+iLmh0cAKv3FVs94l0sMp1nYQYv+5wX/PW7
-         3nspD6qaQLjyvQZN2rXYLuoO3TK0fBYZ5ej3RfeICt41FAbHdpOUfLs/mkf3KhYMNP
-         8SL9za3N04Tsn+iKTMI8yXD7xoS5GAJX5YPNwAVg=
-Date:   Thu, 24 Oct 2019 16:20:31 +0900
-From:   Keith Busch <kbusch@kernel.org>
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/4] block: Enhance blk_revalidate_disk_zones()
-Message-ID: <20191024072031.GA29028@redsun51.ssa.fujisawa.hgst.com>
-References: <20191024065006.8684-1-damien.lemoal@wdc.com>
- <20191024065006.8684-2-damien.lemoal@wdc.com>
+        id S2438371AbfJXIuS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 04:50:18 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51128 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729514AbfJXIuS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 04:50:18 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id E726EB087;
+        Thu, 24 Oct 2019 08:50:15 +0000 (UTC)
+Date:   Thu, 24 Oct 2019 10:50:14 +0200
+From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 2/8] cdrom: factor out common open_for_* code
+Message-ID: <20191024085014.GF938@kitsune.suse.cz>
+References: <cover.1571834862.git.msuchanek@suse.de>
+ <da032629db4a770a5f98ff400b91b44873cbdf46.1571834862.git.msuchanek@suse.de>
+ <20191024021958.GA11485@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191024065006.8684-2-damien.lemoal@wdc.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+In-Reply-To: <20191024021958.GA11485@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 03:50:03PM +0900, Damien Le Moal wrote:
-> -	/* Do a report zone to get max_lba and the same field */
-> -	ret = sd_zbc_do_report_zones(sdkp, buf, bufsize, 0, false);
-> +	/* Do a report zone to get max_lba and the size of the first zone */
-> +	ret = sd_zbc_do_report_zones(sdkp, buf, SD_BUF_SIZE, 0, false);
+On Wed, Oct 23, 2019 at 07:19:58PM -0700, Christoph Hellwig wrote:
+> >  static
+> > -int open_for_data(struct cdrom_device_info *cdi)
+> > +int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
+> 
+> Please fix the coding style.  static never should be on a line of its
+> own..
 
-This is no longer reading all the zones here, so you could set the
-'partial' field to true. And then since this was the only caller that
-had set partial to false, you can also remove that parameter.
+That's fine.
+
+> 
+> >  			} else {
+> >  				cd_dbg(CD_OPEN, "bummer. this drive can't close the tray.\n");
+> > -				ret=-ENOMEDIUM;
+> > -				goto clean_up_and_return;
+> > +				return -ENOMEDIUM;
+> 
+> Can you revert the polarity of the if opening the block before and
+> return early for the -ENOMEDIUM case to save on leven of indentation?
+
+Then I will get complaints I do unrelated changes and it's hard to
+review. The code gets removed later anyway.
+
+Thanks
+
+Michal
