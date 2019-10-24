@@ -2,71 +2,70 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44913CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 06:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7C5CA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 06:50:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 169182166E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 06:37:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAFFE2166E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 06:50:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PRRMrHis"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="KGayhq4O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437751AbfJXGhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 02:37:48 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:43695 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436471AbfJXGhs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 02:37:48 -0400
-Received: by mail-pg1-f195.google.com with SMTP id l24so8679257pgh.10
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Oct 2019 23:37:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Wut7wa2kH3JJjswqkyvKznwH6YzcTwQ9IpmU5ayP8iE=;
-        b=PRRMrHiszXW+s6oODlkes1mBacnZgY7eLV4QECeyGOxYNW4or9dlld9I90ldFzjvvR
-         eVF+9GwoJ0uGm7SAswpf4gjmUuN7LYxi1GmLxZPYfmKgqn+kz46EBaU6wz7iqWG5WsE/
-         brgnS/QyTZaW7VLQM38d+rsEmsSNz+KOuDH6VG31J1ICRiiLmIfbpfcfJdKo9+dXDjl9
-         +JQ7yXnyyVWsSZLGii8Z7JvYZyxXTyzD5fufD4pu7Pcn4CgwmXRKQZ9VH1jxWv5I+2FZ
-         /okVrys6fcfjDX7xL7XokNvE6PiKJJtRF4hQCDEA38lNR9/goq+Y8hJ+2u+JitScTK2Y
-         bLsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Wut7wa2kH3JJjswqkyvKznwH6YzcTwQ9IpmU5ayP8iE=;
-        b=LBLz+EffKBiD1qSJMKd7SJTI9rlYKWTSvMXJ0VbtTO/ur4csGHdKW6nHZhsF2H6ce3
-         NJ6iX8Fr/L52YxGBwj1xoKcTw1/7lxoJN7KpIwB2BGchQGjQ71XwEMFHT8zbuS0yBlEf
-         7EDDMx/3t/KpANjxbMt1B35beXrTw+WMR2xiG4VNq8YhNFF9IF9tzdS4RvPAtn69jpNe
-         1BEiJ3K66wz8UdzY1pkJvfikc9zFGWVg6zn9N3q1kOFpiQo+uvl7ZdhABQ7iQI9ZQPa6
-         uMQBrvudqZ0bVT0m/KJm+NMBPRxT/BZ7R4tkUGRRBoK2SyY35GaBJye/DGx7lOMWdEfu
-         ZXWA==
-X-Gm-Message-State: APjAAAVgh8PHCJRB460PUvuSAXBMFJdWuLCq+EEffkQDFTUB6Z/Bf27p
-        KKPHgsXpR0GhDdaiz+Htcm2TtRLhe6U=
-X-Google-Smtp-Source: APXvYqzh2bkE/gQ+QK8XrMvAPAcfy2S8qdtTVLo+G2eCJvGK6/AApRaZspU2h3Leu2inJvnolEwpag==
-X-Received: by 2002:a17:90a:ff07:: with SMTP id ce7mr5222978pjb.12.1571899067523;
-        Wed, 23 Oct 2019 23:37:47 -0700 (PDT)
-Received: from bobo.local0.net ([210.185.75.56])
-        by smtp.gmail.com with ESMTPSA id z23sm24164859pgu.16.2019.10.23.23.37.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Oct 2019 23:37:46 -0700 (PDT)
-From:   Nicholas Piggin <npiggin@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     Nicholas Piggin <npiggin@gmail.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        zengxhsh@cn.ibm.com
-Subject: [PATCH] scsi: qla2xxx: stop timer in shutdown path
-Date:   Thu, 24 Oct 2019 16:38:04 +1000
-Message-Id: <20191024063804.14538-1-npiggin@gmail.com>
-X-Mailer: git-send-email 2.23.0
+        id S2437801AbfJXGuJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 02:50:09 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:35887 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437797AbfJXGuJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 02:50:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1571899809; x=1603435809;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=GeEIYszQu7uSHw7692Bp5i/0xZP21LB0jX69It9X2dE=;
+  b=KGayhq4OKwiA39i8/IBHMNjKSiLj/d9zwsXm1TN7dtaWMxsIzR77Mk3U
+   Lvk7lmWzRAny0mc5vs0LJi5JYXaOqEnZpnd/wRYaZqvH6r0swSDlWO47O
+   g1nsRgiyLOnVOXigEuaIZ70pr70k+3pY7k/nKZY4zVU6OD1S1L6cC752h
+   ZGuXMlgUOvqaeRE+wJRN3oFrnhrddOSj7BevyHVatVpHB9ajSVI8xwD1w
+   YmPjv/bcnz9MOIR8LPRtR4kb68+d44A/KLDN/qNqcdbOqsEVr6TRTLIWk
+   S8DytaZNDADXH/MQskWydRIUJU75Cja7VuKhxVwRxGnUSkRBnkRePUuSs
+   w==;
+IronPort-SDR: VaYatDSQDyJfY0lEBNS/0ZhgjvbfO8JhfOtk4t6pGmOLL5VTPnHBlm4WWkCnw1afnc2ycgij2T
+ mh0055fxiXXTZLrUZUtnDSjDgtnwS7sBVrALomuQ2REAtJAzH82BeweXu8UsbvpBjaKBx8BH2H
+ tY9bfDtFlMEb9fOeGXxsh88+nfZ6qxTvJXo34+BYG8o8XgVS7Lg0y94vmQG6GdxHF0YTlkBLMi
+ fGshAyFiEkVJ8IwWRzXCYHzHd2ZBcaiIU63FNeCeyHCIRhUHPJTh7GrvSSwXGcXMt3x2pvgscl
+ CSU=
+X-IronPort-AV: E=Sophos;i="5.68,223,1569254400"; 
+   d="scan'208";a="125647239"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Oct 2019 14:50:09 +0800
+IronPort-SDR: PBZkC5q0A60h+wyGX/38vkuH9xHBVgwFnac+guoBML0Siu563dpDrtIA600DwO1gMf23uv3Xli
+ PmOvRpWZJK+G/H5+tyt2vSqMX8C9PKbhdfOFfd46pN4b63Zar/qwpPAxNwYXODcp9+86UTKyBl
+ RkwgA3/eR3yC3DfxOfD83tjxWeCAM9f41nf5Tnr4sNElq8qOy42KdsLjAOqqE+j/Yp0vqAN79Q
+ NHJHKJGEXf1ZyowOnUKsJFTg/Ba0Y3vIAHcWWDLUIvtyk4PcRs0U8Ko/3T3PnryabGzyO0iNqY
+ KaiigEI1B9OyYPer8MrImkc+
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Oct 2019 23:45:42 -0700
+IronPort-SDR: z+VWTacWY9yax5Jn5lpu1A8gHjm/99wY+Sk0dn57pCL3QsHFOlw07IHg2JZUABdXbKCTLR5QwW
+ RoMIF3BsW1KSaICNuicq9HByueB0FWp+SbzoDcI8lJxXvmN8b982rEOrdXHkqIQwXICd3sl/y6
+ CUwJIhD8OjEoSFA1q/p/HmKTc2LL/UJEPOAWY32lo5ojX0DIZH6DkW4L4CX5tS0QNW1Bd8h51o
+ fQBoC8POs7d/5QyKw5GINoxaVUcdGMQxe1YSBSEJdKeFZZi9bag604ZwRhm4wuf01AUMRa9i5Y
+ qZk=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 23 Oct 2019 23:50:08 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 0/4] zoned block device report zones enhancements
+Date:   Thu, 24 Oct 2019 15:50:02 +0900
+Message-Id: <20191024065006.8684-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -74,47 +73,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In shutdown/reboot paths, the timer is not stopped:
+This series of patches improve the handling and execution of report
+zones operations for zoned block devices.
 
-  qla2x00_shutdown
-  pci_device_shutdown
-  device_shutdown
-  kernel_restart_prepare
-  kernel_restart
-  sys_reboot
+The first patch enhances device revalidation by moving zone information
+checks from the low level driver into the block layer. The second patch
+remove some unnecessary code. The last two patches introduce generic
+allocation of report zones command buffer, further enhancing zoned disk
+revalidation.
 
-This causes lockups (on powerpc) when firmware config space access
-calls are interrupted by smp_send_stop later in reboot.
+As always, comments are welcome.
 
-Fixes: e30d1756480dc ("[SCSI] qla2xxx: Addition of shutdown callback handler.")
-Signed-off-by: Nicholas Piggin <npiggin@gmail.com>
----
-The Fixes: tag is not exactly fixing the commit, presumably the timer
-was still left running before then too. However it gives a handle
-for backports: if you care about cleaning up resources on shutdown,
-then you need that patch, so you'll notice this one too.
+Damien Le Moal (4):
+  block: Enhance blk_revalidate_disk_zones()
+  block: Simplify report zones execution
+  block: Introduce report zones queue limits
+  block: Generically handle report zones buffer
 
-Thanks,
-Nick
+ block/blk-settings.c           |   3 +
+ block/blk-zoned.c              | 178 +++++++++++++++++----------
+ drivers/block/null_blk.h       |   6 +-
+ drivers/block/null_blk_zoned.c |   3 +-
+ drivers/md/dm.c                |   9 +-
+ drivers/scsi/sd.h              |   3 +-
+ drivers/scsi/sd_zbc.c          | 212 +++++++++------------------------
+ include/linux/blkdev.h         |  12 +-
+ 8 files changed, 193 insertions(+), 233 deletions(-)
 
- drivers/scsi/qla2xxx/qla_os.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3568031c6504..28a40763fabe 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3531,6 +3531,10 @@ qla2x00_shutdown(struct pci_dev *pdev)
- 		qla2x00_try_to_stop_firmware(vha);
- 	}
- 
-+	/* Disable timer */
-+	if (vha->timer_active)
-+		qla2x00_stop_timer(vha);
-+
- 	/* Turn adapter off line */
- 	vha->flags.online = 0;
- 
 -- 
-2.23.0
+2.21.0
 
