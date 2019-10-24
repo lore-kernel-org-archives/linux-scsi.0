@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA63CA9EBB
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07496CA9EBC
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:53:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2184621872
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9FB92166E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 08:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438414AbfJXIvk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 04:51:40 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52510 "EHLO mx1.suse.de"
+        id S1731924AbfJXIxc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 04:53:32 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53402 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730621AbfJXIvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 04:51:40 -0400
+        id S1730294AbfJXIxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 04:53:31 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 571B6B6A6;
-        Thu, 24 Oct 2019 08:51:38 +0000 (UTC)
-Date:   Thu, 24 Oct 2019 10:51:36 +0200
+        by mx1.suse.de (Postfix) with ESMTP id B3B83B642;
+        Thu, 24 Oct 2019 08:53:29 +0000 (UTC)
+Date:   Thu, 24 Oct 2019 10:53:27 +0200
 From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
@@ -40,44 +40,41 @@ Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
         Bart Van Assche <bvanassche@acm.org>,
         Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 8/8] scsi: sr: wait for the medium to become ready
-Message-ID: <20191024085136.GG938@kitsune.suse.cz>
+Subject: Re: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation
+ bug
+Message-ID: <20191024085327.GH938@kitsune.suse.cz>
 References: <cover.1571834862.git.msuchanek@suse.de>
- <94dc98dc67b1d183d04c338c7978efa0556db6ac.1571834862.git.msuchanek@suse.de>
- <20191024022406.GD11485@infradead.org>
+ <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
+ <20191024022307.GC11485@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191024022406.GD11485@infradead.org>
+In-Reply-To: <20191024022307.GC11485@infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 23, 2019 at 07:24:06PM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 23, 2019 at 02:52:47PM +0200, Michal Suchanek wrote:
-> > +static int sr_block_open_finish(struct block_device *bdev, fmode_t mode,
-> > +				int ret)
-> > +{
-> > +	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
-> > +
-> > +	/* wait for drive to get ready */
-> > +	if ((ret == -ENOMEDIUM) && !(mode & FMODE_NDELAY)) {
-> > +		struct scsi_device *sdev = cd->device;
-> > +		/*
-> > +		 * Cannot use sr_block_ioctl because it locks sr_mutex blocking
-> > +		 * out any processes trying to access the drive
-> > +		 */
-> > +		scsi_autopm_get_device(sdev);
-> > +		cdrom_ioctl(&cd->cdi, bdev, mode, CDROM_AUTOCLOSE, 0);
-> > +		ret = __sr_block_open(bdev, mode);
-> > +		scsi_autopm_put_device(sdev);
+On Wed, Oct 23, 2019 at 07:23:07PM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 23, 2019 at 02:52:46PM +0200, Michal Suchanek wrote:
+> > 
+> > The drive claims to have a tray and claims to be able to close it.
+> > However, the UI has no notion of a tray - when medium is ejected it is
+> > dropped in the floor and the user must select a medium again before the
+> > drive can be re-loaded.  On the kernel side the tray_move call to close
+> > the tray succeeds but the drive state does not change as a result of the
+> > call.
+> > 
+> > The drive does not in fact emulate the tray state. There are two ways to
+> > get the medium state. One is the SCSI status:
 > 
-> Ioctls should never be used from kernel space.  We have a few leftovers,
-> but we need to get rid of that and not add more.
+> Given that this is a buggy software emulation we should not add more
+> than 100 lines of kernel code to work around it.  Ask VMware to fix
+> their mess instead.
 
-What is the alternative?
+And never hear back from them. Not to mention the installed base of
+already buggy servers.
 
 Thanks
 
