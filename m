@@ -2,92 +2,106 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E310CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 09:54:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B99ACA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 10:11:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EAE62166E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 09:54:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09D1421872
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 10:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391609AbfJXJyI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 05:54:08 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2052 "EHLO huawei.com"
+        id S2405386AbfJXKLR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 06:11:17 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56916 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725775AbfJXJyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 05:54:08 -0400
-Received: from lhreml704-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id CB95F723A76FB3298309;
-        Thu, 24 Oct 2019 10:54:05 +0100 (IST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml704-cah.china.huawei.com (10.201.108.45) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 24 Oct 2019 10:54:05 +0100
-Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Thu, 24 Oct
- 2019 10:54:05 +0100
-Subject: Re: [PATCH 05/18] scsi: hisi_sas: Add timestamp for a debugfs dump
-To:     kbuild test robot <lkp@intel.com>
-CC:     <kbuild-all@lists.01.org>, <jejb@linux.vnet.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <linux-kernel@vger.kernel.org>,
-        Luo Jiaxing <luojiaxing@huawei.com>
-References: <1571674935-108326-6-git-send-email-john.garry@huawei.com>
- <201910241732.D736Hdxm%lkp@intel.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <8ffe7e01-d955-8dd5-bbc5-d66c31716667@huawei.com>
-Date:   Thu, 24 Oct 2019 10:54:03 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2390611AbfJXKLQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 06:11:16 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 89A03B68C;
+        Thu, 24 Oct 2019 10:11:14 +0000 (UTC)
+Date:   Thu, 24 Oct 2019 12:11:12 +0200
+From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 7/8] scsi: sr: workaround VMware ESXi cdrom emulation
+ bug
+Message-ID: <20191024101112.GK938@kitsune.suse.cz>
+References: <cover.1571834862.git.msuchanek@suse.de>
+ <abf81ec4f8b6139fffc609df519856ff8dc01d0d.1571834862.git.msuchanek@suse.de>
+ <08f1e291-0196-2402-1947-c0cdaaf534da@suse.de>
+ <20191023162313.GE938@kitsune.suse.cz>
+ <2bc50e71-6129-a482-00bd-0425b486ce07@suse.de>
+ <20191024085631.GJ938@kitsune.suse.cz>
+ <15c972ea-5b3a-487f-7be5-a62d780896da@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <201910241732.D736Hdxm%lkp@intel.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.45]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <15c972ea-5b3a-487f-7be5-a62d780896da@suse.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/10/2019 10:20, kbuild test robot wrote:
-> Hi John,
+On Thu, Oct 24, 2019 at 11:41:38AM +0200, Hannes Reinecke wrote:
+> On 10/24/19 10:56 AM, Michal Suchánek wrote:
+> > On Thu, Oct 24, 2019 at 07:46:57AM +0200, Hannes Reinecke wrote:
+> >> On 10/23/19 6:23 PM, Michal Suchánek wrote:
+> >>> On Wed, Oct 23, 2019 at 04:13:15PM +0200, Hannes Reinecke wrote:
+> [ .. ]>>>> This looks something which should be handled via a blacklist
+> flag, not
+> >>>> some inline hack which everyone forgets about it...
+> >>>
+> >>> AFAIK we used to have a blacklist but don't have anymore. So either it
+> >>> has to be resurrected for this one flag or an inline hack should be good
+> >>> enough.
+> >>>
+> >> But we do have one for generic scsi; cf drivers/scsi/scsi_devinfo.c.
+> >> And this pretty much falls into the category of SCSI quirks, so I'd
+> >> prefer have it hooked into that.
+> > 
+> > But generic scsi does not know about cdrom trays, does it?
+> > 
+> No, just about 'flags'. What you _do_ with those flags is up to you.
+> Or, rather, the driver.
+> Just define a 'tray detection broken' flag, and evaluate it in sr.c.
 > 
-> Thank you for the patch! Yet something to improve:
-> 
-> [auto build test ERROR on mkp-scsi/for-next]
-> [cannot apply to v5.4-rc4 next-20191023]
-> [if your patch is applied to the wrong git tree, please drop us a note to help
-> improve the system. BTW, we also suggest to use '--base' option to specify the
-> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
-> 
-> url:    https://github.com/0day-ci/linux/commits/John-Garry/hisi_sas-Misc-patches-mostly-debugfs/20191024-130727
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-> config: i386-allmodconfig (attached as .config)
-> compiler: gcc-7 (Debian 7.4.0-14) 7.4.0
-> reproduce:
->          # save the attached .config to linux build tree
->          make ARCH=i386
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
-> 
-> All errors (new ones prefixed by >>):
-> 
->>> ERROR: "__udivdi3" [drivers/scsi/hisi_sas/hisi_sas_main.ko] undefined!
-> 
+> Where is the problem with that?
 
-I'll send v2...
+And how do you set the flag?
 
-john
+The blacklist lists exact manufacturer and model while this rule only
+depends on model because manufacturer is bogus. Also the blacklist
+itself is deprecated:
 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
+/*
+ * scsi_static_device_list: deprecated list of devices that require
+ * settings that differ from the default, includes black-listed (broken)
+ * devices. The entries here are added to the tail of scsi_dev_info_list
+ * via scsi_dev_info_list_init.
+ *
+ * Do not add to this list, use the command line or proc interface to add
+ * to the scsi_dev_info_list. This table will eventually go away.
+ */
 
+Thanks
+
+Michal
