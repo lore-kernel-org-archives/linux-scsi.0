@@ -2,110 +2,105 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D92CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 17:06:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8969CA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:14:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BAFDD20650
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 17:06:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD19F21929
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 18:14:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RMhe8mQH";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OH8f4sto"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="HG8N+ROI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410208AbfJXRF7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 13:05:59 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59118 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2410205AbfJXRF6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 13:05:58 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2275E616CD; Thu, 24 Oct 2019 17:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571936758;
-        bh=LzE///rHExRVgk+RnJGks/bQmYQI1qFeZEg28IUoTfM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=RMhe8mQHCuslB7SFBa1+dEpu/52Qio1InZv11y7cBchOAgiXT2DobhiD2Voj2pL2Z
-         qOj3UoTyXtuNtZEC9OLx+NI/cuVT0fkN55/tuZAYd7WIrMp6Y3TDIbN4M/Ae9Y/j/K
-         5BuwJqqTM4N6Q0LK/bNlHFYiR66SY4IZzZjlw9uI=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 87486616C0;
-        Thu, 24 Oct 2019 17:05:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571936757;
-        bh=LzE///rHExRVgk+RnJGks/bQmYQI1qFeZEg28IUoTfM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=OH8f4stoZ3R3MXq2Xre+aJJvCYo1YKGYZo5DuZX4SwTojuWo8MLnYkoF/6A2Bq4pU
-         aYG6Lz4nbAMMx0cvDuABhagd/YzEpssltC+t46FGl7dW9yUr6rk4XTveGEm7Vv11Ec
-         uHGhkpnRmxnj9TJWPbkN0lqkfXqmOFbSk3/mvJrY=
+        id S2410264AbfJXSOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 14:14:45 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:35971 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404839AbfJXSOo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 14:14:44 -0400
+Received: by mail-wm1-f67.google.com with SMTP id c22so3532533wmd.1
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2019 11:14:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=6pv6yVJxjSqE+XGDw69AG9mgT/MsqGxKR3hOZjY1Ub0=;
+        b=HG8N+ROILLBfBx8GyXXl/sg3z+2bLorpdsjBgCKIgfLd/uz/CzoMvrXr2imC6ixz/r
+         LBPzjzYbKZPVIQG3WsAHBqxsDpIZdI6CkhBfdVdi/PUTHG6ACAboOQmYNVra7VQ7gcNd
+         EcH/2o2IYxAU8fR8nLEuMgoBkZp3RYC+DdEh0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=6pv6yVJxjSqE+XGDw69AG9mgT/MsqGxKR3hOZjY1Ub0=;
+        b=BWofR9Xe4sn5Kke/bvkRpw4Rzi65aTRi5eoitHAHklabRGeFNnoYYLczjXxk8CzlTF
+         PKAEtFHFAJ706oLtUJ/gasHQ497m0oKb1DPQHTHE0XkJsmmj3PqgOgPwVLTOA9HFd29P
+         2qGMrfY10sawJ5yaPtZNqw3AX4koDULiO/n/IVScmupBR9V486zOQ9YtZF+E+BuzdErF
+         zc3SDCJ4XfGhMRcgrwZOQvpiaxNYZQY2+zXJaYcJUFvBbdRtV2KadU8vnwC6uPLW7JPW
+         SItkyuvUEO5SwkKs5LX0miEY8AA0W6OvDXrChG3/k3GRnP3ohUOaYdiQQ6/apWoMi3TK
+         VvMA==
+X-Gm-Message-State: APjAAAVajOUzHToSjshgXqWW7OpnfOuhelF4ioWddolV5PjoE682mLRi
+        EMj4SqLKHssPbzgJZZAT/EYKPw==
+X-Google-Smtp-Source: APXvYqye5zyY+tKlF6HHX3kxHOfX6xt/1KjD8QojNykF/+mKn2uYxR0H0ACnpSonbJdsqhZ/OQ/I/w==
+X-Received: by 2002:a05:600c:21d7:: with SMTP id x23mr6027389wmj.6.1571940881004;
+        Thu, 24 Oct 2019 11:14:41 -0700 (PDT)
+Received: from [10.69.45.46] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id h17sm4636995wme.6.2019.10.24.11.14.38
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 24 Oct 2019 11:14:40 -0700 (PDT)
+Subject: Re: [PATCH] scsi: lpfc: lpfc_attr.c: Fix Use plain integer as NULL
+ pointer
+To:     Saurav Girepunje <saurav.girepunje@gmail.com>,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     saurav.girepunje@hotmail.com,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+References: <20191024025726.GA31421@saurav>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <643cce28-6b64-0bfc-254a-52cc3efa0830@broadcom.com>
+Date:   Thu, 24 Oct 2019 11:14:37 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <20191024025726.GA31421@saurav>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 24 Oct 2019 10:05:57 -0700
-From:   asutoshd@codeaurora.org
-To:     Steffen Maier <maier@linux.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
-Subject: Re: Query: SCSI Device node creation when UFS is loaded as a module
-In-Reply-To: <d2804026-7908-4601-3216-e60d51131984@linux.ibm.com>
-References: <468eb805fa69da76c88a0a37aa209c7f@codeaurora.org>
- <d2804026-7908-4601-3216-e60d51131984@linux.ibm.com>
-Message-ID: <e1d00a73efd3b73adae441ff5e00c4b4@codeaurora.org>
-X-Sender: asutoshd@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-24 02:50, Steffen Maier wrote:
-> On 10/24/19 1:51 AM, asutoshd@codeaurora.org wrote:
->> Hi
->> I'm loading the ufs-qcom driver as a module but am not seeing the 
->> /dev/sda* device nodes.
->> Looks like it's not being created.
->> 
->> I find the sda nodes in other paths being enumerated though:
->> 
->> / # find /sys -name sda
->> /sys/kernel/debug/block/sda
->> /sys/class/block/sda
->> /sys/devices/platform/<...>/<xxx>.ufshc/host0/target0:0:0/0:0:0:0/block/sda
->> /sys/block/sda
->> 
->> All Luns are detected and I see sda is detected and prints for all the 
->> Luns as below -:
->> sd 0:0:0:0: [sda] .... ....-byte logical blocks:
->> 
->> ... so on ...
->> 
->> But if I link it statically instead of a module, it works fine. All 
->> device nodes are created.
->> 
->> I'm trying to figure out where/how in SCSI does it create these device 
->> nodes - /dev/sd<a/b/c/d> ?
-> 
-> That's from (systemd-)udevd user space based on uevents from the 
-> kernel.
-> 
->> I've looked into sd.c but I couldn't figure out the exact place yet.
-> 
-> Yeah, based on the SCSI device probe and add lun, the high level
-> driver sd would emit udev events for block devices.
+On 10/23/2019 7:57 PM, Saurav Girepunje wrote:
+> Replace assignment of 0 to pointer with NULL assignment.
+>
+> Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_attr.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index ea62322ffe2b..f7df95963a63 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -1641,7 +1641,7 @@ lpfc_set_trunking(struct lpfc_hba *phba, char *buff_out)
+>   {
+>   	LPFC_MBOXQ_t *mbox = NULL;
+>   	unsigned long val = 0;
+> -	char *pval = 0;
+> +	char *pval = NULL;
+>   	int rc = 0;
+>   
+>   	if (!strncmp("enable", buff_out,
 
-Thanks Steffen and Avri.
+thanks
 
-I understood that sd.c creates the devices based on scsi_device and 
-establishes a relation between scsi_device (sdp) and scsi_disk (sdkp).
-But I couldn't figure out why it creates the device fine when the 
-ufs-qcom is linked statically, but is unable to create the devices when 
-inserted as a module.
+Reviewed-by: James Smart <james.smart@broadcom.com>
 
-Does it follow a different method to create the device nodes when 
-statically linked and needs (systemd-)udevd to handle the events during 
-dynamic insertion?
+-- james
 
-Thanks
-asd
