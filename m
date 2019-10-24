@@ -2,211 +2,102 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DECD9CA9EAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A0ECA9EAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC32720650
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:22:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D869120679
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 16:57:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439796AbfJXQWI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 12:22:08 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40756 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1733261AbfJXQWI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 12:22:08 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id A720FB4E7;
-        Thu, 24 Oct 2019 16:22:05 +0000 (UTC)
-Date:   Thu, 24 Oct 2019 18:22:02 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: Re: [PATCH 01/32] elx: libefc_sli: SLI-4 register offsets and field
- definitions
-Message-ID: <20191024162202.z3g5g4cwjbzotd5a@beryllium.lan>
-References: <20191023215557.12581-1-jsmart2021@gmail.com>
- <20191023215557.12581-2-jsmart2021@gmail.com>
+        id S2410006AbfJXQ5p convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 12:57:45 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:34153 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2410003AbfJXQ5o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Oct 2019 12:57:44 -0400
+Received: by mail-pl1-f195.google.com with SMTP id k7so12167397pll.1
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Oct 2019 09:57:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UCChcMMO2mnLYCYMjv4y0CkUxDSZX2QqeO6cOTn0LcA=;
+        b=XWwwt8EN1wmnYEzT5BndzsWTD84jckttvhDVCa4bN7FitNlZ2FZ63MRl0noowRw0eZ
+         3AAojg+NRQzrFk2TkQjnFB/5PG/PLfd82BonZrJ7XrLwW4VJGQ34JxhcPR/mP0r11nh8
+         O69FXa51QpI5QwuE0xHb3yF+VaF2nIaYMSPUEuShCgooFT+gE9L8kwCdnvT65nzujnNy
+         AvdhhwSr1LK6fXaolUe4gz5IRCUfMN1EbbsnjlrU0uUy/J5u0bu84OHjjSAupT6RK/Lx
+         lDwv1iXxdH3rxCZFaOLJE+0EzNfQ/CHVTslpJS0Yi+XvnBO4EW+tDs28/z4rf950zvzS
+         bauQ==
+X-Gm-Message-State: APjAAAUubRTHHKhcOFbL1orCEcmFaqrLvMqahNniLDQ0ePjeAJRCAndH
+        Z6zdxNHNTIllh9/Sp7eHc/w=
+X-Google-Smtp-Source: APXvYqzt/ifU14lSRs3Sq+z87x1S3loWuoT9krPFltXKyaHeIc9fObnTKN0wDC79ySaibAwxCHUppA==
+X-Received: by 2002:a17:902:b70f:: with SMTP id d15mr13244435pls.210.1571936263809;
+        Thu, 24 Oct 2019 09:57:43 -0700 (PDT)
+Received: from ?IPv6:2620:15c:2c1:200:fb9c:664d:d2ad:c9b5? ([2620:15c:2c1:200:fb9c:664d:d2ad:c9b5])
+        by smtp.gmail.com with ESMTPSA id k32sm3192285pje.10.2019.10.24.09.57.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Oct 2019 09:57:42 -0700 (PDT)
+Subject: Re: [PATCH] scsi:sd: define variable dif as unsigned int instead of
+ bool
+To:     chenxiang <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linuxarm@huawei.com, linux-scsi@vger.kernel.org,
+        john.garry@huawei.com
+References: <1571725628-132736-1-git-send-email-chenxiang66@hisilicon.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <93832371-e007-bd88-bb0a-5e3ebe628b14@acm.org>
+Date:   Thu, 24 Oct 2019 09:57:41 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191023215557.12581-2-jsmart2021@gmail.com>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <1571725628-132736-1-git-send-email-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8BIT
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 10/21/19 11:27 PM, chenxiang wrote:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+> 
+> Variable dif in function sd_setup_read_write_cmnd() is the return value
+> of function scsi_host_dif_capable() which returns dif capability of disks.
+> If define it as bool, even for the disks which support DIF3, the function
+> still return dif=1, which causes IO error. So define variable dif as
+> unsigned int instead of bool.
+> 
+> Fixes: e249e42d277e ("scsi: sd: Clean up sd_setup_read_write_cmnd()")
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> ---
+>  drivers/scsi/sd.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 32d9517..a763b70 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1166,11 +1166,12 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>  	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+>  	sector_t threshold;
+>  	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+> -	bool dif, dix;
+>  	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+>  	bool write = rq_data_dir(rq) == WRITE;
+>  	unsigned char protect, fua;
+>  	blk_status_t ret;
+> +	unsigned int dif;
+> +	bool dix;
+>  
+>  	ret = scsi_init_io(cmd);
+>  	if (ret != BLK_STS_OK)
+> 
 
-On Wed, Oct 23, 2019 at 02:55:26PM -0700, James Smart wrote:
-> +/*************************************************************************
-> + * Common SLI-4 register offsets and field definitions
-> + */
-> +
-> +/* SLI_INTF - SLI Interface Definition Register */
-> +#define SLI4_INTF_REG		0x0058
-> +enum {
-> +	SLI4_INTF_REV_SHIFT = 4,
-> +	SLI4_INTF_REV_MASK = 0x0F << SLI4_INTF_REV_SHIFT,
-> +
-> +	SLI4_INTF_REV_S3 = 3 << SLI4_INTF_REV_SHIFT,
-> +	SLI4_INTF_REV_S4 = 4 << SLI4_INTF_REV_SHIFT,
-> +
-> +	SLI4_INTF_FAMILY_SHIFT = 8,
-> +	SLI4_INTF_FAMILY_MASK  = 0x0F << SLI4_INTF_FAMILY_SHIFT,
-> +
-> +	SLI4_FAMILY_CHECK_ASIC_TYPE = 0xf << SLI4_INTF_FAMILY_SHIFT,
-> +
-> +	SLI4_INTF_IF_TYPE_SHIFT = 12,
-> +	SLI4_INTF_IF_TYPE_MASK = 0x0F << SLI4_INTF_IF_TYPE_SHIFT,
-> +
-> +	SLI4_INTF_IF_TYPE_2 = 2 << SLI4_INTF_IF_TYPE_SHIFT,
-> +	SLI4_INTF_IF_TYPE_6 = 6 << SLI4_INTF_IF_TYPE_SHIFT,
-> +
-> +	SLI4_INTF_VALID_SHIFT = 29,
-> +	SLI4_INTF_VALID_MASK = 0x0F << SLI4_INTF_VALID_SHIFT,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Should this a 32 bit value? This overflows to 34 bits.
-
-> +
-> +	SLI4_INTF_VALID_VALUE = 6 << SLI4_INTF_VALID_SHIFT,
-> +};
-
-Just style question: what is the benefit using anonymous enums?  The
-only reason I came up was that gdb could show the name of the
-value. Though a quick test didn't work if the value is passed into a
-function. Maybe I did something wrong.
-
-I am asking because register number is a define and then the shift and
-mask are enums.
-
-> +
-> +/* ASIC_ID - SLI ASIC Type and Revision Register */
-> +#define SLI4_ASIC_ID_REG	0x009c
-> +enum {
-> +	SLI4_ASIC_GEN_SHIFT = 8,
-> +	SLI4_ASIC_GEN_MASK = 0xFF << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_5 = 0x0b << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_6 = 0x0c << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_7 = 0x0d << SLI4_ASIC_GEN_SHIFT,
-> +};
-> +
-> +enum {
-> +	SLI4_ASIC_REV_A0 = 0x00,
-> +	SLI4_ASIC_REV_A1 = 0x01,
-> +	SLI4_ASIC_REV_A2 = 0x02,
-> +	SLI4_ASIC_REV_A3 = 0x03,
-> +	SLI4_ASIC_REV_B0 = 0x10,
-> +	SLI4_ASIC_REV_B1 = 0x11,
-> +	SLI4_ASIC_REV_B2 = 0x12,
-> +	SLI4_ASIC_REV_C0 = 0x20,
-> +	SLI4_ASIC_REV_C1 = 0x21,
-> +	SLI4_ASIC_REV_C2 = 0x22,
-> +	SLI4_ASIC_REV_D0 = 0x30,
-> +};
-> +
-> +/* BMBX - Bootstrap Mailbox Register */
-> +#define SLI4_BMBX_REG		0x0160
-> +#define SLI4_BMBX_MASK_HI	0x3
-> +#define SLI4_BMBX_MASK_LO	0xf
-> +#define SLI4_BMBX_RDY		(1 << 0)
-> +#define SLI4_BMBX_HI		(1 << 1)
-> +#define SLI4_BMBX_WRITE_HI(r)	((upper_32_bits(r) & ~SLI4_BMBX_MASK_HI) | \
-> +					SLI4_BMBX_HI)
-> +#define SLI4_BMBX_WRITE_LO(r)	(((upper_32_bits(r) & SLI4_BMBX_MASK_HI) \
-> +				<< 30) | (((r) & ~SLI4_BMBX_MASK_LO) >> 2))
-
-Could you break the line differently so that the expression is a bit
-simpler to read (there is a version below which does this
-(SLI4_EQ_DOORBELL))?
-
-> +#define SLI4_BMBX_SIZE				256
-> +
-> +/* SLIPORT_CONTROL - SLI Port Control Register */
-> +#define SLI4_PORT_CTRL_REG		0x0408
-> +#define SLI4_PORT_CTRL_IP		(1 << 27)
-> +#define SLI4_PORT_CTRL_IDIS		(1 << 22)
-> +#define SLI4_PORT_CTRL_FDD		(1 << 31)
-> +
-> +/* SLI4_SLIPORT_ERROR - SLI Port Error Register */
-> +#define SLI4_PORT_ERROR1		0x040c
-> +#define SLI4_PORT_ERROR2		0x0410
-> +
-> +/* EQCQ_DOORBELL - EQ and CQ Doorbell Register */
-> +#define SLI4_EQCQ_DB_REG		0x120
-> +enum {
-> +	SLI4_EQ_ID_LO_MASK = 0x01FF,
-> +
-> +	SLI4_CQ_ID_LO_MASK = 0x03FF,
-> +
-> +	SLI4_EQCQ_CI_EQ = 0x0200,
-> +
-> +	SLI4_EQCQ_QT_EQ = 0x00000400,
-> +	SLI4_EQCQ_QT_CQ = 0x00000000,
-> +
-> +	SLI4_EQCQ_ID_HI_SHIFT = 11,
-> +	SLI4_EQCQ_ID_HI_MASK = 0xF800,
-> +
-> +	SLI4_EQCQ_NUM_SHIFT = 16,
-> +	SLI4_EQCQ_NUM_MASK = 0x1FFF0000,
-> +
-> +	SLI4_EQCQ_ARM = 0x20000000,
-> +	SLI4_EQCQ_UNARM = 0x00000000,
-> +
-> +};
-> +
-> +#define SLI4_EQ_DOORBELL(n, id, a)\
-> +	((id & SLI4_EQ_ID_LO_MASK) | SLI4_EQCQ_QT_EQ |\
-> +	(((id >> 9) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
-> +	((n << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | \
-> +	a | SLI4_EQCQ_CI_EQ)
-> +
-> +#define SLI4_CQ_DOORBELL(n, id, a)\
-> +	((id & SLI4_CQ_ID_LO_MASK) | SLI4_EQCQ_QT_CQ |\
-> +	(((id >> 10) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
-> +	((n << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | a)
-> +
-> +/* EQ_DOORBELL - EQ Doorbell Register for IF_TYPE = 6*/
-> +#define SLI4_IF6_EQ_DB_REG	0x120
-> +enum {
-> +	SLI4_IF6_EQ_ID_MASK = 0x0FFF,
-> +
-> +	SLI4_IF6_EQ_NUM_SHIFT = 16,
-> +	SLI4_IF6_EQ_NUM_MASK = 0x1FFF0000,
-> +};
-> +
-> +#define SLI4_IF6_EQ_DOORBELL(n, id, a)\
-> +	((id & SLI4_IF6_EQ_ID_MASK) | \
-> +	((n << SLI4_IF6_EQ_NUM_SHIFT) & SLI4_IF6_EQ_NUM_MASK) | a)
-> +
-> +/* CQ_DOORBELL - CQ Doorbell Register for IF_TYPE = 6*/
-> +#define SLI4_IF6_CQ_DB_REG	0xC0
-> +enum {
-> +	SLI4_IF6_CQ_ID_MASK = 0xFFFF,
-> +
-> +	SLI4_IF6_CQ_NUM_SHIFT = 16,
-> +	SLI4_IF6_CQ_NUM_MASK = 0x1FFF0000,
-> +};
-> +
-> +#define SLI4_IF6_CQ_DOORBELL(n, id, a)\
-> +	((id & SLI4_IF6_CQ_ID_MASK) | \
-> +	((n << SLI4_IF6_CQ_NUM_SHIFT) & SLI4_IF6_CQ_NUM_MASK) | a)
-
-There is sometimes a space before '\' and sometimes not. Just my OCD,
-sorry...
-
-> +/**
-> + * @brief MQ_DOORBELL - MQ Doorbell Register
-> + */
-> +#define SLI4_MQ_DB_REG		0x0140	/* register offset */
-
-Are the other registers defines also all offsets? Just wondering if
-the comment is pointing out that these values are special or not.
-
-Thanks,
-Daniel
