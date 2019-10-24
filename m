@@ -2,37 +2,37 @@ Return-Path: <SRS0=uVXb=YR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F15CA9EBB
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA481CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 683982166E
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:12:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87F582166E
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Oct 2019 14:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393869AbfJXOMs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Oct 2019 10:12:48 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5172 "EHLO huawei.com"
+        id S2502601AbfJXOLo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Oct 2019 10:11:44 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5168 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2502600AbfJXOLr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Oct 2019 10:11:47 -0400
+        id S2502311AbfJXOLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Oct 2019 10:11:43 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id C53F43DA15A3B5448E3F;
+        by Forcepoint Email with ESMTP id 87A609AA9AABC151AA19;
         Thu, 24 Oct 2019 22:11:35 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.439.0; Thu, 24 Oct 2019 22:11:24 +0800
+ 14.3.439.0; Thu, 24 Oct 2019 22:11:27 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>,
         "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v2 04/18] scsi: hisi_sas: Replace in_softirq() check in hisi_sas_task_exec()
-Date:   Thu, 24 Oct 2019 22:08:11 +0800
-Message-ID: <1571926105-74636-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 12/18] scsi: hisi_sas: Add debugfs file structure for IOST cache
+Date:   Thu, 24 Oct 2019 22:08:19 +0800
+Message-ID: <1571926105-74636-13-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1571926105-74636-1-git-send-email-john.garry@huawei.com>
 References: <1571926105-74636-1-git-send-email-john.garry@huawei.com>
@@ -45,78 +45,99 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Luo Jiaxing <luojiaxing@huawei.com>
 
-For IOs from upper layer, preemption may be disabled as it may be called
-by function __blk_mq_delay_run_hw_queue which will call get_cpu() (it
-disables preemption). So if flags HISI_SAS_REJECT_CMD_BIT is set in
-function hisi_sas_task_exec(), it may disable preempt twice after down()
-and up() which will cause following call trace:
+Create a file structure which was used to save the memory address for
+IOST cache at debugfs. This structure is bound to the corresponding debugfs
+file, it can help callback function of debugfs file to get what it need.
 
-BUG: scheduling while atomic: fio/60373/0x00000002
-Call trace:
-dump_backtrace+0x0/0x150
-show_stack+0x24/0x30
-dump_stack+0xa0/0xc4
-__schedule_bug+0x68/0x88
-__schedule+0x4b8/0x548
-schedule+0x40/0xd0
-schedule_timeout+0x200/0x378
-__down+0x78/0xc8
-down+0x54/0x70
-hisi_sas_task_exec.isra.10+0x598/0x8d8 [hisi_sas_main]
-hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
-sas_queuecommand+0x168/0x1b0 [libsas]
-scsi_queue_rq+0x2ac/0x980
-blk_mq_dispatch_rq_list+0xb0/0x550
-blk_mq_do_dispatch_sched+0x6c/0x110
-blk_mq_sched_dispatch_requests+0x114/0x1d8
-__blk_mq_run_hw_queue+0xb8/0x130
-__blk_mq_delay_run_hw_queue+0x1c0/0x220
-blk_mq_run_hw_queue+0xb0/0x128
-blk_mq_sched_insert_requests+0xdc/0x208
-blk_mq_flush_plug_list+0x1b4/0x3a0
-blk_flush_plug_list+0xdc/0x110
-blk_finish_plug+0x3c/0x50
-blkdev_direct_IO+0x404/0x550
-generic_file_read_iter+0x9c/0x848
-blkdev_read_iter+0x50/0x78
-aio_read+0xc8/0x170
-io_submit_one+0x1fc/0x8d8
-__arm64_sys_io_submit+0xdc/0x280
-el0_svc_common.constprop.0+0xe0/0x1e0
-el0_svc_handler+0x34/0x90
-el0_svc+0x10/0x14
-...
-
-To solve the issue, check preemptible() to avoid disabling preempt
-multiple when flag HISI_SAS_REJECT_CMD_BIT is set.
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas.h      |  6 +++++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 16 ++++++++--------
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index f42f1b34f843..4e32d1b77d16 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -351,6 +351,10 @@ struct hisi_sas_debugfs_itct {
+ 	struct hisi_sas_itct *itct;
+ };
+ 
++struct hisi_sas_debugfs_iost_cache {
++	struct hisi_sas_iost_itct_cache *cache;
++};
++
+ struct hisi_hba {
+ 	/* This must be the first element, used by SHOST_TO_SAS_HA */
+ 	struct sas_ha_struct *p;
+@@ -438,8 +442,8 @@ struct hisi_hba {
+ 	struct hisi_sas_debugfs_dq debugfs_dq[HISI_SAS_MAX_QUEUES];
+ 	struct hisi_sas_debugfs_iost debugfs_iost;
+ 	struct hisi_sas_debugfs_itct debugfs_itct;
+-	u64 *debugfs_iost_cache;
+ 	u64 debugfs_timestamp;
++	struct hisi_sas_debugfs_iost_cache debugfs_iost_cache;
+ 	u64 *debugfs_itct_cache;
+ 
+ 	struct dentry *debugfs_dir;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 621eebbeacd6..a7bac5dc389a 100644
+index a35d3a76ac11..499a733f9a5a 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -587,7 +587,13 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
- 	dev = hisi_hba->dev;
+@@ -2800,7 +2800,7 @@ static void hisi_sas_debugfs_snapshot_itct_reg(struct hisi_hba *hisi_hba)
+ static void hisi_sas_debugfs_snapshot_iost_reg(struct hisi_hba *hisi_hba)
+ {
+ 	int max_command_entries = HISI_SAS_MAX_COMMANDS;
+-	void *cachebuf = hisi_hba->debugfs_iost_cache;
++	void *cachebuf = hisi_hba->debugfs_iost_cache.cache;
+ 	void *databuf = hisi_hba->debugfs_iost.iost;
+ 	struct hisi_sas_iost *iost;
+ 	int i;
+@@ -3088,9 +3088,8 @@ static const struct file_operations hisi_sas_debugfs_iost_fops = {
  
- 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags))) {
--		if (in_softirq())
-+		/*
-+		 * For IOs from upper layer, it may already disable preempt
-+		 * in the IO path, if disable preempt again in down(),
-+		 * function schedule() will report schedule_bug(), so check
-+		 * preemptible() before goto down().
-+		 */
-+		if (!preemptible())
- 			return -EINVAL;
+ static int hisi_sas_debugfs_iost_cache_show(struct seq_file *s, void *p)
+ {
+-	struct hisi_hba *hisi_hba = s->private;
+-	struct hisi_sas_iost_itct_cache *iost_cache =
+-		(struct hisi_sas_iost_itct_cache *)hisi_hba->debugfs_iost_cache;
++	struct hisi_sas_debugfs_iost_cache *debugfs_iost_cache = s->private;
++	struct hisi_sas_iost_itct_cache *iost_cache = debugfs_iost_cache->cache;
+ 	u32 cache_size = HISI_SAS_IOST_ITCT_CACHE_DW_SZ * 4;
+ 	int i, tab_idx;
+ 	__le64 *iost;
+@@ -3250,7 +3249,8 @@ static void hisi_sas_debugfs_create_files(struct hisi_hba *hisi_hba)
+ 			    &hisi_hba->debugfs_iost,
+ 			    &hisi_sas_debugfs_iost_fops);
  
- 		down(&hisi_hba->sem);
+-	debugfs_create_file("iost_cache", 0400, dump_dentry, hisi_hba,
++	debugfs_create_file("iost_cache", 0400, dump_dentry,
++			    &hisi_hba->debugfs_iost_cache,
+ 			    &hisi_sas_debugfs_iost_cache_fops);
+ 
+ 	debugfs_create_file("itct", 0400, dump_dentry,
+@@ -3716,7 +3716,7 @@ static void hisi_sas_debugfs_release(struct hisi_hba *hisi_hba)
+ 	struct device *dev = hisi_hba->dev;
+ 	int i;
+ 
+-	devm_kfree(dev, hisi_hba->debugfs_iost_cache);
++	devm_kfree(dev, hisi_hba->debugfs_iost_cache.cache);
+ 	devm_kfree(dev, hisi_hba->debugfs_itct_cache);
+ 	devm_kfree(dev, hisi_hba->debugfs_iost.iost);
+ 
+@@ -3793,8 +3793,8 @@ static int hisi_sas_debugfs_alloc(struct hisi_hba *hisi_hba)
+ 	sz = HISI_SAS_IOST_ITCT_CACHE_NUM *
+ 	     sizeof(struct hisi_sas_iost_itct_cache);
+ 
+-	hisi_hba->debugfs_iost_cache = devm_kmalloc(dev, sz, GFP_KERNEL);
+-	if (!hisi_hba->debugfs_iost_cache)
++	hisi_hba->debugfs_iost_cache.cache = devm_kmalloc(dev, sz, GFP_KERNEL);
++	if (!hisi_hba->debugfs_iost_cache.cache)
+ 		goto fail;
+ 
+ 	sz = HISI_SAS_IOST_ITCT_CACHE_NUM *
 -- 
 2.17.1
 
