@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 729BBCA9EBC
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:21:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FE4CA9EBC
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:21:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54E3F20679
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:21:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 379F820679
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410191AbfJYLVx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:21:53 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56844 "EHLO mx1.suse.de"
+        id S2410299AbfJYLVz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Oct 2019 07:21:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56934 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731463AbfJYLVx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:21:53 -0400
+        id S2410165AbfJYLVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Oct 2019 07:21:55 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 24313B278;
-        Fri, 25 Oct 2019 11:21:50 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id B41ACB29B;
+        Fri, 25 Oct 2019 11:21:52 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -42,9 +42,9 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v3 2/7] cdrom: factor out common open_for_* code
-Date:   Fri, 25 Oct 2019 13:21:39 +0200
-Message-Id: <6904165cd79a488c557aff19ac1fd9598503386f.1572002144.git.msuchanek@suse.de>
+Subject: [PATCH v3 5/7] bdev: add open_finish.
+Date:   Fri, 25 Oct 2019 13:21:42 +0200
+Message-Id: <31f640791d9cc20cdbbb3000dfcf8370cf3c6223.1572002144.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <cover.1572002144.git.msuchanek@suse.de>
 References: <cover.1572002144.git.msuchanek@suse.de>
@@ -55,176 +55,132 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The open_for_audio and open_for_data copies are bitrotten in different
-ways already and will need to update the autoclose logic in both.
+Opening a block device may require a long operation such as waiting for
+the cdrom tray to close. Performing this operation with locks held locks
+out other attempts to open the device. These processes waiting to open
+the device are not killable.
+
+To avoid this issue and still be able to perform time-consuming checks
+at open() time the block device driver can provide open_finish(). If it
+does opening the device proceeds even when an error is returned from
+open(), bd_mutex is released and open_finish() is called. If
+open_finish() succeeds the device is now open, if it fails release() is
+called.
+
+When -ERESTARTSYS is returned from open() blkdev_get may loop without
+calling open_finish(). On -ERESTARTSYS open_finish() is not called.
+
+Move a ret = 0 assignment up in the if/else branching to avoid returning
+-ENXIO. Previously the return value was ignored on the unhandled branch.
 
 Signed-off-by: Michal Suchanek <msuchanek@suse.de>
 ---
-v2: do not add unrelated whitespace changes
-v3: fix declaration style
----
- drivers/cdrom/cdrom.c | 96 +++++++++++++++----------------------------
- 1 file changed, 33 insertions(+), 63 deletions(-)
+ Documentation/filesystems/locking.rst |  2 ++
+ fs/block_dev.c                        | 21 +++++++++++++++++----
+ include/linux/blkdev.h                |  1 +
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 2ad6b73482fe..87db82489bf8 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1045,13 +1045,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
- 	       tracks->cdi, tracks->xa);
- }
+diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+index fc3a0704553c..2471ced5a8cf 100644
+--- a/Documentation/filesystems/locking.rst
++++ b/Documentation/filesystems/locking.rst
+@@ -456,6 +456,7 @@ block_device_operations
+ prototypes::
  
--static
--int open_for_data(struct cdrom_device_info *cdi)
-+static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- {
- 	int ret;
- 	const struct cdrom_device_ops *cdo = cdi->ops;
--	tracktype tracks;
--	cd_dbg(CD_OPEN, "entering open_for_data\n");
-+
-+	cd_dbg(CD_OPEN, "entering open_for_common\n");
- 	/* Check if the driver can report drive status.  If it can, we
- 	   can do clever things.  If it can't, well, we at least tried! */
- 	if (cdo->drive_status != NULL) {
-@@ -1071,37 +1070,44 @@ int open_for_data(struct cdrom_device_info *cdi)
- 					couldn't close the tray.  We only care 
- 					that there is no disc in the drive, 
- 					since that is the _REAL_ problem here.*/
--					ret=-ENOMEDIUM;
--					goto clean_up_and_return;
-+					return -ENOMEDIUM;
+ 	int (*open) (struct block_device *, fmode_t);
++	int (*open_finish) (struct block_device *, fmode_t, int);
+ 	int (*release) (struct gendisk *, fmode_t);
+ 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+@@ -473,6 +474,7 @@ locking rules:
+ ops			bd_mutex
+ ======================= ===================
+ open:			yes
++open_finish:		no
+ release:		yes
+ ioctl:			no
+ compat_ioctl:		no
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 9c073dbdc1b0..009b5dedb1f7 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1526,6 +1526,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 	int partno;
+ 	int perm = 0;
+ 	bool first_open = false;
++	bool need_finish = false;
+ 
+ 	if (mode & FMODE_READ)
+ 		perm |= MAY_READ;
+@@ -1581,6 +1582,8 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 					put_disk_and_module(disk);
+ 					goto restart;
  				}
- 			} else {
- 				cd_dbg(CD_OPEN, "bummer. this drive can't close the tray.\n");
--				ret=-ENOMEDIUM;
--				goto clean_up_and_return;
-+				return -ENOMEDIUM;
++				if (bdev->bd_disk->fops->open_finish)
++					need_finish = true;
  			}
- 			/* Ok, the door should be closed now.. Check again */
- 			ret = cdo->drive_status(cdi, CDSL_CURRENT);
- 			if ((ret == CDS_NO_DISC) || (ret==CDS_TRAY_OPEN)) {
- 				cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
- 				cd_dbg(CD_OPEN, "tray might not contain a medium\n");
--				ret=-ENOMEDIUM;
--				goto clean_up_and_return;
-+				return -ENOMEDIUM;
+ 
+ 			if (!ret) {
+@@ -1601,7 +1604,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 					invalidate_partitions(disk, bdev);
  			}
- 			cd_dbg(CD_OPEN, "the tray is now closed\n");
+ 
+-			if (ret)
++			if (ret && !need_finish)
+ 				goto out_clear;
+ 		} else {
+ 			struct block_device *whole;
+@@ -1627,10 +1630,14 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 		if (bdev->bd_bdi == &noop_backing_dev_info)
+ 			bdev->bd_bdi = bdi_get(disk->queue->backing_dev_info);
+ 	} else {
++		ret = 0;
+ 		if (bdev->bd_contains == bdev) {
+-			ret = 0;
+-			if (bdev->bd_disk->fops->open)
++			if (bdev->bd_disk->fops->open) {
+ 				ret = bdev->bd_disk->fops->open(bdev, mode);
++				if ((ret != -ERESTARTSYS) &&
++				    bdev->bd_disk->fops->open_finish)
++					need_finish = true;
++			}
+ 			/* the same as first opener case, read comment there */
+ 			if (bdev->bd_invalidated) {
+ 				if (!ret)
+@@ -1638,7 +1645,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 				else if (ret == -ENOMEDIUM)
+ 					invalidate_partitions(bdev->bd_disk, bdev);
+ 			}
+-			if (ret)
++			if (ret && !need_finish)
+ 				goto out_unlock_bdev;
  		}
--		/* the door should be closed now, check for the disc */
--		ret = cdo->drive_status(cdi, CDSL_CURRENT);
--		if (ret!=CDS_DISC_OK) {
--			ret = -ENOMEDIUM;
--			goto clean_up_and_return;
--		}
-+		if (ret != CDS_DISC_OK)
-+			return -ENOMEDIUM;
  	}
--	cdrom_count_tracks(cdi, &tracks);
--	if (tracks.error == CDS_NO_DISC) {
-+	cdrom_count_tracks(cdi, tracks);
-+	if (tracks->error == CDS_NO_DISC) {
- 		cd_dbg(CD_OPEN, "bummer. no disc.\n");
--		ret=-ENOMEDIUM;
--		goto clean_up_and_return;
-+		return -ENOMEDIUM;
- 	}
-+
-+	return 0;
-+}
-+
-+static int open_for_data(struct cdrom_device_info *cdi)
-+{
-+	int ret;
-+	const struct cdrom_device_ops *cdo = cdi->ops;
-+	tracktype tracks;
-+
-+	cd_dbg(CD_OPEN, "entering open_for_data\n");
-+	ret = open_for_common(cdi, &tracks);
-+	if (ret)
-+		goto clean_up_and_return;
-+
- 	/* CD-Players which don't use O_NONBLOCK, workman
- 	 * for example, need bit CDO_CHECK_TYPE cleared! */
- 	if (tracks.data==0) {
-@@ -1208,53 +1214,17 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
- /* This code is similar to that in open_for_data. The routine is called
-    whenever an audio play operation is requested.
- */
--static int check_for_audio_disc(struct cdrom_device_info *cdi,
--				const struct cdrom_device_ops *cdo)
-+static int check_for_audio_disc(struct cdrom_device_info *cdi)
- {
-         int ret;
- 	tracktype tracks;
- 	cd_dbg(CD_OPEN, "entering check_for_audio_disc\n");
- 	if (!(cdi->options & CDO_CHECK_TYPE))
- 		return 0;
--	if (cdo->drive_status != NULL) {
--		ret = cdo->drive_status(cdi, CDSL_CURRENT);
--		cd_dbg(CD_OPEN, "drive_status=%d\n", ret);
--		if (ret == CDS_TRAY_OPEN) {
--			cd_dbg(CD_OPEN, "the tray is open...\n");
--			/* can/may i close it? */
--			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
--			    cdi->options & CDO_AUTO_CLOSE) {
--				cd_dbg(CD_OPEN, "trying to close the tray\n");
--				ret=cdo->tray_move(cdi,0);
--				if (ret) {
--					cd_dbg(CD_OPEN, "bummer. tried to close tray but failed.\n");
--					/* Ignore the error from the low
--					level driver.  We don't care why it
--					couldn't close the tray.  We only care 
--					that there is no disc in the drive, 
--					since that is the _REAL_ problem here.*/
--					return -ENOMEDIUM;
--				}
--			} else {
--				cd_dbg(CD_OPEN, "bummer. this driver can't close the tray.\n");
--				return -ENOMEDIUM;
--			}
--			/* Ok, the door should be closed now.. Check again */
--			ret = cdo->drive_status(cdi, CDSL_CURRENT);
--			if ((ret == CDS_NO_DISC) || (ret==CDS_TRAY_OPEN)) {
--				cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
--				return -ENOMEDIUM;
--			}	
--			if (ret!=CDS_DISC_OK) {
--				cd_dbg(CD_OPEN, "bummer. disc isn't ready.\n");
--				return -EIO;
--			}	
--			cd_dbg(CD_OPEN, "the tray is now closed\n");
--		}	
--	}
--	cdrom_count_tracks(cdi, &tracks);
--	if (tracks.error) 
--		return(tracks.error);
-+
-+	ret = open_for_common(cdi, &tracks);
-+	if (ret)
+@@ -1650,6 +1657,12 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 	/* only one opener holds refs to the module and disk */
+ 	if (!first_open)
+ 		put_disk_and_module(disk);
++	if (ret && need_finish)
++		ret = bdev->bd_disk->fops->open_finish(bdev, mode, ret);
++	if (ret) {
++		__blkdev_put(bdev, mode, for_part);
 +		return ret;
++	}
+ 	return 0;
  
- 	if (tracks.audio==0)
- 		return -EMEDIUMTYPE;
-@@ -2725,7 +2695,7 @@ static int cdrom_ioctl_play_trkind(struct cdrom_device_info *cdi,
- 	if (copy_from_user(&ti, argp, sizeof(ti)))
- 		return -EFAULT;
+  out_clear:
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f3ea78b0c91c..b67e93c6afb7 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1695,6 +1695,7 @@ static inline struct bio_vec *rq_integrity_vec(struct request *rq)
  
--	ret = check_for_audio_disc(cdi, cdi->ops);
-+	ret = check_for_audio_disc(cdi);
- 	if (ret)
- 		return ret;
- 	return cdi->ops->audio_ioctl(cdi, CDROMPLAYTRKIND, &ti);
-@@ -2773,7 +2743,7 @@ static int cdrom_ioctl_audioctl(struct cdrom_device_info *cdi,
- 
- 	if (!CDROM_CAN(CDC_PLAY_AUDIO))
- 		return -ENOSYS;
--	ret = check_for_audio_disc(cdi, cdi->ops);
-+	ret = check_for_audio_disc(cdi);
- 	if (ret)
- 		return ret;
- 	return cdi->ops->audio_ioctl(cdi, cmd, NULL);
+ struct block_device_operations {
+ 	int (*open) (struct block_device *, fmode_t);
++	int (*open_finish)(struct block_device *bdev, fmode_t mode, int ret);
+ 	void (*release) (struct gendisk *, fmode_t);
+ 	int (*rw_page)(struct block_device *, sector_t, struct page *, unsigned int);
+ 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
 -- 
 2.23.0
 
