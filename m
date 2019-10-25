@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACDEECA9EBE
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E33FCA9EBC
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:22:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88BD521D81
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:22:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3195321D7F
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 11:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410222AbfJYLVx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:21:53 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56864 "EHLO mx1.suse.de"
+        id S2409266AbfJYLVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Oct 2019 07:21:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56812 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726352AbfJYLVx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:21:53 -0400
+        id S1726352AbfJYLVv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Oct 2019 07:21:51 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 02277B286;
-        Fri, 25 Oct 2019 11:21:51 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 396CDB227;
+        Fri, 25 Oct 2019 11:21:49 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -42,9 +42,9 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v3 3/7] cdrom: wait for the tray to close
-Date:   Fri, 25 Oct 2019 13:21:40 +0200
-Message-Id: <08202208cb9876d2d96454e6fdd89b022a0be978.1572002144.git.msuchanek@suse.de>
+Subject: [PATCH v3 1/7] cdrom: add poll_event_interruptible
+Date:   Fri, 25 Oct 2019 13:21:38 +0200
+Message-Id: <0a5ab9c86120851692aaa4390ee85ab9b2f86a8a.1572002144.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <cover.1572002144.git.msuchanek@suse.de>
 References: <cover.1572002144.git.msuchanek@suse.de>
@@ -55,77 +55,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi command to close the tray only starts the motor and does not
-wait for the tray to close. Wait until the state chages from TRAY_OPEN
-so users do not race with the tray closing.
-
-This looks like inifinte wait but unless the drive is broken it either
-closes the tray shortly or reports an error when it detects the tray is
-blocked. At worst the wait can be interrupted by the user.
-
-Also wait for the drive to become ready once the tray closes.
+Add convenience macro for polling an event that does not have a
+waitqueue.
 
 Signed-off-by: Michal Suchanek <msuchanek@suse.de>
 ---
-v2:
- - check drive_status exists before using it
- - rename tray_close -> cdrom_tray_close
- - also wait for drive to become ready after tray closes
- - do not wait in cdrom_ioctl_closetray
----
- drivers/cdrom/cdrom.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+ drivers/cdrom/cdrom.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 87db82489bf8..27f4fce22781 100644
+index ac42ae4651ce..2ad6b73482fe 100644
 --- a/drivers/cdrom/cdrom.c
 +++ b/drivers/cdrom/cdrom.c
-@@ -1045,6 +1045,18 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
- 	       tracks->cdi, tracks->xa);
- }
+@@ -282,10 +282,24 @@
+ #include <linux/fcntl.h>
+ #include <linux/blkdev.h>
+ #include <linux/times.h>
++#include <linux/delay.h>
+ #include <linux/uaccess.h>
++#include <linux/sched/signal.h>
+ #include <scsi/scsi_common.h>
+ #include <scsi/scsi_request.h>
  
-+static int cdrom_tray_close(struct cdrom_device_info *cdi)
-+{
-+	int ret;
++#define poll_event_interruptible(event, interval) ({ \
++	int ret = 0; \
++	while (!(event)) { \
++		if (signal_pending(current)) { \
++			ret = -ERESTARTSYS; \
++			break; \
++		} \
++		msleep_interruptible(interval); \
++	} \
++	ret; \
++})
 +
-+	ret = cdi->ops->tray_move(cdi, 0);
-+	if (ret || !cdi->ops->drive_status)
-+		return ret;
-+
-+	return poll_event_interruptible(CDS_TRAY_OPEN !=
-+			cdi->ops->drive_status(cdi, CDSL_CURRENT), 500);
-+}
-+
- static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- {
- 	int ret;
-@@ -1062,7 +1074,9 @@ static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
- 			    cdi->options & CDO_AUTO_CLOSE) {
- 				cd_dbg(CD_OPEN, "trying to close the tray\n");
--				ret=cdo->tray_move(cdi,0);
-+				ret = cdrom_tray_close(cdi);
-+				if (ret == -ERESTARTSYS)
-+					return ret;
- 				if (ret) {
- 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
- 					/* Ignore the error from the low
-@@ -1085,6 +1099,15 @@ static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 			}
- 			cd_dbg(CD_OPEN, "the tray is now closed\n");
- 		}
-+		/* the door should be closed now, check for the disc */
-+		if (ret == CDS_DRIVE_NOT_READY) {
-+			int poll_res = poll_event_interruptible(
-+				CDS_DRIVE_NOT_READY !=
-+				(ret = cdo->drive_status(cdi, CDSL_CURRENT)),
-+				500);
-+			if (poll_res == -ERESTARTSYS)
-+				return poll_res;
-+		}
- 		if (ret != CDS_DISC_OK)
- 			return -ENOMEDIUM;
- 	}
+ /* used to tell the module to turn on full debugging messages */
+ static bool debug;
+ /* default compatibility mode */
 -- 
 2.23.0
 
