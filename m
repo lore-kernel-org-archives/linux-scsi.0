@@ -2,191 +2,340 @@ Return-Path: <SRS0=/OAa=YS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA08CA9EBD
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 09:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBB4CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 09:59:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57CA621D7F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 09:43:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cFWWJ//x"
+	by mail.kernel.org (Postfix) with ESMTP id 015DA21929
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 09:59:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438839AbfJYJnh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Oct 2019 05:43:37 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:54286 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2408810AbfJYJng (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Oct 2019 05:43:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571996614;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1VNj9SGf4zFIKiTUmxCwuWUVohyI+HSm7S98Rja7RPY=;
-        b=cFWWJ//xGRz1yOM5/XVR14JwuA8TQvV7t++1ZxX2LFgXqSwuWDJIdOCpVgwZ0lcbzVSWDR
-        L9dD3oaE0+n6FQzIp7fkRxcpnvfkwRhd8HlLNARXLeSuRbJTLN7QjCz+FsLXxEKyuWaN31
-        vessFslCbIUZRmaoCEQlBRUw5DCy4Jo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-361-fg-pGeYmMa-odtY9_5xdcQ-1; Fri, 25 Oct 2019 05:43:31 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 36A99476;
-        Fri, 25 Oct 2019 09:43:30 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-32.pek2.redhat.com [10.72.8.32])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3AF125B681;
-        Fri, 25 Oct 2019 09:43:20 +0000 (UTC)
-Date:   Fri, 25 Oct 2019 17:43:15 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH V4 1/2] scsi: core: avoid host-wide host_busy counter for
- scsi_mq
-Message-ID: <20191025094315.GA6128@ming.t460p>
-References: <20191009093241.21481-1-ming.lei@redhat.com>
- <20191009093241.21481-2-ming.lei@redhat.com>
- <7d95de12-6114-c0d7-8b21-d36b2ea020fc@huawei.com>
- <20191024005828.GB15426@ming.t460p>
- <19e73b4d-77c7-e776-fee4-8b9f078c2be5@huawei.com>
- <20191024212427.GA26168@ming.t460p>
- <fb0d3475-b9b9-bac2-ec44-5c4cff67a104@huawei.com>
+        id S2408994AbfJYJ7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Oct 2019 05:59:25 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58964 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2408510AbfJYJ7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Oct 2019 05:59:25 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 81552B6FA;
+        Fri, 25 Oct 2019 09:59:22 +0000 (UTC)
+Date:   Fri, 25 Oct 2019 11:59:22 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: Re: [PATCH 02/32] elx: libefc_sli: SLI Descriptors and Queue entries
+Message-ID: <20191025095922.spyfsn5wlnou2xj2@beryllium.lan>
+References: <20191023215557.12581-1-jsmart2021@gmail.com>
+ <20191023215557.12581-3-jsmart2021@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <fb0d3475-b9b9-bac2-ec44-5c4cff67a104@huawei.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: fg-pGeYmMa-odtY9_5xdcQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191023215557.12581-3-jsmart2021@gmail.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 09:58:16AM +0100, John Garry wrote:
->=20
-> > > In scsi_host.h, we have for scsi_host_template.can_queue: "It is set =
-to the
-> > > maximum number of simultaneous commands a given host adapter will acc=
-ept.",
-> > > so that should be honoured.
-> >=20
->=20
-> Hi Ming,
->=20
-> > That words should have been changed to:
-> >=20
-> > "It is set to the maximum number of simultaneous commands a given host =
-adapter's
-> > hw queue will accept."
->=20
-> I find this definition misleading. As you know, some MQ SAS HBAs can acce=
-pt
-> .can_queue commands on a given hw queue, but can still only accept
-> .can_queue commands over all hw queues.
+Hi James,
 
-I don't know there are such MQ HBA driver in tree, at least that is the
-current blk-mq/scsi-mq model: each hw queue has its own independent
-tags, so there can't be the limit for MQ HBA, which should allow to
-accept (.can_queue * nr_hw_queues) commands. And I did hear people
-complains bad performance caused by the atomic .host_busy counter.
+> @@ -0,0 +1,26 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +#if !defined(__EFC_COMMON_H__)
 
-If you are talking about the current SQ(from blk-mq or scsi-mq viewpoint) H=
-BA
-which has multiple reply queue(HPSA, hisilicon SAS, mpt3sas, and megaraid_s=
-as),
-they are just the special type. According to scsi-mq's model, they should
-belong to SQ HBA.
+What about #ifndef which is more commonly used.
 
->=20
-> >=20
-> > >=20
-> > > And Scsi_host.nr_hw_queues: "it is assumed that each hardware queue h=
-as a
-> > > queue depth of can_queue. In other words, the total queue depth per h=
-ost is
-> > > nr_hw_queues * can_queue."
-> >=20
-> > The above is correct.
-> >=20
-> > >=20
-> > > I don't read "total queue depth per host" same as "maximum number of
-> > > simultaneous commands a given host adapter will accept". If anything,=
- the
-> > > nr_hw_queues comment is ambiguous.
-> > >=20
-> > > >=20
-> > > > The point is simple, because each hw queue has its own independent =
-tags,
-> > > > that is why I mentioned your Hisilicon SAS can't be converted to MQ
-> > > > easily cause this hardware has only single shared tags.
-> > >=20
-> > > Please be aware that HiSilicon SAS HW would not be unique for SCSI HB=
-As in
-> > > this regard, in that the unique hostwide tag is not just for HBA HW I=
-O
-> > > management, but also is used as the tag for SCSI TMFs.
-> >=20
-> > Right.
-> >=20
-> > >=20
-> > > Just checking mpt3sas seems similar:
-> > >=20
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tr=
-ee/drivers/scsi/mpt3sas/mpt3sas_scsih.c#n2918
-> > >=20
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tr=
-ee/drivers/scsi/mpt3sas/mpt3sas_base.c#n3546
-> >=20
-> > Not only mpt3sas, there are also HPSA and more. And these drivers have =
-to
-> > support single hw queue of blk-mq, instead of real MQ. And the reason i=
-s that
-> > these HBA has single tags.
->=20
-> We should be able to do better than that.
->=20
-> For a start, at least doesn't the check you remove in scsi_host_is_busy()
-> limit commands the HBA accepts to .can_queue?
+> +enum {
+> +	/* DW2W1 */
+> +	DISEED_SGE_HS			= (1 << 2),
+> +	DISEED_SGE_WS			= (1 << 3),
+> +	DISEED_SGE_IC			= (1 << 4),
+> +	DISEED_SGE_ICS			= (1 << 5),
+> +	DISEED_SGE_ATRT			= (1 << 6),
+> +	DISEED_SGE_AT			= (1 << 7),
+> +	DISEED_SGE_FAT			= (1 << 8),
+> +	DISEED_SGE_NA			= (1 << 9),
+> +	DISEED_SGE_HI			= (1 << 10),
 
-As I mentioned above, that is current blk-mq/scsi-mq's model, each hw
-queue has its own independent tags, so the check really doesn't make
-sense.
+I noticed sometimes there are also BIT() used. Wouldn't it make sense
+to the whole driver to use one or the other version of bit
+definitions?
 
->=20
-> And if you make the change in this patch, then the changes to improve blk=
--mq
-> for CPU hotplug are pointless, as we can't change the SAS HBAs to expose
-> multiple queues.
+> +#define SLI4_QUEUE_DEFAULT_CQ	U16_MAX /** Use the default CQ */
+> +
+> +#define SLI4_QUEUE_RQ_BATCH	8
+> +
+> +#define CFG_RQST_CMDSZ(stype)    sizeof(struct sli4_rqst_##stype##_s)
 
-No, just the small number of special type SCSI HBAs with multiple reply que=
-ue
-and single tags can't benefit from the patchset of 'improve blk-mq for CPU =
-hotplug',
-and all other normal MQ device/drivers do get improved wrt. CPU hotplug.
+The alignment of sizeof is off. Suppose it should be a tab there instead spaces.
 
-We have tried hosttags approach for the several drivers, but looks it is
-too messy. Given there are only 3 or 4 such device, we still can improve
-them via driver private approach in future if no generic way is doable.=20
+> +
+> +#define CFG_RQST_PYLD_LEN(stype)	\
+> +		cpu_to_le32(sizeof(struct sli4_rqst_##stype##_s) -	\
+> +			sizeof(struct sli4_rqst_hdr_s))
+> +
+> +#define CFG_RQST_PYLD_LEN_VAR(stype, varpyld)	\
+> +		cpu_to_le32((sizeof(struct sli4_rqst_##stype##_s) +	\
+> +			varpyld) - sizeof(struct sli4_rqst_hdr_s))
+> +
+> +#define SZ_DMAADDR              sizeof(struct sli4_dmaaddr_s)
+> +
+> +/* Payload length must accommodate both request and response */
+> +#define SLI_CONFIG_PYLD_LENGTH(stype)	\
+> +	max(sizeof(struct sli4_rqst_##stype##_s),		\
+> +		sizeof(struct sli4_rsp_##stype##_s))
 
+Here are the '\' have more indention compared to patch #1.
+
+> +#define CQ_CNT_VAL(type) (CQ_CNT_##type << CQ_CNT_SHIFT)
+> +
+> +#define SLI4_CQE_BYTES			(4 * sizeof(u32))
+> +
+> +#define SLI4_COMMON_CREATE_CQ_V2_MAX_PAGES 8
+
+Maybe use the same indention for the first to defines?
+
+> +
+> +/**
+> + * @brief Generic Common Create EQ/CQ/MQ/WQ/RQ Queue completion
+> + */
+> +struct sli4_rsp_cmn_create_queue_s {
+> +	struct sli4_rsp_hdr_s	hdr;
+> +	__le16	q_id;
+> +	u8	rsvd18;
+> +	u8	ulp;
+> +	__le32	db_offset;
+> +	__le16	db_rs;
+> +	__le16	db_fmt;
+> +};
+
+Just wondering about all these definitions here: These structs
+describes the wire format, no? Shouldn't this marked with __packed? I
+keep forgetting the rules.
+
+> +/**
+> + * EQ count.
+> + */
+> +enum {
+> +	EQ_CNT_SHIFT	= 26,
+> +
+> +	EQ_CNT_256	= 0,
+> +	EQ_CNT_512	= 1,
+> +	EQ_CNT_1024	= 2,
+> +	EQ_CNT_2048	= 3,
+> +	EQ_CNT_4096	= 3,
+> +};
+> +#define EQ_CNT_VAL(type) (EQ_CNT_##type << EQ_CNT_SHIFT)
+> +
+> +#define SLI4_EQE_SIZE_4			0
+> +#define SLI4_EQE_SIZE_16		1
+
+Picking up my question from patch #1, what's the idea about the enums
+and defines? Why are the last two ones not an enum?
+
+> +/**
+> + * @brief WQ_CREATE
+> + *
+> + * Create a Work Queue for FC.
+> + */
+> +#define SLI4_WQ_CREATE_V0_MAX_PAGES	4
+> +struct sli4_rqst_wq_create_s {
+> +	struct sli4_rqst_hdr_s	hdr;
+> +	u8		num_pages;
+> +	u8		dua_byte;
+> +	__le16		cq_id;
+> +	struct sli4_dmaaddr_s page_phys_addr[SLI4_WQ_CREATE_V0_MAX_PAGES];
+> +	u8		bqu_byte;
+> +	u8		ulp;
+> +	__le16		rsvd;
+> +};
+> +
+> +struct sli4_rsp_wq_create_s {
+> +	struct sli4_rsp_cmn_create_queue_s q_rsp;
+> +};
+> +
+> +/**
+> + * @brief WQ_CREATE_V1
+> + *
+> + * Create a version 1 Work Queue for FC use.
+> + */
+
+Why does the workqueue code encode a version? Isn't this pure driver
+code?
+
+> +#define SLI4_WQ_CREATE_V1_MAX_PAGES	8
+> +struct sli4_rqst_wq_create_v1_s {
+> +	struct sli4_rqst_hdr_s	hdr;
+> +	__le16		num_pages;
+> +	__le16		cq_id;
+> +	u8		page_size;
+> +	u8		wqe_size_byte;
+> +	__le16		wqe_count;
+> +	__le32		rsvd;
+> +	struct	sli4_dmaaddr_s page_phys_addr[SLI4_WQ_CREATE_V1_MAX_PAGES];
+> +};
+> +
+> +struct sli4_rsp_wq_create_v1_s {
+> +	struct sli4_rsp_cmn_create_queue_s rsp;
+> +};
+> +/**
+
+Empty line missing.
+
+> + * @brief WQ_DESTROY
+> + *
+> + * Destroy an FC Work Queue.
+> + */
+
+
+> +enum {
+> +	LINK_ATTN_TYPE_LINK_UP		= 0x01,
+> +	LINK_ATTN_TYPE_LINK_DOWN	= 0x02,
+> +	LINK_ATTN_TYPE_NO_HARD_ALPA	= 0x03,
+> +
+> +	LINK_ATTN_P2P			= 0x01,
+> +	LINK_ATTN_FC_AL			= 0x02,
+> +	LINK_ATTN_INTERNAL_LOOPBACK	= 0x03,
+> +	LINK_ATTN_SERDES_LOOPBACK	= 0x04,
+> +
+> +	LINK_ATTN_1G			= 0x01,
+> +	LINK_ATTN_2G			= 0x02,
+> +	LINK_ATTN_4G			= 0x04,
+> +	LINK_ATTN_8G			= 0x08,
+> +	LINK_ATTN_10G			= 0x0a,
+> +	LINK_ATTN_16G			= 0x10,
+> +
+
+One empty line too much.
+
+> +};
+> +
+
+> +/**
+> + * @brief FC Completion Status Codes.
+> + */
+> +#define SLI4_FC_WCQE_STATUS_SUCCESS		0x00
+> +#define SLI4_FC_WCQE_STATUS_FCP_RSP_FAILURE	0x01
+> +#define SLI4_FC_WCQE_STATUS_REMOTE_STOP		0x02
+> +#define SLI4_FC_WCQE_STATUS_LOCAL_REJECT	0x03
+> +#define SLI4_FC_WCQE_STATUS_NPORT_RJT		0x04
+> +#define SLI4_FC_WCQE_STATUS_FABRIC_RJT		0x05
+> +#define SLI4_FC_WCQE_STATUS_NPORT_BSY		0x06
+> +#define SLI4_FC_WCQE_STATUS_FABRIC_BSY		0x07
+> +#define SLI4_FC_WCQE_STATUS_LS_RJT		0x09
+> +#define SLI4_FC_WCQE_STATUS_CMD_REJECT		0x0b
+> +#define SLI4_FC_WCQE_STATUS_FCP_TGT_LENCHECK	0x0c
+> +#define SLI4_FC_WCQE_STATUS_RQ_BUF_LEN_EXCEEDED	0x11
+> +#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_BUF_NEEDED 0x12
+> +#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_FRM_DISC	0x13
+> +#define SLI4_FC_WCQE_STATUS_RQ_DMA_FAILURE	0x14
+> +#define SLI4_FC_WCQE_STATUS_FCP_RSP_TRUNCATE	0x15
+> +#define SLI4_FC_WCQE_STATUS_DI_ERROR		0x16
+> +#define SLI4_FC_WCQE_STATUS_BA_RJT		0x17
+> +#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_XRI_NEEDED 0x18
+> +#define SLI4_FC_WCQE_STATUS_RQ_INSUFF_XRI_DISC	0x19
+> +#define SLI4_FC_WCQE_STATUS_RX_ERROR_DETECT	0x1a
+> +#define SLI4_FC_WCQE_STATUS_RX_ABORT_REQUEST	0x1b
+
+Here are defines and no enums.
+
+> +/**
+> + * @brief WQE used to create an FCP initiator write.
+> + */
+> +enum {
+> +	SLI4_IWR_WQE_DBDE	= 0x40,
+> +	SLI4_IWR_WQE_XBL	= 0x8,
+> +	SLI4_IWR_WQE_XC		= 0x20,
+> +	SLI4_IWR_WQE_IOD	= 0x20,
+> +	SLI4_IWR_WQE_HLM	= 0x10,
+> +	SLI4_IWR_WQE_DNRX	= 0x10,
+> +	SLI4_IWR_WQE_CCPE	= 0x80,
+> +	SLI4_IWR_WQE_EAT	= 0x10,
+> +	SLI4_IWR_WQE_APPID	= 0x10,
+> +	SLI4_IWR_WQE_WQES	= 0x80,
+> +	SLI4_IWR_WQE_PU_SHFT	= 4,
+> +	SLI4_IWR_WQE_CT_SHFT	= 2,
+> +	SLI4_IWR_WQE_BS_SHFT	= 4,
+> +	SLI4_IWR_WQE_LEN_LOC_BIT1 = 0x80,
+> +	SLI4_IWR_WQE_LEN_LOC_BIT2 = 0x1,
+> +};
+
+There are a couple of the same patters above. There is still enough
+space for adding another level of indention so that all '=' are align.
+
+> +/**
+> + * @brief Local Reject Reason Codes.
+> + */
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_CONTINUE	0x01
+> +#define SLI4_FC_LOCAL_REJECT_SEQUENCE_TIMEOUT	0x02
+> +#define SLI4_FC_LOCAL_REJECT_INTERNAL_ERROR	0x03
+> +#define SLI4_FC_LOCAL_REJECT_INVALID_RPI	0x04
+> +#define SLI4_FC_LOCAL_REJECT_NO_XRI		0x05
+> +#define SLI4_FC_LOCAL_REJECT_ILLEGAL_COMMAND	0x06
+> +#define SLI4_FC_LOCAL_REJECT_XCHG_DROPPED	0x07
+> +#define SLI4_FC_LOCAL_REJECT_ILLEGAL_FIELD	0x08
+> +#define SLI4_FC_LOCAL_REJECT_NO_ABORT_MATCH	0x0c
+> +#define SLI4_FC_LOCAL_REJECT_TX_DMA_FAILED	0x0d
+> +#define SLI4_FC_LOCAL_REJECT_RX_DMA_FAILED	0x0e
+> +#define SLI4_FC_LOCAL_REJECT_ILLEGAL_FRAME	0x0f
+> +#define SLI4_FC_LOCAL_REJECT_NO_RESOURCES	0x11
+> +#define SLI4_FC_LOCAL_REJECT_FCP_CONF_FAILURE	0x12
+> +#define SLI4_FC_LOCAL_REJECT_ILLEGAL_LENGTH	0x13
+> +#define SLI4_FC_LOCAL_REJECT_UNSUPPORTED_FEATURE 0x14
+> +#define SLI4_FC_LOCAL_REJECT_ABORT_IN_PROGRESS	0x15
+> +#define SLI4_FC_LOCAL_REJECT_ABORT_REQUESTED	0x16
+> +#define SLI4_FC_LOCAL_REJECT_RCV_BUFFER_TIMEOUT	0x17
+> +#define SLI4_FC_LOCAL_REJECT_LOOP_OPEN_FAILURE	0x18
+> +#define SLI4_FC_LOCAL_REJECT_LINK_DOWN		0x1a
+> +#define SLI4_FC_LOCAL_REJECT_CORRUPTED_DATA	0x1b
+> +#define SLI4_FC_LOCAL_REJECT_CORRUPTED_RPI	0x1c
+> +#define SLI4_FC_LOCAL_REJECT_OUTOFORDER_DATA	0x1d
+> +#define SLI4_FC_LOCAL_REJECT_OUTOFORDER_ACK	0x1e
+> +#define SLI4_FC_LOCAL_REJECT_DUP_FRAME		0x1f
+> +#define SLI4_FC_LOCAL_REJECT_LINK_CONTROL_FRAME	0x20
+> +#define SLI4_FC_LOCAL_REJECT_BAD_HOST_ADDRESS	0x21
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_HDR_BUFFER	0x23
+> +#define SLI4_FC_LOCAL_REJECT_MSEQ_CHAIN_CORRUPTED 0x24
+> +#define SLI4_FC_LOCAL_REJECT_ABORTMULT_REQUESTED 0x25
+> +#define SLI4_FC_LOCAL_REJECT_BUFFER_SHORTAGE	0x28
+> +#define SLI4_FC_LOCAL_REJECT_RCV_XRIBUF_WAITING	0x29
+> +#define SLI4_FC_LOCAL_REJECT_INVALID_VPI	0x2e
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_XRIBUF	0x30
+> +#define SLI4_FC_LOCAL_REJECT_INVALID_RELOFFSET	0x40
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_RELOFFSET	0x41
+> +#define SLI4_FC_LOCAL_REJECT_INSUFF_BUFFERSPACE	0x42
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_SI		0x43
+> +#define SLI4_FC_LOCAL_REJECT_MISSING_ES		0x44
+> +#define SLI4_FC_LOCAL_REJECT_INCOMPLETE_XFER	0x45
+> +#define SLI4_FC_LOCAL_REJECT_SLER_FAILURE	0x46
+> +#define SLI4_FC_LOCAL_REJECT_SLER_CMD_RCV_FAILURE 0x47
+> +#define SLI4_FC_LOCAL_REJECT_SLER_REC_RJT_ERR	0x48
+> +#define SLI4_FC_LOCAL_REJECT_SLER_REC_SRR_RETRY_ERR 0x49
+> +#define SLI4_FC_LOCAL_REJECT_SLER_SRR_RJT_ERR	0x4a
+> +#define SLI4_FC_LOCAL_REJECT_SLER_RRQ_RJT_ERR	0x4c
+> +#define SLI4_FC_LOCAL_REJECT_SLER_RRQ_RETRY_ERR	0x4d
+> +#define SLI4_FC_LOCAL_REJECT_SLER_ABTS_ERR	0x4e
+
+There are a bunch of not align values. Having another tab wouldn't hurt.
+
+> +
+> +enum {
+> +	SLI4_RACQE_RQ_EL_INDX = 0xfff,
+> +	SLI4_RACQE_FCFI = 0x3f,
+> +	SLI4_RACQE_HDPL = 0x3f,
+> +	SLI4_RACQE_RQ_ID = 0xffc0,
+> +};
+
+And here the values are not aligned.
 
 Thanks,
-Ming
-
+Daniel
