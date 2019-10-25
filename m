@@ -2,94 +2,94 @@ Return-Path: <SRS0=/OAa=YS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC8ECA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 16:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B87E1CA9EBD
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 18:32:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F65320867
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 16:16:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 703D421D82
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 18:32:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VaSR5sYe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ffgFRoEs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505255AbfJYQQC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Oct 2019 12:16:02 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:55811 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390348AbfJYQQC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Oct 2019 12:16:02 -0400
-Received: by mail-wm1-f66.google.com with SMTP id g24so2750937wmh.5
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2019 09:16:00 -0700 (PDT)
+        id S1726415AbfJYSbJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Oct 2019 14:31:09 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:43752 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726217AbfJYSat (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Oct 2019 14:30:49 -0400
+Received: by mail-wr1-f65.google.com with SMTP id c2so3415511wrr.10;
+        Fri, 25 Oct 2019 11:30:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xEzoTshWx9LHG7n1pf+ZKj4XQNDPSyPSzUdAg8EzOuM=;
-        b=VaSR5sYeQbzO2y7/VMe7w4rbNf4cihbM2NOXrpOXqNKHHwjkxHvVoMbGnfb3V9kSsI
-         WhCyDQyh0K+s3j67791K56pC02EuQyC0M9x+K1ilakVMsurw7WQijyKixX7F87389aPB
-         CENji9C9G5IM7JLQAi7nE0dVMZEezCX5IGQCxFBvVzDtHddI3OSYCtQ5PLs5jwxRyLKN
-         7YDRT0MzXf490GuUd5kBOVjUveYRiCGp3/40AZDs0PmNqkXA80ULHhzAMGw6KymLcQUz
-         dsYy92+Apwf8WWDVyZFg1bjQxtJhZaPD5ESCmxt0x3yOVDt+/AfG68dhfSqs/n1Chulm
-         m0cQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=dDp13ywgSupw9EcMrvuhw6Gs8e5NpNu6s01gDT2RHJQ=;
+        b=ffgFRoEse6zd80IO5oL6sDbN87iVSBHyvjDvAfBWVg4OsaaV+/9mmmCeWtcKoUFGg+
+         TpZpPYnjdXrhkhaCsF2U8KGFZa0zn94FPNC//BQcn2KpHio7BGNr9p6ERLDUyCH/WfTR
+         mjv9vBMLsdFdGVctTIUJtQ2rhu4go0lkNNDH9T0dKvK2mL8IxKdsvzgax2gyYBiMwUgX
+         kgd9siwWAzDa3AfoqFUQzwVdxsU0cH+C97aCwM+I2Mqjpn7z7Tua83M7CgtGTTJbR11m
+         phBU26GjC1jU7oZH24YMT0W8kZVhr+HQ/8/aAGUoFE74gNpzKvV28/0RWSrchpmO6TqZ
+         c0Pg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xEzoTshWx9LHG7n1pf+ZKj4XQNDPSyPSzUdAg8EzOuM=;
-        b=ZoJ8IoeFZnbJwWdvPYsI0Gfhfo85U59d8wmMhk0f79CWSDItcwIvfZ2tU7LoU9m1qY
-         yfarVGNKFF/t5nwLCWizBCBbzPbq8gNUMbAPFeVPrO887ZPq0TjE8mYmV+fCKrlGguUE
-         NmFyUT4bJyVIqUSiCVIaf21hLy5vPVOOuSHa/6iTRhmdLmk3gEIMggPUuRsMjeWQcF95
-         HUEvrEh5jdRBTdS5iCYe3s/qnXMzgekY/JwShXGffNorLRMueoXxPju7nBIVoSHBdwuu
-         6G1ui7bfTicqiaMO/kRkfkwGFynOdE1g2hgFQopfwOJW3k3JaSrLwjiw7yOWpC0g6rSl
-         o+qQ==
-X-Gm-Message-State: APjAAAUkD8SHRekJsDNSeubwhDO4g8NavGL8UD89OTWKVG3fMJpj1S/L
-        G4dbOx43eirwHxX5WjidddU=
-X-Google-Smtp-Source: APXvYqwRs29cTCDJX/Qj9b0zPr+sP6RUc/kFQZGbYqCKoahmZeaIEZNHdKd7IeDX5YMFaCGTb9q4yw==
-X-Received: by 2002:a1c:3dc6:: with SMTP id k189mr4100932wma.145.1572020160358;
-        Fri, 25 Oct 2019 09:16:00 -0700 (PDT)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id o70sm2825834wme.29.2019.10.25.09.15.58
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 25 Oct 2019 09:15:59 -0700 (PDT)
-Subject: Re: [PATCH 02/16] lpfc: Fix reporting of read-only fw error errors
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-References: <20191018211832.7917-1-jsmart2021@gmail.com>
- <20191018211832.7917-3-jsmart2021@gmail.com> <yq136fhd4ar.fsf@oracle.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=dDp13ywgSupw9EcMrvuhw6Gs8e5NpNu6s01gDT2RHJQ=;
+        b=qVe4VxEhgeP9GbNhosZrG9CQQE3xXSf3NO/2SDHWVNvfSznouv7U/3MCjQ1bakTV8p
+         M75/6Wqhu5DTxMYCUQ13bY2TG0FptoVAJV3lHst/IcG/dXk0e7OAldhA1VKwQ8DEr7S1
+         SwV5uu1lkvTKyfzTGCKzDI9Afow5ZtFceQ1HivHSc90mGiop7S/Azct3U+ZhGXwzyxKJ
+         s9+8CtD3lfb8nICzk0HpHmGUSPvAKJASVO8KxcwS3Q5/+hGDK5v4Ak2nmVBFqxtQdPle
+         UnvK2tVcqmX6klRV7unqgsCE9UlahREMGmpCg1yvj/4vx3n9t/7rgACAyR8iOkk7MsMC
+         8I1w==
+X-Gm-Message-State: APjAAAVMByA1YsFLXD2/EtdUU//bZS6sEGS7AlnwD9gVqy26U3TnPWqt
+        2AHzfdYPzeuIHvsGgRMAtgnfJKwi
+X-Google-Smtp-Source: APXvYqw7t4wrui6HEJVjcoEX7qLOZzwyF8ZiQvvhQZ5NIy4n4wvNH+tMBkFxnSCLtrxET45E0OKAoQ==
+X-Received: by 2002:adf:e903:: with SMTP id f3mr4503713wrm.121.1572027940280;
+        Fri, 25 Oct 2019 11:25:40 -0700 (PDT)
+Received: from pallmd1.broadcom.com ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id i1sm3274259wmb.19.2019.10.25.11.25.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 25 Oct 2019 11:25:39 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <1d3700c8-f020-b2e1-8caa-5c5694baafc0@gmail.com>
-Date:   Fri, 25 Oct 2019 09:15:57 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <yq136fhd4ar.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+To:     linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+        martin.petersen@oracle.com, sfr@canb.auug.org.au,
+        James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH] lpfc: fix build error of lpfc_debugfs.c for vfree/vmalloc
+Date:   Fri, 25 Oct 2019 11:25:30 -0700
+Message-Id: <20191025182530.26653-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/2019 6:03 PM, Martin K. Petersen wrote:
-> 
-> James,
-> 
->>   	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC &&
->>   	     magic_number != MAGIC_NUMER_G6) ||
->>   	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC &&
->> -	     magic_number != MAGIC_NUMER_G7))
->> +	     magic_number != MAGIC_NUMER_G7)) {
-> 
-> These magic numers[sic] caught my eye.
-> 
+lpfc_debufs.c was missing include of vmalloc.h when compiled on PPC.
 
-I'll send a patch to fix the spelling errors
+Add missing header.
 
--- james
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index ab124f7d50d6..6c8effcfc8ae 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -31,6 +31,7 @@
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/ctype.h>
++#include <linux/vmalloc.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+-- 
+2.13.7
 
