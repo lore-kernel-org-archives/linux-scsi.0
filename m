@@ -2,135 +2,148 @@ Return-Path: <SRS0=/OAa=YS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F7BCA9EA0
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 12:20:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18079CA9EBC
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 14:03:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E37D21D71
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 12:20:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E382221D7B
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Oct 2019 14:03:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572012186;
+	bh=s2yQoOMO/7vJo00zrg4wbCZ/eAiOz/CEpJ75Q9s+nw0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=C43KuO0ECqlKVj45HundrLe5+0NkaGcqEF0vs+qW4WozH8sPUvz1MPlkH0zsdPPgF
+	 Uv4qkUrvrjM4mLg25d9OOQ/KBiutT/lN2eTHY1l/lctMWIr4Y0/0FtjKp8DMncFKzb
+	 /C0344vqpF/U6o92wQkVYglt487bAob82ZyGmDRo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2440210AbfJYMUZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Oct 2019 08:20:25 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:31192 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2440207AbfJYMUZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Oct 2019 08:20:25 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9PCH1ob171113
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2019 08:20:24 -0400
-Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2vux7xnx31-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Oct 2019 08:20:23 -0400
-Received: from localhost
-        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Fri, 25 Oct 2019 13:20:22 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp07.uk.ibm.com (192.168.101.137) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Fri, 25 Oct 2019 13:20:18 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x9PCKHF250921546
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Oct 2019 12:20:17 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A21D8A405C;
-        Fri, 25 Oct 2019 12:20:17 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 73ABCA405B;
-        Fri, 25 Oct 2019 12:20:17 +0000 (GMT)
-Received: from oc4120165700.ibm.com (unknown [9.152.96.98])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 25 Oct 2019 12:20:17 +0000 (GMT)
-Subject: Re: [PATCH 03/32] elx: libefc_sli: Data structures and defines for
- mbox commands
-To:     Daniel Wagner <dwagner@suse.de>, James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>
-References: <20191023215557.12581-1-jsmart2021@gmail.com>
- <20191023215557.12581-4-jsmart2021@gmail.com>
- <20191025111944.hdgfnslk57njngfi@beryllium.lan>
-From:   Steffen Maier <maier@linux.ibm.com>
-Date:   Fri, 25 Oct 2019 14:20:17 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S2505324AbfJYN53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Oct 2019 09:57:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52182 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2394825AbfJYN5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Oct 2019 09:57:25 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3A1DF21E6F;
+        Fri, 25 Oct 2019 13:57:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1572011844;
+        bh=s2yQoOMO/7vJo00zrg4wbCZ/eAiOz/CEpJ75Q9s+nw0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VSzZUcm3j3FHuQ9FkU/G9r3NYPktT1wuBRhdQaMe8ctPuhg/H7DQ2BBqcA09TpcJD
+         kV0W77409VWfYRHFVgMncaEuYAMthq2IIjHQVUm+jaoBIQnZhXpHsF5rqEokfyc5z8
+         eMHCU2A+ppmbyN7LW0XPanblwwa4h5NSrAcEG+as=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Chad Dupuis <cdupuis@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 06/25] scsi: qedf: Do not retry ELS request if qedf_alloc_cmd fails
+Date:   Fri, 25 Oct 2019 09:56:54 -0400
+Message-Id: <20191025135715.25468-6-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191025135715.25468-1-sashal@kernel.org>
+References: <20191025135715.25468-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20191025111944.hdgfnslk57njngfi@beryllium.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-x-cbid: 19102512-0028-0000-0000-000003AF6F51
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19102512-0029-0000-0000-00002471A561
-Message-Id: <aac32b49-663f-2803-94f2-8240a01714a5@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-25_07:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1908290000 definitions=main-1910250117
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/25/19 1:19 PM, Daniel Wagner wrote:
-> On Wed, Oct 23, 2019 at 02:55:28PM -0700, James Smart wrote:
->> This patch continues the libefc_sli SLI-4 library population.
->>
->> This patch adds definitions for SLI-4 mailbox commands
->> and responses.
->>
->> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
->> Signed-off-by: James Smart <jsmart2021@gmail.com>
->> ---
->>   drivers/scsi/elx/libefc_sli/sli4.h | 1996 ++++++++++++++++++++++++++++++++++++
->>   1 file changed, 1996 insertions(+)
+From: Chad Dupuis <cdupuis@marvell.com>
 
->> +#define SLI_ROUND_PAGE(b)	(((b) + SLI_SUB_PAGE_MASK) & ~SLI_SUB_PAGE_MASK)
+[ Upstream commit f1c43590365bac054d753d808dbbd207d09e088d ]
 
+If we cannot allocate an ELS middlepath request, simply fail instead of
+trying to delay and then reallocate.  This delay logic is causing soft
+lockup messages:
 
->> +/**
->> + * @brief COMMON_GET_SLI4_PARAMETERS
->> + */
->> +
->> +#define GET_Q_CNT_METHOD(val)\
->> +	((val & RSP_GET_PARAM_Q_CNT_MTHD_MASK)\
->> +	>> RSP_GET_PARAM_Q_CNT_MTHD_SHFT)
->> +#define GET_Q_CREATE_VERSION(val)\
->> +	((val & RSP_GET_PARAM_QV_MASK)\
->> +	>> RSP_GET_PARAM_QV_SHIFT)
-> 
-> This time there is no space in front of '\'. Does the expresssion not
-> fit on one line? Would be easier to read:
-> 
-> #define GET_Q_CREATE_VERSION(val) \
-> 	((val & RSP_GET_PARAM_QV_MASK) >> RSP_GET_PARAM_QV_SHIFT)
+NMI watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [kworker/2:1:7639]
+Modules linked in: xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4 tun devlink ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter dm_service_time vfat fat rpcrdma sunrpc ib_isert iscsi_target_mod ib_iser libiscsi scsi_transport_iscsi ib_srpt target_core_mod ib_srp scsi_transport_srp ib_ipoib rdma_ucm ib_ucm ib_uverbs ib_umad rdma_cm ib_cm iw_cm sb_edac intel_powerclamp coretemp intel_rapl iosf_mbi kvm_intel kvm
+irqbypass crc32_pclmul ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper cryptd iTCO_wdt iTCO_vendor_support qedr(OE) ib_core joydev ipmi_ssif pcspkr hpilo hpwdt sg ipmi_si ipmi_devintf ipmi_msghandler ioatdma shpchp lpc_ich wmi dca acpi_power_meter dm_multipath ip_tables xfs libcrc32c sd_mod crc_t10dif crct10dif_generic qedf(OE) libfcoe mgag200 libfc i2c_algo_bit drm_kms_helper scsi_transport_fc qede(OE) syscopyarea sysfillrect sysimgblt fb_sys_fops ttm qed(OE) drm crct10dif_pclmul e1000e crct10dif_common crc32c_intel scsi_tgt hpsa i2c_core ptp scsi_transport_sas pps_core dm_mirror dm_region_hash dm_log dm_mod
+CPU: 2 PID: 7639 Comm: kworker/2:1 Kdump: loaded Tainted: G           OEL ------------   3.10.0-861.el7.x86_64 #1
+Hardware name: HP ProLiant DL580 Gen9/ProLiant DL580 Gen9, BIOS U17 07/21/2016
+Workqueue: qedf_2_dpc qedf_handle_rrq [qedf]
+task: ffff959edd628fd0 ti: ffff959ed6f08000 task.ti: ffff959ed6f08000
+RIP: 0010:[<ffffffff8355913a>]  [<ffffffff8355913a>] delay_tsc+0x3a/0x60
+RSP: 0018:ffff959ed6f0bd30  EFLAGS: 00000246
+RAX: 000000008ef5f791 RBX: 5f646d635f666465 RCX: 0000025b8ededa2f
+RDX: 000000000000025b RSI: 0000000000000002 RDI: 0000000000217d1e
+RBP: ffff959ed6f0bd30 R08: ffffffffc079aae8 R09: 0000000000000200
+R10: ffffffffc07952c6 R11: 0000000000000000 R12: 6c6c615f66646571
+R13: ffff959ed6f0bcc8 R14: ffff959ed6f0bd08 R15: ffff959e00000028
+FS:  0000000000000000(0000) GS:ffff959eff480000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f4117fa1eb0 CR3: 0000002039e66000 CR4: 00000000003607e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+[<ffffffff8355907d>] __const_udelay+0x2d/0x30
+[<ffffffffc079444a>] qedf_initiate_els+0x13a/0x450 [qedf]
+[<ffffffffc0794210>] ? qedf_srr_compl+0x2a0/0x2a0 [qedf]
+[<ffffffffc0795337>] qedf_send_rrq+0x127/0x230 [qedf]
+[<ffffffffc078ed55>] qedf_handle_rrq+0x15/0x20 [qedf]
+[<ffffffff832b2dff>] process_one_work+0x17f/0x440
+[<ffffffff832b3ac6>] worker_thread+0x126/0x3c0
+[<ffffffff832b39a0>] ? manage_workers.isra.24+0x2a0/0x2a0
+[<ffffffff832bae31>] kthread+0xd1/0xe0
+[<ffffffff832bad60>] ? insert_kthread_work+0x40/0x40
+[<ffffffff8391f637>] ret_from_fork_nospec_begin+0x21/0x21
+[<ffffffff832bad60>] ? insert_kthread_work+0x40/0x40
 
-Protect the macro argument in the expansion with parentheses to prevent 
-unintended operator precedence during evaluation?
-As with (b) of SLI_ROUND_PAGE(b) above.
+Signed-off-by: Chad Dupuis <cdupuis@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qedf/qedf_els.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-(((val) &  ... ))
-
-
-
+diff --git a/drivers/scsi/qedf/qedf_els.c b/drivers/scsi/qedf/qedf_els.c
+index 59c18ca4cda98..e5927a09f7bce 100644
+--- a/drivers/scsi/qedf/qedf_els.c
++++ b/drivers/scsi/qedf/qedf_els.c
+@@ -23,8 +23,6 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
+ 	int rc = 0;
+ 	uint32_t did, sid;
+ 	uint16_t xid;
+-	uint32_t start_time = jiffies / HZ;
+-	uint32_t current_time;
+ 	struct fcoe_wqe *sqe;
+ 	unsigned long flags;
+ 	u16 sqe_idx;
+@@ -50,18 +48,12 @@ static int qedf_initiate_els(struct qedf_rport *fcport, unsigned int op,
+ 		goto els_err;
+ 	}
+ 
+-retry_els:
+ 	els_req = qedf_alloc_cmd(fcport, QEDF_ELS);
+ 	if (!els_req) {
+-		current_time = jiffies / HZ;
+-		if ((current_time - start_time) > 10) {
+-			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS,
+-				   "els: Failed els 0x%x\n", op);
+-			rc = -ENOMEM;
+-			goto els_err;
+-		}
+-		mdelay(20 * USEC_PER_MSEC);
+-		goto retry_els;
++		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_ELS,
++			  "Failed to alloc ELS request 0x%x\n", op);
++		rc = -ENOMEM;
++		goto els_err;
+ 	}
+ 
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS, "initiate_els els_req = "
 -- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+2.20.1
 
