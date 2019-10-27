@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08428CA9EBC
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF500CA9EBC
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C420320679
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8582B21726
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="lJUgsoPu"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TDp+0f7e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726911AbfJ0OGE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:06:04 -0400
+        id S1726940AbfJ0OGF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:06:05 -0400
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfJ0OGE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:04 -0400
+        with ESMTP id S1726541AbfJ0OGF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:05 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1572185240; x=1603721240;
+  t=1572185242; x=1603721242;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=5cvE0oaFONE+MtgJwCgpa8BlpWWXdkUaTDADwKXP7sY=;
-  b=lJUgsoPuKUonyT5TLz45UKlmgV3+Uh76G+E4DPRjLaDoJNWXImUy8C8i
-   HP/IqqIrGkd+K2zsdDU80IqH1/abLa8/1GbQGetuIzTdhmyrk+FrD5g3y
-   9o4ZUCP8fPrxDgZ/QkCUfj9/r9nqLXgh8IuDKUHQ7Q+ayONvZR4AF8udz
-   ejDDDsMSCdxymK/GtowAR4DekOYObsiXnJ1PzBWEkx7/+8Hm4rZhVE7D9
-   e76R6RNWIObTHEvw95MPHdHLkYBqJzaHB8zItHH/6qEPF4KRUWeMvHdJ6
-   vDb5lrcgCQ+CYH3yJyFj133rne4TX4SBW1/0iN7gt3VYRdfzJ1YHjaYjD
-   A==;
-IronPort-SDR: 9BsfnFCXObD66iJRXD/3Zlq528hG5MFpSuLU4Xy2o67GBss17c0nDNf61nDSOYq+yQY0hgSstN
- PoBiQ5F5631wPl2rY7i0MHqNRoYHMnBZwugqHeLHdhYG3ZknVaRuju9OSdmmxvHYhqwFiOSfvr
- c5J/zUKpsz7OpWLGF1ACU4WWyV8u0HyOXRl2GWXb/EMTH1uRiitpnqJDcchE82VTQK8MdWHE43
- QYpWlQtzQIldkpn3N/blSwTPuWevDixMHdCnqBrzkId5Xpj6tNtQk6RpfzEVRoiE5GIm+5Vvkx
- VLM=
+  bh=TLqEky6w+vX+YkKEOL1ISQHtwn9kaFjzjWIu8MoRAiA=;
+  b=TDp+0f7eOphiyplFTxbWO1tC6zUAEL83MWaAuDeOaeGdsVNiBQMsMMsv
+   TsuZdWMeFY96Dq5CUQWXvElVloybGicmFPdkK3AGM16IDv7ILguJpsDgP
+   tGHPwtJeqJZ359AGzehpHZE53gAzXTGNWRox3ygjivtIqn3KUCYqvatZZ
+   cWtNrdUTDzWlZ2X4UcmuiUpgjJ59l0An96IrNkWcOLhHN89sfrMABgLfz
+   rDXZae1rWIbUaXyK1XR5HGSuSuG5u/jqHB3LNFJDoI3ySyC7MWXnJwgFk
+   UGmH2A9j116perxnzJboR0NYTDIVtWu9Y2IKYRaf5fBb6acCiZbOkR+xm
+   g==;
+IronPort-SDR: W/qMN9bXO3UbfMdTHeTdUH1ckiy2myLZBGO+Ge/jzkeBLna/WCLrzISK8fn+OvxUD+2EXDgS13
+ YlKOj3xzbVIxrADjjrHl/v4iqrnfjz/olDa50ZQQO84banPhxHxiZIWVtxYAVWiG3jS4Ui3Ae2
+ +NIO2WdxhiDpmg0u1TKqjb1S0+P6FpJZawRzEdAOvsZ+Ku5HMRntDd3a+zcFDAD0Aw+s2UZNn2
+ y5Jl0JjfIsFy4AO3YjMQjhvNia/YIro8ieHyqC21KPV1PBhaTPKiyAVnaAcG4emlX9rqN/nCXI
+ l1M=
 X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
-   d="scan'208";a="222578551"
+   d="scan'208";a="222578555"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:19 +0800
-IronPort-SDR: TJJhNDX1GKTkIy3JFqgfTefzVby21FmeNl2te6+lQW2Xqfnm0RuFzOyLka+t2e1ZtXcWe27yOf
- vjrJEiy9T3qjpAQuyOPTsPF7A6x1cs8gWQBT4cBUiNrCN7y9nu2JFu0JE25ZX6nnP5djQTDMQd
- P91AAh4v9DdU9gkripiVUvdqsPpeeEKlylinIZgKJ7tY2A1HDJ82cmorWqyHn5ZLT6ztid2/Tk
- k8v8Dor2c0fRSl0jVa/C7HRTX4kb8UVkJMmai7MjQJQIyJvFlUPOfNfPM3fOvnZU12iPm8Yje8
- E3dS92BgYuDEDmHabTcZySvq
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:22 +0800
+IronPort-SDR: ztWVZ1VRTI/fqUpKhau3uvQMr4ToZya76VH9b/QmhTUsnWfa0wL93SGJNZa+J20Kp/+IPL3Doq
+ ODScm9nDLdqPqUp+Za4zC6dd8U9zPAuRu2e/COBgOpj8Hb3v5Uitr0LOVGsKIk6pEahSsvaMm7
+ yJ88cLr2Q+0wfS+a/WHoGronBOUOcQD52NwbR4bgAcEdOF/f2es2YMJo9klwRS9uPv/ktW90q+
+ rB1cXM02Lziwm6IMbErDb9e7+twIShGE2k1HVH6sygCxPGlKsx4xQ8JQV8hUe5Bq4bFyC5g0C4
+ cWNQAEcB1cWsRhii1XrwfkI7
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:27 -0700
-IronPort-SDR: xsDPaaX7ug3izD4+t1ANL9/KQMDmbU4f3DDNjrwLsfkJndSpOKgGt6scuMfMQJCEPQOOqwzWYA
- y92DaZ45IgcYGF0KTRJnlkjjif9OuVzxhe/xsvHGhk5uOsI+lCBnMb+bcR269eCkQI57xEnLpw
- IzxLlwRqxVRvZLEcHWC24/jtxIOUZE8ufm+W877LON5TZg4nOIJwOgt0Nqqq0Ys5RDuHnqaY/A
- /11OlB6nDVFNPhq0HvE86JgaTxCnYd3zqRo61hnHUqm0Wt5ShbdUTHyblUwOZJfDDa2/FbfGN3
- 0P0=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:29 -0700
+IronPort-SDR: YCvuQJ0KJZaaS7VQV7JrO6VOOK0XqmnAIZPpCjeCB1f3SBrHammem3xiraVvye+soPyS3Vjrf7
+ XN2wVgcC8yqf7tcL0QK4A/otP4oX8f2Z4zgkj6bSrOMrECzAuRmL2oyKxm0OqTi5qIsfQ1kh/J
+ LlzV1e1saprX7eW6oaPjzGzu7b1XWQ8cl6UXUHPl+O9D2d+2FDJHkRyboTg+nNbV9z8IgNA+j3
+ A/AhfbyfHkwZGJrpmtd8vpMOJenchm46j4hGLs6bS+cowRC3jbWmXrBTTStumGKnDKKt/WFjvM
+ Vjs=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:06:01 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:06:03 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Dmitry Fomichev <dmitry.fomichev@wdc.com>,
         Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 6/8] scsi: sd_zbc: add zone open, close, and finish support
-Date:   Sun, 27 Oct 2019 23:05:47 +0900
-Message-Id: <20191027140549.26272-7-damien.lemoal@wdc.com>
+Subject: [PATCH 7/8] dm: add zone open, close and finish support
+Date:   Sun, 27 Oct 2019 23:05:48 +0900
+Message-Id: <20191027140549.26272-8-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
 References: <20191027140549.26272-1-damien.lemoal@wdc.com>
@@ -86,134 +86,87 @@ From: Ajay Joshi <ajay.joshi@wdc.com>
 Implement REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH
 support to allow explicit control of zone states.
 
-Contains contributions from Matias Bjorling, Hans Holmberg,
-Keith Busch and Damien Le Moal.
+Contains contributions from Matias Bjorling, Hans Holmberg and
+Damien Le Moal.
 
 Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>
 Signed-off-by: Matias Bjorling <matias.bjorling@wdc.com>
 Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-Signed-off-by: Keith Busch <kbusch@kernel.org>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/sd.c     | 15 +++++++++++++--
- drivers/scsi/sd.h     |  8 +++++---
- drivers/scsi/sd_zbc.c | 22 +++++++++++++---------
- 3 files changed, 31 insertions(+), 14 deletions(-)
+ drivers/md/dm-flakey.c | 7 +++----
+ drivers/md/dm-linear.c | 2 +-
+ drivers/md/dm.c        | 5 +++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 03163ac5fe95..ff0a22e2a34e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1290,9 +1290,17 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
- 	case REQ_OP_WRITE:
- 		return sd_setup_read_write_cmnd(cmd);
- 	case REQ_OP_ZONE_RESET:
--		return sd_zbc_setup_reset_cmnd(cmd, false);
-+		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_RESET_WRITE_POINTER,
-+						   false);
- 	case REQ_OP_ZONE_RESET_ALL:
--		return sd_zbc_setup_reset_cmnd(cmd, true);
-+		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_RESET_WRITE_POINTER,
-+						   true);
-+	case REQ_OP_ZONE_OPEN:
-+		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_OPEN_ZONE, false);
-+	case REQ_OP_ZONE_CLOSE:
-+		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_CLOSE_ZONE, false);
-+	case REQ_OP_ZONE_FINISH:
-+		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_FINISH_ZONE, false);
- 	default:
- 		WARN_ON_ONCE(1);
- 		return BLK_STS_NOTSUPP;
-@@ -1960,6 +1968,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	case REQ_OP_WRITE_SAME:
- 	case REQ_OP_ZONE_RESET:
- 	case REQ_OP_ZONE_RESET_ALL:
-+	case REQ_OP_ZONE_OPEN:
-+	case REQ_OP_ZONE_CLOSE:
-+	case REQ_OP_ZONE_FINISH:
- 		if (!result) {
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 1eab779f812b..bf2102a749bc 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -209,7 +209,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
+diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
+index 2900fbde89b3..76587e9af0ef 100644
+--- a/drivers/md/dm-flakey.c
++++ b/drivers/md/dm-flakey.c
+@@ -280,7 +280,7 @@ static void flakey_map_bio(struct dm_target *ti, struct bio *bio)
+ 	struct flakey_c *fc = ti->private;
  
- extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
- extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
--extern blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all);
-+blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
-+					 unsigned char op, bool all);
- extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- 			    struct scsi_sense_hdr *sshdr);
- extern int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
-@@ -225,8 +226,9 @@ static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
- 
- static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
- 
--static inline blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd,
--						   bool all)
-+static inline blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
-+						       unsigned char op,
-+						       bool all)
- {
- 	return BLK_STS_TARGET;
+ 	bio_set_dev(bio, fc->dev->bdev);
+-	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_sectors(bio) || op_is_zone_mgmt(bio_op(bio)))
+ 		bio->bi_iter.bi_sector =
+ 			flakey_map_sector(ti, bio->bi_iter.bi_sector);
  }
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 1efc69e194f8..39f10ec0dfcf 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -207,13 +207,17 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
- }
+@@ -322,8 +322,7 @@ static int flakey_map(struct dm_target *ti, struct bio *bio)
+ 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
+ 	pb->bio_submitted = false;
  
- /**
-- * sd_zbc_setup_reset_cmnd - Prepare a RESET WRITE POINTER scsi command.
-+ * sd_zbc_setup_zone_mgmt_cmnd - Prepare a zone ZBC_OUT command. The operations
-+ *			can be RESET WRITE POINTER, OPEN, CLOSE or FINISH.
-  * @cmd: the command to setup
-- * @all: Reset all zones control.
-+ * @op: Operation to be performed
-+ * @all: All zones control
+-	/* Do not fail reset zone */
+-	if (bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (op_is_zone_mgmt(bio_op(bio)))
+ 		goto map_bio;
+ 
+ 	/* Are we alive ? */
+@@ -384,7 +383,7 @@ static int flakey_end_io(struct dm_target *ti, struct bio *bio,
+ 	struct flakey_c *fc = ti->private;
+ 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
+ 
+-	if (bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (op_is_zone_mgmt(bio_op(bio)))
+ 		return DM_ENDIO_DONE;
+ 
+ 	if (!*error && pb->bio_submitted && (bio_data_dir(bio) == READ)) {
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index ecefe6703736..97acafd48c85 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -90,7 +90,7 @@ static void linear_map_bio(struct dm_target *ti, struct bio *bio)
+ 	struct linear_c *lc = ti->private;
+ 
+ 	bio_set_dev(bio, lc->dev->bdev);
+-	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
++	if (bio_sectors(bio) || op_is_zone_mgmt(bio_op(bio)))
+ 		bio->bi_iter.bi_sector =
+ 			linear_map_sector(ti, bio->bi_iter.bi_sector);
+ }
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 1a5e328c443a..bc143c1b2333 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1174,7 +1174,8 @@ static size_t dm_dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff,
+ 
+ /*
+  * A target may call dm_accept_partial_bio only from the map routine.  It is
+- * allowed for all bio types except REQ_PREFLUSH and REQ_OP_ZONE_RESET.
++ * allowed for all bio types except REQ_PREFLUSH, REQ_OP_ZONE_RESET,
++ * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH.
   *
-- * Called from sd_init_command() for a REQ_OP_ZONE_RESET request.
-+ * Called from sd_init_command() for REQ_OP_ZONE_RESET, REQ_OP_ZONE_RESET_ALL,
-+ * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE or REQ_OP_ZONE_FINISH requests.
-  */
--blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all)
-+blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
-+					 unsigned char op, bool all)
- {
- 	struct request *rq = cmd->request;
- 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-@@ -234,7 +238,7 @@ blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all)
- 	cmd->cmd_len = 16;
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
- 	cmd->cmnd[0] = ZBC_OUT;
--	cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
-+	cmd->cmnd[1] = op;
- 	if (all)
- 		cmd->cmnd[14] = 0x1;
- 	else
-@@ -263,14 +267,14 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- 	int result = cmd->result;
- 	struct request *rq = cmd->request;
- 
--	if (req_op(rq) == REQ_OP_ZONE_RESET &&
-+	if (op_is_zone_mgmt(req_op(rq)) &&
- 	    result &&
- 	    sshdr->sense_key == ILLEGAL_REQUEST &&
- 	    sshdr->asc == 0x24) {
- 		/*
--		 * INVALID FIELD IN CDB error: reset of a conventional
--		 * zone was attempted. Nothing to worry about, so be
--		 * quiet about the error.
-+		 * INVALID FIELD IN CDB error: a zone management command was
-+		 * attempted on a conventional zone. Nothing to worry about,
-+		 * so be quiet about the error.
- 		 */
- 		rq->rq_flags |= RQF_QUIET;
- 	}
+  * dm_accept_partial_bio informs the dm that the target only wants to process
+  * additional n_sectors sectors of the bio and the rest of the data should be
+@@ -1627,7 +1628,7 @@ static blk_qc_t __split_and_process_bio(struct mapped_device *md,
+ 		ci.sector_count = 0;
+ 		error = __send_empty_flush(&ci);
+ 		/* dec_pending submits any data associated with flush */
+-	} else if (bio_op(bio) == REQ_OP_ZONE_RESET) {
++	} else if (op_is_zone_mgmt(bio_op(bio))) {
+ 		ci.bio = bio;
+ 		ci.sector_count = 0;
+ 		error = __split_and_process_non_flush(&ci);
 -- 
 2.21.0
 
