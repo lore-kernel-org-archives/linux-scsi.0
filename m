@@ -2,62 +2,62 @@ Return-Path: <SRS0=OYiK=YU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF500CA9EBC
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A7FCA9EAF
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8582B21726
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 080DE20679
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TDp+0f7e"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Bx0Sr2iO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726940AbfJ0OGF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:06:05 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
+        id S1726750AbfJ0OGV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:06:21 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31361 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfJ0OGF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:05 -0400
+        with ESMTP id S1726541AbfJ0OGV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1572185242; x=1603721242;
+  t=1572185266; x=1603721266;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=TLqEky6w+vX+YkKEOL1ISQHtwn9kaFjzjWIu8MoRAiA=;
-  b=TDp+0f7eOphiyplFTxbWO1tC6zUAEL83MWaAuDeOaeGdsVNiBQMsMMsv
-   TsuZdWMeFY96Dq5CUQWXvElVloybGicmFPdkK3AGM16IDv7ILguJpsDgP
-   tGHPwtJeqJZ359AGzehpHZE53gAzXTGNWRox3ygjivtIqn3KUCYqvatZZ
-   cWtNrdUTDzWlZ2X4UcmuiUpgjJ59l0An96IrNkWcOLhHN89sfrMABgLfz
-   rDXZae1rWIbUaXyK1XR5HGSuSuG5u/jqHB3LNFJDoI3ySyC7MWXnJwgFk
-   UGmH2A9j116perxnzJboR0NYTDIVtWu9Y2IKYRaf5fBb6acCiZbOkR+xm
-   g==;
-IronPort-SDR: W/qMN9bXO3UbfMdTHeTdUH1ckiy2myLZBGO+Ge/jzkeBLna/WCLrzISK8fn+OvxUD+2EXDgS13
- YlKOj3xzbVIxrADjjrHl/v4iqrnfjz/olDa50ZQQO84banPhxHxiZIWVtxYAVWiG3jS4Ui3Ae2
- +NIO2WdxhiDpmg0u1TKqjb1S0+P6FpJZawRzEdAOvsZ+Ku5HMRntDd3a+zcFDAD0Aw+s2UZNn2
- y5Jl0JjfIsFy4AO3YjMQjhvNia/YIro8ieHyqC21KPV1PBhaTPKiyAVnaAcG4emlX9rqN/nCXI
- l1M=
+  bh=zw9z2raQuJBiKBUSRP4kpCIHnthdBqRSj5UzBl54Qzo=;
+  b=Bx0Sr2iOJmk7RrCi+JOd7bosI+7IgGQGA4P91chd1NBT+4z7TFDVkKVo
+   Pmtyo8GefKI57QC9J7imBwTcs9CGJsIsEdvTr0+gdoRrsOIWlDJ7zAOnN
+   aiwhhedJ0MDcQjA9BNLuZLCaSc9xcQ9lqqksRkUAsaRU4XnX88QtraRrj
+   z+rFVLz5znrsxjJa1SORDtC+h+h/BMXDahW5i6vg8fm4EH8APFhMGUyQ/
+   GteU/BhK8SGfqpCtDfRBnECl3/oMTkBioaSw1JcS0cooqiOSs8nTs19Gv
+   4TsP4Ilu22AzXqRBsz1iP8+KHIRobnVQ/2AYzmxBNm5ZE3LOUWZGwbS1S
+   w==;
+IronPort-SDR: Um91AUHhOhbBJ0EAP0xnFyy115b29tqYqMdM8DWPeCV85TUdgFU8TeBJW1rBDOAxOapusQv2N8
+ WxWzWlwmsaP1qeFae+uzLUdLQfNODF0S4HQ+860vEhC1MH3SYJlfXswMhp+bL23x8mypXU/rdx
+ v2YBpZy/MObuVVOrl0FNXfR1T5Jy8yW+77iagruSjf53Eaf2v8lYZy32xcCd7LuFIs/n04885z
+ I0ma89geAkOdfvVC02atTxndQPh1O0nVY5bkWaqcDjbgGZY2bkpyS0gjFGNjuV++UZ22aCVIC/
+ xFY=
 X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
-   d="scan'208";a="222578555"
+   d="scan'208";a="222578557"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:22 +0800
-IronPort-SDR: ztWVZ1VRTI/fqUpKhau3uvQMr4ToZya76VH9b/QmhTUsnWfa0wL93SGJNZa+J20Kp/+IPL3Doq
- ODScm9nDLdqPqUp+Za4zC6dd8U9zPAuRu2e/COBgOpj8Hb3v5Uitr0LOVGsKIk6pEahSsvaMm7
- yJ88cLr2Q+0wfS+a/WHoGronBOUOcQD52NwbR4bgAcEdOF/f2es2YMJo9klwRS9uPv/ktW90q+
- rB1cXM02Lziwm6IMbErDb9e7+twIShGE2k1HVH6sygCxPGlKsx4xQ8JQV8hUe5Bq4bFyC5g0C4
- cWNQAEcB1cWsRhii1XrwfkI7
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:25 +0800
+IronPort-SDR: 71DSbeXtrpxxrFb8Kn/5rCwOAvxQpKgJ4yjHsJ0UFtvFBggBmDoFhZThNjFL+tXkXo4Knku4xb
+ SOGpS2RU32Jh8g8SQXkrUqbIuv3G8BagLK9sL7x9peVMJhJbfG4aupDuu28K4FVJrvy1ljikJm
+ okVhsLgmCSyFio8/YpBWWaZDOvt+vgXS+pZM1S+WvOda6aW6PAEffuhpjgJaM5kBqhzihiZ6fE
+ CkrRh3vUVTpK1RgOCtkyRJVQKL6znJVSMhVH8DE6cMw29H/uMFMmIP21C16tVeyp+YevzS/9jy
+ shboSCco6PPVwEc/3BJL9Eqk
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:29 -0700
-IronPort-SDR: YCvuQJ0KJZaaS7VQV7JrO6VOOK0XqmnAIZPpCjeCB1f3SBrHammem3xiraVvye+soPyS3Vjrf7
- XN2wVgcC8yqf7tcL0QK4A/otP4oX8f2Z4zgkj6bSrOMrECzAuRmL2oyKxm0OqTi5qIsfQ1kh/J
- LlzV1e1saprX7eW6oaPjzGzu7b1XWQ8cl6UXUHPl+O9D2d+2FDJHkRyboTg+nNbV9z8IgNA+j3
- A/AhfbyfHkwZGJrpmtd8vpMOJenchm46j4hGLs6bS+cowRC3jbWmXrBTTStumGKnDKKt/WFjvM
- Vjs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:30 -0700
+IronPort-SDR: zsGaibo1ct/ZMz0zQXZesnRk7H+7gE+bmgCZApkHVlYevcV1Tj2tEfX4GZWHh4cHMc+lsEGY15
+ 1JeVUeUxd6loyv6BRrQCQeD7KfeJPKYfOa51yRBlnM0AjUg/I/XmlXWdtglPlwwiE5G+8MeCv/
+ i4Nq0R2+bmrCWrtZP1jHkuLL7HYDrJeabtnPfmel/ZHXPWsOPowTQnyTUeOcJfrlocDneS2fcP
+ niK5oQ6QT5CvPknM1cPDuGGq5pl4msjHPlYBX1D4TUTwmPr5pO0+ertG6KTqbhDP/IQis9GTNA
+ mMU=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:06:03 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:06:05 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Dmitry Fomichev <dmitry.fomichev@wdc.com>,
         Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 7/8] dm: add zone open, close and finish support
-Date:   Sun, 27 Oct 2019 23:05:48 +0900
-Message-Id: <20191027140549.26272-8-damien.lemoal@wdc.com>
+Subject: [PATCH 8/8] null_blk: add zone open, close, and finish support
+Date:   Sun, 27 Oct 2019 23:05:49 +0900
+Message-Id: <20191027140549.26272-9-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
 References: <20191027140549.26272-1-damien.lemoal@wdc.com>
@@ -86,87 +86,81 @@ From: Ajay Joshi <ajay.joshi@wdc.com>
 Implement REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH
 support to allow explicit control of zone states.
 
-Contains contributions from Matias Bjorling, Hans Holmberg and
-Damien Le Moal.
+Contains contributions from Matias Bjorling, Hans Holmberg,
+Keith Busch and Damien Le Moal.
 
 Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>
 Signed-off-by: Matias Bjorling <matias.bjorling@wdc.com>
 Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/md/dm-flakey.c | 7 +++----
- drivers/md/dm-linear.c | 2 +-
- drivers/md/dm.c        | 5 +++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/block/null_blk_zoned.c | 33 ++++++++++++++++++++++++++++++---
+ 1 file changed, 30 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
-index 2900fbde89b3..76587e9af0ef 100644
---- a/drivers/md/dm-flakey.c
-+++ b/drivers/md/dm-flakey.c
-@@ -280,7 +280,7 @@ static void flakey_map_bio(struct dm_target *ti, struct bio *bio)
- 	struct flakey_c *fc = ti->private;
- 
- 	bio_set_dev(bio, fc->dev->bdev);
--	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
-+	if (bio_sectors(bio) || op_is_zone_mgmt(bio_op(bio)))
- 		bio->bi_iter.bi_sector =
- 			flakey_map_sector(ti, bio->bi_iter.bi_sector);
+diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
+index 4e56b17ed3ef..02f41a3bc4cb 100644
+--- a/drivers/block/null_blk_zoned.c
++++ b/drivers/block/null_blk_zoned.c
+@@ -136,13 +136,14 @@ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+ 	return BLK_STS_OK;
  }
-@@ -322,8 +322,7 @@ static int flakey_map(struct dm_target *ti, struct bio *bio)
- 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
- 	pb->bio_submitted = false;
  
--	/* Do not fail reset zone */
--	if (bio_op(bio) == REQ_OP_ZONE_RESET)
-+	if (op_is_zone_mgmt(bio_op(bio)))
- 		goto map_bio;
+-static blk_status_t null_zone_reset(struct nullb_cmd *cmd, sector_t sector)
++static blk_status_t null_zone_mgmt(struct nullb_cmd *cmd, enum req_opf op,
++				   sector_t sector)
+ {
+ 	struct nullb_device *dev = cmd->nq->dev;
+ 	struct blk_zone *zone = &dev->zones[null_zone_no(dev, sector)];
+ 	size_t i;
  
- 	/* Are we alive ? */
-@@ -384,7 +383,7 @@ static int flakey_end_io(struct dm_target *ti, struct bio *bio,
- 	struct flakey_c *fc = ti->private;
- 	struct per_bio_data *pb = dm_per_bio_data(bio, sizeof(struct per_bio_data));
- 
--	if (bio_op(bio) == REQ_OP_ZONE_RESET)
-+	if (op_is_zone_mgmt(bio_op(bio)))
- 		return DM_ENDIO_DONE;
- 
- 	if (!*error && pb->bio_submitted && (bio_data_dir(bio) == READ)) {
-diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
-index ecefe6703736..97acafd48c85 100644
---- a/drivers/md/dm-linear.c
-+++ b/drivers/md/dm-linear.c
-@@ -90,7 +90,7 @@ static void linear_map_bio(struct dm_target *ti, struct bio *bio)
- 	struct linear_c *lc = ti->private;
- 
- 	bio_set_dev(bio, lc->dev->bdev);
--	if (bio_sectors(bio) || bio_op(bio) == REQ_OP_ZONE_RESET)
-+	if (bio_sectors(bio) || op_is_zone_mgmt(bio_op(bio)))
- 		bio->bi_iter.bi_sector =
- 			linear_map_sector(ti, bio->bi_iter.bi_sector);
- }
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 1a5e328c443a..bc143c1b2333 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1174,7 +1174,8 @@ static size_t dm_dax_copy_to_iter(struct dax_device *dax_dev, pgoff_t pgoff,
- 
- /*
-  * A target may call dm_accept_partial_bio only from the map routine.  It is
-- * allowed for all bio types except REQ_PREFLUSH and REQ_OP_ZONE_RESET.
-+ * allowed for all bio types except REQ_PREFLUSH, REQ_OP_ZONE_RESET,
-+ * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH.
-  *
-  * dm_accept_partial_bio informs the dm that the target only wants to process
-  * additional n_sectors sectors of the bio and the rest of the data should be
-@@ -1627,7 +1628,7 @@ static blk_qc_t __split_and_process_bio(struct mapped_device *md,
- 		ci.sector_count = 0;
- 		error = __send_empty_flush(&ci);
- 		/* dec_pending submits any data associated with flush */
--	} else if (bio_op(bio) == REQ_OP_ZONE_RESET) {
-+	} else if (op_is_zone_mgmt(bio_op(bio))) {
- 		ci.bio = bio;
- 		ci.sector_count = 0;
- 		error = __split_and_process_non_flush(&ci);
+-	switch (req_op(cmd->rq)) {
++	switch (op) {
+ 	case REQ_OP_ZONE_RESET_ALL:
+ 		for (i = 0; i < dev->nr_zones; i++) {
+ 			if (zone[i].type == BLK_ZONE_TYPE_CONVENTIONAL)
+@@ -158,6 +159,29 @@ static blk_status_t null_zone_reset(struct nullb_cmd *cmd, sector_t sector)
+ 		zone->cond = BLK_ZONE_COND_EMPTY;
+ 		zone->wp = zone->start;
+ 		break;
++	case REQ_OP_ZONE_OPEN:
++		if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
++			return BLK_STS_IOERR;
++		if (zone->cond == BLK_ZONE_COND_FULL)
++			return BLK_STS_IOERR;
++
++		zone->cond = BLK_ZONE_COND_EXP_OPEN;
++		break;
++	case REQ_OP_ZONE_CLOSE:
++		if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
++			return BLK_STS_IOERR;
++		if (zone->cond == BLK_ZONE_COND_FULL)
++			return BLK_STS_IOERR;
++
++		zone->cond = BLK_ZONE_COND_CLOSED;
++		break;
++	case REQ_OP_ZONE_FINISH:
++		if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
++			return BLK_STS_IOERR;
++
++		zone->cond = BLK_ZONE_COND_FULL;
++		zone->wp = zone->start + zone->len;
++		break;
+ 	default:
+ 		return BLK_STS_NOTSUPP;
+ 	}
+@@ -172,7 +196,10 @@ blk_status_t null_handle_zoned(struct nullb_cmd *cmd, enum req_opf op,
+ 		return null_zone_write(cmd, sector, nr_sectors);
+ 	case REQ_OP_ZONE_RESET:
+ 	case REQ_OP_ZONE_RESET_ALL:
+-		return null_zone_reset(cmd, sector);
++	case REQ_OP_ZONE_OPEN:
++	case REQ_OP_ZONE_CLOSE:
++	case REQ_OP_ZONE_FINISH:
++		return null_zone_mgmt(cmd, op, sector);
+ 	default:
+ 		return BLK_STS_OK;
+ 	}
 -- 
 2.21.0
 
