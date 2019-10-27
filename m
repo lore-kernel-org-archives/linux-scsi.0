@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 845C9CA9EBD
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5416FCA9EBC
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5998E21726
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2362021726
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="dsD+X/oM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ReGtvGg2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726869AbfJ0OF4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:05:56 -0400
+        id S1726889AbfJ0OF6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:05:58 -0400
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfJ0OF4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:05:56 -0400
+        with ESMTP id S1726541AbfJ0OF6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:05:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1572185228; x=1603721228;
+  t=1572185231; x=1603721231;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Xfbf+XHAwLMZYdtqHBXL4n+euc8kSDDPQNshVy1NEdY=;
-  b=dsD+X/oMJHetNYpn4kzh1bTtvEBtLEJqXDbRWRqse1lEU2q1kHRv2/am
-   mBjnGnBNQUrB8/E1OH8CbBkPR9rBZnIE6k0A8cD+yOcVVNit8TKTUhuAw
-   C4zIHPAeLTwNqhy6WwjD/yrEg0fETL4golRFvEmDyInHkGxcVl2vsBRW4
-   85HzXoGz1C1McxC0A5uZFaH5ztL3QWXJDiltJIfJ6QANZOywrTVPFyWLw
-   PVKo2hVWVsKOOwMzFVvH1an774MLbG9XVbVHtxQwd/saKI3l1L/11myoG
-   /Sc75dTdIsntDPWtiemUJMzVfaKoSfUnrUFwDgbdjJzHqJxdLmubQzCID
+  bh=YzelDqYrFynhZQWAEiup5vbFP24VklL5nBubfM2krqU=;
+  b=ReGtvGg2y0vbVYteaDE5Mkepn01YCY1R/IS+JWNku5zOUCrup1SOoIPt
+   NO0yssREu2FSu+P0LT2Na66Unal1gQYrW/yYp6vc4mRAF7+e6CS9Q+KpV
+   LMjwi+VqJxfLjdvEoN8X/qknBJwFS8u63JK/4VIBv/sHaluQZ68+l8+ht
+   BlrTO0Iq1NaVD7A3Mav6Tt9EC13hXOsEdhEsbNnm9cWqj6MHLovM2ouAU
+   AnxpcGGdpBIyjqn+6QHNYYN/Rwv/EZGoN2eTLFcRW3WQdAFgHy+TCQt++
+   Fc0MXMTYY/wrC3WxNBq2mZOPeeHCaoYYgPe6MQtnxtIObWCs1EOIRNzyh
    Q==;
-IronPort-SDR: 7a1FdYvaZkl1G1RMitxs5/FQNhqv4+ufyK0EhFa7/b68h5Z5q8ejpFbiPjgZprsYzT9nu1f1RG
- aV5ncuQPm0kGPCZlw0gHY4C2qPQxSqFd8RSc0sgUyE8T3MFWS4bJYomUJCOWkDliAsIRiL/Sw5
- 4yJfUCq9KIJcPvITfCbYZ9qo3ILMSNpP+SqCT79184a/IekARsAFRi40uVpxlePs01OHh4TRj8
- XxWfvuVIGikquWaOJiJ5CaAccOtBgWx0cXGzQcHO9sQ4iUEhWNC8VNJSfe5x2PY7NP1KjKnhtV
- OnA=
+IronPort-SDR: xctl2oLCt65nguT4zKPN9LDJQpPOhS+rEIWA+ONMUfX20L5RKJ69rnrUEbteAhH5ANRH0u3tit
+ qj5NRsipljdIsVrSOi6aour5Z/SHGqj//dISUnmYEadHrBGN/z6lKjLuziighnieTNQc/XJaGx
+ 4vRHx2NEeEDdP+RXsY85EmCNvFzz5WCMLui/ZMIDGCzTTFdKH5wt/reESnyoD154Ao4RB2/p2k
+ B+aeLQWBdnkEfxu7+QHvmuJrXTSrGVQ+0IbP0hdVQ0poxV0PVkewUbPKUitM/z+O4/sMgFAidV
+ gkE=
 X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
-   d="scan'208";a="222578537"
+   d="scan'208";a="222578539"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:08 +0800
-IronPort-SDR: nd8ntmMyc0winhfzjgXDDHT/8HSMN1A3Zy5LxIC/62WYC3VegY+HyBh04vdg0pyFunLqvUW+PR
- eYF1vJpXp9nQs0KwRy6YYHrp5p10Fd94dMt933Q5dFr+1SiH8nz/2L7GOmOmbhZsWsiCLO/wgq
- +p7KRPgJwlPYCkFW/wPMvRhlhkXcF1kh5eeBipnHwBrdsW+bJ0lUKEkhBRAu+bW/DmsuQDgjUO
- oy2MkY3WOBqgWA49wIg9Gp6vodQmR3X/coQK0RsfHQhIvZZsZTjQvnQRtt7ZyWAIHhW7gH2I6E
- 2umX93Q3sJag3OFLglGxt70P
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:10 +0800
+IronPort-SDR: GJ7MLSWlvjFD3tqhYtmjElRlJu3a5AbdJcKVTk6jwG0qWLAg0Kpnu7HTLIG/fgVxwWDM5bsru2
+ poXWNTMr/JkFngPZ1RbkXDPPqojzH2TGUtzf9WnC9mCH5RRZR4dltc67eGBz1Hi4QU9SuMjw6K
+ xEnjfz7A92UJnguuBYQp4YAcnuNBepsU6F6uCGEyH2FSqlAIeMRVizPeaZlnW49bu5r0pqnYZ2
+ ZdB1M9Lq77u9456xlz95NbOEnv04xBQ1N7k/5iX+RGfs+ld1rTGkqBnxH5wKxnJ7tetgOPCRC5
+ rHqQnj2SE60JmQH5dD76x+Of
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:19 -0700
-IronPort-SDR: 2YCBqSRDcWASCl8YStSibU0PXrCLarn1VLq9+3nOA39lnDeEgKmjffRs2FSLIdBt78B6g289Y+
- 4H/Kzpq2H96aNY2aPyxHEYRl6ePMHPqZ7cySs7eQ6fxx1skDkE7z2v0bDvbGp4/FuGBTWAw4aK
- NU0bmCoQbWs8QW4qLu31wFfBFJzIB3fGED0OTfdwTb02nWewnAkkdWnAMvsrc/h6GsCQwSs6j8
- kFQRz5XJaBP/OUQy9IJZfENs78yPLPaKK9vkrWUkoNeun+zShcID70uSObMwfyXRXCKKoyu8bT
- nMA=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:21 -0700
+IronPort-SDR: uR98BDGb+oDCDl3aGAlMSwA0kM5bmjHUYEmzwIJdBaAnbIiG4wxWUs96BTPpyfSFVgv89PwrYn
+ RH+tv5S0a748uqvVul6hso9M+kfuaBVmTJZBpOAT/Fo1JDEBdn1G6Cxvnt9rFQOdQLuiFyi6vr
+ 8s+VoUBcvoPOHWBap2dkA3k0uHknUkvrl3wD5qAPpQM2+XHdToK8arSo4HKSE8bv07RgMqUHLH
+ IsdvHPotDFKSSmEmNfEfTAbE8hO1JSEcEW8mUp6r+4rBQYzSIHdw+wYiWyFVZxYBm+anB6dSiE
+ l5k=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:54 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:56 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Dmitry Fomichev <dmitry.fomichev@wdc.com>,
         Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 2/8] block: Simplify REQ_OP_ZONE_RESET_ALL handling
-Date:   Sun, 27 Oct 2019 23:05:43 +0900
-Message-Id: <20191027140549.26272-3-damien.lemoal@wdc.com>
+Subject: [PATCH 3/8] scsi: sd_zbc: Fix sd_zbc_complete()
+Date:   Sun, 27 Oct 2019 23:05:44 +0900
+Message-Id: <20191027140549.26272-4-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
 References: <20191027140549.26272-1-damien.lemoal@wdc.com>
@@ -81,94 +81,62 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need for the function __blkdev_reset_all_zones() as
-REQ_OP_ZONE_RESET_ALL can be handled directly in blkdev_reset_zones()
-bio loop with an early break from the loop. This patch removes this
-function and modifies blkdev_reset_zones(), simplifying the code.
+The ILLEGAL REQUEST/INVALID FIELD IN CDB error generated by an attempt
+to reset a conventional zone does not apply to the reset write pointer
+command with the ALL bit set, that is, to REQ_OP_ZONE_RESET_ALL
+requests. Fix sd_zbc_complete() to be quiet only in the case of
+REQ_OP_ZONE_RESET, excluding REQ_OP_ZONE_RESET_ALL.
 
+Since REQ_OP_ZONE_RESET is the only request handled by
+sd_zbc_complete(), also simplify the code using a simple if statement.
+
+Fixes: d81e9d494354 ("scsi: implement REQ_OP_ZONE_RESET_ALL")
+Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-zoned.c | 40 +++++++++++++---------------------------
- 1 file changed, 13 insertions(+), 27 deletions(-)
+ drivers/scsi/sd_zbc.c | 29 ++++++++++-------------------
+ 1 file changed, 10 insertions(+), 19 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 7fe376eede86..14785011e798 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -202,32 +202,14 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
- }
- EXPORT_SYMBOL_GPL(blkdev_report_zones);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index de4019dc0f0b..1efc69e194f8 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -263,25 +263,16 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+ 	int result = cmd->result;
+ 	struct request *rq = cmd->request;
  
--/*
-- * Special case of zone reset operation to reset all zones in one command,
-- * useful for applications like mkfs.
-- */
--static int __blkdev_reset_all_zones(struct block_device *bdev, gfp_t gfp_mask)
--{
--	struct bio *bio = bio_alloc(gfp_mask, 0);
--	int ret;
+-	switch (req_op(rq)) {
+-	case REQ_OP_ZONE_RESET:
+-	case REQ_OP_ZONE_RESET_ALL:
 -
--	/* across the zones operations, don't need any sectors */
--	bio_set_dev(bio, bdev);
--	bio_set_op_attrs(bio, REQ_OP_ZONE_RESET_ALL, 0);
+-		if (result &&
+-		    sshdr->sense_key == ILLEGAL_REQUEST &&
+-		    sshdr->asc == 0x24)
+-			/*
+-			 * INVALID FIELD IN CDB error: reset of a conventional
+-			 * zone was attempted. Nothing to worry about, so be
+-			 * quiet about the error.
+-			 */
+-			rq->rq_flags |= RQF_QUIET;
+-		break;
 -
--	ret = submit_bio_wait(bio);
--	bio_put(bio);
--
--	return ret;
--}
--
- static inline bool blkdev_allow_reset_all_zones(struct block_device *bdev,
-+						sector_t sector,
- 						sector_t nr_sectors)
- {
- 	if (!blk_queue_zone_resetall(bdev_get_queue(bdev)))
- 		return false;
- 
--	if (nr_sectors != part_nr_sects_read(bdev->bd_part))
-+	if (sector || nr_sectors != part_nr_sects_read(bdev->bd_part))
- 		return false;
- 	/*
- 	 * REQ_OP_ZONE_RESET_ALL can be executed only if the block device is
-@@ -270,9 +252,6 @@ int blkdev_reset_zones(struct block_device *bdev,
- 		/* Out of range */
- 		return -EINVAL;
- 
--	if (blkdev_allow_reset_all_zones(bdev, nr_sectors))
--		return  __blkdev_reset_all_zones(bdev, gfp_mask);
--
- 	/* Check alignment (handle eventual smaller last zone) */
- 	zone_sectors = blk_queue_zone_sectors(q);
- 	if (sector & (zone_sectors - 1))
-@@ -283,17 +262,24 @@ int blkdev_reset_zones(struct block_device *bdev,
- 		return -EINVAL;
- 
- 	while (sector < end_sector) {
--
- 		bio = blk_next_bio(bio, 0, gfp_mask);
--		bio->bi_iter.bi_sector = sector;
- 		bio_set_dev(bio, bdev);
--		bio_set_op_attrs(bio, REQ_OP_ZONE_RESET, 0);
- 
+-	case REQ_OP_WRITE:
+-	case REQ_OP_WRITE_ZEROES:
+-	case REQ_OP_WRITE_SAME:
+-		break;
++	if (req_op(rq) == REQ_OP_ZONE_RESET &&
++	    result &&
++	    sshdr->sense_key == ILLEGAL_REQUEST &&
++	    sshdr->asc == 0x24) {
 +		/*
-+		 * Special case for the zone reset operation that reset all
-+		 * zones, this is useful for applications like mkfs.
++		 * INVALID FIELD IN CDB error: reset of a conventional
++		 * zone was attempted. Nothing to worry about, so be
++		 * quiet about the error.
 +		 */
-+		if (blkdev_allow_reset_all_zones(bdev, sector, nr_sectors)) {
-+			bio->bi_opf = REQ_OP_ZONE_RESET_ALL;
-+			break;
-+		}
-+
-+		bio->bi_opf = REQ_OP_ZONE_RESET;
-+		bio->bi_iter.bi_sector = sector;
- 		sector += zone_sectors;
- 
- 		/* This may take a while, so be nice to others */
- 		cond_resched();
--
++		rq->rq_flags |= RQF_QUIET;
  	}
+ }
  
- 	ret = submit_bio_wait(bio);
 -- 
 2.21.0
 
