@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D715DCA9EBE
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08428CA9EBC
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A84BC21850
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C420320679
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:06:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BOxtuXXV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="lJUgsoPu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726907AbfJ0OGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:06:03 -0400
+        id S1726911AbfJ0OGE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:06:04 -0400
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfJ0OGC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:02 -0400
+        with ESMTP id S1726541AbfJ0OGE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:06:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1572185238; x=1603721238;
+  t=1572185240; x=1603721240;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uaP74axAC0WvTAoZiYMsg3QO52V240mSkQunz5Fl5+U=;
-  b=BOxtuXXVSRbfExrNgsXdLSJwVc17ITNDaa+HVaq6v/g+ts4fOI4Pw/dF
-   iSmO3inT2ctAruh29/2VOPVxUBq80KPL3vuZeZKgJbEFjTZw8w0JxTw4K
-   9o03EJi4CpHz2b4s8BjeDRrzhjl/9PA6Cg/nil0J+1flMtqxDccDQO1Ys
-   6a2KNJeaN8dyEhtC2Rti1YEgqa0czts4dwcM9RtEnfHDTlno0kjdXIhGI
-   FRUzjGquztBlgIsc/uyHwLAS8vGMvFh+pS1iiCSUKn5kERrsh+FxWN8Wt
-   URGEL3IDqWfUTpJupW1232MS+QTFAcba1hjt2D8e+kQGD6YO3OWlBO92k
-   Q==;
-IronPort-SDR: quo4fRDIG9fgFwBEaPb3fSmy5tHTYZpXmSFajyqZvVW4f7ER702aoOT6ZkYijkP8UUH+uS6RMO
- q8erDCde1E8OY5iG5RZC3lGRs9fOh+ScsqdM30Qhvh6522D7/Igkfb389fVjO0yQHQfBTqVqT8
- EgIDkj1x7abIViUnqnmchgCxTd47C1LcmG0JamhsZtROuRHWZ+PioqWjuMR3pyu4oKQtq48nLn
- Sr96hO3DQdRh7AV7Ege3pZ48VpLhmeNXjO33sV/NpGsxHL5zSrCw7jV7MPY90Sf62+Z0CfBytC
- ZUA=
+  bh=5cvE0oaFONE+MtgJwCgpa8BlpWWXdkUaTDADwKXP7sY=;
+  b=lJUgsoPuKUonyT5TLz45UKlmgV3+Uh76G+E4DPRjLaDoJNWXImUy8C8i
+   HP/IqqIrGkd+K2zsdDU80IqH1/abLa8/1GbQGetuIzTdhmyrk+FrD5g3y
+   9o4ZUCP8fPrxDgZ/QkCUfj9/r9nqLXgh8IuDKUHQ7Q+ayONvZR4AF8udz
+   ejDDDsMSCdxymK/GtowAR4DekOYObsiXnJ1PzBWEkx7/+8Hm4rZhVE7D9
+   e76R6RNWIObTHEvw95MPHdHLkYBqJzaHB8zItHH/6qEPF4KRUWeMvHdJ6
+   vDb5lrcgCQ+CYH3yJyFj133rne4TX4SBW1/0iN7gt3VYRdfzJ1YHjaYjD
+   A==;
+IronPort-SDR: 9BsfnFCXObD66iJRXD/3Zlq528hG5MFpSuLU4Xy2o67GBss17c0nDNf61nDSOYq+yQY0hgSstN
+ PoBiQ5F5631wPl2rY7i0MHqNRoYHMnBZwugqHeLHdhYG3ZknVaRuju9OSdmmxvHYhqwFiOSfvr
+ c5J/zUKpsz7OpWLGF1ACU4WWyV8u0HyOXRl2GWXb/EMTH1uRiitpnqJDcchE82VTQK8MdWHE43
+ QYpWlQtzQIldkpn3N/blSwTPuWevDixMHdCnqBrzkId5Xpj6tNtQk6RpfzEVRoiE5GIm+5Vvkx
+ VLM=
 X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
-   d="scan'208";a="222578545"
+   d="scan'208";a="222578551"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:17 +0800
-IronPort-SDR: xzqt+1ts5mAaJBJcifcy/6GEA7lu/Gz26omlnEw+Egwz4ZN7/5IfJSmbyIHziO1tV6QXGnLEGg
- yQa+bkpAQLIKYO1AB3oggDHAOUuB1vb/MnG0MkUs0x8PL5hYVl0f25VkRolPkZOhC5bwcyBTbK
- JS4wJtHzIh3tkcGmbJV9/Gtqj6dMRTbJgQLZAjZynTY0+WT1SOz8QogikeRybT9Tqkx0e4cMvL
- nBho1+nwq83BQVr/ddCOE5NoYmSZaA5GQ6dy69fvTUaGQuHZRf8+aQEfCQRe/uCJR2sOUaErrH
- HISOKNcaIpuWXtfhlRnXM/sN
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:19 +0800
+IronPort-SDR: TJJhNDX1GKTkIy3JFqgfTefzVby21FmeNl2te6+lQW2Xqfnm0RuFzOyLka+t2e1ZtXcWe27yOf
+ vjrJEiy9T3qjpAQuyOPTsPF7A6x1cs8gWQBT4cBUiNrCN7y9nu2JFu0JE25ZX6nnP5djQTDMQd
+ P91AAh4v9DdU9gkripiVUvdqsPpeeEKlylinIZgKJ7tY2A1HDJ82cmorWqyHn5ZLT6ztid2/Tk
+ k8v8Dor2c0fRSl0jVa/C7HRTX4kb8UVkJMmai7MjQJQIyJvFlUPOfNfPM3fOvnZU12iPm8Yje8
+ E3dS92BgYuDEDmHabTcZySvq
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:25 -0700
-IronPort-SDR: VlrH5BzpXOv60hD7d74hyOtYP8I+naDylREX8iUfHJ4qqvNN1TorTsWgyRaYO2l6ArJp09VyG2
- 9bqOl+kY3iixVs645yUz24CN1z82z2gt74Wi/2FIW06rD/CzTnrVMPqJaHBW6Wn+zgzskjL+6U
- bibOLG2q8I8k9naWFoAqlL3uFQT6NeNBhJJZRDqUyGzNWOwi0SWTXg2vVGU1Lr2A0eoROodZcZ
- OziFzm7XjpmnTPO7q89pg5dkaD2zVCSvxtcoFYALk6V8jQhH1athHyTvKOX+fCCg5VCG+O+3FV
- i1Q=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:27 -0700
+IronPort-SDR: xsDPaaX7ug3izD4+t1ANL9/KQMDmbU4f3DDNjrwLsfkJndSpOKgGt6scuMfMQJCEPQOOqwzWYA
+ y92DaZ45IgcYGF0KTRJnlkjjif9OuVzxhe/xsvHGhk5uOsI+lCBnMb+bcR269eCkQI57xEnLpw
+ IzxLlwRqxVRvZLEcHWC24/jtxIOUZE8ufm+W877LON5TZg4nOIJwOgt0Nqqq0Ys5RDuHnqaY/A
+ /11OlB6nDVFNPhq0HvE86JgaTxCnYd3zqRo61hnHUqm0Wt5ShbdUTHyblUwOZJfDDa2/FbfGN3
+ 0P0=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:59 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:06:01 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -68,9 +68,9 @@ Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Dmitry Fomichev <dmitry.fomichev@wdc.com>,
         Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 5/8] block: add zone open, close and finish ioctl support
-Date:   Sun, 27 Oct 2019 23:05:46 +0900
-Message-Id: <20191027140549.26272-6-damien.lemoal@wdc.com>
+Subject: [PATCH 6/8] scsi: sd_zbc: add zone open, close, and finish support
+Date:   Sun, 27 Oct 2019 23:05:47 +0900
+Message-Id: <20191027140549.26272-7-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
 References: <20191027140549.26272-1-damien.lemoal@wdc.com>
@@ -83,162 +83,137 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Ajay Joshi <ajay.joshi@wdc.com>
 
-Introduce three new ioctl commands BLKOPENZONE, BLKCLOSEZONE and
-BLKFINISHZONE to allow applications to control the condition of zones
-on a zoned block device through the execution of the REQ_OP_ZONE_OPEN,
-REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH operations.
+Implement REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH
+support to allow explicit control of zone states.
 
 Contains contributions from Matias Bjorling, Hans Holmberg,
-Dmitry Fomichev, Keith Busch, Damien Le Moal and Christoph Hellwig.
+Keith Busch and Damien Le Moal.
 
 Signed-off-by: Ajay Joshi <ajay.joshi@wdc.com>
 Signed-off-by: Matias Bjorling <matias.bjorling@wdc.com>
 Signed-off-by: Hans Holmberg <hans.holmberg@wdc.com>
-Signed-off-by: Dmitry Fomichev <dmitry.fomichev@wdc.com>
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/blk-zoned.c             | 28 +++++++++++++++++++++++-----
- block/ioctl.c                 |  5 ++++-
- include/linux/blkdev.h        | 10 +++++-----
- include/uapi/linux/blkzoned.h | 17 ++++++++++++++---
- 4 files changed, 46 insertions(+), 14 deletions(-)
+ drivers/scsi/sd.c     | 15 +++++++++++++--
+ drivers/scsi/sd.h     |  8 +++++---
+ drivers/scsi/sd_zbc.c | 22 +++++++++++++---------
+ 3 files changed, 31 insertions(+), 14 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index dab34dc48fb6..481eaf7d04d4 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -357,15 +357,16 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- }
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 03163ac5fe95..ff0a22e2a34e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1290,9 +1290,17 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
+ 	case REQ_OP_WRITE:
+ 		return sd_setup_read_write_cmnd(cmd);
+ 	case REQ_OP_ZONE_RESET:
+-		return sd_zbc_setup_reset_cmnd(cmd, false);
++		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_RESET_WRITE_POINTER,
++						   false);
+ 	case REQ_OP_ZONE_RESET_ALL:
+-		return sd_zbc_setup_reset_cmnd(cmd, true);
++		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_RESET_WRITE_POINTER,
++						   true);
++	case REQ_OP_ZONE_OPEN:
++		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_OPEN_ZONE, false);
++	case REQ_OP_ZONE_CLOSE:
++		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_CLOSE_ZONE, false);
++	case REQ_OP_ZONE_FINISH:
++		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_FINISH_ZONE, false);
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		return BLK_STS_NOTSUPP;
+@@ -1960,6 +1968,9 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	case REQ_OP_WRITE_SAME:
+ 	case REQ_OP_ZONE_RESET:
+ 	case REQ_OP_ZONE_RESET_ALL:
++	case REQ_OP_ZONE_OPEN:
++	case REQ_OP_ZONE_CLOSE:
++	case REQ_OP_ZONE_FINISH:
+ 		if (!result) {
+ 			good_bytes = blk_rq_bytes(req);
+ 			scsi_set_resid(SCpnt, 0);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 1eab779f812b..bf2102a749bc 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -209,7 +209,8 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
  
- /*
-- * BLKRESETZONE ioctl processing.
-+ * BLKRESETZONE, BLKOPENZONE, BLKCLOSEZONE and BLKFINISHZONE ioctl processing.
-  * Called from blkdev_ioctl.
-  */
--int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
--			     unsigned int cmd, unsigned long arg)
-+int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
-+			   unsigned int cmd, unsigned long arg)
+ extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
+ extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
+-extern blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all);
++blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
++					 unsigned char op, bool all);
+ extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+ 			    struct scsi_sense_hdr *sshdr);
+ extern int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+@@ -225,8 +226,9 @@ static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
+ 
+ static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
+ 
+-static inline blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd,
+-						   bool all)
++static inline blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
++						       unsigned char op,
++						       bool all)
  {
- 	void __user *argp = (void __user *)arg;
- 	struct request_queue *q;
- 	struct blk_zone_range zrange;
-+	enum req_opf op;
- 
- 	if (!argp)
- 		return -EINVAL;
-@@ -386,8 +387,25 @@ int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 	if (copy_from_user(&zrange, argp, sizeof(struct blk_zone_range)))
- 		return -EFAULT;
- 
--	return blkdev_zone_mgmt(bdev, REQ_OP_ZONE_RESET,
--				zrange.sector, zrange.nr_sectors, GFP_KERNEL);
-+	switch (cmd) {
-+	case BLKRESETZONE:
-+		op = REQ_OP_ZONE_RESET;
-+		break;
-+	case BLKOPENZONE:
-+		op = REQ_OP_ZONE_OPEN;
-+		break;
-+	case BLKCLOSEZONE:
-+		op = REQ_OP_ZONE_CLOSE;
-+		break;
-+	case BLKFINISHZONE:
-+		op = REQ_OP_ZONE_FINISH;
-+		break;
-+	default:
-+		return -ENOTTY;
-+	}
-+
-+	return blkdev_zone_mgmt(bdev, op, zrange.sector, zrange.nr_sectors,
-+				GFP_KERNEL);
+ 	return BLK_STS_TARGET;
  }
- 
- static inline unsigned long *blk_alloc_zone_bitmap(int node,
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 15a0eb80ada9..8756efb1419e 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -532,7 +532,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKREPORTZONE:
- 		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
- 	case BLKRESETZONE:
--		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
-+	case BLKOPENZONE:
-+	case BLKCLOSEZONE:
-+	case BLKFINISHZONE:
-+		return blkdev_zone_mgmt_ioctl(bdev, mode, cmd, arg);
- 	case BLKGETZONESZ:
- 		return put_uint(arg, bdev_zone_sectors(bdev));
- 	case BLKGETNRZONES:
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index bf797a63388c..dbef541c2530 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -367,8 +367,8 @@ extern int blk_revalidate_disk_zones(struct gendisk *disk);
- 
- extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 				     unsigned int cmd, unsigned long arg);
--extern int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
--				    unsigned int cmd, unsigned long arg);
-+extern int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
-+				  unsigned int cmd, unsigned long arg);
- 
- #else /* CONFIG_BLK_DEV_ZONED */
- 
-@@ -389,9 +389,9 @@ static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
- 	return -ENOTTY;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 1efc69e194f8..39f10ec0dfcf 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -207,13 +207,17 @@ static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
  }
- 
--static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
--					   fmode_t mode, unsigned int cmd,
--					   unsigned long arg)
-+static inline int blkdev_zone_mgmt_ioctl(struct block_device *bdev,
-+					 fmode_t mode, unsigned int cmd,
-+					 unsigned long arg)
- {
- 	return -ENOTTY;
- }
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index 498eec813494..0cdef67135f0 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -120,9 +120,11 @@ struct blk_zone_report {
- };
  
  /**
-- * struct blk_zone_range - BLKRESETZONE ioctl request
-- * @sector: starting sector of the first zone to issue reset write pointer
-- * @nr_sectors: Total number of sectors of 1 or more zones to reset
-+ * struct blk_zone_range - BLKRESETZONE/BLKOPENZONE/
-+ *                         BLKCLOSEZONE/BLKFINISHZONE ioctl
-+ *                         requests
-+ * @sector: Starting sector of the first zone to operate on.
-+ * @nr_sectors: Total number of sectors of all zones to operate on.
+- * sd_zbc_setup_reset_cmnd - Prepare a RESET WRITE POINTER scsi command.
++ * sd_zbc_setup_zone_mgmt_cmnd - Prepare a zone ZBC_OUT command. The operations
++ *			can be RESET WRITE POINTER, OPEN, CLOSE or FINISH.
+  * @cmd: the command to setup
+- * @all: Reset all zones control.
++ * @op: Operation to be performed
++ * @all: All zones control
+  *
+- * Called from sd_init_command() for a REQ_OP_ZONE_RESET request.
++ * Called from sd_init_command() for REQ_OP_ZONE_RESET, REQ_OP_ZONE_RESET_ALL,
++ * REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE or REQ_OP_ZONE_FINISH requests.
   */
- struct blk_zone_range {
- 	__u64		sector;
-@@ -139,10 +141,19 @@ struct blk_zone_range {
-  *                sector range. The sector range must be zone aligned.
-  * @BLKGETZONESZ: Get the device zone size in number of 512 B sectors.
-  * @BLKGETNRZONES: Get the total number of zones of the device.
-+ * @BLKOPENZONE: Open the zones in the specified sector range.
-+ *               The 512 B sector range must be zone aligned.
-+ * @BLKCLOSEZONE: Close the zones in the specified sector range.
-+ *                The 512 B sector range must be zone aligned.
-+ * @BLKFINISHZONE: Mark the zones as full in the specified sector range.
-+ *                 The 512 B sector range must be zone aligned.
-  */
- #define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
- #define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
- #define BLKGETZONESZ	_IOR(0x12, 132, __u32)
- #define BLKGETNRZONES	_IOR(0x12, 133, __u32)
-+#define BLKOPENZONE	_IOW(0x12, 134, struct blk_zone_range)
-+#define BLKCLOSEZONE	_IOW(0x12, 135, struct blk_zone_range)
-+#define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
+-blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all)
++blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
++					 unsigned char op, bool all)
+ {
+ 	struct request *rq = cmd->request;
+ 	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+@@ -234,7 +238,7 @@ blk_status_t sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd, bool all)
+ 	cmd->cmd_len = 16;
+ 	memset(cmd->cmnd, 0, cmd->cmd_len);
+ 	cmd->cmnd[0] = ZBC_OUT;
+-	cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
++	cmd->cmnd[1] = op;
+ 	if (all)
+ 		cmd->cmnd[14] = 0x1;
+ 	else
+@@ -263,14 +267,14 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+ 	int result = cmd->result;
+ 	struct request *rq = cmd->request;
  
- #endif /* _UAPI_BLKZONED_H */
+-	if (req_op(rq) == REQ_OP_ZONE_RESET &&
++	if (op_is_zone_mgmt(req_op(rq)) &&
+ 	    result &&
+ 	    sshdr->sense_key == ILLEGAL_REQUEST &&
+ 	    sshdr->asc == 0x24) {
+ 		/*
+-		 * INVALID FIELD IN CDB error: reset of a conventional
+-		 * zone was attempted. Nothing to worry about, so be
+-		 * quiet about the error.
++		 * INVALID FIELD IN CDB error: a zone management command was
++		 * attempted on a conventional zone. Nothing to worry about,
++		 * so be quiet about the error.
+ 		 */
+ 		rq->rq_flags |= RQF_QUIET;
+ 	}
 -- 
 2.21.0
 
