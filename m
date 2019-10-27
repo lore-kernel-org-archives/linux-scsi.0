@@ -2,344 +2,139 @@ Return-Path: <SRS0=OYiK=YU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB56CA9EBD
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 08:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F91C47E49
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EA1D20873
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 08:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07CFD21D81
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U5SVYSfU"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MvI++XDP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726079AbfJ0ITh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 04:19:37 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:56727 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725977AbfJ0ITh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 27 Oct 2019 04:19:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572164375;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1YcqTDnLloIb+ZLB9uujC7vc9mZnFxIJiCufzMLN3cU=;
-        b=U5SVYSfUXDgP0BvnwGNu5ddIwdpG5lp/OaxRQPeRp0N5/sLTv3hKljtdBXMyRhmFf36Rko
-        6EDxE8wdQw3vSt2VidkpVgMPeyBkOZ8wk1kPsUfochLfwe9nSuE168vWVojpemAXTrCAxo
-        q41j4S8N+u19xp8cRcg1ElJRDLKW08Q=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-289-p0Jgi6WLOn2-vmJW0PVX0g-1; Sun, 27 Oct 2019 04:19:31 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EA96A107AD28;
-        Sun, 27 Oct 2019 08:19:27 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3F23D5D9E2;
-        Sun, 27 Oct 2019 08:19:17 +0000 (UTC)
-Date:   Sun, 27 Oct 2019 16:19:10 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linuxarm@huawei.com,
-        linux-kernel@vger.kernel.org, hare@suse.com
-Subject: Re: [PATCH 6/6] scsi: hisi_sas: Expose multiple hw queues for v3 as
- experimental
-Message-ID: <20191027081910.GB16704@ming.t460p>
-References: <1571926881-75524-1-git-send-email-john.garry@huawei.com>
- <1571926881-75524-7-git-send-email-john.garry@huawei.com>
+        id S1726736AbfJ0OFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:05:53 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726541AbfJ0OFw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:05:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1572185222; x=1603721222;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=utIVpuMkwaTdskTo45vxPM/J/8/lle5F97i1zeRPlaI=;
+  b=MvI++XDP5mHmNbryaJiiO0YV9cH5oCdvEm2sa2ICnPTL/oxs9Leummb7
+   uBAAZ7KPObiyGOZFxbuy1R3DEEOs6Tr75clDvPtpagwkK0S9h/5WP8IZa
+   +Jg6dOYRr0QQcV2uq8coLdtNiG/HN8snIwKe7ppDo4fhKT7OOe8R8qP5n
+   di8lAxX58q1XjVVlQyDIQ/DBVn4eYcsxZqBMn++efh927TmhZf5XngDY4
+   Djw9Ub0QYF7D5S2VWmk53wTTNamAPv+siyEYqsTWsjzdxjQmutFb/VBoQ
+   uAAwAbPgxOQQ4bHJcTL8RwZYlHbtNeMPjLwVoyEWAYDfDhovmn2C/JPx9
+   w==;
+IronPort-SDR: 0fgX3hgxsqOxx4JMXPjA0PkrT5b03a/Qs3bLjqWSPQozgu2aM69ReTHhr3g2fW8T7DcpMe8QZQ
+ X6pShLvum9kqI4/QvtOG1qTSYLltu4uQrVeKn//UAH3sf6Bm1Hsv3jZvV99yLQruIBsd85B8Mu
+ tKkMH4z1FF8+4g7mh4MEUucKOYQwMVkZS5vHTn+PPZxs8upt8loTVmqQmLmc6sYZ3eqxodl2M6
+ C97wzDBCC4PGPkc9Krkm3cr4H1A/7e1gaREkk1iwVB7OUcNjb68wW8T8WSbIu5ckCuIpZubkQB
+ 9ys=
+X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
+   d="scan'208";a="222578532"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:02 +0800
+IronPort-SDR: YmdfsQJsC+cUkTScAHfzAN0ZfF0CK0mD+J4wuORYuRu+u5upRxdY94BIeVnLka89qM/H8VcegG
+ haq9JNoY4z0QOI8jKP/BqOmrcft3uFEp7/IMehce/Ylgq9iGfJIVG86TmdpAJ7wVts7cuZYQHW
+ cMbum8sWOiMEENXJZ63FGnFkZ8XJGBPS8y0NZWJAlSv9jwJW6FAfw6dyWDTLpyjMjlMF+J0OlJ
+ LygZWMmBEjRT4qfEUjFH+lmmUhOzUrLlD397O+PRO4/eK3GKlL2Pa+QV8RHWskA/cGTmjAaW+w
+ ZXN3bgoWk4m72Bg/eIROjuPg
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:15 -0700
+IronPort-SDR: +RZzKRYzw04dKAZWap4nRW126plQWlg5ewBORgqIOHsG+JaBctwQxupeWsJuzTXv5gowAeF0eh
+ X8WPaAQu3Vur/D8ASXdNogN+xAudZYi6dYSbj4KKAof4dUKREP1ajzZN5vsocLv0BFf/9AgGiH
+ 7XeurbURQa/MmJ0MRgnKi359C/OqtsdN8FbD7S/uS+pPaE6RWYTKX1mLxV+7ss73+B6Z8A+KQH
+ h1ajkIbfurdX22hvijRmEq1rpG/6yTkjZhbjuoNPK2oj8Q/wmf9g95hhlY8ogoQLwchkUqFNA8
+ was=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:50 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
+        Matias Bjorling <matias.bjorling@wdc.com>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Dmitry Fomichev <dmitry.fomichev@wdc.com>,
+        Keith Busch <kbusch@kernel.org>
+Subject: [PATCH 0/8] Zone management commands support
+Date:   Sun, 27 Oct 2019 23:05:41 +0900
+Message-Id: <20191027140549.26272-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-In-Reply-To: <1571926881-75524-7-git-send-email-john.garry@huawei.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: p0Jgi6WLOn2-vmJW0PVX0g-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 10:21:21PM +0800, John Garry wrote:
-> Since we're not ready to expose mutliple queues to the upper layer always
-> due to CPU hotplug issue, add a new interim experimental command line
-> option to support it.
->=20
-> We still need to keep supporting auto_affine_msi_experimental, since
-> people are now replying the performance it provides, even though it is
-> unsafe.
->=20
-> If auto_affine_msi_experimental and expose_mq_experimental are both set,
-> then auto_affine_msi_experimental takes preference.
->=20
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  drivers/scsi/hisi_sas/hisi_sas.h       |  2 +
->  drivers/scsi/hisi_sas/hisi_sas_main.c  | 55 ++++++++++++++++----------
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 51 +++++++++++++++++++++---
->  3 files changed, 83 insertions(+), 25 deletions(-)
->=20
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/his=
-i_sas.h
-> index 4eb8f1c53f78..884f2426d753 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas.h
-> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-> @@ -8,6 +8,8 @@
->  #define _HISI_SAS_H_
-> =20
->  #include <linux/acpi.h>
-> +#include <linux/blk-mq.h>
-> +#include <linux/blk-mq-pci.h>
->  #include <linux/clk.h>
->  #include <linux/debugfs.h>
->  #include <linux/dmapool.h>
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-> index 53802c1cc1d0..c8c96a46acfd 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -389,9 +389,11 @@ static int hisi_sas_task_prep(struct sas_task *task,
->  =09struct hisi_sas_slot *slot;
->  =09struct hisi_sas_cmd_hdr=09*cmd_hdr_base;
->  =09struct asd_sas_port *sas_port =3D device->port;
-> +=09struct Scsi_Host *shost =3D hisi_hba->shost;
->  =09struct device *dev =3D hisi_hba->dev;
->  =09int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
->  =09int n_elem =3D 0, n_elem_dif =3D 0, n_elem_req =3D 0;
-> +=09struct scsi_cmnd *scmd =3D NULL;
->  =09struct hisi_sas_dq *dq;
->  =09unsigned long flags;
->  =09int wr_q_index;
-> @@ -407,13 +409,38 @@ static int hisi_sas_task_prep(struct sas_task *task=
-,
->  =09=09return -ECOMM;
->  =09}
-> =20
-> -=09if (hisi_hba->reply_map) {
-> -=09=09int cpu =3D raw_smp_processor_id();
-> -=09=09unsigned int dq_index =3D hisi_hba->reply_map[cpu];
-> +=09if (task->uldd_task) {
-> +=09=09struct ata_queued_cmd *qc;
-> =20
-> -=09=09*dq_pointer =3D dq =3D &hisi_hba->dq[dq_index];
-> -=09} else {
-> +=09=09if (dev_is_sata(device)) {
-> +=09=09=09qc =3D task->uldd_task;
-> +=09=09=09scmd =3D qc->scsicmd;
-> +=09=09} else {
-> +=09=09=09scmd =3D task->uldd_task;
-> +=09=09}
-> +=09}
-> +
-> +=09/* We have to move to just a single mode: expose multiple queues */
-> +=09if (!hisi_hba->reply_map && !shost->nr_hw_queues) {
->  =09=09*dq_pointer =3D dq =3D sas_dev->dq;
-> +=09} else {
-> +=09=09if (hisi_hba->reply_map) {
-> +=09=09=09int cpu =3D raw_smp_processor_id();
-> +=09=09=09unsigned int dq_index =3D hisi_hba->reply_map[cpu];
-> +
-> +=09=09=09*dq_pointer =3D dq =3D &hisi_hba->dq[dq_index];
-> +=09=09} else {
-> +=09=09=09if (scmd) {
-> +=09=09=09=09unsigned int dq_index;
-> +=09=09=09=09u32 blk_tag;
-> +
-> +=09=09=09=09blk_tag =3D blk_mq_unique_tag(scmd->request);
-> +=09=09=09=09dq_index =3D blk_mq_unique_tag_to_hwq(blk_tag);
-> +=09=09=09=09*dq_pointer =3D dq =3D &hisi_hba->dq[dq_index];
-> +=09=09=09} else {
-> +=09=09=09=09*dq_pointer =3D dq =3D sas_dev->dq;
-> +=09=09=09}
-> +=09=09}
->  =09}
-> =20
->  =09port =3D to_hisi_sas_port(sas_port);
-> @@ -438,22 +465,10 @@ static int hisi_sas_task_prep(struct sas_task *task=
-,
->  =09}
-> =20
->  =09if (hisi_hba->hw->slot_index_alloc)
-> -=09=09rc =3D hisi_hba->hw->slot_index_alloc(hisi_hba, device, NULL);
-> -=09else {
-> -=09=09struct scsi_cmnd *scsi_cmnd =3D NULL;
-> -
-> -=09=09if (task->uldd_task) {
-> -=09=09=09struct ata_queued_cmd *qc;
-> +=09=09rc =3D hisi_hba->hw->slot_index_alloc(hisi_hba, device, scmd);
-> +=09else
-> +=09=09rc =3D hisi_sas_slot_index_alloc(hisi_hba, scmd);
-> =20
-> -=09=09=09if (dev_is_sata(device)) {
-> -=09=09=09=09qc =3D task->uldd_task;
-> -=09=09=09=09scsi_cmnd =3D qc->scsicmd;
-> -=09=09=09} else {
-> -=09=09=09=09scsi_cmnd =3D task->uldd_task;
-> -=09=09=09}
-> -=09=09}
-> -=09=09rc =3D hisi_sas_slot_index_alloc(hisi_hba, scsi_cmnd);
-> -=09}
->  =09if (rc < 0)
->  =09=09goto err_out_dif_dma_unmap;
-> =20
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v3_hw.c
-> index 29119d0b27a7..03ba0416f910 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -512,6 +512,11 @@ module_param(auto_affine_msi_experimental, bool, 044=
-4);
->  MODULE_PARM_DESC(auto_affine_msi_experimental, "Enable auto-affinity of =
-MSI IRQs as experimental:\n"
->  =09=09 "default is off");
-> =20
-> +static bool expose_mq_experimental;
-> +module_param(expose_mq_experimental, bool, 0444);
-> +MODULE_PARM_DESC(expose_mq_experimental, "Expose multiple hw queues to u=
-pper layer as experimental:\n"
-> +=09=09 "default is off");
-> +
->  static u32 hisi_sas_read32(struct hisi_hba *hisi_hba, u32 off)
->  {
->  =09void __iomem *regs =3D hisi_hba->regs + off;
-> @@ -558,6 +563,11 @@ static u32 hisi_sas_phy_read32(struct hisi_hba *hisi=
-_hba,
-> =20
->  static int bitmaps_alloc_v3_hw(struct hisi_hba *hisi_hba)
->  {
-> +=09if (expose_mq_experimental)
-> +=09=09return sbitmap_init_node(&hisi_hba->slot_index_tags,
-> +=09=09=09=09=09 HISI_SAS_MAX_COMMANDS, -1,
-> +=09=09=09=09=09 GFP_KERNEL,
-> +=09=09=09=09=09 dev_to_node(hisi_hba->dev));
->  =09return sbitmap_init_node(&hisi_hba->slot_index_tags,
->  =09=09=09=09 HISI_SAS_UNRESERVED_IPTT, -1,
->  =09=09=09=09 GFP_KERNEL, dev_to_node(hisi_hba->dev));
-> @@ -570,6 +580,10 @@ static int slot_index_alloc_v3_hw(struct hisi_hba *h=
-isi_hba,
->  =09struct sbitmap *slot_index_tags =3D &hisi_hba->slot_index_tags;
->  =09int index;
-> =20
-> +=09if (expose_mq_experimental)
-> +=09=09return sbitmap_get(slot_index_tags,
-> +=09=09=09=09   hisi_hba->sbitmap_alloc_hint, false);
-> +
->  =09if (scmd)
->  =09=09return scmd->request->tag;
-> =20
-> @@ -583,7 +597,10 @@ static void slot_index_free_v3_hw(struct hisi_hba *h=
-isi_hba, int slot_idx)
->  {
->  =09struct sbitmap *slot_index_tags =3D &hisi_hba->slot_index_tags;
-> =20
-> -=09if (slot_idx >=3D HISI_SAS_UNRESERVED_IPTT)
-> +=09if (expose_mq_experimental) {
-> +=09=09sbitmap_clear_bit(slot_index_tags, slot_idx);
-> +=09=09hisi_hba->sbitmap_alloc_hint =3D slot_idx;
-> +=09} else if (slot_idx >=3D HISI_SAS_UNRESERVED_IPTT)
->  =09=09sbitmap_clear_bit(slot_index_tags,
->  =09=09=09=09  slot_idx - HISI_SAS_UNRESERVED_IPTT);
->  }
-> @@ -2414,8 +2431,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba =
-*hisi_hba)
->  =09struct device *dev =3D hisi_hba->dev;
->  =09int vectors;
->  =09int max_msi =3D HISI_SAS_MSI_COUNT_V3_HW, min_msi;
-> +=09struct Scsi_Host *shost =3D hisi_hba->shost;
-> =20
-> -=09if (auto_affine_msi_experimental) {
-> +=09if (auto_affine_msi_experimental || expose_mq_experimental) {
->  =09=09struct irq_affinity desc =3D {
->  =09=09=09.pre_vectors =3D BASE_VECTORS_V3_HW,
->  =09=09};
-> @@ -2434,7 +2452,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba =
-*hisi_hba)
->  =09=09=09=09=09=09=09 &desc);
->  =09=09if (vectors < 0)
->  =09=09=09return -ENOENT;
-> -=09=09setup_reply_map_v3_hw(hisi_hba, vectors - BASE_VECTORS_V3_HW);
-> +=09=09if (auto_affine_msi_experimental)
-> +=09=09=09setup_reply_map_v3_hw(hisi_hba,
-> +=09=09=09=09=09      vectors - BASE_VECTORS_V3_HW);
->  =09} else {
->  =09=09min_msi =3D max_msi;
->  =09=09vectors =3D pci_alloc_irq_vectors(hisi_hba->pci_dev, min_msi,
-> @@ -2444,6 +2464,9 @@ static int interrupt_preinit_v3_hw(struct hisi_hba =
-*hisi_hba)
->  =09}
-> =20
->  =09hisi_hba->cq_nvecs =3D vectors - BASE_VECTORS_V3_HW;
-> +=09if (expose_mq_experimental)
-> +=09=09shost->nr_hw_queues =3D hisi_hba->cq_nvecs;
-> +
->  =09return 0;
->  }
-> =20
-> @@ -3096,6 +3119,17 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba =
-*hisi_hba, bool enable)
->  =09return 0;
->  }
-> =20
-> +static int hisi_sas_map_queues(struct Scsi_Host *shost)
-> +{
-> +=09struct hisi_hba *hisi_hba =3D shost_priv(shost);
-> +=09struct blk_mq_queue_map *qmap =3D &shost->tag_set.map[HCTX_TYPE_DEFAU=
-LT];
-> +
-> +=09if (expose_mq_experimental)
-> +=09=09return blk_mq_pci_map_queues(qmap, hisi_hba->pci_dev,
-> +=09=09=09=09=09     BASE_VECTORS_V3_HW);
-> +=09return blk_mq_map_queues(qmap);
-> +}
-> +
->  static struct scsi_host_template sht_v3_hw =3D {
->  =09.name=09=09=09=3D DRV_NAME,
->  =09.module=09=09=09=3D THIS_MODULE,
-> @@ -3104,6 +3138,7 @@ static struct scsi_host_template sht_v3_hw =3D {
->  =09.slave_configure=09=3D hisi_sas_slave_configure,
->  =09.scan_finished=09=09=3D hisi_sas_scan_finished,
->  =09.scan_start=09=09=3D hisi_sas_scan_start,
-> +=09.map_queues=09=09=3D hisi_sas_map_queues,
->  =09.change_queue_depth=09=3D sas_change_queue_depth,
->  =09.bios_param=09=09=3D sas_bios_param,
->  =09.this_id=09=09=3D -1,
-> @@ -3265,8 +3300,14 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const stru=
-ct pci_device_id *id)
->  =09shost->max_lun =3D ~0;
->  =09shost->max_channel =3D 1;
->  =09shost->max_cmd_len =3D 16;
-> -=09shost->can_queue =3D HISI_SAS_UNRESERVED_IPTT;
-> -=09shost->cmd_per_lun =3D HISI_SAS_UNRESERVED_IPTT;
-> +
-> +=09if (expose_mq_experimental) {
-> +=09=09shost->can_queue =3D HISI_SAS_MAX_COMMANDS;
-> +=09=09shost->cmd_per_lun =3D HISI_SAS_MAX_COMMANDS;
+This series implements a few improvements and cleanups to zone block
+device zone reset operations with the first three patches.
 
-The above is contradictory with current 'nr_hw_queues''s meaning,
-see commit on Scsi_Host.nr_hw_queues.
+The remaining of the series patches introduce zone open, close and
+finish support, allowing users of zoned block devices to explicitly
+control the condition (state) of zones.
 
+While these operations are not stricktly necessary for the correct
+operation of zoned block devices, the open and close operations can
+improve performance for some device implementations of the ZBC and ZAC
+standards under write workloads. The finish zone operation, which
+transition a zone to the full state, can also be useful to protect a
+zone data by preventing further zone writes.
 
-        /*
-         * In scsi-mq mode, the number of hardware queues supported by the =
-LLD.
-         *
-         * Note: it is assumed that each hardware queue has a queue depth o=
-f
-         * can_queue. In other words, the total queue depth per host
-         * is nr_hw_queues * can_queue.
-         */
+These operations are implemented by introducing the new
+REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH request codes
+and the function blkdev_zone_mgmt() to issue these requests. This new
+function also replaces the former blkdev_reset_zones() function to reset
+zones write pointer.
 
-Also this implementation wastes memory too much.
+The new ioctls BLKOPENZONE, BLKCLOSEZONE and BLKFINISHZONE are also
+defined to allow applications to issue these new requests without
+resorting to a device passthrough interface (e.g. SG_IO).
 
+Support for these operations is added to the SCSI sd driver, to the dm
+infrastructure (dm-linear and dm-flakey targets) and to the null_blk
+driver.
 
-thanks,
-Ming
+Ajay Joshi (5):
+  block: add zone open, close and finish operations
+  block: add zone open, close and finish ioctl support
+  scsi: sd_zbc: add zone open, close, and finish support
+  dm: add zone open, close and finish support
+  null_blk: add zone open, close, and finish support
+
+Damien Le Moal (3):
+  block: Remove REQ_OP_ZONE_RESET plugging
+  block: Simplify REQ_OP_ZONE_RESET_ALL handling
+  scsi: sd_zbc: Fix sd_zbc_complete()
+
+ block/blk-core.c               | 12 +++--
+ block/blk-zoned.c              | 99 ++++++++++++++++++----------------
+ block/ioctl.c                  |  5 +-
+ drivers/block/null_blk_zoned.c | 33 ++++++++++--
+ drivers/md/dm-flakey.c         |  7 ++-
+ drivers/md/dm-linear.c         |  2 +-
+ drivers/md/dm-zoned-metadata.c |  6 +--
+ drivers/md/dm.c                |  5 +-
+ drivers/scsi/sd.c              | 15 +++++-
+ drivers/scsi/sd.h              |  8 +--
+ drivers/scsi/sd_zbc.c          | 43 +++++++--------
+ fs/f2fs/segment.c              |  3 +-
+ include/linux/blk_types.h      | 25 +++++++++
+ include/linux/blkdev.h         | 15 +++---
+ include/uapi/linux/blkzoned.h  | 17 ++++--
+ 15 files changed, 192 insertions(+), 103 deletions(-)
+
+-- 
+2.21.0
 
