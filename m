@@ -2,61 +2,62 @@ Return-Path: <SRS0=OYiK=YU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F91C47E49
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A764DCA9EBD
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07CFD21D81
-	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C9AE21850
+	for <linux-scsi@archiver.kernel.org>; Sun, 27 Oct 2019 14:05:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MvI++XDP"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="msaI73hu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726736AbfJ0OFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:05:53 -0400
+        id S1726865AbfJ0OFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:05:54 -0400
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11568 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbfJ0OFw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:05:52 -0400
+        with ESMTP id S1726541AbfJ0OFy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Oct 2019 10:05:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1572185222; x=1603721222;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=utIVpuMkwaTdskTo45vxPM/J/8/lle5F97i1zeRPlaI=;
-  b=MvI++XDP5mHmNbryaJiiO0YV9cH5oCdvEm2sa2ICnPTL/oxs9Leummb7
-   uBAAZ7KPObiyGOZFxbuy1R3DEEOs6Tr75clDvPtpagwkK0S9h/5WP8IZa
-   +Jg6dOYRr0QQcV2uq8coLdtNiG/HN8snIwKe7ppDo4fhKT7OOe8R8qP5n
-   di8lAxX58q1XjVVlQyDIQ/DBVn4eYcsxZqBMn++efh927TmhZf5XngDY4
-   Djw9Ub0QYF7D5S2VWmk53wTTNamAPv+siyEYqsTWsjzdxjQmutFb/VBoQ
-   uAAwAbPgxOQQ4bHJcTL8RwZYlHbtNeMPjLwVoyEWAYDfDhovmn2C/JPx9
+  t=1572185225; x=1603721225;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=jlg9LQdkZeLQo63QAcPnxaAUEhyugOYEsJL1rupmp9U=;
+  b=msaI73huyfNAW26XUItXcmNuOKQuV9xzJBUtZEPPB8OfvFSE1+vBkzoQ
+   L/9s0udaRXyK7S6TuRcyGIeIJ/UG53qlA+a2leJTPtOq85STghhxqGe3Y
+   us6xOumM85hvUscfUodf5cTpoW+DVXADnymuex86DjXZhF7ZDraYsK4Wq
+   L0r5vfy4Zfmvsdpe8fUmHefhUCe0djoYfA/8OCsZG1FF3wqi6UihoJppO
+   h+HFuuUDUJ5NJH7BFxMuWGEpuEZylPhGxV6W72xldp7c3LaipvP0MQPHt
+   zU+2rMYZLmA/iomklPYa77Zv70NzlTvdsjbrnma7d6bKIru/+TTcES2PD
    w==;
-IronPort-SDR: 0fgX3hgxsqOxx4JMXPjA0PkrT5b03a/Qs3bLjqWSPQozgu2aM69ReTHhr3g2fW8T7DcpMe8QZQ
- X6pShLvum9kqI4/QvtOG1qTSYLltu4uQrVeKn//UAH3sf6Bm1Hsv3jZvV99yLQruIBsd85B8Mu
- tKkMH4z1FF8+4g7mh4MEUucKOYQwMVkZS5vHTn+PPZxs8upt8loTVmqQmLmc6sYZ3eqxodl2M6
- C97wzDBCC4PGPkc9Krkm3cr4H1A/7e1gaREkk1iwVB7OUcNjb68wW8T8WSbIu5ckCuIpZubkQB
- 9ys=
+IronPort-SDR: yBSEMVKnU/AYJKmtL47QQNcAvYPn3Pv2AcWAslo0A1Wdcar3c4YXHt5DTY3DDdvbp//LlOiUD+
+ e4ff++/49KuJktfuVh0BukS48TVcmT/MENwu8OSulPFjRTPUaLZiWkgjjOq60Z+0i8brtBhUnn
+ kHrJhyuzeji0TOO0td8KQlpwYm0uu+YetvUxiWKz+mWUskNoHJHvw/J2gSzbbD/k0cVQuy5M49
+ UoHxFtyKLWzievb7/0irvEhKv/XrzDBbwZy2s7F27cgkW9/sMH7yOvTbZzAVIhKfTMwIE/uOUp
+ 8ic=
 X-IronPort-AV: E=Sophos;i="5.68,236,1569254400"; 
-   d="scan'208";a="222578532"
+   d="scan'208";a="222578534"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:02 +0800
-IronPort-SDR: YmdfsQJsC+cUkTScAHfzAN0ZfF0CK0mD+J4wuORYuRu+u5upRxdY94BIeVnLka89qM/H8VcegG
- haq9JNoY4z0QOI8jKP/BqOmrcft3uFEp7/IMehce/Ylgq9iGfJIVG86TmdpAJ7wVts7cuZYQHW
- cMbum8sWOiMEENXJZ63FGnFkZ8XJGBPS8y0NZWJAlSv9jwJW6FAfw6dyWDTLpyjMjlMF+J0OlJ
- LygZWMmBEjRT4qfEUjFH+lmmUhOzUrLlD397O+PRO4/eK3GKlL2Pa+QV8RHWskA/cGTmjAaW+w
- ZXN3bgoWk4m72Bg/eIROjuPg
+  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2019 22:07:05 +0800
+IronPort-SDR: jfC9YRmBiYH5BXgBYVrKXl+C6EcT8M0dvvg1AUpHQXGD++ER4mbT2bW5600qnPgwC15Ew9Jg/Q
+ sUaOjrQxr+GMZiuoNOJTuKna4Su2eiMj4wUMwM9Vw00dYmoVeaRbLxoPp3w0ua2ES8pgq2Frmt
+ wHFHnKzDF1IWgs2ygJGe20qiwH/2tfn4ykpj6UnweBO3iKTulWQ3a254bHEDvM5LVSURlZR6a6
+ +MKz7Of0Q615mBmu8Enm1L+vByW1gMS5jK5mfre6TEl6a7s21zeLe0Ks/E8R7PRCmo+RpGvPG+
+ fidFH+QSsj0BWQ9o/oZ9JZdc
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:15 -0700
-IronPort-SDR: +RZzKRYzw04dKAZWap4nRW126plQWlg5ewBORgqIOHsG+JaBctwQxupeWsJuzTXv5gowAeF0eh
- X8WPaAQu3Vur/D8ASXdNogN+xAudZYi6dYSbj4KKAof4dUKREP1ajzZN5vsocLv0BFf/9AgGiH
- 7XeurbURQa/MmJ0MRgnKi359C/OqtsdN8FbD7S/uS+pPaE6RWYTKX1mLxV+7ss73+B6Z8A+KQH
- h1ajkIbfurdX22hvijRmEq1rpG/6yTkjZhbjuoNPK2oj8Q/wmf9g95hhlY8ogoQLwchkUqFNA8
- was=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2019 07:01:17 -0700
+IronPort-SDR: UoC2Q5lfcrXcukiP5MUowul50Uc7s5EoU9j73nfDk4RULLZ/LxkObuA/Je8nS59wPzBmKCLzfL
+ 8QuZMfk5D7b6kWtNYeyM5WccaEFCsyyFsOG7nKp3J8cUBnhnQijW6Rur1q75hcBgbM1xktfJWT
+ JNg4UwqCEYzYTBKxvFo0/dEbMgrU+DSu7oxNpre0XZAYqYqc6l8lz8R3lMu0/QmDurwAhpDWmv
+ XSkOQt60fe3oT5V0blUqjIbJcWRbqCLc65wyPBpeW5OiSKRfyDvv/2A+knmr3JkbIxH40SgeLr
+ d+4=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:50 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 27 Oct 2019 07:05:52 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -67,10 +68,12 @@ Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Dmitry Fomichev <dmitry.fomichev@wdc.com>,
         Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 0/8] Zone management commands support
-Date:   Sun, 27 Oct 2019 23:05:41 +0900
-Message-Id: <20191027140549.26272-1-damien.lemoal@wdc.com>
+Subject: [PATCH 1/8] block: Remove REQ_OP_ZONE_RESET plugging
+Date:   Sun, 27 Oct 2019 23:05:42 +0900
+Message-Id: <20191027140549.26272-2-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
+References: <20191027140549.26272-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -78,63 +81,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series implements a few improvements and cleanups to zone block
-device zone reset operations with the first three patches.
+REQ_OP_ZONE_RESET operations cannot be merged as these bios and requests
+do not have a size and are never sequential due to the zone start sector
+position required for their execution. As a result, there is no point in
+using a plug around blkdev_reset_zones() bio issuing loop. This patch
+removes this unnecessary plugging.
 
-The remaining of the series patches introduce zone open, close and
-finish support, allowing users of zoned block devices to explicitly
-control the condition (state) of zones.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ block/blk-zoned.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-While these operations are not stricktly necessary for the correct
-operation of zoned block devices, the open and close operations can
-improve performance for some device implementations of the ZBC and ZAC
-standards under write workloads. The finish zone operation, which
-transition a zone to the full state, can also be useful to protect a
-zone data by preventing further zone writes.
-
-These operations are implemented by introducing the new
-REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH request codes
-and the function blkdev_zone_mgmt() to issue these requests. This new
-function also replaces the former blkdev_reset_zones() function to reset
-zones write pointer.
-
-The new ioctls BLKOPENZONE, BLKCLOSEZONE and BLKFINISHZONE are also
-defined to allow applications to issue these new requests without
-resorting to a device passthrough interface (e.g. SG_IO).
-
-Support for these operations is added to the SCSI sd driver, to the dm
-infrastructure (dm-linear and dm-flakey targets) and to the null_blk
-driver.
-
-Ajay Joshi (5):
-  block: add zone open, close and finish operations
-  block: add zone open, close and finish ioctl support
-  scsi: sd_zbc: add zone open, close, and finish support
-  dm: add zone open, close and finish support
-  null_blk: add zone open, close, and finish support
-
-Damien Le Moal (3):
-  block: Remove REQ_OP_ZONE_RESET plugging
-  block: Simplify REQ_OP_ZONE_RESET_ALL handling
-  scsi: sd_zbc: Fix sd_zbc_complete()
-
- block/blk-core.c               | 12 +++--
- block/blk-zoned.c              | 99 ++++++++++++++++++----------------
- block/ioctl.c                  |  5 +-
- drivers/block/null_blk_zoned.c | 33 ++++++++++--
- drivers/md/dm-flakey.c         |  7 ++-
- drivers/md/dm-linear.c         |  2 +-
- drivers/md/dm-zoned-metadata.c |  6 +--
- drivers/md/dm.c                |  5 +-
- drivers/scsi/sd.c              | 15 +++++-
- drivers/scsi/sd.h              |  8 +--
- drivers/scsi/sd_zbc.c          | 43 +++++++--------
- fs/f2fs/segment.c              |  3 +-
- include/linux/blk_types.h      | 25 +++++++++
- include/linux/blkdev.h         | 15 +++---
- include/uapi/linux/blkzoned.h  | 17 ++++--
- 15 files changed, 192 insertions(+), 103 deletions(-)
-
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 4bc5f260248a..7fe376eede86 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -258,7 +258,6 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	sector_t zone_sectors;
+ 	sector_t end_sector = sector + nr_sectors;
+ 	struct bio *bio = NULL;
+-	struct blk_plug plug;
+ 	int ret;
+ 
+ 	if (!blk_queue_is_zoned(q))
+@@ -283,7 +282,6 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	    end_sector != bdev->bd_part->nr_sects)
+ 		return -EINVAL;
+ 
+-	blk_start_plug(&plug);
+ 	while (sector < end_sector) {
+ 
+ 		bio = blk_next_bio(bio, 0, gfp_mask);
+@@ -301,8 +299,6 @@ int blkdev_reset_zones(struct block_device *bdev,
+ 	ret = submit_bio_wait(bio);
+ 	bio_put(bio);
+ 
+-	blk_finish_plug(&plug);
+-
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blkdev_reset_zones);
 -- 
 2.21.0
 
