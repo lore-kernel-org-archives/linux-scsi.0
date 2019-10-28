@@ -2,144 +2,150 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A32CA9EA0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 09:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A2ECA9EBC
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 10:57:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E246E20B7C
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 09:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A468214D9
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 10:57:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nJgmuaIn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732465AbfJ1Jml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 05:42:41 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2057 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732063AbfJ1Jml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Oct 2019 05:42:41 -0400
-Received: from lhreml706-cah.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 2EE2BDEAC21FFA498016;
-        Mon, 28 Oct 2019 09:42:40 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml706-cah.china.huawei.com (10.201.108.47) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 28 Oct 2019 09:42:39 +0000
-Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 28 Oct
- 2019 09:42:39 +0000
-Subject: Re: [PATCH V4 1/2] scsi: core: avoid host-wide host_busy counter for
- scsi_mq
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        id S2388388AbfJ1K5f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 06:57:35 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:3064 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728554AbfJ1K5f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 06:57:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1572260254; x=1603796254;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5cU6D73Hs2L+9WKhpJ/DxPgX9YooUgDZWEqmp8qc6Tk=;
+  b=nJgmuaInWSWG8RvnihJXpDcP7SUk0Rmg7tMmNYqtW3VxYZe3iDWQjLpr
+   0vkgVE+6XS8tArcfTa7keVcTtR/kN9cYrMtK3ruKobkdIZgTagx8n0Re/
+   ZfzABgPdumpiJdJvJ5ogF/yEwjnX4jrJOUIAurli2Bwjj3BTnCMZJdIpi
+   FkGs1+Rv0bxNwGRe1Pue0kTJgOG6qQOOg4aSOHGHMDt8S9C8UkdGbeExH
+   GmVKJujwKESUxlFWYgPGODVtA/YtBbR46upFthLOQ61NOb+NEZxEUDU/8
+   glFhXq3jpK2dgMrB+TUxHnvfwlJUJR8BIX0iAHzQeH63BH1Gw+zVEMOn9
+   g==;
+IronPort-SDR: cSNpMmvJe7sraI8y4QWZOfDh/HpSWP9U13TLr46Y+RGGjaXfqLQUw8iPCEP862v79fhtqp9NU/
+ st3+h99K8Q6PZuAJg/5+29pM9wfJUjZyxxwL3DhYHt7mmE9WHC6ZvWRP44kigTiex6ISXhNtzB
+ UMOfsB0UOGZEElPUQ0ZQ+LCkzrFY+GY2RZTVELg4KKLZ9vt5Hu98S8VCLrU6DKaGsvjo12HQOr
+ nHB70397KPXloevrpikLcaMDAUcdEgS/03qB1/wfIusSAgxJsCK/nR5+fqC3jdGR7lvVOJjtqj
+ 6v8=
+X-IronPort-AV: E=Sophos;i="5.68,239,1569254400"; 
+   d="scan'208";a="121482191"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Oct 2019 18:57:34 +0800
+IronPort-SDR: diRdj7OC/Q2ftUQIxX76GtC8HdBGTT7aIHOy4dkYpBDfA/RnCBcSl8hlyed9ThrRy2OR+kWd77
+ xMgYNJV2XC2KRcm8iTLRHKN4lAoHeVqpyVbT01wFmVQne0Lkq8b3McIATliwLTDPNpdh31ltql
+ 4hBwc6ThavIPhburudmSKGTVo7OWCbOOUUC7sCXFwEGBUCRAROt6pYz3z3kJ3ovMDagGNSVK7V
+ 5Xrk2RH0mQd+5YVi2afzVHNG0cuY5rMnFJJc4Vr8nl1N0O/yNj8WidjBDvj00Hn/IioNzUCiCC
+ s8doMTX9upVyyoJoHIzODOnM
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2019 03:52:56 -0700
+IronPort-SDR: HF+d3JKARyFvJYiVVFrIfJUDiGbVDvC+DpJK0P98J87M+BaVK7PE3AJ29odtlXd+wxKO1TZpSZ
+ 4t3cL6MEj8FlE5KZ65xk0U0lfUbtFhfwSbgpVTX1wOVPwTe6VhJY0qzq7LkBJ0qWK2iWjf+AVo
+ uKYz2KzdhccfuG/9ucm/6Bj8vW49UQjmcdAK4qKuSu8pjgYNzhht9Qc8L/Y1UqQZnhQCtOxsCy
+ XYUleEXeLE+gF6g1UxI7kaxkuOVq+EJNaFa3pdvbADzYk0g8yY1uSDdBRojBypHkKl0Ht9+KMj
+ sLc=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 28 Oct 2019 03:57:33 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Christoph Hellwig" <hch@lst.de>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        "Hannes Reinecke" <hare@suse.de>,
-        Laurence Oberman <loberman@redhat.com>,
-        "Bart Van Assche" <bart.vanassche@wdc.com>
-References: <20191009093241.21481-1-ming.lei@redhat.com>
- <20191009093241.21481-2-ming.lei@redhat.com>
- <7d95de12-6114-c0d7-8b21-d36b2ea020fc@huawei.com>
- <20191024005828.GB15426@ming.t460p>
- <19e73b4d-77c7-e776-fee4-8b9f078c2be5@huawei.com>
- <20191024212427.GA26168@ming.t460p>
- <fb0d3475-b9b9-bac2-ec44-5c4cff67a104@huawei.com>
- <20191025094315.GA6128@ming.t460p>
- <36eb068c-37ed-756f-17ef-113aa55a17d0@huawei.com>
- <20191025215311.GA7076@ming.t460p>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <8a442c8b-f424-3923-c276-6f77c6eb8b57@huawei.com>
-Date:   Mon, 28 Oct 2019 09:42:39 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: [PATCH] scsi: Fix scsi_get/set_resid() interface
+Date:   Mon, 28 Oct 2019 19:57:32 +0900
+Message-Id: <20191028105732.29913-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-In-Reply-To: <20191025215311.GA7076@ming.t460p>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.45]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+struct scsi_cmnd cmd->req.resid_len which is returned and set
+respectively by the helper functions scsi_get_resid() and
+scsi_set_resid() is an unsigned int. Reflect this fact in the interface
+of these helper functions.
 
->>>
->>> I don't know there are such MQ HBA driver in tree,
->>
->> HiSilicon SAS HBA can accept 4096 commands on any given hw queue but can
->> also only accept 4096 commands over all queues simultaneously.  In fact, the
->> hw queue depth is configurable.
->>
->> That's why I think that the definition is misleading.
-> 
-> That is why we call HiSilicon SAS is SQ device, still from
-> blk-mq/scsi-mq viewpoint, :-)
+Also fix compilation errors due to min() and max() type mismatch
+introduced by this change in scsi debug code and usb transport code.
 
-Sure, but this is the Scsi host interface, not the blk-mq interface.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/scsi_debug.c       | 4 ++--
+ drivers/usb/storage/transport.c | 3 +--
+ include/scsi/scsi_cmnd.h        | 4 ++--
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-So I think that the Scsi host interface is somewhat deficient as things 
-stand (for same reason I gave). It can be revisited.
-
-> 
->>
->> I think I sound like a broken record now :)
->>
->> at least that is the
->>> current blk-mq/scsi-mq model: each hw queue has its own independent
->>> tags, so there can't be the limit for MQ HBA, which should allow to
->>> accept (.can_queue * nr_hw_queues) commands. And I did hear people
->>> complains bad performance caused by the atomic .host_busy counter.
->>>
->>
-
-[...]
-
->>
->> TBH, I'm not sure on the group of SCSI drivers which could benefit then.
->>
->> As I see, only qla2xxx driver sets Scsi_host.nr_hw_queues and also uses
->> pci_alloc_irq_vectors_affinity().
-> 
-> Other non-SCSI drivers can benefit from that patchset too, such as NVMe.
-> 
-> Except for qla2xxx, there are also lpfc, virtio-scsi and smartpqi, and
-> there will be more since I heard that new version of one other popular
-> SCSI HBA will support real MQ.
-
-OK, fine. So please check my latest reply on that thread when you have a 
-chance - I may have found an issue.
-
-> 
->>
->>> We have tried hosttags approach for the several drivers, but looks it is
->>> too messy. Given there are only 3 or 4 such device, we still can improve
->>> them via driver private approach in future if no generic way is doable.
->>
->> ok, I'd rather not go on this path - you may say I'm digging my head in the
->> sand. Anyway, I'll continue to support the 'improve blk-mq for CPU hotplug'
->> effort.
-> 
-> I meant that way is the last straw, :-)
-
-ok
-
-Thanks,
-John
-
-> 
-> 
-> Thanks,
-> Ming
-> 
-> .
-> 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index d323523f5f9d..4daf2637c011 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1025,7 +1025,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
+ static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
+ 				  int arr_len, unsigned int off_dst)
+ {
+-	int act_len, n;
++	unsigned int act_len, n;
+ 	struct scsi_data_buffer *sdb = &scp->sdb;
+ 	off_t skip = off_dst;
+ 
+@@ -1039,7 +1039,7 @@ static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
+ 	pr_debug("%s: off_dst=%u, scsi_bufflen=%u, act_len=%u, resid=%d\n",
+ 		 __func__, off_dst, scsi_bufflen(scp), act_len,
+ 		 scsi_get_resid(scp));
+-	n = (int)scsi_bufflen(scp) - ((int)off_dst + act_len);
++	n = scsi_bufflen(scp) - (off_dst + act_len);
+ 	scsi_set_resid(scp, min(scsi_get_resid(scp), n));
+ 	return 0;
+ }
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index 96cb0409dd89..238a8088e17f 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -1284,8 +1284,7 @@ int usb_stor_Bulk_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 
+ 		} else {
+ 			residue = min(residue, transfer_length);
+-			scsi_set_resid(srb, max(scsi_get_resid(srb),
+-			                                       (int) residue));
++			scsi_set_resid(srb, max(scsi_get_resid(srb), residue));
+ 		}
+ 	}
+ 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 91bd749a02f7..3772ae5d40cd 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -190,12 +190,12 @@ static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
+ 	return cmd->sdb.length;
+ }
+ 
+-static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
++static inline void scsi_set_resid(struct scsi_cmnd *cmd, unsigned int resid)
+ {
+ 	cmd->req.resid_len = resid;
+ }
+ 
+-static inline int scsi_get_resid(struct scsi_cmnd *cmd)
++static inline unsigned int scsi_get_resid(struct scsi_cmnd *cmd)
+ {
+ 	return cmd->req.resid_len;
+ }
+-- 
+2.21.0
 
