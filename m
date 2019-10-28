@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE34CCA9EC2
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DA89CA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3AAF208C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32193218BA
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732323AbfJ1UHW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 16:07:22 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35340 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732399AbfJ1UHV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:07:21 -0400
-Received: by mail-pl1-f196.google.com with SMTP id x6so2155286pln.2;
-        Mon, 28 Oct 2019 13:07:19 -0700 (PDT)
+        id S1732577AbfJ1UHh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 16:07:37 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:38540 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730303AbfJ1UHQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:07:16 -0400
+Received: by mail-pf1-f196.google.com with SMTP id c13so7655478pfp.5;
+        Mon, 28 Oct 2019 13:07:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qgYaQ/4w6DU5OAfx3juTipbLvhVJGJbsViU8yUiC/dU=;
-        b=Ox/OWwkPyk4mh2RW6gI/L5NAsNR579MbAjgTlaY4Wd7/YTRtwUwrRA/Uf6Sxv+G0Hh
-         gjCUh/K8DDZw3J4yq3KJ39u0KURZsH3nTgJfnRDYk8TyqqAGXvsRqhRRjRR26Vm794Aj
-         lfOn0n5VHRyjK7kxBUUN7nnLQA5mynor9EzVca4+/+tdtjHvL6/BtHR4CYhy5LoSeLS3
-         uDESFiPKW6JF60LB/RnWof6nEPiyL4Jh7YNVZmDnpZlBztjLWOvQoRrksyJoJ2JeuGjH
-         KugjcUXfOGUOBP4uGIK8U2mKoJx1nMXYr/cZnyKCOIbEEjW0dB+Iwa4KS6fxau6TUHFH
-         vUfQ==
-X-Gm-Message-State: APjAAAWZHI+g/YYE865Fomd1QAAe/re+WbQWTbz8RSkYShvO7QVt87oj
-        tUMGV+SjyIh+srwkFhUrw8M=
-X-Google-Smtp-Source: APXvYqxECuqfJhEN4zSLeOmEK6k51rQVb9Fler5QHU7PuW0Xo8hSyRLLoC3ofFeK1dnL+ymZ098IBw==
-X-Received: by 2002:a17:902:d209:: with SMTP id t9mr21318494ply.278.1572293238573;
-        Mon, 28 Oct 2019 13:07:18 -0700 (PDT)
+        bh=qqmafbxvt6DIwPrQ8GK8JiWsq1zCk4bn8bjPAnXJ94o=;
+        b=XeMbqqxpF+XpG8E1XvUmqM5AgW5npoTrQsFzGmAx1L+/vuBH4IWdI+wOVLDjAZ8cRx
+         DbAyXCT3P56EyD81uXC/r9A2n4uyNz1JzV+yUsSZ9U9K/1/RKuTlhjAqe05oUMnzJrQi
+         TpObNa9lr2r7PoBQ3bLOZsLdSBIgTQFvG7m8wJzg/jstJI7Jq6oMqUom0PLK3rfj3sfo
+         cnKw6yMfwpYRQUKzUSnKNlF2a2CwDgE+p5BUSq6kP+FG4E0xeemLwvfNPuLpLxf1Jqfe
+         WTUwD0AyY8c5UA6mZXM6cpKZwFMgiW8lilxP5cO7hifafvQffZvRJYNk4jOxQQy4SV2A
+         unmw==
+X-Gm-Message-State: APjAAAVLSh0XcXe2h2buG5XSgPJrSbFh5gJ2Cs7lsQawCHJpC6Ts2u/P
+        csK9FRPfheI996783to0tII=
+X-Google-Smtp-Source: APXvYqy10CadmomzITN/67Bio0fCL4NQieKkQErSkx+ODEEALJOyZM0aGK3wXkK2z/rgynMOGPbxSA==
+X-Received: by 2002:a17:90a:86c1:: with SMTP id y1mr1387473pjv.71.1572293235698;
+        Mon, 28 Oct 2019 13:07:15 -0700 (PDT)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id p3sm11084218pgp.41.2019.10.28.13.07.17
+        by smtp.gmail.com with ESMTPSA id p3sm11084218pgp.41.2019.10.28.13.07.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2019 13:07:17 -0700 (PDT)
+        Mon, 28 Oct 2019 13:07:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Peter Zijlstra <peterz@infradead.org>
 Cc:     Ingo Molnar <mingo@kernel.org>,
@@ -49,10 +49,11 @@ Cc:     Ingo Molnar <mingo@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Russell King <rmk+kernel@armlinux.org.uk>
-Subject: [PATCH 7/9] arm/ecard: Use get_unaligned_le{16,24}()
-Date:   Mon, 28 Oct 2019 13:06:58 -0700
-Message-Id: <20191028200700.213753-8-bvanassche@acm.org>
+        Kai Makisara <Kai.Makisara@kolumbus.fi>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 5/9] scsi/st: Use get_unaligned_signed_be24()
+Date:   Mon, 28 Oct 2019 13:06:56 -0700
+Message-Id: <20191028200700.213753-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.24.0.rc0.303.g954a862665-goog
 In-Reply-To: <20191028200700.213753-1-bvanassche@acm.org>
 References: <20191028200700.213753-1-bvanassche@acm.org>
@@ -63,53 +64,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use these functions instead of open-coding them.
+Use this function instead of open-coding it.
 
-Cc: Russell King <rmk+kernel@armlinux.org.uk>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- arch/arm/mach-rpc/ecard.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ drivers/scsi/st.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/mach-rpc/ecard.c b/arch/arm/mach-rpc/ecard.c
-index 75cfad2cb143..4db4ef085fcb 100644
---- a/arch/arm/mach-rpc/ecard.c
-+++ b/arch/arm/mach-rpc/ecard.c
-@@ -89,16 +89,6 @@ ecard_loader_reset(unsigned long base, loader_t loader);
- asmlinkage extern int
- ecard_loader_read(int off, unsigned long base, loader_t loader);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e3266a64a477..53dc7706c935 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -44,6 +44,7 @@ static const char *verstr = "20160209";
  
--static inline unsigned short ecard_getu16(unsigned char *v)
--{
--	return v[0] | v[1] << 8;
--}
--
--static inline signed long ecard_gets24(unsigned char *v)
--{
--	return v[0] | v[1] << 8 | v[2] << 16 | ((v[2] & 0x80) ? 0xff000000 : 0);
--}
--
- static inline ecard_t *slot_to_ecard(unsigned int slot)
- {
- 	return slot < MAX_ECARDS ? slot_to_expcard[slot] : NULL;
-@@ -915,13 +905,13 @@ static int __init ecard_probe(int slot, unsigned irq, card_type_t type)
- 	ec->cid.cd	= cid.r_cd;
- 	ec->cid.is	= cid.r_is;
- 	ec->cid.w	= cid.r_w;
--	ec->cid.manufacturer = ecard_getu16(cid.r_manu);
--	ec->cid.product = ecard_getu16(cid.r_prod);
-+	ec->cid.manufacturer = get_unaligned_le16(cid.r_manu);
-+	ec->cid.product = get_unaligned_le16(cid.r_prod);
- 	ec->cid.country = cid.r_country;
- 	ec->cid.irqmask = cid.r_irqmask;
--	ec->cid.irqoff  = ecard_gets24(cid.r_irqoff);
-+	ec->cid.irqoff  = get_unaligned_le24_sign_extend(cid.r_irqoff);
- 	ec->cid.fiqmask = cid.r_fiqmask;
--	ec->cid.fiqoff  = ecard_gets24(cid.r_fiqoff);
-+	ec->cid.fiqoff  = get_unaligned_le24_sign_extend(cid.r_fiqoff);
- 	ec->fiqaddr	=
- 	ec->irqaddr	= addr;
+ #include <linux/uaccess.h>
+ #include <asm/dma.h>
++#include <asm/unaligned.h>
  
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_dbg.h>
+@@ -2679,8 +2680,7 @@ static void deb_space_print(struct scsi_tape *STp, int direction, char *units, u
+ 	if (!debugging)
+ 		return;
+ 
+-	sc = cmd[2] & 0x80 ? 0xff000000 : 0;
+-	sc |= (cmd[2] << 16) | (cmd[3] << 8) | cmd[4];
++	sc = get_unaligned_signed_be24(&cmd[2]);
+ 	if (direction)
+ 		sc = -sc;
+ 	st_printk(ST_DEB_MSG, STp, "Spacing tape %s over %d %s.\n",
 -- 
 2.24.0.rc0.303.g954a862665-goog
 
