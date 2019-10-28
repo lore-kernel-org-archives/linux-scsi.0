@@ -2,105 +2,71 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11003CA9EC0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 21:02:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F160CA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 21:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D90C5217D6
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 21:02:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F4AF218AC
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 21:53:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uSUvninV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bKY4Vbdd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730562AbfJ1VCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 17:02:54 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:44118 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729037AbfJ1VCy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 17:02:54 -0400
-Received: by mail-pf1-f196.google.com with SMTP id q26so4130860pfn.11;
-        Mon, 28 Oct 2019 14:02:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=jOsPk8O61mge9n7NaaqisDZ0F14LpJepTwa7yUngAe0=;
-        b=uSUvninV+/uL4MGUfbE7yXkdkq2d6KHpOThqfXiI2l0ggHiWTzZjOXRn8iSgAHhOLz
-         Xjck1xLi74AyKGCH6KHqoC3wvUXhponr69K8lmAScP63spwSssiouBnzSwvlNdl4c8rL
-         Y0+VPNTXe+nnr+EAUG2WhU0zZUrEf9SqtBOI7Og8smDM9r9OgxiTT8iUvqiXybtPz953
-         7yN5NQ6T0+Ckb+VKpRpZkvhUPzB0K1LRp7HO6dsETge8Bc4uqgnq1YHXCXNi6wvpQ314
-         bScz8tY62gcECXrIJ+X4geBd0BEZgvTVGeFEs4QqEtwqUdUTXq7o4kA7mXqieKE/d3II
-         pEMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=jOsPk8O61mge9n7NaaqisDZ0F14LpJepTwa7yUngAe0=;
-        b=EJORYo+34lmbVk8bw8tacS7hsAoGgNgnWSoExyZAY/JtOeBF5vMuh7mn5KJLDgH1r/
-         jqjHYTBtiGxBW8vHfxrdepWstwN08LtYgGiZ9cVGBn3d6qLEPyEFyIfhFcOsHI7yYOKS
-         K1YyZPxO90eQPQknzdAbgPSmUDBsG+ocqk2yq9grJspLjV4VqmOr/uLgSw8W52owSvQb
-         MUyeoLfB1wJ9Nj/Y/Sp70wNKQuVra/VFvnvC/9RNYztYQ50scTUKjBHJxT/sz9t9gwv7
-         kXwXRhz2kSlOjVd0+2FRZo+/ZtG/k/P3noXh1g+jWoq6MMZnmN8qTGuqOsHmFVg6yS/d
-         qapA==
-X-Gm-Message-State: APjAAAVqwOqgnpY27qXBGSJu6Yy40BdWvoqQvQ/5T3MmL65y8Ekq9baR
-        93tH1ZHTXEEKX0ExhYoncq8=
-X-Google-Smtp-Source: APXvYqwICjoQQCp5Sef5P9/pJpLavd43gIrGTZeXBi53Nj/HFTdCSswNzcioCn1T/QWF/+hWvFnBGg==
-X-Received: by 2002:a63:c24f:: with SMTP id l15mr2638233pgg.279.1572296573054;
-        Mon, 28 Oct 2019 14:02:53 -0700 (PDT)
-Received: from saurav ([27.62.167.137])
-        by smtp.gmail.com with ESMTPSA id x139sm11878979pgx.92.2019.10.28.14.02.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2019 14:02:52 -0700 (PDT)
-Date:   Tue, 29 Oct 2019 02:32:45 +0530
-From:   Saurav Girepunje <saurav.girepunje@gmail.com>
-To:     agross@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     saurav.girepunje@hotmail.com
-Subject: [PATCH] scsi: ufs: ufs-qcom.c: remove unneeded variable
-Message-ID: <20191028210244.GA29784@saurav>
+        id S1731773AbfJ1VxF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 17:53:05 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:36950 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729738AbfJ1VxE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 17:53:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=GeAyw/k5dbilam+KBQ0S7G/ClcVIzyQAhc583Ygbdc4=; b=bKY4Vbdd47Pu5x+YdddkB39FW
+        0ZYBjXmNPIDzknyDlEiAiuO643h+B3ONCWQR6sEJjhBiIGqnVbgAoZCUk0lqiJwlylqdwOaZEamex
+        1FA91IGTrK9wxio9ui/6XW2z/7IRjaDu6w+Zs56XptKI6UPZx6pjdz4PxwQKebtZ947OSgPDagmUJ
+        6ebIsi7/T/n3wfQhrCu3laOSBaKyf6L6vAPGAMtGleStFQXjTskKN58G6nkQtH08JlbIXLRdfEO3B
+        lOzpn34DPvTUwE8sLJ/nGGqq1KUejoJCdItZzEwpifQ3X16K+2IYIHNVf9CUXxo0FqHqYvI1wHI41
+        wQQkCzxMA==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=worktop.programming.kicks-ass.net)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iPCwe-0002Fj-LD; Mon, 28 Oct 2019 21:53:00 +0000
+Received: by worktop.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 60170980D8F; Mon, 28 Oct 2019 22:52:58 +0100 (CET)
+Date:   Mon, 28 Oct 2019 22:52:58 +0100
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/9] Consolidate {get,put}_unaligned_[bl]e24() definitions
+Message-ID: <20191028215258.GO4643@worktop.programming.kicks-ass.net>
+References: <20191028200700.213753-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191028200700.213753-1-bvanassche@acm.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ret variable is not modified in ufs_qcom_suspend().
+On Mon, Oct 28, 2019 at 01:06:51PM -0700, Bart Van Assche wrote:
+> Hi Peter,
+> 
+> This patch series moves the existing {get,put}_unaligned_[bl]e24() definitions
+> into include/linux/unaligned/generic.h. This patch series also introduces a function
+> for sign-extending 24-bit into 32-bit integers and introduces users for all new
+> functions and macros. Please consider this patch series for kernel version v5.5.
 
-Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
----
- drivers/scsi/ufs/ufs-qcom.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+While I applaud the effort (and didn't see anything off in a hurry), I do
+wonder why you think I should route these patches.
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index a5b71487a206..0ef24cabe1dc 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -530,7 +530,6 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct phy *phy = host->generic_phy;
--	int ret = 0;
- 
- 	if (ufs_qcom_is_link_off(hba)) {
- 		/*
-@@ -545,7 +544,7 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ufs_qcom_disable_lane_clks(host);
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
--- 
-2.20.1
-
+I don't think I've ever touched the unaligned accessors...
