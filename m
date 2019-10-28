@@ -8,61 +8,60 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E49ECA9EC0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:49:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C985CA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:54:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43EC5208C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:49:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5BFA208C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:54:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PvIX3cpn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZYKAltR2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388339AbfJ1Utl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 16:49:41 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:43889 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725867AbfJ1Utl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:49:41 -0400
-Received: by mail-pf1-f194.google.com with SMTP id 3so7722474pfb.10;
-        Mon, 28 Oct 2019 13:49:40 -0700 (PDT)
+        id S2388505AbfJ1Uy0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 16:54:26 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34446 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725867AbfJ1Uy0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:54:26 -0400
+Received: by mail-pl1-f193.google.com with SMTP id k7so6289046pll.1;
+        Mon, 28 Oct 2019 13:54:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+        h=date:from:to:subject:message-id:mime-version:content-disposition
          :user-agent;
-        bh=1Hum32HGcrAtxzDAgbdk3CWnZkz7ktiFh+DUwCg4ZRg=;
-        b=PvIX3cpntw6AsPuxJ6BUXhCXcEa/4XIwybJ31Z+yIhgVmd/8pQB1DB6PiPWI9TO/xl
-         GTGVUvfHphH7+JIbdP4OjVBV/8M46488EQLtKt5sfM2m8hRgSgtHwaORiPjhsc2FkkwT
-         0cXVDm24R97jcZJLQE8xQBZDMdiOI2SSCmsoQ05cSIn8CeLUPWBS9TO9xJqH06xIx3ab
-         F3VbDotwhdhqkuOZdQYyxxMrd8qTqMfuqtCjS1I03WBdahP5Det8xFTbQ0ZkhgG83nvo
-         a4pIzZ7YE6g+pTBNSfEGBagurogbIGhdVcdLBeMR9RMJijXXkmK57uml3ZHbtHXGQbF/
-         M8bA==
+        bh=GLvxNZigDjIH0DGpnyLz+xuaagvehXTngUpiN5P3UPE=;
+        b=ZYKAltR2nlkZSpfM+xj9WQKVKtkVmCLxoyytmDwhgLSaymK9wkdvs9+y+hQJwr2Dxt
+         cfUpBvszqnGopfTmm4UOl1ugzIdRecFrUiWkNsnMO1zMt5UaYjS35tJLBSDovyI/Noey
+         XQ7wPy4VmA7pR3JRToR3ZkU2XlE6smkrX8QGkjhyXfTWEAgr038l2IHzOX4EqcujLrZz
+         IomKgLvcJV66nVS16BRuUDCIhIXAI0nq6o+50K/Gb9QDGZIy6kjN8Fnw1RmDOHXRk+7S
+         ijI94828NKPSXaSAFdDQ6FrJQuHtbwICzeuCD6Jg2lzyaYzjD078pV4GZI0vw0NRl4ky
+         thMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
          :content-disposition:user-agent;
-        bh=1Hum32HGcrAtxzDAgbdk3CWnZkz7ktiFh+DUwCg4ZRg=;
-        b=FCF6vx4yibbdubfNbTmWugDcxIwWfrWeUbdrDcvzZio3BVpdL+rsw/6Z1N0WtFtgy0
-         xYTi+x7ZSIQgMTyE616wOOvLzJ7svDvXxMDLkzhvHufeeuunrADvulUmdFbi6ta15+B2
-         6aLQk2aiOxaKsNt9x7DVfExk2lc8oF0b1bsud71z4VU8u/C5PpS3g1LscR1DCoMMET20
-         yAI4Ow9Xg3PRCySkbeum1U7oww6PW0CP2l+atn3qa5FXSzQM/u57L6jjNARQ6dmjRfv4
-         +drOdzcVVxB0DUJ1hwYvi9R3MTYBJz+8F5dnMRoMkvItGl/XyW6oSTCoMlpsfzDZcZzo
-         adTw==
-X-Gm-Message-State: APjAAAXDh1lyr3/UzOqfhAcVzhK03SQ+mUT4TcpKahatZLDzQuKtNI9k
-        LJW/V54VYkZr6poYA4H7qzE=
-X-Google-Smtp-Source: APXvYqzRDZ8JMCrB1odziVyZcNBn1BBvbF/xH5FTw+p7zNdRZIBXwC16VzOHEpqhw7bFnOr4Xbz6+w==
-X-Received: by 2002:a65:6203:: with SMTP id d3mr22775570pgv.272.1572295780516;
-        Mon, 28 Oct 2019 13:49:40 -0700 (PDT)
+        bh=GLvxNZigDjIH0DGpnyLz+xuaagvehXTngUpiN5P3UPE=;
+        b=L4JOueVD/1Pa6WfjaepVF/ePOnJLXcK3gJpTDv3lSmw93Znh3eJh3bCwsZUUn4nm3g
+         oMY+dZKZctkRIaZmOfhrXeaf4VRQSy4hsM5A3tTA8Wp6Nz0RQMpa7HfySwGbS69Ao76L
+         F5l00/eIHCHMHruNSFSJl9WYxXcSCrs8HcbNq1PhW0hNSXHztauqiep4cULpc1x7F/6S
+         n8jXwdgEnB06k/0yErX4H2uhK/HZnotKdwQaIDv9aMBOo1g+lQBJcGDmovRJbgnpRUIb
+         +N2bsCru7Rc9RdQ1gOxUxDOm7ya3O6IsMSZ5RIgc88uCAHZ7hZJ7nbEwuAGTOrj6Uz9r
+         v9TA==
+X-Gm-Message-State: APjAAAVLfltfNgPgZjjVKTRC7412UEp+NUrPyexM7HkK3Z/V4XOjEWUW
+        xBhgmppXm2mGK/CI2fHee1frr2Id4zc=
+X-Google-Smtp-Source: APXvYqwfjAMzuz8V7lUBoqVvBeXj6ek2KgSWXTDZBYmXzPqarNRnxWuwAivIN4j0x/wlsOqtQDpqRQ==
+X-Received: by 2002:a17:902:6802:: with SMTP id h2mr28402plk.135.1572296065039;
+        Mon, 28 Oct 2019 13:54:25 -0700 (PDT)
 Received: from saurav ([27.62.167.137])
-        by smtp.gmail.com with ESMTPSA id u36sm13494485pgn.29.2019.10.28.13.49.37
+        by smtp.gmail.com with ESMTPSA id s3sm8804729pfm.138.2019.10.28.13.54.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2019 13:49:39 -0700 (PDT)
-Date:   Tue, 29 Oct 2019 02:19:32 +0530
+        Mon, 28 Oct 2019 13:54:24 -0700 (PDT)
+Date:   Tue, 29 Oct 2019 02:24:18 +0530
 From:   Saurav Girepunje <saurav.girepunje@gmail.com>
-To:     intel-linux-scu@intel.com, artur.paszkiewicz@intel.com,
+To:     manoj@linux.ibm.com, mrochs@linux.ibm.com, ukrishn@linux.ibm.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     saurav.girepunje@hotmail.com
-Subject: [PATCH] isci: request.c: remove unneeded variable status
-Message-ID: <20191028204931.GA29561@saurav>
+Subject: [PATCH] cxlflash: superpipe.c: remove unneeded variable
+Message-ID: <20191028205417.GA29635@saurav>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -72,66 +71,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-status variable is not modified within function.
+Remove unneeded variable rc as it is not modified in function.
 
 Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
 ---
- drivers/scsi/isci/request.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/cxlflash/superpipe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 343d24c7e788..6537fa880906 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1480,7 +1480,6 @@ static enum sci_status
- stp_request_pio_await_h2d_completion_tc_event(struct isci_request *ireq,
- 					      u32 completion_code)
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 593669ac3669..4ca64cdec438 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -1233,7 +1233,7 @@ const struct file_operations cxlflash_cxl_fops = {
+  */
+ int cxlflash_mark_contexts_error(struct cxlflash_cfg *cfg)
  {
--	enum sci_status status = SCI_SUCCESS;
+-	int i, rc = 0;
++	int i;
+ 	struct ctx_info *ctxi = NULL;
  
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
-@@ -1500,7 +1499,7 @@ stp_request_pio_await_h2d_completion_tc_event(struct isci_request *ireq,
- 		break;
+ 	mutex_lock(&cfg->ctx_tbl_list_mutex);
+@@ -1252,7 +1252,7 @@ int cxlflash_mark_contexts_error(struct cxlflash_cfg *cfg)
  	}
  
--	return status;
-+	return SCI_SUCCESS;
+ 	mutex_unlock(&cfg->ctx_tbl_list_mutex);
+-	return rc;
++	return 0;
  }
  
- static enum sci_status
-@@ -2103,7 +2102,6 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq,
- 						       u32 completion_code)
- {
--	enum sci_status status = SCI_SUCCESS;
- 
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
-@@ -2148,13 +2146,12 @@ static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq
- 		break;
- 	}
- 
--	return status;
-+	return SCI_SUCCESS;
- }
- 
- static enum sci_status atapi_raw_completion(struct isci_request *ireq, u32 completion_code,
- 						  enum sci_base_request_states next)
- {
--	enum sci_status status = SCI_SUCCESS;
- 
- 	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
- 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
-@@ -2174,7 +2171,7 @@ static enum sci_status atapi_raw_completion(struct isci_request *ireq, u32 compl
- 		break;
- 	}
- 
--	return status;
-+	return SCI_SUCCESS;
- }
- 
- static enum sci_status atapi_data_tc_completion_handler(struct isci_request *ireq,
+ /*
 -- 
 2.20.1
 
