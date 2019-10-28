@@ -2,101 +2,116 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0DEDCA9EC0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:24:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 727F9CA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:38:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9546D21721
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:24:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572294296;
-	bh=yPE0SEZPz8Tc+OMS4kFqOGsFj5A2ktZo+Yyz/KZ1TQE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=dON0FO1YXld5FnqYs2iW1nEYyErQjW4PSANS2dWLp/O/n5a+hlEh5Pfsn64xMepiJ
-	 ydx7idA1BWCgBAZngr5l/U9CfFyATd89w1517eYvipOQf34Y6fpMPAvwS/zFnDiJGu
-	 OCbkZjJwTDHIamAgRJCaoU9swFgw99JUHo1asjD4=
+	by mail.kernel.org (Postfix) with ESMTP id 4FE9020830
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733166AbfJ1UY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 16:24:56 -0400
-Received: from heliosphere.sirena.org.uk ([172.104.155.198]:54800 "EHLO
-        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727802AbfJ1UYz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:24:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sirena.org.uk; s=20170815-heliosphere; h=In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=yPE0SEZPz8Tc+OMS4kFqOGsFj5A2ktZo+Yyz/KZ1TQE=; b=ILqfyNeJxEWgr49oAyTomKf5U
-        ZB9SUmnCLyq3+XdiArCsYn43E/7kA1ds75Is/qGUZOtd0NYLSAOrTJ4Pjhq7nXGq4b5kjg4ZTAzFb
-        qafGcD0CH0klR5B0GktMCkCvpC/ywNHI+CfXlSCYYbw3l8Et5KvYNMcgS4JxWgBNV/d4c=;
-Received: from cpc102320-sgyl38-2-0-cust46.18-2.cable.virginm.net ([82.37.168.47] helo=ypsilon.sirena.org.uk)
-        by heliosphere.sirena.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <broonie@sirena.co.uk>)
-        id 1iPBYl-0000aR-7O; Mon, 28 Oct 2019 20:24:15 +0000
-Received: by ypsilon.sirena.org.uk (Postfix, from userid 1000)
-        id B2C9527403EE; Mon, 28 Oct 2019 20:24:14 +0000 (GMT)
-Date:   Mon, 28 Oct 2019 20:24:14 +0000
-From:   Mark Brown <broonie@kernel.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>,
+        id S1726826AbfJ1UiE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 16:38:04 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:36806 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726623AbfJ1UiE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:38:04 -0400
+Received: by mail-pf1-f196.google.com with SMTP id v19so7721457pfm.3;
+        Mon, 28 Oct 2019 13:38:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=O/b/6mghHgpstK0O5SxbK8ykdy2XcpdcIv0f+yaSsWg=;
+        b=JF5Fd/5pDVAMFWfq94wKFOmYZVHVGhorjBzZP0xDgKRVL52NipRHWlADXJb0VJbeeU
+         AnZo1z1WqSqgzgQU9GatrQJzM1CF2ykZFic35arCLReV0dbOO/mhUb1/gT/Q9pim57q5
+         ZT/DS5I5Rmj5u23VeNb4U7T3eA/UfZhEO9cdcEziHZSm0wlhsUlWK18Xoin+9nRupSdS
+         cJRzaRO+Y1vmrQow1mfwvBvNf4RJM2dNriISPRz0sX2VUIyBPP+83R4FVySSrWOc/wf8
+         tdWAxAYhoIfncF7KEd5JmiEkjJ/Yl3dDlA5OrDpc1cY+mf4svVzLgz8oqCdEpyTiklG5
+         0BtQ==
+X-Gm-Message-State: APjAAAX6n3WcRB90oNyo7R3lsNpPdQAJs0PTZdODDU/BVMMYLhKbeS+9
+        uquhzSJZdfZM6UmGpZ3SHCqqfU0eeKE=
+X-Google-Smtp-Source: APXvYqxSgRD0ux8H6DeP+FzTh+T2WeyJlMIO7/sWjeGqsxFWOUS69N6OE09X19aQc/0TurdqYqk6MA==
+X-Received: by 2002:a17:90a:8c14:: with SMTP id a20mr1497653pjo.77.1572295083533;
+        Mon, 28 Oct 2019 13:38:03 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id 129sm12561232pfg.38.2019.10.28.13.38.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 28 Oct 2019 13:38:02 -0700 (PDT)
+Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Timur Tabi <timur@kernel.org>,
-        Nicolin Chen <nicoleotsuka@gmail.com>,
-        Xiubo Li <Xiubo.Lee@gmail.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
-Subject: Re: [PATCH 9/9] ASoC/fsl_spdif: Use put_unaligned_be24() instead of
- open-coding it
-Message-ID: <20191028202414.GK5015@sirena.co.uk>
-References: <20191028200700.213753-1-bvanassche@acm.org>
- <20191028200700.213753-10-bvanassche@acm.org>
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+References: <20191028105732.29913-1-damien.lemoal@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
+Date:   Mon, 28 Oct 2019 13:38:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="8tUgZ4IE8L4vmMyh"
-Content-Disposition: inline
-In-Reply-To: <20191028200700.213753-10-bvanassche@acm.org>
-X-Cookie: The Moral Majority is neither.
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191028105732.29913-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 10/28/19 3:57 AM, Damien Le Moal wrote:
+> struct scsi_cmnd cmd->req.resid_len which is returned and set
+> respectively by the helper functions scsi_get_resid() and
+> scsi_set_resid() is an unsigned int. Reflect this fact in the interface
+> of these helper functions.
+> [ ... ]
+> -static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
+> +static inline void scsi_set_resid(struct scsi_cmnd *cmd, unsigned int resid)
+>   {
+>   	cmd->req.resid_len = resid;
+>   }
+>   
+> -static inline int scsi_get_resid(struct scsi_cmnd *cmd)
+> +static inline unsigned int scsi_get_resid(struct scsi_cmnd *cmd)
+>   {
+>   	return cmd->req.resid_len;
+>   }
 
---8tUgZ4IE8L4vmMyh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+ From the iSCSI RFC:
 
-On Mon, Oct 28, 2019 at 01:07:00PM -0700, Bart Van Assche wrote:
-> This patch makes the code easier to read.
+    SCSI-Presented Data Transfer Length (SPDTL) is the term this document
+    uses (see Section 1.1 for definition) to represent the aggregate data
+    length that the target SCSI layer attempts to transfer using the
+    local iSCSI layer for a task.  Expected Data Transfer Length (EDTL)
+    is the iSCSI term that represents the length of data that the iSCSI
+    layer expects to transfer for a task.  EDTL is specified in the SCSI
+    Command PDU.
 
-I only have this patch from the series but no cover letter, what's the
-story with dependencies?
+    When SPDTL = EDTL for a task, the target iSCSI layer completes the
+    task with no residuals.  Whenever SPDTL differs from EDTL for a task,
+    that task is said to have a residual.
 
---8tUgZ4IE8L4vmMyh
-Content-Type: application/pgp-signature; name="signature.asc"
+    If SPDTL > EDTL for a task, iSCSI Overflow MUST be signaled in the
+    SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+    be set to the numerical value of (SPDTL - EDTL).
 
------BEGIN PGP SIGNATURE-----
+    If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
+    SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+    be set to the numerical value of (EDTL - SPDTL).
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAl23Tm0ACgkQJNaLcl1U
-h9C0bQf/dKHPtMdfD3BnbaQDGmpdXBeC3ulHsdo6am7obLNTi3STvqJQub0n+xvl
-0qwhNlf7hP6A2S5amw7CHIhgZMaxiedFnckBA6lRfEeIBfsM724qWgEk9DX8csXG
-XyPbE35qiNCulfilLLbu7kgZn+jQrzur9qDJjI0c8L7nqhws/aShY2g/nOWu770z
-+7KeMdWAPXyeTjXIiERD52wrk0XzOQe0b3vzplWRLeKBY/g7TILWzAEDU5woe1J7
-jXew9M8Eob3+GiW2vCXslP0eSrnVcibOVZ+0HIIhb+EPiyqUYn3i3TmSAXV8H7Rd
-EA2uR23tqoeMhbbUjytGXEtrrdDTkw==
-=38LL
------END PGP SIGNATURE-----
+    Note that the Overflow and Underflow scenarios are independent of
+    Data-In and Data-Out.  Either scenario is logically possible in
+    either direction of data transfer.
 
---8tUgZ4IE8L4vmMyh--
+If the residual is changed from signed into unsigned, how is a SCSI LLD 
+expected to report the difference between residual overflow and residual 
+underflow to the SCSI core?
+
+Thanks,
+
+Bart.
