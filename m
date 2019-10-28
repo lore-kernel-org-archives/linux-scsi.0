@@ -2,67 +2,47 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 904CCCA9EA0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 08:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA13CA9EA0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 09:03:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64CCA2086D
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 08:47:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D498214E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 09:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731718AbfJ1IrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 04:47:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40102 "EHLO mx1.suse.de"
+        id S2387552AbfJ1JDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 05:03:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50500 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731611AbfJ1IrR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Oct 2019 04:47:17 -0400
+        id S1730849AbfJ1JDj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Oct 2019 05:03:39 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 15622B249;
-        Mon, 28 Oct 2019 08:47:13 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 11EA8B04F;
+        Mon, 28 Oct 2019 09:03:38 +0000 (UTC)
+Date:   Mon, 28 Oct 2019 10:03:37 +0100
 From:   Daniel Wagner <dwagner@suse.de>
 To:     linux-scsi@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH] scsi: qla2xxx: Check return value of alloc_workqueue()
-Date:   Mon, 28 Oct 2019 09:47:09 +0100
-Message-Id: <20191028084709.81538-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.16.4
+Subject: Re: [PATCH] scsi: qla2xxx: Check return value of alloc_workqueue()
+Message-ID: <20191028090337.i2n25yeuxw3rvacn@beryllium>
+References: <20191028084709.81538-1-dwagner@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191028084709.81538-1-dwagner@suse.de>
+User-Agent: NeoMutt/20180716
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Do not derefence the pointer without checking it
-first. alloc_workqueue() can return a NULL pointer.
+On Mon, Oct 28, 2019 at 09:47:09AM +0100, Daniel Wagner wrote:
+> Do not derefence the pointer without checking it
+> first. alloc_workqueue() can return a NULL pointer.
 
-Reported-by: Semmle vulnerability research team <security-reports@semmle.com>
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/qla2xxx/qla_os.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 16f9b6ed574a..040f82ccacba 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3224,6 +3224,10 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    req->req_q_in, req->req_q_out, rsp->rsp_q_in, rsp->rsp_q_out);
- 
- 	ha->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
-+	if (!ha->wq) {
-+		ret = -ENOMEM;
-+		goto probe_failed;
-+	}
- 
- 	if (ha->isp_ops->initialize_adapter(base_vha)) {
- 		ql_log(ql_log_fatal, base_vha, 0x00d6,
--- 
-2.16.4
-
+Oh forget it. Someone was faster :)
