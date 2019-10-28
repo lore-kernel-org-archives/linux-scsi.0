@@ -2,77 +2,107 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F410CA9EC0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 15:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574FCCA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:42:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EBA621479
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 15:01:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EFCA21721
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:42:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZRRIt5Hp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730338AbfJ1PBa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 11:01:30 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38145 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726945AbfJ1PBa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 11:01:30 -0400
-Received: by mail-pg1-f194.google.com with SMTP id w3so7049154pgt.5;
-        Mon, 28 Oct 2019 08:01:29 -0700 (PDT)
+        id S1731113AbfJ1Rmi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 13:42:38 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:54949 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730531AbfJ1Rmi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 13:42:38 -0400
+Received: by mail-wm1-f67.google.com with SMTP id g7so10428061wmk.4
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2019 10:42:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=vVtXee5nxv2u75A7+ctwOesvx1t8UgvI2w0D0KkHg4w=;
+        b=ZRRIt5HprYlG+1cr1tzPUEyYXdOrAMdSuiEdioPux3me66fIAKy2nO0qdGcBlQu3cC
+         JGC92vLNnMMXgOLNyqMoh6CK/VtL03HA1vMOdcJf2u/8MX7s+npstZzQzBq+ECRcrEHs
+         ZGuaywKEBHso1s5X/SMLzQpYRIjVNZKucpexE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Iot0ZBgc0Dj0tS3PUsk54zTN8OnhvTPdFLbjQIjDxSA=;
-        b=DOnlLJ6llSRlEV4B657Ghd7LUncAmLYfPfkksQch0nfH1Iy/co2bd6F43XmZPsl5bE
-         Wf2aTbX8hxITJHg3XDPxIzuOejWyPKEcKvX2xugNTTLN+v1FjQZzfaZl830Tj/0wBfkK
-         OqmxB3hSJu54QuE8KtG2iMG5HwRXRgydiBh2k0RlcOQtgiq/N4KR2z3Qg14D5dulydAH
-         PzkGRX8ayMRcOvwNBwdA7wiy/uK/yWSJXleH+Ll+S3FCxc0zFc5jKwONtWkiaVW+RI9/
-         ZiRN4AL2R3ODUmZMTJUY92slQ66k3uf6IiS/jaFLkZjhpuxvhg2KYSr7q/VVE3+MqoRl
-         E+ng==
-X-Gm-Message-State: APjAAAUqRAp4hs8/wjRHSJ2GDbduRmWvHbSNsEfo6XgTRmkXNqkrG2xh
-        TGHJT57OGHseSh+wg7aG9mw1naLp
-X-Google-Smtp-Source: APXvYqy8StxS7nh8ZwoKurzwZllHjIj28dUR8kSWsBGP/OebrjsJNEBkXoxDu3GWvS4/2G0GRVvhEA==
-X-Received: by 2002:a63:5422:: with SMTP id i34mr5587188pgb.142.1572274888793;
-        Mon, 28 Oct 2019 08:01:28 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id x12sm10758449pfm.130.2019.10.28.08.01.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Oct 2019 08:01:27 -0700 (PDT)
-Subject: Re: [PATCH v1 1/5] scsi: Adjust DBD setting in mode sense for caching
- mode page per LLD
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1572234608-32654-1-git-send-email-cang@codeaurora.org>
- <1572234608-32654-2-git-send-email-cang@codeaurora.org>
- <0ca52845-10ec-3310-83f7-81bdb635ec12@acm.org>
-Message-ID: <119bbf38-da2b-b928-fb4e-a43891a988c4@acm.org>
-Date:   Mon, 28 Oct 2019 08:01:26 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=vVtXee5nxv2u75A7+ctwOesvx1t8UgvI2w0D0KkHg4w=;
+        b=H/1NiBdAI1/ErGgSKWI5MM33M0T1hFE5tc7pXLqr43YjmPgdR2PDMgIwk/mqM7u9Wn
+         c1g/32FFqNQ+Rz8ChOmZ6PfS5BPwNURgPlVZuckAuOrIK8ePB24KDjLOs+GM8AzAXzoU
+         MaN+7+D9gS0ezaEYLrvPkirWa6WCDgkVIeJ0Qzdpi2qG/Rdb3Hj6P+5XrvCVCVYiVYp0
+         IpClvT8S1jno1tkOdzJHq+sqMF97CZmlHYm+HAq8NUIFrrZrJuYQmUB/PzP0AWHWg9v8
+         90F+ii/dLl0LgiiPI27pbO/J9NY2Dhd2OOG3kTiA6cjGbOVECm3UY71TDZRNJa5MqAsG
+         7sSg==
+X-Gm-Message-State: APjAAAVrF+x4hfyQ3YWXCDq+WTD3v+IAQjdCeNTqhDxW9Sg4SCDXVEFz
+        1HRqLtMfgSdDyEFNo/ygyxPCjg==
+X-Google-Smtp-Source: APXvYqxC2Ys/r/aL0RALWTf5448B3u3BcKzOVdH5dc6n51nsmhMTtcXphw8mK4kTEnCJzWQ7U2n9dg==
+X-Received: by 2002:a05:600c:295:: with SMTP id 21mr417226wmk.168.1572284556652;
+        Mon, 28 Oct 2019 10:42:36 -0700 (PDT)
+Received: from [10.69.45.46] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id a71sm300846wme.11.2019.10.28.10.42.34
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 28 Oct 2019 10:42:35 -0700 (PDT)
+Subject: Re: [PATCH] scsi: lpfc: Fix NULL check before mempool_destroy is not
+ needed
+To:     Saurav Girepunje <saurav.girepunje@gmail.com>,
+        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     saurav.girepunje@hotmail.com
+References: <20191026194712.GA22249@saurav>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <7fb64c36-52aa-ab69-0637-9abfe3fdf19b@broadcom.com>
+Date:   Mon, 28 Oct 2019 10:42:33 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <0ca52845-10ec-3310-83f7-81bdb635ec12@acm.org>
+In-Reply-To: <20191026194712.GA22249@saurav>
 Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/28/19 7:58 AM, Bart Van Assche wrote:
-> Since this patch by itself has no effect, please resubmit this patch 
-> together with the LLD patch that sets set_dbd_for_caching.
+On 10/26/2019 12:47 PM, Saurav Girepunje wrote:
+> mempool_destroy has taken null pointer check into account.
+> so remove the redundant check.
+>
+> Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index e91377a4cafe..f620ecae3428 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -13346,8 +13346,7 @@ lpfc_sli4_oas_verify(struct lpfc_hba *phba)
+>   		phba->cfg_fof = 1;
+>   	} else {
+>   		phba->cfg_fof = 0;
+> -		if (phba->device_data_mem_pool)
+> -			mempool_destroy(phba->device_data_mem_pool);
+> +		mempool_destroy(phba->device_data_mem_pool);
+>   		phba->device_data_mem_pool = NULL;
+>   	}
+>   
+Looks fine.
 
-Please ignore this part of my email. Patch 1/5 showed up in my inbox 
-before the rest of this patch series.
+Thanks
 
-Bart.
+Reviewed-by:  James Smart <james.smart@broadcom.com>
+
+-- james
+
