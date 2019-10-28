@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55506CA9EC0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE34CCA9EC2
 	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AED1208C0
+	by mail.kernel.org (Postfix) with ESMTP id B3AAF208C0
 	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 20:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732465AbfJ1UHX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 16:07:23 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:34321 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732418AbfJ1UHV (ORCPT
+        id S1732323AbfJ1UHW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 16:07:22 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:35340 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732399AbfJ1UHV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 16:07:21 -0400
-Received: by mail-pg1-f193.google.com with SMTP id e4so3368978pgs.1;
-        Mon, 28 Oct 2019 13:07:20 -0700 (PDT)
+Received: by mail-pl1-f196.google.com with SMTP id x6so2155286pln.2;
+        Mon, 28 Oct 2019 13:07:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cYBcEr7JXamXlGE0nw4evwvTfMUMSlNBodCHAYkMNhs=;
-        b=kfnRiBA6xelLmMHBltelKUlY5h4r/oQNbW0pHmoWzO86stxbVVLQLKBOIBC+v3jRd3
-         41xEkxMvfumQYoQxqYR9bvOJ8nBjnx92LvKmvtLYYx9kCA1bkbxJyKQNNPKvc7JXs2NJ
-         XE2Cnu+ALuRG4vgmSd7QjEPJzIjU2bC+VeLhbLUNXRiPqG7f9L52q4ARUBLVIlCp0PWV
-         U3FyJyZMRXGNmleY47goVbYVCkvzGqdGjyHNsG84P05+XU2Y0zhKids7kOH7tCYWERJZ
-         9OIAYjPBiQZwxe+iT5ZOXiL4Ge6n2YdwO29AiBTuY9C4BCcrkxKwTpdX2up7/ADxxjj5
-         +4Qg==
-X-Gm-Message-State: APjAAAVG8zbgsbH2EiYPa+pjIG6bd8BzKUUj2y3b3mJ3HTl2F/Yhqm2P
-        flXJUdKs8gL+awPjs9LqG0c=
-X-Google-Smtp-Source: APXvYqzIJzeohKKZJQE3qciehJBrrZzTGGzGTPCHPjLItPBhDiW6bafqXJG4K1XVEIGlmTtCwtLfAg==
-X-Received: by 2002:a17:90a:77c6:: with SMTP id e6mr1343495pjs.93.1572293240291;
-        Mon, 28 Oct 2019 13:07:20 -0700 (PDT)
+        bh=qgYaQ/4w6DU5OAfx3juTipbLvhVJGJbsViU8yUiC/dU=;
+        b=Ox/OWwkPyk4mh2RW6gI/L5NAsNR579MbAjgTlaY4Wd7/YTRtwUwrRA/Uf6Sxv+G0Hh
+         gjCUh/K8DDZw3J4yq3KJ39u0KURZsH3nTgJfnRDYk8TyqqAGXvsRqhRRjRR26Vm794Aj
+         lfOn0n5VHRyjK7kxBUUN7nnLQA5mynor9EzVca4+/+tdtjHvL6/BtHR4CYhy5LoSeLS3
+         uDESFiPKW6JF60LB/RnWof6nEPiyL4Jh7YNVZmDnpZlBztjLWOvQoRrksyJoJ2JeuGjH
+         KugjcUXfOGUOBP4uGIK8U2mKoJx1nMXYr/cZnyKCOIbEEjW0dB+Iwa4KS6fxau6TUHFH
+         vUfQ==
+X-Gm-Message-State: APjAAAWZHI+g/YYE865Fomd1QAAe/re+WbQWTbz8RSkYShvO7QVt87oj
+        tUMGV+SjyIh+srwkFhUrw8M=
+X-Google-Smtp-Source: APXvYqxECuqfJhEN4zSLeOmEK6k51rQVb9Fler5QHU7PuW0Xo8hSyRLLoC3ofFeK1dnL+ymZ098IBw==
+X-Received: by 2002:a17:902:d209:: with SMTP id t9mr21318494ply.278.1572293238573;
+        Mon, 28 Oct 2019 13:07:18 -0700 (PDT)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id p3sm11084218pgp.41.2019.10.28.13.07.18
+        by smtp.gmail.com with ESMTPSA id p3sm11084218pgp.41.2019.10.28.13.07.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2019 13:07:19 -0700 (PDT)
+        Mon, 28 Oct 2019 13:07:17 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     Peter Zijlstra <peterz@infradead.org>
 Cc:     Ingo Molnar <mingo@kernel.org>,
@@ -49,13 +49,10 @@ Cc:     Ingo Molnar <mingo@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Doug Ledford <dledford@redhat.com>
-Subject: [PATCH 8/9] IB/qib: Sign extend without triggering implementation-defined behavior
-Date:   Mon, 28 Oct 2019 13:06:59 -0700
-Message-Id: <20191028200700.213753-9-bvanassche@acm.org>
+        Russell King <rmk+kernel@armlinux.org.uk>
+Subject: [PATCH 7/9] arm/ecard: Use get_unaligned_le{16,24}()
+Date:   Mon, 28 Oct 2019 13:06:58 -0700
+Message-Id: <20191028200700.213753-8-bvanassche@acm.org>
 X-Mailer: git-send-email 2.24.0.rc0.303.g954a862665-goog
 In-Reply-To: <20191028200700.213753-1-bvanassche@acm.org>
 References: <20191028200700.213753-1-bvanassche@acm.org>
@@ -66,36 +63,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From the C standard: "The result of E1 >> E2 is E1 right-shifted E2 bit
-positions. If E1 has an unsigned type or if E1 has a signed type and a
-nonnegative value, the value of the result is the integral part of the
-quotient of E1 / 2E2 . If E1 has a signed type and a negative value, the
-resulting value is implementation-defined."
+Use these functions instead of open-coding them.
 
-Hence use sign_extend_24_to_32() instead of "<< 8 >> 8".
-
-Cc: Dennis Dalessandro <dennis.dalessandro@intel.com>
-Cc: Mike Marciniszyn <mike.marciniszyn@intel.com>
-Cc: Jason Gunthorpe <jgg@mellanox.com>
-Cc: Doug Ledford <dledford@redhat.com>
+Cc: Russell King <rmk+kernel@armlinux.org.uk>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/infiniband/hw/qib/qib_rc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/arm/mach-rpc/ecard.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/infiniband/hw/qib/qib_rc.c b/drivers/infiniband/hw/qib/qib_rc.c
-index aaf7438258fa..2f1beaab6935 100644
---- a/drivers/infiniband/hw/qib/qib_rc.c
-+++ b/drivers/infiniband/hw/qib/qib_rc.c
-@@ -566,7 +566,7 @@ int qib_make_rc_req(struct rvt_qp *qp, unsigned long *flags)
- 		break;
- 	}
- 	qp->s_sending_hpsn = bth2;
--	delta = (((int) bth2 - (int) wqe->psn) << 8) >> 8;
-+	delta = sign_extend_24_to_32(bth2 - wqe->psn);
- 	if (delta && delta % QIB_PSN_CREDIT == 0)
- 		bth2 |= IB_BTH_REQ_ACK;
- 	if (qp->s_flags & RVT_S_SEND_ONE) {
+diff --git a/arch/arm/mach-rpc/ecard.c b/arch/arm/mach-rpc/ecard.c
+index 75cfad2cb143..4db4ef085fcb 100644
+--- a/arch/arm/mach-rpc/ecard.c
++++ b/arch/arm/mach-rpc/ecard.c
+@@ -89,16 +89,6 @@ ecard_loader_reset(unsigned long base, loader_t loader);
+ asmlinkage extern int
+ ecard_loader_read(int off, unsigned long base, loader_t loader);
+ 
+-static inline unsigned short ecard_getu16(unsigned char *v)
+-{
+-	return v[0] | v[1] << 8;
+-}
+-
+-static inline signed long ecard_gets24(unsigned char *v)
+-{
+-	return v[0] | v[1] << 8 | v[2] << 16 | ((v[2] & 0x80) ? 0xff000000 : 0);
+-}
+-
+ static inline ecard_t *slot_to_ecard(unsigned int slot)
+ {
+ 	return slot < MAX_ECARDS ? slot_to_expcard[slot] : NULL;
+@@ -915,13 +905,13 @@ static int __init ecard_probe(int slot, unsigned irq, card_type_t type)
+ 	ec->cid.cd	= cid.r_cd;
+ 	ec->cid.is	= cid.r_is;
+ 	ec->cid.w	= cid.r_w;
+-	ec->cid.manufacturer = ecard_getu16(cid.r_manu);
+-	ec->cid.product = ecard_getu16(cid.r_prod);
++	ec->cid.manufacturer = get_unaligned_le16(cid.r_manu);
++	ec->cid.product = get_unaligned_le16(cid.r_prod);
+ 	ec->cid.country = cid.r_country;
+ 	ec->cid.irqmask = cid.r_irqmask;
+-	ec->cid.irqoff  = ecard_gets24(cid.r_irqoff);
++	ec->cid.irqoff  = get_unaligned_le24_sign_extend(cid.r_irqoff);
+ 	ec->cid.fiqmask = cid.r_fiqmask;
+-	ec->cid.fiqoff  = ecard_gets24(cid.r_fiqoff);
++	ec->cid.fiqoff  = get_unaligned_le24_sign_extend(cid.r_fiqoff);
+ 	ec->fiqaddr	=
+ 	ec->irqaddr	= addr;
+ 
 -- 
 2.24.0.rc0.303.g954a862665-goog
 
