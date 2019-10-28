@@ -2,71 +2,68 @@ Return-Path: <SRS0=wJ7M=YV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 574FCCA9EC0
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 678E3CA9EC0
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:45:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EFCA21721
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 423A621479
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Oct 2019 17:45:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZRRIt5Hp"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="gvIqtguR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731113AbfJ1Rmi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 13:42:38 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:54949 "EHLO
+        id S1731720AbfJ1Rph (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 13:45:37 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:39199 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730531AbfJ1Rmi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 13:42:38 -0400
-Received: by mail-wm1-f67.google.com with SMTP id g7so10428061wmk.4
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2019 10:42:37 -0700 (PDT)
+        with ESMTP id S1731388AbfJ1Rph (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 13:45:37 -0400
+Received: by mail-wm1-f67.google.com with SMTP id r141so10073855wme.4
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Oct 2019 10:45:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=vVtXee5nxv2u75A7+ctwOesvx1t8UgvI2w0D0KkHg4w=;
-        b=ZRRIt5HprYlG+1cr1tzPUEyYXdOrAMdSuiEdioPux3me66fIAKy2nO0qdGcBlQu3cC
-         JGC92vLNnMMXgOLNyqMoh6CK/VtL03HA1vMOdcJf2u/8MX7s+npstZzQzBq+ECRcrEHs
-         ZGuaywKEBHso1s5X/SMLzQpYRIjVNZKucpexE=
+        bh=Rovnn7Tk4pjpqM2/fuwDU7PFCQET7R0UmlvO8C0rAFs=;
+        b=gvIqtguRcWxgDg/gwI70B+XVTUBFbEECqZkgNuTXBu/6FRmnNqpSE1kz6cejE9bzPh
+         XroT9a2bGuYjjn9WKH/PEkm0KV6HjGvrPyWXtCdsPV/PY7olHTv/0TR5fRaRIt+Ytbwp
+         kYgntAINie2boQlbwLZNR2ojAd3ySj5DN5ivo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
-        bh=vVtXee5nxv2u75A7+ctwOesvx1t8UgvI2w0D0KkHg4w=;
-        b=H/1NiBdAI1/ErGgSKWI5MM33M0T1hFE5tc7pXLqr43YjmPgdR2PDMgIwk/mqM7u9Wn
-         c1g/32FFqNQ+Rz8ChOmZ6PfS5BPwNURgPlVZuckAuOrIK8ePB24KDjLOs+GM8AzAXzoU
-         MaN+7+D9gS0ezaEYLrvPkirWa6WCDgkVIeJ0Qzdpi2qG/Rdb3Hj6P+5XrvCVCVYiVYp0
-         IpClvT8S1jno1tkOdzJHq+sqMF97CZmlHYm+HAq8NUIFrrZrJuYQmUB/PzP0AWHWg9v8
-         90F+ii/dLl0LgiiPI27pbO/J9NY2Dhd2OOG3kTiA6cjGbOVECm3UY71TDZRNJa5MqAsG
-         7sSg==
-X-Gm-Message-State: APjAAAVrF+x4hfyQ3YWXCDq+WTD3v+IAQjdCeNTqhDxW9Sg4SCDXVEFz
-        1HRqLtMfgSdDyEFNo/ygyxPCjg==
-X-Google-Smtp-Source: APXvYqxC2Ys/r/aL0RALWTf5448B3u3BcKzOVdH5dc6n51nsmhMTtcXphw8mK4kTEnCJzWQ7U2n9dg==
-X-Received: by 2002:a05:600c:295:: with SMTP id 21mr417226wmk.168.1572284556652;
-        Mon, 28 Oct 2019 10:42:36 -0700 (PDT)
+        bh=Rovnn7Tk4pjpqM2/fuwDU7PFCQET7R0UmlvO8C0rAFs=;
+        b=OYJxtPhn0N/3igaF05qUbW+BinIF4J9Gexo5gDiM7yCEoK/ykn+8NjKbWB0FurKvU1
+         LYUjIa3e4MM6rgHMGoP0uqyogvuQgWHDI+8PLWEzBKAWh7M1R8vYuvdsyMbfIDPBVbcl
+         tqzBjsi3yscRa/Gv5KeKxw+8PCPsXbPOHGkTryXmCoJXMoZ0hNspjT3h2PuPmQGi8DyW
+         gbNSMYnQ20oRamtsYJSUYjNgwScomzkR6Y1woiaYbH2x1cTUk0dSe5O6lMdUEMM/JSV7
+         sx4cKiOta/mJn1Zp0KZUu11VE9KZfOjsj7fKrMOsbcXcWWZJC7KTGWKaf4gsY4s+b/Ec
+         M1wQ==
+X-Gm-Message-State: APjAAAWrTVPn5rjhNiPDfmEJQsLsAn9zUF0kYivDPzpkeg2FbbT/x8iq
+        RoaLchqncGBbxGIl7+q8HuJipA==
+X-Google-Smtp-Source: APXvYqym+LRObSGKJ/DfwMzxZxtJgEgyYINMiPvpZKnuPR3apHGmDRLQ6sP+9XpvBwHSeaH8PNxarg==
+X-Received: by 2002:a1c:6282:: with SMTP id w124mr429924wmb.172.1572284735740;
+        Mon, 28 Oct 2019 10:45:35 -0700 (PDT)
 Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id a71sm300846wme.11.2019.10.28.10.42.34
+        by smtp.gmail.com with ESMTPSA id f204sm264910wmf.32.2019.10.28.10.45.33
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 28 Oct 2019 10:42:35 -0700 (PDT)
-Subject: Re: [PATCH] scsi: lpfc: Fix NULL check before mempool_destroy is not
- needed
-To:     Saurav Girepunje <saurav.girepunje@gmail.com>,
-        dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     saurav.girepunje@hotmail.com
-References: <20191026194712.GA22249@saurav>
+        Mon, 28 Oct 2019 10:45:35 -0700 (PDT)
+Subject: Re: [PATCH -next] scsi: lpfc: Make lpfc_debugfs_ras_log_data static
+To:     YueHaibing <yuehaibing@huawei.com>, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20191028132556.16272-1-yuehaibing@huawei.com>
 From:   James Smart <james.smart@broadcom.com>
-Message-ID: <7fb64c36-52aa-ab69-0637-9abfe3fdf19b@broadcom.com>
-Date:   Mon, 28 Oct 2019 10:42:33 -0700
+Message-ID: <09b602f1-389a-8bf9-2963-60e1b9a49689@broadcom.com>
+Date:   Mon, 28 Oct 2019 10:45:32 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20191026194712.GA22249@saurav>
+In-Reply-To: <20191028132556.16272-1-yuehaibing@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -75,34 +72,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/26/2019 12:47 PM, Saurav Girepunje wrote:
-> mempool_destroy has taken null pointer check into account.
-> so remove the redundant check.
+On 10/28/2019 6:25 AM, YueHaibing wrote:
+> Fix sparse warning:
 >
-> Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
+> drivers/scsi/lpfc/lpfc_debugfs.c:2083:1: warning:
+>   symbol 'lpfc_debugfs_ras_log_data' was not declared. Should it be static?
+>
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 > ---
->   drivers/scsi/lpfc/lpfc_init.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+>   drivers/scsi/lpfc/lpfc_debugfs.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index e91377a4cafe..f620ecae3428 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -13346,8 +13346,7 @@ lpfc_sli4_oas_verify(struct lpfc_hba *phba)
->   		phba->cfg_fof = 1;
->   	} else {
->   		phba->cfg_fof = 0;
-> -		if (phba->device_data_mem_pool)
-> -			mempool_destroy(phba->device_data_mem_pool);
-> +		mempool_destroy(phba->device_data_mem_pool);
->   		phba->device_data_mem_pool = NULL;
->   	}
+> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+> index 6c8effc..2e6a68d 100644
+> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
+> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+> @@ -2079,8 +2079,8 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+>   }
+>   #endif
 >   
-Looks fine.
+> -int
+> -lpfc_debugfs_ras_log_data(struct lpfc_hba *phba, char *buffer, int size)
+> +static int lpfc_debugfs_ras_log_data(struct lpfc_hba *phba,
+> +				     char *buffer, int size)
+>   {
+>   	int copied = 0;
+>   	struct lpfc_dmabuf *dmabuf, *next;
 
-Thanks
+Looks Fine.  Thanks!
 
-Reviewed-by:  James Smart <james.smart@broadcom.com>
+Reviewed-by: James Smart <james.smart@broadcom.com>
 
 -- james
 
