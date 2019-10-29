@@ -2,154 +2,102 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EBECA9EAE
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 18:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB26CA9EC4
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 19:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C13EB2086A
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 18:00:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DD262087F
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 19:21:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="oZJBSaUp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729507AbfJ2SAJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Oct 2019 14:00:09 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:50886 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727379AbfJ2SAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Oct 2019 14:00:09 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id CA4C2204238;
-        Tue, 29 Oct 2019 19:00:04 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id sbeakG39yp-q; Tue, 29 Oct 2019 19:00:02 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 645CE204163;
-        Tue, 29 Oct 2019 19:00:01 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "usb-storage@lists.one-eyed-alien.net" 
-        <usb-storage@lists.one-eyed-alien.net>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
-References: <20191028105732.29913-1-damien.lemoal@wdc.com>
- <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
- <BYAPR04MB5816FF25422E60C168F78308E7610@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <4eb733b9-8f52-a6c2-eb56-f0759113dc1e@interlog.com>
-Date:   Tue, 29 Oct 2019 13:59:58 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1730416AbfJ2TVA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Oct 2019 15:21:00 -0400
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:45472 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727900AbfJ2TVA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 15:21:00 -0400
+Received: by mail-qt1-f196.google.com with SMTP id x21so4695306qto.12
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2019 12:20:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=VLkdCW6fO/kdWcmvO5mZyGXLIND8hrF7Fib2pxaeHqE=;
+        b=oZJBSaUpNctcJF1KPdB1q8131m6M3DuwlLqWAJBVS6+GtrrEUnTJ1YGxdkS3laLv/O
+         jbUP78t8eppIZnsu1Oii9SJoWBXa0OBhG36OFp7u51/3lGHXsn+VQYbT6kOR2sO+QwXd
+         tjsQb41gUyoRm4bK1vv7btWy9MQFDDhEeF4izUxUvtT2UIEk7nyefrLIBkskCqYHAElq
+         Rq8H1CE0ostW9lFtEZ5Jw2639tSC9ud5q/I2QwJdHgG/2KVwqQwPQ+jzM/SSmNvnK2Ap
+         cf5ZIf7AfPFt4Gt7sZX/DFr4WIrjyQnY+nr7XuMq9q8L4G2k2YgdWpWihZNFr4HIDqFQ
+         Uhhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=VLkdCW6fO/kdWcmvO5mZyGXLIND8hrF7Fib2pxaeHqE=;
+        b=WUKFXscdbxivBgALpPRh+0WDELtfvMOpCfcSuqVC/KPgz5TqSTFQNxKDxh6Io+2fi8
+         yXXATzErPR6gDMK4icorEakovdog1K3JA7ZTpN2sThlAVLqpBQg3sBo5N1EQX0KejFn6
+         SgO8rVYldaBu+QE6uzjEKdRA/665zec0DxLi9LIgzjWMlA9YAne46FqgF4xEhGkkv5+M
+         KgPIU6e5boxEKR3QgbjEpm+TY7YRrrPnpVk3iI3cnJPR5pxqeTD7KHG9V78sZJQJXIXr
+         B6gcdndvqTuW5CahoyT2j4fn3VxfUPAvd0VpH+pU/6usSZ0BIBn+ua8/a49QQGyzwyo3
+         YKuA==
+X-Gm-Message-State: APjAAAVBcvSPOjYqbC6XP1y+rYkBOEZ5CoJ6rmaE3UWsIOqaq1u3SpM0
+        V+Nac4UnqU6GcT3e6C4Go17kgA==
+X-Google-Smtp-Source: APXvYqw9LzxzmjdLYLHltS5J607RC70qGlqUtWazEs9u72lKOb9c3az5HfcxcKJrFLefSp5tx8dDpg==
+X-Received: by 2002:ac8:2476:: with SMTP id d51mr752878qtd.378.1572376859018;
+        Tue, 29 Oct 2019 12:20:59 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-180.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.180])
+        by smtp.gmail.com with ESMTPSA id a6sm7311724qth.74.2019.10.29.12.20.58
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 29 Oct 2019 12:20:58 -0700 (PDT)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1iPX33-0003g8-W0; Tue, 29 Oct 2019 16:20:57 -0300
+Date:   Tue, 29 Oct 2019 16:20:57 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Sagi Grimberg <sagi@grimberg.me>
+Cc:     linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v2] iser: explicitly set shost max_segment_size if non
+ virtual boundary devices
+Message-ID: <20191029192057.GA11679@ziepe.ca>
+References: <20190607012914.2328-1-sagi@grimberg.me>
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816FF25422E60C168F78308E7610@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190607012914.2328-1-sagi@grimberg.me>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-29 4:17 a.m., Damien Le Moal wrote:
-> Bart,
+On Thu, Jun 06, 2019 at 06:29:14PM -0700, Sagi Grimberg wrote:
+> if the rdma device supports sg gaps, we don't need to set a virtual
+> boundary but we then need to explicitly set the max_segment_size, otherwise
+> scsi takes BLK_MAX_SEGMENT_SIZE and sets it using dma_set_max_seg_size()
+> and this affects all the rdma device consumers.
 > 
-> On 2019/10/28 21:38, Bart Van Assche wrote:
->> On 10/28/19 3:57 AM, Damien Le Moal wrote:
->>> struct scsi_cmnd cmd->req.resid_len which is returned and set
->>> respectively by the helper functions scsi_get_resid() and
->>> scsi_set_resid() is an unsigned int. Reflect this fact in the interface
->>> of these helper functions.
->>> [ ... ]
->>> -static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
->>> +static inline void scsi_set_resid(struct scsi_cmnd *cmd, unsigned int resid)
->>>    {
->>>    	cmd->req.resid_len = resid;
->>>    }
->>>    
->>> -static inline int scsi_get_resid(struct scsi_cmnd *cmd)
->>> +static inline unsigned int scsi_get_resid(struct scsi_cmnd *cmd)
->>>    {
->>>    	return cmd->req.resid_len;
->>>    }
->>
->>   From the iSCSI RFC:
->>
->>      SCSI-Presented Data Transfer Length (SPDTL) is the term this document
->>      uses (see Section 1.1 for definition) to represent the aggregate data
->>      length that the target SCSI layer attempts to transfer using the
->>      local iSCSI layer for a task.  Expected Data Transfer Length (EDTL)
->>      is the iSCSI term that represents the length of data that the iSCSI
->>      layer expects to transfer for a task.  EDTL is specified in the SCSI
->>      Command PDU.
->>
->>      When SPDTL = EDTL for a task, the target iSCSI layer completes the
->>      task with no residuals.  Whenever SPDTL differs from EDTL for a task,
->>      that task is said to have a residual.
->>
->>      If SPDTL > EDTL for a task, iSCSI Overflow MUST be signaled in the
->>      SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
->>      be set to the numerical value of (SPDTL - EDTL).
->>
->>      If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
->>      SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
->>      be set to the numerical value of (EDTL - SPDTL).
->>
->>      Note that the Overflow and Underflow scenarios are independent of
->>      Data-In and Data-Out.  Either scenario is logically possible in
->>      either direction of data transfer.
->>
->> If the residual is changed from signed into unsigned, how is a SCSI LLD
->> expected to report the difference between residual overflow and residual
->> underflow to the SCSI core?
+> Fix it by setting shost max_segment_size according to the device
+> capability if SG_GAPS are not supported.
+> 
+> Reported-by: Jason Gunthorpe <jgg@ziepe.ca>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Sagi Grimberg <sagi@grimberg.me>
+> ---
+> Changes from v1:
+> - set max_segment_size only for non virtual boundary devices
+> 
+>  drivers/infiniband/ulp/iser/iscsi_iser.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 
+Sagi, are you respinning this or ??
 
+https://patchwork.kernel.org/patch/10980657/
 
-> As mentioned in the commit message, cmd->req.resid_len where the resid
-> is stored is an unsigned int. And it has been an unsigned int forever as
-> far as I know.
-
-If my memory serves, I put it in over 20 years ago, about the same time
-as the sg v2 interface (struct sg_io_hdr) was implemented. And when I
-put it in it was a (signed) int and this is why:
-
-struct ccb_accept_targ3 {
-     .....
-     CAM_I32 cam_resid;    /* Transfer residual length: 2's comp */
-     .....
-};
-
-[from cam3r03.pdf]
-
-So it coped with both underflow and the less likely case of overflow.
-
-Notice in:
-    struct sg_io_hdr {
-       .....
-       int resid;  /* [o] dxfer_len - actual_transferred */
-       ...
-};
-
-At the time the SCSI mid-level and the block layer didn't bother about
-resid, only some LLDs which is where the sg driver picked it up from.
-
-So some ignoramus changed it to unsigned since then, probably before
-git strangled the kernel source tree.
-
-> So I think changing the interface to unsigned int makes sense in that
-> context. Also, unless I am reading this wrong, the above definition you
-> quote always lead to resid >= 0, so I do not see what problem you are
-> worried about. Could you elaborate your concerns please ?
-
-Linux's internal representation is wrong and should be fixed to match
-its exposed interface (struct sg_io_hdr) which predates the breakage.
-
-Doug Gilbert
-
+Jason
