@@ -2,211 +2,157 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464FBCA9EAE
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D61B3CA9EAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 14:22:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11936214D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F0E320659
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 14:22:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TjVqlCC9";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GZ5osAjR"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="bBSQf7Qa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732508AbfJ2MYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Oct 2019 08:24:20 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:55906 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731976AbfJ2MYU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 08:24:20 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0788860F83; Tue, 29 Oct 2019 12:24:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572351859;
-        bh=OHpqvsbEqQaNTWJz9ZTIW16qLuF+jKcCUcibO+4VId4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TjVqlCC9nqtEwkIVY0zioQ61JlBb7R0w1jniFBG/2xmuI49WbyBN+4TsnjDw9p5wj
-         a7r0WIrWT4/IVWMSLaIatcy0MRKh32/34mf5dVz0fNu5o0A24ZggkYFuKPTP3pbl9Z
-         G464JSbh8Nqt01td5hmKe8gJFDzlZwQGEr8VQxeQ=
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 448CB60DB8;
-        Tue, 29 Oct 2019 12:24:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572351856;
-        bh=OHpqvsbEqQaNTWJz9ZTIW16qLuF+jKcCUcibO+4VId4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GZ5osAjRxeHszL53rqVnt4H8th3BKDkwXX4Ehz7j6U80jTWUxOVdGDJA8Y45N63Cd
-         5KhAt2+7F2F94hSmFqqrQ6njv0nFczh69nqRXiLSiMiUG+1Px7aizru0l1NqH0fVwt
-         tqK8L61p5k9hBI0lszc6B+ltPiVbgtQhUfmn48eo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 448CB60DB8
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 2/2] scsi: ufs: Do not rely on prefetched data
-Date:   Tue, 29 Oct 2019 05:23:49 -0700
-Message-Id: <1572351831-30373-3-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1572351831-30373-1-git-send-email-cang@codeaurora.org>
-References: <1572351831-30373-1-git-send-email-cang@codeaurora.org>
+        id S2389233AbfJ2OWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Oct 2019 10:22:51 -0400
+Received: from mail-eopbgr730088.outbound.protection.outlook.com ([40.107.73.88]:58407
+        "EHLO NAM05-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389221AbfJ2OWu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Oct 2019 10:22:50 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SolIfnsiPDI8mk1w+SCNMQ4AAyFT0R7NCiml6e6yr/HgaE7DtlIOVFUa+rwF3pMVrzz6YQpRndvy7iFkL/+TDXMEkOfJfeeN85533KHOLI5xGftv/syV4hbF6S/FLy0WJgScQQssM61ovXKphuXYzjjr44CZM5G75fC8rQwnx1TNA29vVbIIG3d8jxo7vRJ/atZYxcPPDI0dM2RyX3o0uJn57mJ3pU2eVsxnu2vNFMPWZFB8Tj1+tVNR/MSiBj5SQKWB63SPu1kPDLSXppKoQLZD1CZhi9h1mSW0b0e082V2JK7LYsIVRrCUTezd0DIpvO01XpKf5CfBXHLb3eqJZw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BhEFEzWbmccT89U1PX9naUBfUxoTOz3F99AAttG3eCc=;
+ b=Je/yZzDxjhHOU4Ut8HZh65IVfEWcePpyqObw6iGkVvnoN2e+1m4+D7WuVYH2g/Kjj2nXeb8x4468FKUetKVT6gqZSOzbloFR6l/cDLMV7qW+X2glD5JFNSUJZEIpYzwzTJlBDOpxNP7DJs2u/pB5+4/4ydxnjInA1OGBBgSH3/sMF44kE3bVEAZyP+llbzBF0aaR7blAAwuEQFufDl0Fn8wwqvgt+lghuLWdbNorON/z4chri6UZlqHdpI/Qj6YknqecVhdkr1PXyNlY01rlrHSfILvdAk6nDq3S8STkdG5rSweHseQU0T2G5eDXKLQZvzIvGHh81jcUB2jHrgew4A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BhEFEzWbmccT89U1PX9naUBfUxoTOz3F99AAttG3eCc=;
+ b=bBSQf7QaDikjH1ha1R85EVvJDhkdZOrtnu4NgESHLL4P1aUgRL73hnM3uBXuGVykhWxBZ89uKABmrYjBDfLrjyXgAa44gRDNMGayWX1jQX5GmKAixwP0z2L0buz83mX1CAPJ+6M1pAbXR+fW0VMZd1mK+UKRB7fdJ8r+qCEqhFY=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
+ BN7PR08MB4868.namprd08.prod.outlook.com (20.176.27.141) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2387.24; Tue, 29 Oct 2019 14:22:46 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::8c6f:d978:fcc6:ecad]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::8c6f:d978:fcc6:ecad%4]) with mapi id 15.20.2387.023; Tue, 29 Oct 2019
+ 14:22:46 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     'Alim Akhtar' <alim.akhtar@samsung.com>,
+        'Avri Altman' <avri.altman@wdc.com>,
+        'Pedro Sousa' <pedrom.sousa@synopsys.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>
+CC:     "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        'Evan Green' <evgreen@chromium.org>,
+        'Stanley Chu' <stanley.chu@mediatek.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>,
+        Can Guo <cang@codeaurora.org>
+Subject: [PATCH v1] scsi: ufs: delete redundant function
+ ufshcd_def_desc_sizes()
+Thread-Topic: [PATCH v1] scsi: ufs: delete redundant function
+ ufshcd_def_desc_sizes()
+Thread-Index: AdWOYNFUHmkvcAl2Q/qT6qb+uQ79WA==
+Date:   Tue, 29 Oct 2019 14:22:45 +0000
+Message-ID: <BN7PR08MB5684A3ACE214C3D4792CE729DB610@BN7PR08MB5684.namprd08.prod.outlook.com>
+Accept-Language: en-150, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTkyMWYzYmNkLWZhNTctMTFlOS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFw5MjFmM2JjZS1mYTU3LTExZTktOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjE5OTkiIHQ9IjEzMjE2ODMyNTY0MjUxOTk5MCIgaD0iREZwWlZqUmNjMjhDaVE4ckxJNyt0WU82TWJZPSIgaWQ9IiIgYmw9IjAiIGJvPSIxIi8+PC9tZXRhPg==
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.81.21]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: f5e0c7ad-7f8e-46f8-bb99-08d75c7b780c
+x-ms-traffictypediagnostic: BN7PR08MB4868:|BN7PR08MB4868:|BN7PR08MB4868:
+x-microsoft-antispam-prvs: <BN7PR08MB4868F797A2E9376A722A5F43DB610@BN7PR08MB4868.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:2657;
+x-forefront-prvs: 0205EDCD76
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(136003)(39860400002)(396003)(366004)(346002)(199004)(189003)(66066001)(316002)(6436002)(66946007)(25786009)(66476007)(3846002)(6116002)(76116006)(7416002)(7696005)(52536014)(486006)(86362001)(256004)(9686003)(64756008)(476003)(2906002)(66446008)(8936002)(55016002)(54906003)(26005)(66556008)(478600001)(110136005)(99286004)(8676002)(71200400001)(4326008)(71190400001)(14454004)(6506007)(102836004)(55236004)(33656002)(5660300002)(74316002)(186003)(81156014)(305945005)(7736002)(81166006);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB4868;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: nohWSX36H2u9UPR1LuLqE3iBbxj1LYpum8kGsnOEnbN7nJcs+tteOBa1iEQzRNzFOjaImd/G53PiEDDd6PlOmttYOjF7mAacmCHmcvZC7IAPP2EkH9ZXtTXpW8Vca9oagpoYU6rbcHuR8sorTj/6FQkoIG7kf/1iIvFDiU7aB2PCSNcNYDP10Ftp84kE24vDouxO6keUS6XftYBvWvf8n2oqeNcc/MeqjjSD9DCcKrGWRDlygkUJRsaDHdP/V2muOD2RgUa6FDJnTy2Sf8FXguimun7kUAkuJfg0oWXMMWj2OA1oTp/mCJ9Q50bPNlsMlGZPiWJHZjwIhZOPR9Tg6YzIxBxxR9TLUAYMv5zhuv/UJNELMq5is8wTUctEy1+kJVKEpGZ7R4s0eev8K3a/B07V6As4EThrwFMFk2X0gwdUa9zpqvcfuJaWZxaKij1B
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5e0c7ad-7f8e-46f8-bb99-08d75c7b780c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Oct 2019 14:22:45.9958
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vHiE6yIckNvR/BDdz/QYfIR+UF+dXyd48t0NdVYyP+mMDgtkgBmYm3cyjdXx3skh/nl2eXXUpnSHi5vxz3AvQA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4868
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We were setting bActiveICCLevel attribute for UFS device only once but
-type of this attribute has changed from persistent to volatile since UFS
-device specification v2.1. This attribute is set to the default value after
-power cycle or hardware reset event. It isn't safe to rely on prefetched
-data (only used for bActiveICCLevel attribute now). Hence this change
-removes the code related to data prefetching and set this parameter on
-every attempt to probe the UFS device.
+From: Bean Huo <beanhuo@micron.com>
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+There is no need to call ufshcd_def_desc_sizes() in ufshcd_init(),
+since descriptor lengths will be checked and initialized later in
+ufshcd_init_desc_sizes().
+
+Fixes: a4b0e8a4e92b1b(scsi: ufs: Factor out ufshcd_read_desc_param)=20
+Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++++---------------
- drivers/scsi/ufs/ufshcd.h | 13 -------------
- 2 files changed, 15 insertions(+), 28 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3a0b99b..0026199 100644
+index c28c144d9b4a..21a7244882a1 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6424,11 +6424,12 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
- 	return icc_level;
- }
- 
--static void ufshcd_init_icc_levels(struct ufs_hba *hba)
-+static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
- {
- 	int ret;
- 	int buff_len = hba->desc_size.pwr_desc;
- 	u8 *desc_buf;
-+	u32 icc_level;
- 
- 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
- 	if (!desc_buf)
-@@ -6442,20 +6443,17 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	hba->init_prefetch_data.icc_level =
--			ufshcd_find_max_sup_active_icc_level(hba,
--			desc_buf, buff_len);
--	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
--			__func__, hba->init_prefetch_data.icc_level);
-+	icc_level = ufshcd_find_max_sup_active_icc_level(hba, desc_buf,
-+							 buff_len);
-+	dev_dbg(hba->dev, "%s: setting icc_level 0x%x", __func__, icc_level);
- 
- 	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
--		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
--		&hba->init_prefetch_data.icc_level);
-+		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
- 
- 	if (ret)
- 		dev_err(hba->dev,
- 			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
--			__func__, hba->init_prefetch_data.icc_level , ret);
-+			__func__, icc_level, ret);
- 
- out:
- 	kfree(desc_buf);
-@@ -6963,6 +6961,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		}
- 	}
- 
-+	/*
-+	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 spec)
-+	 * and for removable UFS card as well, hence always set the parameter.
-+	 * Note: Error handler may issue the device reset hence resetting
-+	 *       bActiveICCLevel as well so it is always safe to set this here.
-+	 */
-+	ufshcd_set_active_icc_lvl(hba);
+@@ -6778,23 +6778,13 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *=
+hba)
+ 		&hba->desc_size.geom_desc);
+ 	if (err)
+ 		hba->desc_size.geom_desc =3D QUERY_DESC_GEOMETRY_DEF_SIZE;
 +
- 	/* set the state as operational after switching to desired gear */
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 
-@@ -6979,9 +6985,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
- 			hba->dev_info.f_power_on_wp_en = flag;
- 
--		if (!hba->is_init_prefetch)
--			ufshcd_init_icc_levels(hba);
+ 	err =3D ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
+ 		&hba->desc_size.hlth_desc);
+ 	if (err)
+ 		hba->desc_size.hlth_desc =3D QUERY_DESC_HEALTH_DEF_SIZE;
+ }
+=20
+-static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+-{
+-	hba->desc_size.dev_desc =3D QUERY_DESC_DEVICE_DEF_SIZE;
+-	hba->desc_size.pwr_desc =3D QUERY_DESC_POWER_DEF_SIZE;
+-	hba->desc_size.interc_desc =3D QUERY_DESC_INTERCONNECT_DEF_SIZE;
+-	hba->desc_size.conf_desc =3D QUERY_DESC_CONFIGURATION_DEF_SIZE;
+-	hba->desc_size.unit_desc =3D QUERY_DESC_UNIT_DEF_SIZE;
+-	hba->desc_size.geom_desc =3D QUERY_DESC_GEOMETRY_DEF_SIZE;
+-	hba->desc_size.hlth_desc =3D QUERY_DESC_HEALTH_DEF_SIZE;
+-}
 -
- 		/* Add required well known logical units to scsi mid layer */
- 		if (ufshcd_scsi_add_wlus(hba))
- 			goto out;
-@@ -7006,9 +7009,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		pm_runtime_put_sync(hba->dev);
- 	}
- 
--	if (!hba->is_init_prefetch)
--		hba->is_init_prefetch = true;
+ static struct ufs_ref_clk ufs_ref_clk_freqs[] =3D {
+ 	{19200000, REF_CLK_FREQ_19_2_MHZ},
+ 	{26000000, REF_CLK_FREQ_26_MHZ},
+@@ -8283,9 +8273,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mm=
+io_base, unsigned int irq)
+ 	hba->mmio_base =3D mmio_base;
+ 	hba->irq =3D irq;
+=20
+-	/* Set descriptor lengths to specification defaults */
+-	ufshcd_def_desc_sizes(hba);
 -
- out:
- 	/*
- 	 * If we failed to initialize the device or the device is not
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e0fe247..3089b81 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -405,15 +405,6 @@ struct ufs_clk_scaling {
- 	bool is_suspended;
- };
- 
--/**
-- * struct ufs_init_prefetch - contains data that is pre-fetched once during
-- * initialization
-- * @icc_level: icc level which was read during initialization
-- */
--struct ufs_init_prefetch {
--	u32 icc_level;
--};
--
- #define UFS_ERR_REG_HIST_LENGTH 8
- /**
-  * struct ufs_err_reg_hist - keeps history of errors
-@@ -505,8 +496,6 @@ struct ufs_stats {
-  * @intr_mask: Interrupt Mask Bits
-  * @ee_ctrl_mask: Exception event control mask
-  * @is_powered: flag to check if HBA is powered
-- * @is_init_prefetch: flag to check if data was pre-fetched in initialization
-- * @init_prefetch_data: data pre-fetched during initialization
-  * @eh_work: Worker to handle UFS errors that require s/w attention
-  * @eeh_work: Worker to handle exception events
-  * @errors: HBA errors
-@@ -657,8 +646,6 @@ struct ufs_hba {
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
- 	bool is_powered;
--	bool is_init_prefetch;
--	struct ufs_init_prefetch init_prefetch_data;
- 
- 	/* Work Queues */
- 	struct work_struct eh_work;
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
-
+ 	err =3D ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
+--=20
+2.7.4
