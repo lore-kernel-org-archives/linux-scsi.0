@@ -2,100 +2,83 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9761CA9EC0
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 02:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6839CCA9EC0
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 03:11:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73C5B20862
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 02:37:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A4920862
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 03:11:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ie1MOmbg";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZFqIiXjP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L4cbU5Gs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L4cbU5Gs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730515AbfJ2Chs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 22:37:48 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:54466 "EHLO
+        id S1731246AbfJ2DLI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 23:11:08 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34332 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727775AbfJ2Chr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 22:37:47 -0400
+        with ESMTP id S1729145AbfJ2DLI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 23:11:08 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 00DC360D90; Tue, 29 Oct 2019 02:37:46 +0000 (UTC)
+        id CA2256039E; Tue, 29 Oct 2019 03:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572316667;
-        bh=SpU3CouSAnfBg2a8tqmWgQF4wwGKcI6vsq0WXo5HUl4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ie1MOmbgTAeYF+m8vDl1wmUKSVVpG9QzjFDquymWY+eL+3yB+55bJxNXC64SNRl2B
-         lk1/4a7CPWoQGLPKucl7QYyKQ69X2p+tihcN/DrwjpT008rwhxkvviKF7lQCv3LYiF
-         oMYb5FB8Dft367WR6p9pt0mQsclaEedxzsEFq1zQ=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 86D5A6092D;
-        Tue, 29 Oct 2019 02:37:45 +0000 (UTC)
+        s=default; t=1572318667;
+        bh=P/GOqeWrnbIyols/4U7369z4idV9uAvgxcjPZ205xgs=;
+        h=From:To:Subject:Date:From;
+        b=L4cbU5Gs16ywoPtgG2v2AwI68pxLv+lLtm0/p/a4+yx8w5qzfqfjaI7KlvwZ15N15
+         Te0WzYR3hEyxu8MeZbXh7EUkzVNZWJRPwz6o5E9P2gc0fpSR9dqyGwgv+ZdmUQclCi
+         QJDkDthUOpECeohZnDzd0OErddRrl2bTXJGmPh18=
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DDC6960CDD;
+        Tue, 29 Oct 2019 03:11:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572316665;
-        bh=SpU3CouSAnfBg2a8tqmWgQF4wwGKcI6vsq0WXo5HUl4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ZFqIiXjPMPXRBiaOU6BWJKwUP6zRSxUi3It+FSBQIJGrQczlInzJ2e41kUonmyE3+
-         HwK1ckJNXOtI7CSwQ0FVxzn3X3FRC3ZbWlkZdIKgV9Ep/QZCsDXjB/nnkmIRfXJqIp
-         jLQE5fDcNDmdqT5N8i0qL9i4fJt03/bV2lpmKHuE=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 29 Oct 2019 10:37:45 +0800
-From:   cang@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "Winkler, Tomas" <tomas.winkler@intel.com>,
-        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        s=default; t=1572318667;
+        bh=P/GOqeWrnbIyols/4U7369z4idV9uAvgxcjPZ205xgs=;
+        h=From:To:Subject:Date:From;
+        b=L4cbU5Gs16ywoPtgG2v2AwI68pxLv+lLtm0/p/a4+yx8w5qzfqfjaI7KlvwZ15N15
+         Te0WzYR3hEyxu8MeZbXh7EUkzVNZWJRPwz6o5E9P2gc0fpSR9dqyGwgv+ZdmUQclCi
+         QJDkDthUOpECeohZnDzd0OErddRrl2bTXJGmPh18=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DDC6960CDD
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Evan Green <evgreen@chromium.org>,
-        Janek Kotas <jank@cadence.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Add command logging infrastructure
-In-Reply-To: <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1571808560-3965-1-git-send-email-cang@codeaurora.org>
- <5B8DA87D05A7694D9FA63FD143655C1B9DCF0AFE@hasmsx108.ger.corp.intel.com>
- <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <01eb3c55e35738f2853fbc7175a12eaa@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        cang@codeaurora.org
+Subject: [PATCH v2 0/5] UFS driver general fixes bundle 1
+Date:   Mon, 28 Oct 2019 20:10:49 -0700
+Message-Id: <1572318655-28772-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-23 18:33, Avri Altman wrote:
->> 
->> > Add the necessary infrastructure to keep timestamp history of
->> > commands, events and other useful info for debugging complex issues.
->> > This helps in diagnosing events leading upto failure.
->> 
->> Why not use tracepoints, for that?
-> Ack on Tomas's comment.
-> Are there any pieces of information that you need not provided by the
-> upiu tracer?
-> 
-> Thanks,
-> Avri
+This bundle includes 5 general fixes for UFS driver.
 
-In extreme cases, when the UFS runs into bad state, system may crash. 
-There may not be a chance to collect trace. If trace is not collected 
-and failure is hard to be reproduced, some command logs prints would be 
-very helpful to help understand what was going on before we run into 
-failure.
+Changes since v1:
+- Incorporated review comments from Bart Van Assche.
 
-Thanks,
-Can Guo
+Can Guo (5):
+  scsi: Adjust DBD setting in mode sense for caching mode page per LLD
+  scsi: ufs: Set DBD setting in mode sense for caching mode page
+  scsi: ufs: Release clock if DMA map fails
+  scsi: ufs: Do not clear the DL layer timers
+  scsi: ufs: Do not free irq in suspend
+
+ drivers/scsi/sd.c         |  6 +++++-
+ drivers/scsi/ufs/ufshcd.c | 40 ++++++++++++++++++++++++++--------------
+ drivers/scsi/ufs/unipro.h | 11 +++++++++++
+ include/scsi/scsi_host.h  |  6 ++++++
+ 4 files changed, 48 insertions(+), 15 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
