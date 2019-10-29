@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A071CA9EC3
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 464FBCA9EAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 557F2214B2
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11936214D9
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 12:24:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="I8mlcOfU";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iOCuzRPk"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TjVqlCC9";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GZ5osAjR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730409AbfJ2MYP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Oct 2019 08:24:15 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:55714 "EHLO
+        id S1732508AbfJ2MYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Oct 2019 08:24:20 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:55906 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727001AbfJ2MYP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 08:24:15 -0400
+        with ESMTP id S1731976AbfJ2MYU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 08:24:20 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AAA3060D82; Tue, 29 Oct 2019 12:24:09 +0000 (UTC)
+        id 0788860F83; Tue, 29 Oct 2019 12:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572351854;
-        bh=/Qo6Hv2FZsKypPRWNYDV4xww0EnSM9kVbfvsdPCr1nw=;
+        s=default; t=1572351859;
+        bh=OHpqvsbEqQaNTWJz9ZTIW16qLuF+jKcCUcibO+4VId4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I8mlcOfU0VXU3tV+Qj6tPnLeyBBGm3HC0tgeuen3RTCfsLOsCy/OG3/5icV3EFF3h
-         EQh1OZX5jhDuXaK9yCkyCOi/0CJGl2q3EoM3lQwuXcP0EX8FS+Id4J1cEhtUE5yqC3
-         PokO7S2LxtISZ++mbL8SFZRGTHnknsg/IrqyRLPo=
+        b=TjVqlCC9nqtEwkIVY0zioQ61JlBb7R0w1jniFBG/2xmuI49WbyBN+4TsnjDw9p5wj
+         a7r0WIrWT4/IVWMSLaIatcy0MRKh32/34mf5dVz0fNu5o0A24ZggkYFuKPTP3pbl9Z
+         G464JSbh8Nqt01td5hmKe8gJFDzlZwQGEr8VQxeQ=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0BD7F60E41;
-        Tue, 29 Oct 2019 12:24:06 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 448CB60DB8;
+        Tue, 29 Oct 2019 12:24:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572351847;
-        bh=/Qo6Hv2FZsKypPRWNYDV4xww0EnSM9kVbfvsdPCr1nw=;
+        s=default; t=1572351856;
+        bh=OHpqvsbEqQaNTWJz9ZTIW16qLuF+jKcCUcibO+4VId4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iOCuzRPkGSJuwdWuVDb6QMSlNziOd/aSpGC8nfTI95KMtLLLFdaZdMxZIT+jXgP0w
-         /5h6wHa8GBF52VvzZHup0xWUNoqUxqDfYQ8PAk/J1rSMaP9JOLeHO/f8ldjuDL0Orf
-         GMNr+YUDXQAeOsi4tljAefq5XjaXZt4I+ekmG/GY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0BD7F60E41
+        b=GZ5osAjRxeHszL53rqVnt4H8th3BKDkwXX4Ehz7j6U80jTWUxOVdGDJA8Y45N63Cd
+         5KhAt2+7F2F94hSmFqqrQ6njv0nFczh69nqRXiLSiMiUG+1Px7aizru0l1NqH0fVwt
+         tqK8L61p5k9hBI0lszc6B+ltPiVbgtQhUfmn48eo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 448CB60DB8
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -52,8 +52,7 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         cang@codeaurora.org
-Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -61,10 +60,13 @@ Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Tomas Winkler <tomas.winkler@intel.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 1/2] scsi: ufs: Fix up clock scaling
-Date:   Tue, 29 Oct 2019 05:23:48 -0700
-Message-Id: <1572351831-30373-2-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v1 2/2] scsi: ufs: Do not rely on prefetched data
+Date:   Tue, 29 Oct 2019 05:23:49 -0700
+Message-Id: <1572351831-30373-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1572351831-30373-1-git-send-email-cang@codeaurora.org>
 References: <1572351831-30373-1-git-send-email-cang@codeaurora.org>
@@ -73,171 +75,137 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+We were setting bActiveICCLevel attribute for UFS device only once but
+type of this attribute has changed from persistent to volatile since UFS
+device specification v2.1. This attribute is set to the default value after
+power cycle or hardware reset event. It isn't safe to rely on prefetched
+data (only used for bActiveICCLevel attribute now). Hence this change
+removes the code related to data prefetching and set this parameter on
+every attempt to probe the UFS device.
 
-In host reset and restore path, after hba is stopped but before it is
-enabled back again, we scale up clocks to their max frequencies.
-If clock scale notify vendor specific ops happens to have any operations
-to hba, DME commands for example, it would fail due to hba is stopped at
-this moment. This change introduces another func to explicitly set clock
-frequency so that it can be used here and also in ufshcd_scale_clks().
-Meanwhile, this change modifies the clock scaling preparation error out
-path so that clock is released before it returns.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 74 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 49 insertions(+), 25 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.h | 13 -------------
+ 2 files changed, 15 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c28c144..3a0b99b 100644
+index 3a0b99b..0026199 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -903,28 +903,29 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
- 		return false;
+@@ -6424,11 +6424,12 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 	return icc_level;
  }
  
--static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
-+/**
-+ * ufshcd_set_clk_freq - set UFS controller clock frequencies
-+ * @hba: per adapter instance
-+ * @scale_up: If True, set max possible frequency othewise set low frequency
-+ *
-+ * Returns 0 if successful
-+ * Returns < 0 for any other errors
-+ */
-+static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+-static void ufshcd_init_icc_levels(struct ufs_hba *hba)
++static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
  {
- 	int ret = 0;
- 	struct ufs_clk_info *clki;
- 	struct list_head *head = &hba->clk_list_head;
--	ktime_t start = ktime_get();
--	bool clk_state_changed = false;
+ 	int ret;
+ 	int buff_len = hba->desc_size.pwr_desc;
+ 	u8 *desc_buf;
++	u32 icc_level;
  
- 	if (list_empty(head))
+ 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+ 	if (!desc_buf)
+@@ -6442,20 +6443,17 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
  		goto out;
- 
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
--	if (ret)
--		return ret;
--
- 	list_for_each_entry(clki, head, list) {
- 		if (!IS_ERR_OR_NULL(clki->clk)) {
- 			if (scale_up && clki->max_freq) {
- 				if (clki->curr_freq == clki->max_freq)
- 					continue;
- 
--				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->max_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -943,7 +944,6 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 				if (clki->curr_freq == clki->min_freq)
- 					continue;
- 
--				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->min_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -962,13 +962,36 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 				clki->name, clk_get_rate(clki->clk));
  	}
  
-+out:
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_scale_clks - scale up or scale down UFS controller clocks
-+ * @hba: per adapter instance
-+ * @scale_up: True if scaling up and false if scaling down
-+ *
-+ * Returns 0 if successful
-+ * Returns < 0 for any other errors
-+ */
-+int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
-+{
-+	int ret = 0;
-+
-+	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
-+	if (ret)
-+		return ret;
-+
-+	ret = ufshcd_set_clk_freq(hba, scale_up);
-+	if (ret)
-+		return ret;
-+
- 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
-+	if (ret) {
-+		ufshcd_set_clk_freq(hba, !scale_up);
-+		return ret;
-+	}
+-	hba->init_prefetch_data.icc_level =
+-			ufshcd_find_max_sup_active_icc_level(hba,
+-			desc_buf, buff_len);
+-	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
+-			__func__, hba->init_prefetch_data.icc_level);
++	icc_level = ufshcd_find_max_sup_active_icc_level(hba, desc_buf,
++							 buff_len);
++	dev_dbg(hba->dev, "%s: setting icc_level 0x%x", __func__, icc_level);
  
--out:
--	if (clk_state_changed)
--		trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
--			(scale_up ? "up" : "down"),
--			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 	return ret;
- }
+ 	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+-		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
+-		&hba->init_prefetch_data.icc_level);
++		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
  
-@@ -1154,35 +1177,36 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 
- 	ret = ufshcd_clock_scaling_prepare(hba);
  	if (ret)
--		return ret;
-+		goto out;
+ 		dev_err(hba->dev,
+ 			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
+-			__func__, hba->init_prefetch_data.icc_level , ret);
++			__func__, icc_level, ret);
  
- 	/* scale down the gear before scaling down clocks */
- 	if (!scale_up) {
- 		ret = ufshcd_scale_gear(hba, false);
- 		if (ret)
--			goto out;
-+			goto clk_scaling_unprepare;
- 	}
- 
- 	ret = ufshcd_scale_clks(hba, scale_up);
--	if (ret) {
--		if (!scale_up)
--			ufshcd_scale_gear(hba, true);
--		goto out;
--	}
-+	if (ret)
-+		goto scale_up_gear;
- 
- 	/* scale up the gear after scaling up clocks */
- 	if (scale_up) {
- 		ret = ufshcd_scale_gear(hba, true);
- 		if (ret) {
- 			ufshcd_scale_clks(hba, false);
--			goto out;
-+			goto clk_scaling_unprepare;
+ out:
+ 	kfree(desc_buf);
+@@ -6963,6 +6961,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
  		}
  	}
  
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
-+	goto clk_scaling_unprepare;
++	/*
++	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 spec)
++	 * and for removable UFS card as well, hence always set the parameter.
++	 * Note: Error handler may issue the device reset hence resetting
++	 *       bActiveICCLevel as well so it is always safe to set this here.
++	 */
++	ufshcd_set_active_icc_lvl(hba);
++
+ 	/* set the state as operational after switching to desired gear */
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
  
--out:
-+scale_up_gear:
-+	if (!scale_up)
-+		ufshcd_scale_gear(hba, true);
-+clk_scaling_unprepare:
- 	ufshcd_clock_scaling_unprepare(hba);
-+out:
- 	ufshcd_release(hba);
- 	return ret;
- }
-@@ -6207,7 +6231,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -6979,9 +6985,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+ 			hba->dev_info.f_power_on_wp_en = flag;
  
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_scale_clks(hba, true);
-+	ufshcd_set_clk_freq(hba, true);
+-		if (!hba->is_init_prefetch)
+-			ufshcd_init_icc_levels(hba);
+-
+ 		/* Add required well known logical units to scsi mid layer */
+ 		if (ufshcd_scsi_add_wlus(hba))
+ 			goto out;
+@@ -7006,9 +7009,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 		pm_runtime_put_sync(hba->dev);
+ 	}
  
- 	err = ufshcd_hba_enable(hba);
- 	if (err)
+-	if (!hba->is_init_prefetch)
+-		hba->is_init_prefetch = true;
+-
+ out:
+ 	/*
+ 	 * If we failed to initialize the device or the device is not
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index e0fe247..3089b81 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -405,15 +405,6 @@ struct ufs_clk_scaling {
+ 	bool is_suspended;
+ };
+ 
+-/**
+- * struct ufs_init_prefetch - contains data that is pre-fetched once during
+- * initialization
+- * @icc_level: icc level which was read during initialization
+- */
+-struct ufs_init_prefetch {
+-	u32 icc_level;
+-};
+-
+ #define UFS_ERR_REG_HIST_LENGTH 8
+ /**
+  * struct ufs_err_reg_hist - keeps history of errors
+@@ -505,8 +496,6 @@ struct ufs_stats {
+  * @intr_mask: Interrupt Mask Bits
+  * @ee_ctrl_mask: Exception event control mask
+  * @is_powered: flag to check if HBA is powered
+- * @is_init_prefetch: flag to check if data was pre-fetched in initialization
+- * @init_prefetch_data: data pre-fetched during initialization
+  * @eh_work: Worker to handle UFS errors that require s/w attention
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
+@@ -657,8 +646,6 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
+-	bool is_init_prefetch;
+-	struct ufs_init_prefetch init_prefetch_data;
+ 
+ 	/* Work Queues */
+ 	struct work_struct eh_work;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
