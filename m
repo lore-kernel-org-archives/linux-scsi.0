@@ -2,93 +2,80 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A4C7CA9EC4
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 19:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77868CA9EAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 23:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E742120862
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 19:26:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5302F2086A
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 23:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727296AbfJ2T0U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Oct 2019 15:26:20 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:37202 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725880AbfJ2T0U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 15:26:20 -0400
-Received: by mail-wr1-f65.google.com with SMTP id e11so14936881wrv.4;
-        Tue, 29 Oct 2019 12:26:18 -0700 (PDT)
+        id S1725905AbfJ2XHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Oct 2019 19:07:17 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:40529 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725839AbfJ2XHR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 19:07:17 -0400
+Received: by mail-pg1-f196.google.com with SMTP id 15so127055pgt.7
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Oct 2019 16:07:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=yoc+omBnnUd4soMfJ6bNGvQbXonbqRDHsfZI3u2IJAc=;
-        b=APA/s/TMPc8zbn9zATpX7Xa5Vh0qeCrm5PRmluJ3o+tzVbC4U6dFGCiEdfAYXT89Hy
-         WtzovOMemz7cIe1fucjQaqy88A5tYzN+bsUWtNU7vTQ3JOmn+Oy4NVxghukmFSkqUqrK
-         2++08PrW/XRiOHerRQbFXtZXfTb8rUX09aijFDzMR4F4Z51P1/13WedK8ObZ6nMKpnxk
-         K5ssQ7S31o4mGwFWB+9xcByl10hqHNLKcl9ornzbjU76aYmeLp5yEhnCSBOpLEThJPVE
-         v6p/rNuT65/V0/RUWBmnrLTD0plgX6cq4Qg/GIZxnODbg2YktcGQPnrwap7y3r5umUio
-         TBwQ==
-X-Gm-Message-State: APjAAAVV2v7HsGAOwHosAAuw6tLCXIeSAdJWOI3SXFs6OOcKnH/D2FY7
-        U/CifovX+JJtAMJHtIV0KbE=
-X-Google-Smtp-Source: APXvYqxKqnLZSCi2lnailseMnErYAlUO6kO1QIMaogQRU+5F9spCuKxRzMU6XIlfMB781vXvqpU+Ug==
-X-Received: by 2002:a5d:6785:: with SMTP id v5mr17151879wru.174.1572377177749;
-        Tue, 29 Oct 2019 12:26:17 -0700 (PDT)
-Received: from ?IPv6:2600:1700:65a0:78e0:514:7862:1503:8e4d? ([2600:1700:65a0:78e0:514:7862:1503:8e4d])
-        by smtp.gmail.com with ESMTPSA id f143sm4753881wme.40.2019.10.29.12.26.15
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 29 Oct 2019 12:26:17 -0700 (PDT)
-Subject: Re: [PATCH v2] iser: explicitly set shost max_segment_size if non
- virtual boundary devices
-From:   Sagi Grimberg <sagi@grimberg.me>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        bh=I39axrVHT/WerMUx6b8I9qn2r4dM4ojTYATvGvwHGt0=;
+        b=YCbIHzxp+NCZrOO3E1idtgjm91zscE7qJ61jGKabItagQgstYxGB2q+eNz4WnwvXbu
+         iODsFb7H766Fg2HVGyKiFgJdZQJLTJMrq2yb+VHJcGx6OHgxdHiqHJ0U2XzzommBmJu6
+         Bqt4hFBj+kKFDXx3cNS5hKq7UkriPb5jxyJ+fJqrqtS0LWP/1Q6yN5NL1QeVXZV8oYFk
+         WVWFT4oDw46N1uLreot4/oQowtTmGsNltkQ7ykIg4OZvrd2tWUZz26C8mQy5Jm5NLl/m
+         GpPdQJ7UJGJOcV90SLDJweeE8Q+kimmytVIaVFeVwQQEdAK93cXseAB4y5Yg4W3+TnkQ
+         D2Lw==
+X-Gm-Message-State: APjAAAXK3ute1FT0g1v71uXqTXBJcMMu7x5GCAXNWBd7mjpjdYnXKYWD
+        KYdYA7cFuisJI8vTeoEZE7A=
+X-Google-Smtp-Source: APXvYqxVwYGKKbglXDGM/+OUBZ/6fpy1ZSuKTmUdNAJcIqn0SHGBsyLySIPTLAuI4JkH+BVBRkT7JA==
+X-Received: by 2002:a63:dd17:: with SMTP id t23mr7605467pgg.134.1572390436841;
+        Tue, 29 Oct 2019 16:07:16 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id z21sm170500pfa.119.2019.10.29.16.07.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Oct 2019 16:07:15 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>
-References: <20190607012914.2328-1-sagi@grimberg.me>
- <20191029192057.GA11679@ziepe.ca>
- <5c5fe89e-e56b-946b-7221-5fc1660cadec@grimberg.me>
-Message-ID: <c20152a8-064f-6e92-bf5e-bebedf3ca6ee@grimberg.me>
-Date:   Tue, 29 Oct 2019 12:26:14 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+Subject: [PATCH 0/3] Three small UFS patches
+Date:   Tue, 29 Oct 2019 16:07:07 -0700
+Message-Id: <20191029230710.211926-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.24.0.rc0.303.g954a862665-goog
 MIME-Version: 1.0
-In-Reply-To: <5c5fe89e-e56b-946b-7221-5fc1660cadec@grimberg.me>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Martin,
 
->>> if the rdma device supports sg gaps, we don't need to set a virtual
->>> boundary but we then need to explicitly set the max_segment_size, 
->>> otherwise
->>> scsi takes BLK_MAX_SEGMENT_SIZE and sets it using dma_set_max_seg_size()
->>> and this affects all the rdma device consumers.
->>>
->>> Fix it by setting shost max_segment_size according to the device
->>> capability if SG_GAPS are not supported.
->>>
->>> Reported-by: Jason Gunthorpe <jgg@ziepe.ca>
->>> Suggested-by: Christoph Hellwig <hch@lst.de>
->>> Signed-off-by: Sagi Grimberg <sagi@grimberg.me>
->>> ---
->>> Changes from v1:
->>> - set max_segment_size only for non virtual boundary devices
->>>
->>>   drivers/infiniband/ulp/iser/iscsi_iser.c | 4 +++-
->>>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> Sagi, are you respinning this or ??
-> 
-> I can take the change-log message and paste it in the code,
-> but is that something we want? Usually people look in the
-> change-log history...
+These three patches are what I came up with after having reviewed the compiler warnings
+triggered by the UFS driver and after having reviewed its source code. Please consider
+these patches for kernel version v5.5.
 
-I actually thought it was already in...
+Thanks,
+
+Bart.
+
+Bart Van Assche (3):
+  ufs: Fix kernel-doc warnings
+  ufs: Use enum dev_cmd_type where appropriate
+  ufs: Remove .setup_xfer_req()
+
+ drivers/scsi/ufs/ufs_bsg.c |  1 +
+ drivers/scsi/ufs/ufshcd.c  |  8 +++-----
+ drivers/scsi/ufs/ufshcd.h  | 10 ----------
+ 3 files changed, 4 insertions(+), 15 deletions(-)
+
+-- 
+2.24.0.rc0.303.g954a862665-goog
+
