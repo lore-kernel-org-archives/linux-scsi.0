@@ -2,126 +2,93 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 654F3CA9EC0
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 01:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38801CA9EC4
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 01:49:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D2AC21835
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 01:10:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B44E218AC
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 01:49:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Pbz4wDP9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727830AbfJ2BK6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Oct 2019 21:10:58 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:47528 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726365AbfJ2BK6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Oct 2019 21:10:58 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 83444204197;
-        Tue, 29 Oct 2019 02:10:55 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Src4PM4I7rHq; Tue, 29 Oct 2019 02:10:48 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 62310204163;
-        Tue, 29 Oct 2019 02:10:47 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 0/9] Consolidate {get,put}_unaligned_[bl]e24() definitions
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Peter Zijlstra <peterz@infradead.org>
-Cc:     Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20191028200700.213753-1-bvanassche@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <21a9443a-b52c-d028-d0a5-2bbc0b4c281a@interlog.com>
-Date:   Mon, 28 Oct 2019 21:10:44 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1727518AbfJ2Bt0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Oct 2019 21:49:26 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46716 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727364AbfJ2Bt0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Oct 2019 21:49:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T1mn6S085568;
+        Tue, 29 Oct 2019 01:49:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=BwpL56zWq/DyfZTKkawyTy/VoYhLLKsZYiZWk9+XeG4=;
+ b=Pbz4wDP9qK47sd+UlHmbfMR3sAcbeA0oh32YCSuQdVpKoX8XO48b0IfZs0nUosmVmthm
+ JYN81VCbL2MDePWj4lYeyKOSbT61lsbCNoyNODldDV4n46xKAh+IXJa3PJ/8Deqk9JqC
+ QYN6O4lm7AF3hDZE8r3sBg2ImjoUJYyGU5wKj0zhiP3noaNOeb8dKwVJXR0LieJ3dFw+
+ nO/wm8J0ziZw4RhP6Md8jTwebZSS0j21+6+ht4HL6I7JnhAuB2WXNDj9RUsQ8gySDnpv
+ V7f+cbsuRQTLA4Z/tA+cXadlID/Lzc8ggBcz/MZhS204cwCH/DgK/EQBv3E+r8+hdetT jw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vvumfag7b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Oct 2019 01:49:11 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T1gq6A107620;
+        Tue, 29 Oct 2019 01:49:11 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vw09gu3nn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Oct 2019 01:49:10 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9T1n6qI020391;
+        Tue, 29 Oct 2019 01:49:06 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 28 Oct 2019 18:49:06 -0700
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-next@vger.kernel.org, martin.petersen@oracle.com,
+        sfr@canb.auug.org.au, Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: Re: [PATCH] lpfc: fix build error of lpfc_debugfs.c for vfree/vmalloc
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191025182530.26653-1-jsmart2021@gmail.com>
+Date:   Mon, 28 Oct 2019 21:49:04 -0400
+In-Reply-To: <20191025182530.26653-1-jsmart2021@gmail.com> (James Smart's
+        message of "Fri, 25 Oct 2019 11:25:30 -0700")
+Message-ID: <yq1tv7s8gof.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20191028200700.213753-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=722
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910290017
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=821 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910290018
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-28 4:06 p.m., Bart Van Assche wrote:
-> Hi Peter,
-> 
-> This patch series moves the existing {get,put}_unaligned_[bl]e24() definitions
-> into include/linux/unaligned/generic.h. This patch series also introduces a function
-> for sign-extending 24-bit into 32-bit integers and introduces users for all new
-> functions and macros. Please consider this patch series for kernel version v5.5.
 
-And while you are at it, the sg3_utils user space copy of
-include/linux/unaligned/*.h (called sg_unaligned.h) has bindings
-for 48 bit operations.
+James,
 
-Checking my sg3_utils code, in VPD page 0x83 (mandatory device
-identification page) the EUI-64 based 16-byte designator has a
-6 byte field (the "vendor specific extension identifier").
-Also the SET TIMESTAMP and REPORT TIMESTAMP commands have a 6 byte
-timestamp field. There are also some attribute pages associated with
-the READ ATTRIBUTE command that have 6 byte fields.
+> lpfc_debufs.c was missing include of vmalloc.h when compiled on PPC.
+>
+> Add missing header.
 
+Applied to 5.5/scsi-queue, thanks!
 
-A recent trend with the pages returned by the SCSI LOG SENSE command
-is to have (big endian) fields whose length (in bytes) is encoded
-in the response. I have this function for those:
-
-/* Returns 0 if 'num_bytes' is less than or equal to 0 or greater than
-  * 8 (i.e. sizeof(uint64_t)). Else returns result in uint64_t which is
-  * an 8 byte unsigned integer. */
-static inline uint64_t sg_get_unaligned_be(int num_bytes, const void *p)
-
-And I can see NVMe code in smartmontools using that one:
-
-nvmeprint.cpp:   jrns["eui64"]["ext_id"] =
-                                 sg_get_unaligned_be(5, id_ns.eui64 + 3);
-
-
-Doug Gilbert
-
-
-> Thanks,
-> 
-> Bart.
-> 
-> Bart Van Assche (9):
->    linux/unaligned/byteshift.h: Remove superfluous casts
->    c6x: Include <linux/unaligned/generic.h> instead of duplicating it
->    treewide: Consolidate {get,put}_unaligned_[bl]e24() definitions
->    drivers/iio: Sign extend without triggering implementation-defined
->      behavior
->    scsi/st: Use get_unaligned_signed_be24()
->    scsi/trace: Use get_unaligned_be*()
->    arm/ecard: Use get_unaligned_le{16,24}()
->    IB/qib: Sign extend without triggering implementation-defined behavior
->    ASoC/fsl_spdif: Use put_unaligned_be24() instead of open-coding it
-> 
->   arch/arm/mach-rpc/ecard.c                     |  18 +--
->   arch/c6x/include/asm/unaligned.h              |  65 +--------
->   .../iio/common/st_sensors/st_sensors_core.c   |   7 +-
->   drivers/infiniband/hw/qib/qib_rc.c            |   2 +-
->   drivers/nvme/host/rdma.c                      |   8 --
->   drivers/nvme/target/rdma.c                    |   6 -
->   drivers/scsi/scsi_trace.c                     | 128 ++++++------------
->   drivers/scsi/st.c                             |   4 +-
->   drivers/usb/gadget/function/f_mass_storage.c  |   1 +
->   drivers/usb/gadget/function/storage_common.h  |   5 -
->   include/linux/unaligned/be_byteshift.h        |   6 +-
->   include/linux/unaligned/generic.h             |  44 ++++++
->   include/linux/unaligned/le_byteshift.h        |   6 +-
->   include/target/target_core_backend.h          |   6 -
->   sound/soc/fsl/fsl_spdif.c                     |   5 +-
->   15 files changed, 103 insertions(+), 208 deletions(-)
-> 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
