@@ -2,221 +2,154 @@ Return-Path: <SRS0=POaH=YW=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130AACA9EC3
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 16:26:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EBECA9EAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 18:00:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C880921721
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 16:26:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZPS+0MWs";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="POA1ZhWC"
+	by mail.kernel.org (Postfix) with ESMTP id C13EB2086A
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Oct 2019 18:00:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390267AbfJ2Q0w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Oct 2019 12:26:52 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:37480 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728902AbfJ2Q0w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Oct 2019 12:26:52 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id A999B60CDD; Tue, 29 Oct 2019 16:26:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572366410;
-        bh=oxh4rlK6bZR9Qdq45X3TCKCQDVm+kGPTdv4JEvnfIIk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ZPS+0MWsX4ErNbommogw2fEXU3TNzotLrLp0kdwGuxwdwKR6XXvkDBDrZ0iPu0hdw
-         tiPym9flOTuPUkNpG90Di6n02ezhuj1el0g/l2RYEG5+AHnPF33UOIhfzUdz/Ueb6F
-         edmmOPiCJahrV/NGOwy/xBNYmhMzEzhwNO/R1l44=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 1552A607EF;
-        Tue, 29 Oct 2019 16:26:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572366408;
-        bh=oxh4rlK6bZR9Qdq45X3TCKCQDVm+kGPTdv4JEvnfIIk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=POA1ZhWC8QagaIQlbx7Hin1ppqzB2RqzK5NcSyimw8STUKoN3qzfH0bN98CpF/Ja4
-         BZjEhPaAdkdzCXXGobG7e3U0eAqqYXCoOBKxJzwbA9laajniLitlmkVAbje8nWCZ3d
-         CVb6WWq/eadDyCASWhS73MDingY22US/scnzxjGc=
+        id S1729507AbfJ2SAJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Oct 2019 14:00:09 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:50886 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727379AbfJ2SAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Oct 2019 14:00:09 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id CA4C2204238;
+        Tue, 29 Oct 2019 19:00:04 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id sbeakG39yp-q; Tue, 29 Oct 2019 19:00:02 +0100 (CET)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 645CE204163;
+        Tue, 29 Oct 2019 19:00:01 +0100 (CET)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "usb-storage@lists.one-eyed-alien.net" 
+        <usb-storage@lists.one-eyed-alien.net>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+References: <20191028105732.29913-1-damien.lemoal@wdc.com>
+ <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
+ <BYAPR04MB5816FF25422E60C168F78308E7610@BYAPR04MB5816.namprd04.prod.outlook.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <4eb733b9-8f52-a6c2-eb56-f0759113dc1e@interlog.com>
+Date:   Tue, 29 Oct 2019 13:59:58 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <BYAPR04MB5816FF25422E60C168F78308E7610@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 29 Oct 2019 09:26:48 -0700
-From:   asutoshd@codeaurora.org
-To:     Can Guo <cang@codeaurora.org>
-Cc:     nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 2/2] scsi: ufs: Do not rely on prefetched data
-In-Reply-To: <1572351831-30373-3-git-send-email-cang@codeaurora.org>
-References: <1572351831-30373-1-git-send-email-cang@codeaurora.org>
- <1572351831-30373-3-git-send-email-cang@codeaurora.org>
-Message-ID: <d8850f39c67de9a8fb478a6a738093d1@codeaurora.org>
-X-Sender: asutoshd@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-29 05:23, Can Guo wrote:
-> We were setting bActiveICCLevel attribute for UFS device only once but
-> type of this attribute has changed from persistent to volatile since 
-> UFS
-> device specification v2.1. This attribute is set to the default value 
-> after
-> power cycle or hardware reset event. It isn't safe to rely on 
-> prefetched
-> data (only used for bActiveICCLevel attribute now). Hence this change
-> removes the code related to data prefetching and set this parameter on
-> every attempt to probe the UFS device.
+On 2019-10-29 4:17 a.m., Damien Le Moal wrote:
+> Bart,
 > 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++++---------------
->  drivers/scsi/ufs/ufshcd.h | 13 -------------
->  2 files changed, 15 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 3a0b99b..0026199 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6424,11 +6424,12 @@ static u32
-> ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
->  	return icc_level;
->  }
-> 
-> -static void ufshcd_init_icc_levels(struct ufs_hba *hba)
-> +static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
->  {
->  	int ret;
->  	int buff_len = hba->desc_size.pwr_desc;
->  	u8 *desc_buf;
-> +	u32 icc_level;
-> 
->  	desc_buf = kmalloc(buff_len, GFP_KERNEL);
->  	if (!desc_buf)
-> @@ -6442,20 +6443,17 @@ static void ufshcd_init_icc_levels(struct 
-> ufs_hba *hba)
->  		goto out;
->  	}
-> 
-> -	hba->init_prefetch_data.icc_level =
-> -			ufshcd_find_max_sup_active_icc_level(hba,
-> -			desc_buf, buff_len);
-> -	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
-> -			__func__, hba->init_prefetch_data.icc_level);
-> +	icc_level = ufshcd_find_max_sup_active_icc_level(hba, desc_buf,
-> +							 buff_len);
-> +	dev_dbg(hba->dev, "%s: setting icc_level 0x%x", __func__, icc_level);
-> 
->  	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> -		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
-> -		&hba->init_prefetch_data.icc_level);
-> +		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
-> 
->  	if (ret)
->  		dev_err(hba->dev,
->  			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
-> -			__func__, hba->init_prefetch_data.icc_level , ret);
-> +			__func__, icc_level, ret);
-> 
->  out:
->  	kfree(desc_buf);
-> @@ -6963,6 +6961,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  		}
->  	}
-> 
-> +	/*
-> +	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 
-> spec)
-> +	 * and for removable UFS card as well, hence always set the 
-> parameter.
-> +	 * Note: Error handler may issue the device reset hence resetting
-> +	 *       bActiveICCLevel as well so it is always safe to set this 
-> here.
-> +	 */
-> +	ufshcd_set_active_icc_lvl(hba);
-> +
->  	/* set the state as operational after switching to desired gear */
->  	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> 
-> @@ -6979,9 +6985,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
->  			hba->dev_info.f_power_on_wp_en = flag;
-> 
-> -		if (!hba->is_init_prefetch)
-> -			ufshcd_init_icc_levels(hba);
-> -
->  		/* Add required well known logical units to scsi mid layer */
->  		if (ufshcd_scsi_add_wlus(hba))
->  			goto out;
-> @@ -7006,9 +7009,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  		pm_runtime_put_sync(hba->dev);
->  	}
-> 
-> -	if (!hba->is_init_prefetch)
-> -		hba->is_init_prefetch = true;
-> -
->  out:
->  	/*
->  	 * If we failed to initialize the device or the device is not
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index e0fe247..3089b81 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -405,15 +405,6 @@ struct ufs_clk_scaling {
->  	bool is_suspended;
->  };
-> 
-> -/**
-> - * struct ufs_init_prefetch - contains data that is pre-fetched once 
-> during
-> - * initialization
-> - * @icc_level: icc level which was read during initialization
-> - */
-> -struct ufs_init_prefetch {
-> -	u32 icc_level;
-> -};
-> -
->  #define UFS_ERR_REG_HIST_LENGTH 8
->  /**
->   * struct ufs_err_reg_hist - keeps history of errors
-> @@ -505,8 +496,6 @@ struct ufs_stats {
->   * @intr_mask: Interrupt Mask Bits
->   * @ee_ctrl_mask: Exception event control mask
->   * @is_powered: flag to check if HBA is powered
-> - * @is_init_prefetch: flag to check if data was pre-fetched in 
-> initialization
-> - * @init_prefetch_data: data pre-fetched during initialization
->   * @eh_work: Worker to handle UFS errors that require s/w attention
->   * @eeh_work: Worker to handle exception events
->   * @errors: HBA errors
-> @@ -657,8 +646,6 @@ struct ufs_hba {
->  	u32 intr_mask;
->  	u16 ee_ctrl_mask;
->  	bool is_powered;
-> -	bool is_init_prefetch;
-> -	struct ufs_init_prefetch init_prefetch_data;
-> 
->  	/* Work Queues */
->  	struct work_struct eh_work;
+> On 2019/10/28 21:38, Bart Van Assche wrote:
+>> On 10/28/19 3:57 AM, Damien Le Moal wrote:
+>>> struct scsi_cmnd cmd->req.resid_len which is returned and set
+>>> respectively by the helper functions scsi_get_resid() and
+>>> scsi_set_resid() is an unsigned int. Reflect this fact in the interface
+>>> of these helper functions.
+>>> [ ... ]
+>>> -static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
+>>> +static inline void scsi_set_resid(struct scsi_cmnd *cmd, unsigned int resid)
+>>>    {
+>>>    	cmd->req.resid_len = resid;
+>>>    }
+>>>    
+>>> -static inline int scsi_get_resid(struct scsi_cmnd *cmd)
+>>> +static inline unsigned int scsi_get_resid(struct scsi_cmnd *cmd)
+>>>    {
+>>>    	return cmd->req.resid_len;
+>>>    }
+>>
+>>   From the iSCSI RFC:
+>>
+>>      SCSI-Presented Data Transfer Length (SPDTL) is the term this document
+>>      uses (see Section 1.1 for definition) to represent the aggregate data
+>>      length that the target SCSI layer attempts to transfer using the
+>>      local iSCSI layer for a task.  Expected Data Transfer Length (EDTL)
+>>      is the iSCSI term that represents the length of data that the iSCSI
+>>      layer expects to transfer for a task.  EDTL is specified in the SCSI
+>>      Command PDU.
+>>
+>>      When SPDTL = EDTL for a task, the target iSCSI layer completes the
+>>      task with no residuals.  Whenever SPDTL differs from EDTL for a task,
+>>      that task is said to have a residual.
+>>
+>>      If SPDTL > EDTL for a task, iSCSI Overflow MUST be signaled in the
+>>      SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+>>      be set to the numerical value of (SPDTL - EDTL).
+>>
+>>      If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in the
+>>      SCSI Response PDU as specified in [RFC3720].  The Residual Count MUST
+>>      be set to the numerical value of (EDTL - SPDTL).
+>>
+>>      Note that the Overflow and Underflow scenarios are independent of
+>>      Data-In and Data-Out.  Either scenario is logically possible in
+>>      either direction of data transfer.
+>>
+>> If the residual is changed from signed into unsigned, how is a SCSI LLD
+>> expected to report the difference between residual overflow and residual
+>> underflow to the SCSI core?
 
-Looks good to me.
 
--Asutosh
+
+> As mentioned in the commit message, cmd->req.resid_len where the resid
+> is stored is an unsigned int. And it has been an unsigned int forever as
+> far as I know.
+
+If my memory serves, I put it in over 20 years ago, about the same time
+as the sg v2 interface (struct sg_io_hdr) was implemented. And when I
+put it in it was a (signed) int and this is why:
+
+struct ccb_accept_targ3 {
+     .....
+     CAM_I32 cam_resid;    /* Transfer residual length: 2's comp */
+     .....
+};
+
+[from cam3r03.pdf]
+
+So it coped with both underflow and the less likely case of overflow.
+
+Notice in:
+    struct sg_io_hdr {
+       .....
+       int resid;  /* [o] dxfer_len - actual_transferred */
+       ...
+};
+
+At the time the SCSI mid-level and the block layer didn't bother about
+resid, only some LLDs which is where the sg driver picked it up from.
+
+So some ignoramus changed it to unsigned since then, probably before
+git strangled the kernel source tree.
+
+> So I think changing the interface to unsigned int makes sense in that
+> context. Also, unless I am reading this wrong, the above definition you
+> quote always lead to resid >= 0, so I do not see what problem you are
+> worried about. Could you elaborate your concerns please ?
+
+Linux's internal representation is wrong and should be fixed to match
+its exposed interface (struct sg_io_hdr) which predates the breakage.
+
+Doug Gilbert
+
