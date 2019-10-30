@@ -2,128 +2,104 @@ Return-Path: <SRS0=//Xo=YX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C53BACA9EC5
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:43:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC99CA9EC7
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:12:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F1852080F
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:43:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZQprLW6L";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aQ+A1RVK"
+	by mail.kernel.org (Postfix) with ESMTP id 39E5120874
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726345AbfJ3Mnc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 08:43:32 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:40586 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726088AbfJ3Mnc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Oct 2019 08:43:32 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2995060FEC; Wed, 30 Oct 2019 12:43:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572439411;
-        bh=gtP9LfS5sCqnnlWgSSUJdbnN/P+H+DyR6tGOfbevBa8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ZQprLW6LCRVPBpRQQJhcS3XJF938VcYFw62n74Z6Fthy0yNAmkDjQAAzAsft85xY0
-         Ymhk109Kma3gJ8FFusz0BBcMms5TkyFnJ70Y0hqogfhb6Zyv6sL3VOQ6WPfbxRiEYH
-         GzKa4lBIfYAtdVXIJjsfeBstlOcpVq3FH7ggBnxI=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 0A97660F5C;
-        Wed, 30 Oct 2019 12:43:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572439410;
-        bh=gtP9LfS5sCqnnlWgSSUJdbnN/P+H+DyR6tGOfbevBa8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=aQ+A1RVKqcRob0ei50QvOPjlkE0beOrqmBJz1zSmC7Agc8572oMlHgZnnxnI/7OZK
-         KtwyOuhd0XoJJ8Ugl4x4kfKVSeu+Izv86FpqVw4phRYz/AlKskQlZBy9KBDK/KGHAC
-         Ih3WCO2pAn4+bbLHQgDqsyySaC2KeUqWWNjU3xaQ=
+        id S1727090AbfJ3PMJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 11:12:09 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:44708 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726949AbfJ3PMI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Oct 2019 11:12:08 -0400
+Received: by mail-pg1-f193.google.com with SMTP id e10so1659503pgd.11;
+        Wed, 30 Oct 2019 08:12:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=nrnPTyEFl+6aZzJXJflCpowsX8ZrOUs+tX0p0YHuCEE=;
+        b=c3kETC9VO6Jb4m+3nc4C6M5VtTqp/mjVe07vm76svkzvYlF0wPRBYQX6QS41JpLwp0
+         FaZ98DWjdGT5/w3Jsc7eMG02OhZN4OkrR2DhYG5vWAxgaFbb/FL7bhmJZANshwq7GJyR
+         9Q3j/9H5I3PujjJVIf8uO+swOFxFEK9qPYSHpAi+YXA1J/6PZ5EUifZNl5LCLeZ6gEq3
+         F7LuW/jq+brxUNELVMjZtC2Kbo80aPaiKp+BjkvZblqAYY/Rnuxo0n8lN0rJWbLLp4Ln
+         mfwZC2HZXXdVUl2kVbYSAXIJENex0MsO9Gf6w/I8x2o0ob279cD3inno9QC0Qo5+/UcH
+         YhZA==
+X-Gm-Message-State: APjAAAWs+GJzFBG+Tdl/GxviPkMQT/YciVtg4viwSGptE9CvkZKeiVwu
+        sC1FH7UqeCDvhXGavQWQgn4=
+X-Google-Smtp-Source: APXvYqyIheuynv7JrRYiPQ/gSZ0JJ1J8L2s6PYAcq9UqcuxWCofZljR4zxoAk++LMW2H+VPuMY0ieg==
+X-Received: by 2002:a63:5801:: with SMTP id m1mr25588238pgb.139.1572448327681;
+        Wed, 30 Oct 2019 08:12:07 -0700 (PDT)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id z7sm290350pfr.165.2019.10.30.08.12.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 30 Oct 2019 08:12:06 -0700 (PDT)
+Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
+To:     Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+References: <20191028105732.29913-1-damien.lemoal@wdc.com>
+ <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
+ <4ee551d0-27a6-b516-ade0-d477fd93bad8@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <d0899d02-ecb2-7f0b-3d0a-c818a0ec6ceb@acm.org>
+Date:   Wed, 30 Oct 2019 08:12:04 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 30 Oct 2019 20:43:29 +0800
-From:   cang@codeaurora.org
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc:     'Alim Akhtar' <alim.akhtar@samsung.com>,
-        'Avri Altman' <avri.altman@wdc.com>,
-        'Pedro Sousa' <pedrom.sousa@synopsys.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        'Evan Green' <evgreen@chromium.org>,
-        'Stanley Chu' <stanley.chu@mediatek.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v1] scsi: ufs: delete redundant function
- ufshcd_def_desc_sizes()
-In-Reply-To: <BN7PR08MB5684A3ACE214C3D4792CE729DB610@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <BN7PR08MB5684A3ACE214C3D4792CE729DB610@BN7PR08MB5684.namprd08.prod.outlook.com>
-Message-ID: <32de5877a1fc6da9e0b23936d83ad956@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+In-Reply-To: <4ee551d0-27a6-b516-ade0-d477fd93bad8@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-10-29 22:22, Bean Huo (beanhuo) wrote:
-> From: Bean Huo <beanhuo@micron.com>
+On 10/30/19 1:30 AM, Hannes Reinecke wrote:
+> On 10/28/19 9:38 PM, Bart Van Assche wrote:
+>> If the residual is changed from signed into unsigned, how is a SCSI 
+>> LLD expected to report the difference between residual overflow and 
+>> residual underflow to the SCSI core?
+>
+> You don't have to. To quote RFC 3720 page 122:
 > 
-> There is no need to call ufshcd_def_desc_sizes() in ufshcd_init(),
-> since descriptor lengths will be checked and initialized later in
-> ufshcd_init_desc_sizes().
+>       bit 5 - (O) set for Residual Overflow.  In this case, the Residual
+>         Count indicates the number of bytes that were not transferred
+>         because the initiator's Expected Data Transfer Length was not
+>         sufficient.  For a bidirectional operation, the Residual Count
+>         contains the residual for the write operation.
 > 
-> Fixes: a4b0e8a4e92b1b(scsi: ufs: Factor out ufshcd_read_desc_param)
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 15 +--------------
->  1 file changed, 1 insertion(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c28c144d9b4a..21a7244882a1 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6778,23 +6778,13 @@ static void ufshcd_init_desc_sizes(struct 
-> ufs_hba *hba)
->  		&hba->desc_size.geom_desc);
->  	if (err)
->  		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-> +
->  	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
->  		&hba->desc_size.hlth_desc);
->  	if (err)
->  		hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
->  }
-> 
-> -static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
-> -{
-> -	hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
-> -	hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
-> -	hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
-> -	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
-> -	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
-> -	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
-> -	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
-> -}
-> -
->  static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
->  	{19200000, REF_CLK_FREQ_19_2_MHZ},
->  	{26000000, REF_CLK_FREQ_26_MHZ},
-> @@ -8283,9 +8273,6 @@ int ufshcd_init(struct ufs_hba *hba, void
-> __iomem *mmio_base, unsigned int irq)
->  	hba->mmio_base = mmio_base;
->  	hba->irq = irq;
-> 
-> -	/* Set descriptor lengths to specification defaults */
-> -	ufshcd_def_desc_sizes(hba);
-> -
->  	err = ufshcd_hba_init(hba);
->  	if (err)
->  		goto out_error;
+> IE the 'overflow' setting in the iSCSI command response is an indicator 
+> that there _would_ be more data if the command request _would_ have 
+> specified a larger buffer.
+> But as it didn't, the entire buffer was filled, and the overflow counter 
+> is set.
+> Which, of course, is then ignored by the linux SCSI stack as the request 
+> got all data, and the residual is set to zero.
+> Then it's left to the caller to re-send with a larger buffer if 
+> required. But it's nothing the SCSI stack can nor should be attempting 
+> on its own.
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Hi Hannes,
 
-Best regards
-Can Guo
+I do not agree that reporting a residual overflow by calling 
+scsi_set_resid(..., 0) is acceptable. For reads a residual overflow 
+means that the length specified in the CDB (scsi_bufflen()) exceeds the 
+data buffer size (length of scsi_sglist()). I think it's dangerous to 
+report to the block layer that such requests completed successfully and 
+with residual zero.
+
+Bart.
