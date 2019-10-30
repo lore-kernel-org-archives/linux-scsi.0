@@ -7,46 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 885FFCA9EC5
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B962CCA9EC5
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E4B820856
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A1D421882
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572450725;
-	bh=PPt6GBJsSbXbytF2kq1k6abXEUt6ZqOmQYI4oa1Cr6c=;
+	s=default; t=1572450737;
+	bh=OSa49LhWO0fQPrA54M1luI/Olq9wf5UzWACp8mVh660=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aCHBOrsrEohnnlVKesEfuO3dxRuD4urMVIwEWXjOHEi/dYDO3CAvAMH+/sICDJ1fm
-	 u+w0v8eQqIYuKb0ms5zbHLH1UmpKOjmnxXWxVg4pLywi4zdIeV8ykji4G8tkQjuadu
-	 gcOG8xNh8x0z+WiAGibUB7S8ezXv32MI/r4UxeCs=
+	b=NRL0CZt5zbLnlYjwcFgcZAw8BAEnygHfCqiBkWDhvZFvPJYLKWpCLoIMOtVEPraMF
+	 pFxs/EpeYLw0ocgElsp5A+q1z4/eOXFOO2DT+eQ06TwDOVb0USBiDT9nnDZbtYUCkp
+	 FNOasshWY2cIl01w/0Yhp2DnNSmxonCjuLIXoZWI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727918AbfJ3PwE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 11:52:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53082 "EHLO mail.kernel.org"
+        id S1727513AbfJ3PwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 11:52:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53214 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727429AbfJ3PwD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:52:03 -0400
+        id S1727927AbfJ3PwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Oct 2019 11:52:11 -0400
 Received: from sasha-vm.mshome.net (100.50.158.77.rev.sfr.net [77.158.50.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3186D20874;
-        Wed, 30 Oct 2019 15:52:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 27D6F2087E;
+        Wed, 30 Oct 2019 15:52:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572450722;
-        bh=PPt6GBJsSbXbytF2kq1k6abXEUt6ZqOmQYI4oa1Cr6c=;
+        s=default; t=1572450731;
+        bh=OSa49LhWO0fQPrA54M1luI/Olq9wf5UzWACp8mVh660=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Sa1YnqfCCysbP9wnh1mo9yldIb/HfBhOmdk32ev9MOkqrH5JJRAAUgAGh89jvDJdk
-         06v3S9QDS9orpTapSVVuLBgTt9Sfmypbaqk7vjLZs69DvYY8JPatifo1Yt9Mola39N
-         +z31O1hD2E72DYf0Ul0ZeX8MqzlBfBcqKT12AJJI=
+        b=2HRTupufc/lLNsqVyP68CoxUAGo95dl/1pt8c67QSnsvN0dfYSRP08Yd+65IJBZPC
+         +rG8YOdi2nvnCGMLRmIJV7UcIY98+EDX+jeAlCKvkWU7A0QMt39m9n8DcNrUSK2YNt
+         +n9wG0kJmtMPSxjq3P7weTyW/OJ9zlhdCXsC2NDg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Allen Pais <allen.pais@oracle.com>, Martin Wilck <mwilck@suse.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Thomas Bogendoerfer <tbogendoerfer@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 35/81] scsi: qla2xxx: fix a potential NULL pointer dereference
-Date:   Wed, 30 Oct 2019 11:48:41 -0400
-Message-Id: <20191030154928.9432-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 38/81] scsi: fix kconfig dependency warning related to 53C700_LE_ON_BE
+Date:   Wed, 30 Oct 2019 11:48:44 -0400
+Message-Id: <20191030154928.9432-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191030154928.9432-1-sashal@kernel.org>
 References: <20191030154928.9432-1-sashal@kernel.org>
@@ -59,38 +58,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Allen Pais <allen.pais@oracle.com>
+From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
 
-[ Upstream commit 35a79a63517981a8aea395497c548776347deda8 ]
+[ Upstream commit 8cbf0c173aa096dda526d1ccd66fc751c31da346 ]
 
-alloc_workqueue is not checked for errors and as a result a potential
-NULL dereference could occur.
+When building a kernel with SCSI_SNI_53C710 enabled, Kconfig warns:
 
-Link: https://lore.kernel.org/r/1568824618-4366-1-git-send-email-allen.pais@oracle.com
-Signed-off-by: Allen Pais <allen.pais@oracle.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+WARNING: unmet direct dependencies detected for 53C700_LE_ON_BE
+  Depends on [n]: SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_LASI700 [=n]
+  Selected by [y]:
+  - SCSI_SNI_53C710 [=y] && SCSI_LOWLEVEL [=y] && SNI_RM [=y] && SCSI [=y]
+
+Add the missing depends SCSI_SNI_53C710 to 53C700_LE_ON_BE to fix it.
+
+Link: https://lore.kernel.org/r/20191009151128.32411-1-tbogendoerfer@suse.de
+Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2835afbd2edc7..04cf6986eb8e6 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3233,6 +3233,10 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    req->req_q_in, req->req_q_out, rsp->rsp_q_in, rsp->rsp_q_out);
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 1b92f3c19ff32..90cf4691b8c35 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -898,7 +898,7 @@ config SCSI_SNI_53C710
  
- 	ha->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
-+	if (unlikely(!ha->wq)) {
-+		ret = -ENOMEM;
-+		goto probe_failed;
-+	}
+ config 53C700_LE_ON_BE
+ 	bool
+-	depends on SCSI_LASI700
++	depends on SCSI_LASI700 || SCSI_SNI_53C710
+ 	default y
  
- 	if (ha->isp_ops->initialize_adapter(base_vha)) {
- 		ql_log(ql_log_fatal, base_vha, 0x00d6,
+ config SCSI_STEX
 -- 
 2.20.1
 
