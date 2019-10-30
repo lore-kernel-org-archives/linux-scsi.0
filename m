@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B962CCA9EC5
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C82CA9EC6
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A1D421882
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E12220656
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572450737;
-	bh=OSa49LhWO0fQPrA54M1luI/Olq9wf5UzWACp8mVh660=;
+	s=default; t=1572450755;
+	bh=2Vr+SXCv9AoZpqoz/EsyAnbDpKGhCVDKiropSLh3uYU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NRL0CZt5zbLnlYjwcFgcZAw8BAEnygHfCqiBkWDhvZFvPJYLKWpCLoIMOtVEPraMF
-	 pFxs/EpeYLw0ocgElsp5A+q1z4/eOXFOO2DT+eQ06TwDOVb0USBiDT9nnDZbtYUCkp
-	 FNOasshWY2cIl01w/0Yhp2DnNSmxonCjuLIXoZWI=
+	b=oe17sTbhCYxbzsqZzXI75I+IARH7RfuE6U5nn/n2d1uac2pd7mW+aVM1D7Tk/qhPH
+	 rqit1lUPQgoGyPbSJq9kZn2iKwJZ75i0vaKqWUa6Yo+RC8LaKIoWXf7PLAMSZPf0Mi
+	 3pj5EgfF2QTwpsOBlUYmQbAS/VW1dTQj70DyebGg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727513AbfJ3PwQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 11:52:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53214 "EHLO mail.kernel.org"
+        id S1727951AbfJ3PwK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 11:52:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53200 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727927AbfJ3PwL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:52:11 -0400
+        id S1727944AbfJ3PwK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Oct 2019 11:52:10 -0400
 Received: from sasha-vm.mshome.net (100.50.158.77.rev.sfr.net [77.158.50.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 27D6F2087E;
-        Wed, 30 Oct 2019 15:52:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3C4C420874;
+        Wed, 30 Oct 2019 15:52:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572450731;
-        bh=OSa49LhWO0fQPrA54M1luI/Olq9wf5UzWACp8mVh660=;
+        s=default; t=1572450729;
+        bh=2Vr+SXCv9AoZpqoz/EsyAnbDpKGhCVDKiropSLh3uYU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2HRTupufc/lLNsqVyP68CoxUAGo95dl/1pt8c67QSnsvN0dfYSRP08Yd+65IJBZPC
-         +rG8YOdi2nvnCGMLRmIJV7UcIY98+EDX+jeAlCKvkWU7A0QMt39m9n8DcNrUSK2YNt
-         +n9wG0kJmtMPSxjq3P7weTyW/OJ9zlhdCXsC2NDg=
+        b=u5klCfnWV/cyYZiU6rDB2OSRGS1uYLb/fVD1oFJ0TCp95++B6rfczF43ubvSyOtYX
+         gOfbTe4iXlKoqKqgOk2aG/k8LWBOcadsFtJ7cr4Jz66X0W0FfqxAiJqwSl9iAxwHkN
+         AdJpFzc4KpuERwrLIA+cjKksW8gKZGmaex0Yffmg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Thomas Bogendoerfer <tbogendoerfer@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 38/81] scsi: fix kconfig dependency warning related to 53C700_LE_ON_BE
-Date:   Wed, 30 Oct 2019 11:48:44 -0400
-Message-Id: <20191030154928.9432-38-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 37/81] scsi: sni_53c710: fix compilation error
+Date:   Wed, 30 Oct 2019 11:48:43 -0400
+Message-Id: <20191030154928.9432-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191030154928.9432-1-sashal@kernel.org>
 References: <20191030154928.9432-1-sashal@kernel.org>
@@ -60,38 +60,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Thomas Bogendoerfer <tbogendoerfer@suse.de>
 
-[ Upstream commit 8cbf0c173aa096dda526d1ccd66fc751c31da346 ]
+[ Upstream commit 0ee6211408a8e939428f662833c7301394125b80 ]
 
-When building a kernel with SCSI_SNI_53C710 enabled, Kconfig warns:
+Drop out memory dev_printk() with wrong device pointer argument.
 
-WARNING: unmet direct dependencies detected for 53C700_LE_ON_BE
-  Depends on [n]: SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_LASI700 [=n]
-  Selected by [y]:
-  - SCSI_SNI_53C710 [=y] && SCSI_LOWLEVEL [=y] && SNI_RM [=y] && SCSI [=y]
+[mkp: typo]
 
-Add the missing depends SCSI_SNI_53C710 to 53C700_LE_ON_BE to fix it.
-
-Link: https://lore.kernel.org/r/20191009151128.32411-1-tbogendoerfer@suse.de
+Link: https://lore.kernel.org/r/20191009151118.32350-1-tbogendoerfer@suse.de
 Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sni_53c710.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 1b92f3c19ff32..90cf4691b8c35 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -898,7 +898,7 @@ config SCSI_SNI_53C710
+diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
+index aef4881d8e215..a85d52b5dc320 100644
+--- a/drivers/scsi/sni_53c710.c
++++ b/drivers/scsi/sni_53c710.c
+@@ -66,10 +66,8 @@ static int snirm710_probe(struct platform_device *dev)
  
- config 53C700_LE_ON_BE
- 	bool
--	depends on SCSI_LASI700
-+	depends on SCSI_LASI700 || SCSI_SNI_53C710
- 	default y
+ 	base = res->start;
+ 	hostdata = kzalloc(sizeof(*hostdata), GFP_KERNEL);
+-	if (!hostdata) {
+-		dev_printk(KERN_ERR, dev, "Failed to allocate host data\n");
++	if (!hostdata)
+ 		return -ENOMEM;
+-	}
  
- config SCSI_STEX
+ 	hostdata->dev = &dev->dev;
+ 	dma_set_mask(&dev->dev, DMA_BIT_MASK(32));
 -- 
 2.20.1
 
