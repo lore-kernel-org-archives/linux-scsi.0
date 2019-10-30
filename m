@@ -2,95 +2,134 @@ Return-Path: <SRS0=//Xo=YX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 186D3CA9EC6
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 16:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CAFCA9EC5
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 16:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBC262190F
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 16:01:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572451291;
-	bh=NOlrqPWGx4Qt4ThG2zHhGh6kwXDfKzJEe1B4BQNVwPc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Myuxj3A1k/sbkpVIxyAVZAgf+9h8cQkMDMLm6IklBHOxAuKpp899EeF/MzAmNoXch
-	 1p+ooTT2vpHET8bRNTbuviyIbETSS+ySV0WXWQ6Nt3EyISMX0Nnyl8mQtxBfp9TEV5
-	 lnLkMrGK7p5s041W7oK9+SpiTMQ5kmLQncLXLblA=
+	by mail.kernel.org (Postfix) with ESMTP id 214DE205C9
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 16:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727461AbfJ3QB2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 12:01:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56142 "EHLO mail.kernel.org"
+        id S1726922AbfJ3QSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 12:18:43 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:55291 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727792AbfJ3Pym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:54:42 -0400
-Received: from sasha-vm.mshome.net (100.50.158.77.rev.sfr.net [77.158.50.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1C62B2087E;
-        Wed, 30 Oct 2019 15:54:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572450881;
-        bh=NOlrqPWGx4Qt4ThG2zHhGh6kwXDfKzJEe1B4BQNVwPc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PV7a+xwNTJi2esfNZ3KPP8i/zinPg9uVxLJckPc5mSL3gCZHVwW+ITNyNHhynyodN
-         i4f2LYHInk3HCjbcXaRcGYolAsSGpuyW0IT5Gd7XY/3gUFMZOVz6xEPnm1BKVErXgA
-         vw1Tbp+JeVmETwRfj3jahSOzUQB3SVvoInjDarvc=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Allen Pais <allen.pais@oracle.com>, Martin Wilck <mwilck@suse.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+        id S1726261AbfJ3QSn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Oct 2019 12:18:43 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id A5B68204191;
+        Wed, 30 Oct 2019 17:18:35 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id S4efPonsjrQE; Wed, 30 Oct 2019 17:18:33 +0100 (CET)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 552A320415A;
+        Wed, 30 Oct 2019 17:18:31 +0100 (CET)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
+To:     Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 14/38] scsi: qla2xxx: fix a potential NULL pointer dereference
-Date:   Wed, 30 Oct 2019 11:53:42 -0400
-Message-Id: <20191030155406.10109-14-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191030155406.10109-1-sashal@kernel.org>
-References: <20191030155406.10109-1-sashal@kernel.org>
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+References: <20191028105732.29913-1-damien.lemoal@wdc.com>
+ <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
+ <4ee551d0-27a6-b516-ade0-d477fd93bad8@suse.de>
+ <d0899d02-ecb2-7f0b-3d0a-c818a0ec6ceb@acm.org>
+ <571b5f9a-f151-30fb-5720-d7d47a4ef1d7@suse.de>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <8b2fbab6-b787-470a-f9ed-46622733881c@interlog.com>
+Date:   Wed, 30 Oct 2019 12:18:26 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+In-Reply-To: <571b5f9a-f151-30fb-5720-d7d47a4ef1d7@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Allen Pais <allen.pais@oracle.com>
+On 2019-10-30 11:18 a.m., Hannes Reinecke wrote:
+> On 10/30/19 4:12 PM, Bart Van Assche wrote:
+>> On 10/30/19 1:30 AM, Hannes Reinecke wrote:
+>>> On 10/28/19 9:38 PM, Bart Van Assche wrote:
+>>>> If the residual is changed from signed into unsigned, how is a SCSI LLD 
+>>>> expected to report the difference between residual overflow and residual 
+>>>> underflow to the SCSI core?
+>>>
+>>> You don't have to. To quote RFC 3720 page 122:
+>>>
+>>>       bit 5 - (O) set for Residual Overflow.  In this case, the Residual
+>>>         Count indicates the number of bytes that were not transferred
+>>>         because the initiator's Expected Data Transfer Length was not
+>>>         sufficient.  For a bidirectional operation, the Residual Count
+>>>         contains the residual for the write operation.
+>>>
+>>> IE the 'overflow' setting in the iSCSI command response is an indicator that 
+>>> there _would_ be more data if the command request _would_ have specified a 
+>>> larger buffer.
+>>> But as it didn't, the entire buffer was filled, and the overflow counter is set.
+>>> Which, of course, is then ignored by the linux SCSI stack as the request got 
+>>> all data, and the residual is set to zero.
+>>> Then it's left to the caller to re-send with a larger buffer if required. But 
+>>> it's nothing the SCSI stack can nor should be attempting on its own.
+>>
+>> Hi Hannes,
+>>
+>> I do not agree that reporting a residual overflow by calling 
+>> scsi_set_resid(..., 0) is acceptable. For reads a residual overflow means that 
+>> the length specified in the CDB (scsi_bufflen()) exceeds the data buffer size 
+>> (length of scsi_sglist()). I think it's dangerous to report to the block layer 
+>> that such requests completed successfully and with residual zero.
+>>
+> But that is an error on submission, and should be aborted before it even got 
+> send to the drive.
+> 
+> However, this does not relate to the residual, which is handled after the 
+> command completes (and which sparked this entire thread ...).
 
-[ Upstream commit 35a79a63517981a8aea395497c548776347deda8 ]
+Seen from a pass-through perspective, the resid is just about the near-end
+data transfer between the HBA and pass-through, or as cam3r03 says:
 
-alloc_workqueue is not checked for errors and as a result a potential
-NULL dereference could occur.
+− cam_resid;
+     The data residual length member contains the difference in twos complement
+     form of the number of data bytes transferred by the HA for the SCSI
+     command compared with the number of bytes requested by the CCB
+     cam_dxfer_len member. This is calculated by the total number of bytes
+     requested to be transferred by the CCB minus the actual number of bytes
+     transferred by the HA.
 
-Link: https://lore.kernel.org/r/1568824618-4366-1-git-send-email-allen.pais@oracle.com
-Signed-off-by: Allen Pais <allen.pais@oracle.com>
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qla2xxx/qla_os.c | 4 ++++
- 1 file changed, 4 insertions(+)
+[where "HA" is HBA (or the initiator)]
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 60b6019a2fcae..856a7ceb9a041 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3186,6 +3186,10 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	    req->req_q_in, req->req_q_out, rsp->rsp_q_in, rsp->rsp_q_out);
- 
- 	ha->wq = alloc_workqueue("qla2xxx_wq", 0, 0);
-+	if (unlikely(!ha->wq)) {
-+		ret = -ENOMEM;
-+		goto probe_failed;
-+	}
- 
- 	if (ha->isp_ops->initialize_adapter(base_vha)) {
- 		ql_log(ql_log_fatal, base_vha, 0x00d6,
--- 
-2.20.1
+That makes overflow (negative resid) a bit interesting as it is only
+reasonable that the pass-though user allocated a buffer big enough to
+receive dxfer_len bytes. One would hope that in the READ case of overflow,
+the HBA would have sent the residual bytes to the bit bucket (i.e.
+/dev/null) rather than overfill the data buffer provided by the pass-through.
+
+Handling discrepancies between page length (e.g. of VPD, LOG and MODE pages)
+and the ALLOCATION LENGTH field are defined in the SCSI standards.
+
+That leaves the difficult cases: when there is a discrepancy between what the
+SCSI command (and the storage device) implied as a data length and the
+dxfer_len allocated at the near-end. In some, but not all, cases that is
+detectable before the command is issued.
+
+Overflow can happen, for example if the RDPROTECT field in a READ(10) is
+accidentally set (e.g. because it uses bits previously used for a SPI
+LUN) and the storage device has protection information. That will result
+in an extra 8 bytes per logical block being returned.
+
+Doug Gilbert
+
 
