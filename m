@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24B22CA9EC7
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:59:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF53CA9EC9
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5430217D9
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:59:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD8CF217F9
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:59:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572451164;
-	bh=WZb83f7ajjCS4RolwHUHtussqsT1ehPfqHysGCEZhVo=;
+	s=default; t=1572451191;
+	bh=9FLjLiH7v5XHJHv+NXNnLPQ7INHN9b6L2M7gM2XWXIM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FqZMqnoomkzgdXtytyx8eYHdrh9ayxmKY9lt6W5JKAsRnUmuYHIoeH9n55/W+noal
-	 DweL5vVStKsSh1UyDhu0ptqhsoltWlyMm+cQpLkoGhECn9GDUIA1IAh0Th3IlOpu39
-	 Q1mrN6Pn6iquLI9hL184oQKNCqgLlAb61REDkTyE=
+	b=QuAZga5n+n9T0jGuN04sls3xON6ONs2h3g1nZAgXYNxwpU6m3wFFaJ6DlqdXBqEXK
+	 tHNDR/JWaATEDXy150/DQhxrdziMOGlRAqvuVC+6o/Zt/mHalcRvoImXlQNhU8caUC
+	 RkBAA84jYyq4ySCKnpdJO7WkXCnCroTpnyoCaLHw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729037AbfJ3P5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 11:57:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59050 "EHLO mail.kernel.org"
+        id S1727581AbfJ3P7q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 11:59:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729024AbfJ3P5Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:57:24 -0400
+        id S1728169AbfJ3P4i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Oct 2019 11:56:38 -0400
 Received: from sasha-vm.mshome.net (100.50.158.77.rev.sfr.net [77.158.50.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B7BC420874;
-        Wed, 30 Oct 2019 15:57:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2623920874;
+        Wed, 30 Oct 2019 15:56:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572451043;
-        bh=WZb83f7ajjCS4RolwHUHtussqsT1ehPfqHysGCEZhVo=;
+        s=default; t=1572450998;
+        bh=9FLjLiH7v5XHJHv+NXNnLPQ7INHN9b6L2M7gM2XWXIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c8K0I35ysmycktTqHNEZvEHzt/tYHKxVrpaajwEwVuO0AL/okAF/pzEaKFVT4zfV5
-         gqp3n+VXY+BqAyL750xHSHRd9PVxCp1Zeb6ssAdAQrtCD3n4luz/BJWlx4EQHPVKQL
-         A1aPb5FxviQJPT3LrrfyPckCB8bZ2S6vn8ILS6dQ=
+        b=SEAZ94SCpsLtNodicIjDGv+JFiIA1aQoHoCWYC6u89T5tcO9Aq+bVgNpym8rnVA+h
+         gcF0HhHBDk6AIHDV0OgUQvhKwziBAd3B1lWESoixLkorLiYwqeRJuKYdgBBiD/TDTD
+         4Gtb2rysOtHXZo3eq9RnUhrJNCrx7cc+7y46HyWo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
         Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 08/18] scsi: scsi_dh_alua: handle RTPG sense code correctly during state transitions
-Date:   Wed, 30 Oct 2019 11:56:50 -0400
-Message-Id: <20191030155700.10748-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 17/24] scsi: target: core: Do not overwrite CDB byte 1
+Date:   Wed, 30 Oct 2019 11:55:48 -0400
+Message-Id: <20191030155555.10494-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191030155700.10748-1-sashal@kernel.org>
-References: <20191030155700.10748-1-sashal@kernel.org>
+In-Reply-To: <20191030155555.10494-1-sashal@kernel.org>
+References: <20191030155555.10494-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,76 +61,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-[ Upstream commit b6ce6fb121a655aefe41dccc077141c102145a37 ]
+[ Upstream commit 27e84243cb63601a10e366afe3e2d05bb03c1cb5 ]
 
-Some arrays are not capable of returning RTPG data during state
-transitioning, but rather return an 'LUN not accessible, asymmetric access
-state transition' sense code. In these cases we can set the state to
-'transitioning' directly and don't need to evaluate the RTPG data (which we
-won't have anyway).
+passthrough_parse_cdb() - used by TCMU and PSCSI - attepts to reset the LUN
+field of SCSI-2 CDBs (bits 5,6,7 of byte 1).  The current code is wrong as
+for newer commands not having the LUN field it overwrites relevant command
+bits (e.g. for SECURITY PROTOCOL IN / OUT). We think this code was
+unnecessary from the beginning or at least it is no longer useful. So we
+remove it entirely.
 
-Link: https://lore.kernel.org/r/20191007135701.32389-1-hare@suse.de
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Link: https://lore.kernel.org/r/12498eab-76fd-eaad-1316-c2827badb76a@ts.fujitsu.com
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ drivers/target/target_core_device.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 98787588247bf..60c288526355a 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -527,6 +527,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	unsigned int tpg_desc_tbl_off;
- 	unsigned char orig_transition_tmo;
- 	unsigned long flags;
-+	bool transitioning_sense = false;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 84742125f7730..92b52d2314b53 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1151,27 +1151,6 @@ passthrough_parse_cdb(struct se_cmd *cmd,
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned int size;
  
- 	if (!pg->expiry) {
- 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
-@@ -571,13 +572,19 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			goto retry;
- 		}
- 		/*
--		 * Retry on ALUA state transition or if any
--		 * UNIT ATTENTION occurred.
-+		 * If the array returns with 'ALUA state transition'
-+		 * sense code here it cannot return RTPG data during
-+		 * transition. So set the state to 'transitioning' directly.
- 		 */
- 		if (sense_hdr.sense_key == NOT_READY &&
--		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
--			err = SCSI_DH_RETRY;
--		else if (sense_hdr.sense_key == UNIT_ATTENTION)
-+		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a) {
-+			transitioning_sense = true;
-+			goto skip_rtpg;
-+		}
-+		/*
-+		 * Retry on any other UNIT ATTENTION occurred.
-+		 */
-+		if (sense_hdr.sense_key == UNIT_ATTENTION)
- 			err = SCSI_DH_RETRY;
- 		if (err == SCSI_DH_RETRY &&
- 		    pg->expiry != 0 && time_before(jiffies, pg->expiry)) {
-@@ -665,7 +672,11 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		off = 8 + (desc[7] * 4);
- 	}
- 
-+ skip_rtpg:
- 	spin_lock_irqsave(&pg->lock, flags);
-+	if (transitioning_sense)
-+		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
-+
- 	sdev_printk(KERN_INFO, sdev,
- 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
- 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
+-	/*
+-	 * Clear a lun set in the cdb if the initiator talking to use spoke
+-	 * and old standards version, as we can't assume the underlying device
+-	 * won't choke up on it.
+-	 */
+-	switch (cdb[0]) {
+-	case READ_10: /* SBC - RDProtect */
+-	case READ_12: /* SBC - RDProtect */
+-	case READ_16: /* SBC - RDProtect */
+-	case SEND_DIAGNOSTIC: /* SPC - SELF-TEST Code */
+-	case VERIFY: /* SBC - VRProtect */
+-	case VERIFY_16: /* SBC - VRProtect */
+-	case WRITE_VERIFY: /* SBC - VRProtect */
+-	case WRITE_VERIFY_12: /* SBC - VRProtect */
+-	case MAINTENANCE_IN: /* SPC - Parameter Data Format for SA RTPG */
+-		break;
+-	default:
+-		cdb[1] &= 0x1f; /* clear logical unit number */
+-		break;
+-	}
+-
+ 	/*
+ 	 * For REPORT LUNS we always need to emulate the response, for everything
+ 	 * else, pass it up.
 -- 
 2.20.1
 
