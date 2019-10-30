@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34DE5CA9ECB
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D913FCA9EC5
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:53:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0492D20856
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:52:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B6172173E
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 15:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572450756;
-	bh=Qfqa6yRrhyTXSFO5ETjDNoD+V/lIzLAXs4pkg67v5dg=;
+	s=default; t=1572450819;
+	bh=H+SBg5nFP1mEIy+aYH89VCOepatSi1ui+bvRd8UdPKA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=BWlOdKLD3ZbFluC+GZV84rT2Eet/d1UdPrHDopuDtlLqvZVBn/CFIRk+2X6QLil0X
-	 6yUx2q3MxyKrHgm4RS0Ro+GLxtBj2JD0xQ6TmxYA968pGs7PPkdbMRWmYG1AeYchMu
-	 x+7MPu6W15d9Tv8SNLll8Otsx7GMkG/nKPDIIoXw=
+	b=p1zmZlNVZYebL8gQSYD8VXhQ5HNKyxIRzel0PMnKLlOuR4RJm+2rvLy9psMsZ+zyP
+	 qSaSTjCUGOE9COYYjob9sCEREoHORH1o3OCuHkZ5IoCV+2p1v8CxoCPiFWuaWP1/sU
+	 +baOq8TswWWS/MkaqNOaYk3N+QtWFYTlZoivJMHQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727943AbfJ3PwJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 11:52:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53178 "EHLO mail.kernel.org"
+        id S1728225AbfJ3Pxj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 11:53:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727927AbfJ3PwJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:52:09 -0400
+        id S1728216AbfJ3Pxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Oct 2019 11:53:38 -0400
 Received: from sasha-vm.mshome.net (100.50.158.77.rev.sfr.net [77.158.50.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD66820856;
-        Wed, 30 Oct 2019 15:52:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 01829208C0;
+        Wed, 30 Oct 2019 15:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572450727;
-        bh=Qfqa6yRrhyTXSFO5ETjDNoD+V/lIzLAXs4pkg67v5dg=;
+        s=default; t=1572450817;
+        bh=H+SBg5nFP1mEIy+aYH89VCOepatSi1ui+bvRd8UdPKA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=y0rzw2VMoi8SQvTRaboMarZzeshq09tzdrW4iu9okNysoQJgw3EFiqRu6nrfBqjci
-         y7Ne5rrJPS+N9ByAOmbSFg9G1jkV1Cd9Dd2Pxfr5oUio7owM9wJJx7cMtKReAP/jqd
-         1nailtyMmb8Ibmubm0VpV5H/1+HSfjewItHljGPU=
+        b=C/oKUNcxVQ/GCb/WvRAsEPt55TFjxTMIm4hz7wrYYg1G8vaLE8LLJ7JblQio2ii3H
+         dPd9aqZSizHuxVpmgvnsKQa75S/LfQKkF33PoXPTtkB06d+63NoMePYuWGDHD3Jj5G
+         zFbBKx6tcuY+AFcd/BnT2ru0o9Cr0b0Q+Vs9Hxyw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.com>,
-        Laurence Oberman <loberman@redhat.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Don Brace <don.brace@microsemi.com>,
+        Scott Benesh <scott.benesh@microsemi.com>,
+        Kevin Barnett <kevin.barnett@microsemi.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 36/81] scsi: scsi_dh_alua: handle RTPG sense code correctly during state transitions
-Date:   Wed, 30 Oct 2019 11:48:42 -0400
-Message-Id: <20191030154928.9432-36-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, esc.storagedev@microsemi.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.3 58/81] scsi: hpsa: add missing hunks in reset-patch
+Date:   Wed, 30 Oct 2019 11:49:04 -0400
+Message-Id: <20191030154928.9432-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191030154928.9432-1-sashal@kernel.org>
 References: <20191030154928.9432-1-sashal@kernel.org>
@@ -61,76 +61,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+From: Don Brace <don.brace@microsemi.com>
 
-[ Upstream commit b6ce6fb121a655aefe41dccc077141c102145a37 ]
+[ Upstream commit 134993456c28c2ae14bd953236eb0742fe23d577 ]
 
-Some arrays are not capable of returning RTPG data during state
-transitioning, but rather return an 'LUN not accessible, asymmetric access
-state transition' sense code. In these cases we can set the state to
-'transitioning' directly and don't need to evaluate the RTPG data (which we
-won't have anyway).
+Correct returning from reset before outstanding commands are completed
+for the device.
 
-Link: https://lore.kernel.org/r/20191007135701.32389-1-hare@suse.de
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Link: https://lore.kernel.org/r/157107623870.17997.11208813089704833029.stgit@brunhilda
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ drivers/scsi/hpsa.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 4971104b1817b..f32da0ca529e0 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -512,6 +512,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	unsigned int tpg_desc_tbl_off;
- 	unsigned char orig_transition_tmo;
- 	unsigned long flags;
-+	bool transitioning_sense = false;
- 
- 	if (!pg->expiry) {
- 		unsigned long transition_tmo = ALUA_FAILOVER_TIMEOUT * HZ;
-@@ -572,13 +573,19 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			goto retry;
- 		}
- 		/*
--		 * Retry on ALUA state transition or if any
--		 * UNIT ATTENTION occurred.
-+		 * If the array returns with 'ALUA state transition'
-+		 * sense code here it cannot return RTPG data during
-+		 * transition. So set the state to 'transitioning' directly.
- 		 */
- 		if (sense_hdr.sense_key == NOT_READY &&
--		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
--			err = SCSI_DH_RETRY;
--		else if (sense_hdr.sense_key == UNIT_ATTENTION)
-+		    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a) {
-+			transitioning_sense = true;
-+			goto skip_rtpg;
-+		}
-+		/*
-+		 * Retry on any other UNIT ATTENTION occurred.
-+		 */
-+		if (sense_hdr.sense_key == UNIT_ATTENTION)
- 			err = SCSI_DH_RETRY;
- 		if (err == SCSI_DH_RETRY &&
- 		    pg->expiry != 0 && time_before(jiffies, pg->expiry)) {
-@@ -666,7 +673,11 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 		off = 8 + (desc[7] * 4);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 1bb6aada93fab..a4519710b3fcf 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5478,6 +5478,8 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  	}
  
-+ skip_rtpg:
- 	spin_lock_irqsave(&pg->lock, flags);
-+	if (transitioning_sense)
-+		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
++	c->device = dev;
 +
- 	sdev_printk(KERN_INFO, sdev,
- 		    "%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
- 		    ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
+ 	enqueue_cmd_and_start_io(h, c);
+ 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
+ 	return 0;
+@@ -5549,6 +5551,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		hpsa_cmd_init(h, c->cmdindex, c);
+ 		c->cmd_type = CMD_SCSI;
+ 		c->scsi_cmd = cmd;
++		c->device = dev;
+ 		rc = hpsa_scsi_ioaccel_raid_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+@@ -5556,6 +5559,7 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
+ 		hpsa_cmd_init(h, c->cmdindex, c);
+ 		c->cmd_type = CMD_SCSI;
+ 		c->scsi_cmd = cmd;
++		c->device = dev;
+ 		rc = hpsa_scsi_ioaccel_direct_map(h, c);
+ 		if (rc < 0)     /* scsi_dma_map failed. */
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
 -- 
 2.20.1
 
