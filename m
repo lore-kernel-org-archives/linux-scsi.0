@@ -2,107 +2,77 @@ Return-Path: <SRS0=//Xo=YX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98EF5CA9ECB
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34AE9CA9EC5
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:37:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 702782087E
-	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:23:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09CD42080F
+	for <linux-scsi@archiver.kernel.org>; Wed, 30 Oct 2019 12:37:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EfUho6b5";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EfUho6b5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbfJ3MW5 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 30 Oct 2019 08:22:57 -0400
-Received: from szxga08-in.huawei.com ([45.249.212.255]:42268 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726353AbfJ3MW5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Oct 2019 08:22:57 -0400
-Received: from DGGEML402-HUB.china.huawei.com (unknown [172.30.72.55])
-        by Forcepoint Email with ESMTP id EC1363EBEB1E57610E20;
-        Wed, 30 Oct 2019 20:22:46 +0800 (CST)
-Received: from DGGEML505-MBS.china.huawei.com ([169.254.11.138]) by
- DGGEML402-HUB.china.huawei.com ([fe80::fca6:7568:4ee3:c776%31]) with mapi id
- 14.03.0439.000; Wed, 30 Oct 2019 20:22:37 +0800
-From:   "wubo (T)" <wubo40@huawei.com>
-To:     Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>,
-        open-iscsi <open-iscsi@googlegroups.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Chris Leech <cleech@redhat.com>, Lee Duncan <lduncan@suse.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        Mingfangsen <mingfangsen@huawei.com>
-Subject: Antw: [PATCH v2] scsi: avoid potential deadloop in iscsi_if_rx func
-Thread-Topic: Antw: [PATCH v2] scsi: avoid potential deadloop in iscsi_if_rx
- func
-Thread-Index: AdWO9lESg1/320hTRWyI93hubYXiRQAAM+TA//+AUID//1OToA==
-Date:   Wed, 30 Oct 2019 12:22:37 +0000
-Message-ID: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFA4D6@dggeml505-mbs.china.huawei.com>
-References: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFA0FE@dggeml505-mbs.china.huawei.com>
- <5DB946E1020000A100034B9C@gwsmtp.uni-regensburg.de>
-In-Reply-To: <5DB946E1020000A100034B9C@gwsmtp.uni-regensburg.de>
-Accept-Language: en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.173.221.252]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+        id S1726269AbfJ3Mhy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 30 Oct 2019 08:37:54 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:37172 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726119AbfJ3Mhy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Oct 2019 08:37:54 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id C141960FCF; Wed, 30 Oct 2019 12:37:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572439073;
+        bh=29OC2t52ZBhvNt59FZeQtveFg1xmaj6rJzInpL5k7Tg=;
+        h=From:To:Subject:Date:From;
+        b=EfUho6b5A10kaYeDQldYcHlks76s/Yf0iuAFzbdoIWy/i36E8n5eWp8nUYaiNQ2ey
+         z6QqZN6ehWWwh/FKefqw4medU3ZWRZ0jc18Q0Dw/AHuNkarx1y0OuyUcLS/13PZ39u
+         jfLzK9x4O1ZgFgt14xxt1j4uoJTcg4WIacLFfZ8c=
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E23DE60B6E;
+        Wed, 30 Oct 2019 12:37:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572439073;
+        bh=29OC2t52ZBhvNt59FZeQtveFg1xmaj6rJzInpL5k7Tg=;
+        h=From:To:Subject:Date:From;
+        b=EfUho6b5A10kaYeDQldYcHlks76s/Yf0iuAFzbdoIWy/i36E8n5eWp8nUYaiNQ2ey
+         z6QqZN6ehWWwh/FKefqw4medU3ZWRZ0jc18Q0Dw/AHuNkarx1y0OuyUcLS/13PZ39u
+         jfLzK9x4O1ZgFgt14xxt1j4uoJTcg4WIacLFfZ8c=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E23DE60B6E
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Subject: [PATCH v1 0/2] Introduce bus voting vendor ops
+Date:   Wed, 30 Oct 2019 05:37:41 -0700
+Message-Id: <1572439064-28785-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >>> "wubo (T)" <wubo40@huawei.com> schrieb am 30.10.2019 um 08:56 in
-> Nachricht
-> <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFA0FE@dggeml505-mbs.china.
-> huawei.com>:
-> > From: Bo Wu <wubo40@huawei.com>
-> 
-> ...
-> > +			if (--retries < 0) {
-> > +				printk(KERN_ERR "Send reply failed too many times. "
-> > +				       "Max supported retries %u\n",
-> ISCSI_SEND_MAX_ALLOWED);
-> 
-> Just for "personal taste": Why not simplify the message to:?
-> +				printk(KERN_ERR "Send reply failed too many times
-> (%u)\n",
->                                ISCSI_SEND_MAX_ALLOWED);
-> 
-> > +				break;
-> > +			}
-> > +
-> 
-> Maybe place the number after "many" as an alternative. I think as the
-> message is expected to be rare, a short variant is justified.
+Some vendors need to vote for bus bandwidth when bus clocks are changed,
+hence introduce the bus voting vendor ops so that UFS driver can use it.
 
-Thanks for your suggestion. This problem occured when iscsi_if_send_reply returns -EAGAIN.
-Consider possible other anomalies scenes. In order to get diagnostic information, it is better to replace "many" with error code.
+Can Guo (2):
+  scsi: ufs: Introduce bus voting vendor ops
+  scsi: ufs-qcom: Export bus bandwidth voting ops
 
-Modify as follow:
-if (--retries < 0) {
-	printk(KERN_WARNING "Send reply failed, error %d\n", err);
-	break;
-}
+ drivers/scsi/ufs/ufs-qcom.c | 53 ++++++++++++++++++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.c   | 19 +++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h   |  9 ++++++++
+ 3 files changed, 62 insertions(+), 19 deletions(-)
 
-> Also one could discuss wether the problem that originates "from external"
-> should be KERN_ERR, or maybe just a warning, because the kernel itself can do
-> little against that problem, and it's not a "kernel error" after all ;-)
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
-You are right, This problem scene rarely appears .it is friendly to replace the error with warning.
-
-> 
-> Regards,
-> Ulrich
-> 
-> 
-> 
-
-Thanks,
-Bo Wu
