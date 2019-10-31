@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD387CA9EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10672CA9ECE
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98B442086D
+	by mail.kernel.org (Postfix) with ESMTP id E14442086D
 	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727381AbfJaLF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727473AbfJaLF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 31 Oct 2019 07:05:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37316 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37302 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727033AbfJaLF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Oct 2019 07:05:28 -0400
+        id S1726892AbfJaLF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Oct 2019 07:05:29 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 9A798B348;
+        by mx1.suse.de (Postfix) with ESMTP id 9999DB33C;
         Thu, 31 Oct 2019 11:05:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/24] wd33c93: use SCSI status
-Date:   Thu, 31 Oct 2019 12:04:31 +0100
-Message-Id: <20191031110452.73463-4-hare@suse.de>
+Subject: [PATCH 02/24] bfa: drop driver-defined SCSI status codes
+Date:   Thu, 31 Oct 2019 12:04:30 +0100
+Message-Id: <20191031110452.73463-3-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191031110452.73463-1-hare@suse.de>
 References: <20191031110452.73463-1-hare@suse.de>
@@ -38,44 +38,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard SCSI status and drop usage of the linux-specific ones.
+Drop the driver-defined SCSI status code and use the generic ones
+instead.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/wd33c93.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfa_fc.h    | 15 ---------------
+ drivers/scsi/bfa/bfa_fcpim.c |  2 +-
+ drivers/scsi/bfa/bfad_im.c   |  2 +-
+ 3 files changed, 2 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index f81046f0e68a..76143a68f55c 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -1176,7 +1176,7 @@ wd33c93_intr(struct Scsi_Host *instance)
- 			if (cmd->SCp.Status == ILLEGAL_STATUS_BYTE)
- 				cmd->SCp.Status = lun;
- 			if (cmd->cmnd[0] == REQUEST_SENSE
--			    && cmd->SCp.Status != GOOD)
-+			    && cmd->SCp.Status != SAM_STAT_GOOD)
- 				cmd->result =
- 				    (cmd->
- 				     result & 0x00ffff) | (DID_ERROR << 16);
-@@ -1262,7 +1262,7 @@ wd33c93_intr(struct Scsi_Host *instance)
- 		    hostdata->connected = NULL;
- 		hostdata->busy[cmd->device->id] &= ~(1 << (cmd->device->lun & 0xff));
- 		hostdata->state = S_UNCONNECTED;
--		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != GOOD)
-+		if (cmd->cmnd[0] == REQUEST_SENSE && cmd->SCp.Status != SAM_STAT_GOOD)
- 			cmd->result =
- 			    (cmd->result & 0x00ffff) | (DID_ERROR << 16);
- 		else
-@@ -1296,7 +1296,7 @@ wd33c93_intr(struct Scsi_Host *instance)
- 			hostdata->state = S_UNCONNECTED;
- 			DB(DB_INTR, printk(":%d", cmd->SCp.Status))
- 			    if (cmd->cmnd[0] == REQUEST_SENSE
--				&& cmd->SCp.Status != GOOD)
-+				&& cmd->SCp.Status != SAM_STAT_GOOD)
- 				cmd->result =
- 				    (cmd->
- 				     result & 0x00ffff) | (DID_ERROR << 16);
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index b00fb2409c50..d536270bbe9f 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -33,21 +33,6 @@ struct scsi_cdb_s {
+ 	u8         scsi_cdb[SCSI_MAX_CDBLEN];
+ };
+ 
+-/* ------------------------------------------------------------
+- * SCSI status byte values
+- * ------------------------------------------------------------
+- */
+-#define SCSI_STATUS_GOOD                   0x00
+-#define SCSI_STATUS_CHECK_CONDITION        0x02
+-#define SCSI_STATUS_CONDITION_MET          0x04
+-#define SCSI_STATUS_BUSY                   0x08
+-#define SCSI_STATUS_INTERMEDIATE           0x10
+-#define SCSI_STATUS_ICM                    0x14 /* intermediate condition met */
+-#define SCSI_STATUS_RESERVATION_CONFLICT   0x18
+-#define SCSI_STATUS_COMMAND_TERMINATED     0x22
+-#define SCSI_STATUS_QUEUE_FULL             0x28
+-#define SCSI_STATUS_ACA_ACTIVE             0x30
+-
+ #define SCSI_MAX_ALLOC_LEN      0xFF    /* maximum allocarion length */
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 284baa3b0c8e..997b54f5eb5c 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -2146,7 +2146,7 @@ __bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete)
+ 		/*
+ 		 * setup sense information, if present
+ 		 */
+-		if ((m->scsi_status == SCSI_STATUS_CHECK_CONDITION) &&
++		if ((m->scsi_status == SAM_STAT_CHECK_CONDITION) &&
+ 					m->sns_len) {
+ 			sns_len = m->sns_len;
+ 			snsinfo = BFA_SNSINFO_FROM_TAG(ioim->fcpim->fcp,
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 22f06be2606f..6b5841b1c06e 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -106,7 +106,7 @@ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
+ 	struct bfad_itnim_data_s *itnim_data;
+ 	struct bfad_itnim_s *itnim;
+ 
+-	cmnd->result = DID_OK << 16 | SCSI_STATUS_GOOD;
++	cmnd->result = DID_OK << 16 | SAM_STAT_GOOD;
+ 
+ 	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
+ 	if (cmnd->device->host != NULL)
 -- 
 2.16.4
 
