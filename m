@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E022CCA9EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19AFDCA9ECB
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C08262086D
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E374D2086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727589AbfJaLFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727493AbfJaLFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 31 Oct 2019 07:05:34 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37438 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37444 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727493AbfJaLFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727529AbfJaLFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 31 Oct 2019 07:05:31 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id F07AEB34E;
-        Thu, 31 Oct 2019 11:05:27 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 09C87B373;
+        Thu, 31 Oct 2019 11:05:28 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/24] sg: use SAM status definitions and avoid using masked_status
-Date:   Thu, 31 Oct 2019 12:04:36 +0100
-Message-Id: <20191031110452.73463-9-hare@suse.de>
+Subject: [PATCH 14/24] scsi: Kill DRIVER_HARD
+Date:   Thu, 31 Oct 2019 12:04:42 +0100
+Message-Id: <20191031110452.73463-15-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191031110452.73463-1-hare@suse.de>
 References: <20191031110452.73463-1-hare@suse.de>
@@ -38,74 +38,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard SAM status definitions and avoid using masked status
-values.
+Unused.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sg.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/constants.c    | 2 +-
+ include/scsi/scsi.h         | 1 -
+ include/trace/events/scsi.h | 3 +--
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index e88fb3daebcc..60ff388d04b9 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -503,7 +503,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	old_hdr->target_status = hp->masked_status;
- 	old_hdr->host_status = hp->host_status;
- 	old_hdr->driver_status = hp->driver_status;
--	if ((CHECK_CONDITION & hp->masked_status) ||
-+	if ((SAM_STAT_CHECK_CONDITION & hp->status) ||
- 	    (DRIVER_SENSE & hp->driver_status))
- 		memcpy(old_hdr->sense_buffer, srp->sense_b,
- 		       sizeof (old_hdr->sense_buffer));
-@@ -529,7 +529,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 		break;
- 	case DID_ERROR:
- 		old_hdr->result = (srp->sense_b[0] == 0 && 
--				  hp->masked_status == GOOD) ? 0 : EIO;
-+				  hp->status == SAM_STAT_GOOD) ? 0 : EIO;
- 		break;
- 	default:
- 		old_hdr->result = EIO;
-@@ -574,7 +574,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 	}
- 	hp->sb_len_wr = 0;
- 	if ((hp->mx_sb_len > 0) && hp->sbp) {
--		if ((CHECK_CONDITION & hp->masked_status) ||
-+		if ((SAM_STAT_CHECK_CONDITION & hp->status) ||
- 		    (DRIVER_SENSE & hp->driver_status)) {
- 			int sb_len = SCSI_SENSE_BUFFERSIZE;
- 			sb_len = (hp->mx_sb_len > sb_len) ? sb_len : hp->mx_sb_len;
-@@ -587,7 +587,7 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 			hp->sb_len_wr = len;
- 		}
- 	}
--	if (hp->masked_status || hp->host_status || hp->driver_status)
-+	if (hp->status || hp->host_status || hp->driver_status)
- 		hp->info |= SG_INFO_CHECK;
- 	if (copy_to_user(buf, hp, SZ_SG_IO_HDR)) {
- 		err = -EFAULT;
-@@ -873,7 +873,7 @@ sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
- 			break;
- 		rinfo[val].req_state = srp->done + 1;
- 		rinfo[val].problem =
--			srp->header.masked_status &
-+			srp->header.status &
- 			srp->header.host_status &
- 			srp->header.driver_status;
- 		if (srp->done)
-@@ -1355,8 +1355,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- 		srp->header.host_status = host_byte(result);
- 		srp->header.driver_status = driver_byte(result);
- 		if ((sdp->sgdebug > 0) &&
--		    ((CHECK_CONDITION == srp->header.masked_status) ||
--		     (COMMAND_TERMINATED == srp->header.masked_status)))
-+		    ((SAM_STAT_CHECK_CONDITION == srp->header.status) ||
-+		     (SAM_STAT_COMMAND_TERMINATED == srp->header.status)))
- 			__scsi_print_sense(sdp->device, __func__, sense,
- 					   SCSI_SENSE_BUFFERSIZE);
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 7809bf618606..b2ba83e6b98d 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -408,7 +408,7 @@ static const char * const hostbyte_table[]={
  
+ static const char * const driverbyte_table[]={
+ "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
+-"DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD"};
++"DRIVER_INVALID", "DRIVER_TIMEOUT"};
+ 
+ const char *scsi_hostbyte_string(int result)
+ {
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index f68c234dd3e8..407e188a0aae 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -172,7 +172,6 @@ static inline int scsi_is_wlun(u64 lun)
+ 
+ #define DRIVER_INVALID      0x05
+ #define DRIVER_TIMEOUT      0x06
+-#define DRIVER_HARD         0x07
+ 
+ /*
+  * Internal return values.
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index 404fbc54bc32..e15373917d1e 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -133,8 +133,7 @@
+ 		scsi_driverbyte_name(DRIVER_MEDIA),		\
+ 		scsi_driverbyte_name(DRIVER_ERROR),		\
+ 		scsi_driverbyte_name(DRIVER_INVALID),		\
+-		scsi_driverbyte_name(DRIVER_TIMEOUT),		\
+-		 scsi_driverbyte_name(DRIVER_HARD))
++		scsi_driverbyte_name(DRIVER_TIMEOUT))
+ 
+ #define scsi_msgbyte_name(result)	{ result, #result }
+ #define show_msgbyte_name(val)					\
 -- 
 2.16.4
 
