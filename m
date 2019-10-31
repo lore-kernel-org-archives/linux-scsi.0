@@ -2,100 +2,75 @@ Return-Path: <SRS0=1SmL=YY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A65A8CA9ECF
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 17:55:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6165CA9ECB
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 17:57:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D3422080F
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 17:55:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2B492086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 17:57:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ADMS9XgH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729134AbfJaRzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 13:55:12 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:33587 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726602AbfJaRzM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2019 13:55:12 -0400
-Received: by mail-pl1-f196.google.com with SMTP id y8so3033636plk.0;
-        Thu, 31 Oct 2019 10:55:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rfu7xisG1VzK9l1fM8rUWCXjY+Vu9qgC5rX7Api65YQ=;
-        b=sVLCWYoob04UbUMLPirKTHrvWcBOotdRwKhsfJWBQOvCSVnm6iEgVJdycxjh2EKLNH
-         4DunIVF1bBAbyrz+xtnpDu8O0/CR2BrimsKIaNsileWcLvDrsCNI3P6nR/uBmAzhjkqu
-         bCDiYESXsHIS0eHtIj88B2eS4yjCRf26YEp9JrAVi4eAjAPIE+Vq9wwjgWiMhLWktpcS
-         a9i1UXkEdoGbbia4FpkPjewNtmQoGx4aP7ikTrTJdxMl73/OHxKF/qR9+a4+xHxODcHb
-         LJMOrXcN+ZdpSVkwOtXECVbzfCoEffRT/YQ6217RnJAe04azadxxGhSns1LrbvXKrdCl
-         hNMQ==
-X-Gm-Message-State: APjAAAW/f6DRTLEnx+D4OeCVT3vxqCaIjUFzA0TtosPueKlLnmTOVUQS
-        /s60eYkMwm3IzuNI39mXKX0=
-X-Google-Smtp-Source: APXvYqxOhQdnJ4HJ42l58Y2HemuWrKPK4wsg/9OWnqDaXmkG9u5MJ57Bd6czOyPkmD9iZ1pC0U6XfQ==
-X-Received: by 2002:a17:902:b687:: with SMTP id c7mr7654265pls.52.1572544511272;
-        Thu, 31 Oct 2019 10:55:11 -0700 (PDT)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id 22sm3859912pfo.131.2019.10.31.10.55.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 31 Oct 2019 10:55:10 -0700 (PDT)
-Subject: Re: [PATCH 4/9] drivers/iio: Sign extend without triggering
- implementation-defined behavior
-To:     dgilbert@interlog.com, Peter Zijlstra <peterz@infradead.org>
-Cc:     Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jonathan Cameron <jic23@kernel.org>,
-        Hartmut Knaack <knaack.h@gmx.de>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-References: <20191028200700.213753-1-bvanassche@acm.org>
- <20191028200700.213753-5-bvanassche@acm.org>
- <20191030200232.GC3079@worktop.programming.kicks-ass.net>
- <bc4941a9-25f0-c931-61f1-b4f96c4bdff9@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <a5863854-037d-55d5-69c8-ae15aa4a861a@acm.org>
-Date:   Thu, 31 Oct 2019 10:55:09 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1729117AbfJaR5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 13:57:13 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:46678 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726602AbfJaR5N (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2019 13:57:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=NThx6lFDqYVUr8TtZn2As6WtB1ixtvpCPRZvtqpGcXA=; b=ADMS9XgHFzJN0W1JfbZOHcYuL
+        WiwTGHuVjC1n+3eMJNmhdIbz8gFKURJs9caDViGVRC0/LRLSAewysAzmbCbE857kBBaMHhzx169aJ
+        qLVbcdRAhHa1rcpAp2ewHvzqCXabKXLwgyfrepFLq8VTTAOhE3m0T46SK5oR8Y2o0CAsSqIO/2BKU
+        wiY6jiotsGlPpJggeBS9wju445XW8VNja6QIoyRCk6tTnhevhPK2D8XaO8haqs3725gL36ew0vYi2
+        E3bM9R3Kj6G1dgV7xgy5Q7/X8GJyzzRhn6qgsq0jtC7RZv9o44Wvk4792saRO1BMlwMJzslEYo12K
+        o7wccmCzg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iQEh7-0007t1-1b; Thu, 31 Oct 2019 17:57:13 +0000
+Date:   Thu, 31 Oct 2019 10:57:13 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v5 3/9] block: blk-crypto for Inline Encryption
+Message-ID: <20191031175713.GA23601@infradead.org>
+References: <20191028072032.6911-1-satyat@google.com>
+ <20191028072032.6911-4-satyat@google.com>
 MIME-Version: 1.0
-In-Reply-To: <bc4941a9-25f0-c931-61f1-b4f96c4bdff9@interlog.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191028072032.6911-4-satyat@google.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/30/19 3:13 PM, Douglas Gilbert wrote:
-> On 2019-10-30 4:02 p.m., Peter Zijlstra wrote:
->> On Mon, Oct 28, 2019 at 01:06:55PM -0700, Bart Van Assche wrote:
->>>  From the C standard: "The result of E1 >> E2 is E1 right-shifted E2 bit
->>> positions. If E1 has an unsigned type or if E1 has a signed type and a
->>> nonnegative value, the value of the result is the integral part of the
->>> quotient of E1 / 2E2 . If E1 has a signed type and a negative value, the
->>> resulting value is implementation-defined."
->>
->> FWIW, we actually hard rely on this implementation defined behaviour all
->> over the kernel. See for example the generic sign_extend{32,64}()
->> functions.
->>
->> AFAIR the only reason the C standard says this is implementation defined
->> is because it wants to support daft things like 1s complement and
->> saturating integers.
+On Mon, Oct 28, 2019 at 12:20:26AM -0700, Satya Tangirala wrote:
+> We introduce blk-crypto, which manages programming keyslots for struct
+> bios. With blk-crypto, filesystems only need to call bio_crypt_set_ctx with
+> the encryption key, algorithm and data_unit_num; they don't have to worry
+> about getting a keyslot for each encryption context, as blk-crypto handles
+> that. Blk-crypto also makes it possible for layered devices like device
+> mapper to make use of inline encryption hardware.
 > 
-> See:
->     http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2218.htm
-> 
-> That is in C++20 and on the agenda for C2x:
->     https://gustedt.wordpress.com/2018/11/12/c2x/
+> Blk-crypto delegates crypto operations to inline encryption hardware when
+> available, and also contains a software fallback to the kernel crypto API.
+> For more details, refer to Documentation/block/inline-encryption.rst.
 
-Thanks Peter and Doug. This is very useful feedback. I will drop the 
-sign_extend_24_to_32() function and use sign_extend32() instead.
-
-Bart.
+Can you explain why we need this software fallback that basically just
+duplicates logic already in fscrypt?  As far as I can tell this fallback
+logic actually is more code than the actual inline encryption, and nasty
+code at that, e.g. the whole crypt_iter thing.
