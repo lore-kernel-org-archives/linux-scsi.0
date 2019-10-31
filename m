@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA308CA9EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BA1CA9ECB
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6A982086D
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E77A62086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727541AbfJaLFb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 07:05:31 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37434 "EHLO mx1.suse.de"
+        id S1727555AbfJaLFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 07:05:32 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37440 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727488AbfJaLFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727499AbfJaLFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 31 Oct 2019 07:05:30 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id DC096B359;
-        Thu, 31 Oct 2019 11:05:27 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 05A69B371;
+        Thu, 31 Oct 2019 11:05:28 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/24] scsi: Kill obsolete linux-specific status codes
-Date:   Thu, 31 Oct 2019 12:04:37 +0100
-Message-Id: <20191031110452.73463-10-hare@suse.de>
+Subject: [PATCH 18/24] st: return error code in st_scsi_execute()
+Date:   Thu, 31 Oct 2019 12:04:46 +0100
+Message-Id: <20191031110452.73463-19-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191031110452.73463-1-hare@suse.de>
 References: <20191031110452.73463-1-hare@suse.de>
@@ -38,43 +38,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-After several years it's time to finally kill them.
+The callers to st_scsi_execute already checks for negative
+return values, so we can drop the use of DRIVER_ERROR and
+return the actual error code.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- include/scsi/scsi_proto.h | 19 -------------------
- 1 file changed, 19 deletions(-)
+ drivers/scsi/st.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index c36860111932..660f37ce8721 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -202,25 +202,6 @@ struct scsi_varlen_cdb_hdr {
- #define SAM_STAT_ACA_ACTIVE      0x30
- #define SAM_STAT_TASK_ABORTED    0x40
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e3266a64a477..5f38369cc62f 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -549,7 +549,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+ 			data_direction == DMA_TO_DEVICE ?
+ 			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
+ 	if (IS_ERR(req))
+-		return DRIVER_ERROR << 24;
++		return PTR_ERR(req);
+ 	rq = scsi_req(req);
+ 	req->rq_flags |= RQF_QUIET;
  
--/*
-- *  Status codes. These are deprecated as they are shifted 1 bit right
-- *  from those found in the SCSI standards. This causes confusion for
-- *  applications that are ported to several OSes. Prefer SAM Status codes
-- *  above.
-- */
--
--#define GOOD                 0x00
--#define CHECK_CONDITION      0x01
--#define CONDITION_GOOD       0x02
--#define BUSY                 0x04
--#define INTERMEDIATE_GOOD    0x08
--#define INTERMEDIATE_C_GOOD  0x0a
--#define RESERVATION_CONFLICT 0x0c
--#define COMMAND_TERMINATED   0x11
--#define QUEUE_FULL           0x14
--#define ACA_ACTIVE           0x18
--#define TASK_ABORTED         0x20
--
- #define STATUS_MASK          0xfe
+@@ -560,7 +560,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+ 				      GFP_KERNEL);
+ 		if (err) {
+ 			blk_put_request(req);
+-			return DRIVER_ERROR << 24;
++			return err;
+ 		}
+ 	}
  
- /*
 -- 
 2.16.4
 
