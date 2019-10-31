@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA395CA9ECF
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 446E2CA9ECE
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A83A2086D
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25AD52086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727572AbfJaLFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 07:05:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37476 "EHLO mx1.suse.de"
+        id S1727582AbfJaLFd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 07:05:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37434 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727547AbfJaLFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727542AbfJaLFc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 31 Oct 2019 07:05:32 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2BFE6B38C;
+        by mx1.suse.de (Postfix) with ESMTP id 11F0DB37E;
         Thu, 31 Oct 2019 11:05:28 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 19/24] scsi_ioctl: return error code when blk_rq_map_kern() fails
-Date:   Thu, 31 Oct 2019 12:04:47 +0100
-Message-Id: <20191031110452.73463-20-hare@suse.de>
+Subject: [PATCH 11/24] advansys: kill driver_defined status byte accessors
+Date:   Thu, 31 Oct 2019 12:04:39 +0100
+Message-Id: <20191031110452.73463-12-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191031110452.73463-1-hare@suse.de>
 References: <20191031110452.73463-1-hare@suse.de>
@@ -38,33 +38,189 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The callers of sg_scsi_ioctl() already need to check for
-negative return values, so we can drop the usage of DRIVER_ERROR
-and return the error from blk_rq_map_kern() instead.
+Replace the driver-defined status byte accessors by the
+mid-layer defined ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/scsi_ioctl.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/advansys.c | 78 +++++++++++++------------------------------------
+ 1 file changed, 20 insertions(+), 58 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index f5e0ad65e86a..1ab1b8d9641c 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -485,9 +485,10 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index a242a62caaa1..5268b4b92e43 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -2085,12 +2085,6 @@ do { \
+ #define ASC_BUSY        0
+ #define ASC_ERROR       (-1)
+ 
+-/* struct scsi_cmnd function return codes */
+-#define STATUS_BYTE(byte)   (byte)
+-#define MSG_BYTE(byte)      ((byte) << 8)
+-#define HOST_BYTE(byte)     ((byte) << 16)
+-#define DRIVER_BYTE(byte)   ((byte) << 24)
+-
+ #define ASC_STATS(shost, counter) ASC_STATS_ADD(shost, counter, 1)
+ #ifndef ADVANSYS_STATS
+ #define ASC_STATS_ADD(shost, counter, count)
+@@ -6021,43 +6015,28 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+ 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+ 						  SCSI_SENSE_BUFFERSIZE);
+-				/*
+-				 * Note: The 'status_byte()' macro used by
+-				 * target drivers defined in scsi.h shifts the
+-				 * status byte returned by host drivers right
+-				 * by 1 bit.  This is why target drivers also
+-				 * use right shifted status byte definitions.
+-				 * For instance target drivers use
+-				 * CHECK_CONDITION, defined to 0x1, instead of
+-				 * the SCSI defined check condition value of
+-				 * 0x2. Host drivers are supposed to return
+-				 * the status byte as it is defined by SCSI.
+-				 */
+-				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+-				    STATUS_BYTE(scsiqp->scsi_status);
+-			} else {
+-				scp->result = STATUS_BYTE(scsiqp->scsi_status);
+ 			}
++			scp->result = status_byte(scsiqp->scsi_status);
+ 			break;
+ 
+ 		default:
+ 			/* Some other QHSTA error occurred. */
+ 			ASC_DBG(1, "host_status 0x%x\n", scsiqp->host_status);
+-			scp->result = HOST_BYTE(DID_BAD_TARGET);
++			scp->result = host_byte(DID_BAD_TARGET);
+ 			break;
+ 		}
+ 		break;
+ 
+ 	case QD_ABORTED_BY_HOST:
+ 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
+-		scp->result =
+-		    HOST_BYTE(DID_ABORT) | STATUS_BYTE(scsiqp->scsi_status);
++		scp->result = host_byte(DID_ABORT);
++		set_status_byte(scp, scsiqp->scsi_status);
+ 		break;
+ 
+ 	default:
+ 		ASC_DBG(1, "done_status 0x%x\n", scsiqp->done_status);
+-		scp->result =
+-		    HOST_BYTE(DID_ERROR) | STATUS_BYTE(scsiqp->scsi_status);
++		scp->result = host_byte(DID_ERROR);
++		set_status_byte(scp, scsiqp->scsi_status);
  		break;
  	}
  
--	if (bytes && blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO)) {
--		err = DRIVER_ERROR << 24;
--		goto error;
-+	if (bytes) {
-+		err = blk_rq_map_kern(q, rq, buffer, bytes, GFP_NOIO);
-+		if (err)
-+			goto error;
+@@ -6789,47 +6768,30 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 				ASC_DBG(2, "SAM_STAT_CHECK_CONDITION\n");
+ 				ASC_DBG_PRT_SENSE(2, scp->sense_buffer,
+ 						  SCSI_SENSE_BUFFERSIZE);
+-				/*
+-				 * Note: The 'status_byte()' macro used by
+-				 * target drivers defined in scsi.h shifts the
+-				 * status byte returned by host drivers right
+-				 * by 1 bit.  This is why target drivers also
+-				 * use right shifted status byte definitions.
+-				 * For instance target drivers use
+-				 * CHECK_CONDITION, defined to 0x1, instead of
+-				 * the SCSI defined check condition value of
+-				 * 0x2. Host drivers are supposed to return
+-				 * the status byte as it is defined by SCSI.
+-				 */
+-				scp->result = DRIVER_BYTE(DRIVER_SENSE) |
+-				    STATUS_BYTE(qdonep->d3.scsi_stat);
+-			} else {
+-				scp->result = STATUS_BYTE(qdonep->d3.scsi_stat);
+ 			}
++			scp->result = status_byte(qdonep->d3.scsi_stat);
+ 			break;
+ 
+ 		default:
+ 			/* QHSTA error occurred */
+ 			ASC_DBG(1, "host_stat 0x%x\n", qdonep->d3.host_stat);
+-			scp->result = HOST_BYTE(DID_BAD_TARGET);
++			scp->result = host_byte(DID_BAD_TARGET);
+ 			break;
+ 		}
+ 		break;
+ 
+ 	case QD_ABORTED_BY_HOST:
+ 		ASC_DBG(1, "QD_ABORTED_BY_HOST\n");
+-		scp->result =
+-		    HOST_BYTE(DID_ABORT) | MSG_BYTE(qdonep->d3.
+-						    scsi_msg) |
+-		    STATUS_BYTE(qdonep->d3.scsi_stat);
++		scp->result = host_byte(DID_ABORT);
++		set_msg_byte(scp, qdonep->d3.scsi_msg);
++		set_status_byte(scp, qdonep->d3.scsi_stat);
+ 		break;
+ 
+ 	default:
+ 		ASC_DBG(1, "done_stat 0x%x\n", qdonep->d3.done_stat);
+-		scp->result =
+-		    HOST_BYTE(DID_ERROR) | MSG_BYTE(qdonep->d3.
+-						    scsi_msg) |
+-		    STATUS_BYTE(qdonep->d3.scsi_stat);
++		scp->result = host_byte(DID_ERROR);
++		set_msg_byte(scp, qdonep->d3.scsi_msg);
++		set_status_byte(scp, qdonep->d3.scsi_stat);
+ 		break;
  	}
  
- 	blk_execute_rq(q, disk, rq, 0);
+@@ -7568,7 +7530,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 				"sg_tablesize %d\n", use_sg,
+ 				scp->device->host->sg_tablesize);
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			scp->result = host_byte(DID_ERROR);
+ 			return ASC_ERROR;
+ 		}
+ 
+@@ -7576,7 +7538,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
+ 		if (!asc_sg_head) {
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_SOFT_ERROR);
++			scp->result = host_byte(DID_SOFT_ERROR);
+ 			return ASC_ERROR;
+ 		}
+ 
+@@ -7819,7 +7781,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 				   "ADV_MAX_SG_LIST %d\n", use_sg,
+ 				   scp->device->host->sg_tablesize);
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			scp->result = host_byte(DID_ERROR);
+ 			reqp->cmndp = NULL;
+ 			scp->host_scribble = NULL;
+ 
+@@ -7831,7 +7793,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 		ret = adv_get_sglist(boardp, reqp, scsiqp, scp, use_sg);
+ 		if (ret != ADV_SUCCESS) {
+ 			scsi_dma_unmap(scp);
+-			scp->result = HOST_BYTE(DID_ERROR);
++			scp->result = host_byte(DID_ERROR);
+ 			reqp->cmndp = NULL;
+ 			scp->host_scribble = NULL;
+ 
+@@ -8528,13 +8490,13 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() ASC_ERROR, "
+ 			"err_code 0x%x\n", err_code);
+ 		ASC_STATS(scp->device->host, exe_error);
+-		scp->result = HOST_BYTE(DID_ERROR);
++		scp->result = host_byte(DID_ERROR);
+ 		break;
+ 	default:
+ 		scmd_printk(KERN_ERR, scp, "ExeScsiQueue() unknown, "
+ 			"err_code 0x%x\n", err_code);
+ 		ASC_STATS(scp->device->host, exe_unknown);
+-		scp->result = HOST_BYTE(DID_ERROR);
++		scp->result = host_byte(DID_ERROR);
+ 		break;
+ 	}
+ 
 -- 
 2.16.4
 
