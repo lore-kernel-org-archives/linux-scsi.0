@@ -2,246 +2,186 @@ Return-Path: <SRS0=1SmL=YY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58B5ACA9ECB
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47A30CA9ED0
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27E182086D
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 219062087F
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:05:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727480AbfJaLF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 07:05:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37350 "EHLO mx1.suse.de"
+        id S1727539AbfJaLFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 07:05:30 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37340 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727417AbfJaLF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Oct 2019 07:05:29 -0400
+        id S1727409AbfJaLFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Oct 2019 07:05:30 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 9A0E6B347;
+        by mx1.suse.de (Postfix) with ESMTP id 99221B338;
         Thu, 31 Oct 2019 11:05:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/24] aic7xxx,aic79xxx: remove driver-defined SAM status definitions
-Date:   Thu, 31 Oct 2019 12:04:29 +0100
-Message-Id: <20191031110452.73463-2-hare@suse.de>
+Subject: [PATCHv2 00/24] Revamp SCSI result values
+Date:   Thu, 31 Oct 2019 12:04:28 +0100
+Message-Id: <20191031110452.73463-1-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191031110452.73463-1-hare@suse.de>
-References: <20191031110452.73463-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace the driver-defined SAM status definitions with the
-standard mid-layer defined ones.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/aic7xxx/aic79xx_core.c |  8 ++++----
- drivers/scsi/aic7xxx/aic79xx_osm.c  | 16 ++++++++--------
- drivers/scsi/aic7xxx/aic7xxx_core.c |  6 +++---
- drivers/scsi/aic7xxx/aic7xxx_osm.c  | 12 ++++++------
- drivers/scsi/aic7xxx/aiclib.h       | 15 ---------------
- 5 files changed, 21 insertions(+), 36 deletions(-)
+the 'result' field in the SCSI command is defined as having
+4 fields. The top byte is declared as a 'driver_byte', where the
+driver can signal some internal status back to the midlayer.
+However, there is quite a bit of overlap between the driver_byte
+and the host_byte, resulting in the driver_byte being used in
+very few places, and mostly in legacy drivers.
+Additionally, we have _two_ sets of definitions for the
+last byte (status byte), which can specified either in SAM terms
+or in the linux-specific terms, which are shifted right by one
+from the SAM ones.
+Needless to say, the linux-specific ones are declared obsolete
+for years now.
+And to make the confusion complete, both the status byte and
+the driver byte have a byte for a valid sense code, resulting
+in quite some confusion which of those bits to check.
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 7e5044bf05c0..03a9abc7d959 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -8955,7 +8955,7 @@ ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
- 					break;
- 				}
- 			}
--			if (siu->status == SCSI_STATUS_OK)
-+			if (siu->status == SAM_STAT_GOOD)
- 				ahd_set_transaction_status(scb,
- 							   CAM_REQ_CMP_ERR);
- 		}
-@@ -8969,8 +8969,8 @@ ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
- 		ahd_done(ahd, scb);
- 		break;
- 	}
--	case SCSI_STATUS_CMD_TERMINATED:
--	case SCSI_STATUS_CHECK_COND:
-+	case SAM_STAT_COMMAND_TERMINATED:
-+	case SAM_STAT_CHECK_CONDITION:
- 	{
- 		struct ahd_devinfo devinfo;
- 		struct ahd_dma_seg *sg;
-@@ -9060,7 +9060,7 @@ ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
- 		ahd_queue_scb(ahd, scb);
- 		break;
- 	}
--	case SCSI_STATUS_OK:
-+	case SAM_STAT_GOOD:
- 		printk("%s: Interrupted for status of 0???\n",
- 		       ahd_name(ahd));
- 		/* FALLTHROUGH */
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 57992519384e..72c67e89b911 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -1846,7 +1846,7 @@ ahd_done(struct ahd_softc *ahd, struct scb *scb)
- 
- 	if (dev->openings == 1
- 	 && ahd_get_transaction_status(scb) == CAM_REQ_CMP
--	 && ahd_get_scsi_status(scb) != SCSI_STATUS_QUEUE_FULL)
-+	 && ahd_get_scsi_status(scb) != SAM_STAT_TASK_SET_FULL)
- 		dev->tag_success_count++;
- 	/*
- 	 * Some devices deal with temporary internal resource
-@@ -1903,8 +1903,8 @@ ahd_linux_handle_scsi_status(struct ahd_softc *ahd,
- 	switch (ahd_get_scsi_status(scb)) {
- 	default:
- 		break;
--	case SCSI_STATUS_CHECK_COND:
--	case SCSI_STATUS_CMD_TERMINATED:
-+	case SAM_STAT_CHECK_CONDITION:
-+	case SAM_STAT_COMMAND_TERMINATED:
- 	{
- 		struct scsi_cmnd *cmd;
- 
-@@ -1959,7 +1959,7 @@ ahd_linux_handle_scsi_status(struct ahd_softc *ahd,
- 		}
- 		break;
- 	}
--	case SCSI_STATUS_QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
- 		/*
- 		 * By the time the core driver has returned this
- 		 * command, all other commands that were queued
-@@ -2005,7 +2005,7 @@ ahd_linux_handle_scsi_status(struct ahd_softc *ahd,
- 				dev->last_queuefull_same_count = 0;
- 			}
- 			ahd_set_transaction_status(scb, CAM_REQUEUE_REQ);
--			ahd_set_scsi_status(scb, SCSI_STATUS_OK);
-+			ahd_set_scsi_status(scb, SAM_STAT_GOOD);
- 			ahd_platform_set_tags(ahd, sdev, &devinfo,
- 				     (dev->flags & AHD_DEV_Q_BASIC)
- 				   ? AHD_QUEUE_BASIC : AHD_QUEUE_TAGGED);
-@@ -2019,7 +2019,7 @@ ahd_linux_handle_scsi_status(struct ahd_softc *ahd,
- 		ahd_platform_set_tags(ahd, sdev, &devinfo,
- 			     (dev->flags & AHD_DEV_Q_BASIC)
- 			   ? AHD_QUEUE_BASIC : AHD_QUEUE_TAGGED);
--		ahd_set_scsi_status(scb, SCSI_STATUS_BUSY);
-+		ahd_set_scsi_status(scb, SAM_STAT_BUSY);
- 	}
- }
- 
-@@ -2051,8 +2051,8 @@ ahd_linux_queue_cmd_complete(struct ahd_softc *ahd, struct scsi_cmnd *cmd)
- 		scsi_status = ahd_cmd_get_scsi_status(cmd);
- 
- 		switch(scsi_status) {
--		case SCSI_STATUS_CMD_TERMINATED:
--		case SCSI_STATUS_CHECK_COND:
-+		case SAM_STAT_COMMAND_TERMINATED:
-+		case SAM_STAT_CHECK_CONDITION:
- 			if ((cmd->result >> 24) != DRIVER_SENSE) {
- 				do_fallback = 1;
- 			} else {
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index a9d40d3b90ef..c8d237ccb70d 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -1041,12 +1041,12 @@ ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
- 		ahc_freeze_scb(scb);
- 		ahc_set_scsi_status(scb, hscb->shared_data.status.scsi_status);
- 		switch (hscb->shared_data.status.scsi_status) {
--		case SCSI_STATUS_OK:
-+		case SAM_STAT_GOOD:
- 			printk("%s: Interrupted for status of 0???\n",
- 			       ahc_name(ahc));
- 			break;
--		case SCSI_STATUS_CMD_TERMINATED:
--		case SCSI_STATUS_CHECK_COND:
-+		case SAM_STAT_COMMAND_TERMINATED:
-+		case SAM_STAT_CHECK_CONDITION:
- 		{
- 			struct ahc_dma_seg *sg;
- 			struct scsi_sense *sc;
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index d5c4a0d23706..a0b444e6209d 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -1775,7 +1775,7 @@ ahc_done(struct ahc_softc *ahc, struct scb *scb)
- 
- 	if (dev->openings == 1
- 	 && ahc_get_transaction_status(scb) == CAM_REQ_CMP
--	 && ahc_get_scsi_status(scb) != SCSI_STATUS_QUEUE_FULL)
-+	 && ahc_get_scsi_status(scb) != SAM_STAT_TASK_SET_FULL)
- 		dev->tag_success_count++;
- 	/*
- 	 * Some devices deal with temporary internal resource
-@@ -1832,8 +1832,8 @@ ahc_linux_handle_scsi_status(struct ahc_softc *ahc,
- 	switch (ahc_get_scsi_status(scb)) {
- 	default:
- 		break;
--	case SCSI_STATUS_CHECK_COND:
--	case SCSI_STATUS_CMD_TERMINATED:
-+	case SAM_STAT_CHECK_CONDITION:
-+	case SAM_STAT_COMMAND_TERMINATED:
- 	{
- 		struct scsi_cmnd *cmd;
- 
-@@ -1871,7 +1871,7 @@ ahc_linux_handle_scsi_status(struct ahc_softc *ahc,
- 		}
- 		break;
- 	}
--	case SCSI_STATUS_QUEUE_FULL:
-+	case SAM_STAT_TASK_SET_FULL:
- 	{
- 		/*
- 		 * By the time the core driver has returned this
-@@ -1915,7 +1915,7 @@ ahc_linux_handle_scsi_status(struct ahc_softc *ahc,
- 				dev->last_queuefull_same_count = 0;
- 			}
- 			ahc_set_transaction_status(scb, CAM_REQUEUE_REQ);
--			ahc_set_scsi_status(scb, SCSI_STATUS_OK);
-+			ahc_set_scsi_status(scb, SAM_STAT_GOOD);
- 			ahc_platform_set_tags(ahc, sdev, &devinfo,
- 				     (dev->flags & AHC_DEV_Q_BASIC)
- 				   ? AHC_QUEUE_BASIC : AHC_QUEUE_TAGGED);
-@@ -1926,7 +1926,7 @@ ahc_linux_handle_scsi_status(struct ahc_softc *ahc,
- 		 * as if the target returned BUSY SCSI status.
- 		 */
- 		dev->openings = 1;
--		ahc_set_scsi_status(scb, SCSI_STATUS_BUSY);
-+		ahc_set_scsi_status(scb, SAM_STAT_BUSY);
- 		ahc_platform_set_tags(ahc, sdev, &devinfo,
- 			     (dev->flags & AHC_DEV_Q_BASIC)
- 			   ? AHC_QUEUE_BASIC : AHC_QUEUE_TAGGED);
-diff --git a/drivers/scsi/aic7xxx/aiclib.h b/drivers/scsi/aic7xxx/aiclib.h
-index f8fd198aafbc..ba08eb3c4e3b 100644
---- a/drivers/scsi/aic7xxx/aiclib.h
-+++ b/drivers/scsi/aic7xxx/aiclib.h
-@@ -117,21 +117,6 @@ struct scsi_sense_data
- #define SSD_FULL_SIZE sizeof(struct scsi_sense_data)
- };
- 
--/*
-- * Status Byte
-- */
--#define	SCSI_STATUS_OK			0x00
--#define	SCSI_STATUS_CHECK_COND		0x02
--#define	SCSI_STATUS_COND_MET		0x04
--#define	SCSI_STATUS_BUSY		0x08
--#define SCSI_STATUS_INTERMED		0x10
--#define SCSI_STATUS_INTERMED_COND_MET	0x14
--#define SCSI_STATUS_RESERV_CONFLICT	0x18
--#define SCSI_STATUS_CMD_TERMINATED	0x22	/* Obsolete in SAM-2 */
--#define SCSI_STATUS_QUEUE_FULL		0x28
--#define SCSI_STATUS_ACA_ACTIVE		0x30
--#define SCSI_STATUS_TASK_ABORTED	0x40
--
- /************************* Large Disk Handling ********************************/
- static inline int
- aic_sector_div(sector_t capacity, int heads, int sectors)
+This patchset does several things:
+- remove the linux-specific status byte definitions, and use
+  the SAM values throughout
+- replace the driver-byte values with either SAM ones (for sense
+  code checking) or host-byte definitions
+- remove the driver-byte definitions
+
+As usual, comments and reviews are welcome.
+
+Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
+usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
+this patch series.
+
+Changes to v1:
+- Include reviews from Finn Thain et al
+- Make sysbot happy
+
+Hannes Reinecke (24):
+  aic7xxx,aic79xxx: remove driver-defined SAM status definitions
+  bfa: drop driver-defined SCSI status codes
+  wd33c93: use SCSI status
+  acornscsi: use standard defines
+  scsi: use standard SAM status codes
+  scsi: change status_byte() to return the standard SCSI status
+  target_core: Fixup target_complete_cmd() usage
+  sg: use SAM status definitions and avoid using masked_status
+  scsi: Kill obsolete linux-specific status codes
+  scsi: introduce set_status_byte()
+  advansys: kill driver_defined status byte accessors
+  scsi: introduce scsi_build_sense()
+  scsi: Kill DRIVER_SENSE
+  scsi: Kill DRIVER_HARD
+  scsi_error: use DID_TIME_OUT instead of DRIVER_TIMEOUT
+  scsi: Kill DRIVER_TIMEOUT
+  scsi: do not use DRIVER_INVALID
+  st: return error code in st_scsi_execute()
+  scsi_ioctl: return error code when blk_rq_map_kern() fails
+  scsi_dh_alua: do not interpret DRIVER_ERROR
+  xen-scsiback: stop using DRIVER_ERROR
+  scsi: stop using DRIVER_ERROR
+  scsi: Kill DRIVER_MEDIA, DRIVER_SOFT, and DRIVER_BUSY
+  scsi: Drop the now obsolete driver_byte definitions
+
+ Documentation/scsi/scsi_mid_low_api.txt     |  3 +-
+ block/bsg-lib.c                             |  2 +-
+ block/bsg.c                                 |  2 +-
+ block/scsi_ioctl.c                          |  9 ++--
+ drivers/ata/libata-scsi.c                   | 22 +++-----
+ drivers/infiniband/ulp/srp/ib_srp.c         |  2 +-
+ drivers/message/fusion/mptscsih.c           |  2 +-
+ drivers/s390/scsi/zfcp_scsi.c               |  5 +-
+ drivers/scsi/3w-9xxx.c                      |  5 +-
+ drivers/scsi/3w-sas.c                       |  3 +-
+ drivers/scsi/3w-xxxx.c                      |  7 ++-
+ drivers/scsi/53c700.c                       |  6 +--
+ drivers/scsi/NCR5380.c                      |  4 +-
+ drivers/scsi/advansys.c                     | 78 ++++++++---------------------
+ drivers/scsi/aic7xxx/aic79xx_core.c         |  8 +--
+ drivers/scsi/aic7xxx/aic79xx_osm.c          | 35 ++++++-------
+ drivers/scsi/aic7xxx/aic7xxx_core.c         |  6 +--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c          | 13 +++--
+ drivers/scsi/aic7xxx/aiclib.h               | 15 ------
+ drivers/scsi/arcmsr/arcmsr_hba.c            |  5 +-
+ drivers/scsi/arm/acornscsi.c                | 24 +++------
+ drivers/scsi/arm/fas216.c                   | 10 ++--
+ drivers/scsi/bfa/bfa_fc.h                   | 15 ------
+ drivers/scsi/bfa/bfa_fcpim.c                |  2 +-
+ drivers/scsi/bfa/bfad_im.c                  |  4 +-
+ drivers/scsi/ch.c                           |  5 +-
+ drivers/scsi/constants.c                    | 15 ------
+ drivers/scsi/cxlflash/superpipe.c           | 45 ++++++++---------
+ drivers/scsi/dc395x.c                       | 26 +++-------
+ drivers/scsi/device_handler/scsi_dh_alua.c  |  4 --
+ drivers/scsi/dpt_i2o.c                      |  2 +-
+ drivers/scsi/esp_scsi.c                     |  3 +-
+ drivers/scsi/gdth.c                         | 12 ++---
+ drivers/scsi/hptiop.c                       |  2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c            |  2 +-
+ drivers/scsi/libiscsi.c                     |  5 +-
+ drivers/scsi/lpfc/lpfc_scsi.c               | 36 +++++--------
+ drivers/scsi/megaraid.c                     | 22 ++++----
+ drivers/scsi/megaraid/megaraid_mbox.c       | 22 ++++----
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  2 -
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 -
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  9 ++--
+ drivers/scsi/mvumi.c                        | 16 +++---
+ drivers/scsi/myrb.c                         | 61 ++++++----------------
+ drivers/scsi/myrs.c                         |  9 +---
+ drivers/scsi/pcmcia/nsp_cs.c                |  2 +-
+ drivers/scsi/ps3rom.c                       |  3 +-
+ drivers/scsi/qla2xxx/qla_isr.c              | 15 ++----
+ drivers/scsi/scsi.c                         | 11 ++--
+ drivers/scsi/scsi_debug.c                   | 15 +++---
+ drivers/scsi/scsi_error.c                   | 52 +++++++++----------
+ drivers/scsi/scsi_ioctl.c                   |  2 +-
+ drivers/scsi/scsi_lib.c                     | 44 +++++++++++-----
+ drivers/scsi/scsi_logging.c                 | 10 +---
+ drivers/scsi/scsi_scan.c                    |  2 +-
+ drivers/scsi/scsi_transport_spi.c           |  2 +-
+ drivers/scsi/sd.c                           | 42 ++++++++--------
+ drivers/scsi/sd_zbc.c                       |  4 +-
+ drivers/scsi/sg.c                           | 28 +++++------
+ drivers/scsi/smartpqi/smartpqi_init.c       |  3 +-
+ drivers/scsi/sr.c                           |  2 +-
+ drivers/scsi/sr_ioctl.c                     |  2 +-
+ drivers/scsi/st.c                           |  8 +--
+ drivers/scsi/stex.c                         |  9 ++--
+ drivers/scsi/sym53c8xx_2/sym_glue.c         |  6 +--
+ drivers/scsi/ufs/ufshcd.c                   |  6 +--
+ drivers/scsi/virtio_scsi.c                  |  3 +-
+ drivers/scsi/vmw_pvscsi.c                   | 21 ++++----
+ drivers/scsi/wd33c93.c                      |  6 +--
+ drivers/target/loopback/tcm_loop.c          |  1 -
+ drivers/target/target_core_alua.c           |  6 +--
+ drivers/target/target_core_iblock.c         |  2 +-
+ drivers/target/target_core_pr.c             |  8 +--
+ drivers/target/target_core_sbc.c            | 10 ++--
+ drivers/target/target_core_spc.c            | 14 +++---
+ drivers/target/target_core_xcopy.c          |  2 +-
+ drivers/usb/storage/cypress_atacb.c         |  4 +-
+ drivers/xen/xen-scsiback.c                  | 12 ++---
+ include/scsi/scsi.h                         | 19 +------
+ include/scsi/scsi_cmnd.h                    | 12 +++--
+ include/scsi/scsi_proto.h                   | 19 -------
+ include/scsi/sg.h                           |  5 +-
+ include/trace/events/scsi.h                 | 15 +-----
+ 83 files changed, 377 insertions(+), 636 deletions(-)
+
 -- 
 2.16.4
 
