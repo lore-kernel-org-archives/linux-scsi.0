@@ -2,117 +2,145 @@ Return-Path: <SRS0=1SmL=YY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09153CA9EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D8FACA9ECB
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 14:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D966E21734
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 11:58:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F4BF2086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 14:44:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=android.com header.i=@android.com header.b="QhveXalE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727981AbfJaL6M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 07:58:12 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:55281 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726939AbfJaLzG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2019 07:55:06 -0400
-Received: from [5.158.153.53] (helo=tip-bot2.lab.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tip-bot2@linutronix.de>)
-        id 1iQ92V-0002qc-O5; Thu, 31 Oct 2019 12:54:55 +0100
-Received: from [127.0.1.1] (localhost [IPv6:::1])
-        by tip-bot2.lab.linutronix.de (Postfix) with ESMTP id 5E6251C0070;
-        Thu, 31 Oct 2019 12:54:55 +0100 (CET)
-Date:   Thu, 31 Oct 2019 11:54:55 -0000
-From:   "tip-bot2 for Paul E. McKenney" <tip-bot2@linutronix.de>
-Reply-to: linux-kernel@vger.kernel.org
-To:     linux-tip-commits@vger.kernel.org
-Subject: [tip: core/rcu] drivers/scsi: Replace rcu_swap_protected() with
- rcu_replace_pointer()
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        id S1728071AbfJaOoc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 10:44:32 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44635 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727841AbfJaOoc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2019 10:44:32 -0400
+Received: by mail-pg1-f194.google.com with SMTP id e10so4179926pgd.11
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Oct 2019 07:44:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=android.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=1cvzT62rXtl7s6MS3zw7YxenpIrJIg2/+FrUbg3dqsY=;
+        b=QhveXalEOr4KorjfyrZ+vci5ycjHVDwoYkdT5N6M8Iwq3+j0+PNd5XU1Nhd1vmFUCO
+         rW4RmDWlX9FHbKVght0taZibXxkFaWaeiM3/YrmED6SnWhJloLnNXTq5wUr/4uKiFmlm
+         hEsSxFrz+bHzAt58UXwOBAnOxKDu9QERukDMBEFWEyaj9JXdZwZETfoJU8gQ8a7uD4Ug
+         qZNyAHvXZ0O3jrlMvGml0r6kti8sCEA+1UMbnsIIbQnJ8wCxVHFz1bRTZp2WLlZ2ttb3
+         TdYiF8iGg9EiMHZEiP51qIYDB1Yl4+G4eVCN0VHB1RHcwuvnmSPlyH5t18d2dP0kFrp4
+         ReLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=1cvzT62rXtl7s6MS3zw7YxenpIrJIg2/+FrUbg3dqsY=;
+        b=gTLJpL5UmeclXqplqN8hwU+pqYDdzHuOLDYZ9LGuTqrEcUMRp4wPmmhDqZKBF8zaFT
+         Tvk8GI1iW6FTs/pY6PtXXKXX+LqlmkG4TH3hJduw8IzUQkJtUdCW2F5n8Mj9sMjN1Azl
+         STpU2GiefsGAhEIf9P3ZdyF7miOkeNOd+1F5x2MrJ3URn5nsslzkUsO0j8DruU3vezS8
+         cgjQ7cFAUONXb32QL3iOA3JKYtClJT9QRu3cwvIo4xijjWdHpDesviOUeByhm548IU3s
+         RXgHv08f8JQe4G8nrnHmuPN0QPFgirO0oUtVwl809y08Zd1s+uCiNfIB/PGDk2vjdyeB
+         iaDw==
+X-Gm-Message-State: APjAAAU+E2UD71QBtseo8YYZ727Maj+1w/mRbGuKcYXG9nTjVPL66KU7
+        aGZPoEZVarKQibut6j7YJWqUYA==
+X-Google-Smtp-Source: APXvYqwhC//2V2zHsxlYey9aR2Up5MT6+Pr7SpTTM5kOUqKfXagw9qnRzuuqHWTWoPfTuFf752NjnQ==
+X-Received: by 2002:a63:7b5c:: with SMTP id k28mr3249911pgn.442.1572533071743;
+        Thu, 31 Oct 2019 07:44:31 -0700 (PDT)
+Received: from nebulus.mtv.corp.google.com ([2620:15c:211:200:5404:91ba:59dc:9400])
+        by smtp.googlemail.com with ESMTPSA id f189sm7236743pgc.94.2019.10.31.07.44.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 31 Oct 2019 07:44:31 -0700 (PDT)
+Subject: Re: [PATCH v1 1/2] scsi: ufs: Introduce a vops for resetting host
+ controller
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@kernel.org>, Borislav Petkov <bp@alien8.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1571804009-29787-1-git-send-email-cang@codeaurora.org>
+ <1571804009-29787-2-git-send-email-cang@codeaurora.org>
+From:   Mark Salyzyn <salyzyn@android.com>
+Message-ID: <61b83149-e89b-bb4c-d747-a4c596c8eede@android.com>
+Date:   Thu, 31 Oct 2019 07:44:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Message-ID: <157252289509.29376.651547979200552176.tip-bot2@tip-bot2>
-X-Mailer: tip-git-log-daemon
-Robot-ID: <tip-bot2.linutronix.de>
-Robot-Unsubscribe: Contact <mailto:tglx@linutronix.de> to get blacklisted from these emails
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1571804009-29787-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+Content-Language: en-GB
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The following commit has been merged into the core/rcu branch of tip:
+On 10/22/19 9:13 PM, Can Guo wrote:
+> Some UFS host controllers need their specific implementations of resetting
+> to get them into a good state. Provide a new vops to allow the platform
+> driver to implement this own reset operation.
+>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 16 ++++++++++++++++
+>   drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
+>   2 files changed, 26 insertions(+)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c28c144..161e3c4 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -3859,6 +3859,14 @@ static int ufshcd_link_recovery(struct ufs_hba *hba)
+>   	ufshcd_set_eh_in_progress(hba);
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>   
+> +	ret = ufshcd_vops_full_reset(hba);
+> +	if (ret)
+> +		dev_warn(hba->dev, "%s: full reset returned %d\n",
+> +				  __func__, ret);
+> +
+> +	/* Reset the attached device */
+> +	ufshcd_vops_device_reset(hba);
+> +
+>   	ret = ufshcd_host_reset_and_restore(hba);
+>   
+>   	spin_lock_irqsave(hba->host->host_lock, flags);
 
-Commit-ID:     c0eaf15cd5d39e79feb81a122975df0bb5a1c106
-Gitweb:        https://git.kernel.org/tip/c0eaf15cd5d39e79feb81a122975df0bb5a1c106
-Author:        Paul E. McKenney <paulmck@kernel.org>
-AuthorDate:    Mon, 23 Sep 2019 15:26:28 -07:00
-Committer:     Paul E. McKenney <paulmck@kernel.org>
-CommitterDate: Wed, 30 Oct 2019 08:44:17 -07:00
+In all your cases, especially after this adjustment, 
+ufshcd_vops_full_reset is called blindly (+error checking message) 
+before ufshcd_vops_device_reset. What about dropping the .full_reset 
+(should really have been called .hw_reset or .host_reset) addition to 
+the vops, just adding ufshcd_vops_device_reset call here before 
+ufshcd_host_reset_and_restore, and in the driver folding the 
+ufshcd_vops_full_reset code into the .device_reset handler?
 
-drivers/scsi: Replace rcu_swap_protected() with rcu_replace_pointer()
+Would that be workable? It would be simpler if so.
 
-This commit replaces the use of rcu_swap_protected() with the more
-intuitively appealing rcu_replace_pointer() as a step towards removing
-rcu_swap_protected().
+I can see a desire for the heads up 
+(ufshcd_vops_full_reset+)ufshcd_vops_device_reset calls before 
+ufshcd_host_reset_and_restore because that function will spin 10 seconds 
+waiting for a response from a standardized register, that itself could 
+be hardware locked up requiring product specific reset procedures. But 
+if that is the case, then what about all the other calls to 
+ufshcd_host_reset_and_restore in this file that are not provided the 
+heads up? My guess is that the host device only demonstrated issues in 
+the ufshcd_link_recovery handling path? Are you sure this is the only 
+path that tickles the controller into a hardware lockup state?
 
-Link: https://lore.kernel.org/lkml/CAHk-=wiAsJLw1egFEE=Z7-GGtM6wcvtyytXZA1+BHqta4gg6Hw@mail.gmail.com/
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-[ paulmck: From rcu_replace() to rcu_replace_pointer() per Ingo Molnar. ]
-Signed-off-by: Paul E. McKenney <paulmck@kernel.org>
-Acked-by: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
----
- drivers/scsi/scsi.c       | 4 ++--
- drivers/scsi/scsi_sysfs.c | 8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Sincerely -- Mark Salyzyn
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1f5b5c8..7a1b6c7 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -434,8 +434,8 @@ static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
- 		return;
- 
- 	mutex_lock(&sdev->inquiry_mutex);
--	rcu_swap_protected(*sdev_vpd_buf, vpd_buf,
--			   lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_buf = rcu_replace_pointer(*sdev_vpd_buf, vpd_buf,
-+				      lockdep_is_held(&sdev->inquiry_mutex));
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
- 	if (vpd_buf)
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 64c96c7..5adfcab 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -466,10 +466,10 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	sdev->request_queue = NULL;
- 
- 	mutex_lock(&sdev->inquiry_mutex);
--	rcu_swap_protected(sdev->vpd_pg80, vpd_pg80,
--			   lockdep_is_held(&sdev->inquiry_mutex));
--	rcu_swap_protected(sdev->vpd_pg83, vpd_pg83,
--			   lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_pg80 = rcu_replace_pointer(sdev->vpd_pg80, vpd_pg80,
-+				       lockdep_is_held(&sdev->inquiry_mutex));
-+	vpd_pg83 = rcu_replace_pointer(sdev->vpd_pg83, vpd_pg83,
-+				       lockdep_is_held(&sdev->inquiry_mutex));
- 	mutex_unlock(&sdev->inquiry_mutex);
- 
- 	if (vpd_pg83)
