@@ -2,94 +2,159 @@ Return-Path: <SRS0=1SmL=YY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AE97CA9EC3
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 07:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B4D4C47E49
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 07:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D385B2083E
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 07:04:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFF892086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 07:51:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726795AbfJaHEa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 03:04:30 -0400
-Received: from mga04.intel.com ([192.55.52.120]:8892 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726607AbfJaHEa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 31 Oct 2019 03:04:30 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Oct 2019 00:04:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,250,1569308400"; 
-   d="scan'208";a="375143544"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 31 Oct 2019 00:04:26 -0700
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1iQ4VN-000Hkq-Mb; Thu, 31 Oct 2019 15:04:25 +0800
-Date:   Thu, 31 Oct 2019 15:04:16 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     kbuild-all@lists.01.org, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: Fix up clock scaling
-Message-ID: <201910311454.ePfJ33Sl%lkp@intel.com>
-References: <1572351831-30373-2-git-send-email-cang@codeaurora.org>
+        id S1726874AbfJaHvR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 03:51:17 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53232 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726698AbfJaHvR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 31 Oct 2019 03:51:17 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id A10FBABCE;
+        Thu, 31 Oct 2019 07:51:11 +0000 (UTC)
+Subject: Re: [PATCH] scsi: Fix scsi_get/set_resid() interface
+To:     dgilbert@interlog.com, Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Justin Piszcz <jpiszcz@lucidpixels.com>
+References: <20191028105732.29913-1-damien.lemoal@wdc.com>
+ <eb8f6e3e-0350-9688-58c8-9d777ba93298@acm.org>
+ <4ee551d0-27a6-b516-ade0-d477fd93bad8@suse.de>
+ <d0899d02-ecb2-7f0b-3d0a-c818a0ec6ceb@acm.org>
+ <571b5f9a-f151-30fb-5720-d7d47a4ef1d7@suse.de>
+ <8b2fbab6-b787-470a-f9ed-46622733881c@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <7ba0414d-7989-31ee-4044-90f541db379f@suse.de>
+Date:   Thu, 31 Oct 2019 08:51:08 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1572351831-30373-2-git-send-email-cang@codeaurora.org>
-X-Patchwork-Hint: ignore
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <8b2fbab6-b787-470a-f9ed-46622733881c@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Can,
+On 10/30/19 5:18 PM, Douglas Gilbert wrote:
+> On 2019-10-30 11:18 a.m., Hannes Reinecke wrote:
+>> On 10/30/19 4:12 PM, Bart Van Assche wrote:
+>>> On 10/30/19 1:30 AM, Hannes Reinecke wrote:
+>>>> On 10/28/19 9:38 PM, Bart Van Assche wrote:
+>>>>> If the residual is changed from signed into unsigned, how is a SCSI 
+>>>>> LLD expected to report the difference between residual overflow and 
+>>>>> residual underflow to the SCSI core?
+>>>>
+>>>> You don't have to. To quote RFC 3720 page 122:
+>>>>
+>>>>       bit 5 - (O) set for Residual Overflow.  In this case, the 
+>>>> Residual
+>>>>         Count indicates the number of bytes that were not transferred
+>>>>         because the initiator's Expected Data Transfer Length was not
+>>>>         sufficient.  For a bidirectional operation, the Residual Count
+>>>>         contains the residual for the write operation.
+>>>>
+>>>> IE the 'overflow' setting in the iSCSI command response is an 
+>>>> indicator that there _would_ be more data if the command request 
+>>>> _would_ have specified a larger buffer.
+>>>> But as it didn't, the entire buffer was filled, and the overflow 
+>>>> counter is set.
+>>>> Which, of course, is then ignored by the linux SCSI stack as the 
+>>>> request got all data, and the residual is set to zero.
+>>>> Then it's left to the caller to re-send with a larger buffer if 
+>>>> required. But it's nothing the SCSI stack can nor should be 
+>>>> attempting on its own.
+>>>
+>>> Hi Hannes,
+>>>
+>>> I do not agree that reporting a residual overflow by calling 
+>>> scsi_set_resid(..., 0) is acceptable. For reads a residual overflow 
+>>> means that the length specified in the CDB (scsi_bufflen()) exceeds 
+>>> the data buffer size (length of scsi_sglist()). I think it's 
+>>> dangerous to report to the block layer that such requests completed 
+>>> successfully and with residual zero.
+>>>
+>> But that is an error on submission, and should be aborted before it 
+>> even got send to the drive.
+>>
+>> However, this does not relate to the residual, which is handled after 
+>> the command completes (and which sparked this entire thread ...).
+> 
+> Seen from a pass-through perspective, the resid is just about the near-end
+> data transfer between the HBA and pass-through, or as cam3r03 says:
+> 
+> − cam_resid;
+>      The data residual length member contains the difference in twos 
+> complement
+>      form of the number of data bytes transferred by the HA for the SCSI
+>      command compared with the number of bytes requested by the CCB
+>      cam_dxfer_len member. This is calculated by the total number of bytes
+>      requested to be transferred by the CCB minus the actual number of 
+> bytes
+>      transferred by the HA.
+> 
+> [where "HA" is HBA (or the initiator)]
+> 
+> That makes overflow (negative resid) a bit interesting as it is only
+> reasonable that the pass-though user allocated a buffer big enough to
+> receive dxfer_len bytes. One would hope that in the READ case of overflow,
+> the HBA would have sent the residual bytes to the bit bucket (i.e.
+> /dev/null) rather than overfill the data buffer provided by the 
+> pass-through.
+> 
+Yes. But my point here is that any residual values are handled (and 
+defined) at the protocol level. Any SCSI midlayer protocol like SPC or, 
+indeed, SAM have no concept of residuals.
 
-Thank you for the patch! Perhaps something to improve:
+THe SCSI midlayer chose to add a residual value to document the number 
+of bytes _not_ being handled from hardware.
 
-[auto build test WARNING on scsi/for-next]
-[also build test WARNING on v5.4-rc5 next-20191030]
-[if your patch is applied to the wrong git tree, please drop us a note to help
-improve the system. BTW, we also suggest to use '--base' option to specify the
-base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> Handling discrepancies between page length (e.g. of VPD, LOG and MODE 
+> pages) and the ALLOCATION LENGTH field are defined in the SCSI standards.
+> 
+> That leaves the difficult cases: when there is a discrepancy between 
+> what the
+> SCSI command (and the storage device) implied as a data length and the
+> dxfer_len allocated at the near-end. In some, but not all, cases that is
+> detectable before the command is issued.
+> 
+As mentioned, this needs to be handled in the submission path, and the 
+command should be aborted before being sent to the drive.
 
-url:    https://github.com/0day-ci/linux/commits/Can-Guo/UFS-driver-general-fixes-bundle-2/20191031-081324
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.1-dirty
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+> Overflow can happen, for example if the RDPROTECT field in a READ(10) is
+> accidentally set (e.g. because it uses bits previously used for a SPI
+> LUN) and the storage device has protection information. That will result
+> in an extra 8 bytes per logical block being returned.
+> 
 
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
+See above. We should intercept such a command, and simply abort it with 
+an appropriate error.
+That goes for internal commands, of course; I know it doesn't work for 
+things like sg_raw, but one could argue that this was precisely the 
+point of that command ...
 
+Cheers,
 
-sparse warnings: (new ones prefixed by >>)
-
->> drivers/scsi/ufs/ufshcd.c:977:5: sparse: sparse: symbol 'ufshcd_scale_clks' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                              +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
