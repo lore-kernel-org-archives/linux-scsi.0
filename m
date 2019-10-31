@@ -6,17 +6,17 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A06DCA9ECB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F31CA9ECF
 	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 05:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF5F82067D
-	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 05:12:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 653972086D
+	for <linux-scsi@archiver.kernel.org>; Thu, 31 Oct 2019 05:12:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfJaFMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 31 Oct 2019 01:12:25 -0400
+        id S1726755AbfJaFM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 31 Oct 2019 01:12:26 -0400
 Received: from esa6.microchip.iphmx.com ([216.71.154.253]:29216 "EHLO
         esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726596AbfJaFMZ (ORCPT
+        with ESMTP id S1726400AbfJaFMZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Oct 2019 01:12:25 -0400
 Received-SPF: Pass (esa6.microchip.iphmx.com: domain of
   viswas.g@microsemi.com designates 208.19.100.23 as permitted
@@ -36,22 +36,22 @@ Received-SPF: None (esa6.microchip.iphmx.com: no sender
   x-sender="postmaster@smtp.microsemi.com";
   x-conformance=spf_only
 Authentication-Results: esa6.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=viswas.g@microsemi.com; spf=None smtp.helo=postmaster@smtp.microsemi.com; dmarc=fail (p=none dis=none) d=microchip.com
-IronPort-SDR: iOTDVgKopHp256IlrGFyqxw+Hxv746knQIxOSlBlB+iDjGdsWbFnHPjIpS4XNJQiOMPQvnGEcx
- vMOgzIvt3pqGaTfJQff6j+udA5FGQ1PeQQerFLHxLIbvvIAXaAeLTgPStgnhzbk3UsIdqhO6J4
- Wdo+ymurjc8ED3k8Xx9ZmNymUCqOGCygjbW8S0xY/RWOEB11Q8hzRYzU20mpKqixGDtgmprlZg
- hb+3/XIMMUvXdn7i1PEPdQFTTcEGdtxDEIr7QEu5Ppt5pB/hY+WO1Nw9llT28MShSQa/E4DJRN
- X94=
+IronPort-SDR: CnTaMj7uIplhA9tVMAEnqOYP1/8+jhk/qGZstV0wFkNNIgo3aPgMjHzYHTIxk424UxZBF+BH5T
+ oWxwI6nSz7I5D5SGRygQOBxrIAzFxASdM1SsDQawjoMmicUGnodA4OCRCMVHdoGuS276lYeCm3
+ iUkrnbXNlNIOSvmpFoNxpSIqq5lpHVEugY2oJWeZPWKCjeUB5ZYnyfmcDlpi4fBDuow/5f169C
+ sVlzKjhTPpVvqsRRonhTX7ORImcvCwrZHK+z9/I527vzMqsgSU9yUSl/JEUCdabO/PFGyQtON9
+ iOU=
 X-IronPort-AV: E=Sophos;i="5.68,250,1569308400"; 
-   d="scan'208";a="52279643"
+   d="scan'208";a="52279651"
 Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 30 Oct 2019 22:12:09 -0700
-Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX3.microsemi.net
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 30 Oct 2019 22:12:12 -0700
+Received: from AVMBX3.microsemi.net (10.100.34.33) by AVMBX3.microsemi.net
  (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Wed, 30 Oct
- 2019 22:12:06 -0700
-Received: from localhost (10.41.130.49) by avmbx1.microsemi.net (10.100.34.31)
+ 2019 22:12:11 -0700
+Received: from localhost (10.41.130.49) by avmbx3.microsemi.net (10.100.34.33)
  with Microsoft SMTP Server id 15.1.1847.3 via Frontend Transport; Wed, 30 Oct
- 2019 22:12:06 -0700
+ 2019 22:12:11 -0700
 From:   Deepak Ukey <deepak.ukey@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -59,9 +59,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <jinpu.wang@profitbricks.com>, <martin.petersen@oracle.com>,
         <dpf@google.com>, <jsperbeck@google.com>, <auradkar@google.com>,
         <ianyar@google.com>
-Subject: [PATCH 03/12] pm80xx : Convert 'long' mdelay to msleep.
-Date:   Thu, 31 Oct 2019 10:42:32 +0530
-Message-ID: <20191031051241.6762-4-deepak.ukey@microchip.com>
+Subject: [PATCH 05/12] pm80xx : Increase timeout for pm80xx mpi_uninit_check.
+Date:   Thu, 31 Oct 2019 10:42:34 +0530
+Message-ID: <20191031051241.6762-6-deepak.ukey@microchip.com>
 X-Mailer: git-send-email 2.19.0-rc1
 In-Reply-To: <20191031051241.6762-1-deepak.ukey@microchip.com>
 References: <20191031051241.6762-1-deepak.ukey@microchip.com>
@@ -73,44 +73,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Vikram Auradkar <auradkar@google.com>
+From: ianyar <ianyar@google.com>
 
-For delays longer than 20ms [um]delay isn't recommended.
-pm80xx_chip_soft_rst starts off with a 500ms delay before it even
-gets around to checking for the results of the reset. As long as
-it's at least 500ms it doesn't matter what the scheduler is doing.
-The delay in the pm8001_exec_internal_task_abort does nothing, and
-theory is this is a delay to avoid a double-free.
+The function  mpi_uninit_check takes longer for inbound doorbell
+register to be cleared. Increased the timeout substantially so
+that the driver does not fail to load.
 
-Signed-off-by: Vikram Auradkar <auradkar@google.com>
+Signed-off-by: ianyar <ianyar@google.com>
 Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 ---
  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.h | 3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index ee9c187d8caa..1a1adda15db8 100644
+index 6057610263c1..9d04e5cfffb4 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1241,7 +1241,7 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
- 		pm8001_printk("reset register before write : 0x%x\n", regval));
+@@ -735,9 +735,9 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
+ 	pm8001_cw32(pm8001_ha, 0, MSGU_IBDB_SET, SPCv_MSGU_CFG_TABLE_UPDATE);
+ 	/* wait until Inbound DoorBell Clear Register toggled */
+ 	if (IS_SPCV_12G(pm8001_ha->pdev)) {
+-		max_wait_count = 4 * 1000 * 1000;/* 4 sec */
++		max_wait_count = SPCV_DOORBELL_CLEAR_TIMEOUT;
+ 	} else {
+-		max_wait_count = 2 * 1000 * 1000;/* 2 sec */
++		max_wait_count = SPC_DOORBELL_CLEAR_TIMEOUT;
+ 	}
+ 	do {
+ 		udelay(1);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index dc9ab7689060..701951a0f715 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -220,6 +220,9 @@
+ #define SAS_DOPNRJT_RTRY_TMO            128
+ #define SAS_COPNRJT_RTRY_TMO            128
  
- 	pm8001_cw32(pm8001_ha, 0, SPC_REG_SOFT_RESET, SPCv_NORMAL_RESET_VALUE);
--	mdelay(500);
-+	msleep(500);
- 
- 	regval = pm8001_cr32(pm8001_ha, 0, SPC_REG_SOFT_RESET);
- 	PM8001_INIT_DBG(pm8001_ha,
-@@ -2986,7 +2986,7 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags == PM8001F_RUN_TIME)
--		mdelay(200);/*delay a moment to wait disk to spinup*/
-+		msleep(200);/*delay a moment to wait disk to spinup*/
- 	pm8001_bytes_dmaed(pm8001_ha, phy_id);
- }
- 
++#define SPCV_DOORBELL_CLEAR_TIMEOUT	(30 * 1000 * 1000) /* 30 sec */
++#define SPC_DOORBELL_CLEAR_TIMEOUT	(15 * 1000 * 1000) /* 15 sec */
++
+ /*
+   Making ORR bigger than IT NEXUS LOSS which is 2000000us = 2 second.
+   Assuming a bigger value 3 second, 3000000/128 = 23437.5 where 128
 -- 
 2.16.3
 
