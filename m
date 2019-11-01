@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD8BCA9ECF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 09:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D454CA9ECF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 09:17:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA0EB20656
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 09:16:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FABD2054F
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 09:17:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="WHvD9O6V"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="gC+7UW89"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728258AbfKAJQR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Nov 2019 05:16:17 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:39802 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728226AbfKAJQR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2019 05:16:17 -0400
-Received: by mail-io1-f68.google.com with SMTP id 18so10194419ion.6
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2019 02:16:15 -0700 (PDT)
+        id S1728293AbfKAJRj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Nov 2019 05:17:39 -0400
+Received: from mail-il1-f193.google.com ([209.85.166.193]:34655 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728206AbfKAJRi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2019 05:17:38 -0400
+Received: by mail-il1-f193.google.com with SMTP id a13so8172994ilp.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Nov 2019 02:17:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=2JPk4txylNAtDBUIdyDKHtICDLRC9t4D+l061HMFLwA=;
-        b=WHvD9O6VGAQ/uEUqSVbBJ17lCFsw2rWRFf+q3bkq/5+YS5FXeleWIiKFIE3+V90Ki/
-         nYbEdjvM/Hkbx3Vnw5sP7EXnFYhPaQI8bjYP0FYGmqK0wwC7c7s+xw6FzFn6p2hnHQsu
-         iJfcPpHXllhcPvXD+KEDpcn4Na/kdQcbDlke+J+PpneQciBHzF5LjeahSnGriqAGDzxc
-         9FmzK5GOXwcJ7eHpi07Asx5WzP4VYlLrzrJZDDp26Jct9v2maPHGuSSbwWYrAHLf7XDa
-         lQcp7Cea3qC+YmJt2CWqJGdvHGabjAV9xOPrsJvCg4+2ruXdY67R4qJUgKlL8WXMfRXT
-         m3pA==
+        bh=Bjyoy8M6hk/ci1432uabKaGHX9RgBndyW5DKMq2xKT0=;
+        b=gC+7UW892XWxSHsGvdkbm6wBZ5vYoL4CZRHarYBGHz7e7vL1txqeubEILzOXrcBk7s
+         q4doQ1uExbDFnHEDu7rMItdXH7JO9++UmJQfiUdlW5oo7lmyntXysEv1Q9A1xXsqKF+0
+         82Xxdguvuidnf0H54JWByah2VdADStkp0ArFXvfN8MrDDrCSSSTWNkcVkhRwy7h7+lFE
+         ssn6nvgyFXVhpMY7NNiECXGER7X5l3PEhoDe9o2DD7KFOg1DLYl7W5uei2qP33HYW78Q
+         J7dg3yB0TjR4pcjBWFHOYQqzaDV9kk4T1Ga1JBqXUZ3ggLLUTQNS45q7FzgxiPrL7WLX
+         s/xA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=2JPk4txylNAtDBUIdyDKHtICDLRC9t4D+l061HMFLwA=;
-        b=kbeD0zDAvJYm8LClLc9m+yzWtAyi+fXd6+0d2MbF7D4V6aYL4Q6/wyzQEJgmq6CN+P
-         Adiwb8lOMLLGO/1mJyoGjdF1USfzFIdcuyzJd/qXdfATZxPDMGhoZMuoZaZLLWv2tt+f
-         o3AO0+pWm2ygYhfPeJacf6deEoqwTTU+MxLs5cpNFFO+6+QhWsjZTrXnViCUjTgYKoFe
-         wtbsBmKec5BIEQKGZXyihe5cNI0zZtlAndZQqUA5iTanMZ/WjBEdQTV3TvRTOrGZQ2E5
-         2SkFsQnT4nI3QOuXMAvMuClEeUMDqPh+CJak+FOwJRo7fr0Q1oFPCZS1Uk/Rzk+Fz+T+
-         F/Xg==
-X-Gm-Message-State: APjAAAV5QZyjh2+oBfmyQEkRPLWo9AjL+Lp39ioWrvE56Qf5A+SuFlDr
-        0EijH51zEkHjGC2AB4bRwSvYpiDQiU5Ro5P+aiXdSQ==
-X-Google-Smtp-Source: APXvYqx6s+EIa/vnOA+baTf5b5kkddnxMOxvdkr7uA7kLoaoOQckhiVViDRU6Kxci7eYgnO5Ux1GOpHv7LSi2Lxcet8=
-X-Received: by 2002:a5d:80d5:: with SMTP id h21mr6751739ior.298.1572599774987;
- Fri, 01 Nov 2019 02:16:14 -0700 (PDT)
+        bh=Bjyoy8M6hk/ci1432uabKaGHX9RgBndyW5DKMq2xKT0=;
+        b=lr71qBVfU1Jb/eD4BHuibXIkt5Dcawo/sigfFRNZHp00/fjBhhOfpF+0+RS8Jcsn7X
+         yg3uceac7Uq/R0j9HkMX5ZybT9uT+K1yItDPBpUzf7t6J8VVO7EyYpu3eVqMxZUYKa2q
+         ftEaLVJ52q6z+p8DKX4/wIo4oqo9idPIn6NGso9GGMwjHaR/6uxkqhLtRUAAQNGQW9Yn
+         XbtOc4cTzR6/1+IJlXjrT6MVyzgs3oBcRPk8X9u2fhpJC88F/oAUS1mqjkZ9vumpE5ZK
+         4TWtPm+7bTmEm0/wHO1TCNFm5VPWoK3l68hQMbIDVmiPmJzTBoe4FNYeJjvxNBT0SxhT
+         X9UQ==
+X-Gm-Message-State: APjAAAXpY9tlq3K4JGmC01WkkzBnPTHUHhdlb1XdYZTbGNsNL0LTEr5r
+        q8378IxuHrS0cO6buPfZbLBBfTmG8UgfYfy6SVBf0Q==
+X-Google-Smtp-Source: APXvYqyrsD4Rkpk50Q+2K2hWgw8X00K2l8X2zUaCwbz4SBr2vhurYqCyjW5UWzy1bMI9m0eiXPrLYp4Hqt9B+GlAmKg=
+X-Received: by 2002:a92:d7c6:: with SMTP id g6mr9519216ilq.298.1572599857946;
+ Fri, 01 Nov 2019 02:17:37 -0700 (PDT)
 MIME-Version: 1.0
-References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-2-deepak.ukey@microchip.com>
-In-Reply-To: <20191031051241.6762-2-deepak.ukey@microchip.com>
+References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-3-deepak.ukey@microchip.com>
+In-Reply-To: <20191031051241.6762-3-deepak.ukey@microchip.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Fri, 1 Nov 2019 10:16:04 +0100
-Message-ID: <CAMGffEmtc+4Th-ZiC3Gq5MkijO+WU6as9T5My1EH=gtTXfZAoQ@mail.gmail.com>
-Subject: Re: [PATCH 01/12] pm80xx : Fix for SATA device discovery.
+Date:   Fri, 1 Nov 2019 10:17:27 +0100
+Message-ID: <CAMGffEmz14Qe9i4Utm9GWFnoutsxj4S_KRyXWHxuSAudwCZADg@mail.gmail.com>
+Subject: Re: [PATCH 02/12] pm80xx : Initialize variable used as return status.
 To:     Deepak Ukey <deepak.ukey@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
@@ -71,49 +71,33 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, Oct 31, 2019 at 6:12 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
-> From: peter chang <dpf@google.com>
+> From: John Sperbeck <jsperbeck@google.com>
 >
-> Driver was  missing complete() call in mpi_sata_completion which
-> result in SATA abort error handling is timing out. That causes the
-> device to be left in the in_recovery state so subsequent commands
-> sent to the device fail and the OS removes access to it.
+> In pm8001_task_exec(), if the PHY is down, then we return the
+> current value of 'rc'. We need to make sure it's initialized.
 >
-> Signed-off-by: peter chang <dpf@google.com>
+> Signed-off-by: John Sperbeck <jsperbeck@google.com>
 > Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Thanks for the patch, it looks good.
-But the commit message doesn't explain the second part of the change,
-I suggest to split it to 2 patches.
-Thanks
+Looks good, thanks.
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
+>  drivers/scsi/pm8001/pm8001_sas.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 73261902d75d..ee9c187d8caa 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -2382,6 +2382,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
->                         pm8001_printk("task 0x%p done with io_status 0x%x"
->                         " resp 0x%x stat 0x%x but aborted by upper layer!\n",
->                         t, status, ts->resp, ts->stat));
-> +               if (t->slow_task)
-> +                       complete(&t->slow_task->completion);
->                 pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
->         } else {
->                 spin_unlock_irqrestore(&t->task_state_lock, flags);
-> @@ -3130,8 +3132,10 @@ static int mpi_phy_start_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
->         if (status == 0) {
->                 phy->phy_state = PHY_LINK_DOWN;
->                 if (pm8001_ha->flags == PM8001F_RUN_TIME &&
-> -                               phy->enable_completion != NULL)
-> +                               phy->enable_completion != NULL) {
->                         complete(phy->enable_completion);
-> +                       phy->enable_completion = NULL;
-> +               }
->         }
->         return 0;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 7e48154e11c3..81160e99c75e 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -384,7 +384,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>         struct pm8001_port *port = NULL;
+>         struct sas_task *t = task;
+>         struct pm8001_ccb_info *ccb;
+> -       u32 tag = 0xdeadbeef, rc, n_elem = 0;
+> +       u32 tag = 0xdeadbeef, rc = 0, n_elem = 0;
+>         unsigned long flags = 0;
 >
+>         if (!dev->port) {
 > --
 > 2.16.3
 >
