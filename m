@@ -2,433 +2,107 @@ Return-Path: <SRS0=zYer=YZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AAECA9ECF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 11:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB70CA9ECF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 12:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 361EB20656
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 11:18:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 423002067D
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Nov 2019 12:35:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c6DPO1+d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730363AbfKALSp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Nov 2019 07:18:45 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34756 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730253AbfKALSo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Nov 2019 07:18:44 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 107AAB2D2;
-        Fri,  1 Nov 2019 11:18:41 +0000 (UTC)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/4] aacraid: use blk_mq_rq_busy_iter() for traversing outstanding commands
-Date:   Fri,  1 Nov 2019 12:18:37 +0100
-Message-Id: <20191101111838.140027-4-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191101111838.140027-1-hare@suse.de>
-References: <20191101111838.140027-1-hare@suse.de>
+        id S1729720AbfKAMfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Nov 2019 08:35:13 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:38837 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726229AbfKAMfN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2019 08:35:13 -0400
+Received: by mail-pf1-f194.google.com with SMTP id c13so6984491pfp.5;
+        Fri, 01 Nov 2019 05:35:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=JrQpRLrI0AXjDn7h5/imwTuVbTmOR/egWWcExOPFss8=;
+        b=c6DPO1+dJWaR5QwK5nITdiQa2VSCzKU0UJyzM52uZfJImnUT8znF/v1Z7fehu7ljzX
+         O6Ip6olUXWGHvKGJubiCywGulBq2cwaG1/GdUjlFMUYp1dVqrvI+47su7liqpbLo9Y/c
+         kVhIIexHaGvj7SIEEho4OEFnFBe59YCzC7m7g9SPFUwDTYM+ngM1dkB5goMnyD3/jDue
+         GWGh9bmQtv0XtdEScK9NTd6Ja5sXhF5Pz/s2NIfnr9la7/UAPlWpEXhotxVblLNrT9Sh
+         8xMGgDKVtRPU096775ABViaSa9SQOhh1AmN+ZbPpKFSkHW4ey8cSiaJscwcuMPFfn+8o
+         LU1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=JrQpRLrI0AXjDn7h5/imwTuVbTmOR/egWWcExOPFss8=;
+        b=TNSPv/h2NAeOirwv6Y/441UsadGIGRp0ZcCBawzxoe7MjM/cGfaVTBhANglxMZxw7X
+         z1ztZ43QkELTsmPDpHOmBDCMsmCO4RiNehViBwh3Uz8s2n0rPhqTVhuN4flez5c57dyj
+         1pk9hBPAwS+6ykuUvqbAKjiC4+GMix2jSFC3q2TUc7VXyAakr25WJhHXlEtbEV2zwQBZ
+         3KJdRVQyDTLnYkdtD0CUpTFrmzuCiteMgqorcbb3vmARxD1E/AXjvpACU56RWPZ37zm8
+         sJQFsZ4BOMfYrypg0bUHYBeVTbenvziz5GvfY7XV2eizPsUR6mjuiT821C65BP9TqPfu
+         k+MQ==
+X-Gm-Message-State: APjAAAWOQexuLPBlG8H/pC5PiDVzbvEpsMZVXWx6IKt6Zy3wARfDHKB6
+        0K+J9DHXlm7EKpFSHKBDZBM=
+X-Google-Smtp-Source: APXvYqwchZ6piwRCYF/jZ4yGwFTa6igUGC6aCHKEwPMGqPkQaHu6ZhJXRtktRNJlTRM0R8WwMaIlgA==
+X-Received: by 2002:a63:7247:: with SMTP id c7mr13095692pgn.311.1572611711190;
+        Fri, 01 Nov 2019 05:35:11 -0700 (PDT)
+Received: from saurav ([117.232.233.44])
+        by smtp.gmail.com with ESMTPSA id q23sm7703887pjd.2.2019.11.01.05.35.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Nov 2019 05:35:10 -0700 (PDT)
+Date:   Fri, 1 Nov 2019 18:05:03 +0530
+From:   Saurav Girepunje <saurav.girepunje@gmail.com>
+To:     mikecyr@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     saurav.girepunje@hotmail.com
+Subject: [PATCH] scsi: ibmvscsi_tgt: Remove unneeded variable rc
+Message-ID: <20191101120407.GA9369@saurav>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use blk_mq_rq_busy_iter() for traversing outstanding commands and
-drop the cmd_list usage.
+Variable rc is not modified in ibmvscsis_srp_i_logout function.
+So remove unneeded variable rc.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Issue found using coccicheck tool.
+
+Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
 ---
- drivers/scsi/aacraid/aachba.c   | 127 ++++++++++++++++++++++------------------
- drivers/scsi/aacraid/comminit.c |  30 ++++------
- drivers/scsi/aacraid/commsup.c  |  38 +++++-------
- drivers/scsi/aacraid/linit.c    |  87 ++++++++++++++-------------
- 4 files changed, 147 insertions(+), 135 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index e36608ce937a..df590240e2c9 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2639,81 +2639,96 @@ static void synchronize_callback(void *context, struct fib *fibptr)
- 	cmd->scsi_done(cmd);
- }
- 
-+struct synchronize_busy_data {
-+	struct scsi_device *sdev;
-+	u64 lba;
-+	u32 count;
-+	int active;
-+};
-+
-+static bool synchronize_busy_iter(struct request *req, void *data, bool reserved)
-+{
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	struct synchronize_busy_data *busy_data = data;
-+
-+	if (busy_data->sdev == cmd->device &&
-+	    cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
-+		u64 cmnd_lba;
-+		u32 cmnd_count;
-+
-+		if (cmd->cmnd[0] == WRITE_6) {
-+			cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
-+				(cmd->cmnd[2] << 8) |
-+				cmd->cmnd[3];
-+			cmnd_count = cmd->cmnd[4];
-+			if (cmnd_count == 0)
-+				cmnd_count = 256;
-+		} else if (cmd->cmnd[0] == WRITE_16) {
-+			cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
-+				((u64)cmd->cmnd[3] << 48) |
-+				((u64)cmd->cmnd[4] << 40) |
-+				((u64)cmd->cmnd[5] << 32) |
-+				((u64)cmd->cmnd[6] << 24) |
-+				(cmd->cmnd[7] << 16) |
-+				(cmd->cmnd[8] << 8) |
-+				cmd->cmnd[9];
-+			cmnd_count = (cmd->cmnd[10] << 24) |
-+				(cmd->cmnd[11] << 16) |
-+				(cmd->cmnd[12] << 8) |
-+				cmd->cmnd[13];
-+		} else if (cmd->cmnd[0] == WRITE_12) {
-+			cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
-+				(cmd->cmnd[3] << 16) |
-+				(cmd->cmnd[4] << 8) |
-+				cmd->cmnd[5];
-+			cmnd_count = (cmd->cmnd[6] << 24) |
-+				(cmd->cmnd[7] << 16) |
-+				(cmd->cmnd[8] << 8) |
-+				cmd->cmnd[9];
-+		} else if (cmd->cmnd[0] == WRITE_10) {
-+			cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
-+				(cmd->cmnd[3] << 16) |
-+				(cmd->cmnd[4] << 8) |
-+				cmd->cmnd[5];
-+			cmnd_count = (cmd->cmnd[7] << 8) |
-+				cmd->cmnd[8];
-+		} else
-+			return true;
-+		if (((cmnd_lba + cmnd_count) < busy_data->lba) ||
-+		    (busy_data->count && ((busy_data->lba + busy_data->count) < cmnd_lba)))
-+			return true;;
-+		++busy_data->active;
-+	}
-+	return true;
-+}
-+
- static int aac_synchronize(struct scsi_cmnd *scsicmd)
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 7f9535392a93..09a4dbd0a9e5 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -2353,7 +2353,6 @@ static long ibmvscsis_srp_i_logout(struct scsi_info *vscsi,
  {
- 	int status;
- 	struct fib *cmd_fibcontext;
- 	struct aac_synchronize *synchronizecmd;
--	struct scsi_cmnd *cmd;
- 	struct scsi_device *sdev = scsicmd->device;
--	int active = 0;
- 	struct aac_dev *aac;
- 	u64 lba = ((u64)scsicmd->cmnd[2] << 24) | (scsicmd->cmnd[3] << 16) |
- 		(scsicmd->cmnd[4] << 8) | scsicmd->cmnd[5];
- 	u32 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
--	unsigned long flags;
-+	struct synchronize_busy_data busy_data = {
-+		.sdev = sdev,
-+		.lba = lba,
-+		.count = count,
-+		.active = 0,
-+	};
+ 	struct iu_entry *iue = cmd->iue;
+ 	struct srp_i_logout *log_out = &vio_iu(iue)->srp.i_logout;
+-	long rc = ADAPT_SUCCESS;
  
- 	/*
- 	 * Wait for all outstanding queued commands to complete to this
- 	 * specific target (block).
- 	 */
--	spin_lock_irqsave(&sdev->list_lock, flags);
--	list_for_each_entry(cmd, &sdev->cmd_list, list)
--		if (cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
--			u64 cmnd_lba;
--			u32 cmnd_count;
--
--			if (cmd->cmnd[0] == WRITE_6) {
--				cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
--					(cmd->cmnd[2] << 8) |
--					cmd->cmnd[3];
--				cmnd_count = cmd->cmnd[4];
--				if (cmnd_count == 0)
--					cmnd_count = 256;
--			} else if (cmd->cmnd[0] == WRITE_16) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
--					((u64)cmd->cmnd[3] << 48) |
--					((u64)cmd->cmnd[4] << 40) |
--					((u64)cmd->cmnd[5] << 32) |
--					((u64)cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--				cmnd_count = (cmd->cmnd[10] << 24) |
--					(cmd->cmnd[11] << 16) |
--					(cmd->cmnd[12] << 8) |
--					cmd->cmnd[13];
--			} else if (cmd->cmnd[0] == WRITE_12) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--			} else if (cmd->cmnd[0] == WRITE_10) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[7] << 8) |
--					cmd->cmnd[8];
--			} else
--				continue;
--			if (((cmnd_lba + cmnd_count) < lba) ||
--			  (count && ((lba + count) < cmnd_lba)))
--				continue;
--			++active;
--			break;
--		}
--
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	blk_mq_tagset_busy_iter(&sdev->host->tag_set, synchronize_busy_iter, &busy_data);
+ 	if ((vscsi->debit > 0) || !list_empty(&vscsi->schedule_q) ||
+ 	    !list_empty(&vscsi->waiting_rsp)) {
+@@ -2369,7 +2368,7 @@ static long ibmvscsis_srp_i_logout(struct scsi_info *vscsi,
+ 		ibmvscsis_post_disconnect(vscsi, WAIT_IDLE, 0);
+ 	}
  
- 	/*
- 	 *	Yield the processor (requeue for later)
- 	 */
--	if (active)
-+	if (busy_data.active)
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 
- 	aac = (struct aac_dev *)sdev->host->hostdata;
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index f75878d773cf..72cdf47437fe 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -272,29 +272,25 @@ static void aac_queue_init(struct aac_dev * dev, struct aac_queue * q, u32 *mem,
- 	q->entries = qsize;
+-	return rc;
++	return ADAPT_SUCCESS;
  }
  
-+static bool wait_for_io_iter(struct request *rq, void *data, bool reserved)
-+{
-+	struct scsi_cmnd *command = blk_mq_rq_to_pdu(rq);
-+	int *active = data;
-+
-+	if (command->SCp.phase == AAC_OWNER_FIRMWARE)
-+		*active = 1;
-+	return true;
-+}
-+
- static void aac_wait_for_io_completion(struct aac_dev *aac)
- {
--	unsigned long flagv = 0;
--	int i = 0;
-+	int i;
- 
- 	for (i = 60; i; --i) {
--		struct scsi_device *dev;
--		struct scsi_cmnd *command;
- 		int active = 0;
- 
--		__shost_for_each_device(dev, aac->scsi_host_ptr) {
--			spin_lock_irqsave(&dev->list_lock, flagv);
--			list_for_each_entry(command, &dev->cmd_list, list) {
--				if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
--					active++;
--					break;
--				}
--			}
--			spin_unlock_irqrestore(&dev->list_lock, flagv);
--			if (active)
--				break;
--
--		}
-+		blk_mq_tagset_busy_iter(&aac->scsi_host_ptr->tag_set,
-+					wait_for_io_iter, &active);
- 		/*
- 		 * We can exit If all the commands are complete
- 		 */
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 5a8a999606ea..218b0954b91c 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1472,14 +1472,26 @@ static void aac_schedule_bus_scan(struct aac_dev *aac)
- 		aac_schedule_src_reinit_aif_worker(aac);
- }
- 
-+static bool reset_adapter_complete_iter(struct request *rq, void *data, bool reserved)
-+{
-+	struct scsi_cmnd *command = blk_mq_rq_to_pdu(rq);
-+
-+	if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
-+		command->result = DID_OK << 16
-+		  | COMMAND_COMPLETE << 8
-+		  | SAM_STAT_TASK_SET_FULL;
-+		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
-+		command->scsi_done(command);
-+	}
-+	return true;
-+}
-+
- static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- {
- 	int index, quirks;
- 	int retval;
- 	struct Scsi_Host *host;
- 	struct scsi_device *dev;
--	struct scsi_cmnd *command;
--	struct scsi_cmnd *command_list;
- 	int jafo = 0;
- 	int bled;
- 	u64 dmamask;
-@@ -1607,26 +1619,8 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 * This is where the assumption that the Adapter is quiesced
- 	 * is important.
- 	 */
--	command_list = NULL;
--	__shost_for_each_device(dev, host) {
--		unsigned long flags;
--		spin_lock_irqsave(&dev->list_lock, flags);
--		list_for_each_entry(command, &dev->cmd_list, list)
--			if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
--				command->SCp.buffer = (struct scatterlist *)command_list;
--				command_list = command;
--			}
--		spin_unlock_irqrestore(&dev->list_lock, flags);
--	}
--	while ((command = command_list)) {
--		command_list = (struct scsi_cmnd *)command->SCp.buffer;
--		command->SCp.buffer = NULL;
--		command->result = DID_OK << 16
--		  | COMMAND_COMPLETE << 8
--		  | SAM_STAT_TASK_SET_FULL;
--		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
--		command->scsi_done(command);
--	}
-+	blk_mq_tagset_busy_iter(&host->tag_set, reset_adapter_complete_iter, NULL);
-+
- 	/*
- 	 * Any Device that was already marked offline needs to be marked
- 	 * running
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index ee6bc2f9b80a..30af9eef6774 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -622,54 +622,62 @@ static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 	return aac_do_ioctl(dev, cmd, arg);
- }
- 
--static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+struct fib_count_data {
-+	int mlcnt;
-+	int llcnt;
-+	int ehcnt;
-+	int fwcnt;
-+	int krlcnt;
-+};
-+
-+static bool fib_count_iter(struct request *rq, void *data, bool reserved)
- {
-+	struct scsi_cmnd *scmnd = blk_mq_rq_to_pdu(rq);
-+	struct fib_count_data *fib_count = data;
- 
--	unsigned long flags;
--	struct scsi_device *sdev = NULL;
-+	switch (scmnd->SCp.phase) {
-+	case AAC_OWNER_FIRMWARE:
-+		fib_count->fwcnt++;
-+		break;
-+	case AAC_OWNER_ERROR_HANDLER:
-+		fib_count->ehcnt++;
-+		break;
-+	case AAC_OWNER_LOWLEVEL:
-+		fib_count->llcnt++;
-+		break;
-+	case AAC_OWNER_MIDLEVEL:
-+		fib_count->mlcnt++;
-+		break;
-+	default:
-+		fib_count->krlcnt++;
-+		break;
-+	}
-+	return true;
-+}
-+
-+static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+{
- 	struct Scsi_Host *shost = aac->scsi_host_ptr;
--	struct scsi_cmnd *scmnd = NULL;
- 	struct device *ctrl_dev;
-+	struct fib_count_data fib_count = {
-+		.mlcnt  = 0,
-+		.llcnt  = 0,
-+		.ehcnt  = 0,
-+		.fwcnt  = 0,
-+		.krlcnt = 0,
-+	};
- 
--	int mlcnt  = 0;
--	int llcnt  = 0;
--	int ehcnt  = 0;
--	int fwcnt  = 0;
--	int krlcnt = 0;
--
--	__shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
--			switch (scmnd->SCp.phase) {
--			case AAC_OWNER_FIRMWARE:
--				fwcnt++;
--				break;
--			case AAC_OWNER_ERROR_HANDLER:
--				ehcnt++;
--				break;
--			case AAC_OWNER_LOWLEVEL:
--				llcnt++;
--				break;
--			case AAC_OWNER_MIDLEVEL:
--				mlcnt++;
--				break;
--			default:
--				krlcnt++;
--				break;
--			}
--		}
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--	}
-+	blk_mq_tagset_busy_iter(&shost->tag_set, fib_count_iter, &fib_count);
- 
- 	ctrl_dev = &aac->pdev->dev;
- 
--	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
--	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
--	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
--	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
--	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", fib_count.mlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", fib_count.llcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", fib_count.ehcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fib_count.fwcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", fib_count.krlcnt);
- 
--	return mlcnt + llcnt + ehcnt + fwcnt;
-+	return fib_count.mlcnt + fib_count.llcnt + fib_count.ehcnt + fib_count.fwcnt;
- }
- 
- static int aac_eh_abort(struct scsi_cmnd* cmd)
-@@ -1675,7 +1683,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->irq = pdev->irq;
- 	shost->unique_id = unique_id;
- 	shost->max_cmd_len = 16;
--	shost->use_cmd_list = 1;
- 
- 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
- 		aac_init_char();
+ /* Called with intr lock held */
 -- 
-2.16.4
+2.20.1
 
