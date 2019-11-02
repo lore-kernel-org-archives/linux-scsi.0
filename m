@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7725CCA9EC7
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 05:01:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43987CA9EC7
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 05:02:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CF9921906
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 05:01:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AE4E218AC
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 05:02:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PL0wqpXR";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iRMzXg58"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Vr9paRXx";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V5m/xaOH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726999AbfKBFBv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Nov 2019 01:01:51 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:49948 "EHLO
+        id S1727458AbfKBFB6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 Nov 2019 01:01:58 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:50280 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725842AbfKBFBu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Nov 2019 01:01:50 -0400
+        with ESMTP id S1725842AbfKBFB5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Nov 2019 01:01:57 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0233860FBB; Sat,  2 Nov 2019 05:01:47 +0000 (UTC)
+        id EE0DB615C4; Sat,  2 Nov 2019 05:01:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572670908;
-        bh=3jrpzDJ3un/OnOp4reXw1SVjx+Aq9j/kB2TL+7OU6WU=;
+        s=default; t=1572670916;
+        bh=JvxKGa6O4f7zI3Ydz7dqyF7nDweSq45f4x0Pmi5udY0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PL0wqpXRehSrxIoUNFs+oMSNxcwqF1htCO70LuD1PcxuiwMgZvNOq/jTYDTFzi2sk
-         OjUaMKXfN4Zrp8f2nBQbs0LN0T6vv8qBY3nmjOSHdz0+5aZkwnCpSZUeUV1Iod/WZO
-         Nwhm0P/C2m3tzPcPTEEyxSAHNtE3OGAhNiq6k/TY=
+        b=Vr9paRXx4JK+GvRWBrH8oMjeTvFC3uFAh3Eyb+n1bvnR9OhWFdw2ENzywdeoIRDfA
+         RF4fhX1SCZvWMsv3LTKc/OAOmrsAoJPUIF80jPHK+1N2zjrYj/a9BBGX9O3ItdcBpq
+         mYbBUMfOkjhoWJQF2IJ/JbUW+KtdXwNhTyN62wig=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB756614A3;
-        Sat,  2 Nov 2019 05:01:46 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 08A9A61584;
+        Sat,  2 Nov 2019 05:01:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572670907;
-        bh=3jrpzDJ3un/OnOp4reXw1SVjx+Aq9j/kB2TL+7OU6WU=;
+        s=default; t=1572670915;
+        bh=JvxKGa6O4f7zI3Ydz7dqyF7nDweSq45f4x0Pmi5udY0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iRMzXg58P/yMnLCb1FmT+AgGyUgzZoO+iHQmKWkHVkvklOMYNspST3jisHq2GQWaE
-         bw6I4FkToKB0uGTBi6QnS4YmArFTE56NyaXS9hhNbWU36dCgTVXXOWJ4WbvGGVdT9V
-         zAAEIEnIVGoNNn49H/yC0giQllO2K7fsU7pMyz3s=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DB756614A3
+        b=V5m/xaOHApiOxQqqBCRoOiP4T6Lht1OGb/H79YbqHlBHUy+DeYW93gOXXqie9Yt9j
+         xy6JoLpKdKe2I1gOKCNgDUvLiwKqe0vFNmjOXZqba8p16VM1zpz/B4xvzap0rb+Sxt
+         gOFXVXCtdcy5CjpnF6IEsQv/PCGaoaILgo64n1nc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 08A9A61584
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -52,12 +52,20 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         cang@codeaurora.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 1/5] scsi: Adjust DBD setting in mode sense for caching mode page per LLD
-Date:   Fri,  1 Nov 2019 22:01:34 -0700
-Message-Id: <1572670898-750-2-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v3 3/5] scsi: ufs: Release clock if DMA map fails
+Date:   Fri,  1 Nov 2019 22:01:36 -0700
+Message-Id: <1572670898-750-4-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1572670898-750-1-git-send-email-cang@codeaurora.org>
 References: <1572670898-750-1-git-send-email-cang@codeaurora.org>
@@ -66,48 +74,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Host sends MODE_SENSE_10 with caching mode page, to check if the device
-supports the cache feature.
-UFS JEDEC standards require DBD field to be set to 1.
-
-This patch allows LLD to define the setting of DBD if required.
+In queuecommand path, if DMA map fails, it bails out with clock held.
+In this case, release the clock to keep its usage paired.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/sd.c        | 2 +-
- include/scsi/scsi_host.h | 6 ++++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index aab4ed8..a9cca2f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2660,7 +2660,7 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
- 		dbd = 8;
- 	} else {
- 		modepage = 8;
--		dbd = 0;
-+		dbd = sdp->host->set_dbd_for_caching ? 8 : 0;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0a6b8f9..979b161 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2504,6 +2504,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+ 		clear_bit_unlock(tag, &hba->lrb_in_use);
++		ufshcd_release(hba);
+ 		goto out;
  	}
- 
- 	/* cautiously ask */
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2c3f0c5..3900987 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -650,6 +650,12 @@ struct Scsi_Host {
- 	unsigned no_scsi2_lun_in_cdb:1;
- 
- 	/*
-+	 * Set "DBD" field in mode_sense caching mode page in case it is
-+	 * mandatory by LLD standard.
-+	 */
-+	unsigned set_dbd_for_caching:1;
-+
-+	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
- 	char work_q_name[20];
+ 	/* Make sure descriptors are ready before ringing the doorbell */
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
