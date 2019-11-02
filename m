@@ -2,301 +2,190 @@ Return-Path: <SRS0=HJ87=Y2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A180CA9ED0
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 01:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C21CA9ECF
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 01:12:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D633F2085B
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 01:07:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rFIm/DZP";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rFIm/DZP"
+	by mail.kernel.org (Postfix) with ESMTP id 1F4C1208E3
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 01:12:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727484AbfKBBHK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Nov 2019 21:07:10 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:32772 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726846AbfKBBHK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2019 21:07:10 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 71D558EE16B;
-        Fri,  1 Nov 2019 18:07:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1572656829;
-        bh=GqQD4nOZhsUGGox09TnYbfcB+/jMb7K09jZQvLZ8nUM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=rFIm/DZPo/7KC8khfiK2eAYI8wsU0UroMc9Cq0JeBb0qxcSnQVYOaaWTJ6Nv/4WXh
-         b79jwY2dE5EmJs7JxVSTeOsGcIzY1KRyo+gnVIMajcGtJH2IekLMrIWfUQhCC2GYQL
-         QqVUDUViBJqCoHdJvPefODU8XI/x9ZWCfiEU3TLk=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fGIbicr3zDoY; Fri,  1 Nov 2019 18:07:09 -0700 (PDT)
-Received: from jarvis.lan (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id CB7D68EE144;
-        Fri,  1 Nov 2019 18:07:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1572656829;
-        bh=GqQD4nOZhsUGGox09TnYbfcB+/jMb7K09jZQvLZ8nUM=;
-        h=Subject:From:To:Cc:Date:From;
-        b=rFIm/DZPo/7KC8khfiK2eAYI8wsU0UroMc9Cq0JeBb0qxcSnQVYOaaWTJ6Nv/4WXh
-         b79jwY2dE5EmJs7JxVSTeOsGcIzY1KRyo+gnVIMajcGtJH2IekLMrIWfUQhCC2GYQL
-         QqVUDUViBJqCoHdJvPefODU8XI/x9ZWCfiEU3TLk=
-Message-ID: <1572656827.19347.17.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.4-rc5
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 01 Nov 2019 18:07:07 -0700
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1728087AbfKBBMS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Nov 2019 21:12:18 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:51650 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726999AbfKBBMR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Nov 2019 21:12:17 -0400
+Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
+        id BEE062A25D; Fri,  1 Nov 2019 21:12:15 -0400 (EDT)
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "Michael Schmitz" <schmitzmic@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Message-Id: <4567bcae94523b47d6f3b77450ba305823bca479.1572656814.git.fthain@telegraphics.com.au>
+In-Reply-To: <cover.1572656814.git.fthain@telegraphics.com.au>
+References: <cover.1572656814.git.fthain@telegraphics.com.au>
+From:   Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 1/2] atari_scsi, sun3_scsi: Set sg_tablesize to 1 instead of
+ SG_NONE
+Date:   Sat, 02 Nov 2019 12:06:54 +1100
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Nine changes, eight in drivers [ufs, target, lpfc x 2, qla2xxx x 4] and
-one core change in sd that fixes an I/O failure on DIF type 3 devices.
+Since the scsi subsystem adopted the blk-mq API, a host with zero
+sg_tablesize crashes with a NULL pointer dereference.
 
-The patch is available here:
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+scsi target0:0:0: Beginning Domain Validation
+scsi target0:0:0: Domain Validation skipping write tests
+scsi target0:0:0: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+scsi target0:0:1: Beginning Domain Validation
+scsi target0:0:1: Domain Validation skipping write tests
+scsi target0:0:1: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.5+ PQ: 0 ANSI: 5
+scsi target0:0:2: Beginning Domain Validation
+scsi target0:0:2: Domain Validation skipping write tests
+scsi target0:0:2: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+sr 0:0:2:0: Power-on or device reset occurred
+sd 0:0:0:0: Power-on or device reset occurred
+sd 0:0:1:0: Power-on or device reset occurred
+sd 0:0:0:0: [sda] 10485762 512-byte logical blocks: (5.37 GB/5.00 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Unable to handle kernel NULL pointer dereference at virtual address (ptrval)
+Oops: 00000000
+Modules linked in:
+PC: [<001cd874>] blk_mq_free_request+0x66/0xe2
+SR: 2004  SP: (ptrval)  a2: 00874520
+d0: 00000000    d1: 00000000    d2: 009ba800    d3: 00000000
+d4: 00000000    d5: 08000002    a0: 0087be68    a1: 009a81e0
+Process kworker/u2:2 (pid: 15, task=(ptrval))
+Frame format=7 eff addr=0000007a ssw=0505 faddr=0000007a
+wb 1 stat/addr/data: 0000 00000000 00000000
+wb 2 stat/addr/data: 0000 00000000 00000000
+wb 3 stat/addr/data: 0000 0000007a 00000000
+push data: 00000000 00000000 00000000 00000000
+Stack from 0087bd98:
+        00000002 00000000 0087be72 009a7820 0087bdb4 001c4f6c 009a7820 0087bdd4
+        0024d200 009a7820 0024d0dc 0087be72 009baa00 0087be68 009a5000 0087be7c
+        00265d10 009a5000 0087be72 00000003 00000000 00000000 00000000 0087be68
+        00000bb8 00000005 00000000 00000000 00000000 00000000 00265c56 00000000
+        009ba60c 0036ddf4 00000002 ffffffff 009baa00 009ba600 009a50d6 0087be74
+        00227ba0 009baa08 00000001 009baa08 009ba60c 0036ddf4 00000000 00000000
+Call Trace: [<001c4f6c>] blk_put_request+0xe/0x14
+ [<0024d200>] __scsi_execute+0x124/0x174
+ [<0024d0dc>] __scsi_execute+0x0/0x174
+ [<00265d10>] sd_revalidate_disk+0xba/0x1f02
+ [<00265c56>] sd_revalidate_disk+0x0/0x1f02
+ [<0036ddf4>] strlen+0x0/0x22
+ [<00227ba0>] device_add+0x3da/0x604
+ [<0036ddf4>] strlen+0x0/0x22
+ [<00267e64>] sd_probe+0x30c/0x4b4
+ [<0002da44>] process_one_work+0x0/0x402
+ [<0022b978>] really_probe+0x226/0x354
+ [<0022bc34>] driver_probe_device+0xa4/0xf0
+ [<0002da44>] process_one_work+0x0/0x402
+ [<0022bcd0>] __driver_attach_async_helper+0x50/0x70
+ [<00035dae>] async_run_entry_fn+0x36/0x130
+ [<0002db88>] process_one_work+0x144/0x402
+ [<0002e1aa>] worker_thread+0x0/0x570
+ [<0002e29a>] worker_thread+0xf0/0x570
+ [<0002e1aa>] worker_thread+0x0/0x570
+ [<003768d8>] schedule+0x0/0xb8
+ [<0003f58c>] __init_waitqueue_head+0x0/0x12
+ [<00033e92>] kthread+0xc2/0xf6
+ [<000331e8>] kthread_parkme+0x0/0x4e
+ [<003768d8>] schedule+0x0/0xb8
+ [<00033dd0>] kthread+0x0/0xf6
+ [<00002c10>] ret_from_kernel_thread+0xc/0x14
+Code: 0280 0006 0800 56c0 4400 0280 0000 00ff <52b4> 0c3a 082b 0006 0013 6706 2042 53a8 00c4 4ab9 0047 3374 6640 202d 000c 670c
+Disabling lock debugging due to kernel taint
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Avoid this by setting sg_tablesize = 1.
 
-The short changelog is:
-
-Avri Altman (1):
-      scsi: ufs-bsg: Wake the device before sending raw upiu commands
-
-Bart Van Assche (1):
-      scsi: target: cxgbit: Fix cxgbit_fw4_ack()
-
-Daniel Wagner (2):
-      scsi: lpfc: Honor module parameter lpfc_use_adisc
-      scsi: lpfc: Check queue pointer before use
-
-Hannes Reinecke (1):
-      scsi: qla2xxx: fixup incorrect usage of host_byte
-
-Himanshu Madhani (1):
-      scsi: qla2xxx: Initialized mailbox to prevent driver load failure
-
-Nicholas Piggin (1):
-      scsi: qla2xxx: stop timer in shutdown path
-
-Quinn Tran (1):
-      scsi: qla2xxx: Fix partial flash write of MBI
-
-Xiang Chen (1):
-      scsi: sd: define variable dif as unsigned int instead of bool
-
-And the diffstat:
-
- drivers/scsi/lpfc/lpfc_nportdisc.c      | 4 ++--
- drivers/scsi/lpfc/lpfc_sli.c            | 2 +-
- drivers/scsi/qla2xxx/qla_attr.c         | 7 +++----
- drivers/scsi/qla2xxx/qla_bsg.c          | 6 +++---
- drivers/scsi/qla2xxx/qla_mbx.c          | 3 ++-
- drivers/scsi/qla2xxx/qla_os.c           | 4 ++++
- drivers/scsi/sd.c                       | 3 ++-
- drivers/scsi/ufs/ufs_bsg.c              | 4 ++++
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 3 ++-
- 9 files changed, 23 insertions(+), 13 deletions(-)
-
-With full diff below.
-
-James
-
+Cc: stable@vger.kernel.org # 4.19+
+Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+References: commit 68ab2d76e4be ("scsi: cxlflash: Set sg_tablesize to 1 instead of SG_NONE")
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
+ drivers/scsi/atari_scsi.c | 6 +++---
+ drivers/scsi/mac_scsi.c   | 2 +-
+ drivers/scsi/sun3_scsi.c  | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index f4b879d25fe9..fc6e4546d738 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -851,9 +851,9 @@ lpfc_disc_set_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 
- 	if (!(vport->fc_flag & FC_PT2PT)) {
- 		/* Check config parameter use-adisc or FCP-2 */
--		if ((vport->cfg_use_adisc && (vport->fc_flag & FC_RSCN_MODE)) ||
-+		if (vport->cfg_use_adisc && ((vport->fc_flag & FC_RSCN_MODE) ||
- 		    ((ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE) &&
--		     (ndlp->nlp_type & NLP_FCP_TARGET))) {
-+		     (ndlp->nlp_type & NLP_FCP_TARGET)))) {
- 			spin_lock_irq(shost->host_lock);
- 			ndlp->nlp_flag |= NLP_NPR_ADISC;
- 			spin_unlock_irq(shost->host_lock);
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a0c6945b8139..614f78dddafe 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7866,7 +7866,7 @@ lpfc_sli4_process_missed_mbox_completions(struct lpfc_hba *phba)
- 	if (sli4_hba->hdwq) {
- 		for (eqidx = 0; eqidx < phba->cfg_irq_chann; eqidx++) {
- 			eq = phba->sli4_hba.hba_eq_hdl[eqidx].eq;
--			if (eq->queue_id == sli4_hba->mbx_cq->assoc_qid) {
-+			if (eq && eq->queue_id == sli4_hba->mbx_cq->assoc_qid) {
- 				fpeq = eq;
- 				break;
- 			}
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 8b3015361428..8705ca6395e4 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -440,9 +440,6 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		valid = 0;
- 		if (ha->optrom_size == OPTROM_SIZE_2300 && start == 0)
- 			valid = 1;
--		else if (start == (ha->flt_region_boot * 4) ||
--		    start == (ha->flt_region_fw * 4))
--			valid = 1;
- 		else if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha))
- 			valid = 1;
- 		if (!valid) {
-@@ -489,8 +486,10 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		    "Writing flash region -- 0x%x/0x%x.\n",
- 		    ha->optrom_region_start, ha->optrom_region_size);
- 
--		ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
-+		rval = ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
- 		    ha->optrom_region_start, ha->optrom_region_size);
-+		if (rval)
-+			rval = -EIO;
- 		break;
- 	default:
- 		rval = -EINVAL;
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 28d587a89ba6..99f0a1a08143 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -253,7 +253,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 	srb_t *sp;
- 	const char *type;
- 	int req_sg_cnt, rsp_sg_cnt;
--	int rval =  (DRIVER_ERROR << 16);
-+	int rval =  (DID_ERROR << 16);
- 	uint16_t nextlid = 0;
- 
- 	if (bsg_request->msgcode == FC_BSG_RPT_ELS) {
-@@ -432,7 +432,7 @@ qla2x00_process_ct(struct bsg_job *bsg_job)
- 	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
--	int rval = (DRIVER_ERROR << 16);
-+	int rval = (DID_ERROR << 16);
- 	int req_sg_cnt, rsp_sg_cnt;
- 	uint16_t loop_id;
- 	struct fc_port *fcport;
-@@ -1950,7 +1950,7 @@ qlafx00_mgmt_cmd(struct bsg_job *bsg_job)
- 	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
--	int rval = (DRIVER_ERROR << 16);
-+	int rval = (DID_ERROR << 16);
- 	struct qla_mt_iocb_rqst_fx00 *piocb_rqst;
- 	srb_t *sp;
- 	int req_sg_cnt = 0, rsp_sg_cnt = 0;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 1cc6913f76c4..4a1f21c11758 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -702,6 +702,7 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		mcp->mb[2] = LSW(risc_addr);
- 		mcp->mb[3] = 0;
- 		mcp->mb[4] = 0;
-+		mcp->mb[11] = 0;
- 		ha->flags.using_lr_setting = 0;
- 		if (IS_QLA25XX(ha) || IS_QLA81XX(ha) || IS_QLA83XX(ha) ||
- 		    IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-@@ -746,7 +747,7 @@ qla2x00_execute_fw(scsi_qla_host_t *vha, uint32_t risc_addr)
- 		if (ha->flags.exchoffld_enabled)
- 			mcp->mb[4] |= ENABLE_EXCHANGE_OFFLD;
- 
--		mcp->out_mb |= MBX_4|MBX_3|MBX_2|MBX_1;
-+		mcp->out_mb |= MBX_4 | MBX_3 | MBX_2 | MBX_1 | MBX_11;
- 		mcp->in_mb |= MBX_3 | MBX_2 | MBX_1;
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index e809493d0d06..a82b63a66635 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -742,7 +742,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ 		atari_scsi_template.sg_tablesize = SG_ALL;
  	} else {
- 		mcp->mb[1] = LSW(risc_addr);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e4d765fc03ea..39f7782a133b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3529,6 +3529,10 @@ qla2x00_shutdown(struct pci_dev *pdev)
- 		qla2x00_try_to_stop_firmware(vha);
+ 		atari_scsi_template.can_queue    = 1;
+-		atari_scsi_template.sg_tablesize = SG_NONE;
++		atari_scsi_template.sg_tablesize = 1;
  	}
  
-+	/* Disable timer */
-+	if (vha->timer_active)
-+		qla2x00_stop_timer(vha);
-+
- 	/* Turn adapter off line */
- 	vha->flags.online = 0;
+ 	if (setup_can_queue > 0)
+@@ -751,8 +751,8 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ 	if (setup_cmd_per_lun > 0)
+ 		atari_scsi_template.cmd_per_lun = setup_cmd_per_lun;
  
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 0f96eb0ddbfa..fe05475ce5dc 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1166,11 +1166,12 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
- 	sector_t threshold;
- 	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
--	bool dif, dix;
- 	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
- 	bool write = rq_data_dir(rq) == WRITE;
- 	unsigned char protect, fua;
- 	blk_status_t ret;
-+	unsigned int dif;
-+	bool dix;
+-	/* Leave sg_tablesize at 0 on a Falcon! */
+-	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
++	/* Don't increase sg_tablesize on Falcon! */
++	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize > 0)
+ 		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
  
- 	ret = scsi_init_io(cmd);
- 	if (ret != BLK_STS_OK)
-diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
-index a9344eb4e047..dc2f6d2b46ed 100644
---- a/drivers/scsi/ufs/ufs_bsg.c
-+++ b/drivers/scsi/ufs/ufs_bsg.c
-@@ -98,6 +98,8 @@ static int ufs_bsg_request(struct bsg_job *job)
- 
- 	bsg_reply->reply_payload_rcv_len = 0;
- 
-+	pm_runtime_get_sync(hba->dev);
-+
- 	msgcode = bsg_request->msgcode;
- 	switch (msgcode) {
- 	case UPIU_TRANSACTION_QUERY_REQ:
-@@ -135,6 +137,8 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		break;
- 	}
- 
-+	pm_runtime_put_sync(hba->dev);
-+
- 	if (!desc_buff)
- 		goto out;
- 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-index 22dd4c457d6a..23a90c685dc6 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -1829,7 +1829,7 @@ static void cxgbit_fw4_ack(struct cxgbit_sock *csk, struct sk_buff *skb)
- 
- 	while (credits) {
- 		struct sk_buff *p = cxgbit_sock_peek_wr(csk);
--		const u32 csum = (__force u32)p->csum;
-+		u32 csum;
- 
- 		if (unlikely(!p)) {
- 			pr_err("csk 0x%p,%u, cr %u,%u+%u, empty.\n",
-@@ -1838,6 +1838,7 @@ static void cxgbit_fw4_ack(struct cxgbit_sock *csk, struct sk_buff *skb)
- 			break;
- 		}
- 
-+		csum = (__force u32)p->csum;
- 		if (unlikely(credits < csum)) {
- 			pr_warn("csk 0x%p,%u, cr %u,%u+%u, < %u.\n",
- 				csk,  csk->tid,
+ 	if (setup_hostid >= 0) {
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index 9c5566217ef6..b5dde9d0d054 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -464,7 +464,7 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
+ 		mac_scsi_template.can_queue = setup_can_queue;
+ 	if (setup_cmd_per_lun > 0)
+ 		mac_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
++	if (setup_sg_tablesize > 0)
+ 		mac_scsi_template.sg_tablesize = setup_sg_tablesize;
+ 	if (setup_hostid >= 0)
+ 		mac_scsi_template.this_id = setup_hostid & 7;
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 955e4c938d49..701b842296f0 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -501,7 +501,7 @@ static struct scsi_host_template sun3_scsi_template = {
+ 	.eh_host_reset_handler	= sun3scsi_host_reset,
+ 	.can_queue		= 16,
+ 	.this_id		= 7,
+-	.sg_tablesize		= SG_NONE,
++	.sg_tablesize		= 1,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.cmd_size		= NCR5380_CMD_SIZE,
+@@ -523,7 +523,7 @@ static int __init sun3_scsi_probe(struct platform_device *pdev)
+ 		sun3_scsi_template.can_queue = setup_can_queue;
+ 	if (setup_cmd_per_lun > 0)
+ 		sun3_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
++	if (setup_sg_tablesize > 0)
+ 		sun3_scsi_template.sg_tablesize = setup_sg_tablesize;
+ 	if (setup_hostid >= 0)
+ 		sun3_scsi_template.this_id = setup_hostid & 7;
+-- 
+2.23.0
+
