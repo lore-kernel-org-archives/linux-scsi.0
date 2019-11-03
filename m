@@ -1,69 +1,62 @@
-Return-Path: <SRS0=HJ87=Y2=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=nNaJ=Y3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_RCVD_SPACE_BRACKET,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B7BACA9EC7
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 18:35:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C883ECA9ED0
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 07:33:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4823121726
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 Nov 2019 18:35:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572719722;
-	bh=eiZzhL1O6YabUspGhnWYfrC3lKMGuzssP/86xUeYVEc=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=ndbOj4B6JPMatTaMnyxnZt/dckKVLJdh2XHVYZdONLdS9DyhfZGUmzc49zslvn1mM
-	 IHjAw8+iKkqa/RUKfAsXuCJ30RTkj9o1aUBfF9znFa4Xm/Yx1zKzXW6QqRpI1/K0LW
-	 mepEen6J6GIhzrUAPAPdk9tosGROqchtTJeWB4Xs=
+	by mail.kernel.org (Postfix) with ESMTP id A4F3B214D8
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 07:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727053AbfKBSfG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 Nov 2019 14:35:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49108 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726523AbfKBSfG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 2 Nov 2019 14:35:06 -0400
-Subject: Re: [GIT PULL] SCSI fixes for 5.4-rc5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572719706;
-        bh=eiZzhL1O6YabUspGhnWYfrC3lKMGuzssP/86xUeYVEc=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=LoeUDF08va9u6gGWljUU67yJTMANqVpTtJX3KhMXeASCb2z3C/kOUTj8jhQf9MxJz
-         sbFZEbkzUfghZbunZ2ht8+MhkKE5bI+Z10eyF2VltQAARgV3pjjof2j1VvMDJ/Pdk2
-         fhr2PIJzIicjJd+SZKpXs8tIdexuaWWvw4d7pS38=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1572656827.19347.17.camel@HansenPartnership.com>
-References: <1572656827.19347.17.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1572656827.19347.17.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: d3566abb1a1e7772116e4d50fb6a58d19c9802e5
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f83e148a410006397f01e96570e73038a3a261fa
-Message-Id: <157271970595.32009.17466862093149055769.pr-tracker-bot@kernel.org>
-Date:   Sat, 02 Nov 2019 18:35:05 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1727484AbfKCHdf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Nov 2019 02:33:35 -0500
+Received: from hn.kd.ny.adsl ([42.231.162.229]:4273 "HELO zoosbook.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1727459AbfKCHde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 3 Nov 2019 02:33:34 -0500
+Received: from unknown (HELO m1.gns.snv.thisdomainl.com) (Sun, 03 Nov 2019 16:33:20 +0900)
+        by mail.gimmicc.net with SMTP; Sun, 03 Nov 2019 16:33:20 +0900
+Received: from unknown (HELO mmx09.tilkbans.com) (Sun, 03 Nov 2019 16:17:25 +0900)
+        by mxs.perenter.com with LOCAL; Sun, 03 Nov 2019 16:17:25 +0900
+Received: from smtp.doneohx.com ([Sun, 03 Nov 2019 16:16:12 +0900])
+        by mts.locks.grgtween.net with ASMTP; Sun, 03 Nov 2019 16:16:12 +0900
+Message-ID: <6AB0529B.710C4D0D@zoosbook.com>
+Date:   Sun, 03 Nov 2019 15:46:23 +0900
+Reply-To: "zoosbook.com" <admin@zoosbook.com>
+From:   "zoosbook.com" <admin@zoosbook.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.12) Gecko/20080213 Thunderbird/2.0.0.12
+MIME-Version: 1.0
+To:     <linux-scsi@vger.kernel.org>, <linux-smp@vger.kernel.org>
+Subject: FREE Bestiality Social Network
+Content-Type: text/plain;
+        charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 01 Nov 2019 18:07:07 -0700:
+Hello, 
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Bestiality Social Networking Platform. With pictures, videos and friend
+about bestiality and zoophilia porn. 
+Here you can meet and talk with people that love zoo sex.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f83e148a410006397f01e96570e73038a3a261fa
+Register for a free account with us today
+https://www.zoosbook.com/register
 
-Thank you!
+Let your animalic thoughts get alive.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+After you`ll get a feeling of the things inside, please give us a nice
+review here
+https://www.scamadviser.com/check-website/zoosbook.com
+
+
+See you inside
+
+
