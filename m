@@ -2,61 +2,90 @@ Return-Path: <SRS0=nNaJ=Y3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_RCVD_SPACE_BRACKET,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-10.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C883ECA9ED0
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 07:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16805CA9ED0
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 08:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4F3B214D8
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 07:33:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E216B21655
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Nov 2019 08:59:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727484AbfKCHdf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Nov 2019 02:33:35 -0500
-Received: from hn.kd.ny.adsl ([42.231.162.229]:4273 "HELO zoosbook.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1727459AbfKCHde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 3 Nov 2019 02:33:34 -0500
-Received: from unknown (HELO m1.gns.snv.thisdomainl.com) (Sun, 03 Nov 2019 16:33:20 +0900)
-        by mail.gimmicc.net with SMTP; Sun, 03 Nov 2019 16:33:20 +0900
-Received: from unknown (HELO mmx09.tilkbans.com) (Sun, 03 Nov 2019 16:17:25 +0900)
-        by mxs.perenter.com with LOCAL; Sun, 03 Nov 2019 16:17:25 +0900
-Received: from smtp.doneohx.com ([Sun, 03 Nov 2019 16:16:12 +0900])
-        by mts.locks.grgtween.net with ASMTP; Sun, 03 Nov 2019 16:16:12 +0900
-Message-ID: <6AB0529B.710C4D0D@zoosbook.com>
-Date:   Sun, 03 Nov 2019 15:46:23 +0900
-Reply-To: "zoosbook.com" <admin@zoosbook.com>
-From:   "zoosbook.com" <admin@zoosbook.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.12) Gecko/20080213 Thunderbird/2.0.0.12
+        id S1726968AbfKCI7t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Nov 2019 03:59:49 -0500
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:39017 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726408AbfKCI7t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Nov 2019 03:59:49 -0500
+X-IronPort-AV: E=Sophos;i="5.68,262,1569276000"; 
+   d="scan'208";a="410041714"
+Received: from abo-45-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.45])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Nov 2019 09:59:47 +0100
+Date:   Sun, 3 Nov 2019 09:59:47 +0100 (CET)
+From:   Julia Lawall <julia.lawall@lip6.fr>
+X-X-Sender: jll@hadrien
+To:     Can Guo <cang@codeaurora.org>
+cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        kbuild-all@lists.01.org
+Subject: [PATCH] scsi: ufs: fix call_kern.cocci warnings
+Message-ID: <alpine.DEB.2.21.1911030955460.2744@hadrien>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-To:     <linux-scsi@vger.kernel.org>, <linux-smp@vger.kernel.org>
-Subject: FREE Bestiality Social Network
-Content-Type: text/plain;
-        charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello, 
+From: kbuild test robot <lkp@intel.com>
 
-Bestiality Social Networking Platform. With pictures, videos and friend
-about bestiality and zoophilia porn. 
-Here you can meet and talk with people that love zoo sex.
+Function ufshcd_dump_regs called from ufshcd_intr inside a lock
+but uses GFP_KERNEL.
 
-Register for a free account with us today
-https://www.zoosbook.com/register
+Generated by: scripts/coccinelle/locks/call_kern.cocci
 
-Let your animalic thoughts get alive.
+Fixes: 3393ec7d5dc1 ("scsi: ufs: Fix irq return code")
+CC: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Signed-off-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
+---
 
-After you`ll get a feeling of the things inside, please give us a nice
-review here
-https://www.scamadviser.com/check-website/zoosbook.com
+url:    https://github.com/0day-ci/linux/commits/Can-Guo/UFS-driver-general-fixes-bundle-3/20191103-092121
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+:::::: branch date: 2 hours ago
+:::::: commit date: 2 hours ago
 
+Another approach would be to reorganize the code to not use this function
+in printing the error message from the interrupt handler, or to reorganize
+the code in some other way.
 
-See you inside
+ ufshcd.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -117,7 +117,7 @@ int ufshcd_dump_regs(struct ufs_hba *hba
+ 	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
+ 		return -EINVAL;
+
+-	regs = kzalloc(len, GFP_KERNEL);
++	regs = kzalloc(len, GFP_ATOMIC);
+ 	if (!regs)
+ 		return -ENOMEM;
 
