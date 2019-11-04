@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB14CCA9EBB
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 01:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36B60CA9EBB
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 01:36:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DA6C222CA
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 01:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A04B222C7
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 01:36:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jhDKIXFq";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YcQBFh+v"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hUGX4eBg";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HEqxaCv0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728566AbfKDBg2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Nov 2019 20:36:28 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:43664 "EHLO
+        id S1728828AbfKDBgi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Nov 2019 20:36:38 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:44000 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728288AbfKDBg2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Nov 2019 20:36:28 -0500
+        with ESMTP id S1728288AbfKDBgi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Nov 2019 20:36:38 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id BFF7360F62; Mon,  4 Nov 2019 01:36:27 +0000 (UTC)
+        id 806F460FF7; Mon,  4 Nov 2019 01:36:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572831387;
-        bh=YGs0HFAfG990zlYDTL4p8WA1cAzECcjOWDR3bJ3XKZ4=;
+        s=default; t=1572831397;
+        bh=A09Hg8Gubfo22q2oteGE+XWVmGvlbeGYL8Kj6AbIyz4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jhDKIXFq7FFLhT2bFAkJP4V5OuSa1moMRAY5PYD7CFzUAtE91fU8dvDSwrAgtZkaL
-         2ioo9dIBHjhaQOhMMusHBNxHz4bxRO5Gkd7nfEszxOcCqn2WMMEdtgnlfWFBnsQjbP
-         mzJ9PVU+pzo3NjWGhtY4wDkMY3aJdNilQJEWODew=
+        b=hUGX4eBgih7IYdFJRZGAxdOwevNfqcALMufFEvPGpT6O9rBnxK8kADhEno0oIoh3A
+         ykfkL5zQH1olk4dAYzq2o22dcKkK21h4z2u4H/vhVxxgbEUa6fbsfnuruZXzED7CmJ
+         AQ8UlArKIIYZt1LzZ3N/eThrCm2rR5GLoFfCTwYg=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0DA5560F62;
-        Mon,  4 Nov 2019 01:36:26 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6D2B360FBA;
+        Mon,  4 Nov 2019 01:36:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572831386;
-        bh=YGs0HFAfG990zlYDTL4p8WA1cAzECcjOWDR3bJ3XKZ4=;
+        s=default; t=1572831396;
+        bh=A09Hg8Gubfo22q2oteGE+XWVmGvlbeGYL8Kj6AbIyz4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YcQBFh+vhJLFoHS2BIrmR1+6M2XqBk/nDlK+WKlpH3aEAXiJkA5txG6EF4J9wIJBL
-         03pEp+4NLDR5EHIz6jHnt4aBvfrdGys8qrQa3YAUgVIkeQJSx1HQWFKRYJpQx3c+n6
-         ka4V3vNH+lu1iYqDB8dFHQ6/jBC1Fu/JKDxMX6Pg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0DA5560F62
+        b=HEqxaCv0pvIUJeSnqfbD4ngOQBe/1NXxsLJJi8NNxUDHElaD3Y7h8aBXZ2UM9EkOh
+         aLqYZqrdvnGesQg5ErHtqaF9ShR81nAhBECq2kgFk/fbRkkDnzYp9Fs2KpSh+HHvsg
+         D2UgKehI056ktIiEFhc4XAdwrrugOrEwhPpXCAKU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6D2B360FBA
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -63,9 +63,9 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         Subhash Jadavani <subhashj@codeaurora.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 4/7] scsi: ufs: Fix register dump caused sleep in atomic context
-Date:   Sun,  3 Nov 2019 17:35:59 -0800
-Message-Id: <1572831362-22779-5-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v2 6/7] scsi: ufs: Abort gating if clock on request is pending
+Date:   Sun,  3 Nov 2019 17:36:01 -0800
+Message-Id: <1572831362-22779-7-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1572831362-22779-1-git-send-email-cang@codeaurora.org>
 References: <1572831362-22779-1-git-send-email-cang@codeaurora.org>
@@ -74,28 +74,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufshcd_print_host_regs() can be called by interrupt handler, but it may
-sleep due to ufshcd_dump_regs() allocates the dump buffer memory with flag
-GFP_KERNEL. Fix it by changing GFP_KERNEL to GFP_ATMOIC.
+From: Asutosh Das <asutoshd@codeaurora.org>
 
+This change attempts to abort gating of clocks if a
+request to turn-on clocks is pending.
+This would in turn avoid turning OFF and back ON the
+clocks.
+
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
  drivers/scsi/ufs/ufshcd.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f12f5a7..671ea2a 100644
+index 8d1b04f..7a5a904 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -117,7 +117,7 @@ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 	if (offset % 4 != 0 || len % 4 != 0) /* keep readl happy */
- 		return -EINVAL;
- 
--	regs = kzalloc(len, GFP_KERNEL);
-+	regs = kzalloc(len, GFP_ATOMIC);
- 	if (!regs)
- 		return -ENOMEM;
- 
+@@ -1610,7 +1610,7 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	 * state to CLKS_ON.
+ 	 */
+ 	if (hba->clk_gating.is_suspended ||
+-		(hba->clk_gating.state == REQ_CLKS_ON)) {
++		(hba->clk_gating.state != REQ_CLKS_OFF)) {
+ 		hba->clk_gating.state = CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
