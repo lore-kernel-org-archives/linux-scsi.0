@@ -2,139 +2,106 @@ Return-Path: <SRS0=MVi0=Y4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64314CA9EB5
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 18:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4C72CA9EC9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 23:44:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45E1920578
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 18:20:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A75E820717
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 23:44:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="o05vGWKJ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eRCQEVHm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728346AbfKDSUL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Nov 2019 13:20:11 -0500
-Received: from iolanthe.rowland.org ([192.131.102.54]:55182 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1728971AbfKDSUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Nov 2019 13:20:11 -0500
-Received: (qmail 5157 invoked by uid 2102); 4 Nov 2019 13:20:10 -0500
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 4 Nov 2019 13:20:10 -0500
-Date:   Mon, 4 Nov 2019 13:20:10 -0500 (EST)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@iolanthe.rowland.org
-To:     Andrea Vai <andrea.vai@unipv.it>
-cc:     Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>
-Subject: Re: Slow I/O on USB media after commit f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-In-Reply-To: <38f1974fad3a98ca578fcf808a843cbd28325e44.camel@unipv.it>
-Message-ID: <Pine.LNX.4.44L0.1911041316390.1689-200000@iolanthe.rowland.org>
+        id S2387409AbfKDXoS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Nov 2019 18:44:18 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57754 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387400AbfKDXoS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Nov 2019 18:44:18 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B5EA860E07; Mon,  4 Nov 2019 23:44:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572911056;
+        bh=EYW8abyE8lJm8s9y7qGJ4MoU1MjvPiVlESI93EIvGVM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=o05vGWKJ4TCep6Hn7jc9yhOW3zkUofrWiCjvTUcUexx/SXDmpfODQbGvliSV3Cglr
+         m096Ah5thZPeSnkvvGAIXhlmDS+G53owwjwHrysxhWf+yRzvXbccMPoY9vNDtB913f
+         5GaxfigMEEOUTFIzvB+4Kitc4nw38w5FS1wfFTxc=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 3080C60D7C;
+        Mon,  4 Nov 2019 23:44:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572911055;
+        bh=EYW8abyE8lJm8s9y7qGJ4MoU1MjvPiVlESI93EIvGVM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=eRCQEVHm6BTWoZ77VL8qmiH4MrC7Jd/x1nU1V9JFv8tF6nQINUNK6ClHVFLatr+W2
+         MCTqRoSF9h7iTmfEKaZr5vHPrnybElrH88gHsqU9iAkWh8R9s7wYJx/EnL5mWGcZ7A
+         0i/elXwCqxjPfRh5fHzHCqIWP45auqrZEIFKCdu8=
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1559625215-543176100-1572891610=:1689"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 05 Nov 2019 07:44:13 +0800
+From:   cang@codeaurora.org
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v1 1/2] scsi: ufs: Introduce a vops for resetting host
+ controller
+In-Reply-To: <MN2PR04MB69911784473463D0926AE3B5FC7F0@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1571804009-29787-1-git-send-email-cang@codeaurora.org>
+ <1571804009-29787-2-git-send-email-cang@codeaurora.org>
+ <MN2PR04MB69911784473463D0926AE3B5FC7F0@MN2PR04MB6991.namprd04.prod.outlook.com>
+Message-ID: <1ab0a928184dd11540726d6456056e02@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-  Send mail to mime@docserver.cac.washington.edu for more info.
-
----1559625215-543176100-1572891610=:1689
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-
-On Mon, 4 Nov 2019, Andrea Vai wrote:
-
-> > The "linux" directory is the one generated by a fresh git clone:
-> > 
-> > git clone
-> > git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> > 
-> > What am I doing wrong?
-> > 
+On 2019-11-04 22:28, Avri Altman wrote:
+> Hi,
+>> 
+>> Some UFS host controllers need their specific implementations of 
+>> resetting to
+>> get them into a good state. Provide a new vops to allow the platform 
+>> driver to
+>> implement this own reset operation.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Did you withdraw from this patches and insert them to one of your fix 
+> bundle?
+> I couldn't tell.
+> As this is a vop, in what way its functionality can't be included in
+> the device reset that was recently added?
 > 
-> Meanwhile, Alan tried to help me and gave me another patch (attached),
-> which doesn't work too, but gives a different error: "The git diff
-> header does not contain information about the file once removed 1
-> initial component of the path (row 14)" (actually, this is my
-> translation from the original message in Italian: "error:
-> l'intestazione git diff non riporta le informazioni sul file una volta
-> rimosso 1 componente iniziale del percorso (riga 14)")
-> 
-> I tested the two patches after a fresh git clone today, a few minutes
-> ago.
-> 
-> What can I do?
+> Thanks,
+> Avri
 
-You should be able to do something like this:
+Hi Avri,
 
-	cd linux
-	patch -p1 </path/to/patch2
+Sorry for making you confused.
+Yes, I dropped this series because it cannot fulfil its purpose anymore. 
+I come up with a way which puts the reset in the right place in UFS QCOM 
+platfrom driver without an extra vops, so I inserted the two changes in 
+fix bundle 3.
 
-and that should work with no errors.  You don't need to use git to 
-apply a patch.
+Thanks,
+Can Guo.
 
-In case that patch2 file was mangled somewhere along the way, I have 
-attached a copy to this message.
-
-Alan Stern
-
----1559625215-543176100-1572891610=:1689
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=patch2
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.LNX.4.44L0.1911041320100.1689@iolanthe.rowland.org>
-Content-Description: 
-Content-Disposition: attachment; filename=patch2
-
-RnJvbTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPg0NCg0NCkEg
-c2NoZWR1bGVyIG1pZ2h0IGJlIGF0dGFjaGVkIGV2ZW4gZm9yIGRldmljZXMg
-ZXhwb3NpbmcgbW9yZSB0aGFuDQ0Kb25lIGhhcmR3YXJlIHF1ZXVlLCBzbyB0
-aGUgY2hlY2sgZm9yIHRoZSBudW1iZXIgb2YgaGFyZHdhcmUgcXVldWUNDQpp
-cyBwb2ludGxlc3MgYW5kIHNob3VsZCBiZSByZW1vdmVkLg0NCg0NClNpZ25l
-ZC1vZmYtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4NDQot
-LS0NDQogYmxvY2svYmxrLW1xLmMgfCAgICA3ICstLS0tLS0NCiAxIGZpbGUg
-Y2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDYgZGVsZXRpb25zKC0pDQoNDQpk
-aWZmIC0tZ2l0IGEvYmxvY2svYmxrLW1xLmMgYi9ibG9jay9ibGstbXEuYw0N
-CmluZGV4IDQ0ZmYzYzE0NDJhNC4uZmFhYjU0MmU0ODM2IDEwMDY0NA0NCklu
-ZGV4OiB1c2ItZGV2ZWwvYmxvY2svYmxrLW1xLmMNCj09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT0NCi0tLSB1c2ItZGV2ZWwub3JpZy9ibG9jay9ibGstbXEuYw0K
-KysrIHVzYi1kZXZlbC9ibG9jay9ibGstbXEuYw0KQEAgLTE5NDYsNyArMTk0
-Niw2IEBAIHN0YXRpYyB2b2lkIGJsa19hZGRfcnFfdG9fcGx1ZyhzdHJ1Y3Qg
-YmwNCiANCiBzdGF0aWMgYmxrX3FjX3QgYmxrX21xX21ha2VfcmVxdWVzdChz
-dHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0IGJpbyAqYmlvKQ0KIHsN
-Ci0JY29uc3QgaW50IGlzX3N5bmMgPSBvcF9pc19zeW5jKGJpby0+Ymlfb3Bm
-KTsNCiAJY29uc3QgaW50IGlzX2ZsdXNoX2Z1YSA9IG9wX2lzX2ZsdXNoKGJp
-by0+Ymlfb3BmKTsNCiAJc3RydWN0IGJsa19tcV9hbGxvY19kYXRhIGRhdGEg
-PSB7IC5mbGFncyA9IDB9Ow0KIAlzdHJ1Y3QgcmVxdWVzdCAqcnE7DQpAQCAt
-MTk5Miw4ICsxOTkxLDcgQEAgc3RhdGljIGJsa19xY190IGJsa19tcV9tYWtl
-X3JlcXVlc3Qoc3RydQ0KIAkJLyogYnlwYXNzIHNjaGVkdWxlciBmb3IgZmx1
-c2ggcnEgKi8NCiAJCWJsa19pbnNlcnRfZmx1c2gocnEpOw0KIAkJYmxrX21x
-X3J1bl9od19xdWV1ZShkYXRhLmhjdHgsIHRydWUpOw0KLQl9IGVsc2UgaWYg
-KHBsdWcgJiYgKHEtPm5yX2h3X3F1ZXVlcyA9PSAxIHx8IHEtPm1xX29wcy0+
-Y29tbWl0X3JxcyB8fA0KLQkJCQkhYmxrX3F1ZXVlX25vbnJvdChxKSkpIHsN
-CisJfSBlbHNlIGlmIChwbHVnICYmIChxLT5tcV9vcHMtPmNvbW1pdF9ycXMg
-fHwgIWJsa19xdWV1ZV9ub25yb3QocSkpKSB7DQogCQkvKg0KIAkJICogVXNl
-IHBsdWdnaW5nIGlmIHdlIGhhdmUgYSAtPmNvbW1pdF9ycXMoKSBob29rIGFz
-IHdlbGwsIGFzDQogCQkgKiB3ZSBrbm93IHRoZSBkcml2ZXIgdXNlcyBiZC0+
-bGFzdCBpbiBhIHNtYXJ0IGZhc2hpb24uDQpAQCAtMjA0MSw5ICsyMDM5LDYg
-QEAgc3RhdGljIGJsa19xY190IGJsa19tcV9tYWtlX3JlcXVlc3Qoc3RydQ0K
-IAkJCWJsa19tcV90cnlfaXNzdWVfZGlyZWN0bHkoZGF0YS5oY3R4LCBzYW1l
-X3F1ZXVlX3JxLA0KIAkJCQkJJmNvb2tpZSk7DQogCQl9DQotCX0gZWxzZSBp
-ZiAoKHEtPm5yX2h3X3F1ZXVlcyA+IDEgJiYgaXNfc3luYykgfHwNCi0JCQkh
-ZGF0YS5oY3R4LT5kaXNwYXRjaF9idXN5KSB7DQotCQlibGtfbXFfdHJ5X2lz
-c3VlX2RpcmVjdGx5KGRhdGEuaGN0eCwgcnEsICZjb29raWUpOw0KIAl9IGVs
-c2Ugew0KIAkJYmxrX21xX3NjaGVkX2luc2VydF9yZXF1ZXN0KHJxLCBmYWxz
-ZSwgdHJ1ZSwgdHJ1ZSk7DQogCX0NCg==
----1559625215-543176100-1572891610=:1689--
