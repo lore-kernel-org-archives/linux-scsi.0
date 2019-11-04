@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E2BCA9ED3
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 09:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35087CA9ECF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 09:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C2C020656
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 09:02:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 088EC20656
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Nov 2019 09:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728245AbfKDJCb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Nov 2019 04:02:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:57252 "EHLO mx1.suse.de"
+        id S1728390AbfKDJC1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Nov 2019 04:02:27 -0500
+Received: from mx2.suse.de ([195.135.220.15]:57264 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728255AbfKDJCR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728310AbfKDJCR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 4 Nov 2019 04:02:17 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 5B13DB4BC;
+        by mx1.suse.de (Postfix) with ESMTP id 9DFB3B445;
         Mon,  4 Nov 2019 09:02:11 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,9 +28,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Bart van Assche <bvanassche@acm.org>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/52] megaraid: use standard SAM status codes
-Date:   Mon,  4 Nov 2019 10:01:09 +0100
-Message-Id: <20191104090151.129140-11-hare@suse.de>
+Subject: [PATCH 51/52] scsi: Kill DRIVER_MEDIA, DRIVER_SOFT, and DRIVER_BUSY
+Date:   Mon,  4 Nov 2019 10:01:50 +0100
+Message-Id: <20191104090151.129140-52-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191104090151.129140-1-hare@suse.de>
 References: <20191104090151.129140-1-hare@suse.de>
@@ -39,59 +39,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use standard SAM status codes and omit the explicit shift to convert
-from linux-specific ones.
+Unused.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/message/fusion/mptscsih.c | 2 +-
+ drivers/scsi/constants.c          | 2 +-
+ include/scsi/scsi.h               | 8 --------
+ include/trace/events/scsi.h       | 5 +----
+ 4 files changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index ff6d4aa92421..21e190c38b97 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1581,7 +1581,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
- 
- 				cmd->result = (DRIVER_SENSE << 24) |
- 					(DID_OK << 16) |
--					(CHECK_CONDITION << 1);
-+					SAM_STAT_CHECK_CONDITION;
- 			}
- 			else {
- 				if (mbox->m_out.cmd == MEGA_MBOXCMD_EXTPTHRU) {
-@@ -1591,11 +1591,11 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
- 
- 					cmd->result = (DRIVER_SENSE << 24) |
- 						(DID_OK << 16) |
--						(CHECK_CONDITION << 1);
-+						SAM_STAT_CHECK_CONDITION;
- 				} else {
- 					cmd->sense_buffer[0] = 0x70;
- 					cmd->sense_buffer[2] = ABORTED_COMMAND;
--					cmd->result |= (CHECK_CONDITION << 1);
-+					cmd->result |= SAM_STAT_CHECK_CONDITION;
- 				}
- 			}
- 			break;
-@@ -1613,7 +1613,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index f0737c57ed5f..0064547cef1a 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -703,7 +703,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 		case MPI_IOCSTATUS_BUSY:			/* 0x0002 */
+ 		case MPI_IOCSTATUS_INSUFFICIENT_RESOURCES:	/* 0x0006 */
+ 			/* CHECKME!
+-			 * Maybe: DRIVER_BUSY | SUGGEST_RETRY | DID_SOFT_ERROR (retry)
++			 * Maybe: SUGGEST_RETRY | DID_SOFT_ERROR (retry)
+ 			 * But not: DID_BUS_BUSY lest one risk
+ 			 * killing interrupt handler:-(
  			 */
- 			if( cmd->cmnd[0] == TEST_UNIT_READY ) {
- 				cmd->result |= (DID_ERROR << 16) |
--					(RESERVATION_CONFLICT << 1);
-+					SAM_STAT_RESERVATION_CONFLICT;
- 			}
- 			else
- 			/*
-@@ -1625,7 +1625,7 @@ mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
- 					 cmd->cmnd[0] == RELEASE) ) {
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 57c544fd8c6b..be7eacb67841 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -407,7 +407,7 @@ static const char * const hostbyte_table[]={
+ "DID_NEXUS_FAILURE" };
  
- 				cmd->result |= (DID_ERROR << 16) |
--					(RESERVATION_CONFLICT << 1);
-+					SAM_STAT_RESERVATION_CONFLICT;
- 			}
- 			else
- #endif
+ static const char * const driverbyte_table[]={
+-"DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA"};
++"DRIVER_OK"};
+ 
+ const char *scsi_hostbyte_string(int result)
+ {
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index af9f9ed5321e..acd0b2182db1 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -161,14 +161,6 @@ static inline int scsi_is_wlun(u64 lun)
+ #define DID_MEDIUM_ERROR  0x13  /* Medium error */
+ #define DRIVER_OK       0x00	/* Driver status                           */
+ 
+-/*
+- *  These indicate the error that occurred, and what is available.
+- */
+-
+-#define DRIVER_BUSY         0x01
+-#define DRIVER_SOFT         0x02
+-#define DRIVER_MEDIA        0x03
+-
+ /*
+  * Internal return values.
+  */
+diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
+index b2d3ce9e3990..5984db6996bb 100644
+--- a/include/trace/events/scsi.h
++++ b/include/trace/events/scsi.h
+@@ -127,10 +127,7 @@
+ #define scsi_driverbyte_name(result)	{ result, #result }
+ #define show_driverbyte_name(val)				\
+ 	__print_symbolic(val,					\
+-		scsi_driverbyte_name(DRIVER_OK),		\
+-		scsi_driverbyte_name(DRIVER_BUSY),		\
+-		scsi_driverbyte_name(DRIVER_SOFT),		\
+-		scsi_driverbyte_name(DRIVER_MEDIA))
++		scsi_driverbyte_name(DRIVER_OK))
+ 
+ #define scsi_msgbyte_name(result)	{ result, #result }
+ #define show_msgbyte_name(val)					\
 -- 
 2.16.4
 
