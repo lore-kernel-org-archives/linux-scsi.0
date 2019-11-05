@@ -2,93 +2,114 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1038CC5DF61
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1CBCC5DF60
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 16:18:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB8CE21929
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:39:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B6012087E
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 16:18:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ocp9xiaK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MrFnY+1l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389760AbfKEPj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 10:39:59 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:48538 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727889AbfKEPj6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 10:39:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=XQdcZ/rCMxPfhUJE8nbWkRrJsdxA+Vm56qg50/+E1Cw=; b=Ocp9xiaKzYOCoNB+oT3sxZPTQ
-        GZZmpeZz1Pkbx3hL5igN2A9nnxgJeh5ZX0h0RFq6u88ua22HGxw6tlKR923/wrmQM4d9cJFXkqmXz
-        7p6KUsYbiy3UTrhyHmOUjEl4g1vqoBwf3i4ju5z28ZkYAEfqGXc4DjckNzm91NOiLwHOAtuFuuhfP
-        /u+IK73URb7cxkeIV7/gM5hFZ3aGu6h+2cn2G7ik8OqisFdebxIl9EiPUqch0yc5uCTcNG4K9OCbX
-        VW4f/V+e6xpqbfC64GJBGkXaIedjYx1UzWAGjYoerE2gtLIaBhKqYngoD0iVUT+cjBXJ4SKNeqg0x
-        wuaWM8E5g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iS0w1-0000HC-RP; Tue, 05 Nov 2019 15:39:57 +0000
-Date:   Tue, 5 Nov 2019 07:39:57 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Kim Boojin <boojin.kim@samsung.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net
-Subject: Re: [PATCH v5 3/9] block: blk-crypto for Inline Encryption
-Message-ID: <20191105153957.GA29320@infradead.org>
-References: <20191028072032.6911-1-satyat@google.com>
- <20191028072032.6911-4-satyat@google.com>
- <20191031175713.GA23601@infradead.org>
- <20191031205045.GG16197@mit.edu>
- <20191031212234.GA32262@infradead.org>
- <20191105015411.GB692@sol.localdomain>
+        id S2390137AbfKEQSb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 11:18:31 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:36673 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390104AbfKEQSb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 11:18:31 -0500
+Received: by mail-il1-f196.google.com with SMTP id s75so18750557ilc.3
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 08:18:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=rZbXs0ks5q9thpmkAf+NXg03w86YAdIB+dgzaOSSYBY=;
+        b=MrFnY+1l063Skn6mdAg7BTDZ8Av963tSd2sbyFt/wrxN4Ehmv1lT6vwMgowDu5Nzss
+         W4/SFApmxABt7WJ3jcrys10Zz5/EAELDS9yoGVJbUv8B80/PYPERuqD6uQYzHivIrroA
+         b1KECbhMz1j2N2+SPi1GxET9Hr6S5qEwOlN3B8Ofs5Q80WN7WBIgs+Q0GnshZN1Buto6
+         txJaFpHdBNUa33AUsI0tbQOCX2ociXeDzge+nIU1Ut+kXitxlawODkwVsuKBAbRnrKMt
+         ezvD6EAdbnfrlk6Xx1AcXmU7L4vkiOBYcHd36XDjsiRBqns6WGHcRhteXZXvRxcbXQ74
+         yOpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=rZbXs0ks5q9thpmkAf+NXg03w86YAdIB+dgzaOSSYBY=;
+        b=S9uWnOlOhNxtlW/QajlKESW2h4HAJ91CneThm6KQ/ZUfmYYUpRk/A3pNi0PWK3Ufkv
+         8cEuKinXvD7IaLD2XG1sJO3lm6j1jyyaZtb0Z4eNVfXkoRFKlKFR43ItT+QPv76QnN5o
+         PRqqiUieGkUKQ9SzVi33T7BQMw4VmJNA+VWPN5Qdjn2j5WKmKn8732aKCw3NhAZdCJZO
+         XLByXqUNbTIyxVs9kVDmCMrtdILCGQamYHdZRBvJbdgCtJtSYbfpBf6LooECjXvdsycx
+         nyuGxRqSdqPnyVJnHvR2DAGFz+dqzM7JQgQIwUCVLieh+h2SS7QZ6JKIE6cjrylvJ9K6
+         Mmrw==
+X-Gm-Message-State: APjAAAVilG0+1zwEmPs85q/nSv2i4kH1DTja8jiAqEMHlyGu0w7KqLzv
+        AT28O5RVKFKXe6MHAoNP9iiO5ENSQML3QNoqcvE=
+X-Google-Smtp-Source: APXvYqxKJ/5LrU3AOe0WjPlMGnmP93xUmkmRkAg2aZOVDNIKEUIbk2nvTCKHNyb3CssmgBXJF3scVA+wG9iGWAd2og8=
+X-Received: by 2002:a92:ca8d:: with SMTP id t13mr7171235ilo.58.1572970709845;
+ Tue, 05 Nov 2019 08:18:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191105015411.GB692@sol.localdomain>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20191029230710.211926-1-bvanassche@acm.org> <20191029230710.211926-4-bvanassche@acm.org>
+ <MN2PR04MB69914B9FA252E1B0A05493BAFC600@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <MN2PR04MB6991FD5665C0C1E7DEF7854BFC7F0@MN2PR04MB6991.namprd04.prod.outlook.com>
+In-Reply-To: <MN2PR04MB6991FD5665C0C1E7DEF7854BFC7F0@MN2PR04MB6991.namprd04.prod.outlook.com>
+From:   Alim Akhtar <alim.akhtar@gmail.com>
+Date:   Tue, 5 Nov 2019 21:47:53 +0530
+Message-ID: <CAGOxZ51AHByBFsMiKG_-pGjVe4=1ijQnUipS=Gjq1pYPsCKQGA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ufs: Remove .setup_xfer_req()
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Yaniv Gardi <ygardi@codeaurora.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 04, 2019 at 06:01:17PM -0800, Eric Biggers wrote:
-> I think that "Severely bloating the per-I/O data structure" is an exaggeration,
-> since that it's only 32 bytes, and it isn't in struct bio directly but rather in
-> struct bio_crypt_ctx...
+Hi
 
-Yes, and none of that is needed for the real inline crypto.  And I think
-we can further reduce the overhead of bio_crypt_ctx once we have the
-basiscs sorted out.  If we want to gain more traction we need to reduce
-the I/O to a minimum.
+On Mon, Nov 4, 2019 at 6:29 PM Avri Altman <Avri.Altman@wdc.com> wrote:
+>
+> As no response from Kiwoong Kim:
+>
+> >
+> >
+> > + Kiwoong Kim
+Looks like he is not active here.
+> >
+> > >
+> > > Since the function ufshcd_vops_setup_xfer_req() is the only user of
+> > > the setup_xfer_req function pointer and since that function pointer is
+> > > always zero, remove both this function and the function pointer. This
+> > > patch does not change any functionality.
+> > >
+> > > Cc: Yaniv Gardi <ygardi@codeaurora.org>
+> > > Cc: Subhash Jadavani <subhashj@codeaurora.org>
+> > > Cc: Stanley Chu <stanley.chu@mediatek.com>
+> > > Cc: Avri Altman <avri.altman@wdc.com>
+> > > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> > Since this was introduced only a couple of years ago, Maybe better to CC the
+> > author Kiwoong Kim <kwmad.kim@samsung.com> Before removing this
+> > altogether.
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-> In any case, Satya, it might be a good idea to reorganize this patchset so that
-> it first adds all logic that's needed for "real" inline encryption support
-> (including the needed parts of blk-crypto.c), then adds the crypto API fallback
-> as a separate patch.  That would separate the concerns more cleanly and make the
-> patchset easier to review, and make it easier to make the fallback
-> de-configurable or even remove it entirely if that turns out to be needed.
+Let me check and reconfirm this, give a day or two.
+It will be good if am copied to the ufs patch (I hope
+get_maintainer.pl still pointout my email)
+thanks
 
-Yes, that is a good idea.  Not just in terms of patch, but also in terms
-of code organization.  The current structure is pretty weird with 3
-files that are mostly tighly integrated, except that one also has the
-software implementations.  So what I think we need at a minimum is:
-
- - reoranizize that we have say block/blk-crypt.c for all the inline
-   crypto infrastructure, and block/blk-crypy-sw.c for the actual
-   software crypto implementation.
- - remove all the fields only needed for software crypto from
-   bio_crypt_ctx, and instead clone the bio into a bioset with the
-   additional fields only when we use the software implementation, so
-   that there is no overhead for the hardware path.
+-- 
+Regards,
+Alim
