@@ -2,131 +2,190 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C44FDC010C6
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3D8C010A2
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:59:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98A6B21D6C
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:48:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3E0621D71
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:59:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="KI9+aUbc"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="MAnMWtsj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388155AbfKELsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 06:48:47 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:38876 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730816AbfKELsr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 06:48:47 -0500
-Received: by mail-wm1-f68.google.com with SMTP id z19so15607247wmk.3
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 03:48:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=LpNq9BZEzcBsPjl2fwGhxUI4p8CxhaTMp7/DMtc0Tzw=;
-        b=KI9+aUbcov74z4OaAXNWUWbeLzdg8DbG3S2miuQLMt3Uml7yDXyPmnBaJDTbk0eUef
-         9wiZ7OlgVcK3aYQCtsAnJBZwLGI5ogA7nDHzAyDVvfwxe6YbctPHYwocPHyS/bycuxgI
-         g2uQJ0c4jvgU//F3SyBAddI9l83920U/bo1QcaBmBLgSCeouEBPFpii3p+64ndRAxG97
-         IHGnjUZb4ehLb+agNJlsusvEEaR7EFxQ2gAIFckLDhyOR4WZkhRay33ZVG7y0cBGBAeb
-         Ld3gqMYS9GyNYJmzKdpHsh+whHAjT8yJAGOHzRrU1aG98bKQeLWAMmX5PaKZignuVoD1
-         SNNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=LpNq9BZEzcBsPjl2fwGhxUI4p8CxhaTMp7/DMtc0Tzw=;
-        b=YlLQ5WRK85cff9/8JXhTfsGYX0fH59yWuGolcLDfGR/yio+Xe+X9jAEKCJL0xOOdDP
-         AZbnCfF6XfXsy4WzpUPXi3cET3q1FcqgVgULEawgb4d2pJrstE7kp7XvNZVdxE4Fmrcv
-         cE8w/9l7i4+CgUcG39agiQ6Ig9NWDKdZz61W5DRxmSoEGxSL7sczPyGkp+ZhpYisXFFd
-         FlSHvNuRIles+RkyLwuT9KLVUhbd+6ELKQz4YG32py47PqDsafWtzbMgclbm5zuHcOq2
-         AMnE9l8lVjMeFXrhLGHuB9VVjzQph1jZq9+dUW3Tcn5vO6FCgTtPgB2FQKeTEQdcOb/k
-         oPUw==
-X-Gm-Message-State: APjAAAXbXyuGcqbR3+QPuCXl5o5NsHyGHovDQXfyrRBLxiZZZwzSIeQu
-        egSst2mYxKiu7p/v2pMs0b+xLQ==
-X-Google-Smtp-Source: APXvYqweS3le3W871Mi2XCp7mQy9hB83kcFi9F1QrG1nG+PCkN1aNHbQ6+Gba2cPfasng8QNYKKYHw==
-X-Received: by 2002:a7b:ca51:: with SMTP id m17mr3567639wml.110.1572954524617;
-        Tue, 05 Nov 2019 03:48:44 -0800 (PST)
-Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
-        by smtp.gmail.com with ESMTPSA id v128sm26856481wmb.14.2019.11.05.03.48.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2019 03:48:43 -0800 (PST)
-Message-ID: <0cd6ac36b7ab644576fc0f3f5bd4a880c33855d1.camel@unipv.it>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-From:   Andrea Vai <andrea.vai@unipv.it>
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>
-Date:   Tue, 05 Nov 2019 12:48:42 +0100
-In-Reply-To: <Pine.LNX.4.44L0.1911041316390.1689-200000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1911041316390.1689-200000@iolanthe.rowland.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1730880AbfKEL7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 06:59:25 -0500
+Received: from mail-eopbgr680068.outbound.protection.outlook.com ([40.107.68.68]:58733
+        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730852AbfKEL7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Nov 2019 06:59:25 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SD/4SKUC7c5bnvDbR/JFQKWd9ZIaJ0ybNY429zsOFAijeKdG5y5vDzD6Cd3Sbro4pevK26jSXQNLfvkMPi5/8gxvtrUZyWbSgaHLAJ2mvArD8V2ESuMOezZUbv0aMpAq0uxpbAT+N/OYmx7XgIR2dFb4bB6zqSyDT0JtAp6ibQb3MWQTv2wx3cMtc9sa9t1Zxvb+OAJUo8jgHS/nqsr4aks5bHVHEUTCLvCPmTOupkVq0AtWQ8QD5JE/PjALd0xiO2tN/tFyHMsoOIaTQe8EaDs+QM+Y5p1wD3N+r5OuSsP/ZelOqlzITk9tXC9YcssUwcfEFrwuOtLaRBwPF3dWjg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=L+Ilo+jdGTnOpGPC697uwjPm8HfUTFISStZr2Rqf408=;
+ b=B7C8QlUQyJH0TofgjkaXPp7ClGsInrNhtUR+xdsFwzRiqSMCCjvkxax1nPYMYfmSe1p+0dBeOId63xufVwbbsYlJxQdkg7SvdNrKQS6BLXGFpaGrrZko8Rtt+tUsfvhFiVid3jGHsHYfi9T0XVpZKIqkPjqrEkDxG9z2cUFzhR6Ym2w3El2XPdPgdtqKB3IU9WqurM8jIVuGwJWEdUfLmttrjVx8iBRCZD/rsdcaQkyGeoBSgBsv8dWdzI/N3u82ngK+2G8JwKROn1WeL2ZWkO9UZD8XdmwBP9tQnLr1Z2vsH+vYrsZ7CEjL1Cnuc+QMkajlkUZcTjCSpwMxTCNpDw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=L+Ilo+jdGTnOpGPC697uwjPm8HfUTFISStZr2Rqf408=;
+ b=MAnMWtsj6bkRSio2XK1MAytHaR6txD9lXu23g0rfawUWv5QKPazHPP/3X75+FOUzqgvLdCWrv6z3PlfyMYy3HCzWMzm5WR/wmPgYGVp655NNuLTaIdRe5FJNLwOCHnQ2waW29iCgXthDLrRxrH4Uuv6qzWw/X5F8SnMuIW0rirk=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
+ BN7PR08MB5172.namprd08.prod.outlook.com (20.176.177.83) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2408.24; Tue, 5 Nov 2019 11:58:42 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2408.024; Tue, 5 Nov 2019
+ 11:58:42 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Yaniv Gardi <ygardi@codeaurora.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>
+Subject: RE: [EXT] [PATCH RFC v2 2/5] ufs: Use reserved tags for TMFs
+Thread-Topic: [EXT] [PATCH RFC v2 2/5] ufs: Use reserved tags for TMFs
+Thread-Index: AQHVk3Hu+vKK5UpByE6NhmIiHnKyoqd8eXOQ
+Date:   Tue, 5 Nov 2019 11:58:42 +0000
+Message-ID: <BN7PR08MB56849F96E16115321F44F257DB7E0@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <20191105004226.232635-1-bvanassche@acm.org>
+ <20191105004226.232635-3-bvanassche@acm.org>
+In-Reply-To: <20191105004226.232635-3-bvanassche@acm.org>
+Accept-Language: en-150, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTlhNGNlNTE2LWZmYzMtMTFlOS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFw5YTRjZTUxOC1mZmMzLTExZTktOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjMwMjkiIHQ9IjEzMjE3NDI4NzE5NDI4NjcxNSIgaD0iRnhjNWNKY3U5czNGRis2RUVqUXBsemZjcTA0PSIgaWQ9IiIgYmw9IjAiIGJvPSIxIi8+PC9tZXRhPg==
+x-dg-rorf: true
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.81.21]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1f6ee9b9-eba4-48be-1c9c-08d761e78120
+x-ms-traffictypediagnostic: BN7PR08MB5172:|BN7PR08MB5172:|BN7PR08MB5172:
+x-microsoft-antispam-prvs: <BN7PR08MB5172D0A28093B016BE8CCB5CDB7E0@BN7PR08MB5172.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-forefront-prvs: 0212BDE3BE
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(396003)(39860400002)(376002)(366004)(346002)(189003)(199004)(478600001)(71190400001)(305945005)(3846002)(25786009)(6116002)(66446008)(110136005)(71200400001)(64756008)(76116006)(66556008)(256004)(14444005)(99286004)(66946007)(52536014)(86362001)(54906003)(66066001)(6246003)(4326008)(7416002)(55016002)(9686003)(6436002)(55236004)(7696005)(102836004)(76176011)(7736002)(316002)(66476007)(11346002)(446003)(5660300002)(26005)(14454004)(476003)(486006)(8936002)(8676002)(33656002)(81166006)(81156014)(6506007)(2906002)(186003)(74316002)(229853002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB5172;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: oq/wcBDG69V77XZA7ADCjCEz73ZLD27zOHfsEBnuGd3j+iw7HK6BQ51A2N5i7SPk+7VazgFj/Pr7cK1axhRQWL5+rvsrbbZsbt9IY3mLb5HAPphgcdZ0JlSOcVIOsjlqGd/9+7PrBn6aaSaIZm2vq386sV15MQzs6U9kJvQVnjtCF1x+baZsK13fhbZGWvO1mtV7R486Ms9d6+9AgDA5L1l/77DVPvAHfl2hZa3p/l/aFiUFsAlfb3rCJ57rt33QDv+N9DK9gHYehsiWbHNED5BZcsZtzA76hRHUu+R0+oFakxUPoj6VporQ40eksbPKkSpXhUjlBPct4T0rq3BwCr9/nV2gjguo0eeqhdgH7hGl/Xc/z4yC5DXGA3m8i7grTaQEHd8tuBVvKZTQu2gsoAzn+bl7zo8mzRGN9NyQxULElApaWPv0+kQs/0NJhW0K
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f6ee9b9-eba4-48be-1c9c-08d761e78120
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 11:58:42.6250
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: arE2EwnwLQm7kvJsVknaYjqb2BdSUPntVGt3vKsxo59YTnLYuFqM5QK2jNuucIpeTVPLKszI7XjdqKaALD91Mg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB5172
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il giorno lun, 04/11/2019 alle 13.20 -0500, Alan Stern ha scritto:
-> On Mon, 4 Nov 2019, Andrea Vai wrote:
-> 
-> > > The "linux" directory is the one generated by a fresh git clone:
-> > > 
-> > > git clone
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> > > 
-> > > What am I doing wrong?
-> > > 
-> > 
-> > Meanwhile, Alan tried to help me and gave me another patch
-> (attached),
-> > which doesn't work too, but gives a different error: "The git diff
-> > header does not contain information about the file once removed 1
-> > initial component of the path (row 14)" (actually, this is my
-> > translation from the original message in Italian: "error:
-> > l'intestazione git diff non riporta le informazioni sul file una
-> volta
-> > rimosso 1 componente iniziale del percorso (riga 14)")
-> > 
-> > I tested the two patches after a fresh git clone today, a few
-> minutes
-> > ago.
-> > 
-> > What can I do?
-> 
-> You should be able to do something like this:
-> 
->         cd linux
->         patch -p1 </path/to/patch2
-> 
-> and that should work with no errors.  You don't need to use git to 
-> apply a patch.
-> 
-> In case that patch2 file was mangled somewhere along the way, I
-> have 
-> attached a copy to this message.
+Hi, Bart
 
-Ok, so the "patch" command worked, the kernel compiled and ran, but
-the test still failed (273, 108, 104, 260, 177, 236, 179, 1123, 289,
-873 seconds to copy a 500MB file, vs. ~30 seconds with the "good"
-kernel).
+>=20
+> Reserved tags are numerically lower than non-reserved tags. Compensate th=
+e
+> change caused by reserving tags by subtracting the number of reserved tag=
+s
+> from the tag number assigned by the block layer.
+>=20
+> Cc: Yaniv Gardi <ygardi@codeaurora.org>
+> Cc: Subhash Jadavani <subhashj@codeaurora.org>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 9fc05a535624..3e3c6257a343 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2402,7 +2402,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
+> *host, struct scsi_cmnd *cmd)
+>=20
+>  	hba =3D shost_priv(host);
+>=20
+> -	tag =3D cmd->request->tag;
+> +	tag =3D cmd->request->tag - hba->nutmrs;
+>  	if (!ufshcd_valid_tag(hba, tag)) {
+>  		dev_err(hba->dev,
+>  			"%s: invalid command tag %d: cmd=3D0x%p, cmd-
+> >request=3D0x%p", @@ -5965,7 +5965,8 @@ static int
+> ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+>=20
+>  	host =3D cmd->device->host;
+>  	hba =3D shost_priv(host);
+> -	tag =3D cmd->request->tag;
+> +	tag =3D cmd->request->tag - hba->nutmrs;
+> +	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
 
-Let me know what else could I do,
+Changing request tag number here is not proper way, we have trace tool usin=
+g this tag to track request from block,
+SCSI to UFS layer. If tags being changed in UFS driver, there will be a con=
+fusion.=20
 
-Thanks, and bye
-Andrea
+>=20
+>  	lrbp =3D &hba->lrb[tag];
+>  	err =3D ufshcd_issue_tm_cmd(hba, lrbp->lun, 0, UFS_LOGICAL_RESET,
+> &resp); @@ -6036,7 +6037,7 @@ static int ufshcd_abort(struct scsi_cmnd *c=
+md)
+>=20
+>  	host =3D cmd->device->host;
+>  	hba =3D shost_priv(host);
+> -	tag =3D cmd->request->tag;
+> +	tag =3D cmd->request->tag - hba->nutmrs;
+>  	lrbp =3D &hba->lrb[tag];
+>  	if (!ufshcd_valid_tag(hba, tag)) {
+>  		dev_err(hba->dev,
+> @@ -8320,7 +8321,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
+> *mmio_base, unsigned int irq)
+>  	/* Configure LRB */
+>  	ufshcd_host_memory_configure(hba);
+>=20
+> -	host->can_queue =3D hba->nutrs;
+> +	host->can_queue =3D hba->nutrs + hba->nutmrs;
+> +	host->reserved_tags =3D hba->nutmrs;
 
+
+hba->nutmrs is for task management, relevant door-bell register is bit0-bit=
+7 validate.=20
+If my understanding is correct, UFS task management requests normally issue=
+d by UFS layer, rather than upper layers.=20
+Before issuing task management request, UFS driver layer will apply a free =
+slot, see ufshcd_get_tm_free_slot().
+I don't think it is necessary to change host->can_queue size by adding task=
+ management depth hba->nutmrs.
+
+>  	host->cmd_per_lun =3D hba->nutrs;
+>  	host->max_id =3D UFSHCD_MAX_ID;
+>  	host->max_lun =3D UFS_MAX_LUNS;
+> --
+> 2.24.0.rc1.363.gb1bccd3e3d-goog
+=20
+//Bean
