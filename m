@@ -2,87 +2,101 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67661CA9EC7
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 05:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B10CCA9EC7
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 06:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 428A320818
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 05:54:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 473EC2084D
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 06:03:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387482AbfKEFyh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 00:54:37 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49436 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387443AbfKEFyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 00:54:37 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 6DA6A29D2D;
-        Tue,  5 Nov 2019 00:54:35 -0500 (EST)
-Date:   Tue, 5 Nov 2019 16:54:39 +1100 (AEDT)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Michael Schmitz <schmitzmic@gmail.com>
-cc:     linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, schmitz@debian.org
-Subject: Re: [PATCH] scsi: scsi-lib.c: increase cmd_size by sizeof(struct
- scatterlist)
-In-Reply-To: <1572922150-4358-1-git-send-email-schmitzmic@gmail.com>
-Message-ID: <alpine.LNX.2.21.1.1911051635230.194@nippy.intranet>
-References: <cover.1572656814.git.fthain@telegraphics.com.au> <1572922150-4358-1-git-send-email-schmitzmic@gmail.com>
+        id S1730562AbfKEGDd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 01:03:33 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:53572 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730453AbfKEGDd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Nov 2019 01:03:33 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 8B93020414D;
+        Tue,  5 Nov 2019 07:03:32 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id kyejSwwHxviu; Tue,  5 Nov 2019 07:03:31 +0100 (CET)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 315D220423D;
+        Tue,  5 Nov 2019 07:03:30 +0100 (CET)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 37/52] scsi_debug: use scsi_build_sense()
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Bart van Assche <bvanassche@acm.org>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20191104090151.129140-1-hare@suse.de>
+ <20191104090151.129140-38-hare@suse.de>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <43f15ef8-7910-e498-c0b3-6aa5072388e4@interlog.com>
+Date:   Tue, 5 Nov 2019 01:03:29 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20191104090151.129140-38-hare@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 5 Nov 2019, Michael Schmitz wrote:
+On 2019-11-04 4:01 a.m., Hannes Reinecke wrote:
+> Use scsi_build_sense() to format the sense code.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-> In scsi_mq_setup_tags(), cmd_size is calculated based on zero size
-> for the scatter-gather list in case the low level driver uses SG_NONE
-> in its host template.
-> 
-> cmd_size is passed on to the block layer for calculation of the request
-> size, and we've seen NULL pointer dereference errors from the block
-> layer in drivers where SG_NONE is used and a mq IO scheduler is active,
-> apparently as a consequence of this (see commit 68ab2d76e4be for the
-> cxflash driver, and a recent patch by Finn Thain converting the three
-> m68k NFR5380 drivers to avoid setting SG_NONE).
-> 
-> Try to avoid these errors by accounting for at least one sg list entry
-> when caculating cmd_size, regardless of whether the low level driver
-> set a zero sg_tablesize.
-> 
-> Tested on 030 m68k with the atari_scsi driver - setting sg_tablesize to
-> SG_NONE no longer results in a crash when loading this driver.
-> 
-> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-> CC: Finn Thain <fthain@telegraphics.com.au>
-
-No objections from me. I still like the patch series I sent but it's a 
-matter of taste. I'm happy to leave it to the scsi maintainers to figure 
-out the best fix for this regression.
-
--- 
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
 > ---
->  drivers/scsi/scsi_lib.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+>   drivers/scsi/scsi_debug.c | 11 ++++-------
+>   1 file changed, 4 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index d47d637..d38b0e1 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1867,7 +1867,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->  {
->  	unsigned int cmd_size, sgl_size;
->  
-> -	sgl_size = scsi_mq_inline_sgl_size(shost);
-> +	sgl_size = max_t(unsigned int, sizeof(struct scatterlist),
-> +				scsi_mq_inline_sgl_size(shost));
->  	cmd_size = sizeof(struct scsi_cmnd) + shost->hostt->cmd_size + sgl_size;
->  	if (scsi_host_get_prot(shost))
->  		cmd_size += sizeof(struct scsi_data_buffer) +
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index d323523f5f9d..72f10e631ff4 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -779,7 +779,7 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
+>   	}
+>   	asc = c_d ? INVALID_FIELD_IN_CDB : INVALID_FIELD_IN_PARAM_LIST;
+>   	memset(sbuff, 0, SCSI_SENSE_BUFFERSIZE);
+> -	scsi_build_sense_buffer(sdebug_dsense, sbuff, ILLEGAL_REQUEST, asc, 0);
+> +	scsi_build_sense(scp, sdebug_dsense, ILLEGAL_REQUEST, asc, 0);
+>   	memset(sks, 0, sizeof(sks));
+>   	sks[0] = 0x80;
+>   	if (c_d)
+> @@ -805,17 +805,14 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
+>   
+>   static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
+>   {
+> -	unsigned char *sbuff;
+> -
+> -	sbuff = scp->sense_buffer;
+> -	if (!sbuff) {
+> +	if (!scp->sense_buffer) {
+>   		sdev_printk(KERN_ERR, scp->device,
+>   			    "%s: sense_buffer is NULL\n", __func__);
+>   		return;
+>   	}
+> -	memset(sbuff, 0, SCSI_SENSE_BUFFERSIZE);
+> +	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>   
+> -	scsi_build_sense_buffer(sdebug_dsense, sbuff, key, asc, asq);
+> +	scsi_build_sense(scp, sdebug_dsense, key, asc, asq);
+>   
+>   	if (sdebug_verbose)
+>   		sdev_printk(KERN_INFO, scp->device,
 > 
+
