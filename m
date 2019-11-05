@@ -2,156 +2,178 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB37C17460
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 14:41:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA1EC5DF61
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 14:58:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07EC321929
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 14:41:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="d1N5UUWU";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="OfdYatAN"
+	by mail.kernel.org (Postfix) with ESMTP id 0159C21A4A
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 14:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729070AbfKEOlQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 09:41:16 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17792 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728417AbfKEOlQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 09:41:16 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xA5EQWKf006279;
-        Tue, 5 Nov 2019 06:41:06 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : content-type : content-id :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=1sl8X4uZxxYDWaPVVZ7yEE+wUT+xepokrACveZax4+c=;
- b=d1N5UUWUgLFaGpWekJwdVsVH6V7hRyVY27Xp9smFObRpqNLZdbjhqmYMJeL532UqarUs
- yW0MmYtCyFKy6OmNcP0W28yWSVChEN8Umo5N5WhUjgzOE5ZGLt38QX7Jo5TgQ++v5uUo
- BZ7UuqOfOt4B5vUUz+Lt7ghn3zH5vIDL5geyKBqUqyy4gBPEej7epe2BZicRZSiksNvq
- 7VCYQ70j562kp4NsKb/qN9A4jqhlBq01Qd49P8GrHkH5FqQFUbgAGEHExnBCzwQYfad0
- SJy40cFAq7198TTsryQlk5/KZTS+uuhTdFfEegPQ5XGVUhTW4cF/VPmuBCS/l7fx4JXS fA== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2w19amtn9n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 05 Nov 2019 06:41:06 -0800
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Tue, 5 Nov
- 2019 06:41:04 -0800
-Received: from NAM03-DM3-obe.outbound.protection.outlook.com (104.47.41.51) by
- SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Tue, 5 Nov 2019 06:41:04 -0800
+        id S2389739AbfKEO6o convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 09:58:44 -0500
+Received: from m9a0003g.houston.softwaregrp.com ([15.124.64.68]:33761 "EHLO
+        m9a0003g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388842AbfKEO6o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 09:58:44 -0500
+Received: FROM m9a0003g.houston.softwaregrp.com (15.121.0.190) BY m9a0003g.houston.softwaregrp.com WITH ESMTP;
+ Tue,  5 Nov 2019 14:58:04 +0000
+Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
+ M9W0067.microfocus.com (2002:f79:be::f79:be) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10; Tue, 5 Nov 2019 14:56:02 +0000
+Received: from NAM01-SN1-obe.outbound.protection.outlook.com (15.124.8.14) by
+ M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10 via Frontend Transport; Tue, 5 Nov 2019 14:56:02 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fo7+KMYiaGsmGwkLzIGKpzsTIraOH/tgP22Ff6wY8jyQl/WI8YTUTN8zLSsz0npWUtRgmgM3MOl+pqv29M/6IDHsdHw2TPiFiwucgfqwmHhJV06gPK/vrlAiI22gfdf+ErkCNvUSCm2N8GRke5yucqjvoXMOiR9eIdt9ulWu5WZZiZOQVBzfBAV78Lu/8xGMKvkzBP56Hy0tMeGQOazuIoUdTmjJmNzvEPqORHaRrXlC0dmQ7Sad8o4tcqmWYmABOfLS92ffYFs9BmWx9AoucS10FuOJmfgQROL2xJMMef1bzkbkKbIR2Yjhe7dmv96KZXN+kYR2wxPsykQsIqywtw==
+ b=RG9oJWqY+WxoidmAWUalfn5htIZOQmQpyDxEZMeL3OUjAshN5spCmpVaDUHhH6dv3nMAhIP2xbZ/8VW1EYTUVoo6doQb/xF7Ao/W8h9FUlbIWsoomFVlPz4dRfwCQX8kjeFqeYuY3bBzuqPmcd5VQ8cd3mJ0BCMaxhxzGc5pwXoRCg47heT+uekmiAO33xxwdueiVqgBvq0T3d9INgxMehUG7L2BJ0iOKqleJqTa+PAfuTGtRUhUrm741uvYyam4tkz5d1DSCt9sAf0UQAhcmrCjieecTyVoh+cTlcd1CpKMhH8QRVWQBgA17DC12oVqUxw4+PYqK3Uh+2TVnZXOtQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1sl8X4uZxxYDWaPVVZ7yEE+wUT+xepokrACveZax4+c=;
- b=WS33Ew5ylpyfUvg94czz8N5ofPDIzVkzoHwWZbEJ+XT+lR6Ua6nhaSW3IcjnbxmOWBNG1W2lw955UHz0V0YyQiy8LC+3/Bp/1w0H+yAkDny+1qqHrbEmPeBQxL8pO1iz6jJweNAuVvngFajHm4hJcM2z1mX6d3LmyIvufkw6SDcYl+l4Arn6iAvk3o+XO1RpM6pF0hyTbThSWHK+SCMb6B3ergKW5IdhwmpnQNhKCUjj3v945ZYqqgRnlvXwgeruZ4YkeMKFImQTDNGNqwAsmUeIajIligh2s2jL5NbQKVU9+o9laJL2wT8V/Nyr6i9tsKJC27NmgsRzEtsXnYj1Ng==
+ bh=f3YTcZf/ho+LU+EuLRriuZdqNHR4KcYr5FlRu/Q+bis=;
+ b=X+iuO7OH7iHURJDyUpAo+3C8WSLdvy3RTehpsxIJIgts/c15QNsl/CTZ7zbxvG7efQftgWoPxEfszkLrkPq3L/BG7bjVwSsbzsjV7oj5oVzjiUyt7g3T381Lw7ABLr+/zc1mrY/MAdqu4ICyTy9lUq/ZBEx9VetcMRjSVox1nTTC7qrlfJdwJtVupU/NomQhCJN3xDLmPeVNcESM+pwwUT1KDucK2puXGbAqAZ6S///bklqqUMpgMOXQI7WYzAHaeYKCJf8wfSEM/uCJ5Hv5p6b7mO5HmUvKAjW3ZNz91gXfzpcvps7SizcIWU7az+5DcF9UPVVJGkSQkyUMCKKBtQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1sl8X4uZxxYDWaPVVZ7yEE+wUT+xepokrACveZax4+c=;
- b=OfdYatANU/Y5alZshG4E1syaEqgwnP7X+/86jFNd1AmhE+FJTP3o67g7rAPYu5+HuzfC1uDWlMAoaQv7KMH8zQQcizFPcFkTFbkMIU6wFVFtbfvdJZUsXIpdnTE4plxr4WbXYdBcw1Ia+z0qEo7of/S4JptM7I9L5qh2/h150RA=
-Received: from MN2PR18MB2719.namprd18.prod.outlook.com (20.178.255.156) by
- MN2PR18MB3248.namprd18.prod.outlook.com (10.255.238.202) with Microsoft SMTP
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Received: from CH2PR18MB3349.namprd18.prod.outlook.com (52.132.245.83) by
+ CH2PR18MB3175.namprd18.prod.outlook.com (10.255.155.216) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2408.24; Tue, 5 Nov 2019 14:41:02 +0000
-Received: from MN2PR18MB2719.namprd18.prod.outlook.com
- ([fe80::1435:34ad:dbff:5089]) by MN2PR18MB2719.namprd18.prod.outlook.com
- ([fe80::1435:34ad:dbff:5089%7]) with mapi id 15.20.2408.024; Tue, 5 Nov 2019
- 14:41:02 +0000
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     Martin Wilck <Martin.Wilck@suse.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
-        "Bart.VanAssche@sandisk.com" <Bart.VanAssche@sandisk.com>,
-        Quinn Tran <qutran@marvell.com>,
-        "dwagner@suse.de" <dwagner@suse.de>, "hare@suse.de" <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [EXT] Re: [PATCH v2] fixup "qla2xxx: Optimize NPIV tear down
+ 15.20.2408.24; Tue, 5 Nov 2019 14:56:01 +0000
+Received: from CH2PR18MB3349.namprd18.prod.outlook.com
+ ([fe80::9917:1509:5d1:6f89]) by CH2PR18MB3349.namprd18.prod.outlook.com
+ ([fe80::9917:1509:5d1:6f89%6]) with mapi id 15.20.2408.024; Tue, 5 Nov 2019
+ 14:56:01 +0000
+From:   Martin Wilck <Martin.Wilck@suse.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+CC:     Quinn Tran <qutran@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Martin Wilck <Martin.Wilck@suse.com>,
+        "Daniel Wagner" <dwagner@suse.de>,
+        James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: [PATCH RESEND v2] fixup "qla2xxx: Optimize NPIV tear down process"
+Thread-Topic: [PATCH RESEND v2] fixup "qla2xxx: Optimize NPIV tear down
  process"
-Thread-Topic: [EXT] Re: [PATCH v2] fixup "qla2xxx: Optimize NPIV tear down
- process"
-Thread-Index: AQHVk+cLjvXjhYuJOEeYlbwlfllqOg==
-Date:   Tue, 5 Nov 2019 14:41:02 +0000
-Message-ID: <BC3ECF3A-B9FA-4AD4-B4F1-F9DFAD7D1B31@marvell.com>
+Thread-Index: AQHVk+kjrebV27kmXUOXVa1+ECU7zA==
+Date:   Tue, 5 Nov 2019 14:56:00 +0000
+Message-ID: <20191105145550.10268-1-martin.wilck@suse.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-user-agent: Microsoft-MacOutlook/10.1e.0.191013
-x-originating-ip: [2600:1700:211:eb30:e1a7:7b00:b7d4:a14]
+x-clientproxiedby: AM4PR0701CA0021.eurprd07.prod.outlook.com
+ (2603:10a6:200:42::31) To CH2PR18MB3349.namprd18.prod.outlook.com
+ (2603:10b6:610:28::19)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Martin.Wilck@suse.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.23.0
+x-originating-ip: [2.206.153.8]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2aef9a16-3da4-4dcb-9a9e-08d761fe2e63
-x-ms-traffictypediagnostic: MN2PR18MB3248:
+x-ms-office365-filtering-correlation-id: 92ff47ed-8082-4eee-8a6b-08d7620045aa
+x-ms-traffictypediagnostic: CH2PR18MB3175:|CH2PR18MB3175:
 x-ms-exchange-purlcount: 1
+x-ld-processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd,ExtAddr
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB3248903F8C98B58A8A541905D67E0@MN2PR18MB3248.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:126;
+x-microsoft-antispam-prvs: <CH2PR18MB3175688744C7801B88F8B30AFC7E0@CH2PR18MB3175.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4941;
 x-forefront-prvs: 0212BDE3BE
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(346002)(396003)(376002)(39860400002)(366004)(199004)(189003)(110136005)(64756008)(58126008)(186003)(66446008)(4326008)(81156014)(2906002)(81166006)(486006)(46003)(6486002)(316002)(102836004)(6506007)(14454004)(66556008)(66476007)(25786009)(99286004)(76116006)(2501003)(478600001)(91956017)(66946007)(6116002)(966005)(86362001)(476003)(2616005)(6306002)(6512007)(5660300002)(71190400001)(8676002)(36756003)(54906003)(33656002)(305945005)(6436002)(14444005)(7736002)(8936002)(256004)(229853002)(71200400001)(6246003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3248;H:MN2PR18MB2719.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(39860400002)(396003)(346002)(376002)(136003)(189003)(199004)(6506007)(3846002)(1076003)(86362001)(25786009)(966005)(186003)(7736002)(6512007)(256004)(64756008)(44832011)(486006)(305945005)(66446008)(66556008)(66476007)(50226002)(99286004)(8936002)(476003)(66946007)(5660300002)(4326008)(14444005)(6116002)(8676002)(2616005)(36756003)(386003)(478600001)(52116002)(66066001)(2906002)(81156014)(6306002)(81166006)(26005)(6486002)(110136005)(54906003)(14454004)(71190400001)(71200400001)(102836004)(316002)(6436002)(6606295002);DIR:OUT;SFP:1102;SCL:1;SRVR:CH2PR18MB3175;H:CH2PR18MB3349.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: suse.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: nG1wINntMibWLfikHGqs02eytopxFjBJnvTBipBrpcM0/6HyAobQ69kRtYhNJTg8eTGnv2s7+0PAf7TzH03aA3XaKwd2Av/udf0d4iyjFLk8eYAtT2md8iO2xCOa2C/StO1mNfExs4urVRehUUHdvQrOeySJTg1aY67MO2BqjQjgVZsG4E/7uU6yZwguwyAmCDe7t8DBEKWWDiBX9JT3SXITTvunWR+Rpuz8gQ8nuTT7tuX16gj3sURFYCS5/4RMv55cPccKoB77XSArdMelhpYxOPCFyRA4IxT0f2nuMXMEoZ9dEWZ56a/n2rwnjQuQ/tw5vbxNnhWWmNaeJgsNeAR5+p/JMb/NSAlk7JezZFX9WTwMScTCe1E/pfhMuF8qs+uwe+9q0+8qsq4kr7+zeGp9tkmVq3/MXUl+iQX56ixzFaC0CKPvo4kHWfArqlq9ShMeu9P+ue8DyJNioIIs95cGuC7LW//Dze4iYm6nXkc=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <62709072F3A7984CAC7D99D1B4554DF3@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: base64
+x-microsoft-antispam-message-info: byjj/QJCcRIVDOrkKoDYyBdonzrQM09ahNFZ7fvDMdTcrM0Yv0x3odU2CZ/L6l7Qq9J7lauZCTBwBEKOWk0nAmBrqX4aIrIMJ9Kfy5JX5Ubbz0wVKULI7xZWFwlHJLnRYkInmCWhtB6W+44ybfBqdStbp6eW4QR+K+o4WXiwhCZUk7BgDgjxaawWCEE8co0/TGjrBZGVfCmVtibRyGCIpa+o0B5lOab9/S2se/AcdX20NurzzCzv+Xfgy7+p68YP+3wmzar/V2vj+YWnkHwNlN1sQVWQUsEGwqVIQqhLp2zSIMuqI/4EMfcCxUbRMCe5BcmZUIdABMtW5WY2NckARoqEMvQIso9NEwnp6wXv5dF/lobzm2TDS77bxxYsq5k9S2JsYRlHXCooTJ5+nl4dY5qJ3F7gQjE1k1CAUEhKd4qC6+hWE45VPH/gm05RDxrTAfT32GSJso8OKKZZleKxc/XBYZUVgu/KW08zYSZuV4M=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2aef9a16-3da4-4dcb-9a9e-08d761fe2e63
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 14:41:02.2912
+X-MS-Exchange-CrossTenant-Network-Message-Id: 92ff47ed-8082-4eee-8a6b-08d7620045aa
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 14:56:00.9927
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-id: 856b813c-16e5-49a5-85ec-6f081e13b527
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: R/qovEyK3nAxYN/oG1eE719P460dt/VjpaxGIBCRebfcSLmmv/7/KbLkQGzzhT1DKZw92CVkWbbbv7CXuGfVAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3248
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,1.0.8
- definitions=2019-11-05_05:2019-11-05,2019-11-05 signatures=0
+X-MS-Exchange-CrossTenant-userprincipalname: /nAJSYOJMpauGUXiRO0GB3dGx5TLti8rx8ppVWVAejPtUT+KLMOR7sa+1Wc0pzI2ZK1AU5up9CC3G7cBKkuxiA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR18MB3175
+X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-TWFyaXRuIFcsIA0KDQrvu79PbiAxMS81LzE5LCA0OjEwIEFNLCAiTWFydGluIFdpbGNrIiA8TWFy
-dGluLldpbGNrQHN1c2UuY29tPiB3cm90ZToNCg0KICAgIEV4dGVybmFsIEVtYWlsDQogICAgDQog
-ICAgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KICAgIE1hcnRpbiwgSGltYW5zaHUsDQogICAgDQogICAgDQogICAg
-DQogICAgT24gVGh1LCAyMDE5LTEwLTAzIGF0IDIxOjU3IC0wNDAwLCAgTWFydGluIEsuIFBldGVy
-c2VuIHdyb3RlOg0KICAgIA0KICAgID4gPiB0aGlzIHBhdGNoIGZpeGVzIHR3byBpc3N1ZXMgaW4g
-cGF0Y2ggMDIvMTQgaW4gSGltYW5zaHUncyBsYXRlc3QNCiAgICANCiAgICA+ID4gcWxhMnh4eCBz
-ZXJpZXMgKCJxbGEyeHh4OiBCdWcgZml4ZXMgZm9yIHRoZSBkcml2ZXIiKSBmcm9tIFNlcHQuDQog
-ICAgDQogICAgPiA+IDEydGgsDQogICAgDQogICAgPiA+IHdoaWNoIHlvdSBhcHBsaWVkIG9udG8g
-NS40L3Njc2ktZml4ZXMgYWxyZWFkeS4gIFNlZQ0KICAgIA0KICAgID4gPiBodHRwczovL3VybGRl
-ZmVuc2UucHJvb2Zwb2ludC5jb20vdjIvdXJsP3U9aHR0cHMtM0FfX21hcmMuaW5mb18tM0ZsLTNE
-bGludXgtMkRzY3NpLTI2bS0zRDE1Njk1MTcwNDEwNjY3MS0yNnctM0QyJmQ9RHdJR2FRJmM9bktq
-V2VjMmI2UjBtT3lQYXo3eHRmUSZyPVA0RmtVcWd2MTNMeEF6TGVsZEdDcnczWS1ReUF5cmh5WWJZ
-VVcwOHlXTFkmbT1KNFJsU3pLYUdqa0pGUWhJeDZZWEw3Y2JWZ3VMVUZpc1d1TXRTWkNQZ2tJJnM9
-bWdpOVY4YU9VS0owN1R6Q2lSWjFLYVlpMm5SckhPMnNhTk5EN2Zib0YyVSZlPSANCiAgICANCiAg
-ICA+ID4gDQogICAgDQogICAgPiA+IEknbSBhc3N1bWluZyB0aGF0IEhpbWFuc2h1IGFuZCBRdWlu
-biBhcmUgd29ya2luZyBvbiBhbm90aGVyDQogICAgDQogICAgPiA+IHNlcmllcyBvZiBmaXhlcywg
-aW4gd2hpY2ggY2FzZSB0aGF0IHNob3VsZCB0YWtlIHByZWNlZGVuY2UNCiAgICANCiAgICA+ID4g
-b3ZlciB0aGlzIHBhdGNoLiBJIGp1c3Qgd2FudGVkIHRvIHByb3ZpZGUgdGhpcyBzbyB0aGF0IHRo
-ZQ0KICAgIA0KICAgID4gPiBhbHJlYWR5IGtub3duIHByb2JsZW1zIGFyZSBmaXhlZCBpbiB5b3Vy
-IHRyZWUuDQogICAgDQogICAgPiANCiAgICANCiAgICA+IEhpbWFuc2h1OiBQbGVhc2UgcmV2aWV3
-LiBUaGFua3MhDQogICAgDQogICAgPiANCiAgICANCiAgICANCiAgICANCiAgICB0aGlzIHBhdGNo
-IGlzIHN0aWxsIG5vdCBtZXJnZWQgc2luY2UgYSBtb250aCBhbHRob3VnaCBRdWlubiBoYWQNCiAg
-ICANCiAgICBiYXNpY2FsbHkgYWNrJ2QgdGhlIHByb3BzZWQgY2hhbmdlIA0KICAgIA0KICAgICho
-dHRwczovL3VybGRlZmVuc2UucHJvb2Zwb2ludC5jb20vdjIvdXJsP3U9aHR0cHMtM0FfX21hcmMu
-aW5mb18tM0ZsLTNEbGludXgtMkRzY3NpLTI2bS0zRDE1Njk1MTcwNDEwNjY3MS0yNnctM0QyJmQ9
-RHdJR2FRJmM9bktqV2VjMmI2UjBtT3lQYXo3eHRmUSZyPVA0RmtVcWd2MTNMeEF6TGVsZEdDcncz
-WS1ReUF5cmh5WWJZVVcwOHlXTFkmbT1KNFJsU3pLYUdqa0pGUWhJeDZZWEw3Y2JWZ3VMVUZpc1d1
-TXRTWkNQZ2tJJnM9bWdpOVY4YU9VS0owN1R6Q2lSWjFLYVlpMm5SckhPMnNhTk5EN2Zib0YyVSZl
-PSApLg0KICAgIA0KICAgIA0KICAgIA0KICAgIERvIHlvdSB3YW50IG1lIHRvIHJlc3VibWl0LCBh
-bmQgaWYgeWVzLCBkbyB5b3UgcmVxdWVzdCBjaGFuZ2VzPw0KICAgIA0KICAgIA0KUGxlYXNlIHN1
-Ym1pdCB0aGUgY2hhbmdlcyBhbmQgYWRkIEZpeGVzIHRhZyB3aXRoIGNvbW1pdCBpZCAgZjUxODdi
-N2QxYWM2NmI2MTY3NmY4OTY3NTFkM2FmOWZjZjhkZDU5Mg0KDQogICAgUmVnYXJkcywNCiAgICAN
-CiAgICBNYXJ0aW4gV2lsY2sNCiAgICANCiAgICANCiAgICANCiAgICANCg0K
+From: Martin Wilck <mwilck@suse.com>
+
+Hello Martin,
+
+this patch fixes two issues in patch 02/14 in Himanshu's latest
+qla2xxx series ("qla2xxx: Bug fixes for the driver") from
+Sept. 12th, which you applied onto 5.4/scsi-fixes already.
+See https://marc.info/?l=linux-scsi&m=156951704106671&w=2
+
+I'm assuming that Himanshu and Quinn are working on another
+series of fixes, in which case that should take precedence
+over this patch. I just wanted to provide this so that the
+already known problems are fixed in your tree.
+
+v2: check loop condition only once (Bart van Assche)
+
+Commit message follows:
+
+Fix two issues with the previously submitted patch
+"qla2xxx: Optimize NPIV tear down process": a missing negation
+in a wait_event_timeout() condition, and a missing loop end
+condition.
+
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Fixes: f5187b7d1ac6 ("scsi: qla2xxx: Optimize NPIV tear down process")
+---
+ drivers/scsi/qla2xxx/qla_mid.c | 8 +++++---
+ drivers/scsi/qla2xxx/qla_os.c  | 8 +++++---
+ 2 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 6afad68e5ba2..238240984bc1 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -76,9 +76,11 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
+ 	 * ensures no active vp_list traversal while the vport is removed
+ 	 * from the queue)
+ 	 */
+-	for (i = 0; i < 10 && atomic_read(&vha->vref_count); i++)
+-		wait_event_timeout(vha->vref_waitq,
+-		    atomic_read(&vha->vref_count), HZ);
++	for (i = 0; i < 10; i++) {
++		if (wait_event_timeout(vha->vref_waitq,
++		    !atomic_read(&vha->vref_count), HZ) > 0)
++			break;
++	}
+ 
+ 	spin_lock_irqsave(&ha->vport_slock, flags);
+ 	if (atomic_read(&vha->vref_count)) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 6e627e521562..ee5b6cba9872 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1119,9 +1119,11 @@ qla2x00_wait_for_sess_deletion(scsi_qla_host_t *vha)
+ 
+ 	qla2x00_mark_all_devices_lost(vha, 0);
+ 
+-	for (i = 0; i < 10; i++)
+-		wait_event_timeout(vha->fcport_waitQ, test_fcport_count(vha),
+-		    HZ);
++	for (i = 0; i < 10; i++) {
++		if (wait_event_timeout(vha->fcport_waitQ,
++		    test_fcport_count(vha), HZ) > 0)
++			break;
++	}
+ 
+ 	flush_workqueue(vha->hw->wq);
+ }
+-- 
+2.12.3
+
