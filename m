@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4150C5DF60
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48206C5DF60
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C863C21928
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:18:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A70121929
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:18:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JzvUw4Hc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cwYyQ1gF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389573AbfKEPSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 10:18:32 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:44325 "EHLO
+        id S2389781AbfKEPS4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 10:18:56 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:21480 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2389339AbfKEPSc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 10:18:32 -0500
+        by vger.kernel.org with ESMTP id S2389339AbfKEPS4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 10:18:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572967110;
+        s=mimecast20190719; t=1572967135;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=iWZtHQXZBwv4u36Vs9XmIOj90srP2OhCbN5pKPYBa48=;
-        b=JzvUw4HcTuJiIa+ZwE/Ry+L5DeSfINVpAwH1YmcRTezMhN5Ueq8jJJtS23tqbm6WZ8dWDY
-        D0nrC09lpPWBvA8Unhw9KxgA/kDd6QUyy9+eT5HrNBOpwKuLqBt6ewqQh3jp9nlZIKGZGT
-        oF1TvCFiKJVzWgwiLfAZgOEinpL/XTU=
+        bh=NY+8vtl1sS3QRy0+4LSJUZ9+OnUW1am7C+BXlmp+Cc8=;
+        b=cwYyQ1gF/XgqsNybneFhm2p24pvNKzBBM86Aqdp7S97UgfcUd8MG0u5vq/z/nw/OKTSyz/
+        wx/jKprKzEf4Lag9lfEaj419zY0ZPWFwrsWKx5U3UhnGtdtx5pYzpNAexAnebtuomBrUco
+        Jx5z/XS8bamoNfOAKSnomlYJqnBz+0Y=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-38-6-8BbmWdOBSA9Yx-txTn_w-1; Tue, 05 Nov 2019 10:18:27 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-387-CCnMWoOGO6iOhACiYoPE3w-1; Tue, 05 Nov 2019 10:18:54 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0DCBC1800D4A;
-        Tue,  5 Nov 2019 15:18:26 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D5FBD477;
+        Tue,  5 Nov 2019 15:18:52 +0000 (UTC)
 Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 707F8608B4;
-        Tue,  5 Nov 2019 15:18:25 +0000 (UTC)
-Message-ID: <b527c8cf1f90b606ed83881ab62560f09bc97f9b.camel@redhat.com>
-Subject: Re: [PATCH 1/8] qla2xxx: Retry PLOGI on FC-NVMe PRLI failure
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E19E5D9CD;
+        Tue,  5 Nov 2019 15:18:52 +0000 (UTC)
+Message-ID: <3d6f18af923fe3f1d513851c7d4c67c10d6bb369.camel@redhat.com>
+Subject: Re: [PATCH 2/8] qla2xxx: Do command completion on abort timeout
 From:   "Ewan D. Milne" <emilne@redhat.com>
 To:     Himanshu Madhani <hmadhani@marvell.com>,
         James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org
-Date:   Tue, 05 Nov 2019 10:18:24 -0500
-In-Reply-To: <20191105150657.8092-2-hmadhani@marvell.com>
+Date:   Tue, 05 Nov 2019 10:18:51 -0500
+In-Reply-To: <20191105150657.8092-3-hmadhani@marvell.com>
 References: <20191105150657.8092-1-hmadhani@marvell.com>
-         <20191105150657.8092-2-hmadhani@marvell.com>
+         <20191105150657.8092-3-hmadhani@marvell.com>
 Mime-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: 6-8BbmWdOBSA9Yx-txTn_w-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-MC-Unique: CCnMWoOGO6iOhACiYoPE3w-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
@@ -66,128 +66,83 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On Tue, 2019-11-05 at 07:06 -0800, Himanshu Madhani wrote:
 > From: Quinn Tran <qutran@marvell.com>
 >=20
-> Current code will send PRLI with FC-NVMe bit set for the
-> targets which supports only FCP. This may result into issue
-> with targets which do not understand NVMe and will go into
-> strange state. This patch would restart the login process
-> by going back to PLOGI state. The PLOGI state will force the
-> target to respond to correct PRLI request.
+> On switch, fabric and mgt command timeout, driver
+> send Abort to tell FW to return the original command.
+> If abort is timeout, then return both Abort and
+> original command for cleanup.
 >=20
-> Fixes: c76ae845ea836 ("scsi: qla2xxx: Add error handling for PLOGI ELS pa=
-ssthrough")
-> Cc: stable@vger.kernel.org # 5.4
+> Fixes: 219d27d7147e0 ("scsi: qla2xxx: Fix race conditions in the code for=
+ aborting SCSI commands")
+> Cc: stable@vger.kernel.org # 5.2
 > Signed-off-by: Quinn Tran <qutran@marvell.com>
 > Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 > ---
->  drivers/scsi/qla2xxx/qla_init.c | 37 ++++++++---------------------------=
---
->  drivers/scsi/qla2xxx/qla_iocb.c |  6 +++++-
->  2 files changed, 13 insertions(+), 30 deletions(-)
+>  drivers/scsi/qla2xxx/qla_def.h  |  1 +
+>  drivers/scsi/qla2xxx/qla_init.c | 18 ++++++++++++++++++
+>  2 files changed, 19 insertions(+)
 >=20
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index 721ee7f09b39..ef9bb3c7ad6f 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -604,6 +604,7 @@ typedef struct srb {
+>  =09const char *name;
+>  =09int iocbs;
+>  =09struct qla_qpair *qpair;
+> +=09struct srb *cmd_sp;
+>  =09struct list_head elem;
+>  =09u32 gen1;=09/* scratch */
+>  =09u32 gen2;=09/* scratch */
 > diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
 nit.c
-> index 7cb7545de962..5db8ad832893 100644
+> index 5db8ad832893..7fdbe041cc19 100644
 > --- a/drivers/scsi/qla2xxx/qla_init.c
 > +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -1864,42 +1864,21 @@ qla24xx_handle_prli_done_event(struct scsi_qla_ho=
-st *vha, struct event_arg *ea)
->  =09=09 * FCP/NVMe port
->  =09=09 */
->  =09=09if (NVME_FCP_TARGET(ea->fcport)) {
-> -=09=09=09if (vha->hw->fc4_type_priority =3D=3D FC4_PRIORITY_NVME)
-> -=09=09=09=09ea->fcport->fc4_type &=3D ~FS_FC4TYPE_NVME;
-> -=09=09=09else
-> -=09=09=09=09ea->fcport->fc4_type &=3D ~FS_FC4TYPE_FCP;
->  =09=09=09ql_dbg(ql_dbg_disc, vha, 0x2118,
->  =09=09=09=09"%s %d %8phC post %s prli\n",
->  =09=09=09=09__func__, __LINE__, ea->fcport->port_name,
->  =09=09=09=09(ea->fcport->fc4_type & FS_FC4TYPE_NVME) ?
->  =09=09=09=09"NVMe" : "FCP");
-> -=09=09=09qla24xx_post_prli_work(vha, ea->fcport);
-> -=09=09=09break;
-> +=09=09=09if (vha->hw->fc4_type_priority =3D=3D FC4_PRIORITY_NVME)
-> +=09=09=09=09ea->fcport->fc4_type &=3D ~FS_FC4TYPE_NVME;
-> +=09=09=09else
-> +=09=09=09=09ea->fcport->fc4_type &=3D ~FS_FC4TYPE_FCP;
->  =09=09}
+> @@ -101,8 +101,22 @@ static void qla24xx_abort_iocb_timeout(void *data)
+>  =09u32 handle;
+>  =09unsigned long flags;
 > =20
-> -=09=09/* at this point both PRLI NVME & PRLI FCP failed */
-> -=09=09if (N2N_TOPO(vha->hw)) {
-> -=09=09=09if (ea->fcport->n2n_link_reset_cnt < 3) {
-> -=09=09=09=09ea->fcport->n2n_link_reset_cnt++;
-> -=09=09=09=09/*
-> -=09=09=09=09 * remote port is not sending Plogi. Reset
-> -=09=09=09=09 * link to kick start his state machine
-> -=09=09=09=09 */
-> -=09=09=09=09set_bit(N2N_LINK_RESET, &vha->dpc_flags);
-> -=09=09=09} else {
-> -=09=09=09=09ql_log(ql_log_warn, vha, 0x2119,
-> -=09=09=09=09    "%s %d %8phC Unable to reconnect\n",
-> -=09=09=09=09    __func__, __LINE__, ea->fcport->port_name);
-> -=09=09=09}
-> -=09=09} else {
-> -=09=09=09/*
-> -=09=09=09 * switch connect. login failed. Take connection
-> -=09=09=09 * down and allow relogin to retrigger
-> -=09=09=09 */
-> -=09=09=09ea->fcport->flags &=3D ~FCF_ASYNC_SENT;
-> -=09=09=09ea->fcport->keep_nport_handle =3D 0;
-> -=09=09=09qlt_schedule_sess_for_deletion(ea->fcport);
-> -=09=09}
-> +=09=09ea->fcport->flags &=3D ~FCF_ASYNC_SENT;
-> +=09=09ea->fcport->keep_nport_handle =3D 0;
-> +=09=09ea->fcport->logout_on_delete =3D 1;
-> +=09=09qlt_schedule_sess_for_deletion(ea->fcport);
->  =09=09break;
->  =09}
->  }
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_i=
-ocb.c
-> index eeb526411536..2b675da34bda 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -2764,6 +2764,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, in=
-t res)
->  =09=09=09ea.sp =3D sp;
->  =09=09=09qla24xx_handle_plogi_done_event(vha, &ea);
->  =09=09=09break;
+> +=09if (sp->cmd_sp)
+> +=09=09ql_dbg(ql_dbg_async, sp->vha, 0x507c,
+> +=09=09    "Abort timeout - cmd hdl=3D%x, cmd type=3D%x hdl=3D%x, type=3D=
+%x\n",
+> +=09=09    sp->cmd_sp->handle, sp->cmd_sp->type,
+> +=09=09    sp->handle, sp->type);
+> +=09else
+> +=09=09ql_dbg(ql_dbg_async, sp->vha, 0x507c,
+> +=09=09    "Abort timeout 2 - hdl=3D%x, type=3D%x\n",
+> +=09=09    sp->handle, sp->type);
 > +
->  =09=09case CS_IOCB_ERROR:
->  =09=09=09switch (fw_status[1]) {
->  =09=09=09case LSC_SCODE_PORTID_USED:
-> @@ -2834,6 +2835,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, in=
-t res)
->  =09=09=09=09    fw_status[0], fw_status[1], fw_status[2]);
-> =20
->  =09=09=09=09fcport->flags &=3D ~FCF_ASYNC_SENT;
-> +=09=09=09=09fcport->disc_state =3D DSC_LOGIN_FAILED;
->  =09=09=09=09set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
->  =09=09=09=09break;
->  =09=09=09}
-> @@ -2846,6 +2848,7 @@ static void qla2x00_els_dcmd2_sp_done(srb_t *sp, in=
-t res)
->  =09=09=09    fw_status[0], fw_status[1], fw_status[2]);
-> =20
->  =09=09=09sp->fcport->flags &=3D ~FCF_ASYNC_SENT;
-> +=09=09=09sp->fcport->disc_state =3D DSC_LOGIN_FAILED;
->  =09=09=09set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
->  =09=09=09break;
->  =09=09}
-> @@ -2881,11 +2884,12 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int =
-els_opcode,
->  =09=09return -ENOMEM;
+>  =09spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+>  =09for (handle =3D 1; handle < qpair->req->num_outstanding_cmds; handle+=
++) {
+> +=09=09if (sp->cmd_sp && (qpair->req->outstanding_cmds[handle] =3D=3D
+> +=09=09    sp->cmd_sp))
+> +=09=09=09qpair->req->outstanding_cmds[handle] =3D NULL;
+> +
+>  =09=09/* removing the abort */
+>  =09=09if (qpair->req->outstanding_cmds[handle] =3D=3D sp) {
+>  =09=09=09qpair->req->outstanding_cmds[handle] =3D NULL;
+> @@ -111,6 +125,9 @@ static void qla24xx_abort_iocb_timeout(void *data)
 >  =09}
+>  =09spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
 > =20
-> +=09fcport->flags |=3D FCF_ASYNC_SENT;
-> +=09fcport->disc_state =3D DSC_LOGIN_PEND;
->  =09elsio =3D &sp->u.iocb_cmd;
->  =09ql_dbg(ql_dbg_io, vha, 0x3073,
->  =09    "Enter: PLOGI portid=3D%06x\n", fcport->d_id.b24);
+> +=09if (sp->cmd_sp)
+> +=09=09sp->cmd_sp->done(sp->cmd_sp, QLA_OS_TIMER_EXPIRED);
+> +
+>  =09abt->u.abt.comp_status =3D CS_TIMEOUT;
+>  =09sp->done(sp, QLA_OS_TIMER_EXPIRED);
+>  }
+> @@ -142,6 +159,7 @@ static int qla24xx_async_abort_cmd(srb_t *cmd_sp, boo=
+l wait)
+>  =09sp->type =3D SRB_ABT_CMD;
+>  =09sp->name =3D "abort";
+>  =09sp->qpair =3D cmd_sp->qpair;
+> +=09sp->cmd_sp =3D cmd_sp;
+>  =09if (wait)
+>  =09=09sp->flags =3D SRB_WAKEUP_ON_COMP;
 > =20
-> -=09fcport->flags |=3D FCF_ASYNC_SENT;
->  =09sp->type =3D SRB_ELS_DCMD;
->  =09sp->name =3D "ELS_DCMD";
->  =09sp->fcport =3D fcport;
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
