@@ -2,109 +2,131 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A5CC010A2
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 10:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C44FDC010C6
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:48:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3FCA217F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 10:20:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98A6B21D6C
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 11:48:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bzTtTwtg"
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="KI9+aUbc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388319AbfKEKUj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:20:39 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:41810 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388022AbfKEKUj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 05:20:39 -0500
-Received: by mail-wr1-f67.google.com with SMTP id p4so20629940wrm.8;
-        Tue, 05 Nov 2019 02:20:37 -0800 (PST)
+        id S2388155AbfKELsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 06:48:47 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:38876 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730816AbfKELsr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 06:48:47 -0500
+Received: by mail-wm1-f68.google.com with SMTP id z19so15607247wmk.3
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 03:48:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=U7rVx6gqyBAf8/Ix0rAHegGvn59AhNGRQobMkf7SosQ=;
-        b=bzTtTwtgX5SNoprXTuL3uJvNqg+rVVN6QiEEl3vLtO2OA5ja3rtlJxNhH8T45Q55Hk
-         v3XWKTYxeFDxyegsUAXHU5jMvZNHU02o6JtDh0nkGMOGFkL0FRS3hhkvzP3Vqsnpd0Bt
-         NpGNCvSx9LMmH07fWqN5CCbQfk7twqlTQhgnHm5Rbt4KwE/DjRYQgKe0vTe4DinmBTs5
-         uIiQ/LTogvZuw3fJW7T188+zOFtN9V5fJddUzMhh9WQPk132HJLyNq7JwvY0iiaPFaUB
-         N+oxqVBG8nv94B3vvOFg8Hv68TIQh4LSdAkfWtGFEGU3w77gqtwIcJ+bnJpRe+WDmv2C
-         Nn1A==
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=LpNq9BZEzcBsPjl2fwGhxUI4p8CxhaTMp7/DMtc0Tzw=;
+        b=KI9+aUbcov74z4OaAXNWUWbeLzdg8DbG3S2miuQLMt3Uml7yDXyPmnBaJDTbk0eUef
+         9wiZ7OlgVcK3aYQCtsAnJBZwLGI5ogA7nDHzAyDVvfwxe6YbctPHYwocPHyS/bycuxgI
+         g2uQJ0c4jvgU//F3SyBAddI9l83920U/bo1QcaBmBLgSCeouEBPFpii3p+64ndRAxG97
+         IHGnjUZb4ehLb+agNJlsusvEEaR7EFxQ2gAIFckLDhyOR4WZkhRay33ZVG7y0cBGBAeb
+         Ld3gqMYS9GyNYJmzKdpHsh+whHAjT8yJAGOHzRrU1aG98bKQeLWAMmX5PaKZignuVoD1
+         SNNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=U7rVx6gqyBAf8/Ix0rAHegGvn59AhNGRQobMkf7SosQ=;
-        b=ECgofoW7RxA3L0b3JScq2fbNXcFFWAtukl6l+Nj3usgyVbhUojrNBHXuinnPY17nZb
-         fj/ELSCRPPHemgQ7HoYhoch4TxnJyioz8va0qUkO+Z32vD5gLlZrk2olJkQcybP5EyeU
-         s3yOLBzMdMi1HTEKgGKi9uwZYeX7382SgaT4sijVAgfd/ff4hdDErNHeNX4pZTyvaB1s
-         EZdMsMe2qdUjMdVBYJuk4MQP8PBSG89zbyiCrkxJ6yt1qylG42dV5vLXVIkdY9WUa4En
-         DQG0/fGnXdqjW9+5/NwUJSsQk7vutjvmi1JYDMAG8z97THV+tp0m8GoEXa/AQqmLG+Ww
-         werQ==
-X-Gm-Message-State: APjAAAX4G+kaZODNfD+LfL7Q4UfIqzwTGF3h1bvsldnlDpfHwTZ0KvjO
-        jnrk6PDlr+97AR5pVHvMj5cR/Mu4Ue+ohFidWGQ=
-X-Google-Smtp-Source: APXvYqyWKbdqV5y+fX/GlmvSFNbw7CIaOg7O75M1f/C35mhY/KY/3EDtUrS9+Q26Hy7PZ3+eHf9KeSFGTCo8vlnS3Ig=
-X-Received: by 2002:a5d:490c:: with SMTP id x12mr25443865wrq.301.1572949236565;
- Tue, 05 Nov 2019 02:20:36 -0800 (PST)
-MIME-Version: 1.0
-References: <d5c12f05-5a07-b698-ae60-2728330dd378@web.de> <CAL2rwxrdOVeO3RT_Y3mk3p-076eMMWm6VVF0C4yiYEWJ0TO5DQ@mail.gmail.com>
- <20191105093641.GE10409@kadam>
-In-Reply-To: <20191105093641.GE10409@kadam>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Tue, 5 Nov 2019 21:20:25 +1100
-Message-ID: <CAGRGNgU9=Ng60QE_-f8fs5HzDTFQ_8R3taidERAocBc1nQwbXg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: Use common error handling code in megasas_mgmt_ioctl_fw()
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Markus Elfring <Markus.Elfring@web.de>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
-        "James E. J. Bottomley" <jejb@linux.ibm.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=LpNq9BZEzcBsPjl2fwGhxUI4p8CxhaTMp7/DMtc0Tzw=;
+        b=YlLQ5WRK85cff9/8JXhTfsGYX0fH59yWuGolcLDfGR/yio+Xe+X9jAEKCJL0xOOdDP
+         AZbnCfF6XfXsy4WzpUPXi3cET3q1FcqgVgULEawgb4d2pJrstE7kp7XvNZVdxE4Fmrcv
+         cE8w/9l7i4+CgUcG39agiQ6Ig9NWDKdZz61W5DRxmSoEGxSL7sczPyGkp+ZhpYisXFFd
+         FlSHvNuRIles+RkyLwuT9KLVUhbd+6ELKQz4YG32py47PqDsafWtzbMgclbm5zuHcOq2
+         AMnE9l8lVjMeFXrhLGHuB9VVjzQph1jZq9+dUW3Tcn5vO6FCgTtPgB2FQKeTEQdcOb/k
+         oPUw==
+X-Gm-Message-State: APjAAAXbXyuGcqbR3+QPuCXl5o5NsHyGHovDQXfyrRBLxiZZZwzSIeQu
+        egSst2mYxKiu7p/v2pMs0b+xLQ==
+X-Google-Smtp-Source: APXvYqweS3le3W871Mi2XCp7mQy9hB83kcFi9F1QrG1nG+PCkN1aNHbQ6+Gba2cPfasng8QNYKKYHw==
+X-Received: by 2002:a7b:ca51:: with SMTP id m17mr3567639wml.110.1572954524617;
+        Tue, 05 Nov 2019 03:48:44 -0800 (PST)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id v128sm26856481wmb.14.2019.11.05.03.48.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Nov 2019 03:48:43 -0800 (PST)
+Message-ID: <0cd6ac36b7ab644576fc0f3f5bd4a880c33855d1.camel@unipv.it>
+Subject: Re: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors <kernel-janitors@vger.kernel.org>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        YueHaibing <yuehaibing@huawei.com>
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>
+Date:   Tue, 05 Nov 2019 12:48:42 +0100
+In-Reply-To: <Pine.LNX.4.44L0.1911041316390.1689-200000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1911041316390.1689-200000@iolanthe.rowland.org>
 Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Il giorno lun, 04/11/2019 alle 13.20 -0500, Alan Stern ha scritto:
+> On Mon, 4 Nov 2019, Andrea Vai wrote:
+> 
+> > > The "linux" directory is the one generated by a fresh git clone:
+> > > 
+> > > git clone
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+> > > 
+> > > What am I doing wrong?
+> > > 
+> > 
+> > Meanwhile, Alan tried to help me and gave me another patch
+> (attached),
+> > which doesn't work too, but gives a different error: "The git diff
+> > header does not contain information about the file once removed 1
+> > initial component of the path (row 14)" (actually, this is my
+> > translation from the original message in Italian: "error:
+> > l'intestazione git diff non riporta le informazioni sul file una
+> volta
+> > rimosso 1 componente iniziale del percorso (riga 14)")
+> > 
+> > I tested the two patches after a fresh git clone today, a few
+> minutes
+> > ago.
+> > 
+> > What can I do?
+> 
+> You should be able to do something like this:
+> 
+>         cd linux
+>         patch -p1 </path/to/patch2
+> 
+> and that should work with no errors.  You don't need to use git to 
+> apply a patch.
+> 
+> In case that patch2 file was mangled somewhere along the way, I
+> have 
+> attached a copy to this message.
 
-On Tue, Nov 5, 2019 at 8:41 PM Dan Carpenter <dan.carpenter@oracle.com> wrote:
->
-> On Tue, Nov 05, 2019 at 02:58:35PM +0530, Sumit Saxena wrote:
-> > On Fri, Nov 1, 2019 at 3:06 AM Markus Elfring <Markus.Elfring@web.de> wrote:
-> > >
-> > > From: Markus Elfring <elfring@users.sourceforge.net>
-> > > Date: Thu, 31 Oct 2019 22:23:02 +0100
-> > >
-> > > Move the same error code assignments so that such exception handling
-> > > can be better reused at the end of this function.
-> > >
-> > > This issue was detected by using the Coccinelle software.
-> > >
-> > > Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> >
-> > Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-> >
->
-> The code was a lot better originally...  :(
+Ok, so the "patch" command worked, the kernel compiled and ran, but
+the test still failed (273, 108, 104, 260, 177, 236, 179, 1123, 289,
+873 seconds to copy a 500MB file, vs. ~30 seconds with the "good"
+kernel).
 
-Agreed, this is a lot of stuffing around to save 3 lines.
+Let me know what else could I do,
 
-Thanks,
+Thanks, and bye
+Andrea
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
