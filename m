@@ -2,121 +2,115 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B702CA9ED4
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 03:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 724CDCA9EC7
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 03:53:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53CC2214E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 03:12:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572923546;
-	bh=hCqiCSjlrDhL5SGAV3AMEdP6Wu47sW0wJnkXEfvsLDA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=UwHQOBCC3k2kD2yXHjGlTcFU0Ds12tl13sIYbOTj2F5WlIsyWwwdgzHyy0l+YkXy/
-	 YHOFwa7r1E/QwO2/hL//dLjdLx/620XK+5u4+kpoV2IwhVdwB/Qi1+DUI88w6ac9vy
-	 CXn/Daih1T+gAl4mQsQdo5jmlst6Up3kbnqJaoBo=
+	by mail.kernel.org (Postfix) with ESMTP id 4F668214B2
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 03:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729772AbfKEDM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Nov 2019 22:12:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36692 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729543AbfKEDMZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 Nov 2019 22:12:25 -0500
-Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 55C0D206B8;
-        Tue,  5 Nov 2019 03:12:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572923544;
-        bh=hCqiCSjlrDhL5SGAV3AMEdP6Wu47sW0wJnkXEfvsLDA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ri2wHRty9kxlKC9gQp5N8RoTQPWUoA55ALYg1PirNxKLDJn3ZgT/m/zKOqgfEIUqm
-         Ua2KFn6GvKBaanq+gHvxNHv86uoy/TSVumd9fbUnuZNJrrygfaLQn9RVQTUVh3s+Tu
-         TNbhm3BZI6egc58lOzR1Oc8dCl+b9DOCQFLY3J+w=
-Date:   Mon, 4 Nov 2019 19:12:22 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Satya Tangirala <satyat@google.com>, linux-scsi@vger.kernel.org,
-        Kim Boojin <boojin.kim@samsung.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v5 7/9] fscrypt: add inline encryption support
-Message-ID: <20191105031222.GE692@sol.localdomain>
-Mail-Followup-To: Christoph Hellwig <hch@infradead.org>,
-        Satya Tangirala <satyat@google.com>, linux-scsi@vger.kernel.org,
-        Kim Boojin <boojin.kim@samsung.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20191028072032.6911-1-satyat@google.com>
- <20191028072032.6911-8-satyat@google.com>
- <20191031183217.GF23601@infradead.org>
- <20191031202125.GA111219@gmail.com>
- <20191031212103.GA6244@infradead.org>
+        id S1730047AbfKEDxD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Nov 2019 22:53:03 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:44473 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729711AbfKEDxC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Nov 2019 22:53:02 -0500
+Received: by mail-pf1-f193.google.com with SMTP id q26so14109738pfn.11
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2019 19:53:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=rkgyVC+OHuPOQsxRSUKUdeaSwTtfsnMxNQ4Be2vjMX0=;
+        b=jkCs7z0nyK5EktSWNY78/Tk3qQIFkD9KZ2ePa+zpk1Nd9YqeCWizYH3qHW+0C4Je6d
+         LwR2Iv9eYH4vLzZUdyTlESaabAyXwsoqnEMMnmT0xPzcT25NrZMwx9wpsDf4BcTqWwNq
+         scn0t++dGTQgsnpdx2JSOIAVb4L7B6x02XHcPX/4DE2wqDKTbQoueZvYrNIg6cHwgQK0
+         gTPumUQt3nEDmi2LeJaQL0akpxDFZHhz80edbQstzPAz6Zi+bTwuGz8UHYEJGKgBwx3b
+         80v1Ry4kxfT3N5cwV7d0/diN3LJDOISkvuJT5FrJFSiJQfn7CyIw7t7EJbz8LwxWA4v5
+         QnbQ==
+X-Gm-Message-State: APjAAAW5OZU4OMwu4oZcbwUAMYs7Nh6Mx1zb9934QdXHXzvnxA46LrMW
+        JRPAZ4OGLRRmQTRkJOdknrI=
+X-Google-Smtp-Source: APXvYqzNWEdscEBSDZMWDFLxzo5OtChvKIAXLSWgWJbOa+IunmqtCvkucNNVUXwvp9ZUZtJ4oAIshQ==
+X-Received: by 2002:a17:90a:c505:: with SMTP id k5mr3423292pjt.84.1572925981939;
+        Mon, 04 Nov 2019 19:53:01 -0800 (PST)
+Received: from localhost.localdomain ([2601:647:4000:1075:7888:d8f7:5d82:844a])
+        by smtp.gmail.com with ESMTPSA id 198sm5198958pgf.47.2019.11.04.19.53.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Nov 2019 19:53:00 -0800 (PST)
+Subject: Re: [scsi] 74eb6c22dc: suspend_stress.fail
+To:     kernel test robot <oliver.sang@intel.com>,
+        Ming Lei <ming.lei@redhat.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Laurence Oberman <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>, lkp@lists.01.org
+References: <20191104085021.GF13369@xsang-OptiPlex-9020>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <824c5a0b-a31a-b0a2-b14a-ab6edd294d07@acm.org>
+Date:   Mon, 4 Nov 2019 19:52:59 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191031212103.GA6244@infradead.org>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+In-Reply-To: <20191104085021.GF13369@xsang-OptiPlex-9020>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 31, 2019 at 02:21:03PM -0700, Christoph Hellwig wrote:
-> > > 
-> > > Btw, I'm not happy about the 8-byte IV assumptions everywhere here.
-> > > That really should be a parameter, not hardcoded.
-> > 
-> > To be clear, the 8-byte IV assumption doesn't really come from fs/crypto/, but
-> > rather in what the blk-crypto API provides.  If blk-crypto were to provide
-> > longer IV support, fs/crypto/ would pretty easily be able to make use of it.
+On 2019-11-04 00:50, kernel test robot wrote:
+> FYI, we noticed the following commit (built with gcc-7):
 > 
-> That's what I meant - we hardcode the value in fscrypt.  Instead we need
-> to expose the size from blk-crypt and check for it.
+> commit: 74eb6c22dc70e395b333c9ca579855cd88db8845 ("[RFC PATCH V3 2/2] scsi: core: don't limit per-LUN queue depth for SSD")
+> url: https://github.com/0day-ci/linux/commits/Ming-Lei/scsi-core-avoid-host-wide-host_busy-counter-for-scsi_mq/20191009-015827
+> base: https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git for-next
 > 
-> > 
-> > (And if IVs >= 24 bytes were supported and we added AES-128-CBC-ESSIV and
-> > Adiantum support to blk-crypto.c, then inline encryption would be able to do
-> > everything that the existing filesystem-layer contents encryption can do.)
-> > 
-> > Do you have anything in mind for how to make the API support longer IVs in a
-> > clean way?  Are you thinking of something like:
-> > 
-> > 	#define BLK_CRYPTO_MAX_DUN_SIZE	24
-> > 
-> > 	u8 dun[BLK_CRYPTO_MAX_DUN_SIZE];
-> > 	int dun_size;
-> > 
-> > We do have to perform arithmetic operations on it, so a byte array would make it
-> > ugly and slower, but it should be possible...
+> in testcase: suspend_stress
+> with following parameters:
 > 
-> Well, we could make it an array of u64s, which means we can do all the
-> useful arithmetics on components on one of them.  But I see the point,
-> this adds significant complexity for no real short term gain, and we
-> should probably postponed it until needed.  Maybe just document the
-> assumptions a little better.
+> 	mode: freeze
+> 	iterations: 10
 
-Just in case it's not obvious to anyone, I should also mention that being
-limited to specifying a 64-bit DUN doesn't prevent hardware that accepts a
-longer IV (e.g. 128 bits) from being used.  It would just be a matter of
-zero-padding the IV in the driver rather than in hardware.
+Hi Ming,
 
-The actual limitation we're talking about here is in the range of IVs that can
-be specified.  A 64-bit DUN only allows the first 64 bits of the IV to be
-nonzero.  That works for fscrypt in all cases except DIRECT_KEY policies, and it
-would work for dm-crypt using the usual dm-crypt IV generator (plain64).
+This is the second report by the build robot that this patch causes the
+suspend_stress test to fail. I assume that that means that that test
+failure is not a coincidence. The previous report (Oct-22) is available
+at https://lore.kernel.org/linux-scsi/20191023003027.GD12647@shao2-debian/.
 
-But for inline encryption to be compatible with DIRECT_KEY fscrypt policies or
-with certain other dm-crypt IV generators, we'd need the ability to specify more
-IV bits.
-
-- Eric
+Bart.
