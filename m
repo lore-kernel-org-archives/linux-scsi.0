@@ -2,128 +2,101 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F88AC5DF60
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 21:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 066C2C5DF60
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 21:56:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C510F2087E
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 21:47:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="cU8gP0My"
+	by mail.kernel.org (Postfix) with ESMTP id C1AF02087E
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 21:56:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728178AbfKEVrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 16:47:14 -0500
-Received: from mail-eopbgr800070.outbound.protection.outlook.com ([40.107.80.70]:58702
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726751AbfKEVrO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Nov 2019 16:47:14 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PuFCKVpMSBMxXbIC/gwzbY6w1lZ0w29rtFweMts5xykkRcc749n8xQCHh/vu95Wn0RjesSePOpr9CjpRCGeQ5WFx219Iunfvg11Q76/DyQawB9oNqK9lu0o2pRRL1O3h+KSIIBt10MmrQeL6o3kfjXhLz8IzT7wVbLHAxb/MRa9u8nfy9CHDpdhn+1xiXWzvySbpwmJJcwuFUztbiA16yXOnMdnbfAp/S+Np0EgXTu5MWefQLg8x+oNm2QsfoRTS2TsguBDSUv4Yfrib+wbbLyRn0zUDyvIlwFPcTC2nLjc/k3B69Cx673rImigHJ4uGYsJi2qkNVEmNVeACPtk6HQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Eoq5uYS58y5tLdGdBsQUaIywBhtOhfCxB1rWP46IvH0=;
- b=OHE5O/tyjP3vWT6dXRFTwycPgXvsdX0k9Otd3uwNh9hZGhoawdPmP6vuO8mg2h9lfZVORLNK93H0TpZMmvU7HAhUCRDLRD9F6dalHfTx+CPrtJA5trfhUT46+gcQpOBmwq1SCmWGj/Q/KMNE3p6cAsRk1OSR6FJbVl43pXBbKwa6TSJHHjer7jBRG9Yudx9a3ku8c3JBHde8az2daQyvdLFC/E+0pPjhLUExwxbasR3VeVWJAcZ7BWkcxZmyjs7xb6dktVCxa+Jdukw2ENaDLfQOhpp7xMcBE9f88z1jr8ZnF5wfxm/4gEMfi876NziN7oy7MkDXV97KwUQ6E37T/g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Eoq5uYS58y5tLdGdBsQUaIywBhtOhfCxB1rWP46IvH0=;
- b=cU8gP0MyUbkIZqZIRw2wYB6ePWf9gMrPRLILlH6rElYMnuMRRccQSUpsi+pVoAoOdlpsL03Y6h70eMrcu1cAMFV2oZ1SAqupsPVjMOi2pLdRXfSj6Nyf1qnTJ3kmbWAC5bodUaYKWgaUgVGCBXHGJQTLYu3zRoOjAYUuryMjBe0=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB4322.namprd08.prod.outlook.com (52.135.249.158) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2408.24; Tue, 5 Nov 2019 21:47:11 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2408.024; Tue, 5 Nov 2019
- 21:47:11 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S1730043AbfKEV4C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 16:56:02 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:40117 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730041AbfKEV4C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 16:56:02 -0500
+Received: by mail-pl1-f193.google.com with SMTP id e3so8196257plt.7
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 13:56:00 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FwWvDszRtZZjYkJRiR0LHlyYfi6cCIKYfphV/rqYWXw=;
+        b=KPYZJ7nVoI9A1rS7hlxR4JDphugO3EMC+rLjhkGmIlVbN4uI+v4TEWeAY9qmZeirjp
+         SkG/uZ73Xw5FQ7kJL2onvBW0Zx0UpPqM/iH84WGY0qOHSezwjMX2An03dBMUzBMk4MnS
+         LckwPz3uwHL7/O5J5wlnaEHZws/QAlduF7WxnnKfKhuwG867qwcvUz4W+QnONCIrpzwl
+         /cBD7r78x+B+FGP9OnvJOqcr36I7vjw8b+FlLpG6cfD6DZGBZa8iiwliI0E7IISrbyas
+         IiwcQHqz9GwgL/Cp/Lk9B45yRvB4TIykJIyem1tAgkizkLKCkDmqE36dH6vEKdAvZOx/
+         FtHw==
+X-Gm-Message-State: APjAAAWG6Nm0oWAIwu4Watu42bZ/5RRwu1HRw9wdsOGxToOTi7ydVfA/
+        RWFz1/+M1i1eyJWl2Qx7f5g=
+X-Google-Smtp-Source: APXvYqyoXxmWUrMqOucQidlfKCt+K8lt/yNwfGBkoFZsZeGvEhfBPZZ5EmvDq+0dAPX495MNjVsSkg==
+X-Received: by 2002:a17:902:b198:: with SMTP id s24mr2686908plr.170.1572990960229;
+        Tue, 05 Nov 2019 13:56:00 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id 3sm22384685pfh.45.2019.11.05.13.55.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Nov 2019 13:55:59 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Yaniv Gardi <ygardi@codeaurora.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: RE: [EXT] [PATCH RFC v2 2/5] ufs: Use reserved tags for TMFs
-Thread-Topic: [EXT] [PATCH RFC v2 2/5] ufs: Use reserved tags for TMFs
-Thread-Index: AQHVk3Hu+vKK5UpByE6NhmIiHnKyoqd8eXOQgABVPoCAAElzYA==
-Date:   Tue, 5 Nov 2019 21:47:11 +0000
-Message-ID: <BN7PR08MB56841C9F0D42B50A8CBDE0F5DB7E0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <20191105004226.232635-1-bvanassche@acm.org>
- <20191105004226.232635-3-bvanassche@acm.org>
- <BN7PR08MB56849F96E16115321F44F257DB7E0@BN7PR08MB5684.namprd08.prod.outlook.com>
- <11e7ba67-84ca-2f86-0bce-78646ced9612@acm.org>
-In-Reply-To: <11e7ba67-84ca-2f86-0bce-78646ced9612@acm.org>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLWNmY2M5ZmRmLTAwMTUtMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFxjZmNjOWZlMC0wMDE1LTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjEzNjMiIHQ9IjEzMjE3NDY0MDI3OTQ1Mzk2NSIgaD0iR1J5azY1NW1VVFZZMDRrcHBhMUlZWVFHZnRVPSIgaWQ9IiIgYmw9IjAiIGJvPSIxIi8+PC9tZXRhPg==
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.81.112]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: c6dceb54-45d3-4d7e-9701-08d76239b6ab
-x-ms-traffictypediagnostic: BN7PR08MB4322:|BN7PR08MB4322:|BN7PR08MB4322:
-x-microsoft-antispam-prvs: <BN7PR08MB4322E4A4AAFA3562884707D8DB7E0@BN7PR08MB4322.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-forefront-prvs: 0212BDE3BE
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(39860400002)(346002)(366004)(396003)(376002)(189003)(199004)(81166006)(229853002)(2906002)(66446008)(102836004)(8676002)(64756008)(55236004)(6246003)(26005)(7696005)(99286004)(71190400001)(71200400001)(86362001)(81156014)(76176011)(14444005)(256004)(9686003)(55016002)(6436002)(66946007)(25786009)(66556008)(8936002)(53546011)(76116006)(6116002)(11346002)(446003)(7416002)(3846002)(486006)(66066001)(6506007)(66476007)(52536014)(4326008)(5660300002)(33656002)(476003)(54906003)(74316002)(186003)(7736002)(478600001)(316002)(305945005)(110136005)(14454004);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB4322;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: EQPL7jQq9MrHdUXqhk0WaWOfjQLOjAKFdPXjGQKfz0MQizH56Gitc4XKYC5YMTt1o5QJ4YtcE6Hl6IaHG9G71bgo9n13Rokn+ZxYVdyOpu836u+f+u40Bw3ih6l3kdqhnMsU+r4BkGqzEtTx2zgKGKEqSjEhPuLP0i/Necyzl3iHB0GNYRI3FOA6anZu111b1RbhG6bOxprssFupbuz+bBdm/kecOnSY7xTeSmfrvFpeMp0zEOXRwZUTcjQazSwMZ7ObEsOzh2VDCRfraBRH3KDBl57IVYtDSEa1dhWSQYrSq49v5AP9IYTpLJNSCbUGxDji6HmGQlNXUifSuvSJaqpKxuasDtFpaiX+MjTht0L+7EKonV2iz9FeACG5+ghHH18bHqYrgN9Nbq0x5bhXV3kIRRBTTK40axnYVUiPSwaRCyfssSUtplEmVcZLY4Vz
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
+Date:   Tue,  5 Nov 2019 13:55:53 -0800
+Message-Id: <20191105215553.185018-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.24.0.rc1.363.gb1bccd3e3d-goog
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c6dceb54-45d3-4d7e-9701-08d76239b6ab
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 21:47:11.1502
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: G5kvufjrWLBQfW91JP0UpaOQ1vOaWhckhV0vVMW+BVCDvcxX4dxzFGreKum86g8Wrkc/VWiOLpFBshBL5aUzgQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4322
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiANCj4gT24gMTEvNS8xOSAzOjU4IEFNLCBCZWFuIEh1byAoYmVhbmh1bykgd3JvdGU6DQo+ID4+
-ICAgCWhvc3QgPSBjbWQtPmRldmljZS0+aG9zdDsNCj4gPj4gICAJaGJhID0gc2hvc3RfcHJpdiho
-b3N0KTsNCj4gPj4gLQl0YWcgPSBjbWQtPnJlcXVlc3QtPnRhZzsNCj4gPj4gKwl0YWcgPSBjbWQt
-PnJlcXVlc3QtPnRhZyAtIGhiYS0+bnV0bXJzOw0KPiA+PiArCVdBUk5fT05fT05DRSghdWZzaGNk
-X3ZhbGlkX3RhZyhoYmEsIHRhZykpOw0KPiA+DQo+ID4gQ2hhbmdpbmcgcmVxdWVzdCB0YWcgbnVt
-YmVyIGhlcmUgaXMgbm90IHByb3BlciB3YXksIHdlIGhhdmUgdHJhY2UgdG9vbA0KPiA+IHVzaW5n
-IHRoaXMgdGFnIHRvIHRyYWNrIHJlcXVlc3QgZnJvbSBibG9jaywgU0NTSSB0byBVRlMgbGF5ZXIu
-IElmIHRhZ3MgYmVpbmcNCj4gY2hhbmdlZCBpbiBVRlMgZHJpdmVyLCB0aGVyZSB3aWxsIGJlIGEg
-Y29uZnVzaW9uLg0KPiANCj4gSGkgQmVhbiwNCj4gDQo+IFRoYW5rcyBmb3IgaGF2aW5nIHRha2Vu
-IGEgbG9vay4gV2hpY2ggaW5mb3JtYXRpb24gaXMgdXNlZCBieSB0aGUgdHJhY2luZyB0b29sPw0K
-PiBjbWQtPnJlcXVlc3QtPnRhZyBvciB0aGUgdmFyaWFibGUgY2FsbGVkICd0YWcnIGFib3ZlPyBU
-aGUgbGF0dGVyIHNob3VsZCBub3QgYmUNCj4gbW9kaWZpZWQgYnkgdGhpcyBwYXRjaC4gY21kLT5y
-ZXF1ZXN0LT50YWcgaXMgbW9kaWZpZWQgaG93ZXZlciBmb3IgZXZlcnkNCj4gY29tbWFuZCB0aGF0
-IGlzIG5vdCBhIFRNRi4gUHJlc2VydmluZyB0aGUgYmxvY2sgbGF5ZXIgdGFnIHZhbHVlIGlzIHBv
-c3NpYmxlIGJ1dA0KPiB3b3VsZCByZXF1aXJlIHRvIGludHJvZHVjZSBhIG5ldyB0YWcgc2V0IGZv
-ciBUTUZzLg0KPiANCj4gVGhhbmtzLA0KPiANCj4gQmFydC4NCg0KSGksIEJhcnQNCg0KV2UgYXJl
-IHVzaW5nIGxhdHRlciB2YXJpYWJsZSAndGFnJy4gIA0KV2hhdCBJIGNvbmNlcm4gaXMgdGhhdCBj
-bWQtPnJlcXVlc3QtPnRhZyBhbmQgdmFyaWFibGUgdGFnKFVGUyBkcml2ZXIgdXNlcyB0aGlzIHZh
-cmlhYmxlIHRhZykNCmFyZSBjb25zaXN0ZW50IHdpdGhvdXQgdGhpcyBwYXRjaCwgYW5kIG5vdyB3
-ZSBzaG91bGQgY2hhbmdlIG91ciB0YWcgdHJhY2tpbmcgaGFuZGxpbmcgbWVjaGFuaXNtLg0KQnV0
-IGl0IGlzIG5vdCBiaWcgZGVhbCwgd2UgY2FuIHBsdXMgaGJhLT5udXRtcnMgc3VidHJhY3RlZCBi
-ZWZvcmUgIGluIG9yZGVyIHRvIGluIGxpbmUgd2l0aCBibG9jay9zY3NpIHRhZy4gDQoNClRoYW5r
-cywNCg0KLy9CZWFuDQogDQoNCg==
+According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
+blocks must be transferred. Make the SCSI tracing code follow SBC-2.
+
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_trace.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 784ed9a32a0d..ac35c301c792 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -18,15 +18,18 @@ static const char *
+ scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
+ {
+ 	const char *ret = trace_seq_buffer_ptr(p);
+-	sector_t lba = 0, txlen = 0;
++	u32 lba = 0, txlen;
+ 
+ 	lba |= ((cdb[1] & 0x1F) << 16);
+ 	lba |=  (cdb[2] << 8);
+ 	lba |=   cdb[3];
+-	txlen = cdb[4];
++	/*
++	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
++	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
++	 */
++	txlen = cdb[4] ? cdb[4] : 256;
+ 
+-	trace_seq_printf(p, "lba=%llu txlen=%llu",
+-			 (unsigned long long)lba, (unsigned long long)txlen);
++	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
+ 	trace_seq_putc(p, 0);
+ 
+ 	return ret;
+-- 
+2.24.0.rc1.363.gb1bccd3e3d-goog
+
