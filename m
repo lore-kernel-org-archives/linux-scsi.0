@@ -2,57 +2,93 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 312CEC5DF60
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1038CC5DF61
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E0BA214B2
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:29:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB8CE21929
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 15:39:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ocp9xiaK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389801AbfKEP3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 10:29:23 -0500
-Received: from hn.kd.ny.adsl ([42.231.162.229]:1910 "HELO zoosbook.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1727889AbfKEP3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Nov 2019 10:29:23 -0500
-Received: from unknown (HELO group21.345mail.com) (Tue, 05 Nov 2019 09:25:11 -0600)
-        by asx121.turbo-inline.com with LOCAL; Tue, 05 Nov 2019 09:25:11 -0600
-Received: from [192.229.190.219] by rsmail.alkoholic.net with ESMTP; Tue, 05 Nov 2019 09:08:00 -0600
-Received: from qrx.quickslick.com ([206.98.154.252]) by mailout.endmonthnow.com with SMTP; Tue, 05 Nov 2019 09:06:09 -0600
-Message-ID: <EBD075FC.AEABDEF2@zoosbook.com>
-Date:   Tue, 05 Nov 2019 08:44:02 -0600
-From:   "zoosbook.com" <admin@zoosbook.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.8.1.12) Gecko/20080213 Thunderbird/2.0.0.12
+        id S2389760AbfKEPj7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 10:39:59 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:48538 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727889AbfKEPj6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 10:39:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=XQdcZ/rCMxPfhUJE8nbWkRrJsdxA+Vm56qg50/+E1Cw=; b=Ocp9xiaKzYOCoNB+oT3sxZPTQ
+        GZZmpeZz1Pkbx3hL5igN2A9nnxgJeh5ZX0h0RFq6u88ua22HGxw6tlKR923/wrmQM4d9cJFXkqmXz
+        7p6KUsYbiy3UTrhyHmOUjEl4g1vqoBwf3i4ju5z28ZkYAEfqGXc4DjckNzm91NOiLwHOAtuFuuhfP
+        /u+IK73URb7cxkeIV7/gM5hFZ3aGu6h+2cn2G7ik8OqisFdebxIl9EiPUqch0yc5uCTcNG4K9OCbX
+        VW4f/V+e6xpqbfC64GJBGkXaIedjYx1UzWAGjYoerE2gtLIaBhKqYngoD0iVUT+cjBXJ4SKNeqg0x
+        wuaWM8E5g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iS0w1-0000HC-RP; Tue, 05 Nov 2019 15:39:57 +0000
+Date:   Tue, 5 Nov 2019 07:39:57 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Kim Boojin <boojin.kim@samsung.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Satya Tangirala <satyat@google.com>,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: [PATCH v5 3/9] block: blk-crypto for Inline Encryption
+Message-ID: <20191105153957.GA29320@infradead.org>
+References: <20191028072032.6911-1-satyat@google.com>
+ <20191028072032.6911-4-satyat@google.com>
+ <20191031175713.GA23601@infradead.org>
+ <20191031205045.GG16197@mit.edu>
+ <20191031212234.GA32262@infradead.org>
+ <20191105015411.GB692@sol.localdomain>
 MIME-Version: 1.0
-To:     <linux-scsi@vger.kernel.org>
-Subject: FREE Bestiality Social Network
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191105015411.GB692@sol.localdomain>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello, 
+On Mon, Nov 04, 2019 at 06:01:17PM -0800, Eric Biggers wrote:
+> I think that "Severely bloating the per-I/O data structure" is an exaggeration,
+> since that it's only 32 bytes, and it isn't in struct bio directly but rather in
+> struct bio_crypt_ctx...
 
-Bestiality Social Networking Platform. With pictures, videos and friend
-about bestiality and zoophilia porn. 
-Here you can meet and talk with people that love zoo sex.
+Yes, and none of that is needed for the real inline crypto.  And I think
+we can further reduce the overhead of bio_crypt_ctx once we have the
+basiscs sorted out.  If we want to gain more traction we need to reduce
+the I/O to a minimum.
 
-Register for a free account with us today
-https://www.zoosbook.com/register
+> In any case, Satya, it might be a good idea to reorganize this patchset so that
+> it first adds all logic that's needed for "real" inline encryption support
+> (including the needed parts of blk-crypto.c), then adds the crypto API fallback
+> as a separate patch.  That would separate the concerns more cleanly and make the
+> patchset easier to review, and make it easier to make the fallback
+> de-configurable or even remove it entirely if that turns out to be needed.
 
-Let your animalic thoughts get alive.
+Yes, that is a good idea.  Not just in terms of patch, but also in terms
+of code organization.  The current structure is pretty weird with 3
+files that are mostly tighly integrated, except that one also has the
+software implementations.  So what I think we need at a minimum is:
 
-After you`ll get a feeling of the things inside, please give us a nice
-review here
-https://www.scamadviser.com/check-website/zoosbook.com
-
-
-See you inside
-
-
+ - reoranizize that we have say block/blk-crypt.c for all the inline
+   crypto infrastructure, and block/blk-crypy-sw.c for the actual
+   software crypto implementation.
+ - remove all the fields only needed for software crypto from
+   bio_crypt_ctx, and instead clone the bio into a bioset with the
+   additional fields only when we use the software implementation, so
+   that there is no overhead for the hardware path.
