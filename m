@@ -2,101 +2,117 @@ Return-Path: <SRS0=fi+p=Y5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7649DCA9ED3
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 01:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DBD8CA9ED5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 01:03:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 505BA20848
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 01:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33E68214D9
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Nov 2019 01:03:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572915799;
+	bh=4Jmct+axA8jAkXluFcFQI+uLkQTpqnvf/DA6hb5ReCI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Lv6l5GGxOsj3n3pP2HiXsTbucOt6cpuoqDlZwmc8Grpc+3O07rgBXptNOpKMd7QZa
+	 noSUpcp+Kd62q6wnUcm7IngotMfZWuRKQt6YCgc9FR4aS2HfuUL3X+EEI1S76MoRZQ
+	 dfjVdQBmnopM1rKGr2Rypp/15o2NZnkkUE1FKVFM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729788AbfKEBDH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Nov 2019 20:03:07 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:44738 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729368AbfKEBDH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Nov 2019 20:03:07 -0500
-Received: by mail-pf1-f194.google.com with SMTP id q26so13830828pfn.11
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Nov 2019 17:03:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=1Cw0GA7H4P+NvNZ2CVjOyXYPQ+gLKGTd+sdtcbCWClA=;
-        b=gvFALxDOL1sI8OCkk0CdgEB6K0POvrZ+PSbU6dayE4g6v4FFKH7CNWmzznERuP+wfv
-         ZIzhkqT/x/GNvACsUTdheKAiibO2SEIkFQxbFoyhjTMcvxrR7TG2VunPCnW15uDDEcAs
-         MZSdBdLH+vcvxnk5CN9vuOy87xmFpI1oRA67rB1esbBqTBtpvvtAylTAEuVsKkGPHEnQ
-         kUxxN11kj3dgjSiYZeNlrU8oBfpxhWb1MGbQHW0P55Q2zzxAcWMHEVnjuSTdxlsZ3aeE
-         02aubH144QM8ysCMlT2MjiW/jYilXtu3UHF6+APpBAlqEPRIABgBfS7K6pRDVWhYGS9R
-         nNeQ==
-X-Gm-Message-State: APjAAAXoxHWKh1hk1+pcsrpwftmk1wqEcsje5BNDYgMP0/u7ECO9JpdI
-        sJhGzQQJITvq79nqaJpZov8=
-X-Google-Smtp-Source: APXvYqwreZOoFY0TTqQ+8g4wBcna8GpwQUhre9VXivdAX/qlo3yFFlvkVCnVd3udP5UPmcQ1lEs3+A==
-X-Received: by 2002:a17:90a:f84:: with SMTP id 4mr2663010pjz.110.1572915786740;
-        Mon, 04 Nov 2019 17:03:06 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id f31sm10146540pjg.31.2019.11.04.17.03.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Nov 2019 17:03:05 -0800 (PST)
-Subject: Re: [PATCH RFC v2 2/5] ufs: Use reserved tags for TMFs
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Yaniv Gardi <ygardi@codeaurora.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-References: <20191105004226.232635-1-bvanassche@acm.org>
- <20191105004226.232635-3-bvanassche@acm.org> <20191105005729.GA29695@lst.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <f9e5741f-fbfc-8b16-2e0a-43cd4c1a15b5@acm.org>
-Date:   Mon, 4 Nov 2019 17:03:04 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1730003AbfKEBDS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Nov 2019 20:03:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54846 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728761AbfKEBDS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Nov 2019 20:03:18 -0500
+Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C60232067D;
+        Tue,  5 Nov 2019 01:03:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1572915797;
+        bh=4Jmct+axA8jAkXluFcFQI+uLkQTpqnvf/DA6hb5ReCI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nnl5cMFG8BKuRG8ENOvinMxVE3HupXrzgoCoDukHlYgCMGI8K0oFkbfYfvj8iwGMZ
+         BzncIGhzlSd8Tq4p78mCz6fMFe+r9sH1z08KjMRUBKDvvQhIRWVYb/8d92xKHoIJYQ
+         zdX4RS+7YST5kTD4rUt+3j18FC1y0Lf5NWHcquyk=
+Date:   Mon, 4 Nov 2019 17:03:15 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Satya Tangirala <satyat@google.com>, linux-scsi@vger.kernel.org,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v5 7/9] fscrypt: add inline encryption support
+Message-ID: <20191105010315.GA692@sol.localdomain>
+Mail-Followup-To: Christoph Hellwig <hch@infradead.org>,
+        Satya Tangirala <satyat@google.com>, linux-scsi@vger.kernel.org,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        linux-f2fs-devel@lists.sourceforge.net, linux-block@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20191028072032.6911-1-satyat@google.com>
+ <20191028072032.6911-8-satyat@google.com>
+ <20191031183217.GF23601@infradead.org>
+ <20191031202125.GA111219@gmail.com>
+ <20191031212103.GA6244@infradead.org>
+ <20191031222500.GB111219@gmail.com>
+ <20191105001554.GA24056@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20191105005729.GA29695@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191105001554.GA24056@infradead.org>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/4/19 4:57 PM, Christoph Hellwig wrote:
-> On Mon, Nov 04, 2019 at 04:42:23PM -0800, Bart Van Assche wrote:
->> Reserved tags are numerically lower than non-reserved tags. Compensate the
->> change caused by reserving tags by subtracting the number of reserved tags
->> from the tag number assigned by the block layer.
+On Mon, Nov 04, 2019 at 04:15:54PM -0800, Christoph Hellwig wrote:
+> > I don't think combining these things is a good idea because it would restrict
+> > the use of inline encryption to filesystems that allow IV_INO_LBLK_64 encryption
+> > policies, i.e. filesystems that have stable inode numbers, 32-bit inodes, and
+> > 32-bit file logical block numbers.
+> > 
+> > The on-disk format (i.e. the type of encryption policy chosen) and the
+> > implementation (inline or filesystem-layer crypto) are really two separate
+> > things.  This was one of the changes in v4 => v5 of this patchset; these two
+> > things used to be conflated but now they are separate.  Now you can use inline
+> > encryption with the existing fscrypt policies too.
+> > 
+> > We could use two separate SB_* flags, like SB_INLINE_CRYPT and
+> > SB_IV_INO_LBLK_64_SUPPORT.
 > 
-> Why would you do that?  Do we really care about the exact tag number?
-> If so would it make sense to reverse in the block layer how we allocate
-> private vs normal tags?
+> Yes, I think that is a good idea.
 > 
-> Also this change should probably merged into the patch that actually
-> starts using the private tags by actually allocating requests using
-> them.
+> > However, the ->has_stable_inodes() and
+> > ->get_ino_and_lblk_bits() methods are nice because they separate the filesystem
+> > properties from the question of "is this encryption policy supported".
+> > Declaring the filesystem properties is easier to do because it doesn't require
+> > any fscrypt-specific knowledge.  Also, fs/crypto/ could use these properties in
+> > different ways in the future, e.g. if another IV generation scheme is added.
+> 
+> I don't really like writing up method boilerplates for something that
+> is a simple boolean flag.
 
-Hi Christoph,
+fs/crypto/ uses ->has_stable_inodes() and ->get_ino_and_lblk_bits() to print an
+appropriate error message.  If we changed it to a simple flag we'd have to print
+a less useful error message.  Also, people are basically guaranteed to not
+understand what "SB_IV_INO_LBLK_64_SUPPORT" means exactly, and are likely to
+copy-and-paste it incorrectly when adding fscrypt support to a new filesystem.
+Also it would make it more difficult to add other fscrypt IV generation schemes
+in the future as we'd then need to add another sb flag (e.g. SB_IV_INO_LBLK_128)
+and make filesystem-specific changes, rather than change fs/crypto/ only.
 
-The UFS driver writes the actual tags into doorbell registers. There are 
-two such doorbell registers: one for regular commands and one for task 
-management functions. Both doorbell registers are bitmasks that start 
-from bit zero. So I don't see how to avoid this kind of tag conversions? 
- From the UFS driver, for regular commands:
+So personally I'd prefer to keep ->has_stable_inodes() and
+->get_ino_and_lblk_bits() for now.
 
-ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+Replacing ->inline_crypt_enabled() with SB_INLINE_CRYPT makes much more sense
+though.
 
-And for TMFs:
-
-ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
-
-Thanks,
-
-Bart.
-
-
+- Eric
