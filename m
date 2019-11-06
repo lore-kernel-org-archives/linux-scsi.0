@@ -2,107 +2,75 @@ Return-Path: <SRS0=TWTx=Y6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D4BC5DF62
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F06E6C5DF62
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:42:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 561C52075C
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:31:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KOzxI+wH"
+	by mail.kernel.org (Postfix) with ESMTP id BA9912075C
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:42:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731245AbfKFEbl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 23:31:41 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:53488 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726368AbfKFEbl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 23:31:41 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64Sqli082794;
-        Wed, 6 Nov 2019 04:31:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=/ZtPK4ZzB/bJ4YHeBLzDhoB9Htw2t7HAj0EdVtIAxYs=;
- b=KOzxI+wHrJmkXUlq4JRGQMqUME1PSKA4AB/wK8cxpLpgjR4Dc25QVtcAcp0vtTlQA6c6
- NpAI51zzWsKOH8gz63vCyNMi/1GS5LRPsv8eyOzAQWuyMLrxmyEXa7kUsOl72idfah0f
- tQWciEGUVics40iEKHeSqP1XhHOORDlfF4T5KtMbjiv0xpd+GGwSfUgWQs9VWQP7rdwg
- yOkBM2t/4JG5kBVEnWX4awQIwGOBPHPnD+67gBWou7wrRbaqa5VhLfZvk160vao0qmnw
- VyR4i/7PKP34Va0znPpKIEoIFkbPMXNqrsJyWTo+HchCKjuGmxtILHIdK0hiFh+YKyA7 8Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2w11rq32m8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 Nov 2019 04:31:22 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64Spdu006375;
-        Wed, 6 Nov 2019 04:31:22 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2w35pq6xsq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 Nov 2019 04:31:21 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA64VFSn001743;
-        Wed, 6 Nov 2019 04:31:15 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 Nov 2019 20:31:15 -0800
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linux-scsi\@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-usb\@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "usb-storage\@lists.one-eyed-alien.net" 
-        <usb-storage@lists.one-eyed-alien.net>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [PATCH v2] scsi: Fix scsi_get/set_resid() interface
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191030090847.25650-1-damien.lemoal@wdc.com>
-        <af516590-58dc-0377-5c54-ac63cffbafc8@acm.org>
-        <BYAPR04MB5816D4B866F2E7CC421E8488E7600@BYAPR04MB5816.namprd04.prod.outlook.com>
-        <a33afd2e-a7d6-5584-dc26-79fb8f3d6a97@acm.org>
-        <a640ee15-515b-6811-9883-48b49ead9276@suse.de>
-        <BYAPR04MB581685E630A8EA91902B2F9BE77E0@BYAPR04MB5816.namprd04.prod.outlook.com>
-        <yq1eeym52a5.fsf@oracle.com>
-        <BYAPR04MB58164FF9171FDA66879E7400E77E0@BYAPR04MB5816.namprd04.prod.outlook.com>
-Date:   Tue, 05 Nov 2019 23:31:12 -0500
-In-Reply-To: <BYAPR04MB58164FF9171FDA66879E7400E77E0@BYAPR04MB5816.namprd04.prod.outlook.com>
-        (Damien Le Moal's message of "Tue, 5 Nov 2019 05:24:04 +0000")
-Message-ID: <yq1bltp39tb.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1731250AbfKFEme (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 23:42:34 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:44043 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729784AbfKFEme (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 23:42:34 -0500
+Received: by mail-pg1-f195.google.com with SMTP id f19so7153634pgk.11
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 20:42:34 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=itI465xaKW+nl5ZeGkYAhg1+FghCLTPODNZkZ4uEbBg=;
+        b=UWzvdzxurd+lEXk4v7WnFh7Y3iVJZof1Qq/mcvy1mxE85wIfLBG26bvF9REVRs2NlY
+         jJ9odXXYQyprvd11AJVh6p7TwONA/O1S/yhf51z7v8EJk1qQp57RonAyW3rWZyKTn48I
+         Bn5vyd1elRQKl7EAhtpfxLnIBR5UuFOM7KNyBz8qp3j4jDuMf/SXggahHE8DE1s0Lq9l
+         n3/ylF5lWsTm3K4qpYnqoUQQqDUdeOHpV9W9WLOgCP+ro4i8BBjR0HbnOkv/1HEr7nrj
+         66ba05ntc836vjI8ue++36YVg6bJlCMPyrIEdVdk1XqPEnjO9+pD/6KALQAdurxfiwTU
+         1ySQ==
+X-Gm-Message-State: APjAAAXFBAb6lyRCHssOW7PvLcB+x0wSZhejXco0fkGZcvDAw8KxNSv2
+        c12mk66DqzwshlRrNQrzNag=
+X-Google-Smtp-Source: APXvYqy+xcS31lD8QeTl84BmV7luT/QHUzNKx49/Q+YQi1lhxzsPjiqwSmm6AflTnUaXLGsRbieUeg==
+X-Received: by 2002:a17:90a:33ce:: with SMTP id n72mr1070975pjb.17.1573015353503;
+        Tue, 05 Nov 2019 20:42:33 -0800 (PST)
+Received: from localhost.net ([2601:647:4000:1075:a0dc:7f54:c925:d679])
+        by smtp.gmail.com with ESMTPSA id m15sm10262501pfh.19.2019.11.05.20.42.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Nov 2019 20:42:32 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/2] Two qla2xxx fixes
+Date:   Tue,  5 Nov 2019 20:42:24 -0800
+Message-Id: <20191106044226.5207-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9432 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=513
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911060046
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9432 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=593 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911060046
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Martin,
 
-Damien,
+Please consider the two patches in this series for kernel version v5.5.
 
-> Or keeping resid_len as an unsigned int and adding a flag specifying
-> if the value means underflow or overflow ?
+Thanks,
 
-It's been broken for so long I'd rather make the overflow case an
-opt-in. So a separate flag, please.
+Bart.
+
+Bart Van Assche (2):
+  qla2xxx: Remove an include directive
+  qla2xxx: Fix a dma_pool_free() call
+
+ drivers/scsi/qla2xxx/qla_init.c | 1 -
+ drivers/scsi/qla2xxx/qla_os.c   | 3 ++-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.23.0
+
