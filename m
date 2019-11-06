@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8247C5DF62
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BAE1C5DF62
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:28:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 953A0217F4
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:25:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF57217F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:28:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="VpANlrMt"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="cqD9eLE2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730272AbfKFKZC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Nov 2019 05:25:02 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:32895 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727239AbfKFKZC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2019 05:25:02 -0500
-Received: by mail-io1-f66.google.com with SMTP id j13so9970852ioe.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 02:25:01 -0800 (PST)
+        id S1728523AbfKFK21 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Nov 2019 05:28:27 -0500
+Received: from mail-io1-f65.google.com ([209.85.166.65]:39906 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725856AbfKFK21 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2019 05:28:27 -0500
+Received: by mail-io1-f65.google.com with SMTP id k1so14586062ioj.6
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 02:28:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yqc32dgmiK6CE5bA1T06nXklwtMik5Vn1y/CEhyZlI0=;
-        b=VpANlrMtvnGf5aIUYk4baudZtFGQIBqC2HYvqB5F5dy85hwr4tsZy5eL6TPnxSHzUN
-         r25ez1VOwDX7FrPSUhhjjIv0b9UEmuWxnsXXeq72cZMtCiRNP3cPHCqGLscPEkX6ZBRY
-         37SYsdJP/HF7VPyHH7UP8IrbGyuxWOHFmDmm1BEM1/+zoHc+rPTZUKCZeW7u8HU/JUqh
-         sn/n7IdNdRgOnu1L7yVfYFWrelusfNBu/0PEKx792lSNpqZN1byF4ja5zAJRwm8WJxoT
-         3ukzCw+MB3HMIE1ysPNn69cxWmyBhTxFjCQ3fVXatb2UJYqpj+gagvXUtZ9V28amkz6y
-         FI5A==
+        bh=T5T5Vt9ZaeNvQOuays7x6TASDsvxueKTiEVBHFEDs0s=;
+        b=cqD9eLE2eacFiuMyGh3bhPnYsBlm3b1CypDjo6b20N76+48nI4towiCD7svdLqSjf4
+         IyyBD/KVS7sEkKoNhzTsD/YPOKhC16pznjEWvXqquO6vOvGWGdhFd0AblLD9VGhh+x4p
+         ZKdVWJXMcepgWD/wqf32rNgZN2j1QHUnvtmTPTbxP5F59T2zoxQbx2XJ9583yAQXR7zZ
+         VmQ/zfPktk3dl4Ow+BbEtHs0QFxU5tMj9tGFygvTuE+bk6o71M/Ip4u4LT24Aay70XcH
+         OcRz1PSDVR+eaLA9zfKZJSc08J5TY3zfVxPago1OlpkxGXXvRQyXxq1tiQBVyN7UHvDI
+         VNbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=yqc32dgmiK6CE5bA1T06nXklwtMik5Vn1y/CEhyZlI0=;
-        b=iCztYpM+ny4mEMJcock1DLao8uhqLzRO++ujnxxd1Q/i75WlQnpduCvpOz3Il8DHBJ
-         HWw+HVqbldNfKRgFaWE6E1sniUpR8sA2k40DN5ge+pu0AsLqmOuYLHEEogQ4gE3HL2wQ
-         5XO5VZbnGJFyEc0CvGK+ofSuKcnOoivvjBDl8WWw7iSVjRaAyuFuehNNY9FKYXtjsY3b
-         uRS+/WT6AaYqoC4lZbyaMdLq2D2F7GAD0BnkfafQdoPMu+S43UV+SUWzXKw7DJqYlbhR
-         PdC60yyZx8oCfutQNnTmf3wEgaNLvkO1hDI8aZBYj5T6z1591EFSHG0NlrsSmucZuYkY
-         JEnQ==
-X-Gm-Message-State: APjAAAUp+yUWi3gfs7KUMGwDu6glpCtFi3JZarNyUZyEaJ6YivjnE773
-        N6PF9J8sWLIuInvpONzIctE7gTIPLfl1loS4+5qErg==
-X-Google-Smtp-Source: APXvYqwix3ECAKHjqepQKpOd6Qnl8MRL//0kU7udtKvZOVyROeHX4Ite6PQq5CLm4ny7VriNgpJ+TfJqitHlNr66pKU=
-X-Received: by 2002:a02:a90b:: with SMTP id n11mr8830803jam.13.1573035901449;
- Wed, 06 Nov 2019 02:25:01 -0800 (PST)
+        bh=T5T5Vt9ZaeNvQOuays7x6TASDsvxueKTiEVBHFEDs0s=;
+        b=CeZm06SzLWLVeVdTqspS6BzPYznysollTaRPOrKY6uw6JPe0d7SF5tEKhIZenUuyhi
+         tWKnXANb8bHdrqTk6Fiuq+xhv1FdYWdTZWxpunYliHZ1xHQTcwiAYxdYjesMtI8Nqln8
+         yPTif5hMi0LKuX8dJCZnkGN2NAatwl4T7+/lvcvHh573cH9QDvcoD6arCWBLbDVmjHSL
+         p3zc9WEqrGG6MV4cgGBIKjkgDXLyKmqEiCCogJ1bzP3fthx+LKyHJsLHjJES70fDqdKy
+         Mc2ZtNhz7xeuJoQsxwtRv3yVBCTilg2+idZYYJnCG5KYE7p05AgeWpuHRNVGArSfK30c
+         0ojQ==
+X-Gm-Message-State: APjAAAUYgQ4LCWGPBUyPOMv9dWH1t6qjkQmCl0s1IMl6dueLsULoOOcf
+        L7LIDcBgMy4AUxBYfPK3hhIBAR+pcwlpvx15aLJ3ag==
+X-Google-Smtp-Source: APXvYqzvQoB7+mCDTek93Ozh2PvQVYfAhPjlEraKfS1vwMulgUMq37ssPq23HT5o97O648S9YorjxCH1y/i9qL0/iVM=
+X-Received: by 2002:a5d:80d5:: with SMTP id h21mr28973103ior.298.1573036106933;
+ Wed, 06 Nov 2019 02:28:26 -0800 (PST)
 MIME-Version: 1.0
-References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-6-deepak.ukey@microchip.com>
-In-Reply-To: <20191031051241.6762-6-deepak.ukey@microchip.com>
+References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-7-deepak.ukey@microchip.com>
+In-Reply-To: <20191031051241.6762-7-deepak.ukey@microchip.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Wed, 6 Nov 2019 11:24:50 +0100
-Message-ID: <CAMGffEmNJs05_4JW5XVJTyquHNUEVvhwHiRxkKaGtUAz9XjxDg@mail.gmail.com>
-Subject: Re: [PATCH 05/12] pm80xx : Increase timeout for pm80xx mpi_uninit_check.
+Date:   Wed, 6 Nov 2019 11:28:15 +0100
+Message-ID: <CAMGffEkXQbGF-Tk4vQWuRpbTG7OcKAqMyHakJVDXBjPT1Z7n5A@mail.gmail.com>
+Subject: Re: [PATCH 06/12] pm80xx : Fix dereferencing dangling pointer.
 To:     Deepak Ukey <deepak.ukey@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
@@ -72,52 +72,81 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, Oct 31, 2019 at 6:12 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
-> From: ianyar <ianyar@google.com>
+> From: Vikram Auradkar <auradkar@google.com>
 >
-> The function  mpi_uninit_check takes longer for inbound doorbell
-> register to be cleared. Increased the timeout substantially so
-> that the driver does not fail to load.
+> sas_task structure should not be used after task_done is called.
+> If the device is gone or not attached, we call task_done on t and
+> continue to use in the sas_task in rest of the function. task_done
+> is pointing to sas_ata_task_done, may free the memory associated
+> with the task before returning.
 >
-> Signed-off-by: ianyar <ianyar@google.com>
+> Signed-off-by: Vikram Auradkar <auradkar@google.com>
 > Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Looks fine.
 Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 > ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 4 ++--
->  drivers/scsi/pm8001/pm80xx_hwi.h | 3 +++
->  2 files changed, 5 insertions(+), 2 deletions(-)
+>  drivers/scsi/pm8001/pm8001_sas.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
 >
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 6057610263c1..9d04e5cfffb4 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -735,9 +735,9 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
->         pm8001_cw32(pm8001_ha, 0, MSGU_IBDB_SET, SPCv_MSGU_CFG_TABLE_UPDATE);
->         /* wait until Inbound DoorBell Clear Register toggled */
->         if (IS_SPCV_12G(pm8001_ha->pdev)) {
-> -               max_wait_count = 4 * 1000 * 1000;/* 4 sec */
-> +               max_wait_count = SPCV_DOORBELL_CLEAR_TIMEOUT;
->         } else {
-> -               max_wait_count = 2 * 1000 * 1000;/* 2 sec */
-> +               max_wait_count = SPC_DOORBELL_CLEAR_TIMEOUT;
->         }
->         do {
->                 udelay(1);
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-> index dc9ab7689060..701951a0f715 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-> @@ -220,6 +220,9 @@
->  #define SAS_DOPNRJT_RTRY_TMO            128
->  #define SAS_COPNRJT_RTRY_TMO            128
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 447a66d60275..4491de8d40fc 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -388,6 +388,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>         struct pm8001_ccb_info *ccb;
+>         u32 tag = 0xdeadbeef, rc = 0, n_elem = 0;
+>         unsigned long flags = 0;
+> +       enum sas_protocol task_proto = t->task_proto;
 >
-> +#define SPCV_DOORBELL_CLEAR_TIMEOUT    (30 * 1000 * 1000) /* 30 sec */
-> +#define SPC_DOORBELL_CLEAR_TIMEOUT     (15 * 1000 * 1000) /* 15 sec */
-> +
->  /*
->    Making ORR bigger than IT NEXUS LOSS which is 2000000us = 2 second.
->    Assuming a bigger value 3 second, 3000000/128 = 23437.5 where 128
+>         if (!dev->port) {
+>                 struct task_status_struct *tsm = &t->task_status;
+> @@ -412,7 +413,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>                 pm8001_dev = dev->lldd_dev;
+>                 port = &pm8001_ha->port[sas_find_local_port_id(dev)];
+>                 if (DEV_IS_GONE(pm8001_dev) || !port->port_attached) {
+> -                       if (sas_protocol_ata(t->task_proto)) {
+> +                       if (sas_protocol_ata(task_proto)) {
+>                                 struct task_status_struct *ts = &t->task_status;
+>                                 ts->resp = SAS_TASK_UNDELIVERED;
+>                                 ts->stat = SAS_PHY_DOWN;
+> @@ -434,7 +435,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>                         goto err_out;
+>                 ccb = &pm8001_ha->ccb_info[tag];
+>
+> -               if (!sas_protocol_ata(t->task_proto)) {
+> +               if (!sas_protocol_ata(task_proto)) {
+>                         if (t->num_scatter) {
+>                                 n_elem = dma_map_sg(pm8001_ha->dev,
+>                                         t->scatter,
+> @@ -454,7 +455,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>                 ccb->ccb_tag = tag;
+>                 ccb->task = t;
+>                 ccb->device = pm8001_dev;
+> -               switch (t->task_proto) {
+> +               switch (task_proto) {
+>                 case SAS_PROTOCOL_SMP:
+>                         rc = pm8001_task_prep_smp(pm8001_ha, ccb);
+>                         break;
+> @@ -471,8 +472,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>                         break;
+>                 default:
+>                         dev_printk(KERN_ERR, pm8001_ha->dev,
+> -                               "unknown sas_task proto: 0x%x\n",
+> -                               t->task_proto);
+> +                               "unknown sas_task proto: 0x%x\n", task_proto);
+>                         rc = -EINVAL;
+>                         break;
+>                 }
+> @@ -495,7 +495,7 @@ static int pm8001_task_exec(struct sas_task *task,
+>         pm8001_tag_free(pm8001_ha, tag);
+>  err_out:
+>         dev_printk(KERN_ERR, pm8001_ha->dev, "pm8001 exec failed[%d]!\n", rc);
+> -       if (!sas_protocol_ata(t->task_proto))
+> +       if (!sas_protocol_ata(task_proto))
+>                 if (n_elem)
+>                         dma_unmap_sg(pm8001_ha->dev, t->scatter, t->num_scatter,
+>                                 t->data_dir);
 > --
 > 2.16.3
 >
