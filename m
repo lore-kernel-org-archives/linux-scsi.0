@@ -6,49 +6,48 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DB53C5DF62
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E58D1C5DF64
 	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:42:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 336162075C
+	by mail.kernel.org (Postfix) with ESMTP id A00042075C
 	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:42:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731263AbfKFEmh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1731264AbfKFEmh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 5 Nov 2019 23:42:37 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:44470 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731251AbfKFEmg (ORCPT
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:32921 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729784AbfKFEmg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 23:42:36 -0500
-Received: by mail-pf1-f193.google.com with SMTP id q26so17862059pfn.11
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 20:42:36 -0800 (PST)
+Received: by mail-pg1-f195.google.com with SMTP id u23so16277855pgo.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 20:42:35 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/4TDgepIcZah/edYZGWrYSThpdVjhMFKqnUflESnRcE=;
-        b=j0xwGC0etbxhamvGRCOEECg/uR5QaMGz46h1aKEdWSw2FroV0YJupIeNs5ABAvmB8U
-         Dm/yGTFao8YQFz81z5VifoOvwq1MA1853uNutL/NbWZVBh2Qlp14pIzZI53u1SmO6zDC
-         QabxpVgmxMImbrb/EBR2lC2IN+kLjV2y6JRQJ6x7bfbFdJTGcPx6ii28qbA0uAh3ylYN
-         vT0XuOGHfgSC7wV7lpX0QY3pLNCNeS22bp3fSfGvmtQqKBNPd2i5qoMFLWxF5VViTq3P
-         98Caoc2Mz3rvMQ8z+OlTmzfep/+jxwztug00PZYM1ZF2XsvxDmEzihEjIJoluzOzlIrS
-         XhRg==
-X-Gm-Message-State: APjAAAWbO9i8VZKVqtF4amOrKtRClT6XEleFNzQU/x8Yo/I2opLToPWF
-        9FBTgD+R7oifPFPZ12FlMWpasfCN
-X-Google-Smtp-Source: APXvYqyQjbOFh5KzTiQHeiLkaUlTtTPH+ZpII1VUV1gykjVzLsIfvng69BIGn8wqPq6b+NCSXKC4Ew==
-X-Received: by 2002:a17:90a:174a:: with SMTP id 10mr1078812pjm.104.1573015356180;
-        Tue, 05 Nov 2019 20:42:36 -0800 (PST)
+        bh=SQ9oM0QF6lMXsy/WycLkPXzM32zey87RAjzy8hYB4cE=;
+        b=T3rQx67jRhujRTw1DTnOsQXgs+aEhaAhuGK8i1XehRNyzYSb4hhi/2PtfbTjRenaG8
+         rs41cSlvW+FtmuonHn1cqzt0YZF5hqdXqlOiNfzXjdbmGeZPzTUaLs295dZOaAgvWy9l
+         kfkRcMr0+nffYjGw4TdtLX9CuAIaxsi7CQ7cyPugKfcbgEve0c6uhGPbbtJwidMLF91B
+         q7HZ0mfF4HqsvCvT4y6onp5/mU6k3vHBTEGAFekLJVz4rzCbkWfOonIP5kiBZfsHiEDs
+         XeVdsDyCZDvQlNy0Ud/IaW7R5cc0F35KN2dAq+Bmrbe7m6vYI7yQj6/5Gfox/oB/55jo
+         +hqQ==
+X-Gm-Message-State: APjAAAUlQHwWB6omeS/4/8rxtrXiRu+P9i+BUIPR5yXNJbX+0tlXC09K
+        mptK+jlilAOfnZddM4nJY5c=
+X-Google-Smtp-Source: APXvYqxl1w9OKiDIJvvERLSuk3SOaFktacquIn9g8fwDzU8X8Q3nKXDCYX6uNOIJXpYI51fdKUdA+A==
+X-Received: by 2002:a62:ceca:: with SMTP id y193mr791925pfg.219.1573015354733;
+        Tue, 05 Nov 2019 20:42:34 -0800 (PST)
 Received: from localhost.net ([2601:647:4000:1075:a0dc:7f54:c925:d679])
-        by smtp.gmail.com with ESMTPSA id m15sm10262501pfh.19.2019.11.05.20.42.34
+        by smtp.gmail.com with ESMTPSA id m15sm10262501pfh.19.2019.11.05.20.42.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2019 20:42:35 -0800 (PST)
+        Tue, 05 Nov 2019 20:42:33 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Michael Hernandez <mhernandez@marvell.com>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH 2/2] qla2xxx: Fix a dma_pool_free() call
-Date:   Tue,  5 Nov 2019 20:42:26 -0800
-Message-Id: <20191106044226.5207-3-bvanassche@acm.org>
+Subject: [PATCH 1/2] qla2xxx: Remove an include directive
+Date:   Tue,  5 Nov 2019 20:42:25 -0800
+Message-Id: <20191106044226.5207-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191106044226.5207-1-bvanassche@acm.org>
 References: <20191106044226.5207-1-bvanassche@acm.org>
@@ -59,51 +58,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch fixes the following kernel warning:
+Since the code in qla_init.c is initiator code, remove the SCSI target
+core include directive.
 
-DMA-API: qla2xxx 0000:00:0a.0: device driver frees DMA memory with different size [device address=0x00000000c7b60000] [map size=4088 bytes] [unmap size=512 bytes]
-WARNING: CPU: 3 PID: 1122 at kernel/dma/debug.c:1021 check_unmap+0x4d0/0xbd0
-CPU: 3 PID: 1122 Comm: rmmod Tainted: G           O      5.4.0-rc1-dbg+ #1
-RIP: 0010:check_unmap+0x4d0/0xbd0
-Call Trace:
- debug_dma_free_coherent+0x123/0x173
- dma_free_attrs+0x76/0xe0
- qla2x00_mem_free+0x329/0xc40 [qla2xxx_scst]
- qla2x00_free_device+0x170/0x1c0 [qla2xxx_scst]
- qla2x00_remove_one+0x4f0/0x6d0 [qla2xxx_scst]
- pci_device_remove+0xd5/0x1f0
- device_release_driver_internal+0x159/0x280
- driver_detach+0x8b/0xf2
- bus_remove_driver+0x9a/0x15a
- driver_unregister+0x51/0x70
- pci_unregister_driver+0x2d/0x130
- qla2x00_module_exit+0x1c/0xbc [qla2xxx_scst]
- __x64_sys_delete_module+0x22a/0x300
- do_syscall_64+0x6f/0x2e0
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Cc: Michael Hernandez <mhernandez@marvell.com>
 Cc: Himanshu Madhani <hmadhani@marvell.com>
-Fixes: 3f006ac342c0 ("scsi: qla2xxx: Secure flash update support for ISP28XX") # v5.2-rc1~130^2~270.
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 16f9b6ed574a..05fba5c2c926 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4676,7 +4676,8 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->sfp_data = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 7cb7545de962..c1004d47514c 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -17,7 +17,6 @@
+ #include <asm/prom.h>
+ #endif
  
- 	if (ha->flt)
--		dma_free_coherent(&ha->pdev->dev, SFP_DEV_SIZE,
-+		dma_free_coherent(&ha->pdev->dev,
-+		    sizeof(struct qla_flt_header) + FLT_REGIONS_SIZE,
- 		    ha->flt, ha->flt_dma);
- 	ha->flt = NULL;
- 	ha->flt_dma = 0;
+-#include <target/target_core_base.h>
+ #include "qla_target.h"
+ 
+ /*
 -- 
 2.23.0
 
