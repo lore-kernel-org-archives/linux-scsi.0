@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9274CC5DF62
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:49:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73EEBC5DF62
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:52:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F702217F4
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:49:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F4BE2173E
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 10:52:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="CufScxpO"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="MZH/6HS9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731542AbfKFKtt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Nov 2019 05:49:49 -0500
-Received: from mail-il1-f194.google.com ([209.85.166.194]:33853 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbfKFKts (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2019 05:49:48 -0500
-Received: by mail-il1-f194.google.com with SMTP id p6so8643179ilp.1
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 02:49:48 -0800 (PST)
+        id S1728691AbfKFKwv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Nov 2019 05:52:51 -0500
+Received: from mail-io1-f68.google.com ([209.85.166.68]:43170 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725856AbfKFKwu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Nov 2019 05:52:50 -0500
+Received: by mail-io1-f68.google.com with SMTP id c11so26432704iom.10
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 02:52:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=4CcG+LXXru/ecY1GlToQJDjMt5nzcelgowcr+T/0AnM=;
-        b=CufScxpOx1Ec6S75ulZXGBbdnW1WvSAvTsXtITCv6uqz4FFIjuKHunwURkvXIP1Bma
-         O6HBU5vIib9JZalXn1+dEYIquEwb8qOTuVPR4JmhToUfoA03f9vpIsgnWTv0uZB3xLP/
-         X+k+n3hUDzXxPRIK8Ynkp0ZFyxwGLmbpvuvizYl3Tsf55yBGSNziGMWNBLEaUypepI2S
-         rnZhsAAX1sommH0rkoTXIBv04c4LtQNtBnWLFve7FahjN6FfcWmb+S+Dfu/AHRMkFW66
-         NpoZq4JoGXCPfBvBXdkyf7SQwKd3cvXDAMgP/J3yNnbZa4ItoKOBvcEJzgpFxC7I5byE
-         6PDw==
+        bh=YxRHfPn6q8vDBdVBGG1jiNVBofjSVOf1SpgVpGT8YwQ=;
+        b=MZH/6HS9uO0smUtBYapdAf0f2d5m5mH1xcwS9yJcppCmIA++8JydxX4AZCqNfITlsc
+         To3i9HAL0ZSRX0Y8x2MtIfv6da6UGr3QKZKR8vPKzrA7AxL/ktxFZp8Pj9u1jiBPrV1v
+         0woKezUQtO0ODmCAd2IX+uzLKHzIn2DMiSfUncDnnxaMjwAb9x2kPJz6g96Bczp4LPds
+         9Xh7Xx1XCqj6bSnk9SzVlU6AA36kk+1yQIPq+VLjff4G5+mebnfzhnfLFc+k9wWVe9+/
+         k/D5GEfg2H5qlCCUASOx8BK9iKliAmN5C2MpFLcnxMSYAtkwbN3WgPvvtLBAKU97DMZu
+         dBSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=4CcG+LXXru/ecY1GlToQJDjMt5nzcelgowcr+T/0AnM=;
-        b=sHC5aW8QiF4JWXfPA4qPzrZPCXhmV6vw0JhVqLtLmAV2APZReZuRZGHB4fSq06VHmf
-         /cyMgt4999T+qDJ0x17TdtB/Nb8o+wyyFlPQJyY8UVNmVRJMKl0n2U86NMRoTPaujZXC
-         o1fujORpF8zrjKtigSxCvByr28VUSA6VDFHBLXM4CmGf2Je9n6p0vs7/Sp01rE3hV3ER
-         xTZgIYFpMQxcHY1FyOexEYQSFKtD57F4PmeW4GWnW2KHtQmpxjOpzJclCVoxcX9WpSdI
-         XWS7f1DglAis/ZAhpU0WpXLDfGR+0BXla3WO1Eyq6gFWEllgVyEMxc4oBh2NurCY41bf
-         8qIA==
-X-Gm-Message-State: APjAAAWMmFIVlOW5UZVkod7IoBxzTN6/Tb7XqsG/ylYo9xj/HyHOOkRV
-        fjafHRuQ/gWB5bw1FSY+3Qc3h2DxQk2SiX4Zf+NfHg==
-X-Google-Smtp-Source: APXvYqw5EqjVqm6QstbCEIMNCm5XPfFk/lGRGuxG8d2acqlGz7D3foP9TOCZpWTduV8HKDC2uHmDYeMl8hgyoobmWp4=
-X-Received: by 2002:a92:d64d:: with SMTP id x13mr1865784ilp.54.1573037387892;
- Wed, 06 Nov 2019 02:49:47 -0800 (PST)
+        bh=YxRHfPn6q8vDBdVBGG1jiNVBofjSVOf1SpgVpGT8YwQ=;
+        b=RdibJM1ZBPRNuk+s3HeQfD/h5Iwh2gIFA5Or96hELdnAURMHdZPJvcLqwfPAic/zQa
+         VTUY5NVxGaO36Nmou43g4EUe2fhsVZkJ8oy6mL3e2T8qdfY4R6ATSdk+sgJruK8IwzQ3
+         SKHQ2RchaIUoHzfSSnHLBi7FVBx3F8h9wqk9m+QKevgc9AAO4WwNK4H6zblRYZhJG+4E
+         GpnugxHy4ngXs63oKzANrNFHzLiDgy9642UdEAMGalQEhjwOu1G9tI0kVEDW0XWoGDwU
+         mk7MLK7HpWSIQjhrzgAlubMBMwO6MS84Ua0Uqhfwwq2AA/YfyY2PlKxgGevE3NMPgdWz
+         FinA==
+X-Gm-Message-State: APjAAAW7pJifKf8FdqfIXpO4K6R1cgm8nB7Vdu485CD0ym/tCH9uZ+DU
+        Pi98z+Yi5/GNMNMJohaC6Th4LnDdbq3xlV7nHKt/RQ==
+X-Google-Smtp-Source: APXvYqwcfNu2/rWFUVeUXbGx0AZ+ujb2nkqDh4uoeem1oEnSg9LUa8HdYq/krZVT3UHGY97kKd7jr8gW6WkyH9IKYAQ=
+X-Received: by 2002:a5d:80d5:: with SMTP id h21mr29051503ior.298.1573037568553;
+ Wed, 06 Nov 2019 02:52:48 -0800 (PST)
 MIME-Version: 1.0
-References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-11-deepak.ukey@microchip.com>
-In-Reply-To: <20191031051241.6762-11-deepak.ukey@microchip.com>
+References: <20191031051241.6762-1-deepak.ukey@microchip.com> <20191031051241.6762-12-deepak.ukey@microchip.com>
+In-Reply-To: <20191031051241.6762-12-deepak.ukey@microchip.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Wed, 6 Nov 2019 11:49:37 +0100
-Message-ID: <CAMGffE=qMtx7m_9up1N9j0bGT+cjb0VOUwB2LD5z8=BMU_3MRA@mail.gmail.com>
-Subject: Re: [PATCH 10/12] pm80xx : Controller fatal error through sysfs.
+Date:   Wed, 6 Nov 2019 11:52:37 +0100
+Message-ID: <CAMGffE=FHGOLrCrXE6fmC-6fMcp71xLvL6u2O+-Xfb4GT7QxOw@mail.gmail.com>
+Subject: Re: [PATCH 11/12] pm80xx : Tie the interrupt name to the module instance.
 To:     Deepak Ukey <deepak.ukey@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
@@ -72,57 +72,76 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Thu, Oct 31, 2019 at 6:12 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
-> From: Deepak Ukey <Deepak.Ukey@microchip.com>
+> From: Vikram Auradkar <auradkar@google.com>
 >
-> Added support to check controller fatal error through sysfs.
+> With msix enabled, the interrupt instances are <prefix><index> where
+> the prefix is fixed for all module instances, making it a little
+> harder to track down what's what.
 >
+> Signed-off-by: Vikram Auradkar <auradkar@google.com>
 > Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Looks fine.
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
+>  drivers/scsi/pm8001/pm8001_init.c | 11 ++++++-----
+>  drivers/scsi/pm8001/pm8001_sas.h  |  2 ++
+>  2 files changed, 8 insertions(+), 5 deletions(-)
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 6b85016b4db3..fbdd0bf0e1ab 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -69,6 +69,25 @@ static ssize_t pm8001_ctl_mpi_interface_rev_show(struct device *cdev,
->  static
->  DEVICE_ATTR(interface_rev, S_IRUGO, pm8001_ctl_mpi_interface_rev_show, NULL);
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 86b619d10392..485f0afc53f9 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -894,7 +894,6 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>         u32 number_of_intr;
+>         int flag = 0;
+>         int rc;
+> -       static char intr_drvname[PM8001_MAX_MSIX_VEC][sizeof(DRV_NAME)+3];
 >
-> +/**
-> + * pm8001_ctl_controller_fatal_err - check controller is under fatal err
-> + * @cdev: pointer to embedded class device
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read only' shost attribute.
-> + */
-> +static ssize_t controller_fatal_error_show(struct device *cdev,
-> +               struct device_attribute *attr, char *buf)
-The kernel-doc doesn't match the function name, please fix it.
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +
-> +       return snprintf(buf, PAGE_SIZE, "%d\n",
-> +                       pm8001_ha->controller_fatal_error);
-> +}
-> +static DEVICE_ATTR_RO(controller_fatal_error);
-> +
->  /**
->   * pm8001_ctl_fw_version_show - firmware version
->   * @cdev: pointer to embedded class device
-> @@ -804,6 +823,7 @@ static DEVICE_ATTR(update_fw, S_IRUGO|S_IWUSR|S_IWGRP,
->         pm8001_show_update_fw, pm8001_store_update_fw);
->  struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_interface_rev,
-> +       &dev_attr_controller_fatal_error,
->         &dev_attr_fw_version,
->         &dev_attr_update_fw,
->         &dev_attr_aap_log,
+>         /* SPCv controllers supports 64 msi-x */
+>         if (pm8001_ha->chip_id == chip_8001) {
+> @@ -915,14 +914,16 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>                                 rc, pm8001_ha->number_of_intr));
+>
+>         for (i = 0; i < number_of_intr; i++) {
+> -               snprintf(intr_drvname[i], sizeof(intr_drvname[0]),
+> -                               DRV_NAME"%d", i);
+> +               snprintf(pm8001_ha->intr_drvname[i],
+> +                       sizeof(pm8001_ha->intr_drvname[0]),
+> +                       "%s-%d", pm8001_ha->name, i);
+>                 pm8001_ha->irq_vector[i].irq_id = i;
+>                 pm8001_ha->irq_vector[i].drv_inst = pm8001_ha;
+>
+>                 rc = request_irq(pci_irq_vector(pm8001_ha->pdev, i),
+>                         pm8001_interrupt_handler_msix, flag,
+> -                       intr_drvname[i], &(pm8001_ha->irq_vector[i]));
+> +                       pm8001_ha->intr_drvname[i],
+> +                       &(pm8001_ha->irq_vector[i]));
+>                 if (rc) {
+>                         for (j = 0; j < i; j++) {
+>                                 free_irq(pci_irq_vector(pm8001_ha->pdev, i),
+> @@ -963,7 +964,7 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
+>         pm8001_ha->irq_vector[0].irq_id = 0;
+>         pm8001_ha->irq_vector[0].drv_inst = pm8001_ha;
+>         rc = request_irq(pdev->irq, pm8001_interrupt_handler_intx, IRQF_SHARED,
+> -               DRV_NAME, SHOST_TO_SAS_HA(pm8001_ha->shost));
+> +               pm8001_ha->name, SHOST_TO_SAS_HA(pm8001_ha->shost));
+>         return rc;
+>  }
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index f7be7b85624e..a55b03bca529 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -541,6 +541,8 @@ struct pm8001_hba_info {
+>         struct pm8001_ccb_info  *ccb_info;
+>  #ifdef PM8001_USE_MSIX
+>         int                     number_of_intr;/*will be used in remove()*/
+> +       char                    intr_drvname[PM8001_MAX_MSIX_VEC]
+> +                               [PM8001_NAME_LENGTH+1+3+1];
+>  #endif
+>  #ifdef PM8001_USE_TASKLET
+>         struct tasklet_struct   tasklet[PM8001_MAX_MSIX_VEC];
 > --
 > 2.16.3
 >
-With the updated kernel-doc.
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
