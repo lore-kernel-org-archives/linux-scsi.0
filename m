@@ -2,175 +2,130 @@ Return-Path: <SRS0=TWTx=Y6=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2689C5DF61
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 01:09:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2564C5DF62
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F9E521A49
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 01:09:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7699720717
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Nov 2019 04:09:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="n08eF27D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729882AbfKFBJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Nov 2019 20:09:08 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5728 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729632AbfKFBJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Nov 2019 20:09:08 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 0F038FE0A83A71C03679;
-        Wed,  6 Nov 2019 09:09:06 +0800 (CST)
-Received: from [127.0.0.1] (10.184.225.177) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Wed, 6 Nov 2019
- 09:08:55 +0800
-Subject: Re: [PATCH v3] scsi: avoid potential deadloop in iscsi_if_rx func
-To:     "wubo (T)" <wubo40@huawei.com>,
-        "lduncan@suse.com" <lduncan@suse.com>,
-        "cleech@redhat.com" <cleech@redhat.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>
-CC:     Mingfangsen <mingfangsen@huawei.com>
-References: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFB0ED@dggeml505-mbs.china.huawei.com>
-From:   Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Message-ID: <cfd18d34-69b1-6837-1e59-814fe05f8c45@huawei.com>
-Date:   Wed, 6 Nov 2019 09:08:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        id S1729705AbfKFEJj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Nov 2019 23:09:39 -0500
+Received: from mail-il1-f195.google.com ([209.85.166.195]:44906 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727266AbfKFEJj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Nov 2019 23:09:39 -0500
+Received: by mail-il1-f195.google.com with SMTP id i6so1873429ilr.11
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Nov 2019 20:09:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=IBF6i0CsRDj4z1nhlXI49p94vi3PFKk2xM4+N9XDEV0=;
+        b=n08eF27DZopynSP+bqsjccjiNqyrTQWp4VcbBITQ9nUGQoqie1oA2yKVAbWLvDULOS
+         a588XrVcES9g3fMhfYOGyp6eO728+SLKN5skSq6RbMe98cyAatzCAgoPixfmFGvR9tX8
+         DSE0DO5JHflwASQthDLoSakL9UKtKwo1BXYa250RZJor3AS8+i/YKdCdBpsvMSu+Wkuo
+         NzMg1jdCgpzbDftOKgvXXC7ar1SaFlDPukE4hRUnTViXJFSphGgpMxDJt9Ld9lMakxrg
+         RjjRRk+y2JoFGMtYalqNJNIWN5J2Xdnlcgaotw1ehlH76azglp925y9D8nkHlW4i1sdt
+         ndNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=IBF6i0CsRDj4z1nhlXI49p94vi3PFKk2xM4+N9XDEV0=;
+        b=DwNLKQfCrV/esfsI3qngN2ZvoKUnmz+Kh+kIEzio6GFb3vh/unBTjnDDkLknA7gYhT
+         422HKBWBgqCLX8t6fLd3gWC076UxS67AuW4WFyasvQt38xUJP/9fhqYV3qinQLL9K9GB
+         z6yU3Fb4S2KPZG/TQXMNQL/VPRuFCzwUII3xSmlaGSkfJjgFJXtKcWSEjb2itv1qEs/M
+         Iq3ki2vJ5JhytHkVC/ukbQVnNruJe1q8d+/IaPBnS3wexYBcw/oJ39sj/RWtxgSWSxeG
+         L/3szSQC9WtpIqstVdLr7l+UcZ09rglrhRDOwXul/dxOujkmb4e1OJ7fmvd1RmkK8pm3
+         djvg==
+X-Gm-Message-State: APjAAAV87VIUgIh+LRfKjnn8uSv+Dl0lI07QGkAf5uswHjdXU5pxgr3v
+        q3/Fogvq3lu+an8qDVtzHNTzAAGOKvV1SavXqC4=
+X-Google-Smtp-Source: APXvYqz9MT3VXyZaJdW42Y+64kvdoc3aLi8CcFGzJiCzNH0v44CQLWNDf2/Q9QbfrxCa38f9p3aiojdhUjBWVXIqs7k=
+X-Received: by 2002:a92:a308:: with SMTP id a8mr537455ili.105.1573013378063;
+ Tue, 05 Nov 2019 20:09:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFB0ED@dggeml505-mbs.china.huawei.com>
-Content-Type: text/plain; charset="gb18030"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.184.225.177]
-X-CFilter-Loop: Reflected
+References: <20191029230710.211926-1-bvanassche@acm.org> <20191029230710.211926-4-bvanassche@acm.org>
+ <MN2PR04MB69914B9FA252E1B0A05493BAFC600@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <MN2PR04MB6991FD5665C0C1E7DEF7854BFC7F0@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <CAGOxZ51AHByBFsMiKG_-pGjVe4=1ijQnUipS=Gjq1pYPsCKQGA@mail.gmail.com>
+In-Reply-To: <CAGOxZ51AHByBFsMiKG_-pGjVe4=1ijQnUipS=Gjq1pYPsCKQGA@mail.gmail.com>
+From:   Alim Akhtar <alim.akhtar@gmail.com>
+Date:   Wed, 6 Nov 2019 09:39:01 +0530
+Message-ID: <CAGOxZ53xoaFrs09KfPFHfR69-n9SnRrZ0uESE65e+Wgwe3Pr7A@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ufs: Remove .setup_xfer_req()
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Friendly ping...
+Hi Bart / Avri
 
-On 2019/10/31 14:17, wubo (T) wrote:
-> From: Bo Wu <wubo40@huawei.com>
-> 
-> In iscsi_if_rx func, after receiving one request through 
-> iscsi_if_recv_msg func, iscsi_if_send_reply will be called to 
-> try to reply the request in do-loop. If the return of iscsi_if_send_reply
-> func return -EAGAIN all the time, one deadloop will occur.
->  
-> For example, a client only send msg without calling recvmsg func, 
-> then it will result in the watchdog soft lockup. 
-> The details are given as follows,
-> 
-> Details of the special case which can cause deadloop:
-> 
-> sock_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ISCSI);  
-> retval = bind(sock_fd, (struct sock addr*) & src_addr, sizeof(src_addr); 
-> while (1) { 
-> 	state_msg = sendmsg(sock_fd, &msg, 0); 
-> 	//Note: recvmsg(sock_fd, &msg, 0) is not processed here.
-> } 	 
-> close(sock_fd); 
-> 
-> watchdog: BUG: soft lockup - CPU#7 stuck for 22s! [netlink_test:253305] Sample time: 4000897528 ns(HZ: 250) Sample stat: 
-> curr: user: 675503481560, nice: 321724050, sys: 448689506750, idle: 4654054240530, iowait: 40885550700, irq: 14161174020, softirq: 8104324140, st: 0
-> deta: user: 0, nice: 0, sys: 3998210100, idle: 0, iowait: 0, irq: 1547170, softirq: 242870, st: 0 Sample softirq:
-> 	TIMER:        992
-> 	SCHED:          8
-> Sample irqstat:
-> 	irq    2: delta       1003, curr:    3103802, arch_timer
-> CPU: 7 PID: 253305 Comm: netlink_test Kdump: loaded Tainted: G           OE     
-> Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
-> pstate: 40400005 (nZcv daif +PAN -UAO)
-> pc : __alloc_skb+0x104/0x1b0
-> lr : __alloc_skb+0x9c/0x1b0
-> sp : ffff000033603a30
-> x29: ffff000033603a30 x28: 00000000000002dd
-> x27: ffff800b34ced810 x26: ffff800ba7569f00
-> x25: 00000000ffffffff x24: 0000000000000000
-> x23: ffff800f7c43f600 x22: 0000000000480020
-> x21: ffff0000091d9000 x20: ffff800b34eff200
-> x19: ffff800ba7569f00 x18: 0000000000000000
-> x17: 0000000000000000 x16: 0000000000000000
-> x15: 0000000000000000 x14: 0001000101000100
-> x13: 0000000101010000 x12: 0101000001010100
-> x11: 0001010101010001 x10: 00000000000002dd
-> x9 : ffff000033603d58 x8 : ffff800b34eff400
-> x7 : ffff800ba7569200 x6 : ffff800b34eff400
-> x5 : 0000000000000000 x4 : 00000000ffffffff
-> x3 : 0000000000000000 x2 : 0000000000000001
-> x1 : ffff800b34eff2c0 x0 : 0000000000000300 Call trace:
-> __alloc_skb+0x104/0x1b0
-> iscsi_if_rx+0x144/0x12bc [scsi_transport_iscsi]
-> netlink_unicast+0x1e0/0x258
-> netlink_sendmsg+0x310/0x378
-> sock_sendmsg+0x4c/0x70
-> sock_write_iter+0x90/0xf0
-> __vfs_write+0x11c/0x190
-> vfs_write+0xac/0x1c0
-> ksys_write+0x6c/0xd8
-> __arm64_sys_write+0x24/0x30
-> el0_svc_common+0x78/0x130
-> el0_svc_handler+0x38/0x78
-> el0_svc+0x8/0xc
-> 
-> Here, we add one limit of retry times in do-loop to avoid the deadloop.
-> 
-> Signed-off-by: Bo Wu <wubo40@huawei.com>
-> Reviewed-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-> Suggested-by: Lee Duncan <LDuncan@suse.com>
-> Suggested-by: Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>
-> ---
-> V3:replace the error with warning as suggested by Ulrich
-> V2:add some debug kernel message as suggested by Lee Duncan
-> 
-> Thanks,
-> Bo Wu
-> 
->  drivers/scsi/scsi_transport_iscsi.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 417b868d8735..ed8d9709b9b9 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -24,6 +24,8 @@
->  
->  #define ISCSI_TRANSPORT_VERSION "2.0-870"
->  
-> +#define ISCSI_SEND_MAX_ALLOWED  10
-> +
->  #define CREATE_TRACE_POINTS
->  #include <trace/events/iscsi.h>
->  
-> @@ -3682,6 +3684,7 @@ iscsi_if_rx(struct sk_buff *skb)
->  		struct nlmsghdr	*nlh;
->  		struct iscsi_uevent *ev;
->  		uint32_t group;
-> +		int retries = ISCSI_SEND_MAX_ALLOWED;
->  
->  		nlh = nlmsg_hdr(skb);
->  		if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
-> @@ -3712,6 +3715,10 @@ iscsi_if_rx(struct sk_buff *skb)
->  				break;
->  			err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
->  						  ev, sizeof(*ev));
-> +			if (err == -EAGAIN && --retries < 0) {
-> +				printk(KERN_WARNING "Send reply failed, error %d\n", err);
-> +				break;
-> +			}
->  		} while (err < 0 && err != -ECONNREFUSED && err != -ESRCH);
->  		skb_pull(skb, rlen);
->  	}
+On Tue, Nov 5, 2019 at 9:47 PM Alim Akhtar <alim.akhtar@gmail.com> wrote:
+>
+> Hi
+>
+> On Mon, Nov 4, 2019 at 6:29 PM Avri Altman <Avri.Altman@wdc.com> wrote:
+> >
+> > As no response from Kiwoong Kim:
+> >
+> > >
+> > >
+> > > + Kiwoong Kim
+> Looks like he is not active here.
+> > >
+> > > >
+> > > > Since the function ufshcd_vops_setup_xfer_req() is the only user of
+> > > > the setup_xfer_req function pointer and since that function pointer is
+> > > > always zero, remove both this function and the function pointer. This
+> > > > patch does not change any functionality.
+> > > >
+> > > > Cc: Yaniv Gardi <ygardi@codeaurora.org>
+> > > > Cc: Subhash Jadavani <subhashj@codeaurora.org>
+> > > > Cc: Stanley Chu <stanley.chu@mediatek.com>
+> > > > Cc: Avri Altman <avri.altman@wdc.com>
+> > > > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > > > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> > > Since this was introduced only a couple of years ago, Maybe better to CC the
+> > > author Kiwoong Kim <kwmad.kim@samsung.com> Before removing this
+> > > altogether.
+> > Reviewed-by: Avri Altman <avri.altman@wdc.com>
+>
+> Let me check and reconfirm this, give a day or two.
+> It will be good if am copied to the ufs patch (I hope
+> get_maintainer.pl still pointout my email)
+> thanks
+>
+I checked the brief history of this adding  "setup_xfer_req" to
+support Samsung UFSHCI (this was the ground work done)
+We need this to support vendor specific NEXUS_TYPE settings.
+The Samsung UFSHCI driver will be up for review in near future
+For usecase of the function pointer please see an older version of the
+patch https://patchwork.kernel.org/patch/7306321/
+
 > --
-> 1.8.3.1 
-> 
-> 
-> .
-> 
+> Regards,
+> Alim
 
+
+
+-- 
+Regards,
+Alim
