@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80562FA372C
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 09:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37663FA372C
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 09:49:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B3CF214D8
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 09:48:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E77F02085B
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 09:49:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WyLgxS3T";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ctjyyEhK"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="esDIxK7r";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lLyBqDnA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387868AbfKGJsh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 04:48:37 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:60414 "EHLO
+        id S2387659AbfKGJtX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 04:49:23 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:32928 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727632AbfKGJsh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 04:48:37 -0500
+        with ESMTP id S1726734AbfKGJtW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 04:49:22 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 67C0360A50; Thu,  7 Nov 2019 09:48:33 +0000 (UTC)
+        id 8F82460C6B; Thu,  7 Nov 2019 09:49:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573120115;
-        bh=sDQBDxXRZCeKsQ9VGvBn0JftH8Dvu3dtqOVJgd7P6j0=;
+        s=default; t=1573120160;
+        bh=eM0dW0wRn9XQg0MBnusHynS/PA2+GCtMh12BLTKOCUI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WyLgxS3TUyv52mYh1gGR4DYua/ykK0pNxS5epiS66S7dG2PZ7CjJ5QCd75SC6NQbt
-         e/Uj/hpdrPQ5/NJjfax5lNNGYujkR6SMh3dPhAoCk2CfhduHJd460WUjFqlH1Bmyi7
-         2FNBloa2OuUOa6cw7NeRQ0w/egu9mLSCjxVpE9NU=
+        b=esDIxK7rDPIKD3jsjLkYBgUtDKFObyAtRwzoK2oEe/kRC31wDwGLh0wGpUAKaOnip
+         69YvBOnYQDqiSUY0zO4UpS/w2kqdWrpG9lDHGRUVoo1qidJNFBsKpQ6IzeGpUJx38/
+         vAhe/kd69m13HpoMejJA6FiODxO807JRECuOM7eM=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 41B6E60A23;
-        Thu,  7 Nov 2019 09:48:30 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 677E660614;
+        Thu,  7 Nov 2019 09:49:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573120111;
-        bh=sDQBDxXRZCeKsQ9VGvBn0JftH8Dvu3dtqOVJgd7P6j0=;
+        s=default; t=1573120155;
+        bh=eM0dW0wRn9XQg0MBnusHynS/PA2+GCtMh12BLTKOCUI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ctjyyEhKV92rf8JKW36joQ+UKJ4yE6LsPta5eMin9sZnEfPeHCezOfu21A9Owe0ow
-         o9nmr63L9bx3V0tdOdouWkBwUNWs0l1vFsgS5FylZ+W3EEGRuR3CgX5tACobbYOjhd
-         Fs/FXu79kkRTgBWTjTaUi1ZSx9FTC8yLOlYxnTrs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 41B6E60A23
+        b=lLyBqDnAWvemTNlQPPc6TGQ/jSn+zABfBYsIG4LKPr+vGUKSKTZy8PHpVIb9lyjh1
+         Tzq5HMxmjvAlx7e2Q9n6ela1fBZxvopHGiSiBoElywJ/IB/F2WxQBjmdai5IuISEvE
+         xai3oKYhj/HGXCZGqd7H1xXngSUAlBjvCoI9JV+E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 677E660614
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -57,15 +57,14 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
         Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         Subhash Jadavani <subhashj@codeaurora.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 2/6] scsi: ufs: set load before setting voltage in regulators
-Date:   Thu,  7 Nov 2019 01:47:53 -0800
-Message-Id: <1573120078-15547-3-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v2 5/6] scsi: ufs: Add dev ref clock gating wait time support
+Date:   Thu,  7 Nov 2019 01:47:56 -0800
+Message-Id: <1573120078-15547-6-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1573120078-15547-1-git-send-email-cang@codeaurora.org>
 References: <1573120078-15547-1-git-send-email-cang@codeaurora.org>
@@ -74,50 +73,129 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Asutosh Das <asutoshd@codeaurora.org>
+In UFS version 3.0, a newly added attribute bRefClkGatingWaitTime defines
+the minimum time for which the reference clock is required by device during
+transition to LS-MODE or HIBERN8 state. Make this change to reflect the new
+requirement by adding delays before turning off the clock.
 
-This sequence change is required to avoid dips in voltage
-during boot-up.
-
-Apparently, this dip is caused because in the original
-sequence, the regulators are initialized in lpm mode.
-And then when the load is set to high, and more current
-is drawn, than is allowed in lpm, the dip is seen.
-
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufs.h    |  3 +++
+ drivers/scsi/ufs/ufshcd.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 3327981..385bac8 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -168,6 +168,7 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_FFU_STATUS		= 0x14,
+ 	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
+ 	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
++	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
+ };
+ 
+ /* Descriptor idn for Query requests */
+@@ -530,6 +531,8 @@ struct ufs_dev_info {
+ 	bool f_power_on_wp_en;
+ 	/* Keeps information if any of the LU is power on write protected */
+ 	bool is_lu_power_on_wp;
++	u16 spec_version;
++	u32 clk_gating_wait_us;
+ };
+ 
+ #define MAX_MODEL_LEN 16
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c2de29f..c386c2d 100644
+index 4dfd705..d2d56f8 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7225,6 +7225,11 @@ static int ufshcd_config_vreg(struct device *dev,
- 	name = vreg->name;
+@@ -91,6 +91,9 @@
+ /* default delay of autosuspend: 2000 ms */
+ #define RPM_AUTOSUSPEND_DELAY_MS 2000
  
- 	if (regulator_count_voltages(reg) > 0) {
-+		uA_load = on ? vreg->max_uA : 0;
-+		ret = ufshcd_config_vreg_load(dev, vreg, uA_load);
-+		if (ret)
-+			goto out;
++/* Default value of wait time before gating device ref clock */
++#define UFSHCD_REF_CLK_GATING_WAIT_US 0xFF /* microsecs */
 +
- 		if (vreg->min_uV && vreg->max_uV) {
- 			min_uV = on ? vreg->min_uV : 0;
- 			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
-@@ -7235,11 +7240,6 @@ static int ufshcd_config_vreg(struct device *dev,
- 				goto out;
- 			}
- 		}
--
--		uA_load = on ? vreg->max_uA : 0;
--		ret = ufshcd_config_vreg_load(dev, vreg, uA_load);
--		if (ret)
--			goto out;
- 	}
- out:
- 	return ret;
+ #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+ 	({                                                              \
+ 		int _ret;                                               \
+@@ -3352,6 +3355,37 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
+ 				      param_offset, param_read_buf, param_size);
+ }
+ 
++static int ufshcd_get_ref_clk_gating_wait(struct ufs_hba *hba)
++{
++	int err = 0;
++	u32 gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
++
++	if (hba->dev_info.spec_version >= 0x300) {
++		err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME, 0, 0,
++				&gating_wait);
++		if (err)
++			dev_err(hba->dev, "Failed reading bRefClkGatingWait. err = %d, use default %uus\n",
++					 err, gating_wait);
++
++		if (gating_wait == 0) {
++			gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
++			dev_err(hba->dev, "Undefined ref clk gating wait time, use default %uus\n",
++					 gating_wait);
++		}
++
++		/*
++		 * bRefClkGatingWaitTime defines the minimum time for which the
++		 * reference clock is required by device during transition from
++		 * HS-MODE to LS-MODE or HIBERN8 state. Give it more time to be
++		 * on the safe side.
++		 */
++		hba->dev_info.clk_gating_wait_us = gating_wait + 50;
++	}
++
++	return err;
++}
++
+ /**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
+@@ -6623,6 +6657,10 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ 	dev_desc->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
+ 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
+ 
++	/* getting Specification Version in big endian format */
++	hba->dev_info.spec_version = desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
++				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
++
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+ 	err = ufshcd_read_string_desc(hba, model_index,
+ 				      &dev_desc->model, SD_ASCII_STD);
+@@ -7041,6 +7079,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 
+ 		/* clear any previous UFS device information */
+ 		memset(&hba->dev_info, 0, sizeof(hba->dev_info));
++
++		ufshcd_get_ref_clk_gating_wait(hba);
++
+ 		if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+ 				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+ 			hba->dev_info.f_power_on_wp_en = flag;
+@@ -7373,12 +7414,17 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
+ 	unsigned long flags;
++	unsigned long gating_wait;
+ 	ktime_t start = ktime_get();
+ 	bool clk_state_changed = false;
+ 
+ 	if (list_empty(head))
+ 		goto out;
+ 
++	gating_wait = (unsigned long)hba->dev_info.clk_gating_wait_us;
++	if (!on && !skip_ref_clk && !!gating_wait)
++		usleep_range(gating_wait, gating_wait + 10);
++
+ 	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
+ 	if (ret)
+ 		return ret;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
