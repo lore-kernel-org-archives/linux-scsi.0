@@ -2,98 +2,103 @@ Return-Path: <SRS0=Iijn=Y7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF4C6C5DF61
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 06:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2262CFA372C
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 07:04:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87560218AE
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 06:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7F9521D6C
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 07:04:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="BED9/AYx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727010AbfKGGoS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 01:44:18 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:34353 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726094AbfKGGoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 Nov 2019 01:44:17 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 2ABA6204196;
-        Thu,  7 Nov 2019 07:44:13 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id yFCgbBxVydWo; Thu,  7 Nov 2019 07:44:11 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id A676C204190;
-        Thu,  7 Nov 2019 07:44:10 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH] tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6)
- and WRITE(6)
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>
-References: <20191105215553.185018-1-bvanassche@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <23e0bd60-649f-9323-ad5d-bfd4b54e7b64@interlog.com>
-Date:   Thu, 7 Nov 2019 01:44:09 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1727241AbfKGHEj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 02:04:39 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:52008 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727222AbfKGHEj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 02:04:39 -0500
+Received: by mail-wm1-f65.google.com with SMTP id q70so1223803wme.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 23:04:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=1BWOBnBh3RsSrHmTF9OyTNjqu4CElUB2toH/DiA/qIc=;
+        b=BED9/AYxEqSzI3EIPyUatgXBzDzJIxvgb0tT/vCP+uqowsV2RHUg0bX6M8PTiGO66K
+         n7MyBQhs7dvtPaFHFKpel/rUchRTLdALNm7Nou59bT7p1fZ0MQGt+lJi3gBhtLgJe2nI
+         K2ljk6GK9pXXI9DWK67jD+Edy51V3hkVEHkATxqkphL1L5B/RUdDw8UV9MN6cnC+feiQ
+         X1yVn1O0lJ2Qqr7nY1RV8g5jxqtwrGcS1eGKEWk337YlszC44W+AkYRuFLEBO4SJJuv7
+         ORRsE2UglZFYFgEQC2tCWXH7/lTb3I9PXK50YxjTCVoF749iSKlHRdTYyRllwY0Nix7R
+         cVbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=1BWOBnBh3RsSrHmTF9OyTNjqu4CElUB2toH/DiA/qIc=;
+        b=g3JqQp+WLAvUUv4/iGNNhT2ypSAmnBl46qGlqBRQ8mLlB7/456evW+INBoyG72fIJW
+         j994MHyX9qjxbcsiV4/V/iP+Tyd4JDmBhONyOecWBO9vFksOi36PXZjkBadM1JEmiDTP
+         fNbO5uzo2zsns9gro8hJww9d2E9In3aAhixVv+K2LP0E5hNY17cNz1ztxVBkExm9jkGR
+         HmIyhzr/FKUWqZ+ip93G9xLCwG8K7r4x2E7BtkTgrgqjSMEJCi3yL6BZS6+oUcpGuNDY
+         8SuD77k1jvMMDDa5QJ8v1EWKN45d6jQH5LLiVIMjMe0tvrvKx9MHMjgsyqwMX5tXUPU/
+         INdw==
+X-Gm-Message-State: APjAAAX7DoEIUHlL9f8s/nzbWRIjIvpmpBDFdSOG4a23QyWjBZd5yda9
+        96sH1StXEIp/w8Y4pJDkjT2X5g==
+X-Google-Smtp-Source: APXvYqw5oCk6xXi6ixLz7jByPs1zY84R0XhXM9pbgD9ZCxKqdl36Geh9BAUevrqz0GAD8gxGpRTXcA==
+X-Received: by 2002:a05:600c:254f:: with SMTP id e15mr1260124wma.37.1573110275553;
+        Wed, 06 Nov 2019 23:04:35 -0800 (PST)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id u7sm1508088wre.59.2019.11.06.23.04.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Nov 2019 23:04:34 -0800 (PST)
+Message-ID: <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it>
+Subject: Re: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Date:   Thu, 07 Nov 2019 08:04:28 +0100
+In-Reply-To: <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <Pine.LNX.4.44L0.1911061044070.1694-100000@iolanthe.rowland.org>
+         <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-In-Reply-To: <20191105215553.185018-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-05 4:55 p.m., Bart Van Assche wrote:
-> According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
-> blocks must be transferred. Make the SCSI tracing code follow SBC-2.
+Il giorno mer, 06/11/2019 alle 22.13 +0000, Damien Le Moal ha scritto:
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Douglas Gilbert <dgilbert@interlog.com>
-> Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> 
+> Please simply try your write tests after doing this:
+> 
+> echo mq-deadline > /sys/block/<name of your USB
+> disk>/queue/scheduler
+> 
+> And confirm that mq-deadline is selected with:
+> 
+> cat /sys/block/<name of your USB disk>/queue/scheduler
+> [mq-deadline] kyber bfq none
 
-Reviewed-by: Douglas Gilbert <dgilbert@interlog.com>
+ok, which kernel should I test with this: the fresh git cloned, or the
+one just patched with Alan's patch, or doesn't matter which one?
 
-> ---
->   drivers/scsi/scsi_trace.c | 11 +++++++----
->   1 file changed, 7 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-> index 784ed9a32a0d..ac35c301c792 100644
-> --- a/drivers/scsi/scsi_trace.c
-> +++ b/drivers/scsi/scsi_trace.c
-> @@ -18,15 +18,18 @@ static const char *
->   scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
->   {
->   	const char *ret = trace_seq_buffer_ptr(p);
-> -	sector_t lba = 0, txlen = 0;
-> +	u32 lba = 0, txlen;
->   
->   	lba |= ((cdb[1] & 0x1F) << 16);
->   	lba |=  (cdb[2] << 8);
->   	lba |=   cdb[3];
-> -	txlen = cdb[4];
-> +	/*
-> +	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
-> +	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
-> +	 */
-> +	txlen = cdb[4] ? cdb[4] : 256;
->   
-> -	trace_seq_printf(p, "lba=%llu txlen=%llu",
-> -			 (unsigned long long)lba, (unsigned long long)txlen);
-> +	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
->   	trace_seq_putc(p, 0);
->   
->   	return ret;
-> 
+Thanks, and bye,
+Andrea
 
