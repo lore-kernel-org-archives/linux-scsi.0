@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E85C2C5DF60
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 08:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F0BC5DF60
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 08:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2A8D21D79
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 08:42:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E63821D7B
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 08:42:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QUU1tdqj";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HGXcey1f"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jLTce5Yj";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SSZRC0pR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733181AbfKGImn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 03:42:43 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:33042 "EHLO
+        id S2387651AbfKGImq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 03:42:46 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:33242 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727120AbfKGImn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 03:42:43 -0500
+        with ESMTP id S1727120AbfKGImp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 03:42:45 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0120D608FC; Thu,  7 Nov 2019 08:42:40 +0000 (UTC)
+        id 74C116092D; Thu,  7 Nov 2019 08:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573116161;
-        bh=FtDInhzlNbMYnaah34JKXnQVyTO/o1xFZ/slgp6EYrQ=;
+        s=default; t=1573116164;
+        bh=sDQBDxXRZCeKsQ9VGvBn0JftH8Dvu3dtqOVJgd7P6j0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QUU1tdqjx9o19obxJT26tMZaboE9qEr8UHYQQ+5C+JXCCbSGairwNLSvpqpQ5z4kD
-         0zluAuVJzLptT8N8lp21AYZPDRNcmImv2QQEWrgu+TB3Y4mcKL6Y4Uk4vqeZQlRuA8
-         MatQYJz+GHtO7V4mvS5qkodaoQ8cjPGDQd48TMyI=
+        b=jLTce5YjG5hgR+AHuqL5QTSUmhvEjYc+X1xxm101E90uTd6g59vsq9CzuqN7r557J
+         yDFLPisiX6AX9e3pSFEANRxf0Urt/YWiblCTYNW+4pd5qeryTylqHdkJFwoIsyHLzn
+         opKDXamDfjucl20ER8PLTOG3lB5DYdLew4VMYD0Y=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37C7B60779;
-        Thu,  7 Nov 2019 08:42:38 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 060036085F;
+        Thu,  7 Nov 2019 08:42:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573116159;
-        bh=FtDInhzlNbMYnaah34JKXnQVyTO/o1xFZ/slgp6EYrQ=;
+        s=default; t=1573116162;
+        bh=sDQBDxXRZCeKsQ9VGvBn0JftH8Dvu3dtqOVJgd7P6j0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HGXcey1f6BYXCUSdubFAHI3ITrH7n5tkn9SjOKVaebwSNvm8tQ+BPeGDoWt99EMMk
-         a4ZMjlNjUR7B3ppPKltuOMBvBXEc1E11shjU3MNjtQVU2fJC74TWAQB6t8h+9MQeIM
-         THtAl+jYy90EKuONisWGdURGW/0TuCLWUBRLAOuw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 37C7B60779
+        b=SSZRC0pRiU1Eo2TCL2wjHBfr2TyNIvj4xalCc/4K9Z0YAfMCUxeFulwbEg7jsMUvT
+         jLFGsIkCU6ayHe2QcGtx5OkJ0PRBVdrlbH61oBwig+jtPG3gL2LkjAw3W0rrkpAQGw
+         vOITGj5dYMPEJ9IlrBUZMAy7aR601nCX3pqdvujw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 060036085F
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -52,8 +52,7 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         cang@codeaurora.org
-Cc:     Sayali Lokhande <sayalil@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -63,9 +62,9 @@ Cc:     Sayali Lokhande <sayalil@codeaurora.org>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         Subhash Jadavani <subhashj@codeaurora.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 1/6] scsi: ufs: Flush exception event before suspend
-Date:   Thu,  7 Nov 2019 00:42:08 -0800
-Message-Id: <1573116140-22408-2-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v1 2/6] scsi: ufs: set load before setting voltage in regulators
+Date:   Thu,  7 Nov 2019 00:42:09 -0800
+Message-Id: <1573116140-22408-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1573116140-22408-1-git-send-email-cang@codeaurora.org>
 References: <1573116140-22408-1-git-send-email-cang@codeaurora.org>
@@ -74,68 +73,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sayali Lokhande <sayalil@codeaurora.org>
+From: Asutosh Das <asutoshd@codeaurora.org>
 
-Exception event can be raised by the device when system
-suspend is in progress. This will result in unclocked
-register access in exception event handler as clocks will
-be turned off during suspend. This change makes sure to flush
-exception event handler work in suspend before disabling
-clocks to avoid unclocked register access issue.
+This sequence change is required to avoid dips in voltage
+during boot-up.
 
-Signed-off-by: Sayali Lokhande <sayalil@codeaurora.org>
+Apparently, this dip is caused because in the original
+sequence, the regulators are initialized in lpm mode.
+And then when the load is set to high, and more current
+is drawn, than is allowed in lpm, the dip is seen.
+
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1201578..c2de29f 100644
+index c2de29f..c386c2d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4760,8 +4760,15 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
- 			 * UFS device needs urgent BKOPs.
- 			 */
- 			if (!hba->pm_op_in_progress &&
--			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
--				schedule_work(&hba->eeh_work);
-+			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr)) {
-+				/*
-+				 * Prevent suspend once eeh_work is scheduled
-+				 * to avoid deadlock between ufshcd_suspend
-+				 * and exception event handler.
-+				 */
-+				if (schedule_work(&hba->eeh_work))
-+					pm_runtime_get_noresume(hba->dev);
-+			}
- 			break;
- 		case UPIU_TRANSACTION_REJECT_UPIU:
- 			/* TODO: handle Reject UPIU Response */
-@@ -5215,7 +5222,14 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+@@ -7225,6 +7225,11 @@ static int ufshcd_config_vreg(struct device *dev,
+ 	name = vreg->name;
  
- out:
- 	scsi_unblock_requests(hba->host);
--	pm_runtime_put_sync(hba->dev);
-+	/*
-+	 * pm_runtime_get_noresume is called while scheduling
-+	 * eeh_work to avoid suspend racing with exception work.
-+	 * Hence decrement usage counter using pm_runtime_put_noidle
-+	 * to allow suspend on completion of exception event handler.
-+	 */
-+	pm_runtime_put_noidle(hba->dev);
-+	pm_runtime_put(hba->dev);
- 	return;
- }
- 
-@@ -7901,6 +7915,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			goto enable_gating;
+ 	if (regulator_count_voltages(reg) > 0) {
++		uA_load = on ? vreg->max_uA : 0;
++		ret = ufshcd_config_vreg_load(dev, vreg, uA_load);
++		if (ret)
++			goto out;
++
+ 		if (vreg->min_uV && vreg->max_uV) {
+ 			min_uV = on ? vreg->min_uV : 0;
+ 			ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+@@ -7235,11 +7240,6 @@ static int ufshcd_config_vreg(struct device *dev,
+ 				goto out;
+ 			}
+ 		}
+-
+-		uA_load = on ? vreg->max_uA : 0;
+-		ret = ufshcd_config_vreg_load(dev, vreg, uA_load);
+-		if (ret)
+-			goto out;
  	}
- 
-+	flush_work(&hba->eeh_work);
- 	ret = ufshcd_link_state_transition(hba, req_link_state, 1);
- 	if (ret)
- 		goto set_dev_active;
+ out:
+ 	return ret;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
