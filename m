@@ -2,117 +2,176 @@ Return-Path: <SRS0=Iijn=Y7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A858C5DF61
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 13:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A04FAC5DF60
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 13:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F01B92075C
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 13:40:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 721D2214D8
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 13:54:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="wH3+KwrC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="atPnsZGo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731032AbfKGNkW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 08:40:22 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:46790 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726754AbfKGNkW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 08:40:22 -0500
-Received: by mail-pl1-f195.google.com with SMTP id l4so1449847plt.13
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2019 05:40:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=4jwWug07MWOkr2qYik00IBFcec60QuuQYmHGTX5Nfvk=;
-        b=wH3+KwrCqWpVGRfSTjUUlZGDGoRu3adOrQELxMAsfC0X9zWnU8LI+X1FuqtcenJ4Ih
-         ApOt9YzExOdEtVt0WETR9+3OLChFDUMl1LZI+euhn9v8WCIwMuGajNwzNMn1ubzGN1PL
-         qa2KCx5JuVeMyLOtAYijCYZcULRT4B7BSW6XVSedKLRrNYqCx9cJ6N5DrbG5nao4ugWk
-         TOF92HaAS5mQT4e5ayyDObQmRrwqAuYnlze5K1sMZjF29VMn0/v3kFMG586GC58NZF5y
-         cmTIkoMk9VL+es1FsKZ4EAu9aDtR3KlHYouPP3AxnOyReUTF972b7PjNZU0+JBkkI3Lo
-         cSsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=4jwWug07MWOkr2qYik00IBFcec60QuuQYmHGTX5Nfvk=;
-        b=hRgrbe4gXHX42hFiGY9jpqZyCZOwtPAju1suljtc6V9RBXRDQ4kpKW6hnWlzVa1pkM
-         t2+JTGx1IcR8bt0h1KXzNR7s+XkkZE4vmQjQrfkEODobWBhWsCRLrZcW/U1NiqO0Ooue
-         mcDCPaLhFVohjc/N9gBoz9921i5JOJiPkUQuIh7HBC15ZEbuL1mcY+2bin31DEAlPhjp
-         vBhsjbpHtub9dxRrGbrgJ+Ajtya2uTmissZnCK2DLFIZh4Zap62Q0ZkwaSPrem24JBAx
-         Z2pg6NkYipNejoSvQ3j3Js4tZ3s9XAW1dEH0UayzE9mJdmWf8ocgEldGmxdnvxsGkfBN
-         Kh5Q==
-X-Gm-Message-State: APjAAAUQXZO4gpNIbAbY3xOTis8ZPLmm0Y2k2G5BgvfcRfJGzDMpagse
-        RxPCz3Mhk6DfX53dKEx/WishLw==
-X-Google-Smtp-Source: APXvYqxUqwziIRejg0VlHTo/IjAZ8qKz+Umil4abg66UwevSjmyaJOge6jJD9qFWjmRFk+eqOImpbg==
-X-Received: by 2002:a17:902:47:: with SMTP id 65mr3722636pla.94.1573134021445;
-        Thu, 07 Nov 2019 05:40:21 -0800 (PST)
-Received: from [192.168.1.188] ([66.219.217.79])
-        by smtp.gmail.com with ESMTPSA id r11sm2255570pjp.14.2019.11.07.05.40.18
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 07 Nov 2019 05:40:20 -0800 (PST)
-Subject: Re: [PATCH 0/8] Zone management commands support
-To:     Damien Le Moal <damien.lemoal@wdc.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        id S1728180AbfKGNyo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 08:54:44 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:22885 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726810AbfKGNyo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 08:54:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573134882;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=t+GpHBRriMbogZ8e0AcN1f5YzGvR15HQmscsOF5sEEs=;
+        b=atPnsZGooRxiSH6YCDar6vl245bP3z/HWj4JGhZmvgFsdDgsWHShpZukxfazezGMCMHoJA
+        h/5uBgt0Y+5pHehS/CwK34x8iLgV2E1lpfpMDJ3NaUMoRFHD5zQUbOyeOMbbfQmLu1+rKl
+        9o83wtlnM2wx7cZ0ieH069lKl3r4Wu4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-220-csnduqu1M-CvpMRPYB7mTA-1; Thu, 07 Nov 2019 08:54:40 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3BFB7800C72;
+        Thu,  7 Nov 2019 13:54:39 +0000 (UTC)
+Received: from ovpn-124-234.rdu2.redhat.com (ovpn-124-234.rdu2.redhat.com [10.10.124.234])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4061D5DA32;
+        Thu,  7 Nov 2019 13:54:38 +0000 (UTC)
+Message-ID: <7467951caf48f00f7b3f6cffb588579d462c996b.camel@redhat.com>
+Subject: Re: [PATCH 2/9] c6x: Include <linux/unaligned/generic.h> instead of
+ duplicating it
+From:   Mark Salter <msalter@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Peter Zijlstra <peterz@infradead.org>
+Cc:     Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
-Cc:     Ajay Joshi <ajay.joshi@wdc.com>,
-        Matias Bjorling <matias.bjorling@wdc.com>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Dmitry Fomichev <dmitry.fomichev@wdc.com>,
-        Keith Busch <kbusch@kernel.org>
-References: <20191027140549.26272-1-damien.lemoal@wdc.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <31755ade-ae21-8842-05c0-47017cea7e29@kernel.dk>
-Date:   Thu, 7 Nov 2019 06:40:16 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Aurelien Jacquiot <jacquiot.aurelien@gmail.com>
+Date:   Thu, 07 Nov 2019 08:54:37 -0500
+In-Reply-To: <20191028200700.213753-3-bvanassche@acm.org>
+References: <20191028200700.213753-1-bvanassche@acm.org>
+         <20191028200700.213753-3-bvanassche@acm.org>
+Organization: Red Hat, Inc
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30)
 MIME-Version: 1.0
-In-Reply-To: <20191027140549.26272-1-damien.lemoal@wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-MC-Unique: csnduqu1M-CvpMRPYB7mTA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/27/19 8:05 AM, Damien Le Moal wrote:
-> This series implements a few improvements and cleanups to zone block
-> device zone reset operations with the first three patches.
-> 
-> The remaining of the series patches introduce zone open, close and
-> finish support, allowing users of zoned block devices to explicitly
-> control the condition (state) of zones.
-> 
-> While these operations are not stricktly necessary for the correct
-> operation of zoned block devices, the open and close operations can
-> improve performance for some device implementations of the ZBC and ZAC
-> standards under write workloads. The finish zone operation, which
-> transition a zone to the full state, can also be useful to protect a
-> zone data by preventing further zone writes.
-> 
-> These operations are implemented by introducing the new
-> REQ_OP_ZONE_OPEN, REQ_OP_ZONE_CLOSE and REQ_OP_ZONE_FINISH request codes
-> and the function blkdev_zone_mgmt() to issue these requests. This new
-> function also replaces the former blkdev_reset_zones() function to reset
-> zones write pointer.
-> 
-> The new ioctls BLKOPENZONE, BLKCLOSEZONE and BLKFINISHZONE are also
-> defined to allow applications to issue these new requests without
-> resorting to a device passthrough interface (e.g. SG_IO).
-> 
-> Support for these operations is added to the SCSI sd driver, to the dm
-> infrastructure (dm-linear and dm-flakey targets) and to the null_blk
-> driver.
+On Mon, 2019-10-28 at 13:06 -0700, Bart Van Assche wrote:
+> Use the generic __{get,put}_unaligned_[bl]e() definitions instead of
+> duplicating these. Since a later patch will add more definitions into
+> <linux/unaligned/generic.h>, this patch ensures that these definitions
+> have to be added only once. See also commit a7f626c1948a ("C6X: headers")=
+.
+> See also commit 6510d41954dc ("kernel: Move arches to use common unaligne=
+d
+> access").
+>=20
+> Cc: Mark Salter <msalter@redhat.com>
+> Cc: Aurelien Jacquiot <jacquiot.aurelien@gmail.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  arch/c6x/include/asm/unaligned.h | 65 +-------------------------------
+>  1 file changed, 1 insertion(+), 64 deletions(-)
+>=20
+> diff --git a/arch/c6x/include/asm/unaligned.h b/arch/c6x/include/asm/unal=
+igned.h
+> index b56ba7110f5a..d628cc170564 100644
+> --- a/arch/c6x/include/asm/unaligned.h
+> +++ b/arch/c6x/include/asm/unaligned.h
+> @@ -10,6 +10,7 @@
+>  #define _ASM_C6X_UNALIGNED_H
+> =20
+>  #include <linux/swab.h>
+> +#include <linux/unaligned/generic.h>
+> =20
+>  /*
+>   * The C64x+ can do unaligned word and dword accesses in hardware
+> @@ -100,68 +101,4 @@ static inline void put_unaligned64(u64 val, const vo=
+id *p)
+> =20
+>  #endif
+> =20
+> -/*
+> - * Cause a link-time error if we try an unaligned access other than
+> - * 1,2,4 or 8 bytes long
+> - */
+> -extern int __bad_unaligned_access_size(void);
+> -
+> -#define __get_unaligned_le(ptr) (typeof(*(ptr)))({=09=09=09\
+> -=09sizeof(*(ptr)) =3D=3D 1 ? *(ptr) :=09=09=09=09=09\
+> -=09  (sizeof(*(ptr)) =3D=3D 2 ? get_unaligned_le16((ptr)) :=09=09\
+> -=09     (sizeof(*(ptr)) =3D=3D 4 ? get_unaligned_le32((ptr)) :=09=09\
+> -=09=09(sizeof(*(ptr)) =3D=3D 8 ? get_unaligned_le64((ptr)) :=09\
+> -=09=09   __bad_unaligned_access_size())));=09=09=09\
+> -=09})
+> -
+> -#define __get_unaligned_be(ptr) (__force typeof(*(ptr)))({=09\
+> -=09sizeof(*(ptr)) =3D=3D 1 ? *(ptr) :=09=09=09=09=09\
+> -=09  (sizeof(*(ptr)) =3D=3D 2 ? get_unaligned_be16((ptr)) :=09=09\
+> -=09     (sizeof(*(ptr)) =3D=3D 4 ? get_unaligned_be32((ptr)) :=09=09\
+> -=09=09(sizeof(*(ptr)) =3D=3D 8 ? get_unaligned_be64((ptr)) :=09\
+> -=09=09   __bad_unaligned_access_size())));=09=09=09\
+> -=09})
+> -
+> -#define __put_unaligned_le(val, ptr) ({=09=09=09=09=09\
+> -=09void *__gu_p =3D (ptr);=09=09=09=09=09=09\
+> -=09switch (sizeof(*(ptr))) {=09=09=09=09=09\
+> -=09case 1:=09=09=09=09=09=09=09=09\
+> -=09=09*(u8 *)__gu_p =3D (__force u8)(val);=09=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 2:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_le16((__force u16)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 4:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_le32((__force u32)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 8:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_le64((__force u64)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09default:=09=09=09=09=09=09=09\
+> -=09=09__bad_unaligned_access_size();=09=09=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09}=09=09=09=09=09=09=09=09\
+> -=09(void)0; })
+> -
+> -#define __put_unaligned_be(val, ptr) ({=09=09=09=09=09\
+> -=09void *__gu_p =3D (ptr);=09=09=09=09=09=09\
+> -=09switch (sizeof(*(ptr))) {=09=09=09=09=09\
+> -=09case 1:=09=09=09=09=09=09=09=09\
+> -=09=09*(u8 *)__gu_p =3D (__force u8)(val);=09=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 2:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_be16((__force u16)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 4:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_be32((__force u32)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09case 8:=09=09=09=09=09=09=09=09\
+> -=09=09put_unaligned_be64((__force u64)(val), __gu_p);=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09default:=09=09=09=09=09=09=09\
+> -=09=09__bad_unaligned_access_size();=09=09=09=09\
+> -=09=09break;=09=09=09=09=09=09=09\
+> -=09}=09=09=09=09=09=09=09=09\
+> -=09(void)0; })
+> -
+>  #endif /* _ASM_C6X_UNALIGNED_H */
 
-Applied for 5.5, thanks. I've got the last sd patch pending, the conflict
-is rather ugly. I'll setup a post branch for drivers with this in, once
-the dependent fix has landed in Linus's tree.
+Acked-by: Mark Salter <msalter@redhat.com>
 
--- 
-Jens Axboe
 
