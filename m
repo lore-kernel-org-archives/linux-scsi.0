@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2474FC5DF60
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 05:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06613C5DF61
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 05:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 046ED2178F
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 05:22:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAE1E2178F
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 05:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726372AbfKGFWM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 00:22:12 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:33531 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725747AbfKGFWM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 00:22:12 -0500
-Received: by mail-pg1-f193.google.com with SMTP id h27so1173036pgn.0
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 21:22:12 -0800 (PST)
+        id S1726381AbfKGFWP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 00:22:15 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:41783 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726373AbfKGFWP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 00:22:15 -0500
+Received: by mail-pf1-f193.google.com with SMTP id p26so1544159pfq.8
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Nov 2019 21:22:14 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=52YNfvqeMMQOXqCejA5BhSKdxlrXi+wD0MjRVZBDQV0=;
-        b=mdggNIVIbrEk/YQLcVK/lZvwgZocSTmWlQLoWIQb/0m+ES7IVanrqQ/k2BYymi7q7I
-         B/iV0yuBRcWRuZ4MUe9jil4NYQmNyZHixAvaA3Q0pvGd1YQIVevrkmqTyLO/vWXMR04Z
-         VvfIQI+Kx5ImJqV9wpGZoJffHiPPG6W/aB7TF54NIZNrWOUNMvVGZvjvKilEgSxs89yP
-         NOOpUyPl/uNeb8KAhmlcjF9KDjYSky9D/1uklCO6QytsoVMx8+zfM20bPD2ASVDEFoy9
-         JqfkfyEb5nT7z5JkUl4l6XuQbY5KCtGnEkCM2eOett60I/TIl/pzaXKarDAXC5Nq3I8H
-         v28g==
-X-Gm-Message-State: APjAAAUSYhKkW5ysI/LCwl+vcts6RFNd73tkD8W8Wd7/FASx/cbNl3Cu
-        4mJPjopxi69fwqjUM/Og/0E=
-X-Google-Smtp-Source: APXvYqxl+x0arBnhqGf3VZ2Yc6D/3XyTlpbHJ4fIYdPhttlix3T3s8axKC/ya5YBl7HWvdGTFe4spw==
-X-Received: by 2002:a63:7cf:: with SMTP id 198mr2149974pgh.372.1573104131534;
-        Wed, 06 Nov 2019 21:22:11 -0800 (PST)
+        bh=DTaOhDgtEZZE6eTIW6R/dFyHM3FvEb3jzqyn/t/MQfg=;
+        b=FhAfWFZd1XIL0TXztN1Mm3Hg4KFQzdcoLmruoCwcmhC3BPmcBwkj4pyv83rSlzOhcn
+         d4yGK34k/CP/kzpENAGRaTPr1fJrS4LBBR2E+izg3G82nFh8mS488mCgrvSUaRo5A/w5
+         GGaHKVckQ0h3UK5UE59UtPm8vq0uHUyMzuyHtrKHCCVHeVh614Pu38x+NSYwcEJF5vXq
+         ok3rue3i+eJBf0vEOuEztTKZSf2fOHgnuFPYwhQcg4nI9FlzCrt8Ka9PCZJI7qiwWpcM
+         uQDjLyI9unVAVNMt6yvt6hdJWGyyx4RtbE1CSTJk8lJN/bpmjEHYaNXECyouSQjfWfu3
+         0dsg==
+X-Gm-Message-State: APjAAAUEjckUwqDCQya+5SwJSAlkaVmgRkFZZXYDH9EFSbJhE+lMnPVH
+        SidUhBxtkAwauF5kmEbgOgo=
+X-Google-Smtp-Source: APXvYqy4XTD2Nt6kKswyM7xzJvyIxstz6CHEFNBWafXd1qdK0Lc9Ik677fdbn8DmEoRi1V9xHi8gYw==
+X-Received: by 2002:a63:c445:: with SMTP id m5mr2135913pgg.211.1573104134426;
+        Wed, 06 Nov 2019 21:22:14 -0800 (PST)
 Received: from localhost.net ([2601:647:4000:1075:7917:b099:7983:671c])
-        by smtp.gmail.com with ESMTPSA id m13sm719961pga.70.2019.11.06.21.22.10
+        by smtp.gmail.com with ESMTPSA id m13sm719961pga.70.2019.11.06.21.22.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Nov 2019 21:22:10 -0800 (PST)
+        Wed, 06 Nov 2019 21:22:13 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 2/3] lpfc: Fix a kernel warning triggered by lpfc_sli4_enable_intr()
-Date:   Wed,  6 Nov 2019 21:21:56 -0800
-Message-Id: <20191107052158.25788-4-bvanassche@acm.org>
+Subject: [PATCH 3/3] lpfc: Fix lpfc_cpumask_of_node_init()
+Date:   Wed,  6 Nov 2019 21:21:58 -0800
+Message-Id: <20191107052158.25788-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191107052158.25788-1-bvanassche@acm.org>
 References: <20191107052158.25788-1-bvanassche@acm.org>
@@ -58,86 +58,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following lockdep warning:
+Fix the following kernel warning:
 
-============================================
-WARNING: possible recursive locking detected
-5.4.0-rc6-dbg+ #2 Not tainted
---------------------------------------------
-systemd-udevd/130 is trying to acquire lock:
-ffffffff826b05d0 (cpu_hotplug_lock.rw_sem){++++}, at: irq_calc_affinity_vectors+0x63/0x90
-
-but task is already holding lock:
-
-ffffffff826b05d0 (cpu_hotplug_lock.rw_sem){++++}, at: lpfc_sli4_enable_intr+0x422/0xd50 [lpfc]
-
-other info that might help us debug this:
-
- Possible unsafe locking scenario:
-       CPU0
-       ----
-  lock(cpu_hotplug_lock.rw_sem);
-  lock(cpu_hotplug_lock.rw_sem);
-
-*** DEADLOCK ***
- May be due to missing lock nesting notation
-2 locks held by systemd-udevd/130:
- #0: ffff8880d53fe210 (&dev->mutex){....}, at: __device_driver_lock+0x4a/0x70
- #1: ffffffff826b05d0 (cpu_hotplug_lock.rw_sem){++++}, at: lpfc_sli4_enable_intr+0x422/0xd50 [lpfc]
-
-stack backtrace:
-CPU: 1 PID: 130 Comm: systemd-udevd Not tainted 5.4.0-rc6-dbg+ #2
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-Call Trace:
- dump_stack+0xa5/0xe6
- __lock_acquire.cold+0xf7/0x23a
- lock_acquire+0x106/0x240
- cpus_read_lock+0x41/0xe0
- irq_calc_affinity_vectors+0x63/0x90
- __pci_enable_msix_range+0x10a/0x950
- pci_alloc_irq_vectors_affinity+0x144/0x210
- lpfc_sli4_enable_intr+0x4b2/0xd50 [lpfc]
- lpfc_pci_probe_one+0x1411/0x22b0 [lpfc]
- local_pci_probe+0x7c/0xc0
- pci_device_probe+0x25d/0x390
- really_probe+0x170/0x510
- driver_probe_device+0x127/0x190
- device_driver_attach+0x98/0xa0
- __driver_attach+0xb6/0x1a0
- bus_for_each_dev+0x100/0x150
- driver_attach+0x31/0x40
- bus_add_driver+0x246/0x300
- driver_register+0xe0/0x170
- __pci_register_driver+0xde/0xf0
- lpfc_init+0x134/0x1000 [lpfc]
- do_one_initcall+0xda/0x47e
- do_init_module+0x10a/0x3b0
- load_module+0x4318/0x47c0
- __do_sys_finit_module+0x134/0x1d0
- __x64_sys_finit_module+0x47/0x50
- do_syscall_64+0x6f/0x2e0
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+cpumask_of_node(-1): (unsigned)node >= nr_node_ids(1)
 
 Fixes: dcaa21367938 ("scsi: lpfc: Change default IRQ model on AMD architectures")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 28e6a763f106..37e57fd9ba5d 100644
+index 37e57fd9ba5d..f2051e2f5f56 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11580,9 +11580,7 @@ lpfc_sli4_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
- 		retval = 0;
- 		if (!retval) {
- 			/* Now, try to enable MSI-X interrupt mode */
--			get_online_cpus();
- 			retval = lpfc_sli4_enable_msix(phba);
--			put_online_cpus();
- 			if (!retval) {
- 				/* Indicate initialization to MSI-X mode */
- 				phba->intr_type = MSIX;
+@@ -6005,21 +6005,14 @@ static void
+ lpfc_cpumask_of_node_init(struct lpfc_hba *phba)
+ {
+ 	unsigned int cpu, numa_node;
+-	struct cpumask *numa_mask = NULL;
++	struct cpumask *numa_mask = &phba->sli4_hba.numa_mask;
+ 
+-#ifdef CONFIG_NUMA
+-	numa_node = phba->pcidev->dev.numa_node;
+-#else
+-	numa_node = NUMA_NO_NODE;
+-#endif
+-	numa_mask = &phba->sli4_hba.numa_mask;
++	numa_node = dev_to_node(&phba->pcidev->dev);
++	if (numa_node == NUMA_NO_NODE)
++		return;
+ 
+ 	cpumask_clear(numa_mask);
+ 
+-	/* Check if we're a NUMA architecture */
+-	if (!cpumask_of_node(numa_node))
+-		return;
+-
+ 	for_each_possible_cpu(cpu)
+ 		if (cpu_to_node(cpu) == numa_node)
+ 			cpumask_set_cpu(cpu, numa_mask);
 -- 
 2.23.0
 
