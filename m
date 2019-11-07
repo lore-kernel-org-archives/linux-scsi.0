@@ -2,110 +2,140 @@ Return-Path: <SRS0=Iijn=Y7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C4C7C43331
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 18:59:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D561CC5DF60
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 19:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 066B62085B
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 18:59:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F31821D6C
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Nov 2019 19:00:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="iPZ79ADk"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="iPBWj/fj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbfKGS76 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:59:58 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:37753 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725883AbfKGS75 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 13:59:57 -0500
-Received: by mail-ot1-f66.google.com with SMTP id d5so2970052otp.4
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Nov 2019 10:59:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rgwxQZHa6ldii1pWiRxVyykr5nSYdGqgGsnTVFnT84Y=;
-        b=iPZ79ADka3j4nmgFew4aV8GDcZgyEwjLMdxp0Mh5gVImbZONvzSBW9L1sDFI8fDn3H
-         tnob8FIWxwGjDxp9eXuUAyD7X+O9J00fk8t56cyUl1HBcq0UNvZEFDD7/H+/lhhzvKYj
-         SgIFewwBSBs+CRZJu4aSqVjtbsfPz4Ia4NSA5kd8fqnHx+ad24lm/tMPtATyuujAgPXh
-         1XKicq1x1Q5xCLuAe65ljYXBxTPoh9Q9cqz2zM2+OCgrTkmSh/OTID/oUW0ztm5864wN
-         wN4GNgZiZRtRUKL6RJ6zJRdQh59WYXHqXthL1ObImv7honOLN59FTmXsawrwD0Dyt9e/
-         vpFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rgwxQZHa6ldii1pWiRxVyykr5nSYdGqgGsnTVFnT84Y=;
-        b=TXsJX5Mx15Tgwh+qhT90SiqDgUAU/TL8veTy/sV36sM1c52map5SMzef8qWr46EW1N
-         +kzhoa9YSmoT6NqqdshSpNgBRos4cWs5Jq9vIpf5Qn0JdJxY0NmZomnxaqRk2RWfyopY
-         dEzIkBooBn2iBzCt5TrMliTK6z2qvyNq6bpTlo7TkBkv/7X2y83bzBz8/xS7f0JmKAGE
-         3mPd7sEj0OXP+UcSCSLS5KXyMIf1SfXofACdoJSh6G8DmHfEObrt9kxbbPrfGo9EdrQT
-         jxEOmyyVjVQs4R4L9gTKznrHABAHWO3acZaDIydTnlwd7KThvtnqdtPDoNkfHPMa+PR5
-         Ch2A==
-X-Gm-Message-State: APjAAAWtQQ43U+GKKa+SVYF849HqGCzUISEonvvMqzq+gzBlJ9dgtYgL
-        rqjj/qQCLzNU8ZFTVImhY3suqVekKvKBKdHq5/KyjA==
-X-Google-Smtp-Source: APXvYqzZ2xDwFA4+o+16DbpXyR0jc2MOPlP3+u/QTC5jyvI5FJY3d9mHmZ9im0K4MWchyT/eP41C3qrbM2OhGj3lIpU=
-X-Received: by 2002:a9d:5a0f:: with SMTP id v15mr4513902oth.266.1573153195073;
- Thu, 07 Nov 2019 10:59:55 -0800 (PST)
+        id S1727189AbfKGTAk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 14:00:40 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:52974 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725883AbfKGTAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Nov 2019 14:00:39 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 940B941240;
+        Thu,  7 Nov 2019 19:00:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        user-agent:in-reply-to:content-transfer-encoding
+        :content-disposition:content-type:content-type:mime-version
+        :references:message-id:subject:subject:from:from:date:date
+        :received:received:received; s=mta-01; t=1573153236; x=
+        1574967637; bh=uQxe4Kx4+vxlnYs+1PqEhLZ8nZ2bRn+OplnwjkLe0YI=; b=i
+        PBWj/fju6lpBRKhC7SbWxcAUoa9oOUGJ7xQMONH57JDabrqBzMk3UKhWEasnfh8S
+        2TRrS9E72ERwsoC4A/1rLppJw9F254xsz/mpUMfvfqbatvNMSa8Odgwls1NLNDJq
+        tPJpRf+jx3uStoZaqU0mxBWGS2rDG0+U7oNm/k3pA8=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id QC7XTYk9BAnV; Thu,  7 Nov 2019 22:00:36 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id B3EC0411FF;
+        Thu,  7 Nov 2019 22:00:35 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 7 Nov
+ 2019 22:00:34 +0300
+Date:   Thu, 7 Nov 2019 22:00:32 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Himanshu Madhani <hmadhani@marvell.com>
+CC:     Bart Van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Quinn Tran <qutran@marvell.com>
+Subject: Re: [PATCH 0/4] scsi: qla2xxx: Bug fixes
+Message-ID: <20191107190032.idvubxehqtzbe3ah@SPB-NB-133.local>
+References: <20190912003919.8488-1-r.bolshakov@yadro.com>
+ <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
+ <20190912133605.age2zo7jxdbe4jiq@SPB-NB-133.local>
+ <B39B0F4F-3439-4313-A808-578047F1B93A@marvell.com>
 MIME-Version: 1.0
-References: <Pine.LNX.4.44L0.1911061044070.1694-100000@iolanthe.rowland.org>
- <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
- <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it> <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
-In-Reply-To: <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Andrea Vai <andrea.vai@unipv.it>
-Date:   Thu, 7 Nov 2019 19:59:44 +0100
-Message-ID: <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
-Subject: Re: Slow I/O on USB media after commit f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <B39B0F4F-3439-4313-A808-578047F1B93A@marvell.com>
+User-Agent: NeoMutt/20180716
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[Sorry for the duplicate message, it didn't reach the lists due to
-html formatting]
-Il giorno gio 7 nov 2019 alle ore 08:54 Damien Le Moal
-<Damien.LeMoal@wdc.com> ha scritto:
->
-> On 2019/11/07 16:04, Andrea Vai wrote:
-> > Il giorno mer, 06/11/2019 alle 22.13 +0000, Damien Le Moal ha scritto:
-> >>
-> >>
-> >> Please simply try your write tests after doing this:
-> >>
-> >> echo mq-deadline > /sys/block/<name of your USB
-> >> disk>/queue/scheduler
-> >>
-> >> And confirm that mq-deadline is selected with:
-> >>
-> >> cat /sys/block/<name of your USB disk>/queue/scheduler
-> >> [mq-deadline] kyber bfq none
-> >
-> > ok, which kernel should I test with this: the fresh git cloned, or the
-> > one just patched with Alan's patch, or doesn't matter which one?
->
-> Probably all of them to see if there are any differences.
+Hi Himanshu,
 
-with both kernels, the output of
-cat /sys/block/sdh/queue/schedule
+Could you please take a look at the series and anwser if we should stop
+doing BA_RJT as a response on ABTS when there's no session?
 
-already contains [mq-deadline]: is it correct to assume that the echo
-command and the subsequent testing is useless? What to do now?
+Thank you,
+Roman
 
-Thanks, and bye
-Andrea
+On Thu, Sep 12, 2019 at 01:53:03PM +0000, Himanshu Madhani wrote:
+> Adding Correct Quinn. Please use "qutran@mavell.com"
+> 
+> We'll take a look at the series
+> 
+> ﻿On 9/12/19, 8:49 AM, "linux-scsi-owner@vger.kernel.org on behalf of Roman Bolshakov" <linux-scsi-owner@vger.kernel.org on behalf of r.bolshakov@yadro.com> wrote:
+> 
+>     On Thu, Sep 12, 2019 at 06:37:22AM +0100, Bart Van Assche wrote:
+>     > On 9/12/19 1:39 AM, Roman Bolshakov wrote:
+>     > > This series has a few bug fixes for the driver.
+>     > > 
+>     > > Note, #1 only fixes the crash in the kernel. The complete fix for clean
+>     > > ACL deletion from initiator side is in works and requires a discussion.
+>     > > 
+>     > > As of now initiator is not aware that target no longer wants talking to
+>     > > it, that implies unneeded timeout. It might be fixed by making LOGO
+>     > > explicit on session deletion but it's an issue I want to raise first
+>     > > before making the change. Whether we need implicit LOGO in qla2xxx,
+>     > > explicit or use both.
+>     > > 
+>     > > Also, an unsolicited ABTS from a port without session would still result
+>     > > in BA_RJT response instead of frame discard and LOGO ELS, as specified
+>     > > in FCP (12.3.3 Target FCP_Port response to Exchange termination):
+>     > > 
+>     > >    When an ABTS-LS is received at the target FCP_Port, it shall abort
+>     > >    the designated Exchange and return one of the following responses:
+>     > > 
+>     > >    a) the target FCP_Port shall discard the ABTS-LS and transmit a LOGO
+>     > >       ELS if the Nx_Port issuing the ABTS-LS is not currently logged in
+>     > >       (i.e., no N_Port Login exists);
+>     > > 
+>     > > FWIW, the target driver can receive ABTS as part of ABORT TASK/LUN
+>     > > RESET/CLEAR TASK SET TMFs and in case of failed sequence retransmission
+>     > > requests, exchange or sequence errors. IIRC, some initiators requeue
+>     > > SCSI commands if BA_RJT is received. Therefore, a timely LOGO will
+>     > > prevent a perceived session freeze on the initiators.
+>     > 
+>     > Hi Roman,
+>     > 
+>     > Has this patch series been prepared against Linus' master branch,
+>     > against Martin's 5.3/scsi-fixes or against Martin's 5.4/scsi-queue
+>     > branch? I'm asking this because some patches in this series look similar
+>     > to patches that are already present in the 5.4/scsi-queue branch.
+>     > 
+>     > Thanks,
+>     > 
+>     > Bart.
+>     > 
+>     
+>     Hi Bart,
+>     
+>     To be honest it was prepared against next-20190904 but it applies to
+>     5.4/scsi-queue cleanly. The fixes made two weeks ago look promising but
+>     are related to stuck PRLI and unhandled RSCN while #4 is related to
+>     stuck PLOGI after qla_post_els_plogi_work.
+>     
+>     Thank you,
+>     Roman
+>     
+> 
