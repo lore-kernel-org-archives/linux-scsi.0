@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0898CFC6198
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C92C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D09C021D7F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A69C521D82
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="J3OVqTrS"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="R66SntI1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728466AbfKHB5Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 20:57:16 -0500
+        id S1728568AbfKHB5R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 20:57:17 -0500
 Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12762 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725928AbfKHB5P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 20:57:15 -0500
+        with ESMTP id S1725928AbfKHB5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 20:57:17 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1573178235; x=1604714235;
+  t=1573178236; x=1604714236;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=bKM/4aInW/OgAqMFQv0OZJNRf46tFrvXlpwNgWcw2sw=;
-  b=J3OVqTrSiHtDkLyqDFqPLEdZuivJPeSN05sU36JKARcxh7xcdYc1Ssc5
-   CsN0Nz1WVMElMxos5tqIizrdAGM8oag1cSfayq12h0IEf6RRQ+zmY5v0B
-   yHkKjFfWRpRETZ9Vrs7UBN+T4pz6aDpMiOsDp2cHfqTM8OI8xKVD5jOUj
-   2ozf+2Z7NxLMAx6MvzXABulHh26yYpEUru4fysTxREMnfxYqvRhmhrhkn
-   XZ1DRDvDuJpCsaYBcdZUYLWrVqm+DyXBptdRXdBPI8TxukBTJFUFUussa
-   YMI5/XVMxnUvqoDvH/iCUdtVj9uis0qyjK0fLuaMqs2qi3Q0oklKFXd3n
-   Q==;
-IronPort-SDR: vpw0jBQjSm2ycOzEhWsBGVUyqjZj9ICQfmqa5usz3rJ+uv93fOuLVH9BPo+lulofUFUVSTlt83
- FkloJnYCzfpmox7t5xUIDhMfpdVTZ7ZUCoEaHQbKjfe0eoS8jZcO/YZBkYyF41fOFyMpqapqUL
- IiuqnUxiBnGQIgQPR79O5Q5oGF7lxuZkSGtBapWstF6Z8OqFCUNOwern6VtHEVqQAgBlb6R2H7
- xlO9UwXoAz4sKQwzVoU2vi0zljTlCaU68EI2E6YnnNG2TazMsZomIX2JXLYBGMhK1hi6gzAEIH
- xXA=
+  bh=eU3UPObloIUO/IHs6JVYQB0lk+QRMMWcTIgAimNInc8=;
+  b=R66SntI1lWGpXRSjWs0slYKdBNjZICuE4oM9H7lA4m38YN5+wqU81HAa
+   NenPK+/P/K4Ev4krNVDFOvx1HyS/fDmpCZ0e0rUTtgo/eB9+cW+yfuLT1
+   jwVURFU3ac/GTX7p2tDeKOGoXTNjgDnHEXb1b3F0SYwvMa/aa7Ppgj1Tn
+   d0gOS69+XY+ODe5wcOfKTJN1mj8vnps2NXpjwX+WzaIsoG0uA3qS+21j3
+   d+tZ1m5qZESANfgy2Uulf7av3iZOBQPIc0bjHptUjiH7HQQ81nj/R881E
+   KqUD+RAH+ieIVHxdAcdEZ0aBmsfwSio+LMFbtm6CV5uSMOjXPnqIYh9VJ
+   A==;
+IronPort-SDR: WXMVCfbwbiZaRrWzIYACr2b/AZShZ04UdejeT6tvCZAdIW+7r8NUG203JKySjss0BgEJLj+2dr
+ oPEmlwQsJWcMJeD7PuW20YBVuwKHPV/WF5Qf9H2XdM+z/yizRsPSn3+PsOy8gc8gKZCFvF8MgB
+ DcWdjZGOENvGPgXxUw1L++HtHwAZyZzsbpsi8+yGPkFbtvFnaFBOj79dycj/NwcrGdsOgdSmFQ
+ ugaA2iiwtQ+MMjvkh9bM7gdiazU7s7dvoaq6Tcirpf8PjxRr/LV6RpeyqlYeeVefUeezxzM1e+
+ 6Pg=
 X-IronPort-AV: E=Sophos;i="5.68,279,1569254400"; 
-   d="scan'208";a="122437213"
+   d="scan'208";a="122437218"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2019 09:57:15 +0800
-IronPort-SDR: GxpbKG4wIQU0FKhBaF+Q/zueW/c90BSPYbfbDifDclmtm3Vn4pRYYCyI362sYWj8pJlU+LhnU+
- YB+S5kp8oQyHylBL6X9gNU/+/NnXcBOvWOqM3MSreJKevx0b+vXzY4BoSmrW7xD3XyOtgeF//6
- LQB3U27u/NzCftwF/k/7vS61JtA57BUl2LfAPWvlueYpJ3OSjJQuoPu3ycM70wn/fDKzkGRoW5
- R0Ejirdvc4Gty3GKVxZOZTZggVGG+yg1RHk/q/xWVRwlGTJgxyghbhKTBPBQdv8I72DtNBPoi1
- wEHWE9aYc9nGnKmLBHk6d/kD
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2019 09:57:16 +0800
+IronPort-SDR: 2mDMB4j7+BJUnbnLftJqDcuWl/eUAB0WJowGr9ucxmbnhlfJnnG7FOqcKbj27fXhd9gpB27tgY
+ KlNBK0fVWmviq7MVfxHCfsV6/rAck9+K0zvRa6GVn6PAJpwoP+ln9IZ+mXnbLiro3Ky4Kwhowz
+ 8SzseiZe01H22lxsv+O84lO8VmaeaTk8M0olKb46Nxx19CG6MT8wzsVGCIaBK145UmenHolb3N
+ n50RgH+7V7CX6Q4GKp6GIkKNaE09eNitYd5xFAdV0Znjbcs5v0EnrJX27y5KvqU3gVyOrazRKb
+ c3crJGXo0nH/JoNgwKsoZfr7
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2019 17:52:24 -0800
-IronPort-SDR: 4CDSQV2+GUtY/DSWWA7Yt1gBV3s2ut6Ip0kWS6IlKPmfz9aw8vAh4foMojfjAlyTPim0pyGsMD
- mGEEU6eq6rRd8UgsEGjut9tEMR4CHv2QWG/j3M0IqThDPNwox1bJjWLJqSgcfa0awC6USbi0Nf
- U9bZJAbu2+rAeYmDFVrAXIp7ruBASpzX6QP6gPPjUByI2iZBnk1Fog/wFVZHvfqYU38/wrLoIg
- o9yNzMe2paRPu3RPanNpjJzi6mGL7Lb94r/a3kJQZCrHpf7XlDJWpWG5Q8/eJD9wrM6unlf8Su
- QDk=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2019 17:52:26 -0800
+IronPort-SDR: eEzgyNms9DdIGk7sRIpN96F8FHGQ06z8avuZlFaN3KKigJBu+LO6ibEz+bD6UKDLObxbCGWKrq
+ qXxDKKIVequs0bz2Mmbc2gCKQ8RIIFt3dNjcaHsmUhYC81ER/dlQzPyeEwS6AAJbdoFl3NuE3+
+ GP1SLuVOOCyvTrPg6u8HiBFq4tLtmeEaOZdfiEtANGNEn2h8kSQL4eVWOKDVK9X3VfpodIFDIH
+ 2j9psiwRP02r26em63ZNUVJUGD9fDwUWMsLeCvbu+LVXK/Wg8I1PhoyH5skaS419+eKEEEO0ZC
+ hJU=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 07 Nov 2019 17:57:13 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 07 Nov 2019 17:57:15 -0800
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -65,9 +65,9 @@ To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
-Subject: [PATCH 6/9] null_blk: clean up report zones
-Date:   Fri,  8 Nov 2019 10:56:59 +0900
-Message-Id: <20191108015702.233102-7-damien.lemoal@wdc.com>
+Subject: [PATCH 7/9] null_blk: Add zone_nr_conv to features
+Date:   Fri,  8 Nov 2019 10:57:00 +0900
+Message-Id: <20191108015702.233102-8-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191108015702.233102-1-damien.lemoal@wdc.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
@@ -78,83 +78,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+For a null_blk device with zoned mode enabled, the number of
+conventional zones can be configured through configfs with the
+zone_nr_conv parameter. Add this missing parameter in the features
+string.
 
-Make the instance name match the method name and define the name to NULL
-instead of providing an inline stub, which is rather pointless for a
-method call.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/block/null_blk.h       | 11 +++--------
- drivers/block/null_blk_main.c  |  2 +-
- drivers/block/null_blk_zoned.c |  4 ++--
- 3 files changed, 6 insertions(+), 11 deletions(-)
+ drivers/block/null_blk_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/null_blk.h b/drivers/block/null_blk.h
-index 93c2a3d403da..9bf56fbab091 100644
---- a/drivers/block/null_blk.h
-+++ b/drivers/block/null_blk.h
-@@ -91,8 +91,8 @@ struct nullb {
- #ifdef CONFIG_BLK_DEV_ZONED
- int null_zone_init(struct nullb_device *dev);
- void null_zone_exit(struct nullb_device *dev);
--int null_zone_report(struct gendisk *disk, sector_t sector,
--		     struct blk_zone *zones, unsigned int *nr_zones);
-+int null_report_zones(struct gendisk *disk, sector_t sector,
-+		      struct blk_zone *zones, unsigned int *nr_zones);
- blk_status_t null_handle_zoned(struct nullb_cmd *cmd,
- 				enum req_opf op, sector_t sector,
- 				sector_t nr_sectors);
-@@ -105,12 +105,6 @@ static inline int null_zone_init(struct nullb_device *dev)
- 	return -EINVAL;
- }
- static inline void null_zone_exit(struct nullb_device *dev) {}
--static inline int null_zone_report(struct gendisk *disk, sector_t sector,
--				   struct blk_zone *zones,
--				   unsigned int *nr_zones)
--{
--	return -EOPNOTSUPP;
--}
- static inline blk_status_t null_handle_zoned(struct nullb_cmd *cmd,
- 					     enum req_opf op, sector_t sector,
- 					     sector_t nr_sectors)
-@@ -123,5 +117,6 @@ static inline size_t null_zone_valid_read_len(struct nullb *nullb,
- {
- 	return len;
- }
-+#define null_report_zones	NULL
- #endif /* CONFIG_BLK_DEV_ZONED */
- #endif /* __NULL_BLK_H */
 diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-index 89d385bab45b..2687eb36441c 100644
+index 2687eb36441c..27fb34d7da31 100644
 --- a/drivers/block/null_blk_main.c
 +++ b/drivers/block/null_blk_main.c
-@@ -1444,7 +1444,7 @@ static void null_config_discard(struct nullb *nullb)
+@@ -467,7 +467,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
  
- static const struct block_device_operations null_ops = {
- 	.owner		= THIS_MODULE,
--	.report_zones	= null_zone_report,
-+	.report_zones	= null_report_zones,
- };
- 
- static void null_init_queue(struct nullb *nullb, struct nullb_queue *nq)
-diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
-index 02f41a3bc4cb..00696f16664b 100644
---- a/drivers/block/null_blk_zoned.c
-+++ b/drivers/block/null_blk_zoned.c
-@@ -66,8 +66,8 @@ void null_zone_exit(struct nullb_device *dev)
- 	kvfree(dev->zones);
+ static ssize_t memb_group_features_show(struct config_item *item, char *page)
+ {
+-	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache,badblocks,zoned,zone_size\n");
++	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache,badblocks,zoned,zone_size,zone_nr_conv\n");
  }
  
--int null_zone_report(struct gendisk *disk, sector_t sector,
--		     struct blk_zone *zones, unsigned int *nr_zones)
-+int null_report_zones(struct gendisk *disk, sector_t sector,
-+		      struct blk_zone *zones, unsigned int *nr_zones)
- {
- 	struct nullb *nullb = disk->private_data;
- 	struct nullb_device *dev = nullb->dev;
+ CONFIGFS_ATTR_RO(memb_group_, features);
 -- 
 2.23.0
 
