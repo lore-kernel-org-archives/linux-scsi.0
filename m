@@ -2,54 +2,52 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A64A7FA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:02:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29C79C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D73C2085B
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E44812085B
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573214570;
-	bh=KIk9cKBAlYSu52MEBaNKdwuUofEr+nQ0flIVxSGQwz0=;
+	s=default; t=1573214721;
+	bh=iooMRrUzKpZwG98xHGVPX3V+QQnKKnXvvoq8CkKhwqI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=f2tiGCAv0KvoTiz+VvepY/VY9RRAggh2BvrpsD8+0jMiKk99bu36mudAeLQAxhoM3
-	 tUKUpZsj1loQlBIzSytdnn+5OT1AxCn+TZT9/kFQLmjwfY+i0EbhnL/SO1e/0gVy8X
-	 OfbqJlSPYwfPDDfZmUqWP3W6C0+rXcHs6QdXNaAE=
+	b=Llbk6KerRaS5ie+gZJVQZCmLcUYqMzEgBPm8qkh1OmsASpyyvrpj5tLsiEWltRdPi
+	 dCZMW7ljzEcGkAX1azyFV/DBkrFM88V8cnUgLDHXqbJkhl6Wei21u3OHq7B5VHw89N
+	 REweqApQG8dWzkR+oXmNA2Zfiqpy72uOTHU3oy/s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390230AbfKHLm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:42:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57166 "EHLO mail.kernel.org"
+        id S2389543AbfKHLli (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 06:41:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55080 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390178AbfKHLmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:42:54 -0500
+        id S1732178AbfKHLlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:41:37 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 26B8F222C4;
-        Fri,  8 Nov 2019 11:42:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD68721D7B;
+        Fri,  8 Nov 2019 11:41:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213374;
-        bh=KIk9cKBAlYSu52MEBaNKdwuUofEr+nQ0flIVxSGQwz0=;
+        s=default; t=1573213295;
+        bh=iooMRrUzKpZwG98xHGVPX3V+QQnKKnXvvoq8CkKhwqI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=T4Yo9EjGn4W+TxaSEX8fnBqJujMnpP+4tdFAiesPf3JNG8v2zLTypLk196SzQ37p5
-         YM/8I+e32MwFUeUHTd3xJflmUMdw3pLMkI0FRYfG9I7eo9MRrgntrplVKsYhsSilXj
-         Hepm87tKaxBNX528iYWeXriV/QrjMhO+r8iontyE=
+        b=e2XJLSpj0kis+FkWuFZ+n+fYZgrq6IrSZaj8CTZZbhd/7VBAo7CTxXTIGXyDTjPI7
+         l7TaDeXvXEYoMPNfNtcx0U/Io1DALi51NsK2/0/Qpce9F351/IZKirOPRGPW1VexGc
+         q0rU9EuJ8CZPIHERSNfJkBA6SprbAW8MZubDu0X4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        Evan Green <evgreen@chromium.org>,
+Cc:     Deepak Ukey <deepak.ukey@microchip.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        Jack Wang <jinpu.wang@profitbricks.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 199/205] scsi: ufshcd: Fix NULL pointer dereference for in ufshcd_init
-Date:   Fri,  8 Nov 2019 06:37:46 -0500
-Message-Id: <20191108113752.12502-199-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 153/205] scsi: pm80xx: Fixed system hang issue during kexec boot
+Date:   Fri,  8 Nov 2019 06:37:00 -0500
+Message-Id: <20191108113752.12502-153-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
@@ -62,140 +60,213 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
+From: Deepak Ukey <deepak.ukey@microchip.com>
 
-[ Upstream commit eebcc19646489b68399ce7b35d9c38eb9f4ec40f ]
+[ Upstream commit 72349b62a571effd6faadd0600b8e657dd87afbf ]
 
-Error paths in ufshcd_init() ufshcd_hba_exit() killed clk_scaling workqueue
-when the workqueue is actually created quite late in ufshcd_init().  So, we
-end up getting NULL pointer dereference in such error paths.  Fix this by
-moving clk_scaling initialization and kill codes to two separate methods, and
-call them at required places.
+When the firmware is not responding, execution of kexec boot causes a system
+hang. When firmware assertion happened, driver get notified with interrupt
+vector updated in MPI configuration table. Then, the driver will read
+scratchpad register and set controller_fatal_error flag to true.
 
-Fixes: 401f1e4490ee ("scsi: ufs: don't suspend clock scaling during clock
-gating")
-
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: Matthias Kaehlcke <mka@chromium.org>
-Cc: Evan Green <evgreen@chromium.org>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Evan Green <evgreen@chromium.org>
+Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Acked-by: Jack Wang <jinpu.wang@profitbricks.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 53 +++++++++++++++++++++++++--------------
- 1 file changed, 34 insertions(+), 19 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c |  6 +++
+ drivers/scsi/pm8001/pm8001_sas.c |  7 +++
+ drivers/scsi/pm8001/pm8001_sas.h |  1 +
+ drivers/scsi/pm8001/pm80xx_hwi.c | 80 +++++++++++++++++++++++++++++---
+ drivers/scsi/pm8001/pm80xx_hwi.h |  3 ++
+ 5 files changed, 91 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4aaba3e030554..8bce755e0f5bc 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1772,6 +1772,34 @@ out:
- 	return count;
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index 4dd6cad330e8e..3e814c0469fbd 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1479,6 +1479,12 @@ u32 pm8001_mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
+ 		} else {
+ 			u32 producer_index;
+ 			void *pi_virt = circularQ->pi_virt;
++			/* spurious interrupt during setup if
++			 * kexec-ing and driver doing a doorbell access
++			 * with the pre-kexec oq interrupt setup
++			 */
++			if (!pi_virt)
++				break;
+ 			/* Update the producer index from SPC */
+ 			producer_index = pm8001_read_32(pi_virt);
+ 			circularQ->producer_index = cpu_to_le32(producer_index);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 576a0f091933b..59feda261e088 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -374,6 +374,13 @@ static int pm8001_task_exec(struct sas_task *task,
+ 		return 0;
+ 	}
+ 	pm8001_ha = pm8001_find_ha_by_dev(task->dev);
++	if (pm8001_ha->controller_fatal_error) {
++		struct task_status_struct *ts = &t->task_status;
++
++		ts->resp = SAS_TASK_UNDELIVERED;
++		t->task_done(t);
++		return 0;
++	}
+ 	PM8001_IO_DBG(pm8001_ha, pm8001_printk("pm8001_task_exec device \n "));
+ 	spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 	do {
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 80b4dd6df0c25..1816e351071fa 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -538,6 +538,7 @@ struct pm8001_hba_info {
+ 	u32			logging_level;
+ 	u32			fw_status;
+ 	u32			smp_exp_mode;
++	bool			controller_fatal_error;
+ 	const struct firmware 	*fw_image;
+ 	struct isr_param irq_vector[PM8001_MAX_MSIX_VEC];
+ 	u32			reset_in_progress;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 42f0405601ad1..5021aed87f33a 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -577,6 +577,9 @@ static void update_main_config_table(struct pm8001_hba_info *pm8001_ha)
+ 		pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_size);
+ 	pm8001_mw32(address, MAIN_PCS_EVENT_LOG_OPTION,
+ 		pm8001_ha->main_cfg_tbl.pm80xx_tbl.pcs_event_log_severity);
++	/* Update Fatal error interrupt vector */
++	pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt |=
++					((pm8001_ha->number_of_intr - 1) << 8);
+ 	pm8001_mw32(address, MAIN_FATAL_ERROR_INTERRUPT,
+ 		pm8001_ha->main_cfg_tbl.pm80xx_tbl.fatal_err_interrupt);
+ 	pm8001_mw32(address, MAIN_EVENT_CRC_CHECK,
+@@ -1110,6 +1113,9 @@ static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
+ 		return -EBUSY;
+ 	}
+ 
++	/* Initialize the controller fatal error flag */
++	pm8001_ha->controller_fatal_error = false;
++
+ 	/* Initialize pci space address eg: mpi offset */
+ 	init_pci_device_addresses(pm8001_ha);
+ 	init_default_table_values(pm8001_ha);
+@@ -1218,13 +1224,17 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
+ 	u32 bootloader_state;
+ 	u32 ibutton0, ibutton1;
+ 
+-	/* Check if MPI is in ready state to reset */
+-	if (mpi_uninit_check(pm8001_ha) != 0) {
+-		PM8001_FAIL_DBG(pm8001_ha,
+-			pm8001_printk("MPI state is not ready\n"));
+-		return -1;
++	/* Process MPI table uninitialization only if FW is ready */
++	if (!pm8001_ha->controller_fatal_error) {
++		/* Check if MPI is in ready state to reset */
++		if (mpi_uninit_check(pm8001_ha) != 0) {
++			regval = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
++			PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
++				"MPI state is not ready scratch1 :0x%x\n",
++				regval));
++			return -1;
++		}
+ 	}
+-
+ 	/* checked for reset register normal state; 0x0 */
+ 	regval = pm8001_cr32(pm8001_ha, 0, SPC_REG_SOFT_RESET);
+ 	PM8001_INIT_DBG(pm8001_ha,
+@@ -3752,6 +3762,46 @@ static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	}
  }
  
-+static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
++static void print_scratchpad_registers(struct pm8001_hba_info *pm8001_ha)
 +{
-+	char wq_name[sizeof("ufs_clkscaling_00")];
-+
-+	if (!ufshcd_is_clkscaling_supported(hba))
-+		return;
-+
-+	INIT_WORK(&hba->clk_scaling.suspend_work,
-+		  ufshcd_clk_scaling_suspend_work);
-+	INIT_WORK(&hba->clk_scaling.resume_work,
-+		  ufshcd_clk_scaling_resume_work);
-+
-+	snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
-+		 hba->host->host_no);
-+	hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
-+
-+	ufshcd_clkscaling_init_sysfs(hba);
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_SCRATCH_PAD_0: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_0)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_SCRATCH_PAD_1:0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_SCRATCH_PAD_2: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_2)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_SCRATCH_PAD_3: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_0: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_0)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_1: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_1)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_2: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_2)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_3: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_3)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_4: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_4)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_HOST_SCRATCH_PAD_5: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_5)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_RSVD_SCRATCH_PAD_0: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_6)));
++	PM8001_FAIL_DBG(pm8001_ha,
++		pm8001_printk("MSGU_RSVD_SCRATCH_PAD_1: 0x%x\n",
++			pm8001_cr32(pm8001_ha, 0, MSGU_HOST_SCRATCH_PAD_7)));
 +}
 +
-+static void ufshcd_exit_clk_scaling(struct ufs_hba *hba)
-+{
-+	if (!ufshcd_is_clkscaling_supported(hba))
-+		return;
-+
-+	destroy_workqueue(hba->clk_scaling.workq);
-+	ufshcd_devfreq_remove(hba);
-+}
-+
- static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
  {
- 	char wq_name[sizeof("ufs_clk_gating_00")];
-@@ -6676,6 +6704,7 @@ out:
- 	 */
- 	if (ret && !ufshcd_eh_in_progress(hba) && !hba->pm_op_in_progress) {
- 		pm_runtime_put_sync(hba->dev);
-+		ufshcd_exit_clk_scaling(hba);
- 		ufshcd_hba_exit(hba);
- 	}
+ 	struct outbound_queue_table *circularQ;
+@@ -3759,10 +3809,28 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 	u8 uninitialized_var(bc);
+ 	u32 ret = MPI_IO_STATUS_FAIL;
+ 	unsigned long flags;
++	u32 regval;
  
-@@ -7223,12 +7252,9 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 		ufshcd_variant_hba_exit(hba);
- 		ufshcd_setup_vreg(hba, false);
- 		ufshcd_suspend_clkscaling(hba);
--		if (ufshcd_is_clkscaling_supported(hba)) {
-+		if (ufshcd_is_clkscaling_supported(hba))
- 			if (hba->devfreq)
- 				ufshcd_suspend_clkscaling(hba);
--			destroy_workqueue(hba->clk_scaling.workq);
--			ufshcd_devfreq_remove(hba);
--		}
- 		ufshcd_setup_clocks(hba, false);
- 		ufshcd_setup_hba_vreg(hba, false);
- 		hba->is_powered = false;
-@@ -7908,6 +7934,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba, true);
++	if (vec == (pm8001_ha->number_of_intr - 1)) {
++		regval = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
++		if ((regval & SCRATCH_PAD_MIPSALL_READY) !=
++					SCRATCH_PAD_MIPSALL_READY) {
++			pm8001_ha->controller_fatal_error = true;
++			PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
++				"Firmware Fatal error! Regval:0x%x\n", regval));
++			print_scratchpad_registers(pm8001_ha);
++			return ret;
++		}
++	}
+ 	spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 	circularQ = &pm8001_ha->outbnd_q_tbl[vec];
+ 	do {
++		/* spurious interrupt during setup if kexec-ing and
++		 * driver doing a doorbell access w/ the pre-kexec oq
++		 * interrupt setup.
++		 */
++		if (!circularQ->pi_virt)
++			break;
+ 		ret = pm8001_mpi_msg_consume(pm8001_ha, circularQ, &pMsg1, &bc);
+ 		if (MPI_IO_STATUS_SUCCESS == ret) {
+ 			/* process the outbound message */
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 889e69ce3689b..7dd2699d0efb5 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -1384,6 +1384,9 @@ typedef struct SASProtocolTimerConfig SASProtocolTimerConfig_t;
+ #define SCRATCH_PAD_BOOT_LOAD_SUCCESS	0x0
+ #define SCRATCH_PAD_IOP0_READY		0xC00
+ #define SCRATCH_PAD_IOP1_READY		0x3000
++#define SCRATCH_PAD_MIPSALL_READY	(SCRATCH_PAD_IOP1_READY | \
++					SCRATCH_PAD_IOP0_READY | \
++					SCRATCH_PAD_RAAE_READY)
  
-+	ufshcd_exit_clk_scaling(hba);
- 	ufshcd_exit_clk_gating(hba);
- 	if (ufshcd_is_clkscaling_supported(hba))
- 		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
-@@ -8079,6 +8106,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	ufshcd_init_clk_gating(hba);
- 
-+	ufshcd_init_clk_scaling(hba);
-+
- 	/*
- 	 * In order to avoid any spurious interrupt immediately after
- 	 * registering UFS controller interrupt handler, clear any pending UFS
-@@ -8117,21 +8146,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		goto out_remove_scsi_host;
- 	}
- 
--	if (ufshcd_is_clkscaling_supported(hba)) {
--		char wq_name[sizeof("ufs_clkscaling_00")];
--
--		INIT_WORK(&hba->clk_scaling.suspend_work,
--			  ufshcd_clk_scaling_suspend_work);
--		INIT_WORK(&hba->clk_scaling.resume_work,
--			  ufshcd_clk_scaling_resume_work);
--
--		snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
--			 host->host_no);
--		hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
--
--		ufshcd_clkscaling_init_sysfs(hba);
--	}
--
- 	/*
- 	 * Set the default power management level for runtime and system PM.
- 	 * Default power saving mode is to keep UFS link in Hibern8 state
-@@ -8169,6 +8183,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- out_remove_scsi_host:
- 	scsi_remove_host(hba->host);
- exit_gating:
-+	ufshcd_exit_clk_scaling(hba);
- 	ufshcd_exit_clk_gating(hba);
- out_disable:
- 	hba->is_irq_enabled = false;
+ /* boot loader state */
+ #define SCRATCH_PAD1_BOOTSTATE_MASK		0x70	/* Bit 4-6 */
 -- 
 2.20.1
 
