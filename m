@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7192CFA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A68E8FC6194
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:18:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F76A21D6C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:17:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84207214DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:18:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729964AbfKHHRu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:17:50 -0500
-Received: from mx2.suse.de ([195.135.220.15]:60492 "EHLO mx1.suse.de"
+        id S1729764AbfKHHSR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:18:17 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60600 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728075AbfKHHRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 02:17:50 -0500
+        id S1725886AbfKHHSQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 02:18:16 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 10C2EB186;
-        Fri,  8 Nov 2019 07:17:48 +0000 (UTC)
-Subject: Re: [PATCH 5/9] null_blk: clean up the block device operations
+        by mx1.suse.de (Postfix) with ESMTP id 60752B186;
+        Fri,  8 Nov 2019 07:18:14 +0000 (UTC)
+Subject: Re: [PATCH 6/9] null_blk: clean up report zones
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -31,7 +31,7 @@ To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
- <20191108015702.233102-6-damien.lemoal@wdc.com>
+ <20191108015702.233102-7-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <f34d71a6-0181-8901-b1c6-e85fde9e1235@suse.de>
-Date:   Fri, 8 Nov 2019 08:17:47 +0100
+Message-ID: <176bf3c7-dde3-42b0-2f82-21489d0213f5@suse.de>
+Date:   Fri, 8 Nov 2019 08:18:14 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191108015702.233102-6-damien.lemoal@wdc.com>
+In-Reply-To: <20191108015702.233102-7-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -94,15 +94,17 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 11/8/19 2:56 AM, Damien Le Moal wrote:
 > From: Christoph Hellwig <hch@lst.de>
 > 
-> Remove the pointless stub open and release methods, give the operations
-> vector a slightly less confusing name, and use normal alignment for the
-> assignment operators.
+> Make the instance name match the method name and define the name to NULL
+> instead of providing an inline stub, which is rather pointless for a
+> method call.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  drivers/block/null_blk_main.c | 19 ++++---------------
->  1 file changed, 4 insertions(+), 15 deletions(-)
+>  drivers/block/null_blk.h       | 11 +++--------
+>  drivers/block/null_blk_main.c  |  2 +-
+>  drivers/block/null_blk_zoned.c |  4 ++--
+>  3 files changed, 6 insertions(+), 11 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
