@@ -2,89 +2,70 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10A03FC6195
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:54:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE93C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 17:02:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DAD1121882
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:54:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="QtANlRoK"
+	by mail.kernel.org (Postfix) with ESMTP id 3B8C720869
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 17:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727794AbfKHQyi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 11:54:38 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:50264 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726231AbfKHQyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 11:54:37 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id xA8GmRRQ052691;
-        Fri, 8 Nov 2019 10:48:27 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1573231707;
-        bh=4A4O5I7pwI/p0i8/yVVFwm2hJ5HkTiFhKi6/rXJSUUw=;
-        h=From:To:CC:Subject:Date;
-        b=QtANlRoK8Wi271mYRcJwNxC0JxEQigLC2P2SuVnOWIZuOpcnrJdUjUd2Tj8L5S52h
-         qPQBUiwbgUD2KtDqp1aHgLr0jeOTDliBvnBClxLgFmAm6XF5QHxY/i9DhMaikAJKdJ
-         dasuGsg35kyMrlephdT//rLLE4nvFAo2Y7uJKeLo=
-Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xA8GmRGp106711
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 8 Nov 2019 10:48:27 -0600
-Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE109.ent.ti.com
- (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 8 Nov
- 2019 10:48:11 -0600
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Fri, 8 Nov 2019 10:48:11 -0600
-Received: from a0132425.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xA8GmNLW117597;
-        Fri, 8 Nov 2019 10:48:24 -0600
-From:   Vignesh Raghavendra <vigneshr@ti.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Janek Kotas <jank@cadence.com>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH v3 0/2] scsi: ufs: Add driver for TI wrapper for Cadence UFS IP
-Date:   Fri, 8 Nov 2019 22:18:55 +0530
-Message-ID: <20191108164857.11466-1-vigneshr@ti.com>
-X-Mailer: git-send-email 2.24.0
+        id S1727767AbfKHRCs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 12:02:48 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:35172 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbfKHRCs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 12:02:48 -0500
+Received: by mail-pf1-f195.google.com with SMTP id d13so5021424pfq.2;
+        Fri, 08 Nov 2019 09:02:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ZotNkLJwYYaK+jnVoyW+G7A5ruO+3o9PUSU80sFgcAA=;
+        b=Bdeu1t1FdhF5UIXIVT2YZkCImBf/dIgSXYSuRUQkcP1DkUbEo3GjXJAzoFcuYdTdNL
+         9TrZX0kdPNPniOAyqPLZ/zIxCHWCrn7yLDlmvzZ+hr4uJ6JSwx1KPkTuYcO0gs8jKVI8
+         +hdcEVTC5TYl8evCnoxNxNWooGpxuo9T6pyZL4WfY/dSBcpxNd7w60r4nuF4l6fsNt+7
+         Y6CybYXSMuJ0KR1lv+6abU2HsJq/Uwi7+F6IKsHvmZuX4GmZahLsNs93lCCiuezIMbqv
+         cvJfFMZlfspBFzd60hPRN0J1Q4Oe2joY5Ccsf6x/x0Fl9U6/Al83zc5z7nr1XYJRzBce
+         oscA==
+X-Gm-Message-State: APjAAAXXU4ApgJqCB2wvfr9iUaevDBmdy+gnSEpnU0F/LREkgLOdnsNo
+        u+HddSv8qLEeOEmXfdmqKj4=
+X-Google-Smtp-Source: APXvYqwTLAEMR3L0uPg73tUgg7WZUrtzRvWjSFSf8CoGfRZw6I1qsA/6edqrh4s4bncyEEdVRFXPSA==
+X-Received: by 2002:aa7:930c:: with SMTP id 12mr13377900pfj.33.1573232567390;
+        Fri, 08 Nov 2019 09:02:47 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id n21sm3803675pjq.13.2019.11.08.09.02.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 Nov 2019 09:02:46 -0800 (PST)
+Subject: Re: [PATCH v2] target: core: Prevent memory reclaim recursion
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org
+Cc:     Mike Christie <mchristi@redhat.com>
+References: <20191108082901.417950-1-damien.lemoal@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <05e7e1e7-ac6e-eeb2-e764-00936e8a9647@acm.org>
+Date:   Fri, 8 Nov 2019 09:02:45 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <20191108082901.417950-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series add DT bindings and driver for TI wrapper for Cadence UFS
-IP that is present on TI's J721e SoC
+On 11/8/19 12:29 AM, Damien Le Moal wrote:
+> Prevent recursion into the IO path under low memory conditions by using
+> GFP_NOIO in place of GFP_KERNEL when allocating a new command with
+> tcmu_alloc_cmd() and user ring space with tcmu_get_empty_block().
 
-Vignesh Raghavendra (2):
-  dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for TI UFS wrapper
-  scsi: ufs: Add driver for TI wrapper for Cadence UFS IP
-
- .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 68 ++++++++++++++
- drivers/scsi/ufs/Kconfig                      | 10 +++
- drivers/scsi/ufs/Makefile                     |  1 +
- drivers/scsi/ufs/ti-j721e-ufs.c               | 90 +++++++++++++++++++
- 4 files changed, 169 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
- create mode 100644 drivers/scsi/ufs/ti-j721e-ufs.c
-
--- 
-2.24.0
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
