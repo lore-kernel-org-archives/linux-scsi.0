@@ -2,27 +2,28 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E443DFA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9189CFA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:11:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3EBB2178F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:11:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6916821D82
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:11:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729948AbfKHHLC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:11:02 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58394 "EHLO mx1.suse.de"
+        id S1730279AbfKHHLW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:11:22 -0500
+Received: from mx2.suse.de ([195.135.220.15]:58634 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729896AbfKHHLB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 02:11:01 -0500
+        id S1728513AbfKHHLW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 02:11:22 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 56DE7B33C;
-        Fri,  8 Nov 2019 07:10:59 +0000 (UTC)
-Subject: Re: [PATCH 1/9] block: Enhance blk_revalidate_disk_zones()
+        by mx1.suse.de (Postfix) with ESMTP id 4109DB33C;
+        Fri,  8 Nov 2019 07:11:20 +0000 (UTC)
+Subject: Re: [PATCH 2/9] block: cleanup the !zoned case in
+ blk_revalidate_disk_zones
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -31,7 +32,7 @@ To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
- <20191108015702.233102-2-damien.lemoal@wdc.com>
+ <20191108015702.233102-3-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +78,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <bc7bb317-28ec-dea7-a317-9936bda801b2@suse.de>
-Date:   Fri, 8 Nov 2019 08:10:55 +0100
+Message-ID: <ae0b85df-df04-21cf-be2d-ad040f21aad9@suse.de>
+Date:   Fri, 8 Nov 2019 08:11:19 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191108015702.233102-2-damien.lemoal@wdc.com>
+In-Reply-To: <20191108015702.233102-3-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -92,41 +93,43 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/8/19 2:56 AM, Damien Le Moal wrote:
-> For ZBC and ZAC zoned devices, the scsi driver revalidation processing
-> implemented by sd_revalidate_disk() includes a call to
-> sd_zbc_read_zones() which executes a full disk zone report used to
-> check that all zones of the disk are the same size. This processing is
-> followed by a call to blk_revalidate_disk_zones(), used to initialize
-> the device request queue zone bitmaps (zone type and zone write lock
-> bitmaps). To do so, blk_revalidate_disk_zones() also executes a full
-> device zone report to obtain zone types. As a result, the entire
-> zoned block device revalidation process includes two full device zone
-> report.
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> By moving the zone size checks into blk_revalidate_disk_zones(), this
-> process can be optimized to a single full device zone report, leading to
-> shorter device scan and revalidation times. This patch implements this
-> optimization, reducing the original full device zone report implemented
-> in sd_zbc_check_zones() to a single, small, report zones command
-> execution to obtain the size of the first zone of the device. Checks
-> whether all zones of the device are the same size as the first zone
-> size are moved to the generic blk_check_zone() function called from
-> blk_revalidate_disk_zones().
+> blk_revalidate_disk_zones is never called for non-zoned devices.  Just
+> return early and warn instead of trying to handle this case.
 > 
-> This optimization also has the following benefits:
-> 1) fewer memory allocations in the scsi layer during disk revalidation
->    as the potentailly large buffer for zone report execution is not
->    needed.
-> 2) Implement zone checks in a generic manner, reducing the burden on
->    device driver which only need to obtain the zone size and check that
->    this size is a power of 2 number of LBAs. Any new type of zoned
->    block device will benefit from this.
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  block/blk-zoned.c     |  62 +++++++++++++++++++++++-
->  drivers/scsi/sd_zbc.c | 107 ++++++++----------------------------------
->  2 files changed, 80 insertions(+), 89 deletions(-)
+>  block/blk-zoned.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+> index dae787f67019..523a28d7a15c 100644
+> --- a/block/blk-zoned.c
+> +++ b/block/blk-zoned.c
+> @@ -520,6 +520,9 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+>  	sector_t sector = 0;
+>  	int ret = 0;
+>  
+> +	if (WARN_ON_ONCE(!blk_queue_is_zoned(q)))
+> +		return -EIO;
+> +
+>  	/*
+>  	 * BIO based queues do not use a scheduler so only q->nr_zones
+>  	 * needs to be updated so that the sysfs exposed value is correct.
+> @@ -535,10 +538,8 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+>  	 */
+>  	noio_flag = memalloc_noio_save();
+>  
+> -	if (!blk_queue_is_zoned(q) || !nr_zones) {
+> -		nr_zones = 0;
+> +	if (!nr_zones)
+>  		goto update;
+> -	}
+>  
+>  	/* Allocate bitmaps */
+>  	ret = -ENOMEM;
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
