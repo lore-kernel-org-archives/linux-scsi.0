@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2493FA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29427FA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9D6F215EA
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00267215EA
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:05:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573214739;
-	bh=b90uXpMLnXRJMerP3Cb6DgNgXJP5ikB+ykae6gNjThE=;
+	s=default; t=1573214745;
+	bh=ij0fpTMs+VIPq+Mtv/Rltj5I1qlhRyELJ2VMzh8RZxA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NiOSGeGkeo4FseuJwILo/AJfrWZjiCsnTxcM9H74aF5OUQiCCJ7Q9OovB7d47Zmcj
-	 JqtifLZS6RGp5Zss2rn5ZL6t9bfRuhpZqOYg3TxzNElSXdCBpPAVYOPrty9GlbKfP8
-	 WXLizOZ3hyYx/E867h78qNOel/rHg7flIuwr/Alw=
+	b=XQBbdl5PfvOk9tiTii6ti2YNfp8FsJDViYmcVJ3ODRD1K7yw+sqgoFtxBVzqaLvei
+	 b3WXgknjbQbp5wS85Fk3DER7t3uJZC/YdD5xfXZDLd3whuDvZZTx/rAWXBK9mGL64I
+	 43kx7l3Fd0kTBChKpztrgC4t/BOcgdwz0vvbxKtA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390514AbfKHMFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 07:05:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54850 "EHLO mail.kernel.org"
+        id S1732763AbfKHLlZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 06:41:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54684 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732783AbfKHLl1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:41:27 -0500
+        id S2389416AbfKHLlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:41:24 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7902F222C6;
-        Fri,  8 Nov 2019 11:41:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0D4922245A;
+        Fri,  8 Nov 2019 11:41:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213287;
-        bh=b90uXpMLnXRJMerP3Cb6DgNgXJP5ikB+ykae6gNjThE=;
+        s=default; t=1573213283;
+        bh=ij0fpTMs+VIPq+Mtv/Rltj5I1qlhRyELJ2VMzh8RZxA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=g0TNswMHZbUUY/CJ3Ui1ZIS2nC+gK8gz5a3kPDzuozzWFEFMjkhOux/rsWOXq6hEZ
-         i3GUl7zjZ3ewgfRF3/lyZYG7JLewrAut8E9ASbwOgCkTXinlHqVYdEHBNxIwqOjE6/
-         Bg0kELJLi/ZqrCXHLjI6zksDzKwY/yObNRexzQZQ=
+        b=Gjku4gr6gd7QjHLvfcWCSLUZa+vwcVXii/7oZj2TBCggBD6S1LIRTj8ZNe4sdnnZD
+         IedGMBUxsXVCaXyRj/om1GoUsx2rBF/xk7HeGgMrohx4izpJUyWOuAmi/929EqD68j
+         D22tG//GnzhochFtcknHkwBgIRnQTKzcTLA9ArkU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Smart <james.smart@broadcom.com>,
+Cc:     Quinn Tran <quinn.tran@cavium.com>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 147/205] scsi: lpfc: Fix GFT_ID and PRLI logic for RSCN
-Date:   Fri,  8 Nov 2019 06:36:54 -0500
-Message-Id: <20191108113752.12502-147-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 144/205] scsi: qla2xxx: Fix port speed display on chip reset
+Date:   Fri,  8 Nov 2019 06:36:51 -0500
+Message-Id: <20191108113752.12502-144-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
@@ -60,85 +59,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-[ Upstream commit 01a8aed6a009625282b6265880f6b20cbd7a9c70 ]
+[ Upstream commit 5d74c87a20adcc77b19753c315ad9c320b2288be ]
 
-Driver only sends NVME PRLI to a device that also supports FCP.  This resuls
-in remote ports that don't have fc_remote_ports created for them. The driver
-is clearing the nlp_fc4_type for a ndlp at the wrong time.
+Clear port speed value on chip reset.
 
-Fix by moving the nlp_fc4_type clearing to the discovery engine in the
-DEVICE_RECOVERY state. Also ensure that rport registration is done for all
-nlp_fc4_types.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_ct.c        | 5 -----
- drivers/scsi/lpfc/lpfc_hbadisc.c   | 2 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c | 3 +++
- 3 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index d909d90035bb2..384f5cd7c3c81 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -471,11 +471,6 @@ lpfc_prep_node_fc4type(struct lpfc_vport *vport, uint32_t Did, uint8_t fc4_type)
- 				"Parse GID_FTrsp: did:x%x flg:x%x x%x",
- 				Did, ndlp->nlp_flag, vport->fc_flag);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8f502505aa796..653d535e3052f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -6502,6 +6502,7 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
+ 	if (!(IS_P3P_TYPE(ha)))
+ 		ha->isp_ops->reset_chip(vha);
  
--			/* Don't assume the rport is always the previous
--			 * FC4 type.
--			 */
--			ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
--
- 			/* By default, the driver expects to support FCP FC4 */
- 			if (fc4_type == FC_TYPE_FCP)
- 				ndlp->nlp_fc4_type |= NLP_FC4_FCP;
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index ccdd82b1123f7..db183d1f34ab2 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -4198,7 +4198,7 @@ lpfc_nlp_state_cleanup(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 
- 	if (new_state ==  NLP_STE_MAPPED_NODE ||
- 	    new_state == NLP_STE_UNMAPPED_NODE) {
--		if (ndlp->nlp_fc4_type & NLP_FC4_FCP ||
-+		if (ndlp->nlp_fc4_type ||
- 		    ndlp->nlp_DID == Fabric_DID ||
- 		    ndlp->nlp_DID == NameServer_DID ||
- 		    ndlp->nlp_DID == FDMI_DID) {
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index a6619fd8238c1..394ffbe9cb6d7 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -2323,6 +2323,7 @@ lpfc_device_recov_unmap_node(struct lpfc_vport *vport,
- 	lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
-+	ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
- 	spin_unlock_irq(shost->host_lock);
- 	lpfc_disc_set_adisc(vport, ndlp);
- 
-@@ -2400,6 +2401,7 @@ lpfc_device_recov_mapped_node(struct lpfc_vport *vport,
- 	lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
-+	ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
- 	spin_unlock_irq(shost->host_lock);
- 	lpfc_disc_set_adisc(vport, ndlp);
- 	return ndlp->nlp_state;
-@@ -2657,6 +2659,7 @@ lpfc_device_recov_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 	spin_lock_irq(shost->host_lock);
- 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
-+	ndlp->nlp_fc4_type &= ~(NLP_FC4_FCP | NLP_FC4_NVME);
- 	spin_unlock_irq(shost->host_lock);
- 	return ndlp->nlp_state;
- }
++	ha->link_data_rate = PORT_SPEED_UNKNOWN;
+ 	SAVE_TOPO(ha);
+ 	ha->flags.rida_fmt2 = 0;
+ 	ha->flags.n2n_ae = 0;
 -- 
 2.20.1
 
