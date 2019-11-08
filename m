@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA34DFA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0D9CFA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:23:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A18821D7B
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC5BB21D6C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:23:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729873AbfKHHUX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:20:23 -0500
-Received: from mx2.suse.de ([195.135.220.15]:32976 "EHLO mx1.suse.de"
+        id S1730137AbfKHHXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:23:25 -0500
+Received: from mx2.suse.de ([195.135.220.15]:33560 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725802AbfKHHUW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 02:20:22 -0500
+        id S1725802AbfKHHXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 02:23:23 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 79472B2B7;
-        Fri,  8 Nov 2019 07:20:20 +0000 (UTC)
-Subject: Re: [PATCH 8/9] scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()
+        by mx1.suse.de (Postfix) with ESMTP id ED268B3C7;
+        Fri,  8 Nov 2019 07:23:21 +0000 (UTC)
+Subject: Re: [PATCH 9/9] block: rework zone reporting
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -31,7 +31,7 @@ To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
- <20191108015702.233102-9-damien.lemoal@wdc.com>
+ <20191108015702.233102-10-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <80bfc0e8-860d-3c11-07f4-08b7dd7fada4@suse.de>
-Date:   Fri, 8 Nov 2019 08:20:20 +0100
+Message-ID: <7db8cbf0-7be9-40c8-86b7-85e8803f5218@suse.de>
+Date:   Fri, 8 Nov 2019 08:23:21 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191108015702.233102-9-damien.lemoal@wdc.com>
+In-Reply-To: <20191108015702.233102-10-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -92,23 +92,30 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/8/19 2:57 AM, Damien Le Moal wrote:
-> There is no need to arbitrarily limit the size of a report zone to the
-> number of zones defined by SD_ZBC_REPORT_MAX_ZONES. Rather, simply
-> calculate the report buffer size needed for the requested number of
-> zones without exceeding the device total number of zones. This buffer
-> size limitation to the hardware maximum transfer size and page mapping
-> capabilities is kept unchanged. Starting with this initial buffer size,
-> the allocation is optimized by iterating over decreasing buffer size
-> until the allocation succeeds. This ensures forward progress for zone
-> reports and avoids failures of zones revalidation under memory pressure.
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> While at it, also replace the hard coded 512 B sector size with the
-> SECTOR_SIZE macro.
+> Avoid the need to allocate a potentially large array of struct blk_zone
+> in the block layer by switching the ->report_zones method interface to
+> a callback model. Now the caller simply supplies a callback that is
+> executed on each reported zone, and private data for it.
 > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  drivers/scsi/sd_zbc.c | 22 +++++++++++-----------
->  1 file changed, 11 insertions(+), 11 deletions(-)
+>  block/blk-zoned.c              | 253 +++++++++++++--------------------
+>  drivers/block/null_blk.h       |   2 +-
+>  drivers/block/null_blk_zoned.c |  31 ++--
+>  drivers/md/dm-flakey.c         |  18 +--
+>  drivers/md/dm-linear.c         |  20 +--
+>  drivers/md/dm-zoned-metadata.c | 131 +++++++----------
+>  drivers/md/dm.c                | 121 +++++++---------
+>  drivers/scsi/sd.h              |   4 +-
+>  drivers/scsi/sd_zbc.c          | 106 +++++++-------
+>  fs/f2fs/super.c                |  51 +++----
+>  include/linux/blkdev.h         |  15 +-
+>  include/linux/device-mapper.h  |  24 +++-
+>  12 files changed, 329 insertions(+), 447 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
