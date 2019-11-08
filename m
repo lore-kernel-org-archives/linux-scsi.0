@@ -2,27 +2,27 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B21CAC5DF60
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA34DFA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F4AD21D7B
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:18:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A18821D7B
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 07:20:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729969AbfKHHSq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 02:18:46 -0500
-Received: from mx2.suse.de ([195.135.220.15]:60690 "EHLO mx1.suse.de"
+        id S1729873AbfKHHUX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 02:20:23 -0500
+Received: from mx2.suse.de ([195.135.220.15]:32976 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725886AbfKHHSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 02:18:46 -0500
+        id S1725802AbfKHHUW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 02:20:22 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id CEFC1B186;
-        Fri,  8 Nov 2019 07:18:43 +0000 (UTC)
-Subject: Re: [PATCH 7/9] null_blk: Add zone_nr_conv to features
+        by mx1.suse.de (Postfix) with ESMTP id 79472B2B7;
+        Fri,  8 Nov 2019 07:20:20 +0000 (UTC)
+Subject: Re: [PATCH 8/9] scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -31,7 +31,7 @@ To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
- <20191108015702.233102-8-damien.lemoal@wdc.com>
+ <20191108015702.233102-9-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -77,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <660732e5-6f30-f6d7-acf4-54259cd810f8@suse.de>
-Date:   Fri, 8 Nov 2019 08:18:43 +0100
+Message-ID: <80bfc0e8-860d-3c11-07f4-08b7dd7fada4@suse.de>
+Date:   Fri, 8 Nov 2019 08:20:20 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191108015702.233102-8-damien.lemoal@wdc.com>
+In-Reply-To: <20191108015702.233102-9-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -92,29 +92,23 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/8/19 2:57 AM, Damien Le Moal wrote:
-> For a null_blk device with zoned mode enabled, the number of
-> conventional zones can be configured through configfs with the
-> zone_nr_conv parameter. Add this missing parameter in the features
-> string.
+> There is no need to arbitrarily limit the size of a report zone to the
+> number of zones defined by SD_ZBC_REPORT_MAX_ZONES. Rather, simply
+> calculate the report buffer size needed for the requested number of
+> zones without exceeding the device total number of zones. This buffer
+> size limitation to the hardware maximum transfer size and page mapping
+> capabilities is kept unchanged. Starting with this initial buffer size,
+> the allocation is optimized by iterating over decreasing buffer size
+> until the allocation succeeds. This ensures forward progress for zone
+> reports and avoids failures of zones revalidation under memory pressure.
+> 
+> While at it, also replace the hard coded 512 B sector size with the
+> SECTOR_SIZE macro.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  drivers/block/null_blk_main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-> index 2687eb36441c..27fb34d7da31 100644
-> --- a/drivers/block/null_blk_main.c
-> +++ b/drivers/block/null_blk_main.c
-> @@ -467,7 +467,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
->  
->  static ssize_t memb_group_features_show(struct config_item *item, char *page)
->  {
-> -	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache,badblocks,zoned,zone_size\n");
-> +	return snprintf(page, PAGE_SIZE, "memory_backed,discard,bandwidth,cache,badblocks,zoned,zone_size,zone_nr_conv\n");
->  }
->  
->  CONFIGFS_ATTR_RO(memb_group_, features);
+>  drivers/scsi/sd_zbc.c | 22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
