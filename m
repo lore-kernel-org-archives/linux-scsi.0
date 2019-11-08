@@ -4,52 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E773DFC6194
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A64A7FA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:02:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDD13215EA
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:58:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D73C2085B
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 12:02:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573214293;
-	bh=MSLdSvTvLfCMk74k39xsgTumEnG7O8arncjKkoafRec=;
+	s=default; t=1573214570;
+	bh=KIk9cKBAlYSu52MEBaNKdwuUofEr+nQ0flIVxSGQwz0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=2t6WVc7QPZRy2dat/MmXfTi/3AEWeHVn3YcXDP9538l6AaVBFbL3QINMD9FcpXoyU
-	 62WVXvyvJoqMBrCVaIYID+OAWQNvgWCtYWXZtVvPq/WSviO+9E3nRGboAPLxOTrRy8
-	 CNd25GEQNaTZsnp2nzNV3ucPYzux5slzyWPxG2gc=
+	b=f2tiGCAv0KvoTiz+VvepY/VY9RRAggh2BvrpsD8+0jMiKk99bu36mudAeLQAxhoM3
+	 tUKUpZsj1loQlBIzSytdnn+5OT1AxCn+TZT9/kFQLmjwfY+i0EbhnL/SO1e/0gVy8X
+	 OfbqJlSPYwfPDDfZmUqWP3W6C0+rXcHs6QdXNaAE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390915AbfKHL6M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:58:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59884 "EHLO mail.kernel.org"
+        id S2390230AbfKHLm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 06:42:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57166 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390905AbfKHLou (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:44:50 -0500
+        id S2390178AbfKHLmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:42:54 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0DAC2222C4;
-        Fri,  8 Nov 2019 11:44:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 26B8F222C4;
+        Fri,  8 Nov 2019 11:42:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213489;
-        bh=MSLdSvTvLfCMk74k39xsgTumEnG7O8arncjKkoafRec=;
+        s=default; t=1573213374;
+        bh=KIk9cKBAlYSu52MEBaNKdwuUofEr+nQ0flIVxSGQwz0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kDC86o/5TNs4sdwZUTdiWbNzVA0aquXpVcnvcxDWoq95a5FbsM8hls01TGq/XMCmT
-         nJl4t58ba9f9vQ5DqC9DbEc+rj5g9sHdJkKJRqA+31pkRn61uD9GcwyYwJK/TqqMoZ
-         DFHEYklvrqP7bv7QXmOZW5QSn5EM9gQsi+cg0cHI=
+        b=T4Yo9EjGn4W+TxaSEX8fnBqJujMnpP+4tdFAiesPf3JNG8v2zLTypLk196SzQ37p5
+         YM/8I+e32MwFUeUHTd3xJflmUMdw3pLMkI0FRYfG9I7eo9MRrgntrplVKsYhsSilXj
+         Hepm87tKaxBNX528iYWeXriV/QrjMhO+r8iontyE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <quinn.tran@cavium.com>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
+Cc:     Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Evan Green <evgreen@chromium.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 069/103] scsi: qla2xxx: Defer chip reset until target mode is enabled
-Date:   Fri,  8 Nov 2019 06:42:34 -0500
-Message-Id: <20191108114310.14363-69-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 199/205] scsi: ufshcd: Fix NULL pointer dereference for in ufshcd_init
+Date:   Fri,  8 Nov 2019 06:37:46 -0500
+Message-Id: <20191108113752.12502-199-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191108114310.14363-1-sashal@kernel.org>
-References: <20191108114310.14363-1-sashal@kernel.org>
+In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
+References: <20191108113752.12502-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,71 +62,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
 
-[ Upstream commit 93eca6135183f7a71e36acd47655a085ed11bcdc ]
+[ Upstream commit eebcc19646489b68399ce7b35d9c38eb9f4ec40f ]
 
-For target mode, any chip reset triggered before target mode is enabled will
-be held off until user is ready to enable.  This prevents the chip from
-starting or running before it is intended.
+Error paths in ufshcd_init() ufshcd_hba_exit() killed clk_scaling workqueue
+when the workqueue is actually created quite late in ufshcd_init().  So, we
+end up getting NULL pointer dereference in such error paths.  Fix this by
+moving clk_scaling initialization and kill codes to two separate methods, and
+call them at required places.
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Fixes: 401f1e4490ee ("scsi: ufs: don't suspend clock scaling during clock
+gating")
+
+Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Matthias Kaehlcke <mka@chromium.org>
+Cc: Evan Green <evgreen@chromium.org>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Evan Green <evgreen@chromium.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 53 +++++++++++++++++++++++++--------------
+ 1 file changed, 34 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 7d7fb5bbb6007..f6af293dfbe48 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5797,12 +5797,27 @@ qla2x00_do_dpc(void *data)
- 		if (test_and_clear_bit
- 		    (ISP_ABORT_NEEDED, &base_vha->dpc_flags) &&
- 		    !test_bit(UNLOADING, &base_vha->dpc_flags)) {
-+			bool do_reset = true;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 4aaba3e030554..8bce755e0f5bc 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1772,6 +1772,34 @@ out:
+ 	return count;
+ }
+ 
++static void ufshcd_init_clk_scaling(struct ufs_hba *hba)
++{
++	char wq_name[sizeof("ufs_clkscaling_00")];
 +
-+			switch (ql2x_ini_mode) {
-+			case QLA2XXX_INI_MODE_ENABLED:
-+				break;
-+			case QLA2XXX_INI_MODE_DISABLED:
-+				if (!qla_tgt_mode_enabled(base_vha))
-+					do_reset = false;
-+				break;
-+			case QLA2XXX_INI_MODE_DUAL:
-+				if (!qla_dual_mode_enabled(base_vha))
-+					do_reset = false;
-+				break;
-+			default:
-+				break;
-+			}
++	if (!ufshcd_is_clkscaling_supported(hba))
++		return;
++
++	INIT_WORK(&hba->clk_scaling.suspend_work,
++		  ufshcd_clk_scaling_suspend_work);
++	INIT_WORK(&hba->clk_scaling.resume_work,
++		  ufshcd_clk_scaling_resume_work);
++
++	snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
++		 hba->host->host_no);
++	hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
++
++	ufshcd_clkscaling_init_sysfs(hba);
++}
++
++static void ufshcd_exit_clk_scaling(struct ufs_hba *hba)
++{
++	if (!ufshcd_is_clkscaling_supported(hba))
++		return;
++
++	destroy_workqueue(hba->clk_scaling.workq);
++	ufshcd_devfreq_remove(hba);
++}
++
+ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ {
+ 	char wq_name[sizeof("ufs_clk_gating_00")];
+@@ -6676,6 +6704,7 @@ out:
+ 	 */
+ 	if (ret && !ufshcd_eh_in_progress(hba) && !hba->pm_op_in_progress) {
+ 		pm_runtime_put_sync(hba->dev);
++		ufshcd_exit_clk_scaling(hba);
+ 		ufshcd_hba_exit(hba);
+ 	}
  
--			ql_dbg(ql_dbg_dpc, base_vha, 0x4007,
--			    "ISP abort scheduled.\n");
--			if (!(test_and_set_bit(ABORT_ISP_ACTIVE,
-+			if (do_reset && !(test_and_set_bit(ABORT_ISP_ACTIVE,
- 			    &base_vha->dpc_flags))) {
--
-+				ql_dbg(ql_dbg_dpc, base_vha, 0x4007,
-+				    "ISP abort scheduled.\n");
- 				if (ha->isp_ops->abort_isp(base_vha)) {
- 					/* failed. retry later */
- 					set_bit(ISP_ABORT_NEEDED,
-@@ -5810,10 +5825,9 @@ qla2x00_do_dpc(void *data)
- 				}
- 				clear_bit(ABORT_ISP_ACTIVE,
- 						&base_vha->dpc_flags);
-+				ql_dbg(ql_dbg_dpc, base_vha, 0x4008,
-+				    "ISP abort end.\n");
- 			}
--
--			ql_dbg(ql_dbg_dpc, base_vha, 0x4008,
--			    "ISP abort end.\n");
- 		}
+@@ -7223,12 +7252,9 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ 		ufshcd_variant_hba_exit(hba);
+ 		ufshcd_setup_vreg(hba, false);
+ 		ufshcd_suspend_clkscaling(hba);
+-		if (ufshcd_is_clkscaling_supported(hba)) {
++		if (ufshcd_is_clkscaling_supported(hba))
+ 			if (hba->devfreq)
+ 				ufshcd_suspend_clkscaling(hba);
+-			destroy_workqueue(hba->clk_scaling.workq);
+-			ufshcd_devfreq_remove(hba);
+-		}
+ 		ufshcd_setup_clocks(hba, false);
+ 		ufshcd_setup_hba_vreg(hba, false);
+ 		hba->is_powered = false;
+@@ -7908,6 +7934,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+ 	ufshcd_hba_stop(hba, true);
  
- 		if (test_and_clear_bit(FCPORT_UPDATE_NEEDED,
++	ufshcd_exit_clk_scaling(hba);
+ 	ufshcd_exit_clk_gating(hba);
+ 	if (ufshcd_is_clkscaling_supported(hba))
+ 		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
+@@ -8079,6 +8106,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 
+ 	ufshcd_init_clk_gating(hba);
+ 
++	ufshcd_init_clk_scaling(hba);
++
+ 	/*
+ 	 * In order to avoid any spurious interrupt immediately after
+ 	 * registering UFS controller interrupt handler, clear any pending UFS
+@@ -8117,21 +8146,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		goto out_remove_scsi_host;
+ 	}
+ 
+-	if (ufshcd_is_clkscaling_supported(hba)) {
+-		char wq_name[sizeof("ufs_clkscaling_00")];
+-
+-		INIT_WORK(&hba->clk_scaling.suspend_work,
+-			  ufshcd_clk_scaling_suspend_work);
+-		INIT_WORK(&hba->clk_scaling.resume_work,
+-			  ufshcd_clk_scaling_resume_work);
+-
+-		snprintf(wq_name, sizeof(wq_name), "ufs_clkscaling_%d",
+-			 host->host_no);
+-		hba->clk_scaling.workq = create_singlethread_workqueue(wq_name);
+-
+-		ufshcd_clkscaling_init_sysfs(hba);
+-	}
+-
+ 	/*
+ 	 * Set the default power management level for runtime and system PM.
+ 	 * Default power saving mode is to keep UFS link in Hibern8 state
+@@ -8169,6 +8183,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ out_remove_scsi_host:
+ 	scsi_remove_host(hba->host);
+ exit_gating:
++	ufshcd_exit_clk_scaling(hba);
+ 	ufshcd_exit_clk_gating(hba);
+ out_disable:
+ 	hba->is_irq_enabled = false;
 -- 
 2.20.1
 
