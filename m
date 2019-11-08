@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DF26FC6198
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A756C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23F8721882
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DE9021D7F
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 01:57:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bzhUH5q2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="V6/4+Ezg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727074AbfKHB5J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Nov 2019 20:57:09 -0500
+        id S1728256AbfKHB5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Nov 2019 20:57:10 -0500
 Received: from esa4.hgst.iphmx.com ([216.71.154.42]:12762 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725928AbfKHB5J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 20:57:09 -0500
+        with ESMTP id S1725928AbfKHB5K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Nov 2019 20:57:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1573178228; x=1604714228;
+  t=1573178229; x=1604714229;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=/ZBF2Qm6RnCQBQjayUKqcmSbHczeQ3S6vZtk/vBsgZQ=;
-  b=bzhUH5q2aftvunqA66NVUFisZ7sDCNmvcxG7p1qCMfHnfaKgb2v+qv7e
-   S1JtRhnq9vdAplePBysAkEM8PFMiDPqZgNUFTM+reI3J7LD/y9+VvWqxS
-   aN6anOaeDpPDmAPClH4k6XClHGOwaw9goKcQgtLDYZFEfa8lrlCSGuJ9C
-   LZ6Yxf9AuGJ+EF+Cbbs1ypfME5f0JhaP9i0HnUV5uPHwBzH/zh02rSn4U
-   2H3m8e3c4AV3m2e8+niESFMiPZD9eKf9Uc3+wlxToHcXcpZs9a0M5ICiZ
-   +Psnz0y9xpVRRtZWmPmMt7EPnB9ixCF24a/ycpNoR6I+elneqbag4UQeD
-   Q==;
-IronPort-SDR: Lz/+S4Qb3j3E+/rZhIiPwytmlC9cc2WX5isPyNTlnOKI8djRVcyaz9iWLPUqVES0GbDRHI01AC
- 9Pr/epKTUgUKCoR52+PtL/Pd0XkJbX9ExUj0cCtWQEjROoIeme2ibVlLD2+4Q3Xzc7Ym64nFUw
- uak6CbzDFQoC2UHnXNKIq7FQVwHUydGSwNVydtuRWFobavdGn2w7EYo1xSyFVekcwuhwLuH0ZQ
- 8I9j4ZNPQYa88L5K3hjXqpfmphonUEyUtSqtNila9uY0kquwXcTd80sy2+4pDlJQnmWBAlfmj/
- 07s=
+  bh=1n0Nb/Nk+xgPczd8to649AuxcaKoknq+zLbCWhS06z4=;
+  b=V6/4+EzgJi4jgl+qn8ToudS+njcRrLSYdUfT+hs1azsVQ+HFWq+3MRzT
+   jevJx9fsH2ldyyboS/7hd0DVip3gWMw/99b7FN2S/qjM8BXtG16c9ujjZ
+   X3/eUDkjc66HEnYVMdyt0e8sN8/tfLA0lToNsTVbm7W56jt6Y1LVE4oxb
+   tr5iDPiGlUsPhuAysl9Oi7zxaf3E2wxTCn0ag+nsSZ3tEdbKaCYgpVABH
+   3W326K5U35KAcyPWVTXVK7xgbg8KFw7uWyBgFFGE1K0ZXr6qwo/oC297v
+   AaJ/qp4wHypWX2YH8xaPIGy3wTdoUADlbusMCdFBweAap16W2AlJ1ugsl
+   A==;
+IronPort-SDR: i/XOqXHLw6rFuDb3PiSoaS44cgaU4crtb1M06Imp0UQRKruQv/Axft7h6f8iLs2JOuwyDzCLIx
+ dmkQCtWyjeZWQ/raSt02YIU8AZNFlpbglcBsPMWUzFYgFhB/y+xsWED4LIB94zJNmJoxwQBiUe
+ JqbnCSOpZuImVrSI10oPOZoGmyj9bbVVbnj571GWYUxfhxq5FPDi7FRGLb4Gif93FE+0FB85wg
+ fGIefY7ni+Vmlc+ONcFkGGiaQcSCU6UjgwJBXu7472knEyS7l6jjem9HRet5mh2HFpcYRlQROo
+ zD4=
 X-IronPort-AV: E=Sophos;i="5.68,279,1569254400"; 
-   d="scan'208";a="122437197"
+   d="scan'208";a="122437202"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2019 09:57:07 +0800
-IronPort-SDR: 2o+FT+AMRY++2adLn0QN4GQNyUdqghs/ZAOWz2nZ4D5KxvssuZV9NF4kZNpgs5DdJJ5kOsU/9E
- h4wOwOa3+nNl2ZCtiNCbQb94VxX9t1+h75FfSZ4He2ZsYMZKWvbH5APS5OZsCair+M9Nl81wXH
- iBIa/TgpmOOGiFYnVT+iBZPlwFu/xnATT4c9+Dgh4WU5Mj01Dtk/TKlxRYDMIm1Xjj5N18J40V
- B2lq+6Yt7ktwm3tp9wrU0pQv6Pf7MhTeuXAT33jMxgUqvP9XshAQQ1/QF/MsDR216VFI4jX6K3
- 9AY5oE8dSXtH6dIBVzAKQP3g
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2019 09:57:09 +0800
+IronPort-SDR: vraEmljCFHg6vetrR38CYjwwTmUntAfyc8tnGMqwlvUUmMsrqtYW6UCeQlfTTPuW7h+2MKZkHJ
+ rNIWyqNlBr7PBsQZxBWa7IOrlpXbaJB22pYy6LfX28v69FD9siq1iG5b9G3fnjNDZThZGBFAQ5
+ BN/Z/wvMSRto/s2rR9xFYgnh8s5ivq0k1y5prEnS6ytXBBYXoKylQWAfhR9F3tc2uxTnKmFiYW
+ 0K3igFPpUDvIj6/rjdm1Z1KmckVgbmfmeeYbGmdKUeAGK/qNgjSEZMQGS0qVKs9FuXSA4uv+YM
+ XSQXHJ/wDpNBIa9s6Rr9cT/F
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2019 17:52:17 -0800
-IronPort-SDR: kr5/VwrcP8yZzj4vxGSaX58AWt4Y0XIBpscbpf4VnoVn+egmpoigIllEUBkXIYCD1cImYlODiZ
- g8C+Nd45aBRiX4cf6noKEGG+nI/z+ZDf6qo00fCPiXYYYNMxW2h+NYmssFipj9pIJZyNYItBPD
- /VE6yjmXGBUfpKzK1Cz65/5NNfQ9qhr3maxb1To4K13ZZspuK434rmXVRT5gEmH6xtndFTEFwg
- gmzxaShxISia7XM7WKrb5fQYFupSU+1Rks3wXAQxRlTjH5TnbPpW+DOVLaalFLDWU92lRGFfxU
- vzQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2019 17:52:19 -0800
+IronPort-SDR: yFxw+3zg+bWdVM0Egku9aB0+avk5K/U+jlSZuFcq5p8pgi+NK086WURpaQvdjC41VqBol0XJfF
+ eOWWicAhbCgCgPjJAlEezKks83eHZd1GcNhyOkk6oyQey+NWwxMo+7OyhlDAgo+nwtDRYuu8/5
+ 0CMRf6E6Dapy5Nb/nR0rvlvfTaX74H1ZSHxAUqlAkNIXCImw/1kvmYL9cHClz1bL0a7sjyZh77
+ O0mPWoIbknDb2a01N6G1u7Awsvu03sW3aFNGIcW87UO4xzQsfJY/3e7B2iPDwXmNjpBwIaZ5kX
+ FlM=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 07 Nov 2019 17:57:06 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 07 Nov 2019 17:57:08 -0800
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -65,9 +65,9 @@ To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
-Subject: [PATCH 2/9] block: cleanup the !zoned case in blk_revalidate_disk_zones
-Date:   Fri,  8 Nov 2019 10:56:55 +0900
-Message-Id: <20191108015702.233102-3-damien.lemoal@wdc.com>
+Subject: [PATCH 3/9] block: Simplify report zones execution
+Date:   Fri,  8 Nov 2019 10:56:56 +0900
+Message-Id: <20191108015702.233102-4-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191108015702.233102-1-damien.lemoal@wdc.com>
 References: <20191108015702.233102-1-damien.lemoal@wdc.com>
@@ -78,43 +78,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+All kernel users of blkdev_report_zones() as well as applications use
+through ioctl(BLKZONEREPORT) expect to potentially get less zone
+descriptors than requested. As such, the use of the internal report
+zones command execution loop implemented by blk_report_zones() is
+not necessary and can even be harmful to performance by causing the
+execution of inefficient small zones report command to service the
+reminder of a requested zone array.
 
-blk_revalidate_disk_zones is never called for non-zoned devices.  Just
-return early and warn instead of trying to handle this case.
+This patch removes blk_report_zones(), simplifying the code. Also
+remove a now incorrect comment in dm_blk_report_zones().
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Javier Gonzalez <javier@javigon.com>
 ---
- block/blk-zoned.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ block/blk-zoned.c | 34 +++++-----------------------------
+ drivers/md/dm.c   |  6 ------
+ 2 files changed, 5 insertions(+), 35 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index dae787f67019..523a28d7a15c 100644
+index 523a28d7a15c..ea4e086ba00e 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -520,6 +520,9 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
- 	sector_t sector = 0;
- 	int ret = 0;
+@@ -119,31 +119,6 @@ static bool blkdev_report_zone(struct block_device *bdev, struct blk_zone *rep)
+ 	return true;
+ }
  
-+	if (WARN_ON_ONCE(!blk_queue_is_zoned(q)))
-+		return -EIO;
-+
- 	/*
- 	 * BIO based queues do not use a scheduler so only q->nr_zones
- 	 * needs to be updated so that the sysfs exposed value is correct.
-@@ -535,10 +538,8 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
- 	 */
- 	noio_flag = memalloc_noio_save();
- 
--	if (!blk_queue_is_zoned(q) || !nr_zones) {
--		nr_zones = 0;
-+	if (!nr_zones)
- 		goto update;
+-static int blk_report_zones(struct gendisk *disk, sector_t sector,
+-			    struct blk_zone *zones, unsigned int *nr_zones)
+-{
+-	struct request_queue *q = disk->queue;
+-	unsigned int z = 0, n, nrz = *nr_zones;
+-	sector_t capacity = get_capacity(disk);
+-	int ret;
+-
+-	while (z < nrz && sector < capacity) {
+-		n = nrz - z;
+-		ret = disk->fops->report_zones(disk, sector, &zones[z], &n);
+-		if (ret)
+-			return ret;
+-		if (!n)
+-			break;
+-		sector += blk_queue_zone_sectors(q) * n;
+-		z += n;
 -	}
+-
+-	WARN_ON(z > *nr_zones);
+-	*nr_zones = z;
+-
+-	return 0;
+-}
+-
+ /**
+  * blkdev_report_zones - Get zones information
+  * @bdev:	Target block device
+@@ -164,6 +139,7 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 			struct blk_zone *zones, unsigned int *nr_zones)
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
++	struct gendisk *disk = bdev->bd_disk;
+ 	unsigned int i, nrz;
+ 	int ret;
  
- 	/* Allocate bitmaps */
- 	ret = -ENOMEM;
+@@ -175,7 +151,7 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 	 * report_zones method. If it does not have one defined, the device
+ 	 * driver has a bug. So warn about that.
+ 	 */
+-	if (WARN_ON_ONCE(!bdev->bd_disk->fops->report_zones))
++	if (WARN_ON_ONCE(!disk->fops->report_zones))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!*nr_zones || sector >= bdev->bd_part->nr_sects) {
+@@ -185,8 +161,8 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 
+ 	nrz = min(*nr_zones,
+ 		  __blkdev_nr_zones(q, bdev->bd_part->nr_sects - sector));
+-	ret = blk_report_zones(bdev->bd_disk, get_start_sect(bdev) + sector,
+-			       zones, &nrz);
++	ret = disk->fops->report_zones(disk, get_start_sect(bdev) + sector,
++				       zones, &nrz);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -561,7 +537,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 
+ 	while (z < nr_zones) {
+ 		nrz = min(nr_zones - z, rep_nr_zones);
+-		ret = blk_report_zones(disk, sector, zones, &nrz);
++		ret = disk->fops->report_zones(disk, sector, zones, &nrz);
+ 		if (ret)
+ 			goto out;
+ 		if (!nrz)
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index bc143c1b2333..89189c29438f 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -473,12 +473,6 @@ static int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * blkdev_report_zones() will loop and call this again to cover all the
+-	 * zones of the target, eventually moving on to the next target.
+-	 * So there is no need to loop here trying to fill the entire array
+-	 * of zones.
+-	 */
+ 	ret = tgt->type->report_zones(tgt, sector, zones, nr_zones);
+ 
+ out:
 -- 
 2.23.0
 
