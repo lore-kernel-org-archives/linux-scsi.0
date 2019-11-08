@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 990A3FC6194
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B62C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B18121D7B
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:41:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23F31222C4
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 11:44:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573213293;
-	bh=P75uqMyjoRXnhEw5QxuO8/QYPU7dEevRD9g0hwqkyu0=;
+	s=default; t=1573213494;
+	bh=TQNxn8PQb6pfkKLulXH3rqOfZl5w2skxGNN/p3loGqg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=G2X/ha4YGpgF7FYTB+rbnOjG9bT6xrbh4z4gq6u0PqvSJVTpgG/x7E52v47Bk74h4
-	 uQLbJlX92gmS34syZwWoF51DLKN9KPEGGkKIUQGit5gFm9F24kGlUGJCmVYMxkOYHG
-	 KYq8Xp4Q87a3YlCZnVXCCsfU9rW3qstZFOMvA944=
+	b=rZNgYXU5B1VhgVMLEeTGQAbSi67HRDKsfRfD1SOPOYDmOUWHT2EOWj4DvEDAqowxx
+	 WiDQG5m3naVrk4HAE44aqPhac7CcmTQ8V5qxeYTMGjWhkpEjWI2LUv9hOu3Sg6+0SW
+	 ZeCAufPpb9Cvb8WXS+Bp4Rjju6hp3a1lUlKqRnFg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389499AbfKHLlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:41:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54922 "EHLO mail.kernel.org"
+        id S2390942AbfKHLox (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 06:44:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59902 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732178AbfKHLla (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:41:30 -0500
+        id S2390929AbfKHLox (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:44:53 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E096221D82;
-        Fri,  8 Nov 2019 11:41:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 50ACE222CF;
+        Fri,  8 Nov 2019 11:44:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213289;
-        bh=P75uqMyjoRXnhEw5QxuO8/QYPU7dEevRD9g0hwqkyu0=;
+        s=default; t=1573213492;
+        bh=TQNxn8PQb6pfkKLulXH3rqOfZl5w2skxGNN/p3loGqg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=y0ailCVtCuq+wC6opG8g7PSsdJUA7jlKW5/sUodhKEvQZcEFbR7DurUcJvsnvgK8G
-         mvgT66fpDavbyJcdm+imR+C0gvAAsEotcTK4ubZ2Vo3ls6Y6IN72fcBf/B2kIQHW0B
-         p7Hyo6i8PpCpejGslUROGZr2In0UrtW8zQSziWNE=
+        b=uNF2hBZ1uSbDkNPJ1Ym+h/MJhaHFGUeYWTAmO8aFZH6NwpnPYo1ESUKLMsKz/HG0a
+         bInIBEeLETRnqiWEVTP+xTW4u/3xq2nQfhtRHe7YMPbeDcGeeLfYGX7Nw3FW3zae1Y
+         pACQHAB7D2EBlYfxYeKtX+70UY784U0lThlTexbs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -45,12 +45,12 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         James Smart <james.smart@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 149/205] scsi: lpfc: Fix errors in log messages.
-Date:   Fri,  8 Nov 2019 06:36:56 -0500
-Message-Id: <20191108113752.12502-149-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 071/103] scsi: lpfc: Fix errors in log messages.
+Date:   Fri,  8 Nov 2019 06:42:36 -0500
+Message-Id: <20191108114310.14363-71-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
-References: <20191108113752.12502-1-sashal@kernel.org>
+In-Reply-To: <20191108114310.14363-1-sashal@kernel.org>
+References: <20191108114310.14363-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,10 +80,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 645ffb5332b4a..8ee585e453dcf 100644
+index 23bdb1ca106e4..6c4499db969c1 100644
 --- a/drivers/scsi/lpfc/lpfc_nvme.c
 +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -282,7 +282,7 @@ lpfc_nvme_delete_queue(struct nvme_fc_local_port *pnvme_lport,
+@@ -144,7 +144,7 @@ lpfc_nvme_delete_queue(struct nvme_fc_local_port *pnvme_lport,
  	vport = lport->vport;
  
  	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME,
@@ -93,10 +93,10 @@ index 645ffb5332b4a..8ee585e453dcf 100644
  	kfree(handle);
  }
 diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index e2575c8ec93e8..4ca38bc5694c6 100644
+index 7ac1a067d7801..eacdcb931bdab 100644
 --- a/drivers/scsi/lpfc/lpfc_nvmet.c
 +++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1340,15 +1340,14 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
+@@ -1078,15 +1078,14 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
  			idx = 0;
  	}
  
