@@ -4,149 +4,116 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1455FC6194
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 08:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 341B6FA372C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 08:27:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5E6F2178F
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 08:16:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0723B207FA
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 08:27:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TjNxE5sl";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mdJLYfvD"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="UkZqOefB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730720AbfKHIQX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 03:16:23 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:50282 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727573AbfKHIQX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 03:16:23 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 9F2D7608FF; Fri,  8 Nov 2019 08:16:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573200982;
-        bh=YE4mTfL1gCRFuKHoeeEuCd7jY1kBHK31oyr+tOEAPfQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TjNxE5sliFapWQiDw2tjpWK4diVD81tidrvLsZN04xBkXbyqQg245osh8j0WvyRFT
-         obmkRzHZInO9aV54eEBuYua2WAhqMW5Hf0mYUygcwTrpPGxOZEt+Q3rfiAyMt7M4A0
-         1USSxCCVUCgjsZTNvXWj/AX9L2qK2GsFKd5vH4mU=
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id BDCDB60117;
-        Fri,  8 Nov 2019 08:16:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573200977;
-        bh=YE4mTfL1gCRFuKHoeeEuCd7jY1kBHK31oyr+tOEAPfQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mdJLYfvDzmqZJsbab5fIcgnplrHe06TgdDAckcjLofpkaj0rT7BUCOY9qoMMI5qhT
-         VJpA5qEPyNv+CQ8G3/WjJYY10pzaNwQ46p4HVRX6xAVWByjc/QIqInTNq0Hf+xtu6T
-         AA0hq2LO40+9TKfW4xeI7YCia+cE4gFEVGOd0KiA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org BDCDB60117
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 5/5] scsi: ufs: Complete pending requests in host reset and restore path
-Date:   Fri,  8 Nov 2019 00:15:31 -0800
-Message-Id: <1573200932-384-6-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1573200932-384-1-git-send-email-cang@codeaurora.org>
-References: <1573200932-384-1-git-send-email-cang@codeaurora.org>
+        id S1727016AbfKHI1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 03:27:38 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:26024 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725975AbfKHI1i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 03:27:38 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1573201657; x=1604737657;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5LJPWNDx95mKmDt2bUpL3y3YI3JwCPruxNIjbgkV8iw=;
+  b=UkZqOefBwSPnVsmNa44SzYqAwp+B11wix8gbpUhFp4mfqAHN2adMfAoD
+   pX1ZYCsv/qVVF6oZ3Li5vOpgDFUVC6o1OZPepHZO9fqyxX1CNEWGmm/5A
+   JNL1AUYw7ZpLvBo7rKuIdpQZWi0KMVzRu6QE3fL5ofArG/dvzkFzdYAs1
+   Frf93ABv5BnJ+JuHH5RdTtkPQIQJgup8CGLYTqB1mbUxdx8HGBLRPUCFq
+   2p2jw2AlwwhiS755+7qcgdM1O957hCfMboeUZOQ3q4qr+p8y5N4YbkVqV
+   82EImqeIYa0nuqXTeLQjCEkfZNhQ1VUj1D3H+hI+FVYBLH1oNCRQisvLj
+   A==;
+IronPort-SDR: BV3aVY+8HZICkSEm8J3AHScQakfKd6TivPx8hqSmGB66fZUenBEf1lR9w8QhEMkpBxgOhupf5M
+ cQUG03PH4AKU6PExlIAc1qKzt0mxNbfpbjoJUTvQVvN0J0WS42HVhk2IRmK59F/lloijax+WK6
+ tSrOJC2U4s7trjRVqBJhty5KlL6FhBGiitAYk5RCXz/P1uwltZtUfOtH3pjczmujuMHpN4rjml
+ DhxluJUZ8IcfoFNKj1+TR4jxI5DcrEhlYRQjR2cJZnonYnz2+byecKD7US5uTLRJ8ZgbwwceLF
+ UHA=
+X-IronPort-AV: E=Sophos;i="5.68,280,1569254400"; 
+   d="scan'208";a="122457964"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2019 16:27:37 +0800
+IronPort-SDR: C8XWGOV8nV+J5gyO52vRtNs5l+QXCq5vyqchdHxnRldIXyomUFvELtK6C8gGpP2Kwu40LmZQGv
+ WhHMwYhkZ/oZuii/V3paM9LwIH3fb+lxqogUbDc25uWOCpZYfKgLq2835tDQY4HC5sav6Pn2UV
+ +lzFfXVuj7SVBLyYJcFe1wdH6CX8HMHpXM3bylZMEwdK/Lpu0Zhm39yXojR9f7SjjSXBfvRxuY
+ /6Bi6k3AOZHMjRaG9pSsZxtuV7J7l6CjstH3l7luElSmM//ZXdb2WqeSD5/EFpxdZTWqRa5jkl
+ 3nNpNusnbvQcpTBhV6vfZq5P
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Nov 2019 00:22:46 -0800
+IronPort-SDR: 3B3eEmUEzLERhHLabpnl9v2eMZNf/lHl/TO3AQ+TWORX1QDSR/DbpDLDTTgWrUL/fVTRXz1+Rp
+ t48bhqpwrLw4MwUG/4HkgxBa0y1Wz5hKPCSyAwfDQSLcQm7atU/qXGp+jYY1Lew/ifT0lGzki3
+ zSQ3U0mG9bJTymTw0wmSl1ZRKlciZAFSfyk0qhGEM4IDHmz5XnPJDKivb8uEskrvLYv0A4zmsl
+ oUC5ZIlPKAKOAC3L9lQc9NdiqG002dbp3zZXj99wYf6UU+a7LkTBfcKlj7x4en3i7Fz/Cbf9Rz
+ 4Ys=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Nov 2019 00:27:36 -0800
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org
+Cc:     Mike Christie <mchristi@redhat.com>
+Subject: [PATCH] target: core: Prevent memory reclaim recursion
+Date:   Fri,  8 Nov 2019 17:27:35 +0900
+Message-Id: <20191108082735.417876-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.23.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In UFS host reset and restore path, before probe, we stop and start the
-host controller once. After host controller is stopped, the pending
-requests, if any, are cleared from the doorbell, but no completion IRQ
-would be raised due to the hba is stopped.
-These pending requests shall be completed along with the first NOP_OUT
-command(as it is the first command which can raise a transfer completion
-IRQ) sent during probe.
-Since the OCSs of these pending requests are not SUCCESS(because they are
-not yet literally finished), their UPIUs shall be dumped. When there are
-multiple pending requests, the UPIU dump can be overwhelming and may lead
-to stability issues because it is in atomic context.
-Therefore, before probe, complete these pending requests right after host
-controller is stopped.
+Prevent recursion into the IO path under low memory conditions by using
+GFP_NOIO in place of GFP_KERNEL when allocating a new command with
+tcmu_alloc_cmd() and user ring space with tcmu_get_empty_block().
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 20 +++++++-------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
+ drivers/target/target_core_user.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5950a7c..4df4136 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5404,8 +5404,8 @@ static void ufshcd_err_handler(struct work_struct *work)
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 35be1be87d2a..0b9dfa6b17bc 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -499,7 +499,7 @@ static inline bool tcmu_get_empty_block(struct tcmu_dev *udev,
+ 			schedule_delayed_work(&tcmu_unmap_work, 0);
  
- 	/*
- 	 * if host reset is required then skip clearing the pending
--	 * transfers forcefully because they will automatically get
--	 * cleared after link startup.
-+	 * transfers forcefully because they will get cleared during
-+	 * host reset and restore
- 	 */
- 	if (needs_reset)
- 		goto skip_pending_xfer_clear;
-@@ -6333,9 +6333,13 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	int err;
- 	unsigned long flags;
+ 		/* try to get new page from the mm */
+-		page = alloc_page(GFP_KERNEL);
++		page = alloc_page(GFP_NOIO);
+ 		if (!page)
+ 			goto err_alloc;
  
--	/* Reset the host controller */
-+	/*
-+	 * Stop the host controller and complete the requests
-+	 * cleared by h/w
-+	 */
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	ufshcd_hba_stop(hba, false);
-+	ufshcd_complete_requests(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+@@ -573,7 +573,7 @@ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
+ 	struct tcmu_dev *udev = TCMU_DEV(se_dev);
+ 	struct tcmu_cmd *tcmu_cmd;
  
- 	/* scale up clocks to max frequency before full reinitialization */
-@@ -6369,7 +6373,6 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- static int ufshcd_reset_and_restore(struct ufs_hba *hba)
- {
- 	int err = 0;
--	unsigned long flags;
- 	int retries = MAX_HOST_RESET_RETRIES;
+-	tcmu_cmd = kmem_cache_zalloc(tcmu_cmd_cache, GFP_KERNEL);
++	tcmu_cmd = kmem_cache_zalloc(tcmu_cmd_cache, GFP_NOIO);
+ 	if (!tcmu_cmd)
+ 		return NULL;
  
- 	do {
-@@ -6379,15 +6382,6 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
- 		err = ufshcd_host_reset_and_restore(hba);
- 	} while (err && --retries);
- 
--	/*
--	 * After reset the door-bell might be cleared, complete
--	 * outstanding requests in s/w here.
--	 */
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_transfer_req_compl(hba);
--	ufshcd_tmc_handler(hba);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
- 	return err;
- }
- 
+@@ -584,7 +584,7 @@ static struct tcmu_cmd *tcmu_alloc_cmd(struct se_cmd *se_cmd)
+ 	tcmu_cmd_reset_dbi_cur(tcmu_cmd);
+ 	tcmu_cmd->dbi_cnt = tcmu_cmd_get_block_cnt(tcmu_cmd);
+ 	tcmu_cmd->dbi = kcalloc(tcmu_cmd->dbi_cnt, sizeof(uint32_t),
+-				GFP_KERNEL);
++				GFP_NOIO);
+ 	if (!tcmu_cmd->dbi) {
+ 		kmem_cache_free(tcmu_cmd_cache, tcmu_cmd);
+ 		return NULL;
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.23.0
 
