@@ -2,103 +2,161 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B0B7FA372C
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:34:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C22C5DF60
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:50:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E81A21882
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:34:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C8682178F
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 16:50:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FVSRnp/r"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="gD1t6nRn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726349AbfKHQe3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 11:34:29 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:21752 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726039AbfKHQe2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 11:34:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573230867;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MswkzqSTgztzY8rIctB3nvZ7tTFuK81EkDbQodyjE2k=;
-        b=FVSRnp/rq5HswGy0zsc2HoPGQIexpYvfIjMnc0sczZPnrPEslioaHn9DgGM5Ebzpd6mN8V
-        mJLbOzKhkVJpIyo+5RytCpGHjtK+9qqCf3WQGuRLyDGvia/8Qob1LfxHsbDSYbnTUU6Sxo
-        Oinj2Bi5oFWMqL8jeKwVmolqocWh0CE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-292-hWr799ELOo2eZxLUvrdC3g-1; Fri, 08 Nov 2019 11:34:24 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 28D6B107ACC4;
-        Fri,  8 Nov 2019 16:34:23 +0000 (UTC)
-Received: from [10.10.125.42] (ovpn-125-42.rdu2.redhat.com [10.10.125.42])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6F18260BE1;
-        Fri,  8 Nov 2019 16:34:22 +0000 (UTC)
-Subject: Re: [PATCH v2] target: core: Prevent memory reclaim recursion
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org
-References: <20191108082901.417950-1-damien.lemoal@wdc.com>
- <cefdcca4-e839-829e-54aa-b95e77825d1d@acm.org>
-From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <5DC59908.5010600@redhat.com>
-Date:   Fri, 8 Nov 2019 10:34:16 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
- Thunderbird/38.6.0
+        id S1726231AbfKHQuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 11:50:07 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:49550 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726036AbfKHQuH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 11:50:07 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id xA8GmVLv023950;
+        Fri, 8 Nov 2019 10:48:31 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1573231711;
+        bh=RNrJsp/5NYwS2QsIpeLrKLXLtyzwpT//dGLitwAFGxE=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=gD1t6nRnCW4j6mVhUQml4zPC6Vkp/VJCtAtoDlcl6wgU8YVb55emsZCfur7ZtMGv9
+         02SJUef/HYefIAXW9T6VbOqAerSpAT8FHUZiKHS0l34lMvBeA2wwq5b7SAcojV/tym
+         WDROkoFUVFstirfcWhazxEECEfBEFUkrw9qyse4M=
+Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id xA8GmVRr106798
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 8 Nov 2019 10:48:31 -0600
+Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Fri, 8 Nov
+ 2019 10:48:15 -0600
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE113.ent.ti.com
+ (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Fri, 8 Nov 2019 10:48:15 -0600
+Received: from a0132425.dhcp.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id xA8GmNLX117597;
+        Fri, 8 Nov 2019 10:48:27 -0600
+From:   Vignesh Raghavendra <vigneshr@ti.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Janek Kotas <jank@cadence.com>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH v3 1/2] dt-bindings: ufs: ti,j721e-ufs.yaml: Add binding for TI UFS wrapper
+Date:   Fri, 8 Nov 2019 22:18:56 +0530
+Message-ID: <20191108164857.11466-2-vigneshr@ti.com>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191108164857.11466-1-vigneshr@ti.com>
+References: <20191108164857.11466-1-vigneshr@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <cefdcca4-e839-829e-54aa-b95e77825d1d@acm.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-MC-Unique: hWr799ELOo2eZxLUvrdC3g-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/08/2019 10:22 AM, Bart Van Assche wrote:
-> On 11/8/19 12:29 AM, Damien Le Moal wrote:
->> Prevent recursion into the IO path under low memory conditions by using
->> GFP_NOIO in place of GFP_KERNEL when allocating a new command with
->> tcmu_alloc_cmd() and user ring space with tcmu_get_empty_block().
->>
->> Reported-by: Masato Suzuki <masato.suzuki@wdc.com>
->> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
->> ---
->>
->> Changes from v1:
->> * Added reported-by tag
->>
->>   drivers/target/target_core_user.c | 6 +++---
->>   1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> The patch subject is weird. Shouldn't the patch subject start with
-> "tcmu" instead of "target: core"?
->=20
-> Has the recursion mentioned in the patch description been observed or is
-> this a theoretical issue? I'm asking this because GFP_NOIO only prevents
+Add binding documentation of TI wrapper for Cadence UFS Controller.
 
-Observed.
+Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+v3: No change
 
-> recursion if it is used inside a block driver or filesystem. The tcmu
-> driver is neither - it submits block I/O or filesystem I/O instead of
-> implementing a block driver or filesystem. Should we really disallow
-> tcmu to use the swap subsystem?
+ .../devicetree/bindings/ufs/ti,j721e-ufs.yaml | 68 +++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
 
-A common use is tcm loop on the frontend and tcmu on the backend. You
-see this with virt and containers, where some app is used to interacting
-SCSI devices, but then the storage is backed by something that people
-didn't want to put in the kernel. It's similar to nbd when you use
-AF_UNIX sockets with a local running daemon.
+diff --git a/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+new file mode 100644
+index 000000000000..c8a2a92074df
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/ti,j721e-ufs.yaml
+@@ -0,0 +1,68 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/ti,j721e-ufs.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: TI J721e UFS Host Controller Glue Driver
++
++maintainers:
++  - Vignesh Raghavendra <vigneshr@ti.com>
++
++properties:
++  compatible:
++    items:
++      - const: ti,j721e-ufs
++
++  reg:
++    maxItems: 1
++    description: address of TI UFS glue registers
++
++  clocks:
++    maxItems: 1
++    description: phandle to the M-PHY clock
++
++  power-domains:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - clocks
++  - power-domains
++
++patternProperties:
++  "^ufs@[0-9a-f]+$":
++    type: object
++    description: |
++      Cadence UFS controller node must be the child node. Refer
++      Documentation/devicetree/bindings/ufs/cdns,ufshc.txt for binding
++      documentation of child node
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    ufs_wrapper: ufs-wrapper@4e80000 {
++       compatible = "ti,j721e-ufs";
++       reg = <0x0 0x4e80000 0x0 0x100>;
++       power-domains = <&k3_pds 277>;
++       clocks = <&k3_clks 277 1>;
++       assigned-clocks = <&k3_clks 277 1>;
++       assigned-clock-parents = <&k3_clks 277 4>;
++       #address-cells = <2>;
++       #size-cells = <2>;
++
++       ufs@4e84000 {
++          compatible = "cdns,ufshc-m31-16nm", "jedec,ufs-2.0";
++          reg = <0x0 0x4e84000 0x0 0x10000>;
++          interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
++          freq-table-hz = <19200000 19200000>;
++          power-domains = <&k3_pds 277>;
++          clocks = <&k3_clks 277 1>;
++          assigned-clocks = <&k3_clks 277 1>;
++          assigned-clock-parents = <&k3_clks 277 4>;
++          clock-names = "core_clk";
++       };
++    };
+-- 
+2.24.0
 
