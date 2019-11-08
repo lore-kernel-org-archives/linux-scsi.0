@@ -2,232 +2,94 @@ Return-Path: <SRS0=OHhN=ZA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C29BAFC6195
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 19:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB52FC6196
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 22:36:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F487207FA
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 19:23:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F753214DA
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Nov 2019 22:36:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ixqLj5/q"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kgPh4G9B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389213AbfKHTX4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Nov 2019 14:23:56 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:60650 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1732376AbfKHSxc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 13:53:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573239211;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=9FwgetzyW8P48cGLGqGtD4GfxfTRlJoRiG4n2Dado8Y=;
-        b=ixqLj5/qZDjREgmFuroudJ1XpJJThA7TmnfmjNiz/xXh0D5/QaD8nmFy3+UxkfB05PebK8
-        4V7uYVbTuhfhpbR+9T2I29gTw3mIakBVJAROwWFQXv2UaGUtRlIbsOxuh+BPQ0z6bVV4jy
-        I5ul+Cx5+KjskUkgnJ9q5bBA0jM3bw4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-225-RDOnMV84OlO0Y-tz_4aX-A-1; Fri, 08 Nov 2019 13:53:28 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5C2C88017E0;
-        Fri,  8 Nov 2019 18:53:26 +0000 (UTC)
-Received: from rh2.redhat.com (ovpn-125-42.rdu2.redhat.com [10.10.125.42])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CF6A1600C9;
-        Fri,  8 Nov 2019 18:53:24 +0000 (UTC)
-From:   Mike Christie <mchristi@redhat.com>
-To:     mhocko@kernel.org, david@fromorbit.com, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        martin@urbackup.org, Damien.LeMoal@wdc.com
-Cc:     Mike Christie <mchristi@redhat.com>
-Subject: [PATCH] Add prctl support for controlling mem reclaim V3
-Date:   Fri,  8 Nov 2019 12:53:19 -0600
-Message-Id: <20191108185319.9326-1-mchristi@redhat.com>
+        id S1728080AbfKHWgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Nov 2019 17:36:53 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36984 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727794AbfKHWgx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Nov 2019 17:36:53 -0500
+Received: by mail-wr1-f68.google.com with SMTP id t1so8753753wrv.4
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Nov 2019 14:36:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=qc6CfW6p5miBbAUa0RGWy4g9EUQnbZw6jUICSmg+D24=;
+        b=kgPh4G9BQIho8sscqW+2FfM2954AFGx6D/tSFxftIZI3/nDQR89NmeotvFbG5GUjgX
+         9qSELGByoScz7hm7aSvXM4Wo43NBCRNR4OWkZYwB+MCGzicdvMy2fLe10lVq5cds6AvX
+         69iaJkLtqbJxlOvNxSj64Hi5QqpRF1YxAZ5LyH2vS/96QqqHhBdyIwFB4hB+Xfwv0L6O
+         OJ98P7ux+9ugNp7A+3BCQJjhV67xPalRHhR2G/r5LnFwirxUXJYQc85rSIRCuV8YQnzQ
+         m/B0z5yV84l6YUTRDkXilzKsNBsxONeVnk1DQ22fPDd6R2JXi6Cn04Za6TquCxE1uR9C
+         IEDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=qc6CfW6p5miBbAUa0RGWy4g9EUQnbZw6jUICSmg+D24=;
+        b=exGk1z7BDLjK9xZfdSIsgxoKgj5RlGo91eTfBp6Oe3M7wYBlNV91BwCD2Yql8oShoP
+         Ct2xNgoh/0DrHu2fLZs41/W4XyRPn6LEZUFf5+o8jec3sU6zgPaJRVCZtj31+oD4J4xz
+         x+2P7sJQahm4sW9nLw4E6VYPcqTRhMPG1s9flA1xVk6XY3y4zcg9Ic+Gg84eJoyna0Fi
+         C65dEkhlshO3jS8HgXQ3l69oTtrjbW6BjNYP5tMy2XhCIZfjOopD0nGMiPLLsOT4adzx
+         Ip7MIS1M1+zUfmJpnp04kO8XZMR7C5JCiNRoAj34co05g4EXODkV9Pj1jPZf+UpuNMlE
+         ADQQ==
+X-Gm-Message-State: APjAAAXFSs1sXpF415kHBdbyNdFRks4OeUB/3qcuP4bak6tw5gqdxu5v
+        BgSPBSHNX4dNtJFBej67rSIA4p+3
+X-Google-Smtp-Source: APXvYqwcgfFQoaE3FG7CIvGKI1UxFyBWxRn+OZMLHa3/mdme01Cs4gy1cJh8o5ab+dxOeTv5gGjoDg==
+X-Received: by 2002:a5d:4c4e:: with SMTP id n14mr11595184wrt.260.1573252611286;
+        Fri, 08 Nov 2019 14:36:51 -0800 (PST)
+Received: from [10.230.29.90] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id w18sm7809890wrp.31.2019.11.08.14.36.49
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 08 Nov 2019 14:36:50 -0800 (PST)
+Subject: Re: [PATCH 1/3] lpfc: Fix a kernel warning triggered by
+ lpfc_get_sgl_per_hdwq()
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20191107052158.25788-1-bvanassche@acm.org>
+ <20191107052158.25788-2-bvanassche@acm.org>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <fbbf0fc4-2d29-8268-90b1-8b7a5b1e6d2f@gmail.com>
+Date:   Fri, 8 Nov 2019 14:36:47 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: RDOnMV84OlO0Y-tz_4aX-A-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20191107052158.25788-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
-amd nbd that have userspace components that can run in the IO path. For
-example, iscsi and nbd's userspace deamons may need to recreate a socket
-and/or send IO on it, and dm-multipath's daemon multipathd may need to
-send SG IO or read/write IO to figure out the state of paths and re-set
-them up.
-
-In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-memalloc_*_save/restore functions to control the allocation behavior,
-but for userspace we would end up hitting an allocation that ended up
-writing data back to the same device we are trying to allocate for.
-The device is then in a state of deadlock, because to execute IO the
-device needs to allocate memory, but to allocate memory the memory
-layers want execute IO to the device.
-
-Here is an example with nbd using a local userspace daemon that performs
-network IO to a remote server. We are using XFS on top of the nbd device,
-but it can happen with any FS or other modules layered on top of the nbd
-device that can write out data to free memory.  Here a nbd daemon helper
-thread, msgr-worker-1, is performing a write/sendmsg on a socket to execute
-a request. This kicks off a reclaim operation which results in a WRITE to
-the nbd device and the nbd thread calling back into the mm layer.
-
-[ 1626.609191] msgr-worker-1   D    0  1026      1 0x00004000
-[ 1626.609193] Call Trace:
-[ 1626.609195]  ? __schedule+0x29b/0x630
-[ 1626.609197]  ? wait_for_completion+0xe0/0x170
-[ 1626.609198]  schedule+0x30/0xb0
-[ 1626.609200]  schedule_timeout+0x1f6/0x2f0
-[ 1626.609202]  ? blk_finish_plug+0x21/0x2e
-[ 1626.609204]  ? _xfs_buf_ioapply+0x2e6/0x410
-[ 1626.609206]  ? wait_for_completion+0xe0/0x170
-[ 1626.609208]  wait_for_completion+0x108/0x170
-[ 1626.609210]  ? wake_up_q+0x70/0x70
-[ 1626.609212]  ? __xfs_buf_submit+0x12e/0x250
-[ 1626.609214]  ? xfs_bwrite+0x25/0x60
-[ 1626.609215]  xfs_buf_iowait+0x22/0xf0
-[ 1626.609218]  __xfs_buf_submit+0x12e/0x250
-[ 1626.609220]  xfs_bwrite+0x25/0x60
-[ 1626.609222]  xfs_reclaim_inode+0x2e8/0x310
-[ 1626.609224]  xfs_reclaim_inodes_ag+0x1b6/0x300
-[ 1626.609227]  xfs_reclaim_inodes_nr+0x31/0x40
-[ 1626.609228]  super_cache_scan+0x152/0x1a0
-[ 1626.609231]  do_shrink_slab+0x12c/0x2d0
-[ 1626.609233]  shrink_slab+0x9c/0x2a0
-[ 1626.609235]  shrink_node+0xd7/0x470
-[ 1626.609237]  do_try_to_free_pages+0xbf/0x380
-[ 1626.609240]  try_to_free_pages+0xd9/0x1f0
-[ 1626.609245]  __alloc_pages_slowpath+0x3a4/0xd30
-[ 1626.609251]  ? ___slab_alloc+0x238/0x560
-[ 1626.609254]  __alloc_pages_nodemask+0x30c/0x350
-[ 1626.609259]  skb_page_frag_refill+0x97/0xd0
-[ 1626.609274]  sk_page_frag_refill+0x1d/0x80
-[ 1626.609279]  tcp_sendmsg_locked+0x2bb/0xdd0
-[ 1626.609304]  tcp_sendmsg+0x27/0x40
-[ 1626.609307]  sock_sendmsg+0x54/0x60
-[ 1626.609308]  ___sys_sendmsg+0x29f/0x320
-[ 1626.609313]  ? sock_poll+0x66/0xb0
-[ 1626.609318]  ? ep_item_poll.isra.15+0x40/0xc0
-[ 1626.609320]  ? ep_send_events_proc+0xe6/0x230
-[ 1626.609322]  ? hrtimer_try_to_cancel+0x54/0xf0
-[ 1626.609324]  ? ep_read_events_proc+0xc0/0xc0
-[ 1626.609326]  ? _raw_write_unlock_irq+0xa/0x20
-[ 1626.609327]  ? ep_scan_ready_list.constprop.19+0x218/0x230
-[ 1626.609329]  ? __hrtimer_init+0xb0/0xb0
-[ 1626.609331]  ? _raw_spin_unlock_irq+0xa/0x20
-[ 1626.609334]  ? ep_poll+0x26c/0x4a0
-[ 1626.609337]  ? tcp_tsq_write.part.54+0xa0/0xa0
-[ 1626.609339]  ? release_sock+0x43/0x90
-[ 1626.609341]  ? _raw_spin_unlock_bh+0xa/0x20
-[ 1626.609342]  __sys_sendmsg+0x47/0x80
-[ 1626.609347]  do_syscall_64+0x5f/0x1c0
-[ 1626.609349]  ? prepare_exit_to_usermode+0x75/0xa0
-[ 1626.609351]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-This patch adds a new prctl command that daemons can use after they have
-done their initial setup, and before they start to do allocations that
-are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
-flags so both userspace block and FS threads can use it to avoid the
-allocation recursion and try to prevent from being throttled while
-writing out data to free up memory.
-
-Signed-off-by: Mike Christie <mchristi@redhat.com>
----
-V3=20
-- Drop NOFS, set PF_LESS_THROTTLE and rename prctl flag to reflect it
-is more general and can support both FS and block devices. Both fuse
-and block device daemons, nbd and tcmu-runner, have been tested to
-confirm the more restrictive PF_MEMALLOC_NOIO also works for fuse.
-
-- Use CAP_SYS_RESOURCE instead of admin.
-
-V2:
-- Use prctl instead of procfs.
-- Add support for NOFS for fuse.
-- Check permissions.
+On 11/6/2019 9:21 PM, Bart Van Assche wrote:
+> Fix the following kernel bug report:
+> 
+> BUG: using smp_processor_id() in preemptible [00000000] code: systemd-udevd/954
+> 
+> Fixes: d79c9e9d4b3d ("scsi: lpfc: Support dynamic unbounded SGL lists on G7 hardware.")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
 
- include/uapi/linux/capability.h |  1 +
- include/uapi/linux/prctl.h      |  4 ++++
- kernel/sys.c                    | 26 ++++++++++++++++++++++++++
- 3 files changed, 31 insertions(+)
+Looks good - thanks Bart
 
-diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capabilit=
-y.h
-index 240fdb9a60f6..272dc69fa080 100644
---- a/include/uapi/linux/capability.h
-+++ b/include/uapi/linux/capability.h
-@@ -301,6 +301,7 @@ struct vfs_ns_cap_data {
- /* Allow more than 64hz interrupts from the real-time clock */
- /* Override max number of consoles on console allocation */
- /* Override max number of keymaps */
-+/* Control memory reclaim behavior */
-=20
- #define CAP_SYS_RESOURCE     24
-=20
-diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
-index 7da1b37b27aa..07b4f8131e36 100644
---- a/include/uapi/linux/prctl.h
-+++ b/include/uapi/linux/prctl.h
-@@ -234,4 +234,8 @@ struct prctl_mm_map {
- #define PR_GET_TAGGED_ADDR_CTRL=09=0956
- # define PR_TAGGED_ADDR_ENABLE=09=09(1UL << 0)
-=20
-+/* Control reclaim behavior when allocating memory */
-+#define PR_SET_IO_FLUSHER=09=0957
-+#define PR_GET_IO_FLUSHER=09=0958
-+
- #endif /* _LINUX_PRCTL_H */
-diff --git a/kernel/sys.c b/kernel/sys.c
-index a611d1d58c7d..08c6b682fa99 100644
---- a/kernel/sys.c
-+++ b/kernel/sys.c
-@@ -2486,6 +2486,32 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, a=
-rg2, unsigned long, arg3,
- =09=09=09return -EINVAL;
- =09=09error =3D GET_TAGGED_ADDR_CTRL();
- =09=09break;
-+=09case PR_SET_IO_FLUSHER:
-+=09=09if (!capable(CAP_SYS_RESOURCE))
-+=09=09=09return -EPERM;
-+
-+=09=09if (arg3 || arg4 || arg5)
-+=09=09=09return -EINVAL;
-+
-+=09=09if (arg2 =3D=3D 1)
-+=09=09=09current->flags |=3D PF_MEMALLOC_NOIO | PF_LESS_THROTTLE;
-+=09=09else if (!arg2)
-+=09=09=09current->flags &=3D ~(PF_MEMALLOC_NOIO | PF_LESS_THROTTLE);
-+=09=09else
-+=09=09=09return -EINVAL;
-+=09=09break;
-+=09case PR_GET_IO_FLUSHER:
-+=09=09if (!capable(CAP_SYS_RESOURCE))
-+=09=09=09return -EPERM;
-+
-+=09=09if (arg2 || arg3 || arg4 || arg5)
-+=09=09=09return -EINVAL;
-+
-+=09=09if (current->flags & (PF_MEMALLOC_NOIO | PF_LESS_THROTTLE))
-+=09=09=09error =3D 1;
-+=09=09else
-+=09=09=09error =3D 0;
-+=09=09break;
- =09default:
- =09=09error =3D -EINVAL;
- =09=09break;
---=20
-2.20.1
+Reviewed-by: James Smart <james.smart@broadcom.com>
+
+-- james
 
