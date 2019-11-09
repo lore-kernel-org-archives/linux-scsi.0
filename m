@@ -2,93 +2,246 @@ Return-Path: <SRS0=dDgG=ZB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6CAC43331
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 19:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED096C17443
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 19:47:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7056921924
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 19:14:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7F9621D7F
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 19:47:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RgxIqeT9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726485AbfKITOe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 14:14:34 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:56198 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726240AbfKITOd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2019 14:14:33 -0500
-Received: by mail-wm1-f65.google.com with SMTP id b11so9368763wmb.5;
-        Sat, 09 Nov 2019 11:14:32 -0800 (PST)
+        id S1726405AbfKITrc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 14:47:32 -0500
+Received: from mail-io1-f68.google.com ([209.85.166.68]:42254 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726240AbfKITrc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2019 14:47:32 -0500
+Received: by mail-io1-f68.google.com with SMTP id k13so1569807ioa.9;
+        Sat, 09 Nov 2019 11:47:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sYKraXNLfxX+pdU2SRbr9VE2F1NNmALzbKmry2lE1P8=;
+        b=RgxIqeT9ziuhPt7/nmRv46wUR0tgtdu74j+LSBw2ygr0tPA4a8KREtYS9SrirCL5Bl
+         eluTT5/0duKvdPwOQUD+dsczctSkwjAdC5BsA6Ql6DerKWb6GKsejPqQ8z5DSIWFRxDV
+         FTogcF9BmQvts21TmGqSUvCjPD3QXHjcvyti5tRQDltSYhNycYv6DcVfVJQwpWF9CJ9f
+         th7TDf2hvpi0zAVpYCOK72qQ/zhAtEYQaOcJN4hZv5e0sluL2YR4/V4OWvZi1d8wJru6
+         mISjfAuKIdvrViAMylxNnJnM2Bj75aZSesQlRCWIW3X+00V/2UlruMb3Uul0zXEt9yiS
+         +IMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=NBu6sNDl+sHdYYDpy19HGzHjO1NLsTFIOQ2wBXdL9VQ=;
-        b=AJfX3taAIBqZe8DHxgecu0xs08OoE0D1CTeI35/wp2VfRJ5wrDzjzjmB4i/o1fPrkB
-         8r6MSaqjssYl3dEfmGPatNhDqsu2sYLqOBsXzvIH/JTq2j17jxljatc0CVI6Lpqardhd
-         rk50UR+n5dJw/QcMoIYkv/7XAcEE+xa0pWll9le0g3Md1qyMW/aWlgwd7ef2Q8lMQGd0
-         ZL46m8mEB5GKYFqEfh7uK5vm5JJ5EHYykg93p3AjnSwOq3n9TVuJmU9IlD2gvnUfTcbc
-         C2I2Z7gNpw746IP4X5EDYeZ/XBYw4L+AhqM+zh6tdon9nUOZVZWp0QJjclsMQ93qA2dK
-         xF7w==
-X-Gm-Message-State: APjAAAVPocZcUv5oZfeMNsTS51OlVzZJVowb7auoy7htiYy7ST+96l2n
-        uuZjQ4x+04yYYtzjN9JBJWE=
-X-Google-Smtp-Source: APXvYqwIBuwvPIarWEbgba4BwnCeaED7Mr06Xe/dxiOQxMerUY7jOXAcnyZZe0RdvoHeSY+b6zaM5g==
-X-Received: by 2002:a1c:3d57:: with SMTP id k84mr13058480wma.156.1573326871528;
-        Sat, 09 Nov 2019 11:14:31 -0800 (PST)
-Received: from localhost.localdomain (82-75-169-199.cable.dynamic.v4.ziggo.nl. [82.75.169.199])
-        by smtp.gmail.com with ESMTPSA id t13sm9116929wrr.88.2019.11.09.11.14.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 09 Nov 2019 11:14:31 -0800 (PST)
-From:   Kars de Jong <jongk@linux-m68k.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
-        Kars de Jong <jongk@linux-m68k.org>
-Subject: [PATCH] zorro_esp: increase maximum dma length to 65536 bytes
-Date:   Sat,  9 Nov 2019 20:14:00 +0100
-Message-Id: <20191109191400.8999-1-jongk@linux-m68k.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <CACz-3rh9ZCyU1825yU8xxty5BGrwFhpbjKNoWnn0mGiv_h2Kag@mail.gmail.com>
-References: <CACz-3rh9ZCyU1825yU8xxty5BGrwFhpbjKNoWnn0mGiv_h2Kag@mail.gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sYKraXNLfxX+pdU2SRbr9VE2F1NNmALzbKmry2lE1P8=;
+        b=R/07ucVkOVx0asJyLMQWzBlW65hwr8qS8vmZ0YRU9HnTaoYbk49EKCRCqMtGTACeAx
+         q5Uslik79aKbqc8ugK569LKBfxuKAx1Dz5xC9reaKN9QE2osMITL+8MNtcd/VOkbXU83
+         3uet78+YKrdBv/Kr+yGvfPCEzqt6Z8hPCxhy1cLshJOgpvwGFh6f8S3wHcocYaz+X7q2
+         yrG7nyPQXUrofbLVQwJfmKesO4Im6YlplyOkGfdFfLbH75bDCB10t1IOs4A4LSjcGywB
+         +FYxPEVsvRdabi6z/9FpuMlHGfQz1vuPO/7qjz/hafIVymCn6osb+PggslCERWc77GGx
+         Wg8w==
+X-Gm-Message-State: APjAAAVixIfaD3oRQdksFiqS2vN+uEYSVeP3IFpCE7UILqVNTHna8l8A
+        YXuLhySiKcHijadqClsU9TBEMYO+iHFm5bnn7KM=
+X-Google-Smtp-Source: APXvYqxQozrzEI7fYRnCyVA+GaNGj8YjwHGQ/ZUu8YOrBajjJAIwh0Vg6PpX315+Z5e1EA0+UqxSKEijlKAnV9ryv8M=
+X-Received: by 2002:a6b:ba04:: with SMTP id k4mr1312722iof.131.1573328850900;
+ Sat, 09 Nov 2019 11:47:30 -0800 (PST)
+MIME-Version: 1.0
+References: <20191108185319.9326-1-mchristi@redhat.com>
+In-Reply-To: <20191108185319.9326-1-mchristi@redhat.com>
+From:   Ilya Dryomov <idryomov@gmail.com>
+Date:   Sat, 9 Nov 2019 20:47:54 +0100
+Message-ID: <CAOi1vP8UrtQKYFFiqBtGcZR5chkhBkCCTpxMNy9GVd5SYscboQ@mail.gmail.com>
+Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V3
+To:     Mike Christie <mchristi@redhat.com>
+Cc:     Michal Hocko <mhocko@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-mm <linux-mm@kvack.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>, martin@urbackup.org,
+        Damien.LeMoal@wdc.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When using this driver on a Blizzard 1260, there were failures whenever
-DMA transfers from the SCSI bus to memory of 65535 bytes were followed by a
-DMA transfer of 1 byte. This caused the byte at offset 65535 to be
-overwritten with 0xff. The Blizzard hardware can't handle single byte DMA
-transfers.
+On Fri, Nov 8, 2019 at 8:24 PM Mike Christie <mchristi@redhat.com> wrote:
+>
+> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
+> amd nbd that have userspace components that can run in the IO path. For
+> example, iscsi and nbd's userspace deamons may need to recreate a socket
+> and/or send IO on it, and dm-multipath's daemon multipathd may need to
+> send SG IO or read/write IO to figure out the state of paths and re-set
+> them up.
+>
+> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
+> memalloc_*_save/restore functions to control the allocation behavior,
+> but for userspace we would end up hitting an allocation that ended up
+> writing data back to the same device we are trying to allocate for.
+> The device is then in a state of deadlock, because to execute IO the
+> device needs to allocate memory, but to allocate memory the memory
+> layers want execute IO to the device.
+>
+> Here is an example with nbd using a local userspace daemon that performs
+> network IO to a remote server. We are using XFS on top of the nbd device,
+> but it can happen with any FS or other modules layered on top of the nbd
+> device that can write out data to free memory.  Here a nbd daemon helper
+> thread, msgr-worker-1, is performing a write/sendmsg on a socket to execute
+> a request. This kicks off a reclaim operation which results in a WRITE to
+> the nbd device and the nbd thread calling back into the mm layer.
+>
+> [ 1626.609191] msgr-worker-1   D    0  1026      1 0x00004000
+> [ 1626.609193] Call Trace:
+> [ 1626.609195]  ? __schedule+0x29b/0x630
+> [ 1626.609197]  ? wait_for_completion+0xe0/0x170
+> [ 1626.609198]  schedule+0x30/0xb0
+> [ 1626.609200]  schedule_timeout+0x1f6/0x2f0
+> [ 1626.609202]  ? blk_finish_plug+0x21/0x2e
+> [ 1626.609204]  ? _xfs_buf_ioapply+0x2e6/0x410
+> [ 1626.609206]  ? wait_for_completion+0xe0/0x170
+> [ 1626.609208]  wait_for_completion+0x108/0x170
+> [ 1626.609210]  ? wake_up_q+0x70/0x70
+> [ 1626.609212]  ? __xfs_buf_submit+0x12e/0x250
+> [ 1626.609214]  ? xfs_bwrite+0x25/0x60
+> [ 1626.609215]  xfs_buf_iowait+0x22/0xf0
+> [ 1626.609218]  __xfs_buf_submit+0x12e/0x250
+> [ 1626.609220]  xfs_bwrite+0x25/0x60
+> [ 1626.609222]  xfs_reclaim_inode+0x2e8/0x310
+> [ 1626.609224]  xfs_reclaim_inodes_ag+0x1b6/0x300
+> [ 1626.609227]  xfs_reclaim_inodes_nr+0x31/0x40
+> [ 1626.609228]  super_cache_scan+0x152/0x1a0
+> [ 1626.609231]  do_shrink_slab+0x12c/0x2d0
+> [ 1626.609233]  shrink_slab+0x9c/0x2a0
+> [ 1626.609235]  shrink_node+0xd7/0x470
+> [ 1626.609237]  do_try_to_free_pages+0xbf/0x380
+> [ 1626.609240]  try_to_free_pages+0xd9/0x1f0
+> [ 1626.609245]  __alloc_pages_slowpath+0x3a4/0xd30
+> [ 1626.609251]  ? ___slab_alloc+0x238/0x560
+> [ 1626.609254]  __alloc_pages_nodemask+0x30c/0x350
+> [ 1626.609259]  skb_page_frag_refill+0x97/0xd0
+> [ 1626.609274]  sk_page_frag_refill+0x1d/0x80
+> [ 1626.609279]  tcp_sendmsg_locked+0x2bb/0xdd0
+> [ 1626.609304]  tcp_sendmsg+0x27/0x40
+> [ 1626.609307]  sock_sendmsg+0x54/0x60
+> [ 1626.609308]  ___sys_sendmsg+0x29f/0x320
+> [ 1626.609313]  ? sock_poll+0x66/0xb0
+> [ 1626.609318]  ? ep_item_poll.isra.15+0x40/0xc0
+> [ 1626.609320]  ? ep_send_events_proc+0xe6/0x230
+> [ 1626.609322]  ? hrtimer_try_to_cancel+0x54/0xf0
+> [ 1626.609324]  ? ep_read_events_proc+0xc0/0xc0
+> [ 1626.609326]  ? _raw_write_unlock_irq+0xa/0x20
+> [ 1626.609327]  ? ep_scan_ready_list.constprop.19+0x218/0x230
+> [ 1626.609329]  ? __hrtimer_init+0xb0/0xb0
+> [ 1626.609331]  ? _raw_spin_unlock_irq+0xa/0x20
+> [ 1626.609334]  ? ep_poll+0x26c/0x4a0
+> [ 1626.609337]  ? tcp_tsq_write.part.54+0xa0/0xa0
+> [ 1626.609339]  ? release_sock+0x43/0x90
+> [ 1626.609341]  ? _raw_spin_unlock_bh+0xa/0x20
+> [ 1626.609342]  __sys_sendmsg+0x47/0x80
+> [ 1626.609347]  do_syscall_64+0x5f/0x1c0
+> [ 1626.609349]  ? prepare_exit_to_usermode+0x75/0xa0
+> [ 1626.609351]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+>
+> This patch adds a new prctl command that daemons can use after they have
+> done their initial setup, and before they start to do allocations that
+> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
+> flags so both userspace block and FS threads can use it to avoid the
+> allocation recursion and try to prevent from being throttled while
+> writing out data to free up memory.
+>
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+> V3
+> - Drop NOFS, set PF_LESS_THROTTLE and rename prctl flag to reflect it
+> is more general and can support both FS and block devices. Both fuse
+> and block device daemons, nbd and tcmu-runner, have been tested to
+> confirm the more restrictive PF_MEMALLOC_NOIO also works for fuse.
+>
+> - Use CAP_SYS_RESOURCE instead of admin.
+>
+> V2:
+> - Use prctl instead of procfs.
+> - Add support for NOFS for fuse.
+> - Check permissions.
+>
+>
+>  include/uapi/linux/capability.h |  1 +
+>  include/uapi/linux/prctl.h      |  4 ++++
+>  kernel/sys.c                    | 26 ++++++++++++++++++++++++++
+>  3 files changed, 31 insertions(+)
+>
+> diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
+> index 240fdb9a60f6..272dc69fa080 100644
+> --- a/include/uapi/linux/capability.h
+> +++ b/include/uapi/linux/capability.h
+> @@ -301,6 +301,7 @@ struct vfs_ns_cap_data {
+>  /* Allow more than 64hz interrupts from the real-time clock */
+>  /* Override max number of consoles on console allocation */
+>  /* Override max number of keymaps */
+> +/* Control memory reclaim behavior */
+>
+>  #define CAP_SYS_RESOURCE     24
+>
+> diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
+> index 7da1b37b27aa..07b4f8131e36 100644
+> --- a/include/uapi/linux/prctl.h
+> +++ b/include/uapi/linux/prctl.h
+> @@ -234,4 +234,8 @@ struct prctl_mm_map {
+>  #define PR_GET_TAGGED_ADDR_CTRL                56
+>  # define PR_TAGGED_ADDR_ENABLE         (1UL << 0)
+>
+> +/* Control reclaim behavior when allocating memory */
+> +#define PR_SET_IO_FLUSHER              57
+> +#define PR_GET_IO_FLUSHER              58
+> +
+>  #endif /* _LINUX_PRCTL_H */
+> diff --git a/kernel/sys.c b/kernel/sys.c
+> index a611d1d58c7d..08c6b682fa99 100644
+> --- a/kernel/sys.c
+> +++ b/kernel/sys.c
+> @@ -2486,6 +2486,32 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
+>                         return -EINVAL;
+>                 error = GET_TAGGED_ADDR_CTRL();
+>                 break;
+> +       case PR_SET_IO_FLUSHER:
+> +               if (!capable(CAP_SYS_RESOURCE))
+> +                       return -EPERM;
+> +
+> +               if (arg3 || arg4 || arg5)
+> +                       return -EINVAL;
+> +
+> +               if (arg2 == 1)
+> +                       current->flags |= PF_MEMALLOC_NOIO | PF_LESS_THROTTLE;
+> +               else if (!arg2)
+> +                       current->flags &= ~(PF_MEMALLOC_NOIO | PF_LESS_THROTTLE);
+> +               else
+> +                       return -EINVAL;
+> +               break;
+> +       case PR_GET_IO_FLUSHER:
+> +               if (!capable(CAP_SYS_RESOURCE))
+> +                       return -EPERM;
+> +
+> +               if (arg2 || arg3 || arg4 || arg5)
+> +                       return -EINVAL;
+> +
+> +               if (current->flags & (PF_MEMALLOC_NOIO | PF_LESS_THROTTLE))
 
-Besides this issue, limiting the DMA length to something that is not a
-multiple of the page size is very inefficient on most file systems.
+I think it needs to be conditioned on both flags instead of just one of
+them, for consistency with SET.  Seems worth a define too, PF_IO_FLUSHER?
+Or something local to this file at least.
 
-It seems this limit was chosen because the DMA transfer counter of the ESP
-by default is 16 bits wide, thus limiting the length to 65535 bytes.
-However, the value 0 means 65536 bytes, which is handled by the ESP and the
-Blizzard just fine. It is also the default maximum used by esp_scsi when
-drivers don't provide their own dma_length_limit() function.
+> +                       error = 1;
+> +               else
+> +                       error = 0;
 
-Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
----
- drivers/scsi/zorro_esp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+  error = (current->flags & PF_IO_FLUSHER) == PF_IO_FLUSHER;
 
-diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
-index ca8e3abeb2c7..4448567c495d 100644
---- a/drivers/scsi/zorro_esp.c
-+++ b/drivers/scsi/zorro_esp.c
-@@ -218,7 +218,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
- static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
- 					u32 dma_len)
- {
--	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
-+	return dma_len > (1U << 16) ? (1U << 16) : dma_len;
- }
- 
- static void zorro_esp_reset_dma(struct esp *esp)
--- 
-2.17.1
+Thanks,
 
+                Ilya
