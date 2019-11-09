@@ -2,127 +2,85 @@ Return-Path: <SRS0=dDgG=ZB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D45EC43331
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 22:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F455C17443
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 22:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E2D1207FF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 22:28:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WhrJ7Ost"
+	by mail.kernel.org (Postfix) with ESMTP id 219CB20842
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Nov 2019 22:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726569AbfKIW2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 17:28:52 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:41564 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726470AbfKIW2w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2019 17:28:52 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573338530;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9oSogd1HclYTh4TochWGFDAg+DdvKpv0K/UpcRLncNQ=;
-        b=WhrJ7Ost4/wmId144i0InrnyxLiMEuBEa9Mi54r8AIC5XK342QypLQ+7Z4ic4mg1t+FDFJ
-        seBNmzG+Dhc+0ps5SapNiHStIFnCoMFPOHnFWwfUT3gLMJaNUwzuqc4AoUKcNmgIyixIJ5
-        j4+Z9vwVJXbyb88xOPItGzPo6xNhNdQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-46-PhgiX5CtNoOzD6MkuoOuLQ-1; Sat, 09 Nov 2019 17:28:47 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 41DA480183C;
-        Sat,  9 Nov 2019 22:28:44 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2F580608B9;
-        Sat,  9 Nov 2019 22:28:34 +0000 (UTC)
-Date:   Sun, 10 Nov 2019 06:28:28 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
+        id S1726545AbfKIWxg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 17:53:36 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:37406 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbfKIWxg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Nov 2019 17:53:36 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id EC6942A4DD;
+        Sat,  9 Nov 2019 17:53:31 -0500 (EST)
+Date:   Sun, 10 Nov 2019 09:53:33 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Kars de Jong <jongk@linux-m68k.org>
+cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191109222828.GA30568@ming.t460p>
-References: <Pine.LNX.4.44L0.1911061044070.1694-100000@iolanthe.rowland.org>
- <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
- <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it>
- <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
- <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
+        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Subject: Re: [PATCH] zorro_esp: increase maximum dma length to 65536 bytes
+In-Reply-To: <20191109191400.8999-1-jongk@linux-m68k.org>
+Message-ID: <alpine.LNX.2.21.1.1911100936080.8@nippy.intranet>
+References: <CACz-3rh9ZCyU1825yU8xxty5BGrwFhpbjKNoWnn0mGiv_h2Kag@mail.gmail.com> <20191109191400.8999-1-jongk@linux-m68k.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: PhgiX5CtNoOzD6MkuoOuLQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 07, 2019 at 07:59:44PM +0100, Andrea Vai wrote:
-> [Sorry for the duplicate message, it didn't reach the lists due to
-> html formatting]
-> Il giorno gio 7 nov 2019 alle ore 08:54 Damien Le Moal
-> <Damien.LeMoal@wdc.com> ha scritto:
-> >
-> > On 2019/11/07 16:04, Andrea Vai wrote:
-> > > Il giorno mer, 06/11/2019 alle 22.13 +0000, Damien Le Moal ha scritto=
-:
-> > >>
-> > >>
-> > >> Please simply try your write tests after doing this:
-> > >>
-> > >> echo mq-deadline > /sys/block/<name of your USB
-> > >> disk>/queue/scheduler
-> > >>
-> > >> And confirm that mq-deadline is selected with:
-> > >>
-> > >> cat /sys/block/<name of your USB disk>/queue/scheduler
-> > >> [mq-deadline] kyber bfq none
-> > >
-> > > ok, which kernel should I test with this: the fresh git cloned, or th=
-e
-> > > one just patched with Alan's patch, or doesn't matter which one?
-> >
-> > Probably all of them to see if there are any differences.
->=20
-> with both kernels, the output of
-> cat /sys/block/sdh/queue/schedule
->=20
-> already contains [mq-deadline]: is it correct to assume that the echo
-> command and the subsequent testing is useless? What to do now?
+On Sat, 9 Nov 2019, Kars de Jong wrote:
 
-Another thing we could try is to use 'none' via the following command:
+> When using this driver on a Blizzard 1260, there were failures whenever
+> DMA transfers from the SCSI bus to memory of 65535 bytes were followed by a
+> DMA transfer of 1 byte. This caused the byte at offset 65535 to be
+> overwritten with 0xff. The Blizzard hardware can't handle single byte DMA
+> transfers.
+> 
+> Besides this issue, limiting the DMA length to something that is not a
+> multiple of the page size is very inefficient on most file systems.
+> 
 
- echo none > /sys/block/sdh/queue/scheduler  #suppose 'sdh' points to the u=
-sb storage disk
+Makes sense. You may want to add,
+Fixes: b7ded0e8b0d1 ("scsi: zorro_esp: Limit DMA transfers to 65535 bytes")
 
-Because USB storage HBA is single hw queue, which depth is 1. This way
-should change to dispatch IO in the order of bio submission.
+> It seems this limit was chosen because the DMA transfer counter of the ESP
+> by default is 16 bits wide, thus limiting the length to 65535 bytes.
+> However, the value 0 means 65536 bytes, which is handled by the ESP and the
+> Blizzard just fine. It is also the default maximum used by esp_scsi when
+> drivers don't provide their own dma_length_limit() function.
+> 
+> Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
+> ---
+>  drivers/scsi/zorro_esp.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
+> index ca8e3abeb2c7..4448567c495d 100644
+> --- a/drivers/scsi/zorro_esp.c
+> +++ b/drivers/scsi/zorro_esp.c
+> @@ -218,7 +218,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
+>  static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
+>  					u32 dma_len)
+>  {
+> -	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
+> +	return dma_len > (1U << 16) ? (1U << 16) : dma_len;
+>  }
+>  
 
-Andrea, could you switch io scheduler to none and update us if difference
-can be made?
+Would it be safer to simply remove this code and leave 
+esp_driver_ops.dma_length_limit == NULL for all board types?
 
-Thanks,
-Ming
+-- 
 
+>  static void zorro_esp_reset_dma(struct esp *esp)
+> 
