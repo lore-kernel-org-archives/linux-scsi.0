@@ -2,121 +2,95 @@ Return-Path: <SRS0=5ueY=ZC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CD7AC43331
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 111CFC43331
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 09:25:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 71D482196F
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:10:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573355437;
-	bh=ul0/bGo88jsuhWbKBfwSPapUDoW1WVyc6cHpoRR2Asw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pVMT0oCSNoViqHnFxjNFP15C6zgPcQtH3S+/4JbN6fZwxdgtahmNhlG2jmnM5wbcc
-	 T8SiaSJJOttXXn6k+uUSFIa0z2RksTnt0U6wuXqP7Vx0MKlHvaWNMT/G+Ws33enYGw
-	 VgMacPhxPdnYZWA/23TGyCRfG0wXBpJP9Hkvm8og=
+	by mail.kernel.org (Postfix) with ESMTP id DADC1207FA
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 09:25:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728744AbfKJDKd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 22:10:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42754 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728458AbfKJCn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:43:58 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CAEF7214E0;
-        Sun, 10 Nov 2019 02:43:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573353838;
-        bh=ul0/bGo88jsuhWbKBfwSPapUDoW1WVyc6cHpoRR2Asw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PNlOIDX0nyCs0CNv6ptsVQHXdoRY5jmT35wQmD8MQwcDB1rJ5wPQieOs81SMWl4ih
-         gLqpqtQKz/L69DcZYgEOpESOP6TMAXmD3pjQtDFbT5btDWzgHJ87pVMlGRN3JYCgSu
-         aZf4s8DIuX3IgemVLJsmdr0YN/93udgnyQPfCQvw=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jason Yan <yanaijie@huawei.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Tomas Henzl <thenzl@redhat.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 127/191] scsi: libsas: always unregister the old device if going to discover new
-Date:   Sat,  9 Nov 2019 21:39:09 -0500
-Message-Id: <20191110024013.29782-127-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191110024013.29782-1-sashal@kernel.org>
-References: <20191110024013.29782-1-sashal@kernel.org>
+        id S1726681AbfKJJZg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 Nov 2019 04:25:36 -0500
+Received: from smtpq3.tb.mail.iss.as9143.net ([212.54.42.166]:46728 "EHLO
+        smtpq3.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726617AbfKJJZg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 10 Nov 2019 04:25:36 -0500
+X-Greylist: delayed 1428 seconds by postgrey-1.27 at vger.kernel.org; Sun, 10 Nov 2019 04:25:35 EST
+Received: from [212.54.42.110] (helo=smtp7.tb.mail.iss.as9143.net)
+        by smtpq3.tb.mail.iss.as9143.net with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iTj6Q-0007eX-7D; Sun, 10 Nov 2019 10:01:46 +0100
+Received: from mail-wm1-f47.google.com ([209.85.128.47])
+        by smtp7.tb.mail.iss.as9143.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iTj6Q-0001M6-3L; Sun, 10 Nov 2019 10:01:46 +0100
+Received: by mail-wm1-f47.google.com with SMTP id c17so10280096wmk.2;
+        Sun, 10 Nov 2019 01:01:45 -0800 (PST)
+X-Gm-Message-State: APjAAAVTeSzHmryaI+wLoepgkrvQggIuUMLM2Zfh4+5eZqFDoimnZ7nD
+        h5wuqq07u+sJbhnczDvR13KChMiwAGw+yP+vzSQ=
+X-Google-Smtp-Source: APXvYqwuC6GaN6ATcqRAZjZ70igl0t9NjQ0rLMv5v8s70pHp/vIDO18KiEYxFjaudcG3+bQNsnQ6XF4FCIXpcpWZf+k=
+X-Received: by 2002:a7b:c84b:: with SMTP id c11mr14347252wml.158.1573376505832;
+ Sun, 10 Nov 2019 01:01:45 -0800 (PST)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <CACz-3rh9ZCyU1825yU8xxty5BGrwFhpbjKNoWnn0mGiv_h2Kag@mail.gmail.com>
+ <20191109191400.8999-1-jongk@linux-m68k.org> <1573330351.3650.4.camel@linux.ibm.com>
+ <6b914b12-cbc7-6fe6-7cba-3e89b2f6f19b@gmail.com>
+In-Reply-To: <6b914b12-cbc7-6fe6-7cba-3e89b2f6f19b@gmail.com>
+From:   Kars de Jong <jongk@linux-m68k.org>
+Date:   Sun, 10 Nov 2019 10:01:58 +0100
+X-Gmail-Original-Message-ID: <CACz-3rjUh8tcShX5OPi+37JvF8PqG-8AEf5uMQHjMynSaVa1gw@mail.gmail.com>
+Message-ID: <CACz-3rjUh8tcShX5OPi+37JvF8PqG-8AEf5uMQHjMynSaVa1gw@mail.gmail.com>
+Subject: Re: [PATCH] zorro_esp: increase maximum dma length to 65536 bytes
+To:     Michael Schmitz <schmitzmic@gmail.com>
+Cc:     James Bottomley <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+X-SourceIP: 209.85.128.47
+X-Authenticated-Sender: karsdejong@home.nl (via SMTP)
+X-Ziggo-spambar: /
+X-Ziggo-spamscore: 0.0
+X-Ziggo-spamreport: CMAE Analysis: v=2.3 cv=cPSeTWWN c=1 sm=1 tr=0 a=9+rZDBEiDlHhcck0kWbJtElFXBc=:19 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=MeAgGD-zjQ4A:10 a=pGLkceISAAAA:8 a=JbkMkhRZQ_9swjeIGgcA:9 a=W5WeqUbvGoA5kzlh:21 a=4r4QAPJ9YRGA_bOO:21 a=QEXdDO2ut3YA:10
+X-Ziggo-Spam-Status: No
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jason Yan <yanaijie@huawei.com>
+Hi Michael,
 
-[ Upstream commit 32c850bf587f993b2620b91e5af8a64a7813f504 ]
+Op zo 10 nov. 2019 om 03:36 schreef Michael Schmitz <schmitzmic@gmail.com>:
+> All of the old board-specific drivers used a max transfer length of
+> 0x1000000, only the fastlane driver used 0xfffc.
 
-If we went into sas_rediscover_dev() the attached_sas_addr was already insured
-not to be zero. So it's unnecessary to check if the attached_sas_addr is zero.
+Yes, I also found this when checking the old drivers.
 
-And although if the sas address is not changed, we always have to unregister
-the old device when we are going to register a new one. We cannot just leave
-the device there and bring up the new.
+> That lower limit might
+> be due to a DMA limitation on the fastlane board. We could accommodate
+> the different limit for this board by using a board-specific
+> dma_length_limit() callback...
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: chenxiang <chenxiang66@hisilicon.com>
-CC: John Garry <john.garry@huawei.com>
-CC: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Ewan Milne <emilne@redhat.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/libsas/sas_expander.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+Yes, I think that's the best idea for now. Oktagon also used to have a
+different limit but that was never ported to the new ESP core.
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index b141d1061f38e..2ee9c4ec7a541 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -2062,14 +2062,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
- 		return res;
- 	}
- 
--	/* delete the old link */
--	if (SAS_ADDR(phy->attached_sas_addr) &&
--	    SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
--		SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
--			    SAS_ADDR(dev->sas_addr), phy_id,
--			    SAS_ADDR(phy->attached_sas_addr));
--		sas_unregister_devs_sas_addr(dev, phy_id, last);
--	}
-+	/* we always have to delete the old device when we went here */
-+	SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
-+		    SAS_ADDR(dev->sas_addr), phy_id,
-+		    SAS_ADDR(phy->attached_sas_addr));
-+	sas_unregister_devs_sas_addr(dev, phy_id, last);
- 
- 	return sas_discover_new(dev, phy_id);
- }
--- 
-2.20.1
+> > case for any of the cards the zorro_esp drives, it might be better to
+> > lower the max length to 61440 (64k-4k) so the residual is a page.
+>
+> For the benefit of keeping the code simple, and avoid retesting the
+> fastlane board, that might indeed be the better solution.
 
+But it's slower... :-P
+
+Also, I may be adding another board-specific version for the Blizzard
+12x0 IV to enable 24-bit transfers, like the am53c974 driver does, in
+a later patch.
+
+Kind regards,
+
+Kars.
