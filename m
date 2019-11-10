@@ -7,46 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29C7AC43331
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C94C17440
 	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1E022184C
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A83542184C
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1573354837;
-	bh=HXKXCfTe/YWivqt2/XHI9qBijHiI9BV3Ng/MsU6Ayxs=;
+	bh=l2juZTLHselRSV+UkyHgPIziKlXPN/x9vhH96gkWGgo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=I8uxkz+HAajXia7jF4oqv6N1iRBjTSO+L7LEI3Dx9Cc4iGxdu5pHiqvvcZp46+39J
-	 PAOW2AHbImuTdT53tYCY5gGB2JcSnwr+SDo1MdLwLVkbZ0SalyieIah2i2pr2eHeJi
-	 60S6uD3IsZC/iRuBOAbu5UONijDRa6/3luvTr+v0=
+	b=nQt0oZ9xGjHOvsedoFj7zvLaHwcaBoQDDFHgHJZgKZyV51VolHo7M4fx4kJKrdeei
+	 E2zukLrXLoakBFYQcBPJAIXuMO/wW5Rmx10Pi8r/r4NvOkSmu1HAsEgP79zzehHnq6
+	 nz2PH+SM/bURocIiPMZ4O6lO2TB6Mg7BVwnNRhS0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbfKJDA2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 22:00:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47240 "EHLO mail.kernel.org"
+        id S1729256AbfKJC4q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 21:56:46 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729244AbfKJC4r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:56:47 -0500
+        id S1728943AbfKJC4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:56:45 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4FE5422509;
-        Sun, 10 Nov 2019 02:48:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 064962247A;
+        Sun, 10 Nov 2019 02:47:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573354107;
-        bh=HXKXCfTe/YWivqt2/XHI9qBijHiI9BV3Ng/MsU6Ayxs=;
+        s=default; t=1573354067;
+        bh=l2juZTLHselRSV+UkyHgPIziKlXPN/x9vhH96gkWGgo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Csx1Bj5xMGsN0SfKndzbebT8EGWLgtYSvnY6aRTo2qa/YW5Bi4OOLe38k1x9okavv
-         PC9n8nDtBkC2olPYlOr44/wHHH9QOyDBXYq0NSz7JhqiLwTS14GKanDrHKsS+Fu8pK
-         /QZcjlxpjPgj44BKcp508N5HnNmymzccz5vAChFY=
+        b=zmkq+J9uk8XBtf+yasAvBbbDeiDxRfgAGomp+KEEOMuXclEB5GyccTQ4M10GVEdft
+         I/slpvWtN/Xx9XS/xqlHrFkSLFYPocI7NSe0BdZhmm8oQtjdr8xjIT6thR8FHOPm9m
+         XjFz65H39Fjy0VQRXnIrqvA1ZJQPRJfW1vWxm61c=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+Cc:     Jason Yan <yanaijie@huawei.com>,
+        chenxiang <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Tomas Henzl <thenzl@redhat.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 097/109] scsi: NCR5380: Don't call dsprintk() following reselection interrupt
-Date:   Sat,  9 Nov 2019 21:45:29 -0500
-Message-Id: <20191110024541.31567-97-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 071/109] scsi: libsas: always unregister the old device if going to discover new
+Date:   Sat,  9 Nov 2019 21:45:03 -0500
+Message-Id: <20191110024541.31567-71-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024541.31567-1-sashal@kernel.org>
 References: <20191110024541.31567-1-sashal@kernel.org>
@@ -59,57 +65,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Jason Yan <yanaijie@huawei.com>
 
-[ Upstream commit 08267216b3f8aa5adc204bdccf8deb72c1cd7665 ]
+[ Upstream commit 32c850bf587f993b2620b91e5af8a64a7813f504 ]
 
-The X3T9.2 specification (draft) says, under "6.1.4.1 RESELECTION",
+If we went into sas_rediscover_dev() the attached_sas_addr was already insured
+not to be zero. So it's unnecessary to check if the attached_sas_addr is zero.
 
-    ... The reselected initiator shall then assert the BSY signal
-    within a selection abort time of its most recent detection of being
-    reselected; this is required for correct operation of the time-out
-    procedure.
+And although if the sas address is not changed, we always have to unregister
+the old device when we are going to register a new one. We cannot just leave
+the device there and bring up the new.
 
-The selection abort time is only 200 us which may be insufficient time for a
-printk() call. Move the diagnostics to the error paths.
-
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: chenxiang <chenxiang66@hisilicon.com>
+CC: John Garry <john.garry@huawei.com>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Ewan Milne <emilne@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
+CC: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/NCR5380.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index b13290b3e5d38..48f123601f575 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2021,8 +2021,6 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 		return;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 259ee0d3c3e61..7f2d00354a850 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2060,14 +2060,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
+ 		return res;
  	}
  
--	dsprintk(NDEBUG_RESELECTION, instance, "reselect\n");
--
- 	/*
- 	 * At this point, we have detected that our SCSI ID is on the bus,
- 	 * SEL is true and BSY was false for at least one bus settle delay
-@@ -2035,6 +2033,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_BSY);
- 	if (NCR5380_poll_politely(hostdata,
- 	                          STATUS_REG, SR_SEL, 0, 2 * HZ) < 0) {
-+		shost_printk(KERN_ERR, instance, "reselect: !SEL timeout\n");
- 		NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
- 		return;
- 	}
-@@ -2046,6 +2045,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+-	/* delete the old link */
+-	if (SAS_ADDR(phy->attached_sas_addr) &&
+-	    SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
+-		SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
+-			    SAS_ADDR(dev->sas_addr), phy_id,
+-			    SAS_ADDR(phy->attached_sas_addr));
+-		sas_unregister_devs_sas_addr(dev, phy_id, last);
+-	}
++	/* we always have to delete the old device when we went here */
++	SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
++		    SAS_ADDR(dev->sas_addr), phy_id,
++		    SAS_ADDR(phy->attached_sas_addr));
++	sas_unregister_devs_sas_addr(dev, phy_id, last);
  
- 	if (NCR5380_poll_politely(hostdata,
- 	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0) {
-+		shost_printk(KERN_ERR, instance, "reselect: REQ timeout\n");
- 		do_abort(instance);
- 		return;
- 	}
+ 	return sas_discover_new(dev, phy_id);
+ }
 -- 
 2.20.1
 
