@@ -7,52 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C94C17440
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54FA8C43331
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A83542184C
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28C6C21019
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573354837;
-	bh=l2juZTLHselRSV+UkyHgPIziKlXPN/x9vhH96gkWGgo=;
+	s=default; t=1573354853;
+	bh=D9BMxha0RO46131/kkwWGslWAShKLwmYASEHjQQUC7w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nQt0oZ9xGjHOvsedoFj7zvLaHwcaBoQDDFHgHJZgKZyV51VolHo7M4fx4kJKrdeei
-	 E2zukLrXLoakBFYQcBPJAIXuMO/wW5Rmx10Pi8r/r4NvOkSmu1HAsEgP79zzehHnq6
-	 nz2PH+SM/bURocIiPMZ4O6lO2TB6Mg7BVwnNRhS0=
+	b=zoKZCSCjecf7aLnScT/a6c8JwxxpUOoMB6ctUlcagzCEg62xt0IErvxuCYUWyEPFM
+	 71NMPl35xGYibpCDxKKcs3OI0dMaKZ2Oc0zHcxWtMQz85ZwdioqsDc0MRv/1Rjg43M
+	 oHgmY5Pjoij7NiNng/EsusjB+5E9kNMUgATuoKN4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729256AbfKJC4q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 21:56:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47172 "EHLO mail.kernel.org"
+        id S1729153AbfKJDAn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 22:00:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47212 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728943AbfKJC4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:56:45 -0500
+        id S1729188AbfKJC4q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:56:46 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 064962247A;
-        Sun, 10 Nov 2019 02:47:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8ABBE22501;
+        Sun, 10 Nov 2019 02:48:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573354067;
-        bh=l2juZTLHselRSV+UkyHgPIziKlXPN/x9vhH96gkWGgo=;
+        s=default; t=1573354109;
+        bh=D9BMxha0RO46131/kkwWGslWAShKLwmYASEHjQQUC7w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zmkq+J9uk8XBtf+yasAvBbbDeiDxRfgAGomp+KEEOMuXclEB5GyccTQ4M10GVEdft
-         I/slpvWtN/Xx9XS/xqlHrFkSLFYPocI7NSe0BdZhmm8oQtjdr8xjIT6thR8FHOPm9m
-         XjFz65H39Fjy0VQRXnIrqvA1ZJQPRJfW1vWxm61c=
+        b=ogBsKBSaKivmTLLUbl7g9cGoxhLnGcSyn38j/nbwICrTkcmVgMi8zxBN8gs6rvKi6
+         m16gZlguEZqhZnY6day0JUFIQl0dOb97Qa0CrMjwf24UstomyUxEFiJgodvJBC43xI
+         c+z9CGmtfp8ybBVczr/dlgLZCWKEml5lFbTF2HNY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jason Yan <yanaijie@huawei.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Tomas Henzl <thenzl@redhat.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 071/109] scsi: libsas: always unregister the old device if going to discover new
-Date:   Sat,  9 Nov 2019 21:45:03 -0500
-Message-Id: <20191110024541.31567-71-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 099/109] scsi: NCR5380: Check for bus reset
+Date:   Sat,  9 Nov 2019 21:45:31 -0500
+Message-Id: <20191110024541.31567-99-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024541.31567-1-sashal@kernel.org>
 References: <20191110024541.31567-1-sashal@kernel.org>
@@ -65,58 +59,141 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jason Yan <yanaijie@huawei.com>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-[ Upstream commit 32c850bf587f993b2620b91e5af8a64a7813f504 ]
+[ Upstream commit 6b0e87a6aafe12d75c2bea6fc8e49e88b98b3083 ]
 
-If we went into sas_rediscover_dev() the attached_sas_addr was already insured
-not to be zero. So it's unnecessary to check if the attached_sas_addr is zero.
+The SR_RST bit isn't latched. Hence, detecting a bus reset isn't reliable.
+When it is detected, the right thing to do is to drop all connected and
+disconnected commands. The code for that is already present so refactor it and
+call it when SR_RST is set.
 
-And although if the sas address is not changed, we always have to unregister
-the old device when we are going to register a new one. We cannot just leave
-the device there and bring up the new.
-
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-CC: chenxiang <chenxiang66@hisilicon.com>
-CC: John Garry <john.garry@huawei.com>
-CC: Johannes Thumshirn <jthumshirn@suse.de>
-CC: Ewan Milne <emilne@redhat.com>
-CC: Christoph Hellwig <hch@lst.de>
-CC: Tomas Henzl <thenzl@redhat.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libsas/sas_expander.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ drivers/scsi/NCR5380.c | 74 +++++++++++++++++++++++++-----------------
+ 1 file changed, 45 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 259ee0d3c3e61..7f2d00354a850 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -2060,14 +2060,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
- 		return res;
- 	}
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index a85c5155fcf40..21377ac71168c 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -131,6 +131,7 @@
  
--	/* delete the old link */
--	if (SAS_ADDR(phy->attached_sas_addr) &&
--	    SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
--		SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
--			    SAS_ADDR(dev->sas_addr), phy_id,
--			    SAS_ADDR(phy->attached_sas_addr));
--		sas_unregister_devs_sas_addr(dev, phy_id, last);
--	}
-+	/* we always have to delete the old device when we went here */
-+	SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
-+		    SAS_ADDR(dev->sas_addr), phy_id,
-+		    SAS_ADDR(phy->attached_sas_addr));
-+	sas_unregister_devs_sas_addr(dev, phy_id, last);
+ static int do_abort(struct Scsi_Host *);
+ static void do_reset(struct Scsi_Host *);
++static void bus_reset_cleanup(struct Scsi_Host *);
  
- 	return sas_discover_new(dev, phy_id);
+ /**
+  * initialize_SCp - init the scsi pointer field
+@@ -885,7 +886,14 @@ static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
+ 			/* Probably Bus Reset */
+ 			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+ 
+-			dsprintk(NDEBUG_INTR, instance, "unknown interrupt\n");
++			if (sr & SR_RST) {
++				/* Certainly Bus Reset */
++				shost_printk(KERN_WARNING, instance,
++					     "bus reset interrupt\n");
++				bus_reset_cleanup(instance);
++			} else {
++				dsprintk(NDEBUG_INTR, instance, "unknown interrupt\n");
++			}
+ #ifdef SUN3_SCSI_VME
+ 			dregs->csr |= CSR_DMA_ENABLE;
+ #endif
+@@ -2303,31 +2311,12 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
  }
+ 
+ 
+-/**
+- * NCR5380_host_reset - reset the SCSI host
+- * @cmd: SCSI command undergoing EH
+- *
+- * Returns SUCCESS
+- */
+-
+-static int NCR5380_host_reset(struct scsi_cmnd *cmd)
++static void bus_reset_cleanup(struct Scsi_Host *instance)
+ {
+-	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	int i;
+-	unsigned long flags;
+ 	struct NCR5380_cmd *ncmd;
+ 
+-	spin_lock_irqsave(&hostdata->lock, flags);
+-
+-#if (NDEBUG & NDEBUG_ANY)
+-	shost_printk(KERN_INFO, instance, __func__);
+-#endif
+-	NCR5380_dprint(NDEBUG_ANY, instance);
+-	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+-
+-	do_reset(instance);
+-
+ 	/* reset NCR registers */
+ 	NCR5380_write(MODE_REG, MR_BASE);
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+@@ -2339,14 +2328,6 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
+ 	 * commands!
+ 	 */
+ 
+-	list_for_each_entry(ncmd, &hostdata->unissued, list) {
+-		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
+-
+-		cmd->result = DID_RESET << 16;
+-		cmd->scsi_done(cmd);
+-	}
+-	INIT_LIST_HEAD(&hostdata->unissued);
+-
+ 	if (hostdata->selecting) {
+ 		hostdata->selecting->result = DID_RESET << 16;
+ 		complete_cmd(instance, hostdata->selecting);
+@@ -2380,6 +2361,41 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
+ 
+ 	queue_work(hostdata->work_q, &hostdata->main_task);
+ 	maybe_release_dma_irq(instance);
++}
++
++/**
++ * NCR5380_host_reset - reset the SCSI host
++ * @cmd: SCSI command undergoing EH
++ *
++ * Returns SUCCESS
++ */
++
++static int NCR5380_host_reset(struct scsi_cmnd *cmd)
++{
++	struct Scsi_Host *instance = cmd->device->host;
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	unsigned long flags;
++	struct NCR5380_cmd *ncmd;
++
++	spin_lock_irqsave(&hostdata->lock, flags);
++
++#if (NDEBUG & NDEBUG_ANY)
++	shost_printk(KERN_INFO, instance, __func__);
++#endif
++	NCR5380_dprint(NDEBUG_ANY, instance);
++	NCR5380_dprint_phase(NDEBUG_ANY, instance);
++
++	list_for_each_entry(ncmd, &hostdata->unissued, list) {
++		struct scsi_cmnd *scmd = NCR5380_to_scmd(ncmd);
++
++		scmd->result = DID_RESET << 16;
++		scmd->scsi_done(scmd);
++	}
++	INIT_LIST_HEAD(&hostdata->unissued);
++
++	do_reset(instance);
++	bus_reset_cleanup(instance);
++
+ 	spin_unlock_irqrestore(&hostdata->lock, flags);
+ 
+ 	return SUCCESS;
 -- 
 2.20.1
 
