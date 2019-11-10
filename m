@@ -4,49 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0A50C43331
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734DAC43331
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:56:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 684A821019
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4860321019
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:56:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573354534;
-	bh=ht9seQUWdx8eONxgqfbYtB6UPmAj53mK765ewWByYfQ=;
+	s=default; t=1573354569;
+	bh=RN5s4WwjmeKO7kh5V7ierCiAzxj8M84zs8kaJC64wO4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VbmHpAK9ef7DhaI22iBK1EFOTqKXGLSBfEgEWP9eehtG1T/hNZY8dDEj5qiQNSSBS
-	 nrqpUJdWUC0Itz+1Fim+jZlI7tQadm6cbg/6DsMBKbE+VkgLv30kox2qMgWkfucaGf
-	 x8G1xJ1w2ug6zPBeqjq16qxo5e5nu76/twduMcKU=
+	b=UfXP70YJ9O9fZ3j8cJrGdtLlaPJAN4izzh9cAoh0o56OfoPrFYBS2aeRij7btK2lt
+	 7oyOytiYr8wwsYb4j8N6uob3Ui+cgAwu34ki/TiapD1XjDbnkmNm2RIDjuJ3faAbsd
+	 1Xor3L0FVDYq1SL39ys7EsYC/BaIerQKbp4KJidE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728181AbfKJCz3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 21:55:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33450 "EHLO mail.kernel.org"
+        id S1728745AbfKJC4H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 21:56:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60834 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729669AbfKJCuT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:50:19 -0500
+        id S1729603AbfKJCuD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:50:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5275322595;
-        Sun, 10 Nov 2019 02:50:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 56B9922582;
+        Sun, 10 Nov 2019 02:50:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573354218;
-        bh=ht9seQUWdx8eONxgqfbYtB6UPmAj53mK765ewWByYfQ=;
+        s=default; t=1573354202;
+        bh=RN5s4WwjmeKO7kh5V7ierCiAzxj8M84zs8kaJC64wO4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rsk06Xg8/wJK4dqjz5dSJ019/1E3iFRRuoIRCtTJcuN5YmUofabTFhaLVq5qouyc4
-         5N9t0XZHsWuoyWe41seO0BkSWFPMpoIeJ5UZDQwsX7CV01zVxoztgsqJj2rvvJuKFC
-         NlRD3CvFR6oShU+GOAwxKiDkzTBT80+oCOeu3arE=
+        b=hvENkaTDO+J7FMOonmJeQ0qekLv9pj3VCLKyCebQCYAyvwUDsLz7SfLwcqNW+29NW
+         rsjPJv29O1VXUEq/b7vRg5TmpLIvfeMzJxsVSSt2aSpQxcNtrj7qxWGeepYqwoVYc6
+         jv7oK82a2bDZ8d4H7IVPqBy4dkAeSEnMFlAWFRGE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+Cc:     Jason Yan <yanaijie@huawei.com>,
+        chenxiang <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Ewan Milne <emilne@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Tomas Henzl <thenzl@redhat.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hannes Reinecke <hare@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 56/66] scsi: NCR5380: Use DRIVER_SENSE to indicate valid sense data
-Date:   Sat,  9 Nov 2019 21:48:35 -0500
-Message-Id: <20191110024846.32598-56-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 45/66] scsi: libsas: always unregister the old device if going to discover new
+Date:   Sat,  9 Nov 2019 21:48:24 -0500
+Message-Id: <20191110024846.32598-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024846.32598-1-sashal@kernel.org>
 References: <20191110024846.32598-1-sashal@kernel.org>
@@ -59,58 +65,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Jason Yan <yanaijie@huawei.com>
 
-[ Upstream commit 070356513963be6196142acff56acc8359069fa1 ]
+[ Upstream commit 32c850bf587f993b2620b91e5af8a64a7813f504 ]
 
-When sense data is valid, call set_driver_byte(cmd, DRIVER_SENSE).  Otherwise
-some callers of scsi_execute() will ignore sense data.  Don't set DID_ERROR or
-DID_RESET just because sense data is missing.
+If we went into sas_rediscover_dev() the attached_sas_addr was already insured
+not to be zero. So it's unnecessary to check if the attached_sas_addr is zero.
 
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+And although if the sas address is not changed, we always have to unregister
+the old device when we are going to register a new one. We cannot just leave
+the device there and bring up the new.
+
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+CC: chenxiang <chenxiang66@hisilicon.com>
+CC: John Garry <john.garry@huawei.com>
+CC: Johannes Thumshirn <jthumshirn@suse.de>
+CC: Ewan Milne <emilne@redhat.com>
+CC: Christoph Hellwig <hch@lst.de>
+CC: Tomas Henzl <thenzl@redhat.com>
+CC: Dan Williams <dan.j.williams@intel.com>
+CC: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/NCR5380.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index ba7b3aef3ef0b..35419ba32c467 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -617,11 +617,12 @@ static void complete_cmd(struct Scsi_Host *instance,
- 
- 	if (hostdata->sensing == cmd) {
- 		/* Autosense processing ends here */
--		if ((cmd->result & 0xff) != SAM_STAT_GOOD) {
-+		if (status_byte(cmd->result) != GOOD) {
- 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
--			set_host_byte(cmd, DID_ERROR);
--		} else
-+		} else {
- 			scsi_eh_restore_cmnd(cmd, &hostdata->ses);
-+			set_driver_byte(cmd, DRIVER_SENSE);
-+		}
- 		hostdata->sensing = NULL;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 400eee9d77832..d44f18f773c0f 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -2049,14 +2049,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id, bool last)
+ 		return res;
  	}
  
-@@ -2356,7 +2357,6 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
- 	if (list_del_cmd(&hostdata->autosense, cmd)) {
- 		dsprintk(NDEBUG_ABORT, instance,
- 		         "abort: removed %p from sense queue\n", cmd);
--		set_host_byte(cmd, DID_ERROR);
- 		complete_cmd(instance, cmd);
- 	}
+-	/* delete the old link */
+-	if (SAS_ADDR(phy->attached_sas_addr) &&
+-	    SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
+-		SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
+-			    SAS_ADDR(dev->sas_addr), phy_id,
+-			    SAS_ADDR(phy->attached_sas_addr));
+-		sas_unregister_devs_sas_addr(dev, phy_id, last);
+-	}
++	/* we always have to delete the old device when we went here */
++	SAS_DPRINTK("ex %016llx phy 0x%x replace %016llx\n",
++		    SAS_ADDR(dev->sas_addr), phy_id,
++		    SAS_ADDR(phy->attached_sas_addr));
++	sas_unregister_devs_sas_addr(dev, phy_id, last);
  
-@@ -2435,7 +2435,6 @@ static int NCR5380_bus_reset(struct scsi_cmnd *cmd)
- 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
- 
--		set_host_byte(cmd, DID_RESET);
- 		cmd->scsi_done(cmd);
- 	}
- 	INIT_LIST_HEAD(&hostdata->autosense);
+ 	return sas_discover_new(dev, phy_id);
+ }
 -- 
 2.20.1
 
