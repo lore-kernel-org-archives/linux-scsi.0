@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC276C17440
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:59:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A0CC17443
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97B97214E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 02:59:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 746F02184C
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 Nov 2019 03:00:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573354760;
-	bh=BBDr5XZmvudqT38/n9AWNa+7cdhu3U138aHUBryPFtE=;
+	s=default; t=1573354826;
+	bh=ElvsYt0MM69cxFu8JeKl5tePwzNqdMnAb3PJ5Cr7Nt8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zRIde0HfWjJEyopYuRPa+pkdLEpjKt+F2W5LyUu7Eer/srmEQR+myb2Mju3Jhml7P
-	 iY6GBS49ny4hhlcMFoN1He6JhbhlQpqnmSXBBPl6D19U08LvTChOeZEiqNNVkrNaQj
-	 K9DpHgep/bblID2k/kRAtw+IeWa/gdnZJX80PofY=
+	b=n5dQeC9rHpbB6JbLO1r9EBHYkobxpb7hFKSxvIVlH5Q7uBVwx9NjqclSvyGyqo9Y6
+	 ZNKboGREZuv2rROLOgqP6RuHdzVZs6MmYiSJ7IGDxj1KOHriG/45TqR5KHJtFQPnpF
+	 /YDRfZJwGL7PZHj+iVCZGpsFC2LERgphPwArgcUY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729574AbfKJC6w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Nov 2019 21:58:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47200 "EHLO mail.kernel.org"
+        id S1728590AbfKJDAA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Nov 2019 22:00:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47264 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729372AbfKJC4r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729270AbfKJC4r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sat, 9 Nov 2019 21:56:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B22122516;
-        Sun, 10 Nov 2019 02:48:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 54C32224D7;
+        Sun, 10 Nov 2019 02:48:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573354108;
-        bh=BBDr5XZmvudqT38/n9AWNa+7cdhu3U138aHUBryPFtE=;
+        s=default; t=1573354100;
+        bh=ElvsYt0MM69cxFu8JeKl5tePwzNqdMnAb3PJ5Cr7Nt8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zEb8sIdv3CE4tzwj0FFfj/kdlatc9dJAd9eSWBwbkH7kX6zHB/PbhpRv9QP1KDOyC
-         gqJCWKvl6djh32giogcG6vyV+GQImdW2dHqXklg1p5uhT5Rv1dj9YqANmN7ZqL8Vza
-         onJnyGejxO+YAD4SJICJih9ZL32y79YZi7Cuednk=
+        b=Ve/OVUuNaM+TTVqXHKndq2ufCuj2/Oc1mlzPlbyf9CYqsDmrL+tDUWcfqDBWlw3s2
+         v00mjUOSGadpGuZjrQ20bKo2Mu5no2hrT8AZkzuf2YOL+HfBjRrxjbqGHkksdTAKli
+         dxND5e0U8XeQFxcV6RlkWTxJ7JyUrHnHk42aOztA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+Cc:     Hannes Reinecke <hare@suse.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Ondrey Zary <linux@rainbow-software.org>,
+        Finn Thain <fthain@telegraphics.com.au>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 098/109] scsi: NCR5380: Handle BUS FREE during reselection
-Date:   Sat,  9 Nov 2019 21:45:30 -0500
-Message-Id: <20191110024541.31567-98-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 091/109] scsi: NCR5380: Clear all unissued commands on host reset
+Date:   Sat,  9 Nov 2019 21:45:23 -0500
+Message-Id: <20191110024541.31567-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024541.31567-1-sashal@kernel.org>
 References: <20191110024541.31567-1-sashal@kernel.org>
@@ -59,38 +61,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Hannes Reinecke <hare@suse.com>
 
-[ Upstream commit ca694afad707cb3ae2fdef3b28454444d9ac726e ]
+[ Upstream commit 1aeeeed7f03c576f096eede7b0384f99a98f588c ]
 
-The X3T9.2 specification (draft) says, under "6.1.4.2 RESELECTION time-out
-procedure", that a target may assert RST or go to BUS FREE phase if the
-initiator does not respond within 200 us. Something like this has been
-observed with AztecMonster II target. When it happens, all we can do is wait
-for the target to try again.
+When doing a host reset we should be clearing all outstanding commands, not
+just the command triggering the reset.
 
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+[mkp: adjusted Hannes' SoB address]
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Ondrey Zary <linux@rainbow-software.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/NCR5380.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/NCR5380.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 48f123601f575..a85c5155fcf40 100644
+index 8caa51797511e..9131d30b2da75 100644
 --- a/drivers/scsi/NCR5380.c
 +++ b/drivers/scsi/NCR5380.c
-@@ -2045,6 +2045,9 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+@@ -2309,7 +2309,7 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
+ 	spin_lock_irqsave(&hostdata->lock, flags);
  
- 	if (NCR5380_poll_politely(hostdata,
- 	                          STATUS_REG, SR_REQ, SR_REQ, 2 * HZ) < 0) {
-+		if ((NCR5380_read(STATUS_REG) & (SR_BSY | SR_SEL)) == 0)
-+			/* BUS FREE phase */
-+			return;
- 		shost_printk(KERN_ERR, instance, "reselect: REQ timeout\n");
- 		do_abort(instance);
- 		return;
+ #if (NDEBUG & NDEBUG_ANY)
+-	scmd_printk(KERN_INFO, cmd, __func__);
++	shost_printk(KERN_INFO, instance, __func__);
+ #endif
+ 	NCR5380_dprint(NDEBUG_ANY, instance);
+ 	NCR5380_dprint_phase(NDEBUG_ANY, instance);
+@@ -2327,10 +2327,13 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
+ 	 * commands!
+ 	 */
+ 
+-	if (list_del_cmd(&hostdata->unissued, cmd)) {
++	list_for_each_entry(ncmd, &hostdata->unissued, list) {
++		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
++
+ 		cmd->result = DID_RESET << 16;
+ 		cmd->scsi_done(cmd);
+ 	}
++	INIT_LIST_HEAD(&hostdata->unissued);
+ 
+ 	if (hostdata->selecting) {
+ 		hostdata->selecting->result = DID_RESET << 16;
 -- 
 2.20.1
 
