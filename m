@@ -5,65 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01FDAC17447
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 23:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03487C17441
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 23:04:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C90B7214DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 23:04:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9B33214DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 23:04:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UQCRO6Ta"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DlkeCn3l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727229AbfKKXER (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 18:04:17 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:50306 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbfKKXEQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 18:04:16 -0500
-Received: by mail-wm1-f65.google.com with SMTP id l17so1087567wmh.0;
-        Mon, 11 Nov 2019 15:04:15 -0800 (PST)
+        id S1727211AbfKKXES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 18:04:18 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:40151 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727224AbfKKXES (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 18:04:18 -0500
+Received: by mail-wm1-f68.google.com with SMTP id f3so975117wmc.5
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2019 15:04:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=rsKOVlf4KCoyJA586IbpR/JcJ5NIZQ3tkRW+Ckd8PxQ=;
-        b=UQCRO6Ta7eDFZBBdfIOny/gN7XWKny2YV7kKfCpPKJlCKxnzKl2F+R6ZmJhmz3E4tA
-         l0hQRkpHoAYWPbws/BoiQl4A+tQcF22FgYkEZjq7RdDhsA2DEZ5S35Fiwup7b01Q2g4N
-         nhqsFhd/6zc3y5Bo8zUSQMcHKWUxSqeEzzA7ZJajvCit5igvB6tr/MFvMIYzytXw3yBK
-         mQXn6cqkELTFOf8XdJFHCkl5FWYC9OU71dMB+W3SIP0dYFbwYPDvNyH1hwhcPa7j2At2
-         HuV2XGpcP/JM3WDh+Plpyj8V2w+/uebyp9T8IHMsjrGGxwCOSCG+I15Lb+u3Gv5Ahhro
-         VtJQ==
+        bh=kjCDmhnPLmdm9EQgcBlsh6iXBCXo8RHk+j0Ae0eJir0=;
+        b=DlkeCn3lxbvlRDDPbzUwwnDM99JrgjSRWSahqUcUh5+CLFcJoo+1RCJXjWaNfB6ePr
+         mRmrbyT4A1OskVeP1MOFXDBkL0qHRE2TfVSgnjIJerrMLslA/X51Vtgz1rofcOZefU+a
+         yEIIVrB4YsnvCQ7Nq79kchPTM25OObRt5UTJY128sBt15wrs4/LMkEzjPgkfGNTbiSWe
+         dWv0PMiMa+nAoRNTwONt9hgOIKdvIZqmnXzd7Ze1TkPM3AYX94A+nDSn9LNiTseoa66F
+         CiBIVgoiSq8G4knGrJrTqaP0vzwuykdbx4R49K7RGec7Lub6Yy+cH4D5D14YZfE9wPep
+         3Flg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=rsKOVlf4KCoyJA586IbpR/JcJ5NIZQ3tkRW+Ckd8PxQ=;
-        b=LDt2/nX53QM4pMsXPq1nX/ET4L2DE9PqloHQeKOM9hHMx+ww6CR97aFn65krd1WL0x
-         7nuPoHfWqK/kO/sexA3U2KH+FkvsuEhaF34LJfVk4ZDlX2HWX4jkD9F9nzjODDoaY6fq
-         P4rj/RZbf+KfWvWbwD1b6L2xJT2ZGn2VcQKl3vivGrFMN8GFa8AgbfvbZ0H9QY2hhlXS
-         VQd6arfU2Velh1/fiSbo4Q13g5eGmyRmAheJwEYMiUNCDphy6y9YHzQSgRsbLQ4hodGi
-         wPNxA8wiZKPW/K2qCzC0FrQqvpl6wKxCtv7JHtyFss0ZPwXhZluuvjQXu4/AD+txcP20
-         Iedg==
-X-Gm-Message-State: APjAAAWiUycv2ExF8xKcpnWQbxG2qQPojsuN/V6Q5A0Gl5PenoFD6AMt
-        v6/UHxMxziSfQRvW9PrryY5QrE5z
-X-Google-Smtp-Source: APXvYqw0txKOwsDfeNGhu8WRY3CnnzSiDA5u/VUKrxjINs+4Xr0FHFQ1M/ZZJ8AWw0o+HieKFjD2gg==
-X-Received: by 2002:a1c:dd45:: with SMTP id u66mr1135791wmg.12.1573513454777;
-        Mon, 11 Nov 2019 15:04:14 -0800 (PST)
+        bh=kjCDmhnPLmdm9EQgcBlsh6iXBCXo8RHk+j0Ae0eJir0=;
+        b=kq4LeaCfUI7VQV2qdvy8oSF2Dn86DNiyvWjbbTSKdHijpZlZ4O3ZPzBbL7sFc+b6s2
+         Xoo0mDCx7k6JRr/asHF0hFAs93o1rMbAdKylpdSiWdsWaEQfgLdadwxnHwpKZq36KTn9
+         tbqEpI7j4Jy2BzJWlDmDq8OHnwWIw+SG75WTPBK5BdgCbjBF7OoCLjTVMCAfy/rpoyd2
+         bie+2FOgBsJPprxR5DsHvJvBB+YeBe6oBL3ydUjbooeOPtL/4NCz4OYk/fBK1rjr64ha
+         7/g5K8Genjp+RiQOS7kKSnnA7s0FCOY17paqlXt62g1QkeZw7u5yyzAYceV+al9AQ2kU
+         PMCQ==
+X-Gm-Message-State: APjAAAXK2PveBCpK9T/qSz6fex64vMqkb577mZA6RX7OrmCFxftKHmbl
+        HXOOjb3tjE0RgBZBGUmqTACYaQg0
+X-Google-Smtp-Source: APXvYqyZTBKj0cjtoFC//oxHTLLiL+23LtkjHXlZjb/MdhONkmNa+ijB6d4SpXHBHstCMuM205V9rg==
+X-Received: by 2002:a1c:790b:: with SMTP id l11mr1185246wme.127.1573513456243;
+        Mon, 11 Nov 2019 15:04:16 -0800 (PST)
 Received: from pallmd1.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id m25sm655146wmi.46.2019.11.11.15.04.13
+        by smtp.gmail.com with ESMTPSA id m25sm655146wmi.46.2019.11.11.15.04.14
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Mon, 11 Nov 2019 15:04:14 -0800 (PST)
+        Mon, 11 Nov 2019 15:04:15 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        James Bottomley <James.Bottomley@SteelEye.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        linux-next@vger.kernel.org
-Subject: [PATCH 2/6] lpfc: fix: Coverity: lpfc_cmpl_els_rsp(): Null pointer dereferences
-Date:   Mon, 11 Nov 2019 15:03:57 -0800
-Message-Id: <20191111230401.12958-3-jsmart2021@gmail.com>
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 3/6] lpfc: fix inlining of lpfc_sli4_cleanup_poll_list()
+Date:   Mon, 11 Nov 2019 15:03:58 -0800
+Message-Id: <20191111230401.12958-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191111230401.12958-1-jsmart2021@gmail.com>
 References: <20191111230401.12958-1-jsmart2021@gmail.com>
@@ -72,56 +69,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Coverity reported the following:
+Compilation can fail due to having an inline function
+reference where the function body is not present.
 
-*** CID 101747:  Null pointer dereferences  (FORWARD_NULL)
-/drivers/scsi/lpfc/lpfc_els.c: 4439 in lpfc_cmpl_els_rsp()
-4433     			kfree(mp);
-4434     		}
-4435     		mempool_free(mbox, phba->mbox_mem_pool);
-4436     	}
-4437     out:
-4438     	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
-vvv     CID 101747:  Null pointer dereferences  (FORWARD_NULL)
-vvv     Dereferencing null pointer "shost".
-4439     		spin_lock_irq(shost->host_lock);
-4440     		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
-4441     		spin_unlock_irq(shost->host_lock);
-4442
-4443     		/* If the node is not being used by another discovery thread,
-4444     		 * and we are sending a reject, we are done with it.
+Fix by removing the inline tag.
 
-Fix by adding a check for non-null shost in line 4438.
-The scenario when shost is set to null is when ndlp is null.
-As such, the ndlp check present was sufficient. But better safe
-than sorry so add the shost check.
-
-Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
-Addresses-Coverity-ID: 101747 ("Null pointer dereferences")
-Fixes: 2e0fef85e098 ("[SCSI] lpfc: NPIV: split ports")
+Fixes: 93a4d6f40198 ("scsi: lpfc: Add registration for CPU Offline/Online events")
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
-CC: James Bottomley <James.Bottomley@SteelEye.com>
-CC: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-CC: linux-next@vger.kernel.org
 ---
- drivers/scsi/lpfc/lpfc_els.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+patch is in the 12.6.0.1 set which is in 5.5/scsi-queue
+---
+ drivers/scsi/lpfc/lpfc_crtn.h | 2 +-
+ drivers/scsi/lpfc/lpfc_sli.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 9a570c15b2a1..42a2bf38eaea 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4445,7 +4445,7 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		mempool_free(mbox, phba->mbox_mem_pool);
- 	}
- out:
--	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
-+	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
- 		spin_lock_irq(shost->host_lock);
- 		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
- 		spin_unlock_irq(shost->host_lock);
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index d91aa5330306..ee353c84a097 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -215,7 +215,7 @@ irqreturn_t lpfc_sli_fp_intr_handler(int, void *);
+ irqreturn_t lpfc_sli4_intr_handler(int, void *);
+ irqreturn_t lpfc_sli4_hba_intr_handler(int, void *);
+ 
+-inline void lpfc_sli4_cleanup_poll_list(struct lpfc_hba *phba);
++void lpfc_sli4_cleanup_poll_list(struct lpfc_hba *phba);
+ int lpfc_sli4_poll_eq(struct lpfc_queue *q, uint8_t path);
+ void lpfc_sli4_poll_hbtimer(struct timer_list *t);
+ void lpfc_sli4_start_polling(struct lpfc_queue *q);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index fad890cea21a..6d82ad9380db 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -14466,7 +14466,7 @@ static inline void lpfc_sli4_remove_from_poll_list(struct lpfc_queue *eq)
+ 		del_timer_sync(&phba->cpuhp_poll_timer);
+ }
+ 
+-inline void lpfc_sli4_cleanup_poll_list(struct lpfc_hba *phba)
++void lpfc_sli4_cleanup_poll_list(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_queue *eq, *next;
+ 
 -- 
 2.13.7
 
