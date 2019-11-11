@@ -2,48 +2,62 @@ Return-Path: <SRS0=nyLG=ZD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7EA0C43331
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 11:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80AC1C43331
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 11:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADF10214DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 11:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B2EB21783
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 11:13:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P9noWHIP"
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="kQInzmaK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726857AbfKKLGT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 06:06:19 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46828 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726810AbfKKLGT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 06:06:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573470378;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SJ9a4hS5SZw0uqJ8hrO8u9Z/doxxcwiFg6DzJii+W74=;
-        b=P9noWHIP5xRe6jcURi4YfumRBfaI7CCO4XUOb2wr8IU/Xj2vKhL/ZAqmyCDbWoWwNtNsct
-        415sEelgjsZKs2ZjKEvPhaF7LQPIcfHcGYLhQzloraGeFSy3E/lyHd6MEFjSpUDW7DJ3OJ
-        AXr4tDhQsejEK1mnjb5N7IZaf9SZjqo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-233-qNDW6cQkMj-lQ7uofsDItg-1; Mon, 11 Nov 2019 06:06:15 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CD01E1005509;
-        Mon, 11 Nov 2019 11:06:13 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-29.pek2.redhat.com [10.72.8.29])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id F0C3F608F8;
-        Mon, 11 Nov 2019 11:06:03 +0000 (UTC)
-Date:   Mon, 11 Nov 2019 19:05:58 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
+        id S1726871AbfKKLNJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 06:13:09 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:36795 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726832AbfKKLNJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 06:13:09 -0500
+Received: by mail-wr1-f67.google.com with SMTP id r10so14174725wrx.3
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2019 03:13:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=huepVau9eYwtL+cGD72B7PJ62OYK8YHlVG/n0gyRX58=;
+        b=kQInzmaKutNdAOJ/yrXdo642ND2z7EloykAYSkti3D4LAnjAltx+u5SceqN4I8yY8Z
+         jGhRGn8kJJjVIMq79PqkJYbh3ap2k6Zd2Ur96I0kqpplJChBY8b4377VdIquRxkb9vQ8
+         Y0yTEVqNAN5kPhbZBIYghehhBRKLqEu0qvrSMs8rBlqYRz/80srP9L+kmpGkg732Vn7F
+         YsISrjZgHuJR38wd8+QEq3iKsBDR04HZEBNAvg0QB4ukyuSbSk6DsK3OYO+OHazWh1z+
+         2WQkIEXY1eb2zBzS8fWaJ0bqykiNz+nfA56MqBZi3ormWtr684df5jmAOnFOi8fqmjCE
+         KWfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=huepVau9eYwtL+cGD72B7PJ62OYK8YHlVG/n0gyRX58=;
+        b=DvP9RgEvUNaWA734ivmIgNrYi9f90TCr6Az4zsDTLgg2VUy5Tyi94DvvYR2fcY3P9N
+         JgI2a4Uro7KHPxzUCxOIVtnm9HBKBAEs/K/C6syqW/CORCxji/+fgiWbdFoMUhWBiaU2
+         OgwYdCxCl04tKirBkwF1tx0cilUxmlAUoMlogRDYvrgcEKZaMoGspsDpSgVaHbK8Q22S
+         40ODe+YuBytaVnN0tCToS+n2voDBfp6KAu484TfoBnMtMQVRqWZZ63I8pnt+pzrr3h16
+         4q8CTW3Qc5HkKJJByJuOmJcAOKKeGgQ0Ef8q1EuC/0Xsrcjv2VCLZUJ0gEmnjVhsSVpq
+         1mtA==
+X-Gm-Message-State: APjAAAUtUhrxEgSU5sBpJdkG5obm0GZUmvagdjGatSAHH3eaQ6m2DmpZ
+        HZ5fSEGXpPZ4L94XHDr+GHz5WQ==
+X-Google-Smtp-Source: APXvYqygK+ckQKVRF2PLnKNkKlloC6R8mN1s4qRfqcce/aZc014V+/SiN6BmIrzM0xXUP0+liR+VmQ==
+X-Received: by 2002:a5d:6350:: with SMTP id b16mr5315860wrw.357.1573470785783;
+        Mon, 11 Nov 2019 03:13:05 -0800 (PST)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id h205sm18230112wmf.35.2019.11.11.03.13.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Nov 2019 03:13:05 -0800 (PST)
+Message-ID: <6732099548daec7b69afddb04887c5dba4af851d.camel@unipv.it>
+Subject: Re: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     Ming Lei <ming.lei@redhat.com>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Alan Stern <stern@rowland.harvard.edu>,
         Jens Axboe <axboe@kernel.dk>,
@@ -57,103 +71,115 @@ Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Greg KH <gregkh@linuxfoundation.org>,
         Hans Holmberg <Hans.Holmberg@wdc.com>,
         Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191111110558.GA22228@ming.t460p>
+Date:   Mon, 11 Nov 2019 12:13:04 +0100
+In-Reply-To: <20191111110558.GA22228@ming.t460p>
 References: <Pine.LNX.4.44L0.1911061044070.1694-100000@iolanthe.rowland.org>
- <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
- <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it>
- <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
- <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
- <20191109222828.GA30568@ming.t460p>
- <928d17b00c66caeef30410cf5a472056ae3722d4.camel@unipv.it>
+         <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
+         <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it>
+         <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
+         <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
+         <20191109222828.GA30568@ming.t460p>
+         <928d17b00c66caeef30410cf5a472056ae3722d4.camel@unipv.it>
+         <20191111110558.GA22228@ming.t460p>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-In-Reply-To: <928d17b00c66caeef30410cf5a472056ae3722d4.camel@unipv.it>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: qNDW6cQkMj-lQ7uofsDItg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 11:50:49AM +0100, Andrea Vai wrote:
-> Il giorno dom, 10/11/2019 alle 06.28 +0800, Ming Lei ha scritto:
-> > On Thu, Nov 07, 2019 at 07:59:44PM +0100, Andrea Vai wrote:
-> > > [Sorry for the duplicate message, it didn't reach the lists due to
-> > > html formatting]
-> > > Il giorno gio 7 nov 2019 alle ore 08:54 Damien Le Moal
-> > > <Damien.LeMoal@wdc.com> ha scritto:
-> > > >
-> > > > On 2019/11/07 16:04, Andrea Vai wrote:
-> > > > > Il giorno mer, 06/11/2019 alle 22.13 +0000, Damien Le Moal ha
-> > scritto:
-> > > > >>
-> > > > >>
-> > > > >> Please simply try your write tests after doing this:
-> > > > >>
-> > > > >> echo mq-deadline > /sys/block/<name of your USB
-> > > > >> disk>/queue/scheduler
-> > > > >>
-> > > > >> And confirm that mq-deadline is selected with:
-> > > > >>
-> > > > >> cat /sys/block/<name of your USB disk>/queue/scheduler
-> > > > >> [mq-deadline] kyber bfq none
+Il giorno lun, 11/11/2019 alle 19.05 +0800, Ming Lei ha scritto:
+> On Mon, Nov 11, 2019 at 11:50:49AM +0100, Andrea Vai wrote:
+> > Il giorno dom, 10/11/2019 alle 06.28 +0800, Ming Lei ha scritto:
+> > > On Thu, Nov 07, 2019 at 07:59:44PM +0100, Andrea Vai wrote:
+> > > > [Sorry for the duplicate message, it didn't reach the lists
+> due to
+> > > > html formatting]
+> > > > Il giorno gio 7 nov 2019 alle ore 08:54 Damien Le Moal
+> > > > <Damien.LeMoal@wdc.com> ha scritto:
 > > > > >
-> > > > > ok, which kernel should I test with this: the fresh git
-> > cloned, or the
-> > > > > one just patched with Alan's patch, or doesn't matter which
-> > one?
-> > > >
-> > > > Probably all of them to see if there are any differences.
-> > >=20
-> > > with both kernels, the output of
-> > > cat /sys/block/sdh/queue/schedule
-> > >=20
-> > > already contains [mq-deadline]: is it correct to assume that the
-> > echo
-> > > command and the subsequent testing is useless? What to do now?
-> >=20
-> > Another thing we could try is to use 'none' via the following
-> > command:
-> >=20
-> >  echo none > /sys/block/sdh/queue/scheduler  #suppose 'sdh' points
-> > to the usb storage disk
-> >=20
-> > Because USB storage HBA is single hw queue, which depth is 1. This
-> > way
-> > should change to dispatch IO in the order of bio submission.
-> >=20
-> > Andrea, could you switch io scheduler to none and update us if
-> > difference
-> > can be made?
->=20
-> Of course I would to it, but I see that with the "good" kernel the
-> output of "cat /sys/block/sdf/queue/scheduler" (yes, now it's sdf) is
->=20
-> noop deadline [cfq]
+> > > > > On 2019/11/07 16:04, Andrea Vai wrote:
+> > > > > > Il giorno mer, 06/11/2019 alle 22.13 +0000, Damien Le Moal
+> ha
+> > > scritto:
+> > > > > >>
+> > > > > >>
+> > > > > >> Please simply try your write tests after doing this:
+> > > > > >>
+> > > > > >> echo mq-deadline > /sys/block/<name of your USB
+> > > > > >> disk>/queue/scheduler
+> > > > > >>
+> > > > > >> And confirm that mq-deadline is selected with:
+> > > > > >>
+> > > > > >> cat /sys/block/<name of your USB disk>/queue/scheduler
+> > > > > >> [mq-deadline] kyber bfq none
+> > > > > >
+> > > > > > ok, which kernel should I test with this: the fresh git
+> > > cloned, or the
+> > > > > > one just patched with Alan's patch, or doesn't matter
+> which
+> > > one?
+> > > > >
+> > > > > Probably all of them to see if there are any differences.
+> > > > 
+> > > > with both kernels, the output of
+> > > > cat /sys/block/sdh/queue/schedule
+> > > > 
+> > > > already contains [mq-deadline]: is it correct to assume that
+> the
+> > > echo
+> > > > command and the subsequent testing is useless? What to do now?
+> > > 
+> > > Another thing we could try is to use 'none' via the following
+> > > command:
+> > > 
+> > >  echo none > /sys/block/sdh/queue/scheduler  #suppose 'sdh'
+> points
+> > > to the usb storage disk
+> > > 
+> > > Because USB storage HBA is single hw queue, which depth is 1.
+> This
+> > > way
+> > > should change to dispatch IO in the order of bio submission.
+> > > 
+> > > Andrea, could you switch io scheduler to none and update us if
+> > > difference
+> > > can be made?
+> > 
+> > Of course I would to it, but I see that with the "good" kernel the
+> > output of "cat /sys/block/sdf/queue/scheduler" (yes, now it's sdf)
+> is
+> > 
+> > noop deadline [cfq]
+> 
+> Not sure if cfq makes a difference, and I guess you may get same
+> result
+> with noop or deadline. However, if you only see good write
+> performance with
+> cfq, you may try 'bfq' and see if it works as cfq.
+> 
+> > 
+> > , i.e. it doesn't show "none". Does it matter? (sorry if it's a
+> silly
+> > question)
+> 
+> We are talking about new kernel in which there can't be 'noop
+> deadline [cfq]'
+> any more. And you should see the following output from
+> '/sys/block/sdf/queue/scheduler'
+> in the new kernel:
+> 
+> 	[mq-deadline] kyber bfq none
+> 
+> 
 
-Not sure if cfq makes a difference, and I guess you may get same result
-with noop or deadline. However, if you only see good write performance with
-cfq, you may try 'bfq' and see if it works as cfq.
+ok sorry I misunderstood, assumed you wanted me to compare the "none"
+setting in the old kernel with the same setting in the new kernel. Now
+it's clear to me that you want me to compare the different scheduler
+settings in the new kernel.
 
->=20
-> , i.e. it doesn't show "none". Does it matter? (sorry if it's a silly
-> question)
-
-We are talking about new kernel in which there can't be 'noop deadline [cfq=
-]'
-any more. And you should see the following output from '/sys/block/sdf/queu=
-e/scheduler'
-in the new kernel:
-
-=09[mq-deadline] kyber bfq none
-
-
-thanks,
-Ming
+Thanks, and bye
+Andrea
 
