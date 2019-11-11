@@ -2,307 +2,263 @@ Return-Path: <SRS0=nyLG=ZD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF691C43331
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 15:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 220B5C43331
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 15:34:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88324214E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 15:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDEB2214E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 15:34:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="IUPJMwWl";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=synopsys.onmicrosoft.com header.i=@synopsys.onmicrosoft.com header.b="U0+lvWyo"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vr6gGUD2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726902AbfKKP1t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 10:27:49 -0500
-Received: from dc8-smtprelay2.synopsys.com ([198.182.47.102]:46078 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726845AbfKKP1t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Nov 2019 10:27:49 -0500
-Received: from mailhost.synopsys.com (badc-mailhost2.synopsys.com [10.192.0.18])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        id S1726988AbfKKPer (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 10:34:47 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:49949 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726928AbfKKPer (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 10:34:47 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573486485;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hKIg2qZjecddKZ7Jr+8BQ/R4X4wOCT3J0z5mvON0mkc=;
+        b=Vr6gGUD2OIlN+pvCjhzO0KmAJGb95lUZp83DYDmGRdNxYauPbSh414yG52iKs4kQDI1bfT
+        5meTg7uef6s84LCq3lVTPWfIrVnBr8YHId9Kxm80DnD2Ole3VjZWMdaI56wgztvhJXplxs
+        KpqT72KtD/7H/XwjS9OqPfC/pWGS3Sw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-282-fmBZr0vqOu-b3E3K2GlFRQ-1; Mon, 11 Nov 2019 10:34:42 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id EDE2DC0E01;
-        Mon, 11 Nov 2019 15:27:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1573486068; bh=81cMCScTrJweMXO3tQrpAzQ7GadVxb09zwg3mRWELf4=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=IUPJMwWltE93vYYQdcNqx62lw7uUhUkjjqpYIGnipka2q9L4f8guSc5ZAZz6keHhK
-         oNT9TPNbBwAI1Iryf5O8sI2tgqLa3+VqywXSG6FOA8E+UubWrZkLLV+ZnLs1SMFjZ1
-         SkuHnq/cXj+s8ro5r9kZc2Im/ECT0y8WzTpDmts54ua175pH1vsvaFoAerqCWdzknH
-         2gPC+rpBuyANOQPSyMbhwgHVP2Kv9Lo49kxQrshYFLIETIFa4uwv06HqOr7JEd+wyr
-         6PU4wxku2HFmSsPp43Rc6cWVf9vWKKX2xuV+QMdezra+VrdRIChdfLeIhZBvif1IxK
-         YAYBcIfiUnemw==
-Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 755E7A0066;
-        Mon, 11 Nov 2019 15:27:44 +0000 (UTC)
-Received: from US01HYBRID2.internal.synopsys.com (10.15.246.24) by
- US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 11 Nov 2019 07:27:44 -0800
-Received: from NAM04-BN3-obe.outbound.protection.outlook.com (10.13.134.195)
- by mrs.synopsys.com (10.15.246.24) with Microsoft SMTP Server (TLS) id
- 14.3.408.0; Mon, 11 Nov 2019 07:27:44 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HvGR507NR9hdpi4pLDM9M0jySq3X5IYMENgKUWQavlzop8rvYD/6rQ8MELIWhsGK+fihKRTGYhb2y0vFd9XwCoYTWRAOSNPcwMJ4R9B8xK/VhhtpTYWV14+t7r6ZNAma/XbFaEyDauKWKz7Di5ZAc6VNYlTrDG+r3aNyqXt5BeG33HBqnZwnhg2+pja19dgAT7TpnantuIafcLCU0LA//ork1UZwYAlZHnKBuLY6QFCipfADHigsF87wmJPwnX+K/VZDrljAq66kefBC4qN6R0TZIpEv3ap7OhJN1euss1fygkaaj2Q1g+782rHRZFMToK2zEKeWfwBlI2K7H0kMqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=x4hYj/D2IhV826POaSI0GU2TB8ZS3jDIi6+sHGuDowA=;
- b=gxEct0dz7ns5Qx47hB9CUOHkkH+T79ozY4Gyhtv6KkxBqQf4Tso63JEXdNaxs5kzYOfc7ExP2DXlcjyNyYWnm7KGKyjISSTGiHAbxFBto3MiSkVierpdNNmhSjXnc6b7JUoJEONmhtUZyvEv1Bo5A5mH6uonnIVQTeV0O9TVuf4tw9QIV+eX/CVB5B9EdYgp23LsVQUl6HjnZsAuJu+v+Vv075/9O9F3WO7qrobwsPnY+pCr+pIvGPUlSqvA7CedW6DucAtcrrvfNlqMvXPOcTGbWmTI1nHfnjurY5q30TFRb61yARMnH+TDYRSXOkLkXVl1gqM5+h8RZC2F2/Qufg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=synopsys.com; dmarc=pass action=none header.from=synopsys.com;
- dkim=pass header.d=synopsys.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=synopsys.onmicrosoft.com; s=selector2-synopsys-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=x4hYj/D2IhV826POaSI0GU2TB8ZS3jDIi6+sHGuDowA=;
- b=U0+lvWyodlvL64GavDjvX9Pz1i701nC4wdXQuCgctG0m2PuJGmHXHvjDMxPAmB44dQ+/ySHJJhZhhnlrOJSMKwkz/qJN8PQGZSVNF3i6GCeoMi//Z3lz8s6SaAdN/GixrdQajFuHP4INSVN1QRdyAeOkEm6xDbsh4BDJSkIa2cY=
-Received: from MN2PR12MB3167.namprd12.prod.outlook.com (20.179.80.95) by
- MN2PR12MB4032.namprd12.prod.outlook.com (10.255.239.32) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2430.20; Mon, 11 Nov 2019 15:27:41 +0000
-Received: from MN2PR12MB3167.namprd12.prod.outlook.com
- ([fe80::2974:feba:8a00:35ef]) by MN2PR12MB3167.namprd12.prod.outlook.com
- ([fe80::2974:feba:8a00:35ef%6]) with mapi id 15.20.2430.027; Mon, 11 Nov 2019
- 15:27:41 +0000
-From:   Pedro Sousa <PedroM.Sousa@synopsys.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "vinholikatti@gmail.com" <vinholikatti@gmail.com>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 1/2] scsi: ufs: export hibern8 entry and exit
-Thread-Topic: [PATCH v3 1/2] scsi: ufs: export hibern8 entry and exit
-Thread-Index: AQHVicHiQdVJ7uEJjken9mNQwozXTaeGLVRw
-Date:   Mon, 11 Nov 2019 15:27:41 +0000
-Message-ID: <MN2PR12MB3167500F195C920A90840315CC740@MN2PR12MB3167.namprd12.prod.outlook.com>
-References: <1571849351-819-1-git-send-email-asutoshd@codeaurora.org>
-In-Reply-To: <1571849351-819-1-git-send-email-asutoshd@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcc291c2FcYXBw?=
- =?us-ascii?Q?ZGF0YVxyb2FtaW5nXDA5ZDg0OWI2LTMyZDMtNGE0MC04NWVlLTZiODRiYTI5?=
- =?us-ascii?Q?ZTM1Ylxtc2dzXG1zZy1jYjI3MjE0Mi0wNDk3LTExZWEtOWEwYS1iODA4Y2Yz?=
- =?us-ascii?Q?YjJlNWVcYW1lLXRlc3RcY2IyNzIxNDMtMDQ5Ny0xMWVhLTlhMGEtYjgwOGNm?=
- =?us-ascii?Q?M2IyZTVlYm9keS50eHQiIHN6PSIzNDk1IiB0PSIxMzIxNzk1OTY1OTY5MzMw?=
- =?us-ascii?Q?ODAiIGg9IjJRQWdBKzY2YnFXRFJCdFJQcUpNVEpTQ1V2ST0iIGlkPSIiIGJs?=
- =?us-ascii?Q?PSIwIiBibz0iMSIgY2k9ImNBQUFBRVJIVTFSU1JVRk5DZ1VBQUJRSkFBRFk4?=
- =?us-ascii?Q?YmFOcEpqVkFWai81cXBrYnhHbldQL21xbVJ2RWFjT0FBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFIQUFBQUNrQ0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFF?=
- =?us-ascii?Q?QUFRQUJBQUFBbEF3ZnN3QUFBQUFBQUFBQUFBQUFBSjRBQUFCbUFHa0FiZ0Jo?=
- =?us-ascii?Q?QUc0QVl3QmxBRjhBY0FCc0FHRUFiZ0J1QUdrQWJnQm5BRjhBZHdCaEFIUUFa?=
- =?us-ascii?Q?UUJ5QUcwQVlRQnlBR3NBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUVB?=
- =?us-ascii?Q?QUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhrQVh3QndB?=
- =?us-ascii?Q?R0VBY2dCMEFHNEFaUUJ5QUhNQVh3Qm5BR1lBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFBQ0FBQUFB?=
- =?us-ascii?Q?QUNlQUFBQVpnQnZBSFVBYmdCa0FISUFlUUJmQUhBQVlRQnlBSFFBYmdCbEFI?=
- =?us-ascii?Q?SUFjd0JmQUhNQVlRQnRBSE1BZFFCdUFHY0FYd0JqQUc4QWJnQm1BQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJtQUc4QWRR?=
- =?us-ascii?Q?QnVBR1FBY2dCNUFGOEFjQUJoQUhJQWRBQnVBR1VBY2dCekFGOEFjd0JoQUcw?=
- =?us-ascii?Q?QWN3QjFBRzRBWndCZkFISUFaUUJ6QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
- =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCekFHMEFhUUJqQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
- =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
- =?us-ascii?Q?QUhJQWN3QmZBSE1BZEFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
- =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWRBQnpB?=
- =?us-ascii?Q?RzBBWXdBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
- =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0IxQUcwQVl3QUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
- =?us-ascii?Q?QUFBQUFDZUFBQUFad0IwQUhNQVh3QndBSElBYndCa0FIVUFZd0IwQUY4QWRB?=
- =?us-ascii?Q?QnlBR0VBYVFCdUFHa0FiZ0JuQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCekFH?=
- =?us-ascii?Q?RUFiQUJsQUhNQVh3QmhBR01BWXdCdkFIVUFiZ0IwQUY4QWNBQnNBR0VBYmdB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBSE1BWVFCc0FHVUFjd0JmQUhF?=
- =?us-ascii?Q?QWRRQnZBSFFBWlFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
- =?us-ascii?Q?Q0FBQUFBQUNlQUFBQWN3QnVBSEFBY3dCZkFHd0FhUUJqQUdVQWJnQnpBR1VB?=
- =?us-ascii?Q?WHdCMEFHVUFjZ0J0QUY4QU1RQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
- =?us-ascii?Q?QUc0QWNBQnpBRjhBYkFCcEFHTUFaUUJ1QUhNQVpRQmZBSFFBWlFCeUFHMEFY?=
- =?us-ascii?Q?d0J6QUhRQWRRQmtBR1VBYmdCMEFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFIWUFad0JmQUdzQVpRQjVB?=
- =?us-ascii?Q?SGNBYndCeUFHUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
- =?us-ascii?Q?QUFDQUFBQUFBQT0iLz48L21ldGE+?=
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=sousa@synopsys.com; 
-x-originating-ip: [83.174.63.141]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4e3fdc4c-c33b-4212-702f-08d766bbb16b
-x-ms-traffictypediagnostic: MN2PR12MB4032:
-x-microsoft-antispam-prvs: <MN2PR12MB403273A39CD1755856997979CC740@MN2PR12MB4032.namprd12.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-forefront-prvs: 0218A015FA
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(39860400002)(396003)(346002)(366004)(376002)(189003)(199004)(13464003)(7416002)(25786009)(476003)(11346002)(81156014)(81166006)(66476007)(66446008)(446003)(66946007)(76116006)(64756008)(2906002)(66556008)(8676002)(2501003)(33656002)(53546011)(6506007)(478600001)(7696005)(14444005)(52536014)(14454004)(8936002)(76176011)(486006)(102836004)(5660300002)(256004)(55016002)(186003)(99286004)(7736002)(74316002)(316002)(9686003)(110136005)(54906003)(6436002)(305945005)(26005)(229853002)(71200400001)(71190400001)(4326008)(6246003)(2201001)(66066001)(3846002)(86362001)(6116002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR12MB4032;H:MN2PR12MB3167.namprd12.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: synopsys.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 5m71ETKLoIehZl4tlhWzNcqh1w8J0O9WfQCgWkfHPe9n4z+mFEjs3AKhzTtcSeAZIWHD64/gjED8NOfSVbjmV3AA8PQizb7tTsOzwFStRJX5bpxIeFiN703+Fg91fQDyBc/tqQ5k1NnhoU2s8Ngt65DzxSMsoGGjiOMQTMSpMCubzAV+TY2liVdXVGkTPjTtghWT5Tzq7NmSBzipRtWiP1kGZiLots8K8dmd7+FALGkOnWJd5U9JthnCvc0E5rwQy+txsaqb2pDxJPgdc1JVYCPlplP46OxVo/kxynx38hQA6Ypw/dz+vfPDtdNee2DdgdwMVJuktce8IF679hUn64/HdxOrVQi7STf/HQx/qvh5kThUgsg3E1HbZFclVzuofLzwA6csIsis+7DrOeVkgEftK5/uOO1Tkd1VydY5jIJryS1CXUpZsdBZk/+HkmV8
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE903107ACC5;
+        Mon, 11 Nov 2019 15:34:40 +0000 (UTC)
+Received: from mchristi.msp.csb (ovpn-126-72.rdu2.redhat.com [10.10.126.72])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EE8885D6A3;
+        Mon, 11 Nov 2019 15:34:38 +0000 (UTC)
+Reply-To: mchristi@redhat.com
+Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V3
+To:     Ilya Dryomov <idryomov@gmail.com>
+Cc:     Michal Hocko <mhocko@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-mm <linux-mm@kvack.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>, martin@urbackup.org,
+        Damien.LeMoal@wdc.com
+References: <20191108185319.9326-1-mchristi@redhat.com>
+ <CAOi1vP8UrtQKYFFiqBtGcZR5chkhBkCCTpxMNy9GVd5SYscboQ@mail.gmail.com>
+From:   Michael Christie <mchristi@redhat.com>
+Organization: Red Hat
+Message-ID: <6866412f-46d2-28ff-c833-e9006a46913c@redhat.com>
+Date:   Mon, 11 Nov 2019 09:34:44 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e3fdc4c-c33b-4212-702f-08d766bbb16b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Nov 2019 15:27:41.6091
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: c33c9f88-1eb7-4099-9700-16013fd9e8aa
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: flnlqBE7B5xJMbsfXixwgflOhk29QsSTzkJLB12tK4TxNx7SvMB3a2siZ7hEOONPTdG/ORmJIhLDGcJgk0o2yg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4032
-X-OriginatorOrg: synopsys.com
+In-Reply-To: <CAOi1vP8UrtQKYFFiqBtGcZR5chkhBkCCTpxMNy9GVd5SYscboQ@mail.gmail.com>
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: fmBZr0vqOu-b3E3K2GlFRQ-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Asutosh,
+On 11/09/2019 01:47 PM, Ilya Dryomov wrote:
+> On Fri, Nov 8, 2019 at 8:24 PM Mike Christie <mchristi@redhat.com> wrote:
+>>
+>> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
+>> amd nbd that have userspace components that can run in the IO path. For
+>> example, iscsi and nbd's userspace deamons may need to recreate a socket
+>> and/or send IO on it, and dm-multipath's daemon multipathd may need to
+>> send SG IO or read/write IO to figure out the state of paths and re-set
+>> them up.
+>>
+>> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
+>> memalloc_*_save/restore functions to control the allocation behavior,
+>> but for userspace we would end up hitting an allocation that ended up
+>> writing data back to the same device we are trying to allocate for.
+>> The device is then in a state of deadlock, because to execute IO the
+>> device needs to allocate memory, but to allocate memory the memory
+>> layers want execute IO to the device.
+>>
+>> Here is an example with nbd using a local userspace daemon that performs
+>> network IO to a remote server. We are using XFS on top of the nbd device=
+,
+>> but it can happen with any FS or other modules layered on top of the nbd
+>> device that can write out data to free memory.  Here a nbd daemon helper
+>> thread, msgr-worker-1, is performing a write/sendmsg on a socket to exec=
+ute
+>> a request. This kicks off a reclaim operation which results in a WRITE t=
+o
+>> the nbd device and the nbd thread calling back into the mm layer.
+>>
+>> [ 1626.609191] msgr-worker-1   D    0  1026      1 0x00004000
+>> [ 1626.609193] Call Trace:
+>> [ 1626.609195]  ? __schedule+0x29b/0x630
+>> [ 1626.609197]  ? wait_for_completion+0xe0/0x170
+>> [ 1626.609198]  schedule+0x30/0xb0
+>> [ 1626.609200]  schedule_timeout+0x1f6/0x2f0
+>> [ 1626.609202]  ? blk_finish_plug+0x21/0x2e
+>> [ 1626.609204]  ? _xfs_buf_ioapply+0x2e6/0x410
+>> [ 1626.609206]  ? wait_for_completion+0xe0/0x170
+>> [ 1626.609208]  wait_for_completion+0x108/0x170
+>> [ 1626.609210]  ? wake_up_q+0x70/0x70
+>> [ 1626.609212]  ? __xfs_buf_submit+0x12e/0x250
+>> [ 1626.609214]  ? xfs_bwrite+0x25/0x60
+>> [ 1626.609215]  xfs_buf_iowait+0x22/0xf0
+>> [ 1626.609218]  __xfs_buf_submit+0x12e/0x250
+>> [ 1626.609220]  xfs_bwrite+0x25/0x60
+>> [ 1626.609222]  xfs_reclaim_inode+0x2e8/0x310
+>> [ 1626.609224]  xfs_reclaim_inodes_ag+0x1b6/0x300
+>> [ 1626.609227]  xfs_reclaim_inodes_nr+0x31/0x40
+>> [ 1626.609228]  super_cache_scan+0x152/0x1a0
+>> [ 1626.609231]  do_shrink_slab+0x12c/0x2d0
+>> [ 1626.609233]  shrink_slab+0x9c/0x2a0
+>> [ 1626.609235]  shrink_node+0xd7/0x470
+>> [ 1626.609237]  do_try_to_free_pages+0xbf/0x380
+>> [ 1626.609240]  try_to_free_pages+0xd9/0x1f0
+>> [ 1626.609245]  __alloc_pages_slowpath+0x3a4/0xd30
+>> [ 1626.609251]  ? ___slab_alloc+0x238/0x560
+>> [ 1626.609254]  __alloc_pages_nodemask+0x30c/0x350
+>> [ 1626.609259]  skb_page_frag_refill+0x97/0xd0
+>> [ 1626.609274]  sk_page_frag_refill+0x1d/0x80
+>> [ 1626.609279]  tcp_sendmsg_locked+0x2bb/0xdd0
+>> [ 1626.609304]  tcp_sendmsg+0x27/0x40
+>> [ 1626.609307]  sock_sendmsg+0x54/0x60
+>> [ 1626.609308]  ___sys_sendmsg+0x29f/0x320
+>> [ 1626.609313]  ? sock_poll+0x66/0xb0
+>> [ 1626.609318]  ? ep_item_poll.isra.15+0x40/0xc0
+>> [ 1626.609320]  ? ep_send_events_proc+0xe6/0x230
+>> [ 1626.609322]  ? hrtimer_try_to_cancel+0x54/0xf0
+>> [ 1626.609324]  ? ep_read_events_proc+0xc0/0xc0
+>> [ 1626.609326]  ? _raw_write_unlock_irq+0xa/0x20
+>> [ 1626.609327]  ? ep_scan_ready_list.constprop.19+0x218/0x230
+>> [ 1626.609329]  ? __hrtimer_init+0xb0/0xb0
+>> [ 1626.609331]  ? _raw_spin_unlock_irq+0xa/0x20
+>> [ 1626.609334]  ? ep_poll+0x26c/0x4a0
+>> [ 1626.609337]  ? tcp_tsq_write.part.54+0xa0/0xa0
+>> [ 1626.609339]  ? release_sock+0x43/0x90
+>> [ 1626.609341]  ? _raw_spin_unlock_bh+0xa/0x20
+>> [ 1626.609342]  __sys_sendmsg+0x47/0x80
+>> [ 1626.609347]  do_syscall_64+0x5f/0x1c0
+>> [ 1626.609349]  ? prepare_exit_to_usermode+0x75/0xa0
+>> [ 1626.609351]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+>>
+>> This patch adds a new prctl command that daemons can use after they have
+>> done their initial setup, and before they start to do allocations that
+>> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
+>> flags so both userspace block and FS threads can use it to avoid the
+>> allocation recursion and try to prevent from being throttled while
+>> writing out data to free up memory.
+>>
+>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>> ---
+>> V3
+>> - Drop NOFS, set PF_LESS_THROTTLE and rename prctl flag to reflect it
+>> is more general and can support both FS and block devices. Both fuse
+>> and block device daemons, nbd and tcmu-runner, have been tested to
+>> confirm the more restrictive PF_MEMALLOC_NOIO also works for fuse.
+>>
+>> - Use CAP_SYS_RESOURCE instead of admin.
+>>
+>> V2:
+>> - Use prctl instead of procfs.
+>> - Add support for NOFS for fuse.
+>> - Check permissions.
+>>
+>>
+>>  include/uapi/linux/capability.h |  1 +
+>>  include/uapi/linux/prctl.h      |  4 ++++
+>>  kernel/sys.c                    | 26 ++++++++++++++++++++++++++
+>>  3 files changed, 31 insertions(+)
+>>
+>> diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capabi=
+lity.h
+>> index 240fdb9a60f6..272dc69fa080 100644
+>> --- a/include/uapi/linux/capability.h
+>> +++ b/include/uapi/linux/capability.h
+>> @@ -301,6 +301,7 @@ struct vfs_ns_cap_data {
+>>  /* Allow more than 64hz interrupts from the real-time clock */
+>>  /* Override max number of consoles on console allocation */
+>>  /* Override max number of keymaps */
+>> +/* Control memory reclaim behavior */
+>>
+>>  #define CAP_SYS_RESOURCE     24
+>>
+>> diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
+>> index 7da1b37b27aa..07b4f8131e36 100644
+>> --- a/include/uapi/linux/prctl.h
+>> +++ b/include/uapi/linux/prctl.h
+>> @@ -234,4 +234,8 @@ struct prctl_mm_map {
+>>  #define PR_GET_TAGGED_ADDR_CTRL                56
+>>  # define PR_TAGGED_ADDR_ENABLE         (1UL << 0)
+>>
+>> +/* Control reclaim behavior when allocating memory */
+>> +#define PR_SET_IO_FLUSHER              57
+>> +#define PR_GET_IO_FLUSHER              58
+>> +
+>>  #endif /* _LINUX_PRCTL_H */
+>> diff --git a/kernel/sys.c b/kernel/sys.c
+>> index a611d1d58c7d..08c6b682fa99 100644
+>> --- a/kernel/sys.c
+>> +++ b/kernel/sys.c
+>> @@ -2486,6 +2486,32 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long=
+, arg2, unsigned long, arg3,
+>>                         return -EINVAL;
+>>                 error =3D GET_TAGGED_ADDR_CTRL();
+>>                 break;
+>> +       case PR_SET_IO_FLUSHER:
+>> +               if (!capable(CAP_SYS_RESOURCE))
+>> +                       return -EPERM;
+>> +
+>> +               if (arg3 || arg4 || arg5)
+>> +                       return -EINVAL;
+>> +
+>> +               if (arg2 =3D=3D 1)
+>> +                       current->flags |=3D PF_MEMALLOC_NOIO | PF_LESS_T=
+HROTTLE;
+>> +               else if (!arg2)
+>> +                       current->flags &=3D ~(PF_MEMALLOC_NOIO | PF_LESS=
+_THROTTLE);
+>> +               else
+>> +                       return -EINVAL;
+>> +               break;
+>> +       case PR_GET_IO_FLUSHER:
+>> +               if (!capable(CAP_SYS_RESOURCE))
+>> +                       return -EPERM;
+>> +
+>> +               if (arg2 || arg3 || arg4 || arg5)
+>> +                       return -EINVAL;
+>> +
+>> +               if (current->flags & (PF_MEMALLOC_NOIO | PF_LESS_THROTTL=
+E))
+>=20
+> I think it needs to be conditioned on both flags instead of just one of
+> them, for consistency with SET.  Seems worth a define too, PF_IO_FLUSHER?
+> Or something local to this file at least.
 
-Reviewed-by: Pedro Sousa <pedrom.sousa@synopsys.com>
+Yeah, that was a mistake. Will fix.
 
-Thanks!
-Pedro Sousa
-
------Original Message-----
-From: Asutosh Das <asutoshd@codeaurora.org>=20
-Sent: Wednesday, October 23, 2019 5:49 PM
-To: cang@codeaurora.org; rnayak@codeaurora.org; vinholikatti@gmail.com; jej=
-b@linux.vnet.ibm.com; martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org; kernel-team@android.com; saravanak@google.c=
-om; salyzyn@google.com; Asutosh Das <asutoshd@codeaurora.org>; Alim Akhtar =
-<alim.akhtar@samsung.com>; Avri Altman <avri.altman@wdc.com>; Pedro Sousa <=
-pedrom.sousa@synopsys.com>; James E.J. Bottomley <jejb@linux.ibm.com>; Stan=
-ley Chu <stanley.chu@mediatek.com>; Bean Huo <beanhuo@micron.com>; Tomas Wi=
-nkler <tomas.winkler@intel.com>; Subhash Jadavani <subhashj@codeaurora.org>=
-; Bjorn Andersson <bjorn.andersson@linaro.org>; Arnd Bergmann <arnd@arndb.d=
-e>; open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 1/2] scsi: ufs: export hibern8 entry and exit
-
-Qualcomm controllers need to be in hibern8 before scaling up
-or down the clocks. Hence, export the hibern8 entry and exit
-functions.
-
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 8 ++++----
- drivers/scsi/ufs/ufshcd.h | 3 ++-
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c28c144..57d9315 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -250,8 +250,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba);
- static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 				 bool skip_ref_clk);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
--static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
- static void ufshcd_resume_clkscaling(struct ufs_hba *hba);
-@@ -3904,7 +3902,7 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba =
-*hba)
- 	return ret;
- }
-=20
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
- 	int ret =3D 0, retries;
-=20
-@@ -3916,8 +3914,9 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *h=
-ba)
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
-=20
--static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
-+int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- {
- 	struct uic_command uic_cmd =3D {0};
- 	int ret;
-@@ -3943,6 +3942,7 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hb=
-a)
-=20
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_exit);
-=20
- static void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
- {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e0fe247..1e3daf5 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1107,5 +1107,6 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int=
- scsi_lun)
-=20
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix);
--
-+int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
-+int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
- #endif /* End of Header */
---=20
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux =
-Foundation Collaborative Project.
+>=20
+>> +                       error =3D 1;
+>> +               else
+>> +                       error =3D 0;
+>=20
+>   error =3D (current->flags & PF_IO_FLUSHER) =3D=3D PF_IO_FLUSHER;
+>=20
+> Thanks,
+>=20
+>                 Ilya
+>=20
 
