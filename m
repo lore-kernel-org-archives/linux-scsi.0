@@ -2,101 +2,193 @@ Return-Path: <SRS0=nyLG=ZD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF39C17445
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 16:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24AFCC43331
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:08:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C6BF214E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 16:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3AFD214DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:08:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Ec0dqc9E";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="clbtaX41"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727015AbfKKQH7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 11:07:59 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:42898 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726845AbfKKQH4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 11:07:56 -0500
-Received: by mail-pf1-f195.google.com with SMTP id s5so10957164pfh.9
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2019 08:07:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=qqDen71cPMe0deJ6I8e5k0Pf17UIFsIti+gPspjz738=;
-        b=ijijq414uUv8mZdMYBPMKr8afq0UkHZ5meJEUCKsDmxY9iUrAf2DA1ygDORuEdeHfA
-         +5kmWUwxceOFt0XSQSrpXVj84nCodJy8hSkKQ5bhB1RaTxVY+ireAV816fxtBrES2SX6
-         z1sw7qH+eW3Rs49pZfN1IImnWIIPphoZdg+CtMorETGk2exR02wX47IkyYPPUbp8miJA
-         +3H2LOacxtFshS2lUMXVCf6i2eV+mMbpgeEhK14a2i0Kx7KNYRzLsIwL/KWUjf7X8qjO
-         4ZHbGgh7ZdDfjxfUzTRkDoSI/DORd5tNrFaQ+ROzoR30W8u+A7tHBYO8Enq//qIzidWg
-         a13w==
-X-Gm-Message-State: APjAAAW1Kk2FrNFLUMRN0FrFlOI0I3OZK7Nwc0nSiNSQW2ym6sWly3DT
-        W4zeMNbK3GAvNDhSPL7mgPZy63uP
-X-Google-Smtp-Source: APXvYqxBu5IBe0AGnnyAvcxWLoTqX0pikT4Upsieco9hPDBI2rkvsDPK82S9oVVJKQ5LsdsLyoQI4Q==
-X-Received: by 2002:a62:7847:: with SMTP id t68mr21439325pfc.140.1573488475549;
-        Mon, 11 Nov 2019 08:07:55 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id w2sm14963048pfj.22.2019.11.11.08.07.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Nov 2019 08:07:54 -0800 (PST)
-Subject: Re: [PATCH] scsi_dh_rdac: avoid crash during rescan
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20191111104522.99531-1-hare@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <4d66f2de-aa31-1e94-61b7-f8fc6a4af677@acm.org>
-Date:   Mon, 11 Nov 2019 08:07:53 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <20191111104522.99531-1-hare@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+        id S1726897AbfKKRIk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 12:08:40 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48434 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726871AbfKKRIk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Nov 2019 12:08:40 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0260C8EE0EA;
+        Mon, 11 Nov 2019 09:08:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1573492120;
+        bh=+Yg/2jPdCK9r7LUFp9lf3LC20PR2r7b13Z6eUeXo5fI=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Ec0dqc9Eke3jRGhrYb0AiGUL/pUxCL/34BHchrx7/A0d3J7Bx0IQPXBW83GtC/3KP
+         ZQV1BQZIkCjmkr4io+/gSKt/opUHgYkIqulElpvAz2J61kSC5BQ80vyWu76Q1l5/mc
+         3Loq6PmfJNVUyGTtGuc8H0utq96BqL2tRqTAAJmA=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2NXRgvZTG6vd; Mon, 11 Nov 2019 09:08:39 -0800 (PST)
+Received: from jarvis.lan (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 5B5778EE0CE;
+        Mon, 11 Nov 2019 09:08:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1573492119;
+        bh=+Yg/2jPdCK9r7LUFp9lf3LC20PR2r7b13Z6eUeXo5fI=;
+        h=Subject:From:To:Cc:Date:From;
+        b=clbtaX41kDCW2jTMcrcN3te4zV1v4hja8JaHJneYvJs3eVypoG10F++KzmzpxvV6a
+         m3N8UO8ovWUhXa1ko5QiNuvp12bhe8xgsf+7yGXgcuuyNmI89wc0fZJfzFEmzngEWc
+         egl9bXXJdWZE2gKcS79qA2Jy+pjY1Y5pAnFTWp2c=
+Message-ID: <1573492117.6865.5.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.4-rc7
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Mon, 11 Nov 2019 09:08:37 -0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/11/19 2:45 AM, Hannes Reinecke wrote:
-> During rescanning the device might already have been removed, so
-> we should drop the BUG_ON and just ignore the non-existing device.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/device_handler/scsi_dh_rdac.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index 5efc959493ec..33a71df5ee59 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -424,8 +424,8 @@ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
->   		rcu_read_lock();
->   		list_for_each_entry_rcu(tmp, &h->ctlr->dh_list, node) {
->   			/* h->sdev should always be valid */
-> -			BUG_ON(!tmp->sdev);
-> -			tmp->sdev->access_state = access_state;
-> +			if (tmp->sdev) {
-> +				tmp->sdev->access_state = access_state;
->   		}
->   		rcu_read_unlock();
->   		err = SCSI_DH_OK;
+Three small changes: two in the core and one in the qla2xxx driver. The
+sg_tablesize fix affects a thinko in the migration to blk-mq of certain
+legacy drivers which could cause an oops and the sd core change should
+only affect zoned block devices which were wrongly suppressing error
+messages for reset all zones. 
 
-Since rdac_bus_detach() may clear h->sdev concurrently with the above 
-code I think READ_ONCE() is needed to make the above code safe.
+The patch is available here:
 
-Has it been considered to change the kfree() call in rdac_bus_detach() 
-into a kfree_rcu() call? I think otherwise the above 
-list_for_each_entry_rcu() loop may trigger a use-after-free.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
+The short changelog is:
 
-Bart.
+Damien Le Moal (1):
+      scsi: sd_zbc: Fix sd_zbc_complete()
 
+Martin Wilck (1):
+      scsi: qla2xxx: fix NPIV tear down process
 
+Michael Schmitz (1):
+      scsi: core: Handle drivers which set sg_tablesize to zero
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_mid.c |  8 +++++---
+ drivers/scsi/qla2xxx/qla_os.c  |  8 +++++---
+ drivers/scsi/scsi_lib.c        |  3 ++-
+ drivers/scsi/sd_zbc.c          | 29 ++++++++++-------------------
+ 4 files changed, 22 insertions(+), 26 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 6afad68e5ba2..238240984bc1 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -76,9 +76,11 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t *vha)
+ 	 * ensures no active vp_list traversal while the vport is removed
+ 	 * from the queue)
+ 	 */
+-	for (i = 0; i < 10 && atomic_read(&vha->vref_count); i++)
+-		wait_event_timeout(vha->vref_waitq,
+-		    atomic_read(&vha->vref_count), HZ);
++	for (i = 0; i < 10; i++) {
++		if (wait_event_timeout(vha->vref_waitq,
++		    !atomic_read(&vha->vref_count), HZ) > 0)
++			break;
++	}
+ 
+ 	spin_lock_irqsave(&ha->vport_slock, flags);
+ 	if (atomic_read(&vha->vref_count)) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3568031c6504..e6ff17f38178 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1119,9 +1119,11 @@ qla2x00_wait_for_sess_deletion(scsi_qla_host_t *vha)
+ 
+ 	qla2x00_mark_all_devices_lost(vha, 0);
+ 
+-	for (i = 0; i < 10; i++)
+-		wait_event_timeout(vha->fcport_waitQ, test_fcport_count(vha),
+-		    HZ);
++	for (i = 0; i < 10; i++) {
++		if (wait_event_timeout(vha->fcport_waitQ,
++		    test_fcport_count(vha), HZ) > 0)
++			break;
++	}
+ 
+ 	flush_workqueue(vha->hw->wq);
+ }
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dc210b9d4896..3a352a4601b1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1882,7 +1882,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ {
+ 	unsigned int cmd_size, sgl_size;
+ 
+-	sgl_size = scsi_mq_inline_sgl_size(shost);
++	sgl_size = max_t(unsigned int, sizeof(struct scatterlist),
++				scsi_mq_inline_sgl_size(shost));
+ 	cmd_size = sizeof(struct scsi_cmnd) + shost->hostt->cmd_size + sgl_size;
+ 	if (scsi_host_get_prot(shost))
+ 		cmd_size += sizeof(struct scsi_data_buffer) +
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index de4019dc0f0b..1efc69e194f8 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -263,25 +263,16 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
+ 	int result = cmd->result;
+ 	struct request *rq = cmd->request;
+ 
+-	switch (req_op(rq)) {
+-	case REQ_OP_ZONE_RESET:
+-	case REQ_OP_ZONE_RESET_ALL:
+-
+-		if (result &&
+-		    sshdr->sense_key == ILLEGAL_REQUEST &&
+-		    sshdr->asc == 0x24)
+-			/*
+-			 * INVALID FIELD IN CDB error: reset of a conventional
+-			 * zone was attempted. Nothing to worry about, so be
+-			 * quiet about the error.
+-			 */
+-			rq->rq_flags |= RQF_QUIET;
+-		break;
+-
+-	case REQ_OP_WRITE:
+-	case REQ_OP_WRITE_ZEROES:
+-	case REQ_OP_WRITE_SAME:
+-		break;
++	if (req_op(rq) == REQ_OP_ZONE_RESET &&
++	    result &&
++	    sshdr->sense_key == ILLEGAL_REQUEST &&
++	    sshdr->asc == 0x24) {
++		/*
++		 * INVALID FIELD IN CDB error: reset of a conventional
++		 * zone was attempted. Nothing to worry about, so be
++		 * quiet about the error.
++		 */
++		rq->rq_flags |= RQF_QUIET;
+ 	}
+ }
+ 
