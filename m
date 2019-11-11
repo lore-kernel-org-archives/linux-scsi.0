@@ -6,24 +6,23 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96469C17443
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 06:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C83C17441
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 06:56:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 74BA021925
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 06:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7504E2196E
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 06:56:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726791AbfKKGzd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 01:55:33 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53892 "EHLO mx1.suse.de"
+        id S1726793AbfKKG4O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 01:56:14 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54056 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725812AbfKKGzd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Nov 2019 01:55:33 -0500
+        id S1726360AbfKKG4O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Nov 2019 01:56:14 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id DC2AAAD12;
-        Mon, 11 Nov 2019 06:55:30 +0000 (UTC)
-Subject: Re: [PATCH v2 4/9] block: Remove partition support for zoned block
- devices
+        by mx1.suse.de (Postfix) with ESMTP id 5BAA9AC23;
+        Mon, 11 Nov 2019 06:56:12 +0000 (UTC)
+Subject: Re: [PATCH v2 8/9] scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
@@ -32,7 +31,7 @@ To:     Damien Le Moal <damien.lemoal@wdc.com>,
         linux-f2fs-devel@lists.sourceforge.net,
         Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
 References: <20191111023930.638129-1-damien.lemoal@wdc.com>
- <20191111023930.638129-5-damien.lemoal@wdc.com>
+ <20191111023930.638129-9-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -78,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <f6efebb1-32d6-4858-1ea5-6f8356b892c4@suse.de>
-Date:   Mon, 11 Nov 2019 07:55:29 +0100
+Message-ID: <e5d0a5c6-0a6e-fea9-0d19-42b42bb63499@suse.de>
+Date:   Mon, 11 Nov 2019 07:56:12 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191111023930.638129-5-damien.lemoal@wdc.com>
+In-Reply-To: <20191111023930.638129-9-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -93,34 +92,24 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/11/19 3:39 AM, Damien Le Moal wrote:
-> No known partitioning tool supports zoned block devices, especially the
-> host managed flavor with strong sequential write constraints.
-> Furthermore, there are also no known user nor use cases for partitioned
-> zoned block devices.
+> There is no need to arbitrarily limit the size of a report zone to the
+> number of zones defined by SD_ZBC_REPORT_MAX_ZONES. Rather, simply
+> calculate the report buffer size needed for the requested number of
+> zones without exceeding the device total number of zones. This buffer
+> size limitation to the hardware maximum transfer size and page mapping
+> capabilities is kept unchanged. Starting with this initial buffer size,
+> the allocation is optimized by iterating over decreasing buffer size
+> until the allocation succeeds (each iteration is allowed to fail fast
+> using the __GFP_NORETRY flag). This ensures forward progress for zone
+> reports and avoids failures of zones revalidation under memory pressure.
 > 
-> This patch removes partition device creation for zoned block devices,
-> which allows simplifying the processing of zone commands for zoned
-> block devices. A warning is added if a partition table is found on the
-> device.
-> 
-> For report zones operations no zone sector information remapping is
-> necessary anymore, simplifying the code. Of note is that remapping of
-> zone reports for DM targets is still necessary as done by
-> dm_remap_zone_report().
-> 
-> Similarly, remaping of a zone reset bio is not necessary anymore.
-> Testing for the applicability of the zone reset all request also becomes
-> simpler and only needs to check that the number of sectors of the
-> requested zone range is equal to the disk capacity.
+> While at it, also replace the hard coded 512 B sector size with the
+> SECTOR_SIZE macro.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  block/blk-core.c          |  6 +---
->  block/blk-zoned.c         | 62 ++++++--------------------------
->  block/partition-generic.c | 74 +++++----------------------------------
->  drivers/md/dm.c           |  3 --
->  4 files changed, 21 insertions(+), 124 deletions(-)
+>  drivers/scsi/sd_zbc.c | 24 +++++++++++++-----------
+>  1 file changed, 13 insertions(+), 11 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
