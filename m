@@ -2,239 +2,79 @@ Return-Path: <SRS0=nyLG=ZD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CF0DC17443
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 09:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C2CC17441
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 10:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 546152075C
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 09:32:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573464755;
-	bh=6kZnh4xohKvnhS11RTmA8D1b23bqzOH5KKHIMcAgi4c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=DJOjK5il7PL2K5ITx0DR9Ia2LLJYRJ5MfoK3eknMM55G6/iIA6hkz+5ZmZA0mLGu1
-	 6wLeRbq0iARoHlHo6jT0CXm1BCl5eC9+x1xwiu5QpspH1sifrSIh2kf0c8yr3G9gkn
-	 GOGmFkYEWDwl1vnuu76oJmN+rZgNqq3fn0fajuU4=
+	by mail.kernel.org (Postfix) with ESMTP id D960D214E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 10:22:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jWDUAfwS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbfKKJcb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 04:32:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:35362 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726768AbfKKJcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Nov 2019 04:32:31 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id DC194B5ED;
-        Mon, 11 Nov 2019 09:32:27 +0000 (UTC)
-Date:   Mon, 11 Nov 2019 10:32:26 +0100
-From:   Michal Hocko <mhocko@kernel.org>
-To:     Mike Christie <mchristi@redhat.com>
-Cc:     david@fromorbit.com, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        martin@urbackup.org, Damien.LeMoal@wdc.com,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V3
-Message-ID: <20191111093226.GC1396@dhcp22.suse.cz>
-References: <20191108185319.9326-1-mchristi@redhat.com>
+        id S1726843AbfKKKW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 05:22:59 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:58938 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726768AbfKKKW7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 05:22:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=rsrc0hw15XFvUS1BF0cnd7QBR4nqLE43XWK8jb8pnzE=; b=jWDUAfwSsKiB0sckHhneGHYAj
+        9OnETJBBXAfFSPzpdDJfeXV4WXPcmqdi5e1wBm5Szpjelrjnp8kPWC+XJwclLLzwj30ej4PaaImBm
+        LiSV0zVnyKhPDlPe1CArH8J65tsP+xgbDrjRzdVr6+SQR2fJQjKunQG34NuP0GmwngqietPNezzvG
+        scrPh0QEEe/Oc3tUIzAI0ojgTOOVvlcheInxaeMlTu27Fk6/APNgKpwiA3omvAtl31JvjNL3KFmxR
+        oXnih/xP1XUO2YMOKlYG15xKFJwiUuTAvzKg5jbtdlQE07t1+TtOS8w0XaRa4g+yVyGCaQPB/nJ/X
+        mRYp6VdZw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iU6qW-0000gA-Fm; Mon, 11 Nov 2019 10:22:56 +0000
+Date:   Mon, 11 Nov 2019 02:22:55 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
+Subject: Re: [PATCH v2 8/9] scsi: sd_zbc: Cleanup sd_zbc_alloc_report_buffer()
+Message-ID: <20191111102255.GB727@infradead.org>
+References: <20191111023930.638129-1-damien.lemoal@wdc.com>
+ <20191111023930.638129-9-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191108185319.9326-1-mchristi@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191111023930.638129-9-damien.lemoal@wdc.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[Cc linux-api]
+On Mon, Nov 11, 2019 at 11:39:29AM +0900, Damien Le Moal wrote:
+> There is no need to arbitrarily limit the size of a report zone to the
+> number of zones defined by SD_ZBC_REPORT_MAX_ZONES. Rather, simply
+> calculate the report buffer size needed for the requested number of
+> zones without exceeding the device total number of zones. This buffer
+> size limitation to the hardware maximum transfer size and page mapping
+> capabilities is kept unchanged. Starting with this initial buffer size,
+> the allocation is optimized by iterating over decreasing buffer size
+> until the allocation succeeds (each iteration is allowed to fail fast
+> using the __GFP_NORETRY flag). This ensures forward progress for zone
+> reports and avoids failures of zones revalidation under memory pressure.
+> 
+> While at it, also replace the hard coded 512 B sector size with the
+> SECTOR_SIZE macro.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-On Fri 08-11-19 12:53:19, Mike Christie wrote:
-> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
-> amd nbd that have userspace components that can run in the IO path. For
-> example, iscsi and nbd's userspace deamons may need to recreate a socket
-> and/or send IO on it, and dm-multipath's daemon multipathd may need to
-> send SG IO or read/write IO to figure out the state of paths and re-set
-> them up.
-> 
-> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-> memalloc_*_save/restore functions to control the allocation behavior,
-> but for userspace we would end up hitting an allocation that ended up
-> writing data back to the same device we are trying to allocate for.
-> The device is then in a state of deadlock, because to execute IO the
-> device needs to allocate memory, but to allocate memory the memory
-> layers want execute IO to the device.
-> 
-> Here is an example with nbd using a local userspace daemon that performs
-> network IO to a remote server. We are using XFS on top of the nbd device,
-> but it can happen with any FS or other modules layered on top of the nbd
-> device that can write out data to free memory.  Here a nbd daemon helper
-> thread, msgr-worker-1, is performing a write/sendmsg on a socket to execute
-> a request. This kicks off a reclaim operation which results in a WRITE to
-> the nbd device and the nbd thread calling back into the mm layer.
-> 
-> [ 1626.609191] msgr-worker-1   D    0  1026      1 0x00004000
-> [ 1626.609193] Call Trace:
-> [ 1626.609195]  ? __schedule+0x29b/0x630
-> [ 1626.609197]  ? wait_for_completion+0xe0/0x170
-> [ 1626.609198]  schedule+0x30/0xb0
-> [ 1626.609200]  schedule_timeout+0x1f6/0x2f0
-> [ 1626.609202]  ? blk_finish_plug+0x21/0x2e
-> [ 1626.609204]  ? _xfs_buf_ioapply+0x2e6/0x410
-> [ 1626.609206]  ? wait_for_completion+0xe0/0x170
-> [ 1626.609208]  wait_for_completion+0x108/0x170
-> [ 1626.609210]  ? wake_up_q+0x70/0x70
-> [ 1626.609212]  ? __xfs_buf_submit+0x12e/0x250
-> [ 1626.609214]  ? xfs_bwrite+0x25/0x60
-> [ 1626.609215]  xfs_buf_iowait+0x22/0xf0
-> [ 1626.609218]  __xfs_buf_submit+0x12e/0x250
-> [ 1626.609220]  xfs_bwrite+0x25/0x60
-> [ 1626.609222]  xfs_reclaim_inode+0x2e8/0x310
-> [ 1626.609224]  xfs_reclaim_inodes_ag+0x1b6/0x300
-> [ 1626.609227]  xfs_reclaim_inodes_nr+0x31/0x40
-> [ 1626.609228]  super_cache_scan+0x152/0x1a0
-> [ 1626.609231]  do_shrink_slab+0x12c/0x2d0
-> [ 1626.609233]  shrink_slab+0x9c/0x2a0
-> [ 1626.609235]  shrink_node+0xd7/0x470
-> [ 1626.609237]  do_try_to_free_pages+0xbf/0x380
-> [ 1626.609240]  try_to_free_pages+0xd9/0x1f0
-> [ 1626.609245]  __alloc_pages_slowpath+0x3a4/0xd30
-> [ 1626.609251]  ? ___slab_alloc+0x238/0x560
-> [ 1626.609254]  __alloc_pages_nodemask+0x30c/0x350
-> [ 1626.609259]  skb_page_frag_refill+0x97/0xd0
-> [ 1626.609274]  sk_page_frag_refill+0x1d/0x80
-> [ 1626.609279]  tcp_sendmsg_locked+0x2bb/0xdd0
-> [ 1626.609304]  tcp_sendmsg+0x27/0x40
-> [ 1626.609307]  sock_sendmsg+0x54/0x60
-> [ 1626.609308]  ___sys_sendmsg+0x29f/0x320
-> [ 1626.609313]  ? sock_poll+0x66/0xb0
-> [ 1626.609318]  ? ep_item_poll.isra.15+0x40/0xc0
-> [ 1626.609320]  ? ep_send_events_proc+0xe6/0x230
-> [ 1626.609322]  ? hrtimer_try_to_cancel+0x54/0xf0
-> [ 1626.609324]  ? ep_read_events_proc+0xc0/0xc0
-> [ 1626.609326]  ? _raw_write_unlock_irq+0xa/0x20
-> [ 1626.609327]  ? ep_scan_ready_list.constprop.19+0x218/0x230
-> [ 1626.609329]  ? __hrtimer_init+0xb0/0xb0
-> [ 1626.609331]  ? _raw_spin_unlock_irq+0xa/0x20
-> [ 1626.609334]  ? ep_poll+0x26c/0x4a0
-> [ 1626.609337]  ? tcp_tsq_write.part.54+0xa0/0xa0
-> [ 1626.609339]  ? release_sock+0x43/0x90
-> [ 1626.609341]  ? _raw_spin_unlock_bh+0xa/0x20
-> [ 1626.609342]  __sys_sendmsg+0x47/0x80
-> [ 1626.609347]  do_syscall_64+0x5f/0x1c0
-> [ 1626.609349]  ? prepare_exit_to_usermode+0x75/0xa0
-> [ 1626.609351]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 
-> This patch adds a new prctl command that daemons can use after they have
-> done their initial setup, and before they start to do allocations that
-> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
-> flags so both userspace block and FS threads can use it to avoid the
-> allocation recursion and try to prevent from being throttled while
-> writing out data to free up memory.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
+Looks fine even with the __vmalloc usage:
 
-OK, this looks much better then explicitly exposing NOIO/NOFS to the
-userspace. Restricting to CAP_SYS_RESOURCE makes sense as well but I am
-not really an expert in that direction.
-
-So for the proposed semantic this makes sense
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Please do not forget to add a man page update.
-
-Keeping the rest of the email for the new CC
-
-> ---
-> V3 
-> - Drop NOFS, set PF_LESS_THROTTLE and rename prctl flag to reflect it
-> is more general and can support both FS and block devices. Both fuse
-> and block device daemons, nbd and tcmu-runner, have been tested to
-> confirm the more restrictive PF_MEMALLOC_NOIO also works for fuse.
-> 
-> - Use CAP_SYS_RESOURCE instead of admin.
-> 
-> V2:
-> - Use prctl instead of procfs.
-> - Add support for NOFS for fuse.
-> - Check permissions.
-> 
-> 
->  include/uapi/linux/capability.h |  1 +
->  include/uapi/linux/prctl.h      |  4 ++++
->  kernel/sys.c                    | 26 ++++++++++++++++++++++++++
->  3 files changed, 31 insertions(+)
-> 
-> diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
-> index 240fdb9a60f6..272dc69fa080 100644
-> --- a/include/uapi/linux/capability.h
-> +++ b/include/uapi/linux/capability.h
-> @@ -301,6 +301,7 @@ struct vfs_ns_cap_data {
->  /* Allow more than 64hz interrupts from the real-time clock */
->  /* Override max number of consoles on console allocation */
->  /* Override max number of keymaps */
-> +/* Control memory reclaim behavior */
->  
->  #define CAP_SYS_RESOURCE     24
->  
-> diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
-> index 7da1b37b27aa..07b4f8131e36 100644
-> --- a/include/uapi/linux/prctl.h
-> +++ b/include/uapi/linux/prctl.h
-> @@ -234,4 +234,8 @@ struct prctl_mm_map {
->  #define PR_GET_TAGGED_ADDR_CTRL		56
->  # define PR_TAGGED_ADDR_ENABLE		(1UL << 0)
->  
-> +/* Control reclaim behavior when allocating memory */
-> +#define PR_SET_IO_FLUSHER		57
-> +#define PR_GET_IO_FLUSHER		58
-> +
->  #endif /* _LINUX_PRCTL_H */
-> diff --git a/kernel/sys.c b/kernel/sys.c
-> index a611d1d58c7d..08c6b682fa99 100644
-> --- a/kernel/sys.c
-> +++ b/kernel/sys.c
-> @@ -2486,6 +2486,32 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
->  			return -EINVAL;
->  		error = GET_TAGGED_ADDR_CTRL();
->  		break;
-> +	case PR_SET_IO_FLUSHER:
-> +		if (!capable(CAP_SYS_RESOURCE))
-> +			return -EPERM;
-> +
-> +		if (arg3 || arg4 || arg5)
-> +			return -EINVAL;
-> +
-> +		if (arg2 == 1)
-> +			current->flags |= PF_MEMALLOC_NOIO | PF_LESS_THROTTLE;
-> +		else if (!arg2)
-> +			current->flags &= ~(PF_MEMALLOC_NOIO | PF_LESS_THROTTLE);
-> +		else
-> +			return -EINVAL;
-> +		break;
-> +	case PR_GET_IO_FLUSHER:
-> +		if (!capable(CAP_SYS_RESOURCE))
-> +			return -EPERM;
-> +
-> +		if (arg2 || arg3 || arg4 || arg5)
-> +			return -EINVAL;
-> +
-> +		if (current->flags & (PF_MEMALLOC_NOIO | PF_LESS_THROTTLE))
-> +			error = 1;
-> +		else
-> +			error = 0;
-> +		break;
->  	default:
->  		error = -EINVAL;
->  		break;
-> -- 
-> 2.20.1
-> 
-
--- 
-Michal Hocko
-SUSE Labs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
