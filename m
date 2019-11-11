@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2100C17445
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:48:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3988C43331
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:48:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98F9F21655
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:48:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AF5A20818
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Nov 2019 17:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726955AbfKKRsx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Nov 2019 12:48:53 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:46842 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726877AbfKKRsw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 12:48:52 -0500
-Received: by mail-pg1-f196.google.com with SMTP id r18so9849832pgu.13
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2019 09:48:50 -0800 (PST)
+        id S1726958AbfKKRsy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Nov 2019 12:48:54 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:43215 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726877AbfKKRsx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Nov 2019 12:48:53 -0500
+Received: by mail-pg1-f193.google.com with SMTP id l24so9871666pgh.10
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Nov 2019 09:48:53 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QpURMpSIivIVjp5XF97c8qcDAy5Kcf2EyDkDFVraOOA=;
-        b=rvJYpbCiIew56ZmStQOfFP7U1lxZX0XLFiHpvhKqh8lhkYte0PmXjn/MaA7a53xj/G
-         WAA8a2BA60zGaD3p4VNc24y6KsYn+79EP2AHZWOofJYGfzsttT6aiMTG5a2a87RvgxU8
-         NsCLB0SeDz7J6YapCuLeAopn+u0nSERASUnriuYprNqPTCFj3eXkbVtweD1NayftOjIR
-         NNDECgf4wZC0g0JmiFDDeV80LmcJRTKQdIg1fQXzW0LN7X8kyUiQ+13/EyQ757shH8QQ
-         AlcPyCxlPo9xSx7F8F0hAhiPYfZjnhIeaFO4XEMrVg/MnABu14hZSlTK5RboTgk62B1L
-         GhiA==
-X-Gm-Message-State: APjAAAXk7A9yOIag3LVJ24tUMk9wfau+gboiwls/+pqEhYeVfSF8gcDW
-        QZE+Qq9mWud0n8a9DQ6HAzQ=
-X-Google-Smtp-Source: APXvYqzpl8WpWLwNc8/DMJDxHuR1ttAtrMZf7ssVLoJMHAnsPEYTXkdC4LNVeBtO6PRywfKk9BpQlA==
-X-Received: by 2002:a17:90a:32e5:: with SMTP id l92mr302776pjb.40.1573494530272;
-        Mon, 11 Nov 2019 09:48:50 -0800 (PST)
+        bh=mA/AceqJ0FtsePpgLqlrA/NMv5QPT2P64U/aEQJEjFo=;
+        b=O5FU03joNVMy/3yCk3nQaVNnWffsIi8t7qh4td1isGdvOQ2yYih7TjTciW1Mp0z896
+         2sFl0k9Q6kEs3YSGvWl9h9IW/ZoMJTmJvsseuKET3lNCGUBl5QyPkm6fi7BjkioAOMko
+         6de3/VuYKwfY3rEbZ4njVlGzhMyufdcfr60GtwMRa59RUUhDpqCMetKnBESo0FHZ4na+
+         bYiUc+L+m74WWikF5923Zt9S6K/QjEjMj5X2F8/xegjQqJFDhXSLGOPHYqsMvPy98Zlv
+         3ypolJ0eDZ8BLe9/2xPrbf7NI3dBwi6te3yXHEq6tNRwrWijuDOA1m9C3AfZQfIGkSxW
+         8r1Q==
+X-Gm-Message-State: APjAAAWHx7U+KKdQAsLqj3lmrV6dbOmyum1G6bUaz16easIAL3ptT+mM
+        YRUe/SSLuWuJ9I/bx+Rwh3I=
+X-Google-Smtp-Source: APXvYqz/6LoMoUGErZyDmxJBvaOelCUffd+oZc7c2YJB3QuqLdH99lFEShQytTRYsqai7SUsPtpK8Q==
+X-Received: by 2002:a17:90a:4fe6:: with SMTP id q93mr290246pjh.88.1573494533120;
+        Mon, 11 Nov 2019 09:48:53 -0800 (PST)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id p123sm18126763pfg.30.2019.11.11.09.48.48
+        by smtp.gmail.com with ESMTPSA id p123sm18126763pfg.30.2019.11.11.09.48.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Nov 2019 09:48:49 -0800 (PST)
+        Mon, 11 Nov 2019 09:48:52 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -50,9 +50,9 @@ Cc:     Bean Huo <beanhuo@micron.com>, Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v4 1/3] ufs: Avoid busy-waiting by eliminating tag conflicts
-Date:   Mon, 11 Nov 2019 09:48:39 -0800
-Message-Id: <20191111174841.185278-2-bvanassche@acm.org>
+Subject: [PATCH v4 3/3] ufs: Simplify the clock scaling mechanism implementation
+Date:   Mon, 11 Nov 2019 09:48:41 -0800
+Message-Id: <20191111174841.185278-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.24.0.rc1.363.gb1bccd3e3d-goog
 In-Reply-To: <20191111174841.185278-1-bvanassche@acm.org>
 References: <20191111174841.185278-1-bvanassche@acm.org>
@@ -63,342 +63,308 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of tracking which tags are in use in the ufs_hba.lrb_in_use
-bitmask, rely on the block layer tag allocation mechanism. This patch
-removes the following busy-waiting loop if ufshcd_issue_devman_upiu_cmd()
-and the block layer accidentally allocate the same tag for a SCSI request:
-* ufshcd_queuecommand() returns SCSI_MLQUEUE_HOST_BUSY.
-* The SCSI core requeues the SCSI command.
+Scaling the clock is only safe while no commands are in progress. Use
+blk_mq_{un,}freeze_queue() to block submission of new commands and to
+wait for ongoing commands to complete. Remove "_scsi" from the name of
+the functions that block and unblock requests since these functions
+now block both SCSI commands and non-SCSI commands.
 
 Tested-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Avri Altman <avri.altman@wdc.com>
 Cc: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 121 +++++++++++++++-----------------------
- drivers/scsi/ufs/ufshcd.h |   6 +-
- 2 files changed, 50 insertions(+), 77 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 143 +++++++++++++-------------------------
+ drivers/scsi/ufs/ufshcd.h |   3 -
+ 2 files changed, 47 insertions(+), 99 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9cbe3b45cf1c..93c920bf77d2 100644
+index 00c567bbbb64..65f05ca8d76f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -497,8 +497,8 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
--	dev_err(hba->dev, "lrb in use=0x%lx, outstanding reqs=0x%lx tasks=0x%lx\n",
--		hba->lrb_in_use, hba->outstanding_reqs, hba->outstanding_tasks);
-+	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-+		hba->outstanding_reqs, hba->outstanding_tasks);
- 	dev_err(hba->dev, "saved_err=0x%x, saved_uic_err=0x%x\n",
- 		hba->saved_err, hba->saved_uic_err);
- 	dev_err(hba->dev, "Device power mode=%d, UIC link state=%d\n",
-@@ -1596,6 +1596,25 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
- }
- EXPORT_SYMBOL_GPL(ufshcd_hold);
- 
-+static bool ufshcd_is_busy(struct request *req, void *priv, bool reserved)
-+{
-+	int *busy = priv;
-+
-+	WARN_ON_ONCE(reserved);
-+	(*busy)++;
-+	return false;
-+}
-+
-+/* Whether or not any tag is in use by a request that is in progress. */
-+static bool ufshcd_any_tag_in_use(struct ufs_hba *hba)
-+{
-+	struct request_queue *q = hba->cmd_queue;
-+	int busy = 0;
-+
-+	blk_mq_tagset_busy_iter(q->tag_set, ufshcd_is_busy, &busy);
-+	return busy;
-+}
-+
- static void ufshcd_gate_work(struct work_struct *work)
- {
- 	struct ufs_hba *hba = container_of(work, struct ufs_hba,
-@@ -1619,7 +1638,7 @@ static void ufshcd_gate_work(struct work_struct *work)
- 
- 	if (hba->clk_gating.active_reqs
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
--		|| hba->lrb_in_use || hba->outstanding_tasks
-+		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
- 		|| hba->active_uic_cmd || hba->uic_async_done)
- 		goto rel_lock;
- 
-@@ -1673,7 +1692,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 
- 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
--		|| hba->lrb_in_use || hba->outstanding_tasks
-+		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
- 		|| hba->active_uic_cmd || hba->uic_async_done
- 		|| ufshcd_eh_in_progress(hba))
- 		return;
-@@ -2443,22 +2462,9 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	hba->req_abort_count = 0;
- 
--	/* acquire the tag to make sure device cmds don't use it */
--	if (test_and_set_bit_lock(tag, &hba->lrb_in_use)) {
--		/*
--		 * Dev manage command in progress, requeue the command.
--		 * Requeuing the command helps in cases where the request *may*
--		 * find different tag instead of waiting for dev manage command
--		 * completion.
--		 */
--		err = SCSI_MLQUEUE_HOST_BUSY;
--		goto out;
--	}
--
- 	err = ufshcd_hold(hba, true);
- 	if (err) {
- 		err = SCSI_MLQUEUE_HOST_BUSY;
--		clear_bit_unlock(tag, &hba->lrb_in_use);
- 		goto out;
+@@ -290,16 +290,50 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
  	}
- 	WARN_ON(hba->clk_gating.state != CLKS_ON);
-@@ -2479,7 +2485,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	err = ufshcd_map_sg(hba, lrbp);
- 	if (err) {
- 		lrbp->cmd = NULL;
--		clear_bit_unlock(tag, &hba->lrb_in_use);
- 		goto out;
- 	}
- 	/* Make sure descriptors are ready before ringing the doorbell */
-@@ -2626,44 +2631,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 	return err;
  }
  
--/**
-- * ufshcd_get_dev_cmd_tag - Get device management command tag
-- * @hba: per-adapter instance
-- * @tag_out: pointer to variable with available slot value
-- *
-- * Get a free slot and lock it until device management command
-- * completes.
-- *
-- * Returns false if free slot is unavailable for locking, else
-- * return true with tag value in @tag.
-- */
--static bool ufshcd_get_dev_cmd_tag(struct ufs_hba *hba, int *tag_out)
+-static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
++static void ufshcd_unblock_requests(struct ufs_hba *hba)
+ {
+-	if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
+-		scsi_unblock_requests(hba->host);
++	struct scsi_device *sdev;
++
++	blk_mq_unfreeze_queue(hba->tmf_queue);
++	blk_mq_unfreeze_queue(hba->cmd_queue);
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_unfreeze_queue(sdev->request_queue);
+ }
+ 
+-static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
++static int ufshcd_block_requests(struct ufs_hba *hba, unsigned long timeout)
+ {
+-	if (atomic_inc_return(&hba->scsi_block_reqs_cnt) == 1)
+-		scsi_block_requests(hba->host);
++	struct scsi_device *sdev;
++	unsigned long deadline = jiffies + timeout;
++
++	if (timeout == ULONG_MAX) {
++		shost_for_each_device(sdev, hba->host)
++			blk_mq_freeze_queue(sdev->request_queue);
++		blk_mq_freeze_queue(hba->cmd_queue);
++		blk_mq_freeze_queue(hba->tmf_queue);
++		return 0;
++	}
++
++	shost_for_each_device(sdev, hba->host)
++		blk_freeze_queue_start(sdev->request_queue);
++	blk_freeze_queue_start(hba->cmd_queue);
++	blk_freeze_queue_start(hba->tmf_queue);
++	shost_for_each_device(sdev, hba->host) {
++		if (blk_mq_freeze_queue_wait_timeout(sdev->request_queue,
++				max_t(long, 0, deadline - jiffies)) <= 0) {
++			goto err;
++		}
++	}
++	if (blk_mq_freeze_queue_wait_timeout(hba->cmd_queue,
++				max_t(long, 0, deadline - jiffies)) <= 0)
++		goto err;
++	if (blk_mq_freeze_queue_wait_timeout(hba->tmf_queue,
++				max_t(long, 0, deadline - jiffies)) <= 0)
++		goto err;
++	return 0;
++
++err:
++	ufshcd_unblock_requests(hba);
++	return -ETIMEDOUT;
+ }
+ 
+ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+@@ -971,65 +1005,6 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+ 	return false;
+ }
+ 
+-static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+-					u64 wait_timeout_us)
 -{
--	int tag;
--	bool ret = false;
--	unsigned long tmp;
+-	unsigned long flags;
+-	int ret = 0;
+-	u32 tm_doorbell;
+-	u32 tr_doorbell;
+-	bool timeout = false, do_last_check = false;
+-	ktime_t start;
 -
--	if (!tag_out)
--		goto out;
--
+-	ufshcd_hold(hba, false);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	/*
+-	 * Wait for all the outstanding tasks/transfer requests.
+-	 * Verify by checking the doorbell registers are clear.
+-	 */
+-	start = ktime_get();
 -	do {
--		tmp = ~hba->lrb_in_use;
--		tag = find_last_bit(&tmp, hba->nutrs);
--		if (tag >= hba->nutrs)
+-		if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+-			ret = -EBUSY;
 -			goto out;
--	} while (test_and_set_bit_lock(tag, &hba->lrb_in_use));
+-		}
 -
--	*tag_out = tag;
--	ret = true;
+-		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		if (!tm_doorbell && !tr_doorbell) {
+-			timeout = false;
+-			break;
+-		} else if (do_last_check) {
+-			break;
+-		}
+-
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+-		schedule();
+-		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+-		    wait_timeout_us) {
+-			timeout = true;
+-			/*
+-			 * We might have scheduled out for long time so make
+-			 * sure to check if doorbells are cleared by this time
+-			 * or not.
+-			 */
+-			do_last_check = true;
+-		}
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+-	} while (tm_doorbell || tr_doorbell);
+-
+-	if (timeout) {
+-		dev_err(hba->dev,
+-			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
+-			__func__, tm_doorbell, tr_doorbell);
+-		ret = -EBUSY;
+-	}
 -out:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	ufshcd_release(hba);
 -	return ret;
 -}
 -
--static inline void ufshcd_put_dev_cmd_tag(struct ufs_hba *hba, int tag)
--{
--	clear_bit_unlock(tag, &hba->lrb_in_use);
--}
--
  /**
-  * ufshcd_exec_dev_cmd - API for sending device management requests
-  * @hba: UFS hba
-@@ -2676,6 +2643,8 @@ static inline void ufshcd_put_dev_cmd_tag(struct ufs_hba *hba, int tag)
- static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		enum dev_cmd_type cmd_type, int timeout)
+  * ufshcd_scale_gear - scale up/down UFS gear
+  * @hba: per adapter instance
+@@ -1079,27 +1054,16 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+ 
+ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
  {
-+	struct request_queue *q = hba->cmd_queue;
-+	struct request *req;
- 	struct ufshcd_lrb *lrbp;
- 	int err;
- 	int tag;
-@@ -2689,7 +2658,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	 * Even though we use wait_event() which sleeps indefinitely,
- 	 * the maximum wait time is bounded by SCSI request timeout.
+-	#define DOORBELL_CLR_TOUT_US		(1000 * 1000) /* 1 sec */
+-	int ret = 0;
+ 	/*
+ 	 * make sure that there are no outstanding requests when
+ 	 * clock scaling is in progress
  	 */
--	wait_event(hba->dev_cmd.tag_wq, ufshcd_get_dev_cmd_tag(hba, &tag));
-+	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+	tag = req->tag;
-+	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
- 
- 	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
-@@ -2714,8 +2687,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 			err ? "query_complete_err" : "query_complete");
- 
- out_put_tag:
--	ufshcd_put_dev_cmd_tag(hba, tag);
--	wake_up(&hba->dev_cmd.tag_wq);
-+	blk_put_request(req);
- 	up_read(&hba->clk_scaling_lock);
- 	return err;
- }
-@@ -4834,7 +4806,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 			cmd->result = result;
- 			/* Mark completed command as NULL in LRB */
- 			lrbp->cmd = NULL;
--			clear_bit_unlock(index, &hba->lrb_in_use);
- 			/* Do not touch lrbp after scsi done */
- 			cmd->scsi_done(cmd);
- 			__ufshcd_release(hba);
-@@ -4856,9 +4827,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 	hba->outstanding_reqs ^= completed_reqs;
- 
- 	ufshcd_clk_scaling_update_busy(hba);
+-	ufshcd_scsi_block_requests(hba);
+-	down_write(&hba->clk_scaling_lock);
+-	if (ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+-		ret = -EBUSY;
+-		up_write(&hba->clk_scaling_lock);
+-		ufshcd_scsi_unblock_requests(hba);
+-	}
 -
--	/* we might have free'd some tags above */
--	wake_up(&hba->dev_cmd.tag_wq);
+-	return ret;
++	return ufshcd_block_requests(hba, HZ);
+ }
+ 
+ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba)
+ {
+-	up_write(&hba->clk_scaling_lock);
+-	ufshcd_scsi_unblock_requests(hba);
++	ufshcd_unblock_requests(hba);
  }
  
  /**
-@@ -5787,6 +5755,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 					enum dev_cmd_type cmd_type,
- 					enum query_opcode desc_op)
- {
-+	struct request_queue *q = hba->cmd_queue;
-+	struct request *req;
- 	struct ufshcd_lrb *lrbp;
- 	int err = 0;
- 	int tag;
-@@ -5796,7 +5766,11 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+@@ -1471,7 +1435,7 @@ static void ufshcd_ungate_work(struct work_struct *work)
+ 		hba->clk_gating.is_suspended = false;
+ 	}
+ unblock_reqs:
+-	ufshcd_scsi_unblock_requests(hba);
++	ufshcd_unblock_requests(hba);
+ }
  
- 	down_read(&hba->clk_scaling_lock);
- 
--	wait_event(hba->dev_cmd.tag_wq, ufshcd_get_dev_cmd_tag(hba, &tag));
-+	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+	tag = req->tag;
-+	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
- 
- 	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
-@@ -5870,8 +5844,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 		}
+ /**
+@@ -1528,7 +1492,7 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		/* fallthrough */
+ 	case CLKS_OFF:
+-		ufshcd_scsi_block_requests(hba);
++		ufshcd_block_requests(hba, ULONG_MAX);
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+@@ -2395,9 +2359,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		BUG();
  	}
  
--	ufshcd_put_dev_cmd_tag(hba, tag);
--	wake_up(&hba->dev_cmd.tag_wq);
-+	blk_put_request(req);
- 	up_read(&hba->clk_scaling_lock);
+-	if (!down_read_trylock(&hba->clk_scaling_lock))
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	switch (hba->ufshcd_state) {
+ 	case UFSHCD_STATE_OPERATIONAL:
+@@ -2463,7 +2424,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ out_unlock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ out:
+-	up_read(&hba->clk_scaling_lock);
  	return err;
  }
-@@ -6166,9 +6139,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	hba->lrb[tag].cmd = NULL;
- 	spin_unlock_irqrestore(host->host_lock, flags);
  
--	clear_bit_unlock(tag, &hba->lrb_in_use);
--	wake_up(&hba->dev_cmd.tag_wq);
+@@ -2617,8 +2577,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	struct completion wait;
+ 	unsigned long flags;
+ 
+-	down_read(&hba->clk_scaling_lock);
 -
+ 	/*
+ 	 * Get free slot, sleep if slots are unavailable.
+ 	 * Even though we use wait_event() which sleeps indefinitely,
+@@ -2654,7 +2612,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 
+ out_put_tag:
+ 	blk_put_request(req);
+-	up_read(&hba->clk_scaling_lock);
+ 	return err;
+ }
+ 
+@@ -5329,7 +5286,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 
  out:
- 	if (!err) {
- 		err = SUCCESS;
-@@ -8172,6 +8142,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- {
- 	ufs_bsg_remove(hba);
- 	ufs_sysfs_remove_nodes(hba->dev);
-+	blk_cleanup_queue(hba->cmd_queue);
- 	scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
-@@ -8335,9 +8306,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	ufshcd_scsi_unblock_requests(hba);
++	ufshcd_unblock_requests(hba);
+ 	ufshcd_release(hba);
+ 	pm_runtime_put_sync(hba->dev);
+ }
+@@ -5452,8 +5409,8 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
  
- 	init_rwsem(&hba->clk_scaling_lock);
+ 		/* handle fatal errors only when link is functional */
+ 		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
+-			/* block commands from scsi mid-layer */
+-			ufshcd_scsi_block_requests(hba);
++			/* block all commands, incl. SCSI commands */
++			ufshcd_block_requests(hba, ULONG_MAX);
  
--	/* Initialize device management tag acquire wait queue */
--	init_waitqueue_head(&hba->dev_cmd.tag_wq);
+ 			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
+ 
+@@ -5759,8 +5716,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	unsigned long flags;
+ 	u32 upiu_flags;
+ 
+-	down_read(&hba->clk_scaling_lock);
+-
+ 	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+ 	if (IS_ERR(req))
+ 		return PTR_ERR(req);
+@@ -5840,7 +5795,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	}
+ 
+ 	blk_put_request(req);
+-	up_read(&hba->clk_scaling_lock);
+ 	return err;
+ }
+ 
+@@ -8309,8 +8263,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Initialize mutex for device management commands */
+ 	mutex_init(&hba->dev_cmd.lock);
+ 
+-	init_rwsem(&hba->clk_scaling_lock);
 -
  	ufshcd_init_clk_gating(hba);
  
  	ufshcd_init_clk_scaling(hba);
-@@ -8371,6 +8339,11 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		goto exit_gating;
- 	}
+@@ -8396,7 +8348,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  
-+	err = -ENOMEM;
-+	hba->cmd_queue = blk_mq_init_queue(&hba->host->tag_set);
-+	if (!hba->cmd_queue)
-+		goto out_remove_scsi_host;
-+
- 	/* Reset the attached device */
- 	ufshcd_vops_device_reset(hba);
- 
-@@ -8380,7 +8353,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		dev_err(hba->dev, "Host controller enable failed\n");
- 		ufshcd_print_host_regs(hba);
- 		ufshcd_print_host_state(hba);
--		goto out_remove_scsi_host;
-+		goto free_cmd_queue;
- 	}
- 
+ 	/* Hold auto suspend until async scan completes */
+ 	pm_runtime_get_sync(dev);
+-	atomic_set(&hba->scsi_block_reqs_cnt, 0);
  	/*
-@@ -8417,6 +8390,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	return 0;
- 
-+free_cmd_queue:
-+	blk_cleanup_queue(hba->cmd_queue);
- out_remove_scsi_host:
- 	scsi_remove_host(hba->host);
- exit_gating:
+ 	 * We are assuming that device wasn't put in sleep/power-down
+ 	 * state exclusively during the boot stage before kernel.
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index e0fe247c719e..6d9521892a84 100644
+index 5865e16f53a6..c44bfcdb26a3 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -212,13 +212,11 @@ struct ufs_query {
-  * @type: device management command type - Query, NOP OUT
-  * @lock: lock to allow one command at a time
-  * @complete: internal commands completion
-- * @tag_wq: wait queue until free command slot is available
+@@ -520,7 +520,6 @@ struct ufs_stats {
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+  *  device is known or not.
+- * @scsi_block_reqs_cnt: reference counting for scsi block requests
   */
- struct ufs_dev_cmd {
- 	enum dev_cmd_type type;
- 	struct mutex lock;
- 	struct completion *complete;
--	wait_queue_head_t tag_wq;
- 	struct ufs_query query;
- };
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -724,9 +723,7 @@ struct ufs_hba {
+ 	enum bkops_status urgent_bkops_lvl;
+ 	bool is_urgent_bkops_lvl_checked;
  
-@@ -483,7 +481,7 @@ struct ufs_stats {
-  * @host: Scsi_Host instance of the driver
-  * @dev: device handle
-  * @lrb: local reference block
-- * @lrb_in_use: lrb in use
-+ * @cmd_queue: Used to allocate command tags from hba->host->tag_set.
-  * @outstanding_tasks: Bits representing outstanding task requests
-  * @outstanding_reqs: Bits representing outstanding transfer requests
-  * @capabilities: UFS Controller Capabilities
-@@ -541,6 +539,7 @@ struct ufs_hba {
+-	struct rw_semaphore clk_scaling_lock;
+ 	struct ufs_desc_size desc_size;
+-	atomic_t scsi_block_reqs_cnt;
  
- 	struct Scsi_Host *host;
- 	struct device *dev;
-+	struct request_queue *cmd_queue;
- 	/*
- 	 * This field is to keep a reference to "scsi_device" corresponding to
- 	 * "UFS device" W-LU.
-@@ -561,7 +560,6 @@ struct ufs_hba {
- 	u32 ahit;
- 
- 	struct ufshcd_lrb *lrb;
--	unsigned long lrb_in_use;
- 
- 	unsigned long outstanding_tasks;
- 	unsigned long outstanding_reqs;
+ 	struct device		bsg_dev;
+ 	struct request_queue	*bsg_queue;
 -- 
 2.24.0.rc1.363.gb1bccd3e3d-goog
 
