@@ -2,49 +2,122 @@ Return-Path: <SRS0=nPvI=ZE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3A4C43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A01C43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:30:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1146021D7F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 150CB206B6
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:30:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eTGiIoWJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727220AbfKLSAQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 13:00:16 -0500
-Received: from [211.53.128.215] ([211.53.128.215]:35512 "EHLO MAIL.isd.co.kr"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727229AbfKLSAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Nov 2019 13:00:16 -0500
-Received: from 192.168.1.163 (217.217.179.17) by MAIL.isd.co.kr (10.10.10.22)
- with Microsoft SMTP Server id 14.3.123.3; Wed, 13 Nov 2019 02:57:40 +0900
-Date:   Tue, 12 Nov 2019 18:57:42 +0100
-From:   Peter Wong <choimj@isd.co.kr>
-Reply-To: Peter Wong <pw178484@gmail.com>
-To:     <linux-scsi@vger.kernel.org>
-Message-ID: <21582002.155172.1573581464265.JavaMail.cash@webmail.isd.co.kr>
-Subject: Investment opportunity
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [217.217.179.17]
+        id S1727044AbfKLSab (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 13:30:31 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31199 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726718AbfKLSab (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 13:30:31 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573583430;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3l55eh7+AZM0FjyRO1uZWlbag6Gc7dlqMMDqPnedYVw=;
+        b=eTGiIoWJMlbp5i2Pp/32Fvlw7I1L0L8pr8UcB/m+jZYidbev++YHT1HpqAuKYtY5ReN2Ki
+        sFrNnAv5RPIWImv99NeGWZN02MJjVv+qy2x65oFQXSBjiJw+r82+h5aUZkwFEtNYdxLIT2
+        UTyOIvWCxql57Zh/FPPCq/qBFyg9bPE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-14-dKsttPp6PwyheE-CPUhEuw-1; Tue, 12 Nov 2019 13:30:26 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 464CF107ACC8;
+        Tue, 12 Nov 2019 18:30:25 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 61FCA101F6C5;
+        Tue, 12 Nov 2019 18:30:24 +0000 (UTC)
+Message-ID: <e8e868d7e2b4fe0894bb3badff6c63ecd80d6e28.camel@redhat.com>
+Subject: Re: [PATCH 1/6] lpfc: fix: Coverity: lpfc_get_scsi_buf_s3(): Null
+ pointer dereferences
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org
+Date:   Tue, 12 Nov 2019 13:30:23 -0500
+In-Reply-To: <20191111230401.12958-2-jsmart2021@gmail.com>
+References: <20191111230401.12958-1-jsmart2021@gmail.com>
+         <20191111230401.12958-2-jsmart2021@gmail.com>
+Mime-Version: 1.0
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: dKsttPp6PwyheE-CPUhEuw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Greetings,
+On Mon, 2019-11-11 at 15:03 -0800, James Smart wrote:
+> Coverity reported the following:
+>=20
+> *** CID 1487391:  Null pointer dereferences  (FORWARD_NULL)
+> /drivers/scsi/lpfc/lpfc_scsi.c: 614 in lpfc_get_scsi_buf_s3()
+> 608     =09=09spin_unlock(&phba->scsi_buf_list_put_lock);
+> 609     =09}
+> 610     =09spin_unlock_irqrestore(&phba->scsi_buf_list_get_lock, iflag);
+> 611
+> 612     =09if (lpfc_ndlp_check_qdepth(phba, ndlp)) {
+> 613     =09=09atomic_inc(&ndlp->cmd_pending);
+> vvv     CID 1487391:  Null pointer dereferences  (FORWARD_NULL)
+> vvv     Dereferencing null pointer "lpfc_cmd".
+> 614     =09=09lpfc_cmd->flags |=3D LPFC_SBUF_BUMP_QDEPTH;
+> 615     =09}
+> 616     =09return  lpfc_cmd;
+> 617     }
+> 618     /**
+> 619      * lpfc_get_scsi_buf_s4 - Get a scsi buffer from io_buf_list of t=
+he HBA
+>=20
+> Fix by checking lpfc_cmd to be non-NULL as part of line 612
+>=20
+> Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+> Addresses-Coverity-ID: 1487391 ("Null pointer dereferences")
+> Fixes: 2a5b7d626ed2 ("scsi: lpfc: Limit tracking of tgt queue depth in fa=
+st path")
+>=20
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> CC: "Martin K. Petersen" <martin.petersen@oracle.com>
+> CC: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+> CC: linux-next@vger.kernel.org
+> ---
+>  drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.=
+c
+> index 959ef471d758..ba26df90a36a 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -611,7 +611,7 @@ lpfc_get_scsi_buf_s3(struct lpfc_hba *phba, struct lp=
+fc_nodelist *ndlp,
+>  =09}
+>  =09spin_unlock_irqrestore(&phba->scsi_buf_list_get_lock, iflag);
+> =20
+> -=09if (lpfc_ndlp_check_qdepth(phba, ndlp)) {
+> +=09if (lpfc_ndlp_check_qdepth(phba, ndlp) && lpfc_cmd) {
+>  =09=09atomic_inc(&ndlp->cmd_pending);
+>  =09=09lpfc_cmd->flags |=3D LPFC_SBUF_BUMP_QDEPTH;
+>  =09}
 
-Find attached email very confidential. reply for more details
-
-Thanks.
-Peter Wong
-
-
-
-
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
