@@ -2,81 +2,90 @@ Return-Path: <SRS0=nPvI=ZE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 497B1C17441
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 09:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6974C43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 09:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DC962196E
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 09:34:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9898E20650
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 09:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727352AbfKLJem (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 04:34:42 -0500
-Received: from smtpq3.tb.mail.iss.as9143.net ([212.54.42.166]:48802 "EHLO
-        smtpq3.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725899AbfKLJem (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Nov 2019 04:34:42 -0500
-Received: from [212.54.42.137] (helo=smtp6.tb.mail.iss.as9143.net)
-        by smtpq3.tb.mail.iss.as9143.net with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.90_1)
-        (envelope-from <jongk@linux-m68k.org>)
-        id 1iUSZL-0004OE-LD; Tue, 12 Nov 2019 10:34:39 +0100
-Received: from mail-wm1-f44.google.com ([209.85.128.44])
-        by smtp6.tb.mail.iss.as9143.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.90_1)
-        (envelope-from <jongk@linux-m68k.org>)
-        id 1iUSZL-00073o-GZ; Tue, 12 Nov 2019 10:34:39 +0100
-Received: by mail-wm1-f44.google.com with SMTP id t26so2140487wmi.4;
-        Tue, 12 Nov 2019 01:34:39 -0800 (PST)
-X-Gm-Message-State: APjAAAWPl1M6P3Ho1wxbFoRTuSoOncpry6Mv+sGamUe8Hj+IcfoDEFJv
-        VGbeRvkz9debmcKKtVaFdwUDmSAVd1M3Zfouono=
-X-Google-Smtp-Source: APXvYqzdttmBjRlX1gAWVSosaygJJWgRFNozXjRXYPOGlvyv5xsLCvnbLoHljnkAnbGSASAQxrEcuoDngPBviisl+ZA=
-X-Received: by 2002:a1c:720b:: with SMTP id n11mr2774106wmc.60.1573551279260;
- Tue, 12 Nov 2019 01:34:39 -0800 (PST)
+        id S1727414AbfKLJe2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 04:34:28 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6205 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727171AbfKLJe1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Nov 2019 04:34:27 -0500
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id CF1CF6C0DA9CB716FA85;
+        Tue, 12 Nov 2019 17:34:24 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.439.0; Tue, 12 Nov 2019 17:34:18 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-kernel@vger.kernel.org>,
+        Xiang Chen <chenxiang66@hisilicon.com>,
+        "John Garry" <john.garry@huawei.com>
+Subject: [PATCH 3/4] scsi: hisi_sas: Relocate call to hisi_sas_debugfs_exit()
+Date:   Tue, 12 Nov 2019 17:30:58 +0800
+Message-ID: <1573551059-107873-4-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1573551059-107873-1-git-send-email-john.garry@huawei.com>
+References: <1573551059-107873-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-References: <CACz-3rh9ZCyU1825yU8xxty5BGrwFhpbjKNoWnn0mGiv_h2Kag@mail.gmail.com>
- <20191109191400.8999-1-jongk@linux-m68k.org> <1573330351.3650.4.camel@linux.ibm.com>
- <6b914b12-cbc7-6fe6-7cba-3e89b2f6f19b@gmail.com>
-In-Reply-To: <6b914b12-cbc7-6fe6-7cba-3e89b2f6f19b@gmail.com>
-From:   Kars de Jong <jongk@linux-m68k.org>
-Date:   Tue, 12 Nov 2019 10:34:28 +0100
-X-Gmail-Original-Message-ID: <CACz-3rgkdiFxTPd9gJ6Sebmuv7gG23wgZ6v9Fx4p_xg-_emr_g@mail.gmail.com>
-Message-ID: <CACz-3rgkdiFxTPd9gJ6Sebmuv7gG23wgZ6v9Fx4p_xg-_emr_g@mail.gmail.com>
-Subject: Re: [PATCH] zorro_esp: increase maximum dma length to 65536 bytes
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     James Bottomley <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-X-SourceIP: 209.85.128.44
-X-Authenticated-Sender: karsdejong@home.nl (via SMTP)
-X-Ziggo-spambar: /
-X-Ziggo-spamscore: 0.0
-X-Ziggo-spamreport: CMAE Analysis: v=2.3 cv=WMwBoUkR c=1 sm=1 tr=0 a=9+rZDBEiDlHhcck0kWbJtElFXBc=:19 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=MeAgGD-zjQ4A:10 a=pGLkceISAAAA:8 a=1UFXjjYtAAAA:8 a=G3ydgQW_W0eQeUwnF44A:9 a=QEXdDO2ut3YA:10 a=vgRaD6Luq-vJqV3RfsKp:22
-X-Ziggo-Spam-Status: No
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michael,
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Op zo 10 nov. 2019 om 03:36 schreef Michael Schmitz <schmitzmic@gmail.com>:
-> I need to confirm this from a data book of the older (pre-fast)
-> revisions of this chip family. but since as Kars also states, the core
-> driver default for the 16 bit transfer size is 64k as well, I very much
-> suspect the same behaviour for the older revisions.
+Currently we call function hisi_sas_debugfs_exit() to remove debugfs_dir
+before freeing interrupt irqs and destroying workqueue in the driver
+remove path.
 
-According to ftp://bitsavers.informatik.uni-stuttgart.de/components/ncr/scsi/NCR53C90ab.pdf,
-on the NCR 53C90A programming the transfer counter to 0 also means
-64k. That's the oldest data book I could find.
-But the Zorro driver assumes a fast variant of the chip anyway (the
-clock frequency is hard coded to 40 MHz), so this point is a little
-moot.
+If a dump is triggered before function hisi_sas_debugfs_exit() but
+debugfs_work may be called after it, so it may refer to already removed
+debugfs_dir which will cause NULL pointer dereference.
 
-Kind regards,
+To avoid it, put function hisi_sas_debugfs_exit() after free_irqs and
+destroy workqueue when removing hisi_sas driver.
 
-Kars.
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index b7836406debe..bf5d5f138437 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3302,8 +3302,6 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	struct hisi_hba *hisi_hba = sha->lldd_ha;
+ 	struct Scsi_Host *shost = sha->core.shost;
+ 
+-	hisi_sas_debugfs_exit(hisi_hba);
+-
+ 	if (timer_pending(&hisi_hba->timer))
+ 		del_timer(&hisi_hba->timer);
+ 
+@@ -3315,6 +3313,7 @@ static void hisi_sas_v3_remove(struct pci_dev *pdev)
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	hisi_sas_free(hisi_hba);
++	hisi_sas_debugfs_exit(hisi_hba);
+ 	scsi_host_put(shost);
+ }
+ 
+-- 
+2.17.1
+
