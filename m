@@ -2,44 +2,45 @@ Return-Path: <SRS0=nPvI=ZE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A32FFC17441
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E39EDC17441
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8719A2196E
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C79982196E
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726970AbfKLS6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 13:58:37 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:38206 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726718AbfKLS6g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 13:58:36 -0500
-Received: by mail-wm1-f65.google.com with SMTP id z19so4136303wmk.3;
-        Tue, 12 Nov 2019 10:58:35 -0800 (PST)
+        id S1727124AbfKLS6m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 13:58:42 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37554 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726718AbfKLS6m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 13:58:42 -0500
+Received: by mail-wm1-f67.google.com with SMTP id b17so4147465wmj.2;
+        Tue, 12 Nov 2019 10:58:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=2OdOpykLsnzEhklgJ8BjBEIsUVROm20WmbImz3r38Rk=;
-        b=qD1e/8cyjxwpbPSHczSXIaOekW7n7WcXndDSQ6w4Lhnrmh2GWe6vWgI13k1z9Ullt6
-         AfZL2JF0TOqBZKUaoESYvkyMoOrpa7MYUHmQBjoP06JVlIT7Jskkc+ybpZm626Lh7q6+
-         gpl9wN2KqO4JtZOcl6fgFGTbnhcH1e6mGsWEwES98k/9YXvnukgzgyTFkptIAcJX2FgL
-         HqKFLNfqhUTohHfF9U1jKqnj3zSyfYDD29oRPreV/MlbfR3HsNelZdLIN0hLHgnZRBeJ
-         a1poFZRR9Dzw4+ONvWvcem2H8L3jyONITepgr8rOrQFGrZRrhNrvvvJfRdsa1S07Orx0
-         XAuA==
-X-Gm-Message-State: APjAAAVRW10y2NF57hbEQ+aIk1qpHca6mJkBS7KO2giZIAcFjzEUNQAw
-        MtZQ1eEiLbAX/OI3s+WEODxUNsXD8jk=
-X-Google-Smtp-Source: APXvYqzmWL9o2tasgjDQDMSea79AMfBCZ4NvuUGBmkxmdVNHGl/WslUNxLqX8+C88/8I5OdpvHgFgQ==
-X-Received: by 2002:a1c:b404:: with SMTP id d4mr5757803wmf.9.1573585114766;
-        Tue, 12 Nov 2019 10:58:34 -0800 (PST)
+        bh=MmgpaHqoBn93vej2ZY+NJG2iolt4Tzj23bMz4h89v4k=;
+        b=HlaN9oyMd93+uc5R9/4TopJOxVbYZCAIKPsxZgllxygmb24fc3ywq2vkw/lOL5Y7PT
+         56Q49FBSFFzFRsXEApuJJrPqoI7Jv7YS261gt8l3P8EbSUnUhwg9bWTC1pTkst8TX9OT
+         OwCnD0Zn9+NSTnX6eUsswP/PHrg/zQ9T4rDemTQY/qwp1FQGDqaO6KElWGvPlyHU5zgS
+         4+0qLNJhyKWmwavSLX/S8FeTtaX7ofYv1Y2nFN6YMYr+e9Y/Q0IkCy7W8WcCOHdzpKdS
+         UWR+BQo9+wwLwI70NOtZZ+0WtHV2/d5XoJnWsVoBR9tbey9apdMhMWscIeaH6g6a5veZ
+         9Adg==
+X-Gm-Message-State: APjAAAUZbCNIJf1Yk7CkIczGhzu1/MxBdawpDH0lHBnvX5a9gzqcqlIp
+        lRm/xy92jIAtMDPBBDaPtHo=
+X-Google-Smtp-Source: APXvYqxYVvo59T1UoezPCXuCvV6CYJ+rPlr1bukTaMNCwbS7x+8B+W30tHDQQZnow7silRCDvuvcyQ==
+X-Received: by 2002:a7b:ce86:: with SMTP id q6mr5249666wmj.20.1573585119853;
+        Tue, 12 Nov 2019 10:58:39 -0800 (PST)
 Received: from localhost.localdomain (82-75-169-199.cable.dynamic.v4.ziggo.nl. [82.75.169.199])
-        by smtp.gmail.com with ESMTPSA id u18sm13017109wrp.14.2019.11.12.10.58.33
+        by smtp.gmail.com with ESMTPSA id u18sm13017109wrp.14.2019.11.12.10.58.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2019 10:58:34 -0800 (PST)
+        Tue, 12 Nov 2019 10:58:39 -0800 (PST)
 From:   Kars de Jong <jongk@linux-m68k.org>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -47,51 +48,85 @@ To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
 Cc:     linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
         schmitzmic@gmail.com, fthain@telegraphics.com.au,
         Kars de Jong <jongk@linux-m68k.org>
-Subject: [PATCH 0/2] Some esp_scsi updates
-Date:   Tue, 12 Nov 2019 19:57:08 +0100
-Message-Id: <20191112185710.23988-1-jongk@linux-m68k.org>
+Subject: [PATCH 1/2] esp_scsi: Correct ordering of PCSCSI definition in esp_rev enum
+Date:   Tue, 12 Nov 2019 19:57:09 +0100
+Message-Id: <20191112185710.23988-2-jongk@linux-m68k.org>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191029220503.7553-1-jongk@linux-m68k.org>
+In-Reply-To: <20191112185710.23988-1-jongk@linux-m68k.org>
 References: <20191029220503.7553-1-jongk@linux-m68k.org>
+ <20191112185710.23988-1-jongk@linux-m68k.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When trying kernel 5.4.0-rc5 on my Amiga, I experienced data transfer failures
-when reading from my FAST-10 SCSI disk. I have a Blizzard 12x0 IV SCSI
-controller which uses a Symbios Logic SYM53CF94-2 "FSC" chip.
+The order of the definitions in the esp_rev enum is important. The values
+are used in comparisons for chip features.
 
-This used to work with the old generic NCR53C9x driver, so I investigated the
-issue.
+Add a comment to the enum explaining this.
 
-It turned out to be caused by lacking detection of FSC silicon in the new
-driver.
+Also, the actual values for the enum fields are irrelevant, so remove the
+explicit values (suggested by Geert Uytterhoeven). This makes adding a new
+field in the middle of the enum easier.
 
-The second patch in this series adds support for the FSC.
+Finally, move the PCSCSI definition to the right place in the enum. In its
+previous location, at the end of the enum, the wrong values are written to
+the CONFIG3 register when used with FAST-SCSI targets. Add comments to the
+enum explaining this.
 
-When adding support for the chip, I found out the hard way that the esp_rev
-enum is ordered (I just added it to the end of the enum).
+Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
+---
+ drivers/scsi/esp_scsi.c |  2 +-
+ drivers/scsi/esp_scsi.h | 19 +++++++++++--------
+ 2 files changed, 12 insertions(+), 9 deletions(-)
 
-Then I also discovered that the definition for the PCSCSI chip was in the wrong
-place of the enum. It will probably have issues with FAST-10 SCSI targets,
-because its CONFIG3 settings are wrong.
-
-The first patch fixes this, and adds comments to the enum to hopefully prevent
-this from happening again.
-
-When discussing this on the Linux/m68k mailing list, it was suggested to
-perhaps replace the dependency on ordering of the esp_rev enum by feature flags.
-I did not implement this for now.
-
-Kars de Jong (2):
-  esp_scsi: Correct ordering of PCSCSI definition in esp_rev enum
-  esp_scsi: Add support for FSC chip
-
- drivers/scsi/esp_scsi.c | 22 +++++++++++++--------
- drivers/scsi/esp_scsi.h | 44 ++++++++++++++++++++++++++---------------
- 2 files changed, 42 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index bb88995a12c7..4fc3eee3138b 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -2373,10 +2373,10 @@ static const char *esp_chip_names[] = {
+ 	"ESP100A",
+ 	"ESP236",
+ 	"FAS236",
++	"AM53C974",
+ 	"FAS100A",
+ 	"FAST",
+ 	"FASHME",
+-	"AM53C974",
+ };
+ 
+ static struct scsi_transport_template *esp_transport_template;
+diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+index 91b32f2a1a1b..b96cbda03d2d 100644
+--- a/drivers/scsi/esp_scsi.h
++++ b/drivers/scsi/esp_scsi.h
+@@ -257,15 +257,18 @@ struct esp_cmd_priv {
+ };
+ #define ESP_CMD_PRIV(CMD)	((struct esp_cmd_priv *)(&(CMD)->SCp))
+ 
++/* NOTE: this enum is ordered based on chip features! */
+ enum esp_rev {
+-	ESP100     = 0x00,  /* NCR53C90 - very broken */
+-	ESP100A    = 0x01,  /* NCR53C90A */
+-	ESP236     = 0x02,
+-	FAS236     = 0x03,
+-	FAS100A    = 0x04,
+-	FAST       = 0x05,
+-	FASHME     = 0x06,
+-	PCSCSI     = 0x07,  /* AM53c974 */
++	ESP100,  /* NCR53C90 - very broken */
++	ESP100A, /* NCR53C90A */
++	ESP236,
++	/* Chips below this line use ESP_CONFIG3_FSCSI to enable FAST SCSI */
++	FAS236,
++	PCSCSI,  /* AM53c974 */
++	/* Chips below this line use ESP_CONFIG3_FAST to enable FAST SCSI */
++	FAS100A,
++	FAST,
++	FASHME,
+ };
+ 
+ struct esp_cmd_entry {
 -- 
 2.17.1
 
