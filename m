@@ -2,90 +2,96 @@ Return-Path: <SRS0=nPvI=ZE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E64C43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A32FFC17441
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DF7120818
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:33:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ijZ5hRWd"
+	by mail.kernel.org (Postfix) with ESMTP id 8719A2196E
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 18:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727002AbfKLSdF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 13:33:05 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:54388 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725997AbfKLSdF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Nov 2019 13:33:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573583583;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hOngMvB/JVqKrVOe2rVRrVQXb7pE8yP+FVcMyEr87FQ=;
-        b=ijZ5hRWdot+iCyqYpkcxN9dj+CUgtBlNyoTV3z0J3QYiVzILyNSpXX1iat7gFssIdxhOyj
-        m/PdJ0L609roAIwBnq2YiGyhtIbC4d8xCvFLRHVzEOChR01E0WB9gfNFDrBsDTPkQ0W3Du
-        sU8X4qbcWBYGQi7O8gajgqRpYFZCOks=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-159-9YGXBzWpMeaTLej7Xb_K1A-1; Tue, 12 Nov 2019 13:33:00 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 90BBB86A064;
-        Tue, 12 Nov 2019 18:32:59 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1F1D3101E59D;
-        Tue, 12 Nov 2019 18:32:59 +0000 (UTC)
-Message-ID: <296200e15187caaca6061434b740bdf440f147b0.camel@redhat.com>
-Subject: Re: [PATCH 6/6] lpfc: Update lpfc version to 12.6.0.2
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
-Date:   Tue, 12 Nov 2019 13:32:58 -0500
-In-Reply-To: <20191111230401.12958-7-jsmart2021@gmail.com>
-References: <20191111230401.12958-1-jsmart2021@gmail.com>
-         <20191111230401.12958-7-jsmart2021@gmail.com>
-Mime-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: 9YGXBzWpMeaTLej7Xb_K1A-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+        id S1726970AbfKLS6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 13:58:37 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:38206 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726718AbfKLS6g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 13:58:36 -0500
+Received: by mail-wm1-f65.google.com with SMTP id z19so4136303wmk.3;
+        Tue, 12 Nov 2019 10:58:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=2OdOpykLsnzEhklgJ8BjBEIsUVROm20WmbImz3r38Rk=;
+        b=qD1e/8cyjxwpbPSHczSXIaOekW7n7WcXndDSQ6w4Lhnrmh2GWe6vWgI13k1z9Ullt6
+         AfZL2JF0TOqBZKUaoESYvkyMoOrpa7MYUHmQBjoP06JVlIT7Jskkc+ybpZm626Lh7q6+
+         gpl9wN2KqO4JtZOcl6fgFGTbnhcH1e6mGsWEwES98k/9YXvnukgzgyTFkptIAcJX2FgL
+         HqKFLNfqhUTohHfF9U1jKqnj3zSyfYDD29oRPreV/MlbfR3HsNelZdLIN0hLHgnZRBeJ
+         a1poFZRR9Dzw4+ONvWvcem2H8L3jyONITepgr8rOrQFGrZRrhNrvvvJfRdsa1S07Orx0
+         XAuA==
+X-Gm-Message-State: APjAAAVRW10y2NF57hbEQ+aIk1qpHca6mJkBS7KO2giZIAcFjzEUNQAw
+        MtZQ1eEiLbAX/OI3s+WEODxUNsXD8jk=
+X-Google-Smtp-Source: APXvYqzmWL9o2tasgjDQDMSea79AMfBCZ4NvuUGBmkxmdVNHGl/WslUNxLqX8+C88/8I5OdpvHgFgQ==
+X-Received: by 2002:a1c:b404:: with SMTP id d4mr5757803wmf.9.1573585114766;
+        Tue, 12 Nov 2019 10:58:34 -0800 (PST)
+Received: from localhost.localdomain (82-75-169-199.cable.dynamic.v4.ziggo.nl. [82.75.169.199])
+        by smtp.gmail.com with ESMTPSA id u18sm13017109wrp.14.2019.11.12.10.58.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Nov 2019 10:58:34 -0800 (PST)
+From:   Kars de Jong <jongk@linux-m68k.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>
+Cc:     linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
+        schmitzmic@gmail.com, fthain@telegraphics.com.au,
+        Kars de Jong <jongk@linux-m68k.org>
+Subject: [PATCH 0/2] Some esp_scsi updates
+Date:   Tue, 12 Nov 2019 19:57:08 +0100
+Message-Id: <20191112185710.23988-1-jongk@linux-m68k.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191029220503.7553-1-jongk@linux-m68k.org>
+References: <20191029220503.7553-1-jongk@linux-m68k.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2019-11-11 at 15:04 -0800, James Smart wrote:
-> Update lpfc version to 12.6.0.2
->=20
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_ve=
-rsion.h
-> index 1532390770f5..9e5ff58edaca 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -20,7 +20,7 @@
->   * included with this package.                                     *
->   *******************************************************************/
-> =20
-> -#define LPFC_DRIVER_VERSION "12.6.0.1"
-> +#define LPFC_DRIVER_VERSION "12.6.0.2"
->  #define LPFC_DRIVER_NAME=09=09"lpfc"
-> =20
->  /* Used for SLI 2/3 */
+When trying kernel 5.4.0-rc5 on my Amiga, I experienced data transfer failures
+when reading from my FAST-10 SCSI disk. I have a Blizzard 12x0 IV SCSI
+controller which uses a Symbios Logic SYM53CF94-2 "FSC" chip.
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+This used to work with the old generic NCR53C9x driver, so I investigated the
+issue.
+
+It turned out to be caused by lacking detection of FSC silicon in the new
+driver.
+
+The second patch in this series adds support for the FSC.
+
+When adding support for the chip, I found out the hard way that the esp_rev
+enum is ordered (I just added it to the end of the enum).
+
+Then I also discovered that the definition for the PCSCSI chip was in the wrong
+place of the enum. It will probably have issues with FAST-10 SCSI targets,
+because its CONFIG3 settings are wrong.
+
+The first patch fixes this, and adds comments to the enum to hopefully prevent
+this from happening again.
+
+When discussing this on the Linux/m68k mailing list, it was suggested to
+perhaps replace the dependency on ordering of the esp_rev enum by feature flags.
+I did not implement this for now.
+
+Kars de Jong (2):
+  esp_scsi: Correct ordering of PCSCSI definition in esp_rev enum
+  esp_scsi: Add support for FSC chip
+
+ drivers/scsi/esp_scsi.c | 22 +++++++++++++--------
+ drivers/scsi/esp_scsi.h | 44 ++++++++++++++++++++++++++---------------
+ 2 files changed, 42 insertions(+), 24 deletions(-)
+
+-- 
+2.17.1
 
