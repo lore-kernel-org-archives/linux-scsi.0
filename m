@@ -6,88 +6,94 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA95AC43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 07:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5D8C17440
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 07:10:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A4EA21925
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 07:09:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A65B222BD
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 07:10:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="l3BL1Qpr";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="vy3GX5kq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="A4F+egwX";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="OuSmPl0H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727020AbfKLHJG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 02:09:06 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11762 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725847AbfKLHJF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 02:09:05 -0500
+        id S1725853AbfKLHKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 02:10:41 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:52561 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725283AbfKLHKl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 02:10:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1573542572; x=1605078572;
+  t=1573542641; x=1605078641;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=r8tqbKzIxlsbsGLyCrGHNMxKD2tTJEQ2dFgOR++f6es=;
-  b=l3BL1QprssvRKHhJeNAjCeD+cnWgbKTKN7JcxRtcUDfjfwMTy6lOpZTV
-   nT6FHY3YjgISlYZ2fDM87mP+2jMOqMlr8M3s6M+yqtTJ7zClrPmUEeKz9
-   2KfFfU1sZhUU3/Rwazffv4PLgwC/1VRU8EBN1y2k9yn4X4+VsxfMKgGet
-   5PzMdmOx9WD5mmmLtbNxGfTftCKaUU/15eY61qZr5UY+fisCdoqtNd5Tq
-   E1v04tyl8bOzkdVcf+ytJkC2kIpr4NaFqfPm2yiOI/9Z0F2Qb4y2xH0+X
-   zSxSoK6pje00ihNGaPkT/hCsW6VtqH1ULvxCoY3m8pioIfI0TRjZxK1cS
-   g==;
-IronPort-SDR: Tucgrrw9s0PAPpJCVGQFvCT7m+Yl/CtkEVqSVdd6DgcEDUgy3DsbTsfQXJTb0nvga+PoY8Cf/q
- IOC/JCJ792/O9afAgmDhz3Lnn3dlt5z9QKRzpBlLPb2AjHSZ8m2Tf8poa+ANG6sMSclBeZ++wp
- yLHchlS/o4k1QY3nsT1lsyT1POBREIXwqLOTV7jrii1A3gEwfFnvbldGGM1JCPbKvl3lp8Ih17
- mS9SY0r+OTFrSpEfgElzWe5f8e6vO4cfyE2Nd45ZFKjglCI+z2F8abE6Y6QiSEXBMAZAABIY2w
- 3Cc=
+  bh=1YwnslQlx5lccCrqn3pBaRl5u3lohDZiCHDp02xXj/Q=;
+  b=A4F+egwXatZpO37Dv+iLDyyd3fN/9j9Z52XGVkuHwxV3H5pLnL+r+YDB
+   hkiA5nJcwMEH2Ezy+MHPOrDNI0oiZEVRdf0+txxQm7kZrLKC8GBqr2k0x
+   PJ69qacFiHBmK+DifXV4NlmtPLKdRzMK+xp2RGXfzKByY6oxNcicgHQsV
+   WYtCcLaiL9y1ShlAifxWUyA6GcyF6hI+30XK9caJMld7VzhMQiGvBKMf6
+   kySXg+JBs9rAPJkSeoetI+1UJfka/j1TTJ5aq0i3ENfDBzoMU9Gh2ggJ9
+   M6kevxBxIymZa2RXgP8YtP3rpoU/dJG6LL50+TO+ZAmGTuVxIZ/xBRPtq
+   Q==;
+IronPort-SDR: IjS4uvLjoWFbzxkko5edfKV2wct/F4zLgbd8MqstgZpn5zAXal291dtxa75g561Z0Hyhutw5JP
+ GxW9VQr3dRrztjTshOwbdCmefOC5sz80bjZk6oifoesbiZ4hP+UcQI1zlB3Bvp/cw9/Cp43znA
+ rtCrTFi7af+O1pUya9hNuzdvw7KbYOGNJjOxic8qhVmuyJMHXpySZp725GmaPVRWCYj3gtSg1j
+ fkcb/n0TOOhfOSSySC5H6TGk2rmXJpkpu0ohhUOi72Ngsf2BQv/c2ldwpluh2XWB5eD/9CJGVa
+ yW8=
 X-IronPort-AV: E=Sophos;i="5.68,295,1569254400"; 
-   d="scan'208";a="223985777"
-Received: from mail-sn1nam04lp2050.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.50])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Nov 2019 15:09:07 +0800
+   d="scan'208";a="127162020"
+Received: from mail-dm3nam05lp2052.outbound.protection.outlook.com (HELO NAM05-DM3-obe.outbound.protection.outlook.com) ([104.47.49.52])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Nov 2019 15:10:39 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oCBZ0ziAlWEbmA80B/McVRi9WEV895TqkPA+y5QKvzphoIgvDLMGp0W5Ts4tTIMuUwJ9jJL4Dd7WGWINKHVrSf7qX9yiTE8NpMOb+ImWGnkG/Wdu8BpuLNGT72Jt7TQnbf/zArZ+dsHfgWVhkP4xwjYm7tL/OI1NhDV1Ok/GA6IK1ElJnMkiWwtgz4rXKzIyR0FUCNFQHyGJiOBRUV2UrM9usA1gIZGAIbDNZK5VuujkT+jPEDagg3Tm82FxPUX+nlFov7Y51MyWIJ+voSIfWdg9SYXAhiyVoXJmMOgiUGH6iW33l8Yu6tYvyjWDz4W21vzqQp0A4XcEDhfTnZjMJQ==
+ b=NOSRRY+kBG7W2KYHA1BDlzXbQJrgwmk+aufmCOT5fqJhe8C/ttgyStNzbNVg83bNf/wwA91Z5sE4m4KuyLbXIetZNf9KE1wRsSYiB6VmsxEEO+udQhFxwJQsSuN6n2DA8BGxEz2ZtPsjLx+yw0t8wZhRtN6CwBfg+QwOkUQSu3hPHO8v95WZgvyjOoIXLvVuOUWxXUcqLFcakOxgRXvYX0dZtQPGS8rxwVJTUUquALeM4rgS6e+ZwCk/F/THiA6Pz1JZV2ju9msATCzE2yr+mABgKT9TtCLQ2t5MxTV3AN+j6BcC56n7+As/nAhpyylKXu5etGz2Hkm5niz4wiRHWw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r8tqbKzIxlsbsGLyCrGHNMxKD2tTJEQ2dFgOR++f6es=;
- b=B9AazS5IorAWaHh8pO3l0JeTtv8ulfgnGNjfvxpi1TNQ9R59skTqJ0244JBi57+uqAoZHO8101HS/hhrWp5/aGOPH/UG5+SmPHyob5Nsr3MoYXOyqcg0tKMawdbJUakGKT5MItWLsy7MTGY0y0tLyJTCcyvK+SZ0exmyjqy+e5Lz7COc+2WKHn+M5cu/4u9Jq95Zl7vp7mfrb0WdoIOOkFCjAUly7F58z+ZL0WGvP30sNfnhZqeaYsVWDEAEYAN5Mg7okETS2b4nQl9QxJXTgqXAe+YdlFEcUm/g0HWNtqfEViQtiR91Ic+KRByC2q4HcMntg4ANhD5UT4jFra6D9Q==
+ bh=1YwnslQlx5lccCrqn3pBaRl5u3lohDZiCHDp02xXj/Q=;
+ b=oOIyXOziYueQ9fIY6bNTYiBvXC5usY3p3fCSHHsxI/i7nu6pYNCULku4BZrDOY0h3A7PZLgATopgWOZfmteOglI1uM2n9n1JtC6h9wAlBQgEOCd5+G67rMQPGcdsFQrKbOceDaabfQvmf7RAF2Zj+u6wB5oMRMbhAzdT4pyE2O1ALoZAguhYd2UxjWJ34QDzz9a4jujeRhinReG/Uxz3O4+mW6WRLpVycECbmPmkPAVIgCxZG4LP3FnVNH3zmXsgQtiBsEN2adQfKNMVM1gxJhVO+YZw00k7P/OqbVXOy6w8kI/daEeJFiEoNpk5n996UzirMc6XDAQ7nun+DS4Jvg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r8tqbKzIxlsbsGLyCrGHNMxKD2tTJEQ2dFgOR++f6es=;
- b=vy3GX5kqtnt/SAfhorupfIhv+0Z/gxZmGykexJozMZ/cwd0Yt5v2JCHoCgqAt792uEyeZ80jysgEMI3KY5FLPRfYdmcXLV4HMDDrqdlFHVHFF8iafdGQZ4zPlWIdR4JobbTPRYdpvcdgk2RQ1HheM1b1pkngEalfsQ6YgL9keQ4=
+ bh=1YwnslQlx5lccCrqn3pBaRl5u3lohDZiCHDp02xXj/Q=;
+ b=OuSmPl0H73McCDmkftpS/jHrkKLIrUnxVwty/2b8aKKZOvZt/00Q1PpVzz72f2cBuPu7uhRgC+g2X3+SKuwg2L49RqiO6bIF/EZSmn2lek8IAIuzM7C25pe3MGJLoZYhpqNCl38Yyakb4PBz2EESu7OTK62RRDXhFoOuti4FyLU=
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
  MN2PR04MB5664.namprd04.prod.outlook.com (20.179.23.149) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2430.20; Tue, 12 Nov 2019 07:08:47 +0000
+ 15.20.2430.20; Tue, 12 Nov 2019 07:10:38 +0000
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::5852:6199:7952:c2ce]) by MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::5852:6199:7952:c2ce%7]) with mapi id 15.20.2430.027; Tue, 12 Nov 2019
- 07:08:47 +0000
+ 07:10:38 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Vignesh Raghavendra <vigneshr@ti.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+To:     Can Guo <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        "saravanak@google.com" <saravanak@google.com>,
+        "salyzyn@google.com" <salyzyn@google.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Janek Kotas <jank@cadence.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH v3 2/2] scsi: ufs: Add driver for TI wrapper for Cadence
- UFS IP
-Thread-Topic: [PATCH v3 2/2] scsi: ufs: Add driver for TI wrapper for Cadence
- UFS IP
-Thread-Index: AQHVllSiHcw5O5TCgUaZXlQBroFh0qeHIzOw
-Date:   Tue, 12 Nov 2019 07:08:47 +0000
-Message-ID: <MN2PR04MB6991B7577732F25EB139FCBFFC770@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <20191108164857.11466-1-vigneshr@ti.com>
- <20191108164857.11466-3-vigneshr@ti.com>
-In-Reply-To: <20191108164857.11466-3-vigneshr@ti.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v1 1/5] scsi: ufs: Recheck bkops level if bkops is
+ disabled
+Thread-Topic: [PATCH v1 1/5] scsi: ufs: Recheck bkops level if bkops is
+ disabled
+Thread-Index: AQHVlgy9aXqCRANwik+MtMzDwZUC2qeHJDLA
+Date:   Tue, 12 Nov 2019 07:10:38 +0000
+Message-ID: <MN2PR04MB69913E6B58B9B474896BDA76FC770@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1573200932-384-1-git-send-email-cang@codeaurora.org>
+ <1573200932-384-2-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1573200932-384-2-git-send-email-cang@codeaurora.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -97,28 +103,28 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: fd90cc93-a45e-423d-b621-08d7673f299b
+x-ms-office365-filtering-correlation-id: b03dc81a-0430-4623-24f1-08d7673f6bb8
 x-ms-traffictypediagnostic: MN2PR04MB5664:
-x-microsoft-antispam-prvs: <MN2PR04MB5664DD18D50A425C224C0995FC770@MN2PR04MB5664.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <MN2PR04MB5664F1DA4D19DE878ECC63C8FC770@MN2PR04MB5664.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:651;
+x-ms-oob-tlc-oobclassifiers: OLM:1751;
 x-forefront-prvs: 021975AE46
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(376002)(136003)(39860400002)(346002)(366004)(199004)(189003)(26005)(305945005)(110136005)(54906003)(71190400001)(6436002)(229853002)(71200400001)(99286004)(74316002)(9686003)(316002)(6246003)(3846002)(6116002)(86362001)(66066001)(4744005)(4326008)(7736002)(66556008)(8676002)(76116006)(476003)(7696005)(7416002)(2906002)(64756008)(25786009)(81156014)(66946007)(81166006)(11346002)(66476007)(446003)(76176011)(5024004)(186003)(55016002)(486006)(5660300002)(102836004)(478600001)(256004)(33656002)(52536014)(14454004)(8936002)(6506007)(66446008);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB5664;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(346002)(39860400002)(136003)(396003)(376002)(189003)(199004)(7416002)(7696005)(476003)(66946007)(81156014)(446003)(66476007)(11346002)(81166006)(2906002)(25786009)(64756008)(66556008)(8676002)(2501003)(76116006)(256004)(33656002)(478600001)(66446008)(14444005)(52536014)(14454004)(8936002)(6506007)(76176011)(102836004)(5660300002)(486006)(55016002)(186003)(74316002)(71200400001)(99286004)(316002)(9686003)(54906003)(110136005)(305945005)(26005)(229853002)(6436002)(71190400001)(4744005)(4326008)(7736002)(6246003)(2201001)(3846002)(66066001)(86362001)(6116002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB5664;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: M14cSDgTgzd7tMTqUnikWW1CrMZ4vTvGZdF7ROiDUZwvYrMUqPIgY7tY0wg+lSQr+zalNFKsv0XPpGmGPHLrvJ+7SGDlNU8Gq0NgnH1Hqeu0Lrmu964mzxZRLJ+LQjT/vtQJ+fOOZWrnj31ifwGusG46UJBk/qM7Fe/JzDEPh1g6ohtcw+MA4nFZCz2Cvuh0nd/uqMGWg8NgpWoRNxiv7bIEie5O6AXAQ103MlFGLtzdwjZtwsRzEURMqcOIZ/W2lptgLK8I+bKAq6iSNu4Qrv2ym1rJueqhmApYYj6+jt1aYHg8Yl9iAzLEPEu0phm1DMND2DzP4BeLIT5TgrjVwcq6/QjGEPCrpfJIUUY+YVJuB0uRf4hTW99vews2p0G4m5y8pTmNXPNIz6J4IvZCxH7WcY88T9pxLa0InnqoYJziRjOMdszoS20anKL3UN0p
+x-microsoft-antispam-message-info: xRdfJgWsocnfWliQrPpxQDTxnZo7bl7tIwkpqV8g+uFNA9wP0akMl7C4/Y+HRdBKxRwzz02K4FCu3sx0jdfQK5o0ERuXcvbWykruuO/iZBkRcPOBk+khMCsyrmnetMI/n/Z62ueX1mZ2ldZ669t/EJFGf1KTBMK0npe+lSYaxj1AqwfLGed8hmgZkRIbmiU1k0YT4BSn8UXnQ9xJeHpIPpe7DJW0QA1amDT4NGEK5b6I4/eB+2n8Gsb+vhdPsomYJvmpzKflxxlI0SRFdryZ6/SqIAjyddoIaQ0zjhOAfmJI+ZLF5J7yymxfKr+7bVf8QFi97JmEZAHRqb+rigFDw+IxrVhhNHIxYFNMcPk+ymOb/qoKZB2/58SFEvCHjMTeWyYt2jCfFKYhEROGvD5jpOztYIxmK3BQ/xtrnV0NXksltL5Lggwvouyq15504x1f
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd90cc93-a45e-423d-b621-08d7673f299b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2019 07:08:47.4218
+X-MS-Exchange-CrossTenant-Network-Message-Id: b03dc81a-0430-4623-24f1-08d7673f6bb8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2019 07:10:38.3019
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 963z2EEE8Vicg/GMVGIaRqq5o71ty3C5r8AHPx9o87JQdbFGuP+M1gMV27BzzKDV5igAceBw81j4o+I/4Bq8hQ==
+X-MS-Exchange-CrossTenant-userprincipalname: Y8dsCbI4wM3o/A3vDMsdy09CGDv0ojo7M8qXZkpy4PvCRIK+zzCk3xvFadF4Cz0p31tzIIkkbLS6PhujOeKrjQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB5664
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -126,20 +132,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 >=20
-> CAUTION: This email originated from outside of Western Digital. Do not cl=
-ick on
-> links or open attachments unless you recognize the sender and know that t=
-he
-> content is safe.
+> From: Asutosh Das <asutoshd@codeaurora.org>
 >=20
+> Bkops level should be rechecked upon receiving an exception.
+> Currently the bkops level is being cached and never updated.
 >=20
-> TI's J721e SoC has a Cadence UFS IP with a TI specific wrapper. This is a=
- minimal
-> driver to configure the wrapper. It releases the UFS slave device out of =
-reset and
-> sets up registers to indicate PHY reference clock input frequency before =
-probing
-> child Cadence UFS driver.
+> Update the same each time the level is checked.
+> Also do not use the cached bkops level value if it is disabled and then e=
+nabled.
 >=20
-> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
-Reviewed-by Avri Altman <avri.altman@wdc.com>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+Acked-by Avri Altman <avri.altman@wdc.com>
+
+This is essentially a bug fix:
+Fixes: afdfff59a0e0 (scsi: ufs: handle non spec compliant bkops behaviour b=
+y device)
