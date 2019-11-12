@@ -2,100 +2,135 @@ Return-Path: <SRS0=nPvI=ZE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF8BC43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 16:04:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8335C43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 16:25:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96F3120679
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 16:04:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BBFD20679
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 16:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726954AbfKLQEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 11:04:52 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:41931 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726008AbfKLQEw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 11:04:52 -0500
-Received: by mail-pg1-f196.google.com with SMTP id h4so12129909pgv.8
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2019 08:04:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=u6mVgCSkU5lK0HovZ9UlB0pEs5ibW6DnrbLibe2WEl0=;
-        b=a8TdSDdEXPpt3H3zK5mbI2U1s4Ew7ltC3UrH/ViMR1mcarH1FKhd24jWM/+syzfBQy
-         MjKtC7C1nDlsHpirkYlWC4CxUXEToNMZqMuuXKoG6CEPXbJRPnfMudW1lI6ukO7E330K
-         df173uUEZR2LR/AH9m7CN4QqWQ4HoBUXreX/3Nwt7JUOMBK9GE/h5pWeM2nmd42XNaqY
-         OrRN+6S75oIk9VGKpH1JZECnn1RuBW2cUDZorEkVbk1wPhRC0sIRjyCHS57AKDpkP58Q
-         UjjBWros18sNdpQcBrO9nZUBW9goLMDVGVR5Wt7Kmyd3OTgI1TqSPVOffICxoU9zywWO
-         MIjw==
-X-Gm-Message-State: APjAAAXzmqwyzLOxR6FKPMEyQTyhxvMrJk2W4ilOulstGdqJYkR3bGc5
-        wiVIShXPKkQ8hyuwVapM7v8=
-X-Google-Smtp-Source: APXvYqxQ129TuL5zBJGSaJG2UIKwGUNLcDGvZkvD0VBu4Lm6YMFUxnQlbSfOlOTGRo0H1uUqgsE6OQ==
-X-Received: by 2002:aa7:8e0a:: with SMTP id c10mr36765736pfr.166.1573574691308;
-        Tue, 12 Nov 2019 08:04:51 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id d4sm2864453pjs.9.2019.11.12.08.04.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 Nov 2019 08:04:50 -0800 (PST)
-Subject: Re: [EXT] Re: [PATCH v4 3/3] ufs: Simplify the clock scaling
- mechanism implementation
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-References: <20191111174841.185278-1-bvanassche@acm.org>
- <20191111174841.185278-4-bvanassche@acm.org>
- <f9432876516560c76c27184362592757@codeaurora.org>
- <BN7PR08MB5684F921576D9E73ED5A18DDDB770@BN7PR08MB5684.namprd08.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <445f55d7-1fb6-d700-3a74-7d3b926209cc@acm.org>
-Date:   Tue, 12 Nov 2019 08:04:47 -0800
+        id S1726958AbfKLQZL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 11:25:11 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46212 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726953AbfKLQZL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Nov 2019 11:25:11 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id C78BCB2D6;
+        Tue, 12 Nov 2019 16:25:08 +0000 (UTC)
+Subject: Re: [PATCH] scsi_dh_rdac: avoid crash during rescan
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20191111104522.99531-1-hare@suse.de>
+ <4d66f2de-aa31-1e94-61b7-f8fc6a4af677@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <5399a1c3-6e01-d61e-414a-74f42f3a3de7@suse.de>
+Date:   Tue, 12 Nov 2019 17:25:08 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <BN7PR08MB5684F921576D9E73ED5A18DDDB770@BN7PR08MB5684.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <4d66f2de-aa31-1e94-61b7-f8fc6a4af677@acm.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/12/19 7:43 AM, Bean Huo (beanhuo) wrote:
-> Can Guo wrote: 
- >> Bart Van Assche wrote:
->>>   		/* handle fatal errors only when link is functional */
->>>   		if (hba->ufshcd_state == UFSHCD_STATE_OPERATIONAL) {
->>> -			/* block commands from scsi mid-layer */
->>> -			ufshcd_scsi_block_requests(hba);
->>> +			/* block all commands, incl. SCSI commands */
->>> +			ufshcd_block_requests(hba, ULONG_MAX);
->>>
+On 11/11/19 5:07 PM, Bart Van Assche wrote:
+> On 11/11/19 2:45 AM, Hannes Reinecke wrote:
+>> During rescanning the device might already have been removed, so
+>> we should drop the BUG_ON and just ignore the non-existing device.
 >>
->> ufshcd_block_requests() may sleep, but ufshcd_check_errors is called from
->> IRQ(atmic) context.
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/device_handler/scsi_dh_rdac.c | 4 ++--
+>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c
+>> b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>> index 5efc959493ec..33a71df5ee59 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>> @@ -424,8 +424,8 @@ static int check_ownership(struct scsi_device
+>> *sdev, struct rdac_dh_data *h)
+>>           rcu_read_lock();
+>>           list_for_each_entry_rcu(tmp, &h->ctlr->dh_list, node) {
+>>               /* h->sdev should always be valid */
+>> -            BUG_ON(!tmp->sdev);
+>> -            tmp->sdev->access_state = access_state;
+>> +            if (tmp->sdev) {
+>> +                tmp->sdev->access_state = access_state;
+>>           }
+>>           rcu_read_unlock();
+>>           err = SCSI_DH_OK;
 > 
-> [Bean Huo]
-> Can Guo's comment is correct, I triggered an error manually, my UFS being killed.
-> And removing this patch, no problem. Please take this seriously.
+> Since rdac_bus_detach() may clear h->sdev concurrently with the above
+> code I think READ_ONCE() is needed to make the above code safe.
+> 
+> Has it been considered to change the kfree() call in rdac_bus_detach()
+> into a kfree_rcu() call? I think otherwise the above
+> list_for_each_entry_rcu() loop may trigger a use-after-free.
+> 
+Good point. I'll have a look.
 
-Hi Can and Bean,
+Cheers,
 
-Thank you for having reported this. I'll look into keeping 
-scsi_block_requests() and scsi_unblock_requests() in this code path.
-
-Thanks,
-
-Bart.
-
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
