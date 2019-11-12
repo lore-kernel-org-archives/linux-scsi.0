@@ -3,36 +3,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18D9BC17440
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 23:07:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E553EC17440
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 23:18:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDEBE21D7F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 23:07:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6A5A21E6F
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 23:18:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726978AbfKLXHC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 18:07:02 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33174 "EHLO
+        id S1727319AbfKLXSE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 18:18:04 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33408 "EHLO
         kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726932AbfKLXHC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 18:07:02 -0500
+        with ESMTP id S1726932AbfKLXSD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 18:18:03 -0500
 Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 8E44329910;
-        Tue, 12 Nov 2019 18:06:58 -0500 (EST)
-Date:   Wed, 13 Nov 2019 10:07:01 +1100 (AEDT)
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 3ABB229910;
+        Tue, 12 Nov 2019 18:17:59 -0500 (EST)
+Date:   Wed, 13 Nov 2019 10:18:03 +1100 (AEDT)
 From:   Finn Thain <fthain@telegraphics.com.au>
 To:     Kars de Jong <jongk@linux-m68k.org>
 cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
         linux-m68k@vger.kernel.org, schmitzmic@gmail.com
-Subject: Re: [PATCH 1/2] esp_scsi: Correct ordering of PCSCSI definition in
- esp_rev enum
-In-Reply-To: <20191112185710.23988-2-jongk@linux-m68k.org>
-Message-ID: <alpine.LNX.2.21.1.1911130946410.13@nippy.intranet>
-References: <20191029220503.7553-1-jongk@linux-m68k.org> <20191112185710.23988-1-jongk@linux-m68k.org> <20191112185710.23988-2-jongk@linux-m68k.org>
+Subject: Re: [PATCH 2/2] esp_scsi: Add support for FSC chip
+In-Reply-To: <20191112185710.23988-3-jongk@linux-m68k.org>
+Message-ID: <alpine.LNX.2.21.1.1911131007110.13@nippy.intranet>
+References: <20191029220503.7553-1-jongk@linux-m68k.org> <20191112185710.23988-1-jongk@linux-m68k.org> <20191112185710.23988-3-jongk@linux-m68k.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
@@ -42,87 +41,143 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Tue, 12 Nov 2019, Kars de Jong wrote:
 
-> The order of the definitions in the esp_rev enum is important. The values
-> are used in comparisons for chip features.
+> The FSC (NCR53CF9x-2 / SYM53CF9x-2) has a different family code than QLogic
+> or Emulex parts. This caused it to be detected as a FAS100A.
 > 
-> Add a comment to the enum explaining this.
+> Unforunately, this meant the configuration of the CONFIG3 register was
+> incorrect. This causes data transfer issues with FAST-SCSI targets.
 > 
-> Also, the actual values for the enum fields are irrelevant, so remove the
-> explicit values (suggested by Geert Uytterhoeven). This makes adding a new
-> field in the middle of the enum easier.
-> 
-> Finally, move the PCSCSI definition to the right place in the enum. In its
-> previous location, at the end of the enum, the wrong values are written to
-> the CONFIG3 register when used with FAST-SCSI targets. Add comments to the
-> enum explaining this.
+> The FSC also has the CONFIG4 register. It can be used to enable a feature
+> called Active Negation which should always be enabled according to the data
+> manual.
 > 
 > Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
 > ---
->  drivers/scsi/esp_scsi.c |  2 +-
->  drivers/scsi/esp_scsi.h | 19 +++++++++++--------
->  2 files changed, 12 insertions(+), 9 deletions(-)
+>  drivers/scsi/esp_scsi.c | 20 +++++++++++++-------
+>  drivers/scsi/esp_scsi.h | 25 +++++++++++++++++--------
+>  2 files changed, 30 insertions(+), 15 deletions(-)
 > 
 > diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index bb88995a12c7..4fc3eee3138b 100644
+> index 4fc3eee3138b..cef1b0cb5ee6 100644
 > --- a/drivers/scsi/esp_scsi.c
 > +++ b/drivers/scsi/esp_scsi.c
-> @@ -2373,10 +2373,10 @@ static const char *esp_chip_names[] = {
->  	"ESP100A",
+> @@ -243,7 +243,7 @@ static void esp_set_all_config3(struct esp *esp, u8 val)
+>  /* Reset the ESP chip, _not_ the SCSI bus. */
+>  static void esp_reset_esp(struct esp *esp)
+>  {
+> -	u8 family_code, version;
+> +	u8 family_code, uid;
+>  
+>  	/* Now reset the ESP chip */
+>  	scsi_esp_cmd(esp, ESP_CMD_RC);
+> @@ -257,13 +257,17 @@ static void esp_reset_esp(struct esp *esp)
+>  	 */
+>  	esp->max_period = ((35 * esp->ccycle) / 1000);
+>  	if (esp->rev == FAST) {
+> -		version = esp_read8(ESP_UID);
+> -		family_code = (version & 0xf8) >> 3;
+> -		if (family_code == 0x02)
+> +		uid = esp_read8(ESP_UID);
+> +		family_code = ESP_FAMILY(uid);
+
+The uid temporary isn't needed.
+
+> +		if (family_code == ESP_UID_F236)
+>  			esp->rev = FAS236;
+> -		else if (family_code == 0x0a)
+> +		else if (family_code == ESP_UID_HME)
+>  			esp->rev = FASHME; /* Version is usually '5'. */
+> -		else
+> +		else if (family_code == ESP_UID_FSC) {
+> +			esp->rev = FSC;
+> +			/* Enable Active Negation */
+> +			esp_write8(ESP_CONFIG4_RADE, ESP_CFG4);
+> +		} else
+>  			esp->rev = FAS100A;
+>  		esp->min_period = ((4 * esp->ccycle) / 1000);
+>  	} else {
+> @@ -308,7 +312,8 @@ static void esp_reset_esp(struct esp *esp)
+>  
+>  	case FAS236:
+>  	case PCSCSI:
+> -		/* Fast 236, AM53c974 or HME */
+> +	case FSC:
+> +		/* Fast 236, AM53c974, FSC or HME */
+>  		esp_write8(esp->config2, ESP_CFG2);
+>  		if (esp->rev == FASHME) {
+>  			u8 cfg3 = esp->target[0].esp_config3;
+> @@ -2374,6 +2379,7 @@ static const char *esp_chip_names[] = {
 >  	"ESP236",
 >  	"FAS236",
-> +	"AM53C974",
+>  	"AM53C974",
+> +	"FSC",
 >  	"FAS100A",
 >  	"FAST",
 >  	"FASHME",
-> -	"AM53C974",
->  };
->  
->  static struct scsi_transport_template *esp_transport_template;
 > diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
-> index 91b32f2a1a1b..b96cbda03d2d 100644
+> index b96cbda03d2d..95f2b27e8d6c 100644
 > --- a/drivers/scsi/esp_scsi.h
 > +++ b/drivers/scsi/esp_scsi.h
-> @@ -257,15 +257,18 @@ struct esp_cmd_priv {
->  };
->  #define ESP_CMD_PRIV(CMD)	((struct esp_cmd_priv *)(&(CMD)->SCp))
+> @@ -78,12 +78,14 @@
+>  #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
+>  #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
 >  
-> +/* NOTE: this enum is ordered based on chip features! */
-
-Fair enough, that has been overlooked before.
-
->  enum esp_rev {
-> -	ESP100     = 0x00,  /* NCR53C90 - very broken */
-> -	ESP100A    = 0x01,  /* NCR53C90A */
-> -	ESP236     = 0x02,
-> -	FAS236     = 0x03,
-> -	FAS100A    = 0x04,
-> -	FAST       = 0x05,
-> -	FASHME     = 0x06,
-> -	PCSCSI     = 0x07,  /* AM53c974 */
-> +	ESP100,  /* NCR53C90 - very broken */
-> +	ESP100A, /* NCR53C90A */
-> +	ESP236,
-> +	/* Chips below this line use ESP_CONFIG3_FSCSI to enable FAST SCSI */
-> +	FAS236,
-> +	PCSCSI,  /* AM53c974 */
-> +	/* Chips below this line use ESP_CONFIG3_FAST to enable FAST SCSI */
-> +	FAS100A,
-> +	FAST,
-> +	FASHME,
->  };
+> -/* ESP config register 4 read-write, found only on am53c974 chips */
+> -#define ESP_CONFIG4_RADE      0x04     /* Active negation */
+> -#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
+> -#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
+> -#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
+> -#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
+> +/* ESP config register 4 read-write, found on am53c974 and FSC chips */
+> +#define ESP_CONFIG4_BBTE      0x01     /* Back-to-back transfers     (fsc)   */
+> +#define ESP_CONGIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
+> +#define ESP_CONFIG4_RADE      0x04     /* Active negation   (am53c974/fsc)   */
+> +#define ESP_CONFIG4_RAE       0x08     /* Act. negation REQ/ACK (am53c974)   */
+> +#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature (am53c974)   */
+> +#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0    (am53c974)   */
+> +#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1    (am53c974)   */
 >  
->  struct esp_cmd_entry {
-> 
+>  #define ESP_CONFIG_GE_12NS    (0)
+>  #define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
+> @@ -209,10 +211,16 @@
+>  #define ESP_TEST_TS           0x04     /* Tristate test mode */
+>  
+>  /* ESP unique ID register read-only, found on fas236+fas100a only */
+> +#define ESP_UID_REV           0x07     /* ESP revision bitmask */
 
-FAS100A, FAST and FASHME are below both lines, which is a bit confusing.
+This is unused.
 
-In general, I don't like to see comments that merely re-state the explicit 
-logic in the algorithm. Such comments add no value.
+> +#define ESP_UID_FAM           0xf8     /* ESP family bitmask */
+> +
+> +#define ESP_FAMILY(uid) (((uid) & ESP_UID_FAM) >> 3)
+> +
 
-(At best this redundancy creates a maintenance burden and at worst the 
-commentary becomes neglected until it creates contradictions.)
+The ESP_UID_FAM symbol only appears here. I don't think it adds value.
 
-Aside from that:
-Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
+> +/* Values for the ESP family */
+
+I would omit that comment.
+
+>  #define ESP_UID_F100A         0x00     /* ESP FAS100A  */
+>  #define ESP_UID_F236          0x02     /* ESP FAS236   */
+> -#define ESP_UID_REV           0x07     /* ESP revision */
+> -#define ESP_UID_FAM           0xf8     /* ESP family   */
+> +#define ESP_UID_HME           0x0a     /* FAS HME      */
+> +#define ESP_UID_FSC           0x14     /* NCR/Symbios Logic FSC */
+>  
+
+Is there a distinction between the chip's uid and the chip's family?
 
 -- 
+
+>  /* ESP fifo flags register read-only */
+>  /* Note that the following implies a 16 byte FIFO on the ESP. */
+> @@ -265,6 +273,7 @@ enum esp_rev {
+>  	/* Chips below this line use ESP_CONFIG3_FSCSI to enable FAST SCSI */
+>  	FAS236,
+>  	PCSCSI,  /* AM53c974 */
+> +	FSC,     /* NCR/Symbios Logic FSC */
+>  	/* Chips below this line use ESP_CONFIG3_FAST to enable FAST SCSI */
+>  	FAS100A,
+>  	FAST,
+> 
