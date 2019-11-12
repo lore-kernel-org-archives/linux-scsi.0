@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 375B6C43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 22:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30CCCC43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 22:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F1A121A49
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 22:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0791121A49
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Nov 2019 22:35:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fa3Zj2A5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X4ihNSx/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbfKLWfX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 17:35:23 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:46811 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726912AbfKLWfX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 17:35:23 -0500
-Received: by mail-wr1-f67.google.com with SMTP id b3so41918wrs.13;
-        Tue, 12 Nov 2019 14:35:21 -0800 (PST)
+        id S1727113AbfKLWf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 17:35:29 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:56158 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726912AbfKLWf3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 17:35:29 -0500
+Received: by mail-wm1-f65.google.com with SMTP id b11so4966660wmb.5;
+        Tue, 12 Nov 2019 14:35:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=267YKYgyio7TvNsDEgQVQTzsRypxQUBUtaiCGWnT0yA=;
-        b=fa3Zj2A5ic679JdA2Tr29Cc2fg3g1pHkGbNkvmPMS1fxjQMCYZxdTwEF9CJRRsVd0K
-         +V4Qj+yiS/XLZNVpyfcWhD0ra2J5SdNzUjhm20QZG2KBlsct9aXecmLy2/dfykmInM5z
-         OpD53d3XZuBhYPBB6sYZQIRnwdEKyjNX8Ik2RKT6BneYj3fRnCjalhw5jr0gTmw5sfaq
-         WVedFJljG+j2qHa61969Etf9aMuAehleXpba6n6Szeb/wBBc/l4fC2ZOSWuaWGPwEFzC
-         oBekCQBSvs3mJAG3u2wEAbE5JWfwxO8ypifu+QoQ0Kdud4WwBW/m5RcHvJt1/bqq5kfF
-         4nXQ==
+        bh=LP3okD6bfEMVRR6gihLk+Rf09o9lY8LLHF8+yoRa1O8=;
+        b=X4ihNSx/iLguwoZNGX305tcSfuS4Iu0XmAHzKTz0Q2Dm48Y+UfeV5iPL2DNJv0Cnmm
+         LXSjNXEB8e/qFBsqiIp+pcpyibatJgaZr+KxcnOu2WKp6JthUYlnw6Slp7dAgPP7zqAe
+         dIqoh0p/4TVzuEutcH1gwQFnTrA7mExHXIGou3kgrFy+BBnbyzbczijuwvk3Nxb9qcQt
+         qP7SLAFWnJGspPwHUjgNevnOnq/9jmTpgq/aQUP0YBRscHEJUcwx0TnX0tpyG4EBBd2m
+         afFBPUjtXNJNcLOufLI9PeCnlDzvekMujPeBhDYFYikKMVyz2U0QKFNddtBpq7FjVtW4
+         bwEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=267YKYgyio7TvNsDEgQVQTzsRypxQUBUtaiCGWnT0yA=;
-        b=GmK2DWEd3VZ7ZQQ6l2WocXIHZULGyg4kCv67ub+d7IACEaxjHdtZsTQncUUHmH+Cy1
-         doaJrt14ZFh0X2u1IxmQ5f4pBuHoKeh3CJQMxSLbMN0B8sR8g9E+IUkPGFJ85c+af9Rx
-         nqJcpG7FW3cBJ5hav4Kv2Ll+yabDKQgP5ncbX/ZBegQbA2yyd5AueR8kdkzDA4Mz37wQ
-         JUMfZ5RKNqjajzWyZpzojgv0iUeAe/M2dWqWoWty03LUHplR6OfmSMCldwraxxgEB6a2
-         LX/X92FuJ4u55Ck1pLbR3qqBXBKhd5T0Qz3iKI+M9NBYYqaPz45/wO0Zx2e8W6Iv1FjU
-         LAlw==
-X-Gm-Message-State: APjAAAUsNoYw31u9Fa1/Llqea9mQZ7TYHKCd47xJ7ssGAfCE5l57vgXq
-        P5NmEevmOfp1s1o3pNRZpmA=
-X-Google-Smtp-Source: APXvYqxL8zTIaeKSQxAAgs6j2sCP3b9FQqqoJcyEDr7Cb7A7vUWv3xINyoXrNeldhmp+rEEcrwni0g==
-X-Received: by 2002:adf:f490:: with SMTP id l16mr28109225wro.77.1573598121326;
-        Tue, 12 Nov 2019 14:35:21 -0800 (PST)
+        bh=LP3okD6bfEMVRR6gihLk+Rf09o9lY8LLHF8+yoRa1O8=;
+        b=JTA2NWR+Iz7Bzo7KsVTaqY5yjO38A/6z62VlpXDyVLkX0Y5m/LuNUVNTSqFBISLtM+
+         XZIp+/C6/TcUCgPQjw+JFbcrWdEhTL+pzmn3yxme6Uf5zP338tcLz4A8RpquQ6+qWJ5+
+         UcCcFRixqdLTXgq7B6Y5PagN+eoFIx8uB9ethT87OyVGs9hnDBoViuz48rteTFpxAkxK
+         tl2W4ffEGjAgjBTVkIk5M+KavanGs/kU8jo0ZxPpq3EG9gt7PStKC2BdGnyD4Hr2FJaR
+         fW8Ty/tJirzCdE71ehRlKEjQh0+e8VSug6bXbNPjl5hkVlay7G8VfMItEu0NhLiL1UPX
+         dDUw==
+X-Gm-Message-State: APjAAAVNoBVjoXN9LgaqC4NHrLYPaeJWQrs/tJrOdLP1vcwkBB7FZW1I
+        wWBYBBphvADPa3SxMA8ZFDE=
+X-Google-Smtp-Source: APXvYqy54vbv0xDEBEnteg1TauUpY1p+iKOTXfCKfEPhupLTeSMhFMf74nXJtpGH8NIkUMz59GAOGA==
+X-Received: by 2002:a1c:984b:: with SMTP id a72mr6374780wme.78.1573598127171;
+        Tue, 12 Nov 2019 14:35:27 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bfdef.dynamic.kabel-deutschland.de. [95.91.253.239])
-        by smtp.gmail.com with ESMTPSA id d20sm584356wra.4.2019.11.12.14.35.19
+        by smtp.gmail.com with ESMTPSA id d20sm584356wra.4.2019.11.12.14.35.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Nov 2019 14:35:20 -0800 (PST)
+        Tue, 12 Nov 2019 14:35:26 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
@@ -61,9 +61,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] scsi: ufs: print helpful hint when response size exceed buffer size
-Date:   Tue, 12 Nov 2019 23:34:35 +0100
-Message-Id: <20191112223436.27449-2-huobean@gmail.com>
+Subject: [PATCH v2 2/2] scsi: ufs: fix potential bug which ends in system hang-up
+Date:   Tue, 12 Nov 2019 23:34:36 +0100
+Message-Id: <20191112223436.27449-3-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191112223436.27449-1-huobean@gmail.com>
 References: <20191112223436.27449-1-huobean@gmail.com>
@@ -74,42 +74,73 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Print out returned response size and buffer size, while the front one
-is bigger than the back one.
+In function __ufshcd_query_descriptor(), in the event of an error
+happening, we directly goto out_unlock, and forget to invaliate
+hba->dev_cmd.query.descriptor pointer. Thus results in this pointer
+still validity in ufshcd_copy_query_response() for other query requests
+which go through ufshcd_exec_raw_upiu_cmd(). This will cuases __memcpy()
+crash and system hangs up, log shows as below:
 
+Unable to handle kernel paging request at virtual address
+ffff000012233c40
+Mem abort info:
+   ESR = 0x96000047
+   Exception class = DABT (current EL), IL = 32 bits
+   SET = 0, FnV = 0
+   EA = 0, S1PTW = 0
+Data abort info:
+   ISV = 0, ISS = 0x00000047
+   CM = 0, WnR = 1
+swapper pgtable: 4k pages, 48-bit VAs, pgdp = 0000000028cc735c
+[ffff000012233c40] pgd=00000000bffff003, pud=00000000bfffe003,
+pmd=00000000ba8b8003, pte=0000000000000000
+ Internal error: Oops: 96000047 [#2] PREEMPT SMP
+ ...
+ Call trace:
+  __memcpy+0x74/0x180
+  ufshcd_issue_devman_upiu_cmd+0x250/0x3c0
+  ufshcd_exec_raw_upiu_cmd+0xfc/0x1a8
+  ufs_bsg_request+0x178/0x3b0
+  bsg_queue_rq+0xc0/0x118
+  blk_mq_dispatch_rq_list+0xb0/0x538
+  blk_mq_sched_dispatch_requests+0x18c/0x1d8
+  __blk_mq_run_hw_queue+0xb4/0x118
+  blk_mq_run_work_fn+0x28/0x38
+  process_one_work+0x1ec/0x470
+  worker_thread+0x48/0x458
+  kthread+0x130/0x138
+  ret_from_fork+0x10/0x1c
+ Code: 540000ab a8c12027 a88120c7 a8c12027 (a88120c7)
+ ---[ end trace 793e1eb5dff69f2d ]---
+ note: kworker/0:2H[2054] exited with preempt_count 1
+
+This patch is to move "descriptor = NULL" down to below
+the label "out_unlock".
+
+Fixes: d44a5f98bb49b2(ufs: query descriptor API)
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9cbe3b45cf1c..527bd3b4f834 100644
+index 527bd3b4f834..977d0c6fef95 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1938,8 +1938,8 @@ int ufshcd_copy_query_response(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 			memcpy(hba->dev_cmd.query.descriptor, descp, resp_len);
- 		} else {
- 			dev_warn(hba->dev,
--				"%s: Response size is bigger than buffer",
--				__func__);
-+				 "%s: rsp size %d is bigger than buffer size %d",
-+				 __func__, resp_len, buf_len);
- 			return -EINVAL;
- 		}
+@@ -2989,10 +2989,10 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
+ 		goto out_unlock;
  	}
-@@ -5864,7 +5864,9 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 			memcpy(desc_buff, descp, resp_len);
- 			*buff_len = resp_len;
- 		} else {
--			dev_warn(hba->dev, "rsp size is bigger than buffer");
-+			dev_warn(hba->dev,
-+				 "%s: rsp size %d is bigger than buffer size %d",
-+				 __func__, resp_len, *buff_len);
- 			*buff_len = 0;
- 			err = -EINVAL;
- 		}
+ 
+-	hba->dev_cmd.query.descriptor = NULL;
+ 	*buf_len = be16_to_cpu(response->upiu_res.length);
+ 
+ out_unlock:
++	hba->dev_cmd.query.descriptor = NULL;
+ 	mutex_unlock(&hba->dev_cmd.lock);
+ out:
+ 	ufshcd_release(hba);
 -- 
 2.17.1
 
