@@ -2,83 +2,103 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D94BBC17440
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 01:27:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CFF2C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 01:38:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8FC1222CE
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 01:27:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573608461;
-	bh=cy+L60Qy7wwfV9YrX33f7ctlru7kjaXSUmLoEaGwNEY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Y1J/mKT5RyQRRKiENuevicGXKhMLwY8Ytdfj+D483iG+JWvJonLtorLHF073q8mS/
-	 x5nFfkJodYu9GMxNkUIBkzw7bVDfszCkvkRqi6uUOZw0ZzJ0NkVRtkaeMtHhZ17j1t
-	 DG+ozQ7nreKO49hbx7ishcp3WyKijs9EKlpO0e5g=
+	by mail.kernel.org (Postfix) with ESMTP id E7294222D0
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 01:38:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gHFWHkKm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727221AbfKMB1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:27:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51232 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726960AbfKMB1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:27:40 -0500
-Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 16348222CD;
-        Wed, 13 Nov 2019 01:27:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573608460;
-        bh=cy+L60Qy7wwfV9YrX33f7ctlru7kjaXSUmLoEaGwNEY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cc2ghfxjXaKQIcw3GWki60ue09JYLUyQMWhVkxGSaM77Wpf6rFFZ2K6iJTbL7m2fJ
-         yLV5KNAmCMMjQ0+sMzHc7dYp1eI/UyWb9zQKk6JHOhxpu20ZBZjcrfJ5QHfiY0dbki
-         bGcMjWCdAPwA6+T6r6n2ULiZ3lLAahwPQxE4QYKE=
-Date:   Tue, 12 Nov 2019 20:27:39 -0500
-From:   Sasha Levin <sashal@kernel.org>
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     stable@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
-Subject: Re: Please consider mainline commit 9393c8de628c for stable
-Message-ID: <20191113012739.GN8496@sasha-vm>
-References: <3bb75710-9e53-4896-b368-a3c5a3fc7fa8@gmail.com>
+        id S1727338AbfKMBiy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 20:38:54 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:38452 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727041AbfKMBix (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 20:38:53 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD1YNRM001889;
+        Wed, 13 Nov 2019 01:37:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=nBEVt/y9CIbMxIiZwK0x8Vgf1UghyXUE7rZHgMKFOkI=;
+ b=gHFWHkKmteGiPHt8Q2AnfXoA/gc79ee+q2VElCvQBq2gz2vqpEv72tZyhzpwOsLKx+Pz
+ 8Xq4hNrXWTQiYDzHVm5TEd/mcNETQyvup3T2v7BFiLbjVDpdJFdGGnD6njWQ+9Z1uFto
+ 9v8UFv8vhSNzJI/ByC5+l5Tp9u4Y68yFdppMngOFTDqbnZpEPzBA3A21zJmmBWoRCt0f
+ mgc+2SaU58k4Yoa0QzkE7BC+yx7hQi9jiC7r5t4Ywnf09gp+UBcuaacd1GvPpLqfeq6W
+ PpabvpZeaiNuQRfsArkzxa0bSonp7QeF6AvbhaJpXEtEEu0YPBwuLfiBK9Wh2ZwhiCUo mg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2w5p3qrpjg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 01:37:16 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD1YJqY091498;
+        Wed, 13 Nov 2019 01:37:16 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2w7khmdhh3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Nov 2019 01:37:16 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAD1b9IQ007575;
+        Wed, 13 Nov 2019 01:37:09 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 13 Nov 2019 01:37:08 +0000
+To:     "wubo \(T\)" <wubo40@huawei.com>
+Cc:     "lduncan\@suse.com" <lduncan@suse.com>,
+        "cleech\@redhat.com" <cleech@redhat.com>,
+        "jejb\@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen\@oracle.com" <martin.petersen@oracle.com>,
+        "open-iscsi\@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi\@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>,
+        Mingfangsen <mingfangsen@huawei.com>,
+        "liuzhiqiang \(I\)" <liuzhiqiang26@huawei.com>
+Subject: Re: [PATCH v3] scsi: avoid potential deadloop in iscsi_if_rx func
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFB0ED@dggeml505-mbs.china.huawei.com>
+Date:   Tue, 12 Nov 2019 20:37:05 -0500
+In-Reply-To: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915DFB0ED@dggeml505-mbs.china.huawei.com>
+        (wubo's message of "Thu, 31 Oct 2019 06:17:01 +0000")
+Message-ID: <yq18soksgji.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <3bb75710-9e53-4896-b368-a3c5a3fc7fa8@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=957
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1910280000 definitions=main-1911130008
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
+ definitions=main-1911130008
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 03:52:47PM +1300, Michael Schmitz wrote:
->Dear stable kernel maintainers,
->
->please consider including commit 9393c8de628c ("scsi: core: Handle 
->drivers which set sg_tablesize to zero") for inclusion in stable.
->
->The commit fixes a long standing bug that affects all SCSI low-level 
->drivers setting sg_tablesize to zero, introduced in commit d285203c 
->("scsi: add support for a blk-mq based I/O path.") around kernel 
->version 3.16.
->
->Use of the option use_blk_mq=y in kernel versions prior to 5.1, and 
->any use of such drivers in later kernels, will result in a null 
->pointer dereference from the block layer.
->
->I hadn't expected Martin Petersen to pick my fix over another one 
->submitted by Finn Thain, so I never added CC: or Fixes: tags.
 
-Could you provide a backport for 4.19 and older?
+> In iscsi_if_rx func, after receiving one request through
+> iscsi_if_recv_msg func, iscsi_if_send_reply will be called to try to
+> reply the request in do-loop. If the return of iscsi_if_send_reply
+> func return -EAGAIN all the time, one deadloop will occur.
+>  
+> For example, a client only send msg without calling recvmsg func, 
+> then it will result in the watchdog soft lockup. 
+> The details are given as follows,
 
-We would need to work around not having 3dccdf53c2f3 ("scsi: core: avoid
-preallocating big SGL for data") in older kernels, and I'm not confident
-about what I ended up as a backport without ability to test it.
+Lee/Chris/Ulrich: Please review!
 
 -- 
-Thanks,
-Sasha
+Martin K. Petersen	Oracle Linux Engineering
