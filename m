@@ -2,65 +2,179 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFF3C17447
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D6BC43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:57:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F27421D7F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:22:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Aqto3Grl"
+	by mail.kernel.org (Postfix) with ESMTP id 1AC57222CA
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727578AbfKMOWN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 09:22:13 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44840 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726957AbfKMOWN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 09:22:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=z6v4nLsUw0L09vyumEvW5kAmrgoiKUojczjpjwUyStw=; b=Aqto3GrlTVZHwB/d4+Dx0xUcy
-        TBiS42GfmRAmWNA1yBLtPMAzzGVhZ8AQ/KWh6yJYUC+2Pf7LoUdX8HjW60jb9H2szCw9aj2Z2qJrp
-        OgjH6ovTs3o7xZCkEUFDfxbuORC44znKzhgHPIAJKZPMFeWFDdbZgKHOfy8V9sc4DJvcqQBdk5xaB
-        AGbiy+Zz6O0lxCXIlp5mphyUpdLXd5iTgniud6LrhoMw8jDWzypQZZEL/+N6D7cxpXe9v/+7TVOsC
-        fYiJG0DUxKUMCJEp2w8+DSmnK5nRAZoVNAlwXwnET3+QP81QOvWwxl6o4XPr0mUOfL7sng2nkPkrJ
-        HFNrsr+iQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iUtX6-0002iK-5G; Wed, 13 Nov 2019 14:22:08 +0000
-Date:   Wed, 13 Nov 2019 06:22:08 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Kars de Jong <jongk@linux-m68k.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
-        linux-m68k@vger.kernel.org, schmitzmic@gmail.com,
-        fthain@telegraphics.com.au
-Subject: Re: [PATCH 1/2] esp_scsi: Correct ordering of PCSCSI definition in
- esp_rev enum
-Message-ID: <20191113142208.GA8269@infradead.org>
-References: <20191029220503.7553-1-jongk@linux-m68k.org>
- <20191112185710.23988-1-jongk@linux-m68k.org>
- <20191112185710.23988-2-jongk@linux-m68k.org>
+        id S1727779AbfKMO5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 09:57:39 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2094 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726251AbfKMO5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 09:57:39 -0500
+Received: from lhreml701-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 3EBB479D1242E9871B03;
+        Wed, 13 Nov 2019 14:57:37 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml701-cah.china.huawei.com (10.201.108.42) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Wed, 13 Nov 2019 14:57:35 +0000
+Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 13 Nov
+ 2019 14:57:35 +0000
+Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
+To:     Hannes Reinecke <hare@suse.de>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "hare@suse.com" <hare@suse.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>
+References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-4-git-send-email-john.garry@huawei.com>
+ <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
+Date:   Wed, 13 Nov 2019 14:57:33 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191112185710.23988-2-jongk@linux-m68k.org>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.46]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 07:57:09PM +0100, Kars de Jong wrote:
-> The order of the definitions in the esp_rev enum is important. The values
-> are used in comparisons for chip features.
+On 13/11/2019 14:06, Hannes Reinecke wrote:
+> On 11/13/19 2:36 PM, John Garry wrote:
+>> Some SCSI HBAs (such as HPSA, megaraid, mpt3sas, hisi_sas_v3 ..) support
+>> multiple reply queues with single hostwide tags.
+>>
+>> In addition, these drivers want to use interrupt assignment in
+>> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY). However, as discussed in [0],
+>> CPU hotplug may cause in-flight IO completion to not be serviced when an
+>> interrupt is shutdown.
+>>
+>> To solve that problem, Ming's patchset to drain hctx's should ensure no
+>> IOs are missed in-flight [1].
+>>
+>> However, to take advantage of that patchset, we need to map the HBA HW
+>> queues to blk mq hctx's; to do that, we need to expose the HBA HW queues.
+>>
+>> In making that transition, the per-SCSI command request tags are no
+>> longer unique per Scsi host - they are just unique per hctx. As such, the
+>> HBA LLDD would have to generate this tag internally, which has a certain
+>> performance overhead.
+>>
+>> However another problem is that blk mq assumes the host may accept
+>> (Scsi_host.can_queue * #hw queue) commands. In [2], we removed the Scsi
+>> host busy counter, which would stop the LLDD being sent more than
+>> .can_queue commands; however, we should still ensure that the block layer
+>> does not issue more than .can_queue commands to the Scsi host.
+>>
+>> To solve this problem, introduce a shared tags per blk_mq_tag_set, which
+>> may be requested when allocating the tagset.
+>>
+>> New flag BLK_MQ_F_TAG_HCTX_SHARED should be set when requesting the
+>> tagset.
+>>
+>> This is based on work originally from Ming Lei in [3].
+>>
+>> [0] https://lore.kernel.org/linux-block/alpine.DEB.2.21.1904051331270.1802@nanos.tec.linutronix.de/
+>> [1] https://lore.kernel.org/linux-block/20191014015043.25029-1-ming.lei@redhat.com/
+>> [2] https://lore.kernel.org/linux-scsi/20191025065855.6309-1-ming.lei@redhat.com/
+>> [3] https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/
+>>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   block/blk-core.c       |  1 +
+>>   block/blk-flush.c      |  2 +
+>>   block/blk-mq-debugfs.c |  2 +-
+>>   block/blk-mq-tag.c     | 85 ++++++++++++++++++++++++++++++++++++++++++
+>>   block/blk-mq-tag.h     |  1 +
+>>   block/blk-mq.c         | 61 +++++++++++++++++++++++++-----
+>>   block/blk-mq.h         |  9 +++++
+>>   include/linux/blk-mq.h |  3 ++
+>>   include/linux/blkdev.h |  1 +
+>>   9 files changed, 155 insertions(+), 10 deletions(-)
+>>
+> [ .. ]
+>> @@ -396,15 +398,17 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+>>   		blk_mq_tag_busy(data->hctx);
+>>   	}
+>>   
+>> -	tag = blk_mq_get_tag(data);
+>> -	if (tag == BLK_MQ_TAG_FAIL) {
+>> -		if (clear_ctx_on_error)
+>> -			data->ctx = NULL;
+>> -		blk_queue_exit(q);
+>> -		return NULL;
+>> +	if (data->hctx->shared_tags) {
+>> +		shared_tag = blk_mq_get_shared_tag(data);
+>> +		if (shared_tag == BLK_MQ_TAG_FAIL)
+>> +			goto err_shared_tag;
+>>   	}
+>>   
+>> -	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags, alloc_time_ns);
+>> +	tag = blk_mq_get_tag(data);
+>> +	if (tag == BLK_MQ_TAG_FAIL)
+>> +		goto err_tag;
+>> +
+>> +	rq = blk_mq_rq_ctx_init(data, tag, shared_tag, data->cmd_flags, alloc_time_ns);
+>>   	if (!op_is_flush(data->cmd_flags)) {
+>>   		rq->elv.icq = NULL;
+>>   		if (e && e->type->ops.prepare_request) {
 
-Yikes.  Wouldn't it make much more sense to have a feature bitmap?
+Hi Hannes,
+
+> Why do you need to keep a parallel tag accounting between 'normal' and
+> 'shared' tags here?
+> Isn't is sufficient to get a shared tag only, and us that in lieo of the
+> 'real' one?
+
+In theory, yes. Just the 'shared' tag should be adequate.
+
+A problem I see with this approach is that we lose the identity of which 
+tags are allocated for each hctx. As an example for this, consider 
+blk_mq_queue_tag_busy_iter(), which iterates the bits for each hctx. 
+Now, if you're just using shared tags only, that wouldn't work.
+
+Consider blk_mq_can_queue() as another example - this tells us if a hctx 
+has any bits unset, while with only using shared tags it would tell if 
+any bits unset over all queues, and this change in semantics could break 
+things. At a glance, function __blk_mq_tag_idle() looks problematic also.
+
+And this is where it becomes messy to implement.
+
+> 
+> I would love to combine both,
+
+Same here...
+
+  as then we can easily do a reverse mapping
+> by using the 'tag' value to lookup the command itself, and can possibly
+> do the 'scsi_cmd_priv' trick of embedding the LLDD-specific parts within
+> the command. With this split we'll be wasting quite some memory there,
+> as the possible 'tag' values are actually nr_hw_queues * shared_tags.
+
+Yeah, understood. That's just a trade-off I saw.
+
+Thanks,
+John
