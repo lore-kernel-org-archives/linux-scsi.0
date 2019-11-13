@@ -2,179 +2,85 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D6BC43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 587ACC17447
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 15:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AC57222CA
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:57:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FC482245C
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 15:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727779AbfKMO5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 09:57:39 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2094 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726251AbfKMO5j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 09:57:39 -0500
-Received: from lhreml701-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 3EBB479D1242E9871B03;
-        Wed, 13 Nov 2019 14:57:37 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml701-cah.china.huawei.com (10.201.108.42) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 13 Nov 2019 14:57:35 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 13 Nov
- 2019 14:57:35 +0000
-Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
-To:     Hannes Reinecke <hare@suse.de>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "hare@suse.com" <hare@suse.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>
-References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-4-git-send-email-john.garry@huawei.com>
- <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
-Date:   Wed, 13 Nov 2019 14:57:33 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727168AbfKMPEJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 10:04:09 -0500
+Received: from smtpq3.tb.mail.iss.as9143.net ([212.54.42.166]:44554 "EHLO
+        smtpq3.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726812AbfKMPEJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 10:04:09 -0500
+Received: from [212.54.42.110] (helo=smtp7.tb.mail.iss.as9143.net)
+        by smtpq3.tb.mail.iss.as9143.net with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iUuBj-0005AH-3U; Wed, 13 Nov 2019 16:04:07 +0100
+Received: from mail-wr1-f52.google.com ([209.85.221.52])
+        by smtp7.tb.mail.iss.as9143.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iUuBi-00064K-Vk; Wed, 13 Nov 2019 16:04:07 +0100
+Received: by mail-wr1-f52.google.com with SMTP id s5so2766439wrw.2;
+        Wed, 13 Nov 2019 07:04:06 -0800 (PST)
+X-Gm-Message-State: APjAAAXi1kptu7LeqB/3y2k6RHxBhv8Y1YYujTgr96D8gg+8K4F7yWiO
+        +61mSTZMmplwQ1Sz47V0K0G19gtSqGm7EnNe16I=
+X-Google-Smtp-Source: APXvYqz/w4ljt9buLhiVQ18ue9qf21x4K4kKqNT+JKY0tOyba9PHSWbZr9CuWIhRLyWWJLpcZTrBbskm2GW4BsiUjnA=
+X-Received: by 2002:a5d:44d2:: with SMTP id z18mr3140767wrr.209.1573657446722;
+ Wed, 13 Nov 2019 07:04:06 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20191029220503.7553-1-jongk@linux-m68k.org> <20191112185710.23988-1-jongk@linux-m68k.org>
+ <20191112185710.23988-2-jongk@linux-m68k.org> <20191113142208.GA8269@infradead.org>
+In-Reply-To: <20191113142208.GA8269@infradead.org>
+From:   Kars de Jong <jongk@linux-m68k.org>
+Date:   Wed, 13 Nov 2019 16:03:55 +0100
+X-Gmail-Original-Message-ID: <CACz-3rg5vNXCZQszMccSJikbZgBmdyPOMC+vvs3QuuhrQGW_MA@mail.gmail.com>
+Message-ID: <CACz-3rg5vNXCZQszMccSJikbZgBmdyPOMC+vvs3QuuhrQGW_MA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] esp_scsi: Correct ordering of PCSCSI definition in
+ esp_rev enum
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
+        linux-m68k@vger.kernel.org, schmitzmic@gmail.com,
+        fthain@telegraphics.com.au
+Content-Type: text/plain; charset="UTF-8"
+X-SourceIP: 209.85.221.52
+X-Authenticated-Sender: karsdejong@home.nl (via SMTP)
+X-Ziggo-spambar: /
+X-Ziggo-spamscore: 0.0
+X-Ziggo-spamreport: CMAE Analysis: v=2.3 cv=cPSeTWWN c=1 sm=1 tr=0 a=9+rZDBEiDlHhcck0kWbJtElFXBc=:19 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=MeAgGD-zjQ4A:10 a=JfrnYn6hAAAA:8 a=l8ZAoXzOCdwS2lX8vb4A:9 a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
+X-Ziggo-Spam-Status: No
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/11/2019 14:06, Hannes Reinecke wrote:
-> On 11/13/19 2:36 PM, John Garry wrote:
->> Some SCSI HBAs (such as HPSA, megaraid, mpt3sas, hisi_sas_v3 ..) support
->> multiple reply queues with single hostwide tags.
->>
->> In addition, these drivers want to use interrupt assignment in
->> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY). However, as discussed in [0],
->> CPU hotplug may cause in-flight IO completion to not be serviced when an
->> interrupt is shutdown.
->>
->> To solve that problem, Ming's patchset to drain hctx's should ensure no
->> IOs are missed in-flight [1].
->>
->> However, to take advantage of that patchset, we need to map the HBA HW
->> queues to blk mq hctx's; to do that, we need to expose the HBA HW queues.
->>
->> In making that transition, the per-SCSI command request tags are no
->> longer unique per Scsi host - they are just unique per hctx. As such, the
->> HBA LLDD would have to generate this tag internally, which has a certain
->> performance overhead.
->>
->> However another problem is that blk mq assumes the host may accept
->> (Scsi_host.can_queue * #hw queue) commands. In [2], we removed the Scsi
->> host busy counter, which would stop the LLDD being sent more than
->> .can_queue commands; however, we should still ensure that the block layer
->> does not issue more than .can_queue commands to the Scsi host.
->>
->> To solve this problem, introduce a shared tags per blk_mq_tag_set, which
->> may be requested when allocating the tagset.
->>
->> New flag BLK_MQ_F_TAG_HCTX_SHARED should be set when requesting the
->> tagset.
->>
->> This is based on work originally from Ming Lei in [3].
->>
->> [0] https://lore.kernel.org/linux-block/alpine.DEB.2.21.1904051331270.1802@nanos.tec.linutronix.de/
->> [1] https://lore.kernel.org/linux-block/20191014015043.25029-1-ming.lei@redhat.com/
->> [2] https://lore.kernel.org/linux-scsi/20191025065855.6309-1-ming.lei@redhat.com/
->> [3] https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>   block/blk-core.c       |  1 +
->>   block/blk-flush.c      |  2 +
->>   block/blk-mq-debugfs.c |  2 +-
->>   block/blk-mq-tag.c     | 85 ++++++++++++++++++++++++++++++++++++++++++
->>   block/blk-mq-tag.h     |  1 +
->>   block/blk-mq.c         | 61 +++++++++++++++++++++++++-----
->>   block/blk-mq.h         |  9 +++++
->>   include/linux/blk-mq.h |  3 ++
->>   include/linux/blkdev.h |  1 +
->>   9 files changed, 155 insertions(+), 10 deletions(-)
->>
-> [ .. ]
->> @@ -396,15 +398,17 @@ static struct request *blk_mq_get_request(struct request_queue *q,
->>   		blk_mq_tag_busy(data->hctx);
->>   	}
->>   
->> -	tag = blk_mq_get_tag(data);
->> -	if (tag == BLK_MQ_TAG_FAIL) {
->> -		if (clear_ctx_on_error)
->> -			data->ctx = NULL;
->> -		blk_queue_exit(q);
->> -		return NULL;
->> +	if (data->hctx->shared_tags) {
->> +		shared_tag = blk_mq_get_shared_tag(data);
->> +		if (shared_tag == BLK_MQ_TAG_FAIL)
->> +			goto err_shared_tag;
->>   	}
->>   
->> -	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags, alloc_time_ns);
->> +	tag = blk_mq_get_tag(data);
->> +	if (tag == BLK_MQ_TAG_FAIL)
->> +		goto err_tag;
->> +
->> +	rq = blk_mq_rq_ctx_init(data, tag, shared_tag, data->cmd_flags, alloc_time_ns);
->>   	if (!op_is_flush(data->cmd_flags)) {
->>   		rq->elv.icq = NULL;
->>   		if (e && e->type->ops.prepare_request) {
+Hi Christoph!
 
-Hi Hannes,
+Op wo 13 nov. 2019 om 15:22 schreef Christoph Hellwig <hch@infradead.org>:
+>
+> On Tue, Nov 12, 2019 at 07:57:09PM +0100, Kars de Jong wrote:
+> > The order of the definitions in the esp_rev enum is important. The values
+> > are used in comparisons for chip features.
+>
+> Yikes.  Wouldn't it make much more sense to have a feature bitmap?
 
-> Why do you need to keep a parallel tag accounting between 'normal' and
-> 'shared' tags here?
-> Isn't is sufficient to get a shared tag only, and us that in lieo of the
-> 'real' one?
+Yes, I mentioned that in my cover letter already, and it was discussed
+a bit on the Linux/m68k mailing list.
+ It may be hard to get that tested though, most of the users are
+legacy architectures with a probably very limited number of users.
+But if a mostly review-based process is good enough, I am certainly
+willing to change it.
 
-In theory, yes. Just the 'shared' tag should be adequate.
+Kind regards,
 
-A problem I see with this approach is that we lose the identity of which 
-tags are allocated for each hctx. As an example for this, consider 
-blk_mq_queue_tag_busy_iter(), which iterates the bits for each hctx. 
-Now, if you're just using shared tags only, that wouldn't work.
-
-Consider blk_mq_can_queue() as another example - this tells us if a hctx 
-has any bits unset, while with only using shared tags it would tell if 
-any bits unset over all queues, and this change in semantics could break 
-things. At a glance, function __blk_mq_tag_idle() looks problematic also.
-
-And this is where it becomes messy to implement.
-
-> 
-> I would love to combine both,
-
-Same here...
-
-  as then we can easily do a reverse mapping
-> by using the 'tag' value to lookup the command itself, and can possibly
-> do the 'scsi_cmd_priv' trick of embedding the LLDD-specific parts within
-> the command. With this split we'll be wasting quite some memory there,
-> as the possible 'tag' values are actually nr_hw_queues * shared_tags.
-
-Yeah, understood. That's just a trade-off I saw.
-
-Thanks,
-John
+Kars.
