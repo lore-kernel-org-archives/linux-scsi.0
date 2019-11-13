@@ -2,101 +2,112 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4636DC17447
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E33C17454
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:27:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F3A0222D4
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4ED8922473
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:27:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oyrnK84K"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J8+sF7LL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727170AbfKMEH1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 23:07:27 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:41116 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727032AbfKMEH0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 23:07:26 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD39E4j105913;
-        Wed, 13 Nov 2019 03:12:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=0uycHj1hnQzwFGbzXvkxe6k9HMxfe6ttpDQFwoIQ6ig=;
- b=oyrnK84K2lFalULpBohYNELqp5uWFq4H4bNYTd5O+HL+HohkNKKn4yBkDhRIexvWhkBP
- h6pM/s7KHtwVZNSb7WJJgWpip1ghFTmIuUd3u7Jg3GVcz1S0HPbOMJNLGmzUzcAsEUOo
- 7g1tqS0T9Qi8pfq07LO1MfU6HLaMsJxugqI3ynla/s0535IVhPiadUt+miRPYdLy+otF
- o+z8VKq8/v6b7er0P9YcYd3Q/YfVO4ex1Hrt4d9KJRW3b/8PremoFZ2Trk/xYooHqPy4
- 38a034x/8XZRbQcuMryqoQxIYmQELbakQIPTs12hFAR9DRL8wh5IJ+2LXWr7brPGxp6y Sw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2w5mvts7kj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 03:12:35 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD399jU167983;
-        Wed, 13 Nov 2019 03:12:34 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2w7vpnfw09-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 03:12:34 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAD3CUEJ031961;
-        Wed, 13 Nov 2019 03:12:30 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 19:12:29 -0800
-To:     Finn Thain <fthain@telegraphics.com.au>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Michael Schmitz" <schmitzmic@gmail.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, "Jonathan Corbet" <corbet@lwn.net>,
-        "Bartlomiej Zolnierkiewicz" <b.zolnierkie@samsung.com>,
-        "Jens Axboe" <axboe@kernel.dk>,
-        "Viresh Kumar" <vireshk@kernel.org>,
-        "Oliver Neukum" <oneukum@suse.com>,
-        "Alan Stern" <stern@rowland.harvard.edu>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        usb-storage@lists.one-eyed-alien.net, linux-doc@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 0/2] SG_NONE fix and cleanup
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <cover.1572656814.git.fthain@telegraphics.com.au>
-Date:   Tue, 12 Nov 2019 22:12:25 -0500
-In-Reply-To: <cover.1572656814.git.fthain@telegraphics.com.au> (Finn Thain's
-        message of "Sat, 02 Nov 2019 12:06:54 +1100")
-Message-ID: <yq1lfskpizq.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727924AbfKME1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 23:27:45 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:43928 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727180AbfKME1o (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 23:27:44 -0500
+Received: by mail-pf1-f193.google.com with SMTP id 3so711268pfb.10;
+        Tue, 12 Nov 2019 20:27:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=eimBgjDjKpO/BNiwKmZxZNq9wEIZnLGA/lSG4Kux51U=;
+        b=J8+sF7LLJD7hfCpF/jBZUs+57aECYdff+iIP/LuncGv6kPW9iItkRCaAcpA/mQvtSw
+         V9iWugGdF4NgSC7cmjdwNRPFEduGVEzPHqMhW/BA49ttwFANauw8PhY5VpbaWdRjrvDJ
+         Q3ahozGpeLp1dIk5i9/MmagYp/kYYTjvR7RE1pvgCdu+52OtVRVf3CzNb1VVjF3qleJ6
+         Rf1vQ7Ru9IIMPKZox+Tudz8zIFZ145x9m/fVxmmuEIrSW8P4XiV2xhcPZqh19Upl0Zcf
+         NBJLvhx9p9mnx5MirkRvncZvSYAqJ+YMF9aFHz6xUDH1k7D3VaPqRdeJqTnYXvTklaRP
+         SMfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=eimBgjDjKpO/BNiwKmZxZNq9wEIZnLGA/lSG4Kux51U=;
+        b=qdsTLm4N3kiXmcDvDB24MAEL5aMhcUQDiaU/FJUcSOtDZcioOXjoaDkWxBSBEH21rL
+         LDctBSEq9AgyfHGMWGvslQQfCOtkKAcBJzWidl8D4LFSER2KZDKiIjcUJvZOyUNR4FDA
+         u0pN0UZ1zRIwkTGE7Al9OoWX5yptWPhc78bElJn4BEO7NKSWTns5FBJ+OmcZCUnNbYJJ
+         +wcmesTyFFNO/R/u0aJMjCKOXbW6GW1repkNFxBBNWA1jUeFjoBKeOZwkUvJkFpluGv6
+         zkuKTye26xtqIDRbKdLKS6hxuH3qp+U1byQHLEU/qVIKQiIqFb2coMSTPtpe1sXZkLKz
+         f0Dw==
+X-Gm-Message-State: APjAAAV+1V6EHvJDD34OGUuh60nXrv3W3L0HV23XH9EJcNT34MHdOMMX
+        MD4s7gZibxmdzln//Qa9dbZFFdcR
+X-Google-Smtp-Source: APXvYqyYBCllFsmBxPUEeJvCjXUpQTItrGDDjxuQ9C1v8WakRhhFjt559UgpozFGs7XIwQxfJyi8Tg==
+X-Received: by 2002:a62:8789:: with SMTP id i131mr1786390pfe.221.1573619263465;
+        Tue, 12 Nov 2019 20:27:43 -0800 (PST)
+Received: from [192.168.1.101] (122-58-182-39-adsl.sparkbb.co.nz. [122.58.182.39])
+        by smtp.gmail.com with ESMTPSA id z11sm664741pfg.117.2019.11.12.20.27.39
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Nov 2019 20:27:42 -0800 (PST)
+Subject: Re: Please consider mainline commit 9393c8de628c for stable
+To:     Sasha Levin <sashal@kernel.org>
+References: <3bb75710-9e53-4896-b368-a3c5a3fc7fa8@gmail.com>
+ <20191113012739.GN8496@sasha-vm>
+Cc:     stable@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <a7ccad7a-01b1-4cc5-f9a3-c08bb160a351@gmail.com>
+Date:   Wed, 13 Nov 2019 17:27:37 +1300
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911130026
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911130026
+In-Reply-To: <20191113012739.GN8496@sasha-vm>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Sasha,
 
-Finn,
+Am 13.11.2019 um 14:27 schrieb Sasha Levin:
+> On Tue, Nov 12, 2019 at 03:52:47PM +1300, Michael Schmitz wrote:
+>> Dear stable kernel maintainers,
+>>
+>> please consider including commit 9393c8de628c ("scsi: core: Handle
+>> drivers which set sg_tablesize to zero") for inclusion in stable.
+>>
+>> The commit fixes a long standing bug that affects all SCSI low-level
+>> drivers setting sg_tablesize to zero, introduced in commit d285203c
+>> ("scsi: add support for a blk-mq based I/O path.") around kernel
+>> version 3.16.
+>>
+>> Use of the option use_blk_mq=y in kernel versions prior to 5.1, and
+>> any use of such drivers in later kernels, will result in a null
+>> pointer dereference from the block layer.
+>>
+>> I hadn't expected Martin Petersen to pick my fix over another one
+>> submitted by Finn Thain, so I never added CC: or Fixes: tags.
+>
+> Could you provide a backport for 4.19 and older?
+>
+> We would need to work around not having 3dccdf53c2f3 ("scsi: core: avoid
+> preallocating big SGL for data") in older kernels, and I'm not confident
+> about what I ended up as a backport without ability to test it.
 
-> These two patches address some issues stemming from scsi-mq conversion.
+I hadn't spotted that. From  what I've seen, that commit renamed 
+scsi_mq_inline_sgl_size() by scsi_mq_sgl_size() (among all the other 
+changes) so modifying my patch with that in mind should suffice.
 
-Applied to 5.5/scsi-queue, thanks!
+For safety, I'll test that version though.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Cheers,
+
+	Michael
+
