@@ -2,294 +2,113 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D37C17447
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:40:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0047AC43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 347AE22466
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:40:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D49E0207FC
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727208AbfKMNk3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 08:40:29 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:40684 "EHLO huawei.com"
+        id S1727680AbfKMN6X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 08:58:23 -0500
+Received: from mx2.suse.de ([195.135.220.15]:37900 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726978AbfKMNk3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 08:40:29 -0500
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 041A7B6C1A483B587A4F;
-        Wed, 13 Nov 2019 21:40:24 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS404-HUB.china.huawei.com (10.3.19.204) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 13 Nov 2019 21:40:16 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <ming.lei@redhat.com>,
-        <hare@suse.com>, <bvanassche@acm.org>, <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC 5/5] scsi: hisi_sas: Switch v3 hw to MQ
-Date:   Wed, 13 Nov 2019 21:36:49 +0800
-Message-ID: <1573652209-163505-6-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+        id S1726186AbfKMN6X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 08:58:23 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 27C0CAE15;
+        Wed, 13 Nov 2019 13:58:20 +0000 (UTC)
+Subject: Re: [PATCH RFC 1/5] blk-mq: Remove some unused function arguments
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, ming.lei@redhat.com, hare@suse.com,
+        bvanassche@acm.org, chenxiang66@hisilicon.com
 References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-2-git-send-email-john.garry@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <89e29883-2ef4-d148-56fa-5f02c9d62e3b@suse.de>
+Date:   Wed, 13 Nov 2019 14:58:19 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+In-Reply-To: <1573652209-163505-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the block layer provides a shared tag, we can switch the driver
-to expose all HW queues.
+On 11/13/19 2:36 PM, John Garry wrote:
+> The struct blk_mq_hw_ctx * argument in blk_mq_put_tag(),
+> blk_mq_poll_nsecs(), and blk_mq_poll_hybrid_sleep() is unused, so remove
+> it.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  block/blk-mq-tag.c |  4 ++--
+>  block/blk-mq-tag.h |  3 +--
+>  block/blk-mq.c     | 10 ++++------
+>  block/blk-mq.h     |  2 +-
+>  4 files changed, 8 insertions(+), 11 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas.h       |  3 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 43 +++++++------
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 85 +++++++++++---------------
- 3 files changed, 59 insertions(+), 72 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 233c73e01246..0405602df2a4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -8,6 +8,8 @@
- #define _HISI_SAS_H_
- 
- #include <linux/acpi.h>
-+#include <linux/blk-mq.h>
-+#include <linux/blk-mq-pci.h>
- #include <linux/clk.h>
- #include <linux/debugfs.h>
- #include <linux/dmapool.h>
-@@ -431,7 +433,6 @@ struct hisi_hba {
- 	u32 intr_coal_count;	/* Interrupt count to coalesce */
- 
- 	int cq_nvecs;
--	unsigned int *reply_map;
- 
- 	/* bist */
- 	enum sas_linkrate debugfs_bist_linkrate;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 52d5b9afbb18..cca94b296065 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -183,12 +183,13 @@ static void hisi_sas_slot_index_set(struct hisi_hba *hisi_hba, int slot_idx)
- static int hisi_sas_slot_index_alloc(struct hisi_hba *hisi_hba,
- 				     struct scsi_cmnd *scsi_cmnd)
- {
--	int index;
- 	void *bitmap = hisi_hba->slot_index_tags;
-+	struct Scsi_Host *shost = hisi_hba->shost;
- 	unsigned long flags;
-+	int index;
- 
--	if (scsi_cmnd)
--		return scsi_cmnd->request->tag;
-+	if (shost->hostt->host_tagset && scsi_cmnd)
-+		return scsi_cmnd->request->shared_tag;
- 
- 	spin_lock_irqsave(&hisi_hba->lock, flags);
- 	index = find_next_zero_bit(bitmap, hisi_hba->slot_index_count,
-@@ -421,6 +422,7 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 	struct device *dev = hisi_hba->dev;
- 	int dlvry_queue_slot, dlvry_queue, rc, slot_idx;
- 	int n_elem = 0, n_elem_dif = 0, n_elem_req = 0;
-+	struct scsi_cmnd *scmd = NULL;
- 	struct hisi_sas_dq *dq;
- 	unsigned long flags;
- 	int wr_q_index;
-@@ -436,10 +438,23 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 		return -ECOMM;
- 	}
- 
--	if (hisi_hba->reply_map) {
--		int cpu = raw_smp_processor_id();
--		unsigned int dq_index = hisi_hba->reply_map[cpu];
-+	if (task->uldd_task) {
-+		struct ata_queued_cmd *qc;
-+
-+		if (dev_is_sata(device)) {
-+			qc = task->uldd_task;
-+			scmd = qc->scsicmd;
-+		} else {
-+			scmd = task->uldd_task;
-+		}
-+	}
- 
-+	if (scmd) {
-+		unsigned int dq_index;
-+		u32 blk_tag;
-+
-+		blk_tag = blk_mq_unique_tag(scmd->request);
-+		dq_index = blk_mq_unique_tag_to_hwq(blk_tag);
- 		*dq_pointer = dq = &hisi_hba->dq[dq_index];
- 	} else {
- 		*dq_pointer = dq = sas_dev->dq;
-@@ -468,21 +483,9 @@ static int hisi_sas_task_prep(struct sas_task *task,
- 
- 	if (hisi_hba->hw->slot_index_alloc)
- 		rc = hisi_hba->hw->slot_index_alloc(hisi_hba, device);
--	else {
--		struct scsi_cmnd *scsi_cmnd = NULL;
--
--		if (task->uldd_task) {
--			struct ata_queued_cmd *qc;
-+	else
-+		rc = hisi_sas_slot_index_alloc(hisi_hba, scmd);
- 
--			if (dev_is_sata(device)) {
--				qc = task->uldd_task;
--				scsi_cmnd = qc->scsicmd;
--			} else {
--				scsi_cmnd = task->uldd_task;
--			}
--		}
--		rc  = hisi_sas_slot_index_alloc(hisi_hba, scsi_cmnd);
--	}
- 	if (rc < 0)
- 		goto err_out_dif_dma_unmap;
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index bf5d5f138437..98f2bd24a23b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2353,66 +2353,35 @@ static irqreturn_t cq_interrupt_v3_hw(int irq_no, void *p)
- 	return IRQ_HANDLED;
- }
- 
--static void setup_reply_map_v3_hw(struct hisi_hba *hisi_hba, int nvecs)
-+static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
- {
--	const struct cpumask *mask;
--	int queue, cpu;
--
--	for (queue = 0; queue < nvecs; queue++) {
--		struct hisi_sas_cq *cq = &hisi_hba->cq[queue];
-+	int vectors;
-+	int max_msi = HISI_SAS_MSI_COUNT_V3_HW, min_msi;
-+	struct Scsi_Host *shost = hisi_hba->shost;
-+	struct irq_affinity desc = {
-+		.pre_vectors = BASE_VECTORS_V3_HW,
-+	};
-+
-+	min_msi = MIN_AFFINE_VECTORS_V3_HW;
-+	vectors = pci_alloc_irq_vectors_affinity(hisi_hba->pci_dev,
-+						 min_msi, max_msi,
-+						 PCI_IRQ_MSI |
-+						 PCI_IRQ_AFFINITY,
-+						 &desc);
-+	if (vectors < 0)
-+		return -ENOENT;
- 
--		mask = pci_irq_get_affinity(hisi_hba->pci_dev, queue +
--					    BASE_VECTORS_V3_HW);
--		if (!mask)
--			goto fallback;
--		cq->pci_irq_mask = mask;
--		for_each_cpu(cpu, mask)
--			hisi_hba->reply_map[cpu] = queue;
--	}
--	return;
-+	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
-+	shost->nr_hw_queues = hisi_hba->cq_nvecs;
- 
--fallback:
--	for_each_possible_cpu(cpu)
--		hisi_hba->reply_map[cpu] = cpu % hisi_hba->queue_count;
--	/* Don't clean all CQ masks */
-+	return 0;
- }
- 
- static int interrupt_init_v3_hw(struct hisi_hba *hisi_hba)
- {
- 	struct device *dev = hisi_hba->dev;
- 	struct pci_dev *pdev = hisi_hba->pci_dev;
--	int vectors, rc, i;
--	int max_msi = HISI_SAS_MSI_COUNT_V3_HW, min_msi;
--
--	if (auto_affine_msi_experimental) {
--		struct irq_affinity desc = {
--			.pre_vectors = BASE_VECTORS_V3_HW,
--		};
--
--		min_msi = MIN_AFFINE_VECTORS_V3_HW;
--
--		hisi_hba->reply_map = devm_kcalloc(dev, nr_cpu_ids,
--						   sizeof(unsigned int),
--						   GFP_KERNEL);
--		if (!hisi_hba->reply_map)
--			return -ENOMEM;
--		vectors = pci_alloc_irq_vectors_affinity(hisi_hba->pci_dev,
--							 min_msi, max_msi,
--							 PCI_IRQ_MSI |
--							 PCI_IRQ_AFFINITY,
--							 &desc);
--		if (vectors < 0)
--			return -ENOENT;
--		setup_reply_map_v3_hw(hisi_hba, vectors - BASE_VECTORS_V3_HW);
--	} else {
--		min_msi = max_msi;
--		vectors = pci_alloc_irq_vectors(hisi_hba->pci_dev, min_msi,
--						max_msi, PCI_IRQ_MSI);
--		if (vectors < 0)
--			return vectors;
--	}
--
--	hisi_hba->cq_nvecs = vectors - BASE_VECTORS_V3_HW;
-+	int rc, i;
- 
- 	rc = devm_request_irq(dev, pci_irq_vector(pdev, 1),
- 			      int_phy_up_down_bcast_v3_hw, 0,
-@@ -3057,6 +3026,15 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
- 	return 0;
- }
- 
-+static int hisi_sas_map_queues(struct Scsi_Host *shost)
-+{
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
-+	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-+
-+	return blk_mq_pci_map_queues(qmap, hisi_hba->pci_dev,
-+					     BASE_VECTORS_V3_HW);
-+}
-+
- static struct scsi_host_template sht_v3_hw = {
- 	.name			= DRV_NAME,
- 	.module			= THIS_MODULE,
-@@ -3065,6 +3043,7 @@ static struct scsi_host_template sht_v3_hw = {
- 	.slave_configure	= hisi_sas_slave_configure,
- 	.scan_finished		= hisi_sas_scan_finished,
- 	.scan_start		= hisi_sas_scan_start,
-+	.map_queues		= hisi_sas_map_queues,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.bios_param		= sas_bios_param,
- 	.this_id		= -1,
-@@ -3078,6 +3057,7 @@ static struct scsi_host_template sht_v3_hw = {
- 	.shost_attrs		= host_attrs_v3_hw,
- 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
- 	.host_reset             = hisi_sas_host_reset,
-+	.host_tagset		= 1,
- };
- 
- static const struct hisi_sas_hw hisi_sas_v3_hw = {
-@@ -3249,6 +3229,9 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (hisi_sas_debugfs_enable)
- 		hisi_sas_debugfs_init(hisi_hba);
- 
-+	rc = interrupt_preinit_v3_hw(hisi_hba);
-+	if (rc)
-+		goto err_out_ha;
- 	rc = scsi_add_host(shost, dev);
- 	if (rc)
- 		goto err_out_ha;
+Hannes
 -- 
-2.17.1
-
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
