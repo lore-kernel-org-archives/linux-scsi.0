@@ -2,192 +2,226 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39257C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 15:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC33C33CA0
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 16:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB99F205C9
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 15:30:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GUbzRoW1";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="WZFS9rSd"
+	by mail.kernel.org (Postfix) with ESMTP id 34B4B2247C
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 15:38:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727974AbfKMPaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 10:30:00 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1894 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727968AbfKMPaA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 10:30:00 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xADFQeVF032055;
-        Wed, 13 Nov 2019 07:29:54 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=pfpt0818;
- bh=PZ5OjELrAFpgyTIqzBNMp6UtLc6aWYO3Ps5gDmJJ+Og=;
- b=GUbzRoW1BqhuW5tCTEI5OJTL2wTbouSaMhPxlm+WkjTuBXO8YVpbxfwvZT1cYtDDAdXd
- cE7OlH+cI8qf9JjiMguks3NGny4QTLfynaJROSMGiR2XoqnHfmkXXVpX4RVUONoG21Z2
- 0O8ROBWFTlpf8lzgjUGc+X6l5IP/qBBt4B7sFupE1QjCrUJdJQ+d96LjZPKsqIF0Sy+/
- +eQGMsp9wZ0YBSJfG+5FUArQLQfNLseaQTvkAYrqxffup1FHpvApvCreZAXldTvcBROZ
- 3upAurFgeao3KrMceFVU5N/rf221mZ8TXC/ju75bfUurR2aJ67oZhMAqkgQW1iKrp+Tg WA== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2w8e2r1kgr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 13 Nov 2019 07:29:54 -0800
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 13 Nov
- 2019 07:29:53 -0800
-Received: from NAM04-CO1-obe.outbound.protection.outlook.com (104.47.45.56) by
- SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Wed, 13 Nov 2019 07:29:52 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=h3kckAOvn3eXEK98oXOxCw6lCuar+UgMluwr3fq/W0fwZQtXpNfo25Ze1WgzNd4fVSLPrfI+nbEXMEPBQtquFARrfVGEwBAQvSArf9vLudfqHP/pQzuyW2EtrJwty0lwl1nru21oZ759bv0Uiy++zNdZ8RPrS+2XFEuWvNmBd4OZi9xH7nsbd/zh5pTIyud1jlrjaBM4ynBbxRrcMDct0zkkbZv7F4f8ndqDh/YHs+ERT3O+Sy+Udz4KYmt4+Yq8jzmf8TNS+U6hNOTGKJ0iye2e63jipXlQJggRsfShznmUflupchXLuvIgP4lE7aPxEac0G9MQ5yf9+zsZpGozoA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PZ5OjELrAFpgyTIqzBNMp6UtLc6aWYO3Ps5gDmJJ+Og=;
- b=mfGwMJhYkfNA3bqkjE6pcOFifc6AuI1wpK1d8e6jfPl1+vFmih5COr954sj9OC8u2Bh31fl51NDFuWtgRpAsilcKF2BK/jKOYBdnuCLX4BHBiEpV8NaYkzL5P6IfQkJQLK33t/Evzg1z7I4AvXqUwceYubpXbJ7DV2x5x2qRxuhNKi7PvUBqaG+xhG3gtsg+Q55p0I6hB8gz0qyk4v6nzXRcDgVtddlZSLr7tvYfnLt2xyPyjY659neNZui3vjLD2lxTRlpSAtPgHioYyu0K9dx+5EISspaJsKGop2hRrRGm6JrUKBozvCVHF551mQzsvEd2yU5trY8sa8nSllXCyA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PZ5OjELrAFpgyTIqzBNMp6UtLc6aWYO3Ps5gDmJJ+Og=;
- b=WZFS9rSduAzLBkxy4ns7bS90hEblLyUV+z58nbwbLr7/6xqvCoorzlVikoQJgQoADw0YsgG3TAQ4YjVBHLMtnWGBJ1fxYCf+pcxrUzblB2/Ku63Dq4Svh9r8Ts4Rlcgq4kBu3kpSqmbTEYCytX3U8nHadyqDUEwgDoahfVZnhQQ=
-Received: from MN2PR18MB2719.namprd18.prod.outlook.com (20.178.255.156) by
- MN2PR18MB2445.namprd18.prod.outlook.com (20.179.83.221) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2430.23; Wed, 13 Nov 2019 15:29:50 +0000
-Received: from MN2PR18MB2719.namprd18.prod.outlook.com
- ([fe80::1435:34ad:dbff:5089]) by MN2PR18MB2719.namprd18.prod.outlook.com
- ([fe80::1435:34ad:dbff:5089%7]) with mapi id 15.20.2430.028; Wed, 13 Nov 2019
- 15:29:50 +0000
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        id S1727850AbfKMPi1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 10:38:27 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60096 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726335AbfKMPi1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 10:38:27 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id BC271B49B;
+        Wed, 13 Nov 2019 15:38:23 +0000 (UTC)
+Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
+To:     John Garry <john.garry@huawei.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Quinn Tran <qutran@marvell.com>
-Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
-Thread-Topic: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
-Thread-Index: AQHVlrU0VXoSA9b5+EaZjGKOtqlhIqeF2L8AgAEBHQCAAmcYgA==
-Date:   Wed, 13 Nov 2019 15:29:50 +0000
-Message-ID: <19433666-FCA3-4340-8A81-707F85B87F02@marvell.com>
-References: <20191109042135.12125-1-bvanassche@acm.org>
- <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
- <32187dd9-f222-fbed-cc93-1c6abca6e06c@acm.org>
-In-Reply-To: <32187dd9-f222-fbed-cc93-1c6abca6e06c@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3445.104.11)
-x-originating-ip: [66.73.206.218]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f2f41f1f-4447-4ac7-b34b-08d7684e52ef
-x-ms-traffictypediagnostic: MN2PR18MB2445:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB2445943BF4026D5C088A1C46D6760@MN2PR18MB2445.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:311;
-x-forefront-prvs: 0220D4B98D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(366004)(346002)(136003)(396003)(39860400002)(189003)(199004)(71200400001)(26005)(107886003)(50226002)(6116002)(316002)(102836004)(6436002)(3846002)(99286004)(14444005)(25786009)(256004)(486006)(478600001)(71190400001)(4326008)(305945005)(86362001)(6916009)(81166006)(81156014)(54906003)(6246003)(8936002)(14454004)(36756003)(7736002)(8676002)(2906002)(4001150100001)(446003)(33656002)(2616005)(476003)(6512007)(5660300002)(66946007)(76176011)(229853002)(11346002)(186003)(6506007)(66066001)(53546011)(66446008)(66556008)(64756008)(66476007)(91956017)(76116006)(6486002);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2445;H:MN2PR18MB2719.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Qwo7hdtUslSoht2NYPk3+h1HipAEeM2bYDWP9NCu7PLtxvm6oo4NfjqMcg6f/vKxV2cKj4mhvrdBajo5cXkX3TFJFOwXzm/v9MZWCCXSCAUo9Y/tuvyWUBiIpFYeTyZ5KdAiqt/c1zxFuMr6CFflPCu9FDC39oKPAGJXCKBIysR8f3D66tHW/Uh6HL8AVVgH3m3e2lxf7M5hkrp3VlYy0EymXmeLVa+lwgiQz/u6+iAzUuB9sPxa2oGEfhkbuueBmM7gdPjj18Eg8kZAXWg0GdBGgiN7qqBPfinLbGxIOTfrrTF4x78CL/pmbQXVtl54Hs5JxUdP238aOS/FMtPOopai1nch/WoLTr2LEaUxGpO661QbwIBXNighPhFHlTpvBKVTZQ88yBozT7axHfJsRejPPlrgHvC41JWHTe24VDxFh5HcnqwSQKvIuQ03acUr
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <DE90A5E4EA562449A2DE3C6993C569C0@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "hare@suse.com" <hare@suse.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>
+References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-4-git-send-email-john.garry@huawei.com>
+ <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+ <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
+Date:   Wed, 13 Nov 2019 16:38:22 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: f2f41f1f-4447-4ac7-b34b-08d7684e52ef
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 15:29:50.2763
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ba6CW4PeNiR28uAH74Ba9PpiIyOeKskLBl4PssKKPOPZ08Njc2JjiUVgkjf1LBi64EB8LqXN0C4O/abmNfEQPQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2445
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-11-13_04:2019-11-13,2019-11-13 signatures=0
+In-Reply-To: <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart/Roman,
-
-
-> On Nov 11, 2019, at 8:48 PM, Bart Van Assche <bvanassche@acm.org> wrote:
->=20
-> On 2019-11-11 03:28, Roman Bolshakov wrote:
->> On Fri, Nov 08, 2019 at 08:21:35PM -0800, Bart Van Assche wrote:
->>> The commit mentioned in the subject breaks point-to-point mode for at l=
-east
->>> the QLE2562 HBA. Restore point-to-point support by reverting that commi=
-t.
->>>=20
->>> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
->>> Cc: Quinn Tran <qutran@marvell.com>
->>> Cc: Himanshu Madhani <hmadhani@marvell.com>
->>> Fixes: 0aabb6b699f7 ("scsi: qla2xxx: Fix Nport ID display value") > Sig=
-ned-off-by: Bart Van Assche <bvanassche@acm.org>
+On 11/13/19 3:57 PM, John Garry wrote:
+> On 13/11/2019 14:06, Hannes Reinecke wrote:
+>> On 11/13/19 2:36 PM, John Garry wrote:
+>>> Some SCSI HBAs (such as HPSA, megaraid, mpt3sas, hisi_sas_v3 ..) support
+>>> multiple reply queues with single hostwide tags.
+>>>
+>>> In addition, these drivers want to use interrupt assignment in
+>>> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY). However, as discussed in [0],
+>>> CPU hotplug may cause in-flight IO completion to not be serviced when an
+>>> interrupt is shutdown.
+>>>
+>>> To solve that problem, Ming's patchset to drain hctx's should ensure no
+>>> IOs are missed in-flight [1].
+>>>
+>>> However, to take advantage of that patchset, we need to map the HBA HW
+>>> queues to blk mq hctx's; to do that, we need to expose the HBA HW
+>>> queues.
+>>>
+>>> In making that transition, the per-SCSI command request tags are no
+>>> longer unique per Scsi host - they are just unique per hctx. As such,
+>>> the
+>>> HBA LLDD would have to generate this tag internally, which has a certain
+>>> performance overhead.
+>>>
+>>> However another problem is that blk mq assumes the host may accept
+>>> (Scsi_host.can_queue * #hw queue) commands. In [2], we removed the Scsi
+>>> host busy counter, which would stop the LLDD being sent more than
+>>> .can_queue commands; however, we should still ensure that the block
+>>> layer
+>>> does not issue more than .can_queue commands to the Scsi host.
+>>>
+>>> To solve this problem, introduce a shared tags per blk_mq_tag_set, which
+>>> may be requested when allocating the tagset.
+>>>
+>>> New flag BLK_MQ_F_TAG_HCTX_SHARED should be set when requesting the
+>>> tagset.
+>>>
+>>> This is based on work originally from Ming Lei in [3].
+>>>
+>>> [0]
+>>> https://lore.kernel.org/linux-block/alpine.DEB.2.21.1904051331270.1802@nanos.tec.linutronix.de/
+>>>
+>>> [1]
+>>> https://lore.kernel.org/linux-block/20191014015043.25029-1-ming.lei@redhat.com/
+>>>
+>>> [2]
+>>> https://lore.kernel.org/linux-scsi/20191025065855.6309-1-ming.lei@redhat.com/
+>>>
+>>> [3]
+>>> https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/
+>>>
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
 >>> ---
->>> drivers/scsi/qla2xxx/qla_iocb.c | 7 +++----
->>> 1 file changed, 3 insertions(+), 4 deletions(-)
->>>=20
->>> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla=
-_iocb.c
->>> index b25f87ff8cde..cfd686fab1b1 100644
->>> --- a/drivers/scsi/qla2xxx/qla_iocb.c
->>> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
->>> @@ -2656,10 +2656,9 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entr=
-y_24xx *els_iocb)
->>> 	els_iocb->port_id[0] =3D sp->fcport->d_id.b.al_pa;
->>> 	els_iocb->port_id[1] =3D sp->fcport->d_id.b.area;
->>> 	els_iocb->port_id[2] =3D sp->fcport->d_id.b.domain;
->>> -	/* For SID the byte order is different than DID */
->>> -	els_iocb->s_id[1] =3D vha->d_id.b.al_pa;
->>> -	els_iocb->s_id[2] =3D vha->d_id.b.area;
->>> -	els_iocb->s_id[0] =3D vha->d_id.b.domain;
->>> +	els_iocb->s_id[0] =3D vha->d_id.b.al_pa;
->>> +	els_iocb->s_id[1] =3D vha->d_id.b.area;
->>> +	els_iocb->s_id[2] =3D vha->d_id.b.domain;
->>>=20
->>> 	if (elsio->u.els_logo.els_cmd =3D=3D ELS_DCMD_PLOGI) {
->>> 		els_iocb->control_flags =3D 0;
->>=20
->> The original commit definitely fixes P2P mode for QLE2700, the lowest
->> byte is domain, followed by AL_PA, followed by area. However the
->> fields are reserved in ELS IOCB for QLE2500, according to FW spec.
->>=20
->> Perhaps we should have a switch here for 2500 and the other one for
->> 2600/2700? Or, we should only set the fields only for QLE2700, to comply
->> with both specs.
-> Himanshu, can you tell us which adapters and/or firmware versions need
-> which version of the above code?
->=20
-> Thank you,
->=20
-> Bart.
+>>>   block/blk-core.c       |  1 +
+>>>   block/blk-flush.c      |  2 +
+>>>   block/blk-mq-debugfs.c |  2 +-
+>>>   block/blk-mq-tag.c     | 85 ++++++++++++++++++++++++++++++++++++++++++
+>>>   block/blk-mq-tag.h     |  1 +
+>>>   block/blk-mq.c         | 61 +++++++++++++++++++++++++-----
+>>>   block/blk-mq.h         |  9 +++++
+>>>   include/linux/blk-mq.h |  3 ++
+>>>   include/linux/blkdev.h |  1 +
+>>>   9 files changed, 155 insertions(+), 10 deletions(-)
+>>>
+>> [ .. ]
+>>> @@ -396,15 +398,17 @@ static struct request
+>>> *blk_mq_get_request(struct request_queue *q,
+>>>           blk_mq_tag_busy(data->hctx);
+>>>       }
+>>>   -    tag = blk_mq_get_tag(data);
+>>> -    if (tag == BLK_MQ_TAG_FAIL) {
+>>> -        if (clear_ctx_on_error)
+>>> -            data->ctx = NULL;
+>>> -        blk_queue_exit(q);
+>>> -        return NULL;
+>>> +    if (data->hctx->shared_tags) {
+>>> +        shared_tag = blk_mq_get_shared_tag(data);
+>>> +        if (shared_tag == BLK_MQ_TAG_FAIL)
+>>> +            goto err_shared_tag;
+>>>       }
+>>>   -    rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags,
+>>> alloc_time_ns);
+>>> +    tag = blk_mq_get_tag(data);
+>>> +    if (tag == BLK_MQ_TAG_FAIL)
+>>> +        goto err_tag;
+>>> +
+>>> +    rq = blk_mq_rq_ctx_init(data, tag, shared_tag, data->cmd_flags,
+>>> alloc_time_ns);
+>>>       if (!op_is_flush(data->cmd_flags)) {
+>>>           rq->elv.icq = NULL;
+>>>           if (e && e->type->ops.prepare_request) {
+> 
+> Hi Hannes,
+> 
+>> Why do you need to keep a parallel tag accounting between 'normal' and
+>> 'shared' tags here?
+>> Isn't is sufficient to get a shared tag only, and us that in lieo of the
+>> 'real' one?
+> 
+> In theory, yes. Just the 'shared' tag should be adequate.
+> 
+> A problem I see with this approach is that we lose the identity of which
+> tags are allocated for each hctx. As an example for this, consider
+> blk_mq_queue_tag_busy_iter(), which iterates the bits for each hctx.
+> Now, if you're just using shared tags only, that wouldn't work.
+> 
+> Consider blk_mq_can_queue() as another example - this tells us if a hctx
+> has any bits unset, while with only using shared tags it would tell if
+> any bits unset over all queues, and this change in semantics could break
+> things. At a glance, function __blk_mq_tag_idle() looks problematic also.
+> 
+> And this is where it becomes messy to implement.
+> 
+Oh, my. Indeed, that's correct.
 
-All adapters with FW v4.4 will behave same. If you are running into issue w=
-ith P2P connection,
-it might be something different than specific to this code change. Original=
- code in the driver was not
-following firmware spec. This code is now used in initiator mode as well du=
-e to introduction of
-FC-NVMe handling in the driver.  Also, can you tell me what version of firm=
-ware you have on your=20
-remote port.
+But then we don't really care _which_ shared tag is assigned; so
+wouldn't be we better off by just having an atomic counter here?
+Cache locality will be blown anyway ...
 
-Thanks,
-Himanshu=
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
