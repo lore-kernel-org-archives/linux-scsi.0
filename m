@@ -2,107 +2,234 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DFAC43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDBEFC17440
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7131D2084E
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611506;
-	bh=0KIFf+yZ8C/VuVjVmiu3e3orCWGVm8Ohdi7wNMRPvMw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FbowEvhWMGBIDWj4l9kozn6x+a4mIIU1GiWZxpwSmL+xPvVgM43BAA52F0QX+ka44
-	 EuASXtXSLiLLsG3ig2QnEwmo6BM0hgWUyuls2gK6eQ9hdbH4n5GWj3htzhBXpgiWbt
-	 eKtgL8V5dWbxRTpwNnKa5c8c0GIzORh7T5x6TJnE=
+	by mail.kernel.org (Postfix) with ESMTP id 9B7852067B
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DX/94/Dx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729213AbfKMBzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:55:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47394 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729159AbfKMBzl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:55:41 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 070D622467;
-        Wed, 13 Nov 2019 01:55:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610140;
-        bh=0KIFf+yZ8C/VuVjVmiu3e3orCWGVm8Ohdi7wNMRPvMw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nH/4MsQP9iPsxr401Z0CGTsHrKNXAaaGuKuWkwT2WMJu5nJz9pievVHqKzmunT1U4
-         tboidR6AQ0xEMnfPaE/yH7TPaRb38F5jc1nk8cO1Ebwt99d4JKq+4ZjHtelGekYObx
-         Sm5QdH+PormihcK0KzNjb7dXXmTFZsZA9bvq9RQ0=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        Ching Huang <ching2048@areca.com.tw>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.19 187/209] scsi: arcmsr: clean up clang warning on extraneous parentheses
-Date:   Tue, 12 Nov 2019 20:50:03 -0500
-Message-Id: <20191113015025.9685-187-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
-References: <20191113015025.9685-1-sashal@kernel.org>
+        id S1728351AbfKMCXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:23:50 -0500
+Received: from mail-io1-f67.google.com ([209.85.166.67]:36048 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728214AbfKMBwV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 20:52:21 -0500
+Received: by mail-io1-f67.google.com with SMTP id s3so714731ioe.3;
+        Tue, 12 Nov 2019 17:52:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5VRa2p2uVA7mOe9eR+tZyl9qxFDNknjRkbjM2+ZG8/g=;
+        b=DX/94/DxWwYaTp0UKS930L2xgAW1C6/s5Zao/F5UkmMRpkufMFlm3E0TItLjrFy7FT
+         AdeLAL8qmrU1fh8BwzUhqIDSmsG0Yb6xzf2K6FSJec5tbSJRKHpXxoAjZ9trGmaC7YYN
+         WCtRnrW1cHF/IP52b68DxJIP44iOzv7TH5Ova8UZzGUV9XBxHzS3PwLkreauXeV3UUmS
+         Rhv0nGIPWb20nHvfQgOsq5O8VcijVhaEGQgqBKdUwr7ioxTm77yGiCeieRExK04D6GmO
+         UOPqkgRn4x0BZnvAIeMkdwiWDn+OJR6IN2HVdorKSTTdRZthZeohheY4IOKoLmBomsqW
+         9e1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5VRa2p2uVA7mOe9eR+tZyl9qxFDNknjRkbjM2+ZG8/g=;
+        b=QG2WbDZn09jN0LPK4K6WUZDu9zZDXhmmNgadRCwVNdNLnIH9AVywszbdE+ytHdjaim
+         7iD4ZQeTdyceZWxjZt83I8vTSZtiC6bLGkD//ynTm7Z1P0m08YUuqChSb1WNcGuHkPzn
+         2AU+ckWyDTbX7X/4AJKv2lrg9pCkHjb4TpynCxIsw4ISh4Z1frD/bQ8PZIPNBOk+CoZM
+         vfco7u6H2fVUBZ8tSqVi6HdbbfsT2uOPDEdoQ9jrXoOBaxW8q7PHMwLDExJXXmB6Dyoo
+         VwkoFP2+p4bOzNVONjZttX7TE3/eW2OH2SWwkg0jNDNEHNOB5M5RSM5D/bQwc79HfPKZ
+         1TWA==
+X-Gm-Message-State: APjAAAUiPkdt/ypHX4JpvoV1pj+sEdvrOqycJZLBMbKC/pqIB3wEBMed
+        W96VlMxR/Ke8iESqQv6n+kP8q543v6wZKt6JaMA=
+X-Google-Smtp-Source: APXvYqwMd8Urg3MvqLQzocQPrnCFpakQXd+ZDVh0NDjIQD5raobJsT1r9TH1o9QPPti9oFdXfY56Xq86x9avR45gooo=
+X-Received: by 2002:a5d:8591:: with SMTP id f17mr963879ioj.198.1573609939605;
+ Tue, 12 Nov 2019 17:52:19 -0800 (PST)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20191108164857.11466-1-vigneshr@ti.com> <20191108164857.11466-3-vigneshr@ti.com>
+In-Reply-To: <20191108164857.11466-3-vigneshr@ti.com>
+From:   Alim Akhtar <alim.akhtar@gmail.com>
+Date:   Wed, 13 Nov 2019 07:21:39 +0530
+Message-ID: <CAGOxZ50OqMYWs+j37=U9r0URQmTK_jxcsor8PejhEVVOXWq4Ww@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] scsi: ufs: Add driver for TI wrapper for Cadence
+ UFS IP
+To:     Vignesh Raghavendra <vigneshr@ti.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Janek Kotas <jank@cadence.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi Vignesh
 
-[ Upstream commit ca2ade24157693b4e533ccec69df00ef719d4aad ]
+On Fri, Nov 8, 2019 at 10:20 PM Vignesh Raghavendra <vigneshr@ti.com> wrote:
+>
+> TI's J721e SoC has a Cadence UFS IP with a TI specific wrapper. This is
+> a minimal driver to configure the wrapper. It releases the UFS slave
+> device out of reset and sets up registers to indicate PHY reference
+> clock input frequency before probing child Cadence UFS driver.
+>
+> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+> ---
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+>
+> v3:
+> Fix macros to have TI_* prefix
+>
+>
+> v2: No change
+>
+>  drivers/scsi/ufs/Kconfig        | 10 ++++
+>  drivers/scsi/ufs/Makefile       |  1 +
+>  drivers/scsi/ufs/ti-j721e-ufs.c | 90 +++++++++++++++++++++++++++++++++
+>  3 files changed, 101 insertions(+)
+>  create mode 100644 drivers/scsi/ufs/ti-j721e-ufs.c
+>
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 0b845ab7c3bf..d14c2243e02a 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -132,6 +132,16 @@ config SCSI_UFS_HISI
+>           Select this if you have UFS controller on Hisilicon chipset.
+>           If unsure, say N.
+>
+> +config SCSI_UFS_TI_J721E
+> +       tristate "TI glue layer for Cadence UFS Controller"
+> +       depends on OF && HAS_IOMEM && (ARCH_K3 || COMPILE_TEST)
+> +       help
+> +         This selects driver for TI glue layer for Cadence UFS Host
+> +         Controller IP.
+> +
+> +         Selects this if you have TI platform with UFS controller.
+> +         If unsure, say N.
+> +
+>  config SCSI_UFS_BSG
+>         bool "Universal Flash Storage BSG device node"
+>         depends on SCSI_UFSHCD
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index 2a9097939bcb..94c6c5d7334b 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -11,3 +11,4 @@ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+> +obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+> diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
+> new file mode 100644
+> index 000000000000..5216d228cdd9
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ti-j721e-ufs.c
+> @@ -0,0 +1,90 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +//
+> +// Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
+> +//
+> +
+> +#include <linux/clk.h>
+> +#include <linux/io.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/pm_runtime.h>
+> +
+> +#define TI_UFS_SS_CTRL         0x4
+> +#define TI_UFS_SS_RST_N_PCS    BIT(0)
+> +#define TI_UFS_SS_CLK_26MHZ    BIT(4)
+> +
+> +static int ti_j721e_ufs_probe(struct platform_device *pdev)
+> +{
+> +       struct device *dev = &pdev->dev;
+> +       unsigned long clk_rate;
+> +       void __iomem *regbase;
+> +       struct clk *clk;
+> +       u32 reg = 0;
+> +       int ret;
+> +
+> +       regbase = devm_platform_ioremap_resource(pdev, 0);
+> +       if (IS_ERR(regbase))
+> +               return PTR_ERR(regbase);
+> +
+> +       pm_runtime_enable(dev);
+> +       ret = pm_runtime_get_sync(dev);
+> +       if (ret < 0) {
+> +               pm_runtime_put_noidle(dev);
+> +               return ret;
+> +       }
+> +
+> +       /* Select MPHY refclk frequency */
+> +       clk = devm_clk_get(dev, NULL);
+> +       if (IS_ERR(clk)) {
+> +               dev_err(dev, "Cannot claim MPHY clock.\n");
+> +               return PTR_ERR(clk);
+> +       }
+> +       clk_rate = clk_get_rate(clk);
+> +       if (clk_rate == 26000000)
+> +               reg |= TI_UFS_SS_CLK_26MHZ;
+> +       devm_clk_put(dev, clk);
+> +
+> +       /*  Take UFS slave device out of reset */
+> +       reg |= TI_UFS_SS_RST_N_PCS;
+> +       writel(reg, regbase + TI_UFS_SS_CTRL);
+> +
+> +       ret = of_platform_populate(pdev->dev.of_node, NULL, NULL,
+> +                                  dev);
+> +       if (ret) {
+> +               dev_err(dev, "failed to populate child nodes %d\n", ret);
+> +               pm_runtime_put_sync(dev);
+> +       }
+> +
+> +       return ret;
+> +}
+> +
+> +static int ti_j721e_ufs_remove(struct platform_device *pdev)
+> +{
+> +       of_platform_depopulate(&pdev->dev);
+> +       pm_runtime_put_sync(&pdev->dev);
+> +
+> +       return 0;
+> +}
+> +
+> +static const struct of_device_id ti_j721e_ufs_of_match[] = {
+> +       {
+> +               .compatible = "ti,j721e-ufs",
+> +       },
+> +       { },
+> +};
+> +
+> +static struct platform_driver ti_j721e_ufs_driver = {
+> +       .probe  = ti_j721e_ufs_probe,
+> +       .remove = ti_j721e_ufs_remove,
+> +       .driver = {
+> +               .name   = "ti-j721e-ufs",
+> +               .of_match_table = ti_j721e_ufs_of_match,
+> +       },
+> +};
+> +module_platform_driver(ti_j721e_ufs_driver);
+> +
+> +MODULE_AUTHOR("Vignesh Raghavendra <vigneshr@ti.com>");
+> +MODULE_DESCRIPTION("TI UFS host controller glue driver");
+> +MODULE_LICENSE("GPL v2");
+> --
+> 2.24.0
+>
 
-There are extraneous parantheses that are causing clang to produce a
-warning so remove these.
 
-Clean up 3 clang warnings:
-equality comparison with extraneous parentheses [-Wparentheses-equality]
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Acked-by: Ching Huang <ching2048@areca.com.tw>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 12316ef4c8931..c75d4695f9828 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		pci_read_config_byte(acb->pdev, i, &value[i]);
- 	}
- 	/* hardware reset signal */
--	if ((acb->dev_id == 0x1680)) {
-+	if (acb->dev_id == 0x1680) {
- 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
--	} else if ((acb->dev_id == 0x1880)) {
-+	} else if (acb->dev_id == 0x1880) {
- 		do {
- 			count++;
- 			writel(0xF, &pmuC->write_sequence);
-@@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
- 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
- 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
- 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
--	} else if ((acb->dev_id == 0x1214)) {
-+	} else if (acb->dev_id == 0x1214) {
- 		writel(0x20, pmuD->reset_request);
- 	} else {
- 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
 -- 
-2.20.1
-
+Regards,
+Alim
