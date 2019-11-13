@@ -2,117 +2,106 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A0D0C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 16:27:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F60C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 17:00:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 659C824066
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 16:27:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="NgUoM1hW"
+	by mail.kernel.org (Postfix) with ESMTP id 6FF88206D5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 17:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728338AbfKMQ1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 11:27:01 -0500
-Received: from mail-eopbgr770041.outbound.protection.outlook.com ([40.107.77.41]:9955
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727221AbfKMQ1B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 11:27:01 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IQHcBRdbcqEQtn81u5su9YA0uqPfOByv/lSNEuhnzgQ1QkyjDsH/+j+bjh+NlEOeyXCzsGRZ0ni4Iy0gSXWjKYv+c50gt7Qwe0FZPy7OHgMjdgwKfpf8lQcLAReAjIF2ugVsntJa2lt76oaQgcltAShpho2kjBjFiMoNJ58jOE70ijFfPSbnmV1rQG5ir04xyJmjA29Im8YxuqGWIuHaoeAjZ9nr7HLq5lgkZm+sfOr1ZWCNaKvBkrgby4Jqf8zsmdLChnKr4MMquB3XcEJDLCsw7eucbMK/LAA2nmM1DCn900RIuTwCOROtAo9/T8A43AUOpSc/Dw7sjQBtsyYNdQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5UJc7jMgR5YiYX1Z9f//voCfIJP50JZs1fKrdDss4nQ=;
- b=dkyLZwx+LFcDUr3ASBa482dui/wpTHGDeI/aCil2YPmBoV9fdGZY9AaZDzOtsf+h0qPgWHUPm862qPVNRIe6grIOyXJUDBn1EH2fqhS/lI/pIY95ocpEsnU6/AVSWRJ74Emai4uEQmohSJI+3b0P9J0g3l0IK+9oJgVPxy7OzfF39/zPJT6V7wVnMOHk6M/yLDsRcqJ9lHCmbiepH3ZEANZF3NlGQdKfCwlW5zhwS3eFcWMJeAwbp+gHpMotCemi2P9PJLIvXyE2Y+05yAj5qRWz6Vy+CAzcTkn8pC2LtNaUTYjOMk6/q5YGxy5fX5lzRq5n69Bppkbqf4tP8s01fA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5UJc7jMgR5YiYX1Z9f//voCfIJP50JZs1fKrdDss4nQ=;
- b=NgUoM1hWZqXanM/zyxRQPec+MyQjVnqLWtwzSouiL2uqkGkpckd4T+gUEOi0tivGE5QlBRfnrJIW60p46jCkq4F8fe2iKO5HBVRezk0xASmcYD3A4MYWffHg/fzUH/LTYaWSvv2ktMx596Ya2STL+5gHXXVmnSgCQyJc3NbdJyI=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB5683.namprd08.prod.outlook.com (20.176.30.81) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2430.20; Wed, 13 Nov 2019 16:26:59 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2430.028; Wed, 13 Nov 2019
- 16:26:59 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Can Guo <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH v4 3/5] scsi: ufs: Release clock if DMA map fails
-Thread-Topic: [EXT] [PATCH v4 3/5] scsi: ufs: Release clock if DMA map fails
-Thread-Index: AQHVmeeyXKBE/XJKZkuVruGGiYn+vaeJSkLw
-Date:   Wed, 13 Nov 2019 16:26:58 +0000
-Message-ID: <BN7PR08MB5684B3516E362FD79B80AA44DB760@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <1573624824-671-1-git-send-email-cang@codeaurora.org>
- <1573624824-671-4-git-send-email-cang@codeaurora.org>
-In-Reply-To: <1573624824-671-4-git-send-email-cang@codeaurora.org>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTY4NDFiMWExLTA2MzItMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFw2ODQxYjFhMy0wNjMyLTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjMzMiIgdD0iMTMyMTgxMzYwMTY1Njc4ODgwIiBoPSJNOUpJWGZxdmRyZ01mMmp6N2lvN1Z5cjVUcEk9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [195.89.176.137]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 42dfa3a1-377b-4731-298d-08d768564e99
-x-ms-traffictypediagnostic: BN7PR08MB5683:|BN7PR08MB5683:|BN7PR08MB5683:
-x-microsoft-antispam-prvs: <BN7PR08MB56832B5BDF29EBE87C22A855DB760@BN7PR08MB5683.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:1332;
-x-forefront-prvs: 0220D4B98D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(346002)(366004)(136003)(39860400002)(376002)(396003)(199004)(189003)(476003)(11346002)(110136005)(478600001)(66066001)(8676002)(54906003)(6116002)(25786009)(3846002)(55016002)(6436002)(486006)(446003)(9686003)(71200400001)(71190400001)(7696005)(5660300002)(305945005)(74316002)(76116006)(7736002)(2201001)(81156014)(26005)(6246003)(52536014)(2501003)(8936002)(186003)(7416002)(86362001)(14454004)(229853002)(256004)(66476007)(66446008)(64756008)(66556008)(316002)(2906002)(81166006)(102836004)(99286004)(66946007)(4326008)(558084003)(33656002)(6506007)(76176011);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB5683;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 077VHQdVAUsw1XZk0/UpfVpnqVEfz5XCLLuoz8IYWFhPTgZDzVmQYNLeTV1GS5YN3HYBWpyGlV2Yl97MVyrO+q8EAQ2rKAoZ29hoSNcbUC2prONtowbHgcb6H84Y/UsLRxjrynAKZK8xJFRzKvtgUouOAqDfdkG3HnhzPMKEycLPo30yrL+e/0qU+47lzirov/fHrMjITJFDzn0/rQtxz/wNV9yadAcNKZYukG1RihaDBvbfBWL42XvWGvvtxNDxsxslk7mVtaPk7RqP2byor/o6CUZeJon4QwzsO8MJhl79xx4UJLG3KD/MXTuwONSGnpSYqic70QqCZAbpdwr4T8thBoloJWVtNdZbRAl3f/y8rew61KSriVUADnhfsAG160Re/tCFYFWHC6hYnk7mlywaExQa39mgsksHjY++r5u3YjbSEkImurVkFBy3V/pz
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727254AbfKMRAe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 12:00:34 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:38056 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726195AbfKMRAd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 12:00:33 -0500
+Received: by mail-pl1-f194.google.com with SMTP id w8so1315766plq.5
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2019 09:00:33 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=EZH97raVR/wdf3EG+owV45UFlV+fCbiJx83DUHjnv8Q=;
+        b=FZQuSBoM7jgi7Cf4Irzkyx5zhVgarnVceUeO9Jkaly7FTD6HhYx00UMVdhifW9MgNu
+         EGD+SRfa5MhXd1psy6b2ObC5lyEhNOmkeqC9dxF5JwcGRUN7vdnBf/1oWImVxGqHc9UR
+         KyfT8iXZyHNK1cm0rdH8KzZMaQrP6Z9ng2gite3O2/ljw9NsTyy98xQyAhuE+JiRm4CK
+         1oGWdhKY0f210A7pEfzvwOcd+e1+0p02DbACDnP2ja/Hy3HPQsQzBfM5Rs66Cat2gwlh
+         YRLrsbkvN3PTnqtwptJFRQ7TbVuJwRRomKhFMZJLFLaSYGmSH9IVPRPXJHKVRqHHTivx
+         6toQ==
+X-Gm-Message-State: APjAAAVGO0I1oWR/yAdI2IxPwFmz4pIP50K1ugRag5vX1tkQVzwj/6AU
+        hOGNu6KXgWVPFN42AukNBqg=
+X-Google-Smtp-Source: APXvYqywNuxy7VF/s1Ad1WkxD3amYw7Ncm698C3x712K40GS3AtDQK5q7mF67P2zJBP+ODZMTNv43g==
+X-Received: by 2002:a17:902:d891:: with SMTP id b17mr4883263plz.256.1573664432887;
+        Wed, 13 Nov 2019 09:00:32 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id c16sm3332224pfo.34.2019.11.13.09.00.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Nov 2019 09:00:31 -0800 (PST)
+Subject: Re: [scsi] 74eb6c22dc: suspend_stress.fail
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     kernel test robot <oliver.sang@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Laurence Oberman <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>, lkp@lists.01.org
+References: <20191104085021.GF13369@xsang-OptiPlex-9020>
+ <824c5a0b-a31a-b0a2-b14a-ab6edd294d07@acm.org>
+ <20191105061150.GA17084@ming.t460p>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <cb814a0c-c636-e9f4-654a-3f21bd0db646@acm.org>
+Date:   Wed, 13 Nov 2019 09:00:29 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 42dfa3a1-377b-4731-298d-08d768564e99
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 16:26:58.8681
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 6elZNJ5bce8E65jDomF+/79O46sxWGVsU0LrgPK2CewXpmtl19vInJmFf1G40tb5oIbMVo0BwElOt1VXVpqdVg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB5683
+In-Reply-To: <20191105061150.GA17084@ming.t460p>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> In queuecommand path, if DMA map fails, it bails out with clock held.
-> In this case, release the clock to keep its usage paired.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+On 11/4/19 10:11 PM, Ming Lei wrote:
+> On Mon, Nov 04, 2019 at 07:52:59PM -0800, Bart Van Assche wrote:
+>> On 2019-11-04 00:50, kernel test robot wrote:
+>>> FYI, we noticed the following commit (built with gcc-7):
+>>>
+>>> commit: 74eb6c22dc70e395b333c9ca579855cd88db8845 ("[RFC PATCH V3 2/2] scsi: core: don't limit per-LUN queue depth for SSD")
+>>> url: https://github.com/0day-ci/linux/commits/Ming-Lei/scsi-core-avoid-host-wide-host_busy-counter-for-scsi_mq/20191009-015827
+>>> base: https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git for-next
+>>>
+>>> in testcase: suspend_stress
+>>> with following parameters:
+>>>
+>>> 	mode: freeze
+>>> 	iterations: 10
+>>
+>> Hi Ming,
+>>
+>> This is the second report by the build robot that this patch causes the
+>> suspend_stress test to fail. I assume that that means that that test
+>> failure is not a coincidence. The previous report (Oct-22) is available
+>> at https://lore.kernel.org/linux-scsi/20191023003027.GD12647@shao2-debian/.
+> 
+> Yeah, it should be one real issue, and there are other issues too. I will work
+> out a new version for addressing all.
 
+Hi Ming,
+
+Have you already made any progress? I'm asking because the v5.5 merge 
+window is expected to open soon (this weekend).
+
+Thanks,
+
+Bart.
