@@ -2,95 +2,107 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8314C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DFAC43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:18:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 806D8222D4
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:17:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h+ItZ4rF"
+	by mail.kernel.org (Postfix) with ESMTP id 7131D2084E
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:18:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573611506;
+	bh=0KIFf+yZ8C/VuVjVmiu3e3orCWGVm8Ohdi7wNMRPvMw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=FbowEvhWMGBIDWj4l9kozn6x+a4mIIU1GiWZxpwSmL+xPvVgM43BAA52F0QX+ka44
+	 EuASXtXSLiLLsG3ig2QnEwmo6BM0hgWUyuls2gK6eQ9hdbH4n5GWj3htzhBXpgiWbt
+	 eKtgL8V5dWbxRTpwNnKa5c8c0GIzORh7T5x6TJnE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729763AbfKMCRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:17:32 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:57222 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727994AbfKMCRb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 21:17:31 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD2ELvC062491;
-        Wed, 13 Nov 2019 02:17:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=QBIeg2OL5OqL9nUGXU0TF+QIKQqRYIW2AdRz3DyL33Q=;
- b=h+ItZ4rFIH9ie2n2ORynnSBNg0Wrj/q7d3YL9E+lkvSjLvd5yiywHMQO3uACb/hgfyEX
- hczE8HCJg6XAU+bZR1Rt84QDLzdaHeIm7TXQCGLnZaoaJuIuQUBLe+YqecArBgduDAWb
- ZxPh+ueRNH1CJY8yEbd0OqwvGLD7BUmnUhZSb07tpx1DoWFmFrR7H/6RiZiSQU0YAaTJ
- v2mzRr75NQbKRmoKbYWbATaJcsHUA9ToqIJrUBD1dvUpfIR5MlcS7L6NaRYfUflR59ve
- 4Cgz0PwuqdYG0gnGri+S+/Yv0EBoa9LMCOZq3MzKdAFtFXFjSwqm2ULpbFnrQZd6eUsN rA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2w5mvts000-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 02:17:20 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD2DQ1l146421;
-        Wed, 13 Nov 2019 02:15:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2w7j04a6hx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 02:15:20 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAD2FJ70026935;
-        Wed, 13 Nov 2019 02:15:19 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 18:15:19 -0800
-To:     John Garry <john.garry@huawei.com>
-Cc:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 0/4] hisi_sas: Some misc minor patches
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1573551059-107873-1-git-send-email-john.garry@huawei.com>
-Date:   Tue, 12 Nov 2019 21:15:16 -0500
-In-Reply-To: <1573551059-107873-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Tue, 12 Nov 2019 17:30:55 +0800")
-Message-ID: <yq1ftisr07f.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1729213AbfKMBzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 20:55:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47394 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729159AbfKMBzl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:55:41 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 070D622467;
+        Wed, 13 Nov 2019 01:55:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573610140;
+        bh=0KIFf+yZ8C/VuVjVmiu3e3orCWGVm8Ohdi7wNMRPvMw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nH/4MsQP9iPsxr401Z0CGTsHrKNXAaaGuKuWkwT2WMJu5nJz9pievVHqKzmunT1U4
+         tboidR6AQ0xEMnfPaE/yH7TPaRb38F5jc1nk8cO1Ebwt99d4JKq+4ZjHtelGekYObx
+         Sm5QdH+PormihcK0KzNjb7dXXmTFZsZA9bvq9RQ0=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Colin Ian King <colin.king@canonical.com>,
+        Ching Huang <ching2048@areca.com.tw>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.19 187/209] scsi: arcmsr: clean up clang warning on extraneous parentheses
+Date:   Tue, 12 Nov 2019 20:50:03 -0500
+Message-Id: <20191113015025.9685-187-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
+References: <20191113015025.9685-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911130016
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911130016
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
-John,
+[ Upstream commit ca2ade24157693b4e533ccec69df00ef719d4aad ]
 
-> This series includes some misc patches which were sitting on our
-> internal dev branch.
->
-> Nothing extra special to note, just really some tidying and very minor
-> fixes.
+There are extraneous parantheses that are causing clang to produce a
+warning so remove these.
 
-Applied to 5.5/scsi-queue, thanks!
+Clean up 3 clang warnings:
+equality comparison with extraneous parentheses [-Wparentheses-equality]
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Acked-by: Ching Huang <ching2048@areca.com.tw>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 12316ef4c8931..c75d4695f9828 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -4135,9 +4135,9 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		pci_read_config_byte(acb->pdev, i, &value[i]);
+ 	}
+ 	/* hardware reset signal */
+-	if ((acb->dev_id == 0x1680)) {
++	if (acb->dev_id == 0x1680) {
+ 		writel(ARCMSR_ARC1680_BUS_RESET, &pmuA->reserved1[0]);
+-	} else if ((acb->dev_id == 0x1880)) {
++	} else if (acb->dev_id == 0x1880) {
+ 		do {
+ 			count++;
+ 			writel(0xF, &pmuC->write_sequence);
+@@ -4161,7 +4161,7 @@ static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
+ 		} while (((readl(&pmuE->host_diagnostic_3xxx) &
+ 			ARCMSR_ARC1884_DiagWrite_ENABLE) == 0) && (count < 5));
+ 		writel(ARCMSR_ARC188X_RESET_ADAPTER, &pmuE->host_diagnostic_3xxx);
+-	} else if ((acb->dev_id == 0x1214)) {
++	} else if (acb->dev_id == 0x1214) {
+ 		writel(0x20, pmuD->reset_request);
+ 	} else {
+ 		pci_write_config_byte(acb->pdev, 0x84, 0x20);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.20.1
+
