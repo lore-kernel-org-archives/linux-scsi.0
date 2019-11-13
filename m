@@ -7,226 +7,160 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDBEFC17440
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF2DC17440
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:25:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B7852067B
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB3A521D7F
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:25:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DX/94/Dx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C5zJXaoW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728351AbfKMCXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:23:50 -0500
-Received: from mail-io1-f67.google.com ([209.85.166.67]:36048 "EHLO
+        id S1728909AbfKMCZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:25:07 -0500
+Received: from mail-io1-f67.google.com ([209.85.166.67]:33206 "EHLO
         mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728214AbfKMBwV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 20:52:21 -0500
-Received: by mail-io1-f67.google.com with SMTP id s3so714731ioe.3;
-        Tue, 12 Nov 2019 17:52:20 -0800 (PST)
+        with ESMTP id S1727723AbfKMCZG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 21:25:06 -0500
+Received: by mail-io1-f67.google.com with SMTP id j13so810150ioe.0;
+        Tue, 12 Nov 2019 18:25:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=5VRa2p2uVA7mOe9eR+tZyl9qxFDNknjRkbjM2+ZG8/g=;
-        b=DX/94/DxWwYaTp0UKS930L2xgAW1C6/s5Zao/F5UkmMRpkufMFlm3E0TItLjrFy7FT
-         AdeLAL8qmrU1fh8BwzUhqIDSmsG0Yb6xzf2K6FSJec5tbSJRKHpXxoAjZ9trGmaC7YYN
-         WCtRnrW1cHF/IP52b68DxJIP44iOzv7TH5Ova8UZzGUV9XBxHzS3PwLkreauXeV3UUmS
-         Rhv0nGIPWb20nHvfQgOsq5O8VcijVhaEGQgqBKdUwr7ioxTm77yGiCeieRExK04D6GmO
-         UOPqkgRn4x0BZnvAIeMkdwiWDn+OJR6IN2HVdorKSTTdRZthZeohheY4IOKoLmBomsqW
-         9e1g==
+        bh=67vt+2/hcnur/stdYuxW6KOlEarE4FFpvwMXouje6z0=;
+        b=C5zJXaoWqhirA5JCzRzQxV6NeESF2nnVYyWxW3GPmZgA3s9X0SjSG7oOgw7GKTeKd6
+         4UMme8ZH+Z5d040MLiivvMDkk7mV7Y4M2lyRmLy02gcoA8HavuwI81OkKq19KHVvuISM
+         hjpF56QT9rMyiN0DCZtYVVuUNz7msCut/xpm3zLFDL1WDZ8NFnvqwFVEoP9LDdYxl4HC
+         7v0eBMSBZ7Vt111I1M9fKgU4pcE60ZmLtIm6VPz9tIT3zYHjysYcSRbFSGiowSFh5AN3
+         CnyJ3cSirM+W+u0JslaNlQCyGu+b4dFHpV/7oHaHD036f2WdS3cVE3qnoFwCo7vW+1VH
+         9Mrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=5VRa2p2uVA7mOe9eR+tZyl9qxFDNknjRkbjM2+ZG8/g=;
-        b=QG2WbDZn09jN0LPK4K6WUZDu9zZDXhmmNgadRCwVNdNLnIH9AVywszbdE+ytHdjaim
-         7iD4ZQeTdyceZWxjZt83I8vTSZtiC6bLGkD//ynTm7Z1P0m08YUuqChSb1WNcGuHkPzn
-         2AU+ckWyDTbX7X/4AJKv2lrg9pCkHjb4TpynCxIsw4ISh4Z1frD/bQ8PZIPNBOk+CoZM
-         vfco7u6H2fVUBZ8tSqVi6HdbbfsT2uOPDEdoQ9jrXoOBaxW8q7PHMwLDExJXXmB6Dyoo
-         VwkoFP2+p4bOzNVONjZttX7TE3/eW2OH2SWwkg0jNDNEHNOB5M5RSM5D/bQwc79HfPKZ
-         1TWA==
-X-Gm-Message-State: APjAAAUiPkdt/ypHX4JpvoV1pj+sEdvrOqycJZLBMbKC/pqIB3wEBMed
-        W96VlMxR/Ke8iESqQv6n+kP8q543v6wZKt6JaMA=
-X-Google-Smtp-Source: APXvYqwMd8Urg3MvqLQzocQPrnCFpakQXd+ZDVh0NDjIQD5raobJsT1r9TH1o9QPPti9oFdXfY56Xq86x9avR45gooo=
-X-Received: by 2002:a5d:8591:: with SMTP id f17mr963879ioj.198.1573609939605;
- Tue, 12 Nov 2019 17:52:19 -0800 (PST)
+        bh=67vt+2/hcnur/stdYuxW6KOlEarE4FFpvwMXouje6z0=;
+        b=HQKMcBq0T/O/1gWQTv8tE8zmv0TB1gyNACAArdnVzqyESW4FsIFo44+g3+cJpBYRnN
+         81pN8Ty5odZ/Xr65goevoQoRhXjMu9fVrY3YbuCqI/CZElwjJhXNMCLm7S6O6+K+SeP/
+         FZjQuOfpZESsG0fGYsOisMJMnsgo89vvHXQJ1/qmKJVkIQm8kwcfdEjW8M48tCAfdJt5
+         5MqBzgsR+NWHpNpSJb8nfCmp/R+QrF/oYKVR7jvyOVpgEXoWZaRgtrztM/CUHO85kz3Q
+         31a5ROspV3P62kFaxUEO0/DRd83cidyxiQoYdP9N33djomPSw8UihuL0VTJIUgJ81CdD
+         tWRA==
+X-Gm-Message-State: APjAAAV4eijhwgggWfsz/fFGyej1/BNO7QjS6UVoMzAepWZuaT+daUKz
+        9Gn2gn9EJ/h4pN6UxzA7H7lPipwdFPRk3R090iM=
+X-Google-Smtp-Source: APXvYqwuo2tTbYTMNeWbnMR8FQ9nl/VAo3S2+IdE0xI195BER3D+h0bQM0h+rgl2KyG1yFAZxh1xzwjq174E8KUeDCI=
+X-Received: by 2002:a6b:b987:: with SMTP id j129mr1093188iof.105.1573611904929;
+ Tue, 12 Nov 2019 18:25:04 -0800 (PST)
 MIME-Version: 1.0
-References: <20191108164857.11466-1-vigneshr@ti.com> <20191108164857.11466-3-vigneshr@ti.com>
-In-Reply-To: <20191108164857.11466-3-vigneshr@ti.com>
+References: <1573200932-384-1-git-send-email-cang@codeaurora.org> <1573200932-384-6-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1573200932-384-6-git-send-email-cang@codeaurora.org>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Wed, 13 Nov 2019 07:21:39 +0530
-Message-ID: <CAGOxZ50OqMYWs+j37=U9r0URQmTK_jxcsor8PejhEVVOXWq4Ww@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] scsi: ufs: Add driver for TI wrapper for Cadence
- UFS IP
-To:     Vignesh Raghavendra <vigneshr@ti.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
+Date:   Wed, 13 Nov 2019 07:54:28 +0530
+Message-ID: <CAGOxZ502wp17UFEk67Qno9DQ0dFPfwMRTLNTCvOXibQDhOw4SA@mail.gmail.com>
+Subject: Re: [PATCH v1 5/5] scsi: ufs: Complete pending requests in host reset
+ and restore path
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
-        Janek Kotas <jank@cadence.com>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Vignesh
+Hi Can,
 
-On Fri, Nov 8, 2019 at 10:20 PM Vignesh Raghavendra <vigneshr@ti.com> wrote:
+On Fri, Nov 8, 2019 at 1:50 PM Can Guo <cang@codeaurora.org> wrote:
 >
-> TI's J721e SoC has a Cadence UFS IP with a TI specific wrapper. This is
-> a minimal driver to configure the wrapper. It releases the UFS slave
-> device out of reset and sets up registers to indicate PHY reference
-> clock input frequency before probing child Cadence UFS driver.
+> In UFS host reset and restore path, before probe, we stop and start the
+> host controller once. After host controller is stopped, the pending
+> requests, if any, are cleared from the doorbell, but no completion IRQ
+> would be raised due to the hba is stopped.
+> These pending requests shall be completed along with the first NOP_OUT
+> command(as it is the first command which can raise a transfer completion
+> IRQ) sent during probe.
+> Since the OCSs of these pending requests are not SUCCESS(because they are
+> not yet literally finished), their UPIUs shall be dumped. When there are
+> multiple pending requests, the UPIU dump can be overwhelming and may lead
+> to stability issues because it is in atomic context.
+> Therefore, before probe, complete these pending requests right after host
+> controller is stopped.
 >
-> Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
 > ---
+Looks good, I hope this is tested on your platform.
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+
+>  drivers/scsi/ufs/ufshcd.c | 20 +++++++-------------
+>  1 file changed, 7 insertions(+), 13 deletions(-)
 >
-> v3:
-> Fix macros to have TI_* prefix
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 5950a7c..4df4136 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5404,8 +5404,8 @@ static void ufshcd_err_handler(struct work_struct *work)
 >
+>         /*
+>          * if host reset is required then skip clearing the pending
+> -        * transfers forcefully because they will automatically get
+> -        * cleared after link startup.
+> +        * transfers forcefully because they will get cleared during
+> +        * host reset and restore
+>          */
+>         if (needs_reset)
+>                 goto skip_pending_xfer_clear;
+> @@ -6333,9 +6333,13 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>         int err;
+>         unsigned long flags;
 >
-> v2: No change
+> -       /* Reset the host controller */
+> +       /*
+> +        * Stop the host controller and complete the requests
+> +        * cleared by h/w
+> +        */
+>         spin_lock_irqsave(hba->host->host_lock, flags);
+>         ufshcd_hba_stop(hba, false);
+> +       ufshcd_complete_requests(hba);
+>         spin_unlock_irqrestore(hba->host->host_lock, flags);
 >
->  drivers/scsi/ufs/Kconfig        | 10 ++++
->  drivers/scsi/ufs/Makefile       |  1 +
->  drivers/scsi/ufs/ti-j721e-ufs.c | 90 +++++++++++++++++++++++++++++++++
->  3 files changed, 101 insertions(+)
->  create mode 100644 drivers/scsi/ufs/ti-j721e-ufs.c
+>         /* scale up clocks to max frequency before full reinitialization */
+> @@ -6369,7 +6373,6 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>  static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+>  {
+>         int err = 0;
+> -       unsigned long flags;
+>         int retries = MAX_HOST_RESET_RETRIES;
 >
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 0b845ab7c3bf..d14c2243e02a 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -132,6 +132,16 @@ config SCSI_UFS_HISI
->           Select this if you have UFS controller on Hisilicon chipset.
->           If unsure, say N.
+>         do {
+> @@ -6379,15 +6382,6 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
+>                 err = ufshcd_host_reset_and_restore(hba);
+>         } while (err && --retries);
 >
-> +config SCSI_UFS_TI_J721E
-> +       tristate "TI glue layer for Cadence UFS Controller"
-> +       depends on OF && HAS_IOMEM && (ARCH_K3 || COMPILE_TEST)
-> +       help
-> +         This selects driver for TI glue layer for Cadence UFS Host
-> +         Controller IP.
-> +
-> +         Selects this if you have TI platform with UFS controller.
-> +         If unsure, say N.
-> +
->  config SCSI_UFS_BSG
->         bool "Universal Flash Storage BSG device node"
->         depends on SCSI_UFSHCD
-> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index 2a9097939bcb..94c6c5d7334b 100644
-> --- a/drivers/scsi/ufs/Makefile
-> +++ b/drivers/scsi/ufs/Makefile
-> @@ -11,3 +11,4 @@ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
->  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
->  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
->  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
-> +obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
-> diff --git a/drivers/scsi/ufs/ti-j721e-ufs.c b/drivers/scsi/ufs/ti-j721e-ufs.c
-> new file mode 100644
-> index 000000000000..5216d228cdd9
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ti-j721e-ufs.c
-> @@ -0,0 +1,90 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +//
-> +// Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
-> +//
-> +
-> +#include <linux/clk.h>
-> +#include <linux/io.h>
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/pm_runtime.h>
-> +
-> +#define TI_UFS_SS_CTRL         0x4
-> +#define TI_UFS_SS_RST_N_PCS    BIT(0)
-> +#define TI_UFS_SS_CLK_26MHZ    BIT(4)
-> +
-> +static int ti_j721e_ufs_probe(struct platform_device *pdev)
-> +{
-> +       struct device *dev = &pdev->dev;
-> +       unsigned long clk_rate;
-> +       void __iomem *regbase;
-> +       struct clk *clk;
-> +       u32 reg = 0;
-> +       int ret;
-> +
-> +       regbase = devm_platform_ioremap_resource(pdev, 0);
-> +       if (IS_ERR(regbase))
-> +               return PTR_ERR(regbase);
-> +
-> +       pm_runtime_enable(dev);
-> +       ret = pm_runtime_get_sync(dev);
-> +       if (ret < 0) {
-> +               pm_runtime_put_noidle(dev);
-> +               return ret;
-> +       }
-> +
-> +       /* Select MPHY refclk frequency */
-> +       clk = devm_clk_get(dev, NULL);
-> +       if (IS_ERR(clk)) {
-> +               dev_err(dev, "Cannot claim MPHY clock.\n");
-> +               return PTR_ERR(clk);
-> +       }
-> +       clk_rate = clk_get_rate(clk);
-> +       if (clk_rate == 26000000)
-> +               reg |= TI_UFS_SS_CLK_26MHZ;
-> +       devm_clk_put(dev, clk);
-> +
-> +       /*  Take UFS slave device out of reset */
-> +       reg |= TI_UFS_SS_RST_N_PCS;
-> +       writel(reg, regbase + TI_UFS_SS_CTRL);
-> +
-> +       ret = of_platform_populate(pdev->dev.of_node, NULL, NULL,
-> +                                  dev);
-> +       if (ret) {
-> +               dev_err(dev, "failed to populate child nodes %d\n", ret);
-> +               pm_runtime_put_sync(dev);
-> +       }
-> +
-> +       return ret;
-> +}
-> +
-> +static int ti_j721e_ufs_remove(struct platform_device *pdev)
-> +{
-> +       of_platform_depopulate(&pdev->dev);
-> +       pm_runtime_put_sync(&pdev->dev);
-> +
-> +       return 0;
-> +}
-> +
-> +static const struct of_device_id ti_j721e_ufs_of_match[] = {
-> +       {
-> +               .compatible = "ti,j721e-ufs",
-> +       },
-> +       { },
-> +};
-> +
-> +static struct platform_driver ti_j721e_ufs_driver = {
-> +       .probe  = ti_j721e_ufs_probe,
-> +       .remove = ti_j721e_ufs_remove,
-> +       .driver = {
-> +               .name   = "ti-j721e-ufs",
-> +               .of_match_table = ti_j721e_ufs_of_match,
-> +       },
-> +};
-> +module_platform_driver(ti_j721e_ufs_driver);
-> +
-> +MODULE_AUTHOR("Vignesh Raghavendra <vigneshr@ti.com>");
-> +MODULE_DESCRIPTION("TI UFS host controller glue driver");
-> +MODULE_LICENSE("GPL v2");
+> -       /*
+> -        * After reset the door-bell might be cleared, complete
+> -        * outstanding requests in s/w here.
+> -        */
+> -       spin_lock_irqsave(hba->host->host_lock, flags);
+> -       ufshcd_transfer_req_compl(hba);
+> -       ufshcd_tmc_handler(hba);
+> -       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -
+>         return err;
+>  }
+>
 > --
-> 2.24.0
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project
 >
 
 
