@@ -6,31 +6,30 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE54C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE6DC17449
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:06:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E1C422466
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A585C2245C
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 14:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727386AbfKMN6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 08:58:48 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38104 "EHLO mx1.suse.de"
+        id S1727385AbfKMOGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 09:06:17 -0500
+Received: from mx2.suse.de ([195.135.220.15]:41864 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726186AbfKMN6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 08:58:48 -0500
+        id S1726410AbfKMOGQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 09:06:16 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 5799BB12C;
-        Wed, 13 Nov 2019 13:58:46 +0000 (UTC)
-Subject: Re: [PATCH RFC 2/5] blk-mq: rename BLK_MQ_F_TAG_SHARED as
- BLK_MQ_F_TAG_QUEUE_SHARED
+        by mx1.suse.de (Postfix) with ESMTP id B88DDB1D8;
+        Wed, 13 Nov 2019 14:06:13 +0000 (UTC)
+Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
 To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
         jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, ming.lei@redhat.com, hare@suse.com,
         bvanassche@acm.org, chenxiang66@hisilicon.com
 References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-3-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-4-git-send-email-john.garry@huawei.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -76,12 +75,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <32995d48-1306-8e51-9f61-0d3e59a8ecdb@suse.de>
-Date:   Wed, 13 Nov 2019 14:58:46 +0100
+Message-ID: <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+Date:   Wed, 13 Nov 2019 15:06:12 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1573652209-163505-3-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1573652209-163505-4-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,25 +90,93 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/13/19 2:36 PM, John Garry wrote:
-> From: Ming Lei <ming.lei@redhat.com>
+> Some SCSI HBAs (such as HPSA, megaraid, mpt3sas, hisi_sas_v3 ..) support
+> multiple reply queues with single hostwide tags.
 > 
-> BLK_MQ_F_TAG_SHARED actually means that tags is shared among request
-> queues, all of which should belong to LUNs attached to same HBA.
+> In addition, these drivers want to use interrupt assignment in
+> pci_alloc_irq_vectors(PCI_IRQ_AFFINITY). However, as discussed in [0],
+> CPU hotplug may cause in-flight IO completion to not be serviced when an
+> interrupt is shutdown.
 > 
-> So rename it to make the point explicitly.
+> To solve that problem, Ming's patchset to drain hctx's should ensure no
+> IOs are missed in-flight [1].
 > 
-> Suggested-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> However, to take advantage of that patchset, we need to map the HBA HW
+> queues to blk mq hctx's; to do that, we need to expose the HBA HW queues.
+> 
+> In making that transition, the per-SCSI command request tags are no
+> longer unique per Scsi host - they are just unique per hctx. As such, the
+> HBA LLDD would have to generate this tag internally, which has a certain
+> performance overhead.
+> 
+> However another problem is that blk mq assumes the host may accept
+> (Scsi_host.can_queue * #hw queue) commands. In [2], we removed the Scsi
+> host busy counter, which would stop the LLDD being sent more than
+> .can_queue commands; however, we should still ensure that the block layer
+> does not issue more than .can_queue commands to the Scsi host.
+> 
+> To solve this problem, introduce a shared tags per blk_mq_tag_set, which
+> may be requested when allocating the tagset.
+> 
+> New flag BLK_MQ_F_TAG_HCTX_SHARED should be set when requesting the
+> tagset.
+> 
+> This is based on work originally from Ming Lei in [3].
+> 
+> [0] https://lore.kernel.org/linux-block/alpine.DEB.2.21.1904051331270.1802@nanos.tec.linutronix.de/
+> [1] https://lore.kernel.org/linux-block/20191014015043.25029-1-ming.lei@redhat.com/
+> [2] https://lore.kernel.org/linux-scsi/20191025065855.6309-1-ming.lei@redhat.com/
+> [3] https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/
+> 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
+>  block/blk-core.c       |  1 +
+>  block/blk-flush.c      |  2 +
 >  block/blk-mq-debugfs.c |  2 +-
->  block/blk-mq-tag.c     |  2 +-
->  block/blk-mq-tag.h     |  4 ++--
->  block/blk-mq.c         | 20 ++++++++++----------
->  include/linux/blk-mq.h |  2 +-
->  5 files changed, 15 insertions(+), 15 deletions(-)
+>  block/blk-mq-tag.c     | 85 ++++++++++++++++++++++++++++++++++++++++++
+>  block/blk-mq-tag.h     |  1 +
+>  block/blk-mq.c         | 61 +++++++++++++++++++++++++-----
+>  block/blk-mq.h         |  9 +++++
+>  include/linux/blk-mq.h |  3 ++
+>  include/linux/blkdev.h |  1 +
+>  9 files changed, 155 insertions(+), 10 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+[ .. ]
+> @@ -396,15 +398,17 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+>  		blk_mq_tag_busy(data->hctx);
+>  	}
+>  
+> -	tag = blk_mq_get_tag(data);
+> -	if (tag == BLK_MQ_TAG_FAIL) {
+> -		if (clear_ctx_on_error)
+> -			data->ctx = NULL;
+> -		blk_queue_exit(q);
+> -		return NULL;
+> +	if (data->hctx->shared_tags) {
+> +		shared_tag = blk_mq_get_shared_tag(data);
+> +		if (shared_tag == BLK_MQ_TAG_FAIL)
+> +			goto err_shared_tag;
+>  	}
+>  
+> -	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags, alloc_time_ns);
+> +	tag = blk_mq_get_tag(data);
+> +	if (tag == BLK_MQ_TAG_FAIL)
+> +		goto err_tag;
+> +
+> +	rq = blk_mq_rq_ctx_init(data, tag, shared_tag, data->cmd_flags, alloc_time_ns);
+>  	if (!op_is_flush(data->cmd_flags)) {
+>  		rq->elv.icq = NULL;
+>  		if (e && e->type->ops.prepare_request) {
+Why do you need to keep a parallel tag accounting between 'normal' and
+'shared' tags here?
+Isn't is sufficient to get a shared tag only, and us that in lieo of the
+'real' one?
+
+I would love to combine both, as then we can easily do a reverse mapping
+by using the 'tag' value to lookup the command itself, and can possibly
+do the 'scsi_cmd_priv' trick of embedding the LLDD-specific parts within
+the command. With this split we'll be wasting quite some memory there,
+as the possible 'tag' values are actually nr_hw_queues * shared_tags.
 
 Cheers,
 
