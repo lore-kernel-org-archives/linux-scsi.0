@@ -2,49 +2,48 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B56C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 21:36:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17661C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 22:04:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 079C8206ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 21:36:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 137C8206E5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 22:04:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="f5VmTYBy"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="JZQ3zLjL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726969AbfKMVfz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 16:35:55 -0500
-Received: from mail-eopbgr690089.outbound.protection.outlook.com ([40.107.69.89]:11254
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
+        id S1726410AbfKMWEM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 17:04:12 -0500
+Received: from mail-eopbgr820047.outbound.protection.outlook.com ([40.107.82.47]:42047
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726162AbfKMVfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 16:35:55 -0500
+        id S1726162AbfKMWEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 17:04:11 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=b9gAj9Q3XDoDzSBNEwSnjkpUbPw3u6kIcIkws/m5OJJRS5Wqu5dJI5F9ewdgaEZ5xuOaRGtu7sFdYC3Xoj0i42y+Y1sIIU/xb54abq0cwXOspUL2b2G+gx0n3HaznGcoytzjuT+fSW02gE94mYtgJUm2bZJhN+s4LHDbzBxdU5o4g2BKrSoOEliTjA/2RYR38t1HpATFnroyuc3mamuUB9w4H5sDUeRctq51nuZvd6rF7Ck0bd+VbTfK0QzrsPbzyRccejdKbfqzitYVoS7roNHlq++5BgtPvdf1QKPvfsQSfV1jO40MXTezWGmibKyQagjN8rZN3QROGM1T1OHo2g==
+ b=mUlCm/QI5IDqIGNoouRhlKNFWlhFi2IwYXJbXQJvROpcvIgSQ3yb5llSa2M6Twi6jsAoBhfTqgE6HBop9qa52CpwMcDLcTpyFjFrC78oJobxjl5MMHB2n9B9AFGPB+FGHTl/4FH96evEjCT9Ta7Vk0BNMRZjcZ27rYjTUtn02NY7OW+5UHkFgv4cJaApbL2znYQ5SZkA4CYt1X6W1FO3WD1R6q07z4fOmzIXD6w+wCpx8UaS63NDfZ2OuDhRapHtZGoix6ulG9ujv1hVF7ICwvthX0HIM6Gi9mAn2yZJ8ryDrc58xWOCFc4ZNySDENSydkjYM4sRenVYIhsJ44Ml9g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OTM1FccH4BJmJJgiKw6PubKfPhaeyfWDRX+GgnBSJbs=;
- b=i9AT/8XwxKsGqY5JZRKwznCFhU6Bn3f0icBD0JFkHnDa70L/JGq7s99lGn0/FHtpJxcTs64ij/o2K23ZdmX4Pc1Ewta/k8o25xo2WyFt2iCQhPm6ji9gwQAMLfZ0seylzujETes5AUIFQRJzgYOoq8OQ0ZbiwqpHB6kPj/vSTgXpQyYZ8VTiS3Ejh67/JaQnUsEvb2rKX+WhxdAUMa1I5YnbZH8IAOK269cTQScrFMEgP9x+zic6jB8ArjyetAeP0lsIMz7D4wk2nCNp5BZbJ4a4zcF1L5n6fySyn4yhnYhtMPBxmZ6FC9VgctWKWrjTBaE2/5IRlqE1vam6tA2dWg==
+ bh=5Omqvw/ODgVQaJfSk48IdNf+pV26D49dbIGG3elsLY0=;
+ b=C2UwZ9FPSDTs4+yWlkKkaz6KsJwGk1U4diF85RgINrHVqZu8d6CSu+1Y9pCzUmTADv90QMRYVu7CaBjfZma2pECmPo5M+YoODfEPJC0iIWgwYsT4G7fGKq2qBoeRgXnolucbJU6qrrf/w/i/+H3+ckHFAxyheXPREPRoAl09630AAJHcMmFnhz7MdqSlFRUJrl90oz37BEhCE1YlSyuRQi4FC6yoIt1rmunpYjQ7LbXDIwfOdIMSBFnPMs6ff9eyuJ4uCH5yJKaW5MIs4F0qSiGDyvqk9vxSM6Am56+v2W/t8BhNpvtPw9PKR3Ppra5RDIMylihnInj/PIYJTXsZGA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
  dkim=pass header.d=micron.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OTM1FccH4BJmJJgiKw6PubKfPhaeyfWDRX+GgnBSJbs=;
- b=f5VmTYByAgUmHFXmLh6ab2GEB6BoonTZ1IViO2NEfkh/MyQWImjGQkdeZPWGK8x8gDwJuR0+V8hii4CRDXcxvL3icamwSH08R3Js/3XgUCJnJP7b/t6uj6sVYU+rlsYEhQI3oqwl9WNiiGQoUSnznhgt3ghi/SCi0R8eyNlz5+Q=
+ bh=5Omqvw/ODgVQaJfSk48IdNf+pV26D49dbIGG3elsLY0=;
+ b=JZQ3zLjLdaZGc6Ki5zm4at0S2pbP4lAQIPm2scYNJjRWfV/ogE3X84nNtaHHTJRD4ZpO5sueXee4Ss7wjx3W8JY8V4FOpXMhML4xeKFe/wdI0cfHQNo+iJ9UQKeSI5Mbkz45AfnXD/8uwT1ws17lo4JBlzfLAAT9yl4JBnCRAOc=
 Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB3859.namprd08.prod.outlook.com (52.132.5.26) with Microsoft SMTP
+ BN7PR08MB4403.namprd08.prod.outlook.com (52.133.220.18) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.23; Wed, 13 Nov 2019 21:35:53 +0000
+ 15.20.2451.23; Wed, 13 Nov 2019 22:04:03 +0000
 Received: from BN7PR08MB5684.namprd08.prod.outlook.com
  ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
  ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2430.028; Wed, 13 Nov 2019
- 21:35:52 +0000
+ 22:04:03 +0000
 From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
 To:     Can Guo <cang@codeaurora.org>,
         "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
@@ -63,74 +62,82 @@ CC:     Alim Akhtar <alim.akhtar@samsung.com>,
         Subhash Jadavani <subhashj@codeaurora.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH v1 1/5] scsi: ufs: Recheck bkops level if bkops is
- disabled
-Thread-Topic: [EXT] [PATCH v1 1/5] scsi: ufs: Recheck bkops level if bkops is
- disabled
-Thread-Index: AQHVlgy8Ub+viGdtoUi1bbnuqokAjqeJo3lg
-Date:   Wed, 13 Nov 2019 21:35:52 +0000
-Message-ID: <BN7PR08MB568425DF74EEE0A1F4DDB119DB760@BN7PR08MB5684.namprd08.prod.outlook.com>
+Subject: RE: [EXT] [PATCH v1 5/5] scsi: ufs: Complete pending requests in host
+ reset and restore path
+Thread-Topic: [EXT] [PATCH v1 5/5] scsi: ufs: Complete pending requests in
+ host reset and restore path
+Thread-Index: AQHVlgzPbiOALT34b0a4wX/4UETvQqeJrjpQ
+Date:   Wed, 13 Nov 2019 22:04:03 +0000
+Message-ID: <BN7PR08MB56849EEE83414549F4787BCEDB760@BN7PR08MB5684.namprd08.prod.outlook.com>
 References: <1573200932-384-1-git-send-email-cang@codeaurora.org>
- <1573200932-384-2-git-send-email-cang@codeaurora.org>
-In-Reply-To: <1573200932-384-2-git-send-email-cang@codeaurora.org>
+ <1573200932-384-6-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1573200932-384-6-git-send-email-cang@codeaurora.org>
 Accept-Language: en-150, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLThmMGJkZjQ0LTA2NWQtMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFw4ZjBiZGY0NS0wNjVkLTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjgzMCIgdD0iMTMyMTgxNTQ1NTAwNjI4NTE2IiBoPSJZR3pPdlhVUzZSSDUxSFB4d2xyaWc0YWhmbDA9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTdlOGE2NzVkLTA2NjEtMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFw3ZThhNjc1Zi0wNjYxLTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjEyMjMiIHQ9IjEzMjE4MTU2MjQwMzE2Njg1MiIgaD0id2hybUw2UG14M1lIMnBPSmRiNkpUOXFqS01jPSIgaWQ9IiIgYmw9IjAiIGJvPSIxIi8+PC9tZXRhPg==
 x-dg-rorf: true
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=beanhuo@micron.com; 
 x-originating-ip: [165.225.81.26]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: c94b769d-9a03-4ebf-9f0d-08d768817594
-x-ms-traffictypediagnostic: BN7PR08MB3859:|BN7PR08MB3859:|BN7PR08MB3859:
-x-microsoft-antispam-prvs: <BN7PR08MB38593EF7C7D16311C4774808DB760@BN7PR08MB3859.namprd08.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 6e166170-6832-458d-eeb6-08d768856510
+x-ms-traffictypediagnostic: BN7PR08MB4403:|BN7PR08MB4403:|BN7PR08MB4403:
+x-microsoft-antispam-prvs: <BN7PR08MB44031AF8701692D0ADBED029DB760@BN7PR08MB4403.namprd08.prod.outlook.com>
 x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:2512;
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
 x-forefront-prvs: 0220D4B98D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(346002)(39860400002)(136003)(366004)(396003)(199004)(189003)(81156014)(81166006)(8936002)(7416002)(2201001)(110136005)(66446008)(86362001)(3846002)(316002)(6436002)(74316002)(305945005)(9686003)(6116002)(4326008)(2906002)(55016002)(8676002)(66946007)(5660300002)(256004)(14444005)(64756008)(52536014)(99286004)(76116006)(71200400001)(71190400001)(54906003)(66476007)(66556008)(4744005)(66066001)(478600001)(7696005)(102836004)(14454004)(76176011)(229853002)(25786009)(7736002)(26005)(476003)(446003)(11346002)(6246003)(186003)(33656002)(6506007)(2501003)(486006)(55236004);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB3859;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(346002)(39860400002)(376002)(396003)(366004)(189003)(199004)(66946007)(81166006)(66446008)(8936002)(81156014)(446003)(8676002)(66476007)(66556008)(64756008)(6246003)(14454004)(6116002)(316002)(76176011)(229853002)(478600001)(3846002)(7696005)(2906002)(71190400001)(7416002)(71200400001)(186003)(256004)(110136005)(26005)(25786009)(55016002)(54906003)(9686003)(55236004)(74316002)(6506007)(6436002)(14444005)(305945005)(7736002)(52536014)(2501003)(102836004)(486006)(476003)(66066001)(76116006)(2201001)(86362001)(5660300002)(4326008)(99286004)(11346002)(33656002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB4403;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: micron.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: nVbMIdeAQrQwiysEYJKPBlK+rDwlIg+a9+HTiamqJl9CjvMlI538MXv2LEGDn/f7yODo3L3oSfugYHds8j5FR3W/khhPnOucealCtD0HIBchm0Of9uYK/HwPOQ7TerQDjjjCergwM0gamp6UHiObvW9cyWzrHPJclavCk5usW8x/zsBIfcez7JCB2odJaZKBlxr0FwpJUBFGQVnggmgM3U2jlkT1UlSMmvnRiTShG4evd+yRztsuMkdFyOqtgkFh3/S7gCUlxoQqoO3SLb5TWDpn1jgy0mwnzcnngQ3oCYv147wIjIoze+FDq0RkMIT8ge5AyTHC5WxgAxUqv6w1bw/BuyrENiFkbmflZTJ5zxG/P9vLJ6LkhJ1fAhRksdqv0lDdvZZNi8sPZdwHkifSvPJplavSLT9yKSmMo57rAEW0zniCuOHB8tlbg33vNaho
+x-microsoft-antispam-message-info: NMyOs95vVpiBOpG6eI9A/87lxUzxO3pKUG8nDYyfuil9/PromukTL7VeZrEKLJJjo2BhauRiDOMXYvNYn+NQHdz0+26M9oE8SUfqQ+WYVJ/pZeTgAOnqA8t/uHwLyNlq0N75vpOxrnhDylewFYxb8H+JZLd8eChU+vsnJ+SEfXbwaiXis7fa0sKxbcu78/QalN5FavFqtjKCQliC9Xoql3PleRjJA0uqmuvO5LAnyFN7jeSMcfF415d5e/SOZSCw3WYLarrD/jGZk3K7dSzIoFZ3gPlNUg0F+VlUHh8ImmP5SilIjurMByOeL5nmY7CWL5/Kzx3EozINHpIh2lDXyUvwH8/KOMwJfHt42bj3Mou3XL5YwtPgkvS3bDmOjdFUIlG4T5fFT9U6xhbIztpe1YN72WIdyUHVyLl3zsc+FANg111Di0Eeu6gSVVyyfKVt
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c94b769d-9a03-4ebf-9f0d-08d768817594
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 21:35:52.7905
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6e166170-6832-458d-eeb6-08d768856510
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 22:04:03.1093
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kwrUkws3HHetzgblvjUEObkRqIAdy+ewy/ZwhX0oW6TXH2ihAEq/bV/IIOJMlBJjOXvNkw5MK5NEhOiPpB6UHg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB3859
+X-MS-Exchange-CrossTenant-userprincipalname: P0WAiTMAbKLrA1RiolEmKpFu3CTighF4eYWFWAwhgqN8Rf7bMnIP5pGU/DPzzya11A1DA1+FRkD9ovboK4qNSg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4403
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Subject: [EXT] [PATCH v1 1/5] scsi: ufs: Recheck bkops level if bkops is =
-disabled
 >=20
-> From: Asutosh Das <asutoshd@codeaurora.org>
->=20
-> Bkops level should be rechecked upon receiving an exception.
-> Currently the bkops level is being cached and never updated.
->=20
+> In UFS host reset and restore path, before probe, we stop and start the h=
+ost
+> controller once. After host controller is stopped, the pending requests, =
+if any,
+> are cleared from the doorbell, but no completion IRQ would be raised due =
+to the
+> hba is stopped.
+> These pending requests shall be completed along with the first NOP_OUT
+> command(as it is the first command which can raise a transfer completion
+> IRQ) sent during probe.
 
-Yes, this makes sense, once receiving a bkops exception, we should recheck =
-its level.
-Because device side has changed its status.
+Hi, Can
+I am not sure for this point, because there is HW/SW device reset before or=
+ after host reset/restore.
+Device HW/SW reset also will clear the pended tasks in device side. That wi=
+ll be better.
+I think Qcom platform already enabled HW reset.
 
-> Update the same each time the level is checked.
-> Also do not use the cached bkops level value if it is disabled and then e=
-nabled.
->=20
-should use current level.
+//Bean
 
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Since the OCSs of these pending requests are not SUCCESS(because they are=
+ not
+> yet literally finished), their UPIUs shall be dumped. When there are mult=
+iple
+> pending requests, the UPIU dump can be overwhelming and may lead to stabi=
+lity
+> issues because it is in atomic context.
+> Therefore, before probe, complete these pending requests right after host
+> controller is stopped.
