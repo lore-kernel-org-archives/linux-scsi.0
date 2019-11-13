@@ -2,112 +2,89 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E33C17454
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1F1C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 06:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4ED8922473
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 04:27:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F8B9222CD
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 06:00:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J8+sF7LL"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kJU5hLig";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kJU5hLig"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727924AbfKME1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 23:27:45 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:43928 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727180AbfKME1o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 23:27:44 -0500
-Received: by mail-pf1-f193.google.com with SMTP id 3so711268pfb.10;
-        Tue, 12 Nov 2019 20:27:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=eimBgjDjKpO/BNiwKmZxZNq9wEIZnLGA/lSG4Kux51U=;
-        b=J8+sF7LLJD7hfCpF/jBZUs+57aECYdff+iIP/LuncGv6kPW9iItkRCaAcpA/mQvtSw
-         V9iWugGdF4NgSC7cmjdwNRPFEduGVEzPHqMhW/BA49ttwFANauw8PhY5VpbaWdRjrvDJ
-         Q3ahozGpeLp1dIk5i9/MmagYp/kYYTjvR7RE1pvgCdu+52OtVRVf3CzNb1VVjF3qleJ6
-         Rf1vQ7Ru9IIMPKZox+Tudz8zIFZ145x9m/fVxmmuEIrSW8P4XiV2xhcPZqh19Upl0Zcf
-         NBJLvhx9p9mnx5MirkRvncZvSYAqJ+YMF9aFHz6xUDH1k7D3VaPqRdeJqTnYXvTklaRP
-         SMfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=eimBgjDjKpO/BNiwKmZxZNq9wEIZnLGA/lSG4Kux51U=;
-        b=qdsTLm4N3kiXmcDvDB24MAEL5aMhcUQDiaU/FJUcSOtDZcioOXjoaDkWxBSBEH21rL
-         LDctBSEq9AgyfHGMWGvslQQfCOtkKAcBJzWidl8D4LFSER2KZDKiIjcUJvZOyUNR4FDA
-         u0pN0UZ1zRIwkTGE7Al9OoWX5yptWPhc78bElJn4BEO7NKSWTns5FBJ+OmcZCUnNbYJJ
-         +wcmesTyFFNO/R/u0aJMjCKOXbW6GW1repkNFxBBNWA1jUeFjoBKeOZwkUvJkFpluGv6
-         zkuKTye26xtqIDRbKdLKS6hxuH3qp+U1byQHLEU/qVIKQiIqFb2coMSTPtpe1sXZkLKz
-         f0Dw==
-X-Gm-Message-State: APjAAAV+1V6EHvJDD34OGUuh60nXrv3W3L0HV23XH9EJcNT34MHdOMMX
-        MD4s7gZibxmdzln//Qa9dbZFFdcR
-X-Google-Smtp-Source: APXvYqyYBCllFsmBxPUEeJvCjXUpQTItrGDDjxuQ9C1v8WakRhhFjt559UgpozFGs7XIwQxfJyi8Tg==
-X-Received: by 2002:a62:8789:: with SMTP id i131mr1786390pfe.221.1573619263465;
-        Tue, 12 Nov 2019 20:27:43 -0800 (PST)
-Received: from [192.168.1.101] (122-58-182-39-adsl.sparkbb.co.nz. [122.58.182.39])
-        by smtp.gmail.com with ESMTPSA id z11sm664741pfg.117.2019.11.12.20.27.39
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 12 Nov 2019 20:27:42 -0800 (PST)
-Subject: Re: Please consider mainline commit 9393c8de628c for stable
-To:     Sasha Levin <sashal@kernel.org>
-References: <3bb75710-9e53-4896-b368-a3c5a3fc7fa8@gmail.com>
- <20191113012739.GN8496@sasha-vm>
-Cc:     stable@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <a7ccad7a-01b1-4cc5-f9a3-c08bb160a351@gmail.com>
-Date:   Wed, 13 Nov 2019 17:27:37 +1300
-User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
- Icedove/45.4.0
-MIME-Version: 1.0
-In-Reply-To: <20191113012739.GN8496@sasha-vm>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S1726120AbfKMGAd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 01:00:33 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:34344 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725858AbfKMGAd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 01:00:33 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 7449F6088D; Wed, 13 Nov 2019 06:00:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573624832;
+        bh=x+bXgAw/KLbJH+pZh7S3UedB0pDlLExTXSxpwU94q60=;
+        h=From:To:Subject:Date:From;
+        b=kJU5hLig/VwFpro67yA17BpJdIUyDXn00AxL0foDPsU/a8WFH913vq71sfZ0mfJfL
+         GeAVZQmDkLTp9uqtHQ7YvENpD5CKw/aKebvtBLRZbNeni6M24OUHnZQ2AwIO2wxKBT
+         bECl//yfC6lXDDOncWXtXxwzs8yK0foKZ9g8Q6fs=
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9A9516085C;
+        Wed, 13 Nov 2019 06:00:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573624832;
+        bh=x+bXgAw/KLbJH+pZh7S3UedB0pDlLExTXSxpwU94q60=;
+        h=From:To:Subject:Date:From;
+        b=kJU5hLig/VwFpro67yA17BpJdIUyDXn00AxL0foDPsU/a8WFH913vq71sfZ0mfJfL
+         GeAVZQmDkLTp9uqtHQ7YvENpD5CKw/aKebvtBLRZbNeni6M24OUHnZQ2AwIO2wxKBT
+         bECl//yfC6lXDDOncWXtXxwzs8yK0foKZ9g8Q6fs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9A9516085C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Subject: [PATCH v4 0/5] UFS driver general fixes bundle 1
+Date:   Tue, 12 Nov 2019 22:00:18 -0800
+Message-Id: <1573624824-671-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Sasha,
+This bundle includes 5 general fixes for UFS driver.
 
-Am 13.11.2019 um 14:27 schrieb Sasha Levin:
-> On Tue, Nov 12, 2019 at 03:52:47PM +1300, Michael Schmitz wrote:
->> Dear stable kernel maintainers,
->>
->> please consider including commit 9393c8de628c ("scsi: core: Handle
->> drivers which set sg_tablesize to zero") for inclusion in stable.
->>
->> The commit fixes a long standing bug that affects all SCSI low-level
->> drivers setting sg_tablesize to zero, introduced in commit d285203c
->> ("scsi: add support for a blk-mq based I/O path.") around kernel
->> version 3.16.
->>
->> Use of the option use_blk_mq=y in kernel versions prior to 5.1, and
->> any use of such drivers in later kernels, will result in a null
->> pointer dereference from the block layer.
->>
->> I hadn't expected Martin Petersen to pick my fix over another one
->> submitted by Finn Thain, so I never added CC: or Fixes: tags.
->
-> Could you provide a backport for 4.19 and older?
->
-> We would need to work around not having 3dccdf53c2f3 ("scsi: core: avoid
-> preallocating big SGL for data") in older kernels, and I'm not confident
-> about what I ended up as a backport without ability to test it.
+Changes since v3:
+- Incorporated review comments from Martin K. Petersen.
 
-I hadn't spotted that. From  what I've seen, that commit renamed 
-scsi_mq_inline_sgl_size() by scsi_mq_sgl_size() (among all the other 
-changes) so modifying my patch with that in mind should suffice.
+Changes since v2:
+- Incorporated review comments from Mark Salyzyn
 
-For safety, I'll test that version though.
+Changes since v1:
+- Incorporated review comments from Bart Van Assche.
 
-Cheers,
+Can Guo (5):
+  scsi: Adjust DBD setting in mode sense for caching mode page per LLD
+  scsi: ufs: Use DBD setting in mode sense
+  scsi: ufs: Release clock if DMA map fails
+  scsi: ufs: Do not clear the DL layer timers
+  scsi: ufs: Do not free irq in suspend
 
-	Michael
+ drivers/scsi/scsi_lib.c    |  2 ++
+ drivers/scsi/ufs/ufshcd.c  | 42 ++++++++++++++++++++++++++++--------------
+ drivers/scsi/ufs/unipro.h  | 11 +++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 42 insertions(+), 14 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
