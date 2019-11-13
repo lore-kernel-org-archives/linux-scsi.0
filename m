@@ -2,96 +2,124 @@ Return-Path: <SRS0=WAUG=ZF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE4DC43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 998DCC43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8271A21D7F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 709C62084E
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CgDGmqFS"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="J1GKzxf5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729759AbfKMCQH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:16:07 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:40648 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729554AbfKMCQF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 21:16:05 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD2EG3L053871;
-        Wed, 13 Nov 2019 02:15:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=zj7XkFTdmK7DXAeK0RmIrwFhY3DmD+T83WInFkC3ypM=;
- b=CgDGmqFS6dsl46NhRAUES5/cJZJZMUI2q9jtYs0R9MRWxg/VvFDws02fa/yzktpafH1p
- W+DZRFOLGweDmpHi06ZTi1bcQ7ISydXmWQkCrgaBhfJKOqXJx5fY+MKP2pqRGEBc2MYi
- ucE+UbEe1z2YY3clPrcVDf0ataM+DC4s5ZCJmk3MHRWW1x9EdQ11WMJADn5Crf3PXW7Q
- teS1pW8YUlo22V0vpbtKuiwYDNfTI4zuJ32EFsiwTfkG9ij8oqRieZVmCMoUmho+87x/
- ssmOXqdLp/Ikg1mqGK8l8kx4LhOPCgdh4Mp3B+zSP7aNzJdpv/Np3Czks7G/xc7dGYuF vg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2w5ndq8y86-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 02:15:46 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAD2E6Gg051036;
-        Wed, 13 Nov 2019 02:15:46 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2w7vpnduww-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 Nov 2019 02:15:46 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAD2FhZx019114;
-        Wed, 13 Nov 2019 02:15:43 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 Nov 2019 18:15:42 -0800
-To:     Bean Huo <huobean@gmail.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] Two small patches for UFS
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191112223436.27449-1-huobean@gmail.com>
-Date:   Tue, 12 Nov 2019 21:15:38 -0500
-In-Reply-To: <20191112223436.27449-1-huobean@gmail.com> (Bean Huo's message of
-        "Tue, 12 Nov 2019 23:34:34 +0100")
-Message-ID: <yq1bltgr06t.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727725AbfKMCQq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:16:46 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:44126 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730185AbfKMCQo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Nov 2019 21:16:44 -0500
+Received: by mail-pg1-f193.google.com with SMTP id f19so302450pgk.11
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Nov 2019 18:16:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=c7pgGUOErKCone57ckbGDS/eeyPemc6EIW0Fbaye1l4=;
+        b=J1GKzxf5D4PNxbYKxDELs3k7YlYHe/IgHvU8Etzan0v3SuwtZ62rEm1vWFQAXFTWqg
+         q5GbIvG6C/Bi2hnba2PXWn2pywiaPhAqj19zLVeHVpUB/w+bJn62gzb9mmaePzydVmxv
+         XAYZZFMdQ6jMS+xxsqXiz430ptjXzzatWh97FtCiIUx8TWg2NGykQo3WcHtCfcJrMFcr
+         eqAqztK9aojc6IvhkKDL8UM7ckfiwhqjgW7yUs9sNKNCQts2WY/qf/Y56U6wCuW8N3t0
+         HTWIy5X+Nktu52sYBB0Vz/LfvTjVsXzxChLk+jf8NXDEItN26y685XWjFOthOBTTeLzq
+         6W0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=c7pgGUOErKCone57ckbGDS/eeyPemc6EIW0Fbaye1l4=;
+        b=MBHmqu4L8KvaAjrMGlS+bg0Pr5CPTruLUjjERAuownwi+ozuLb6VGx1luM4FMHLLYr
+         rt0kWZjYiWl06kQtxqw0TIXGS8V42eTH2ArYzzYhzVCRCbtWxgJnSwHtH41QcuD/g5E3
+         bBoB0XXy5DgD545dZ8/tvNrMsCCUB7fgcYB6X2sYzXkfyT/Wv+s2spAGI1O52cQ3MBTD
+         1oaFKaLu+quUyKviBxEABdrKYdItgYWkIz61S0jtmSizHorikuC5FwKZBfs898mFlCXg
+         bB2D8pxsEXPwBkYWQTCifVwbzHY/3NVNTpiUJT/dZeWNIaiYfV8WBT1xVOfKAE6HaSSL
+         tUCg==
+X-Gm-Message-State: APjAAAX2HmN0rLxPKQN3TEe/YS8vcVs+jnEo4TlOlR0Bi7aLUDPLPOOs
+        Te9gqdPXtRjjKhN45wNEGwLLEg==
+X-Google-Smtp-Source: APXvYqycpY+BSOLB53HT4o8SEWzgzYFea+fu4bX8JbhALJ60LxNdAWEQSjGNGVeVl5dehnnO9BWleQ==
+X-Received: by 2002:a17:90a:a114:: with SMTP id s20mr1410230pjp.44.1573611402828;
+        Tue, 12 Nov 2019 18:16:42 -0800 (PST)
+Received: from [192.168.1.182] ([66.219.217.79])
+        by smtp.gmail.com with ESMTPSA id e17sm303534pfh.121.2019.11.12.18.16.40
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 12 Nov 2019 18:16:41 -0800 (PST)
+Subject: Re: [PATCH v2 0/9] Zoned block device enhancements and zone report
+ rework
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <yuchao0@huawei.com>
+References: <20191111023930.638129-1-damien.lemoal@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <a0c1c1bf-d6e5-8be1-ed99-6bfed3483d1d@kernel.dk>
+Date:   Tue, 12 Nov 2019 19:16:39 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1910280000 definitions=main-1911130016
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9439 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1910280000
- definitions=main-1911130016
+In-Reply-To: <20191111023930.638129-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 11/10/19 6:39 PM, Damien Le Moal wrote:
+> This series of patches introduces changes to zoned block device handling
+> code with the intent to simplify the code while optimizing run-time
+> operation, particularly in the area of zone reporting.
+> 
+> The first patch lifts the device zone check code out of the sd driver
+> and reimplements these zone checks generically as part of
+> blk_revalidate_disk_zones(). This avoids zoned block device drivers to
+> have to implement these checks. The second patch simplifies this
+> function code for the !zoned case.
+> 
+> The third patch is a small cleanup of zone report processing in
+> preparation for the fourth patch which removes support for partitions
+> on zoned block devices. As mentioned in that patch commit message, none
+> of the known partitioning tools support zoned devices and there are no
+> known use case in the field of SMR disks being used with partitions.
+> Dropping partition supports allows to significantly simplify the code
+> for zone report as zone sector values remapping becomes unnecessary.
+> 
+> Patch 5 to 6 are small cleanups and fixes of the null_blk driver zoned
+> mode.
+> 
+> The prep patch 7 optimizes zone report buffer allocation for the SCSI
+> sd driver. Finally, patch 8 introduces a new interface for report zones
+> handling using a callback function executed per zone reported by the
+> device. This allows avoiding the need to allocate large arrays of
+> blk_zone structures for the execution of zone reports. This can
+> significantly reduce memory usage and pressure on the memory management
+> system while significantly simplify the code all over.
+> 
+> Overall, this series not only reduces significantly the code size, it
+> also improves run-time memory usage for zone report execution.
+> 
+> This series applies cleanly on the for-next block tree on top of the
+> zone management operation series. It may however create a conflict with
+> Christoph's reqork of disk size revalidation. Please consider this
+> series for inclusion in the 5.5 kernel.
 
-Bean,
-
-> Here are two small patches, one is to fix a potential bug which could
-> result in system hang-up, another one is to add more helpful debug
-> hint.
-
-Applied to 5.5/scsi-queue, thanks!
+We're taking branching to new levels... I created for-5.5/zoned for this,
+which is for-5.5/block + for-5.5/drivers + for-5.5/drivers-post combined.
+The latter is a branch with the SCSI dependencies from Martin pulled in.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
+
