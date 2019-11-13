@@ -6,30 +6,31 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0047AC43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE54C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D49E0207FC
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E1C422466
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Nov 2019 13:58:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727680AbfKMN6X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 08:58:23 -0500
-Received: from mx2.suse.de ([195.135.220.15]:37900 "EHLO mx1.suse.de"
+        id S1727386AbfKMN6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 08:58:48 -0500
+Received: from mx2.suse.de ([195.135.220.15]:38104 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726186AbfKMN6X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Nov 2019 08:58:23 -0500
+        id S1726186AbfKMN6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 08:58:48 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 27C0CAE15;
-        Wed, 13 Nov 2019 13:58:20 +0000 (UTC)
-Subject: Re: [PATCH RFC 1/5] blk-mq: Remove some unused function arguments
+        by mx1.suse.de (Postfix) with ESMTP id 5799BB12C;
+        Wed, 13 Nov 2019 13:58:46 +0000 (UTC)
+Subject: Re: [PATCH RFC 2/5] blk-mq: rename BLK_MQ_F_TAG_SHARED as
+ BLK_MQ_F_TAG_QUEUE_SHARED
 To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
         jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, ming.lei@redhat.com, hare@suse.com,
         bvanassche@acm.org, chenxiang66@hisilicon.com
 References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-2-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-3-git-send-email-john.garry@huawei.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -75,12 +76,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <89e29883-2ef4-d148-56fa-5f02c9d62e3b@suse.de>
-Date:   Wed, 13 Nov 2019 14:58:19 +0100
+Message-ID: <32995d48-1306-8e51-9f61-0d3e59a8ecdb@suse.de>
+Date:   Wed, 13 Nov 2019 14:58:46 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1573652209-163505-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1573652209-163505-3-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,17 +91,23 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/13/19 2:36 PM, John Garry wrote:
-> The struct blk_mq_hw_ctx * argument in blk_mq_put_tag(),
-> blk_mq_poll_nsecs(), and blk_mq_poll_hybrid_sleep() is unused, so remove
-> it.
+> From: Ming Lei <ming.lei@redhat.com>
 > 
+> BLK_MQ_F_TAG_SHARED actually means that tags is shared among request
+> queues, all of which should belong to LUNs attached to same HBA.
+> 
+> So rename it to make the point explicitly.
+> 
+> Suggested-by: Bart Van Assche <bvanassche@acm.org>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  block/blk-mq-tag.c |  4 ++--
->  block/blk-mq-tag.h |  3 +--
->  block/blk-mq.c     | 10 ++++------
->  block/blk-mq.h     |  2 +-
->  4 files changed, 8 insertions(+), 11 deletions(-)
+>  block/blk-mq-debugfs.c |  2 +-
+>  block/blk-mq-tag.c     |  2 +-
+>  block/blk-mq-tag.h     |  4 ++--
+>  block/blk-mq.c         | 20 ++++++++++----------
+>  include/linux/blk-mq.h |  2 +-
+>  5 files changed, 15 insertions(+), 15 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
