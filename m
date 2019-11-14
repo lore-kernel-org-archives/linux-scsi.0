@@ -2,69 +2,128 @@ Return-Path: <SRS0=ICpX=ZG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91884C43215
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 08:57:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CE8C432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 09:03:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ED7020723
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 08:57:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29DA62071B
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 09:03:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oiT2RC/b"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="V6kTyEY8";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="XuKaWGDn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726263AbfKNI47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Nov 2019 03:56:59 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:40043 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725976AbfKNI46 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 03:56:58 -0500
-Received: by mail-io1-f66.google.com with SMTP id p6so5927163iod.7;
-        Thu, 14 Nov 2019 00:56:56 -0800 (PST)
+        id S1726443AbfKNJDQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Nov 2019 04:03:16 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:10850 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725920AbfKNJDQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 04:03:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1573722196; x=1605258196;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=YI7Naci+p2YfOHAD6iPg72R22MCSYXBw1MF9ZIwgUwg=;
+  b=V6kTyEY80+nAvTqJHGwpkKh+0elYxIXIGbiXjyrtoWRxdLAOeNTP02Hb
+   mDn+6MwbXzc3fooZCVJSKRi+bMO4Axaey8NjtKPm16OGajrXMl8j4X/E0
+   Y8JVDN2oObINQuMou2B0CF2Cg23AJmcAebAOz/jWCrKKOuCMnWsT+benE
+   42lyxS8C9G4T2rJ8vBpyeAXAJAlXqlJRbOfqf/nnyamEG5tHFFtZ1D9um
+   +Ljf0GfaAbs2fay2dLghPHWat9GScwODoLlxdhx0RHvk+W5PoYnLOQ/vZ
+   Azw63UfuhZEmtzCCBzRTKMTdhMvZKsiYJSSukNMHf0Pws4SIm8BfrHkt6
+   w==;
+IronPort-SDR: 97pRY4qKgCbI1m7AjL66TEzIPR6RnIaMc4KnQkX+NAHKslzuhT10TXT5by3IRIGS53y/IWT3IA
+ WTuFIG4emAUskbz0FKxoa47yTjhpKTBr3JTBNPiIfi8FLkrf4deJ6ga6fhHXKbyGPB3DN5rkOZ
+ YpRbAJax2ivFhy82kfVYwFOV5d7HqAWdAyxT538IsFWRAAhNir0mjCiUnCVn8oX3CIBl5pB2ed
+ 6mmWb930BIDdVb6+sTa+rJD/whhqy8j+Uu8SlyeC0+au3g6nB1PW2pIs51qtW/yVhfcawONZ6m
+ YSo=
+X-IronPort-AV: E=Sophos;i="5.68,302,1569254400"; 
+   d="scan'208";a="124622417"
+Received: from mail-cys01nam02lp2053.outbound.protection.outlook.com (HELO NAM02-CY1-obe.outbound.protection.outlook.com) ([104.47.37.53])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Nov 2019 17:03:15 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RUdTIWb9xAPl/p+HAxDEbMW4vsqEM4HOtblZH7Ot28EL9xWZ5escNw2y2s5LWPYVjlBvIjcQmvWQYfx1VlBdWcGby6bKGGp8uw42BbcvHTBB2OEqceMxLQTjnAbtAmY36mWo4MoU+RXq0lLdR/8iPVKp2PAg7ODFPFryPX74UnvVL4v9/ZNocak25goaZ48NlP457V2/xhMNejOEgf2DSVJRp4wZ3ba5xMPb5BUPdrbmuW4O7ohGSxWIH9UEIPMW/CrxtJUrWjcE/SzUY+4xDz/7ZGi2ie/35hIWTltyLrUUB8QgmM+2U/R8SLjlqcDxUsTCvT8y0LMkvSeMf7JGSw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=33NIS4SwadOfOHjiM1Z/DaZ3caJFEsi0VElTGTCx7pQ=;
+ b=H1jCVtEHb1AgsCVw+buXBtctknBEjR9smpydHkSeYi2sFQ3rho7Ydo+2XwbW0DIhUx2MnQknnqhj2/02ICMEspGLu+7TnkQFcDyfoEN6czCAigEXFYatZEoJuAoCUvbe2r8nE/qfjkHA3sJW+IDsWYfya2ojbeGBh4FtHfbjrsCGkZ0UjLRWiBHrnNhwndU1t5xi9aOBgkasG91AuTu7zJUefC2KLTCWYPyZF90auWtb159xNPP3YZYx3jGAUZYzpjRvkI4nyz3+hXT6RFI2xCK7jMsnK9kaFG5Oz4kXKe04Qo+nIj6xutyB4sAUAJRA1doBQiRSWuMi0sFYvIfj/Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=NbXXK6bu0dg2zI7R5KEkk9IUJJ7xkv0jNGRocMeqp54=;
-        b=oiT2RC/bejWLycuxKkNmrXLshuKJkpQ8QbbCzp5sZf7uCmkjcLVlsqufYaB76kVLEp
-         td9Wkb5yZErKpFF7Q3iWppBkvWx91gbXE5ErUKPMMEKvDqkOOuMLfcWATWNjxc0t23Sb
-         4oZXa5Bpvo0cLB8oKsz+NNEEvftslGUdU/L+4vMvvDxNyQ71XNXefomOoHPgbzVmjVa6
-         3GaKNTRCALTkfi1LWgbSLHqR+z6u3NMduZDEAj6utVvKx2rWvdFPI+4v57+4k4e3FuSC
-         /3HfVUjcY1QV4wW2t7T3XhaxkcBmzFiS2JGp83MiyMOzOiBEFqFn5RPTyuHMZSFvlWF+
-         9ZiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=NbXXK6bu0dg2zI7R5KEkk9IUJJ7xkv0jNGRocMeqp54=;
-        b=k5UNgxnoI85bEuTUZhLxGRh6eREez/Xtk44zo3ip878Tpo18+wUMjbVXmB355GpEHz
-         rxAG1PdyYqMuVGiXKnCXSVbpGGMmkQOr2jUDnJUqyR5XaqLexAHRgLmWpkni4UX2sgpM
-         uAx31b8jHP7JzD0M258ge+MdeLsP0lCbIzIHoHTLSgxDl3PEOFKdT2mgEIEdk5YuTn4l
-         vhpuH5qg66+B7mQk04yDg0GwBmO7hwC4J1gJcqE8v7mgeQfyaeUQuUrg5Q/nwKSRTyqt
-         JAneLqr9UdWE9AgmanDI9nLCCH3HqYj5FbWDzlN3mx260M2OJsPSAq+7CH6QysAMk40d
-         y/VA==
-X-Gm-Message-State: APjAAAWO5mubqH8cMNgA0afJIvnRa1K5Sy/PuoEKKJCVuzv5BajTcgIG
-        T6/a9EOgOdq4ilqhZZbYqKK4a5lrxhs2JdCspBg=
-X-Google-Smtp-Source: APXvYqwHjWoyL1J5Jrs+HHYpGKOUUX6fk2rrVcjRpaxLwOQPHCz3m1260WX/UfjMbtX9LCjy6k3m6aYtWim4Smtjre0=
-X-Received: by 2002:a02:ac0a:: with SMTP id a10mr7105329jao.53.1573721816302;
- Thu, 14 Nov 2019 00:56:56 -0800 (PST)
-MIME-Version: 1.0
-References: <1559161113902-328168114-2-diffsplit-thomas@m3y3r.de> <07841ae4-03d2-1fdd-1c32-85c55688bb2a@web.de>
-In-Reply-To: <07841ae4-03d2-1fdd-1c32-85c55688bb2a@web.de>
-From:   "Gomonovych, Vasyl" <gomonovych@gmail.com>
-Date:   Thu, 14 Nov 2019 09:56:45 +0100
-Message-ID: <CAHYXAn+hzzysj6uW6ghLDtjZ7UxEDXXzvLDW46VkJyVwBD78Lw@mail.gmail.com>
-Subject: Re: scsi: pmcraid: Use *_pool_zalloc rather than *_pool_alloc
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     Thomas Meyer <thomas@m3y3r.de>,
-        "James E. J. Bottomley" <jejb@linux.ibm.com>,
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=33NIS4SwadOfOHjiM1Z/DaZ3caJFEsi0VElTGTCx7pQ=;
+ b=XuKaWGDn20KB3OumAEA+p5ky+ulWExrlPcS9c6RjrMXb2ZM9AQpB4iaY8pjlYVMRGpaiwTep9AviFqNld34YglJ9llve2TjDU6FkJv+5L8nmdpx40MDs43yyNZc5MlKlOqd8YJwUUjSAiGE0ZxdFEdXpMM8BWt9Bb2rTd7rhYqY=
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
+ MN2PR04MB7102.namprd04.prod.outlook.com (10.186.147.75) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2430.20; Thu, 14 Nov 2019 09:03:13 +0000
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::5852:6199:7952:c2ce]) by MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::5852:6199:7952:c2ce%7]) with mapi id 15.20.2430.027; Thu, 14 Nov 2019
+ 09:03:13 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Can Guo <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        "saravanak@google.com" <saravanak@google.com>,
+        "salyzyn@google.com" <salyzyn@google.com>
+CC:     Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v4 2/7] scsi: ufs-qcom: Add reset control support for host
+ controller
+Thread-Topic: [PATCH v4 2/7] scsi: ufs-qcom: Add reset control support for
+ host controller
+Thread-Index: AQHVme4abyNW2mq0C0+96JxTUVeHeaeKX+vA
+Date:   Thu, 14 Nov 2019 09:03:13 +0000
+Message-ID: <MN2PR04MB69918A580EC558ECF3FB2748FC710@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1573627552-12615-1-git-send-email-cang@codeaurora.org>
+ <1573627552-12615-3-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1573627552-12615-3-git-send-email-cang@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 65f9a2fc-af30-4b61-b92e-08d768e17afd
+x-ms-traffictypediagnostic: MN2PR04MB7102:
+x-microsoft-antispam-prvs: <MN2PR04MB71020BED771A42CD7CBAB8C8FC710@MN2PR04MB7102.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:923;
+x-forefront-prvs: 02213C82F8
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(396003)(366004)(39860400002)(136003)(376002)(189003)(199004)(33656002)(7416002)(26005)(7696005)(305945005)(229853002)(5660300002)(81166006)(81156014)(11346002)(74316002)(54906003)(446003)(6506007)(186003)(8936002)(102836004)(8676002)(110136005)(6436002)(52536014)(76176011)(55016002)(316002)(4744005)(76116006)(25786009)(2201001)(486006)(99286004)(6246003)(86362001)(66476007)(66556008)(66946007)(66446008)(64756008)(71190400001)(71200400001)(14454004)(66066001)(9686003)(7736002)(2906002)(3846002)(6116002)(478600001)(256004)(2501003)(476003)(4326008);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB7102;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: yHA/Wwg5QM63z4ERi9/dg86MpZe2FRdL3NDwvFsiCMVXUnetQG1VpWAXMA2B4Aj6+mABhUgZK3GnlUsTeyhHdqKs/wtSHGIiGrueJ6UJ/v0WruOeQFN8CHBGibLObk7IwQZyAmP1UAekzN99oJea2P6df82n8b6ReKjax2Lk6LGlWwACDTpBvGk4PSYLkNPjO/5x0citRoa7Q3Ba/VZXyW/Tvj8ivFPNMgXkqUlTM3OXQ8MZdqz6ovpf7cfOEJStIGGE/KgT4IJpxxXnNugAP81vcBrK09FKvu3vC0hLQLWIYneaKlTLRFfG9MnXyGAtrvAv/ywT7R/MlXOo607piTSJDc7csEypk/DpwkAo5FivsFe53RoIv5rXr7PqBpeJTzenh/Xc+utS5OkclTZQte8Ke/h23wPK2tLLGIOQzGWCJh0f5qJOND41y1Ma9T4H
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 65f9a2fc-af30-4b61-b92e-08d768e17afd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2019 09:03:13.5278
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: XcBJs8IkamHnYiOZLNwLnWhnjff0P4JsdN63AVcKfDVfM441ghZIU6HbeRpGgaS+5f9I/gfnyWRAX856vUzhnw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB7102
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -72,26 +131,35 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi,
 
-Yes, maybe you are right better to use the full name, sorry.
+>=20
+>=20
+> Add reset control for host controller so that host controller can be rese=
+t as
+> required in its power up sequence.
+>=20
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> +       ret =3D reset_control_assert(host->core_reset);
+> +       if (ret) {
+> +               dev_err(hba->dev, "%s: core_reset assert failed, err =3D =
+%d\n",
+> +                                __func__, ret);
+> +               goto out;
+> +       }
+> +
+> +       /*
+> +        * The hardware requirement for delay between assert/deassert
+> +        * is at least 3-4 sleep clock (32.7KHz) cycles, which comes to
+> +        * ~125us (4/32768). To be on the safe side add 200us delay.
+> +        */
+> +       usleep_range(200, 210);
+Aren't you sleeping anyway in your reset_control_ops?
 
-Regards Vasyl
-
-On Sun, Nov 3, 2019 at 5:05 PM Markus Elfring <Markus.Elfring@web.de> wrote=
-:
->
-> > Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0.
->
-> Do you find a commit message nicer from a similar change suggestion?
-> scsi: pmcraid: Use dma_pool_zalloc rather than dma_pool_alloc
-> https://lore.kernel.org/linux-scsi/20190718181051.22882-1-gomonovych@gmai=
-l.com/
-> https://lore.kernel.org/patchwork/patch/1102040/
->
-> Regards,
-> Markus
-
-
-
---=20
-=D0=94=D0=BE=D0=B1=D1=80=D0=BE=D1=97 =D0=B2=D0=B0=D0=BC =D0=BF=D0=BE=D1=80=
-=D0=B8 =D0=B4=D0=BD=D1=8F.
+> +
+> +       ret =3D reset_control_deassert(host->core_reset);
+> +       if (ret)
+> +               dev_err(hba->dev, "%s: core_reset deassert failed, err =
+=3D %d\n",
+> +                                __func__, ret);
+> +
+> +       usleep_range(1000, 1100);
+ditto
