@@ -2,151 +2,127 @@ Return-Path: <SRS0=ICpX=ZG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 701ECC432C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 01:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3127BC432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 01:25:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E354206EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 01:18:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E5FD206F0
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 01:25:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BwgecA2I";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VFhyJjum"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="br2Yj3TW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726590AbfKNBSU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 20:18:20 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:37136 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726098AbfKNBST (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 20:18:19 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6F74260D85; Thu, 14 Nov 2019 01:18:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573694298;
-        bh=u5vRIXV5qHvRwmoVSfcZHp7ushgdb7aZN/PjAN8IygQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=BwgecA2IyMHTv/JlRDzVRZS+QD32i5hOe0I9ZVBgB93DUPwt9SqHdVqdEWmXQTOvA
-         axTUhsHksXCBVQbFgMTD0QrIZQcJwiVwkdd0MJ0esIfaAJDFfg6zD6ccFhQPUye7Tm
-         W7QdONdCd713u62SpPMtyKkUOrrOVcpUw2p6xn/8=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 30954602F7;
-        Thu, 14 Nov 2019 01:18:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573694296;
-        bh=u5vRIXV5qHvRwmoVSfcZHp7ushgdb7aZN/PjAN8IygQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=VFhyJjum3Ca3bmZFsw62G/rOUVPPRD69EbvSn7E2tfKfAZ33ShEmdwq4WVzBL48FC
-         NXbEuEJz/QHoeSgydsll0HCyiNTZxCNgh40qFnGOoku91MIlFj9ODyzTR9aISMoigD
-         xfJEqqiTyajCCB4TMUx/wCrY/mcIjrDY+34O1IRA=
+        id S1726598AbfKNBZv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 20:25:51 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:52994 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726491AbfKNBZv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 20:25:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573694750;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UjLqkHC9zEQ7RiYwDDBRYIh2FKBXiYCbPENb820XiLU=;
+        b=br2Yj3TW1r1dR+oqGJYa4UKWsgXTgZHuvZeATwQ6W1OSIefV9L+HRuCBKVLWEKcqk45R89
+        X0SoCd3EzX4rG9Kpwt8tnb7dlnPACwHjNPOpZPz8E/xmuFnvjPuZj0mRq6jiOGqc/qyDzU
+        d04ztws+UjoOhfjA2bO+JCG2PnQznZI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-421-4VpFMu1YNYuVp0C7Gak01Q-1; Wed, 13 Nov 2019 20:25:49 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B82141802CE0;
+        Thu, 14 Nov 2019 01:25:46 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-18.pek2.redhat.com [10.72.8.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E1CC61036C69;
+        Thu, 14 Nov 2019 01:25:36 +0000 (UTC)
+Date:   Thu, 14 Nov 2019 09:25:32 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     kernel test robot <oliver.sang@intel.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Laurence Oberman <loberman@redhat.com>,
+        Bart Van Assche <bart.vanassche@wdc.com>, lkp@lists.01.org
+Subject: Re: [scsi] 74eb6c22dc: suspend_stress.fail
+Message-ID: <20191114012532.GA14190@ming.t460p>
+References: <20191104085021.GF13369@xsang-OptiPlex-9020>
+ <824c5a0b-a31a-b0a2-b14a-ab6edd294d07@acm.org>
+ <20191105061150.GA17084@ming.t460p>
+ <cb814a0c-c636-e9f4-654a-3f21bd0db646@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 14 Nov 2019 09:18:16 +0800
-From:   cang@codeaurora.org
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        Can Guo <cang@codeaurora.org>
-Subject: Re: [EXT] [PATCH v1 5/5] scsi: ufs: Complete pending requests in host
- reset and restore path
-In-Reply-To: <0dc202a1decb6bbc103253b8c3c8c8ce@codeaurora.org>
-References: <1573200932-384-1-git-send-email-cang@codeaurora.org>
- <1573200932-384-6-git-send-email-cang@codeaurora.org>
- <BN7PR08MB56849EEE83414549F4787BCEDB760@BN7PR08MB5684.namprd08.prod.outlook.com>
- <0dc202a1decb6bbc103253b8c3c8c8ce@codeaurora.org>
-Message-ID: <760d101a874e934f205701d282b3cc6f@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+In-Reply-To: <cb814a0c-c636-e9f4-654a-3f21bd0db646@acm.org>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: 4VpFMu1YNYuVp0C7Gak01Q-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-14 09:03, cang@codeaurora.org wrote:
-> On 2019-11-14 06:04, Bean Huo (beanhuo) wrote:
->>> 
->>> In UFS host reset and restore path, before probe, we stop and start 
->>> the host
->>> controller once. After host controller is stopped, the pending 
->>> requests, if any,
->>> are cleared from the doorbell, but no completion IRQ would be raised 
->>> due to the
->>> hba is stopped.
->>> These pending requests shall be completed along with the first 
->>> NOP_OUT
->>> command(as it is the first command which can raise a transfer 
->>> completion
->>> IRQ) sent during probe.
->> 
->> Hi, Can
->> I am not sure for this point, because there is HW/SW device reset
->> before or after host reset/restore.
->> Device HW/SW reset also will clear the pended tasks in device side.
->> That will be better.
->> I think Qcom platform already enabled HW reset.
->> 
->> //Bean
->> 
-> 
-> Hi Bean,
-> 
-> By pending tasks here, it means the requests sent down from scsi/block 
-> layer,
-> but have not yet been handled by ufs driver(cmd->scsi_done() have not
-> been called yet for these requests).
-> For these requests, although removed by host and UFS device in their
-> HW queues(doorbell),
-> UFS driver still needs to complete them from SW side(call
-> cmd->scsi_done() for each one of them) to
-> let upper layer know that they are finished(although not successfully)
-> to avoid hitting
-> timeout of these pending tasks. I hope I make my explanation clearly.
-> 
-> Best Regards,
-> Can Guo.
-> 
+On Wed, Nov 13, 2019 at 09:00:29AM -0800, Bart Van Assche wrote:
+> On 11/4/19 10:11 PM, Ming Lei wrote:
+> > On Mon, Nov 04, 2019 at 07:52:59PM -0800, Bart Van Assche wrote:
+> > > On 2019-11-04 00:50, kernel test robot wrote:
+> > > > FYI, we noticed the following commit (built with gcc-7):
+> > > >=20
+> > > > commit: 74eb6c22dc70e395b333c9ca579855cd88db8845 ("[RFC PATCH V3 2/=
+2] scsi: core: don't limit per-LUN queue depth for SSD")
+> > > > url: https://github.com/0day-ci/linux/commits/Ming-Lei/scsi-core-av=
+oid-host-wide-host_busy-counter-for-scsi_mq/20191009-015827
+> > > > base: https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git fo=
+r-next
+> > > >=20
+> > > > in testcase: suspend_stress
+> > > > with following parameters:
+> > > >=20
+> > > > =09mode: freeze
+> > > > =09iterations: 10
+> > >=20
+> > > Hi Ming,
+> > >=20
+> > > This is the second report by the build robot that this patch causes t=
+he
+> > > suspend_stress test to fail. I assume that that means that that test
+> > > failure is not a coincidence. The previous report (Oct-22) is availab=
+le
+> > > at https://lore.kernel.org/linux-scsi/20191023003027.GD12647@shao2-de=
+bian/.
+> >=20
+> > Yeah, it should be one real issue, and there are other issues too. I wi=
+ll work
+> > out a new version for addressing all.
+>=20
+> Hi Ming,
+>=20
+> Have you already made any progress? I'm asking because the v5.5 merge win=
+dow
+> is expected to open soon (this weekend).
 
-Hi Bean,
+Hi Bart,
 
-Just want to add up more phrases. We do have HW/SW reset.
-Sorry about below lines which make you confused. Here I am just 
-describing what
-is like with previous code. Since these pending requests does not have
-a chance to be handled in their IRQ handler after hba is stopped, and as
-they have been cleared from doorbell already, then once there is an 
-available
-transfer completion IRQ, these requests will be handled in the IRQ 
-handler,
-no matter what is the transfer completion IRQ fired for. And NOP_OUT is 
-just
-the first command that can fire a transer completion IRQ.
+I am busy on other things, and may not have time to look at this issue
+for v5.5.
 
-Can Guo.
+If you have idea for making the patch into mergeable, please go ahead.
 
-These pending requests shall be completed along with the first NOP_OUT
-command(as it is the first command which can raise a transfer completion
-IRQ) sent during probe.
 
->>> Since the OCSs of these pending requests are not SUCCESS(because they 
->>> are not
->>> yet literally finished), their UPIUs shall be dumped. When there are 
->>> multiple
->>> pending requests, the UPIU dump can be overwhelming and may lead to 
->>> stability
->>> issues because it is in atomic context.
->>> Therefore, before probe, complete these pending requests right after 
->>> host
->>> controller is stopped.
+thanks,
+Ming
+
