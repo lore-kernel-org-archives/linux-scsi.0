@@ -2,113 +2,164 @@ Return-Path: <SRS0=ICpX=ZG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50AEDC432C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 02:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5221FC432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 04:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77DDC206F3
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 02:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30A3B206EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 04:42:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ocSs8KGS";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="LhptA+iA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726949AbfKNCen (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Nov 2019 21:34:43 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:34363 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726120AbfKNCen (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Nov 2019 21:34:43 -0500
-Received: by mail-pg1-f195.google.com with SMTP id z188so2686218pgb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Nov 2019 18:34:43 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=ZC4F8egCW2FV2YNCMmqpMWetyObVa72yR/mLPhLXY8A=;
-        b=axSDjSw4imIj6pBt3oBxWJZvhbSGYmJXEdbhywCaNUOXdwzEwsr0ItnMDAoXaR5sOF
-         +riRUq4hP7UuZn5wNJZmMsrihmOrmANlS1yH1Ciw8JVhJeMasLCplg8hNUpAvlO5zH3+
-         Qpvm/44DGc7j6UG11wlcOzwjLYnpa4AUF8Mz9w4b6iojztRB8uvYC93J/Ilv4bzmDhEr
-         wUAoxEhyjEm6jvhC5IUniAJ2kDSlvpWfgEmuUqr9wY80dvD5c9xu2DKdOkZpCf2LF1bg
-         OaE6b25TcD+gxbPufuhxhZbd886ZqyYbo9yZXqJJBbI3juCrVLuRVBeOvHEVtO1Dp/Te
-         jj6w==
-X-Gm-Message-State: APjAAAWtdBnQPazS4ZtGE2Ba+bi959DIs8E1CDej9ny9mu0Cxjd1eCzW
-        /6xq6uHJiEawvPEyx4fJLls=
-X-Google-Smtp-Source: APXvYqwJLH9U6WI3ExRkFh7oI7aDg+bBSPQyLLLZydIBvp0HBLiFVwo6TAHuHaykvFyvDwwlBRqIpg==
-X-Received: by 2002:a62:83ca:: with SMTP id h193mr8068819pfe.218.1573698882621;
-        Wed, 13 Nov 2019 18:34:42 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:a8:cb7:5e35:ff76:162c? ([2601:647:4000:a8:cb7:5e35:ff76:162c])
-        by smtp.gmail.com with ESMTPSA id q8sm3844750pgg.15.2019.11.13.18.34.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Nov 2019 18:34:41 -0800 (PST)
-Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
-To:     Himanshu Madhani <hmadhani@marvell.com>
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Quinn Tran <qutran@marvell.com>
-References: <20191109042135.12125-1-bvanassche@acm.org>
- <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
- <32187dd9-f222-fbed-cc93-1c6abca6e06c@acm.org>
- <19433666-FCA3-4340-8A81-707F85B87F02@marvell.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <1dac96c3-54d5-11bf-292b-c25a62a3c919@acm.org>
-Date:   Wed, 13 Nov 2019 18:34:40 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
-MIME-Version: 1.0
-In-Reply-To: <19433666-FCA3-4340-8A81-707F85B87F02@marvell.com>
-Content-Type: text/plain; charset=utf-8
+        id S1726557AbfKNEmq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Nov 2019 23:42:46 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:19530 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726521AbfKNEmq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Nov 2019 23:42:46 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAE4em35021160;
+        Wed, 13 Nov 2019 20:42:35 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=Ge7k4OSblBjU2JhwE4iFeI1STTIDyks3Tjf9AV2lZAU=;
+ b=ocSs8KGSpWCFtqfu6DcR45ppV5ppZSsPUkTu9GZOVtcri14JRVindnfyBP3jXq3syE6Z
+ kCjYvLAaUj97/5A4f+532wtb+rSQVA3t2Fk424LXt/3iTEsGUCdJ/BqkJA4cCtJgx51U
+ xgIZrr3kaYToot6K/2tt55zuodf3rquqC+NBypf1WIG9vV7wUObbM3NkW93/JkwCRghX
+ wgLU5gwqdYHofG6lLzsiNw04kQ7vccP5yMR3SUVqVkPwvkS4RXhjRCqjlyeMwfpBlgPp
+ c/Imo9K1pVDVSQENx3IY1g8zrbKwzbzMWk30LgZ/KycbSnonzrf5dzGMG8ktSHg1NDQZ NA== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2w8wwg0gdt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 13 Nov 2019 20:42:35 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 13 Nov
+ 2019 20:42:34 -0800
+Received: from NAM05-CO1-obe.outbound.protection.outlook.com (104.47.48.53) by
+ SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Wed, 13 Nov 2019 20:42:34 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kg1HIzvMIP8LAitJfGIB5EIP19tHmB+qMi7Roh/vUeoN+pIlK7JWzq5bmnc2xj0iA9jaKyJEPrDwV1us9aUMKmFCfYm/Z3ECLRTMxsGYpBCvbemmDHvLigOhySzdjvHdkymHDmStdlAzx7BooiRqM3MshhaBmFy4ea99r7ezBT1H/yibJSob+FfvboXMNSE8gCgB3WteIsm74t4lOE9RN3RQNbzl/EYtnToCO1hV+ky92CSUdDHTMNfr+wnU6f/droHIRrFcNeq+MgSAbki06+lzCvoocKm6sNyu8OVCb/d5H2x2XZKh7W43f/+jrHDLLYRXgir99uJyPZcHOR1pdw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ge7k4OSblBjU2JhwE4iFeI1STTIDyks3Tjf9AV2lZAU=;
+ b=a1Ru35/2RaTkvnYxG/zMjulAJ4z2QR6aEoNMID27vrEW1viYOObWZa/h1y2fp6UcYa+8BMPrN9Z84CtDIPlIypGutlExTSAs76S4j0OautQmJqFWT8TRj3Sequ3CKBlY7a8A6liLXSi9OzBljrwsfTQc1s2YlntnQtFhp9h9IqdL3FB7z05P4Mef6BI8sJ2WLzYoUqUObUiOagKtRjAmgU9X7GX2aJQBRApjcA2bgGqPH8PyJGaxjwXXHeVKPd8ySpBsypGiVQYvZ2EmIFHDgmgdwoFzWTr1X7Rk/JFZRGGVcMl0vh72+yrBTBIbmJNg0vVGBXd4taOx9Ccvw676wQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ge7k4OSblBjU2JhwE4iFeI1STTIDyks3Tjf9AV2lZAU=;
+ b=LhptA+iAA+hxIdNx6fSjClu33IXZLsQqe2vOzYPM1Mo7pbiikj25rmGd3qtpFAv7O1lYB/7NBimQS6NFibPXvj5qrmt1vLcVJSEtERnUnUJuWjQDxUEBo2M+0R22FXhB/BBFwMHAVAWinzCmLaMA5dg2kTV7cut3k3qcHdMAvEE=
+Received: from MN2PR18MB3022.namprd18.prod.outlook.com (20.179.81.79) by
+ MN2PR18MB2384.namprd18.prod.outlook.com (20.179.80.150) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2430.20; Thu, 14 Nov 2019 04:42:33 +0000
+Received: from MN2PR18MB3022.namprd18.prod.outlook.com
+ ([fe80::50f5:6e56:bb7a:c6a5]) by MN2PR18MB3022.namprd18.prod.outlook.com
+ ([fe80::50f5:6e56:bb7a:c6a5%6]) with mapi id 15.20.2430.027; Thu, 14 Nov 2019
+ 04:42:33 +0000
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     Pan Bian <bianpan2016@163.com>,
+        "QLogic-Storage-Upstream@qlogic.com" 
+        <QLogic-Storage-Upstream@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] SCSI: qla4xxx: fix double free bug
+Thread-Topic: [PATCH] SCSI: qla4xxx: fix double free bug
+Thread-Index: AQHVk704LzvZr/hpFk+MexrJVSr6K6eKJC9Q
+Date:   Thu, 14 Nov 2019 04:42:33 +0000
+Message-ID: <MN2PR18MB302207CEA407EB6C5E8C2A05D8710@MN2PR18MB3022.namprd18.prod.outlook.com>
+References: <1572945927-27796-1-git-send-email-bianpan2016@163.com>
+In-Reply-To: <1572945927-27796-1-git-send-email-bianpan2016@163.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [114.143.185.87]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 5e1001c0-d25f-491b-3318-08d768bd10b5
+x-ms-traffictypediagnostic: MN2PR18MB2384:
+x-microsoft-antispam-prvs: <MN2PR18MB2384842E806B970F09788E10D8710@MN2PR18MB2384.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4502;
+x-forefront-prvs: 02213C82F8
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(346002)(39860400002)(366004)(396003)(376002)(136003)(13464003)(199004)(189003)(81166006)(102836004)(76176011)(11346002)(6506007)(71190400001)(3846002)(476003)(33656002)(486006)(53546011)(99286004)(446003)(2906002)(7736002)(26005)(2501003)(66066001)(25786009)(74316002)(305945005)(86362001)(6436002)(6116002)(4326008)(66476007)(66556008)(64756008)(14454004)(316002)(478600001)(14444005)(8936002)(8676002)(186003)(71200400001)(66446008)(9686003)(54906003)(66946007)(229853002)(5660300002)(76116006)(52536014)(110136005)(256004)(81156014)(7696005)(55016002)(6246003)(32563001);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2384;H:MN2PR18MB3022.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: CJLTqcOtB1gUx9/GGpwUHbzOkjW215sy3WLbwhQHKccPdAAxz2XunmorrdZu/qdEEvWhhZM/0I9HyVplKpFpDZbjC9HnbMNP0lYCcdsjiXqK75p5StQfvtMqegTn6wnHUOQygHrIpVnl8+4r287pjK59LkpIHZPcckMHFdn6PpvY0CO23XG++sJytz0imboCmOK9JP1QD7z0EQBEDk7OdZxpISgj9xnlhI/4fjBIRItr5YNrtPA417IemeZ1vEZKEBwoOsZVK6pB4aVlER31fH8fzziTVaTVtl9JRDMIcFUpSn9kJzjQq9R3OP5GoiwbS1EezV1NukCKu0+ZPfWQlDeqYSA9VLwqazN7KDyltjQVVyH0g0wkHaMPBmH2KdskUjD/Y5HpnUghF+MGLZvT6sfIiradNmiIZYtRWdbz8QOMi6cs+17WnlEz5p1XSSNi
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5e1001c0-d25f-491b-3318-08d768bd10b5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2019 04:42:33.3683
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: L6MmX6uk3dbwCZYt2K2evuaZON3iXxQcz9onjhiR8vHEIsPpzZV7bDZJtRTsqBSn/BYRKzQFUYgwdMflYPRuSg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2384
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-11-13_06:2019-11-13,2019-11-13 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-13 07:29, Himanshu Madhani wrote:
-> On Nov 11, 2019, at 8:48 PM, Bart Van Assche <bvanassche@acm.org> wrote:
->> Himanshu, can you tell us which adapters and/or firmware versions need
->> which version of the above code?
-> 
-> All adapters with FW v4.4 will behave same. If you are running into issue with P2P connection,
-> it might be something different than specific to this code change. Original code in the driver was not
-> following firmware spec. This code is now used in initiator mode as well due to introduction of
-> FC-NVMe handling in the driver.  Also, can you tell me what version of firmware you have on your 
-> remote port.
 
-Hi Himanshu,
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org <linux-scsi-
+> owner@vger.kernel.org> On Behalf Of Pan Bian
+> Sent: Tuesday, November 5, 2019 2:55 PM
+> To: QLogic-Storage-Upstream@qlogic.com; James E.J. Bottomley
+> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Pan Bian
+> <bianpan2016@163.com>
+> Subject: [PATCH] SCSI: qla4xxx: fix double free bug
+>=20
+> The variable init_fw_cb is released twice, resulting in a double free bug=
+. The
+> call to the function dma_free_coherent() before goto is removed to get ri=
+d
+> of potential double free.
+>=20
+> Fixes: 2a49a78ed3c ("[SCSI] qla4xxx: added IPv6 support.")
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> ---
+>  drivers/scsi/qla4xxx/ql4_mbx.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mb=
+x.c
+> index dac9a7013208..02636b4785c5 100644
+> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+> @@ -640,9 +640,6 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host *
+> ha)
+>=20
+>  	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0],
+> init_fw_cb_dma) !=3D
+>  	    QLA_SUCCESS) {
+> -		dma_free_coherent(&ha->pdev->dev,
+> -				  sizeof(struct addr_ctrl_blk),
+> -				  init_fw_cb, init_fw_cb_dma);
+>  		goto exit_init_fw_cb;
+>  	}
 
-My test was run on a setup with a single QLE2562 adapter with both FC
-ports connected directly to each other. The kernel driver identifies
-that adapter as follows: ISP2532: PCIe (5.0GT/s x8) @ 0000:00:0a.0 hdma+
-host#=12 fw=8.07.00 (90d5). Please let me know if you need more information.
+Thanks
 
-Thanks,
-
-Bart.
-
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
