@@ -2,182 +2,191 @@ Return-Path: <SRS0=2nLx=ZH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9815C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 01:33:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA69C43141
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 02:09:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78E7F20723
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 01:33:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MOPBtNtj";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TSccu8B1"
+	by mail.kernel.org (Postfix) with ESMTP id 90796206F4
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 02:09:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727374AbfKOBdZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Nov 2019 20:33:25 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:39220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727323AbfKOBdY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 20:33:24 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 3900961067; Fri, 15 Nov 2019 01:33:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573781604;
-        bh=VTBzwwJodLYvkUFlF5wil68XysauCwqW0WsHUJpxbKM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=MOPBtNtjoP1TlyKvikj8jIMxAwLTij7v4JnLqyR0vG1hUlAGhirMKmHErtU+ad8aC
-         Msi4yb6ULOHwJfGSzc4ewOn10tKTPDmma1Zr+f9qe7R2VfNMl7sqXEJcRrpsfv0Snb
-         qCYyIX3i+UFxGiiIkp8SB+CCvDC/0ulSikjIdmvk=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id ED7F660A37;
-        Fri, 15 Nov 2019 01:33:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573781603;
-        bh=VTBzwwJodLYvkUFlF5wil68XysauCwqW0WsHUJpxbKM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=TSccu8B15kPEbE0ljTxC+PMD9UjwyawQdv7yUHUePL6kbh5aZdh/QE8rSWcqB22zt
-         rhFWQszFVdqhiP8V4rBC6pDI5V/6K8lLR39JcqICLP0UVhErBcmkPotfV33eBxFkEK
-         oHVN6ge7/wNg7zl4GPsvhOhRfntC9EW42ffx2h/w=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Fri, 15 Nov 2019 09:33:22 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1727257AbfKOCJq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Nov 2019 21:09:46 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:34742 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727020AbfKOCJp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 21:09:45 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 709662A6F6;
+        Thu, 14 Nov 2019 21:09:42 -0500 (EST)
+Date:   Fri, 15 Nov 2019 13:09:37 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Kars de Jong <jongk@linux-m68k.org>
+cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 7/7] scsi: ufs: Fix error handing during hibern8 enter
-In-Reply-To: <MN2PR04MB699130F410CDE9BFB5815CC0FC710@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1573627552-12615-1-git-send-email-cang@codeaurora.org>
- <1573627552-12615-8-git-send-email-cang@codeaurora.org>
- <MN2PR04MB699130F410CDE9BFB5815CC0FC710@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <258c6c088cafb4c0b89e8e9439cfa06e@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
+        linux-m68k@vger.kernel.org, schmitzmic@gmail.com
+Subject: Re: [PATCH v3 2/2] esp_scsi: Add support for FSC chip
+In-Reply-To: <20191114222518.2441-3-jongk@linux-m68k.org>
+Message-ID: <alpine.LNX.2.21.1.1911151212001.9@nippy.intranet>
+References: <20191114215956.21767-1-jongk@linux-m68k.org> <20191114222518.2441-1-jongk@linux-m68k.org> <20191114222518.2441-3-jongk@linux-m68k.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-14 19:06, Avri Altman wrote:
->> 
->> 
->> From: Subhash Jadavani <subhashj@codeaurora.org>
->> 
->> During clock gating (ufshcd_gate_work()), we first put the link 
->> hibern8 by
->> calling ufshcd_uic_hibern8_enter() and if ufshcd_uic_hibern8_enter() 
->> returns
->> success (0) then we gate all the clocks.
->> Now let’s zoom in to what ufshcd_uic_hibern8_enter() does internally:
->> It calls __ufshcd_uic_hibern8_enter() which on detecting the 
->> LINERESET,
->> initiates the full recovery and puts the link back to highest HS gear 
->> and returns
->> success (0) to ufshcd_uic_hibern8_enter() which is the issue as link 
->> is still in
->> active state due to recovery!
->> Now ufshcd_uic_hibern8_enter() returns success to ufshcd_gate_work() 
->> and
->> hence it goes ahead with gating the UFS clock while link is still in 
->> active state
->> hence I believe controller would raise UIC error interrupts. But when 
->> we service
->> the interrupt, clocks might have already been disabled!
->> 
->> This change fixes for this by returning failure from
->> __ufshcd_uic_hibern8_enter() if recovery succeeds as link is still not 
->> in hibern8,
->> upon receiving the error ufshcd_hibern8_enter() would initiate retry 
->> to put the
->> link state back into hibern8.
->> 
->> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 19 ++++++++++++++-----
->>  1 file changed, 14 insertions(+), 5 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c 
->> index
->> 7a5a904..934c27a 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -3891,15 +3891,24 @@ static int __ufshcd_uic_hibern8_enter(struct
->> ufs_hba *hba)
->>                              ktime_to_us(ktime_sub(ktime_get(), 
->> start)), ret);
->> 
->>         if (ret) {
->> +               int err;
->> +
->>                 dev_err(hba->dev, "%s: hibern8 enter failed. ret = 
->> %d\n",
->>                         __func__, ret);
->> 
->>                 /*
->> -                * If link recovery fails then return error so that 
->> caller
->> -                * don't retry the hibern8 enter again.
->> +                * If link recovery fails then return error code 
->> (-ENOLINK)
->> +                * returned ufshcd_link_recovery().
->> +                * If link recovery succeeds then return -EAGAIN to 
->> attempt
->> +                * hibern8 enter retry again.
-> You no longer returning -ENOLINK, and either way retrying, regardless
-> of the error code.
-> Better check that the commit log is still telling the correct story,
-> taking into consideration all those recent fixes and all.
+
+On Thu, 14 Nov 2019, Kars de Jong wrote:
+
+> The FSC (NCR53CF9x-2 / SYM53CF9x-2) has a different family code than QLogic
+> or Emulex parts. This caused it to be detected as a FAS100A.
 > 
+> Unforunately, this meant the configuration of the CONFIG3 register was
+> incorrect. This causes data transfer issues with FAST-SCSI targets.
+> 
+> The FSC also has the CONFIG4 register. It can be used to enable a feature
+> called Active Negation which should always be enabled according to the data
+> manual.
+> 
+> Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
 
-Thanks for pointing this.
+Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
 
-Best Regards,
-Can Guo.
+A few observations follow. Not a NAK, just FYI...
 
->>                  */
->> -               if (ufshcd_link_recovery(hba))
->> -                       ret = -ENOLINK;
->> +               err = ufshcd_link_recovery(hba);
->> +               if (err) {
->> +                       dev_err(hba->dev, "%s: link recovery failed", 
->> __func__);
->> +                       ret = err;
->> +               } else {
->> +                       ret = -EAGAIN;
->> +               }
->>         } else
->>                 ufshcd_vops_hibern8_notify(hba, 
->> UIC_CMD_DME_HIBER_ENTER,
->>                                                                 
->> POST_CHANGE); @@ -3913,7 +3922,7 @@
->> static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
->> 
->>         for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; 
->> retries--) {
->>                 ret = __ufshcd_uic_hibern8_enter(hba);
->> -               if (!ret || ret == -ENOLINK)
->> +               if (!ret)
->>                         goto out;
->>         }
->>  out:
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
->> a Linux Foundation Collaborative Project
+> ---
+>  drivers/scsi/esp_scsi.c | 19 ++++++++++++-------
+>  drivers/scsi/esp_scsi.h | 24 ++++++++++++++++--------
+>  2 files changed, 28 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 4fc3eee3138b..e887ea3e514a 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -243,7 +243,7 @@ static void esp_set_all_config3(struct esp *esp, u8 val)
+>  /* Reset the ESP chip, _not_ the SCSI bus. */
+>  static void esp_reset_esp(struct esp *esp)
+>  {
+> -	u8 family_code, version;
+> +	u8 family_code;
+>  
+
+This is not the best scope for this variable. You have to touch both lines 
+(declaration and initialization) anyway, so you can easily improve this.
+
+>  	/* Now reset the ESP chip */
+>  	scsi_esp_cmd(esp, ESP_CMD_RC);
+> @@ -257,13 +257,16 @@ static void esp_reset_esp(struct esp *esp)
+>  	 */
+>  	esp->max_period = ((35 * esp->ccycle) / 1000);
+>  	if (esp->rev == FAST) {
+> -		version = esp_read8(ESP_UID);
+> -		family_code = (version & 0xf8) >> 3;
+> -		if (family_code == 0x02)
+> +		family_code = ESP_FAMILY(esp_read8(ESP_UID));
+> +		if (family_code == ESP_UID_F236)
+>  			esp->rev = FAS236;
+> -		else if (family_code == 0x0a)
+> +		else if (family_code == ESP_UID_HME)
+>  			esp->rev = FASHME; /* Version is usually '5'. */
+> -		else
+> +		else if (family_code == ESP_UID_FSC) {
+> +			esp->rev = FSC;
+> +			/* Enable Active Negation */
+> +			esp_write8(ESP_CONFIG4_RADE, ESP_CFG4);
+> +		} else
+>  			esp->rev = FAS100A;
+>  		esp->min_period = ((4 * esp->ccycle) / 1000);
+>  	} else {
+> @@ -308,7 +311,8 @@ static void esp_reset_esp(struct esp *esp)
+>  
+>  	case FAS236:
+>  	case PCSCSI:
+> -		/* Fast 236, AM53c974 or HME */
+> +	case FSC:
+> +		/* Fast 236, AM53c974, FSC or HME */
+
+This comment merely re-states the logic in the case labels. If you don't 
+delete the comment, it has to be maintained along with the case labels. 
+Consequently this patch is longer than it needs to be.
+
+>  		esp_write8(esp->config2, ESP_CFG2);
+>  		if (esp->rev == FASHME) {
+>  			u8 cfg3 = esp->target[0].esp_config3;
+> @@ -2374,6 +2378,7 @@ static const char *esp_chip_names[] = {
+>  	"ESP236",
+>  	"FAS236",
+>  	"AM53C974",
+> +	"FSC",
+>  	"FAS100A",
+>  	"FAST",
+>  	"FASHME",
+> diff --git a/drivers/scsi/esp_scsi.h b/drivers/scsi/esp_scsi.h
+> index f764d64e1f25..a673dec1b8a1 100644
+> --- a/drivers/scsi/esp_scsi.h
+> +++ b/drivers/scsi/esp_scsi.h
+> @@ -78,12 +78,14 @@
+>  #define ESP_CONFIG3_IMS       0x80     /* ID msg chk'ng        (esp/fas236)  */
+>  #define ESP_CONFIG3_OBPUSH    0x80     /* Push odd-byte to dma (hme)         */
+>  
+> -/* ESP config register 4 read-write, found only on am53c974 chips */
+> -#define ESP_CONFIG4_RADE      0x04     /* Active negation */
+> -#define ESP_CONFIG4_RAE       0x08     /* Active negation on REQ and ACK */
+> -#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature */
+> -#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0 */
+> -#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1 */
+> +/* ESP config register 4 read-write, found on am53c974 and FSC chips */
+> +#define ESP_CONFIG4_BBTE      0x01     /* Back-to-back transfers     (fsc)   */
+> +#define ESP_CONGIG4_TEST      0x02     /* Transfer counter test mode (fsc)   */
+> +#define ESP_CONFIG4_RADE      0x04     /* Active negation   (am53c974/fsc)   */
+> +#define ESP_CONFIG4_RAE       0x08     /* Act. negation REQ/ACK (am53c974)   */
+> +#define ESP_CONFIG4_PWD       0x20     /* Reduced power feature (am53c974)   */
+> +#define ESP_CONFIG4_GE0       0x40     /* Glitch eater bit 0    (am53c974)   */
+> +#define ESP_CONFIG4_GE1       0x80     /* Glitch eater bit 1    (am53c974)   */
+>  
+
+You've added "(FSC)" and "(am53c974)" here, which is fine but you've 
+repeated yourself in the comment, "found on am53c974 and FSC chips". The 
+DRY principle applies here too (Don't Repeat Yourself).
+
+>  #define ESP_CONFIG_GE_12NS    (0)
+>  #define ESP_CONFIG_GE_25NS    (ESP_CONFIG_GE1)
+> @@ -209,10 +211,15 @@
+>  #define ESP_TEST_TS           0x04     /* Tristate test mode */
+>  
+>  /* ESP unique ID register read-only, found on fas236+fas100a only */
+> +#define ESP_UID_FAM           0xf8     /* ESP family bitmask */
+> +
+> +#define ESP_FAMILY(uid) (((uid) & ESP_UID_FAM) >> 3)
+> +
+> +/* Values for the ESP family bits */
+>  #define ESP_UID_F100A         0x00     /* ESP FAS100A  */
+>  #define ESP_UID_F236          0x02     /* ESP FAS236   */
+> -#define ESP_UID_REV           0x07     /* ESP revision */
+> -#define ESP_UID_FAM           0xf8     /* ESP family   */
+> +#define ESP_UID_HME           0x0a     /* FAS HME      */
+> +#define ESP_UID_FSC           0x14     /* NCR/Symbios Logic FSC */
+>  
+>  /* ESP fifo flags register read-only */
+>  /* Note that the following implies a 16 byte FIFO on the ESP. */
+> @@ -264,6 +271,7 @@ enum esp_rev {
+>  	ESP236,
+>  	FAS236,
+>  	PCSCSI,  /* AM53c974 */
+> +	FSC,     /* NCR/Symbios Logic FSC */
+
+Is there a difference between "FSC" and "NCR/Symbios Logic FSC"? The 
+reader has to infer that not all "FSC" chips are equivalent and that the 
+brand name is significant. Whereas, there is real value in putting a part 
+code here (as in the line above).
+
+-- 
+
+>  	FAS100A,
+>  	FAST,
+>  	FASHME,
+> 
