@@ -2,134 +2,160 @@ Return-Path: <SRS0=2nLx=ZH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57556C43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 10:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1ECFC432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 10:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3852C20740
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 10:29:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4D5120748
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 10:46:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727347AbfKOK3c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 05:29:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:39252 "EHLO mx1.suse.de"
+        id S1727399AbfKOKq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 05:46:58 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2102 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727122AbfKOK3b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Nov 2019 05:29:31 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id AFB61B27C;
-        Fri, 15 Nov 2019 10:29:29 +0000 (UTC)
-Subject: Re: [PATCH 1/4] dpt_i2o: use midlayer tcq implementation
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20191115080555.146710-1-hare@suse.de>
- <20191115080555.146710-2-hare@suse.de> <20191115084857.GA24954@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <815c5bf3-2fe3-4681-4083-710f10ea9dde@suse.de>
-Date:   Fri, 15 Nov 2019 11:29:28 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1726996AbfKOKq4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Nov 2019 05:46:56 -0500
+Received: from LHREML710-CAH.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 62D3A1695C76DAA7E817;
+        Fri, 15 Nov 2019 10:46:55 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ LHREML710-CAH.china.huawei.com (10.201.108.33) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Fri, 15 Nov 2019 10:46:55 +0000
+Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Fri, 15 Nov
+ 2019 10:46:54 +0000
+Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
+To:     Hannes Reinecke <hare@suse.de>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "hare@suse.com" <hare@suse.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>
+References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-4-git-send-email-john.garry@huawei.com>
+ <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+ <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
+ <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
+ <ace95bc5-7b89-9ed3-be89-8139f977984b@huawei.com>
+ <42b0bcd9-f147-76eb-dfce-270f77bca818@suse.de>
+ <89cd1985-39c7-2965-d25b-2ee2c183d057@huawei.com>
+ <e676df15-7331-abe3-d3da-3ff46cb6684f@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <ff77beff-5fd9-9f05-12b6-826922bace1f@huawei.com>
+Date:   Fri, 15 Nov 2019 10:46:53 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191115084857.GA24954@lst.de>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <e676df15-7331-abe3-d3da-3ff46cb6684f@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.226.46]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/15/19 9:48 AM, Christoph Hellwig wrote:
-> On Fri, Nov 15, 2019 at 09:05:52AM +0100, Hannes Reinecke wrote:
-> static bool fail_posted_scbs_iter(struct request *rq, void *data, bool reserved)
->>  {
->> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
->>  
->> +	cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+On 15/11/2019 07:26, Hannes Reinecke wrote:
+> On 11/14/19 10:41 AM, John Garry wrote:
+>> On 13/11/2019 18:38, Hannes Reinecke wrote:
+>>>> Hi Hannes,
+>>>>
+>>>>> Oh, my. Indeed, that's correct.
+>>>>
+>>>> The tags could be kept in sync like this:
+>>>>
+>>>> shared_tag = blk_mq_get_tag(shared_tagset);
+>>>> if (shared_tag != -1)
+>>>>       sbitmap_set(hctx->tags, shared_tag);
+>>>>
+>>>> But that's obviously not ideal.
+>>>>
+>>> Actually, I _do_ prefer keeping both in sync.
+>>> We might want to check if the 'normal' tag is set (typically it would
+>>> not, but then, who knows ...)
+>>> The beauty here is that both 'shared' and 'normal' tag are in sync, so
+>>> if a driver would be wanting to use the tag as index into a command
+>>> array it can do so without any surprises.
+>>>
+>>> Why do you think it's not ideal?
+>>
+>> A few points:
+>> - Getting a bit from one tagset and then setting it in another tagset is
+>> a bit clunky.
+> Yes, that's true.
+> But painstakingly trying to find a free bit in a bitmask when we already
+> know which to pick is also a bit daft.
+
+Yeah, but it's not all good - there would still be a certain overhead in 
+the atomic set and unset bit on the hctx sbitmap. However it still 
+should be faster as it excludes the search.
+
 > 
-> Not new in this patch, but SAM_STAT_TASK_SET_FULL seems like an odd
-> error code for bouncing all commands to the mid layer after an reset.
+>> - There may be an atomicity of the getting the shared tag bit and
+>> setting the hctx tag bit - I don't think that there is.
 > 
-Was'ne me. Personally I would go with DID_ABORTED here,
-but who am I to judge ...
+> That was precisely what I've alluded to in 'We might want to check if
+> the normal tag is set'.
+> Typically the 'normal' tag would be free (as the shared tag set out of
+> necessity needs to be the combination of all hctx tag sets).
 
->> +	cmd->scsi_done(cmd);
->> +
->> +	return true;
->> +}
->> +
->> +static void adpt_fail_posted_scbs(adpt_hba* pHba)
->> +{
->> +	blk_mq_tagset_busy_iter(&pHba->host->tag_set,
->> +				fail_posted_scbs_iter, NULL);
+Right
+
+> Any difference here _is_ a programming error, and should be flagged as
+> such (sbitmap_test_and_set() anyone?)
+
+Eh, I hope that we wouldn't need this.
+
+> We might have ordering issues on release, as we really should drop the
+> hctx tag before the shared tag; but when we observe that we should be fine.
 > 
-> Should this be a scsi layer helper?  In the future it also sounds
-> like we migh want to move something like this to be called from
-> common code, as letting the other command posted to the hardware
-> just time out after a host reset is rather silly.
+>> - Consider that sometimes we may want to check if there is space on a hw
+>> queue - checking the hctx tags is not really proper any longer, as
+>> typically there would always be space on hctx, but not always the shared
+>> tags. We did delete blk_mq_can_queue() yesterday, which would be an
+>> example of that. Need to check if there are others.
+>>
+> Clearly, this needs an audit of all functions accessing the hctx tag
+> space; maybe it's worth having a pre-requisite patchset differentiating
+> between hctx tags and global, shared tags. Hmm.
 > 
-Sure, for the common helper.
+>> Having said all that, the obvious advantage is performance gain, can
+>> still use request.tag and so maybe less intrusive changes.
+>>
+>> I'll have a look at the implementation. The devil is mostly in the
+>> detail...
+>>
+> True.
+> And, incidentally, if we run with shared tage we can skip the scheduling
+> section in blk_mq_get_tag(); if we're out of tags, we're out of tags,
 
-Moving it to the common layer is probably not going to work, as some
-HBAs will complete commands internally during host reset (and hence
-triggering a completion), while others don't (or can't, like aacraid).
+Right, but don't we need to then "kick all hw queues", instead of just 
+that for the current hctx in blk_mq_get_tag() when free tags are exhausted?
 
-So not sure about that one.
+> and no rescheduling will help as we don't _have_ other tagsets to look at.
+> 
+> But overall I like this approach.
+> 
 
-Cheers,
+Yeah, to me it seems sensible. Again, a neat implementation is the 
+challenge.
 
-Hannes
--- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 247165 (AG München), GF: Felix Imendörffer
+I'll post an RFC v2 for this one.
+
+I am also requesting some performance figures also internally.
+
+Thanks,
+John
