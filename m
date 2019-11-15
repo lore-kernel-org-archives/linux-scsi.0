@@ -1,89 +1,120 @@
-Return-Path: <SRS0=ICpX=ZG=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=2nLx=ZH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B264C432C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 23:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEF8C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 01:25:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43139206E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Nov 2019 23:01:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C803620725
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 01:25:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="gvWYGLht"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="m1uJxKeH";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="G+RgoiJ6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727192AbfKNXBe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Nov 2019 18:01:34 -0500
-Received: from linux.microsoft.com ([13.77.154.182]:33242 "EHLO
-        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbfKNXBd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 18:01:33 -0500
-Received: by linux.microsoft.com (Postfix, from userid 1004)
-        id 6CA9120110BD; Thu, 14 Nov 2019 15:01:32 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 6CA9120110BD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
-        s=default; t=1573772492;
-        bh=Ckk87F5MC07qtgzW/3HfYOthBvz6QWmpl5e5thFSOf8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=gvWYGLhtDUn3goNXxVYHrRg6RqeoknZZwUWDSqtNOAi8FQsp4UTKYSLg5E2Gt+cDj
-         BbQsZf/bWA2znltYAEoUbUPpUJPnDMK53Pr2W+iBz0Kt7lSnpwdhvgCFpmrXOnqJYi
-         DVustrb2a3jo8O+KNwoJMHZumxPbjv94qlPODxfI=
-From:   longli@linuxonhyperv.com
-To:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
+        id S1727472AbfKOBZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Nov 2019 20:25:24 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:36490 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726956AbfKOBZY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Nov 2019 20:25:24 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B46B461162; Fri, 15 Nov 2019 01:25:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573781123;
+        bh=JdRtZkJ8mhdpbkZNjuHT294B/fO/LejmbNspGfybIec=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=m1uJxKeHvTi23WPCBcWrBd49odfWETyuI7t0kaPzC0gwJ4ecvLvElMGHwTcMIGwuV
+         GtdGFNqscYrFXptgWHTxTr64G30lf25YiQ8J98HW0y9plylEkmpp4bUniBOn24OYRY
+         KTO6OfI/dDDtRFiCUlPbfx0gorW8n85ET5Rzyq+o=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id 72D2A61016;
+        Fri, 15 Nov 2019 01:25:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573781122;
+        bh=JdRtZkJ8mhdpbkZNjuHT294B/fO/LejmbNspGfybIec=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=G+RgoiJ6wg810RWm+kCImOhVwAIprIQP0JIgp9aGdSLHVOqvIpyjhbR2WSmp5yVkQ
+         sQfuoGwiAxew0643MC63rUWrBD24ik/TVtWXoJQaKuNorL+FYShukwp48HYSHXYt8n
+         G9v05Zqd4Ypv3rJN04j1wWX1v8EUJsQ3IA1tuRJU=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 15 Nov 2019 09:25:22 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Long Li <longli@microsoft.com>
-Subject: [PATCH] storvsc: Properly set queue depth for scsi disk
-Date:   Thu, 14 Nov 2019 15:01:26 -0800
-Message-Id: <1573772486-40662-1-git-send-email-longli@linuxonhyperv.com>
-X-Mailer: git-send-email 1.8.3.1
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 2/7] scsi: ufs-qcom: Add reset control support for host
+ controller
+In-Reply-To: <MN2PR04MB69918A580EC558ECF3FB2748FC710@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1573627552-12615-1-git-send-email-cang@codeaurora.org>
+ <1573627552-12615-3-git-send-email-cang@codeaurora.org>
+ <MN2PR04MB69918A580EC558ECF3FB2748FC710@MN2PR04MB6991.namprd04.prod.outlook.com>
+Message-ID: <c52906ce2d8b97aa394d347955dfd8d0@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>
+On 2019-11-14 17:03, Avri Altman wrote:
+> Hi,
+> 
+>> 
+>> 
+>> Add reset control for host controller so that host controller can be 
+>> reset as
+>> required in its power up sequence.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> +       ret = reset_control_assert(host->core_reset);
+>> +       if (ret) {
+>> +               dev_err(hba->dev, "%s: core_reset assert failed, err = 
+>> %d\n",
+>> +                                __func__, ret);
+>> +               goto out;
+>> +       }
+>> +
+>> +       /*
+>> +        * The hardware requirement for delay between assert/deassert
+>> +        * is at least 3-4 sleep clock (32.7KHz) cycles, which comes 
+>> to
+>> +        * ~125us (4/32768). To be on the safe side add 200us delay.
+>> +        */
+>> +       usleep_range(200, 210);
+> Aren't you sleeping anyway in your reset_control_ops?
+> 
 
-The disk queue depth should be set based on host queue depth.
+For our cases, reset_control_assert uses the reset_control_ops->assert() 
+we registered for
+node &clock_gcc. There is no sleep or delay in Q's 
+reset_control_ops->assert() func.
 
-While it's possible that we may have multiple disks on the host, the combined
-queue depths from those disks may exceed host queue depth. It's still better
-than hard-coding them.
+>> +
+>> +       ret = reset_control_deassert(host->core_reset);
+>> +       if (ret)
+>> +               dev_err(hba->dev, "%s: core_reset deassert failed, err 
+>> = %d\n",
+>> +                                __func__, ret);
+>> +
+>> +       usleep_range(1000, 1100);
+> ditto
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Same as above.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 542d2bac2922..12c499f5da44 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1442,6 +1442,8 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
- 			sdevice->no_write_same = 0;
- 	}
- 
-+	scsi_change_queue_depth(sdevice, sdevice->host->can_queue);
-+
- 	return 0;
- }
- 
-@@ -1691,7 +1693,6 @@ static struct scsi_host_template scsi_driver = {
- 	.eh_timed_out =		storvsc_eh_timed_out,
- 	.slave_alloc =		storvsc_device_alloc,
- 	.slave_configure =	storvsc_device_configure,
--	.cmd_per_lun =		2048,
- 	.this_id =		-1,
- 	/* Make sure we dont get a sg segment crosses a page boundary */
- 	.dma_boundary =		PAGE_SIZE-1,
--- 
-2.20.1
-
+Best Regards,
+Can Guo.
