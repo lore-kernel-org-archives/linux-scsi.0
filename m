@@ -2,48 +2,55 @@ Return-Path: <SRS0=2nLx=ZH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B1EDC432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB05FC432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:03:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3428A206D4
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9382B2073B
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:03:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="UB0SWHg9"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NyUEhUv8";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iATKS7ia"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbfKOGg0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 01:36:26 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:56494 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725774AbfKOGfn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2019 01:35:43 -0500
-X-UUID: 4fd331558b9d414794818d6513d7117a-20191115
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=rk57yqGMmLCWAiKj3bUDvcywvFJ3T7OqD7JZ6VwhDU4=;
-        b=UB0SWHg95dooa4dydC6ecVveeXLMd9W9mOHNDhRUkv8P01rDr/YjQmJbZHIjAyts+4GsTaRZmHhL23GLl/M6J6/xIelgranoUFGDbxLiAQFxfRh+08Dc/d/59XRq+ZXEEO4xHXL5sCGx24TlBPGdzCVoVIXk6+2kLkGIzSJCiuU=;
-X-UUID: 4fd331558b9d414794818d6513d7117a-20191115
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 254854927; Fri, 15 Nov 2019 14:35:36 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs01n1.mediatek.inc (172.21.101.68) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Fri, 15 Nov 2019 14:35:27 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 15 Nov 2019 14:35:27 +0800
-Message-ID: <1573799728.4956.5.camel@mtkswgap22>
-Subject: Re: [PATCH v5 3/7] scsi: ufs: Fix up auto hibern8 enablement
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
-        <rnayak@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <kernel-team@android.com>, <saravanak@google.com>,
-        <salyzyn@google.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+        id S1727077AbfKOHDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 02:03:39 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58582 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726717AbfKOHDj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2019 02:03:39 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E06AD61069; Fri, 15 Nov 2019 07:03:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573801418;
+        bh=cXKB7/z8hKIcCs1csnbwGGQvhJZYZrYw+Be56PBlCDI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=NyUEhUv8ts/nDu7Q0ClZ8xWYm4i9KztgjtFhp/gP9xiBba/jknAtjhEppiq592i2B
+         HDJUwjlAc6etxqE+O32/g0egtG28sgeG5UNzu8J/ZJbj5wR76MZyJ23sww9zO1U3Xx
+         m4nYgR7vbhlwsBvulvgjD8uSf8WZig3/aljjTCLw=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id B18CE60F79;
+        Fri, 15 Nov 2019 07:03:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573801417;
+        bh=cXKB7/z8hKIcCs1csnbwGGQvhJZYZrYw+Be56PBlCDI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=iATKS7iaEVRZOR1zD2uYbDqyi9VL7LHTyD+b44EEKNeZQoyLmbL/NK64TBzFlXNz6
+         t/BFWUgmCcUsDhjGCHS3tjTPGEV9NHxjhcO5pM9V5KaKr1WaPKur+mZjRXFdvdGwyG
+         eFCuCurus72s1f3Axmxtmxgo/UkJkw4MaMjml8Dk=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 15 Nov 2019 15:03:37 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -54,28 +61,51 @@ CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Arnd Bergmann <arnd@arndb.de>,
         open list <linux-kernel@vger.kernel.org>
-Date:   Fri, 15 Nov 2019 14:35:28 +0800
-In-Reply-To: <1573798172-20534-4-git-send-email-cang@codeaurora.org>
+Subject: Re: [PATCH v5 3/7] scsi: ufs: Fix up auto hibern8 enablement
+In-Reply-To: <1573799728.4956.5.camel@mtkswgap22>
 References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
-         <1573798172-20534-4-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+ <1573798172-20534-4-git-send-email-cang@codeaurora.org>
+ <1573799728.4956.5.camel@mtkswgap22>
+Message-ID: <2a925548b8ead7c3b5ddf2d7bf3de05d@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBUaHUsIDIwMTktMTEtMTQgYXQgMjI6MDkgLTA4MDAsIENhbiBHdW8gd3Jv
-dGU6DQo+ICsJaWYgKGhiYS0+YWhpdCAhPSBhaGl0KQ0KPiArCQloYmEtPmFoaXQgPSBhaGl0Ow0K
-PiAgCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsN
-Cj4gKwlpZiAoIXBtX3J1bnRpbWVfc3VzcGVuZGVkKGhiYS0+ZGV2KSkgew0KDQpBbHdheXMgZG8g
-cG1fcnVudGltZV9nZXRfc3luYygpIGhlcmUgY291bGQgYXZvaWQgcG9zc2libGUgcmFjaW5nPw0K
-DQpBbmQgdGh1cyBBSDggY291bGQgYmUgZW5hYmxlZCByZWdhcmRsZXNzIG9mIHJ1bnRpbWUgc3Rh
-dHVzLg0KDQo+ICsJCXBtX3J1bnRpbWVfZ2V0X3N5bmMoaGJhLT5kZXYpOw0KPiArCQl1ZnNoY2Rf
-aG9sZChoYmEsIGZhbHNlKTsNCj4gKwkJdWZzaGNkX2F1dG9faGliZXJuOF9lbmFibGUoaGJhKTsN
-Cj4gKwkJdWZzaGNkX3JlbGVhc2UoaGJhKTsNCj4gKwkJcG1fcnVudGltZV9wdXQoaGJhLT5kZXYp
-Ow0KPiArCX0NCj4gIH0NCg0KVGhhbmtzLA0KU3RhbmxleQ0KDQo=
+On 2019-11-15 14:35, Stanley Chu wrote:
+> Hi Can,
+> 
+> On Thu, 2019-11-14 at 22:09 -0800, Can Guo wrote:
+>> +	if (hba->ahit != ahit)
+>> +		hba->ahit = ahit;
+>>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +	if (!pm_runtime_suspended(hba->dev)) {
+> 
+> Always do pm_runtime_get_sync() here could avoid possible racing?
+> 
+> And thus AH8 could be enabled regardless of runtime status.
+> 
+>> +		pm_runtime_get_sync(hba->dev);
+>> +		ufshcd_hold(hba, false);
+>> +		ufshcd_auto_hibern8_enable(hba);
+>> +		ufshcd_release(hba);
+>> +		pm_runtime_put(hba->dev);
+>> +	}
+>>  }
+> 
+> Thanks,
+> Stanley
 
+Hi Stanley,
+
+if !pm_runtime_suspended() is true, hba->dev's runtime status, other 
+than RPM_ACTIVE,
+may be RPM_SUSPENDING or RPM_RESUMING. So, here for safty, do 
+pm_runtime_get_sync() once
+before access registers, in case we hit corner cases in which powers 
+and/or clocks are OFF.
+
+Thanks,
+Can Guo.
