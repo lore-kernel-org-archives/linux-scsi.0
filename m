@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01053C43141
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C68C33C99
 	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF4B72073C
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B75312077B
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727428AbfKOIGD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 03:06:03 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36166 "EHLO mx1.suse.de"
+        id S1727431AbfKOIGE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 03:06:04 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36170 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726717AbfKOIGC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Nov 2019 03:06:02 -0500
+        id S1727418AbfKOIGD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Nov 2019 03:06:03 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2288FAF22;
+        by mx1.suse.de (Postfix) with ESMTP id 2300CAF5B;
         Fri, 15 Nov 2019 08:06:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/4] dpt_i2o: use midlayer tcq implementation
-Date:   Fri, 15 Nov 2019 09:05:52 +0100
-Message-Id: <20191115080555.146710-2-hare@suse.de>
+Subject: [PATCH 4/4] scsi: Remove cmd_list functionality
+Date:   Fri, 15 Nov 2019 09:05:55 +0100
+Message-Id: <20191115080555.146710-5-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191115080555.146710-1-hare@suse.de>
 References: <20191115080555.146710-1-hare@suse.de>
@@ -38,59 +38,178 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Switch to use the SCSI midlayer TCQ implementation and drop the
-use of the scsi command list.
-And switch to use the SAM status codes while we're at it.
+Remove cmd_list functionality; no users left.
+With that the scsi_put_command() becomes empty,
+so remove that one, too.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/dpt_i2o.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi.c        | 14 --------------
+ drivers/scsi/scsi_error.c  |  1 -
+ drivers/scsi/scsi_lib.c    | 32 --------------------------------
+ drivers/scsi/scsi_priv.h   |  2 --
+ drivers/scsi/scsi_scan.c   |  1 -
+ include/scsi/scsi_cmnd.h   |  1 -
+ include/scsi/scsi_device.h |  1 -
+ include/scsi/scsi_host.h   |  2 --
+ 8 files changed, 54 deletions(-)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index abc74fd474dc..cc3f1100c888 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -2335,7 +2335,6 @@ static s32 adpt_scsi_host_alloc(adpt_hba* pHba, struct scsi_host_template *sht)
- 	host->unique_id = (u32)sys_tbl_pa + pHba->unit;
- 	host->sg_tablesize = pHba->sg_tablesize;
- 	host->can_queue = pHba->post_fifo_size;
--	host->use_cmd_list = 1;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 4f76841a7038..ae7a1adfa551 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -94,20 +94,6 @@ EXPORT_SYMBOL(scsi_logging_level);
+ ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain);
+ EXPORT_SYMBOL(scsi_sd_pm_domain);
  
- 	return 0;
- }
-@@ -2647,20 +2646,20 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 	return 0;
- }
- 
--static void adpt_fail_posted_scbs(adpt_hba* pHba)
-+static bool fail_posted_scbs_iter(struct request *rq, void *data, bool reserved)
+-/**
+- * scsi_put_command - Free a scsi command block
+- * @cmd: command block to free
+- *
+- * Returns:	Nothing.
+- *
+- * Notes:	The command must not belong to any lists.
+- */
+-void scsi_put_command(struct scsi_cmnd *cmd)
+-{
+-	scsi_del_cmd_from_list(cmd);
+-	BUG_ON(delayed_work_pending(&cmd->abort_work));
+-}
+-
+ #ifdef CONFIG_SCSI_LOGGING
+ void scsi_log_send(struct scsi_cmnd *cmd)
  {
--	struct scsi_cmnd* 	cmd = NULL;
--	struct scsi_device* 	d = NULL;
-+	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index ae2fa170f6ad..978be1602f71 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2412,7 +2412,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 	wake_up(&shost->host_wait);
+ 	scsi_run_host_queues(shost);
  
--	shost_for_each_device(d, pHba->host) {
--		unsigned long flags;
--		spin_lock_irqsave(&d->list_lock, flags);
--		list_for_each_entry(cmd, &d->cmd_list, list) {
--			cmd->result = (DID_OK << 16) | (QUEUE_FULL <<1);
--			cmd->scsi_done(cmd);
--		}
--		spin_unlock_irqrestore(&d->list_lock, flags);
--	}
-+	cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
-+	cmd->scsi_done(cmd);
-+
-+	return true;
-+}
-+
-+static void adpt_fail_posted_scbs(adpt_hba* pHba)
-+{
-+	blk_mq_tagset_busy_iter(&pHba->host->tag_set,
-+				fail_posted_scbs_iter, NULL);
+-	scsi_put_command(scmd);
+ 	kfree(rq);
+ 
+ out_put_autopm_host:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index dc210b9d4896..6b957531aaf0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -565,7 +565,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ {
+ 	scsi_mq_free_sgtables(cmd);
+ 	scsi_uninit_cmd(cmd);
+-	scsi_del_cmd_from_list(cmd);
  }
  
+ /* Returns false when no more bytes to process, true if there are more */
+@@ -1101,35 +1100,6 @@ static void scsi_cleanup_rq(struct request *rq)
+ 	}
+ }
+ 
+-/* Add a command to the list used by the aacraid and dpt_i2o drivers */
+-void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device *sdev = cmd->device;
+-	struct Scsi_Host *shost = sdev->host;
+-	unsigned long flags;
+-
+-	if (shost->use_cmd_list) {
+-		spin_lock_irqsave(&sdev->list_lock, flags);
+-		list_add_tail(&cmd->list, &sdev->cmd_list);
+-		spin_unlock_irqrestore(&sdev->list_lock, flags);
+-	}
+-}
+-
+-/* Remove a command from the list used by the aacraid and dpt_i2o drivers */
+-void scsi_del_cmd_from_list(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device *sdev = cmd->device;
+-	struct Scsi_Host *shost = sdev->host;
+-	unsigned long flags;
+-
+-	if (shost->use_cmd_list) {
+-		spin_lock_irqsave(&sdev->list_lock, flags);
+-		BUG_ON(list_empty(&cmd->list));
+-		list_del_init(&cmd->list);
+-		spin_unlock_irqrestore(&sdev->list_lock, flags);
+-	}
+-}
+-
+ /* Called after a request has been started. */
+ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ {
+@@ -1158,8 +1128,6 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
+ 	cmd->jiffies_at_alloc = jiffies_at_alloc;
+ 	cmd->retries = retries;
+-
+-	scsi_add_cmd_to_list(cmd);
+ }
+ 
+ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index cc2859d76d81..88b6ef2cc94d 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -84,8 +84,6 @@ int scsi_eh_get_sense(struct list_head *work_q,
+ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+ 
+ /* scsi_lib.c */
+-extern void scsi_add_cmd_to_list(struct scsi_cmnd *cmd);
+-extern void scsi_del_cmd_from_list(struct scsi_cmnd *cmd);
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ extern void scsi_device_unbusy(struct scsi_device *sdev);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 058079f915f1..f2437a7570ce 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -236,7 +236,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	sdev->sdev_state = SDEV_CREATED;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+-	INIT_LIST_HEAD(&sdev->cmd_list);
+ 	INIT_LIST_HEAD(&sdev->starved_entry);
+ 	INIT_LIST_HEAD(&sdev->event_list);
+ 	spin_lock_init(&sdev->list_lock);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 91bd749a02f7..134686e27005 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -158,7 +158,6 @@ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ 	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+ }
+ 
+-extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+ 
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3ed836db5306..fd2aee1f59fc 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -110,7 +110,6 @@ struct scsi_device {
+ 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+ 	spinlock_t list_lock;
+-	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
+ 	struct list_head starved_entry;
+ 	unsigned short queue_depth;	/* How deep of a queue we want */
+ 	unsigned short max_queue_depth;	/* max queue depth */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 2c3f0c58869b..6459ca7969bb 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -641,8 +641,6 @@ struct Scsi_Host {
+ 	/* The controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+ 
+-	unsigned use_cmd_list:1;
+-
+ 	/* Host responded with short (<36 bytes) INQUIRY result */
+ 	unsigned short_inquiry:1;
  
 -- 
 2.16.4
