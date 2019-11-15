@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C68C33C99
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 969E6C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B75312077B
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6818E2073B
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 08:06:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727431AbfKOIGE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 03:06:04 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36170 "EHLO mx1.suse.de"
+        id S1727432AbfKOIGG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 03:06:06 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36164 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727418AbfKOIGD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Nov 2019 03:06:03 -0500
+        id S1726365AbfKOIGE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Nov 2019 03:06:04 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2300CAF5B;
+        by mx1.suse.de (Postfix) with ESMTP id 21F0AABBD;
         Fri, 15 Nov 2019 08:06:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/4] scsi: Remove cmd_list functionality
-Date:   Fri, 15 Nov 2019 09:05:55 +0100
-Message-Id: <20191115080555.146710-5-hare@suse.de>
+Subject: [PATCH 3/4] aacraid: use blk_mq_rq_busy_iter() for traversing outstanding commands
+Date:   Fri, 15 Nov 2019 09:05:54 +0100
+Message-Id: <20191115080555.146710-4-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191115080555.146710-1-hare@suse.de>
 References: <20191115080555.146710-1-hare@suse.de>
@@ -38,179 +38,397 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove cmd_list functionality; no users left.
-With that the scsi_put_command() becomes empty,
-so remove that one, too.
+Use blk_mq_rq_busy_iter() for traversing outstanding commands and
+drop the cmd_list usage.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi.c        | 14 --------------
- drivers/scsi/scsi_error.c  |  1 -
- drivers/scsi/scsi_lib.c    | 32 --------------------------------
- drivers/scsi/scsi_priv.h   |  2 --
- drivers/scsi/scsi_scan.c   |  1 -
- include/scsi/scsi_cmnd.h   |  1 -
- include/scsi/scsi_device.h |  1 -
- include/scsi/scsi_host.h   |  2 --
- 8 files changed, 54 deletions(-)
+ drivers/scsi/aacraid/aachba.c   | 127 ++++++++++++++++++++++------------------
+ drivers/scsi/aacraid/comminit.c |  30 ++++------
+ drivers/scsi/aacraid/commsup.c  |  38 +++++-------
+ drivers/scsi/aacraid/linit.c    |  87 ++++++++++++++-------------
+ 4 files changed, 147 insertions(+), 135 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 4f76841a7038..ae7a1adfa551 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -94,20 +94,6 @@ EXPORT_SYMBOL(scsi_logging_level);
- ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain);
- EXPORT_SYMBOL(scsi_sd_pm_domain);
- 
--/**
-- * scsi_put_command - Free a scsi command block
-- * @cmd: command block to free
-- *
-- * Returns:	Nothing.
-- *
-- * Notes:	The command must not belong to any lists.
-- */
--void scsi_put_command(struct scsi_cmnd *cmd)
--{
--	scsi_del_cmd_from_list(cmd);
--	BUG_ON(delayed_work_pending(&cmd->abort_work));
--}
--
- #ifdef CONFIG_SCSI_LOGGING
- void scsi_log_send(struct scsi_cmnd *cmd)
- {
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae2fa170f6ad..978be1602f71 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2412,7 +2412,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- 	wake_up(&shost->host_wait);
- 	scsi_run_host_queues(shost);
- 
--	scsi_put_command(scmd);
- 	kfree(rq);
- 
- out_put_autopm_host:
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index dc210b9d4896..6b957531aaf0 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -565,7 +565,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- {
- 	scsi_mq_free_sgtables(cmd);
- 	scsi_uninit_cmd(cmd);
--	scsi_del_cmd_from_list(cmd);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index e36608ce937a..c7bb8bc5ea5e 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -2639,81 +2639,96 @@ static void synchronize_callback(void *context, struct fib *fibptr)
+ 	cmd->scsi_done(cmd);
  }
  
- /* Returns false when no more bytes to process, true if there are more */
-@@ -1101,35 +1100,6 @@ static void scsi_cleanup_rq(struct request *rq)
- 	}
- }
- 
--/* Add a command to the list used by the aacraid and dpt_i2o drivers */
--void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
--{
--	struct scsi_device *sdev = cmd->device;
--	struct Scsi_Host *shost = sdev->host;
++struct synchronize_busy_data {
++	struct scsi_device *sdev;
++	u64 lba;
++	u32 count;
++	int active;
++};
++
++static bool synchronize_busy_iter(struct request *req, void *data, bool reserved)
++{
++	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
++	struct synchronize_busy_data *busy_data = data;
++
++	if (busy_data->sdev == cmd->device &&
++	    cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
++		u64 cmnd_lba;
++		u32 cmnd_count;
++
++		if (cmd->cmnd[0] == WRITE_6) {
++			cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
++				(cmd->cmnd[2] << 8) |
++				cmd->cmnd[3];
++			cmnd_count = cmd->cmnd[4];
++			if (cmnd_count == 0)
++				cmnd_count = 256;
++		} else if (cmd->cmnd[0] == WRITE_16) {
++			cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
++				((u64)cmd->cmnd[3] << 48) |
++				((u64)cmd->cmnd[4] << 40) |
++				((u64)cmd->cmnd[5] << 32) |
++				((u64)cmd->cmnd[6] << 24) |
++				(cmd->cmnd[7] << 16) |
++				(cmd->cmnd[8] << 8) |
++				cmd->cmnd[9];
++			cmnd_count = (cmd->cmnd[10] << 24) |
++				(cmd->cmnd[11] << 16) |
++				(cmd->cmnd[12] << 8) |
++				cmd->cmnd[13];
++		} else if (cmd->cmnd[0] == WRITE_12) {
++			cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
++				(cmd->cmnd[3] << 16) |
++				(cmd->cmnd[4] << 8) |
++				cmd->cmnd[5];
++			cmnd_count = (cmd->cmnd[6] << 24) |
++				(cmd->cmnd[7] << 16) |
++				(cmd->cmnd[8] << 8) |
++				cmd->cmnd[9];
++		} else if (cmd->cmnd[0] == WRITE_10) {
++			cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
++				(cmd->cmnd[3] << 16) |
++				(cmd->cmnd[4] << 8) |
++				cmd->cmnd[5];
++			cmnd_count = (cmd->cmnd[7] << 8) |
++				cmd->cmnd[8];
++		} else
++			return true;
++		if (((cmnd_lba + cmnd_count) < busy_data->lba) ||
++		    (busy_data->count && ((busy_data->lba + busy_data->count) < cmnd_lba)))
++			return true;
++		++busy_data->active;
++	}
++	return true;
++}
++
+ static int aac_synchronize(struct scsi_cmnd *scsicmd)
+ {
+ 	int status;
+ 	struct fib *cmd_fibcontext;
+ 	struct aac_synchronize *synchronizecmd;
+-	struct scsi_cmnd *cmd;
+ 	struct scsi_device *sdev = scsicmd->device;
+-	int active = 0;
+ 	struct aac_dev *aac;
+ 	u64 lba = ((u64)scsicmd->cmnd[2] << 24) | (scsicmd->cmnd[3] << 16) |
+ 		(scsicmd->cmnd[4] << 8) | scsicmd->cmnd[5];
+ 	u32 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
 -	unsigned long flags;
++	struct synchronize_busy_data busy_data = {
++		.sdev = sdev,
++		.lba = lba,
++		.count = count,
++		.active = 0,
++	};
+ 
+ 	/*
+ 	 * Wait for all outstanding queued commands to complete to this
+ 	 * specific target (block).
+ 	 */
+-	spin_lock_irqsave(&sdev->list_lock, flags);
+-	list_for_each_entry(cmd, &sdev->cmd_list, list)
+-		if (cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
+-			u64 cmnd_lba;
+-			u32 cmnd_count;
 -
--	if (shost->use_cmd_list) {
+-			if (cmd->cmnd[0] == WRITE_6) {
+-				cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
+-					(cmd->cmnd[2] << 8) |
+-					cmd->cmnd[3];
+-				cmnd_count = cmd->cmnd[4];
+-				if (cmnd_count == 0)
+-					cmnd_count = 256;
+-			} else if (cmd->cmnd[0] == WRITE_16) {
+-				cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
+-					((u64)cmd->cmnd[3] << 48) |
+-					((u64)cmd->cmnd[4] << 40) |
+-					((u64)cmd->cmnd[5] << 32) |
+-					((u64)cmd->cmnd[6] << 24) |
+-					(cmd->cmnd[7] << 16) |
+-					(cmd->cmnd[8] << 8) |
+-					cmd->cmnd[9];
+-				cmnd_count = (cmd->cmnd[10] << 24) |
+-					(cmd->cmnd[11] << 16) |
+-					(cmd->cmnd[12] << 8) |
+-					cmd->cmnd[13];
+-			} else if (cmd->cmnd[0] == WRITE_12) {
+-				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
+-					(cmd->cmnd[3] << 16) |
+-					(cmd->cmnd[4] << 8) |
+-					cmd->cmnd[5];
+-				cmnd_count = (cmd->cmnd[6] << 24) |
+-					(cmd->cmnd[7] << 16) |
+-					(cmd->cmnd[8] << 8) |
+-					cmd->cmnd[9];
+-			} else if (cmd->cmnd[0] == WRITE_10) {
+-				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
+-					(cmd->cmnd[3] << 16) |
+-					(cmd->cmnd[4] << 8) |
+-					cmd->cmnd[5];
+-				cmnd_count = (cmd->cmnd[7] << 8) |
+-					cmd->cmnd[8];
+-			} else
+-				continue;
+-			if (((cmnd_lba + cmnd_count) < lba) ||
+-			  (count && ((lba + count) < cmnd_lba)))
+-				continue;
+-			++active;
+-			break;
+-		}
+-
+-	spin_unlock_irqrestore(&sdev->list_lock, flags);
++	blk_mq_tagset_busy_iter(&sdev->host->tag_set, synchronize_busy_iter, &busy_data);
+ 
+ 	/*
+ 	 *	Yield the processor (requeue for later)
+ 	 */
+-	if (active)
++	if (busy_data.active)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
+ 	aac = (struct aac_dev *)sdev->host->hostdata;
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index f75878d773cf..72cdf47437fe 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -272,29 +272,25 @@ static void aac_queue_init(struct aac_dev * dev, struct aac_queue * q, u32 *mem,
+ 	q->entries = qsize;
+ }
+ 
++static bool wait_for_io_iter(struct request *rq, void *data, bool reserved)
++{
++	struct scsi_cmnd *command = blk_mq_rq_to_pdu(rq);
++	int *active = data;
++
++	if (command->SCp.phase == AAC_OWNER_FIRMWARE)
++		*active = 1;
++	return true;
++}
++
+ static void aac_wait_for_io_completion(struct aac_dev *aac)
+ {
+-	unsigned long flagv = 0;
+-	int i = 0;
++	int i;
+ 
+ 	for (i = 60; i; --i) {
+-		struct scsi_device *dev;
+-		struct scsi_cmnd *command;
+ 		int active = 0;
+ 
+-		__shost_for_each_device(dev, aac->scsi_host_ptr) {
+-			spin_lock_irqsave(&dev->list_lock, flagv);
+-			list_for_each_entry(command, &dev->cmd_list, list) {
+-				if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+-					active++;
+-					break;
+-				}
+-			}
+-			spin_unlock_irqrestore(&dev->list_lock, flagv);
+-			if (active)
+-				break;
+-
+-		}
++		blk_mq_tagset_busy_iter(&aac->scsi_host_ptr->tag_set,
++					wait_for_io_iter, &active);
+ 		/*
+ 		 * We can exit If all the commands are complete
+ 		 */
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 5a8a999606ea..096b1a107d98 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1472,14 +1472,26 @@ static void aac_schedule_bus_scan(struct aac_dev *aac)
+ 		aac_schedule_src_reinit_aif_worker(aac);
+ }
+ 
++static bool reset_adapter_iter(struct request *rq, void *data, bool reserved)
++{
++	struct scsi_cmnd *command = blk_mq_rq_to_pdu(rq);
++
++	if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
++		command->result = DID_OK << 16
++		  | COMMAND_COMPLETE << 8
++		  | SAM_STAT_TASK_SET_FULL;
++		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
++		command->scsi_done(command);
++	}
++	return true;
++}
++
+ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ {
+ 	int index, quirks;
+ 	int retval;
+ 	struct Scsi_Host *host;
+ 	struct scsi_device *dev;
+-	struct scsi_cmnd *command;
+-	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
+@@ -1607,26 +1619,8 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	 * This is where the assumption that the Adapter is quiesced
+ 	 * is important.
+ 	 */
+-	command_list = NULL;
+-	__shost_for_each_device(dev, host) {
+-		unsigned long flags;
+-		spin_lock_irqsave(&dev->list_lock, flags);
+-		list_for_each_entry(command, &dev->cmd_list, list)
+-			if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+-				command->SCp.buffer = (struct scatterlist *)command_list;
+-				command_list = command;
+-			}
+-		spin_unlock_irqrestore(&dev->list_lock, flags);
+-	}
+-	while ((command = command_list)) {
+-		command_list = (struct scsi_cmnd *)command->SCp.buffer;
+-		command->SCp.buffer = NULL;
+-		command->result = DID_OK << 16
+-		  | COMMAND_COMPLETE << 8
+-		  | SAM_STAT_TASK_SET_FULL;
+-		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+-		command->scsi_done(command);
+-	}
++	blk_mq_tagset_busy_iter(&host->tag_set, reset_adapter_iter, NULL);
++
+ 	/*
+ 	 * Any Device that was already marked offline needs to be marked
+ 	 * running
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index ee6bc2f9b80a..30af9eef6774 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -622,54 +622,62 @@ static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
+ 	return aac_do_ioctl(dev, cmd, arg);
+ }
+ 
+-static int get_num_of_incomplete_fibs(struct aac_dev *aac)
++struct fib_count_data {
++	int mlcnt;
++	int llcnt;
++	int ehcnt;
++	int fwcnt;
++	int krlcnt;
++};
++
++static bool fib_count_iter(struct request *rq, void *data, bool reserved)
+ {
++	struct scsi_cmnd *scmnd = blk_mq_rq_to_pdu(rq);
++	struct fib_count_data *fib_count = data;
+ 
+-	unsigned long flags;
+-	struct scsi_device *sdev = NULL;
++	switch (scmnd->SCp.phase) {
++	case AAC_OWNER_FIRMWARE:
++		fib_count->fwcnt++;
++		break;
++	case AAC_OWNER_ERROR_HANDLER:
++		fib_count->ehcnt++;
++		break;
++	case AAC_OWNER_LOWLEVEL:
++		fib_count->llcnt++;
++		break;
++	case AAC_OWNER_MIDLEVEL:
++		fib_count->mlcnt++;
++		break;
++	default:
++		fib_count->krlcnt++;
++		break;
++	}
++	return true;
++}
++
++static int get_num_of_incomplete_fibs(struct aac_dev *aac)
++{
+ 	struct Scsi_Host *shost = aac->scsi_host_ptr;
+-	struct scsi_cmnd *scmnd = NULL;
+ 	struct device *ctrl_dev;
++	struct fib_count_data fib_count = {
++		.mlcnt  = 0,
++		.llcnt  = 0,
++		.ehcnt  = 0,
++		.fwcnt  = 0,
++		.krlcnt = 0,
++	};
+ 
+-	int mlcnt  = 0;
+-	int llcnt  = 0;
+-	int ehcnt  = 0;
+-	int fwcnt  = 0;
+-	int krlcnt = 0;
+-
+-	__shost_for_each_device(sdev, shost) {
 -		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_add_tail(&cmd->list, &sdev->cmd_list);
+-		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
+-			switch (scmnd->SCp.phase) {
+-			case AAC_OWNER_FIRMWARE:
+-				fwcnt++;
+-				break;
+-			case AAC_OWNER_ERROR_HANDLER:
+-				ehcnt++;
+-				break;
+-			case AAC_OWNER_LOWLEVEL:
+-				llcnt++;
+-				break;
+-			case AAC_OWNER_MIDLEVEL:
+-				mlcnt++;
+-				break;
+-			default:
+-				krlcnt++;
+-				break;
+-			}
+-		}
 -		spin_unlock_irqrestore(&sdev->list_lock, flags);
 -	}
--}
--
--/* Remove a command from the list used by the aacraid and dpt_i2o drivers */
--void scsi_del_cmd_from_list(struct scsi_cmnd *cmd)
--{
--	struct scsi_device *sdev = cmd->device;
--	struct Scsi_Host *shost = sdev->host;
--	unsigned long flags;
--
--	if (shost->use_cmd_list) {
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		BUG_ON(list_empty(&cmd->list));
--		list_del_init(&cmd->list);
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--	}
--}
--
- /* Called after a request has been started. */
- void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- {
-@@ -1158,8 +1128,6 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	INIT_DELAYED_WORK(&cmd->abort_work, scmd_eh_abort_handler);
- 	cmd->jiffies_at_alloc = jiffies_at_alloc;
- 	cmd->retries = retries;
--
--	scsi_add_cmd_to_list(cmd);
++	blk_mq_tagset_busy_iter(&shost->tag_set, fib_count_iter, &fib_count);
+ 
+ 	ctrl_dev = &aac->pdev->dev;
+ 
+-	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
+-	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
+-	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
+-	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
+-	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
++	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", fib_count.mlcnt);
++	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", fib_count.llcnt);
++	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", fib_count.ehcnt);
++	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fib_count.fwcnt);
++	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", fib_count.krlcnt);
+ 
+-	return mlcnt + llcnt + ehcnt + fwcnt;
++	return fib_count.mlcnt + fib_count.llcnt + fib_count.ehcnt + fib_count.fwcnt;
  }
  
- static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index cc2859d76d81..88b6ef2cc94d 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -84,8 +84,6 @@ int scsi_eh_get_sense(struct list_head *work_q,
- int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+ static int aac_eh_abort(struct scsi_cmnd* cmd)
+@@ -1675,7 +1683,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->irq = pdev->irq;
+ 	shost->unique_id = unique_id;
+ 	shost->max_cmd_len = 16;
+-	shost->use_cmd_list = 1;
  
- /* scsi_lib.c */
--extern void scsi_add_cmd_to_list(struct scsi_cmnd *cmd);
--extern void scsi_del_cmd_from_list(struct scsi_cmnd *cmd);
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_device_unbusy(struct scsi_device *sdev);
- extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 058079f915f1..f2437a7570ce 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -236,7 +236,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	sdev->sdev_state = SDEV_CREATED;
- 	INIT_LIST_HEAD(&sdev->siblings);
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
--	INIT_LIST_HEAD(&sdev->cmd_list);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 91bd749a02f7..134686e27005 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -158,7 +158,6 @@ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
- 	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
- }
- 
--extern void scsi_put_command(struct scsi_cmnd *);
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
- 
- extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 3ed836db5306..fd2aee1f59fc 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -110,7 +110,6 @@ struct scsi_device {
- 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
- 
- 	spinlock_t list_lock;
--	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
- 	struct list_head starved_entry;
- 	unsigned short queue_depth;	/* How deep of a queue we want */
- 	unsigned short max_queue_depth;	/* max queue depth */
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2c3f0c58869b..6459ca7969bb 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -641,8 +641,6 @@ struct Scsi_Host {
- 	/* The controller does not support WRITE SAME */
- 	unsigned no_write_same:1;
- 
--	unsigned use_cmd_list:1;
--
- 	/* Host responded with short (<36 bytes) INQUIRY result */
- 	unsigned short_inquiry:1;
- 
+ 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
+ 		aac_init_char();
 -- 
 2.16.4
 
