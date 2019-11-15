@@ -2,110 +2,95 @@ Return-Path: <SRS0=2nLx=ZH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB05FC432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:03:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65209C43141
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:04:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9382B2073B
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:03:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NyUEhUv8";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="iATKS7ia"
+	by mail.kernel.org (Postfix) with ESMTP id 402142075E
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:04:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727077AbfKOHDj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 02:03:39 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:58582 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726717AbfKOHDj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2019 02:03:39 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E06AD61069; Fri, 15 Nov 2019 07:03:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573801418;
-        bh=cXKB7/z8hKIcCs1csnbwGGQvhJZYZrYw+Be56PBlCDI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=NyUEhUv8ts/nDu7Q0ClZ8xWYm4i9KztgjtFhp/gP9xiBba/jknAtjhEppiq592i2B
-         HDJUwjlAc6etxqE+O32/g0egtG28sgeG5UNzu8J/ZJbj5wR76MZyJ23sww9zO1U3Xx
-         m4nYgR7vbhlwsBvulvgjD8uSf8WZig3/aljjTCLw=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id B18CE60F79;
-        Fri, 15 Nov 2019 07:03:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573801417;
-        bh=cXKB7/z8hKIcCs1csnbwGGQvhJZYZrYw+Be56PBlCDI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=iATKS7iaEVRZOR1zD2uYbDqyi9VL7LHTyD+b44EEKNeZQoyLmbL/NK64TBzFlXNz6
-         t/BFWUgmCcUsDhjGCHS3tjTPGEV9NHxjhcO5pM9V5KaKr1WaPKur+mZjRXFdvdGwyG
-         eFCuCurus72s1f3Axmxtmxgo/UkJkw4MaMjml8Dk=
+        id S1727020AbfKOHEj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 02:04:39 -0500
+Received: from smtpq3.tb.mail.iss.as9143.net ([212.54.42.166]:42102 "EHLO
+        smtpq3.tb.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726920AbfKOHEj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Nov 2019 02:04:39 -0500
+Received: from [212.54.42.137] (helo=smtp6.tb.mail.iss.as9143.net)
+        by smtpq3.tb.mail.iss.as9143.net with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iVVen-0005p4-EP; Fri, 15 Nov 2019 08:04:37 +0100
+Received: from mail-wm1-f46.google.com ([209.85.128.46])
+        by smtp6.tb.mail.iss.as9143.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <jongk@linux-m68k.org>)
+        id 1iVVen-000867-AC; Fri, 15 Nov 2019 08:04:37 +0100
+Received: by mail-wm1-f46.google.com with SMTP id c22so9132303wmd.1;
+        Thu, 14 Nov 2019 23:04:37 -0800 (PST)
+X-Gm-Message-State: APjAAAUxhsnhAEKucbu7hREyv5JLUl5eRH6nQ1hh9t2HoJAg5m/iBbtv
+        eO5tBgisuLM8BLB0bDiAq42F55dd1cgp5xvq3vY=
+X-Google-Smtp-Source: APXvYqy9yYCvJoDsJJkhuTJPbd10REfVaM8nknWq62Qf8xjpQgeVSKz99KrfGEC/CskbgAeg69ezkIDLHMFskEh4RS4=
+X-Received: by 2002:a1c:453:: with SMTP id 80mr13120554wme.5.1573801477034;
+ Thu, 14 Nov 2019 23:04:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 15 Nov 2019 15:03:37 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
+References: <20191114215956.21767-1-jongk@linux-m68k.org> <20191114222518.2441-1-jongk@linux-m68k.org>
+ <20191114222518.2441-2-jongk@linux-m68k.org> <alpine.LNX.2.21.1.1911151157150.9@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.21.1.1911151157150.9@nippy.intranet>
+From:   Kars de Jong <jongk@linux-m68k.org>
+Date:   Fri, 15 Nov 2019 08:04:56 +0100
+X-Gmail-Original-Message-ID: <CACz-3rgjGkeH1tPR8mzoGaWySXepZZtzVJLxd=3rcz+TY-B1Hg@mail.gmail.com>
+Message-ID: <CACz-3rgjGkeH1tPR8mzoGaWySXepZZtzVJLxd=3rcz+TY-B1Hg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] esp_scsi: Correct ordering of PCSCSI definition in
+ esp_rev enum
+To:     Finn Thain <fthain@telegraphics.com.au>
+Cc:     Hannes Reinecke <hare@suse.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 3/7] scsi: ufs: Fix up auto hibern8 enablement
-In-Reply-To: <1573799728.4956.5.camel@mtkswgap22>
-References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
- <1573798172-20534-4-git-send-email-cang@codeaurora.org>
- <1573799728.4956.5.camel@mtkswgap22>
-Message-ID: <2a925548b8ead7c3b5ddf2d7bf3de05d@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org,
+        schmitzmic@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+X-SourceIP: 209.85.128.46
+X-Authenticated-Sender: karsdejong@home.nl (via SMTP)
+X-Ziggo-spambar: /
+X-Ziggo-spamscore: 0.0
+X-Ziggo-spamreport: CMAE Analysis: v=2.3 cv=WMwBoUkR c=1 sm=1 tr=0 a=9+rZDBEiDlHhcck0kWbJtElFXBc=:19 a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=MeAgGD-zjQ4A:10 a=8981fWPbAAAA:8 a=CUAyi6wxMhN9au1ZHakA:9 a=QEXdDO2ut3YA:10 a=o72u2rHnfW5qNJ_4I8LD:22
+X-Ziggo-Spam-Status: No
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-15 14:35, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Thu, 2019-11-14 at 22:09 -0800, Can Guo wrote:
->> +	if (hba->ahit != ahit)
->> +		hba->ahit = ahit;
->>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
->> +	if (!pm_runtime_suspended(hba->dev)) {
-> 
-> Always do pm_runtime_get_sync() here could avoid possible racing?
-> 
-> And thus AH8 could be enabled regardless of runtime status.
-> 
->> +		pm_runtime_get_sync(hba->dev);
->> +		ufshcd_hold(hba, false);
->> +		ufshcd_auto_hibern8_enable(hba);
->> +		ufshcd_release(hba);
->> +		pm_runtime_put(hba->dev);
->> +	}
->>  }
-> 
-> Thanks,
-> Stanley
+Hi Finn!
 
-Hi Stanley,
+Op vr 15 nov. 2019 om 03:13 schreef Finn Thain <fthain@telegraphics.com.au>:
+> For simplicity, the entire patch series would normally show the same
+> version number (v3).
 
-if !pm_runtime_suspended() is true, hba->dev's runtime status, other 
-than RPM_ACTIVE,
-may be RPM_SUSPENDING or RPM_RESUMING. So, here for safty, do 
-pm_runtime_get_sync() once
-before access registers, in case we hit corner cases in which powers 
-and/or clocks are OFF.
+OK, thanks.
 
-Thanks,
-Can Guo.
+> Also, the series would normally be a thread unto itself, rather than a sub-thread.
+
+OK, I followed an example from the git-send-email manual ("which
+avoids breaking threads to provide a new patch series").
+I found the relevant convention in "Submitting patches", I didn't
+notice that before. Thanks.
+
+> ...
+>
+> This is Hannes' code so I'll leave it up to him to review this change.
+>
+> I presume this is untested on PCSCSI hardware. ISTR that there's an
+> emulator for that board somewhere...
+
+Yes, I don't have any, so I could not test it. QEMU emulates it, but
+it doesn't care about CONFIG3 etc. at all.
+
+Thanks for your reviews!
+
+Kind regards,
+
+Kars.
