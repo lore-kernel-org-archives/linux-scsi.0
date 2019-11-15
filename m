@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD83C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87CADC432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9ACDB2073A
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:09:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EB502073A
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 06:10:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mAsU6c/w";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Jpzu97I+"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hueIDgC4";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L/jrEf8f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727181AbfKOGJz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 01:09:55 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:37756 "EHLO
+        id S1727323AbfKOGKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 01:10:09 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:38088 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbfKOGJy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2019 01:09:54 -0500
+        with ESMTP id S1725848AbfKOGKI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Nov 2019 01:10:08 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 4027E611A7; Fri, 15 Nov 2019 06:09:50 +0000 (UTC)
+        id B6CDA611BD; Fri, 15 Nov 2019 06:10:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573798193;
-        bh=vA5QMfOG8/tSJ0LbkGi4Gjgkhix8FM2eGb2eZp8y9oo=;
+        s=default; t=1573798207;
+        bh=FwdFdOmJd9KNWRI6RrHvYALDn8KmaSzJOep2nOMopZk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mAsU6c/wQz5Yca+WHSYXRRsEXxDvVfYFFCAl0xFPG4SFMv4nSAQt47oeOCYRY1Ox6
-         ggS0GCBBzzZN9iUtIp0Zxj/4cnxMmXMx8JM+VuqNHrK8SHmWp/OQ9oqak2wUb1wiEJ
-         Ok/VEwcYjk34pEyWpzKcLPDeeQVjfyidTgX/KFLM=
+        b=hueIDgC4vp6Ioq1PDSuG+Csm/Wa1PG7fcMHrGHja9kZ5W8x6uo/26AuwEQs1tTRcg
+         3QUwnyjyT6iLfJEL4GYp4jYOwCLiNYnz8JGtDD0TX5wV2EPKX/9VE10EVIH1zfePxD
+         c+M4w7ptpaO5mJek44AlslfYTZMFU1Sr5W31OSRg=
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 596296117A;
-        Fri, 15 Nov 2019 06:09:47 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8BD1B611A3;
+        Fri, 15 Nov 2019 06:09:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573798188;
-        bh=vA5QMfOG8/tSJ0LbkGi4Gjgkhix8FM2eGb2eZp8y9oo=;
+        s=default; t=1573798199;
+        bh=FwdFdOmJd9KNWRI6RrHvYALDn8KmaSzJOep2nOMopZk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jpzu97I+QLGqZfithVQdUJmo/SM3uZfhp8h4Ilu6zJ1ppjMkJiKzeABLppETA4fbA
-         ydAU4MFy/C1T53ZUh/f4BxWWPqlRSNVRlFP7C6RUtNflqKfl2TElt+NnEdRdYu6cHK
-         uADSiKdfRjTLJyfLxNc4TR/VNKJqUERJu1acFkNc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 596296117A
+        b=L/jrEf8fCBPdBVAD7Ud34HdNZZ0ZJ7eEj0DO+aReG7AL8qoZ8SrirMmzSERGobjo2
+         csz7zbmiYPic/8uvVRoJQirmW4x/lnW5wg6y617UFLgAQdfcLZihJPG+50EfMVgtTV
+         dN3GxIJ5/ThYzUXArfJ/xZrPZGhvuCkXL3AkboBU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8BD1B611A3
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -52,17 +52,21 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         cang@codeaurora.org
-Cc:     Andy Gross <agross@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for host controller
-Date:   Thu, 14 Nov 2019 22:09:25 -0800
-Message-Id: <1573798172-20534-3-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v5 3/7] scsi: ufs: Fix up auto hibern8 enablement
+Date:   Thu, 14 Nov 2019 22:09:26 -0800
+Message-Id: <1573798172-20534-4-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
 References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
@@ -71,114 +75,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add reset control for host controller so that host controller can be reset
-as required in its power up sequence.
+Fix up possible unclocked register access to auto hibern8 register in
+resume path and through sysfs entry. Meanwhile, enable auto hibern8
+only after device is fully initialized in probe path.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 53 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-qcom.h |  3 +++
- 2 files changed, 56 insertions(+)
+ drivers/scsi/ufs/ufs-sysfs.c | 15 +++++++++------
+ drivers/scsi/ufs/ufshcd.c    | 14 +++++++-------
+ drivers/scsi/ufs/ufshcd.h    |  2 ++
+ 3 files changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index a5b7148..c69c29a1c 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -246,6 +246,44 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
- 	mb();
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 969a36b..ad2abc9 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -126,13 +126,16 @@ static void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+ 		return;
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->ahit == ahit)
+-		goto out_unlock;
+-	hba->ahit = ahit;
+-	if (!pm_runtime_suspended(hba->dev))
+-		ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
+-out_unlock:
++	if (hba->ahit != ahit)
++		hba->ahit = ahit;
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (!pm_runtime_suspended(hba->dev)) {
++		pm_runtime_get_sync(hba->dev);
++		ufshcd_hold(hba, false);
++		ufshcd_auto_hibern8_enable(hba);
++		ufshcd_release(hba);
++		pm_runtime_put(hba->dev);
++	}
  }
  
-+/**
-+ * ufs_qcom_host_reset - reset host controller and PHY
-+ */
-+static int ufs_qcom_host_reset(struct ufs_hba *hba)
-+{
-+	int ret = 0;
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	if (!host->core_reset) {
-+		dev_warn(hba->dev, "%s: reset control not set\n", __func__);
-+		goto out;
-+	}
-+
-+	ret = reset_control_assert(host->core_reset);
-+	if (ret) {
-+		dev_err(hba->dev, "%s: core_reset assert failed, err = %d\n",
-+				 __func__, ret);
-+		goto out;
-+	}
-+
-+	/*
-+	 * The hardware requirement for delay between assert/deassert
-+	 * is at least 3-4 sleep clock (32.7KHz) cycles, which comes to
-+	 * ~125us (4/32768). To be on the safe side add 200us delay.
-+	 */
-+	usleep_range(200, 210);
-+
-+	ret = reset_control_deassert(host->core_reset);
-+	if (ret)
-+		dev_err(hba->dev, "%s: core_reset deassert failed, err = %d\n",
-+				 __func__, ret);
-+
-+	usleep_range(1000, 1100);
-+
-+out:
-+	return ret;
-+}
-+
- static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+ /* Convert Auto-Hibernate Idle Timer register value to microseconds */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 525f8e6..9bc2cad 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3947,7 +3947,7 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
++void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
  {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -254,6 +292,12 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 	bool is_rate_B = (UFS_QCOM_LIMIT_HS_RATE == PA_HS_MODE_B)
- 							? true : false;
+ 	unsigned long flags;
  
-+	/* Reset UFS Host Controller and PHY */
-+	ret = ufs_qcom_host_reset(hba);
-+	if (ret)
-+		dev_warn(hba->dev, "%s: host reset returned %d\n",
-+				  __func__, ret);
+@@ -6892,9 +6892,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
+ 
+-	/* Enable Auto-Hibernate if configured */
+-	ufshcd_auto_hibern8_enable(hba);
+-
+ 	ret = ufshcd_verify_dev_init(hba);
+ 	if (ret)
+ 		goto out;
+@@ -6945,6 +6942,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* set the state as operational after switching to desired gear */
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 
++	/* Enable Auto-Hibernate if configured */
++	ufshcd_auto_hibern8_enable(hba);
 +
- 	if (is_rate_B)
- 		phy_set_mode(phy, PHY_MODE_UFS_HS_B);
+ 	/*
+ 	 * If we are in error handling context or in power management callbacks
+ 	 * context, no need to scan the host
+@@ -7962,12 +7962,12 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	if (hba->clk_scaling.is_allowed)
+ 		ufshcd_resume_clkscaling(hba);
  
-@@ -1101,6 +1145,15 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	host->hba = hba;
- 	ufshcd_set_variant(hba, host);
+-	/* Schedule clock gating in case of no access to UFS device yet */
+-	ufshcd_release(hba);
+-
+ 	/* Enable Auto-Hibernate if configured */
+ 	ufshcd_auto_hibern8_enable(hba);
  
-+	/* Setup the reset control of HCI */
-+	host->core_reset = devm_reset_control_get(hba->dev, "rst");
-+	if (IS_ERR(host->core_reset)) {
-+		err = PTR_ERR(host->core_reset);
-+		dev_warn(dev, "Failed to get reset control %d\n", err);
-+		host->core_reset = NULL;
-+		err = 0;
-+	}
++	/* Schedule clock gating in case of no access to UFS device yet */
++	ufshcd_release(hba);
 +
- 	/* Fire up the reset controller. Failure here is non-fatal. */
- 	host->rcdev.of_node = dev->of_node;
- 	host->rcdev.ops = &ufs_qcom_reset_ops;
-diff --git a/drivers/scsi/ufs/ufs-qcom.h b/drivers/scsi/ufs/ufs-qcom.h
-index d401f17..2d95e7c 100644
---- a/drivers/scsi/ufs/ufs-qcom.h
-+++ b/drivers/scsi/ufs/ufs-qcom.h
-@@ -6,6 +6,7 @@
- #define UFS_QCOM_H_
+ 	goto out;
  
- #include <linux/reset-controller.h>
-+#include <linux/reset.h>
+ set_old_link_state:
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index e0fe247..2740f69 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -926,6 +926,8 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
  
- #define MAX_UFS_QCOM_HOSTS	1
- #define MAX_U32                 (~(u32)0)
-@@ -233,6 +234,8 @@ struct ufs_qcom_host {
- 	u32 dbg_print_en;
- 	struct ufs_qcom_testbus testbus;
- 
-+	/* Reset control of HCI */
-+	struct reset_control *core_reset;
- 	struct reset_controller_dev rcdev;
- 
- 	struct gpio_desc *device_reset;
++void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
++
+ #define SD_ASCII_STD true
+ #define SD_RAW false
+ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
