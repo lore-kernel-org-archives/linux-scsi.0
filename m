@@ -6,43 +6,29 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 880B7C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45972C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:42:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F0042077B
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2659B20732
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Nov 2019 07:42:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727192AbfKOH3k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Nov 2019 02:29:40 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51820 "EHLO mx1.suse.de"
+        id S1726567AbfKOHmX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Nov 2019 02:42:23 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56404 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726444AbfKOH3j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 Nov 2019 02:29:39 -0500
+        id S1726182AbfKOHmX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Nov 2019 02:42:23 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id C6613AD05;
-        Fri, 15 Nov 2019 07:29:36 +0000 (UTC)
-Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
-To:     Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "hare@suse.com" <hare@suse.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>
-References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-4-git-send-email-john.garry@huawei.com>
- <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
- <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
- <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
- <ace95bc5-7b89-9ed3-be89-8139f977984b@huawei.com>
- <42b0bcd9-f147-76eb-dfce-270f77bca818@suse.de>
- <89cd1985-39c7-2965-d25b-2ee2c183d057@huawei.com>
- <c34c0ce2-40a8-e4fc-3366-1f7b906da5a3@acm.org>
+        by mx1.suse.de (Postfix) with ESMTP id 43807AD2C;
+        Fri, 15 Nov 2019 07:42:21 +0000 (UTC)
+Subject: Re: [PATCHv3 00/52] Revamp SCSI result values
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Bart van Assche <bvanassche@acm.org>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20191104090151.129140-1-hare@suse.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -88,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3cda2c0a-1b09-afd3-e0d2-28f7587a085c@suse.de>
-Date:   Fri, 15 Nov 2019 08:29:36 +0100
+Message-ID: <5fa00739-0f30-56fa-426e-1847457cc1dd@suse.de>
+Date:   Fri, 15 Nov 2019 08:42:19 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <c34c0ce2-40a8-e4fc-3366-1f7b906da5a3@acm.org>
+In-Reply-To: <20191104090151.129140-1-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -102,45 +88,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/15/19 6:30 AM, Bart Van Assche wrote:
-> On 11/14/19 1:41 AM, John Garry wrote:
->> On 13/11/2019 18:38, Hannes Reinecke wrote:
->>>> Hi Hannes,
->>>>
->>>>> Oh, my. Indeed, that's correct.
->>>>
->>>> The tags could be kept in sync like this:
->>>>
->>>> shared_tag = blk_mq_get_tag(shared_tagset);
->>>> if (shared_tag != -1)
->>>>      sbitmap_set(hctx->tags, shared_tag);
->>>>
->>>> But that's obviously not ideal.
->>>>
->>> Actually, I _do_ prefer keeping both in sync.
->>> We might want to check if the 'normal' tag is set (typically it would not, but then, who knows ...)
->>> The beauty here is that both 'shared' and 'normal' tag are in sync, so if a driver would be wanting to use the tag as index into a command array it can do so without any surprises.
->>>
->>> Why do you think it's not ideal?
->>
->> A few points:
->> - Getting a bit from one tagset and then setting it in another tagset is a bit clunky.
->> - There may be an atomicity of the getting the shared tag bit and setting the hctx tag bit - I don't think that there is.
->> - Consider that sometimes we may want to check if there is space on a hw queue - checking the hctx tags is not really proper any longer, as typically there would always be space on hctx, but not always the shared tags. We did delete blk_mq_can_queue() yesterday, which
->> would be an example of that. Need to check if there are others.
->>
->> Having said all that, the obvious advantage is performance gain, can still use request.tag and so maybe less intrusive changes.
->>
->> I'll have a look at the implementation. The devil is mostly in the detail...
+On 11/4/19 10:00 AM, Hannes Reinecke wrote:
+> Hi all,
 > 
-> Wouldn't that approach trigger a deadlock if it is attempted to allocate the last
-> tag from two different hardware queues? How about sharing tag sets across hardware
-> queues, e.g. like in the (totally untested) patch below?
+> the 'result' field in the SCSI command is defined as having
+> 4 fields. The top byte is declared as a 'driver_byte', where the
+> driver can signal some internal status back to the midlayer.
+> However, there is quite a bit of overlap between the driver_byte
+> and the host_byte, resulting in the driver_byte being used in
+> very few places, and mostly in legacy drivers.
+> Additionally, we have _two_ sets of definitions for the
+> last byte (status byte), which can specified either in SAM terms
+> or in the linux-specific terms, which are shifted right by one
+> from the SAM ones.
+> Needless to say, the linux-specific ones are declared obsolete
+> for years now.
+> And to make the confusion complete, both the status byte and
+> the driver byte have a byte for a valid sense code, resulting
+> in quite some confusion which of those bits to check.
 > 
-Why should it?
-The shared tag map determines which tag should be allocated in the
-per-hctx map, and as the former is a strict superset of all hctx maps
-the bit _has_ to be free in the hctx map.
+> This patchset does several things:
+> - remove the linux-specific status byte definitions, and use
+>   the SAM values throughout
+> - replace the driver-byte values with either SAM ones (for sense
+>   code checking) or host-byte definitions
+> - remove the driver-byte definitions
+> 
+> As usual, comments and reviews are welcome.
+> 
+> Please note, commit 66cf50e65b18 ("scsi: qla2xxx: fixup incorrect
+> usage of host_byte") from 5.4/scsi-fixes is a prerequisite for
+> this patch series.
+> 
+Martin, ping?
+
+I've got another patchset queued for splitting off the 'result' field,
+which kinda depends on this one...
 
 Cheers,
 
