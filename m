@@ -2,51 +2,50 @@ Return-Path: <SRS0=ZMHN=ZI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 490C5C432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574FDC33C8C
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 225C121887
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 269C72089D
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920311;
-	bh=F/ryplOLoyCK6W19sBZaQN24wr2gWrf1Q6aRTNdpz2Y=;
+	s=default; t=1573920312;
+	bh=Y5oiB7530wepLPGyawlMUGIb28+HF8HLGv0HAT+h6v4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=06b1o+2XfnEaFntVbLlFRSYyYe16Gh2Q3SLH1qu5OTEQ7TsICCmofAIjaQ2NO8HdE
-	 QOqdi6mx+q8XiK2azZHN7PWCnm+BdsT2SqSkILjsW1NiCc5PFr+0aF1kNJ3yqqvh58
-	 KDDS1NyPM7RtjftmvQmAJzRJPMFiGaxSITDT6ekY=
+	b=Fv/8DMijcIdHyoa1af9h2UT1DUcgJTfGOPrTkT2xPrAgYxGhjt12G4vgtGwd31w3H
+	 RzUGgu6KKN+b5oDxHmSkAJTQXHafmMi2Ac0I4RKh8miq/TajOfN+cZNdUJMYSd9v9v
+	 ebLMlPhwlp8mV9PuBduFQZs3YUUWKQ/J1a2iAvu0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730760AbfKPQFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:05:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60110 "EHLO mail.kernel.org"
+        id S1730748AbfKPPv0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:51:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60042 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729196AbfKPPv1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:51:27 -0500
+        id S1729221AbfKPPvZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:51:25 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C251F20895;
-        Sat, 16 Nov 2019 15:51:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0AB91214DE;
+        Sat, 16 Nov 2019 15:51:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919487;
-        bh=F/ryplOLoyCK6W19sBZaQN24wr2gWrf1Q6aRTNdpz2Y=;
+        s=default; t=1573919485;
+        bh=Y5oiB7530wepLPGyawlMUGIb28+HF8HLGv0HAT+h6v4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eX7JdxP2pp6JizjXU1QWlsz6o0MSuRsOMeIk6CxpP5lhlinFyCLgC5uGnph768RcY
-         ZLqeZh3EDVtzK9yIIRSjZxynPfOOn4yI+rhNIbqW0fTRyP1aCMumdO8I8McvP+X9HG
-         /2ZkcxqnFxI2cTcyGumhZ7z/s7paeAleCHJ4BzoM=
+        b=wHh3YxAuHxsYdkYvgJvyXfFT0eK+Y5GIdUpuVv8NT3Bj1eYKbEUbtlT9uKkXApS+f
+         t1F9VKJy3/pBylgTA4/DJM+BcAt7kzmXu0x8zDCJ5UOxgLxj8PKLRBrunQ4AJkSOhj
+         I67a2qUNERtNM5DZrX8Y07w6gcxZwkBZG3XbIL3Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+Cc:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.9 18/99] scsi: isci: Use proper enumerated type in atapi_d2h_reg_frame_handler
-Date:   Sat, 16 Nov 2019 10:49:41 -0500
-Message-Id: <20191116155103.10971-18-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 16/99] scsi: ips: fix missing break in switch
+Date:   Sat, 16 Nov 2019 10:49:39 -0500
+Message-Id: <20191116155103.10971-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116155103.10971-1-sashal@kernel.org>
 References: <20191116155103.10971-1-sashal@kernel.org>
@@ -59,53 +58,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
-[ Upstream commit e9e9a103528c7e199ead6e5374c9c52cf16b5802 ]
+[ Upstream commit 5d25ff7a544889bc4b749fda31778d6a18dddbcb ]
 
-Clang warns when one enumerated type is implicitly converted to another.
+Add missing break statement in order to prevent the code from falling
+through to case TEST_UNIT_READY.
 
-drivers/scsi/isci/request.c:1629:13: warning: implicit conversion from
-enumeration type 'enum sci_io_status' to different enumeration type
-'enum sci_status' [-Wenum-conversion]
-                        status = SCI_IO_FAILURE_RESPONSE_VALID;
-                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/isci/request.c:1631:12: warning: implicit conversion from
-enumeration type 'enum sci_io_status' to different enumeration type
-'enum sci_status' [-Wenum-conversion]
-                status = SCI_IO_FAILURE_RESPONSE_VALID;
-                       ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-status is of type sci_status but SCI_IO_FAILURE_RESPONSE_VALID is of
-type sci_io_status. Use SCI_FAILURE_IO_RESPONSE_VALID, which is from
-sci_status and has SCI_IO_FAILURE_RESPONSE_VALID's exact value since
-that is what SCI_IO_FAILURE_RESPONSE_VALID is mapped to in the isci.h
-file.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/153
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Addresses-Coverity-ID: 1357338 ("Missing break in switch")
+Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/isci/request.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ips.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index b709d2b208809..7d71ca421751d 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1626,9 +1626,9 @@ static enum sci_status atapi_d2h_reg_frame_handler(struct isci_request *ireq,
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 02cb76fd44208..6bbf2945a3e00 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3500,6 +3500,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
  
- 	if (status == SCI_SUCCESS) {
- 		if (ireq->stp.rsp.status & ATA_ERR)
--			status = SCI_IO_FAILURE_RESPONSE_VALID;
-+			status = SCI_FAILURE_IO_RESPONSE_VALID;
- 	} else {
--		status = SCI_IO_FAILURE_RESPONSE_VALID;
-+		status = SCI_FAILURE_IO_RESPONSE_VALID;
- 	}
+ 		case START_STOP:
+ 			scb->scsi_cmd->result = DID_OK << 16;
++			break;
  
- 	if (status != SCI_SUCCESS) {
+ 		case TEST_UNIT_READY:
+ 		case INQUIRY:
 -- 
 2.20.1
 
