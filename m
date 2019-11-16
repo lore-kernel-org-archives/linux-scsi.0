@@ -4,51 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A522C43141
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8950C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6450420815
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7E6D2089D
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:04:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920087;
-	bh=ZUU5H9HjWn3RXfrImjsnjhkhrT3YNJwLQmoT5CgPNO8=;
+	s=default; t=1573920282;
+	bh=zVi3l48Dj1pEq/lXVT7CWip3HEIXhUTRhaX6jVURMJE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fsweOtwnAhC41LVPnI9ubrmf0L9JBV0p2kKt1xFWGFAmowFUpqU2muoo9mp+AJ6p5
-	 x7TkrkaoD85AB8nu6bweWL+lUpkE3cN90L5mV53BWQ9KZRxTf4NDuWvLlcoDzoS8cr
-	 BPAdzyCCCHVr5S4iI5yGLXUJjoBlmjmSqTI6Rxnc=
+	b=1HhMzagSZ8hjPaFIEjiHMM8NokxB70XOEEEE3cA+H8pD6UXO21S2U42lqowvVxpEY
+	 K8cY/rk+hp19WSHxOo+DDtfCcQJ2q49ezkZyJW7WNfFSmI0IYsMBSMShzrg9uKV06Q
+	 3KQfe8Vjt0j+GWZ2e9ADoiYI0xtg7R61/dWeVXOg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730914AbfKPQBS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:01:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34290 "EHLO mail.kernel.org"
+        id S1731068AbfKPQEm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:04:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60314 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731183AbfKPPxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:53:17 -0500
+        id S1730790AbfKPPvf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:51:35 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 428DC2186D;
-        Sat, 16 Nov 2019 15:53:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A0A9A20723;
+        Sat, 16 Nov 2019 15:51:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919596;
-        bh=ZUU5H9HjWn3RXfrImjsnjhkhrT3YNJwLQmoT5CgPNO8=;
+        s=default; t=1573919495;
+        bh=zVi3l48Dj1pEq/lXVT7CWip3HEIXhUTRhaX6jVURMJE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VfDov+inAarS8gq4WStmTfTcIGkOqp/8rqMqAPEVPNOR7O5vzRbIZsml5MYX6Z01j
-         SQ+cxvMRhegLPx/2TXRzOlik9GUNcI176eHeDsayqmYICwVTMkK6m/ry0pv427XBEn
-         6PDAXXAQ36caNXTya8MhMN8T9XtbpnTsH6Anf2so=
+        b=1658jAuWJtHucIY4OuBgqjdUrZVWQ+ntPrMNMmssUR57W4y4LQ9h4CmbXf2m9c6fZ
+         5W3+56yf8ibonT+kQoQyA369tu1SozE9JUpUAyVcnRo1Fp2/BVVOF5zHN9lZpLPTUI
+         EVXLcZQz/O3pkmjqYk9uVyoJFvyCOH9KpvhUxkEs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
+Cc:     Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 83/99] scsi: mpt3sas: Fix Sync cache command failure during driver unload
-Date:   Sat, 16 Nov 2019 10:50:46 -0500
-Message-Id: <20191116155103.10971-83-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, dc395x@twibble.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 23/99] scsi: dc395x: fix dma API usage in srb_done
+Date:   Sat, 16 Nov 2019 10:49:46 -0500
+Message-Id: <20191116155103.10971-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116155103.10971-1-sashal@kernel.org>
 References: <20191116155103.10971-1-sashal@kernel.org>
@@ -61,85 +59,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: Christoph Hellwig <hch@lst.de>
 
-[ Upstream commit 9029a72500b95578a35877a43473b82cb0386c53 ]
+[ Upstream commit 3a5bd7021184dec2946f2a4d7a8943f8a5713e52 ]
 
-This is to fix SYNC CACHE and START STOP command failures with
-DID_NO_CONNECT during driver unload.
+We can't just transfer ownership to the CPU and then unmap, as this will
+break with swiotlb.
 
-In driver's IO submission patch (i.e. in driver's .queuecommand()) driver
-won't allow any SCSI commands to the IOC when ioc->remove_host flag is set
-and hence SYNC CACHE commands which are issued to the target drives (where
-write cache is enabled) during driver unload time is failed with
-DID_NO_CONNECT status.
+Instead unmap the command and sense buffer a little earlier in the I/O
+completion handler and get rid of the pci_dma_sync_sg_for_cpu call
+entirely.
 
-Now modified the driver to allow SYNC CACHE and START STOP commands to IOC,
-even when remove_host flag is set.
-
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 36 +++++++++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/scsi/dc395x.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index ec48c010a3bab..aa2078d7e23e2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3297,6 +3297,40 @@ _scsih_tm_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	return _scsih_check_for_pending_tm(ioc, smid);
- }
- 
-+/** _scsih_allow_scmd_to_device - check whether scmd needs to
-+ *				 issue to IOC or not.
-+ * @ioc: per adapter object
-+ * @scmd: pointer to scsi command object
-+ *
-+ * Returns true if scmd can be issued to IOC otherwise returns false.
-+ */
-+inline bool _scsih_allow_scmd_to_device(struct MPT3SAS_ADAPTER *ioc,
-+	struct scsi_cmnd *scmd)
-+{
-+
-+	if (ioc->pci_error_recovery)
-+		return false;
-+
-+	if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
-+		if (ioc->remove_host)
-+			return false;
-+
-+		return true;
-+	}
-+
-+	if (ioc->remove_host) {
-+
-+		switch (scmd->cmnd[0]) {
-+		case SYNCHRONIZE_CACHE:
-+		case START_STOP:
-+			return true;
-+		default:
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
- 
- /**
-  * _scsih_sas_control_complete - completion routine
-@@ -4059,7 +4093,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		return 0;
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 5ee7f44cf869b..9da0ac360848f 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -3450,14 +3450,12 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		}
  	}
  
--	if (ioc->pci_error_recovery || ioc->remove_host) {
-+	if (!(_scsih_allow_scmd_to_device(ioc, scmd))) {
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		return 0;
+-	if (dir != PCI_DMA_NONE && scsi_sg_count(cmd))
+-		pci_dma_sync_sg_for_cpu(acb->dev, scsi_sglist(cmd),
+-					scsi_sg_count(cmd), dir);
+-
+ 	ckc_only = 0;
+ /* Check Error Conditions */
+       ckc_e:
+ 
++	pci_unmap_srb(acb, srb);
++
+ 	if (cmd->cmnd[0] == INQUIRY) {
+ 		unsigned char *base = NULL;
+ 		struct ScsiInqData *ptr;
+@@ -3511,7 +3509,6 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 			cmd, cmd->result);
+ 		srb_free_insert(acb, srb);
+ 	}
+-	pci_unmap_srb(acb, srb);
+ 
+ 	cmd->scsi_done(cmd);
+ 	waiting_process_next(acb);
 -- 
 2.20.1
 
