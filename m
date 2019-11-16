@@ -2,55 +2,55 @@ Return-Path: <SRS0=ZMHN=ZI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3D6C432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8BC8C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:51:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 65C21217D6
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8F3020728
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:51:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919438;
-	bh=EHA+Fe7eIbG8tt1ANtpom1GPKu0YwoUmtCxEmscV9QU=;
+	s=default; t=1573919490;
+	bh=X0X+XnxcakSoGSTsODunSWW+0yo6QkYP+ksjJxsWRis=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DxVUo5IcdyyJH1VPHlckf81pr8RvfDG9VwcD9lQ/5cmRcfvDIhGAe7hqf+feXLcpx
-	 PH5gC4mKpTM4RTYazeFr6dAoNluGFqpSR8dKP+mf+UpjPQn/wXmQZ7lgyY7pwru9X5
-	 yTiDMJWiQayvD2yAfkfJHLK6Sj1ZXYyJkisnoCeE=
+	b=uUZ7DckCDhQl5NBNd38MT626ApEaEDI6fMr6BZbxTusEf8tYR144VFdSeFHQDLxEC
+	 i1bUf3mXKD8JatKlCrcOL2xWPf12iRC/WWyz4B+4akTQ0LMern4Hbalz5EbRc5AJlR
+	 Zk5y9z1AcMHAS2ZFCiSgzdDxZbJmJFObXl2z9flw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730568AbfKPPug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:50:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58734 "EHLO mail.kernel.org"
+        id S1730771AbfKPPva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:51:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730555AbfKPPuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:50:35 -0500
+        id S1729221AbfKPPv3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:51:29 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E7E8720B7C;
-        Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A8B8421887;
+        Sat, 16 Nov 2019 15:51:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919434;
-        bh=EHA+Fe7eIbG8tt1ANtpom1GPKu0YwoUmtCxEmscV9QU=;
+        s=default; t=1573919489;
+        bh=X0X+XnxcakSoGSTsODunSWW+0yo6QkYP+ksjJxsWRis=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ac1trimyVxl64Tij7YHlAre+WijjmUAV/NRkMMQd4HW5IYamOYhmHow+ssW0wY7Fz
-         MVJ9GuHoMqh3V/tZUOfO5DXtQ4O6IT7oVM913FjZQ053vKLFhN1taMBTdBwdpHWy0+
-         x1ogy93bHyEz2zx1aaDRW5EwGYl6D7bnj5l2yWjs=
+        b=fFLp6j65zTwOwA7rCg+BjyHv7eEJFHUp40QoD1UcNybJJ8J6pmupaaMVoOX0PQNJE
+         eSh37F47uoNTgBYZlH3yMBHuFAENwQ+NCAq0Tv4CtaQeyd3+UoXD2Q4Hh8Py1Zgo2V
+         bwVE/a2Eu4oXsgKS8I5E34f34mer2ic6bPGODaUs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Hannes Reinecke <hare@suse.com>,
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 132/150] scsi: lpfc: fcoe: Fix link down issue after 1000+ link bounces
-Date:   Sat, 16 Nov 2019 10:47:10 -0500
-Message-Id: <20191116154729.9573-132-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.9 20/99] scsi: iscsi_tcp: Explicitly cast param in iscsi_sw_tcp_host_get_param
+Date:   Sat, 16 Nov 2019 10:49:43 -0500
+Message-Id: <20191116155103.10971-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
-References: <20191116154729.9573-1-sashal@kernel.org>
+In-Reply-To: <20191116155103.10971-1-sashal@kernel.org>
+References: <20191116155103.10971-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,130 +60,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
 
-[ Upstream commit 036cad1f1ac9ce03e2db94b8460f98eaf1e1ee4c ]
+[ Upstream commit 20054597f169090109fc3f0dfa1a48583f4178a4 ]
 
-On FCoE adapters, when running link bounce test in a loop, initiator
-failed to login with switch switch and required driver reload to
-recover. Switch reached a point where all subsequent FLOGIs would be
-LS_RJT'd. Further testing showed the condition to be related to not
-performing FCF discovery between FLOGI's.
+Clang warns when one enumerated type is implicitly converted to another.
 
-Fix by monitoring FLOGI failures and once a repeated error is seen
-repeat FCF discovery.
+drivers/scsi/iscsi_tcp.c:803:15: warning: implicit conversion from
+enumeration type 'enum iscsi_host_param' to different enumeration type
+'enum iscsi_param' [-Wenum-conversion]
+                                                 &addr, param, buf);
+                                                        ^~~~~
+1 warning generated.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+iscsi_conn_get_addr_param handles ISCSI_HOST_PARAM_IPADDRESS just fine
+so add an explicit cast to iscsi_param to make it clear to Clang that
+this is expected behavior.
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/153
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c     |  2 ++
- drivers/scsi/lpfc/lpfc_hbadisc.c | 20 ++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_init.c    |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c     | 11 ++---------
- drivers/scsi/lpfc/lpfc_sli4.h    |  1 +
- 5 files changed, 26 insertions(+), 10 deletions(-)
+ drivers/scsi/iscsi_tcp.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index ddd29752d96dc..95449f97101d3 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1152,6 +1152,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
- 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
- 			spin_unlock_irq(&phba->hbalock);
-+			phba->fcf.fcf_redisc_attempted = 0; /* reset */
- 			goto out;
- 		}
- 		if (!rc) {
-@@ -1166,6 +1167,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
- 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
- 			spin_unlock_irq(&phba->hbalock);
-+			phba->fcf.fcf_redisc_attempted = 0; /* reset */
- 			goto out;
- 		}
- 	}
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index b970933a218d5..d850077c5e226 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1999,6 +1999,26 @@ int lpfc_sli4_fcf_rr_next_proc(struct lpfc_vport *vport, uint16_t fcf_index)
- 				"failover and change port state:x%x/x%x\n",
- 				phba->pport->port_state, LPFC_VPORT_UNKNOWN);
- 		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
-+
-+		if (!phba->fcf.fcf_redisc_attempted) {
-+			lpfc_unregister_fcf(phba);
-+
-+			rc = lpfc_sli4_redisc_fcf_table(phba);
-+			if (!rc) {
-+				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
-+						"3195 Rediscover FCF table\n");
-+				phba->fcf.fcf_redisc_attempted = 1;
-+				lpfc_sli4_clear_fcf_rr_bmask(phba);
-+			} else {
-+				lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+						"3196 Rediscover FCF table "
-+						"failed. Status:x%x\n", rc);
-+			}
-+		} else {
-+			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+					"3197 Already rediscover FCF table "
-+					"attempted. No more retry\n");
-+		}
- 		goto stop_flogi_current_fcf;
- 	} else {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_FIP | LOG_ELS,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 25612ccf6ff28..15bcd00dd7a23 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4997,7 +4997,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
- 			break;
- 		}
- 		/* If fast FCF failover rescan event is pending, do nothing */
--		if (phba->fcf.fcf_flag & FCF_REDISC_EVT) {
-+		if (phba->fcf.fcf_flag & (FCF_REDISC_EVT | FCF_REDISC_PEND)) {
- 			spin_unlock_irq(&phba->hbalock);
- 			break;
- 		}
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 6c2b098b76095..ebf7d3cda3677 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18056,15 +18056,8 @@ lpfc_sli4_fcf_rr_next_index_get(struct lpfc_hba *phba)
- 			goto initial_priority;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
- 				"2844 No roundrobin failover FCF available\n");
--		if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX)
--			return LPFC_FCOE_FCF_NEXT_NONE;
--		else {
--			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
--				"3063 Only FCF available idx %d, flag %x\n",
--				next_fcf_index,
--			phba->fcf.fcf_pri[next_fcf_index].fcf_rec.flag);
--			return next_fcf_index;
--		}
-+
-+		return LPFC_FCOE_FCF_NEXT_NONE;
- 	}
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index ace4f1f41b8e0..d60564397be54 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -798,7 +798,8 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+ 			return rc;
  
- 	if (next_fcf_index < LPFC_SLI4_FCF_TBL_INDX_MAX &&
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 60200385fe009..a132a83ef233c 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -265,6 +265,7 @@ struct lpfc_fcf {
- #define FCF_REDISC_EVT	0x100 /* FCF rediscovery event to worker thread */
- #define FCF_REDISC_FOV	0x200 /* Post FCF rediscovery fast failover */
- #define FCF_REDISC_PROG (FCF_REDISC_PEND | FCF_REDISC_EVT)
-+	uint16_t fcf_redisc_attempted;
- 	uint32_t addr_mode;
- 	uint32_t eligible_fcf_cnt;
- 	struct lpfc_fcf_rec current_rec;
+ 		return iscsi_conn_get_addr_param((struct sockaddr_storage *)
+-						 &addr, param, buf);
++						 &addr,
++						 (enum iscsi_param)param, buf);
+ 	default:
+ 		return iscsi_host_get_param(shost, param, buf);
+ 	}
 -- 
 2.20.1
 
