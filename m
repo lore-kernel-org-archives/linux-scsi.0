@@ -2,51 +2,52 @@ Return-Path: <SRS0=ZMHN=ZI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66693C432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C00C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4057821845
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C14232184B
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921501;
-	bh=/ZJI/4gyijIuk0UAleXk9pAGE4qXIMVC+2rzUpbTqLg=;
+	s=default; t=1573921519;
+	bh=0kjC/bhYkd5uVA3EYta0Z8i5/4EmS3pkzPHQm41NAXU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=eQWU9F15dsufSh3g+COQdf49acjqPheQ5bHlzZ1QTdRi/7US2vgYEJps8SSdGNptn
-	 tU1kWYlFmw+4BzAhkZmzkeYBSkUQREEdyw4K4HL6xZiQGdJ36Z1u7JoM5aZmrvE4m9
-	 j3/rRp+r5xnYsOmcp042fIkvs3XwGe86mPTXeuc8=
+	b=FHvYkYfwCoL3JzhWwNj/tNxsCgeXyhiKed3rWswk5Y9k/VXRk78QRsNU6z+2IUGcI
+	 K6pFxphEm2vh/lgPwVvbl+Ug6smGy8jZi4MwC0iwaQJwAVIFR3klyxa4K6gr5ksxBU
+	 Bdur7TXiYZyX8V8TL7L6xoG+/MQXD9bTht76cTqo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728937AbfKPQYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:24:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45942 "EHLO mail.kernel.org"
+        id S1728183AbfKPPmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:42:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45626 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728218AbfKPPmX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:42:23 -0500
+        id S1728168AbfKPPmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:42:08 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 94E4F2083E;
-        Sat, 16 Nov 2019 15:42:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 425A520815;
+        Sat, 16 Nov 2019 15:42:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573918943;
-        bh=/ZJI/4gyijIuk0UAleXk9pAGE4qXIMVC+2rzUpbTqLg=;
+        s=default; t=1573918927;
+        bh=0kjC/bhYkd5uVA3EYta0Z8i5/4EmS3pkzPHQm41NAXU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tzJmfi2CzG2CktobJc+doFAUM/LtYcNj23X+2DrMgVT2kJaL78fv1SCrrQpQrInC0
-         hS565mRugBtpJmYGmlPxRhKEqwvuGSNZYPIkmbUxCTGCesGQdXEEW451j7uIZ3Hztf
-         BukeDzOL2xM2ZOagaZAHHDh4fUBK6HUTYXzwWTNI=
+        b=hX0PBoM8HJQK/5/49MCl7WJmMYSs8fzuljEdJvtlVuWvnugttNdEXcDQYq+iGeCtu
+         RiJqFfVogwb7fQ9EySFyoa939O1jj5EIv+i8LnmbsiEbVlCiTMAh0ov6NyUJ3Rd6HL
+         0Y2OqNy9evgVwnWwUnUTmDq1F5wM6nmMowNXC42s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 065/237] scsi: zorro_esp: Limit DMA transfers to 65535 bytes
-Date:   Sat, 16 Nov 2019 10:38:20 -0500
-Message-Id: <20191116154113.7417-65-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.19 054/237] scsi: iscsi_tcp: Explicitly cast param in iscsi_sw_tcp_host_get_param
+Date:   Sat, 16 Nov 2019 10:38:09 -0500
+Message-Id: <20191116154113.7417-54-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -59,87 +60,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Finn Thain <fthain@telegraphics.com.au>
+From: Nathan Chancellor <natechancellor@gmail.com>
 
-[ Upstream commit b7ded0e8b0d11b6df1c4e5aa23a26e6629c21985 ]
+[ Upstream commit 20054597f169090109fc3f0dfa1a48583f4178a4 ]
 
-The core driver, esp_scsi, does not use the ESP_CONFIG2_FENAB bit, so the
-chip's Transfer Counter register is only 16 bits wide (not 24).  A larger
-transfer cannot work and will theoretically result in a failed command
-and a "DMA length is zero" error.
+Clang warns when one enumerated type is implicitly converted to another.
 
-Fixes: 3109e5ae0311 ("scsi: zorro_esp: New driver for Amiga Zorro NCR53C9x boards")
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+drivers/scsi/iscsi_tcp.c:803:15: warning: implicit conversion from
+enumeration type 'enum iscsi_host_param' to different enumeration type
+'enum iscsi_param' [-Wenum-conversion]
+                                                 &addr, param, buf);
+                                                        ^~~~~
+1 warning generated.
+
+iscsi_conn_get_addr_param handles ISCSI_HOST_PARAM_IPADDRESS just fine
+so add an explicit cast to iscsi_param to make it clear to Clang that
+this is expected behavior.
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/153
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/zorro_esp.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/scsi/iscsi_tcp.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
-index bb70882e6b56e..be79127db5946 100644
---- a/drivers/scsi/zorro_esp.c
-+++ b/drivers/scsi/zorro_esp.c
-@@ -245,7 +245,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
- static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
- 					u32 dma_len)
- {
--	return dma_len > 0xFFFFFF ? 0xFFFFFF : dma_len;
-+	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
- }
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index b025a0b743417..23354f206533b 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -800,7 +800,8 @@ static int iscsi_sw_tcp_host_get_param(struct Scsi_Host *shost,
+ 			return rc;
  
- static void zorro_esp_reset_dma(struct esp *esp)
-@@ -484,7 +484,6 @@ static void zorro_esp_send_blz1230_dma_cmd(struct esp *esp, u32 addr,
- 	scsi_esp_cmd(esp, ESP_CMD_DMA);
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	scsi_esp_cmd(esp, cmd);
- }
-@@ -529,7 +528,6 @@ static void zorro_esp_send_blz1230II_dma_cmd(struct esp *esp, u32 addr,
- 	scsi_esp_cmd(esp, ESP_CMD_DMA);
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	scsi_esp_cmd(esp, cmd);
- }
-@@ -574,7 +572,6 @@ static void zorro_esp_send_blz2060_dma_cmd(struct esp *esp, u32 addr,
- 	scsi_esp_cmd(esp, ESP_CMD_DMA);
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	scsi_esp_cmd(esp, cmd);
- }
-@@ -599,7 +596,6 @@ static void zorro_esp_send_cyber_dma_cmd(struct esp *esp, u32 addr,
- 
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	if (write) {
- 		/* DMA receive */
-@@ -649,7 +645,6 @@ static void zorro_esp_send_cyberII_dma_cmd(struct esp *esp, u32 addr,
- 
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	if (write) {
- 		/* DMA receive */
-@@ -691,7 +686,6 @@ static void zorro_esp_send_fastlane_dma_cmd(struct esp *esp, u32 addr,
- 
- 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
- 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
--	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
- 
- 	if (write) {
- 		/* DMA receive */
+ 		return iscsi_conn_get_addr_param((struct sockaddr_storage *)
+-						 &addr, param, buf);
++						 &addr,
++						 (enum iscsi_param)param, buf);
+ 	default:
+ 		return iscsi_host_get_param(shost, param, buf);
+ 	}
 -- 
 2.20.1
 
