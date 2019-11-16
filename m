@@ -2,127 +2,55 @@ Return-Path: <SRS0=ZMHN=ZI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7383BC432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:26:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1F7C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48D05214DE
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:26:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921604;
-	bh=y5GylDGsCz7qIrBi3/WJS/VV0/tGA8o9bj7XaPDIqYk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RJ5H6aAISh3Csz9JfNf/QWNK2mID2UGTd3Ec1G1+E+VxR0yPhKy/5a272gA6+krwE
-	 MPNzyPx3M3WiFcNbIMzv7OH/IhZdQXW3/a2tHX3H0FKZtTj4DBNRiLbXqJxxxeHBQ6
-	 dwN+T18UEZYJYkQEUiN3lHUCl2dXvITIrQ8IfsKU=
+	by mail.kernel.org (Postfix) with ESMTP id 7D71A216F4
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728587AbfKPQ0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:26:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45210 "EHLO mail.kernel.org"
+        id S1727893AbfKPQbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:31:23 -0500
+Received: from verein.lst.de ([213.95.11.211]:49379 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728029AbfKPPlx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:41:53 -0500
-Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1C7692084B;
-        Sat, 16 Nov 2019 15:41:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573918912;
-        bh=y5GylDGsCz7qIrBi3/WJS/VV0/tGA8o9bj7XaPDIqYk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aXZgbZzYIsW2LDqYUzi4yNCtw2SUlHMrmwvfcyHRH3yZDKc0F+OXNS/tCY8ryd9ct
-         r79yv9ubxmoFGhvvIqH4tC4DM29o54vtCLS0KI3Lredk5fGh5epeB3Ay/lXjGrrMGB
-         BgwGEHnkCGWUuBGHb2kgt1VaeaW71m1QmwL1qG6A=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 036/237] scsi: hisi_sas: Free slot later in slot_complete_vx_hw()
-Date:   Sat, 16 Nov 2019 10:37:51 -0500
-Message-Id: <20191116154113.7417-36-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
-References: <20191116154113.7417-1-sashal@kernel.org>
+        id S1727606AbfKPQbW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 11:31:22 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 45ADB68BE1; Sat, 16 Nov 2019 17:31:21 +0100 (CET)
+Date:   Sat, 16 Nov 2019 17:31:20 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 2/5] dpt_i2o: use midlayer tcq implementation
+Message-ID: <20191116163120.GC23951@lst.de>
+References: <20191115122757.132006-1-hare@suse.de> <20191115122757.132006-3-hare@suse.de>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191115122757.132006-3-hare@suse.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+On Fri, Nov 15, 2019 at 01:27:54PM +0100, Hannes Reinecke wrote:
+> +	cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+> +	cmd->scsi_done(cmd);
+>  
+> +	return true;
+> +}
+> +
+> +static void adpt_fail_posted_scbs(adpt_hba* pHba)
+> +{
+> +	scsi_host_busy_iter(pHba->host, fail_posted_scbs_iter, NULL);
 
-[ Upstream commit 3e178f3ecfcf91a258e832b0f0843a4cfd9059ac ]
-
-If an SSP/SMP IO times out, it may be actually in reality be
-simultaneously processing completion of the slot in
-slot_complete_vx_hw().
-
-Then if the slot is freed in slot_complete_vx_hw() (this IPTT is freed
-and it may be re-used by other slot), and we may abort the wrong slot in
-hisi_sas_abort_task().
-
-So to solve the issue, free the slot after the check of
-SAS_TASK_STATE_ABORTED in slot_complete_vx_hw().
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 1c4ea58da1ae1..c4774d63d5d04 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2481,7 +2481,6 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	}
- 
- out:
--	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-@@ -2491,6 +2490,7 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	}
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 
- 	if (!is_internal && (task->task_proto != SAS_PROTOCOL_SMP)) {
- 		spin_lock_irqsave(&device->done_lock, flags);
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 3922b17e2ea39..fb2a5969181b5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1749,7 +1749,6 @@ slot_complete_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	}
- 
- out:
--	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 	sts = ts->stat;
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-@@ -1759,6 +1758,7 @@ slot_complete_v3_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot)
- 	}
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+	hisi_sas_slot_task_free(hisi_hba, task, slot);
- 
- 	if (!is_internal && (task->task_proto != SAS_PROTOCOL_SMP)) {
- 		spin_lock_irqsave(&device->done_lock, flags);
--- 
-2.20.1
-
+I still think that SAM_STAT_TASK_SET_FULL is a very strange error here,
+and that we should have a helper like adpt_fail_posted_scbs in the
+core SCSI code.  Also your * placement is wrong above.
