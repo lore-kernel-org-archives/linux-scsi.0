@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC44C432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71740C43215
 	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E420521826
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 414EF2184B
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1573919433;
-	bh=p6TVB7m8UPJaDVQp43MW63MiIcuG/GbRpd+rHfbiTTg=;
+	bh=zwqFsR5FTsY0QpvqPh8rX5XlnQ914OsYn3y5BaG5MiQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mjXyvq8fBw/Ue9JpwI8jZ8Rot/4YJRfVA6oZFMssbZxse8pMcEiIjPs2wGcBYO6T7
-	 8pW9nxFL0kdRe2m5jlbk+TBMGPs/qDKKeg/YmgeQWP4xFew6SZ7oRZciF3YiRp0859
-	 1HuDEryqs7HoVNaDwEuvcrcTugIQ1k1QHlHKJ2cg=
+	b=PIlgpaoI3SQTk5vYZQXOP1TrwD0VEbNzhvYeC6ru/yLC/g9TFkJXnpuA5QINs1Kns
+	 ZbD9uoXsxSmve/NJfT0TNV47XZuEvzzo+F5SRr6fTajW3v94+qO2pjaPZp/ZEWbo1I
+	 CqgZSxCodYo9n8LvILwKJo7PfOnI2A5GGPJwdk+I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729636AbfKPPuc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1730545AbfKPPuc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 16 Nov 2019 10:50:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58580 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:58630 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730009AbfKPPub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1730541AbfKPPub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sat, 16 Nov 2019 10:50:31 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1CCF5217D6;
+        by mail.kernel.org (Postfix) with ESMTPSA id E72BE21887;
         Sat, 16 Nov 2019 15:50:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919430;
-        bh=p6TVB7m8UPJaDVQp43MW63MiIcuG/GbRpd+rHfbiTTg=;
+        s=default; t=1573919431;
+        bh=zwqFsR5FTsY0QpvqPh8rX5XlnQ914OsYn3y5BaG5MiQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jCQMojGT5MhTdrDmGQEWnkA6oQunxBPwBQ4qQyDHnIwRhTC/tLpFF6VeJcWsQO0ZU
-         SJUZLt2KcdMYLzU+q9h+kWW/2BCAlSxCRfa00oo4uP+SaMfEUyYtGa/N2eJ4zk1hAx
-         8pLVPKMDreAjT7U4LIWfP5imhaOx3ggId0ZHCxzY=
+        b=OFtk/ZSu+IIl4lVSoE7nYlCxCpAzcejzln3dBjbmX4LJ/h3H37Fd21iow03o8+t3L
+         Zvz5Hl6Zon7/BcwDD1LNvKpIOOKlnaf1EaaLVu3svhwh8JXD7wT8a5pkk+v0KHoYG9
+         DUGmPvXsp+AQW91MwFlueKvpc2ptZrX6Iq3EiAUQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
@@ -46,9 +46,9 @@ Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 127/150] scsi: mpt3sas: Fix Sync cache command failure during driver unload
-Date:   Sat, 16 Nov 2019 10:47:05 -0500
-Message-Id: <20191116154729.9573-127-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 128/150] scsi: mpt3sas: Don't modify EEDPTagMode field setting on SAS3.5 HBA devices
+Date:   Sat, 16 Nov 2019 10:47:06 -0500
+Message-Id: <20191116154729.9573-128-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -63,19 +63,11 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 9029a72500b95578a35877a43473b82cb0386c53 ]
+[ Upstream commit 6cd1bc7b9b5075d395ba0120923903873fc7ea0e ]
 
-This is to fix SYNC CACHE and START STOP command failures with
-DID_NO_CONNECT during driver unload.
-
-In driver's IO submission patch (i.e. in driver's .queuecommand()) driver
-won't allow any SCSI commands to the IOC when ioc->remove_host flag is set
-and hence SYNC CACHE commands which are issued to the target drives (where
-write cache is enabled) during driver unload time is failed with
-DID_NO_CONNECT status.
-
-Now modified the driver to allow SYNC CACHE and START STOP commands to IOC,
-even when remove_host flag is set.
+If EEDPTagMode field in manufacturing page11 is set then unset it. This is
+needed to fix a hardware bug only in SAS3/SAS2 cards. So, skipping
+EEDPTagMode changes in Manufacturing page11 for SAS 3.5 controllers.
 
 Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
@@ -83,63 +75,22 @@ Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 36 +++++++++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b28efddab7b1a..9ef0c6265cd2b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3328,6 +3328,40 @@ _scsih_tm_tr_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	return _scsih_check_for_pending_tm(ioc, smid);
- }
- 
-+/** _scsih_allow_scmd_to_device - check whether scmd needs to
-+ *				 issue to IOC or not.
-+ * @ioc: per adapter object
-+ * @scmd: pointer to scsi command object
-+ *
-+ * Returns true if scmd can be issued to IOC otherwise returns false.
-+ */
-+inline bool _scsih_allow_scmd_to_device(struct MPT3SAS_ADAPTER *ioc,
-+	struct scsi_cmnd *scmd)
-+{
-+
-+	if (ioc->pci_error_recovery)
-+		return false;
-+
-+	if (ioc->hba_mpi_version_belonged == MPI2_VERSION) {
-+		if (ioc->remove_host)
-+			return false;
-+
-+		return true;
-+	}
-+
-+	if (ioc->remove_host) {
-+
-+		switch (scmd->cmnd[0]) {
-+		case SYNCHRONIZE_CACHE:
-+		case START_STOP:
-+			return true;
-+		default:
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
- 
- /**
-  * _scsih_sas_control_complete - completion routine
-@@ -4100,7 +4134,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		return 0;
- 	}
- 
--	if (ioc->pci_error_recovery || ioc->remove_host) {
-+	if (!(_scsih_allow_scmd_to_device(ioc, scmd))) {
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		return 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 7bfe53f48d1d4..817a7963a038b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3140,7 +3140,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
+ 	 * flag unset in NVDATA.
+ 	 */
+ 	mpt3sas_config_get_manufacturing_pg11(ioc, &mpi_reply, &ioc->manu_pg11);
+-	if (ioc->manu_pg11.EEDPTagMode == 0) {
++	if (!ioc->is_gen35_ioc && ioc->manu_pg11.EEDPTagMode == 0) {
+ 		pr_err("%s: overriding NVDATA EEDPTagMode setting\n",
+ 		    ioc->name);
+ 		ioc->manu_pg11.EEDPTagMode &= ~0x3;
 -- 
 2.20.1
 
