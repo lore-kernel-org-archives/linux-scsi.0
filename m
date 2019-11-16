@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C91F8C432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92953C43141
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96C052168B
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D0D3214DE
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921052;
-	bh=rzlFMkmivZ6Tw8GRPSvnVO/UpRCEyuNnI37LYXz/4rg=;
+	s=default; t=1573921053;
+	bh=cfIdG14Q63GQOlkA/hZ9JJgBBsfr+CPkNd3cO7cwUs0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NhhDf1SmXaXwoYybEjBOZO58GgAuaGU8mBsEYn+ht6fg3qIgbiVUJov/jh03MQCmg
-	 cjQZM8Z2n2d2ob/be+OIK72ktXcxYHpDIruHNOEhbpZPmAdH4fKeMclE82qzlyXUiI
-	 i8Obd6K8lXfh0Ao4TsKYXc8gnEP1rYTD8/fNfwK0=
+	b=nVeLbxlBN1d7ej88AYghP9ZaedCIBcX5qDSjdCeun+pvaB2SNPv4PKXcAJUyTK3fs
+	 S2BpQcPE3GuD273zYNy4zyJoTqm1Aw8AdyZF/beYChfDEKx+JXQHq7tm8p7fOaXbiB
+	 +Qx8fDlvvvXfTeBag/sGQH4u3QZisDzMVDG7IZgQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729511AbfKPPqs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:46:48 -0500
+        id S1729506AbfKPPqr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:46:47 -0500
 Received: from mail.kernel.org ([198.145.29.99]:53254 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729504AbfKPPqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:47 -0500
+        id S1729495AbfKPPqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:46:45 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4EA022081E;
-        Sat, 16 Nov 2019 15:46:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BC734208A3;
+        Sat, 16 Nov 2019 15:46:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919206;
-        bh=rzlFMkmivZ6Tw8GRPSvnVO/UpRCEyuNnI37LYXz/4rg=;
+        s=default; t=1573919205;
+        bh=cfIdG14Q63GQOlkA/hZ9JJgBBsfr+CPkNd3cO7cwUs0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gd9XkkJayyEygsxtZOEpc4yy1uPi6v/D1WesHqUrHii+APny+LwObsvvCRIDyfm0v
-         2bmEORw6AHaaJKtidZKdk7c5/bQcMQNd7DTrUBpn87lG1hiGP5otdlVpuxMjIiL1tc
-         nqOFWgg+aW4K3xcjXP21SyQchB9cbj8AFf2BrrEA=
+        b=UG/UxkDKlkRdLb8YRVqGxp5/XFnl3kx/0PlTTkmRHTVDDhM+pKtalUWb/h2LWzBbr
+         yqpfSKND/AAYg2cO+wV/sg7lAHaPtxORZg0aKC4aMpdfUfYRdWIe8H4fxdF9Oq1wuM
+         GxKApZMymQGIDQoRx8wNcXEFAKwORhaaZSQ97ecs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 210/237] scsi: megaraid_sas: Fix msleep granularity
-Date:   Sat, 16 Nov 2019 10:40:45 -0500
-Message-Id: <20191116154113.7417-210-sashal@kernel.org>
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 208/237] scsi: mpt3sas: Don't modify EEDPTagMode field setting on SAS3.5 HBA devices
+Date:   Sat, 16 Nov 2019 10:40:43 -0500
+Message-Id: <20191116154113.7417-208-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -59,44 +61,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 9155cf30a3c4ef97e225d6daddf9bd4b173267e8 ]
+[ Upstream commit 6cd1bc7b9b5075d395ba0120923903873fc7ea0e ]
 
-In megasas_transition_to_ready() driver waits 180seconds for controller to
-change FW state. Here we are calling msleep(1) in a loop for this.  As
-explained in timers-howto.txt, msleep(1) will actually sleep longer than
-1ms. If a faulty controller is connected, we will end up waiting for much
-more than 180 seconds causing unnecessary delays during load.
+If EEDPTagMode field in manufacturing page11 is set then unset it. This is
+needed to fix a hardware bug only in SAS3/SAS2 cards. So, skipping
+EEDPTagMode changes in Manufacturing page11 for SAS 3.5 controllers.
 
-Change the granularity of msleep() call from 1ms to 1000ms.
-
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index bc37666f998e6..2f94ab9c23540 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3894,12 +3894,12 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 		/*
- 		 * The cur_state should not last for more than max_wait secs
- 		 */
--		for (i = 0; i < (max_wait * 1000); i++) {
-+		for (i = 0; i < max_wait; i++) {
- 			curr_abs_state = instance->instancet->
- 				read_fw_status_reg(instance->reg_set);
- 
- 			if (abs_state == curr_abs_state) {
--				msleep(1);
-+				msleep(1000);
- 			} else
- 				break;
- 		}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index d2ab52026014f..2c556c7fcf0dc 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -4117,7 +4117,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
+ 	 * flag unset in NVDATA.
+ 	 */
+ 	mpt3sas_config_get_manufacturing_pg11(ioc, &mpi_reply, &ioc->manu_pg11);
+-	if (ioc->manu_pg11.EEDPTagMode == 0) {
++	if (!ioc->is_gen35_ioc && ioc->manu_pg11.EEDPTagMode == 0) {
+ 		pr_err("%s: overriding NVDATA EEDPTagMode setting\n",
+ 		    ioc->name);
+ 		ioc->manu_pg11.EEDPTagMode &= ~0x3;
 -- 
 2.20.1
 
