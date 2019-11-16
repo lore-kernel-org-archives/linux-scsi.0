@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE1FC33C8C
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D47EC43215
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E06742089D
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B73720874
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920440;
-	bh=zeMmqN91T1U6t+tXj7rn0j1WvBUUfrtvQg+SMNngmbI=;
+	s=default; t=1573920441;
+	bh=8b+zj0+DXJml/xNJPstz9a1AxF/molanvs40WN1AvBY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=t/UYvlpf+VmvSGdbgF/k7f7oF3t0ODXhVx1MOOfCf/OQDjMWlHWBMqZOPv2vXqqmI
-	 9ixFzQguK6spIlKKycM/oXjI/Bd59jJ5O2X8n0nDy93NCQUbxg0dqZ1MNSUK/sVKf7
-	 UkM6tXDif0jpl300wvLVPiZ/co1RnDe4kxtoVcKM=
+	b=ETb8zb4q14x5cMDFyegCVVrzf11BSx365yysh9lK8unkGtfOCzHoq0V4iVKPdtElg
+	 AG1k4NlefLkmZUtDS+iN2yB0udMj6ErvVkPiVMDLw2/r28TENUhwUG4VPFv1VwUrm+
+	 H1AKi6opt6FA7h5S3nC5jNNkQThXhg/yTlOkizYU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730562AbfKPPuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:50:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729125AbfKPPue (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729658AbfKPPue (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 16 Nov 2019 10:50:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58672 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730492AbfKPPud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:33 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 22EAC2182A;
-        Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 66C0321823;
+        Sat, 16 Nov 2019 15:50:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919433;
-        bh=zeMmqN91T1U6t+tXj7rn0j1WvBUUfrtvQg+SMNngmbI=;
+        s=default; t=1573919432;
+        bh=8b+zj0+DXJml/xNJPstz9a1AxF/molanvs40WN1AvBY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PBrO+m/zxFbVZFEx750BD5VW7e1l4QEjcWafz2O3E19WaK4on0AMAURtb42hf3bfv
-         ABuZ/nGGUE2jFfeGbHFS5wWLkJx25SuDA55kW4cRyrPKdiGAeMvwd5RxeNvZitbH9B
-         VPk4/+ceokReaaMJcWGBo6JTP3hBqFd+rulZqJRY=
+        b=iL0g21mLW89stI6Ytw5Ilb77HsU/FVEJt0dfiV1L74nyjDqYWsP2hHzFOTZinbyWj
+         KN3oVwlE6DbcCYEb+BazZAN5rp5YnDYNoLHxJ24tmNfapwL+rFoQ9ImnRBXWvDhUp+
+         gXce6WmmSDTe2eoKIZvAio4fCWYE4IdMShAgTaVs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 131/150] scsi: megaraid_sas: Fix goto labels in error handling
-Date:   Sat, 16 Nov 2019 10:47:09 -0500
-Message-Id: <20191116154729.9573-131-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 130/150] scsi: megaraid_sas: Fix msleep granularity
+Date:   Sat, 16 Nov 2019 10:47:08 -0500
+Message-Id: <20191116154729.9573-130-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -61,42 +61,42 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-[ Upstream commit 8a25fa17b6ed6e6c8101e9c68a10ae68a9025f2c ]
+[ Upstream commit 9155cf30a3c4ef97e225d6daddf9bd4b173267e8 ]
 
-During init, if pci_alloc_irq_vectors() fails, the driver has not yet setup
-the IRQs. Fix the goto labels and error handling for this case.
+In megasas_transition_to_ready() driver waits 180seconds for controller to
+change FW state. Here we are calling msleep(1) in a loop for this.  As
+explained in timers-howto.txt, msleep(1) will actually sleep longer than
+1ms. If a faulty controller is connected, we will end up waiting for much
+more than 180 seconds causing unnecessary delays during load.
+
+Change the granularity of msleep() call from 1ms to 1000ms.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 23a9f0777fa62..577513649afbe 100644
+index 8595d83229b77..23a9f0777fa62 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5324,7 +5324,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (!instance->msix_vectors) {
- 		i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_LEGACY);
- 		if (i < 0)
--			goto fail_setup_irqs;
-+			goto fail_init_adapter;
- 	}
+@@ -3823,12 +3823,12 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
+ 		/*
+ 		 * The cur_state should not last for more than max_wait secs
+ 		 */
+-		for (i = 0; i < (max_wait * 1000); i++) {
++		for (i = 0; i < max_wait; i++) {
+ 			curr_abs_state = instance->instancet->
+ 				read_fw_status_reg(instance->reg_set);
  
- 	megasas_setup_reply_map(instance);
-@@ -5541,9 +5541,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 
- fail_get_ld_pd_list:
- 	instance->instancet->disable_intr(instance);
--fail_init_adapter:
- 	megasas_destroy_irqs(instance);
--fail_setup_irqs:
-+fail_init_adapter:
- 	if (instance->msix_vectors)
- 		pci_free_irq_vectors(instance->pdev);
- 	instance->msix_vectors = 0;
+ 			if (abs_state == curr_abs_state) {
+-				msleep(1);
++				msleep(1000);
+ 			} else
+ 				break;
+ 		}
 -- 
 2.20.1
 
