@@ -2,51 +2,50 @@ Return-Path: <SRS0=ZMHN=ZI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184B6C43141
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD7DC43141
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E11262089D
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:59:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0A322089D
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:59:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919965;
-	bh=detVZUwgRyHVtddSUN/iavcWIqSHjmcqFrt8yqmE6bQ=;
+	s=default; t=1573919973;
+	bh=Y5oiB7530wepLPGyawlMUGIb28+HF8HLGv0HAT+h6v4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R5XDdDKqJdepUerP0cNytwidEE6MetwFyrDqZP6M4KvG8FW09zx5m8BhnAwpT9yK4
-	 YfhETbDrGz3ICR9zB1wPuoBl40GMkNbTdzhzkt0h6NbuSe23wz5t91SWLEGa4zS1l9
-	 +30JYDyoBhq8guAslWTKsuZNXr92nVdgWvuFWL4M=
+	b=iDxcEoll+o5TyB4o2uRoCBCSHKHo/UFdOjreFGlrQ24VFpNz3FmlQDUZ4M3FNT8Nf
+	 ARyS5LWiK/tQls6k/5Sb5bqr+dksGiZ7iYu9fTVT2dWg/nklh3q8+WvBCN8dO22a79
+	 zAVk1Px4LvK51QT63ZgoE5veVh/0hEiOA9yXTcWQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730676AbfKPP7Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:59:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35286 "EHLO mail.kernel.org"
+        id S1731247AbfKPP7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:59:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35250 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729287AbfKPPx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:53:58 -0500
+        id S1731340AbfKPPxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:53:55 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8F4C3218BA;
-        Sat, 16 Nov 2019 15:53:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9670021934;
+        Sat, 16 Nov 2019 15:53:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919636;
-        bh=detVZUwgRyHVtddSUN/iavcWIqSHjmcqFrt8yqmE6bQ=;
+        s=default; t=1573919634;
+        bh=Y5oiB7530wepLPGyawlMUGIb28+HF8HLGv0HAT+h6v4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rv7SEE1ar9Ug+XgiJk7m/HRNNktSEtj93ZbgtPhUjT7PrJURppH/BDQYjRLcH3yPz
-         U/L7Z6z6Pl68PnAKTJ4A7MSfWyJHxuzR5kjnDwVXsxKa/EkLZJ58sk1oU+vmGTB4tW
-         mxuVhq/twTU35wcquf6DGpNYW5smJDcXZdoReFhE=
+        b=zCXckWjpPxv9+rh+aSJ8bso94NgQWJbCCPs3x7MPJfLqNZxPPBCu3uJrcM0VFm8GB
+         bS1Sn1kBer7Ktwkqut4J4pqeFGNPsFApvYCi49QnqXj+6567Suv5vcdWwt/FlSfoye
+         5sabMZIGtCs20ZGyIIAPh8XFBSBrc5cUn+bI4NOk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+Cc:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.4 17/77] scsi: isci: Change sci_controller_start_task's return type to sci_status
-Date:   Sat, 16 Nov 2019 10:52:39 -0500
-Message-Id: <20191116155339.11909-17-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 14/77] scsi: ips: fix missing break in switch
+Date:   Sat, 16 Nov 2019 10:52:36 -0500
+Message-Id: <20191116155339.11909-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116155339.11909-1-sashal@kernel.org>
 References: <20191116155339.11909-1-sashal@kernel.org>
@@ -59,104 +58,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
-[ Upstream commit 362b5da3dfceada6e74ecdd7af3991bbe42c0c0f ]
+[ Upstream commit 5d25ff7a544889bc4b749fda31778d6a18dddbcb ]
 
-Clang warns when an enumerated type is implicitly converted to another.
+Add missing break statement in order to prevent the code from falling
+through to case TEST_UNIT_READY.
 
-drivers/scsi/isci/request.c:3476:13: warning: implicit conversion from
-enumeration type 'enum sci_task_status' to different enumeration type
-'enum sci_status' [-Wenum-conversion]
-                        status = sci_controller_start_task(ihost,
-                               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/scsi/isci/host.c:2744:10: warning: implicit conversion from
-enumeration type 'enum sci_status' to different enumeration type 'enum
-sci_task_status' [-Wenum-conversion]
-                return SCI_SUCCESS;
-                ~~~~~~ ^~~~~~~~~~~
-drivers/scsi/isci/host.c:2753:9: warning: implicit conversion from
-enumeration type 'enum sci_status' to different enumeration type 'enum
-sci_task_status' [-Wenum-conversion]
-        return status;
-        ~~~~~~ ^~~~~~
-
-Avoid all of these implicit conversion by just making
-sci_controller_start_task use sci_status. This silences
-Clang and has no functional change since sci_task_status
-has all of its values mapped to something in sci_status.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/153
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Addresses-Coverity-ID: 1357338 ("Missing break in switch")
+Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/isci/host.c | 8 ++++----
- drivers/scsi/isci/host.h | 2 +-
- drivers/scsi/isci/task.c | 4 ++--
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/ips.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 609dafd661d14..da4583a2fa23e 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -2717,9 +2717,9 @@ enum sci_status sci_controller_continue_io(struct isci_request *ireq)
-  *    the task management request.
-  * @task_request: the handle to the task request object to start.
-  */
--enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
--					       struct isci_remote_device *idev,
--					       struct isci_request *ireq)
-+enum sci_status sci_controller_start_task(struct isci_host *ihost,
-+					  struct isci_remote_device *idev,
-+					  struct isci_request *ireq)
- {
- 	enum sci_status status;
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 02cb76fd44208..6bbf2945a3e00 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3500,6 +3500,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
  
-@@ -2728,7 +2728,7 @@ enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
- 			 "%s: SCIC Controller starting task from invalid "
- 			 "state\n",
- 			 __func__);
--		return SCI_TASK_FAILURE_INVALID_STATE;
-+		return SCI_FAILURE_INVALID_STATE;
- 	}
+ 		case START_STOP:
+ 			scb->scsi_cmd->result = DID_OK << 16;
++			break;
  
- 	status = sci_remote_device_start_task(ihost, idev, ireq);
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 22a9bb1abae14..15dc6e0d8deb0 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -490,7 +490,7 @@ enum sci_status sci_controller_start_io(
- 	struct isci_remote_device *idev,
- 	struct isci_request *ireq);
- 
--enum sci_task_status sci_controller_start_task(
-+enum sci_status sci_controller_start_task(
- 	struct isci_host *ihost,
- 	struct isci_remote_device *idev,
- 	struct isci_request *ireq);
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 6dcaed0c1fc8c..fb6eba331ac6e 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -258,7 +258,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
- 				 struct isci_tmf *tmf, unsigned long timeout_ms)
- {
- 	DECLARE_COMPLETION_ONSTACK(completion);
--	enum sci_task_status status = SCI_TASK_FAILURE;
-+	enum sci_status status = SCI_FAILURE;
- 	struct isci_request *ireq;
- 	int ret = TMF_RESP_FUNC_FAILED;
- 	unsigned long flags;
-@@ -301,7 +301,7 @@ static int isci_task_execute_tmf(struct isci_host *ihost,
- 	/* start the TMF io. */
- 	status = sci_controller_start_task(ihost, idev, ireq);
- 
--	if (status != SCI_TASK_SUCCESS) {
-+	if (status != SCI_SUCCESS) {
- 		dev_dbg(&ihost->pdev->dev,
- 			 "%s: start_io failed - status = 0x%x, request = %p\n",
- 			 __func__,
+ 		case TEST_UNIT_READY:
+ 		case INQUIRY:
 -- 
 2.20.1
 
