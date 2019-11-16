@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71740C43215
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D3D6C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 414EF2184B
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65C21217D6
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919433;
-	bh=zwqFsR5FTsY0QpvqPh8rX5XlnQ914OsYn3y5BaG5MiQ=;
+	s=default; t=1573919438;
+	bh=EHA+Fe7eIbG8tt1ANtpom1GPKu0YwoUmtCxEmscV9QU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=PIlgpaoI3SQTk5vYZQXOP1TrwD0VEbNzhvYeC6ru/yLC/g9TFkJXnpuA5QINs1Kns
-	 ZbD9uoXsxSmve/NJfT0TNV47XZuEvzzo+F5SRr6fTajW3v94+qO2pjaPZp/ZEWbo1I
-	 CqgZSxCodYo9n8LvILwKJo7PfOnI2A5GGPJwdk+I=
+	b=DxVUo5IcdyyJH1VPHlckf81pr8RvfDG9VwcD9lQ/5cmRcfvDIhGAe7hqf+feXLcpx
+	 PH5gC4mKpTM4RTYazeFr6dAoNluGFqpSR8dKP+mf+UpjPQn/wXmQZ7lgyY7pwru9X5
+	 yTiDMJWiQayvD2yAfkfJHLK6Sj1ZXYyJkisnoCeE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730545AbfKPPuc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:50:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58630 "EHLO mail.kernel.org"
+        id S1730568AbfKPPug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:50:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58734 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730541AbfKPPub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:50:31 -0500
+        id S1730555AbfKPPuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:35 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E72BE21887;
-        Sat, 16 Nov 2019 15:50:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E7E8720B7C;
+        Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919431;
-        bh=zwqFsR5FTsY0QpvqPh8rX5XlnQ914OsYn3y5BaG5MiQ=;
+        s=default; t=1573919434;
+        bh=EHA+Fe7eIbG8tt1ANtpom1GPKu0YwoUmtCxEmscV9QU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OFtk/ZSu+IIl4lVSoE7nYlCxCpAzcejzln3dBjbmX4LJ/h3H37Fd21iow03o8+t3L
-         Zvz5Hl6Zon7/BcwDD1LNvKpIOOKlnaf1EaaLVu3svhwh8JXD7wT8a5pkk+v0KHoYG9
-         DUGmPvXsp+AQW91MwFlueKvpc2ptZrX6Iq3EiAUQ=
+        b=ac1trimyVxl64Tij7YHlAre+WijjmUAV/NRkMMQd4HW5IYamOYhmHow+ssW0wY7Fz
+         MVJ9GuHoMqh3V/tZUOfO5DXtQ4O6IT7oVM913FjZQ053vKLFhN1taMBTdBwdpHWy0+
+         x1ogy93bHyEz2zx1aaDRW5EwGYl6D7bnj5l2yWjs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Hannes Reinecke <hare@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 128/150] scsi: mpt3sas: Don't modify EEDPTagMode field setting on SAS3.5 HBA devices
-Date:   Sat, 16 Nov 2019 10:47:06 -0500
-Message-Id: <20191116154729.9573-128-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 132/150] scsi: lpfc: fcoe: Fix link down issue after 1000+ link bounces
+Date:   Sat, 16 Nov 2019 10:47:10 -0500
+Message-Id: <20191116154729.9573-132-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -61,36 +60,130 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 6cd1bc7b9b5075d395ba0120923903873fc7ea0e ]
+[ Upstream commit 036cad1f1ac9ce03e2db94b8460f98eaf1e1ee4c ]
 
-If EEDPTagMode field in manufacturing page11 is set then unset it. This is
-needed to fix a hardware bug only in SAS3/SAS2 cards. So, skipping
-EEDPTagMode changes in Manufacturing page11 for SAS 3.5 controllers.
+On FCoE adapters, when running link bounce test in a loop, initiator
+failed to login with switch switch and required driver reload to
+recover. Switch reached a point where all subsequent FLOGIs would be
+LS_RJT'd. Further testing showed the condition to be related to not
+performing FCF discovery between FLOGI's.
 
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Fix by monitoring FLOGI failures and once a repeated error is seen
+repeat FCF discovery.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c     |  2 ++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 20 ++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c    |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c     | 11 ++---------
+ drivers/scsi/lpfc/lpfc_sli4.h    |  1 +
+ 5 files changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 7bfe53f48d1d4..817a7963a038b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3140,7 +3140,7 @@ _base_static_config_pages(struct MPT3SAS_ADAPTER *ioc)
- 	 * flag unset in NVDATA.
- 	 */
- 	mpt3sas_config_get_manufacturing_pg11(ioc, &mpi_reply, &ioc->manu_pg11);
--	if (ioc->manu_pg11.EEDPTagMode == 0) {
-+	if (!ioc->is_gen35_ioc && ioc->manu_pg11.EEDPTagMode == 0) {
- 		pr_err("%s: overriding NVDATA EEDPTagMode setting\n",
- 		    ioc->name);
- 		ioc->manu_pg11.EEDPTagMode &= ~0x3;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index ddd29752d96dc..95449f97101d3 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1152,6 +1152,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
+ 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
+ 			spin_unlock_irq(&phba->hbalock);
++			phba->fcf.fcf_redisc_attempted = 0; /* reset */
+ 			goto out;
+ 		}
+ 		if (!rc) {
+@@ -1166,6 +1167,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
+ 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
+ 			spin_unlock_irq(&phba->hbalock);
++			phba->fcf.fcf_redisc_attempted = 0; /* reset */
+ 			goto out;
+ 		}
+ 	}
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index b970933a218d5..d850077c5e226 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1999,6 +1999,26 @@ int lpfc_sli4_fcf_rr_next_proc(struct lpfc_vport *vport, uint16_t fcf_index)
+ 				"failover and change port state:x%x/x%x\n",
+ 				phba->pport->port_state, LPFC_VPORT_UNKNOWN);
+ 		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
++
++		if (!phba->fcf.fcf_redisc_attempted) {
++			lpfc_unregister_fcf(phba);
++
++			rc = lpfc_sli4_redisc_fcf_table(phba);
++			if (!rc) {
++				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++						"3195 Rediscover FCF table\n");
++				phba->fcf.fcf_redisc_attempted = 1;
++				lpfc_sli4_clear_fcf_rr_bmask(phba);
++			} else {
++				lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
++						"3196 Rediscover FCF table "
++						"failed. Status:x%x\n", rc);
++			}
++		} else {
++			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
++					"3197 Already rediscover FCF table "
++					"attempted. No more retry\n");
++		}
+ 		goto stop_flogi_current_fcf;
+ 	} else {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_FIP | LOG_ELS,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 25612ccf6ff28..15bcd00dd7a23 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4997,7 +4997,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
+ 			break;
+ 		}
+ 		/* If fast FCF failover rescan event is pending, do nothing */
+-		if (phba->fcf.fcf_flag & FCF_REDISC_EVT) {
++		if (phba->fcf.fcf_flag & (FCF_REDISC_EVT | FCF_REDISC_PEND)) {
+ 			spin_unlock_irq(&phba->hbalock);
+ 			break;
+ 		}
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 6c2b098b76095..ebf7d3cda3677 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -18056,15 +18056,8 @@ lpfc_sli4_fcf_rr_next_index_get(struct lpfc_hba *phba)
+ 			goto initial_priority;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
+ 				"2844 No roundrobin failover FCF available\n");
+-		if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX)
+-			return LPFC_FCOE_FCF_NEXT_NONE;
+-		else {
+-			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
+-				"3063 Only FCF available idx %d, flag %x\n",
+-				next_fcf_index,
+-			phba->fcf.fcf_pri[next_fcf_index].fcf_rec.flag);
+-			return next_fcf_index;
+-		}
++
++		return LPFC_FCOE_FCF_NEXT_NONE;
+ 	}
+ 
+ 	if (next_fcf_index < LPFC_SLI4_FCF_TBL_INDX_MAX &&
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 60200385fe009..a132a83ef233c 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -265,6 +265,7 @@ struct lpfc_fcf {
+ #define FCF_REDISC_EVT	0x100 /* FCF rediscovery event to worker thread */
+ #define FCF_REDISC_FOV	0x200 /* Post FCF rediscovery fast failover */
+ #define FCF_REDISC_PROG (FCF_REDISC_PEND | FCF_REDISC_EVT)
++	uint16_t fcf_redisc_attempted;
+ 	uint32_t addr_mode;
+ 	uint32_t eligible_fcf_cnt;
+ 	struct lpfc_fcf_rec current_rec;
 -- 
 2.20.1
 
