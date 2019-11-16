@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F04CC432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66693C432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1D83214DE
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4057821845
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:25:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921498;
-	bh=qsqvoLnvkm9r6o6e3Zo90Z9m4WCmoNPo7yyWUXtRSf4=;
+	s=default; t=1573921501;
+	bh=/ZJI/4gyijIuk0UAleXk9pAGE4qXIMVC+2rzUpbTqLg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mUWVcI3a1IVZgXys+NLEGu7HQWyNBsMx4Evy6b9trr/y65j0rxkCfJGU9r75Y+F/i
-	 nNpsyj5jdxS3sZ/Cd25FTpLij5D6xrDRkD3Xc5WVJgW01isOXar2vSiSD/MlDJybsp
-	 dadCb2rkPcF+uFuy5/+NATHM9JJM9wLz0jHMf3dM=
+	b=eQWU9F15dsufSh3g+COQdf49acjqPheQ5bHlzZ1QTdRi/7US2vgYEJps8SSdGNptn
+	 tU1kWYlFmw+4BzAhkZmzkeYBSkUQREEdyw4K4HL6xZiQGdJ36Z1u7JoM5aZmrvE4m9
+	 j3/rRp+r5xnYsOmcp042fIkvs3XwGe86mPTXeuc8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729629AbfKPQYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728937AbfKPQYh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 16 Nov 2019 11:24:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45914 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:45942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727812AbfKPPmV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:42:21 -0500
+        id S1728218AbfKPPmX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:42:23 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A424C2075E;
-        Sat, 16 Nov 2019 15:42:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 94E4F2083E;
+        Sat, 16 Nov 2019 15:42:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573918941;
-        bh=qsqvoLnvkm9r6o6e3Zo90Z9m4WCmoNPo7yyWUXtRSf4=;
+        s=default; t=1573918943;
+        bh=/ZJI/4gyijIuk0UAleXk9pAGE4qXIMVC+2rzUpbTqLg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iO0Fiazwy0Hg8GGtY/N6W60KGmr12j1KUKuGyL/IMkP+P7ZKzOksYajZT45VrE1SD
-         QuJqVYg9WVMp8Y9Gt/2rONnkHYiIgtrx6lXE6sTj83NKqO8KyRs8UoI7RHOJPem3gR
-         YpVq1G8a4BrJmzOGbF/jnYmlHb/qXCd+ByVWjxcs=
+        b=tzJmfi2CzG2CktobJc+doFAUM/LtYcNj23X+2DrMgVT2kJaL78fv1SCrrQpQrInC0
+         hS565mRugBtpJmYGmlPxRhKEqwvuGSNZYPIkmbUxCTGCesGQdXEEW451j7uIZ3Hztf
+         BukeDzOL2xM2ZOagaZAHHDh4fUBK6HUTYXzwWTNI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, dc395x@twibble.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 063/237] scsi: dc395x: fix dma API usage in srb_done
-Date:   Sat, 16 Nov 2019 10:38:18 -0500
-Message-Id: <20191116154113.7417-63-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 065/237] scsi: zorro_esp: Limit DMA transfers to 65535 bytes
+Date:   Sat, 16 Nov 2019 10:38:20 -0500
+Message-Id: <20191116154113.7417-65-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -59,53 +59,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-[ Upstream commit 3a5bd7021184dec2946f2a4d7a8943f8a5713e52 ]
+[ Upstream commit b7ded0e8b0d11b6df1c4e5aa23a26e6629c21985 ]
 
-We can't just transfer ownership to the CPU and then unmap, as this will
-break with swiotlb.
+The core driver, esp_scsi, does not use the ESP_CONFIG2_FENAB bit, so the
+chip's Transfer Counter register is only 16 bits wide (not 24).  A larger
+transfer cannot work and will theoretically result in a failed command
+and a "DMA length is zero" error.
 
-Instead unmap the command and sense buffer a little earlier in the I/O
-completion handler and get rid of the pci_dma_sync_sg_for_cpu call
-entirely.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 3109e5ae0311 ("scsi: zorro_esp: New driver for Amiga Zorro NCR53C9x boards")
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/dc395x.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/zorro_esp.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 1ed2cd82129d2..08161df64ead5 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -3447,14 +3447,12 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		}
- 	}
+diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
+index bb70882e6b56e..be79127db5946 100644
+--- a/drivers/scsi/zorro_esp.c
++++ b/drivers/scsi/zorro_esp.c
+@@ -245,7 +245,7 @@ static int fastlane_esp_irq_pending(struct esp *esp)
+ static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
+ 					u32 dma_len)
+ {
+-	return dma_len > 0xFFFFFF ? 0xFFFFFF : dma_len;
++	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
+ }
  
--	if (dir != PCI_DMA_NONE && scsi_sg_count(cmd))
--		pci_dma_sync_sg_for_cpu(acb->dev, scsi_sglist(cmd),
--					scsi_sg_count(cmd), dir);
--
- 	ckc_only = 0;
- /* Check Error Conditions */
-       ckc_e:
+ static void zorro_esp_reset_dma(struct esp *esp)
+@@ -484,7 +484,6 @@ static void zorro_esp_send_blz1230_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
  
-+	pci_unmap_srb(acb, srb);
-+
- 	if (cmd->cmnd[0] == INQUIRY) {
- 		unsigned char *base = NULL;
- 		struct ScsiInqData *ptr;
-@@ -3507,7 +3505,6 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 			cmd, cmd->result);
- 		srb_free_insert(acb, srb);
- 	}
--	pci_unmap_srb(acb, srb);
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -529,7 +528,6 @@ static void zorro_esp_send_blz1230II_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
  
- 	cmd->scsi_done(cmd);
- 	waiting_process_next(acb);
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -574,7 +572,6 @@ static void zorro_esp_send_blz2060_dma_cmd(struct esp *esp, u32 addr,
+ 	scsi_esp_cmd(esp, ESP_CMD_DMA);
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	scsi_esp_cmd(esp, cmd);
+ }
+@@ -599,7 +596,6 @@ static void zorro_esp_send_cyber_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -649,7 +645,6 @@ static void zorro_esp_send_cyberII_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
+@@ -691,7 +686,6 @@ static void zorro_esp_send_fastlane_dma_cmd(struct esp *esp, u32 addr,
+ 
+ 	zorro_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
+ 	zorro_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
+-	zorro_esp_write8(esp, (esp_count >> 16) & 0xff, ESP_TCHI);
+ 
+ 	if (write) {
+ 		/* DMA receive */
 -- 
 2.20.1
 
