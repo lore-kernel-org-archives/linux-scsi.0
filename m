@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E34EDC43215
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE1FC33C8C
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD25A218A3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E06742089D
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920438;
-	bh=Ip6hU7yXg9AcHOr9vr8JdMkTGx+/SfF3tqPyui4JfNY=;
+	s=default; t=1573920440;
+	bh=zeMmqN91T1U6t+tXj7rn0j1WvBUUfrtvQg+SMNngmbI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GxVXIaN0MREECvaWPz8Z79727IN/9HjBBhN+Mkiz/lWLkYasEXPVGG4wZkP+XDHfF
-	 dBZTrsDoRhJTgycp8sd4KAhtNXqtEIa6bTEvwCPiRoWLCMjtLpSWtwQYbLENfpkPdL
-	 p8tCT4A8BlQKirT05Adjlyx2IssZwGAUdH/D+9h0=
+	b=t/UYvlpf+VmvSGdbgF/k7f7oF3t0ODXhVx1MOOfCf/OQDjMWlHWBMqZOPv2vXqqmI
+	 9ixFzQguK6spIlKKycM/oXjI/Bd59jJ5O2X8n0nDy93NCQUbxg0dqZ1MNSUK/sVKf7
+	 UkM6tXDif0jpl300wvLVPiZ/co1RnDe4kxtoVcKM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730776AbfKPQHM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:07:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58746 "EHLO mail.kernel.org"
+        id S1730562AbfKPPuf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:50:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58718 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730559AbfKPPug (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:50:36 -0500
+        id S1729125AbfKPPue (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:34 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A0BAF21823;
-        Sat, 16 Nov 2019 15:50:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 22EAC2182A;
+        Sat, 16 Nov 2019 15:50:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919434;
-        bh=Ip6hU7yXg9AcHOr9vr8JdMkTGx+/SfF3tqPyui4JfNY=;
+        s=default; t=1573919433;
+        bh=zeMmqN91T1U6t+tXj7rn0j1WvBUUfrtvQg+SMNngmbI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uJvHSB4+CQPTujmoShZb2XOw+vooVVtahPj0oGqGowm3CfyuetgXuS+0Gej86Xf+a
-         5182mqqa94EsiB3eBty0kN4umAkr+iMutkgHx87RSZhjMeD2PhjFmRaBbuHrl+ITpp
-         u4wdovJBkCi7kpYFJsjKC8Cp0G0KV4Tmpgvwa+Yg=
+        b=PBrO+m/zxFbVZFEx750BD5VW7e1l4QEjcWafz2O3E19WaK4on0AMAURtb42hf3bfv
+         ABuZ/nGGUE2jFfeGbHFS5wWLkJx25SuDA55kW4cRyrPKdiGAeMvwd5RxeNvZitbH9B
+         VPk4/+ceokReaaMJcWGBo6JTP3hBqFd+rulZqJRY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Hannes Reinecke <hare@suse.com>,
+Cc:     Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 133/150] scsi: lpfc: Correct loss of fc4 type on remote port address change
-Date:   Sat, 16 Nov 2019 10:47:11 -0500
-Message-Id: <20191116154729.9573-133-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 131/150] scsi: megaraid_sas: Fix goto labels in error handling
+Date:   Sat, 16 Nov 2019 10:47:09 -0500
+Message-Id: <20191116154729.9573-131-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -60,103 +59,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-[ Upstream commit d83ca3ea833d7a66d49225e4191c4e37cab8f079 ]
+[ Upstream commit 8a25fa17b6ed6e6c8101e9c68a10ae68a9025f2c ]
 
-An address change for a remote port cause PRLI for the wrong protocol
-to be sent.  The node copy done in the discovery code skipped copying
-the fc4 protocols supported as well.
+During init, if pci_alloc_irq_vectors() fails, the driver has not yet setup
+the IRQs. Fix the goto labels and error handling for this case.
 
-Fix the copy logic for the address change.  Beefed up log messages in
-this area as well.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c       | 26 +++++++++++++++++++++++---
- drivers/scsi/lpfc/lpfc_nportdisc.c |  5 +++--
- 2 files changed, 26 insertions(+), 5 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 95449f97101d3..e5db20e8979d5 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1550,8 +1550,10 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 	 */
- 	new_ndlp = lpfc_findnode_wwpn(vport, &sp->portName);
- 
-+	/* return immediately if the WWPN matches ndlp */
- 	if (new_ndlp == ndlp && NLP_CHK_NODE_ACT(new_ndlp))
- 		return ndlp;
-+
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		active_rrqs_xri_bitmap = mempool_alloc(phba->active_rrq_pool,
- 						       GFP_KERNEL);
-@@ -1560,9 +1562,13 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 			       phba->cfg_rrq_xri_bitmap_sz);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 23a9f0777fa62..577513649afbe 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5324,7 +5324,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	if (!instance->msix_vectors) {
+ 		i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_LEGACY);
+ 		if (i < 0)
+-			goto fail_setup_irqs;
++			goto fail_init_adapter;
  	}
  
--	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--		 "3178 PLOGI confirm: ndlp %p x%x: new_ndlp %p\n",
--		 ndlp, ndlp->nlp_DID, new_ndlp);
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_NODE,
-+			 "3178 PLOGI confirm: ndlp x%x x%x x%x: "
-+			 "new_ndlp x%x x%x x%x\n",
-+			 ndlp->nlp_DID, ndlp->nlp_flag,  ndlp->nlp_fc4_type,
-+			 (new_ndlp ? new_ndlp->nlp_DID : 0),
-+			 (new_ndlp ? new_ndlp->nlp_flag : 0),
-+			 (new_ndlp ? new_ndlp->nlp_fc4_type : 0));
+ 	megasas_setup_reply_map(instance);
+@@ -5541,9 +5541,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
  
- 	if (!new_ndlp) {
- 		rc = memcmp(&ndlp->nlp_portname, name,
-@@ -1611,6 +1617,14 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 			       phba->cfg_rrq_xri_bitmap_sz);
- 	}
- 
-+	/* At this point in this routine, we know new_ndlp will be
-+	 * returned. however, any previous GID_FTs that were done
-+	 * would have updated nlp_fc4_type in ndlp, so we must ensure
-+	 * new_ndlp has the right value.
-+	 */
-+	if (vport->fc_flag & FC_FABRIC)
-+		new_ndlp->nlp_fc4_type = ndlp->nlp_fc4_type;
-+
- 	lpfc_unreg_rpi(vport, new_ndlp);
- 	new_ndlp->nlp_DID = ndlp->nlp_DID;
- 	new_ndlp->nlp_prev_state = ndlp->nlp_prev_state;
-@@ -1732,6 +1746,12 @@ lpfc_plogi_confirm_nport(struct lpfc_hba *phba, uint32_t *prsp,
- 	    active_rrqs_xri_bitmap)
- 		mempool_free(active_rrqs_xri_bitmap,
- 			     phba->active_rrq_pool);
-+
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_NODE,
-+			 "3173 PLOGI confirm exit: new_ndlp x%x x%x x%x\n",
-+			 new_ndlp->nlp_DID, new_ndlp->nlp_flag,
-+			 new_ndlp->nlp_fc4_type);
-+
- 	return new_ndlp;
- }
- 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index a0658d1582287..043bca6449cd0 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -2829,8 +2829,9 @@ lpfc_disc_state_machine(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	/* DSM in event <evt> on NPort <nlp_DID> in state <cur_state> */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
- 			 "0211 DSM in event x%x on NPort x%x in "
--			 "state %d Data: x%x\n",
--			 evt, ndlp->nlp_DID, cur_state, ndlp->nlp_flag);
-+			 "state %d Data: x%x x%x\n",
-+			 evt, ndlp->nlp_DID, cur_state,
-+			 ndlp->nlp_flag, ndlp->nlp_fc4_type);
- 
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_DSM,
- 		 "DSM in:          evt:%d ste:%d did:x%x",
+ fail_get_ld_pd_list:
+ 	instance->instancet->disable_intr(instance);
+-fail_init_adapter:
+ 	megasas_destroy_irqs(instance);
+-fail_setup_irqs:
++fail_init_adapter:
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
+ 	instance->msix_vectors = 0;
 -- 
 2.20.1
 
