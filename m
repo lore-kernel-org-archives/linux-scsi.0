@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC0CAC432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20915C43141
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B37AC2195D
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:55:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E40462168B
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919732;
-	bh=Fl3SEsBIGzxBJctj4L6lQQ/WsPmWKTODO20AiuDqu4c=;
+	s=default; t=1573919781;
+	bh=YAoNevRZdrrDehJ/hPdRuUZnd/D//7WimKmw/6nGgNc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FIGtvoAJfm/JvMa8q8rdKkbWfaqzBdyqKinhHArQtK6laR7cSoAx9QGqtMg+8MoAA
-	 Af5Y9c0J/2s964vsY2hFegKXmo+Xlq1Us0whpNrUdKIudNEen1JGHcbQO9IahliBnG
-	 +C202HsMTX8WsTTRxG/QEZEqEonN1Eg3Zx4bQ+/c=
+	b=D0HU37Jh/Py7IWt8sbhmLrsoM+TANNCLwRsMkA32M8Spx39iA//oSeMedRz9ZqHKy
+	 VWywN6e2Lpb4BYckyzmcr7Y4bMkCCSqG6diClRtnUgeCrx6zQHcXcMx5Tjgtht4jqv
+	 UptxRAflb/VBbFOBnSFBzCQSI0UsrvveNQVHmqDQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731625AbfKPPza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:55:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37582 "EHLO mail.kernel.org"
+        id S1731620AbfKPP4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 10:56:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731618AbfKPPz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:55:29 -0500
+        id S1731612AbfKPPz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:55:27 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2546421925;
-        Sat, 16 Nov 2019 15:55:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 53C292195D;
+        Sat, 16 Nov 2019 15:55:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919728;
-        bh=Fl3SEsBIGzxBJctj4L6lQQ/WsPmWKTODO20AiuDqu4c=;
+        s=default; t=1573919726;
+        bh=YAoNevRZdrrDehJ/hPdRuUZnd/D//7WimKmw/6nGgNc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jeYcjNMKcJN3a4aPbI76hL/x1XpAPIsdlDmieFKQ4ZmF0N4K2LezfI0h1W6/UNQiK
-         jMLd0pA0kY7iRSqkLAI0NZbCZrsXXBewrFQi0DTnWDwC7Bj7nAA7mZb6DyUZbxpCyj
-         fKnC2m5NBJoOLEp2OLpbJbt0v+bP4Wqa1rOc0h98=
+        b=HLI4ek4KAxQ/wz8J4ys9BaI5XVvxf2S0zrhW1zunmNH8Ft3iAsqwVHdwNecqnPzZO
+         okBjzYQG6boFcO/h1OYUTUiBTXMXUWFvl1PhdDjgkg69ejHHde3DdDpZEykuR5+f+3
+         fE0XeaFA0bb9RGW/hLRZ8MSkPKu1vZTqoEAXAY8g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Hannes Reinecke <hare@suse.com>,
+Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 69/77] scsi: lpfc: fcoe: Fix link down issue after 1000+ link bounces
-Date:   Sat, 16 Nov 2019 10:53:31 -0500
-Message-Id: <20191116155339.11909-69-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 67/77] scsi: mpt3sas: Fix driver modifying persistent data in Manufacturing page11
+Date:   Sat, 16 Nov 2019 10:53:29 -0500
+Message-Id: <20191116155339.11909-67-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116155339.11909-1-sashal@kernel.org>
 References: <20191116155339.11909-1-sashal@kernel.org>
@@ -60,130 +61,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 036cad1f1ac9ce03e2db94b8460f98eaf1e1ee4c ]
+[ Upstream commit 97f35194093362a63b33caba2485521ddabe2c95 ]
 
-On FCoE adapters, when running link bounce test in a loop, initiator
-failed to login with switch switch and required driver reload to
-recover. Switch reached a point where all subsequent FLOGIs would be
-LS_RJT'd. Further testing showed the condition to be related to not
-performing FCF discovery between FLOGI's.
+Currently driver is modifying both current & NVRAM/persistent data in
+Manufacturing page11. Driver should change only current copy of
+Manufacturing page11. It should not modify the persistent data.
 
-Fix by monitoring FLOGI failures and once a repeated error is seen
-repeat FCF discovery.
+So removed the section of code where driver is modifying the persistent
+data of Manufacturing page11.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c     |  2 ++
- drivers/scsi/lpfc/lpfc_hbadisc.c | 20 ++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_init.c    |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c     | 11 ++---------
- drivers/scsi/lpfc/lpfc_sli4.h    |  1 +
- 5 files changed, 26 insertions(+), 10 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_config.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 82a690924f5eb..7ca8c2522c928 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1124,6 +1124,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
- 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
- 			spin_unlock_irq(&phba->hbalock);
-+			phba->fcf.fcf_redisc_attempted = 0; /* reset */
- 			goto out;
- 		}
- 		if (!rc) {
-@@ -1138,6 +1139,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
- 			phba->hba_flag &= ~(FCF_RR_INPROG | HBA_DEVLOSS_TMO);
- 			spin_unlock_irq(&phba->hbalock);
-+			phba->fcf.fcf_redisc_attempted = 0; /* reset */
- 			goto out;
- 		}
- 	}
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index a67950908db17..d50db2004d21e 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1966,6 +1966,26 @@ int lpfc_sli4_fcf_rr_next_proc(struct lpfc_vport *vport, uint16_t fcf_index)
- 				"failover and change port state:x%x/x%x\n",
- 				phba->pport->port_state, LPFC_VPORT_UNKNOWN);
- 		phba->pport->port_state = LPFC_VPORT_UNKNOWN;
-+
-+		if (!phba->fcf.fcf_redisc_attempted) {
-+			lpfc_unregister_fcf(phba);
-+
-+			rc = lpfc_sli4_redisc_fcf_table(phba);
-+			if (!rc) {
-+				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
-+						"3195 Rediscover FCF table\n");
-+				phba->fcf.fcf_redisc_attempted = 1;
-+				lpfc_sli4_clear_fcf_rr_bmask(phba);
-+			} else {
-+				lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+						"3196 Rediscover FCF table "
-+						"failed. Status:x%x\n", rc);
-+			}
-+		} else {
-+			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+					"3197 Already rediscover FCF table "
-+					"attempted. No more retry\n");
-+		}
- 		goto stop_flogi_current_fcf;
- 	} else {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_FIP | LOG_ELS,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 60c21093f8656..7e06fd6127ccb 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4376,7 +4376,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba *phba,
- 			break;
- 		}
- 		/* If fast FCF failover rescan event is pending, do nothing */
--		if (phba->fcf.fcf_flag & FCF_REDISC_EVT) {
-+		if (phba->fcf.fcf_flag & (FCF_REDISC_EVT | FCF_REDISC_PEND)) {
- 			spin_unlock_irq(&phba->hbalock);
- 			break;
- 		}
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index ad4f16ab7f7a2..523a1058078a5 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -16350,15 +16350,8 @@ lpfc_sli4_fcf_rr_next_index_get(struct lpfc_hba *phba)
- 			goto initial_priority;
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
- 				"2844 No roundrobin failover FCF available\n");
--		if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX)
--			return LPFC_FCOE_FCF_NEXT_NONE;
--		else {
--			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
--				"3063 Only FCF available idx %d, flag %x\n",
--				next_fcf_index,
--			phba->fcf.fcf_pri[next_fcf_index].fcf_rec.flag);
--			return next_fcf_index;
--		}
-+
-+		return LPFC_FCOE_FCF_NEXT_NONE;
- 	}
- 
- 	if (next_fcf_index < LPFC_SLI4_FCF_TBL_INDX_MAX &&
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 1e916e16ce989..0ecf92c8a2882 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -237,6 +237,7 @@ struct lpfc_fcf {
- #define FCF_REDISC_EVT	0x100 /* FCF rediscovery event to worker thread */
- #define FCF_REDISC_FOV	0x200 /* Post FCF rediscovery fast failover */
- #define FCF_REDISC_PROG (FCF_REDISC_PEND | FCF_REDISC_EVT)
-+	uint16_t fcf_redisc_attempted;
- 	uint32_t addr_mode;
- 	uint32_t eligible_fcf_cnt;
- 	struct lpfc_fcf_rec current_rec;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
+index a6914ec99cc04..56dc0e3be2ba2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_config.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+@@ -677,10 +677,6 @@ mpt3sas_config_set_manufacturing_pg11(struct MPT3SAS_ADAPTER *ioc,
+ 	r = _config_request(ioc, &mpi_request, mpi_reply,
+ 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
+ 	    sizeof(*config_page));
+-	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
+-	r = _config_request(ioc, &mpi_request, mpi_reply,
+-	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
+-	    sizeof(*config_page));
+  out:
+ 	return r;
+ }
 -- 
 2.20.1
 
