@@ -7,48 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE98C432C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CDAC432C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:24:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2624C214DE
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:17:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E985214DE
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Nov 2019 16:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921058;
-	bh=kqAp3QBxVhcqTGJGRtkpTNDA19iAjS9CSm45alVTbgM=;
+	s=default; t=1573921497;
+	bh=ijZUssjHtXM9YfOAy7rCU8OcNgoZ6UItBKk+B3wUlS0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Tvvj5gAw2y1tAn1uELIMCq7KbPEUSsiZcIUk5E1JzjPlTi8GxhDRUiWa8d5Pv1B79
-	 Hg3r8/lD/Aus8Fj/j4NEhS8KvzAznrrWvSpUmdlqQ3lPApEMBfVPM2C5sR50bv7kHq
-	 4tLXym7xw1EubievINqansgL+BTEQpDYKa8+nBiI=
+	b=pZcLq20DCxUGZiTJ0UGkPqRxJakaweVpxLaJww2OQayIL061S8BqCL5TFHQRTs1PH
+	 dZarq9R5qAEDCHiXnsS+C3g29F66FNnQIkYfRPnK7Y9XAk+yQ9EvJT3BZ/+vLc8LOL
+	 Jnxy3MeYXMxsTw5sqIKm2Xb6hFX/J9qIR8oPCtbw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729863AbfKPQRe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:17:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53242 "EHLO mail.kernel.org"
+        id S1730211AbfKPQYi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Nov 2019 11:24:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45928 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729502AbfKPPqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:46 -0500
+        id S1728273AbfKPPmW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:42:22 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7C89A2089D;
-        Sat, 16 Nov 2019 15:46:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 59EC22084B;
+        Sat, 16 Nov 2019 15:42:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919205;
-        bh=kqAp3QBxVhcqTGJGRtkpTNDA19iAjS9CSm45alVTbgM=;
+        s=default; t=1573918942;
+        bh=ijZUssjHtXM9YfOAy7rCU8OcNgoZ6UItBKk+B3wUlS0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BYhJ4cn6d/tAayh5HgACaAg4iBn7sL7J21TK+0i2+iTluTWo23yoY/XugKG4yfTV3
-         GdHJIVh+ZP8JUnsGazyGkfwJo0oJgvhWqs0gy9vnxz1ZhpKeCxWrVVInvAExsMI/ob
-         SfZD2xPLvx6wKMZ+gFKIyF5cttUvNgMyrFR6jsuk=
+        b=WH67GIgCzA333QEVnaJXmu0QNTIR9v139PM9cZbNAi5w0gw+p5Fpei69X/F30D6Bf
+         meFFNGL3OY0JLQZP3Nx7bJ+Rgz4RleSzpppOecQqbTHJh0iZDOTgz/dGI5dkGUfOuU
+         P6PhogyHukgO4FUYeZaLb2x+Ta+jpSU7t07quDGw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
+Cc:     Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 209/237] scsi: mpt3sas: Fix driver modifying persistent data in Manufacturing page11
-Date:   Sat, 16 Nov 2019 10:40:44 -0500
-Message-Id: <20191116154113.7417-209-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, dc395x@twibble.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 064/237] scsi: dc395x: fix DMA API usage in sg_update_list
+Date:   Sat, 16 Nov 2019 10:38:19 -0500
+Message-Id: <20191116154113.7417-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -61,41 +59,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+From: Christoph Hellwig <hch@lst.de>
 
-[ Upstream commit 97f35194093362a63b33caba2485521ddabe2c95 ]
+[ Upstream commit 6c404a68bf83b4135a8a9aa1c388ebdf98e8ba7f ]
 
-Currently driver is modifying both current & NVRAM/persistent data in
-Manufacturing page11. Driver should change only current copy of
-Manufacturing page11. It should not modify the persistent data.
+We need to transfer device ownership to the CPU before we can manipulate
+the mapped data.
 
-So removed the section of code where driver is modifying the persistent
-data of Manufacturing page11.
-
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_config.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/dc395x.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index d29a2dcc7d0ec..9b01c5a7aebd9 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -692,10 +692,6 @@ mpt3sas_config_set_manufacturing_pg11(struct MPT3SAS_ADAPTER *ioc,
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
--	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
--	r = _config_request(ioc, &mpi_request, mpi_reply,
--	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
--	    sizeof(*config_page));
-  out:
- 	return r;
- }
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 08161df64ead5..3943347ec3c7c 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -1969,6 +1969,11 @@ static void sg_update_list(struct ScsiReqBlk *srb, u32 left)
+ 			xferred -= psge->length;
+ 		} else {
+ 			/* Partial SG entry done */
++			pci_dma_sync_single_for_cpu(srb->dcb->
++					    acb->dev,
++					    srb->sg_bus_addr,
++					    SEGMENTX_LEN,
++					    PCI_DMA_TODEVICE);
+ 			psge->length -= xferred;
+ 			psge->address += xferred;
+ 			srb->sg_index = idx;
 -- 
 2.20.1
 
