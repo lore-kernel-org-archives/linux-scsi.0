@@ -2,113 +2,94 @@ Return-Path: <SRS0=Zq1p=ZJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B53C432C0
-	for <linux-scsi@archiver.kernel.org>; Sun, 17 Nov 2019 18:14:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF47C432C3
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Nov 2019 23:13:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D223D2084C
-	for <linux-scsi@archiver.kernel.org>; Sun, 17 Nov 2019 18:14:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="YSAzwdKl"
+	by mail.kernel.org (Postfix) with ESMTP id C928B20727
+	for <linux-scsi@archiver.kernel.org>; Sun, 17 Nov 2019 23:13:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726069AbfKQSOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 Nov 2019 13:14:41 -0500
-Received: from mta-p7.oit.umn.edu ([134.84.196.207]:57716 "EHLO
-        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726047AbfKQSOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Nov 2019 13:14:41 -0500
-X-Greylist: delayed 402 seconds by postgrey-1.27 at vger.kernel.org; Sun, 17 Nov 2019 13:14:40 EST
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p7.oit.umn.edu (Postfix) with ESMTP id 5EDF3989
-        for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2019 18:07:58 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p7.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id j1BBiKURF8kN for <linux-scsi@vger.kernel.org>;
-        Sun, 17 Nov 2019 12:07:58 -0600 (CST)
-Received: from mail-yb1-f197.google.com (mail-yb1-f197.google.com [209.85.219.197])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 3484A1B3
-        for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2019 12:07:58 -0600 (CST)
-Received: by mail-yb1-f197.google.com with SMTP id 63so11809121ybv.11
-        for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2019 10:07:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=rMpew6zjYt8BPuA5TZf/KmQkS9FbG3A+IGOU7KV/r/s=;
-        b=YSAzwdKlPw8jVl+9ukfREsB6qTIq9HzlTnyIAkpxF5MZLdjE3vVJkhtRt1Ki6gfbgX
-         nlnuj1bmxllbk7oSuG6eHo7sMUAjbNjwwXZmIXy9oy3fSor9X4Sdc8+qtJoWFAm+AQAG
-         Fbib6TmCw+iyq6UnDx8HMQv1mIf0o5QIrRMyndcXkvykkfmeH+L8wk2kc/bSiud/YISm
-         LmnJyRyGuwdD0hZDF3XpW3K7KL/n8RE1vaanwkHV5/rt9jEedJQJNFGnggEDazJ5DVSN
-         XiZtcVVEvS/l03SsDpqpiD/o6yiiUkivEPeJHdYqN1CWc6MTsbilNvyQB99z+Db0/jku
-         HQHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=rMpew6zjYt8BPuA5TZf/KmQkS9FbG3A+IGOU7KV/r/s=;
-        b=FBDae+7saEKARSMT2qoSat589mug6rY1zgaLACLXQ3mzgX1IZ6Pm5xBsTKVP384Hlk
-         /82SWQWyuoN9QDvtC7fEXas5s9jPWYOg8jQSigKjYMNnji1F+t/VWZ6PBrQeAfAv7zGp
-         yvhSlhjC5RIpImc7LLEL6qPO8gQwVfvqLqbUw0HGRW5XBg6Z0tjG4g0BMIYzAcKNsZ+a
-         nMLW1OswrOES5a0VHanjRefoqGgYuBNSTxJzYgD5hggxx7zVyA7uyLEOETim7rTHXrdp
-         4dh9nd5CG3cUPnHzAQvxQ3oaQGRsxyoFOj3pVczSS7ZMW96bzGds/+QFQzn0tAflSR3z
-         WQRg==
-X-Gm-Message-State: APjAAAUVu/KisXoyQZDWpFmgN30P3DlByRJ7Z8ZqG+nWZrMlm42fsUsm
-        y/qM0iG8R5NLuDSADN6LnLffBqhSeG05yd9j/2QjxV/MdTJui5OwDYOnhRHu4CrakZlyO/iYtcK
-        tE+CstY8Qc69+QJdHtxm6Jn8+Gw==
-X-Received: by 2002:a0d:e1c5:: with SMTP id k188mr17317123ywe.470.1574014077667;
-        Sun, 17 Nov 2019 10:07:57 -0800 (PST)
-X-Google-Smtp-Source: APXvYqz6mHLu72MhlrM+7cXvK++5H4c+YI4TXvAKytt9EKyUjBcaA4OHjW1IFsudo+oMSTzW8UfANA==
-X-Received: by 2002:a0d:e1c5:: with SMTP id k188mr17317105ywe.470.1574014077419;
-        Sun, 17 Nov 2019 10:07:57 -0800 (PST)
-Received: from cs-u-syssec1.dtc.umn.edu (cs-u-syssec1.cs.umn.edu. [128.101.106.66])
-        by smtp.gmail.com with ESMTPSA id l1sm8019506ywh.9.2019.11.17.10.07.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 17 Nov 2019 10:07:57 -0800 (PST)
-From:   Aditya Pakki <pakki001@umn.edu>
-To:     pakki001@umn.edu
-Cc:     kjlu@umn.edu, Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1726304AbfKQXNN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 17 Nov 2019 18:13:13 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49118 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726268AbfKQXNN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Nov 2019 18:13:13 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id A4C032A771;
+        Sun, 17 Nov 2019 18:13:10 -0500 (EST)
+Date:   Mon, 18 Nov 2019 10:13:08 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Kars de Jong <jongk@linux-m68k.org>
+cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: megaraid_mbox: change the error level of crit to warning
-Date:   Sun, 17 Nov 2019 12:07:52 -0600
-Message-Id: <20191117180752.3974-1-pakki001@umn.edu>
-X-Mailer: git-send-email 2.17.1
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] esp_scsi: Clear Transfer Count registers before PIO
+ transfers
+In-Reply-To: <CACz-3rjHAyi6kMQ6j9YALLm1ApYrsqKiTnGNPUhxqqEuRJ9TjQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.21.1.1911180947020.8@nippy.intranet>
+References: <2bbb6359d542f5882be67c415ecc25ad2d9eeb5e.1573875417.git.fthain@telegraphics.com.au> <CACz-3rjHAyi6kMQ6j9YALLm1ApYrsqKiTnGNPUhxqqEuRJ9TjQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In megaraid_alloc_cmd_packets(), incorrect mbox alignment and other
-out of memory failures are processed similarly. The patch makes the
-error logging consistent by replacing KERN_CRIT with KERN_WARNING.
+On Sun, 17 Nov 2019, Kars de Jong wrote:
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
----
- drivers/scsi/megaraid/megaraid_mbox.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi Finn,
+> 
+> Op za 16 nov. 2019 om 04:36 schreef Finn Thain 
+> <fthain@telegraphics.com.au>:
+> >
+> > The zorro_esp driver uses both PIO and DMA transfers. If a failed DMA 
+> > transfer happened to be followed by a PIO transfer, the TCLOW and 
+> > TCMED registers would not get cleared. It is theoretically possible 
+> > that the stale value from the transfer counter or the TCLOW/TCMED 
+> > registers could then be used by the controller and the driver. Avoid 
+> > that by clearing these registers before each PIO transfer.
+> 
+> Are you sure this is really needed?
+> 
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index f6ac819e6e96..5595a7655c54 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -1046,7 +1046,7 @@ megaraid_alloc_cmd_packets(adapter_t *adapter)
- 
- 		// make sure the mailbox is aligned properly
- 		if (ccb->mbox_dma_h & 0x0F) {
--			con_log(CL_ANN, (KERN_CRIT
-+			con_log(CL_ANN, (KERN_WARNING
- 				"megaraid mbox: not aligned on 16-bytes\n"));
- 
- 			goto out_teardown_dma_pools;
+No. I think it improves robustness and correctness.
+
+I would be interested to know whether there is any measurable performance 
+impact on zorro_esp.
+
+> The only [time when] the driver reads these registers is after a data 
+> transfer. These are done using DMA on all Zorro boards, so I don't think 
+> there's a risk of stale values from a PIO transfer there.
+> 
+
+I'm not entirely sure that the chip is unaffected by stale counter values. 
+
+(Stale transfer counter values are distinct from stale transfer count 
+register values. Both are addressed by the patch.)
+
+If there are DMA controllers out there that can't do very short transfers 
+then this objection would seem to be invalid, because the "DMA length is 
+zero!" issue could be tackled using PIO.
+
+> The only place the controller reads these registers is when a DMA 
+> command is issued. The only place where that is done is in the zorro_esp 
+> send_dma_command() functions. 
+
+Aren't you overlooking all of the ESP_CMD_DMA flags in the core driver?
+
+Thanks for your review.
+
 -- 
-2.17.1
 
+> These all set both registers explicitly before issuing the DMA command 
+> to the controller, so I don't think there's a risk there either.
+> 
+> Kind regards,
+> 
+> Kars.
+> 
