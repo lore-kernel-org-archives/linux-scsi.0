@@ -2,124 +2,170 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5478C432C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:37:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3962C432C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:41:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A1E02073A
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:37:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE4DC2071B
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:41:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="S4zJ//FJ"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="Vl5whEQ/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726506AbfKRJhb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:37:31 -0500
-Received: from mail-eopbgr740072.outbound.protection.outlook.com ([40.107.74.72]:53664
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726461AbfKRJha (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 04:37:30 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PnOdRyOhtvxS/d6dyGp6YHmccTUxE+Pk1Dmy1c3lokq/Jyq+hYBKrgwm2PoUaJm8YM6PCIWSI4/dzq5Z8W+icVxVrjEyydca7bjzEC5LFjWYtnYEiwlRlwRSw7teEjv0IiADty5Y/FTzyByDHnmD3Mw4SWXWNVQBUy3B5gieIHfCE2IvLMd7FhBcrOeQgpvYssFcObf4xHbfa3YDy2OQ87Vy5pcxx7BqlF2QrjHfiWUIkYCDjBLECsY66zpi0yyuNFFbjtjkGGdNGJyAKtaaKN+Oqoukl1oI8MM+A1KJ13JnmlEHICEL2kXutUV18H8nHkYHXGqAwkycw6vXGopDOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ULOSXUSi+/EsERkJiV9n05O+86O8Cl5+5spjLv17qis=;
- b=A++Es6+9zEOeScDAvF2Am/mBgAGn6yYBfo9NJzeQX7ZMU9OIwoKBmZfn/egQHeweRxevTOww4eC6bzUh6OxKL0v4VVjTSHBU1flzKJKB2g7b+PW8/XiE0xMpz82q3aKSUQRaZeaBuACpmjL69LTfF/+KFgfxn6iMekxz1N3ywUCPeG+e92HMPmaQLzD6V2Y13XobvI/5PTrIvVfEDGvrQmhBLYH/5Oh6KLuYFzWAzWNzq+zXTwRdLpsElQkQNfqBJR3qbQ6GFsA5NzWtZ/Smus2pDZat7L+AM+0elg48tWr6hM1CQxCB/CIFHImfWFzaG0cOCKW78QKLbPXFwmBG6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ULOSXUSi+/EsERkJiV9n05O+86O8Cl5+5spjLv17qis=;
- b=S4zJ//FJUli+odNj88jSPBf9gCm4ugiEtlNybx6meg2HjYNmWcEONfULrkJOVATIhH/4F2zJQ+TCBPsJOVwwi8YV5tBudGHUqXmyZDjOiuxs/o0tOWSRu7Z/gGwfei7z6j+0Pm6BAxvSeJvz5aFICzauaopnsBjKk/VoiYh2UXg=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB4228.namprd08.prod.outlook.com (52.133.222.154) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.27; Mon, 18 Nov 2019 09:37:27 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2451.029; Mon, 18 Nov 2019
- 09:37:27 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Can Guo <cang@qti.qualcomm.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH v2 3/4] scsi: ufs: Avoid messing up the
- compl_time_stamp of lrbs
-Thread-Topic: [EXT] [PATCH v2 3/4] scsi: ufs: Avoid messing up the
- compl_time_stamp of lrbs
-Thread-Index: AQHVncN0qi6outuzf0O6t+NF9bzRkKeQq7+Q
-Date:   Mon, 18 Nov 2019 09:37:27 +0000
-Message-ID: <BN7PR08MB5684C8920F081E3463B8BE90DB4D0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <1574049061-11417-1-git-send-email-cang@qti.qualcomm.com>
- <1574049061-11417-4-git-send-email-cang@qti.qualcomm.com>
-In-Reply-To: <1574049061-11417-4-git-send-email-cang@qti.qualcomm.com>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTA2MzA0MmJiLTA5ZTctMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFwwNjMwNDJiZC0wOWU3LTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjQyMyIgdD0iMTMyMTg1NDM0NDQ0NDUyOTkzIiBoPSJQeXU5YU5iV0k2Q2krdmo5VFphQk1nWW9LWm89IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.81.21]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e2525a6c-806a-4fb4-bd61-08d76c0aecc4
-x-ms-traffictypediagnostic: BN7PR08MB4228:|BN7PR08MB4228:|BN7PR08MB4228:
-x-microsoft-antispam-prvs: <BN7PR08MB4228BC8A1A3FF0E6A0BAFA3EDB4D0@BN7PR08MB4228.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-forefront-prvs: 0225B0D5BC
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(366004)(376002)(346002)(396003)(39860400002)(189003)(199004)(74316002)(558084003)(55016002)(4326008)(256004)(99286004)(76116006)(9686003)(229853002)(6436002)(8936002)(25786009)(81156014)(7696005)(76176011)(6246003)(81166006)(8676002)(86362001)(5660300002)(6116002)(3846002)(476003)(186003)(55236004)(66066001)(2201001)(71190400001)(71200400001)(7416002)(102836004)(6506007)(316002)(14454004)(110136005)(446003)(11346002)(54906003)(66946007)(66446008)(64756008)(66556008)(66476007)(478600001)(52536014)(33656002)(7736002)(486006)(305945005)(2906002)(26005)(2501003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB4228;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: sHV1mF+QPxkYaglTnhRSw3JFZ2ypUPwcaBviHFYOnTO6G/WYzqF57ovTiLFDTVsd7yZBiyoFI24a1joDiI/blp00skxxOhxUBO8tMnyoplWkj6l/cJFEVwdaA7DjXJQU/09G6/11ldBxcAE2r8HWNMiuca0Pz6ElA8WKEfCbN3Z2b/SJtyogRWAq06Q+7Uf79PdKKJuZqTXQSQo+qWFtuxZPvWq1XsHTyy/qn37qJFbrotrCBHu+yYptQwyDh8fZyiRIeG27IUURn0WkuYaHyW+9tBWmnED9Ozg5/TBs0j6AHm7fM8LavoDjVla2Hx4/Co7Ka+Zc8Pup2LuXAAjdDE10mlQI/+PLWA1DLMVIiv/udwDHaCLji4HZ/PfV0mIei0f4xSp98m8xzceUAZ+FRJasGur8yTqBfHq89l2bDqWSd9fmOGtzzbObRAXIzEJu
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726539AbfKRJl7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 04:41:59 -0500
+Received: from mail-il1-f194.google.com ([209.85.166.194]:40150 "EHLO
+        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726461AbfKRJl7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2019 04:41:59 -0500
+Received: by mail-il1-f194.google.com with SMTP id d83so15359774ilk.7
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2019 01:41:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=s/xCULP+rH7gn4b9tLGIOpjlH5sBt2aMavVI8pKmtg4=;
+        b=Vl5whEQ/5fuz252IGyDczDMN8JXcnwEQN3Jg/XhI7BOykS0YeasyGZgyKsFaM2/kIw
+         fRDrBbgO4HQCrVDQ3iWy7r04Fy/HCMsVBXLF20Nk0QS7cVkr8iYVwAwtDhKXEfMSXSCg
+         P0b9oAjZEVjjjI6zmCf1GQQoKKllcMF/ut/QBS+0qtkd53WY/JFBkJgRU6tqL92ONrta
+         u5wwS6vZViV+Pj/KjkGoBwWChfCL5L/aFQUTK3RtxeTvklr07QjUBbE+Ex9O/EDmjkx4
+         SGug4InO0F9eWzI7Ys7/EbiZHADWgVKavgCh4lDb9Y3gjc4ywFaMYlZeradyQyYf/rEu
+         LB9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=s/xCULP+rH7gn4b9tLGIOpjlH5sBt2aMavVI8pKmtg4=;
+        b=F/w+I6W7j73qxYPXuU5rsJhZEVJzPmr8Yrg+K3PAWI4zHZfOxQOp0c1n1lcOn8Iacj
+         VSFfWXgzHhPHlw5n8pe3kO3ntTe/XK8WC+oXyVZ+OIZZHkoVQqjRU0z8egr6+IC0WPUg
+         7pLjIkzRBjqaY32D1TBV4tGsbbbaOhIa9OzHX2o3WPviWXuR8Bhh/8ftlkBB9vedXSVG
+         OGKGjElTaaY/yTzh+oEHuMAqhA2y8C2ZfA2oGR2AX+B0g3FRUx0x53rIL1yuuJ31IvFc
+         qsl1Xn41f/hwXrBN2ZtpGa3TM1LU92jEAFCxctqIh46+/J/7PXDbtn5Zr8RmUhzHMDax
+         b0Eg==
+X-Gm-Message-State: APjAAAWTmjHpnomQyNIoSrMUp4Wcjlas6HJR/12kU0oed4z1/c3ziKRq
+        9QnmAKJB3URMuIW3VO5Tvjk3nvKx1M/vvUu8s2kVWQ==
+X-Google-Smtp-Source: APXvYqxcPY5VArAbbjI9PO4LwqreDANiQE7W1dAgM6i7t62mpcboKmFYydhyGg8skDtbPV3eVsaqU19XvZoc+Zr1mRE=
+X-Received: by 2002:a92:c152:: with SMTP id b18mr15028816ilh.71.1574070116498;
+ Mon, 18 Nov 2019 01:41:56 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e2525a6c-806a-4fb4-bd61-08d76c0aecc4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2019 09:37:27.2144
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: f8Eo6UAedSQqyO0ax38LY66eOYXNjCDQuViPLtAes8fbT56eCxSlqDQgSBudu9G6QpOSdahenBB1mt0vCjGdCA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4228
+References: <20191114100910.6153-1-deepak.ukey@microchip.com> <20191114100910.6153-10-deepak.ukey@microchip.com>
+In-Reply-To: <20191114100910.6153-10-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Mon, 18 Nov 2019 10:41:45 +0100
+Message-ID: <CAMGffEnjSZrv+TUrin--EhLq4sJBk09zvq-box0nKdz7pCyr1Q@mail.gmail.com>
+Subject: Re: [PATCH V2 09/13] pm80xx : Cleanup command when a reset times out.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
+        Jack Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>, dpf@google.com,
+        jsperbeck@google.com, Vikram Auradkar <auradkar@google.com>,
+        ianyar@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> From: Can Guo <cang@codeaurora.org>
->=20
-> To be on the safe side, do not touch one lrb after clear its slot in the =
-lrb_in_use
-> bitmap to avoid messing up the next task which would possibly occupy this=
- lrb.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+On Thu, Nov 14, 2019 at 11:08 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
+>
+> From: peter chang <dpf@google.com>
+>
+> Added the fix so the if driver properly sent the abort it try to remove
+> it from the firmware's list of outstanding commands regardless of the
+> abort status. This means that the task gets free-ed 'now' rather than
+> possibly getting free-ed later when the scsi layer thinks it's leaked
+> but still valid.
+>
+> Signed-off-by: peter chang <dpf@google.com>
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Thanks
+> ---
+>  drivers/scsi/pm8001/pm8001_sas.c | 50 +++++++++++++++++++++++++++++-----------
+>  1 file changed, 37 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 4491de8d40fc..b7cbc312843e 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -1204,8 +1204,8 @@ int pm8001_abort_task(struct sas_task *task)
+>         pm8001_dev = dev->lldd_dev;
+>         pm8001_ha = pm8001_find_ha_by_dev(dev);
+>         phy_id = pm8001_dev->attached_phy;
+> -       rc = pm8001_find_tag(task, &tag);
+> -       if (rc == 0) {
+> +       ret = pm8001_find_tag(task, &tag);
+> +       if (ret == 0) {
+>                 pm8001_printk("no tag for task:%p\n", task);
+>                 return TMF_RESP_FUNC_FAILED;
+>         }
+> @@ -1243,26 +1243,50 @@ int pm8001_abort_task(struct sas_task *task)
+>
+>                         /* 2. Send Phy Control Hard Reset */
+>                         reinit_completion(&completion);
+> +                       phy->port_reset_status = PORT_RESET_TMO;
+>                         phy->reset_success = false;
+>                         phy->enable_completion = &completion;
+>                         phy->reset_completion = &completion_reset;
+>                         ret = PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
+>                                 PHY_HARD_RESET);
+> -                       if (ret)
+> -                               goto out;
+> -                       PM8001_MSG_DBG(pm8001_ha,
+> -                               pm8001_printk("Waiting for local phy ctl\n"));
+> -                       wait_for_completion(&completion);
+> -                       if (!phy->reset_success)
+> +                       if (ret) {
+> +                               phy->enable_completion = NULL;
+> +                               phy->reset_completion = NULL;
+>                                 goto out;
+> +                       }
+>
+> -                       /* 3. Wait for Port Reset complete / Port reset TMO */
+> +                       /* In the case of the reset timeout/fail we still
+> +                        * abort the command at the firmware. The assumption
+> +                        * here is that the drive is off doing something so
+> +                        * that it's not processing requests, and we want to
+> +                        * avoid getting a completion for this and either
+> +                        * leaking the task in libsas or losing the race and
+> +                        * getting a double free.
+> +                        */
+>                         PM8001_MSG_DBG(pm8001_ha,
+> +                               pm8001_printk("Waiting for local phy ctl\n"));
+> +                       ret = wait_for_completion_timeout(&completion,
+> +                                       PM8001_TASK_TIMEOUT * HZ);
+> +                       if (!ret || !phy->reset_success) {
+> +                               phy->enable_completion = NULL;
+> +                               phy->reset_completion = NULL;
+> +                       } else {
+> +                               /* 3. Wait for Port Reset complete or
+> +                                * Port reset TMO
+> +                                */
+> +                               PM8001_MSG_DBG(pm8001_ha,
+>                                 pm8001_printk("Waiting for Port reset\n"));
+> -                       wait_for_completion(&completion_reset);
+> -                       if (phy->port_reset_status) {
+> -                               pm8001_dev_gone_notify(dev);
+> -                               goto out;
+> +                               ret = wait_for_completion_timeout(
+> +                                       &completion_reset,
+> +                                       PM8001_TASK_TIMEOUT * HZ);
+> +                               if (!ret)
+> +                                       phy->reset_completion = NULL;
+> +                               WARN_ON(phy->port_reset_status ==
+> +                                               PORT_RESET_TMO);
+> +                               if (phy->port_reset_status == PORT_RESET_TMO) {
+> +                                       pm8001_dev_gone_notify(dev);
+> +                                       goto out;
+> +                               }
+>                         }
+>
+>                         /*
+> --
+> 2.16.3
+>
