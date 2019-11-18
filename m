@@ -2,170 +2,242 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A034C432C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC76DC432C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B6B920855
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5EFE20855
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XhdwF3Mv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726635AbfKRKbn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 05:31:43 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2107 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726536AbfKRKbn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 05:31:43 -0500
-Received: from lhreml709-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id BE6B832AB0F642FAD420;
-        Mon, 18 Nov 2019 10:31:41 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml709-cah.china.huawei.com (10.201.108.32) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 18 Nov 2019 10:31:41 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 18 Nov
- 2019 10:31:41 +0000
-Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "hare@suse.com" <hare@suse.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>
-References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-4-git-send-email-john.garry@huawei.com>
- <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
- <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
- <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
- <ace95bc5-7b89-9ed3-be89-8139f977984b@huawei.com>
- <42b0bcd9-f147-76eb-dfce-270f77bca818@suse.de>
- <89cd1985-39c7-2965-d25b-2ee2c183d057@huawei.com>
- <c34c0ce2-40a8-e4fc-3366-1f7b906da5a3@acm.org>
- <8e7bd2cb-1035-13ba-05db-d8e12c61df1f@huawei.com>
- <6b85f172-695c-4757-3794-455b8d55e015@acm.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <1ba51afd-cce5-f7b2-704c-06e00db027bc@huawei.com>
-Date:   Mon, 18 Nov 2019 10:31:40 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726708AbfKRKbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 05:31:52 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:50122 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726518AbfKRKbw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2019 05:31:52 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574073110;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=kQGaSPSMYZf0wTy4mSjYgqZcEjcQZsd+fMlyCkP8oTA=;
+        b=XhdwF3MvMaOJZcLcwwnWUCulR72OjbamI5440PD0DBqrCk09d1CB3gIFwlgBxpwYg6t6Y6
+        lBUeo3q/IVJQ8SYBAWI8huCWhQhpv9ltsApY4yD2wKRlWp2BifVMhKCyg3lW6hBdd1SNL9
+        ylsWmUV3Bueh90BtALcxsyFatCdLFCE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-322-YV0MO35nMzaGbPBoC5Cesw-1; Mon, 18 Nov 2019 05:31:46 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8CF5F801FD2;
+        Mon, 18 Nov 2019 10:31:42 +0000 (UTC)
+Received: from localhost (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F37A519C6A;
+        Mon, 18 Nov 2019 10:31:38 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+Subject: [PATCH 2/4] scsi: mpt3sas: use private counter for tracking inflight per-LUN commands
+Date:   Mon, 18 Nov 2019 18:31:15 +0800
+Message-Id: <20191118103117.978-3-ming.lei@redhat.com>
+In-Reply-To: <20191118103117.978-1-ming.lei@redhat.com>
+References: <20191118103117.978-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <6b85f172-695c-4757-3794-455b8d55e015@acm.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml710-chm.china.huawei.com (10.201.108.61) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: YV0MO35nMzaGbPBoC5Cesw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 15/11/2019 17:57, Bart Van Assche wrote:
-> On 11/15/19 2:24 AM, John Garry wrote:
->> Bart Van Assche wrote:
->> > How about sharing tag sets across hardware
->> > queues, e.g. like in the (totally untested) patch below?
->>
->> So this is similar in principle what Ming Lei came up with here:
->> https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/ 
->>
->> However your implementation looks neater, which is good.
->>
->> My concern with this approach is that we can't differentiate which 
->> tags are allocated for which hctx, and sometimes we need to know that.
->>
+Prepare for bypassing sdev->device_busy for improving performance on
+fast SCSI storage device, so sdev->device_busy can't be relied
+any more.
 
-Hi Bart,
+mpt3sas may need one such counter for balancing load among LUNs in
+some specific setting, so add one private counter for this purpose.
 
->> An example here was blk_mq_queue_tag_busy_iter(), which iterates the 
->> bits for each hctx. This would just be broken by that change, unless 
->> we record which bits are associated with each hctx.
-> 
-> I disagree. In bt_iter() I added " && rq->mq_hctx == hctx" such that 
-> blk_mq_queue_tag_busy_iter() only calls the callback function for 
-> matching (hctx, rq) pairs.
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  3 ++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +++++++++++++--
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
-OK, I see. I assumed that rq->mq_hctx was statically set when we 
-initially allocate the static requests per hctx; but that doesn’t appear 
-so - it's set in blk_mq_get_request()->blk_mq_rq_ctx_init().
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt=
+3sas_base.c
+index fea3cb6a090b..9c2d374b3157 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3480,12 +3480,13 @@ static inline u8
+ _base_get_high_iops_msix_index(struct MPT3SAS_ADAPTER *ioc,
+ =09struct scsi_cmnd *scmd)
+ {
++=09struct MPT3SAS_DEVICE *sas_device_priv_data =3D scmd->device->hostdata;
+ =09/**
+ =09 * Round robin the IO interrupts among the high iops
+ =09 * reply queues in terms of batch count 16 when outstanding
+ =09 * IOs on the target device is >=3D8.
+ =09 */
+-=09if (atomic_read(&scmd->device->device_busy) >
++=09if (atomic_read(&sas_device_priv_data->active_cmds) >
+ =09    MPT3SAS_DEVICE_HIGH_IOPS_DEPTH)
+ =09=09return base_mod64((
+ =09=09    atomic64_add_return(1, &ioc->high_iops_outstanding) /
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt=
+3sas_base.h
+index faca0a5e71f8..9e9f319bb636 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -467,6 +467,7 @@ struct MPT3SAS_DEVICE {
+ =09 * thing while a SATL command is pending.
+ =09 */
+ =09unsigned long ata_command_pending;
++=09atomic_t active_cmds;
+=20
+ };
+=20
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mp=
+t3sas_scsih.c
+index c8e512ba6d39..194960dae1d6 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1770,6 +1770,7 @@ scsih_slave_alloc(struct scsi_device *sdev)
+=20
+ =09sas_device_priv_data->lun =3D sdev->lun;
+ =09sas_device_priv_data->flags =3D MPT_DEVICE_FLAGS_INIT;
++=09atomic_set(&sas_device_priv_data->active_cmds, 0);
+=20
+ =09starget =3D scsi_target(sdev);
+ =09sas_target_priv_data =3D starget->hostdata;
+@@ -2884,6 +2885,7 @@ scsih_abort(struct scsi_cmnd *scmd)
+ =09    ioc->remove_host) {
+ =09=09sdev_printk(KERN_INFO, scmd->device,
+ =09=09=09"device been deleted! scmd(%p)\n", scmd);
++=09=09atomic_dec(&sas_device_priv_data->active_cmds);
+ =09=09scmd->result =3D DID_NO_CONNECT << 16;
+ =09=09scmd->scsi_done(scmd);
+ =09=09r =3D SUCCESS;
+@@ -2993,7 +2995,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ =09=09MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0,
+ =09=09tr_timeout, tr_method);
+ =09/* Check for busy commands after reset */
+-=09if (r =3D=3D SUCCESS && atomic_read(&scmd->device->device_busy))
++=09if (r =3D=3D SUCCESS && atomic_read(&sas_device_priv_data->active_cmds)=
+)
+ =09=09r =3D FAILED;
+  out:
+ =09sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(%p)\n",
+@@ -4517,9 +4519,12 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *io=
+c)
+ =09int count =3D 0;
+=20
+ =09for (smid =3D 1; smid <=3D ioc->scsiio_depth; smid++) {
++=09=09struct MPT3SAS_DEVICE *sas_device_priv_data;
++
+ =09=09scmd =3D mpt3sas_scsih_scsi_lookup_get(ioc, smid);
+ =09=09if (!scmd)
+ =09=09=09continue;
++=09=09sas_device_priv_data =3D scmd->device->hostdata;
+ =09=09count++;
+ =09=09_scsih_set_satl_pending(scmd, false);
+ =09=09st =3D scsi_cmd_priv(scmd);
+@@ -4529,6 +4534,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc=
+)
+ =09=09=09scmd->result =3D DID_NO_CONNECT << 16;
+ =09=09else
+ =09=09=09scmd->result =3D DID_RESET << 16;
++=09=09atomic_dec(&sas_device_priv_data->active_cmds);
+ =09=09scmd->scsi_done(scmd);
+ =09}
+ =09dtmprintk(ioc, ioc_info(ioc, "completing %d cmds\n", count));
+@@ -4756,11 +4762,14 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmn=
+d *scmd)
+ =09    mpi_request->LUN);
+ =09memcpy(mpi_request->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
+=20
++=09atomic_inc(&sas_device_priv_data->active_cmds);
++
+ =09if (mpi_request->DataLength) {
+ =09=09pcie_device =3D sas_target_priv_data->pcie_dev;
+ =09=09if (ioc->build_sg_scmd(ioc, scmd, smid, pcie_device)) {
+ =09=09=09mpt3sas_base_free_smid(ioc, smid);
+ =09=09=09_scsih_set_satl_pending(scmd, false);
++=09=09=09atomic_dec(&sas_device_priv_data->active_cmds);
+ =09=09=09goto out;
+ =09=09}
+ =09} else
+@@ -5207,6 +5216,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *=
+ioc, u16 handle)
+ static u8
+ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 r=
+eply)
+ {
++=09struct MPT3SAS_DEVICE *sas_device_priv_data;
+ =09Mpi25SCSIIORequest_t *mpi_request;
+ =09Mpi2SCSIIOReply_t *mpi_reply;
+ =09struct scsi_cmnd *scmd;
+@@ -5216,7 +5226,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid,=
+ u8 msix_index, u32 reply)
+ =09u8 scsi_state;
+ =09u8 scsi_status;
+ =09u32 log_info;
+-=09struct MPT3SAS_DEVICE *sas_device_priv_data;
+ =09u32 response_code =3D 0;
+=20
+ =09mpi_reply =3D mpt3sas_base_get_reply_virt_addr(ioc, reply);
+@@ -5225,6 +5234,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid,=
+ u8 msix_index, u32 reply)
+ =09if (scmd =3D=3D NULL)
+ =09=09return 1;
+=20
++=09sas_device_priv_data =3D scmd->device->hostdata;
+ =09_scsih_set_satl_pending(scmd, false);
+=20
+ =09mpi_request =3D mpt3sas_base_get_msg_frame(ioc, smid);
+@@ -5431,6 +5441,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid,=
+ u8 msix_index, u32 reply)
+=20
+ =09scsi_dma_unmap(scmd);
+ =09mpt3sas_base_free_smid(ioc, smid);
++=09atomic_dec(&sas_device_priv_data->active_cmds);
+ =09scmd->scsi_done(scmd);
+ =09return 0;
+ }
+--=20
+2.20.1
 
-> 
->> Another example was __blk_mq_tag_idle(), which looks problematic.
-> 
-> Please elaborate.
-
-Again, this was for the same reason being that I thought we could not 
-differentiate which rqs were associated with which hctx.
-
-> 
->> For debugfs, when we examine 
->> /sys/kernel/debug/block/.../hctxX/tags_bitmap, wouldn't that be the 
->> tags for all hctx (hctx0)?
->>
->> For debugging reasons, I would say we want to know which tags are 
->> allocated for a specific hctx, as this is tightly related to the 
->> requests for that hctx.
-> 
-> That is an open issue in the patch I posted and something that needs to 
-> be addressed. One way to address this is to change the 
-> sbitmap_bitmap_show() calls into calls to a function that only shows 
-> those bits for which rq->mq_hctx == hctx.
-
-Yeah, understood.
-
-> 
->>> @@ -341,8 +341,11 @@ void blk_mq_tagset_busy_iter(struct 
->>> blk_mq_tag_set *tagset,
->>>       int i;
->>>
->>>       for (i = 0; i < tagset->nr_hw_queues; i++) {
->>> -        if (tagset->tags && tagset->tags[i])
->>> +        if (tagset->tags && tagset->tags[i]) {
->>>               blk_mq_all_tag_busy_iter(tagset->tags[i], fn, priv);
->>
->> As I mentioned earlier, wouldn't this iterate over all tags for all 
->> hctx's, when we just want the tags for hctx[i]?
->>
->> Thanks,
->> John
->>
->> [Not trimming reply for future reference]
->>
->>> +            if (tagset->share_tags)
->>> +                break;
->>> +        }
->>>       }
->>>   }
->>>   EXPORT_SYMBOL(blk_mq_tagset_busy_iter);
-> 
-> Since blk_mq_tagset_busy_iter() loops over all hardware queues all what 
-> is changed is the order in which requests are examined. I am not aware 
-> of any block driver that calls blk_mq_tagset_busy_iter() and that 
-> depends on the order of the requests passed to the callback function.
-> 
-
-OK, fine.
-
-So, to me, this approach also seems viable then.
-
-I am however not so happy with how we use blk_mq_tag_set.tags[0] for the 
-shared tags; I would like to use blk_mq_tag_set.shared_tags and make 
-blk_mq_tag_set.tags[] point at blk_mq_tag_set.shared_tags or maybe not 
-blk_mq_tag_set.tags[] at all. However maybe that change may be more 
-intrusive.
-
-And another more real concern is that we miss a check somewhere for 
-rq->mq_hctx == hctx when examining the bits on the shared tags.
-
-Thanks,
-John
