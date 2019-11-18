@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF173C432C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C53C43215
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 962D62073A
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5285120748
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbfKRJWd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:22:33 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54648 "EHLO mx1.suse.de"
+        id S1726858AbfKRJWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 04:22:35 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54662 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726776AbfKRJWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726809AbfKRJWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 18 Nov 2019 04:22:33 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 3F2B2B1A7;
+        by mx1.suse.de (Postfix) with ESMTP id 3EFB2B16F;
         Mon, 18 Nov 2019 09:22:31 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,9 +28,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Subject: [PATCH 1/9] dpt_i2o: rename adpt_i2o_to_scsi() to adpt_i2o_scsi_complete()
-Date:   Mon, 18 Nov 2019 10:22:00 +0100
-Message-Id: <20191118092208.54521-2-hare@suse.de>
+Subject: [PATCH 3/9] dpt_i2o: use scsi_host_flush_commands() to abort outstanding commands
+Date:   Mon, 18 Nov 2019 10:22:02 +0100
+Message-Id: <20191118092208.54521-4-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191118092208.54521-1-hare@suse.de>
 References: <20191118092208.54521-1-hare@suse.de>
@@ -39,62 +39,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rename the badly named function into adpt_i2o_scsi_complete(),
-and make it a void function as the return value is never used.
-This also fixes a potential use-after free as the return value
-might be evaluated from the command result after the command
-has been freed.
+Rather than traversing all outstanding commands manually use the
+scsi_host_flush_commands() helper to terminate all commands during
+reset.
+With that we can drop the cmd_list usage from the midlayer.
 
 Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/dpt_i2o.c | 5 ++---
- drivers/scsi/dpti.h    | 2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/dpt_i2o.c | 20 +-------------------
+ drivers/scsi/dpti.h    |  1 -
+ 2 files changed, 1 insertion(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index abc74fd474dc..c30ace9f251e 100644
+index c30ace9f251e..5fc09caa7ded 100644
 --- a/drivers/scsi/dpt_i2o.c
 +++ b/drivers/scsi/dpt_i2o.c
-@@ -2173,7 +2173,7 @@ static irqreturn_t adpt_isr(int irq, void *dev_id)
- 						 readl(reply + 12) - 1);
- 			if(cmd != NULL){
- 				scsi_dma_unmap(cmd);
--				adpt_i2o_to_scsi(reply, cmd);
-+				adpt_i2o_scsi_complete(reply, cmd);
- 			}
- 		}
- 		writel(m, pHba->reply_port);
-@@ -2341,7 +2341,7 @@ static s32 adpt_scsi_host_alloc(adpt_hba* pHba, struct scsi_host_template *sht)
+@@ -817,7 +817,7 @@ static int adpt_hba_reset(adpt_hba* pHba)
+ 	}
+ 	pHba->state &= ~DPTI_STATE_RESET;
+ 
+-	adpt_fail_posted_scbs(pHba);
++	scsi_host_flush_commands(pHba->host, DID_RESET);
+ 	return 0;	/* return success */
  }
  
+@@ -2335,7 +2335,6 @@ static s32 adpt_scsi_host_alloc(adpt_hba* pHba, struct scsi_host_template *sht)
+ 	host->unique_id = (u32)sys_tbl_pa + pHba->unit;
+ 	host->sg_tablesize = pHba->sg_tablesize;
+ 	host->can_queue = pHba->post_fifo_size;
+-	host->use_cmd_list = 1;
  
--static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd)
-+static void adpt_i2o_scsi_complete(void __iomem *reply, struct scsi_cmnd *cmd)
- {
- 	adpt_hba* pHba;
- 	u32 hba_status;
-@@ -2459,7 +2459,6 @@ static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd)
- 	if(cmd->scsi_done != NULL){
- 		cmd->scsi_done(cmd);
- 	} 
--	return cmd->result;
+ 	return 0;
+ }
+@@ -2646,23 +2645,6 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
+ 	return 0;
  }
  
- 
+-static void adpt_fail_posted_scbs(adpt_hba* pHba)
+-{
+-	struct scsi_cmnd* 	cmd = NULL;
+-	struct scsi_device* 	d = NULL;
+-
+-	shost_for_each_device(d, pHba->host) {
+-		unsigned long flags;
+-		spin_lock_irqsave(&d->list_lock, flags);
+-		list_for_each_entry(cmd, &d->cmd_list, list) {
+-			cmd->result = (DID_OK << 16) | (QUEUE_FULL <<1);
+-			cmd->scsi_done(cmd);
+-		}
+-		spin_unlock_irqrestore(&d->list_lock, flags);
+-	}
+-}
+-
+-
+ /*============================================================================
+  *  Routines from i2o subsystem
+  *============================================================================
 diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
-index 42b1e28b5884..3ec391134bb0 100644
+index 3ec391134bb0..72293b8450b6 100644
 --- a/drivers/scsi/dpti.h
 +++ b/drivers/scsi/dpti.h
-@@ -286,7 +286,7 @@ static s32 adpt_i2o_status_get(adpt_hba* pHba);
- static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba);
- static s32 adpt_i2o_hrt_get(adpt_hba* pHba);
- static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, struct adpt_device* dptdevice);
--static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd);
-+static void adpt_i2o_scsi_complete(void __iomem *reply, struct scsi_cmnd *cmd);
- static s32 adpt_scsi_host_alloc(adpt_hba* pHba,struct scsi_host_template * sht);
- static s32 adpt_hba_reset(adpt_hba* pHba);
- static s32 adpt_i2o_reset_hba(adpt_hba* pHba);
+@@ -295,7 +295,6 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba);
+ static s32 adpt_send_nop(adpt_hba*pHba,u32 m);
+ static void adpt_i2o_delete_hba(adpt_hba* pHba);
+ static void adpt_inquiry(adpt_hba* pHba);
+-static void adpt_fail_posted_scbs(adpt_hba* pHba);
+ static struct adpt_device* adpt_find_device(adpt_hba* pHba, u32 chan, u32 id, u64 lun);
+ static int adpt_install_hba(struct scsi_host_template* sht, struct pci_dev* pDev) ;
+ static int adpt_i2o_online_hba(adpt_hba* pHba);
 -- 
 2.16.4
 
