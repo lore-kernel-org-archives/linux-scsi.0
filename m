@@ -2,274 +2,170 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F8B4C43141
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A034C432C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBC4120885
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NHh2PD3C"
+	by mail.kernel.org (Postfix) with ESMTP id 7B6B920855
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:31:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726706AbfKRKbp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 05:31:45 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:23797 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726518AbfKRKbo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 05:31:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574073102;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=QBUQpEvhUSGPyW0TNCDWONDd8thoA0ntji5C32j1HOM=;
-        b=NHh2PD3CxryF93hocFfzs/VRO6KJRMJTq5aGqD5tbK7iRfuiheI7fJLiirZqjZgHLyfoja
-        OBsP97Hfp/MhCZdnB5vNSKOTrbQlwQJ77ITxF41NWgJBtxLe6hu7nILCQ3EtVFaMgsihGa
-        oO4cprw0jKegIdB/12K/5hjLIDT24Hs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-207-R0u2oME6PaG-zSQCmkh7eQ-1; Mon, 18 Nov 2019 05:31:39 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9C7AD1802CE0;
-        Mon, 18 Nov 2019 10:31:36 +0000 (UTC)
-Received: from localhost (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 013D4600CD;
-        Mon, 18 Nov 2019 10:31:32 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 1/4] scsi: megaraid_sas: use private counter for tracking inflight per-LUN commands
-Date:   Mon, 18 Nov 2019 18:31:14 +0800
-Message-Id: <20191118103117.978-2-ming.lei@redhat.com>
-In-Reply-To: <20191118103117.978-1-ming.lei@redhat.com>
-References: <20191118103117.978-1-ming.lei@redhat.com>
+        id S1726635AbfKRKbn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 05:31:43 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2107 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726536AbfKRKbn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Nov 2019 05:31:43 -0500
+Received: from lhreml709-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id BE6B832AB0F642FAD420;
+        Mon, 18 Nov 2019 10:31:41 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml709-cah.china.huawei.com (10.201.108.32) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 18 Nov 2019 10:31:41 +0000
+Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 18 Nov
+ 2019 10:31:41 +0000
+Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "hare@suse.com" <hare@suse.com>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>
+References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
+ <1573652209-163505-4-git-send-email-john.garry@huawei.com>
+ <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
+ <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
+ <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
+ <ace95bc5-7b89-9ed3-be89-8139f977984b@huawei.com>
+ <42b0bcd9-f147-76eb-dfce-270f77bca818@suse.de>
+ <89cd1985-39c7-2965-d25b-2ee2c183d057@huawei.com>
+ <c34c0ce2-40a8-e4fc-3366-1f7b906da5a3@acm.org>
+ <8e7bd2cb-1035-13ba-05db-d8e12c61df1f@huawei.com>
+ <6b85f172-695c-4757-3794-455b8d55e015@acm.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <1ba51afd-cce5-f7b2-704c-06e00db027bc@huawei.com>
+Date:   Mon, 18 Nov 2019 10:31:40 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: R0u2oME6PaG-zSQCmkh7eQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <6b85f172-695c-4757-3794-455b8d55e015@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.226.46]
+X-ClientProxiedBy: lhreml710-chm.china.huawei.com (10.201.108.61) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prepare for bypassing sdev->device_busy for improving performance on
-fast SCSI storage device, so sdev->device_busy can't be relied
-any more.
+On 15/11/2019 17:57, Bart Van Assche wrote:
+> On 11/15/19 2:24 AM, John Garry wrote:
+>> Bart Van Assche wrote:
+>> > How about sharing tag sets across hardware
+>> > queues, e.g. like in the (totally untested) patch below?
+>>
+>> So this is similar in principle what Ming Lei came up with here:
+>> https://lore.kernel.org/linux-block/20190531022801.10003-1-ming.lei@redhat.com/ 
+>>
+>> However your implementation looks neater, which is good.
+>>
+>> My concern with this approach is that we can't differentiate which 
+>> tags are allocated for which hctx, and sometimes we need to know that.
+>>
 
-megaraid_sas may need one such counter for balancing load among LUNs in
-some specific setting, so add one private counter for this purpose.
+Hi Bart,
 
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Ewan D. Milne <emilne@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas.h        |  1 +
- drivers/scsi/megaraid/megaraid_sas_base.c   | 15 +++++++++++++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 13 +++++++++----
- 3 files changed, 23 insertions(+), 6 deletions(-)
+>> An example here was blk_mq_queue_tag_busy_iter(), which iterates the 
+>> bits for each hctx. This would just be broken by that change, unless 
+>> we record which bits are associated with each hctx.
+> 
+> I disagree. In bt_iter() I added " && rq->mq_hctx == hctx" such that 
+> blk_mq_queue_tag_busy_iter() only calls the callback function for 
+> matching (hctx, rq) pairs.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/m=
-egaraid_sas.h
-index a6e788c02ff4..f9562c02705b 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2025,6 +2025,7 @@ struct MR_PRIV_DEVICE {
- =09u8 interface_type;
- =09u8 task_abort_tmo;
- =09u8 target_reset_tmo;
-+=09atomic_t active_cmds;
- };
- struct megasas_cmd;
-=20
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megar=
-aid/megaraid_sas_base.c
-index 42cf38c1ea99..3afead3bc96e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1759,6 +1759,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct=
- scsi_cmnd *scmd)
- {
- =09struct megasas_instance *instance;
- =09struct MR_PRIV_DEVICE *mr_device_priv_data;
-+=09int ret;
-=20
- =09instance =3D (struct megasas_instance *)
- =09    scmd->device->host->hostdata;
-@@ -1821,7 +1822,11 @@ megasas_queue_command(struct Scsi_Host *shost, struc=
-t scsi_cmnd *scmd)
- =09=09goto out_done;
- =09}
-=20
--=09return instance->instancet->build_and_issue_cmd(instance, scmd);
-+=09atomic_inc(&mr_device_priv_data->active_cmds);
-+=09ret =3D instance->instancet->build_and_issue_cmd(instance, scmd);
-+=09if (ret)
-+=09=09atomic_dec(&mr_device_priv_data->active_cmds);
-+=09return ret;
-=20
-  out_done:
- =09scmd->scsi_done(scmd);
-@@ -2100,6 +2105,7 @@ static int megasas_slave_alloc(struct scsi_device *sd=
-ev)
-=20
- =09atomic_set(&mr_device_priv_data->r1_ldio_hint,
- =09=09   instance->r1_ldio_hint_default);
-+=09atomic_set(&mr_device_priv_data->active_cmds, 0);
- =09return 0;
- }
-=20
-@@ -3475,12 +3481,15 @@ megasas_complete_cmd(struct megasas_instance *insta=
-nce, struct megasas_cmd *cmd,
- =09unsigned long flags;
- =09struct fusion_context *fusion =3D instance->ctrl_context;
- =09u32 opcode, status;
-+=09struct MR_PRIV_DEVICE *mr_device_priv_data =3D NULL;
-=20
- =09/* flag for the retry reset */
- =09cmd->retry_for_fw_reset =3D 0;
-=20
--=09if (cmd->scmd)
-+=09if (cmd->scmd) {
- =09=09cmd->scmd->SCp.ptr =3D NULL;
-+=09=09mr_device_priv_data =3D cmd->scmd->device->hostdata;
-+=09}
-=20
- =09switch (hdr->cmd) {
- =09case MFI_CMD_INVALID:
-@@ -3519,6 +3528,7 @@ megasas_complete_cmd(struct megasas_instance *instanc=
-e, struct megasas_cmd *cmd,
- =09=09if (exception) {
-=20
- =09=09=09atomic_dec(&instance->fw_outstanding);
-+=09=09=09atomic_dec(&mr_device_priv_data->active_cmds);
-=20
- =09=09=09scsi_dma_unmap(cmd->scmd);
- =09=09=09cmd->scmd->scsi_done(cmd->scmd);
-@@ -3567,6 +3577,7 @@ megasas_complete_cmd(struct megasas_instance *instanc=
-e, struct megasas_cmd *cmd,
- =09=09}
-=20
- =09=09atomic_dec(&instance->fw_outstanding);
-+=09=09atomic_dec(&mr_device_priv_data->active_cmds);
-=20
- =09=09scsi_dma_unmap(cmd->scmd);
- =09=09cmd->scmd->scsi_done(cmd->scmd);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/meg=
-araid/megaraid_sas_fusion.c
-index e301458bcbae..10ed3bc3b643 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2728,7 +2728,7 @@ megasas_build_ldio_fusion(struct megasas_instance *in=
-stance,
- =09u8 *raidLUN;
- =09unsigned long spinlock_flags;
- =09struct MR_LD_RAID *raid =3D NULL;
--=09struct MR_PRIV_DEVICE *mrdev_priv;
-+=09struct MR_PRIV_DEVICE *mrdev_priv =3D scp->device->hostdata;
- =09struct RAID_CONTEXT *rctx;
- =09struct RAID_CONTEXT_G35 *rctx_g35;
-=20
-@@ -2826,7 +2826,7 @@ megasas_build_ldio_fusion(struct megasas_instance *in=
-stance,
- =09}
-=20
- =09if ((instance->perf_mode =3D=3D MR_BALANCED_PERF_MODE) &&
--=09=09atomic_read(&scp->device->device_busy) >
-+=09=09atomic_read(&mrdev_priv->active_cmds) >
- =09=09(io_info.data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
- =09=09cmd->request_desc->SCSIIO.MSIxIndex =3D
- =09=09=09mega_mod64((atomic64_add_return(1, &instance->high_iops_outstandi=
-ng) /
-@@ -2849,7 +2849,6 @@ megasas_build_ldio_fusion(struct megasas_instance *in=
-stance,
- =09=09 * with the SLD bit asserted.
- =09=09 */
- =09=09if (io_info.r1_alt_dev_handle !=3D MR_DEVHANDLE_INVALID) {
--=09=09=09mrdev_priv =3D scp->device->hostdata;
-=20
- =09=09=09if (atomic_inc_return(&instance->fw_outstanding) >
- =09=09=09=09(instance->host->can_queue)) {
-@@ -3159,7 +3158,7 @@ megasas_build_syspd_fusion(struct megasas_instance *i=
-nstance,
- =09cmd->request_desc->SCSIIO.DevHandle =3D io_request->DevHandle;
-=20
- =09if ((instance->perf_mode =3D=3D MR_BALANCED_PERF_MODE) &&
--=09=09atomic_read(&scmd->device->device_busy) > MR_DEVICE_HIGH_IOPS_DEPTH)
-+=09=09atomic_read(&mr_device_priv_data->active_cmds) > MR_DEVICE_HIGH_IOPS=
-_DEPTH)
- =09=09cmd->request_desc->SCSIIO.MSIxIndex =3D
- =09=09=09mega_mod64((atomic64_add_return(1, &instance->high_iops_outstandi=
-ng) /
- =09=09=09=09MR_HIGH_IOPS_BATCH_COUNT), instance->low_latency_index_start);
-@@ -3550,6 +3549,7 @@ complete_cmd_fusion(struct megasas_instance *instance=
-, u32 MSIxIndex,
-=20
- =09while (d_val.u.low !=3D cpu_to_le32(UINT_MAX) &&
- =09       d_val.u.high !=3D cpu_to_le32(UINT_MAX)) {
-+=09=09struct MR_PRIV_DEVICE *mr_device_priv_data =3D NULL;
-=20
- =09=09smid =3D le16_to_cpu(reply_desc->SMID);
- =09=09cmd_fusion =3D fusion->cmd_list[smid - 1];
-@@ -3585,6 +3585,8 @@ complete_cmd_fusion(struct megasas_instance *instance=
-, u32 MSIxIndex,
- =09=09=09}
- =09=09=09/* Fall through - and complete IO */
- =09=09case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
-+=09=09=09mr_device_priv_data =3D scmd_local->device->hostdata;
-+=09=09=09atomic_dec(&mr_device_priv_data->active_cmds);
- =09=09=09atomic_dec(&instance->fw_outstanding);
- =09=09=09if (cmd_fusion->r1_alt_dev_handle =3D=3D MR_DEVHANDLE_INVALID) {
- =09=09=09=09map_cmd_status(fusion, scmd_local, status,
-@@ -4865,6 +4867,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int=
- reason)
-=20
- =09=09/* Now return commands back to the OS */
- =09=09for (i =3D 0 ; i < instance->max_scsi_cmds; i++) {
-+=09=09=09struct MR_PRIV_DEVICE *mr_device_priv_data =3D NULL;
- =09=09=09cmd_fusion =3D fusion->cmd_list[i];
- =09=09=09/*check for extra commands issued by driver*/
- =09=09=09if (instance->adapter_type >=3D VENTURA_SERIES) {
-@@ -4893,6 +4896,8 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int=
- reason)
- =09=09=09=09megasas_return_cmd_fusion(instance, cmd_fusion);
- =09=09=09=09scsi_dma_unmap(scmd_local);
- =09=09=09=09scmd_local->scsi_done(scmd_local);
-+=09=09=09=09mr_device_priv_data =3D scmd_local->device->hostdata;
-+=09=09=09=09atomic_dec(&mr_device_priv_data->active_cmds);
- =09=09=09}
- =09=09}
-=20
---=20
-2.20.1
+OK, I see. I assumed that rq->mq_hctx was statically set when we 
+initially allocate the static requests per hctx; but that doesn’t appear 
+so - it's set in blk_mq_get_request()->blk_mq_rq_ctx_init().
 
+> 
+>> Another example was __blk_mq_tag_idle(), which looks problematic.
+> 
+> Please elaborate.
+
+Again, this was for the same reason being that I thought we could not 
+differentiate which rqs were associated with which hctx.
+
+> 
+>> For debugfs, when we examine 
+>> /sys/kernel/debug/block/.../hctxX/tags_bitmap, wouldn't that be the 
+>> tags for all hctx (hctx0)?
+>>
+>> For debugging reasons, I would say we want to know which tags are 
+>> allocated for a specific hctx, as this is tightly related to the 
+>> requests for that hctx.
+> 
+> That is an open issue in the patch I posted and something that needs to 
+> be addressed. One way to address this is to change the 
+> sbitmap_bitmap_show() calls into calls to a function that only shows 
+> those bits for which rq->mq_hctx == hctx.
+
+Yeah, understood.
+
+> 
+>>> @@ -341,8 +341,11 @@ void blk_mq_tagset_busy_iter(struct 
+>>> blk_mq_tag_set *tagset,
+>>>       int i;
+>>>
+>>>       for (i = 0; i < tagset->nr_hw_queues; i++) {
+>>> -        if (tagset->tags && tagset->tags[i])
+>>> +        if (tagset->tags && tagset->tags[i]) {
+>>>               blk_mq_all_tag_busy_iter(tagset->tags[i], fn, priv);
+>>
+>> As I mentioned earlier, wouldn't this iterate over all tags for all 
+>> hctx's, when we just want the tags for hctx[i]?
+>>
+>> Thanks,
+>> John
+>>
+>> [Not trimming reply for future reference]
+>>
+>>> +            if (tagset->share_tags)
+>>> +                break;
+>>> +        }
+>>>       }
+>>>   }
+>>>   EXPORT_SYMBOL(blk_mq_tagset_busy_iter);
+> 
+> Since blk_mq_tagset_busy_iter() loops over all hardware queues all what 
+> is changed is the order in which requests are examined. I am not aware 
+> of any block driver that calls blk_mq_tagset_busy_iter() and that 
+> depends on the order of the requests passed to the callback function.
+> 
+
+OK, fine.
+
+So, to me, this approach also seems viable then.
+
+I am however not so happy with how we use blk_mq_tag_set.tags[0] for the 
+shared tags; I would like to use blk_mq_tag_set.shared_tags and make 
+blk_mq_tag_set.tags[] point at blk_mq_tag_set.shared_tags or maybe not 
+blk_mq_tag_set.tags[] at all. However maybe that change may be more 
+intrusive.
+
+And another more real concern is that we miss a check somewhere for 
+rq->mq_hctx == hctx when examining the bits on the shared tags.
+
+Thanks,
+John
