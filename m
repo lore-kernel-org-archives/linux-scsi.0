@@ -2,115 +2,99 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCC4C432C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 02:46:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C733EC432C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 02:48:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F300F206D9
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 02:46:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FBDF206D4
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 02:48:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="mpXVTt2u"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZAHb2RK9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726425AbfKRCqI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 Nov 2019 21:46:08 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:36952 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725905AbfKRCqI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Nov 2019 21:46:08 -0500
-Received: by mail-pg1-f193.google.com with SMTP id b10so352791pgd.4
-        for <linux-scsi@vger.kernel.org>; Sun, 17 Nov 2019 18:46:07 -0800 (PST)
+        id S1726336AbfKRCs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 17 Nov 2019 21:48:26 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:46707 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726168AbfKRCs0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Nov 2019 21:48:26 -0500
+Received: by mail-pg1-f196.google.com with SMTP id r18so8846341pgu.13;
+        Sun, 17 Nov 2019 18:48:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Z9AbyDvtIlqA8teGPhwS3XwAlLU5YBdWg0suzOZUyY0=;
-        b=mpXVTt2uGXtfurvuXttr2TL940xEsOmdAa+jgl6//9SepZGyDy4oMGX4oE9aDeuyGb
-         ZaUVCzWwhtM+KfrGstPdTg8ymBlkkaMV05+8veiRD1HTULCSrVg4pUM4DhX70sdldCgP
-         1AT4XnRcwhs1h0goTlEOeHSoqZ3M1pMC6aAFnjwga4epv8wgg0jG+LnaW9dwGiGTeVJ5
-         fTfuNk0MC7fQqPzkTuAfHK20nIczQL/2byQpQGw3LCMnfKx8Zxf9SvDuWIeFrETwg6RQ
-         8tOhro56uE/3cL55fZlhQobqutiBosWSeUzg6AEMtnTCdMpxMQYcVUY5rXVPCk95BdqV
-         z7fw==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=LJN39JvnBb2Ux5j3Tg40TBNH2WUxnDoGsfa7IupBTVI=;
+        b=ZAHb2RK9q+W6dB+/aNWg/9K49ic9zZD1IlGvjYHAq5rPESRF9FBvit+YKlhWUIPTYu
+         4mwxvn2yykpSn5B1vZIOzWZzvgnk4+dAv2Op8pZCbcQy2JkxzBVL1Y4x5glh/Ly2LaYr
+         E1AdMp6XESISya5DKuR8DgFPqq57nwqtLt0fim7WKJF8xmgA+NC/dC53QcnnWiK1m0IN
+         D7agbyVSsFvpJVxVxUikMYQz40FCPzrvA2PSJZO5NSSa5/s7xn+ASD62a6wgNb+EvOoY
+         6OXbKodt4ujIQlwkpfXBQsALoO92ddIYwpscGVN9PRnJ93bvhCGk29rdJswTdlYmKg/6
+         7zLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Z9AbyDvtIlqA8teGPhwS3XwAlLU5YBdWg0suzOZUyY0=;
-        b=KKU3vD+yEsMUvEn8XJwXnPrLqyIzRksJeScEO9D9RVFu3hKuLCWrR/CR2MYArasQPY
-         JSLeJ+UPsSQL7WUA0cYBuIxp4elOhbsQfPAFJFB+6hddGntb6v3I4fsMXCeNRxEqNUFZ
-         r97QrQpg/YYsZCVj7TOAXIyMmNrYHGhH9MIUswyi9pgToe5YkU9udHT5+7pEMjzVY83F
-         t+ufkpU7lMAOEfBrFBBLJYtIfSzDSgXmJMiIAJZGeSa5BUqJmqcYJG8cpxPH9cYESKot
-         CbvjP6+bgI5NO1mSHLgack5UsFb54HsskjUeERKHYTPGXi/9cDiQPUA/3fu9njrm37Zt
-         m3Gg==
-X-Gm-Message-State: APjAAAXEFgvDXcExMv0MXl1vPfeG4E3kAYYkHNv5VxrvWQp7zXkz8NB6
-        NWYNyPlN2ogd0VQajSk6P07nPw==
-X-Google-Smtp-Source: APXvYqyN6lR4gUByRUeVLBv2oS9jxr1gXRxII5ymqZZf0HJghyxYcg2NZ7XD87pujYL7vi8KuOsTtA==
-X-Received: by 2002:a63:1f08:: with SMTP id f8mr1128798pgf.145.1574045167153;
-        Sun, 17 Nov 2019 18:46:07 -0800 (PST)
-Received: from [192.168.1.188] ([66.219.217.79])
-        by smtp.gmail.com with ESMTPSA id c13sm19409481pfi.0.2019.11.17.18.46.04
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 17 Nov 2019 18:46:06 -0800 (PST)
-Subject: Re: [PATCH] scsi: core: only re-run queue in scsi_end_request() if
- device queue is busy
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Long Li <longli@microsoft.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20191117080818.2664-1-ming.lei@redhat.com>
- <BYAPR04MB5816F43072584F8F20EF4292E74D0@BYAPR04MB5816.namprd04.prod.outlook.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <f6c6bc65-8fba-e415-ee08-c2efed24a450@kernel.dk>
-Date:   Sun, 17 Nov 2019 19:46:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        bh=LJN39JvnBb2Ux5j3Tg40TBNH2WUxnDoGsfa7IupBTVI=;
+        b=pGPZ5M4mCOtffqyGENDoT5nPWldDMC68b3V2nHnt6FVUB34aW8MxQZayLj4TeZ04Yv
+         zLJXL8hPrBetmFCxLdrbiApuHc6fd8UxWFifNgO9krBqbXWtMj9tGZ/8R1VAzjDSjEeI
+         tdPKfSeaQlYxWpRk2GwCFf+O5KEIe/KarPlpNHDBksIdapyZsgF0uxmnnFUd7YuEJqcX
+         hmUKBZCR6rkDRzWzajVpB+Fv64gherGQuwjHC//jcLRRzQfVxxyr9Djm4WXw1pRT7okJ
+         88NCW12bqkxgt6ZqLvM6ayO+F5YORKfAJ0XBrSX3VcJskmyJ/AjeyYAFywlOX8l4N+xv
+         4PVg==
+X-Gm-Message-State: APjAAAXcG5bv72xMPAtiTEBVDiUEulFNTPOAS2NbF9RnGa8ugF4txlPV
+        61qlZTN5ZMWm7YbsZ9trrKw=
+X-Google-Smtp-Source: APXvYqxPWcFo6G0pp+6Un/9vYsChZ6XnP5zORNI+ij00omFSTq9HSpZcokYHpOLbZwUJF5JIWIH/Fg==
+X-Received: by 2002:a62:e716:: with SMTP id s22mr31429246pfh.258.1574045306003;
+        Sun, 17 Nov 2019 18:48:26 -0800 (PST)
+Received: from suzukaze.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
+        by smtp.gmail.com with ESMTPSA id j5sm19018009pfe.100.2019.11.17.18.48.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 17 Nov 2019 18:48:25 -0800 (PST)
+From:   Chuhong Yuan <hslester96@gmail.com>
+Cc:     Don Brace <don.brace@microsemi.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
+Subject: [PATCH] scsi: smartpqi: add missed free_irq in suspend
+Date:   Mon, 18 Nov 2019 10:48:15 +0800
+Message-Id: <20191118024815.21524-1-hslester96@gmail.com>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816F43072584F8F20EF4292E74D0@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/17/19 5:18 PM, Damien Le Moal wrote:
-> On 2019/11/17 17:08, Ming Lei wrote:
->> Now the requeue queue is run in scsi_end_request() unconditionally if both
->> target queue and host queue is ready. We should have re-run request queue
->> only after this device queue becomes busy for restarting this LUN only.
->>
->> Recently Long Li reported that cost of run queue may be very heavy in
->> case of high queue depth. So improve this situation by only running
->> requesut queue when this LUN is busy.
-> 
-> s/requesut/request
-> 
-> Also, shouldn't this patch have the tag:
-> 
-> Reported-by: Long Li <longli@microsoft.com>
-> 
-> ?
-> 
-> Another remark is that Long's approach is generic to the block layer
-> while your patch here is scsi specific. I wonder if the same problem
-> cannot happen with other drivers too ?
+The driver calls request_irq in resume but does not call free_irq in
+suspend.
+Add the missed call to fix it.
 
-The block layer is just doing what it's told, and I doubt many drivers
-would have the crazy kind of re-run logic that the SCSI midlayer does.
-As far as I'm concerned, the fix belongs on the SCSI side of things
-instead of being papered over on the block side.
+Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index ea5409bebf57..ebe563cfc36b 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -8023,6 +8023,8 @@ static __maybe_unused int pqi_suspend(struct pci_dev *pci_dev, pm_message_t stat
+ 	pqi_ctrl_wait_for_pending_io(ctrl_info, NO_TIMEOUT);
+ 	pqi_stop_heartbeat_timer(ctrl_info);
+ 
++	free_irq(pci_irq_vector(pci_dev, 0), &ctrl_info->queue_groups[0]);
++
+ 	if (state.event == PM_EVENT_FREEZE)
+ 		return 0;
+ 
 -- 
-Jens Axboe
+2.24.0
 
