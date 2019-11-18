@@ -6,30 +6,31 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2930C432C0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4901DC43215
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DBF22073A
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CCFF2073A
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:22:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726460AbfKRJWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726830AbfKRJWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 18 Nov 2019 04:22:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:54562 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54574 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726767AbfKRJWb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 04:22:31 -0500
+        id S1726775AbfKRJWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Nov 2019 04:22:32 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 4EE36AE87;
+        by mx1.suse.de (Postfix) with ESMTP id 4F8D6B13A;
         Mon, 18 Nov 2019 09:22:30 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/9] scsi: add scsi_host_flush_commands() helper
-Date:   Mon, 18 Nov 2019 10:22:01 +0100
-Message-Id: <20191118092208.54521-3-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 6/9] scsi: add scsi_host_busy_iter()
+Date:   Mon, 18 Nov 2019 10:22:05 +0100
+Message-Id: <20191118092208.54521-7-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191118092208.54521-1-hare@suse.de>
 References: <20191118092208.54521-1-hare@suse.de>
@@ -38,59 +39,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper scsi_host_flush_commands() to terminate all outstanding
-commands on a scsi host.
+Add an iterator scsi_host_busy_iter() to traverse all busy commands.
+If locking against concurrent command completions is required it
+has to be provided by the caller.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hosts.c     | 24 ++++++++++++++++++++++++
- include/scsi/scsi_host.h |  1 +
- 2 files changed, 25 insertions(+)
+ drivers/scsi/hosts.c     | 33 +++++++++++++++++++++++++++++++++
+ include/scsi/scsi_host.h |  5 +++++
+ 2 files changed, 38 insertions(+)
 
 diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1d669e47b692..da1df48ef27c 100644
+index da1df48ef27c..a0a660b50929 100644
 --- a/drivers/scsi/hosts.c
 +++ b/drivers/scsi/hosts.c
-@@ -650,3 +650,27 @@ void scsi_flush_work(struct Scsi_Host *shost)
- 	flush_workqueue(shost->work_q);
+@@ -674,3 +674,36 @@ void scsi_host_flush_commands(struct Scsi_Host *shost, int status)
+ 	blk_mq_tagset_busy_iter(&shost->tag_set, flush_cmds_iter, &status);
  }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
+ EXPORT_SYMBOL_GPL(scsi_host_flush_commands);
 +
++struct scsi_host_busy_iter_data {
++	scsi_host_busy_iter_fn *fn;
++	void *priv;
++};
++
++static bool __scsi_host_busy_iter_fn(struct request *req, void *priv,
++				   bool reserved)
++{
++	struct scsi_host_busy_iter_data *iter_data = priv;
++	struct scsi_cmnd *sc = blk_mq_rq_to_pdu(req);
++
++	return iter_data->fn(sc, iter_data->priv, reserved);
++}
 +
 +/**
-+ * scsi_host_flush_commands -- Terminate all running commands
-+ * @shost:	Scsi Host on which commands should be terminated
-+ * @status:	Status to be set for the terminated commands
-+ */
-+static bool flush_cmds_iter(struct request *rq, void *data, bool reserved)
++ * scsi_host_busy_iter - Iterate over all busy commands
++ * @shost:	Pointer to Scsi_Host.
++ * @fn:		Function to call on each busy command
++ * @priv:	Data pointer passed to @fn
++ **/
++void scsi_host_busy_iter(struct Scsi_Host *shost,
++			 scsi_host_busy_iter_fn *fn, void *priv)
 +{
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	int status = *(int *)data;
++	struct scsi_host_busy_iter_data iter_data = {
++		.fn = fn,
++		.priv = priv,
++	};
 +
-+	if (reserved)
-+		return true;
-+	scmd->result = status << 16;
-+	scmd->scsi_done(scmd);
-+	return true;
++	blk_mq_tagset_busy_iter(&shost->tag_set, __scsi_host_busy_iter_fn,
++				&iter_data);
 +}
-+
-+void scsi_host_flush_commands(struct Scsi_Host *shost, int status)
-+{
-+	blk_mq_tagset_busy_iter(&shost->tag_set, flush_cmds_iter, &status);
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_flush_commands);
++EXPORT_SYMBOL_GPL(scsi_host_busy_iter);
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f577647bf5f2..cb9a6fe9ad5b 100644
+index cb9a6fe9ad5b..1293d9686115 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -735,6 +735,7 @@ extern int scsi_host_busy(struct Scsi_Host *shost);
- extern void scsi_host_put(struct Scsi_Host *t);
- extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern const char *scsi_host_state_name(enum scsi_host_state);
-+extern void scsi_host_flush_commands(struct Scsi_Host *shost, int status);
+@@ -761,6 +761,11 @@ static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
+ extern void scsi_unblock_requests(struct Scsi_Host *);
+ extern void scsi_block_requests(struct Scsi_Host *);
  
- static inline int __must_check scsi_add_host(struct Scsi_Host *host,
- 					     struct device *dev)
++typedef bool (scsi_host_busy_iter_fn)(struct scsi_cmnd *, void *, bool);
++
++void scsi_host_busy_iter(struct Scsi_Host *,
++			 scsi_host_busy_iter_fn *fn, void *priv);
++
+ struct class_container;
+ 
+ /*
 -- 
 2.16.4
 
