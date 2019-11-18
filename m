@@ -2,121 +2,166 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF246C432C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE39C432C3
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:07:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96EC32071C
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:51:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3E342075E
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 10:06:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="wyGuP1LE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OfyD9HaJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726695AbfKRJvv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:51:51 -0500
-Received: from mail-eopbgr720049.outbound.protection.outlook.com ([40.107.72.49]:36928
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726562AbfKRJvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 04:51:51 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=G9N9ZpE5jVrm3pJSvARTlFUcyZ3d9n4AnRY4DscWWT3AybEjjyf5swG3poQUdyE/BonQwHsk4O9RNfIvIrXCirL/Ftj1dAGYmSjY/Ih3n7XGKxceJNGx/E8yCxswV18X86Sm9k6HbfqWTh1p5jR3jviAh0HlW8Nbu3jHbMpgtvOmU6FfS1W3KJJn6iRQqS8Ua2Al7VrvvgFHnlm0gXMWDB9gDKA1qyuojMxDQCoqnYqUZbGUylbcVvvAy/IzRV8VcNxQh5fmk2CKw03r6OSSxOombF6EAdPxdbOLy0FOoD1wuGwS1WqeklYeIkArwCKpeBOQBRrNwEWFUj565/s+3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yyhV1P2tssMclxUu2Ui8GkhmjLwLzRZkjwcvpDTnLyA=;
- b=Y+tpkvIWpUvAPe2HFGk7uIe+p2x3pjyinr4c6g/zKGE6gp8bJURxE9pusqn/NPvz9WS7mwF2FDEGCFiYYrIDA0/QjEu67cSfetuYnRjrsexmbg5eB+QuRV+cUDPrw5bztOCRSatSTdLN5aKFm1rEZu9V9NAM9jzBG9ELgvkXoeV7VZy5sKrnOW47HVuU6wdCqlzSkLwrmbA/liklm8OWVXyIuNwEOVQy7DMdffNshYkgn0mg4oEqPJoHnIG8xRCjfCiOQAz/AUiwiqGVbS4ACAtO6fEt1MKJtCJTEof69GxRKeVT48WgTi82c5J+Qm4RmeO/ATS70EfkCxUgqXeQ4Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yyhV1P2tssMclxUu2Ui8GkhmjLwLzRZkjwcvpDTnLyA=;
- b=wyGuP1LE1zZUySkd/VfgJl2WAJyKJhI5xgAJMBRcvVs6Ons7oQYlf352QVK7jc0gviwHgellrkpsawc3VhyFB67Nmt4RxAG7bfgCOItwxiG+pDZCjOJ4Z2GAiiuzy3R+ne2ydNM1iRcbZpz4gpZfA8E8iF2dXj2Izq/KUJtfcE4=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB3937.namprd08.prod.outlook.com (52.132.219.153) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.28; Mon, 18 Nov 2019 09:51:47 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2451.029; Mon, 18 Nov 2019
- 09:51:47 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Can Guo <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH v2 4/4] scsi: ufs: Complete pending requests in host
- reset and restore path
-Thread-Topic: [EXT] [PATCH v2 4/4] scsi: ufs: Complete pending requests in
- host reset and restore path
-Thread-Index: AQHVncP572OrDbW7VUC/JPUH6UNuzKeQr6BA
-Date:   Mon, 18 Nov 2019 09:51:47 +0000
-Message-ID: <BN7PR08MB568412CDD5492F15BC573433DB4D0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <1574049277-13477-1-git-send-email-cang@codeaurora.org>
- <0101016e7ca65c00-b8ca2b79-8dd5-40cc-ac78-35a9cfb8a08b-000000@us-west-2.amazonses.com>
-In-Reply-To: <0101016e7ca65c00-b8ca2b79-8dd5-40cc-ac78-35a9cfb8a08b-000000@us-west-2.amazonses.com>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTA3MWMzMjNiLTA5ZTktMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFwwNzFjMzIzZC0wOWU5LTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjM5OCIgdD0iMTMyMTg1NDQzMDQ5NzQ5NDM3IiBoPSJQRUZWVmk1UlRLREdIQWZyeXJHaUk0TGg4dlk9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.81.21]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: f425e9a5-441a-4588-3ea0-08d76c0ced83
-x-ms-traffictypediagnostic: BN7PR08MB3937:|BN7PR08MB3937:|BN7PR08MB3937:
-x-microsoft-antispam-prvs: <BN7PR08MB39379D5B061287A26C345B98DB4D0@BN7PR08MB3937.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:873;
-x-forefront-prvs: 0225B0D5BC
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(39860400002)(346002)(376002)(136003)(396003)(199004)(189003)(6436002)(99286004)(26005)(5660300002)(33656002)(256004)(14444005)(478600001)(8676002)(486006)(316002)(558084003)(476003)(186003)(7696005)(446003)(102836004)(11346002)(54906003)(55236004)(6506007)(110136005)(76116006)(81156014)(81166006)(8936002)(229853002)(2201001)(66066001)(4326008)(76176011)(7416002)(55016002)(6246003)(6116002)(14454004)(3846002)(52536014)(71190400001)(71200400001)(66556008)(66476007)(66446008)(64756008)(66946007)(2906002)(2501003)(86362001)(74316002)(305945005)(25786009)(9686003)(7736002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB3937;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: h+4zW7UASIpTRmrdj+yXQXyFRcb6tbZSvBdwlBtxr4VuhASBEaXUsbLODPTn6ZYthJJ7mLBsEL9RTKVmKkgh1ITnp09DK/PIGcVwWmKefMgr+yGhzGl79sQl0iZdh3dvqzDalYa2+Sv5aMoUsuO/ac3cJ3cuIEAWcMpQlMygaqTAH+hpwnhikB11F1t6sNYxto7izYulSnJETs/V0YqsTRkVqylsnPv5scy7By5t2MfnO3QlRfczTjL4D/mm4Dg0gBZ5ug/Ne7UlkSYcTY5UxMP7c/eez3xybQsArotti9Nq25UVmtV4dPGq9YoYfNXsdGe/SDJ9fFOuYGTexdZ6e1rrn+5XhQwTGvqy3fA64Ii7WB/jqWX0NIIK9JZeSul4qWwiuGA3Ttj4lxtakMB3QTTMGQUEhPZ/eWUz4n9oEM1E2K+zpZGPjkk/127sBJCU
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726536AbfKRKG7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 05:06:59 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:33079 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726506AbfKRKG7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Nov 2019 05:06:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574071617;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=xDFVc1HBc7wausr3PrkyIxtBUOBWj9qrn6+Sb/aeyKI=;
+        b=OfyD9HaJhzSDdBEEgSI+bQGAo2YjsxahSGrlxjabWNZNNbY2/ujYZcboOLYSae/bA9lSu6
+        aONRqMFddIT7Axv9iZkKrGqcJox5zfR2z4EPIIeZypU8Yt8yWOVlIZ7HqDP9S431jgaW+A
+        Hr01j/7gJLAQf33xRXNpIv9q/AvEpQs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-194-3o3zNgL1OwWL-OfCsby9Cw-1; Mon, 18 Nov 2019 05:06:49 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC039477;
+        Mon, 18 Nov 2019 10:06:47 +0000 (UTC)
+Received: from localhost (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 13A83BA44;
+        Mon, 18 Nov 2019 10:06:43 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Long Li <longli@microsoft.com>, linux-block@vger.kernel.org
+Subject: [PATCH V2] scsi: core: only re-run queue in scsi_end_request() if device queue is busy
+Date:   Mon, 18 Nov 2019 18:06:40 +0800
+Message-Id: <20191118100640.3673-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f425e9a5-441a-4588-3ea0-08d76c0ced83
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2019 09:51:47.4894
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 0vJ/KXN9NCspe7hR8e3HUsKVFaPrEuSHfuQ+WZjh00gOhgjG/CKsX5+NF2Mbqt8x5AxXdgBot9dwr0whCk4ySA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB3937
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-MC-Unique: 3o3zNgL1OwWL-OfCsby9Cw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Therefore, before probe, complete these pending requests right after host
-> controller is stopped and silence the UPIU dump from them.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Tested-by: Bean Huo <beanhuo@micon.com>
+Now the request queue is run in scsi_end_request() unconditionally if both
+target queue and host queue is ready. We should have re-run request queue
+only after this device queue becomes busy for restarting this LUN only.
+
+Recently Long Li reported that cost of run queue may be very heavy in
+case of high queue depth. So improve this situation by only running
+the request queue when this LUN is busy.
+
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Long Li <longli@microsoft.com>
+Cc: linux-block@vger.kernel.org
+Reported-by: Long Li <longli@microsoft.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+V2:
+=09- commit log change, no any code change
+=09- add reported-by tag=20
+
+
+ drivers/scsi/scsi_lib.c    | 29 +++++++++++++++++++++++++++--
+ include/scsi/scsi_device.h |  1 +
+ 2 files changed, 28 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 379533ce8661..62a86a82c38d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -612,7 +612,7 @@ static bool scsi_end_request(struct request *req, blk_s=
+tatus_t error,
+ =09if (scsi_target(sdev)->single_lun ||
+ =09    !list_empty(&sdev->host->starved_list))
+ =09=09kblockd_schedule_work(&sdev->requeue_work);
+-=09else
++=09else if (READ_ONCE(sdev->restart))
+ =09=09blk_mq_run_hw_queues(q, true);
+=20
+ =09percpu_ref_put(&q->q_usage_counter);
+@@ -1632,8 +1632,33 @@ static bool scsi_mq_get_budget(struct blk_mq_hw_ctx =
+*hctx)
+ =09struct request_queue *q =3D hctx->queue;
+ =09struct scsi_device *sdev =3D q->queuedata;
+=20
+-=09if (scsi_dev_queue_ready(q, sdev))
++=09if (scsi_dev_queue_ready(q, sdev)) {
++=09=09WRITE_ONCE(sdev->restart, 0);
+ =09=09return true;
++=09}
++
++=09/*
++=09 * If all in-flight requests originated from this LUN are completed
++=09 * before setting .restart, sdev->device_busy will be observed as
++=09 * zero, then blk_mq_delay_run_hw_queue() will dispatch this request
++=09 * soon. Otherwise, completion of one of these request will observe
++=09 * the .restart flag, and the request queue will be run for handling
++=09 * this request, see scsi_end_request().
++=09 *
++=09 * However, the .restart flag may be cleared from other dispatch code
++=09 * path after one inflight request is completed, then:
++=09 *
++=09 * 1) if this request is dispatched from scheduler queue or sw queue on=
+e
++=09 * by one, this request will be handled in that dispatch path too given
++=09 * the request still stays at scheduler/sw queue when calling .get_budg=
+et()
++=09 * callback.
++=09 *
++=09 * 2) if this request is dispatched from hctx->dispatch or
++=09 * blk_mq_flush_busy_ctxs(), this request will be put into hctx->dispat=
+ch
++=09 * list soon, and blk-mq will be responsible for covering it, see
++=09 * blk_mq_dispatch_rq_list().
++=09 */
++=09WRITE_ONCE(sdev->restart, 1);
+=20
+ =09if (atomic_read(&sdev->device_busy) =3D=3D 0 && !scsi_device_blocked(sd=
+ev))
+ =09=09blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a4342..9d8ca662ae86 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -109,6 +109,7 @@ struct scsi_device {
+ =09atomic_t device_busy;=09=09/* commands actually active on LLDD */
+ =09atomic_t device_blocked;=09/* Device returned QUEUE_FULL. */
+=20
++=09unsigned int restart;
+ =09spinlock_t list_lock;
+ =09struct list_head cmd_list;=09/* queue of in use SCSI Command structures=
+ */
+ =09struct list_head starved_entry;
+--=20
+2.20.1
+
