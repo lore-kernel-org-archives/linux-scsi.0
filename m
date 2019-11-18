@@ -2,471 +2,121 @@ Return-Path: <SRS0=r6FR=ZK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4C0C432C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF246C432C3
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:51:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1390D206CC
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96EC32071C
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 09:51:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="Q1RJVlz4"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="wyGuP1LE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726511AbfKRJny (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:43:54 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:45676 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726464AbfKRJny (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2019 04:43:54 -0500
-Received: by mail-io1-f66.google.com with SMTP id v17so6840601iol.12
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Nov 2019 01:43:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=seh7igrgqpU8nYmlQX5hl61XoVoKqEsM+xxmEdD+LdU=;
-        b=Q1RJVlz4z9h6N1u4yKwTFOESDQseAw9aFIOn5C2wWcmFX0nXE7TA6j1SfoZ/rPuIq7
-         7TFRYUUNS6hlmu9fis6YFqh4C+l8V0wxtwIHCvsH93tCZGF7CgN2riQJLr6c29dDSKgJ
-         GE/LmyNJIl2NTbfjQiGn8qhdc6C0PmUs/qUg7Zd9k605qX5N9B2nVmymGVef+UwlmZOF
-         dkxex8Ox/VlLf5me5xQxkb3EqqH4H6UFDUktUCzro7xsfVUMB+Dt7F2dW2HG56clqsj8
-         BDSFnQNRqrZBgTSOnKV4xKOlYvr3qHdYf6yz/Vy97qEvHwP4q+nsiYhdYRuhyctzDjmz
-         HTuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=seh7igrgqpU8nYmlQX5hl61XoVoKqEsM+xxmEdD+LdU=;
-        b=PEW7ShZ53/o6sO55AOBLz6CgeGeRTTXfNfoQi52ZffbGpIoCQxDL4A04eUSjVA+XWp
-         vDcigOJrFB5uCt9cSAL96TgDyDT2rBzqcJCZwQLQhKnZqUM8OY+24uF8NTZZV6aGfuHL
-         TkenggH9tJKkwCjdpHO006i5GYFNDQtDJ8GCjunzk31tugUn5nBAtL5DYGFWx091d6Fq
-         JoAD1eavyME9XT74BJiwtgtQtOC//ovlDKlOULB+QP3Zefjd4SZasb9MClLER6L46tEE
-         WMn8zB3+zSgrW6nsJ85G06d69wiZ8WOkuGisJA22REesgncOGunFyCwkCtV16RJOEGKd
-         W9SA==
-X-Gm-Message-State: APjAAAVHZWnRwir+FMDkYkmyWpHQiE9TpQBCx0pFWRDpJNXmfcYzdkCP
-        vcZPO1FeeXbbZJ6mWSUP01S5Xd/P7vp1jPvt9AWSTg==
-X-Google-Smtp-Source: APXvYqwtAlu2EFHvmbEiG1W4nl97n7i4FuwowaHnRcLNku5JEk3la/foHI30xw3+5ImvUTHiVmy1Hy9tR9yZAEwBONM=
-X-Received: by 2002:a02:9047:: with SMTP id y7mr12369843jaf.13.1574070233250;
- Mon, 18 Nov 2019 01:43:53 -0800 (PST)
+        id S1726695AbfKRJvv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 04:51:51 -0500
+Received: from mail-eopbgr720049.outbound.protection.outlook.com ([40.107.72.49]:36928
+        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726562AbfKRJvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Nov 2019 04:51:51 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=G9N9ZpE5jVrm3pJSvARTlFUcyZ3d9n4AnRY4DscWWT3AybEjjyf5swG3poQUdyE/BonQwHsk4O9RNfIvIrXCirL/Ftj1dAGYmSjY/Ih3n7XGKxceJNGx/E8yCxswV18X86Sm9k6HbfqWTh1p5jR3jviAh0HlW8Nbu3jHbMpgtvOmU6FfS1W3KJJn6iRQqS8Ua2Al7VrvvgFHnlm0gXMWDB9gDKA1qyuojMxDQCoqnYqUZbGUylbcVvvAy/IzRV8VcNxQh5fmk2CKw03r6OSSxOombF6EAdPxdbOLy0FOoD1wuGwS1WqeklYeIkArwCKpeBOQBRrNwEWFUj565/s+3Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yyhV1P2tssMclxUu2Ui8GkhmjLwLzRZkjwcvpDTnLyA=;
+ b=Y+tpkvIWpUvAPe2HFGk7uIe+p2x3pjyinr4c6g/zKGE6gp8bJURxE9pusqn/NPvz9WS7mwF2FDEGCFiYYrIDA0/QjEu67cSfetuYnRjrsexmbg5eB+QuRV+cUDPrw5bztOCRSatSTdLN5aKFm1rEZu9V9NAM9jzBG9ELgvkXoeV7VZy5sKrnOW47HVuU6wdCqlzSkLwrmbA/liklm8OWVXyIuNwEOVQy7DMdffNshYkgn0mg4oEqPJoHnIG8xRCjfCiOQAz/AUiwiqGVbS4ACAtO6fEt1MKJtCJTEof69GxRKeVT48WgTi82c5J+Qm4RmeO/ATS70EfkCxUgqXeQ4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yyhV1P2tssMclxUu2Ui8GkhmjLwLzRZkjwcvpDTnLyA=;
+ b=wyGuP1LE1zZUySkd/VfgJl2WAJyKJhI5xgAJMBRcvVs6Ons7oQYlf352QVK7jc0gviwHgellrkpsawc3VhyFB67Nmt4RxAG7bfgCOItwxiG+pDZCjOJ4Z2GAiiuzy3R+ne2ydNM1iRcbZpz4gpZfA8E8iF2dXj2Izq/KUJtfcE4=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
+ BN7PR08MB3937.namprd08.prod.outlook.com (52.132.219.153) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2451.28; Mon, 18 Nov 2019 09:51:47 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::a91a:c2f5:c557:4285]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::a91a:c2f5:c557:4285%6]) with mapi id 15.20.2451.029; Mon, 18 Nov 2019
+ 09:51:47 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     Can Guo <cang@codeaurora.org>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>,
+        "saravanak@google.com" <saravanak@google.com>,
+        "salyzyn@google.com" <salyzyn@google.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [EXT] [PATCH v2 4/4] scsi: ufs: Complete pending requests in host
+ reset and restore path
+Thread-Topic: [EXT] [PATCH v2 4/4] scsi: ufs: Complete pending requests in
+ host reset and restore path
+Thread-Index: AQHVncP572OrDbW7VUC/JPUH6UNuzKeQr6BA
+Date:   Mon, 18 Nov 2019 09:51:47 +0000
+Message-ID: <BN7PR08MB568412CDD5492F15BC573433DB4D0@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <1574049277-13477-1-git-send-email-cang@codeaurora.org>
+ <0101016e7ca65c00-b8ca2b79-8dd5-40cc-ac78-35a9cfb8a08b-000000@us-west-2.amazonses.com>
+In-Reply-To: <0101016e7ca65c00-b8ca2b79-8dd5-40cc-ac78-35a9cfb8a08b-000000@us-west-2.amazonses.com>
+Accept-Language: en-150, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTA3MWMzMjNiLTA5ZTktMTFlYS04Yjg1LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFwwNzFjMzIzZC0wOWU5LTExZWEtOGI4NS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjM5OCIgdD0iMTMyMTg1NDQzMDQ5NzQ5NDM3IiBoPSJQRUZWVmk1UlRLREdIQWZyeXJHaUk0TGg4dlk9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
+x-dg-rorf: true
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.81.21]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: f425e9a5-441a-4588-3ea0-08d76c0ced83
+x-ms-traffictypediagnostic: BN7PR08MB3937:|BN7PR08MB3937:|BN7PR08MB3937:
+x-microsoft-antispam-prvs: <BN7PR08MB39379D5B061287A26C345B98DB4D0@BN7PR08MB3937.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:873;
+x-forefront-prvs: 0225B0D5BC
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(39860400002)(346002)(376002)(136003)(396003)(199004)(189003)(6436002)(99286004)(26005)(5660300002)(33656002)(256004)(14444005)(478600001)(8676002)(486006)(316002)(558084003)(476003)(186003)(7696005)(446003)(102836004)(11346002)(54906003)(55236004)(6506007)(110136005)(76116006)(81156014)(81166006)(8936002)(229853002)(2201001)(66066001)(4326008)(76176011)(7416002)(55016002)(6246003)(6116002)(14454004)(3846002)(52536014)(71190400001)(71200400001)(66556008)(66476007)(66446008)(64756008)(66946007)(2906002)(2501003)(86362001)(74316002)(305945005)(25786009)(9686003)(7736002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB3937;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: h+4zW7UASIpTRmrdj+yXQXyFRcb6tbZSvBdwlBtxr4VuhASBEaXUsbLODPTn6ZYthJJ7mLBsEL9RTKVmKkgh1ITnp09DK/PIGcVwWmKefMgr+yGhzGl79sQl0iZdh3dvqzDalYa2+Sv5aMoUsuO/ac3cJ3cuIEAWcMpQlMygaqTAH+hpwnhikB11F1t6sNYxto7izYulSnJETs/V0YqsTRkVqylsnPv5scy7By5t2MfnO3QlRfczTjL4D/mm4Dg0gBZ5ug/Ne7UlkSYcTY5UxMP7c/eez3xybQsArotti9Nq25UVmtV4dPGq9YoYfNXsdGe/SDJ9fFOuYGTexdZ6e1rrn+5XhQwTGvqy3fA64Ii7WB/jqWX0NIIK9JZeSul4qWwiuGA3Ttj4lxtakMB3QTTMGQUEhPZ/eWUz4n9oEM1E2K+zpZGPjkk/127sBJCU
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20191114100910.6153-1-deepak.ukey@microchip.com> <20191114100910.6153-14-deepak.ukey@microchip.com>
-In-Reply-To: <20191114100910.6153-14-deepak.ukey@microchip.com>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Mon, 18 Nov 2019 10:43:42 +0100
-Message-ID: <CAMGffEmrY9qb34Nw-C+QxFRB+dW8y=sgaxdHWM1sT2kfpySLEQ@mail.gmail.com>
-Subject: Re: [PATCH V2 13/13] pm80xx : Modified the logic to collect fatal dump.
-To:     Deepak Ukey <deepak.ukey@microchip.com>
-Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
-        Jack Wang <jinpu.wang@profitbricks.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>, dpf@google.com,
-        jsperbeck@google.com, Vikram Auradkar <auradkar@google.com>,
-        ianyar@google.com
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f425e9a5-441a-4588-3ea0-08d76c0ced83
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2019 09:51:47.4894
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0vJ/KXN9NCspe7hR8e3HUsKVFaPrEuSHfuQ+WZjh00gOhgjG/CKsX5+NF2Mbqt8x5AxXdgBot9dwr0whCk4ySA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB3937
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 14, 2019 at 11:08 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
->
-> From: Deepak Ukey <Deepak.Ukey@microchip.com>
->
-> Added the correct method to collect the fatal dump.
->
-> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
-> Reported-by: kbuild test robot <lkp@intel.com>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-> ---
->  drivers/scsi/pm8001/pm8001_sas.h |   3 +
->  drivers/scsi/pm8001/pm80xx_hwi.c | 251 ++++++++++++++++++++++++++++++---------
->  2 files changed, 195 insertions(+), 59 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index a55b03bca529..93438c8f67da 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -152,6 +152,8 @@ struct pm8001_ioctl_payload {
->  #define MPI_FATAL_EDUMP_TABLE_HANDSHAKE            0x0C     /* FDDHSHK */
->  #define MPI_FATAL_EDUMP_TABLE_STATUS               0x10     /* FDDTSTAT */
->  #define MPI_FATAL_EDUMP_TABLE_ACCUM_LEN            0x14     /* ACCDDLEN */
-> +#define MPI_FATAL_EDUMP_TABLE_TOTAL_LEN                   0x18     /* TOTALLEN */
-> +#define MPI_FATAL_EDUMP_TABLE_SIGNATURE                   0x1C     /* SIGNITURE */
->  #define MPI_FATAL_EDUMP_HANDSHAKE_RDY              0x1
->  #define MPI_FATAL_EDUMP_HANDSHAKE_BUSY             0x0
->  #define MPI_FATAL_EDUMP_TABLE_STAT_RSVD                 0x0
-> @@ -507,6 +509,7 @@ struct pm8001_hba_info {
->         u32                     forensic_last_offset;
->         u32                     fatal_forensic_shift_offset;
->         u32                     forensic_fatal_step;
-> +       u32                     forensic_preserved_accumulated_transfer;
->         u32                     evtlog_ib_offset;
->         u32                     evtlog_ob_offset;
->         void __iomem    *msg_unit_tbl_addr;/*Message Unit Table Addr*/
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 5ca9732f4704..19601138e889 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -76,7 +76,7 @@ void pm80xx_pci_mem_copy(struct pm8001_hba_info  *pm8001_ha, u32 soffset,
->         destination1 = (u32 *)destination;
->
->         for (index = 0; index < dw_count; index += 4, destination1++) {
-> -               offset = (soffset + index / 4);
-> +               offset = (soffset + index);
->                 if (offset < (64 * 1024)) {
->                         value = pm8001_cr32(pm8001_ha, bus_base_number, offset);
->                         *destination1 =  cpu_to_le32(value);
-> @@ -93,9 +93,12 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->         struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
->         void __iomem *fatal_table_address = pm8001_ha->fatal_tbl_addr;
->         u32 accum_len , reg_val, index, *temp;
-> +       u32 status = 1;
->         unsigned long start;
->         u8 *direct_data;
->         char *fatal_error_data = buf;
-> +       u32 length_to_read;
-> +       u32 offset;
->
->         pm8001_ha->forensic_info.data_buf.direct_data = buf;
->         if (pm8001_ha->chip_id == chip_8001) {
-> @@ -105,16 +108,35 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                 return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
->                         (char *)buf;
->         }
-> +       /* initialize variables for very first call from host application */
->         if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
->                 PM8001_IO_DBG(pm8001_ha,
->                 pm8001_printk("forensic_info TYPE_NON_FATAL..............\n"));
->                 direct_data = (u8 *)fatal_error_data;
->                 pm8001_ha->forensic_info.data_type = TYPE_NON_FATAL;
->                 pm8001_ha->forensic_info.data_buf.direct_len = SYSFS_OFFSET;
-> +               pm8001_ha->forensic_info.data_buf.direct_offset = 0;
->                 pm8001_ha->forensic_info.data_buf.read_len = 0;
-> +               pm8001_ha->forensic_preserved_accumulated_transfer = 0;
->
-> -               pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
-> +               /* Write signature to fatal dump table */
-> +               pm8001_mw32(fatal_table_address,
-> +                               MPI_FATAL_EDUMP_TABLE_SIGNATURE, 0x1234abcd);
->
-> +               pm8001_ha->forensic_info.data_buf.direct_data = direct_data;
-> +               PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("ossaHwCB: status1 %d\n", status));
-> +               PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("ossaHwCB: read_len 0x%x\n",
-> +                       pm8001_ha->forensic_info.data_buf.read_len));
-> +               PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("ossaHwCB: direct_len 0x%x\n",
-> +                       pm8001_ha->forensic_info.data_buf.direct_len));
-> +               PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("ossaHwCB: direct_offset 0x%x\n",
-> +                       pm8001_ha->forensic_info.data_buf.direct_offset));
-> +       }
-> +       if (pm8001_ha->forensic_info.data_buf.direct_offset == 0) {
->                 /* start to get data */
->                 /* Program the MEMBASE II Shifting Register with 0x00.*/
->                 pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> @@ -127,30 +149,66 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->         /* Read until accum_len is retrived */
->         accum_len = pm8001_mr32(fatal_table_address,
->                                 MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
-> -       PM8001_IO_DBG(pm8001_ha, pm8001_printk("accum_len 0x%x\n",
-> -                                               accum_len));
-> +       /* Determine length of data between previously stored transfer length
-> +        * and current accumulated transfer length
-> +        */
-> +       length_to_read =
-> +               accum_len - pm8001_ha->forensic_preserved_accumulated_transfer;
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: accum_len 0x%x\n", accum_len));
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: length_to_read 0x%x\n",
-> +               length_to_read));
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: last_offset 0x%x\n",
-> +               pm8001_ha->forensic_last_offset));
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: read_len 0x%x\n",
-> +               pm8001_ha->forensic_info.data_buf.read_len));
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv:: direct_len 0x%x\n",
-> +               pm8001_ha->forensic_info.data_buf.direct_len));
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv:: direct_offset 0x%x\n",
-> +               pm8001_ha->forensic_info.data_buf.direct_offset));
-> +
-> +       /* If accumulated length failed to read correctly fail the attempt.*/
->         if (accum_len == 0xFFFFFFFF) {
->                 PM8001_IO_DBG(pm8001_ha,
->                         pm8001_printk("Possible PCI issue 0x%x not expected\n",
-> -                               accum_len));
-> -               return -EIO;
-> +                       accum_len));
-> +               return status;
->         }
-> -       if (accum_len == 0 || accum_len >= 0x100000) {
-> +       /* If accumulated length is zero fail the attempt */
-> +       if (accum_len == 0) {
->                 pm8001_ha->forensic_info.data_buf.direct_data +=
->                         sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> -                               "%08x ", 0xFFFFFFFF);
-> +                       "%08x ", 0xFFFFFFFF);
->                 return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
->                         (char *)buf;
->         }
-> +       /* Accumulated length is good so start capturing the first data */
->         temp = (u32 *)pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr;
->         if (pm8001_ha->forensic_fatal_step == 0) {
->  moreData:
-> +               /* If data to read is less than SYSFS_OFFSET then reduce the
-> +                * length of dataLen
-> +                */
-> +               if (pm8001_ha->forensic_last_offset + SYSFS_OFFSET
-> +                               > length_to_read) {
-> +                       pm8001_ha->forensic_info.data_buf.direct_len =
-> +                               length_to_read -
-> +                               pm8001_ha->forensic_last_offset;
-> +               } else {
-> +                       pm8001_ha->forensic_info.data_buf.direct_len =
-> +                               SYSFS_OFFSET;
-> +               }
->                 if (pm8001_ha->forensic_info.data_buf.direct_data) {
->                         /* Data is in bar, copy to host memory */
-> -                       pm80xx_pci_mem_copy(pm8001_ha, pm8001_ha->fatal_bar_loc,
-> -                        pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr,
-> -                               pm8001_ha->forensic_info.data_buf.direct_len ,
-> -                                       1);
-> +                       pm80xx_pci_mem_copy(pm8001_ha,
-> +                       pm8001_ha->fatal_bar_loc,
-> +                       pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr,
-> +                       pm8001_ha->forensic_info.data_buf.direct_len, 1);
->                 }
->                 pm8001_ha->fatal_bar_loc +=
->                         pm8001_ha->forensic_info.data_buf.direct_len;
-> @@ -161,21 +219,29 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                 pm8001_ha->forensic_info.data_buf.read_len =
->                         pm8001_ha->forensic_info.data_buf.direct_len;
->
-> -               if (pm8001_ha->forensic_last_offset  >= accum_len) {
-> +               if (pm8001_ha->forensic_last_offset  >= length_to_read) {
->                         pm8001_ha->forensic_info.data_buf.direct_data +=
->                         sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
->                                 "%08x ", 3);
-> -                       for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
-> +                       for (index = 0; index <
-> +                               (pm8001_ha->forensic_info.data_buf.direct_len
-> +                                / 4); index++) {
->                                 pm8001_ha->forensic_info.data_buf.direct_data +=
-> -                                       sprintf(pm8001_ha->
-> -                                        forensic_info.data_buf.direct_data,
-> -                                               "%08x ", *(temp + index));
-> +                               sprintf(
-> +                               pm8001_ha->forensic_info.data_buf.direct_data,
-> +                               "%08x ", *(temp + index));
->                         }
->
->                         pm8001_ha->fatal_bar_loc = 0;
->                         pm8001_ha->forensic_fatal_step = 1;
->                         pm8001_ha->fatal_forensic_shift_offset = 0;
->                         pm8001_ha->forensic_last_offset = 0;
-> +                       status = 0;
-> +                       offset = (int)
-> +                       ((char *)pm8001_ha->forensic_info.data_buf.direct_data
-> +                       - (char *)buf);
-> +                       PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("get_fatal_spcv:return1 0x%x\n", offset));
->                         return (char *)pm8001_ha->
->                                 forensic_info.data_buf.direct_data -
->                                 (char *)buf;
-> @@ -185,12 +251,20 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                                 sprintf(pm8001_ha->
->                                         forensic_info.data_buf.direct_data,
->                                         "%08x ", 2);
-> -                       for (index = 0; index < (SYSFS_OFFSET / 4); index++) {
-> -                               pm8001_ha->forensic_info.data_buf.direct_data +=
-> -                                       sprintf(pm8001_ha->
-> +                       for (index = 0; index <
-> +                               (pm8001_ha->forensic_info.data_buf.direct_len
-> +                                / 4); index++) {
-> +                               pm8001_ha->forensic_info.data_buf.direct_data
-> +                                       += sprintf(pm8001_ha->
->                                         forensic_info.data_buf.direct_data,
->                                         "%08x ", *(temp + index));
->                         }
-> +                       status = 0;
-> +                       offset = (int)
-> +                       ((char *)pm8001_ha->forensic_info.data_buf.direct_data
-> +                       - (char *)buf);
-> +                       PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("get_fatal_spcv:return2 0x%x\n", offset));
->                         return (char *)pm8001_ha->
->                                 forensic_info.data_buf.direct_data -
->                                 (char *)buf;
-> @@ -200,63 +274,122 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                 pm8001_ha->forensic_info.data_buf.direct_data +=
->                         sprintf(pm8001_ha->forensic_info.data_buf.direct_data,
->                                 "%08x ", 2);
-> -               for (index = 0; index < 256; index++) {
-> +               for (index = 0; index <
-> +                       (pm8001_ha->forensic_info.data_buf.direct_len
-> +                        / 4) ; index++) {
->                         pm8001_ha->forensic_info.data_buf.direct_data +=
->                                 sprintf(pm8001_ha->
-> -                                       forensic_info.data_buf.direct_data,
-> -                                               "%08x ", *(temp + index));
-> +                               forensic_info.data_buf.direct_data,
-> +                               "%08x ", *(temp + index));
->                 }
->                 pm8001_ha->fatal_forensic_shift_offset += 0x100;
->                 pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
->                         pm8001_ha->fatal_forensic_shift_offset);
->                 pm8001_ha->fatal_bar_loc = 0;
-> +               status = 0;
-> +               offset = (int)
-> +                       ((char *)pm8001_ha->forensic_info.data_buf.direct_data
-> +                       - (char *)buf);
-> +               PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: return3 0x%x\n", offset));
->                 return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
->                         (char *)buf;
->         }
->         if (pm8001_ha->forensic_fatal_step == 1) {
-> -               pm8001_ha->fatal_forensic_shift_offset = 0;
-> -               /* Read 64K of the debug data. */
-> -               pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
-> -                       pm8001_ha->fatal_forensic_shift_offset);
-> -               pm8001_mw32(fatal_table_address,
-> -                       MPI_FATAL_EDUMP_TABLE_HANDSHAKE,
-> +               /* store previous accumulated length before triggering next
-> +                * accumulated length update
-> +                */
-> +               pm8001_ha->forensic_preserved_accumulated_transfer =
-> +                       pm8001_mr32(fatal_table_address,
-> +                       MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
-> +
-> +               /* continue capturing the fatal log until Dump status is 0x3 */
-> +               if (pm8001_mr32(fatal_table_address,
-> +                       MPI_FATAL_EDUMP_TABLE_STATUS) <
-> +                       MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE) {
-> +
-> +                       /* reset fddstat bit by writing to zero*/
-> +                       pm8001_mw32(fatal_table_address,
-> +                                       MPI_FATAL_EDUMP_TABLE_STATUS, 0x0);
-> +
-> +                       /* set dump control value to '1' so that new data will
-> +                        * be transferred to shared memory
-> +                        */
-> +                       pm8001_mw32(fatal_table_address,
-> +                               MPI_FATAL_EDUMP_TABLE_HANDSHAKE,
->                                 MPI_FATAL_EDUMP_HANDSHAKE_RDY);
->
-> -               /* Poll FDDHSHK  until clear  */
-> -               start = jiffies + (2 * HZ); /* 2 sec */
-> +                       /*Poll FDDHSHK  until clear */
-> +                       start = jiffies + (2 * HZ); /* 2 sec */
->
-> -               do {
-> -                       reg_val = pm8001_mr32(fatal_table_address,
-> +                       do {
-> +                               reg_val = pm8001_mr32(fatal_table_address,
->                                         MPI_FATAL_EDUMP_TABLE_HANDSHAKE);
-> -               } while ((reg_val) && time_before(jiffies, start));
-> +                       } while ((reg_val) && time_before(jiffies, start));
->
-> -               if (reg_val != 0) {
-> -                       PM8001_FAIL_DBG(pm8001_ha,
-> -                       pm8001_printk("TIMEOUT:MEMBASE_II_SHIFT_REGISTER"
-> -                       " = 0x%x\n", reg_val));
-> -                       return -EIO;
-> -               }
-> -
-> -               /* Read the next 64K of the debug data. */
-> -               pm8001_ha->forensic_fatal_step = 0;
-> -               if (pm8001_mr32(fatal_table_address,
-> -                       MPI_FATAL_EDUMP_TABLE_STATUS) !=
-> -                               MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE) {
-> -                       pm8001_mw32(fatal_table_address,
-> -                               MPI_FATAL_EDUMP_TABLE_HANDSHAKE, 0);
-> -                       goto moreData;
-> -               } else {
-> -                       pm8001_ha->forensic_info.data_buf.direct_data +=
-> -                               sprintf(pm8001_ha->
-> -                                       forensic_info.data_buf.direct_data,
-> -                                               "%08x ", 4);
-> -                       pm8001_ha->forensic_info.data_buf.read_len = 0xFFFFFFFF;
-> -                       pm8001_ha->forensic_info.data_buf.direct_len =  0;
-> -                       pm8001_ha->forensic_info.data_buf.direct_offset = 0;
-> -                       pm8001_ha->forensic_info.data_buf.read_len = 0;
-> +                       if (reg_val != 0) {
-> +                               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
-> +                               "TIMEOUT:MPI_FATAL_EDUMP_TABLE_HDSHAKE 0x%x\n",
-> +                               reg_val));
-> +                              /* Fail the dump if a timeout occurs */
-> +                               pm8001_ha->forensic_info.data_buf.direct_data +=
-> +                               sprintf(
-> +                               pm8001_ha->forensic_info.data_buf.direct_data,
-> +                               "%08x ", 0xFFFFFFFF);
-> +                               return((char *)
-> +                               pm8001_ha->forensic_info.data_buf.direct_data
-> +                               - (char *)buf);
-> +                       }
-> +                       /* Poll status register until set to 2 or
-> +                        * 3 for up to 2 seconds
-> +                        */
-> +                       start = jiffies + (2 * HZ); /* 2 sec */
-> +
-> +                       do {
-> +                               reg_val = pm8001_mr32(fatal_table_address,
-> +                                       MPI_FATAL_EDUMP_TABLE_STATUS);
-> +                       } while (((reg_val != 2) || (reg_val != 3)) &&
-> +                                       time_before(jiffies, start));
-> +
-> +                       if (reg_val < 2) {
-> +                               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
-> +                               "TIMEOUT:MPI_FATAL_EDUMP_TABLE_STATUS = 0x%x\n",
-> +                               reg_val));
-> +                               /* Fail the dump if a timeout occurs */
-> +                               pm8001_ha->forensic_info.data_buf.direct_data +=
-> +                               sprintf(
-> +                               pm8001_ha->forensic_info.data_buf.direct_data,
-> +                               "%08x ", 0xFFFFFFFF);
-> +                               pm8001_cw32(pm8001_ha, 0,
-> +                                       MEMBASE_II_SHIFT_REGISTER,
-> +                                       pm8001_ha->fatal_forensic_shift_offset);
-> +                       }
-> +                       /* Read the next block of the debug data.*/
-> +                       length_to_read = pm8001_mr32(fatal_table_address,
-> +                       MPI_FATAL_EDUMP_TABLE_ACCUM_LEN) -
-> +                       pm8001_ha->forensic_preserved_accumulated_transfer;
-> +                       if (length_to_read != 0x0) {
-> +                               pm8001_ha->forensic_fatal_step = 0;
-> +                               goto moreData;
-> +                       } else {
-> +                               pm8001_ha->forensic_info.data_buf.direct_data +=
-> +                               sprintf(
-> +                               pm8001_ha->forensic_info.data_buf.direct_data,
-> +                               "%08x ", 4);
-> +                               pm8001_ha->forensic_info.data_buf.read_len
-> +                                                               = 0xFFFFFFFF;
-> +                               pm8001_ha->forensic_info.data_buf.direct_len
-> +                                                               =  0;
-> +                               pm8001_ha->forensic_info.data_buf.direct_offset
-> +                                                               = 0;
-> +                               pm8001_ha->forensic_info.data_buf.read_len = 0;
-> +                       }
->                 }
->         }
-> -
-> +       offset = (int)((char *)pm8001_ha->forensic_info.data_buf.direct_data
-> +                       - (char *)buf);
-> +       PM8001_IO_DBG(pm8001_ha,
-> +               pm8001_printk("get_fatal_spcv: return4 0x%x\n", offset));
->         return (char *)pm8001_ha->forensic_info.data_buf.direct_data -
->                 (char *)buf;
->  }
-> --
-> 2.16.3
->
+> Therefore, before probe, complete these pending requests right after host
+> controller is stopped and silence the UPIU dump from them.
+>=20
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Tested-by: Bean Huo <beanhuo@micon.com>
