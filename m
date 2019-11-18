@@ -6,33 +6,31 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 560E5C432C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 08:26:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA13FC432C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 08:32:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3691C20740
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 08:26:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B36EE2073A
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Nov 2019 08:32:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726464AbfKRI0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 03:26:39 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6693 "EHLO huawei.com"
+        id S1726460AbfKRIcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 03:32:07 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6247 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726442AbfKRI0j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 03:26:39 -0500
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 0C5B9B3A51CBA320222A;
-        Mon, 18 Nov 2019 16:26:36 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS410-HUB.china.huawei.com
- (10.3.19.210) with Microsoft SMTP Server id 14.3.439.0; Mon, 18 Nov 2019
- 16:26:28 +0800
+        id S1726420AbfKRIcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Nov 2019 03:32:07 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id AF0432B04E199BEA0818;
+        Mon, 18 Nov 2019 16:32:05 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS407-HUB.china.huawei.com
+ (10.3.19.207) with Microsoft SMTP Server id 14.3.439.0; Mon, 18 Nov 2019
+ 16:31:56 +0800
 From:   zhengbin <zhengbin13@huawei.com>
-To:     <sathya.prakash@broadcom.com>, <chaitra.basappa@broadcom.com>,
-        <suganath-prabu.subramani@broadcom.com>,
-        <MPT-FusionLinux.pdl@broadcom.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH] scsi: mpt3sas: remove not needed memset
-Date:   Mon, 18 Nov 2019 16:33:52 +0800
-Message-ID: <1574066032-40510-1-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH] scsi: pmcraid: remove not needed memset
+Date:   Mon, 18 Nov 2019 16:39:19 +0800
+Message-ID: <1574066359-88294-1-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -45,26 +43,26 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes coccicheck warning:
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:5080:16-34: WARNING: dma_alloc_coherent use in ioc -> request already zeroes out memory,  so memset is not needed
+drivers/scsi/pmcraid.c:4711:3-21: WARNING: dma_alloc_coherent use in pinstance -> hrrq_start [ i ] already zeroes out memory,  so memset is not needed
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
+ drivers/scsi/pmcraid.c | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index fea3cb6..d26fbc2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5076,7 +5076,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		_base_release_memory_pools(ioc);
- 		goto retry_allocation;
- 	}
--	memset(ioc->request, 0, sz);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 398d2af..b0916d2 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4720,7 +4720,6 @@ static int pmcraid_allocate_host_rrqs(struct pmcraid_instance *pinstance)
+ 			return -ENOMEM;
+ 		}
 
- 	if (retry_sz)
- 		ioc_err(ioc, "request pool: dma_alloc_coherent succeed: hba_depth(%d), chains_per_io(%d), frame_sz(%d), total(%d kb)\n",
+-		memset(pinstance->hrrq_start[i], 0, buffer_size);
+ 		pinstance->hrrq_curr[i] = pinstance->hrrq_start[i];
+ 		pinstance->hrrq_end[i] =
+ 			pinstance->hrrq_start[i] + PMCRAID_MAX_CMD - 1;
 --
 2.7.4
 
