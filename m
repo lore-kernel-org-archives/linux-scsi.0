@@ -2,90 +2,112 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3450C43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 15:46:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08831C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 16:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9E772230C
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 15:46:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0B1222365
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 16:09:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FJh2fsjc"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="LjBeUDlC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728544AbfKSPq5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 10:46:57 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:23118 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728532AbfKSPq4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 10:46:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574178415;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=P/G7kM8j4oYCC+cnhV5sL37M7tSFWLv6DMhMjlzyrJo=;
-        b=FJh2fsjcraAs3XALfHccbpBnGjbzWlxSD0wrDJL+CGJXx8LudrxWHQLx+be330e8Ej+2yK
-        9VnSeaPHZe/ftvf1Oc4xuoRqhEOsmvsKxcwFTd3IyXi3NL+7urOfgni5l3SvlkSk40KzWA
-        EQjNSMFCjPpuD8vFJ85PdHafw+aMgpE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-67-pPA5X5TqMgmxuvNuWZetHQ-1; Tue, 19 Nov 2019 10:46:54 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3C0B08E5DC3;
-        Tue, 19 Nov 2019 15:46:53 +0000 (UTC)
-Received: from rhel7lobe.redhat.com (ovpn-117-16.phx2.redhat.com [10.3.117.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 927D860850;
-        Tue, 19 Nov 2019 15:46:52 +0000 (UTC)
-From:   Laurence Oberman <loberman@redhat.com>
-To:     QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org,
-        djeffery@redhat.com, jpittman@redhat.com, cdupuis1@gmail.com
-Cc:     Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH] bnx2fc: timeout calculation invalid for bnx2fc_eh_abort()
-Date:   Tue, 19 Nov 2019 10:46:34 -0500
-Message-Id: <1574178394-16635-1-git-send-email-loberman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: pPA5X5TqMgmxuvNuWZetHQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+        id S1728362AbfKSQJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 11:09:03 -0500
+Received: from mail-il1-f194.google.com ([209.85.166.194]:33308 "EHLO
+        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727909AbfKSQJD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2019 11:09:03 -0500
+Received: by mail-il1-f194.google.com with SMTP id m5so706190ilq.0
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2019 08:09:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ZjYxprU3IRLz/AX9U1vszJUIv5Bi18dcJPXiYw1DQ40=;
+        b=LjBeUDlCfEO3O4aelb+WkQ2GjVpZtfEwUaFPNeWPzIpegb6vXNpN7mzFfUpicnPfP8
+         JiYSZSlPie2HyP1Ox9rLQnLGnN98ArMCVGyFQSVNOEhvVrUxJhx+leEdOOl1ealpSBiW
+         erlFvJmHF9M453HZEtZypzzM5B3HwDpjMS2YuLXkGEy33kQTGWNCkuklJdDdCl2FfllB
+         xInWclGlt4APFPPdMkzUS7yQB/HKGRHFzVIXi/AUrMTclzvlsB2eb6SLwFODnpDUBk6T
+         trUXjfmU8B3fL6QjSx0zqz+m/LyuTKwKcz6svaLonr/ZC3BrwvETvpATR3YD83cnRYY2
+         a8lQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ZjYxprU3IRLz/AX9U1vszJUIv5Bi18dcJPXiYw1DQ40=;
+        b=kqh99iPS0DHGPjAAQG+r9ld30MBdVO6BpLHZ39ywunD+Es3b8NCUvN9AY4R5N/TLtb
+         Xb2fVAoEtW9W+Mwxaf98jxXNbCcNdvNsmV569Mvw3Lw1fovUmQfoFxLdP3pl4Vt/iWyR
+         DlsDByTpto4/rHCJ28I+LigihXg0rOdGmjedSWYaqFG5ibF/E/C0fKucrPPZrGxda/di
+         WIYAZXEFaqhRWrxYfdcGqxc9u2HxvdaHFgtOnzeXZt2kh3AK+/GzEtM/xR6AMODL2JOY
+         ug6WgJIJaMpaTR/gphF9RHyTw9zAOCmcwNTBzV29KUkfOx7hqzD1PaAO8mT1VIdDexn0
+         ALNw==
+X-Gm-Message-State: APjAAAWJ0pvi8MMQ1g373XyVk1uqugRIh0/pYtAz3PqNMCFzAznQ2NRv
+        jIAmTTSeptct4i0CCmkXCNs5WlKV8LY=
+X-Google-Smtp-Source: APXvYqxLuCthviNHrCFlx8L+LbjSA1Ys0lX2ea/wib4VwEAeUoybGt7cWhE3VXAQV37wD3VaeLdv5Q==
+X-Received: by 2002:a92:10d3:: with SMTP id 80mr22695151ilq.210.1574179740487;
+        Tue, 19 Nov 2019 08:09:00 -0800 (PST)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id h15sm5717598ilh.85.2019.11.19.08.08.58
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 19 Nov 2019 08:08:59 -0800 (PST)
+Subject: Re: [PATCH] cdrom: support Beurer GL50 evo CD-on-a-chip devices.
+To:     =?UTF-8?Q?Diego_Elio_Petten=c3=b2?= <flameeyes@flameeyes.com>
+Cc:     linux-scsi@vger.kernel.org
+References: <20191111132955.19361-1-flameeyes@flameeyes.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <80f9668f-2c2f-e81f-54e5-c47da6f0d6f3@kernel.dk>
+Date:   Tue, 19 Nov 2019 09:08:58 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
+MIME-Version: 1.0
+In-Reply-To: <20191111132955.19361-1-flameeyes@flameeyes.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the bnx2fc_eh_abort() function there is a calculation for
-wait_for_completion that uses a HZ multiplier.
-This is incorrect, it scales the timeout by 1000 seconds
-instead of converting the ms value to jiffies.
-Therefore change the calculation.
+On 11/11/19 6:29 AM, Diego Elio Pettenò wrote:
+> The Beurer GL50 evo uses a Cygnal/Cypress-manufactured CD-on-a-chip that
+> only accepts a subset of SCSI commands.
+> 
+> Most of the not-implemented commands are fine to fail, but a few,
+> particularly around the MMC or Audio commands, will put the device into an
+> unrecoverable state, so they need to be avoided at all costs.
+> 
+> In addition to adding a new vendor entry to sr_vendor, this required gating
+> a few functions in the cdrom driver to not even try sending the command
+> when the capability is not present.
 
-Reported-by: David Jeffery <djeffery@redhat.com>
-Reviewed-by: John Pittman .jpittman@redhat.com>
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is pretty horrible, but not really your fault. Just one minor note:
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_i=
-o.c
-index 401743e..d8ae6d0 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1242,7 +1242,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
-=20
- =09/* Wait 2 * RA_TOV + 1 to be sure timeout function hasn't fired */
- =09time_left =3D wait_for_completion_timeout(&io_req->abts_done,
--=09=09=09=09=09=09(2 * rp->r_a_tov + 1) * HZ);
-+=09=09=09=09=09msecs_to_jiffies(2 * rp->r_a_tov + 1));
- =09if (time_left)
- =09=09BNX2FC_IO_DBG(io_req,
- =09=09=09      "Timed out in eh_abort waiting for abts_done");
---=20
-1.8.3.1
+> @@ -1162,7 +1168,9 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+>   		ret = open_for_data(cdi);
+>   		if (ret)
+>   			goto err;
+> -		cdrom_mmc3_profile(cdi);
+> +		if (CDROM_CAN(CDC_GENERIC_PACKET)) {
+> +			cdrom_mmc3_profile(cdi);
+> +		}
+>   		if (mode & FMODE_WRITE) {
+>   			ret = -EROFS;
+>   			if (cdrom_open_write(cdi))
+
+Just make that:
+
+		if (CDROM_CAN(CDC_GENERIC_PACKET))
+			cdrom_mmc3_profile(cdi);
+
+And you probably want to split this patch into two, one with the
+necessary changes to cdrom.c, and one that adds the Beuer device to
+sr_vendor.c.
+
+-- 
+Jens Axboe
 
