@@ -2,87 +2,126 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C14C43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 21:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94121C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 21:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16F632245B
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 21:01:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B00E21D7F
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 21:37:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LAc174dE"
+	dkim=pass (2048-bit key) header.d=flameeyes-com.20150623.gappssmtp.com header.i=@flameeyes-com.20150623.gappssmtp.com header.b="hZSoa+i7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727316AbfKSVBh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 16:01:37 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:33497 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726711AbfKSVBh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 16:01:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574197296;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3k76vkbxYfBS7iYecez5mNImE7w6shD/L48z6TFORCk=;
-        b=LAc174dEMe9m3VwgSyDzKbu3P7IsKpeidul6hCiuWhHmux0rRmxkEjdp5DjWM8fDaWjAsG
-        +wVjKP9bD34LmK6En7f24UrAu501Ht44SH2UH1Rz5vZaxPeknBeIWJ9p0oMsTSnQmqzVXy
-        IijFKP7sN1QKjw7nJklOSeHp/zosUOM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-307-L9mtVF4AOdSQufZtODqdIg-1; Tue, 19 Nov 2019 16:01:32 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 941E2800686;
-        Tue, 19 Nov 2019 21:01:28 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id ED9345E27A;
-        Tue, 19 Nov 2019 21:01:23 +0000 (UTC)
-Message-ID: <16ea01eb24e349da19bcad725f95b2759973e5e3.camel@redhat.com>
-Subject: Re: [PATCH 1/1] scsi core: limit overhead of device_busy counter
- for SSDs
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Sumanesh Samanta <sumanesh.samanta@broadcom.com>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        ming.lei@redhat.com, sathya.prakash@broadcom.com,
-        chaitra.basappa@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        hch@lst.de, hare@suse.de, bart.vanassche@wdc.com
-Date:   Tue, 19 Nov 2019 16:01:23 -0500
-In-Reply-To: <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com>
-References: <1574194079-27363-1-git-send-email-sumanesh.samanta@broadcom.com>
-         <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com>
-Mime-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: L9mtVF4AOdSQufZtODqdIg-1
-X-Mimecast-Spam-Score: 0
+        id S1727329AbfKSVhf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 16:37:35 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:42174 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726874AbfKSVhf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2019 16:37:35 -0500
+Received: by mail-wr1-f65.google.com with SMTP id a15so25682499wrf.9
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2019 13:37:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=flameeyes-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=R1v6jei2+smOpO/lPVxq55FmAnu1W+lEkKGBufTcw6E=;
+        b=hZSoa+i7vo9hvX2AHPQ4+JbrH7osRbDC0Ak7JW2iiBBAzQvmbNXrcU/SYG3HfVbcgu
+         1ukf5ZaR1jtgJU0+QBEMB18YcSXeTM146r42Q2f3e4mUWFd8KjYYvetUEmB+6ZQd52nc
+         rOEs1SJKibHi21rUYZp1gZBtdJECFf3M7tjVKbyHdGQcoeK04cCSL8BdfNquuxSbIGns
+         Ak8Fc6EOO/K7gsy0w9YQwyGedQa7jm22s25o+6JGDt+R747OW3+/MSWsxJCb9eMNRhST
+         69j1BeESEIqAieiQBuLvY+EIGqgAIMTv+MaDy2N8Ls59j5Haq2HGvHkATH6lpvPBHOAm
+         agqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=R1v6jei2+smOpO/lPVxq55FmAnu1W+lEkKGBufTcw6E=;
+        b=rT4/qugNA1vgqxc0yDiNNKs2geSRlqJYz7jdLhYpCCSR3wlCPvDOaKtBg69bSmttnO
+         n1O0O9RIOR8faAWYo1qoOBKF1+VKkwNKUVPqQqj5x8fpk1WIzdDjRuV7SqA52Wd6sI0v
+         HNaDYjtcVvmczj/fAWwPHSJ2OG6DITn31qKwYl+QtjfThHNznxgBPj/h+xUG5NXU3Bq0
+         llnpDR1+S3OXZ1hI47F1/MKGXOMRZQ+U5UFIWA7X7Q3+LwiQrz1BcKCaHj6DUeF/Z1PY
+         CdTzhm2mBf6q9WnxpHIc0zOxEY88UOVvoh0q7Oxd9vw2OPu7JbT8YIOXItyTilhmob59
+         3S/A==
+X-Gm-Message-State: APjAAAXPiqyDAELmDUg32VsCSElASwn1VQf0toYXdLArszUDenPxu3fh
+        JZyrTAZnOs6XBwplS0Fai9RGxQ==
+X-Google-Smtp-Source: APXvYqxsYfsmW5gQiC6VpYKyR++2rIKlDLXMDCRFGY4HA1WqGtvm5N9Zbi7MTOKijIKh++cCkP6HpA==
+X-Received: by 2002:adf:c00a:: with SMTP id z10mr39513868wre.81.1574199452788;
+        Tue, 19 Nov 2019 13:37:32 -0800 (PST)
+Received: from localhost ([2a01:4b00:80c6:1000:283d:d5ff:fee6:36c5])
+        by smtp.gmail.com with ESMTPSA id w11sm32617693wra.83.2019.11.19.13.37.31
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 19 Nov 2019 13:37:31 -0800 (PST)
+From:   =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 1/2] cdrom: respect device capabilities during opening action
+Date:   Tue, 19 Nov 2019 21:37:08 +0000
+Message-Id: <20191119213709.10900-1-flameeyes@flameeyes.com>
+X-Mailer: git-send-email 2.23.0
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2019-11-19 at 12:07 -0800, Sumanesh Samanta wrote:
-> =20
-> +#define MAX_PER_CPU_COUNTER_ABSOLUTE_VAL (0xFFFFFFFFFFF)
-> +#define PER_CPU_COUNTER_OK_VAL (MAX_PER_CPU_COUNTER_ABSOLUTE_VAL>>16)
-> +#define USE_DEVICE_BUSY(sdev)=09(!(sdev)->host->hostt->use_per_cpu_devic=
-e_busy \
-> +=09=09=09=09|| !blk_queue_nonrot((sdev)->request_queue))
-> +
-> +
+Reading the TOC only works if the device can play audio, otherwise
+these commands fail (and possibly bring the device to an unhealthy
+state.)
 
-I think this macro, which looks at a couple of different flags, one of
-which is keyed off a property of the device, rather than the driver,
-needs to be further refined.  Also, QUEUE_FLAG_NONROT can be changed by
-sysfs, this might cause problems later.
+Similarly, cdrom_mmc3_profile() should only be called if the device
+supports generic packet commands.
 
--Ewan
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Diego Elio Pettenò <flameeyes@flameeyes.com>
+---
+ drivers/cdrom/cdrom.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index ac42ae4651ce..eebdcbef0578 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -996,6 +996,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	tracks->xa = 0;
+ 	tracks->error = 0;
+ 	cd_dbg(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n");
++
++	if (!CDROM_CAN(CDC_PLAY_AUDIO)) {
++		tracks->error = CDS_NO_INFO;
++		return;
++	}
++
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header);
+ 	if (ret) {
+@@ -1162,7 +1168,8 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+ 		ret = open_for_data(cdi);
+ 		if (ret)
+ 			goto err;
+-		cdrom_mmc3_profile(cdi);
++		if (CDROM_CAN(CDC_GENERIC_PACKET))
++			cdrom_mmc3_profile(cdi);
+ 		if (mode & FMODE_WRITE) {
+ 			ret = -EROFS;
+ 			if (cdrom_open_write(cdi))
+@@ -2882,6 +2889,9 @@ int cdrom_get_last_written(struct cdrom_device_info *cdi, long *last_written)
+ 	   it doesn't give enough information or fails. then we return
+ 	   the toc contents. */
+ use_toc:
++	if (!CDROM_CAN(CDC_PLAY_AUDIO))
++		return -ENOSYS;
++
+ 	toc.cdte_format = CDROM_MSF;
+ 	toc.cdte_track = CDROM_LEADOUT;
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &toc)))
+-- 
+2.23.0
 
