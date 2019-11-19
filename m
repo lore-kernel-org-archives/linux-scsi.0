@@ -2,129 +2,135 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E56E2C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 09:27:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FC1C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 09:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C346621823
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 09:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1781922302
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 09:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727414AbfKSJ07 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 04:26:59 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2108 "EHLO huawei.com"
+        id S1726573AbfKSJbY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 04:31:24 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46888 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727399AbfKSJ07 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 04:26:59 -0500
-Received: from LHREML713-CAH.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 52FCBD8A914E0CFC7618;
-        Tue, 19 Nov 2019 09:26:57 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML713-CAH.china.huawei.com (10.201.108.36) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 19 Nov 2019 09:26:57 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Tue, 19 Nov
- 2019 09:26:56 +0000
-Subject: Re: [PATCH RFC 3/5] blk-mq: Facilitate a shared tags per tagset
-From:   John Garry <john.garry@huawei.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "hare@suse.com" <hare@suse.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>
-References: <1573652209-163505-1-git-send-email-john.garry@huawei.com>
- <1573652209-163505-4-git-send-email-john.garry@huawei.com>
- <32880159-86e8-5c48-1532-181fdea0df96@suse.de>
- <2cbf591c-8284-8499-7804-e7078cf274d2@huawei.com>
- <02056612-a958-7b05-3c54-bb2fa69bc493@suse.de>
- <ace95bc5-7b89-9ed3-be89-8139f977984b@huawei.com>
- <42b0bcd9-f147-76eb-dfce-270f77bca818@suse.de>
- <89cd1985-39c7-2965-d25b-2ee2c183d057@huawei.com>
- <c34c0ce2-40a8-e4fc-3366-1f7b906da5a3@acm.org>
- <8e7bd2cb-1035-13ba-05db-d8e12c61df1f@huawei.com>
- <6b85f172-695c-4757-3794-455b8d55e015@acm.org>
- <1ba51afd-cce5-f7b2-704c-06e00db027bc@huawei.com>
-Message-ID: <0b75b219-6145-a58a-77fa-74024cdec493@huawei.com>
-Date:   Tue, 19 Nov 2019 09:26:55 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1725784AbfKSJbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 04:31:24 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 261C6B237;
+        Tue, 19 Nov 2019 09:31:22 +0000 (UTC)
+Subject: Re: [PATCH 52/52] scsi: Drop the now obsolete driver_byte definitions
+To:     Martin Wilck <mwilck@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Bart van Assche <bvanassche@acm.org>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>
+References: <20191104090151.129140-1-hare@suse.de>
+ <20191104090151.129140-53-hare@suse.de>
+ <4b19bf3fdb242f166b203c456243553c09a22c92.camel@suse.de>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <4164a4a2-d206-b4de-367b-6c94f0bbbf99@suse.de>
+Date:   Tue, 19 Nov 2019 10:31:21 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1ba51afd-cce5-f7b2-704c-06e00db027bc@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <4b19bf3fdb242f166b203c456243553c09a22c92.camel@suse.de>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml710-chm.china.huawei.com (10.201.108.61) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 11/19/19 10:02 AM, Martin Wilck wrote:
+> On Mon, 2019-11-04 at 10:01 +0100, Hannes Reinecke wrote:
+>> The driver_byte field in the result is now unused, so we can drop
+>> the definitions.
 >>
->>>> @@ -341,8 +341,11 @@ void blk_mq_tagset_busy_iter(struct 
->>>> blk_mq_tag_set *tagset,
->>>>       int i;
->>>>
->>>>       for (i = 0; i < tagset->nr_hw_queues; i++) {
->>>> -        if (tagset->tags && tagset->tags[i])
->>>> +        if (tagset->tags && tagset->tags[i]) {
->>>>               blk_mq_all_tag_busy_iter(tagset->tags[i], fn, priv);
->>>
->>> As I mentioned earlier, wouldn't this iterate over all tags for all 
->>> hctx's, when we just want the tags for hctx[i]?
->>>
->>> Thanks,
->>> John
->>>
->>> [Not trimming reply for future reference]
->>>
->>>> +            if (tagset->share_tags)
->>>> +                break;
->>>> +        }
->>>>       }
->>>>   }
->>>>   EXPORT_SYMBOL(blk_mq_tagset_busy_iter);
->>
->> Since blk_mq_tagset_busy_iter() loops over all hardware queues all 
->> what is changed is the order in which requests are examined. I am not 
->> aware of any block driver that calls blk_mq_tagset_busy_iter() and 
->> that depends on the order of the requests passed to the callback 
->> function.
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  Documentation/scsi/scsi_mid_low_api.txt |  3 +--
+>>  block/bsg-lib.c                         |  2 +-
+>>  block/bsg.c                             |  2 +-
+>>  block/scsi_ioctl.c                      |  2 +-
+>>  drivers/scsi/constants.c                | 14 --------------
+>>  drivers/scsi/scsi_logging.c             | 10 ++--------
+>>  drivers/scsi/sd.c                       |  9 ++++-----
+>>  drivers/scsi/sd_zbc.c                   |  4 ++--
+>>  drivers/scsi/sg.c                       |  5 ++---
+>>  drivers/scsi/sr.c                       |  2 +-
+>>  drivers/scsi/sr_ioctl.c                 |  2 +-
+>>  drivers/scsi/st.c                       |  4 ++--
+>>  include/scsi/scsi.h                     |  3 ---
+>>  include/scsi/scsi_cmnd.h                |  4 ----
+>>  include/trace/events/scsi.h             |  7 +------
+>>  15 files changed, 19 insertions(+), 54 deletions(-)
 >>
 > 
-> OK, fine.
+> While I generally like this change, the driver byte is part of the
+> sg_io user space API, and used in sg3_utils and multipath-tools (in
+> particular, DRIVER_SENSE), and likely in other user space tools as
+> well. Can we simply ditch it without adding some compatibility code to
+> sg and bsg?
 > 
-> So, to me, this approach also seems viable then.
-> 
-> I am however not so happy with how we use blk_mq_tag_set.tags[0] for the 
-> shared tags; I would like to use blk_mq_tag_set.shared_tags and make 
-> blk_mq_tag_set.tags[] point at blk_mq_tag_set.shared_tags or maybe not 
-> blk_mq_tag_set.tags[] at all. However maybe that change may be more 
-> intrusive.
-> 
-> And another more real concern is that we miss a check somewhere for 
-> rq->mq_hctx == hctx when examining the bits on the shared tags.
+Why, but I did...
+sg and bsg should report to userland exactly the same values as before;
+or at least that was the plan.
 
-Another issue I notice is that using tags from just hctx0 may cause a 
-breakage when associated with a different hw queue in the driver.
+Cheers,
 
-Specifically we may have blk_mq_alloc_rqs(hctx_idx = 
-0)->blk_mq_init_request()->nvme_init_request(), and we would set all 
-iod->nvmeq = nvmeq0; since we may actually use this iod on another hw 
-queue, we're breaking that interface.
-
-Thanks,
-John
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
