@@ -2,231 +2,131 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E74DCC43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC8AC432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0B0520672
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:07:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TCzo7MWa";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="C2c0bbRs"
+	by mail.kernel.org (Postfix) with ESMTP id 2C8A2222A5
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:52:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728162AbfKSGHX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 01:07:23 -0500
-Received: from a27-10.smtp-out.us-west-2.amazonses.com ([54.240.27.10]:36094
-        "EHLO a27-10.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729019AbfKSFdS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 00:33:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574141597;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
-        bh=GlyMthblqvRAyrh2xUaWmB3J3VHTjlXdZAiCcUK1bB4=;
-        b=TCzo7MWa4Ax9241dDj7mXxvzz/PgbPuj9vbgUYKLhTZJgxsubI6CllewOovet3wy
-        UtRofOJJXe4PUU73Dna1kne51OtvoBjCJ+W4/ebBMH7OIbJ1zfqW7IZDEWUJOrFhHBm
-        jew+0yPxa6HbOenGiq5D+rzDJcWb22f92HIQMJmw=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574141597;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
-        bh=GlyMthblqvRAyrh2xUaWmB3J3VHTjlXdZAiCcUK1bB4=;
-        b=C2c0bbRsBaqoxt2jHlnG8+I77BmX9TGiWbn51EBGsGcym/k7gtXtFWZu23h61ZVQ
-        mfQlMRpRe+f92NfL1JmWw7FG5m0Ym8OeoN3oqH6jtlOa0/MnPYM/LLZRYF3L5j0v6iO
-        x8Kpx/6frYm68ciuAvsCtFUCdLxp9od6uQuazWJI=
+        id S1727953AbfKSGwc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 01:52:32 -0500
+Received: from mx2.suse.de ([195.135.220.15]:42000 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727521AbfKSGwc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 01:52:32 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 67AA7AC91;
+        Tue, 19 Nov 2019 06:52:30 +0000 (UTC)
+Subject: Re: [PATCH 2/9] scsi: add scsi_host_flush_commands() helper
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20191118092208.54521-1-hare@suse.de>
+ <20191118092208.54521-3-hare@suse.de>
+ <ca868669-6939-ca53-43bc-8f45ea382d3d@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <cc46b06b-223a-f475-6474-037a274567ea@suse.de>
+Date:   Tue, 19 Nov 2019 07:52:29 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+In-Reply-To: <ca868669-6939-ca53-43bc-8f45ea382d3d@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-Date:   Tue, 19 Nov 2019 05:33:17 +0000
-From:   cang@codeaurora.org
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>, stummala@codeaurora.org,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        linux-scsi@vger.kernel.org, Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [EXT] Re: [PATCH v5 4/4] ufs: Simplify the clock scaling
- mechanism implementation
-In-Reply-To: <5659ab82-a087-4cfb-088e-e25d7f5515a3@acm.org>
-References: <20191112173743.141503-1-bvanassche@acm.org>
- <20191112173743.141503-5-bvanassche@acm.org>
- <a26c719466edfd2c41eea789a6c908ab@codeaurora.org>
- <8acd9237-7414-5dce-5285-69ed3ce6f28c@acm.org>
- <BN7PR08MB56843E1941F42BEF8239B895DB760@BN7PR08MB5684.namprd08.prod.outlook.com>
- <ca27868b-9d25-36b9-7548-02252c293905@acm.org>
- <e0ab904e1413ae6a89cebbced22a6cf8@codeaurora.org>
- <5659ab82-a087-4cfb-088e-e25d7f5515a3@acm.org>
-Message-ID: <0101016e822695e0-499a071e-b625-425c-ac3e-74cf807e3100-000000@us-west-2.amazonses.com>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
-X-SES-Outgoing: 2019.11.19-54.240.27.10
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-19 02:13, Bart Van Assche wrote:
-> On 11/14/19 10:01 PM, Can Guo wrote:
->> On 2019-11-15 00:11, Bart Van Assche wrote:
->>> On 11/13/19 8:03 AM, Bean Huo (beanhuo) wrote:
->>>> I think, you are asking for comment from Can.  As for me, attached 
->>>> patch is better.
->>>> Removing ufshcd_wait_for_doorbell_clr(), instead of reading doorbell 
->>>> register, Now
->>>> using block layer blk_mq_{un,}freeze_queue(), looks good. I tested 
->>>> your V5 patches,
->>>> didn't find problem yet.
->>>> 
->>>> Since my available platform doesn't support dynamic clk scaling, I 
->>>> think, now seems only
->>>> Qcom UFS controllers support this feature. So we need Can Guo to 
->>>> finally confirm it.
->>> 
->>> Do you agree with this patch series if patch 4 is replaced by the
->>> patch attached to my previous e-mail? The entire (revised) series is
->>> available at https://github.com/bvanassche/linux/tree/ufs-for-next.
->> 
->> After ufshcd_clock_scaling_prepare() returns(no error), all request 
->> queues are frozen. If failure
->> happens(say power mode change command fails) after this point and 
->> error handler kicks off,
->> we need to send dev commands(in ufshcd_probe_hba()) to bring UFS back 
->> to functionality.
->> However, as the hba->cmd_queue is frozen, dev commands cannot be sent, 
->> the error handler shall fail.
+On 11/18/19 11:57 PM, Bart Van Assche wrote:
+> On 11/18/19 1:22 AM, Hannes Reinecke wrote:
+>> +/**
+>> + * scsi_host_flush_commands -- Terminate all running commands
+>> + * @shost:    Scsi Host on which commands should be terminated
+>> + * @status:    Status to be set for the terminated commands
+>> + */
+>> +static bool flush_cmds_iter(struct request *rq, void *data, bool
+>> reserved)
+>> +{
+>> +    struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
+>> +    int status = *(int *)data;
+>> +
+>> +    if (reserved)
+>> +        return true;
+>> +    scmd->result = status << 16;
+>> +    scmd->scsi_done(scmd);
+>> +    return true;
+>> +}
+>> +
+>> +void scsi_host_flush_commands(struct Scsi_Host *shost, int status)
+>> +{
+>> +    blk_mq_tagset_busy_iter(&shost->tag_set, flush_cmds_iter, &status);
+>> +}
 > 
-> Hi Can,
+> Should the kernel-doc comment be moved from the static function to the
+> exported function? Please also add a comment that it is only safe to
+> call scsi_host_flush_commands() from inside a LLD reset handler.
 > 
-> My understanding of the current UFS driver code is that
-> ufshcd_clock_scaling_prepare() waits for ongoing commands to finish
-> but not for SCSI error handling to finish. Would you agree with
-> changing that behavior such that ufshcd_clock_scaling_prepare()
-> returns an error
-> code if SCSI error handling is in progress? Do you agree that once
-> that change has been made that it is fine to invoke
-> blk_freeze_queue_start() for all three types of block layer request
-> queues (SCSI commands, device management commands and TMFs)? Do you
-> agree that this would fix the issue that it is possible today to
-> submit TMFs from user space using through the BSG queue while clock
-> scaling is in progress?
-> 
-> Thanks,
-> 
-> Bart.
+I'd rather say that concurrent I/O submission must be prevented from the
+caller. But yes, will be updating the comments.
 
-Hi Bart,
+Cheers,
 
-Your understanding is correct.
-
-> Would you agree with changing that behavior such that 
-> ufshcd_clock_scaling_prepare()
-> returns an error code if SCSI error handling is in progress?
-
-I believe we already have the check of ufshcd_eh_in_progress() in
-ufshcd_devfreq_target() before call ufshcd_devfreq_scale().
-
-> Do you agree that once that change has been made that it is fine to 
-> invoke
-> blk_freeze_queue_start() for all three types of block layer request
-> queues (SCSI commands, device management commands and TMFs)?
-
-I agree. As err handling work always runs in ASYNC way in current code 
-base, it is fine to freeze all the queues.
-If there is err handling work, scheduled during scaling, would 
-eventually be unblocked when hba->cmd_queue
-is unfrozen after scaling returns or fails.
-
-Sorry for making you confused. My previous comment is based on that if 
-we need to do hibern8
-enter/exit in vendor ops (see 
-https://lore.kernel.org/patchwork/patch/1143579/), and if hibern8
-enter/exit fails during scaling, we need to call ufshcd_link_recovery() 
-to recovery everything in SYNC way.
-And as hba->cmd_queue is frozen, ufshcd_link_recovery() would hang when 
-it needs to send device
-manangement commands. In this case, we need to make sure hba->cmd_queue 
-is NOT frozen.
-So it seems contraditory.
-
-FYI, even with the patch 
-https://lore.kernel.org/patchwork/patch/1143579/, current
-implementation also has this problem. And we have another change to 
-address it by
-making change to ufshcd_exec_dev_cmd() like below.
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c2a2ff2..81a000e 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4068,6 +4068,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
-*hba,
-         int tag;
-         struct completion wait;
-         unsigned long flags;
-+       bool has_read_lock = false;
-
-@@ -4075,8 +4076,10 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
-*hba,
-
-+       if (!ufshcd_eh_in_progress(hba)) {
-                 down_read(&hba->lock);
-+               has_read_lock = true;
-+       }
-
-         /*
-          * Get free slot, sleep if slots are unavailable.
-@@ -4110,7 +4113,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
-*hba,
-  out_put_tag:
-         ufshcd_put_dev_cmd_tag(hba, tag);
-         wake_up(&hba->dev_cmd.tag_wq);
-+       if (has_read_lock)
-                 up_read(&hba->lock);
-         return err;
-  }
-
-
-Aside the functionality, we need to take this change carefully as it may 
-relate with performance.
-With the old implementation, when devfreq decides to scale up, we can 
-make sure that all requests
-sent to UFS device after this point will go through the highest UFS 
-Gear. Scaling up will happen
-right after doorbell is cleared, not even need to wait till the requests 
-are freed from block layer.
-And 1 sec is long enough to clean out the doorbell by HW.
-
-In the new implementation of ufshcd_clock_scaling_prepare(), after 
-blk_freeze_queue_start(), we call
-blk_mq_freeze_queue_wait_timeout() to wait for 1 sec. In addition to 
-those requests which have already
-been queued to HW doorbell, more requests will be dispatched within 1 
-sec, through the lowest Gear.
-My first impression is that it might be a bit lazy and I am not sure how 
-much it may affect the benchmarks.
-
-And if the request queues are heavily loaded(many bios are waiting for a 
-free tag to become a request),
-is 1 sec long enough to freeze all these request queues? If no, 
-performance would be affected if scaling up
-fails frequently.
-As per my understanding, the request queue will become frozen only after 
-all the existing requests and
-bios(which are already waiting for a free tag on the queue) to be 
-completed and freed from block layer.
-Please correct me if I am wrong.
-
-While, in the old implementatoin, when devfreq decides to scale up, 
-scaling can always
-happen for majority chances, execept for those unexpected HW issues.
-
-Best Regards,
-Can Guo
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
