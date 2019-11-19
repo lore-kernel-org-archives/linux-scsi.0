@@ -2,38 +2,34 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79237C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:06:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B759C432C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:10:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C388222DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:06:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F017222309
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:10:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727099AbfKSHGl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 02:06:41 -0500
-Received: from mx2.suse.de ([195.135.220.15]:45276 "EHLO mx1.suse.de"
+        id S1727097AbfKSHKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 02:10:49 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48816 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725784AbfKSHGk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 02:06:40 -0500
+        id S1726555AbfKSHKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 02:10:49 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D2212AD4A;
-        Tue, 19 Nov 2019 07:06:37 +0000 (UTC)
-Subject: Re: [PATCH 8/9] aacraid: use scsi_host_busy_iter() in
- get_num_of_incomplete_fibs()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
+        by mx1.suse.de (Postfix) with ESMTP id 7924AB13C;
+        Tue, 19 Nov 2019 07:10:47 +0000 (UTC)
+Subject: Re: [PATCHv3 00/52] Revamp SCSI result values
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
+        Bart van Assche <bvanassche@acm.org>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org,
-        Balsundar P <balsundar.p@microsemi.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-References: <20191118092208.54521-1-hare@suse.de>
- <20191118092208.54521-9-hare@suse.de>
- <bcf68366-cb44-b846-1348-d646555f98ba@acm.org>
+        linux-scsi@vger.kernel.org
+References: <20191104090151.129140-1-hare@suse.de>
+ <5fa00739-0f30-56fa-426e-1847457cc1dd@suse.de> <yq18socles3.fsf@oracle.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -79,12 +75,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <f9f0ee84-10fd-33ac-81bb-e57b35973304@suse.de>
-Date:   Tue, 19 Nov 2019 08:06:37 +0100
+Message-ID: <2d039a2d-d5c2-eb6c-b75a-ad1a662c5b9a@suse.de>
+Date:   Tue, 19 Nov 2019 08:10:47 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <bcf68366-cb44-b846-1348-d646555f98ba@acm.org>
+In-Reply-To: <yq18socles3.fsf@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -93,131 +89,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/19/19 12:06 AM, Bart Van Assche wrote:
-> On 11/18/19 1:22 AM, Hannes Reinecke wrote:
->> Use the scsi midlayer helper to traverse the number of outstanding
->> commands. This also eliminates the last usage for the cmd_list
->> functionality so we can drop it.
->>
->> Cc: Balsundar P <balsundar.p@microsemi.com>
->> Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/aacraid/linit.c | 81
->> ++++++++++++++++++++++----------------------
->>   1 file changed, 41 insertions(+), 40 deletions(-)
->>
->> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
->> index ee6bc2f9b80a..db96482c4fdc 100644
->> --- a/drivers/scsi/aacraid/linit.c
->> +++ b/drivers/scsi/aacraid/linit.c
->> @@ -622,54 +622,56 @@ static int aac_ioctl(struct scsi_device *sdev,
->> unsigned int cmd,
->>       return aac_do_ioctl(dev, cmd, arg);
->>   }
->>   -static int get_num_of_incomplete_fibs(struct aac_dev *aac)
->> +struct fib_count_data {
->> +    int mlcnt;
->> +    int llcnt;
->> +    int ehcnt;
->> +    int fwcnt;
->> +    int krlcnt;
->> +};
->> +
->> +static bool fib_count_iter(struct scsi_cmnd *scmnd, void *data, bool
->> reserved)
->>   {
->> +    struct fib_count_data *fib_count = data;
->>   -    unsigned long flags;
->> -    struct scsi_device *sdev = NULL;
->> +    switch (scmnd->SCp.phase) {
->> +    case AAC_OWNER_FIRMWARE:
->> +        fib_count->fwcnt++;
->> +        break;
->> +    case AAC_OWNER_ERROR_HANDLER:
->> +        fib_count->ehcnt++;
->> +        break;
->> +    case AAC_OWNER_LOWLEVEL:
->> +        fib_count->llcnt++;
->> +        break;
->> +    case AAC_OWNER_MIDLEVEL:
->> +        fib_count->mlcnt++;
->> +        break;
->> +    default:
->> +        fib_count->krlcnt++;
->> +        break;
->> +    }
->> +    return true;
->> +}
->> +
->> +/* Called during SCSI EH, so we don't need to block requests */
->> +static int get_num_of_incomplete_fibs(struct aac_dev *aac)
->> +{
->>       struct Scsi_Host *shost = aac->scsi_host_ptr;
->> -    struct scsi_cmnd *scmnd = NULL;
->>       struct device *ctrl_dev;
->> +    struct fib_count_data fcnt = { };
->>   -    int mlcnt  = 0;
->> -    int llcnt  = 0;
->> -    int ehcnt  = 0;
->> -    int fwcnt  = 0;
->> -    int krlcnt = 0;
->> -
->> -    __shost_for_each_device(sdev, shost) {
->> -        spin_lock_irqsave(&sdev->list_lock, flags);
->> -        list_for_each_entry(scmnd, &sdev->cmd_list, list) {
->> -            switch (scmnd->SCp.phase) {
->> -            case AAC_OWNER_FIRMWARE:
->> -                fwcnt++;
->> -                break;
->> -            case AAC_OWNER_ERROR_HANDLER:
->> -                ehcnt++;
->> -                break;
->> -            case AAC_OWNER_LOWLEVEL:
->> -                llcnt++;
->> -                break;
->> -            case AAC_OWNER_MIDLEVEL:
->> -                mlcnt++;
->> -                break;
->> -            default:
->> -                krlcnt++;
->> -                break;
->> -            }
->> -        }
->> -        spin_unlock_irqrestore(&sdev->list_lock, flags);
->> -    }
->> +    scsi_host_busy_iter(shost, fib_count_iter, &fcnt);
->>         ctrl_dev = &aac->pdev->dev;
->>   -    dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
->> -    dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
->> -    dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
->> -    dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
->> -    dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
->> +    dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", fcnt.mlcnt);
->> +    dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", fcnt.llcnt);
->> +    dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n",
->> fcnt.ehcnt);
->> +    dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fcnt.fwcnt);
->> +    dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", fcnt.krlcnt);
->>   -    return mlcnt + llcnt + ehcnt + fwcnt;
->> +    return fcnt.mlcnt + fcnt.llcnt + fcnt.ehcnt + fcnt.fwcnt;
->>   }
->>     static int aac_eh_abort(struct scsi_cmnd* cmd)
->> @@ -1675,7 +1677,6 @@ static int aac_probe_one(struct pci_dev *pdev,
->> const struct pci_device_id *id)
->>       shost->irq = pdev->irq;
->>       shost->unique_id = unique_id;
->>       shost->max_cmd_len = 16;
->> -    shost->use_cmd_list = 1;
->>         if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
->>           aac_init_char();
+On 11/19/19 4:35 AM, Martin K. Petersen wrote:
 > 
-> Same comment here: could scsi_device_quiesce() and scsi_device_resume()
-> have been used instead?
+> Hi Hannes,
 > 
-We don't need to.
-This function is called during SCSI EH when the host is quiesced anyway.
-That's what I tried to imply with the added comment on top.
+>> Martin, ping?
+>>
+>> I've got another patchset queued for splitting off the 'result' field,
+>> which kinda depends on this one...
+> 
+> It's a pretty big and intrusive change. And even though we (somewhat
+> unexpectedly) got another week, I still think it's too risky for 5.5.
+> 
+> I plan on merging it first thing when the queue for 5.6 opens.
+> 
+Sure. Just wanted to know if it's worth playing around with the next
+round of patches (splitting off 'result', thus ending a history of
+shifting status bytes into wrong places :-)
+
+Thanks for the heads-up.
+
+Should I do a respin for 5.5?
 
 Cheers,
 
