@@ -2,35 +2,38 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC8AC432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:52:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1703C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C8A2222A5
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 06:52:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BABAF2186D
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727953AbfKSGwc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 01:52:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:42000 "EHLO mx1.suse.de"
+        id S1726023AbfKSHFQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 02:05:16 -0500
+Received: from mx2.suse.de ([195.135.220.15]:44756 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727521AbfKSGwc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 01:52:32 -0500
+        id S1725784AbfKSHFQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 02:05:16 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 67AA7AC91;
-        Tue, 19 Nov 2019 06:52:30 +0000 (UTC)
-Subject: Re: [PATCH 2/9] scsi: add scsi_host_flush_commands() helper
+        by mx1.suse.de (Postfix) with ESMTP id C915EAD4A;
+        Tue, 19 Nov 2019 07:05:12 +0000 (UTC)
+Subject: Re: [PATCH 7/9] aacraid: use scsi_host_busy_iter() in
+ aac_wait_for_io_completion()
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
+        linux-scsi@vger.kernel.org,
+        Balsundar P <balsundar.p@microsemi.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 References: <20191118092208.54521-1-hare@suse.de>
- <20191118092208.54521-3-hare@suse.de>
- <ca868669-6939-ca53-43bc-8f45ea382d3d@acm.org>
+ <20191118092208.54521-8-hare@suse.de>
+ <d1fa932b-0134-cd8e-3ac1-dd03ec0a8e6f@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -76,12 +79,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <cc46b06b-223a-f475-6474-037a274567ea@suse.de>
-Date:   Tue, 19 Nov 2019 07:52:29 +0100
+Message-ID: <7f47c2e5-fa61-4584-8e9c-b4c3a11041c2@suse.de>
+Date:   Tue, 19 Nov 2019 08:05:12 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <ca868669-6939-ca53-43bc-8f45ea382d3d@acm.org>
+In-Reply-To: <d1fa932b-0134-cd8e-3ac1-dd03ec0a8e6f@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,37 +93,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/18/19 11:57 PM, Bart Van Assche wrote:
+On 11/19/19 12:05 AM, Bart Van Assche wrote:
 > On 11/18/19 1:22 AM, Hannes Reinecke wrote:
->> +/**
->> + * scsi_host_flush_commands -- Terminate all running commands
->> + * @shost:    Scsi Host on which commands should be terminated
->> + * @status:    Status to be set for the terminated commands
->> + */
->> +static bool flush_cmds_iter(struct request *rq, void *data, bool
->> reserved)
+>> Use the midlayer helper function to traverse outstanding commands.
+>>
+>> Cc: Balsundar P <balsundar.p@microsemi.com>
+>> Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/aacraid/comminit.c | 30 +++++++++++++-----------------
+>>   1 file changed, 13 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/scsi/aacraid/comminit.c
+>> b/drivers/scsi/aacraid/comminit.c
+>> index f75878d773cf..89c0ca339ef5 100644
+>> --- a/drivers/scsi/aacraid/comminit.c
+>> +++ b/drivers/scsi/aacraid/comminit.c
+>> @@ -272,29 +272,25 @@ static void aac_queue_init(struct aac_dev * dev,
+>> struct aac_queue * q, u32 *mem,
+>>       q->entries = qsize;
+>>   }
+>>   +static bool wait_for_io_iter(struct scsi_cmnd *cmd, void *data,
+>> bool reserved)
 >> +{
->> +    struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
->> +    int status = *(int *)data;
+>> +    int *active = data;
 >> +
->> +    if (reserved)
->> +        return true;
->> +    scmd->result = status << 16;
->> +    scmd->scsi_done(scmd);
+>> +    if (cmd->SCp.phase == AAC_OWNER_FIRMWARE)
+>> +        *active = 1;
 >> +    return true;
 >> +}
 >> +
->> +void scsi_host_flush_commands(struct Scsi_Host *shost, int status)
->> +{
->> +    blk_mq_tagset_busy_iter(&shost->tag_set, flush_cmds_iter, &status);
->> +}
+>> +/* scsi_block_requests() has been called, so no new request can be
+>> issued */
+>>   static void aac_wait_for_io_completion(struct aac_dev *aac)
+>>   {
+>> -    unsigned long flagv = 0;
+>> -    int i = 0;
+>> +    int i;
+>>         for (i = 60; i; --i) {
+>> -        struct scsi_device *dev;
+>> -        struct scsi_cmnd *command;
+>>           int active = 0;
+>>   -        __shost_for_each_device(dev, aac->scsi_host_ptr) {
+>> -            spin_lock_irqsave(&dev->list_lock, flagv);
+>> -            list_for_each_entry(command, &dev->cmd_list, list) {
+>> -                if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+>> -                    active++;
+>> -                    break;
+>> -                }
+>> -            }
+>> -            spin_unlock_irqrestore(&dev->list_lock, flagv);
+>> -            if (active)
+>> -                break;
+>> -
+>> -        }
+>> +        scsi_host_busy_iter(aac->scsi_host_ptr,
+>> +                    wait_for_io_iter, &active);
+>>           /*
+>>            * We can exit If all the commands are complete
+>>            */
 > 
-> Should the kernel-doc comment be moved from the static function to the
-> exported function? Please also add a comment that it is only safe to
-> call scsi_host_flush_commands() from inside a LLD reset handler.
+> Would using scsi_device_quiesce() and scsi_device_resume() allow to
+> eliminate the busy-waiting loop from the aacraid driver?
 > 
-I'd rather say that concurrent I/O submission must be prevented from the
-caller. But yes, will be updating the comments.
+I've actually looked into it, but then figured that it'll be more
+cumbersome as I'd have to iterate across all devices here, calling
+scsi_device_quiesce() on each one.
+But looking closer into it, we could have a helper scsi_host_quiesce()
+and scsi_host_resume() ... yes, indeed.
+Will be updating the patchset.
 
 Cheers,
 
