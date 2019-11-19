@@ -2,90 +2,92 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F433C432C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10466C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BAFD2230D
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA5272186D
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 07:05:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="NWSRVy2G";
-	dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b="uMak6FbU"
+	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="iGiGCmUj";
+	dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b="1MnMJmOA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726555AbfKSHFp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 02:05:45 -0500
-Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:13734 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725784AbfKSHFp (ORCPT
+        id S1727351AbfKSHF5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 02:05:57 -0500
+Received: from mx0b-0014ca01.pphosted.com ([208.86.201.193]:52212 "EHLO
+        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727145AbfKSHF4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 02:05:45 -0500
-Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
-        by mx0a-0014ca01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAJ724f6030539;
-        Mon, 18 Nov 2019 23:05:23 -0800
+        Tue, 19 Nov 2019 02:05:56 -0500
+Received: from pps.filterd (m0042333.ppops.net [127.0.0.1])
+        by mx0b-0014ca01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAJ73hYn009047;
+        Mon, 18 Nov 2019 23:05:30 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=proofpoint;
- bh=803thjegLTotHqNYFRW3V1bqkE9iCLy2jpG2DZKC1pY=;
- b=NWSRVy2G3lXbzEBm65WtEjl4g0zmQpvInNLSFWuE4vP9zdff/JhRTSl/U0QxLTbNnvDx
- SjET+QsAYp04wJTs9AY5/qV1yHUd0j57bVIDLdX3QfO0+IkZrPogfWTzY3v3GAYf4CV9
- lNN0ynnrktvFlkZ5fYE1K93XUdRPJ0RqvXGlAEG46SkCf6/zmhqaMQhxI1eXVSl6cDUc
- mXxY17B6UpyRMZiqD6wAP/X4IzTJ+uZBrKYj2vQQlhgy6wEnDUAztuccRGRRcvi0xgwh
- MDNqSlqXdQfBSeto88t0BKumXv7NL68xJRJfhJXuv8qxlI7ZsQVYeJt/0qkG9O1zgxeg IQ== 
-Received: from nam01-sn1-obe.outbound.protection.outlook.com (mail-sn1nam01lp2059.outbound.protection.outlook.com [104.47.32.59])
-        by mx0a-0014ca01.pphosted.com with ESMTP id 2waehy9caf-1
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=proofpoint;
+ bh=qI6V5date5LOpgUANTAHpyiGkFplUbk4ChWLOvlSdmA=;
+ b=iGiGCmUj2uUjcqzfkg7YiVPZukTBVpsZIFaIXjCkvjgSZyMIawX761pmrwlPST6natBC
+ xkLV8ae7sfsZeAuvi0Sk7ev2egcB2aNuZbM+1oyWehMTy/4k6NiP6LYjb4pB3pggvWxk
+ +IyiHIaoZkUVpOpBOObERjJvBZTqRckSP2a4D7cgt2jNYCf5uHadeOFe706JOW0hf/Ap
+ /pjbEuG9iEzopGaP6JNY/TLu2XDyEF8pyDYPB8cad1PIhMm19vv9+rNMDsGb46b5pdUb
+ JzA/cTUi8eEYwBdaWzv5LvgTEknh9ePCANHkzkX+jyzotXxRbWAWc0Q4cZRlQVt4tXWT Tg== 
+Received: from nam03-co1-obe.outbound.protection.outlook.com (mail-co1nam03lp2051.outbound.protection.outlook.com [104.47.40.51])
+        by mx0b-0014ca01.pphosted.com with ESMTP id 2wadjy9hhq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 Nov 2019 23:05:22 -0800
+        Mon, 18 Nov 2019 23:05:29 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UHvgX6m9SH1zP7Mh7CWiMQee4+Uk5qkwFTvHCsIsWlWhtQcfjwdEyJP4nT9lCi5oT9yyEi6w3V0xfbsofChAmHc0SAuNJmNBs/xhwjjskng+2iOnnTM2l2hZqxyFvg1y7Rr5Ens48VJKc6bhJmdB4QA8FK8h6sL/WchM4oUDit/mPyN3QqMXyFSxU6oiK98Bh9S17YLmiAYj0fC8+WfkJGhAj9LBsYRM6S9PMq3/8VUwZaoFJwZXXnG3pC4PVAgxd9OZAG468ITTon5Oh7foUWwJUn3x7gsjhODBU6CzHusdSt9QManCRXTUfLenusmZBgmzeGn4ecxz9qHgXgYBMA==
+ b=deFm+XWE/9KpxY7Nq7fywyV0l3+ScXO5rVxqle0NWolar+LYHQRxHEY5GWWu1FSzCQA22uC9OZa1bZGzXGmkZl0N8Tkw20jJlHLuz+DzZePOSK32jjgRtxHASCbFHTriXVQSqvP1/f+g6XoLN7r8xASibQuMkSQID5Utc4/NETrpvTrxccDsSFMz+lXe/hQMwoj6sqIkiBmFNq37BIX3RmDuy2x31wNSxieSIHFbfq6tN5/7/5pOxwvtJGlzPI8HEBHkaRu9QVBBh2XANKHGq8FRJXGhK4KC0asu77Lst+Mun413uatPFvjRESjCo1vq+cpvYVFOHvXhZMUTvPAt9g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=803thjegLTotHqNYFRW3V1bqkE9iCLy2jpG2DZKC1pY=;
- b=J15jqAaWF9IM2HdDqSADpcGGO2YjRsVPXCbAWIa4C64UbzZPc4j8KAPLu8VE0B3sJ5Ox2f5GAovTnMU2vzwCyarFw+EwKsuv2CKwUdAf9S6VIezMG3V+iVfIxIlQLdM5zKeHs5HYvzEM6SZeB2oOHE19X7aJkXtT5+ioeanvaNrj4QRGy6N7mkfwe3AFXEXYXNoU93o20Kdy2joNJynUMirDDUjXLLlUCqM9mJvCLkiUvV6iu0Pzh6P4aOdsO3KrI8y2nZysDIPMJDxMMx0jwsWcd6Z0T2ARb0LGTAV0nbO1c+2vyNnHsVMlPtAUjz0L58HxyROdi4VaRMkuUSel2Q==
+ bh=qI6V5date5LOpgUANTAHpyiGkFplUbk4ChWLOvlSdmA=;
+ b=lOe+KpsiQa8WsMKHxca6eibrso5wEQBy7rew8RTHkWN7V/0awBjEDXgMtDTPeeRO/q1t3bjUpvrlUTbU6NAavXpJBaDBzDkhusRb3arx1mP+a9cUGqVi12JBOAeR6AP1QxhQzTvv9hqYau8/oxNjOhh/yJP9f0LnWuNDX9WiPuwH3XFsBNTIOc/h2+vXTJ2DxxgJ1HOjFNjptGXhgf9bocna5zzKv0V3RVMYvdPbUk78WDCkcH/qm1E1wL1vbZtMaFMJ+7tzEPb8BwSnLo5OUIKf5jesiLoA+F8kgBpMxwOCAP5ABYHaDUEfOJXJ2b68y/h931a3X2Kk0tlfA56UdA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
- is 199.43.4.28) smtp.rcpttodomain=linux.ibm.com smtp.mailfrom=cadence.com;
+ is 158.140.1.28) smtp.rcpttodomain=linux.ibm.com smtp.mailfrom=cadence.com;
  dmarc=fail (p=none sp=none pct=100) action=none header.from=cadence.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=803thjegLTotHqNYFRW3V1bqkE9iCLy2jpG2DZKC1pY=;
- b=uMak6FbUU95rTB5iAqd02FGizd7WDZXmFfHh6HseaF1ve1v5gPiQ0yWuopfV93jj7DQJRDTZ3tgZPdOQ4GchuEtydHYsR6s+u8DHTCnMjV33i+4PfaBVOYaRoxvoXxJUpGlo5+/iYrAFK4NPiuphR7H5bj333AZ0LEAYqRjfSSQ=
-Received: from SN4PR0701CA0005.namprd07.prod.outlook.com
- (2603:10b6:803:28::15) by SN6PR07MB5741.namprd07.prod.outlook.com
- (2603:10b6:805:f0::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2451.23; Tue, 19 Nov
- 2019 07:05:18 +0000
-Received: from MW2NAM12FT054.eop-nam12.prod.protection.outlook.com
- (2a01:111:f400:fe5a::204) by SN4PR0701CA0005.outlook.office365.com
- (2603:10b6:803:28::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.2451.23 via Frontend
- Transport; Tue, 19 Nov 2019 07:05:18 +0000
+ bh=qI6V5date5LOpgUANTAHpyiGkFplUbk4ChWLOvlSdmA=;
+ b=1MnMJmOAFfVLx5g0XMEsvThknnQh8t9LHy3cdXUYeb50JHU3HPxSP6qehE/HaPhumbJ/eeSVvqELxNmZOZv5yV27aun0RdVMuR9KN9WLleCsnMRdar2gb9Up0bf16sF5GwBd/mG0e+NKit5trbMpJ7zH+fos9Lq3hUXzA5Bvww4=
+Received: from BYAPR07CA0057.namprd07.prod.outlook.com (2603:10b6:a03:60::34)
+ by CY1PR07MB2587.namprd07.prod.outlook.com (2a01:111:e400:c60e::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2451.27; Tue, 19 Nov
+ 2019 07:05:26 +0000
+Received: from MW2NAM12FT015.eop-nam12.prod.protection.outlook.com
+ (2a01:111:f400:fe5a::206) by BYAPR07CA0057.outlook.office365.com
+ (2603:10b6:a03:60::34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2451.23 via Frontend
+ Transport; Tue, 19 Nov 2019 07:05:26 +0000
 Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
- cadence.com discourages use of 199.43.4.28 as permitted sender)
-Received: from rmmaillnx1.cadence.com (199.43.4.28) by
- MW2NAM12FT054.mail.protection.outlook.com (10.13.180.197) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.2451.23 via Frontend Transport; Tue, 19 Nov 2019 07:05:16 +0000
+ cadence.com discourages use of 158.140.1.28 as permitted sender)
+Received: from sjmaillnx2.cadence.com (158.140.1.28) by
+ MW2NAM12FT015.mail.protection.outlook.com (10.13.180.82) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2451.23 via Frontend Transport; Tue, 19 Nov 2019 07:05:25 +0000
 Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
-        by rmmaillnx1.cadence.com (8.14.4/8.14.4) with ESMTP id xAJ75AQs006987
+        by sjmaillnx2.cadence.com (8.14.4/8.14.4) with ESMTP id xAJ75LMB023874
         (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK);
-        Tue, 19 Nov 2019 02:05:11 -0500
+        Mon, 18 Nov 2019 23:05:24 -0800
 X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
 Received: from maileu3.global.cadence.com (10.160.88.99) by
  maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3; Tue, 19 Nov 2019 08:05:09 +0100
+ 15.0.1367.3; Tue, 19 Nov 2019 08:05:20 +0100
 Received: from vleu-orange.cadence.com (10.160.88.83) by
  maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Tue, 19 Nov 2019 08:05:09 +0100
+ 15.0.1367.3 via Frontend Transport; Tue, 19 Nov 2019 08:05:20 +0100
 Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
-        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id xAJ7590c024037;
-        Tue, 19 Nov 2019 08:05:09 +0100
+        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id xAJ75KYc024629;
+        Tue, 19 Nov 2019 08:05:20 +0100
 Received: (from sheebab@localhost)
-        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id xAJ756IL023794;
-        Tue, 19 Nov 2019 08:05:06 +0100
+        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id xAJ75Kks024628;
+        Tue, 19 Nov 2019 08:05:20 +0100
 From:   sheebab <sheebab@cadence.com>
 To:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
         <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
@@ -95,75 +97,197 @@ To:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
         <vigneshr@ti.com>, <linux-block@vger.kernel.org>
 CC:     <rafalc@cadence.com>, <mparab@cadence.com>,
         sheebab <sheebab@cadence.com>
-Subject: [PATCH RESEND 0/2] scsi: ufs: hibern8 fixes
-Date:   Tue, 19 Nov 2019 08:04:40 +0100
-Message-ID: <1574147082-22725-1-git-send-email-sheebab@cadence.com>
+Subject: [PATCH RESEND 2/2] scsi: ufs: Update L4 attributes on manual hibern8 exit in Cadence UFS.
+Date:   Tue, 19 Nov 2019 08:04:42 +0100
+Message-ID: <1574147082-22725-3-git-send-email-sheebab@cadence.com>
 X-Mailer: git-send-email 2.4.5
+In-Reply-To: <1574147082-22725-1-git-send-email-sheebab@cadence.com>
+References: <1574147082-22725-1-git-send-email-sheebab@cadence.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-OrganizationHeadersPreserved: maileu3.global.cadence.com
 X-EOPAttributedMessage: 0
-X-Forefront-Antispam-Report: CIP:199.43.4.28;IPV:CAL;SCL:-1;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(4636009)(136003)(39860400002)(346002)(376002)(396003)(199004)(189003)(36092001)(50466002)(110136005)(316002)(186003)(26005)(14444005)(47776003)(87636003)(70206006)(336012)(7416002)(356004)(6666004)(5660300002)(4326008)(51416003)(26826003)(107886003)(81156014)(81166006)(16586007)(42186006)(8936002)(8676002)(86362001)(48376002)(478600001)(305945005)(2201001)(2906002)(76130400001)(50226002)(54906003)(126002)(486006)(36756003)(426003)(476003)(70586007)(2616005)(921003)(1121003)(2101003)(83996005);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR07MB5741;H:rmmaillnx1.cadence.com;FPR:;SPF:SoftFail;LANG:en;PTR:ErrorRetry;A:1;MX:1;
+X-Forefront-Antispam-Report: CIP:158.140.1.28;IPV:CAL;SCL:-1;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(4636009)(396003)(136003)(346002)(39860400002)(376002)(36092001)(189003)(199004)(107886003)(76176011)(51416003)(478600001)(8676002)(26826003)(50226002)(36756003)(47776003)(4326008)(16586007)(42186006)(54906003)(316002)(14444005)(7636002)(5660300002)(7416002)(6666004)(86362001)(126002)(356004)(426003)(50466002)(76130400001)(186003)(26005)(87636003)(110136005)(2906002)(2616005)(8936002)(246002)(336012)(11346002)(305945005)(2201001)(70586007)(486006)(70206006)(48376002)(476003)(446003)(921003)(1121003)(83996005)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:CY1PR07MB2587;H:sjmaillnx2.cadence.com;FPR:;SPF:SoftFail;LANG:en;PTR:corp.Cadence.COM;MX:1;A:1;
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0c62d2af-6fa2-48e9-ba23-08d76cbed49b
-X-MS-TrafficTypeDiagnostic: SN6PR07MB5741:
-X-Microsoft-Antispam-PRVS: <SN6PR07MB57413BB5C56CE84FB0E5FE62A44C0@SN6PR07MB5741.namprd07.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Office365-Filtering-Correlation-Id: 015bca00-b35e-493b-79bc-08d76cbeda63
+X-MS-TrafficTypeDiagnostic: CY1PR07MB2587:
+X-Microsoft-Antispam-PRVS: <CY1PR07MB2587E6B19E9FCAD176B8B3E0A44C0@CY1PR07MB2587.namprd07.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
 X-Forefront-PRVS: 022649CC2C
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: yB+ZZlC63QT8OP/trtmDbUJBGAi0jOAyzDUbqZnGeo1sSmL5kytdsZm0kAWmOxz8yXPpEhGmrYo3XFyzvv4FfjPKnlsGVVyAanWMrr3/+hjfb48wJrwEjhFUpi78+zLUtPiPXpAPu3y776/rkv/Z49+UQGn4K62S+BOPxaDmvlHuD17GDzIlfNZSmD6T6GqmIzKVp887XnSkPVx+kuul/vM1iHuIYiz1GOZT+7XQgsmIKOISkXfcTQe/+9K5OfT3zKxd+4AduMw9QCGJwsBSz0yc3TnKO60ZI54CiPi1HvD4RJFPx6HYSefjWzF06mhLXlFAMAEF72SFxjnbgstNr4RkBXr10AgroKBqUPXQV4y5e9fVpn6J4TtLqzSwUMYBTBnGYr2pL0ZjZDDVuoaCgpQjcXZ9SO/T6LUO98/DXIrx5CHQiwFfzUYbldc2z5h1
+X-Microsoft-Antispam-Message-Info: X/QFX0xrSda+crQPYtcg2+eVNP9XjjaUMqtItpSqnTApibSw4axrTKOolTzJxmjSjO4vv6GY4UvmexWpJlcTitusG9MeHbDVtjG/46edoJm3kyyIbKoJIngtAVbW9PK4pHj5BmBYAHKqE3xFZWPGi4h1NEJUqnB6H8Sj6wK9zewWETgMCrUv2H7MOkyIh5EKp0nalnWvWWI40RHGFmu/QZxds2hNoWwk/EHnn6xNDlPRjWuiOuHgxV1U7OHjK5QI/o91Ks0LWGabVh286UDL9zaCQJ+bBAYpO+2c5PU7J1KeaEbxtrpDiO9EOcSRtJ7VeYRXwi39Lm4j27y/4vcaNq+HAhY88gigMR+YhY/Adhi3UEwXntQlYKX/P1JIOLU9JSorAYRt+8fMxK2bGQDf6u8kBVJ6K5Zuvrtqea6m9qFOPcn7202V4oMiTI7dcvk1
 X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2019 07:05:16.1215
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2019 07:05:25.9182
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c62d2af-6fa2-48e9-ba23-08d76cbed49b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 015bca00-b35e-493b-79bc-08d76cbeda63
 X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[199.43.4.28];Helo=[rmmaillnx1.cadence.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[158.140.1.28];Helo=[sjmaillnx2.cadence.com]
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR07MB5741
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY1PR07MB2587
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
  definitions=2019-11-19_01:2019-11-15,2019-11-19 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 mlxscore=0
- mlxlogscore=892 spamscore=0 priorityscore=1501 malwarescore=0
- clxscore=1015 lowpriorityscore=0 impostorscore=0 adultscore=0 phishscore=0
- bulkscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-1911190065
+X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 spamscore=0
+ malwarescore=0 lowpriorityscore=0 bulkscore=0 mlxlogscore=999
+ clxscore=1015 phishscore=0 adultscore=0 mlxscore=0 priorityscore=1501
+ impostorscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-1910280000 definitions=main-1911190065
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Backup L4 attributes duirng manual hibern8 entry
+and restore the L4 attributes on manual hibern8 exit as per JESD220C.
 
-Resending this patch to include mailing list and miss out patches.
+Signed-off-by: sheebab <sheebab@cadence.com>
+---
+ drivers/scsi/ufs/cdns-pltfrm.c | 97 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 95 insertions(+), 2 deletions(-)
 
-This patch set contains following patches
-for Cadence UFS controller driver.
-
-1. 0001-scsi-ufs-Enable-hibern8-interrupt-only-during-manual.patch
-   This patch is to fix false interrupt assertion during auto hibernation.
-   In this patch, hibern8 interrupt is Disabled during initialization
-   and later the interrupt is Enabled/Disabled during manual hibern8
-   Entry/Exit.
-2. 0002-scsi-ufs-Update-L4-attributes-on-manual-hibern8-exit.patch
-   This patch is to update L4 attributes during manual hibern8 exit.
-   As per JESD220C spec, L4 attributes will be reset to their reset value 
-   during DME_HIBERNATION_EXIT. This patch will take backup of the L4 
-   parameters before DME_HIBERNATION_ENTER and restores the L4 parameters
-   after DME_HIBERNATION_EXIT
-   
-
-Thanks,
-Sheeba B
-
-sheebab (2):
-  scsi: ufs: Enable hibern8 interrupt only during manual hibern8 in
-    Cadence UFS.
-  scsi: ufs: Update L4 attributes on manual hibern8 exit in Cadence UFS.
-
- drivers/scsi/ufs/cdns-pltfrm.c | 172 +++++++++++++++++++++++++++++++++--
- 1 file changed, 167 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+index adbbd60..5510567 100644
+--- a/drivers/scsi/ufs/cdns-pltfrm.c
++++ b/drivers/scsi/ufs/cdns-pltfrm.c
+@@ -19,6 +19,14 @@
+ 
+ #define CDNS_UFS_REG_HCLKDIV	0xFC
+ #define CDNS_UFS_REG_PHY_XCFGD1	0x113C
++#define CDNS_UFS_MAX 12
++
++struct cdns_ufs_host {
++	/**
++	 * cdns_ufs_dme_attr_val - for storing L4 attributes
++	 */
++	u32 cdns_ufs_dme_attr_val[CDNS_UFS_MAX];
++};
+ 
+ /**
+  * cdns_ufs_enable_intr - enable interrupts
+@@ -47,6 +55,77 @@ static void cdns_ufs_disable_intr(struct ufs_hba *hba, u32 intrs)
+ }
+ 
+ /**
++ * cdns_ufs_get_l4_attr - get L4 attributes on local side
++ * @hba: per adapter instance
++ *
++ */
++static void cdns_ufs_get_l4_attr(struct ufs_hba *hba)
++{
++	struct cdns_ufs_host *host = ufshcd_get_variant(hba);
++
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_PEERDEVICEID),
++		       &host->cdns_ufs_dme_attr_val[0]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_PEERCPORTID),
++		       &host->cdns_ufs_dme_attr_val[1]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_TRAFFICCLASS),
++		       &host->cdns_ufs_dme_attr_val[2]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_PROTOCOLID),
++		       &host->cdns_ufs_dme_attr_val[3]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_CPORTFLAGS),
++		       &host->cdns_ufs_dme_attr_val[4]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_TXTOKENVALUE),
++		       &host->cdns_ufs_dme_attr_val[5]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_RXTOKENVALUE),
++		       &host->cdns_ufs_dme_attr_val[6]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_LOCALBUFFERSPACE),
++		       &host->cdns_ufs_dme_attr_val[7]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_PEERBUFFERSPACE),
++		       &host->cdns_ufs_dme_attr_val[8]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_CREDITSTOSEND),
++		       &host->cdns_ufs_dme_attr_val[9]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_CPORTMODE),
++		       &host->cdns_ufs_dme_attr_val[10]);
++	ufshcd_dme_get(hba, UIC_ARG_MIB(T_CONNECTIONSTATE),
++		       &host->cdns_ufs_dme_attr_val[11]);
++}
++
++/**
++ * cdns_ufs_set_l4_attr - set L4 attributes on local side
++ * @hba: per adapter instance
++ *
++ */
++static void cdns_ufs_set_l4_attr(struct ufs_hba *hba)
++{
++	struct cdns_ufs_host *host = ufshcd_get_variant(hba);
++
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE), 0);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERDEVICEID),
++		       host->cdns_ufs_dme_attr_val[0]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERCPORTID),
++		       host->cdns_ufs_dme_attr_val[1]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_TRAFFICCLASS),
++		       host->cdns_ufs_dme_attr_val[2]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_PROTOCOLID),
++		       host->cdns_ufs_dme_attr_val[3]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTFLAGS),
++		       host->cdns_ufs_dme_attr_val[4]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_TXTOKENVALUE),
++		       host->cdns_ufs_dme_attr_val[5]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_RXTOKENVALUE),
++		       host->cdns_ufs_dme_attr_val[6]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_LOCALBUFFERSPACE),
++		       host->cdns_ufs_dme_attr_val[7]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERBUFFERSPACE),
++		       host->cdns_ufs_dme_attr_val[8]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_CREDITSTOSEND),
++		       host->cdns_ufs_dme_attr_val[9]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_CPORTMODE),
++		       host->cdns_ufs_dme_attr_val[10]);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE),
++		       host->cdns_ufs_dme_attr_val[11]);
++}
++
++/**
+  * Sets HCLKDIV register value based on the core_clk
+  * @hba: host controller instance
+  *
+@@ -134,6 +213,7 @@ static void cdns_ufs_hibern8_notify(struct ufs_hba *hba, enum uic_cmd_dme cmd,
+ 		 * before manual hibernate entry.
+ 		 */
+ 		cdns_ufs_enable_intr(hba, UFSHCD_UIC_HIBERN8_MASK);
++		cdns_ufs_get_l4_attr(hba);
+ 	}
+ 	if (status == POST_CHANGE && cmd == UIC_CMD_DME_HIBER_EXIT) {
+ 		/**
+@@ -141,6 +221,7 @@ static void cdns_ufs_hibern8_notify(struct ufs_hba *hba, enum uic_cmd_dme cmd,
+ 		 * after manual hibern8 exit.
+ 		 */
+ 		cdns_ufs_disable_intr(hba, UFSHCD_UIC_HIBERN8_MASK);
++		cdns_ufs_set_l4_attr(hba);
+ 	}
+ }
+ 
+@@ -245,15 +326,27 @@ static int cdns_ufs_pltfrm_probe(struct platform_device *pdev)
+ 	const struct of_device_id *of_id;
+ 	struct ufs_hba_variant_ops *vops;
+ 	struct device *dev = &pdev->dev;
++	struct cdns_ufs_host *host;
++	struct ufs_hba *hba;
+ 
+ 	of_id = of_match_node(cdns_ufs_of_match, dev->of_node);
+ 	vops = (struct ufs_hba_variant_ops *)of_id->data;
+ 
+ 	/* Perform generic probe */
+ 	err = ufshcd_pltfrm_init(pdev, vops);
+-	if (err)
++	if (err) {
+ 		dev_err(dev, "ufshcd_pltfrm_init() failed %d\n", err);
+-
++		goto out;
++	}
++	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
++	if (!host) {
++		err = -ENOMEM;
++		dev_err(dev, "%s: no memory for cdns host\n", __func__);
++		goto out;
++	}
++	hba =  platform_get_drvdata(pdev);
++	ufshcd_set_variant(hba, host);
++out:
+ 	return err;
+ }
+ 
 -- 
 2.7.4
 
