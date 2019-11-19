@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C773C43141
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 14:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 624ABC432C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 14:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 241FF22313
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 14:31:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E7972230E
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 14:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728157AbfKSObS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 09:31:18 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7145 "EHLO huawei.com"
+        id S1728081AbfKSObM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 09:31:12 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:60944 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728106AbfKSObS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 09:31:18 -0500
+        id S1726409AbfKSObL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 09:31:11 -0500
 Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id AB283207C2B6DCE093D8;
+        by Forcepoint Email with ESMTP id DF7F7B3FAB60CB90DDF5;
         Tue, 19 Nov 2019 22:31:08 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.439.0; Tue, 19 Nov 2019 22:30:59 +0800
+ 14.3.439.0; Tue, 19 Nov 2019 22:30:58 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>
@@ -32,9 +32,9 @@ CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <ming.lei@redhat.com>,
         <hare@suse.com>, <bvanassche@acm.org>, <chenxiang66@hisilicon.com>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC V2 4/5] scsi: Add template flag 'host_tagset'
-Date:   Tue, 19 Nov 2019 22:27:37 +0800
-Message-ID: <1574173658-76818-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RFC v2 1/5] blk-mq: Remove some unused function arguments
+Date:   Tue, 19 Nov 2019 22:27:34 +0800
+Message-ID: <1574173658-76818-2-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1574173658-76818-1-git-send-email-john.garry@huawei.com>
 References: <1574173658-76818-1-git-send-email-john.garry@huawei.com>
@@ -47,46 +47,111 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+The struct blk_mq_hw_ctx * argument in blk_mq_put_tag(),
+blk_mq_poll_nsecs(), and blk_mq_poll_hybrid_sleep() is unused, so remove
+it.
 
-Add a host template flag 'host_tagset' so hostwide tagset can be
-shared on multiple reply queues after the SCSI device's reply queue
-is converted to blk-mq hw queue.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/scsi_lib.c  | 2 ++
- include/scsi/scsi_host.h | 3 +++
- 2 files changed, 5 insertions(+)
+ block/blk-mq-tag.c |  4 ++--
+ block/blk-mq-tag.h |  3 +--
+ block/blk-mq.c     | 10 ++++------
+ block/blk-mq.h     |  2 +-
+ 4 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5447738906ac..97c9352f2d16 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1901,6 +1901,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
- 	shost->tag_set.flags |=
- 		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
-+	if (shost->hostt->host_tagset)
-+		shost->tag_set.flags |= BLK_MQ_F_TAG_HCTX_SHARED;
- 	shost->tag_set.driver_data = shost;
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index fbacde454718..586c9d6e904a 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -183,8 +183,8 @@ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
+ 	return tag + tag_offset;
+ }
  
- 	return blk_mq_alloc_tag_set(&shost->tag_set);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 31e0d6ca1eba..08299aeb822d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -442,6 +442,9 @@ struct scsi_host_template {
- 	/* True if the low-level driver supports blk-mq only */
- 	unsigned force_blk_mq:1;
+-void blk_mq_put_tag(struct blk_mq_hw_ctx *hctx, struct blk_mq_tags *tags,
+-		    struct blk_mq_ctx *ctx, unsigned int tag)
++void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx,
++		    unsigned int tag)
+ {
+ 	if (!blk_mq_tag_is_reserved(tags, tag)) {
+ 		const int real_tag = tag - tags->nr_reserved_tags;
+diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
+index 15bc74acb57e..d0c10d043891 100644
+--- a/block/blk-mq-tag.h
++++ b/block/blk-mq-tag.h
+@@ -26,8 +26,7 @@ extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags, unsigned int r
+ extern void blk_mq_free_tags(struct blk_mq_tags *tags);
  
-+	/* True if the host uses host-wide tagspace */
-+	unsigned host_tagset:1;
-+
- 	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
+ extern unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
+-extern void blk_mq_put_tag(struct blk_mq_hw_ctx *hctx, struct blk_mq_tags *tags,
+-			   struct blk_mq_ctx *ctx, unsigned int tag);
++extern void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx, unsigned int tag);
+ extern int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+ 					struct blk_mq_tags **tags,
+ 					unsigned int depth, bool can_grow);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 75228d282fc3..20c498fce4dd 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -493,9 +493,9 @@ static void __blk_mq_free_request(struct request *rq)
+ 	blk_pm_mark_last_busy(rq);
+ 	rq->mq_hctx = NULL;
+ 	if (rq->tag != -1)
+-		blk_mq_put_tag(hctx, hctx->tags, ctx, rq->tag);
++		blk_mq_put_tag(hctx->tags, ctx, rq->tag);
+ 	if (sched_tag != -1)
+-		blk_mq_put_tag(hctx, hctx->sched_tags, ctx, sched_tag);
++		blk_mq_put_tag(hctx->sched_tags, ctx, sched_tag);
+ 	blk_mq_sched_restart(hctx);
+ 	blk_queue_exit(q);
+ }
+@@ -3354,7 +3354,6 @@ static void blk_mq_poll_stats_fn(struct blk_stat_callback *cb)
+ }
+ 
+ static unsigned long blk_mq_poll_nsecs(struct request_queue *q,
+-				       struct blk_mq_hw_ctx *hctx,
+ 				       struct request *rq)
+ {
+ 	unsigned long ret = 0;
+@@ -3387,7 +3386,6 @@ static unsigned long blk_mq_poll_nsecs(struct request_queue *q,
+ }
+ 
+ static bool blk_mq_poll_hybrid_sleep(struct request_queue *q,
+-				     struct blk_mq_hw_ctx *hctx,
+ 				     struct request *rq)
+ {
+ 	struct hrtimer_sleeper hs;
+@@ -3407,7 +3405,7 @@ static bool blk_mq_poll_hybrid_sleep(struct request_queue *q,
+ 	if (q->poll_nsec > 0)
+ 		nsecs = q->poll_nsec;
+ 	else
+-		nsecs = blk_mq_poll_nsecs(q, hctx, rq);
++		nsecs = blk_mq_poll_nsecs(q, rq);
+ 
+ 	if (!nsecs)
+ 		return false;
+@@ -3462,7 +3460,7 @@ static bool blk_mq_poll_hybrid(struct request_queue *q,
+ 			return false;
+ 	}
+ 
+-	return blk_mq_poll_hybrid_sleep(q, hctx, rq);
++	return blk_mq_poll_hybrid_sleep(q, rq);
+ }
+ 
+ /**
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 32c62c64e6c2..78d38b5f2793 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -208,7 +208,7 @@ static inline bool blk_mq_get_dispatch_budget(struct blk_mq_hw_ctx *hctx)
+ static inline void __blk_mq_put_driver_tag(struct blk_mq_hw_ctx *hctx,
+ 					   struct request *rq)
+ {
+-	blk_mq_put_tag(hctx, hctx->tags, rq->mq_ctx, rq->tag);
++	blk_mq_put_tag(hctx->tags, rq->mq_ctx, rq->tag);
+ 	rq->tag = -1;
+ 
+ 	if (rq->rq_flags & RQF_MQ_INFLIGHT) {
 -- 
 2.17.1
 
