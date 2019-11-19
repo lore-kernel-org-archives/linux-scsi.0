@@ -2,139 +2,206 @@ Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B32C432C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 02:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44F10C432C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 02:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F4DD222F2
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 02:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12A2522311
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 02:21:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bTKW7Euh";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="QeXuzILQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZmlVjp5v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727014AbfKSCAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Nov 2019 21:00:18 -0500
-Received: from a27-188.smtp-out.us-west-2.amazonses.com ([54.240.27.188]:48322
-        "EHLO a27-188.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726761AbfKSCAS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Nov 2019 21:00:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574128817;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
-        bh=7V4ORWP4fmF4jElRRjqAY3TB3aDqmX0kyeDAD63NAXI=;
-        b=bTKW7EuhSjXlKRDMjm7W+okWiYVbugJm9jJZVv2klzVKWL8Kxux0BfAkWuahy+a3
-        VDX/wBKKKox8V1NdH5NDNWyYNAVW34ds8YOpmAzqrFVdnSzH5MOxK23XOksKEkP2fJz
-        jgBnTfSFk2cDvA697vEJHLMwl4vgYpla9Y3O9HGA=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574128816;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
-        bh=7V4ORWP4fmF4jElRRjqAY3TB3aDqmX0kyeDAD63NAXI=;
-        b=QeXuzILQm7kHviFL/e1WbYMrNgz86RFtKHQMHZj2UPCVZqrQacAOmwd9NE35u+aF
-        XpFc91shZwT9iQmU59E0yzvdxpNZUk2wbf7rBkK898/NnM+hqnz6PnJqQT1JIo/geOf
-        E6EIuz4wJ5C7fStnoGJN3tKmCEmnqoJllQJ4nheQ=
+        id S1727059AbfKSCVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Nov 2019 21:21:18 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:41255 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726990AbfKSCVS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Nov 2019 21:21:18 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574130077;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=86O2DN0L3SDx4AnwOCmuZblOGVlZFGCkgSfX2dhNKhc=;
+        b=ZmlVjp5vdRB8CVEz9kM9EAbGGyr+uAJ4nW/oM2FiXXDlzpE2uvcEsHOaDgiyaKn4SVg/q6
+        yifg+o0vpXU2UKBbLy++RPgDp7qMHo4+zJ1TV5HpbMm0D1wKi635YD2W73A2azVF4hbrpq
+        qdgMEw4ivW7W/75A74XyvdLu4qzEObM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-381-tcmB4oYwN1Gc4tkqhGpUTw-1; Mon, 18 Nov 2019 21:21:13 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 43623801E5A;
+        Tue, 19 Nov 2019 02:21:11 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7BBCE600CD;
+        Tue, 19 Nov 2019 02:21:03 +0000 (UTC)
+Date:   Tue, 19 Nov 2019 10:20:58 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Long Li <longli@microsoft.com>, linux-block@vger.kernel.org
+Subject: Re: [PATCH V2] scsi: core: only re-run queue in scsi_end_request()
+ if device queue is busy
+Message-ID: <20191119022058.GB391@ming.t460p>
+References: <20191118100640.3673-1-ming.lei@redhat.com>
+ <9e7b1a1c-f125-b359-4b59-675368e100f2@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 19 Nov 2019 02:00:16 +0000
-From:   cang@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Can Guo <cang@qti.qualcomm.com>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] scsi: ufs: Update VCCQ2 and VCCQ min/max voltage
- hard codes
-In-Reply-To: <MN2PR04MB6991121D72EA8E6DF7F6258AFC4D0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1574049061-11417-1-git-send-email-cang@qti.qualcomm.com>
- <1574049061-11417-3-git-send-email-cang@qti.qualcomm.com>
- <MN2PR04MB6991121D72EA8E6DF7F6258AFC4D0@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <0101016e816392e3-3a981572-cccc-4a0e-a462-8790ab7c11b7-000000@us-west-2.amazonses.com>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
-X-SES-Outgoing: 2019.11.19-54.240.27.188
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+In-Reply-To: <9e7b1a1c-f125-b359-4b59-675368e100f2@acm.org>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-MC-Unique: tcmB4oYwN1Gc4tkqhGpUTw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-18 15:15, Avri Altman wrote:
->> 
->> From: Can Guo <cang@codeaurora.org>
->> 
->> Per UFS 3.0 JEDEC standard, the VCCQ2 min voltage is 1.7v and the VCCQ
->> voltage range is 1.14v ~ 1.26v. Update their hard codes accordingly to 
->> make
->> sure they work in a safe range compliant for ver 1.0/2.0/2.1/3.0 UFS 
->> devices.
-> So to keep it safe, we need to use largest range:
-> min_uV = min over all spec ranges, and max_uV = max over all spec 
-> ranges.
-> Meaning leave it as it is if we want to be backward compatible with 
-> UFS1.0.
-> 
-> Thanks,
-> Avri
-> 
+On Mon, Nov 18, 2019 at 03:40:06PM -0800, Bart Van Assche wrote:
+> On 11/18/19 2:06 AM, Ming Lei wrote:
+> > Now the request queue is run in scsi_end_request() unconditionally if b=
+oth
+> > target queue and host queue is ready. We should have re-run request que=
+ue
+> > only after this device queue becomes busy for restarting this LUN only.
+> >=20
+> > Recently Long Li reported that cost of run queue may be very heavy in
+> > case of high queue depth. So improve this situation by only running
+> > the request queue when this LUN is busy.
+> >=20
+> > Cc: Jens Axboe <axboe@kernel.dk>
+> > Cc: Ewan D. Milne <emilne@redhat.com>
+> > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> > Cc: Hannes Reinecke <hare@suse.de>
+> > Cc: Bart Van Assche <bvanassche@acm.org>
+> > Cc: Damien Le Moal <damien.lemoal@wdc.com>
+> > Cc: Long Li <longli@microsoft.com>
+> > Cc: linux-block@vger.kernel.org
+> > Reported-by: Long Li <longli@microsoft.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> > V2:
+> > =09- commit log change, no any code change
+> > =09- add reported-by tag
+> >=20
+> >=20
+> >   drivers/scsi/scsi_lib.c    | 29 +++++++++++++++++++++++++++--
+> >   include/scsi/scsi_device.h |  1 +
+> >   2 files changed, 28 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 379533ce8661..62a86a82c38d 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -612,7 +612,7 @@ static bool scsi_end_request(struct request *req, b=
+lk_status_t error,
+> >   =09if (scsi_target(sdev)->single_lun ||
+> >   =09    !list_empty(&sdev->host->starved_list))
+> >   =09=09kblockd_schedule_work(&sdev->requeue_work);
+> > -=09else
+> > +=09else if (READ_ONCE(sdev->restart))
+> >   =09=09blk_mq_run_hw_queues(q, true);
+> >   =09percpu_ref_put(&q->q_usage_counter);
+> > @@ -1632,8 +1632,33 @@ static bool scsi_mq_get_budget(struct blk_mq_hw_=
+ctx *hctx)
+> >   =09struct request_queue *q =3D hctx->queue;
+> >   =09struct scsi_device *sdev =3D q->queuedata;
+> > -=09if (scsi_dev_queue_ready(q, sdev))
+> > +=09if (scsi_dev_queue_ready(q, sdev)) {
+> > +=09=09WRITE_ONCE(sdev->restart, 0);
+> >   =09=09return true;
+> > +=09}
+> > +
+> > +=09/*
+> > +=09 * If all in-flight requests originated from this LUN are completed
+> > +=09 * before setting .restart, sdev->device_busy will be observed as
+> > +=09 * zero, then blk_mq_delay_run_hw_queue() will dispatch this reques=
+t
+> > +=09 * soon. Otherwise, completion of one of these request will observe
+> > +=09 * the .restart flag, and the request queue will be run for handlin=
+g
+> > +=09 * this request, see scsi_end_request().
+> > +=09 *
+> > +=09 * However, the .restart flag may be cleared from other dispatch co=
+de
+> > +=09 * path after one inflight request is completed, then:
+> > +=09 *
+> > +=09 * 1) if this request is dispatched from scheduler queue or sw queu=
+e one
+> > +=09 * by one, this request will be handled in that dispatch path too g=
+iven
+> > +=09 * the request still stays at scheduler/sw queue when calling .get_=
+budget()
+> > +=09 * callback.
+> > +=09 *
+> > +=09 * 2) if this request is dispatched from hctx->dispatch or
+> > +=09 * blk_mq_flush_busy_ctxs(), this request will be put into hctx->di=
+spatch
+> > +=09 * list soon, and blk-mq will be responsible for covering it, see
+> > +=09 * blk_mq_dispatch_rq_list().
+> > +=09 */
+> > +=09WRITE_ONCE(sdev->restart, 1);
+>=20
+> Hi Ming,
+>=20
+> Are any memory barriers needed?
+>=20
+> Should WRITE_ONCE(sdev->restart, 1) perhaps be moved above the
+> scsi_dev_queue_ready()? Consider e.g. the following scenario:
+>=20
+> sdev->restart =3D=3D 0
+>=20
+> scsi_mq_get_budget() calls scsi_dev_queue_ready() and that last function
+> returns false.
+>=20
+> scsi_end_request() calls __blk_mq_end_request()
+> scsi_end_request() skips the blk_mq_run_hw_queues() call
 
-Hi Avri,
+Suppose the sdev->restart isn't set as 1 or isn't visible by
+scsi_end_request().
 
-Sorry I don't quite follow you here.
-Leaving it as it is means for UFS2.1 devices, when boot up, if we call
-regulator_set_voltage(1.65, 1.95) to setup its VCCQ2, 
-regulator_set_voltage() will
-give you 1.65v on VCCQ2 if the voltage level of this regulator is wider, 
-say (1.60, 1.95).
-Meaning you will finally set 1.65v to VCCQ2. But 1.65v is out of spec 
-for UFS v2.1 as it
-requires min voltage to be 1.7v on VCCQ2. So, the smallest range is 
-safe.
-Of course, in real board design, the regulator's voltage level is 
-limited/designed by power team
-to be in a safe range, say (1.8, 1.92), so that calling 
-regulator_set_voltage(1.65, 1.95) still gives
-you 1.8v. But it does not mean the current hard codes are compliant for 
-all UFS devices.
+>=20
+> scsi_mq_get_budget() changes sdev->restart into 1.
 
-Best Regards,
-Can Guo.
+As the comment mentioned, if there isn't any in-flight requests
+originated from this LUN, blk_mq_delay_run_hw_queue() in
+scsi_mq_get_budget() will run the hw queue. If there is any
+in-flight requests from this LUN, that request's scsi_end_request()
+will handle that.
 
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufs.h | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h index 
->> 385bac8..9df4f4d
->> 100644
->> --- a/drivers/scsi/ufs/ufs.h
->> +++ b/drivers/scsi/ufs/ufs.h
->> @@ -500,9 +500,9 @@ struct ufs_query_res {
->>  #define UFS_VREG_VCC_MAX_UV       3600000 /* uV */
->>  #define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
->>  #define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
->> -#define UFS_VREG_VCCQ_MIN_UV      1100000 /* uV */
->> +#define UFS_VREG_VCCQ_MIN_UV      1140000 /* uV */
->>  #define UFS_VREG_VCCQ_MAX_UV      1300000 /* uV */
->> -#define UFS_VREG_VCCQ2_MIN_UV     1650000 /* uV */
->> +#define UFS_VREG_VCCQ2_MIN_UV     1700000 /* uV */
->>  #define UFS_VREG_VCCQ2_MAX_UV     1950000 /* uV */
->> 
->>  /*
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
->> a Linux Foundation Collaborative Project
+Then looks one barrier is required between 'WRITE_ONCE(sdev->restart, 1)'
+and 'atomic_read(&sdev->device_busy) =3D=3D 0'.
+
+And its pair is scsi_device_unbusy() and READ_ONCE(sdev->restart).
+The barrier between the pair could be implied by __blk_mq_end_request(),
+either __blk_mq_free_request() or rq->end_io.
+
+>=20
+> Can this race happen with the above patch applied? Will this scenario res=
+ult
+> in a queue stall?
+
+If barrier is added between 'WRITE_ONCE(sdev->restart, 1)' and
+'atomic_read(&sdev->device_busy) =3D=3D 0', the race should be avoided.
+
+Will do that in V3.
+
+Thanks,
+Ming
+
