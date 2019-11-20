@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD80C33C99
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F009FC43141
 	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41D1920872
+	by mail.kernel.org (Postfix) with ESMTP id C842520872
 	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="ldmS6EvB"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="LsujtCqt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbfKTW1o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726722AbfKTW1o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 20 Nov 2019 17:27:44 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:51276 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:51280 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726698AbfKTW1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726658AbfKTW1n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 20 Nov 2019 17:27:43 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 26E7A43E03;
-        Wed, 20 Nov 2019 22:27:42 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 28F7642004;
+        Wed, 20 Nov 2019 22:27:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1574288861; x=1576103262; bh=hRumHpSG5+clEN/Z+HJCUlpkwIoz6mPtowh
-        upPpAb4s=; b=ldmS6EvBtVHhBdiV5COHN+bBdOfKgXF/BeMjjolo3LqFe4LBwmn
-        F1jZsg//h2fZhzeowoIAfeFos2wU0Ti4JjgeYz3tIOeioph7CNj5FuxeXjvftFgh
-        wxIu9X0XGFRkTvM1f+QfQpgrE7v7bXU/RgrcOEKjhvfQmqS2oEPChdoM=
+        1574288860; x=1576103261; bh=ATTKVf3A7Bd7aCGacapEQlVHTfGwIRao2f/
+        c1INGfYY=; b=LsujtCqtBeHnurfnmn9cu3KiPjs3JI9i5sl3ZtJ4yyug4Fz93fa
+        pWV85Vj+adt1naSRPsrncW47tXFHD2RGC/ZmwLES97GLDP+8n1EclmntltUU5kIo
+        Y2V4AdwRkl4CH9zwl7rXd0ur9BOl9Kd0x8DWpHz+YnryMedx9Z97itWY=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id EVRsVwlOmfqa; Thu, 21 Nov 2019 01:27:41 +0300 (MSK)
+        with ESMTP id MRuHGdyV6Hz8; Thu, 21 Nov 2019 01:27:40 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id A2FB643E04;
-        Thu, 21 Nov 2019 01:27:38 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A3C4243597;
+        Thu, 21 Nov 2019 01:27:37 +0300 (MSK)
 Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 21
- Nov 2019 01:27:38 +0300
+ Nov 2019 01:27:37 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
 To:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-CC:     <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 14/15] scsi: qla2xxx: Add debug dump of LOGO payload and ELS IOCB
-Date:   Thu, 21 Nov 2019 01:27:22 +0300
-Message-ID: <20191120222723.27779-15-r.bolshakov@yadro.com>
+CC:     <linux@yadro.com>, Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v2 12/15] scsi: qla2xxx: Use explicit LOGO in target mode
+Date:   Thu, 21 Nov 2019 01:27:20 +0300
+Message-ID: <20191120222723.27779-13-r.bolshakov@yadro.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191120222723.27779-1-r.bolshakov@yadro.com>
 References: <20191120222723.27779-1-r.bolshakov@yadro.com>
@@ -67,42 +67,90 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The change adds a way to debug LOGO ELS, likewise PLOGI.
+From: Quinn Tran <qutran@marvell.com>
 
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Himanshu Madhani <hmadhani@marvell.com>
+Target makes implicit LOGO on session teardown. LOGO ELS is not send on
+the wire and initiator is not aware that target no longer wants talking
+to it. Initiator keeps sending I/O requests, target responds with
+BA_RJT, they time out and then initiator sends ABORT TASK (ABTS-LS).
+
+Current behaviour incurs unneeded I/O timeout and can be fixed by making
+explicit LOGO on session deletion.
+
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/qla2xxx/qla_def.h     |  1 +
+ drivers/scsi/qla2xxx/qla_iocb.c    | 16 ++++++++++++----
+ drivers/scsi/qla2xxx/qla_target.c  |  1 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  1 +
+ 4 files changed, 15 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 460f443f6471..2edd9f7b3074 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2401,6 +2401,7 @@ typedef struct fc_port {
+ 	unsigned int id_changed:1;
+ 	unsigned int scan_needed:1;
+ 	unsigned int n2n_flag:1;
++	unsigned int explicit_logout:1;
+ 
+ 	struct completion nvme_del_done;
+ 	uint32_t nvme_prli_service_param;
 diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 12b37b711ae8..cd2e0f89e9b5 100644
+index bd8160fddcd3..53ccbd6b71ed 100644
 --- a/drivers/scsi/qla2xxx/qla_iocb.c
 +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2627,6 +2627,10 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 
- 	memcpy(elsio->u.els_logo.els_logo_pyld, &logo_pyld,
- 	    sizeof(struct els_logo_payload));
-+	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0x3075, "LOGO buffer:");
-+	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x010a,
-+		       elsio->u.els_logo.els_logo_pyld,
-+		       sizeof(*elsio->u.els_logo.els_logo_pyld));
- 
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS) {
-@@ -2704,6 +2708,11 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 		els_iocb->rx_byte_count = 0;
- 		els_iocb->rx_address = 0;
- 		els_iocb->rx_len = 0;
-+		ql_dbg(ql_dbg_io + ql_dbg_buffer, vha, 0x3076,
-+		       "LOGO ELS IOCB:");
-+		ql_dump_buffer(ql_log_info, vha, 0x010b,
-+			       els_iocb,
-+			       sizeof(*els_iocb));
+@@ -2405,11 +2405,19 @@ qla2x00_login_iocb(srb_t *sp, struct mbx_entry *mbx)
+ static void
+ qla24xx_logout_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ {
++	u16 control_flags = LCF_COMMAND_LOGO;
+ 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
+-	logio->control_flags =
+-	    cpu_to_le16(LCF_COMMAND_LOGO|LCF_IMPL_LOGO);
+-	if (!sp->fcport->keep_nport_handle)
+-		logio->control_flags |= cpu_to_le16(LCF_FREE_NPORT);
++
++	if (sp->fcport->explicit_logout) {
++		control_flags |= LCF_EXPL_LOGO|LCF_FREE_NPORT;
++	} else {
++		control_flags |= LCF_IMPL_LOGO;
++
++		if (!sp->fcport->keep_nport_handle)
++			control_flags |= LCF_FREE_NPORT;
++	}
++
++	logio->control_flags = cpu_to_le16(control_flags);
+ 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+ 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
+ 	logio->port_id[1] = sp->fcport->d_id.b.area;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 853fa187d827..68c14143e50e 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1104,6 +1104,7 @@ void qlt_free_session_done(struct work_struct *work)
+ 		}
  	}
  
- 	sp->vha->qla_stats.control_requests++;
++	sess->explicit_logout = 0;
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 	sess->free_pending = 0;
+ 
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index bab2073c1f72..abe7f79bb789 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -350,6 +350,7 @@ static void tcm_qla2xxx_close_session(struct se_session *se_sess)
+ 	target_sess_cmd_list_set_waiting(se_sess);
+ 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+ 
++	sess->explicit_logout = 1;
+ 	tcm_qla2xxx_put_sess(sess);
+ }
+ 
 -- 
 2.24.0
 
