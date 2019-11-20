@@ -1,156 +1,93 @@
-Return-Path: <SRS0=81Lx=ZL=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E905C43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 23:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B538C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18CF02240C
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Nov 2019 23:36:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E2BD22440
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:09:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GKCdZvYn"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="vrbiAU1n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727038AbfKSXgE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 18:36:04 -0500
-Received: from mail-wr1-f45.google.com ([209.85.221.45]:38378 "EHLO
-        mail-wr1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726874AbfKSXgE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2019 18:36:04 -0500
-Received: by mail-wr1-f45.google.com with SMTP id i12so25972163wro.5
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2019 15:36:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to;
-        bh=u19BeCFiVnNBqiINu4cmpfBmJ02SJ/fxTUpeWLVeAt0=;
-        b=GKCdZvYnPgLuXVpB4bDKMPL3CIJZJOCekr6xClSqViQQi+zwgrSIVaov6cN/4tGC90
-         A4u4ZgIRE8ENbaMgxA8aSIoJ9OCWQNf3oATJKWgxGbYfv/fWXCXzmiB25we0+Ywr+ZTl
-         y4miwaM/JTGFiAWdddCZM/pPd1XMRXtF4vQiA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to;
-        bh=u19BeCFiVnNBqiINu4cmpfBmJ02SJ/fxTUpeWLVeAt0=;
-        b=B2guZNpMVhO8D0+G0qGtuSYI9iajqBw9OArDwHRx0t/S57XEdMuoVSE1VJ6frydAxx
-         ywEqUgroewCotUQVKaQepUQvGN3RkCI/MmR9jUYAt3e7yyOAFyd6NtVqVSoZeTVZH7/Y
-         yjs+5fm2Nzn18q0sNTyaTnVVP1q5DhqXRQywBTKUCsjd4Kd853LZvLIXg4MKA3bX7kw3
-         YX2p/LKrWo8fRMuo4p15vW+/A/LwYdHMdJiyIP0Ds2qp8+y+iXl6jUDtcWDdn+WIvupo
-         Jb4bXOwrXepXs4/vWylRywk1V2F9zDLywBMFeqoVVBFnzD7TuQ/Ec8pzdWl7zh/qJTgP
-         Bh8w==
-X-Gm-Message-State: APjAAAVD0ZreEVkhUEGut3fKpnHbTNstg1iVfCQw/b4srXf/65OXWxvL
-        ESY0zYGXw4KD6zgIb7EExjjOpLkMCVwcIOqsg/4z6Q==
-X-Google-Smtp-Source: APXvYqw4QFuneTasciE21GNsONTL+ye/9ekgNIWdVNyAR7X9aLSAn75QFcyxIWOCbsmA3NUrSl4FRD91k0KWM4mVeeE=
-X-Received: by 2002:adf:db4e:: with SMTP id f14mr38479548wrj.257.1574206561798;
- Tue, 19 Nov 2019 15:36:01 -0800 (PST)
-From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-References: <1574194079-27363-1-git-send-email-sumanesh.samanta@broadcom.com>
- <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com> <8357148d-e819-4a3c-9834-25080e036781@acm.org>
-In-Reply-To: <8357148d-e819-4a3c-9834-25080e036781@acm.org>
+        id S1727336AbfKTAJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 19:09:43 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:41762 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726911AbfKTAJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Nov 2019 19:09:42 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 9184743B0D;
+        Wed, 20 Nov 2019 00:09:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1574208580;
+         x=1576022981; bh=to4YK2jaQHz4/H+9scqkyU153Kk2jE89BgTRdn7HLAQ=; b=
+        vrbiAU1nLYWAtHl8EHb4ozQFaCmr/J9ZNmKxmtql4OvEpux8P1MfDewD1W1U6Zb3
+        ak3D98ENUne5EubEhjcGmPSa2hNztZjuuDlhsPV3C7yUiduEBff08Ye1OrH/RcN+
+        73s8ALF0n9CGFvTa+gvxcpD0rRZZVQQ8BMaYIZWmAcI=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id yhXMURU8Y3Eq; Wed, 20 Nov 2019 03:09:40 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 02E19438D1;
+        Wed, 20 Nov 2019 03:09:39 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 20
+ Nov 2019 03:09:38 +0300
+Date:   Wed, 20 Nov 2019 03:09:38 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Himanshu Madhani <hmadhani@marvell.com>
+CC:     Bart Van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Quinn Tran <qutran@marvell.com>
+Subject: Re: [EXT] [PATCH 0/4] scsi: qla2xxx: Bug fixes
+Message-ID: <20191120000938.vy7o2znyj4lpnpan@SPB-NB-133.local>
+References: <20190912003919.8488-1-r.bolshakov@yadro.com>
+ <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
+ <20190912133605.age2zo7jxdbe4jiq@SPB-NB-133.local>
+ <B39B0F4F-3439-4313-A808-578047F1B93A@marvell.com>
+ <20191107190032.idvubxehqtzbe3ah@SPB-NB-133.local>
+ <20191113185423.ofjxrsxazahy3gbx@SPB-NB-133.local>
+ <0B40AFCA-8CB0-4F21-BDD1-DFE7A66DAA07@marvell.com>
+ <20191119214656.t2rluirv5kgzl6vg@SPB-NB-133.local>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 14.0
-Thread-Index: AQI3eggT/McHkvzRPAOxlHKa/248ZAGXzjzyAd7rGiSms7lsQA==
-Date:   Tue, 19 Nov 2019 16:35:59 -0700
-Message-ID: <e4a7540785d14eea7ccf0f7bd02c05f4@mail.gmail.com>
-Subject: RE: [PATCH 1/1] scsi core: limit overhead of device_busy counter for SSDs
-To:     Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
-        linux-block@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        ming.lei@redhat.com,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        chaitra.basappa@broadcom.com,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>, emilne@redhat.com,
-        hch@lst.de, hare@suse.de, bart.vanassche@wdc.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20191119214656.t2rluirv5kgzl6vg@SPB-NB-133.local>
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On Wed, Nov 20, 2019 at 12:46:56AM +0300, Roman Bolshakov wrote:
+> Hi Himanshu,
+> 
+> I've tried the patch and it seems that LOGO doesn't succeed yet:
+> [ 1079.073246] qla2xxx [0000:00:06.0]-2870:1: Async-logout - hdl=0 loop-id=0 portid=000002 21:00:00:24:ff:7f:35:c6.
+> [ 1079.073333] qla2xxx [0000:00:06.0]-5837:1: Async-logout failed - 21:00:00:24:ff:7f:35:c6 hdl=12 portid=000002 comp=31 iop0=19 iop1=c.
+> 
+> It means that firmware detected IOCB parameter error at offset 0xc.
+> I'll examine IOCB parameter dumps tomorrow.
+> 
 
-Thanks for pointing this out.
-Yes, the purpose of my patch is exactly same as Ming's patch you referred
-to, albeit it achieves the same purpose in a different way.
+FWIW, it was an easy fix, we have to set either explicit LOGO bit or implicit
+LOGO bit. Free N_Port handle is not allowed to be set alone. I corrected
+the patch:
+https://github.com/roolebo/linux/commit/6e86300a60552bfc0a4c49d65d89e5011dd90f10
 
-If the earlier patch makes it upstream, then my patch is not needed.
-
-Thanks,
-Sumanesh
-
-
------Original Message-----
-From: Bart Van Assche [mailto:bvanassche@acm.org]
-Sent: Tuesday, November 19, 2019 4:22 PM
-To: Sumanesh Samanta; axboe@kernel.dk; linux-block@vger.kernel.org;
-jejb@linux.ibm.com; martin.petersen@oracle.com; linux-scsi@vger.kernel.org;
-ming.lei@redhat.com; sathya.prakash@broadcom.com;
-chaitra.basappa@broadcom.com; suganath-prabu.subramani@broadcom.com;
-kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-shivasharan.srikanteshwara@broadcom.com; emilne@redhat.com; hch@lst.de;
-hare@suse.de; bart.vanassche@wdc.com
-Subject: Re: [PATCH 1/1] scsi core: limit overhead of device_busy counter
-for SSDs
-
-On 11/19/19 12:07 PM, Sumanesh Samanta wrote:
-> From: root <sumanesh.samanta@broadcom.com>
->
-> Recently a patch was delivered to remove host_busy counter from SCSI mid
-> layer. That was a major bottleneck, and helped improve SCSI stack
-> performance.
-> With that patch, bottle neck moved to the scsi_device device_busy counter.
-> The performance issue with this counter is seen more in cases where a
-> single device can produce very high IOPs, for example h/w RAID devices
-> where OS sees one device, but there are many drives behind it, thus being
-> capable of very high IOPs. The effect is also visible when cores from
-> multiple NUMA nodes send IO to the same device or same controller.
-> The device_busy counter is not needed by controllers which can manage as
-> many IO as submitted to it. Rotating media still uses it for merging IO,
-> but for non-rotating SSD drives it becomes a major bottleneck as described
-> above.
->
-> A few weeks back, a patch was provided to address the device_busy counter
-> also but unfortunately that had some issues:
-> 1. There was a functional issue discovered:
-> https://lists.01.org/hyperkitty/list/lkp@lists.01.org/thread/VFKDTG4XC4VHWX5KKDJJI7P36EIGK526/
-> 2. There was some concern about existing drivers using the device_busy
-> counter.
->
-> This patch is an attempt to address both the above issues.
-> For this patch to be effective, LLDs need to set a specific flag
-> use_per_cpu_device_busy in the scsi_host_template. For other drivers ( who
-> does not set the flag), this patch would be a no-op, and should not affect
-> their performance or functionality at all.
->
-> Also, this patch does not fundamentally change any logic or functionality
-> of the code. All it does is replace device_busy with a per CPU counter. In
-> fast path, all cpu increment/decrement their own counter. In relatively
-> slow path. they call scsi_device_busy function to get the total no of IO
-> outstanding on a device. Only functional aspect it changes is that for
-> non-rotating media, the number of IO to a device is not restricted.
-> Controllers which can handle that, can set the use_per_cpu_device_busy
-> flag in scsi_host_template to take advantage of this patch. Other
-> controllers need not modify any code and would work as usual.
-> Since the patch does not modify any other functional aspects, it should
-> not have any side effects even for drivers that do set the
-> use_per_cpu_device_busy flag.
-
-Hi Sumanesh,
-
-Can you have a look at the following patch series and see whether it has
-perhaps the same purpose as your patch?
-
-https://lore.kernel.org/linux-scsi/20191118103117.978-1-ming.lei@redhat.com/
-
-Thanks,
-
-Bart.
+--
+Roman
