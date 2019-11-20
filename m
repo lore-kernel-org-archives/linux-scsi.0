@@ -2,92 +2,91 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B538C432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E612C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:15:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E2BD22440
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:09:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="vrbiAU1n"
+	by mail.kernel.org (Postfix) with ESMTP id 1C4B4222B6
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 00:15:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727336AbfKTAJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 19:09:43 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:41762 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726911AbfKTAJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 19:09:42 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 9184743B0D;
-        Wed, 20 Nov 2019 00:09:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1574208580;
-         x=1576022981; bh=to4YK2jaQHz4/H+9scqkyU153Kk2jE89BgTRdn7HLAQ=; b=
-        vrbiAU1nLYWAtHl8EHb4ozQFaCmr/J9ZNmKxmtql4OvEpux8P1MfDewD1W1U6Zb3
-        ak3D98ENUne5EubEhjcGmPSa2hNztZjuuDlhsPV3C7yUiduEBff08Ye1OrH/RcN+
-        73s8ALF0n9CGFvTa+gvxcpD0rRZZVQQ8BMaYIZWmAcI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id yhXMURU8Y3Eq; Wed, 20 Nov 2019 03:09:40 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 02E19438D1;
-        Wed, 20 Nov 2019 03:09:39 +0300 (MSK)
-Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 20
- Nov 2019 03:09:38 +0300
-Date:   Wed, 20 Nov 2019 03:09:38 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
+        id S1727324AbfKTAPJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Nov 2019 19:15:09 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34876 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727226AbfKTAPJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Nov 2019 19:15:09 -0500
+Received: by mail-pl1-f194.google.com with SMTP id s10so12898437plp.2
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Nov 2019 16:15:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5e1pakyY874apaoAQAoEdsMsi6VKbfNb9VD2VwanHIw=;
+        b=VZ2MLFXIi5ttYBYsdRj+YQkuEMBh12wp/WJ6pFFjVZ/2iT0yqnD8MNLays5GLB/JQf
+         q+Rg2VmSk4v3Yz1JeKfBiYvsOVsfQrvKj55seQ5kk8SZbYjtAcaoYBv+LoS+iOpdTnNl
+         0OmJTCfzirZMaAJjhkBWdtInWgNo6COi87DOwyM416ba53hrZ6ED45++BzXjiYtHbj40
+         p75BXmRbboGJAYZZ6zI9lthK5ij/Rc7SuxKoWgB2lXPgixUdz4RSmM0CZG8766Wpv/fG
+         jlneuUIMlnUxdnsD32xHnwffGZViyt4kIsbLa6SqZjqoUZv6a8rggir6sDa3icuHuyxz
+         U6XQ==
+X-Gm-Message-State: APjAAAVPyrTgV9RBv3mHMiTdZfC7w/aDtLJAv0Dg5Qxc5Ef1JMGaJo2U
+        eWvXivVoKuGvHLs7vlGTXh2Bjcpz
+X-Google-Smtp-Source: APXvYqyjFPC3HcuJos0sY1MJcOTdXVOwAo3r8zjs4J/7N49bKAC2MJ9IZraYafq1fHfrs/CB9hJ51A==
+X-Received: by 2002:a17:90a:24b:: with SMTP id t11mr326400pje.77.1574208907278;
+        Tue, 19 Nov 2019 16:15:07 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id p16sm4860767pjp.31.2019.11.19.16.15.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 Nov 2019 16:15:06 -0800 (PST)
+Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
+From:   Bart Van Assche <bvanassche@acm.org>
 To:     Himanshu Madhani <hmadhani@marvell.com>
-CC:     Bart Van Assche <bvanassche@acm.org>,
+Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Quinn Tran <qutran@marvell.com>
-Subject: Re: [EXT] [PATCH 0/4] scsi: qla2xxx: Bug fixes
-Message-ID: <20191120000938.vy7o2znyj4lpnpan@SPB-NB-133.local>
-References: <20190912003919.8488-1-r.bolshakov@yadro.com>
- <8774334a-b1e7-1a5e-0da3-82db68f963b6@acm.org>
- <20190912133605.age2zo7jxdbe4jiq@SPB-NB-133.local>
- <B39B0F4F-3439-4313-A808-578047F1B93A@marvell.com>
- <20191107190032.idvubxehqtzbe3ah@SPB-NB-133.local>
- <20191113185423.ofjxrsxazahy3gbx@SPB-NB-133.local>
- <0B40AFCA-8CB0-4F21-BDD1-DFE7A66DAA07@marvell.com>
- <20191119214656.t2rluirv5kgzl6vg@SPB-NB-133.local>
+References: <20191109042135.12125-1-bvanassche@acm.org>
+ <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
+ <32187dd9-f222-fbed-cc93-1c6abca6e06c@acm.org>
+ <19433666-FCA3-4340-8A81-707F85B87F02@marvell.com>
+ <1dac96c3-54d5-11bf-292b-c25a62a3c919@acm.org>
+Message-ID: <fa7d57ec-77b3-3397-063e-d949716abaa8@acm.org>
+Date:   Tue, 19 Nov 2019 16:15:04 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20191119214656.t2rluirv5kgzl6vg@SPB-NB-133.local>
-X-Originating-IP: [172.17.128.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+In-Reply-To: <1dac96c3-54d5-11bf-292b-c25a62a3c919@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 12:46:56AM +0300, Roman Bolshakov wrote:
+On 11/13/19 6:34 PM, Bart Van Assche wrote:
+> On 2019-11-13 07:29, Himanshu Madhani wrote:
+>> On Nov 11, 2019, at 8:48 PM, Bart Van Assche <bvanassche@acm.org> wrote:
+>>> Himanshu, can you tell us which adapters and/or firmware versions need
+>>> which version of the above code?
+>>
+>> All adapters with FW v4.4 will behave same. If you are running into issue with P2P connection,
+>> it might be something different than specific to this code change. Original code in the driver was not
+>> following firmware spec. This code is now used in initiator mode as well due to introduction of
+>> FC-NVMe handling in the driver.  Also, can you tell me what version of firmware you have on your
+>> remote port.
+> 
 > Hi Himanshu,
 > 
-> I've tried the patch and it seems that LOGO doesn't succeed yet:
-> [ 1079.073246] qla2xxx [0000:00:06.0]-2870:1: Async-logout - hdl=0 loop-id=0 portid=000002 21:00:00:24:ff:7f:35:c6.
-> [ 1079.073333] qla2xxx [0000:00:06.0]-5837:1: Async-logout failed - 21:00:00:24:ff:7f:35:c6 hdl=12 portid=000002 comp=31 iop0=19 iop1=c.
-> 
-> It means that firmware detected IOCB parameter error at offset 0xc.
-> I'll examine IOCB parameter dumps tomorrow.
-> 
+> My test was run on a setup with a single QLE2562 adapter with both FC
+> ports connected directly to each other. The kernel driver identifies
+> that adapter as follows: ISP2532: PCIe (5.0GT/s x8) @ 0000:00:0a.0 hdma+
+> host#=12 fw=8.07.00 (90d5). Please let me know if you need more information.
 
-FWIW, it was an easy fix, we have to set either explicit LOGO bit or implicit
-LOGO bit. Free N_Port handle is not allowed to be set alone. I corrected
-the patch:
-https://github.com/roolebo/linux/commit/6e86300a60552bfc0a4c49d65d89e5011dd90f10
+Ping?
 
---
-Roman
+Bart.
