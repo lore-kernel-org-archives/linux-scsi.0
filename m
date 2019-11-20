@@ -7,112 +7,114 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DB7C432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 23:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B029C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 23:53:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E2BF2088F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 23:06:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAE312075A
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 23:53:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="VIbJQgeL";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="tIMSnXHH"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="T1aNzAsc";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="bZAKTlaK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726044AbfKTXGU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 18:06:20 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17880 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725842AbfKTXGU (ORCPT
+        id S1726202AbfKTXxt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 18:53:49 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48780 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725878AbfKTXxt (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 18:06:20 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAKN05oK024264;
-        Wed, 20 Nov 2019 15:06:18 -0800
+        Wed, 20 Nov 2019 18:53:49 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAKNpBU0002206;
+        Wed, 20 Nov 2019 15:53:47 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=pfpt0818;
- bh=+HkOghZ0vte+caUZWxKwUYdUipQExAN4vuQcIYGqp2c=;
- b=VIbJQgeL5RC1qw31qfWLMlDkdOPz/HvAC5ZJiu6cUeVuYnJFSEGVo8vZ7r1sF+y8dK4b
- hiKg588R/vITY2flT86FnjM/DQgL7hev2gcqxm/BTDhLDTSXF7zeeIhqmK60rxF4TYO5
- 1WdE/DLlnOZNe5ltFp9lQRHEsI/emYsgb0DskHBwrmf8d1H0//IIiyzr2SM7QTM87QKq
- nnWNIE0M0P6LOlq5rOkzJt2GGeHi73iL4Kb0chwSCd9hgc7lmrjyzMHHqyXSLnnaVRq5
- 9mQn1Z1u4fwH6WlscvMT6w3PGAYLwjoC+SkZeYYHrqRgReF0tJ+9Zg0+VOmdQQR+O5kO 1Q== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2wd090uvr8-1
+ bh=25QeVzrIe1QnbrXSNhzVBPeLb6QN0dGNl7ZVZf+3eiU=;
+ b=T1aNzAscewHJkBfx0F2tce4YRPa0r7J+73go2Cu3nA7bvjLQCgiy3uJe4aBaR7q2LYvY
+ kd8VdYaa3rltj+jWVsUIvvutYCRbpNEMVWJI79ko8FQjz6jupTTvphFkSbHm7GLXw0ZG
+ RVnJi6SlCsWzyTMG8mZcNResNPUlEVHqIqpJ53BLkUsNvF8ckqiTmvMo4Pnew8k4igTM
+ HmYcYmG+2FfJa0B9FCw64ID5pXjpyNWgPB5GBIzlXjSj4cGdjaAclydYFVFxLaguisgm
+ pKJUXXN20Kk/AOXoEVkxj3SS7NNxyzTflFARsQ1jpHY4EcixSLwI/wz0i1nGMMKyJXLI tQ== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2wc842ags9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 20 Nov 2019 15:06:18 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 20 Nov
- 2019 15:06:17 -0800
-Received: from NAM01-SN1-obe.outbound.protection.outlook.com (104.47.32.56) by
- SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Wed, 20 Nov 2019 15:06:16 -0800
+        Wed, 20 Nov 2019 15:53:46 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 20 Nov
+ 2019 15:53:45 -0800
+Received: from NAM01-BN3-obe.outbound.protection.outlook.com (104.47.33.56) by
+ SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Wed, 20 Nov 2019 15:53:45 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=R5himkJwzoLfw+GcZmHaaWSK0PxAT1zZ3v34Br00RxhuDmpBeJtw8kQxeJBOXJwxQCB4QpKRWGlXiDZrjqjPtcJO9Xekjq2YlCbuXbw1Qud2gsLUP0wAyzDytt+81ux+jDd+HVl3fWBsuGDykJPU+p116ArlDXEZfZDMg42ZJktHgOvR+sqtJpk174dOdWOewH8HmQPmefXgiVnQw4v83vaxkYz7HbWx4lBq0fk0EFje3xPG6tqjdyWiWYbKvBO0aA28hEYoUUMgQVg/ETNzLLVxwSBSXr0HrCXfrrifo+m6B2BTpoA0Pe4GM+ky1gg85zdv1B3J35sRJa/Lp/ULbA==
+ b=MJ0hcC9Zn4vYOF5hzhl/83TcqwDqB/aiS3Oxzre8NV80xFQwoid+NKLvqoFV4GDI1QrAGEijbQqy2kSf9qlDde4eatzDKFf3alCMXgWIKf1HdATHnIwaEtQAkszsmqnG7dnV9x5yC0DZ4dfqDuRNTCth0oZOI6sTuLPZkYI83+HrHGSlNIRlFSZ7NMPTL8TSFGN9nTZ7o4l8b8ImvbseBmqQuuFGnJtO85jsbftXQjBsyuRFDKYg8ei5gZ5maZzpy3S39Vq8sSW7TCnUeeA7CD9yOyhjybq+xYdusJyX2mb4HIrYWvGDg2wU9eNXRljrXzQ7/SYv6yMv0WqAKro0AA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+HkOghZ0vte+caUZWxKwUYdUipQExAN4vuQcIYGqp2c=;
- b=h3e6QVXxUsPSyGIivtary4YhuLvzkjg6ADtrp4yE1kAkrG2d9aiUzvN4HX3SK40PU8ybQ0ZmLVUxMtNYyy8Falk3dBii9AduNQKEXssFpz68kT91R6X2iDwLVQ3VbHb+6/1za6zSHyeJOwxpszGrvW1+Cu/6JQ0W7sInlIfJ7EVuK1xr5dDgIvYdEClw0ihkGfPKoplO5vmlrERf1lFmx2xEAM5GRaBkd/Z4KOGbDuXEZTNBCyLdUywQ+pQU2BgPvIyEiX9RtNCSWDZAK/ZH6nJmw7zUbDuitfo5+o/QdRNnU9KqpycYsBRIxJ34F83vBb5PGGM0TCrNeiI07X58IQ==
+ bh=25QeVzrIe1QnbrXSNhzVBPeLb6QN0dGNl7ZVZf+3eiU=;
+ b=IeJwQnQDpHLFCnNAjinXTcqXrq+UTDVbrRhS7ZNBvqNiQ8TdgR3UTeSQiQ386umYLG5aHow97SldjUlJrqRaG5GFboivV4rgBS5Lt839zkPejwOEnkzh5U+c/bxXP9sNY+f89k495UfvCi6gHZgwGIoX6DifcW0OxewHKPmnFyDIfinH+lYCrYgymYiPbUmpyefS4sKSqDQ94gfsYVZbMUEy2mYtoGwnLToOqq0QhW3TJSY5N1B8+rmPnvqIz3OX9DtG9/PH/P7q1kRzPvbQ7d6bSw+S8c/hhcHh51vndAOhI2vcESUw9w3dNHc+SEqWKg/7zrDeMbvfXFgYx5oILw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
  dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+HkOghZ0vte+caUZWxKwUYdUipQExAN4vuQcIYGqp2c=;
- b=tIMSnXHHNqDFJgWiAJ2/Z7nKPZIRVZpueC7h7qET90NzBuiyI6qU/bsMizXPYlYfHntWDHNNEhCi55iGEV7tzhZQGWXgxKmzvpZkXeuJCs+mbJIoYF+DA2/5vvgzWAsSWrL7qTiQMY7HXpKFUriD515QfPlq2eFMoculllrK3yA=
+ bh=25QeVzrIe1QnbrXSNhzVBPeLb6QN0dGNl7ZVZf+3eiU=;
+ b=bZAKTlaKXPN4IIL78bQrw7pRWYqVsSwxT14SxTKd43Css1efTk2vgrj7g5a7OwXs7KYLQlANIMRmdFiEyQ3Cy+2oUVj/1bmOebLOnmm03JP5qHrekx9OIxDzFJmr/4cfoZJz93kM4n+O7zsvmyH7nRtg/BsvvT0OZI0zsENCe8c=
 Received: from BYAPR18MB2759.namprd18.prod.outlook.com (20.179.58.88) by
- BYAPR18MB2901.namprd18.prod.outlook.com (20.179.59.204) with Microsoft SMTP
+ BYAPR18MB2789.namprd18.prod.outlook.com (20.179.56.97) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2474.17; Wed, 20 Nov 2019 23:06:15 +0000
+ 15.20.2474.17; Wed, 20 Nov 2019 23:53:43 +0000
 Received: from BYAPR18MB2759.namprd18.prod.outlook.com
  ([fe80::5907:fd6e:ff93:426b]) by BYAPR18MB2759.namprd18.prod.outlook.com
  ([fe80::5907:fd6e:ff93:426b%7]) with mapi id 15.20.2451.031; Wed, 20 Nov 2019
- 23:06:15 +0000
+ 23:53:43 +0000
 From:   Quinn Tran <qutran@marvell.com>
 To:     Roman Bolshakov <r.bolshakov@yadro.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
 CC:     "linux@yadro.com" <linux@yadro.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Subject: RE: [EXT] [PATCH v2 08/15] scsi: qla2xxx: Configure local loop for
- N2N target
-Thread-Topic: [EXT] [PATCH v2 08/15] scsi: qla2xxx: Configure local loop for
- N2N target
-Thread-Index: AQHVn/G+aq6zOc1fUkaqNHqfOxUOu6eUrXOA
-Date:   Wed, 20 Nov 2019 23:06:14 +0000
-Message-ID: <BYAPR18MB2759EA9C77A9CD0807F43AC0D54F0@BYAPR18MB2759.namprd18.prod.outlook.com>
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Krishna Kant <krishna.kant@purestorage.com>,
+        "Alexei Potashnik" <alexei@purestorage.com>
+Subject: RE: [EXT] [PATCH v2 09/15] scsi: qla2xxx: Send Notify ACK after N2N
+ PLOGI
+Thread-Topic: [EXT] [PATCH v2 09/15] scsi: qla2xxx: Send Notify ACK after N2N
+ PLOGI
+Thread-Index: AQHVn/HBkecpz0evC0GoU0Y5ICWl1qeUuHSA
+Date:   Wed, 20 Nov 2019 23:53:43 +0000
+Message-ID: <BYAPR18MB27591E2D46D9CB81C30B4004D54F0@BYAPR18MB2759.namprd18.prod.outlook.com>
 References: <20191120222723.27779-1-r.bolshakov@yadro.com>
- <20191120222723.27779-9-r.bolshakov@yadro.com>
-In-Reply-To: <20191120222723.27779-9-r.bolshakov@yadro.com>
+ <20191120222723.27779-10-r.bolshakov@yadro.com>
+In-Reply-To: <20191120222723.27779-10-r.bolshakov@yadro.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-originating-ip: [198.186.1.5]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9e4e57f7-a9df-4c26-a67b-08d76e0e3e68
-x-ms-traffictypediagnostic: BYAPR18MB2901:
+x-ms-office365-filtering-correlation-id: e292d6b3-af4e-4a99-8816-08d76e14e04a
+x-ms-traffictypediagnostic: BYAPR18MB2789:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR18MB29011E514A615AD9E3D81923D54F0@BYAPR18MB2901.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2201;
+x-microsoft-antispam-prvs: <BYAPR18MB2789CAEA17B970489A187244D54F0@BYAPR18MB2789.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3173;
 x-forefront-prvs: 02272225C5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(376002)(396003)(39850400004)(136003)(346002)(199004)(189003)(446003)(52536014)(256004)(476003)(14444005)(9686003)(4326008)(486006)(7696005)(2906002)(26005)(8936002)(186003)(76176011)(11346002)(6436002)(5660300002)(107886003)(55016002)(6246003)(6506007)(81156014)(99286004)(102836004)(305945005)(229853002)(66066001)(316002)(86362001)(81166006)(6116002)(14454004)(71200400001)(76116006)(2201001)(33656002)(74316002)(66476007)(66556008)(2501003)(66446008)(64756008)(66946007)(7736002)(25786009)(54906003)(71190400001)(110136005)(478600001)(3846002)(8676002);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR18MB2901;H:BYAPR18MB2759.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(39850400004)(396003)(346002)(376002)(366004)(189003)(199004)(13464003)(8676002)(8936002)(26005)(7736002)(2501003)(305945005)(11346002)(446003)(486006)(53546011)(76176011)(110136005)(14454004)(476003)(7696005)(316002)(54906003)(33656002)(25786009)(478600001)(74316002)(102836004)(6506007)(81166006)(55016002)(256004)(14444005)(9686003)(6436002)(66066001)(229853002)(6246003)(86362001)(4326008)(2201001)(71200400001)(71190400001)(186003)(2906002)(66446008)(6116002)(3846002)(66556008)(66476007)(52536014)(5660300002)(76116006)(64756008)(66946007)(99286004)(81156014);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR18MB2789;H:BYAPR18MB2759.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: marvell.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: SqadPqDhFMO8+MC/rF/vNnJl5rMGJvASVZWTfpoDRpY54429TZpf8hnJPvE+PFoaIzAyzoeXYaJyz8Dt/nSMtLutYpFTIPed9HKvSHedWS+GUpxeHu6NptHbxf2fs8+eQdymGtArWk9REbu1Iaoi0k7cyZLrdMtqNr4IJqdxict3iUycDy8FpeEBYrXPo3ZFd2OBOXjIOyukQJtafTyy7oXEtGNTOltkr2gn+L88nKUupKomot42uzzkspbe2QcevQon/kzlgyNXT6eioTar3OENxmnbT/vUWSpjAYAaAiFCATlprxMVoOQGXHH8fhmH+ctezcecEYbbFID2TegF44Gk7vIsJEtHpkqor8LK5KVi5rBGIK1OdMnH5kxPrhsXcwExhzt2knEiJsmLxOux9mAf7pDN3nRCnr143XlOc49OEsI6KiD4pjUl9VIzhv8z
+x-microsoft-antispam-message-info: 6ag24cNhfEeLAnQ4aCzUwGW+okmUFjQAYQGAKzvFKyb3RcKGSXp4qsMHBi5KVxJg2UK++yJzjLKvmToh7od9LhMm5/7PsOoYFEd/eHAikaN7oZRtU3ARctvr/gvOEQoiEqFL2plPpxlZbMfNgiD8nsSOYbb2hu2CPB0fnJbDU1iJaJsqjoLf0LGzPJO7BNMUOC2Q8tIlm77U3c8M6iHFKYjVUdM1cyPnFr/kA3TJzxUKAUnbz2HhNN+c2QGZZPSCRUmeyRUK17eTYKPel3O3sI7m9vCbNkH7H5ymnHUZOlE4qDXZlhamAvfKYsBy45uQgR8Gq+HBTevVCA3rpR0WTIRGQLU0saTy+Nf+G6BeZ+fDF2aoIM+vNEieKbueLpBtl/MrRgFIV0bpL1ylPRNFzltODUCoRTsRiucXHFvR+eu0JUotIiwJ84gt/1TEy/25
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9e4e57f7-a9df-4c26-a67b-08d76e0e3e68
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2019 23:06:15.0078
+X-MS-Exchange-CrossTenant-Network-Message-Id: e292d6b3-af4e-4a99-8816-08d76e14e04a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2019 23:53:43.6437
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8M9PLF30ZSYa6Sv98XoU9Ym7UufzxaBJ36jZMGWiOMqJi04v4HTONieaVJlpm0GARN5vUmd6RhlEQZyydTSODg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2901
+X-MS-Exchange-CrossTenant-userprincipalname: 26lLsoWWyJVT8+bWNv7o4esfz5o21h1cnIXdzV6e4r1bHgMjEjE1nT0cqtZJ2bpkzU1FTwii8WC0pLS+X54hrQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2789
 X-OriginatorOrg: marvell.com
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
  definitions=2019-11-20_08:2019-11-20,2019-11-20 signatures=0
@@ -121,48 +123,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-qla2x00_configure_local_loop initializes PLOGI payload for PLOGI ELS using =
-Get Parameters mailbox command.
+Acked-by: Quinn Tran <qutran@marvell.com>
 
-In the case when the driver is running in target mode, the topology is N2N =
-and the target port has higher WWPN, LOCAL_LOOP_UPDATE bit is cleared too e=
-arly and PLOGI payload is not initialized by the Get Parameters command. Th=
-at causes a failure of ELS IOCB carrying the PLOGI with 0x15 aka Data Under=
-run error.
 
-LOCAL_LOOP_UPDATE has to be set to initialize PLOGI payload.
 
-Fixes: 48acad099074 ("scsi: qla2xxx: Fix N2N link re-connect")
+-----Original Message-----
+From: Roman Bolshakov <r.bolshakov@yadro.com>=20
+Sent: Wednesday, November 20, 2019 2:27 PM
+To: linux-scsi@vger.kernel.org; target-devel@vger.kernel.org
+Cc: linux@yadro.com; Roman Bolshakov <r.bolshakov@yadro.com>; Quinn Tran <q=
+utran@marvell.com>; Himanshu Madhani <hmadhani@marvell.com>; Krishna Kant <=
+krishna.kant@purestorage.com>; Alexei Potashnik <alexei@purestorage.com>
+Subject: [EXT] [PATCH v2 09/15] scsi: qla2xxx: Send Notify ACK after N2N PL=
+OGI
+
+External Email
+
+----------------------------------------------------------------------
+qlt_handle_login schedules session for deletion even if a login is in progr=
+ess. That causes login bouncing, i.e. a few logins are made before it settl=
+es down.
+
+Complete the first login by sending Notify Acknowledge IOCB via qlt_plogi_a=
+ck_unref if the session is pending login completion.
+
+Fixes: 9cd883f07a54 ("scsi: qla2xxx: Fix session cleanup for N2N")
 Cc: Quinn Tran <qutran@marvell.com>
 Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Krishna Kant <krishna.kant@purestorage.com>
+Cc: Alexei Potashnik <alexei@purestorage.com>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_ini=
-t.c index 12391815be06..096f41fe17d2 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -4932,14 +4932,8 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 		set_bit(RSCN_UPDATE, &flags);
- 		clear_bit(LOCAL_LOOP_UPDATE, &flags);
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_t=
+arget.c
+index ab62fcba8ab3..853fa187d827 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -4802,6 +4802,7 @@ static int qlt_handle_login(struct scsi_qla_host *vha=
+,
 =20
--	} else if (ha->current_topology =3D=3D ISP_CFG_N) {
--		clear_bit(RSCN_UPDATE, &flags);
--		if (qla_tgt_mode_enabled(vha)) {
--			/* allow the other side to start the login */
--			clear_bit(LOCAL_LOOP_UPDATE, &flags);
--			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
--		}
--	} else if (ha->current_topology =3D=3D ISP_CFG_NL) {
-+	} else if (ha->current_topology =3D=3D ISP_CFG_NL ||
-+		   ha->current_topology =3D=3D ISP_CFG_N) {
- 		clear_bit(RSCN_UPDATE, &flags);
- 		set_bit(LOCAL_LOOP_UPDATE, &flags);
- 	} else if (!vha->flags.online ||
+ 	switch (sess->disc_state) {
+ 	case DSC_DELETED:
++	case DSC_LOGIN_PEND:
+ 		qlt_plogi_ack_unref(vha, pla);
+ 		break;
+=20
 --
 2.24.0
-
-QT: ACK.
 
