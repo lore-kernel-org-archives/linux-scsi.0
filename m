@@ -2,159 +2,227 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AB2C432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 04:14:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 920F7C43215
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 07:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8F812245C
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 04:14:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66E3A2245D
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 07:29:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Qo8vScqx";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="InwQXLwh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Gj76bub4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727545AbfKTEOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Nov 2019 23:14:44 -0500
-Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:39036
-        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727343AbfKTEOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 Nov 2019 23:14:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574223283;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
-        bh=sQkNXuDVsJ0tsz0h+83RhRvsNtFDcFeY7de5XccyV/E=;
-        b=Qo8vScqxfHA9Q4ooy0gAv3ctisVHtZ/bvCgBemcoAta+TlCQyGQtN9gV6gxWw01E
-        BYbgqiimoIEi+HNkEx6WUGEdHD1YLlMUhQjomvxtBuUsnpJ4o1i1iV3mTbi0mFpS1qc
-        qqBqzgivaUP0pMGs/GhNO2wkIh4hMu3RjrOzi0js=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574223283;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
-        bh=sQkNXuDVsJ0tsz0h+83RhRvsNtFDcFeY7de5XccyV/E=;
-        b=InwQXLwhSUoSQHOniuON/CDxljrEZ51RI60W5t3yDU1H0uZW+HNcrnRWJXc6V4gz
-        WKA/YRHpZnjxhTE43up5r8H4UA/prqfqxM8BgWUrnxneNSeUJPTIyomc/pDndpcnbJk
-        y7Tx1EzXS7PIy/IhfvJ5Tu7HPJkuAXRxBRQGYB1k=
+        id S1727317AbfKTH3m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 02:29:42 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:51356 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726380AbfKTH3m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 02:29:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574234980;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Qh1jIN8T5r6Yn1nEjc291k5Sa/J7IM0gritglFe5gJM=;
+        b=Gj76bub49uMXUOJJQYaKQQ0X2Tvj+yz7vjkeAODp8ttrEZqmUNAi3u2Djcx5UnnfTetcop
+        rKBIDpV4Kcb9pTUMgWYcQuBI+ECVBQ2/VCKRzrme7bOMpAe097V7YQjwGzf9FQykHC+t4e
+        TsFmALWpqlgl0LQWgskMI0dJBb49M1w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-372-1isBW-BSMnCFB7TppGgU9A-1; Wed, 20 Nov 2019 02:29:36 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 936E01005509;
+        Wed, 20 Nov 2019 07:29:34 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A8EED6049A;
+        Wed, 20 Nov 2019 07:29:24 +0000 (UTC)
+Date:   Wed, 20 Nov 2019 15:29:19 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        emilne@redhat.com, hch@lst.de, hare@suse.de, bart.vanassche@wdc.com
+Subject: Re: [PATCH 1/1] scsi core: limit overhead of device_busy counter for
+ SSDs
+Message-ID: <20191120072919.GB3664@ming.t460p>
+References: <1574194079-27363-1-git-send-email-sumanesh.samanta@broadcom.com>
+ <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 20 Nov 2019 04:14:43 +0000
-From:   cang@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Can Guo <cang@qti.qualcomm.com>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] scsi: ufs: Update VCCQ2 and VCCQ min/max voltage
- hard codes
-In-Reply-To: <MN2PR04MB699170FFA7B2DD59014374D5FC4C0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1574049061-11417-1-git-send-email-cang@qti.qualcomm.com>
- <1574049061-11417-3-git-send-email-cang@qti.qualcomm.com>
- <MN2PR04MB6991121D72EA8E6DF7F6258AFC4D0@MN2PR04MB6991.namprd04.prod.outlook.com>
- <0101016e8163937a-d539c90e-6df8-454a-969a-9e33e9ef35b6-000000@us-west-2.amazonses.com>
- <MN2PR04MB699170FFA7B2DD59014374D5FC4C0@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <0101016e870503bb-b0e9294a-c6ea-46de-a8f3-19e11329410c-000000@us-west-2.amazonses.com>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
-X-SES-Outgoing: 2019.11.20-54.240.27.56
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+In-Reply-To: <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-MC-Unique: 1isBW-BSMnCFB7TppGgU9A-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-19 20:41, Avri Altman wrote:
->> 
->> On 2019-11-18 15:15, Avri Altman wrote:
->> >>
->> >> From: Can Guo <cang@codeaurora.org>
->> >>
->> >> Per UFS 3.0 JEDEC standard, the VCCQ2 min voltage is 1.7v and the
->> >> VCCQ voltage range is 1.14v ~ 1.26v. Update their hard codes
->> >> accordingly to make sure they work in a safe range compliant for ver
->> >> 1.0/2.0/2.1/3.0 UFS devices.
->> > So to keep it safe, we need to use largest range:
->> > min_uV = min over all spec ranges, and max_uV = max over all spec
->> > ranges.
->> > Meaning leave it as it is if we want to be backward compatible with
->> > UFS1.0.
->> >
->> > Thanks,
->> > Avri
->> >
->> 
->> Hi Avri,
->> 
->> Sorry I don't quite follow you here.
->> Leaving it as it is means for UFS2.1 devices, when boot up, if we call
->> regulator_set_voltage(1.65, 1.95) to setup its VCCQ2,
->> regulator_set_voltage() will
->> give you 1.65v on VCCQ2 if the voltage level of this regulator is 
->> wider, say (1.60,
->> 1.95).
->> Meaning you will finally set 1.65v to VCCQ2. But 1.65v is out of spec 
->> for UFS
->> v2.1 as it requires min voltage to be 1.7v on VCCQ2. So, the smallest 
->> range is
->> safe.
->> Of course, in real board design, the regulator's voltage level is 
->> limited/designed
->> by power team to be in a safe range, say (1.8, 1.92), so that calling
->> regulator_set_voltage(1.65, 1.95) still gives you 1.8v. But it does 
->> not mean the
->> current hard codes are compliant for all UFS devices.
-> You are correct - the narrowest the range the better - as long as you
-> don't cross the limits of previous spec.
-> So changing 1.1 -> 1.14  and 1.65 -> 1.7 is fine.
-> While at it, Vccq max in UFS3.0 is 1.26, why not change 1.3 -> 1.26,
-> like you indicated in your commit log?
-> 
-> Thanks,
-> Avri
-> 
+On Tue, Nov 19, 2019 at 12:07:59PM -0800, Sumanesh Samanta wrote:
+> From: root <sumanesh.samanta@broadcom.com>
+>=20
+> Recently a patch was delivered to remove host_busy counter from SCSI mid =
+layer. That was a major bottleneck, and helped improve SCSI stack performan=
+ce.
+> With that patch, bottle neck moved to the scsi_device device_busy counter=
+. The performance issue with this counter is seen more in cases where a sin=
+gle device can produce very high IOPs, for example h/w RAID devices where O=
+S sees one device, but there are many drives behind it, thus being capable =
+of very high IOPs. The effect is also visible when cores from multiple NUMA=
+ nodes send IO to the same device or same controller.
+> The device_busy counter is not needed by controllers which can manage as =
+many IO as submitted to it. Rotating media still uses it for merging IO, bu=
+t for non-rotating SSD drives it becomes a major bottleneck as described ab=
+ove.
+>=20
+> A few weeks back, a patch was provided to address the device_busy counter=
+ also but unfortunately that had some issues:
+> 1. There was a functional issue discovered:
+> https://lists.01.org/hyperkitty/list/lkp@lists.01.org/thread/VFKDTG4XC4VH=
+WX5KKDJJI7P36EIGK526/
+> 2. There was some concern about existing drivers using the device_busy co=
+unter.
 
-Thank you Avri, sorry I missed the change to max voltage of VCCQ, I
-will update it in the next version.
+There are only two drivers(mpt3sas and megaraid_sas) which uses this
+counter. And there are two types of usage:
 
-Best Regards,
-Can Guo.
+1) both use .device_busy to balance interrupt load among LUNs in
+fast path
 
->> 
->> Best Regards,
->> Can Guo.
->> 
->> >>
->> >> Signed-off-by: Can Guo <cang@codeaurora.org>
->> >> ---
->> >>  drivers/scsi/ufs/ufs.h | 4 ++--
->> >>  1 file changed, 2 insertions(+), 2 deletions(-)
->> >>
->> >> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h index
->> >> 385bac8..9df4f4d
->> >> 100644
->> >> --- a/drivers/scsi/ufs/ufs.h
->> >> +++ b/drivers/scsi/ufs/ufs.h
->> >> @@ -500,9 +500,9 @@ struct ufs_query_res {
->> >>  #define UFS_VREG_VCC_MAX_UV       3600000 /* uV */
->> >>  #define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
->> >>  #define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
->> >> -#define UFS_VREG_VCCQ_MIN_UV      1100000 /* uV */
->> >> +#define UFS_VREG_VCCQ_MIN_UV      1140000 /* uV */
->> >>  #define UFS_VREG_VCCQ_MAX_UV      1300000 /* uV */
->> >> -#define UFS_VREG_VCCQ2_MIN_UV     1650000 /* uV */
->> >> +#define UFS_VREG_VCCQ2_MIN_UV     1700000 /* uV */
->> >>  #define UFS_VREG_VCCQ2_MAX_UV     1950000 /* uV */
->> >>
->> >>  /*
->> >> --
->> >> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
->> >> Forum, a Linux Foundation Collaborative Project
+2) mpt3sas uses .device_busy in its device reset handler(slow path), and
+this kind of usage can be replaced by blk_mq_queue_tag_busy_iter()
+easily.
+
+IMO, blk-mq has already considered IO load balance, see
+hctx_may_queue(), meantime managed IRQ can balance IO completion load
+among each IRQ vectors, not see obvious reason for driver to do that
+any more.
+
+However, if the two drivers still want to do that, I'd suggest to implement
+it inside the driver, and no reason to re-invent generic wheels just for
+two drivers.
+
+That is why I replace .device_busy uses in the two drivers with private
+counters in the patches posted days ago:
+
+https://lore.kernel.org/linux-scsi/20191118103117.978-1-ming.lei@redhat.com=
+/T/#t
+
+And if drivers thought the private counter isn't good enough, they can
+improve it in any way, such as this percpu approach, or even kill them.
+
+>=20
+> This patch is an attempt to address both the above issues.
+> For this patch to be effective, LLDs need to set a specific flag use_per_=
+cpu_device_busy in the scsi_host_template. For other drivers ( who does not=
+ set the flag), this patch would be a no-op, and should not affect their pe=
+rformance or functionality at all.
+>=20
+> Also, this patch does not fundamentally change any logic or functionality=
+ of the code. All it does is replace device_busy with a per CPU counter. In=
+ fast path, all cpu increment/decrement their own counter. In relatively sl=
+ow path. they call scsi_device_busy function to get the total no of IO outs=
+tanding on a device. Only functional aspect it changes is that for non-rota=
+ting media, the number of IO to a device is not restricted. Controllers whi=
+ch can handle that, can set the use_per_cpu_device_busy flag in scsi_host_t=
+emplate to take advantage of this patch. Other controllers need not modify =
+any code and would work as usual.
+> Since the patch does not modify any other functional aspects, it should n=
+ot have any side effects even for drivers that do set the use_per_cpu_devic=
+e_busy flag.
+> ---
+>  drivers/scsi/scsi_lib.c    | 151 ++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/scsi_scan.c   |  16 ++++
+>  drivers/scsi/scsi_sysfs.c  |   9 ++-
+>  drivers/scsi/sg.c          |   2 +-
+>  include/scsi/scsi_device.h |  15 ++++
+>  include/scsi/scsi_host.h   |  16 ++++
+>  6 files changed, 197 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 2563b061f56b..5dc392914f9e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -52,6 +52,12 @@
+>  #define  SCSI_INLINE_SG_CNT  2
+>  #endif
+> =20
+> +#define MAX_PER_CPU_COUNTER_ABSOLUTE_VAL (0xFFFFFFFFFFF)
+> +#define PER_CPU_COUNTER_OK_VAL (MAX_PER_CPU_COUNTER_ABSOLUTE_VAL>>16)
+> +#define USE_DEVICE_BUSY(sdev)=09(!(sdev)->host->hostt->use_per_cpu_devic=
+e_busy \
+> +=09=09=09=09|| !blk_queue_nonrot((sdev)->request_queue))
+> +
+> +
+>  static struct kmem_cache *scsi_sdb_cache;
+>  static struct kmem_cache *scsi_sense_cache;
+>  static struct kmem_cache *scsi_sense_isadma_cache;
+> @@ -65,6 +71,111 @@ scsi_select_sense_cache(bool unchecked_isa_dma)
+>  =09return unchecked_isa_dma ? scsi_sense_isadma_cache : scsi_sense_cache=
+;
+>  }
+> =20
+> +/*
+> + *Generic helper function to decrement per cpu io counter.
+> + *@per_cpu_counter: The per cpu counter array. Current cpu counter will =
+be
+> + * decremented
+> + */
+> +
+> +static inline void dec_per_cpu_io_counter(atomic64_t __percpu *per_cpu_c=
+ounter)
+> +{
+> +=09atomic64_t __percpu *io_count =3D get_cpu_ptr(per_cpu_counter);
+> +
+> +=09if (unlikely(abs(atomic64_dec_return(io_count)) >
+> +=09=09=09=09MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
+> +=09=09scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_count);
+> +=09put_cpu_ptr(per_cpu_counter);
+> +}
+> +/*
+> + *Generic helper function to increment per cpu io counter.
+> + *@per_cpu_counter: The per cpu counter array. Current cpu counter will =
+be
+> + * incremented
+> + */
+> +static inline void inc_per_cpu_io_counter(atomic64_t __percpu *per_cpu_c=
+ounter)
+> +{
+> +=09atomic64_t __percpu *io_count =3D=09get_cpu_ptr(per_cpu_counter);
+> +
+> +=09if (unlikely(abs(atomic64_inc_return(io_count)) >
+> +=09=09=09=09MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
+> +=09=09scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_count);
+> +=09put_cpu_ptr(per_cpu_counter);
+> +}
+> +
+> +
+> +/**
+> + * scsi_device_busy - Return the device_busy counter
+> + * @sdev:=09Pointer to scsi_device to get busy counter.
+> + **/
+> +int scsi_device_busy(struct scsi_device *sdev)
+> +{
+> +=09long long total =3D 0;
+> +=09int i;
+> +
+> +=09if (USE_DEVICE_BUSY(sdev))
+
+As Ewan and Bart commented, you can't use the NONROT queue flag simply
+in IO path, given it may be changed somewhere.
+
+Thanks,
+Ming
+
