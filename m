@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C77C432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 886CBC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:59:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC94622440
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:55:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ACE321D7B
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:59:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728329AbfKTJz6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 04:55:58 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58002 "EHLO mx1.suse.de"
+        id S1728122AbfKTJ7L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 04:59:11 -0500
+Received: from mx2.suse.de ([195.135.220.15]:59876 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728320AbfKTJzy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 04:55:54 -0500
+        id S1727124AbfKTJ7K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Nov 2019 04:59:10 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 369C46998A;
-        Wed, 20 Nov 2019 09:55:51 +0000 (UTC)
-Subject: Re: [PATCH 2/4] scsi: mpt3sas: use private counter for tracking
- inflight per-LUN commands
+        by mx1.suse.de (Postfix) with ESMTP id 9862569BA5;
+        Wed, 20 Nov 2019 09:59:08 +0000 (UTC)
+Subject: Re: [PATCH 3/4] scsi: sd: register request queue after
+ sd_revalidate_disk is done
 To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -40,7 +40,7 @@ Cc:     linux-block@vger.kernel.org,
         Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20191118103117.978-1-ming.lei@redhat.com>
- <20191118103117.978-3-ming.lei@redhat.com>
+ <20191118103117.978-4-ming.lei@redhat.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -86,12 +86,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3bce6271-1f6e-355c-f8ac-378904d4fbe2@suse.de>
-Date:   Wed, 20 Nov 2019 10:55:50 +0100
+Message-ID: <a5e67097-9c56-6cc7-37bf-fb704bfd95b9@suse.de>
+Date:   Wed, 20 Nov 2019 10:59:08 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191118103117.978-3-ming.lei@redhat.com>
+In-Reply-To: <20191118103117.978-4-ming.lei@redhat.com>
 Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -101,12 +101,16 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 11/18/19 11:31 AM, Ming Lei wrote:
-> Prepare for bypassing sdev->device_busy for improving performance on
-> fast SCSI storage device, so sdev->device_busy can't be relied
-> any more.
+> Prepare for improving SSD performance in the following patch, which
+> needs to read queue flag of QUEUE_FLAG_NONROT in IO path. So we have
+> to freeze queue before changing this flag in sd_revalidate_disk().
 > 
-> mpt3sas may need one such counter for balancing load among LUNs in
-> some specific setting, so add one private counter for this purpose.
+> However, queue freezing becomes quite slow after the queue is registered
+> because RCU period is involved.
+> 
+> So delay registering queue after sd_revalidate_disk() is done for
+> avoiding slow queue freezing which will be added to sd_revalidate_disk()
+> in the following patch.
 > 
 > Cc: Sathya Prakash <sathya.prakash@broadcom.com>
 > Cc: Chaitra P B <chaitra.basappa@broadcom.com>
@@ -120,145 +124,30 @@ On 11/18/19 11:31 AM, Ming Lei wrote:
 > Cc: Bart Van Assche <bart.vanassche@wdc.com>
 > Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c  |  3 ++-
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |  1 +
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +++++++++++++--
->  3 files changed, 16 insertions(+), 3 deletions(-)
+>  drivers/scsi/sd.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index fea3cb6a090b..9c2d374b3157 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -3480,12 +3480,13 @@ static inline u8
->  _base_get_high_iops_msix_index(struct MPT3SAS_ADAPTER *ioc,
->  	struct scsi_cmnd *scmd)
->  {
-> +	struct MPT3SAS_DEVICE *sas_device_priv_data = scmd->device->hostdata;
->  	/**
->  	 * Round robin the IO interrupts among the high iops
->  	 * reply queues in terms of batch count 16 when outstanding
->  	 * IOs on the target device is >=8.
->  	 */
-> -	if (atomic_read(&scmd->device->device_busy) >
-> +	if (atomic_read(&sas_device_priv_data->active_cmds) >
->  	    MPT3SAS_DEVICE_HIGH_IOPS_DEPTH)
->  		return base_mod64((
->  		    atomic64_add_return(1, &ioc->high_iops_outstanding) /
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index faca0a5e71f8..9e9f319bb636 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -467,6 +467,7 @@ struct MPT3SAS_DEVICE {
->  	 * thing while a SATL command is pending.
->  	 */
->  	unsigned long ata_command_pending;
-> +	atomic_t active_cmds;
->  
->  };
->  
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index c8e512ba6d39..194960dae1d6 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -1770,6 +1770,7 @@ scsih_slave_alloc(struct scsi_device *sdev)
->  
->  	sas_device_priv_data->lun = sdev->lun;
->  	sas_device_priv_data->flags = MPT_DEVICE_FLAGS_INIT;
-> +	atomic_set(&sas_device_priv_data->active_cmds, 0);
->  
->  	starget = scsi_target(sdev);
->  	sas_target_priv_data = starget->hostdata;
-> @@ -2884,6 +2885,7 @@ scsih_abort(struct scsi_cmnd *scmd)
->  	    ioc->remove_host) {
->  		sdev_printk(KERN_INFO, scmd->device,
->  			"device been deleted! scmd(%p)\n", scmd);
-> +		atomic_dec(&sas_device_priv_data->active_cmds);
->  		scmd->result = DID_NO_CONNECT << 16;
->  		scmd->scsi_done(scmd);
->  		r = SUCCESS;
-> @@ -2993,7 +2995,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
->  		MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0,
->  		tr_timeout, tr_method);
->  	/* Check for busy commands after reset */
-> -	if (r == SUCCESS && atomic_read(&scmd->device->device_busy))
-> +	if (r == SUCCESS && atomic_read(&sas_device_priv_data->active_cmds))
->  		r = FAILED;
->   out:
->  	sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(%p)\n",
-> @@ -4517,9 +4519,12 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
->  	int count = 0;
->  
->  	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
-> +		struct MPT3SAS_DEVICE *sas_device_priv_data;
-> +
->  		scmd = mpt3sas_scsih_scsi_lookup_get(ioc, smid);
->  		if (!scmd)
->  			continue;
-> +		sas_device_priv_data = scmd->device->hostdata;
->  		count++;
->  		_scsih_set_satl_pending(scmd, false);
->  		st = scsi_cmd_priv(scmd);
-> @@ -4529,6 +4534,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
->  			scmd->result = DID_NO_CONNECT << 16;
->  		else
->  			scmd->result = DID_RESET << 16;
-> +		atomic_dec(&sas_device_priv_data->active_cmds);
->  		scmd->scsi_done(scmd);
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 03163ac5fe95..0744c34468e1 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3368,12 +3368,14 @@ static int sd_probe(struct device *dev)
 >  	}
->  	dtmprintk(ioc, ioc_info(ioc, "completing %d cmds\n", count));
-> @@ -4756,11 +4762,14 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
->  	    mpi_request->LUN);
->  	memcpy(mpi_request->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
 >  
-> +	atomic_inc(&sas_device_priv_data->active_cmds);
+>  	blk_pm_runtime_init(sdp->request_queue, dev);
+> -	device_add_disk(dev, gd, NULL);
+> +	device_add_disk_no_queue_reg(dev, gd);
+>  	if (sdkp->capacity)
+>  		sd_dif_config_host(sdkp);
+>  
+>  	sd_revalidate_disk(gd);
+>  
+> +	blk_register_queue(gd);
 > +
->  	if (mpi_request->DataLength) {
->  		pcie_device = sas_target_priv_data->pcie_dev;
->  		if (ioc->build_sg_scmd(ioc, scmd, smid, pcie_device)) {
->  			mpt3sas_base_free_smid(ioc, smid);
->  			_scsih_set_satl_pending(scmd, false);
-> +			atomic_dec(&sas_device_priv_data->active_cmds);
->  			goto out;
->  		}
->  	} else
-> @@ -5207,6 +5216,7 @@ _scsih_smart_predicted_fault(struct MPT3SAS_ADAPTER *ioc, u16 handle)
->  static u8
->  _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  {
-> +	struct MPT3SAS_DEVICE *sas_device_priv_data;
->  	Mpi25SCSIIORequest_t *mpi_request;
->  	Mpi2SCSIIOReply_t *mpi_reply;
->  	struct scsi_cmnd *scmd;
-> @@ -5216,7 +5226,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  	u8 scsi_state;
->  	u8 scsi_status;
->  	u32 log_info;
-> -	struct MPT3SAS_DEVICE *sas_device_priv_data;
->  	u32 response_code = 0;
->  
->  	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
-
-The above two modifications are probably not needed ...
-
-> @@ -5225,6 +5234,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  	if (scmd == NULL)
->  		return 1;
->  
-> +	sas_device_priv_data = scmd->device->hostdata;
->  	_scsih_set_satl_pending(scmd, false);
->  
->  	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-> @@ -5431,6 +5441,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  
->  	scsi_dma_unmap(scmd);
->  	mpt3sas_base_free_smid(ioc, smid);
-> +	atomic_dec(&sas_device_priv_data->active_cmds);
->  	scmd->scsi_done(scmd);
->  	return 0;
->  }
+>  	if (sdkp->security) {
+>  		sdkp->opal_dev = init_opal_dev(sdp, &sd_sec_submit);
+>  		if (sdkp->opal_dev)
 > 
-Otherwise:
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
