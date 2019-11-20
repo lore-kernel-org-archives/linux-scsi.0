@@ -2,127 +2,263 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55197C432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 18:39:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5942C43215
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 20:00:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FF72208C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 18:39:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B0562075E
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 20:00:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fXYHv7HW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbfKTSjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 13:39:40 -0500
-Received: from m9a0001g.houston.softwaregrp.com ([15.124.64.66]:53124 "EHLO
-        m9a0001g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726685AbfKTSjk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 13:39:40 -0500
-X-Greylist: delayed 3256 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Nov 2019 13:39:40 EST
-Received: FROM m9a0001g.houston.softwaregrp.com (15.121.0.191) BY m9a0001g.houston.softwaregrp.com WITH ESMTP;
- Wed, 20 Nov 2019 18:38:58 +0000
-Received: from M9W0067.microfocus.com (2002:f79:be::f79:be) by
- M9W0068.microfocus.com (2002:f79:bf::f79:bf) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Wed, 20 Nov 2019 17:08:57 +0000
-Received: from NAM04-CO1-obe.outbound.protection.outlook.com (15.124.72.10) by
- M9W0067.microfocus.com (15.121.0.190) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Wed, 20 Nov 2019 17:08:57 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=axj59p4dn3vpkYfgIY1piwqnWfEK/Zwqsc7I6s5+ZmpRcOmT8sPQZqAw6a4iw7RUCdM7AfQP/gbkiuIuZDKy70xE6rN/gdijQn9Tl0LiVh7Haa+BF1IfgCLLlKbsoeVNMjzKApit0qdQ87bqiifUeH5Wkc54I613qLpSOlxg1f97cQZ/RqSZJHvaQredjlzzp7fMf/wTcmJExwgBFEa+VOUw7RN8j9HS0wl/42W7BO7+OMM6oJTh8/qQkxsR+CMQ1HiP7VHIb8oF8ggghK1k5QS5tL5yXEmsCNKNCzrNaDJ/NAUWVb0jIMuxRpEDFxXjI2i+loN8QEf00onALrpdHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uc5e35HhsHN2mtNoEsdMucao2SsyP1SPtEo7n1VyFn4=;
- b=NzIIHG1GTsr+tSUJenU6IUuIN8MuMF15Ngh9zWkW0y0QxATgieXi3gHdlKG8A88LkDRalSONwEsBgrVIZGqKTfFmkmyAvAbtjVvhsnxMxnXIyKeYWYiSUpUQvZmM3FZq3KRaOcM0TgF5O0mlPBfNPfLu/Aw3bJc0jBlDbfMYlFuGGh/0TTxFZ2lfn/f7pwbOHrlCG/H+IpjrjJBAsbTvyWsm747Td75hCLrNi730CvmZzXwkmIHy5uLKCZnhqjFwbJuYM2t0MEORIVU8RkSaQbWDG4Q7MoxxuCrp7F1CKmWAnDxZ+RBxXhK/MwztnthgUAypCtzI8NJdyrn7vUJLvA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Received: from MN2PR18MB3278.namprd18.prod.outlook.com (10.255.237.204) by
- MN2PR18MB2432.namprd18.prod.outlook.com (20.179.84.32) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.30; Wed, 20 Nov 2019 17:08:54 +0000
-Received: from MN2PR18MB3278.namprd18.prod.outlook.com
- ([fe80::2914:6699:d7e5:de45]) by MN2PR18MB3278.namprd18.prod.outlook.com
- ([fe80::2914:6699:d7e5:de45%3]) with mapi id 15.20.2451.031; Wed, 20 Nov 2019
- 17:08:53 +0000
-From:   Lee Duncan <LDuncan@suse.com>
-To:     Tom Abraham <TAbraham@suse.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] scsi: qla2xxx: avoid crash in
- qlt_handle_abts_completion() if mcmd == NULL
-Thread-Topic: [PATCH] scsi: qla2xxx: avoid crash in
- qlt_handle_abts_completion() if mcmd == NULL
-Thread-Index: AQHVk/Mn21+AUdfikUaO7LypaxLA+6eUYm6A
-Date:   Wed, 20 Nov 2019 17:08:53 +0000
-Message-ID: <74bc094b-e534-7170-4cba-e7aa2451dd6c@suse.com>
-References: <20191104181803.5475-1-tabraham@suse.com>
-In-Reply-To: <20191104181803.5475-1-tabraham@suse.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: LO2P123CA0035.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600::23)
- To MN2PR18MB3278.namprd18.prod.outlook.com (2603:10b6:208:168::12)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=LDuncan@suse.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [73.25.22.216]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3d14aa39-264e-4cc4-4d47-08d76ddc522d
-x-ms-traffictypediagnostic: MN2PR18MB2432:|MN2PR18MB2432:
-x-ld-processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB24324836993AC05E9F401046DA4F0@MN2PR18MB2432.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:534;
-x-forefront-prvs: 02272225C5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(136003)(346002)(39860400002)(366004)(396003)(199004)(189003)(11346002)(486006)(2616005)(66946007)(66476007)(8936002)(76176011)(186003)(52116002)(31696002)(102836004)(81166006)(86362001)(26005)(53546011)(6506007)(386003)(5660300002)(80792005)(4744005)(4326008)(25786009)(6436002)(478600001)(6486002)(229853002)(6246003)(107886003)(36756003)(66446008)(6512007)(66556008)(64756008)(14454004)(81156014)(8676002)(476003)(99286004)(31686004)(110136005)(256004)(14444005)(2906002)(316002)(66066001)(6116002)(54906003)(3846002)(71200400001)(446003)(305945005)(7736002)(71190400001);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR18MB2432;H:MN2PR18MB3278.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: suse.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: vo1WNhnzeZ2xsHHXPfoQaw414NDA09g+fxOR7MFKQs6LW8WYmQLllWazCsYJmxW11gB4EJTdkAppiUrH7ucqYTFmST6YAemDeCNq8kSArEnFukoPK1l9iUq+0c9TYNJcxVtqpO6urlckR0z2Wsm3R52mixhUCsImLdebndW8eJ0vPNSjF2U3OUH5uIjbO6zJclNpbvZoNBF54GCZEVM3tJLUf/3Z8et08g9GuzE1uV+RROz6MUmA2rJa+kSIB0ndFp9yylBU0U45V0XDobKEQ8/bDpyqYp/7OyCjGYQ3J2hSnJUlBiB+qOsenT9Sph7KZN1jNm1yPrSUwCzkT0Scw+JdSNc6pEmxksMSrkSYWbQKeV0FzhRr/6ASD55ULZ/7nOgFzaITM+VG4gKOJTQLe00BBe8T6S2eIsNOH4tRiY83tkbQaCsQ91eYVDlaihh4
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <84B75E3A84CB2542B23E8ACF932D259D@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1727259AbfKTUAL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 15:00:11 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:41956 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727179AbfKTUAL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 15:00:11 -0500
+Received: by mail-wr1-f65.google.com with SMTP id b18so1381832wrj.8
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2019 12:00:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=Qel/Qp9Fo4wMUlCl4DO6D3RTsT7v4Klswcvp9ktFJ+o=;
+        b=fXYHv7HW2Cu4Za7sgOU7gtmDy6miBHEWfa+rW4qNBYDGhzSIyTA2MnRhKwFSCeWftW
+         POplkaSbT6FmP7mtK57mZTyrubyzgZMAyu9g5Rw/FWf3wMFIBQH5NxJPFQLH1GBE8trb
+         ywGZCrXpiDg53E5lE+jZcGMLsBsVYSq5PSwaU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=Qel/Qp9Fo4wMUlCl4DO6D3RTsT7v4Klswcvp9ktFJ+o=;
+        b=GfwNYIznIY49+ChbiExXHFk+SbnZ7pdBUcKLvl3qeisCPN41fEOO6m3wsHD7/MZHFj
+         ULX8Ai3+BN+FLxOyxpHlvEKMhucrw/B4l429bPzp97LRsRNBbpHJ6gbYQOJ4w7aQSVU0
+         8QQdqnTAhEPIPcW44Kx3DWCAAzSaNc2KlSomV6rsKO6k7VQHley1FJtTpnvituHEj4ZB
+         pYHI4/VA1nDuxoDzFGVlZ23omHb96GIDi/0dLEOiXDAgsTYk/d0VBcDtSu6YExYSZqrU
+         V/bo7sDfB2q9wRIDrhyZUETzfSv5HX5APVI6Ltu+1lKV8G+Fa0OFrgD+YrOSsPMXjfq6
+         m+Pw==
+X-Gm-Message-State: APjAAAVDPzUDaJH2RiAgmcgfSe3cPjd5EBDC3zqGGXYbIzi/RU2O2QIN
+        EzswmQsLSBaVlJbGkz0uqWxmyS1QYO+Z4OH2D2XDXQ==
+X-Google-Smtp-Source: APXvYqysLEYlp7kZ7WW4ZVjlUT5rXyQt8eif4tkNKyubxOdwTnU5T5LTpmyJPj49SGd/IPftQL+Fc5vyM7G9G/ZgQyE=
+X-Received: by 2002:adf:db4e:: with SMTP id f14mr5543676wrj.257.1574280008151;
+ Wed, 20 Nov 2019 12:00:08 -0800 (PST)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3d14aa39-264e-4cc4-4d47-08d76ddc522d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2019 17:08:53.8375
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 856b813c-16e5-49a5-85ec-6f081e13b527
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: yIphvsVIEMDoK0wsMJiMq1A95JqjORndUhzyH6ZbaGarjmFdxfjTbWSyyb4thX+mH8wFKFfHWJVG3Qx/EwYJ+A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2432
-X-OriginatorOrg: suse.com
+References: <1574194079-27363-1-git-send-email-sumanesh.samanta@broadcom.com>
+ <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com> <20191120072919.GB3664@ming.t460p>
+In-Reply-To: <20191120072919.GB3664@ming.t460p>
+From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Date:   Wed, 20 Nov 2019 12:59:56 -0700
+Message-ID: <CADbZ7FqP1EXrUOpD1QSd9MTRz1rgN6BLyhyd0i2r30bu_4xUCA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] scsi core: limit overhead of device_busy counter for SSDs
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        chaitra.basappa@broadcom.com,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        Ewan Milne <emilne@redhat.com>, hch@lst.de, hare@suse.de,
+        bart.vanassche@wdc.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gMTEvNC8xOSAxMDoxOCBBTSwgVGhvbWFzIEFicmFoYW0gd3JvdGU6DQo+IHFsdF9jdGlvX3Rv
-X2NtZCgpIHdpbGwgcmV0dXJuIGEgTlVMTCBtY21kIGlmIGggPT0gUUxBX1RHVF9TS0lQX0hBTkRM
-RS4gSWYNCj4gdGhlIGVycm9yIHN1YmNvZGVzIGRvbid0IG1hdGNoIHRoZSBleGFjdCBjb2RlcyBj
-aGVja2VkIGEgY3Jhc2ggd2lsbCBvY2N1cg0KPiB3aGVuIGNhbGxpbmcgZnJlZV9tY21kIG9uIHRo
-ZSBudWxsIG1jbWQNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFRob21hcyBBYnJhaGFtIDx0YWJyYWhh
-bUBzdXNlLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMg
-fCAzICsrLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigt
-KQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYyBi
-L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KPiBpbmRleCBhMDZlNTYyMjRhNTUu
-LjYxMWFiMjI0NjYyZiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3Rh
-cmdldC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KPiBAQCAt
-NTczMiw3ICs1NzMyLDggQEAgc3RhdGljIHZvaWQgcWx0X2hhbmRsZV9hYnRzX2NvbXBsZXRpb24o
-c3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSwNCj4gIAkJCSAgICB2aGEtPnZwX2lkeCwgZW50cnkt
-PmNvbXBsX3N0YXR1cywNCj4gIAkJCSAgICBlbnRyeS0+ZXJyb3Jfc3ViY29kZTEsDQo+ICAJCQkg
-ICAgZW50cnktPmVycm9yX3N1YmNvZGUyKTsNCj4gLQkJCWhhLT50Z3QudGd0X29wcy0+ZnJlZV9t
-Y21kKG1jbWQpOw0KPiArCQkJaWYgKG1jbWQpDQo+ICsJCQkJaGEtPnRndC50Z3Rfb3BzLT5mcmVl
-X21jbWQobWNtZCk7DQo+ICAJCX0NCj4gIAl9IGVsc2UgaWYgKG1jbWQpIHsNCj4gIAkJaGEtPnRn
-dC50Z3Rfb3BzLT5mcmVlX21jbWQobWNtZCk7DQo+IA0KDQpSZXZpZXdlZC1ieTogTGVlIER1bmNh
-biA8bGR1bmNhbkBzdXNlLmNvbT4NCg==
+On Wed, Nov 20, 2019 at 12:29 AM Ming Lei <ming.lei@redhat.com> wrote:
+>
+> On Tue, Nov 19, 2019 at 12:07:59PM -0800, Sumanesh Samanta wrote:
+> > From: root <sumanesh.samanta@broadcom.com>
+> >
+> > Recently a patch was delivered to remove host_busy counter from SCSI mi=
+d layer. That was a major bottleneck, and helped improve SCSI stack perform=
+ance.
+> > With that patch, bottle neck moved to the scsi_device device_busy count=
+er. The performance issue with this counter is seen more in cases where a s=
+ingle device can produce very high IOPs, for example h/w RAID devices where=
+ OS sees one device, but there are many drives behind it, thus being capabl=
+e of very high IOPs. The effect is also visible when cores from multiple NU=
+MA nodes send IO to the same device or same controller.
+> > The device_busy counter is not needed by controllers which can manage a=
+s many IO as submitted to it. Rotating media still uses it for merging IO, =
+but for non-rotating SSD drives it becomes a major bottleneck as described =
+above.
+> >
+> > A few weeks back, a patch was provided to address the device_busy count=
+er also but unfortunately that had some issues:
+> > 1. There was a functional issue discovered:
+> > https://lists.01.org/hyperkitty/list/lkp@lists.01.org/thread/VFKDTG4XC4=
+VHWX5KKDJJI7P36EIGK526/
+> > 2. There was some concern about existing drivers using the device_busy =
+counter.
+>
+> There are only two drivers(mpt3sas and megaraid_sas) which uses this
+> counter. And there are two types of usage:
+>
+> 1) both use .device_busy to balance interrupt load among LUNs in
+> fast path
+>
+> 2) mpt3sas uses .device_busy in its device reset handler(slow path), and
+> this kind of usage can be replaced by blk_mq_queue_tag_busy_iter()
+> easily.
+>
+> IMO, blk-mq has already considered IO load balance, see
+> hctx_may_queue(), meantime managed IRQ can balance IO completion load
+> among each IRQ vectors, not see obvious reason for driver to do that
+> any more.
+>
+> However, if the two drivers still want to do that, I'd suggest to impleme=
+nt
+> it inside the driver, and no reason to re-invent generic wheels just for
+> two drivers.
+>
+> That is why I replace .device_busy uses in the two drivers with private
+> counters in the patches posted days ago:
+>
+> https://lore.kernel.org/linux-scsi/20191118103117.978-1-ming.lei@redhat.c=
+om/T/#t
+>
+
+Agreed, a private counter should be good enough.
+
+> And if drivers thought the private counter isn't good enough, they can
+> improve it in any way, such as this percpu approach, or even kill them.
+>
+
+I was more concerned about the functional issue discovered in the
+earlier patch and provided mine as an alternative without any side
+effect or functional issue, since it does not modify any core logic.
+Having said that, if your latest patch goes through and is accepted,
+then agree that my patch is not needed. If however, some issue is
+discovered in your latest patch, then I would request my patch to be
+considered as an alternative, so that the device_busy counter overhead
+can be avoided
+
+> >
+> > This patch is an attempt to address both the above issues.
+> > For this patch to be effective, LLDs need to set a specific flag use_pe=
+r_cpu_device_busy in the scsi_host_template. For other drivers ( who does n=
+ot set the flag), this patch would be a no-op, and should not affect their =
+performance or functionality at all.
+> >
+> > Also, this patch does not fundamentally change any logic or functionali=
+ty of the code. All it does is replace device_busy with a per CPU counter. =
+In fast path, all cpu increment/decrement their own counter. In relatively =
+slow path. they call scsi_device_busy function to get the total no of IO ou=
+tstanding on a device. Only functional aspect it changes is that for non-ro=
+tating media, the number of IO to a device is not restricted. Controllers w=
+hich can handle that, can set the use_per_cpu_device_busy flag in scsi_host=
+_template to take advantage of this patch. Other controllers need not modif=
+y any code and would work as usual.
+> > Since the patch does not modify any other functional aspects, it should=
+ not have any side effects even for drivers that do set the use_per_cpu_dev=
+ice_busy flag.
+> > ---
+> >  drivers/scsi/scsi_lib.c    | 151 ++++++++++++++++++++++++++++++++++---
+> >  drivers/scsi/scsi_scan.c   |  16 ++++
+> >  drivers/scsi/scsi_sysfs.c  |   9 ++-
+> >  drivers/scsi/sg.c          |   2 +-
+> >  include/scsi/scsi_device.h |  15 ++++
+> >  include/scsi/scsi_host.h   |  16 ++++
+> >  6 files changed, 197 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 2563b061f56b..5dc392914f9e 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -52,6 +52,12 @@
+> >  #define  SCSI_INLINE_SG_CNT  2
+> >  #endif
+> >
+> > +#define MAX_PER_CPU_COUNTER_ABSOLUTE_VAL (0xFFFFFFFFFFF)
+> > +#define PER_CPU_COUNTER_OK_VAL (MAX_PER_CPU_COUNTER_ABSOLUTE_VAL>>16)
+> > +#define USE_DEVICE_BUSY(sdev)        (!(sdev)->host->hostt->use_per_cp=
+u_device_busy \
+> > +                             || !blk_queue_nonrot((sdev)->request_queu=
+e))
+> > +
+> > +
+> >  static struct kmem_cache *scsi_sdb_cache;
+> >  static struct kmem_cache *scsi_sense_cache;
+> >  static struct kmem_cache *scsi_sense_isadma_cache;
+> > @@ -65,6 +71,111 @@ scsi_select_sense_cache(bool unchecked_isa_dma)
+> >       return unchecked_isa_dma ? scsi_sense_isadma_cache : scsi_sense_c=
+ache;
+> >  }
+> >
+> > +/*
+> > + *Generic helper function to decrement per cpu io counter.
+> > + *@per_cpu_counter: The per cpu counter array. Current cpu counter wil=
+l be
+> > + * decremented
+> > + */
+> > +
+> > +static inline void dec_per_cpu_io_counter(atomic64_t __percpu *per_cpu=
+_counter)
+> > +{
+> > +     atomic64_t __percpu *io_count =3D get_cpu_ptr(per_cpu_counter);
+> > +
+> > +     if (unlikely(abs(atomic64_dec_return(io_count)) >
+> > +                             MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
+> > +             scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_co=
+unt);
+> > +     put_cpu_ptr(per_cpu_counter);
+> > +}
+> > +/*
+> > + *Generic helper function to increment per cpu io counter.
+> > + *@per_cpu_counter: The per cpu counter array. Current cpu counter wil=
+l be
+> > + * incremented
+> > + */
+> > +static inline void inc_per_cpu_io_counter(atomic64_t __percpu *per_cpu=
+_counter)
+> > +{
+> > +     atomic64_t __percpu *io_count =3D get_cpu_ptr(per_cpu_counter);
+> > +
+> > +     if (unlikely(abs(atomic64_inc_return(io_count)) >
+> > +                             MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
+> > +             scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_co=
+unt);
+> > +     put_cpu_ptr(per_cpu_counter);
+> > +}
+> > +
+> > +
+> > +/**
+> > + * scsi_device_busy - Return the device_busy counter
+> > + * @sdev:    Pointer to scsi_device to get busy counter.
+> > + **/
+> > +int scsi_device_busy(struct scsi_device *sdev)
+> > +{
+> > +     long long total =3D 0;
+> > +     int i;
+> > +
+> > +     if (USE_DEVICE_BUSY(sdev))
+>
+> As Ewan and Bart commented, you can't use the NONROT queue flag simply
+> in IO path, given it may be changed somewhere.
+>
+
+I added the NONROT check just as an afterthought. This patch is
+designed for high end controllers, and most of them have some storage
+IO size limit. Also, for HDD sequential IO is almost always large and
+touch the controller max IO size limit. Thus, I am not sure merge
+matters for these kind of controllers. Database use REDO log and small
+sequential IO, but those are targeted to SSDs, where latency and IOPs
+are far more important than IO merging.
+Anyway, this patch is opt-in for drivers, so any LLD that cannot take
+advantage of the flag need not set it, and would work as-is.
+I can provide a new version of the patch with this check removed
+
+> Thanks,
+> Ming
+>
