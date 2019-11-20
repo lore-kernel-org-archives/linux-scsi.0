@@ -2,163 +2,168 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA03C33C9A
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 10:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A4BC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 13:26:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E5D32243E
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 10:31:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 164FF224F3
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 13:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728713AbfKTKbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 05:31:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:49308 "EHLO mx1.suse.de"
+        id S1729504AbfKTN0j convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 08:26:39 -0500
+Received: from szxga03-in.huawei.com ([45.249.212.189]:2090 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728301AbfKTKba (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 05:31:30 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id C9D3DB404;
-        Wed, 20 Nov 2019 10:31:27 +0000 (UTC)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Balsundar P <balsundar.p@microsemi.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Subject: [PATCH 10/11] aacraid: use scsi_host_busy_iter() in get_num_of_incomplete_fibs()
-Date:   Wed, 20 Nov 2019 11:31:13 +0100
-Message-Id: <20191120103114.24723-11-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191120103114.24723-1-hare@suse.de>
-References: <20191120103114.24723-1-hare@suse.de>
+        id S1727798AbfKTN0j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Nov 2019 08:26:39 -0500
+Received: from DGGEML404-HUB.china.huawei.com (unknown [172.30.72.53])
+        by Forcepoint Email with ESMTP id 4738F8727DE762286877;
+        Wed, 20 Nov 2019 21:26:28 +0800 (CST)
+Received: from DGGEML505-MBX.china.huawei.com ([169.254.12.31]) by
+ DGGEML404-HUB.china.huawei.com ([fe80::b177:a243:7a69:5ab8%31]) with mapi id
+ 14.03.0439.000; Wed, 20 Nov 2019 21:26:18 +0800
+From:   "wubo (T)" <wubo40@huawei.com>
+To:     Lee Duncan <LDuncan@suse.com>,
+        "cleech@redhat.com" <cleech@redhat.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>
+CC:     Mingfangsen <mingfangsen@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+Subject: [PATCH V4] scsi: avoid potential deadlock in iscsi_if_rx func
+Thread-Topic: [PATCH V4] scsi: avoid potential deadlock in iscsi_if_rx func
+Thread-Index: AdWfpPEqf8P620ByTC6DVQFqYQ7mDQ==
+Date:   Wed, 20 Nov 2019 13:26:17 +0000
+Message-ID: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E3D4D2@dggeml505-mbx.china.huawei.com>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.173.221.252]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the scsi midlayer helper to traverse the number of outstanding
-commands. This also eliminates the last usage for the cmd_list
-functionality so we can drop it.
+In iscsi_if_rx func, after receiving one request through iscsi_if_recv_msg func,
+iscsi_if_send_reply will be called to try to reply the request in do-loop. 
+If the return of iscsi_if_send_reply func return -EAGAIN all the time, one deadlock will occur.
 
-Cc: Balsundar P <balsundar.p@microsemi.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+For example, a client only send msg without calling recvmsg func, then it will result in the watchdog soft lockup. 
+The details are given as follows,
+
+Details of the special case which can cause deadlock:
+
+sock_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ISCSI); 
+retval = bind(sock_fd, (struct sock addr*) & src_addr, sizeof(src_addr);
+while (1) { 
+         state_msg = sendmsg(sock_fd, &msg, 0); 
+         //Note: recvmsg(sock_fd, &msg, 0) is not processed here.
+}        
+close(sock_fd); 
+
+watchdog: BUG: soft lockup - CPU#7 stuck for 22s! [netlink_test:253305] Sample time: 4000897528 ns(HZ: 250) Sample stat: 
+curr: user: 675503481560, nice: 321724050, sys: 448689506750, idle: 4654054240530, iowait: 40885550700, irq: 14161174020, softirq: 8104324140, st: 0
+deta: user: 0, nice: 0, sys: 3998210100, idle: 0, iowait: 0, irq: 1547170, softirq: 242870, st: 0 Sample softirq:
+         TIMER:        992
+         SCHED:          8
+Sample irqstat:
+         irq    2: delta       1003, curr:    3103802, arch_timer
+CPU: 7 PID: 253305 Comm: netlink_test Kdump: loaded Tainted: G           OE     
+Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
+pstate: 40400005 (nZcv daif +PAN -UAO)
+pc : __alloc_skb+0x104/0x1b0
+lr : __alloc_skb+0x9c/0x1b0
+sp : ffff000033603a30
+x29: ffff000033603a30 x28: 00000000000002dd
+x27: ffff800b34ced810 x26: ffff800ba7569f00
+x25: 00000000ffffffff x24: 0000000000000000
+x23: ffff800f7c43f600 x22: 0000000000480020
+x21: ffff0000091d9000 x20: ffff800b34eff200
+x19: ffff800ba7569f00 x18: 0000000000000000
+x17: 0000000000000000 x16: 0000000000000000
+x15: 0000000000000000 x14: 0001000101000100
+x13: 0000000101010000 x12: 0101000001010100
+x11: 0001010101010001 x10: 00000000000002dd
+x9 : ffff000033603d58 x8 : ffff800b34eff400
+x7 : ffff800ba7569200 x6 : ffff800b34eff400
+x5 : 0000000000000000 x4 : 00000000ffffffff
+x3 : 0000000000000000 x2 : 0000000000000001
+x1 : ffff800b34eff2c0 x0 : 0000000000000300 Call trace:
+__alloc_skb+0x104/0x1b0
+iscsi_if_rx+0x144/0x12bc [scsi_transport_iscsi]
+netlink_unicast+0x1e0/0x258
+netlink_sendmsg+0x310/0x378
+sock_sendmsg+0x4c/0x70
+sock_write_iter+0x90/0xf0
+__vfs_write+0x11c/0x190
+vfs_write+0xac/0x1c0
+ksys_write+0x6c/0xd8
+__arm64_sys_write+0x24/0x30
+el0_svc_common+0x78/0x130
+el0_svc_handler+0x38/0x78
+el0_svc+0x8/0xc
+
+Here, we add one limit of retry times in do-loop to avoid the deadlock.
+
+V4: 
+	- modify the patch subject, no code change.
+
+V3:  
+	- replace the error with warning as suggested by Ulrich 
+
+V2:  
+	- add some debug kernel message as suggested by Lee Duncan
+
+Signed-off-by: Bo Wu <wubo40@huawei.com>
+Reviewed-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Reviewed-by: Lee Duncan <LDuncan@suse.com>
 ---
- drivers/scsi/aacraid/linit.c | 81 ++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 40 deletions(-)
+drivers/scsi/scsi_transport_iscsi.c | 7 +++++++
+1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 847dac80defa..b7b189672118 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -622,54 +622,56 @@ static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 	return aac_do_ioctl(dev, cmd, arg);
- }
- 
--static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+struct fib_count_data {
-+	int mlcnt;
-+	int llcnt;
-+	int ehcnt;
-+	int fwcnt;
-+	int krlcnt;
-+};
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 417b868d8735..ed8d9709b9b9 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -24,6 +24,8 @@
+
+ #define ISCSI_TRANSPORT_VERSION "2.0-870"
+
++#define ISCSI_SEND_MAX_ALLOWED  10
 +
-+static bool fib_count_iter(struct scsi_cmnd *scmnd, void *data, bool reserved)
- {
-+	struct fib_count_data *fib_count = data;
- 
--	unsigned long flags;
--	struct scsi_device *sdev = NULL;
-+	switch (scmnd->SCp.phase) {
-+	case AAC_OWNER_FIRMWARE:
-+		fib_count->fwcnt++;
-+		break;
-+	case AAC_OWNER_ERROR_HANDLER:
-+		fib_count->ehcnt++;
-+		break;
-+	case AAC_OWNER_LOWLEVEL:
-+		fib_count->llcnt++;
-+		break;
-+	case AAC_OWNER_MIDLEVEL:
-+		fib_count->mlcnt++;
-+		break;
-+	default:
-+		fib_count->krlcnt++;
-+		break;
-+	}
-+	return true;
-+}
-+
-+/* Called during SCSI EH, so we don't need to block requests */
-+static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+{
- 	struct Scsi_Host *shost = aac->scsi_host_ptr;
--	struct scsi_cmnd *scmnd = NULL;
- 	struct device *ctrl_dev;
-+	struct fib_count_data fcnt = { };
- 
--	int mlcnt  = 0;
--	int llcnt  = 0;
--	int ehcnt  = 0;
--	int fwcnt  = 0;
--	int krlcnt = 0;
--
--	__shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
--			switch (scmnd->SCp.phase) {
--			case AAC_OWNER_FIRMWARE:
--				fwcnt++;
--				break;
--			case AAC_OWNER_ERROR_HANDLER:
--				ehcnt++;
--				break;
--			case AAC_OWNER_LOWLEVEL:
--				llcnt++;
--				break;
--			case AAC_OWNER_MIDLEVEL:
--				mlcnt++;
--				break;
--			default:
--				krlcnt++;
--				break;
--			}
--		}
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--	}
-+	scsi_host_busy_iter(shost, fib_count_iter, &fcnt);
- 
- 	ctrl_dev = &aac->pdev->dev;
- 
--	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
--	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
--	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
--	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
--	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", fcnt.mlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", fcnt.llcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", fcnt.ehcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fcnt.fwcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", fcnt.krlcnt);
- 
--	return mlcnt + llcnt + ehcnt + fwcnt;
-+	return fcnt.mlcnt + fcnt.llcnt + fcnt.ehcnt + fcnt.fwcnt;
- }
- 
- static int aac_eh_abort(struct scsi_cmnd* cmd)
-@@ -1675,7 +1677,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->irq = pdev->irq;
- 	shost->unique_id = unique_id;
- 	shost->max_cmd_len = 16;
--	shost->use_cmd_list = 1;
- 
- 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
- 		aac_init_char();
--- 
-2.16.4
+#define CREATE_TRACE_POINTS
+#include <trace/events/iscsi.h>
+
+@@ -3682,6 +3684,7 @@ iscsi_if_rx(struct sk_buff *skb)
+                struct nlmsghdr       *nlh;
+                struct iscsi_uevent *ev;
+                uint32_t group;
++                int retries = ISCSI_SEND_MAX_ALLOWED;
+
+                 nlh = nlmsg_hdr(skb);
+                if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
+@@ -3712,6 +3715,10 @@ iscsi_if_rx(struct sk_buff *skb)
+                                   break;
+                          err = iscsi_if_send_reply(portid, nlh->nlmsg_type,
+                                                        ev, sizeof(*ev));
++                          if (err == -EAGAIN && --retries < 0) {
++                                   printk(KERN_WARNING "Send reply failed, error %d\n", err);
++                                   break;
++                          }
+                } while (err < 0 && err != -ECONNREFUSED && err != -ESRCH);
+                skb_pull(skb, rlen);
+       }
+--
+1.8.3.1
 
