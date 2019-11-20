@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 739FBC432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 329BEC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4800E20857
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A9EC20872
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 22:27:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="U8SPjd79"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="nLXXl2JF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbfKTW1n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 17:27:43 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:51262 "EHLO mta-01.yadro.com"
+        id S1726701AbfKTW1m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 17:27:42 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:51276 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725819AbfKTW1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726536AbfKTW1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 20 Nov 2019 17:27:41 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id EC87D42F10;
-        Wed, 20 Nov 2019 22:27:40 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id F325543E07;
+        Wed, 20 Nov 2019 22:27:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1574288860; x=1576103261; bh=8juQ/+xQP0fjrdeggdmrYn1F+F1tz+SrUVs
-        3eiNcJoE=; b=U8SPjd79H1Lm3w84qcjRhRICJWIofIZ8MKFFStaF2vHWA2i9EJx
-        SixctuiUXJnry8yY2G8P3ZUD/FqfW/yfhYM5tj6LGXiyLmXgkTo19GLsZxmnZ5kG
-        f7MOtmkhvsxY05cLu++sQS167HVQVOO4eC4BT+scePxlHehmm/GfgnVw=
+        1574288858; x=1576103259; bh=FJaTLojVV5xO0HBNOT++1T1b7T1o7HKRwl3
+        0Rk4VK5U=; b=nLXXl2JFZb5xKGvvowbYiuBWNyxRwFpEryGk7tB66lwbtWD3AN0
+        Ptxe1WYpTbEgAIRjq+d6+wXiOzANg4uEst4Pk9fJnz0F8Njx2DLY833ZIZf3Qh6L
+        UkLMpCfnP5kc62iohz55glozyDjwRLmLTqJ0dkZZajUOW3szMPKAraG8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id OjHgONY1vIYN; Thu, 21 Nov 2019 01:27:40 +0300 (MSK)
+        with ESMTP id FjDiiJsRsJ4x; Thu, 21 Nov 2019 01:27:38 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 2D5B442004;
-        Thu, 21 Nov 2019 01:27:37 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1A98943B0D;
+        Thu, 21 Nov 2019 01:27:35 +0300 (MSK)
 Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 21
- Nov 2019 01:27:36 +0300
+ Nov 2019 01:27:34 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
 To:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
 CC:     <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>,
         Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <hmadhani@marvell.com>
-Subject: [PATCH v2 11/15] scsi: qla2xxx: Ignore PORT UPDATE after N2N PLOGI
-Date:   Thu, 21 Nov 2019 01:27:19 +0300
-Message-ID: <20191120222723.27779-12-r.bolshakov@yadro.com>
+Subject: [PATCH v2 07/15] scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
+Date:   Thu, 21 Nov 2019 01:27:15 +0300
+Message-ID: <20191120222723.27779-8-r.bolshakov@yadro.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191120222723.27779-1-r.bolshakov@yadro.com>
 References: <20191120222723.27779-1-r.bolshakov@yadro.com>
@@ -67,48 +67,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PORT UPDATE asynchronous event is generated on the host that issues PLOGI
-ELS (in the case of higher WWPN). In that case, the event shouldn't be
-handled as it sets unwanted DPC flags (i.e. LOOP_RESYNC_NEEDED) that
-trigger link flap.
-
-Ignore the event if the host has higher WWPN, but handle otherwise.
+The size of the buffer is hardcoded as 0x70 or 112 bytes, while the
+size of ELS IOCB is 0x40 and the size of PLOGI payload returned by
+Get Parameters command is 0x74.
 
 Cc: Quinn Tran <qutran@marvell.com>
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 4eb88c3ee08e..bb6811b94683 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3920,6 +3920,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 					vha->d_id.b24 = 0;
- 					vha->d_id.b.al_pa = 1;
- 					ha->flags.n2n_bigger = 1;
-+					ha->flags.n2n_ae = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index b25f87ff8cde..bd8160fddcd3 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2676,7 +2676,8 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 		ql_dbg(ql_dbg_io + ql_dbg_buffer, vha, 0x3073,
+ 		    "PLOGI ELS IOCB:\n");
+ 		ql_dump_buffer(ql_log_info, vha, 0x0109,
+-		    (uint8_t *)els_iocb, 0x70);
++		    (uint8_t *)els_iocb,
++		    sizeof(*els_iocb));
+ 	} else {
+ 		els_iocb->control_flags = 1 << 13;
+ 		els_iocb->tx_byte_count =
+@@ -2934,7 +2935,8 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
  
- 					id.b.al_pa = 2;
- 					ql_dbg(ql_dbg_async, vha, 0x5075,
-@@ -3930,6 +3931,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 					    "Format 1: Remote login - Waiting for WWPN %8phC.\n",
- 					    rptid_entry->u.f1.port_name);
- 					ha->flags.n2n_bigger = 0;
-+					ha->flags.n2n_ae = 1;
- 				}
- 				qla24xx_post_newsess_work(vha, &id,
- 				    rptid_entry->u.f1.port_name,
-@@ -3941,7 +3943,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 			/* if our portname is higher then initiate N2N login */
+ 	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0x3073, "PLOGI buffer:\n");
+ 	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x0109,
+-	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld, 0x70);
++	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
++	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
  
- 			set_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags);
--			ha->flags.n2n_ae = 1;
- 			return;
- 			break;
- 		case TOPO_FL:
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
 -- 
 2.24.0
 
