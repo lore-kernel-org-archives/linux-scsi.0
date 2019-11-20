@@ -2,152 +2,136 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 578EDC432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEBB4C43215
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 396EF223D1
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91B3320715
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 09:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbfKTJmh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 04:42:37 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:44330 "EHLO huawei.com"
+        id S1728117AbfKTJyM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 04:54:12 -0500
+Received: from mx2.suse.de ([195.135.220.15]:57346 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726757AbfKTJmh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 04:42:37 -0500
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id F03FEEF849C56F642FB0;
-        Wed, 20 Nov 2019 17:42:34 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 20 Nov 2019 17:42:27 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>,
-        <hch@lst.de>
-CC:     <linux-scsi@vger.kernel.org>, <chenxiang66@hisilicon.com>,
-        <linux-kernel@vger.kernel.org>, <yanaijie@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: scsi_transport_sas: Fix memory leak when removing devices
-Date:   Wed, 20 Nov 2019 17:39:15 +0800
-Message-ID: <1574242755-94156-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S1726450AbfKTJyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Nov 2019 04:54:12 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 1425469966;
+        Wed, 20 Nov 2019 09:54:10 +0000 (UTC)
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas: use private counter for tracking
+ inflight per-LUN commands
+To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+References: <20191118103117.978-1-ming.lei@redhat.com>
+ <20191118103117.978-2-ming.lei@redhat.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <97bf460e-62c9-dc64-db4c-fb5540e70ae9@suse.de>
+Date:   Wed, 20 Nov 2019 10:54:09 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+In-Reply-To: <20191118103117.978-2-ming.lei@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Removing a non-host rphy causes a memory leak:
+On 11/18/19 11:31 AM, Ming Lei wrote:
+> Prepare for bypassing sdev->device_busy for improving performance on
+> fast SCSI storage device, so sdev->device_busy can't be relied
+> any more.
+> 
+> megaraid_sas may need one such counter for balancing load among LUNs in
+> some specific setting, so add one private counter for this purpose.
+> 
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Cc: Ewan D. Milne <emilne@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Bart Van Assche <bart.vanassche@wdc.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas.h        |  1 +
+>  drivers/scsi/megaraid/megaraid_sas_base.c   | 15 +++++++++++++--
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 13 +++++++++----
+>  3 files changed, 23 insertions(+), 6 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-root@(none)$ echo 0 > /sys/devices/platform/HISI0162:01/host0/port-0:0/expander-0:0/port-0:0:10/phy-0:0:10/sas_phy/phy-0:0:10/enable
-[   79.857888] hisi_sas_v2_hw HISI0162:01: dev[7:1] is gone
-root@(none)$ echo scan > /sys/kernel/debug/kmemleak
-[  131.656603] kmemleak: 3 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-root@(none)$ more /sys/kernel/debug/kmemleak
-unreferenced object 0xffff041da5c66000 (size 256):
-  comm "kworker/u128:1", pid 549, jiffies 4294898543 (age 113.728s)
-  hex dump (first 32 bytes):
-    00 5e c6 a5 1d 04 ff ff 01 00 00 00 00 00 00 00  .^..............
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<(____ptrval____)>] kmem_cache_alloc+0x188/0x260
-    [<(____ptrval____)>] bsg_setup_queue+0x48/0x1a8
-    [<(____ptrval____)>] sas_rphy_add+0x108/0x2d0
-    [<(____ptrval____)>] sas_probe_devices+0x168/0x208
-    [<(____ptrval____)>] sas_discover_domain+0x660/0x9c8
-    [<(____ptrval____)>] process_one_work+0x3f8/0x690
-    [<(____ptrval____)>] worker_thread+0x70/0x6a0
-    [<(____ptrval____)>] kthread+0x1b8/0x1c0
-    [<(____ptrval____)>] ret_from_fork+0x10/0x18
-unreferenced object 0xffff041d8c075400 (size 128):
-  comm "kworker/u128:1", pid 549, jiffies 4294898543 (age 113.728s)
-  hex dump (first 32 bytes):
-    00 40 25 97 1d 00 ff ff 00 00 00 00 00 00 00 00  .@%.............
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<(____ptrval____)>] __kmalloc_node+0x1a8/0x2c8
-    [<(____ptrval____)>] blk_mq_realloc_tag_set_tags.part.70+0x48/0xd8
-    [<(____ptrval____)>] blk_mq_alloc_tag_set+0x1dc/0x530
-    [<(____ptrval____)>] bsg_setup_queue+0xe8/0x1a8
-    [<(____ptrval____)>] sas_rphy_add+0x108/0x2d0
-    [<(____ptrval____)>] sas_probe_devices+0x168/0x208
-    [<(____ptrval____)>] sas_discover_domain+0x660/0x9c8
-    [<(____ptrval____)>] process_one_work+0x3f8/0x690
-    [<(____ptrval____)>] worker_thread+0x70/0x6a0
-    [<(____ptrval____)>] kthread+0x1b8/0x1c0
-    [<(____ptrval____)>] ret_from_fork+0x10/0x18
-unreferenced object 0xffff041da5c65e00 (size 256):
-  comm "kworker/u128:1", pid 549, jiffies 4294898543 (age 113.728s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<(____ptrval____)>] __kmalloc_node+0x1a8/0x2c8
-    [<(____ptrval____)>] blk_mq_alloc_tag_set+0x254/0x530
-    [<(____ptrval____)>] bsg_setup_queue+0xe8/0x1a8
-    [<(____ptrval____)>] sas_rphy_add+0x108/0x2d0
-    [<(____ptrval____)>] sas_probe_devices+0x168/0x208
-    [<(____ptrval____)>] sas_discover_domain+0x660/0x9c8
-    [<(____ptrval____)>] process_one_work+0x3f8/0x690
-    [<(____ptrval____)>] worker_thread+0x70/0x6a0
-    [<(____ptrval____)>] kthread+0x1b8/0x1c0
-    [<(____ptrval____)>] ret_from_fork+0x10/0x18
-root@(none)$
+Cheers,
 
-It turns out that we don't clean up the request queue fully for bsg
-devices, as the blk mq tags for the request queue are not freed.
-
-Fix by doing the queue removal in one place - in sas_rphy_remove() -
-instead of unregistering the queue in sas_rphy_remove() and finally
-cleaning up the queue in calling blk_cleanup_queue() from
-sas_end_device_release() or sas_expander_release().
-
-Function bsg_remove_queue() can handle a NULL pointer q, so remove the
-precheck in sas_rphy_remove().
-
-Fixes: 651a013649943 ("scsi: scsi_transport_sas: switch to bsg-lib for SMP passthrough")
-Signed-off-by: John Garry <john.garry@huawei.com>
-
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index ef138c57e2a6..182fd25c7c43 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1391,9 +1391,6 @@ static void sas_expander_release(struct device *dev)
- 	struct sas_rphy *rphy = dev_to_rphy(dev);
- 	struct sas_expander_device *edev = rphy_to_expander_device(rphy);
- 
--	if (rphy->q)
--		blk_cleanup_queue(rphy->q);
--
- 	put_device(dev->parent);
- 	kfree(edev);
- }
-@@ -1403,9 +1400,6 @@ static void sas_end_device_release(struct device *dev)
- 	struct sas_rphy *rphy = dev_to_rphy(dev);
- 	struct sas_end_device *edev = rphy_to_end_device(rphy);
- 
--	if (rphy->q)
--		blk_cleanup_queue(rphy->q);
--
- 	put_device(dev->parent);
- 	kfree(edev);
- }
-@@ -1634,8 +1628,7 @@ sas_rphy_remove(struct sas_rphy *rphy)
- 	}
- 
- 	sas_rphy_unlink(rphy);
--	if (rphy->q)
--		bsg_unregister_queue(rphy->q);
-+	bsg_remove_queue(rphy->q);
- 	transport_remove_device(dev);
- 	device_del(dev);
- }
+Hannes
 -- 
-2.17.1
-
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
