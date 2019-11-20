@@ -2,150 +2,127 @@ Return-Path: <SRS0=SaCo=ZM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9248BC432C0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 17:58:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55197C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 18:39:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DA7820878
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 17:58:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FF72208C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Nov 2019 18:39:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727977AbfKTR6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 12:58:48 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:36121 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727442AbfKTR6r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 12:58:47 -0500
-Received: by mail-pj1-f68.google.com with SMTP id cq11so167269pjb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2019 09:58:46 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=JOz1WVZ1ZN2RC6ePdz3SPB319kQjcksOXu7r5UuZ5HI=;
-        b=DrLxpgD3syaXHtnn5+vYLulkaFMgSmkB4T5lhNpAW+msAzN1lzBP5wDswr/0kWcpmX
-         9fg/XnxPGL5K1TylC9DCtFCwuoiGrKLQ2kfzUUmwOXKgb5PoeK1GmYj2s1vOeKin5ebH
-         0xB8zoeNSHqz93dewyjFh5j8d/ARd2YOYRO/un5P1fNYdaYt9gMEgYGcrORwTm0KGDes
-         fXZu4NO3037tJge8052uGufnoFnccVWqBQArA6AGSSaotdBn0V2F0ywWbmVxJ4sTc0v2
-         lLfBvqBQvwfUBukiU8x/PyAn9w6Qf+iMAxdgz3bo1qycMI5JCl4s1EO3LiQtWfWPpK9A
-         rHew==
-X-Gm-Message-State: APjAAAWZbL1RdPqOAkseKV71JapIf2q92yt0+L1nXQZlEVWwlKNHLAEB
-        8lOcgcRy7ZYRMSs/BOk3sQo=
-X-Google-Smtp-Source: APXvYqy8C6WCjoxZUIHHWPb8BcwlCVLn8TetfKUlogGxKRR9HJZGi0Auk5ZP1Jh5cecdr3Gn0K7A6Q==
-X-Received: by 2002:a17:90a:2623:: with SMTP id l32mr5913595pje.70.1574272726392;
-        Wed, 20 Nov 2019 09:58:46 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id 190sm11811940pga.65.2019.11.20.09.58.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Nov 2019 09:58:45 -0800 (PST)
-Subject: Re: [EXT] Re: [PATCH v5 4/4] ufs: Simplify the clock scaling
- mechanism implementation
-To:     cang@codeaurora.org
-Cc:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>, stummala@codeaurora.org,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        linux-scsi@vger.kernel.org, Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-References: <20191112173743.141503-1-bvanassche@acm.org>
- <20191112173743.141503-5-bvanassche@acm.org>
- <a26c719466edfd2c41eea789a6c908ab@codeaurora.org>
- <8acd9237-7414-5dce-5285-69ed3ce6f28c@acm.org>
- <BN7PR08MB56843E1941F42BEF8239B895DB760@BN7PR08MB5684.namprd08.prod.outlook.com>
- <ca27868b-9d25-36b9-7548-02252c293905@acm.org>
- <e0ab904e1413ae6a89cebbced22a6cf8@codeaurora.org>
- <5659ab82-a087-4cfb-088e-e25d7f5515a3@acm.org>
- <0101016e822696b5-d1c358be-a0a2-4ef6-b04d-627c1fb361f8-000000@us-west-2.amazonses.com>
- <9d680c52-53b3-f57d-a14b-525810148ad2@acm.org>
- <0101016e86e3a961-1840fd1c-d71b-434a-8392-f62d7ece8b0f-000000@us-west-2.amazonses.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <6bb86bb6-2906-a0ad-7f83-cc4a2dd3dd5c@acm.org>
-Date:   Wed, 20 Nov 2019 09:58:43 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <0101016e86e3a961-1840fd1c-d71b-434a-8392-f62d7ece8b0f-000000@us-west-2.amazonses.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1726880AbfKTSjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 13:39:40 -0500
+Received: from m9a0001g.houston.softwaregrp.com ([15.124.64.66]:53124 "EHLO
+        m9a0001g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726685AbfKTSjk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Nov 2019 13:39:40 -0500
+X-Greylist: delayed 3256 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Nov 2019 13:39:40 EST
+Received: FROM m9a0001g.houston.softwaregrp.com (15.121.0.191) BY m9a0001g.houston.softwaregrp.com WITH ESMTP;
+ Wed, 20 Nov 2019 18:38:58 +0000
+Received: from M9W0067.microfocus.com (2002:f79:be::f79:be) by
+ M9W0068.microfocus.com (2002:f79:bf::f79:bf) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10; Wed, 20 Nov 2019 17:08:57 +0000
+Received: from NAM04-CO1-obe.outbound.protection.outlook.com (15.124.72.10) by
+ M9W0067.microfocus.com (15.121.0.190) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10 via Frontend Transport; Wed, 20 Nov 2019 17:08:57 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=axj59p4dn3vpkYfgIY1piwqnWfEK/Zwqsc7I6s5+ZmpRcOmT8sPQZqAw6a4iw7RUCdM7AfQP/gbkiuIuZDKy70xE6rN/gdijQn9Tl0LiVh7Haa+BF1IfgCLLlKbsoeVNMjzKApit0qdQ87bqiifUeH5Wkc54I613qLpSOlxg1f97cQZ/RqSZJHvaQredjlzzp7fMf/wTcmJExwgBFEa+VOUw7RN8j9HS0wl/42W7BO7+OMM6oJTh8/qQkxsR+CMQ1HiP7VHIb8oF8ggghK1k5QS5tL5yXEmsCNKNCzrNaDJ/NAUWVb0jIMuxRpEDFxXjI2i+loN8QEf00onALrpdHw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uc5e35HhsHN2mtNoEsdMucao2SsyP1SPtEo7n1VyFn4=;
+ b=NzIIHG1GTsr+tSUJenU6IUuIN8MuMF15Ngh9zWkW0y0QxATgieXi3gHdlKG8A88LkDRalSONwEsBgrVIZGqKTfFmkmyAvAbtjVvhsnxMxnXIyKeYWYiSUpUQvZmM3FZq3KRaOcM0TgF5O0mlPBfNPfLu/Aw3bJc0jBlDbfMYlFuGGh/0TTxFZ2lfn/f7pwbOHrlCG/H+IpjrjJBAsbTvyWsm747Td75hCLrNi730CvmZzXwkmIHy5uLKCZnhqjFwbJuYM2t0MEORIVU8RkSaQbWDG4Q7MoxxuCrp7F1CKmWAnDxZ+RBxXhK/MwztnthgUAypCtzI8NJdyrn7vUJLvA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Received: from MN2PR18MB3278.namprd18.prod.outlook.com (10.255.237.204) by
+ MN2PR18MB2432.namprd18.prod.outlook.com (20.179.84.32) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2451.30; Wed, 20 Nov 2019 17:08:54 +0000
+Received: from MN2PR18MB3278.namprd18.prod.outlook.com
+ ([fe80::2914:6699:d7e5:de45]) by MN2PR18MB3278.namprd18.prod.outlook.com
+ ([fe80::2914:6699:d7e5:de45%3]) with mapi id 15.20.2451.031; Wed, 20 Nov 2019
+ 17:08:53 +0000
+From:   Lee Duncan <LDuncan@suse.com>
+To:     Tom Abraham <TAbraham@suse.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+CC:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH] scsi: qla2xxx: avoid crash in
+ qlt_handle_abts_completion() if mcmd == NULL
+Thread-Topic: [PATCH] scsi: qla2xxx: avoid crash in
+ qlt_handle_abts_completion() if mcmd == NULL
+Thread-Index: AQHVk/Mn21+AUdfikUaO7LypaxLA+6eUYm6A
+Date:   Wed, 20 Nov 2019 17:08:53 +0000
+Message-ID: <74bc094b-e534-7170-4cba-e7aa2451dd6c@suse.com>
+References: <20191104181803.5475-1-tabraham@suse.com>
+In-Reply-To: <20191104181803.5475-1-tabraham@suse.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: LO2P123CA0035.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600::23)
+ To MN2PR18MB3278.namprd18.prod.outlook.com (2603:10b6:208:168::12)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=LDuncan@suse.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [73.25.22.216]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3d14aa39-264e-4cc4-4d47-08d76ddc522d
+x-ms-traffictypediagnostic: MN2PR18MB2432:|MN2PR18MB2432:
+x-ld-processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR18MB24324836993AC05E9F401046DA4F0@MN2PR18MB2432.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:534;
+x-forefront-prvs: 02272225C5
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(136003)(346002)(39860400002)(366004)(396003)(199004)(189003)(11346002)(486006)(2616005)(66946007)(66476007)(8936002)(76176011)(186003)(52116002)(31696002)(102836004)(81166006)(86362001)(26005)(53546011)(6506007)(386003)(5660300002)(80792005)(4744005)(4326008)(25786009)(6436002)(478600001)(6486002)(229853002)(6246003)(107886003)(36756003)(66446008)(6512007)(66556008)(64756008)(14454004)(81156014)(8676002)(476003)(99286004)(31686004)(110136005)(256004)(14444005)(2906002)(316002)(66066001)(6116002)(54906003)(3846002)(71200400001)(446003)(305945005)(7736002)(71190400001);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR18MB2432;H:MN2PR18MB3278.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: suse.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: vo1WNhnzeZ2xsHHXPfoQaw414NDA09g+fxOR7MFKQs6LW8WYmQLllWazCsYJmxW11gB4EJTdkAppiUrH7ucqYTFmST6YAemDeCNq8kSArEnFukoPK1l9iUq+0c9TYNJcxVtqpO6urlckR0z2Wsm3R52mixhUCsImLdebndW8eJ0vPNSjF2U3OUH5uIjbO6zJclNpbvZoNBF54GCZEVM3tJLUf/3Z8et08g9GuzE1uV+RROz6MUmA2rJa+kSIB0ndFp9yylBU0U45V0XDobKEQ8/bDpyqYp/7OyCjGYQ3J2hSnJUlBiB+qOsenT9Sph7KZN1jNm1yPrSUwCzkT0Scw+JdSNc6pEmxksMSrkSYWbQKeV0FzhRr/6ASD55ULZ/7nOgFzaITM+VG4gKOJTQLe00BBe8T6S2eIsNOH4tRiY83tkbQaCsQ91eYVDlaihh4
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <84B75E3A84CB2542B23E8ACF932D259D@namprd18.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3d14aa39-264e-4cc4-4d47-08d76ddc522d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2019 17:08:53.8375
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 856b813c-16e5-49a5-85ec-6f081e13b527
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: yIphvsVIEMDoK0wsMJiMq1A95JqjORndUhzyH6ZbaGarjmFdxfjTbWSyyb4thX+mH8wFKFfHWJVG3Qx/EwYJ+A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2432
+X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/19/19 7:38 PM, cang@codeaurora.org wrote:
-> On 2019-11-20 07:16, Bart Van Assche wrote:
->> On 11/18/19 9:33 PM, cang@codeaurora.org wrote:
-[ ... ]
-> 
-> I am still not quite clear about the blk_freeze_queue() part.
-> 
->>> In the new implementation of ufshcd_clock_scaling_prepare(), after 
->>> blk_freeze_queue_start(), we call blk_mq_freeze_queue_wait_timeout()
->>> to wait for 1 sec. In addition to those requests which have already
->>> been queued to HW doorbell, more requests will be dispatched within 1 
->>> sec, through the lowest Gear. My first impression is that it might be >>> a bit lazy and I am not sure how much it may affect the benchmarks.
-> 
-> First of all, reg above lines, do you agree that there can be latency in 
-> scaling up/down
-> comparing with the old implementation?
-> 
-> I can understand that after queue is frozen, all calls to blk_get_request()
-> are blocked, no submission can be made after this point, due to
-> blk_queue_enter() shall wait on q->mq_freeze_wq.
-> 
-> <--code snippet-->
-> wait_event(q->mq_freeze_wq,
->             (atomic_read(&q->mq_freeze_depth) == 0 &&
-> <--code snippet-->
-> 
->>> And if the request queues are heavily loaded(many bios are waiting 
->>> for a free tag to become a request),
->>> is 1 sec long enough to freeze all these request queue?
-> 
-> But here I meant those bios, before we call blk_freeze_queue_start(), 
-> sent through
-> submit_bio() calls which have already entered blk_mq_get_request() and 
-> already
-> returned from the blk_queue_enter_live(). These bios are waiting for a 
-> free tag
-> (waiting on func blk_mq_get_tag() when queue is full).
-> Shall the request queue be frozen before these bios are handled?
-> 
-> void blk_mq_freeze_queue_wait(struct request_queue *q)
-> {
->       wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
-> }
-> EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_wait);
-> 
-> Per my understanding, these bios have already increased 
-> &q->q_usage_counter.
-> And the &q->q_usage_counter will only become 0 when all of the requests 
-> in the
-> queue and these bios(after they get free tags and turned into requests) are
-> completed from block layer, meaning after blk_queue_exit() is called in
-> __blk_mq_free_request() for all of them. Please correct me if I am wrong.
-
-Hi Can,
-
-Please have another look at the request queue freezing mechanism in the 
-block layer. If blk_queue_enter() sleeps in wait_event() that implies 
-either that the percpu_ref_tryget_live() call failed or that the 
-percpu_ref_tryget_live() succeeded and that it was followed by a 
-percpu_ref_put() call. Ignoring concurrent q_usage_counter changes, in 
-both cases q->q_usage_counter will have the same value as before 
-blk_queue_enter() started.
-
-In other words, there shouldn't be a latency difference between the 
-current and the proposed approach since neither approach waits for 
-completion of bios or SCSI commands that are queued after clock scaling 
-started.
-
-Thanks,
-
-Bart.
+T24gMTEvNC8xOSAxMDoxOCBBTSwgVGhvbWFzIEFicmFoYW0gd3JvdGU6DQo+IHFsdF9jdGlvX3Rv
+X2NtZCgpIHdpbGwgcmV0dXJuIGEgTlVMTCBtY21kIGlmIGggPT0gUUxBX1RHVF9TS0lQX0hBTkRM
+RS4gSWYNCj4gdGhlIGVycm9yIHN1YmNvZGVzIGRvbid0IG1hdGNoIHRoZSBleGFjdCBjb2RlcyBj
+aGVja2VkIGEgY3Jhc2ggd2lsbCBvY2N1cg0KPiB3aGVuIGNhbGxpbmcgZnJlZV9tY21kIG9uIHRo
+ZSBudWxsIG1jbWQNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFRob21hcyBBYnJhaGFtIDx0YWJyYWhh
+bUBzdXNlLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMg
+fCAzICsrLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigt
+KQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYyBi
+L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KPiBpbmRleCBhMDZlNTYyMjRhNTUu
+LjYxMWFiMjI0NjYyZiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3Rh
+cmdldC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KPiBAQCAt
+NTczMiw3ICs1NzMyLDggQEAgc3RhdGljIHZvaWQgcWx0X2hhbmRsZV9hYnRzX2NvbXBsZXRpb24o
+c3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSwNCj4gIAkJCSAgICB2aGEtPnZwX2lkeCwgZW50cnkt
+PmNvbXBsX3N0YXR1cywNCj4gIAkJCSAgICBlbnRyeS0+ZXJyb3Jfc3ViY29kZTEsDQo+ICAJCQkg
+ICAgZW50cnktPmVycm9yX3N1YmNvZGUyKTsNCj4gLQkJCWhhLT50Z3QudGd0X29wcy0+ZnJlZV9t
+Y21kKG1jbWQpOw0KPiArCQkJaWYgKG1jbWQpDQo+ICsJCQkJaGEtPnRndC50Z3Rfb3BzLT5mcmVl
+X21jbWQobWNtZCk7DQo+ICAJCX0NCj4gIAl9IGVsc2UgaWYgKG1jbWQpIHsNCj4gIAkJaGEtPnRn
+dC50Z3Rfb3BzLT5mcmVlX21jbWQobWNtZCk7DQo+IA0KDQpSZXZpZXdlZC1ieTogTGVlIER1bmNh
+biA8bGR1bmNhbkBzdXNlLmNvbT4NCg==
