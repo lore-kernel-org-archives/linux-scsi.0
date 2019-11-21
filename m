@@ -2,44 +2,44 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A2B4C432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C083C432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BCA2206CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C37A206CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726540AbfKUWJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Nov 2019 17:09:11 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:45813 "EHLO
+        id S1726554AbfKUWJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Nov 2019 17:09:13 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:44735 "EHLO
         mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726297AbfKUWJK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2019 17:09:10 -0500
-Received: by mail-pl1-f195.google.com with SMTP id w7so2196582plz.12
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2019 14:09:10 -0800 (PST)
+        with ESMTP id S1726297AbfKUWJM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2019 17:09:12 -0500
+Received: by mail-pl1-f195.google.com with SMTP id az9so2200072plb.11
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2019 14:09:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zcFeLGaC0kZuLZi8us1AZWM4bS28wziNMRfKkCINacI=;
-        b=jUF5g8k2huR/SCHLnX7/3e5B4k382uuxoRN/4Wmq2t+76vipdqiArIna0I2C6UP2Xz
-         0224kRDDuQ6tGkW7IO2CKlmw0Thc4Bz25kO5rJL0OIo18+jvnB29Ic4HrZMJRf1RbALT
-         mzGw4tAX7gdn8cVBEtWrTXP7mCVXfGvQnkxV6NgU/2hxm4SOwp4yO8IZ7CSLgf/vqZsM
-         0KiW3w0V0KGdR22kt1FrFU7cjRX2h+67LRAUc6wIxeKF/1XJuiS+jZZi3J0p4Yw1mR0j
-         8rR/2shUjHOhCuKxDptmuikCOp5A2mgOUnfsowNUbODp4un2/6/OM8GOD5PE7QkL6Gq0
-         I8qA==
-X-Gm-Message-State: APjAAAXsTzJqZ1WDoAQTIZDqg5pcn5EYF3IB3LxertwczHpNUwoawqMm
-        PHI33Iz4pC9xxz7jdTjnBZ0=
-X-Google-Smtp-Source: APXvYqwdMgkPgLjytpuFBRcbUN/GIL7JmTDWoA4JSbvpGRyPC6QoYZQFzI64vT8cT1PC96WoPVa2ug==
-X-Received: by 2002:a17:902:848a:: with SMTP id c10mr5066711plo.209.1574374149648;
-        Thu, 21 Nov 2019 14:09:09 -0800 (PST)
+        bh=BkrNWWFjmO6CmQrGA6EbrNNmxT5DhfxdzSQwN3I0qzU=;
+        b=CRUou1gnyU+gHdt9nLVOqnwopxMOHfU9QmCVoHgAbIGCdhSdItViAZmdkDnzZqFobP
+         1lVJsMeNo3t0jhkTvKiN6pZKtsmFXZkH3VxgUDgJ17xpWW4wo3LJfSGCCsSDb+6OrPPu
+         UW5puf4MVM2uXRimwXN0biMTUa8Yfc5HAOHSMvTocXHPSdTylsfI7FlK7UzbVikL2hSt
+         ETJ7UrK8ZSwM6aL1JqFSE5vPuFAtyueMkCu9NigXB5LRiJb3haby8iOk/ibDblDQKPQ6
+         v5bGGj1VgL6imhDiVUwoLSrQN0VVcugX22QfvNWMxhhdcSTdQXLjUfmAbSxXzbvk6vDf
+         htNg==
+X-Gm-Message-State: APjAAAUTMo9a7RIkSdpTCQNTZMKPmNCGyPCuggVnO9MmgoV/PnE5huta
+        XEGMoXuAVxqLzOAyhWujFUbgAN1q
+X-Google-Smtp-Source: APXvYqzLzocNfEGuEb/WUcoV5B4su7fDmPRenZmfUF5QCb6M5epv0ctjCQ01SwX7cnn3ogadcv1tXg==
+X-Received: by 2002:a17:902:8c91:: with SMTP id t17mr4779547plo.225.1574374151027;
+        Thu, 21 Nov 2019 14:09:11 -0800 (PST)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id m15sm4617714pfh.19.2019.11.21.14.09.08
+        by smtp.gmail.com with ESMTPSA id m15sm4617714pfh.19.2019.11.21.14.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Nov 2019 14:09:08 -0800 (PST)
+        Thu, 21 Nov 2019 14:09:10 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -50,9 +50,9 @@ Cc:     Bean Huo <beanhuo@micron.com>, Avri Altman <avri.altman@wdc.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v6 2/4] ufs: Avoid busy-waiting by eliminating tag conflicts
-Date:   Thu, 21 Nov 2019 14:08:48 -0800
-Message-Id: <20191121220850.16195-3-bvanassche@acm.org>
+Subject: [PATCH v6 3/4] ufs: Use blk_{get,put}_request() to allocate and free TMFs
+Date:   Thu, 21 Nov 2019 14:08:49 -0800
+Message-Id: <20191121220850.16195-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.24.0.432.g9d3f5f5b63-goog
 In-Reply-To: <20191121220850.16195-1-bvanassche@acm.org>
 References: <20191121220850.16195-1-bvanassche@acm.org>
@@ -63,12 +63,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of tracking which tags are in use in the ufs_hba.lrb_in_use
-bitmask, rely on the block layer tag allocation mechanism. This patch
-removes the following busy-waiting loop if ufshcd_issue_devman_upiu_cmd()
-and the block layer accidentally allocate the same tag for a SCSI request:
-* ufshcd_queuecommand() returns SCSI_MLQUEUE_HOST_BUSY.
-* The SCSI core requeues the SCSI command.
+Manage TMF tags with blk_{get,put}_request() instead of
+ufshcd_get_tm_free_slot() / ufshcd_put_tm_slot(). Store a per-request
+completion pointer in request.end_io_data instead of using a waitqueue
+to report TMF completion.
 
 Tested-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
@@ -78,325 +76,267 @@ Cc: Avri Altman <avri.altman@wdc.com>
 Cc: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 121 +++++++++++++++-----------------------
- drivers/scsi/ufs/ufshcd.h |   6 +-
- 2 files changed, 50 insertions(+), 77 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 130 ++++++++++++++++++++++----------------
+ drivers/scsi/ufs/ufshcd.h |  12 ++--
+ 2 files changed, 80 insertions(+), 62 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index deca1538e184..7b3649111b4e 100644
+index 7b3649111b4e..99337e0b54f6 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -497,8 +497,8 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
--	dev_err(hba->dev, "lrb in use=0x%lx, outstanding reqs=0x%lx tasks=0x%lx\n",
--		hba->lrb_in_use, hba->outstanding_reqs, hba->outstanding_tasks);
-+	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-+		hba->outstanding_reqs, hba->outstanding_tasks);
- 	dev_err(hba->dev, "saved_err=0x%x, saved_uic_err=0x%x\n",
- 		hba->saved_err, hba->saved_uic_err);
- 	dev_err(hba->dev, "Device power mode=%d, UIC link state=%d\n",
-@@ -1273,6 +1273,24 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	return ret;
- }
- 
-+static bool ufshcd_is_busy(struct request *req, void *priv, bool reserved)
-+{
-+	int *busy = priv;
-+
-+	WARN_ON_ONCE(reserved);
-+	(*busy)++;
-+	return false;
-+}
-+
-+/* Whether or not any tag is in use by a request that is in progress. */
-+static bool ufshcd_any_tag_in_use(struct ufs_hba *hba)
-+{
-+	struct request_queue *q = hba->cmd_queue;
-+	int busy = 0;
-+
-+	blk_mq_tagset_busy_iter(q->tag_set, ufshcd_is_busy, &busy);
-+	return busy;
-+}
- 
- static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 		struct devfreq_dev_status *stat)
-@@ -1619,7 +1637,7 @@ static void ufshcd_gate_work(struct work_struct *work)
- 
- 	if (hba->clk_gating.active_reqs
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
--		|| hba->lrb_in_use || hba->outstanding_tasks
-+		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
- 		|| hba->active_uic_cmd || hba->uic_async_done)
- 		goto rel_lock;
- 
-@@ -1673,7 +1691,7 @@ static void __ufshcd_release(struct ufs_hba *hba)
- 
- 	if (hba->clk_gating.active_reqs || hba->clk_gating.is_suspended
- 		|| hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL
--		|| hba->lrb_in_use || hba->outstanding_tasks
-+		|| ufshcd_any_tag_in_use(hba) || hba->outstanding_tasks
- 		|| hba->active_uic_cmd || hba->uic_async_done
- 		|| ufshcd_eh_in_progress(hba))
- 		return;
-@@ -2443,22 +2461,9 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	hba->req_abort_count = 0;
- 
--	/* acquire the tag to make sure device cmds don't use it */
--	if (test_and_set_bit_lock(tag, &hba->lrb_in_use)) {
--		/*
--		 * Dev manage command in progress, requeue the command.
--		 * Requeuing the command helps in cases where the request *may*
--		 * find different tag instead of waiting for dev manage command
--		 * completion.
--		 */
--		err = SCSI_MLQUEUE_HOST_BUSY;
--		goto out;
--	}
--
- 	err = ufshcd_hold(hba, true);
- 	if (err) {
- 		err = SCSI_MLQUEUE_HOST_BUSY;
--		clear_bit_unlock(tag, &hba->lrb_in_use);
- 		goto out;
- 	}
- 	WARN_ON(hba->clk_gating.state != CLKS_ON);
-@@ -2479,7 +2484,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	err = ufshcd_map_sg(hba, lrbp);
- 	if (err) {
- 		lrbp->cmd = NULL;
--		clear_bit_unlock(tag, &hba->lrb_in_use);
- 		goto out;
- 	}
- 	/* Make sure descriptors are ready before ringing the doorbell */
-@@ -2626,44 +2630,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 	return err;
+@@ -645,40 +645,6 @@ static inline int ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp)
+ 	return le32_to_cpu(lrbp->utr_descriptor_ptr->header.dword_2) & MASK_OCS;
  }
  
 -/**
-- * ufshcd_get_dev_cmd_tag - Get device management command tag
-- * @hba: per-adapter instance
-- * @tag_out: pointer to variable with available slot value
+- * ufshcd_get_tm_free_slot - get a free slot for task management request
+- * @hba: per adapter instance
+- * @free_slot: pointer to variable with available slot value
 - *
-- * Get a free slot and lock it until device management command
-- * completes.
-- *
-- * Returns false if free slot is unavailable for locking, else
-- * return true with tag value in @tag.
+- * Get a free tag and lock it until ufshcd_put_tm_slot() is called.
+- * Returns 0 if free slot is not available, else return 1 with tag value
+- * in @free_slot.
 - */
--static bool ufshcd_get_dev_cmd_tag(struct ufs_hba *hba, int *tag_out)
+-static bool ufshcd_get_tm_free_slot(struct ufs_hba *hba, int *free_slot)
 -{
 -	int tag;
 -	bool ret = false;
--	unsigned long tmp;
 -
--	if (!tag_out)
+-	if (!free_slot)
 -		goto out;
 -
 -	do {
--		tmp = ~hba->lrb_in_use;
--		tag = find_last_bit(&tmp, hba->nutrs);
--		if (tag >= hba->nutrs)
+-		tag = find_first_zero_bit(&hba->tm_slots_in_use, hba->nutmrs);
+-		if (tag >= hba->nutmrs)
 -			goto out;
--	} while (test_and_set_bit_lock(tag, &hba->lrb_in_use));
+-	} while (test_and_set_bit_lock(tag, &hba->tm_slots_in_use));
 -
--	*tag_out = tag;
+-	*free_slot = tag;
 -	ret = true;
 -out:
 -	return ret;
 -}
 -
--static inline void ufshcd_put_dev_cmd_tag(struct ufs_hba *hba, int tag)
+-static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
 -{
--	clear_bit_unlock(tag, &hba->lrb_in_use);
+-	clear_bit_unlock(slot, &hba->tm_slots_in_use);
 -}
 -
  /**
-  * ufshcd_exec_dev_cmd - API for sending device management requests
-  * @hba: UFS hba
-@@ -2676,6 +2642,8 @@ static inline void ufshcd_put_dev_cmd_tag(struct ufs_hba *hba, int tag)
- static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		enum dev_cmd_type cmd_type, int timeout)
- {
-+	struct request_queue *q = hba->cmd_queue;
-+	struct request *req;
- 	struct ufshcd_lrb *lrbp;
- 	int err;
- 	int tag;
-@@ -2689,7 +2657,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	 * Even though we use wait_event() which sleeps indefinitely,
- 	 * the maximum wait time is bounded by SCSI request timeout.
- 	 */
--	wait_event(hba->dev_cmd.tag_wq, ufshcd_get_dev_cmd_tag(hba, &tag));
-+	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+	tag = req->tag;
-+	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
- 
- 	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
-@@ -2714,8 +2686,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 			err ? "query_complete_err" : "query_complete");
- 
- out_put_tag:
--	ufshcd_put_dev_cmd_tag(hba, tag);
--	wake_up(&hba->dev_cmd.tag_wq);
-+	blk_put_request(req);
- 	up_read(&hba->clk_scaling_lock);
- 	return err;
+  * ufshcd_utrl_clear - Clear a bit in UTRLCLR register
+  * @hba: per adapter instance
+@@ -5583,6 +5549,27 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
+ 	return retval;
  }
-@@ -4856,7 +4827,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 			cmd->result = result;
- 			/* Mark completed command as NULL in LRB */
- 			lrbp->cmd = NULL;
--			clear_bit_unlock(index, &hba->lrb_in_use);
- 			/* Do not touch lrbp after scsi done */
- 			cmd->scsi_done(cmd);
- 			__ufshcd_release(hba);
-@@ -4878,9 +4848,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 	hba->outstanding_reqs ^= completed_reqs;
  
- 	ufshcd_clk_scaling_update_busy(hba);
--
--	/* we might have free'd some tags above */
--	wake_up(&hba->dev_cmd.tag_wq);
++struct ctm_info {
++	struct ufs_hba	*hba;
++	unsigned long	pending;
++	unsigned int	ncpl;
++};
++
++static bool ufshcd_compl_tm(struct request *req, void *priv, bool reserved)
++{
++	struct ctm_info *const ci = priv;
++	struct completion *c;
++
++	WARN_ON_ONCE(reserved);
++	if (test_bit(req->tag, &ci->pending))
++		return true;
++	ci->ncpl++;
++	c = req->end_io_data;
++	if (c)
++		complete(c);
++	return true;
++}
++
+ /**
+  * ufshcd_tmc_handler - handle task management function completion
+  * @hba: per adapter instance
+@@ -5593,16 +5580,14 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
+  */
+ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
+ {
+-	u32 tm_doorbell;
++	struct request_queue *q = hba->tmf_queue;
++	struct ctm_info ci = {
++		.hba	 = hba,
++		.pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL),
++	};
+ 
+-	tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-	hba->tm_condition = tm_doorbell ^ hba->outstanding_tasks;
+-	if (hba->tm_condition) {
+-		wake_up(&hba->tm_wq);
+-		return IRQ_HANDLED;
+-	} else {
+-		return IRQ_NONE;
+-	}
++	blk_mq_tagset_busy_iter(q->tag_set, ufshcd_compl_tm, &ci);
++	return ci.ncpl ? IRQ_HANDLED : IRQ_NONE;
  }
  
  /**
-@@ -5876,6 +5843,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 					enum dev_cmd_type cmd_type,
- 					enum query_opcode desc_op)
+@@ -5708,7 +5693,10 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 		struct utp_task_req_desc *treq, u8 tm_function)
  {
-+	struct request_queue *q = hba->cmd_queue;
++	struct request_queue *q = hba->tmf_queue;
+ 	struct Scsi_Host *host = hba->host;
++	DECLARE_COMPLETION_ONSTACK(wait);
 +	struct request *req;
- 	struct ufshcd_lrb *lrbp;
- 	int err = 0;
- 	int tag;
-@@ -5885,7 +5854,11 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	unsigned long flags;
+ 	int free_slot, task_tag, err;
  
- 	down_read(&hba->clk_scaling_lock);
+@@ -5717,7 +5705,10 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	 * Even though we use wait_event() which sleeps indefinitely,
+ 	 * the maximum wait time is bounded by %TM_CMD_TIMEOUT.
+ 	 */
+-	wait_event(hba->tm_tag_wq, ufshcd_get_tm_free_slot(hba, &free_slot));
++	req = blk_get_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
++	req->end_io_data = &wait;
++	free_slot = req->tag;
++	WARN_ON_ONCE(free_slot < 0 || free_slot >= hba->nutmrs);
+ 	ufshcd_hold(hba, false);
  
--	wait_event(hba->dev_cmd.tag_wq, ufshcd_get_dev_cmd_tag(hba, &tag));
-+	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+	tag = req->tag;
-+	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
+ 	spin_lock_irqsave(host->host_lock, flags);
+@@ -5743,10 +5734,14 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_send");
  
- 	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
-@@ -5961,8 +5934,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 		}
- 	}
- 
--	ufshcd_put_dev_cmd_tag(hba, tag);
--	wake_up(&hba->dev_cmd.tag_wq);
-+	blk_put_request(req);
- 	up_read(&hba->clk_scaling_lock);
- 	return err;
- }
-@@ -6257,9 +6229,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	hba->lrb[tag].cmd = NULL;
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 
--	clear_bit_unlock(tag, &hba->lrb_in_use);
--	wake_up(&hba->dev_cmd.tag_wq);
--
- out:
+ 	/* wait until the task management command is completed */
+-	err = wait_event_timeout(hba->tm_wq,
+-			test_bit(free_slot, &hba->tm_condition),
++	err = wait_for_completion_io_timeout(&wait,
+ 			msecs_to_jiffies(TM_CMD_TIMEOUT));
  	if (!err) {
- 		err = SUCCESS;
-@@ -8263,6 +8232,7 @@ void ufshcd_remove(struct ufs_hba *hba)
++		/*
++		 * Make sure that ufshcd_compl_tm() does not trigger a
++		 * use-after-free.
++		 */
++		req->end_io_data = NULL;
+ 		ufshcd_add_tm_upiu_trace(hba, task_tag, "tm_complete_err");
+ 		dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
+ 				__func__, tm_function);
+@@ -5765,9 +5760,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	__clear_bit(free_slot, &hba->outstanding_tasks);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+-	clear_bit(free_slot, &hba->tm_condition);
+-	ufshcd_put_tm_slot(hba, free_slot);
+-	wake_up(&hba->tm_tag_wq);
++	blk_put_request(req);
+ 
+ 	ufshcd_release(hba);
+ 	return err;
+@@ -8232,6 +8225,8 @@ void ufshcd_remove(struct ufs_hba *hba)
  {
  	ufs_bsg_remove(hba);
  	ufs_sysfs_remove_nodes(hba->dev);
-+	blk_cleanup_queue(hba->cmd_queue);
++	blk_cleanup_queue(hba->tmf_queue);
++	blk_mq_free_tag_set(&hba->tmf_tag_set);
+ 	blk_cleanup_queue(hba->cmd_queue);
  	scsi_remove_host(hba->host);
  	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
-@@ -8426,9 +8396,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -8311,6 +8306,18 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ }
+ EXPORT_SYMBOL(ufshcd_alloc_host);
  
- 	init_rwsem(&hba->clk_scaling_lock);
++/* This function exists because blk_mq_alloc_tag_set() requires this. */
++static blk_status_t ufshcd_queue_tmf(struct blk_mq_hw_ctx *hctx,
++				     const struct blk_mq_queue_data *qd)
++{
++	WARN_ON_ONCE(true);
++	return BLK_STS_NOTSUPP;
++}
++
++static const struct blk_mq_ops ufshcd_tmf_ops = {
++	.queue_rq = ufshcd_queue_tmf,
++};
++
+ /**
+  * ufshcd_init - Driver initialization routine
+  * @hba: per-adapter instance
+@@ -8380,10 +8387,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  
--	/* Initialize device management tag acquire wait queue */
--	init_waitqueue_head(&hba->dev_cmd.tag_wq);
+ 	hba->max_pwr_info.is_valid = false;
+ 
+-	/* Initailize wait queue for task management */
+-	init_waitqueue_head(&hba->tm_wq);
+-	init_waitqueue_head(&hba->tm_tag_wq);
 -
- 	ufshcd_init_clk_gating(hba);
- 
- 	ufshcd_init_clk_scaling(hba);
-@@ -8462,6 +8429,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		goto exit_gating;
+ 	/* Initialize work queues */
+ 	INIT_WORK(&hba->eh_work, ufshcd_err_handler);
+ 	INIT_WORK(&hba->eeh_work, ufshcd_exception_event_handler);
+@@ -8435,6 +8438,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		goto out_remove_scsi_host;
  	}
  
-+	hba->cmd_queue = blk_mq_init_queue(&hba->host->tag_set);
-+	if (IS_ERR(hba->cmd_queue)) {
-+		err = PTR_ERR(hba->cmd_queue);
-+		goto out_remove_scsi_host;
++	hba->tmf_tag_set = (struct blk_mq_tag_set) {
++		.nr_hw_queues	= 1,
++		.queue_depth	= hba->nutmrs,
++		.ops		= &ufshcd_tmf_ops,
++		.flags		= BLK_MQ_F_NO_SCHED,
++	};
++	err = blk_mq_alloc_tag_set(&hba->tmf_tag_set);
++	if (err < 0)
++		goto free_cmd_queue;
++	hba->tmf_queue = blk_mq_init_queue(&hba->tmf_tag_set);
++	if (IS_ERR(hba->tmf_queue)) {
++		err = PTR_ERR(hba->tmf_queue);
++		goto free_tmf_tag_set;
 +	}
 +
  	/* Reset the attached device */
  	ufshcd_vops_device_reset(hba);
  
-@@ -8471,7 +8444,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -8444,7 +8462,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  		dev_err(hba->dev, "Host controller enable failed\n");
  		ufshcd_print_host_regs(hba);
  		ufshcd_print_host_state(hba);
--		goto out_remove_scsi_host;
-+		goto free_cmd_queue;
+-		goto free_cmd_queue;
++		goto free_tmf_queue;
  	}
  
  	/*
-@@ -8508,6 +8481,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -8481,6 +8499,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  
  	return 0;
  
-+free_cmd_queue:
-+	blk_cleanup_queue(hba->cmd_queue);
++free_tmf_queue:
++	blk_cleanup_queue(hba->tmf_queue);
++free_tmf_tag_set:
++	blk_mq_free_tag_set(&hba->tmf_tag_set);
+ free_cmd_queue:
+ 	blk_cleanup_queue(hba->cmd_queue);
  out_remove_scsi_host:
- 	scsi_remove_host(hba->host);
- exit_gating:
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 2740f6941ec6..56b9da6db1cc 100644
+index 56b9da6db1cc..53bfe175342c 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -212,13 +212,11 @@ struct ufs_query {
-  * @type: device management command type - Query, NOP OUT
-  * @lock: lock to allow one command at a time
-  * @complete: internal commands completion
-- * @tag_wq: wait queue until free command slot is available
-  */
- struct ufs_dev_cmd {
- 	enum dev_cmd_type type;
- 	struct mutex lock;
- 	struct completion *complete;
--	wait_queue_head_t tag_wq;
- 	struct ufs_query query;
- };
+@@ -493,11 +493,9 @@ struct ufs_stats {
+  * @irq: Irq number of the controller
+  * @active_uic_cmd: handle of active UIC command
+  * @uic_cmd_mutex: mutex for uic command
+- * @tm_wq: wait queue for task management
+- * @tm_tag_wq: wait queue for free task management slots
+- * @tm_slots_in_use: bit map of task management request slots in use
++ * @tmf_tag_set: TMF tag set.
++ * @tmf_queue: Used to allocate TMF tags.
+  * @pwr_done: completion for power mode change
+- * @tm_condition: condition variable for task management
+  * @ufshcd_state: UFSHCD states
+  * @eh_flags: Error handling flags
+  * @intr_mask: Interrupt Mask Bits
+@@ -641,10 +639,8 @@ struct ufs_hba {
+ 	/* Device deviations from standard UFS device spec. */
+ 	unsigned int dev_quirks;
  
-@@ -483,7 +481,7 @@ struct ufs_stats {
-  * @host: Scsi_Host instance of the driver
-  * @dev: device handle
-  * @lrb: local reference block
-- * @lrb_in_use: lrb in use
-+ * @cmd_queue: Used to allocate command tags from hba->host->tag_set.
-  * @outstanding_tasks: Bits representing outstanding task requests
-  * @outstanding_reqs: Bits representing outstanding transfer requests
-  * @capabilities: UFS Controller Capabilities
-@@ -541,6 +539,7 @@ struct ufs_hba {
+-	wait_queue_head_t tm_wq;
+-	wait_queue_head_t tm_tag_wq;
+-	unsigned long tm_condition;
+-	unsigned long tm_slots_in_use;
++	struct blk_mq_tag_set tmf_tag_set;
++	struct request_queue *tmf_queue;
  
- 	struct Scsi_Host *host;
- 	struct device *dev;
-+	struct request_queue *cmd_queue;
- 	/*
- 	 * This field is to keep a reference to "scsi_device" corresponding to
- 	 * "UFS device" W-LU.
-@@ -561,7 +560,6 @@ struct ufs_hba {
- 	u32 ahit;
- 
- 	struct ufshcd_lrb *lrb;
--	unsigned long lrb_in_use;
- 
- 	unsigned long outstanding_tasks;
- 	unsigned long outstanding_reqs;
+ 	struct uic_command *active_uic_cmd;
+ 	struct mutex uic_cmd_mutex;
