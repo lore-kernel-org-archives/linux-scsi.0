@@ -2,157 +2,128 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2E78C432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 00:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 431AEC432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 00:08:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6AE6120878
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 00:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FFC1208A1
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 00:08:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="k0djxuUj";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="RXtsZDIZ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ddHJcx4R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbfKUADF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 19:03:05 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50148 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725878AbfKUADF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 19:03:05 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xAKNuPgt014509;
-        Wed, 20 Nov 2019 16:03:04 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=8cgcpfG0dFQwNKqFtP46a24EhqoN1rxitqSanQnXtG4=;
- b=k0djxuUjsSt+XIQtWXEnHgfPQVxU1xRLPuWaI1I+n9fcP6r2z9gCLooqBWLWkkLf9cH0
- tExwg9knBL/1LKqBD78kAGOBEV285oFlSCNZbwxBdkp4SPTQuXymCJk58Z2dPKgZZzbd
- F5kVH04Fc39JgV6xr2XXsM19KDHD27Eh+AZ10715A2/eHrZwy7lt/7zWJLP4Q65SunKU
- syLIk7WtWmWn6hNwlepAWT8FNG0ogHFhu1MGXgwOugunc1kQhK61laeSTYWQOS2N63hS
- BW9TRXnqTKSsCITivh6zBnrIyoB0WWqlCamV9BCtGc0RFw1uCeL9mSCHlsMcaKkJIpNP ZA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2wc842ahwm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 20 Nov 2019 16:03:04 -0800
-Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 20 Nov
- 2019 16:03:03 -0800
-Received: from NAM05-DM3-obe.outbound.protection.outlook.com (104.47.49.52) by
- SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Wed, 20 Nov 2019 16:03:03 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BAgj+Qd2Dzhz8UxouZWr/jxpdTA4KIyKmqlPfSq33tEU+mcx/WNAO0hnzIVmjS9p1uqgwYawIVXAs+Brx2039IkwmUhqAEygnwuxwuK69CMraNPiX+q0fknUm4ViGwVbbW2EpP7GBBXCiq+9uTiU43TtkEyrrtSzCY+eSzQZoBgirj2D6POKyVDtzlM86zn09eYvn1UDk7vKWtcgfn0B0/uqOXuYIUM0wrJVCgNpj0jlJOEOggH53R60Nu1CempWSnJYfAsTjIVNyTm1OWtd8XWHi/rx9AZwlgjv3VbB3HZscB2zWISNswDlMJ/DCjc/0DXkbLgrq3hCWCeiWzi+qg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8cgcpfG0dFQwNKqFtP46a24EhqoN1rxitqSanQnXtG4=;
- b=Asquq5DumSR03WqFBl0HrypyMooN03raN0vnzVX5HXyD+yGxQbcM8HJKvbEEs1ao737RkOqjqZ+DYLPdfXUhgFs5j9mUgBh/GlOhkzDpAyHHEonbHmpFXm3knVOKJId0VIDYe6/5NOPm0DzM7rqNxUBkMSlKKz+ILGKJIVuHV+GjRdqnQ0geQkvtZHlGGOrGmN6ct0cshS+ef+qaHFjITXTM+BAQ4R1uOHZoWQvbGac1Y7mjD9jMcSt/fog34rLLHNo1NDCV3ZY+Wx5TJxg4J5jqV6jeZ6j8JxGbFe/FDAaUeQ4Gq3WuGYJxqIrB0orqCdUU4HfKTLtB3yrG9r0Htw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
+        id S1726230AbfKUAIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 19:08:31 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:40843 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726202AbfKUAIb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 19:08:31 -0500
+Received: by mail-wr1-f66.google.com with SMTP id q15so2113642wrw.7
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2019 16:08:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8cgcpfG0dFQwNKqFtP46a24EhqoN1rxitqSanQnXtG4=;
- b=RXtsZDIZ2jorYjr9Z+GFPOP/gpqF1Ef9STcAdkbgssP1Ve4uA2MsvBNgiZseTUH/oIG/cU8tsIo/WMpUOdBwgz3mB+/C3/a81NtAC5CvqId9rnZSgCPg2fnWoxWjq/OPIxM6yEvBXtds3ewmrRGsui/kK2D4/mLIiyPpHXVxjWw=
-Received: from BYAPR18MB2759.namprd18.prod.outlook.com (20.179.58.88) by
- BYAPR18MB2454.namprd18.prod.outlook.com (20.179.94.14) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2474.16; Thu, 21 Nov 2019 00:03:01 +0000
-Received: from BYAPR18MB2759.namprd18.prod.outlook.com
- ([fe80::5907:fd6e:ff93:426b]) by BYAPR18MB2759.namprd18.prod.outlook.com
- ([fe80::5907:fd6e:ff93:426b%7]) with mapi id 15.20.2451.031; Thu, 21 Nov 2019
- 00:03:01 +0000
-From:   Quinn Tran <qutran@marvell.com>
-To:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-CC:     "linux@yadro.com" <linux@yadro.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Subject: RE: [EXT] [PATCH v2 10/15] scsi: qla2xxx: Don't defer relogin
- unconditonally
-Thread-Topic: [EXT] [PATCH v2 10/15] scsi: qla2xxx: Don't defer relogin
- unconditonally
-Thread-Index: AQHVn/HCmWeiFkLWikKy4v0ZYoCbhqeUvekg
-Date:   Thu, 21 Nov 2019 00:03:01 +0000
-Message-ID: <BYAPR18MB27594A332DE1F7E0AC70B227D54E0@BYAPR18MB2759.namprd18.prod.outlook.com>
-References: <20191120222723.27779-1-r.bolshakov@yadro.com>
- <20191120222723.27779-11-r.bolshakov@yadro.com>
-In-Reply-To: <20191120222723.27779-11-r.bolshakov@yadro.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [198.186.1.5]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3c3e5d2f-311a-4cd1-3b50-08d76e162cd6
-x-ms-traffictypediagnostic: BYAPR18MB2454:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR18MB24545E6F6954385DC99D92EDD54E0@BYAPR18MB2454.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-forefront-prvs: 0228DDDDD7
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(4636009)(396003)(39850400004)(376002)(366004)(136003)(346002)(189003)(199004)(478600001)(33656002)(2906002)(476003)(486006)(66066001)(71190400001)(71200400001)(6116002)(3846002)(11346002)(446003)(8676002)(25786009)(66476007)(66556008)(64756008)(66446008)(66946007)(110136005)(76116006)(81166006)(8936002)(14454004)(81156014)(54906003)(2201001)(74316002)(7736002)(2501003)(4326008)(229853002)(7696005)(76176011)(86362001)(305945005)(6436002)(55016002)(9686003)(99286004)(5660300002)(6246003)(107886003)(14444005)(256004)(6506007)(186003)(52536014)(316002)(26005)(102836004)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR18MB2454;H:BYAPR18MB2759.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: kYL5gB/OGv1mgSAPQOx6Tdl57XeG35RW5PVH3wBzTEwyICzAU+pIfn0nYWJVzJWppxNM7aP4aa+FdcWI4KXieP45Pekevr2gpfg4t28PI4N+HBViERd5YBaDDI0UIjjvx/M3M8G1zlVIDPUNSGshw0bHUPDWYgsJXXMVJDPR72tAZLD3xn/aJIKY9ndupebgIOEt/VgnG3KX8M5Z16eG951rRySqKOm1P4XajjiIjdpsDeG5roLS89shP9OEbYegme4vcOD1KGONWcidSa2ud7O8ZAoCFEq8mga7DYITYuimqkmc5yym2oG7uza7kAWmCipdkZ3/dfjBOuVVOfXrdw46xSknCH6K5MvLtUsF1OghttUrY3ImyGyJHjIPHsL9oxM94+dLtvuRw6W3Nu9Z7RWIOqCq5PRiPPee6UFiBCZT4snL/VXLpxmArXmFuuHH
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=broadcom.com; s=google;
+        h=subject:to:references:in-reply-to:from:message-id:date:user-agent
+         :mime-version:content-transfer-encoding:content-language;
+        bh=boSRjTkS8/PqTPvpr5o5YoKVt1JwCd5HZudbs4rgl20=;
+        b=ddHJcx4RuML45IKilYdUYJPmXRQ4TBuFRpaZMB5Z/wkFsr/tkaeaHDiMTnIbJhYR+M
+         3YAsLvHHxU+QNk6lXHjCcx8G6GjIKoD45ULaPNFplos9teoXAqouFe7FK9THcUqxTvv+
+         p21/hMnx3Ga6esu9NCLJqmNCQBn/zsVbOan4c=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:in-reply-to:from
+         :message-id:date:user-agent:mime-version:content-transfer-encoding
+         :content-language;
+        bh=boSRjTkS8/PqTPvpr5o5YoKVt1JwCd5HZudbs4rgl20=;
+        b=X4dPdPVgw5v1edSt4T94ieRegwCCFLq7P/IyE3wI/SiZiJF3TKc65VQsId+6SAAUeM
+         P/09KzPdgyQP9NF4FaJGc0R0r7YvtYkSaXgc7Z1RkWy0oNTJi/d5iRNT/eucS4+Igaa0
+         uhYXRULYxNsViv7jlEmJmummWgQQNckLsReq/povySiXV8ozuw4KoS88ezQYMxVwOcPZ
+         XmewnIu14PonJCB7hjRpkwpf8cSRWGJ4hwMaxRICQ1RnJdymASIxDm5XuwqkWuOKFhqM
+         WS+mYXivWigYYL4cye+9gZAqBXhYU+njbq7RLjJaC3mMPuluhCZmedjUuRSnD+/Dr7+t
+         lU0g==
+X-Gm-Message-State: APjAAAU6L9iAmZ/sk3DcS79/DfWfn1KSckRvt1W3O89dTPtUF81p2LR6
+        UfxODtCdyUtBiezxG7BEQErjddmin7ALs73gXiRrExTQi5kHsjyZRpm2jDJmbuynMbdN9qGWdxY
+        096iCQbdtA30D8jko3v/sJKOh77EvQQrZzn67Em4sVIDOk+J9bpHeNrUScRYBAdMIW9jhnXWy2J
+        oGTi6IaSg=
+X-Google-Smtp-Source: APXvYqxpBMY2Vjgo3amFM4h29OX4jvNSVqkYFbx66U4VOA1vruDXsZdmyOYKMBrJMfl3BPOZlp36kA==
+X-Received: by 2002:adf:f5c6:: with SMTP id k6mr6712211wrp.245.1574294907705;
+        Wed, 20 Nov 2019 16:08:27 -0800 (PST)
+Received: from [135.142.48.175] ([192.19.220.253])
+        by smtp.gmail.com with ESMTPSA id u13sm883539wmm.45.2019.11.20.16.08.26
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Nov 2019 16:08:27 -0800 (PST)
+Subject: Re: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for
+ SSD
+To:     linux-scsi@vger.kernel.org
+References: <20191118103117.978-1-ming.lei@redhat.com>
+ <20191118103117.978-5-ming.lei@redhat.com>
+ <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
+ <9bbcbbb42b659c323c9e0d74aa9b062a3f517d1f.camel@redhat.com>
+In-Reply-To: <9bbcbbb42b659c323c9e0d74aa9b062a3f517d1f.camel@redhat.com>
+From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Message-ID: <fb154344-9f36-f09d-2dfa-7b940b89cf93@broadcom.com>
+Date:   Wed, 20 Nov 2019 17:08:25 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3c3e5d2f-311a-4cd1-3b50-08d76e162cd6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2019 00:03:01.5748
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OjI/lX7aoIpLgjZDqY4KofqUaz7IYKuZMzlnUxkDU6RT+iT+VcOfMWLSffSCH4i8U061wBiMkInuEyRDKMtG4A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2454
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-11-20_08:2019-11-20,2019-11-20 signatures=0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good.
+>Ordinarily I'd prefer a host template  attribute as Sumanesh proposed,
+>but I dislike  wrapping the examination of that and the queue flag in
+>a macro that makes  it not obvious how the behavior is affected.
 
-Acked-by: Quinn Tran <qutran@marvell.com>
+I think we can have a host template attribute and discard this check
+altogether, that is not check device_busy for both SDD and HDDs.
+
+As both you and Hannes mentioned, this change affects high end controllers
+most, and most of them have some storage IO size limit. Also, for HDD
+sequential IO is almost always large and
+touch the controller max IO size limit. Thus, I am not sure merge matters
+for these kind of controllers. Database use REDO log and small sequential
+IO, but those are targeted to SSDs, where latency and IOPs are far more
+important than IO merging.
+If this patch is opt-in for drivers, so any LLD that cannot take advantage
+of the flag need not set it, and would work as-is
 
 
-----------------------------------------------------------------------
-qla2x00_configure_local_loop sets RELOGIN_NEEDED bit and calls qla24xx_fcpo=
-rt_handle_login to perform the login. This bit triggers a wake up of DPC la=
-ter after a successful login.
+Thanks,
 
-The deferred call is not needed if login succeeds, and it's set in qla24xx_=
-fcport_handle_login in case of errors, hence it should be safe to drop.
+Sumanesh
 
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_ini=
-t.c index 096f41fe17d2..e984746e7428 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5050,7 +5050,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 				memcpy(&ha->plogi_els_payld.data,
- 				    (void *)ha->init_cb,
- 				    sizeof(ha->plogi_els_payld.data));
--				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
- 			} else {
- 				ql_dbg(ql_dbg_init, vha, 0x00d1,
- 				    "PLOGI ELS param read fail.\n");
---
-2.24.0
-
+On 11/20/2019 10:00 AM, Ewan D. Milne wrote:
+> On Wed, 2019-11-20 at 11:05 +0100, Hannes Reinecke wrote:
+>> Hmm.
+>>
+>> I must admit I patently don't like this explicit dependency on
+>> blk_nonrot(). Having a conditional counter is just an open invitation to
+>> getting things wrong...
+>>
+> This concerns me as well, it seems like the SCSI ML should have it's
+> own per-device attribute if we actually need to control this per-device
+> instead of on a per-host or per-driver basis.  And it seems like this
+> is something that is specific to high-performance drivers, so changing
+> the way this works for all drivers seems a bit much.
+>
+> Ordinarily I'd prefer a host template attribute as Sumanesh proposed,
+> but I dislike wrapping the examination of that and the queue flag in
+> a macro that makes it not obvious how the behavior is affected.
+> (Plus Hannes just submitted submitted the patches to remove .use_cmd_list,
+> which was another piece of ML functionality used by only a few drivers.)
+>
+> Ming's patch does freeze the queue if NONROT is changed by sysfs, but
+> the flag can be changed by other kernel code, e.g. sd_revalidate_disk()
+> clears it and then calls sd_read_block_characteristics() which may set
+> it again.  So it's not clear to me how reliable this is.
+>
+> -Ewan
+>
+>
