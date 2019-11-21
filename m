@@ -2,26 +2,27 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9087AC43141
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 17:13:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DED7C432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 17:13:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 733BE20708
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 17:13:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FA40206D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 17:13:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726735AbfKURN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Nov 2019 12:13:29 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53954 "EHLO mx1.suse.de"
+        id S1727277AbfKURNw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Nov 2019 12:13:52 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54298 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726279AbfKURN2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Nov 2019 12:13:28 -0500
+        id S1727197AbfKURNp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Nov 2019 12:13:45 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 831E4B27B;
-        Thu, 21 Nov 2019 17:13:26 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 11510B2A1;
+        Thu, 21 Nov 2019 17:13:44 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -44,10 +45,12 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         "Ewan D. Milne" <emilne@redhat.com>,
         Christoph Hellwig <hch@infradead.org>,
         Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 00/10] Fix cdrom autoclose
-Date:   Thu, 21 Nov 2019 18:13:07 +0100
-Message-Id: <cover.1574355709.git.msuchanek@suse.de>
+Subject: [PATCH v4 10/10] scsi: sr: wait for the medium to become ready
+Date:   Thu, 21 Nov 2019 18:13:17 +0100
+Message-Id: <c0c769f470be6a91b80fbd92658a3012a7225455.1574355709.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
+In-Reply-To: <cover.1574355709.git.msuchanek@suse.de>
+References: <cover.1574355709.git.msuchanek@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -55,54 +58,101 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+Use the autoclose function provided by cdrom driver to wait for drive to
+close in open_finish, and attempt to open once more after the door
+closes.
 
-there is cdrom autoclose feature that is supposed to close the tray,
-wait for the disc to become ready, and then open the device.
+Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+---
+v3: use function call rather than IOCTL
+v4: fix reference leak on -ENXIO
+---
+ drivers/scsi/sr.c | 54 ++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 42 insertions(+), 12 deletions(-)
 
-This used to work in ancient times. Then in old times there was a hack
-in util-linux which worked around the breakage which probably resulted
-from switching to scsi emulation.
-
-Currently util-linux maintainer refuses to merge another hack on the
-basis that kernel still has the feature so it should be fixed there.
-The code needs not be replicated in every userspace utility like mount
-or dd which has no business knowing which devices are CD-roms and where
-the autoclose setting is in the kernel.
-
-v3:
-- change the VMware workaround to use blacklist flag
-- use exported function instead of ioctl
-v4:
-- fix crash reported by kernel test robot
-- fix the debug message logic while refactoring cdrom_open
-- move repeated code out of __blkdev_get
-
-Link: https://lore.kernel.org/lkml/cover.1571834862.git.msuchanek@suse.de/
-Link: https://lore.kernel.org/lkml/cover.1513263482.git.msuchanek@suse.de/
-
-Michal Suchanek (10):
-  cdrom: add poll_event_interruptible
-  cdrom: factor out common open_for_* code
-  cdrom: wait for the tray to close
-  cdrom: export autoclose logic as a separate function
-  cdrom: unify log messages.
-  bdev: reset first_open when looping in __blkget_dev
-  bdev: separate parts of __blkdev_get as helper functions
-  bdev: add open_finish
-  scsi: blacklist: add VMware ESXi cdrom - broken tray emulation
-  scsi: sr: wait for the medium to become ready
-
- Documentation/filesystems/locking.rst |   2 +
- drivers/cdrom/cdrom.c                 | 471 +++++++++++++-------------
- drivers/scsi/scsi_devinfo.c           |  15 +-
- drivers/scsi/sr.c                     |  60 +++-
- fs/block_dev.c                        |  80 +++--
- include/linux/blkdev.h                |   1 +
- include/linux/cdrom.h                 |   1 +
- include/scsi/scsi_devinfo.h           |   7 +-
- 8 files changed, 360 insertions(+), 277 deletions(-)
-
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 07c319494bf4..41ddf08b4c7b 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -522,29 +522,58 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ 	return ret;
+ }
+ 
+-static int sr_block_open(struct block_device *bdev, fmode_t mode)
++static int __sr_block_open(struct block_device *bdev, fmode_t mode)
+ {
+-	struct scsi_cd *cd;
+-	struct scsi_device *sdev;
+-	int ret = -ENXIO;
+-
+-	cd = scsi_cd_get(bdev->bd_disk);
+-	if (!cd)
+-		goto out;
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++	int ret;
+ 
+-	sdev = cd->device;
+-	scsi_autopm_get_device(sdev);
+ 	check_disk_change(bdev);
+ 
+ 	mutex_lock(&sr_mutex);
+ 	ret = cdrom_open(&cd->cdi, bdev, mode);
+ 	mutex_unlock(&sr_mutex);
+ 
++	return ret;
++}
++
++static int sr_block_open(struct block_device *bdev, fmode_t mode)
++{
++	struct scsi_cd *cd = scsi_cd_get(bdev->bd_disk);
++	struct scsi_device *sdev;
++	int ret;
++
++	if (!cd)
++		return -ENXIO;
++
++	sdev = cd->device;
++	scsi_autopm_get_device(sdev);
++	ret = __sr_block_open(bdev, mode);
+ 	scsi_autopm_put_device(sdev);
+-	if (ret)
++
++	if ((ret == -ERESTARTSYS) || (ret == -ENXIO))
+ 		scsi_cd_put(cd);
+ 
+-out:
++	return ret;
++}
++
++static int sr_block_open_finish(struct block_device *bdev, fmode_t mode,
++				int ret)
++{
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++
++	/* wait for drive to get ready */
++	if ((ret == -ENOMEDIUM) && !(mode & FMODE_NDELAY)) {
++		struct scsi_device *sdev = cd->device;
++		/*
++		 * Cannot use sr_block_ioctl because it locks sr_mutex blocking
++		 * out any processes trying to access the drive
++		 */
++		scsi_autopm_get_device(sdev);
++		cdrom_autoclose(&cd->cdi);
++		ret = __sr_block_open(bdev, mode);
++		scsi_autopm_put_device(sdev);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -640,6 +669,7 @@ static const struct block_device_operations sr_bdops =
+ {
+ 	.owner		= THIS_MODULE,
+ 	.open		= sr_block_open,
++	.open_finish	= sr_block_open_finish,
+ 	.release	= sr_block_release,
+ 	.ioctl		= sr_block_ioctl,
+ 	.check_events	= sr_block_check_events,
 -- 
 2.23.0
 
