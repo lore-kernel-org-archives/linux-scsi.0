@@ -2,215 +2,120 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF5AC43141
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 03:20:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46245C432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 03:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF43D2089D
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 03:20:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574306408;
-	bh=eH6c3vZ34/BlhDA35s5Qvqy86M8SZAGXxflxVUO5nV8=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=fflk+ZSIJhnhwJSVKC0gYSR91GCEd1l4IumyT1VYWlExU1aNA+bTlFW2Tae3KFvEZ
-	 KSLuchE658axDQJRNsZimJthl1g0fIz97b5Z+owDgJ/ZysNhUP9AAALMWPRE8XxpMr
-	 7wIKFEyfr58IAni/pXN360Y5NeSGq/iDvy4DogPk=
+	by mail.kernel.org (Postfix) with ESMTP id 2482720721
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 03:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbfKUDUF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 22:20:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33588 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726658AbfKUDUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 22:20:04 -0500
-Received: from PC-kkoz.proceq.com (unknown [213.160.61.66])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 238D020721;
-        Thu, 21 Nov 2019 03:20:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574306403;
-        bh=eH6c3vZ34/BlhDA35s5Qvqy86M8SZAGXxflxVUO5nV8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=XorNfAOuZ2jl7Lq90xheUSuWAkOypb2guK5mru2gWJBIK+fjEnLynVI57R212XW4D
-         pzVkmRvTfOWhGxKOXQY8TYTzoccJCW4aNSvXrBlBONU8QNgkcgbxbgz7PxXHY8S2lj
-         DLTt0ZMEECOF6D/mfcd2gIc8ftIGqmCntx7Wz5vE=
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzk@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        QLogic-Storage-Upstream@cavium.com,
-        Don Brace <don.brace@microsemi.com>,
-        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com
-Subject: [PATCH v2] scsi: Fix Kconfig indentation
-Date:   Thu, 21 Nov 2019 04:19:58 +0100
-Message-Id: <1574306399-15100-1-git-send-email-krzk@kernel.org>
-X-Mailer: git-send-email 2.7.4
+        id S1726165AbfKUD0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 22:26:34 -0500
+Received: from mail-pf1-f172.google.com ([209.85.210.172]:46768 "EHLO
+        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725819AbfKUD0e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 22:26:34 -0500
+Received: by mail-pf1-f172.google.com with SMTP id 193so889843pfc.13
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2019 19:26:34 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Ns8oW8VOnxmruGY1xGHN7N6ZQhB0cFjMwITUu/crYdI=;
+        b=iqrwPcuv681MJqWcXr+a0vbJRmQakWpl6n7mARYW3aRBZZiuwCZ2bxgD2cXGLkJftu
+         uvAaSzqXnURstHTOW3PX5S9M20DFjxU8eKxIexHTMQfaKjlzZvJBX79l/ouvJ4i4E+Pv
+         ay29uo0Yzo9xApRzppajORd7kqlE/ZKzqAmbiwUVzbH6fDdMGEi9PybJ5jIxgUoxOFI7
+         xdEn0OYaZxpqlqD5/2TPBr4Nf8PfsqBxAetaRXtQjyHop5VcvzUvGIZmlQcJXsnWVUKw
+         CBZPUyWJDoCkHPsFHnAAFKpu/g70kEx9x0Yeu91uS9R+O/RWqQyNKUmvMgSjb1p/4ojz
+         bMbg==
+X-Gm-Message-State: APjAAAUVVbSFxyC8/2eAytMcYaZ9bNo1dihljv0GxrUVj32cKCTuiAYJ
+        LEuKQdXIfRy8L7+vpgsDGvxZzMW2
+X-Google-Smtp-Source: APXvYqxGzcqKjQW51c3JSgJT4GTaA9KhqnHjwqqlwxwryjgeznUXEY46LC2ec4hi++mzf+d6QKsBPw==
+X-Received: by 2002:a62:7643:: with SMTP id r64mr7694191pfc.191.1574306793660;
+        Wed, 20 Nov 2019 19:26:33 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:df:44ee:9e53:c622:9674? ([2601:647:4000:df:44ee:9e53:c622:9674])
+        by smtp.gmail.com with ESMTPSA id a6sm689357pja.30.2019.11.20.19.26.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Nov 2019 19:26:32 -0800 (PST)
+Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
+To:     Himanshu Madhani <hmadhani@marvell.com>
+Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Quinn Tran <qutran@marvell.com>
+References: <20191109042135.12125-1-bvanassche@acm.org>
+ <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
+ <32187dd9-f222-fbed-cc93-1c6abca6e06c@acm.org>
+ <19433666-FCA3-4340-8A81-707F85B87F02@marvell.com>
+ <1dac96c3-54d5-11bf-292b-c25a62a3c919@acm.org>
+ <fa7d57ec-77b3-3397-063e-d949716abaa8@acm.org>
+ <22154B05-853E-42D2-9B3B-749FEB9D1E51@marvell.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <7391e4c5-e40d-1016-e950-46678a86456b@acm.org>
+Date:   Wed, 20 Nov 2019 19:26:30 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
+MIME-Version: 1.0
+In-Reply-To: <22154B05-853E-42D2-9B3B-749FEB9D1E51@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adjust indentation from spaces to tab (+optional two spaces) as in
-coding style with command like:
-	$ sed -e 's/^        /\t/' -i */Kconfig
+On 2019-11-20 13:39, Himanshu Madhani wrote:
+> Sorry for delay. Can you send me log file with
+> ql2xextended_error_logging=0x5200b000 to see why you are seeing issue
+> in your setup and if possible trigger FW dump and send me that as well
+> right after you see this issue. I’ll have to check with my firmware
+> guys on the behavior you are seeing.
 
-Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+Hi Himanshu,
 
----
+Logs are available at
+https://drive.google.com/file/d/195QDMr2Yj_y4JAbkL6zKlqP5txI0Bvv-/
 
-Changes since v1:
-1. Fix also 7-space and tab+1 space indentation issues.
----
- drivers/scsi/Kconfig                 | 28 ++++++++++++++--------------
- drivers/scsi/aic7xxx/Kconfig.aic7xxx | 14 +++++++-------
- drivers/scsi/pcmcia/Kconfig          |  2 +-
- drivers/scsi/qedf/Kconfig            |  4 ++--
- drivers/scsi/smartpqi/Kconfig        |  8 ++++----
- 5 files changed, 28 insertions(+), 28 deletions(-)
+Creating a firmware dump failed unfortunately:
+root@ubuntu-vm:~# qaucli -fwdump 21-00-00-24-FF-46-B8-E9 fwdump.bin
+Using config file: /opt/QLogic_Corporation/QConvergeConsoleCLI/qaucli.cfg
+Installation directory: /opt/QLogic_Corporation/QConvergeConsoleCLI
+Working dir: /root
+Option is unsupported with selected HBA (Instance 1 - QLE2562)!
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 90cf4691b8c3..97ccdb250a46 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -2,9 +2,9 @@
- menu "SCSI device support"
- 
- config SCSI_MOD
--       tristate
--       default y if SCSI=n || SCSI=y
--       default m if SCSI=m
-+	tristate
-+	default y if SCSI=n || SCSI=y
-+	default m if SCSI=m
- 
- config RAID_ATTRS
- 	tristate "RAID Transport Class"
-@@ -1166,8 +1166,8 @@ config SCSI_LPFC
- 	depends on NVME_FC || NVME_FC=n
- 	select CRC_T10DIF
- 	---help---
--          This lpfc driver supports the Emulex LightPulse
--          Family of Fibre Channel PCI host adapters.
-+	  This lpfc driver supports the Emulex LightPulse
-+	  Family of Fibre Channel PCI host adapters.
- 
- config SCSI_LPFC_DEBUG_FS
- 	bool "Emulex LightPulse Fibre Channel debugfs Support"
-@@ -1480,14 +1480,14 @@ config ZFCP
- 	depends on S390 && QDIO && SCSI
- 	depends on SCSI_FC_ATTRS
- 	help
--          If you want to access SCSI devices attached to your IBM eServer
--          zSeries by means of Fibre Channel interfaces say Y.
--          For details please refer to the documentation provided by IBM at
--          <http://oss.software.ibm.com/developerworks/opensource/linux390>
-+	  If you want to access SCSI devices attached to your IBM eServer
-+	  zSeries by means of Fibre Channel interfaces say Y.
-+	  For details please refer to the documentation provided by IBM at
-+	  <http://oss.software.ibm.com/developerworks/opensource/linux390>
- 
--          This driver is also available as a module. This module will be
--          called zfcp. If you want to compile it as a module, say M here
--          and read <file:Documentation/kbuild/modules.rst>.
-+	  This driver is also available as a module. This module will be
-+	  called zfcp. If you want to compile it as a module, say M here
-+	  and read <file:Documentation/kbuild/modules.rst>.
- 
- config SCSI_PMCRAID
- 	tristate "PMC SIERRA Linux MaxRAID adapter support"
-@@ -1518,8 +1518,8 @@ config SCSI_VIRTIO
- 	tristate "virtio-scsi support"
- 	depends on VIRTIO
- 	help
--          This is the virtual HBA driver for virtio.  If the kernel will
--          be used in a virtual machine, say Y or M.
-+	  This is the virtual HBA driver for virtio.  If the kernel will
-+	  be used in a virtual machine, say Y or M.
- 
- source "drivers/scsi/csiostor/Kconfig"
- 
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-index 3546b8cc401f..4ed44ba4a55b 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -71,20 +71,20 @@ config AIC7XXX_DEBUG_ENABLE
- 	driver errors.
- 
- config AIC7XXX_DEBUG_MASK
--        int "Debug code enable mask (2047 for all debugging)"
--        depends on SCSI_AIC7XXX
--        default "0"
--        help
-+	int "Debug code enable mask (2047 for all debugging)"
-+	depends on SCSI_AIC7XXX
-+	default "0"
-+	help
- 	Bit mask of debug options that is only valid if the
- 	CONFIG_AIC7XXX_DEBUG_ENABLE option is enabled.  The bits in this mask
- 	are defined in the drivers/scsi/aic7xxx/aic7xxx.h - search for the
- 	variable ahc_debug in that file to find them.
- 
- config AIC7XXX_REG_PRETTY_PRINT
--        bool "Decode registers during diagnostics"
--        depends on SCSI_AIC7XXX
-+	bool "Decode registers during diagnostics"
-+	depends on SCSI_AIC7XXX
- 	default y
--        help
-+	help
- 	Compile in register value tables for the output of expanded register
- 	contents in diagnostics.  This make it much easier to understand debug
- 	output without having to refer to a data book and/or the aic7xxx.reg
-diff --git a/drivers/scsi/pcmcia/Kconfig b/drivers/scsi/pcmcia/Kconfig
-index dc9b74c9348a..a7920fc95e7d 100644
---- a/drivers/scsi/pcmcia/Kconfig
-+++ b/drivers/scsi/pcmcia/Kconfig
-@@ -56,7 +56,7 @@ config PCMCIA_NINJA_SCSI
- 	    [I-O DATA (OEM) (version string: "IO DATA","CBSC16       ","1")]
- 	    I-O DATA CBSC-II
- 	    [Kyusyu Matsushita Kotobuki (OEM)
--               (version string: "KME    ","SCSI-CARD-001","1")]
-+	       (version string: "KME    ","SCSI-CARD-001","1")]
- 	    KME KXL-820AN's card
- 	    HP M820e CDRW's card
- 	    etc.
-diff --git a/drivers/scsi/qedf/Kconfig b/drivers/scsi/qedf/Kconfig
-index 7cd993be4e57..80328dbd44c9 100644
---- a/drivers/scsi/qedf/Kconfig
-+++ b/drivers/scsi/qedf/Kconfig
-@@ -3,8 +3,8 @@ config QEDF
- 	tristate "QLogic QEDF 25/40/100Gb FCoE Initiator Driver Support"
- 	depends on PCI && SCSI
- 	depends on QED
--        depends on LIBFC
--        depends on LIBFCOE
-+	depends on LIBFC
-+	depends on LIBFCOE
- 	select QED_LL2
- 	select QED_FCOE
- 	---help---
-diff --git a/drivers/scsi/smartpqi/Kconfig b/drivers/scsi/smartpqi/Kconfig
-index bc6506884e3b..456ec474fa17 100644
---- a/drivers/scsi/smartpqi/Kconfig
-+++ b/drivers/scsi/smartpqi/Kconfig
-@@ -50,7 +50,7 @@ config SCSI_SMARTPQI
- 	To compile this driver as a module, choose M here: the
- 	module will be called smartpqi.
- 
--        Note: the aacraid driver will not manage a smartpqi
--              controller. You need to enable smartpqi for smartpqi
--              controllers. For more information, please see
--              Documentation/scsi/smartpqi.txt
-+	Note: the aacraid driver will not manage a smartpqi
-+	      controller. You need to enable smartpqi for smartpqi
-+	      controllers. For more information, please see
-+	      Documentation/scsi/smartpqi.txt
--- 
-2.7.4
+This test was run against Martin's 5.5/scsi-queue branch (commit
+65309ef6b258 ("scsi: bnx2fc: timeout calculation invalid for
+bnx2fc_eh_abort()")).
 
+Please let me know if you need more information.
+
+Bart.
