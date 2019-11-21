@@ -2,292 +2,138 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3CD7C43215
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE88C43215
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:50:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C49F2089D
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:34:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1040920898
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:50:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SK0QEABb"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="e3OQntoE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725956AbfKUBem (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 20:34:42 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:40189 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725904AbfKUBem (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Nov 2019 20:34:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574300079;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vdMMqIUW+n8fYrxJrWczQe7ROLNVgbAjr9VVaidR2SE=;
-        b=SK0QEABbgMy6HnzG0Hevxg5xBiZJEskLDoYaUoGTRUNiblvRnWPMQ65bJAW4sjHYoZg4rA
-        slNLiyWbZy2Hua9p+AvgF+/g3W6mYD1Mq4UoJPUqJhSX4Dd6N4WvJPlMIWD5GGZxqZqL6d
-        QKbxKaEsKa80ClnUYhN1teuFuoKia+E=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-350-ffBQsPYjNWa1dlbdphx-CQ-1; Wed, 20 Nov 2019 20:34:36 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 205961800D45;
-        Thu, 21 Nov 2019 01:34:34 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2971D34941;
-        Thu, 21 Nov 2019 01:34:23 +0000 (UTC)
-Date:   Thu, 21 Nov 2019 09:34:19 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Cc:     axboe@kernel.dk, linux-block@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        id S1726014AbfKUBuQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 20:50:16 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:55360 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725854AbfKUBuQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 20:50:16 -0500
+Received: by mail-wm1-f66.google.com with SMTP id b11so1848929wmb.5
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Nov 2019 17:50:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FG0xwp6HVYe1f5DDSVU7DrWAa/EAcoi4UERXNfS+PzA=;
+        b=e3OQntoEJyi6412ZXF96CoksLqmA1uxrmTF03xvE9Tq8EHl5fBKJXH1euEuimV+DR4
+         ksVzfvNZPgUKmh9tMthjxBCnDQpS74MKSmcLaxnGMkzApR5/lMxCHrHEQf1ZEaHlqo/I
+         cW6dLyyuSNUWEQipJszZZaZk5YhdOnANz3u/k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FG0xwp6HVYe1f5DDSVU7DrWAa/EAcoi4UERXNfS+PzA=;
+        b=APA04B+MINGFygioIOBm+jBuO0/BmGIyiGnsKRwtW8DzXzKvbn/ytB0IIcbjVKHYJM
+         li7DpoHgH17+G921tVopHAp7D+JXm9UCeX4oYk3I8dbTs12hG3ixIcrSDJu/WENPmNln
+         fL2toGZ75M9v3HbRZYFgofEa8okvF8+4ZPMzm136IwFDN/Wr31bQfjh7k8xfAYizxnTS
+         sfmBMo7rPxQGep2uG8sVzN0ApUEcGitZMyIt9xCPfkbJ5QYQZhhDnoQuuFnkK9eZ9Cxm
+         rAMM71yISEb7/4lXGXSF8M3/tLJnweyPUg2i2pZxIMB2h0PnjMn/tokU3kNXn9xcuu/i
+         kbWw==
+X-Gm-Message-State: APjAAAViZDjPb/MobqFY+dkfC30SI7oNpEDzJ/jvRpr6UG+8AIaJr6hC
+        WHtXbEEQ3LiIqsVy3rwW3UdZ0h2j4NCU36zzyow91Q==
+X-Google-Smtp-Source: APXvYqyfbJQGLLIjAIFZGC2/WpovD17wheezTOr/BBTkBa+ChmHy434DUgxK3hVwTyjF5ci6QZ5l1u5RHZedl2IZL0g=
+X-Received: by 2002:a7b:c181:: with SMTP id y1mr6717738wmi.16.1574301013750;
+ Wed, 20 Nov 2019 17:50:13 -0800 (PST)
+MIME-Version: 1.0
+References: <c7c78e42173ad8bc6e8c775bf6e98f54@mail.gmail.com> <20191121012148.GE24548@ming.t460p>
+In-Reply-To: <20191121012148.GE24548@ming.t460p>
+From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Date:   Wed, 20 Nov 2019 18:50:02 -0700
+Message-ID: <CADbZ7Fqcx4rWLB7MMVj+J+9n0bMGENj-WZZijiOHN0WrL6OV0A@mail.gmail.com>
+Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Ewan Milne <emilne@redhat.com>, axboe@kernel.dk,
+        bart.vanassche@wdc.com, hare@suse.de, hch@lst.de,
+        jejb@linux.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com,
         Sathya Prakash <sathya.prakash@broadcom.com>,
-        chaitra.basappa@broadcom.com,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
         Shivasharan Srikanteshwara 
         <shivasharan.srikanteshwara@broadcom.com>,
-        Ewan Milne <emilne@redhat.com>, hch@lst.de, hare@suse.de,
-        bart.vanassche@wdc.com
-Subject: Re: [PATCH 1/1] scsi core: limit overhead of device_busy counter for
- SSDs
-Message-ID: <20191121013419.GF24548@ming.t460p>
-References: <1574194079-27363-1-git-send-email-sumanesh.samanta@broadcom.com>
- <1574194079-27363-2-git-send-email-sumanesh.samanta@broadcom.com>
- <20191120072919.GB3664@ming.t460p>
- <CADbZ7FqP1EXrUOpD1QSd9MTRz1rgN6BLyhyd0i2r30bu_4xUCA@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CADbZ7FqP1EXrUOpD1QSd9MTRz1rgN6BLyhyd0i2r30bu_4xUCA@mail.gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: ffBQsPYjNWa1dlbdphx-CQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 12:59:56PM -0700, Sumanesh Samanta wrote:
-> On Wed, Nov 20, 2019 at 12:29 AM Ming Lei <ming.lei@redhat.com> wrote:
-> >
-> > On Tue, Nov 19, 2019 at 12:07:59PM -0800, Sumanesh Samanta wrote:
-> > > From: root <sumanesh.samanta@broadcom.com>
-> > >
-> > > Recently a patch was delivered to remove host_busy counter from SCSI =
-mid layer. That was a major bottleneck, and helped improve SCSI stack perfo=
-rmance.
-> > > With that patch, bottle neck moved to the scsi_device device_busy cou=
-nter. The performance issue with this counter is seen more in cases where a=
- single device can produce very high IOPs, for example h/w RAID devices whe=
-re OS sees one device, but there are many drives behind it, thus being capa=
-ble of very high IOPs. The effect is also visible when cores from multiple =
-NUMA nodes send IO to the same device or same controller.
-> > > The device_busy counter is not needed by controllers which can manage=
- as many IO as submitted to it. Rotating media still uses it for merging IO=
-, but for non-rotating SSD drives it becomes a major bottleneck as describe=
-d above.
-> > >
-> > > A few weeks back, a patch was provided to address the device_busy cou=
-nter also but unfortunately that had some issues:
-> > > 1. There was a functional issue discovered:
-> > > https://lists.01.org/hyperkitty/list/lkp@lists.01.org/thread/VFKDTG4X=
-C4VHWX5KKDJJI7P36EIGK526/
-> > > 2. There was some concern about existing drivers using the device_bus=
-y counter.
-> >
-> > There are only two drivers(mpt3sas and megaraid_sas) which uses this
-> > counter. And there are two types of usage:
-> >
-> > 1) both use .device_busy to balance interrupt load among LUNs in
-> > fast path
-> >
-> > 2) mpt3sas uses .device_busy in its device reset handler(slow path), an=
-d
-> > this kind of usage can be replaced by blk_mq_queue_tag_busy_iter()
-> > easily.
-> >
-> > IMO, blk-mq has already considered IO load balance, see
-> > hctx_may_queue(), meantime managed IRQ can balance IO completion load
-> > among each IRQ vectors, not see obvious reason for driver to do that
-> > any more.
-> >
-> > However, if the two drivers still want to do that, I'd suggest to imple=
-ment
-> > it inside the driver, and no reason to re-invent generic wheels just fo=
-r
-> > two drivers.
-> >
-> > That is why I replace .device_busy uses in the two drivers with private
-> > counters in the patches posted days ago:
-> >
-> > https://lore.kernel.org/linux-scsi/20191118103117.978-1-ming.lei@redhat=
-.com/T/#t
-> >
->=20
-> Agreed, a private counter should be good enough.
->=20
-> > And if drivers thought the private counter isn't good enough, they can
-> > improve it in any way, such as this percpu approach, or even kill them.
-> >
->=20
-> I was more concerned about the functional issue discovered in the
-> earlier patch and provided mine as an alternative without any side
-> effect or functional issue, since it does not modify any core logic.
-> Having said that, if your latest patch goes through and is accepted,
-> then agree that my patch is not needed. If however, some issue is
-> discovered in your latest patch, then I would request my patch to be
-> considered as an alternative, so that the device_busy counter overhead
-> can be avoided
->=20
-> > >
-> > > This patch is an attempt to address both the above issues.
-> > > For this patch to be effective, LLDs need to set a specific flag use_=
-per_cpu_device_busy in the scsi_host_template. For other drivers ( who does=
- not set the flag), this patch would be a no-op, and should not affect thei=
-r performance or functionality at all.
-> > >
-> > > Also, this patch does not fundamentally change any logic or functiona=
-lity of the code. All it does is replace device_busy with a per CPU counter=
-. In fast path, all cpu increment/decrement their own counter. In relativel=
-y slow path. they call scsi_device_busy function to get the total no of IO =
-outstanding on a device. Only functional aspect it changes is that for non-=
-rotating media, the number of IO to a device is not restricted. Controllers=
- which can handle that, can set the use_per_cpu_device_busy flag in scsi_ho=
-st_template to take advantage of this patch. Other controllers need not mod=
-ify any code and would work as usual.
-> > > Since the patch does not modify any other functional aspects, it shou=
-ld not have any side effects even for drivers that do set the use_per_cpu_d=
-evice_busy flag.
-> > > ---
-> > >  drivers/scsi/scsi_lib.c    | 151 ++++++++++++++++++++++++++++++++++-=
---
-> > >  drivers/scsi/scsi_scan.c   |  16 ++++
-> > >  drivers/scsi/scsi_sysfs.c  |   9 ++-
-> > >  drivers/scsi/sg.c          |   2 +-
-> > >  include/scsi/scsi_device.h |  15 ++++
-> > >  include/scsi/scsi_host.h   |  16 ++++
-> > >  6 files changed, 197 insertions(+), 12 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index 2563b061f56b..5dc392914f9e 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -52,6 +52,12 @@
-> > >  #define  SCSI_INLINE_SG_CNT  2
-> > >  #endif
-> > >
-> > > +#define MAX_PER_CPU_COUNTER_ABSOLUTE_VAL (0xFFFFFFFFFFF)
-> > > +#define PER_CPU_COUNTER_OK_VAL (MAX_PER_CPU_COUNTER_ABSOLUTE_VAL>>16=
-)
-> > > +#define USE_DEVICE_BUSY(sdev)        (!(sdev)->host->hostt->use_per_=
-cpu_device_busy \
-> > > +                             || !blk_queue_nonrot((sdev)->request_qu=
-eue))
-> > > +
-> > > +
-> > >  static struct kmem_cache *scsi_sdb_cache;
-> > >  static struct kmem_cache *scsi_sense_cache;
-> > >  static struct kmem_cache *scsi_sense_isadma_cache;
-> > > @@ -65,6 +71,111 @@ scsi_select_sense_cache(bool unchecked_isa_dma)
-> > >       return unchecked_isa_dma ? scsi_sense_isadma_cache : scsi_sense=
-_cache;
-> > >  }
-> > >
-> > > +/*
-> > > + *Generic helper function to decrement per cpu io counter.
-> > > + *@per_cpu_counter: The per cpu counter array. Current cpu counter w=
-ill be
-> > > + * decremented
-> > > + */
-> > > +
-> > > +static inline void dec_per_cpu_io_counter(atomic64_t __percpu *per_c=
-pu_counter)
-> > > +{
-> > > +     atomic64_t __percpu *io_count =3D get_cpu_ptr(per_cpu_counter);
-> > > +
-> > > +     if (unlikely(abs(atomic64_dec_return(io_count)) >
-> > > +                             MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
-> > > +             scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_=
-count);
-> > > +     put_cpu_ptr(per_cpu_counter);
-> > > +}
-> > > +/*
-> > > + *Generic helper function to increment per cpu io counter.
-> > > + *@per_cpu_counter: The per cpu counter array. Current cpu counter w=
-ill be
-> > > + * incremented
-> > > + */
-> > > +static inline void inc_per_cpu_io_counter(atomic64_t __percpu *per_c=
-pu_counter)
-> > > +{
-> > > +     atomic64_t __percpu *io_count =3D get_cpu_ptr(per_cpu_counter);
-> > > +
-> > > +     if (unlikely(abs(atomic64_inc_return(io_count)) >
-> > > +                             MAX_PER_CPU_COUNTER_ABSOLUTE_VAL))
-> > > +             scsi_rebalance_per_cpu_io_counters(per_cpu_counter, io_=
-count);
-> > > +     put_cpu_ptr(per_cpu_counter);
-> > > +}
-> > > +
-> > > +
-> > > +/**
-> > > + * scsi_device_busy - Return the device_busy counter
-> > > + * @sdev:    Pointer to scsi_device to get busy counter.
-> > > + **/
-> > > +int scsi_device_busy(struct scsi_device *sdev)
-> > > +{
-> > > +     long long total =3D 0;
-> > > +     int i;
-> > > +
-> > > +     if (USE_DEVICE_BUSY(sdev))
-> >
-> > As Ewan and Bart commented, you can't use the NONROT queue flag simply
-> > in IO path, given it may be changed somewhere.
-> >
->=20
-> I added the NONROT check just as an afterthought. This patch is
-> designed for high end controllers, and most of them have some storage
-> IO size limit.
+>>You just see large IO size from driver side or device side, and do you
+>>know why the big size IO is submitted to driver? Block layer's IO merge
+>>contributes a lot for that, and IO merge usually starts to work
 
-IO size usually depends on workloads, instead of controller.
+May be it contribute to some extent, but I do not think streaming
+applications have any incentive/reason to give small IO. An
+application like Netflix need to read as much data as soon as possible
+and serve to customers, they have no reason to read in small chunks.
+In fact, they read in huge chunks.
+That is why sequential IO is normally large chunks and random IO (
+which is more DB kind of operations ) is small IO.
+Only exception I know of is database REDO logs, that are small
+sequential IO, because there the DB is logging small transactions --
+but they go to SSDs.
 
-You can't assume that big size IO is always submitted from userspace
-because HBA is high end.
+>>Yeah, that is why my patches just bypass sdev->device_busy for SSD, and
+>>looks you misunderstood the idea behind the patches, right?
 
-For sequential IO workloads, block layer tries best to run IO merge,
-which is usually big win for HDD.
+No, I got the idea, I am just saying most high end controllers have an
+IO size limit  , and even if the block layer merges IO, it does not
+help, since they have to be broken to the max size the controller
+supports. Also, most high end controllers have their own merging
+logic, and hence not too much dependent on upper layer merging for
+them
 
-> Also, for HDD sequential IO is almost always large and
-> touch the controller max IO size limit.
-
-No, there are workloads, single IO size isn't big, but
-they are sequential, it may not be hit by readahead, such as
-write. That is exactly what block layer has to run IO merge
-for these small IOs.
-
-> Thus, I am not sure merge
-> matters for these kind of controllers. Database use REDO log and small
-> sequential IO, but those are targeted to SSDs, where latency and IOPs
-> are far more important than IO merging.
-> Anyway, this patch is opt-in for drivers, so any LLD that cannot take
-> advantage of the flag need not set it, and would work as-is.
-> I can provide a new version of the patch with this check removed
-
-Frankly speaking, we should check NONROT flag instead of controller,
-which may connect to slow HDD too, right?
-
-Thanks,
-Ming
-
+On Wed, Nov 20, 2019 at 6:22 PM Ming Lei <ming.lei@redhat.com> wrote:
+>
+> On Wed, Nov 20, 2019 at 02:58:40PM -0700, Sumanesh Samanta wrote:
+> > >Ordinarily I'd prefer a host template attribute as Sumanesh proposed,
+> > >but I dislike wrapping the examination of that and the queue flag in
+> > >a macro that makes it not obvious how the behavior is affected.
+> >
+> > I think we can have a host template attribute and discard this check
+> > altogether, that is not check device_busy for both SDD and HDDs.
+> >
+> > As both you and Hannes mentioned, this change affects high end controllers
+> > most, and most of them have some storage IO size limit. Also, for HDD
+> > sequential IO is almost always large and
+> > touch the controller max IO size limit.
+>
+> You just see large IO size from driver side or device side, and do you
+> know why the big size IO is submitted to driver? Block layer's IO merge
+> contributes a lot for that, and IO merge usually starts to work
+> after queue becomes busy which can be signaled from !blk_mq_get_dispatch_budget().
+>
+> That is why we implements .get_budget and .put_budget on SCSI for fixing
+> sequential IO performance regression.
+>
+> 0df21c86bdbf scsi: implement .get_budget and .put_budget for blk-mq
+> aeec77629a4a scsi: allow passing in null rq to scsi_prep_state_check()
+> b347689ffbca blk-mq-sched: improve dispatching from sw queue
+> de1482974080 blk-mq: introduce .get_budget and .put_budget in blk_mq_ops
+>
+> Also HDD may be connected to high end HBA too.
+>
+> > Thus, I am not sure merge matters
+> > for these kind of controllers.
+>
+> Yeah, that is why my patches just bypass sdev->device_busy for SSD, and
+> looks you misunderstood the idea behind the patches, right?
+>
+>
+>
+> Thanks,
+> Ming
+>
