@@ -2,46 +2,35 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CEC6C432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 15:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B85FEC432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 15:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E69742068E
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 15:45:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F29206D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 15:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726658AbfKUPpy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Nov 2019 10:45:54 -0500
-Received: from mx2.suse.de ([195.135.220.15]:37960 "EHLO mx1.suse.de"
+        id S1726573AbfKUPqU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Nov 2019 10:46:20 -0500
+Received: from mx2.suse.de ([195.135.220.15]:38088 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726279AbfKUPpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Nov 2019 10:45:54 -0500
+        id S1726279AbfKUPqU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Nov 2019 10:46:20 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 29534AF79;
-        Thu, 21 Nov 2019 15:45:50 +0000 (UTC)
-Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-References: <20191118103117.978-1-ming.lei@redhat.com>
- <20191118103117.978-5-ming.lei@redhat.com>
- <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
- <20191121005323.GB24548@ming.t460p>
+        by mx1.suse.de (Postfix) with ESMTP id F38CEAF79;
+        Thu, 21 Nov 2019 15:46:17 +0000 (UTC)
+Subject: Re: [PATCH 02/11] scsi: add scsi_host_flush_commands() helper
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20191120103114.24723-1-hare@suse.de>
+ <20191120103114.24723-3-hare@suse.de>
+ <841676ff-3d41-1dd4-a220-6b2ee84d7320@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -87,13 +76,13 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <336f35fc-2e22-c615-9405-50297b9737ea@suse.de>
-Date:   Thu, 21 Nov 2019 16:45:48 +0100
+Message-ID: <454b5753-3132-1b88-149d-a45690dcd4f7@suse.de>
+Date:   Thu, 21 Nov 2019 16:46:17 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191121005323.GB24548@ming.t460p>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <841676ff-3d41-1dd4-a220-6b2ee84d7320@acm.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -101,214 +90,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/21/19 1:53 AM, Ming Lei wrote:
-> On Wed, Nov 20, 2019 at 11:05:24AM +0100, Hannes Reinecke wrote:
->> On 11/18/19 11:31 AM, Ming Lei wrote:
->>> SCSI core uses the atomic variable of sdev->device_busy to track
->>> in-flight IO requests dispatched to this scsi device. IO request may be
->>> submitted from any CPU, so the cost for maintaining the shared atomic
->>> counter can be very big on big NUMA machine with lots of CPU cores.
->>>
->>> sdev->queue_depth is usually used for two purposes: 1) improve IO merge;
->>> 2) fair IO request scattered among all LUNs.
->>>
->>> blk-mq already provides fair request allocation among all active shared
->>> request queues(LUNs), see hctx_may_queue().
->>>
->>> NVMe doesn't have such per-request-queue(namespace) queue depth, so it
->>> is reasonable to ignore the limit for SCSI SSD too. Also IO merge won't
->>> play big role for reaching top SSD performance.
->>>
->>> With this patch, big cost for tracking in-flight per-LUN requests via
->>> atomic variable can be saved.
->>>
->>> Given QUEUE_FLAG_NONROT is read in IO path, we have to freeze queue
->>> before changing this flag.
->>>
->>> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
->>> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
->>> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
->>> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
->>> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
->>> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
->>> Cc: Ewan D. Milne <emilne@redhat.com>
->>> Cc: Christoph Hellwig <hch@lst.de>,
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Cc: Bart Van Assche <bart.vanassche@wdc.com>
->>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->>> ---
->>>  block/blk-sysfs.c       | 14 +++++++++++++-
->>>  drivers/scsi/scsi_lib.c | 24 ++++++++++++++++++------
->>>  drivers/scsi/sd.c       |  4 ++++
->>>  3 files changed, 35 insertions(+), 7 deletions(-)
->>>
->>> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
->>> index fca9b158f4a0..9cc0dd5f88a1 100644
->>> --- a/block/blk-sysfs.c
->>> +++ b/block/blk-sysfs.c
->>> @@ -281,6 +281,18 @@ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
->>>  QUEUE_SYSFS_BIT_FNS(iostats, IO_STAT, 0);
->>>  #undef QUEUE_SYSFS_BIT_FNS
->>>  
->>> +static ssize_t queue_store_nonrot_freeze(struct request_queue *q,
->>> +		const char *page, size_t count)
->>> +{
->>> +	size_t ret;
->>> +
->>> +	blk_mq_freeze_queue(q);
->>> +	ret = queue_store_nonrot(q, page, count);
->>> +	blk_mq_unfreeze_queue(q);
->>> +
->>> +	return ret;
->>> +}
->>> +
->>>  static ssize_t queue_zoned_show(struct request_queue *q, char *page)
->>>  {
->>>  	switch (blk_queue_zoned_model(q)) {
->>> @@ -642,7 +654,7 @@ static struct queue_sysfs_entry queue_write_zeroes_max_entry = {
->>>  static struct queue_sysfs_entry queue_nonrot_entry = {
->>>  	.attr = {.name = "rotational", .mode = 0644 },
->>>  	.show = queue_show_nonrot,
->>> -	.store = queue_store_nonrot,
->>> +	.store = queue_store_nonrot_freeze,
->>>  };
->>>  
->>>  static struct queue_sysfs_entry queue_zoned_entry = {
->>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->>> index 62a86a82c38d..72655a049efd 100644
->>> --- a/drivers/scsi/scsi_lib.c
->>> +++ b/drivers/scsi/scsi_lib.c
->>> @@ -354,7 +354,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
->>>  	if (starget->can_queue > 0)
->>>  		atomic_dec(&starget->target_busy);
->>>  
->>> -	atomic_dec(&sdev->device_busy);
->>> +	if (!blk_queue_nonrot(sdev->request_queue))
->>> +		atomic_dec(&sdev->device_busy);
->>>  }
->>>  
->>>  static void scsi_kick_queue(struct request_queue *q)
->>> @@ -410,7 +411,8 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
->>>  
->>>  static inline bool scsi_device_is_busy(struct scsi_device *sdev)
->>>  {
->>> -	if (atomic_read(&sdev->device_busy) >= sdev->queue_depth)
->>> +	if (!blk_queue_nonrot(sdev->request_queue) &&
->>> +			atomic_read(&sdev->device_busy) >= sdev->queue_depth)
->>>  		return true;
->>>  	if (atomic_read(&sdev->device_blocked) > 0)
->>>  		return true;
->>> @@ -1283,8 +1285,12 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
->>>  				  struct scsi_device *sdev)
->>>  {
->>>  	unsigned int busy;
->>> +	bool bypass = blk_queue_nonrot(sdev->request_queue);
->>>  
->>> -	busy = atomic_inc_return(&sdev->device_busy) - 1;
->>> +	if (!bypass)
->>> +		busy = atomic_inc_return(&sdev->device_busy) - 1;
->>> +	else
->>> +		busy = 0;
->>>  	if (atomic_read(&sdev->device_blocked)) {
->>>  		if (busy)
->>>  			goto out_dec;
->>> @@ -1298,12 +1304,16 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
->>>  				   "unblocking device at zero depth\n"));
->>>  	}
->>>  
->>> +	if (bypass)
->>> +		return 1;
->>> +
->>>  	if (busy >= sdev->queue_depth)
->>>  		goto out_dec;
->>>  
->>>  	return 1;
->>>  out_dec:
->>> -	atomic_dec(&sdev->device_busy);
->>> +	if (!bypass)
->>> +		atomic_dec(&sdev->device_busy);
->>>  	return 0;
->>>  }
->>>  
->>> @@ -1624,7 +1634,8 @@ static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
->>>  	struct request_queue *q = hctx->queue;
->>>  	struct scsi_device *sdev = q->queuedata;
->>>  
->>> -	atomic_dec(&sdev->device_busy);
->>> +	if (!blk_queue_nonrot(sdev->request_queue))
->>> +		atomic_dec(&sdev->device_busy);
->>>  }
->>>  
->>>  static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
->>> @@ -1731,7 +1742,8 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->>>  	case BLK_STS_OK:
->>>  		break;
->>>  	case BLK_STS_RESOURCE:
->>> -		if (atomic_read(&sdev->device_busy) ||
->>> +		if ((!blk_queue_nonrot(sdev->request_queue) &&
->>> +		     atomic_read(&sdev->device_busy)) ||
->>>  		    scsi_device_blocked(sdev))
->>>  			ret = BLK_STS_DEV_RESOURCE;
->>>  		break;
->>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->>> index 0744c34468e1..c3d47117700d 100644
->>> --- a/drivers/scsi/sd.c
->>> +++ b/drivers/scsi/sd.c
->>> @@ -2927,7 +2927,9 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
->>>  	rot = get_unaligned_be16(&buffer[4]);
->>>  
->>>  	if (rot == 1) {
->>> +		blk_mq_freeze_queue(q);
->>>  		blk_queue_flag_set(QUEUE_FLAG_NONROT, q);
->>> +		blk_mq_unfreeze_queue(q);
->>>  		blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, q);
->>>  	}
->>>  
->>> @@ -3123,7 +3125,9 @@ static int sd_revalidate_disk(struct gendisk *disk)
->>>  		 * cause this to be updated correctly and any device which
->>>  		 * doesn't support it should be treated as rotational.
->>>  		 */
->>> +		blk_mq_freeze_queue(q);
->>>  		blk_queue_flag_clear(QUEUE_FLAG_NONROT, q);
->>> +		blk_mq_unfreeze_queue(q);
->>>  		blk_queue_flag_set(QUEUE_FLAG_ADD_RANDOM, q);
->>>  
->>>  		if (scsi_device_supports_vpd(sdp)) {
->>>
->> Hmm.
->>
->> I must admit I patently don't like this explicit dependency on
->> blk_nonrot(). Having a conditional counter is just an open invitation to
->> getting things wrong...
+On 11/20/19 5:19 PM, Bart Van Assche wrote:
+> On 11/20/19 2:31 AM, Hannes Reinecke wrote:
+>> +static bool flush_cmds_iter(struct request *rq, void *data, bool
+>> reserved)
+>> +{
+>> +    struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
+>> +    int status = *(int *)data;
+>> +
+>> +    if (reserved)
+>> +        return true;
 > 
-> That won't be an issue given this patch freezes queue when the
-> NONROT queue flag is changed.
+> Since the SCSI core does not support reserving tags, this early return
+> is dead code. Additionally, I'm not sure this early return would be
+> correct if reserved tag support would be added to the SCSI core. How
+> about leaving out this early return?
 > 
-That's not what I'm saying.
+Yeah, all right.
 
-My issue is that we're turning the device_busy counter into a
-conditional counter, which only must be accessed when that condition is
-true.
-This not only puts a burden on the developer (as he has to remember to
-always check the condition), but also has possible issues when switching
-between modes.
-The latter you've addressed with ensuring that the queue must be frozen
-when modifying that flag, but the former is a conceptual problem.
-
-And that was what I had been referring to.
-
->>
->> I would far prefer if we could delegate any queueing decision to the
->> elevators, and completely drop the device_busy flag for all devices.
+>> +    scsi_dma_unmap(scmd);
+>> +    scmd->result = status << 16;
+>> +    scmd->scsi_done(scmd);
+>> +    return true;
+>> +}
+>> +
+>> +/**
+>> + * scsi_host_flush_commands -- Terminate all running commands
+>                                ^^
+> Should this have been a single hyphen?
 > 
-> If you drop it, you may create big sequential IO performance drop
-> on HDD., that is why this patch only bypasses sdev->queue_depth on
-> SSD. NVMe bypasses it because no one uses HDD. via NVMe.
-> 
-I still wonder how much performance drop we actually see; what seems to
-happen is that device_busy just arbitrary pushes back to the block
-layer, giving it more time to do merging.
-I do think we can do better then that...
+Maybe.
+
+Will be sending an updated version.
 
 Cheers,
 
@@ -316,5 +129,5 @@ Hannes
 -- 
 Dr. Hannes Reinecke		      Teamlead Storage & Networking
 hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N�rnberg
-HRB 247165 (AG M�nchen), GF: Felix Imend�rffer
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
