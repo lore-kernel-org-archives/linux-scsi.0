@@ -2,123 +2,107 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 543B7C43215
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 19:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA13C432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C289206CC
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 19:19:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AJ/eclEn"
+	by mail.kernel.org (Postfix) with ESMTP id 359D2206CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 22:09:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726722AbfKUTTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Nov 2019 14:19:38 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45873 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726546AbfKUTTi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2019 14:19:38 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574363976;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zv/iZ/7iNVXktTSWMBYCInxJ10DtWIchWCIKy4SGAIk=;
-        b=AJ/eclEnSTG/+MJo4bVeDsHdGEPCBdnrXPAaZ1KZqS2D9LWerf003FyL1XnzFDsmewGK80
-        q9FeQIEx2W4BnFSbdef8I0gfS53nhXD2X12zLs+0PRmCPLENfedVTqjmon65SySnoKmraE
-        OpHnK1SFphPPuUwCzxfe3ZJ1wwHR03s=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-348-2Gk-B0iePGudDSZSjCBsPg-1; Thu, 21 Nov 2019 14:19:33 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7BF3918C897A;
-        Thu, 21 Nov 2019 19:19:31 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EA6B51037AB1;
-        Thu, 21 Nov 2019 19:19:27 +0000 (UTC)
-Message-ID: <5f2a9e5cc4e7832874d5d9ebd204cd8a53695b04.camel@redhat.com>
-Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Date:   Thu, 21 Nov 2019 14:19:26 -0500
-In-Reply-To: <20191121005458.GC24548@ming.t460p>
-References: <20191118103117.978-1-ming.lei@redhat.com>
-         <20191118103117.978-5-ming.lei@redhat.com>
-         <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
-         <9bbcbbb42b659c323c9e0d74aa9b062a3f517d1f.camel@redhat.com>
-         <20191121005458.GC24548@ming.t460p>
-Mime-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: 2Gk-B0iePGudDSZSjCBsPg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+        id S1726335AbfKUWJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Nov 2019 17:09:07 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:38039 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726297AbfKUWJH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Nov 2019 17:09:07 -0500
+Received: by mail-pg1-f196.google.com with SMTP id t3so1890571pgl.5
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Nov 2019 14:09:07 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Gpq6FM+fvcyP0popf1lOvHeNPRgc7LuVtAHS2ZdLKuA=;
+        b=rJ5olcpU3JhFpMn9GeLpBsMredFI7HTuAfD2ipv4TvsMLsY2ocKj+7sqhDMUU9mlbl
+         rRvGZlkpZZJ8LdheDJ3SVFCDYNmYcxxL6/FgGdxeJKiXGDXJAGVWGY+k/t3C3Bdcx3wM
+         XWRl3A1rF55aJvGFNRN0n7KFlJZkg91Hlhg6nsZQSrr6oOA0n07HwfQ/sIhYGlzYOM3S
+         zRoHJgcuNRLKfHSaXvrhEKL9ZEU+nSTAewSWIW8MAKFUgTuYysiRl8cL/Hg1am6IJ21Y
+         7XeX1vlzoGsB/Udw3Do+1NkRF89ww15VB494heEpoWtbaSWiagQAK17UQzNbbvmmtsVM
+         sOBg==
+X-Gm-Message-State: APjAAAW0Iw6aWyZo3NXx34vu4bXEqUmeLJZ/z4X1pNoSmrDOjq5u/YKg
+        kCRHn/jqUninoi4aEG9Hul0=
+X-Google-Smtp-Source: APXvYqzk4ba/UtOp6mFdiTzzyUqdZwgWVvAesPCjp0OBUIzOpp64QCrglh6V+b5C49CvYL8zgWhXvw==
+X-Received: by 2002:a62:7dd2:: with SMTP id y201mr13990665pfc.90.1574374146549;
+        Thu, 21 Nov 2019 14:09:06 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id m15sm4617714pfh.19.2019.11.21.14.09.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Nov 2019 14:09:05 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     Bean Huo <beanhuo@micron.com>, Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v6 0/4] Simplify and optimize the UFS driver
+Date:   Thu, 21 Nov 2019 14:08:46 -0800
+Message-Id: <20191121220850.16195-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.24.0.432.g9d3f5f5b63-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2019-11-21 at 08:54 +0800, Ming Lei wrote:
-> On Wed, Nov 20, 2019 at 12:00:19PM -0500, Ewan D. Milne wrote:
-> > On Wed, 2019-11-20 at 11:05 +0100, Hannes Reinecke wrote:
-> > >=20
-> > > Hmm.
-> > >=20
-> > > I must admit I patently don't like this explicit dependency on
-> > > blk_nonrot(). Having a conditional counter is just an open invitation=
- to
-> > > getting things wrong...
-> > >=20
-> >=20
-> > This concerns me as well, it seems like the SCSI ML should have it's
-> > own per-device attribute if we actually need to control this per-device
-> > instead of on a per-host or per-driver basis.  And it seems like this
-> > is something that is specific to high-performance drivers, so changing
-> > the way this works for all drivers seems a bit much.
-> >=20
-> > Ordinarily I'd prefer a host template attribute as Sumanesh proposed,
-> > but I dislike wrapping the examination of that and the queue flag in
-> > a macro that makes it not obvious how the behavior is affected.
-> > (Plus Hannes just submitted submitted the patches to remove .use_cmd_li=
-st,
-> > which was another piece of ML functionality used by only a few drivers.=
-)
-> >=20
-> > Ming's patch does freeze the queue if NONROT is changed by sysfs, but
-> > the flag can be changed by other kernel code, e.g. sd_revalidate_disk()
-> > clears it and then calls sd_read_block_characteristics() which may set
-> > it again.  So it's not clear to me how reliable this is.
->=20
-> The queue freeze is applied in sd_revalidate_disk() too, isn't it?
->=20
+Hello Martin,
 
-Yes, sorry, you are right, your patch does add this.  But if anything else =
-changes
-the NONROT attribute for a queue associated with a SCSI device in the futur=
-e
-it would have to freeze the queue.  Because the device_busy counter mechani=
-sm
-would rely on it to work right.  This isn't an obvious connection, it seems=
- to me.
+This patch series that simplifies and optimizes the UFS driver. Please consider
+this patch series for kernel v5.5.
 
--Ewan
+Thanks,
+
+Bart.
+
+Changes compared to v5:
+- Reworked patch 4/4 such that it only modifies the clock scaling code and
+  no other code. Added more comments in the code and improved the patch
+  description.
+- Rebased this patch series on top of the 5.5/scsi-queue branch.
+
+Changes compared to v4:
+- Reverted back to scsi_block_requests() / scsi_unblock_requests() for the
+  UFS error handler.
+- Added a new patch that serializes error handling and command submission.
+- Fixed a blk_mq_init_queue() return value check.
+
+Changes compared to v3:
+- Left out "scsi" from the name of the functions that suspend and resume
+  command processing.
+
+Changes compared to v2:
+- Use a separate tag set for TMF tags.
+
+Changes compared to v1:
+- Use the block layer tag infrastructure for managing TMF tags.
+
+Bart Van Assche (4):
+  ufs: Serialize error handling and command submission
+  ufs: Avoid busy-waiting by eliminating tag conflicts
+  ufs: Use blk_{get,put}_request() to allocate and free TMFs
+  ufs: Simplify the clock scaling mechanism implementation
+
+Bart Van Assche (4):
+  ufs: Serialize error handling and command submission
+  ufs: Avoid busy-waiting by eliminating tag conflicts
+  ufs: Use blk_{get,put}_request() to allocate and free TMFs
+  ufs: Simplify the clock scaling mechanism implementation
+
+ drivers/scsi/ufs/ufshcd.c | 386 +++++++++++++++++---------------------
+ drivers/scsi/ufs/ufshcd.h |  19 +-
+ 2 files changed, 182 insertions(+), 223 deletions(-)
 
