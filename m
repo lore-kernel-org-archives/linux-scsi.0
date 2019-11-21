@@ -2,78 +2,187 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E12C432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 10:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A931FC432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 10:24:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1956D206CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 10:15:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80C2720872
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 10:24:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727007AbfKUKPg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Nov 2019 05:15:36 -0500
-Received: from mx2.suse.de ([195.135.220.15]:55124 "EHLO mx1.suse.de"
+        id S1726270AbfKUKYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Nov 2019 05:24:20 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2110 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726994AbfKUKPg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Nov 2019 05:15:36 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2CEEEB1EC;
-        Thu, 21 Nov 2019 10:15:34 +0000 (UTC)
-Date:   Thu, 21 Nov 2019 11:15:32 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>, Ming Lei <ming.lei@redhat.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Tejun Heo <tj@kernel.org>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 6/8] bdev: add open_finish.
-Message-ID: <20191121101532.GI11661@kitsune.suse.cz>
-References: <cover.1571834862.git.msuchanek@suse.de>
- <ea2652294651cbc8549736728c650d16d2fe1808.1571834862.git.msuchanek@suse.de>
- <20191024022232.GB11485@infradead.org>
- <20191024085514.GI938@kitsune.suse.cz>
- <20191024131254.GE2963@bombadil.infradead.org>
+        id S1726014AbfKUKYU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Nov 2019 05:24:20 -0500
+Received: from lhreml708-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 0FD5A7597279BC2F94E6;
+        Thu, 21 Nov 2019 10:24:18 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml708-cah.china.huawei.com (10.201.108.49) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 21 Nov 2019 10:24:17 +0000
+Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Thu, 21 Nov
+ 2019 10:24:17 +0000
+Subject: Re: [PATCH RFC V2 3/5] blk-mq: Facilitate a shared sbitmap per tagset
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "hare@suse.com" <hare@suse.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "chenxiang (M)" <chenxiang66@hisilicon.com>
+References: <1574173658-76818-1-git-send-email-john.garry@huawei.com>
+ <1574173658-76818-4-git-send-email-john.garry@huawei.com>
+ <20191121085531.GC4755@ming.t460p>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <db93e0ba-118a-a4f6-41a8-064353568ef7@huawei.com>
+Date:   Thu, 21 Nov 2019 10:24:16 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20191024131254.GE2963@bombadil.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191121085531.GC4755@ming.t460p>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.46]
+X-ClientProxiedBy: lhreml720-chm.china.huawei.com (10.201.108.71) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 06:12:54AM -0700, Matthew Wilcox wrote:
-> On Thu, Oct 24, 2019 at 10:55:14AM +0200, Michal Suchánek wrote:
-> > On Wed, Oct 23, 2019 at 07:22:32PM -0700, Christoph Hellwig wrote:
-> > > On Wed, Oct 23, 2019 at 02:52:45PM +0200, Michal Suchanek wrote:
-> > > > Opening a block device may require a long operation such as waiting for
-> > > > the cdrom tray to close. Performing this operation with locks held locks
-> > > > out other attempts to open the device. These processes waiting to open
-> > > > the device are not killable.
+>>   
+>>   int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>>   {
+>> +	struct blk_mq_tag_set *tag_set = q->tag_set;
+>>   	struct blk_mq_hw_ctx *hctx;
+>>   	struct elevator_queue *eq;
+>>   	unsigned int i;
+>> @@ -537,6 +538,19 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>>   		blk_mq_debugfs_register_sched_hctx(q, hctx);
+>>   	}
+>>   
+>> +	if (blk_mq_is_sbitmap_shared(tag_set)) {
+>> +		if (!blk_mq_init_sched_shared_sbitmap(tag_set, q->nr_requests)) {
+>> +			ret = -ENOMEM;
+>> +			goto err;
+>> +		}
+>> +		queue_for_each_hw_ctx(q, hctx, i) {
+>> +			struct blk_mq_tags *tags = hctx->sched_tags;
+>> +
+>> +			tags->pbitmap_tags = &tag_set->sched_shared_bitmap_tags;
+>> +			tags->pbreserved_tags = &tag_set->sched_shared_breserved_tags;
 > 
-> You can use mutex_lock_killable() to fix that.
+> This kind of sharing is wrong, sched tags should be request queue wide
+> instead of tagset wide, and each request queue has its own & independent
+> scheduler queue.
+
+Right, so if we get get a scheduler tag we still need to get a driver 
+tag, and this would be the "shared" tag.
+
+That makes things simpler then.
+
 > 
-That fixes only half of the problem.
+>> +		}
+>> +	}
+>> +
+>>   	return 0;
+>>   
+>>   err:
+>> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+>> index 42792942b428..6625bebb46c3 100644
+>> --- a/block/blk-mq-tag.c
+>> +++ b/block/blk-mq-tag.c
+>> @@ -35,9 +35,9 @@ bool __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
+>>    */
+>>   void blk_mq_tag_wakeup_all(struct blk_mq_tags *tags, bool include_reserve)
+>>   {
+>> -	sbitmap_queue_wake_all(&tags->bitmap_tags);
+>> +	sbitmap_queue_wake_all(tags->pbitmap_tags);
+>>   	if (include_reserve)
+>> -		sbitmap_queue_wake_all(&tags->breserved_tags);
+>> +		sbitmap_queue_wake_all(tags->pbreserved_tags);
+>>   }
+>>   
 
-Other processes still cannot access the device while you wait on
-mutex_lock_killable
+[...]
 
-Thanks
 
-Michal
+>>   	mutex_init(&set->tag_list_lock);
+>>   	INIT_LIST_HEAD(&set->tag_list);
+>>   
+>> @@ -3137,6 +3151,7 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+>>   {
+>>   	struct blk_mq_tag_set *set = q->tag_set;
+>>   	struct blk_mq_hw_ctx *hctx;
+>> +	bool sched_tags = false;
+>>   	int i, ret;
+>>   
+>>   	if (!set)
+>> @@ -3160,6 +3175,7 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+>>   			ret = blk_mq_tag_update_depth(hctx, &hctx->tags, nr,
+>>   							false);
+>>   		} else {
+>> +			sched_tags = true;
+>>   			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
+>>   							nr, true);
+>>   		}
+>> @@ -3169,8 +3185,41 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+>>   			q->elevator->type->ops.depth_updated(hctx);
+>>   	}
+>>   
+>> -	if (!ret)
+>> +	/*
+>> +	 * if ret is 0, all queues should have been updated to the same depth
+>> +	 * if not, then maybe some have been updated - yuk, need to handle this for shared sbitmap...
+>> +	 * if some are updated, we should probably roll back the change altogether. FIXME
+>> +	 */
+>> +	if (!ret) {
+>> +		if (blk_mq_is_sbitmap_shared(set)) {
+>> +			if (sched_tags) {
+>> +				sbitmap_queue_free(&set->sched_shared_bitmap_tags);
+>> +				sbitmap_queue_free(&set->sched_shared_breserved_tags);
+>> +				if (!blk_mq_init_sched_shared_sbitmap(set, nr))
+>> +					return -ENOMEM; /* fixup error handling */
+>> +
+>> +				queue_for_each_hw_ctx(q, hctx, i) {
+>> +					hctx->sched_tags->pbitmap_tags = &set->sched_shared_bitmap_tags;
+>> +					hctx->sched_tags->pbreserved_tags = &set->sched_shared_breserved_tags;
+>> +				}
+>> +			} else {
+>> +				sbitmap_queue_free(&set->shared_bitmap_tags);
+>> +				sbitmap_queue_free(&set->shared_breserved_tags);
+>> +				if (!blk_mq_init_shared_sbitmap(set))
+>> +					return -ENOMEM; /* fixup error handling */
+> 
+> No, we can't re-allocate driver tags here which are shared by all LUNs. > And you should see that 'can_grow' is set as false for driver tags
+> in blk_mq_update_nr_requests(), which can only touch per-request-queue
+> data, not tagset wide data.
+
+Yeah, I see that. We should just resize for driver tags bitmap.
+
+Personally I think the mainline code is a little loose here, as if we 
+could grow driver tags, then blk_mq_tagset.tags would be out-of-sync 
+with the hctx->tags. Maybe that should be made more explicit in the code.
+
+BTW, do you have anything to say about this (modified slightly) comment:
+
+/*
+  * if ret != 0, q->nr_requests would not be updated, yet the depth
+  * for some hctx sched tags may have changed - is that the right thing
+  * to do?
+  */
+
+Thanks,
+John
+
