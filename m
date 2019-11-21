@@ -2,147 +2,89 @@ Return-Path: <SRS0=2e3T=ZN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B9ABC432C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26392C432C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:11:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C806A20885
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F132920715
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Nov 2019 01:11:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hjz5AzuF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p6Xi+7VV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726574AbfKUBHv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Nov 2019 20:07:51 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:54995 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726784AbfKUBHv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 20:07:51 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574298470;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EMA1mi+epqlKukeQrbSFS2j99WJXSwyruMRk73Pu514=;
-        b=Hjz5AzuFJHFN4rDuIXze8+DVW7Qn69NLDdgoi6lZgQ7gUSI7YDPQN5/n4nDlhtZr5u6te+
-        /PnIUuOVnxXaQzyqpnRv1KPnUu4aCPaOOlVMEEfDFq8wgGWXf2+ARTtOJ0rF3GqSLEbOyS
-        M6jjd1M3QdMwPcJJqYWwT8dAwqvW0hw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-408-91xZsREGMjyCsJxpFsUIfA-1; Wed, 20 Nov 2019 20:07:47 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 220BC1005509;
-        Thu, 21 Nov 2019 01:07:45 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 051D03491F;
-        Thu, 21 Nov 2019 01:07:34 +0000 (UTC)
-Date:   Thu, 21 Nov 2019 09:07:30 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
-Message-ID: <20191121010730.GD24548@ming.t460p>
-References: <20191118103117.978-1-ming.lei@redhat.com>
- <20191118103117.978-5-ming.lei@redhat.com>
- <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
- <9bbcbbb42b659c323c9e0d74aa9b062a3f517d1f.camel@redhat.com>
- <44644664-f7b6-facd-d1bb-f7cfc9524379@acm.org>
+        id S1726568AbfKUBLR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Nov 2019 20:11:17 -0500
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:37349 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726343AbfKUBLR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Nov 2019 20:11:17 -0500
+Received: by mail-qk1-f195.google.com with SMTP id e187so1667599qkf.4;
+        Wed, 20 Nov 2019 17:11:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=UJFKLDUAQ8Rl8GVeE/OPZCBt930RD+KxHstB2Zo/uAQ=;
+        b=p6Xi+7VVrIHmB8HPGfu454P5KQjU43bXsqwi+m69TNTRPUT2PHrnPolPjKIWhV26AF
+         /gvykCKjEAlT2LbdK+rP6FL+g/B9/oz0XtJ0bFLHyy9ndM2sRPMYx+KCHKbKvmRsztlx
+         X6gkBhZtSpgNNYlHSnDVZwVtfRZbF9WZd6pML4+WBUbYskLP4pJmR35FIjYs/r0fz/wL
+         cbELRYMjkM0wszm81D9KuHU69h3Z4R36L9PgCcLhC3uG2J+o24jHIHrtZvfvDUpW7omP
+         7BH4HTInogadcMnF0bIzQYAkKO2OXA4cZdzYmrUcIVTD1+9mCAmlNM5A+vzWTm0gfyTR
+         cZ+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UJFKLDUAQ8Rl8GVeE/OPZCBt930RD+KxHstB2Zo/uAQ=;
+        b=AnrWFk5TNlyoi9zIdCHkRX/mPkKuU542vn4tdXepMxMEMCbeoSpSsdCJSq+X/g/BOQ
+         e5dZlxBhtCsKICJafn65hxrjNcB5c508kETaN0ibMq8dlSv7KvkB3NxbGR6MopLD42uO
+         XhH8ry2Lst/DSPRUshtSy8daAO1ROCvZfXW9d7ZczLaPSK5CvBscIxbcbdVhct+jGwfp
+         5oEzqc/nqZEd6DD2niOR8MjdCDrT0qAnc1guW3NY8DOxSEpUNM6YgFxV5NSCdro1uhMo
+         yWJ/fcqSdnPFVVqZaJvDMm+g97bTy6OpeR7NelKry2ooF+/Modyck3MedaYjaq2nwk8H
+         ylhg==
+X-Gm-Message-State: APjAAAXnTVtANq8oenQYaIUCKelgQtXE5FlRAgKBWJ4znSM8qNrpgDVF
+        mKZ/vBI6h9r6o9D00rioTj0=
+X-Google-Smtp-Source: APXvYqwNltaIrGVK57zRdlaae+SFzuUMZiWSy3/3CX8CUcs8ZplIM9A0GvHbAXtgKY+t4Q3FH0VOPQ==
+X-Received: by 2002:a05:620a:536:: with SMTP id h22mr5451203qkh.480.1574298675918;
+        Wed, 20 Nov 2019 17:11:15 -0800 (PST)
+Received: from oc6857751186.ibm.com ([2601:1c2:1b7f:e860:c35a:1d95:8a0f:9ad0])
+        by smtp.gmail.com with ESMTPSA id m186sm613335qkc.39.2019.11.20.17.11.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Nov 2019 17:11:15 -0800 (PST)
+Subject: Re: [PATCH] scsi: ibmvscsi_tgt: Remove unneeded variable rc
+To:     Saurav Girepunje <saurav.girepunje@gmail.com>,
+        mikecyr@linux.ibm.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     saurav.girepunje@hotmail.com
+References: <20191101120407.GA9369@saurav>
+From:   Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+Message-ID: <25de88a9-b013-f5cc-06c2-3efb1f3f0001@gmail.com>
+Date:   Wed, 20 Nov 2019 17:11:12 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <44644664-f7b6-facd-d1bb-f7cfc9524379@acm.org>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: 91xZsREGMjyCsJxpFsUIfA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+In-Reply-To: <20191101120407.GA9369@saurav>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 12:56:21PM -0800, Bart Van Assche wrote:
-> On 11/20/19 9:00 AM, Ewan D. Milne wrote:
-> > On Wed, 2019-11-20 at 11:05 +0100, Hannes Reinecke wrote:
-> > > I must admit I patently don't like this explicit dependency on
-> > > blk_nonrot(). Having a conditional counter is just an open invitation=
- to
-> > > getting things wrong...
-> >=20
-> > This concerns me as well, it seems like the SCSI ML should have it's
-> > own per-device attribute if we actually need to control this per-device
-> > instead of on a per-host or per-driver basis.  And it seems like this
-> > is something that is specific to high-performance drivers, so changing
-> > the way this works for all drivers seems a bit much.
-> >=20
-> > Ordinarily I'd prefer a host template attribute as Sumanesh proposed,
-> > but I dislike wrapping the examination of that and the queue flag in
-> > a macro that makes it not obvious how the behavior is affected.
-> > (Plus Hannes just submitted submitted the patches to remove .use_cmd_li=
-st,
-> > which was another piece of ML functionality used by only a few drivers.=
-)
-> >=20
-> > Ming's patch does freeze the queue if NONROT is changed by sysfs, but
-> > the flag can be changed by other kernel code, e.g. sd_revalidate_disk()
-> > clears it and then calls sd_read_block_characteristics() which may set
-> > it again.  So it's not clear to me how reliable this is.
->=20
-> How about changing the default behavior into ignoring sdev->queue_depth a=
-nd
-> only honoring sdev->queue_depth if a "quirk" flag is set or if overridden=
- by
-> setting a sysfs attribute?
+On 11/1/19 5:35 AM, Saurav Girepunje wrote:
+> Variable rc is not modified in ibmvscsis_srp_i_logout function.
+> So remove unneeded variable rc.
+> 
+> Issue found using coccicheck tool.
+> 
+> Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
 
-Using 'quirk' was my first idea in mind when we start to discuss the issue,=
- but
-problem is that it isn't flexible, for example, one HBA may connects HDD. i=
-n one
-setting, and SSD. in another setting.
-
-> My understanding is that the goal of the queue
-> ramp-up/ramp-down mechanism is to reduce the number of times a SCSI devic=
-e
-> responds "BUSY".
-
-I don't understand the motivation of ramp-up/ramp-down, maybe it is just
-for fairness among LUNs. So far, blk-mq provides fair IO submission
-among LUNs. One problem of ignoring it is that sequential IO performance
-may be dropped much compared with before.
-
-> An alternative for queue ramp-up/ramp-down is a delayed
-> queue re-run. I think if scsi_queue_rq() returns BLK_STS_RESOURCE that th=
-e
-> queue is only rerun after a delay. From blk_mq_dispatch_rq_list():
->=20
-> =09[ ... ]
-> =09else if (needs_restart && (ret =3D=3D BLK_STS_RESOURCE))
-> =09=09blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
-
-The delay re-run can't work given we call blk_mq_get_dispatch_budget()
-before dequeuing request from scheduler/sw queue for improving IO merge.
-At that time, run queue won't be involved.
-
-
-Thanks,
-Ming
+Reviewed-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 
