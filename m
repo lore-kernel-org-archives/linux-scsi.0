@@ -2,106 +2,164 @@ Return-Path: <SRS0=RMqd=ZO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F32B3C432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 08:53:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68959C432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 09:14:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C653B20714
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 08:53:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="JwHoJJc9"
+	by mail.kernel.org (Postfix) with ESMTP id 4845720714
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 09:14:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727118AbfKVIx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 03:53:59 -0500
-Received: from mail-io1-f67.google.com ([209.85.166.67]:33973 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726546AbfKVIxz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2019 03:53:55 -0500
-Received: by mail-io1-f67.google.com with SMTP id z193so7121723iof.1
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2019 00:53:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=if8y5NFlyeeHTVh2ye2YOtmqiEB2pxeks7g0W56+3es=;
-        b=JwHoJJc9ZdDEo2RfCLoHKhgPn33o0v94BCrI2ZMbALFuFVtOHM1a+qalcjViTJfFQT
-         wGcdzwIMTaDsA1t3vMYt//MtNtE3uURk5xRuo2xlStXwYIn3bJMXAwFvyYkjueSS4CD1
-         zgF9/i0saIRA64YKR74eTiK0B+nP1OrKdDmxAi1y+jpz1jorKEHmjys8nLyksACQpDai
-         8LBpdj5FaasX8V3ouc2ihovhAIJJN4RANMDxnmpnA+3eu9lF9Y3J6q9rpdt0xwzYKDBI
-         LFz+oY+uQ9v12b95F5t2v5ukYMy77BpLoqRIcmZkF3V7HZ7hw+WQN1KiyW/+7EMtM9MJ
-         U0YQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=if8y5NFlyeeHTVh2ye2YOtmqiEB2pxeks7g0W56+3es=;
-        b=gtGODaMQ3EkjVgZwddf2PAvGubdNkoqVRCp9ZCWdl+1rA79VgDFS902ajexmVGYC0i
-         WjdkP4GvCOsgyHXcwR1axZ8+n/ldg01QDfmiDcBD29lRnPIhJ0LcLY/clvdo7rk+yeGF
-         GpJxkGbrNN6+u1U+GA4uNRNQnwarCFvXo7reJsr7ZCM9y2P3ReAUrlTt7B1o1LSvWNR1
-         HzDRmXDo8EfBakGGW6HAC2akFMrN3b5oDxaNu1qO6ESH2bZtVDI1G6et2gHnYUFyVYtI
-         HynR54RqT4WZsx6Kmw7MJ2NI8jzI3qexIuIIfwtQNfO4rI1RZODAlSy5pN3b8mgnoRXe
-         Yi9g==
-X-Gm-Message-State: APjAAAWb30WPKoKr5/eBvAzP6M/SFVR+yE9OEA8Pn3PevES5gZVNHkf6
-        VjJCirOhOeCgJw2PvrMB4ZKd/7L8fVtJQ3b2a9B/rw==
-X-Google-Smtp-Source: APXvYqxDK3EHEOhKT9JqqXJcN1RlH2l246qXTmKF4IrMpMVi2D/sVuuclWbE+i1Pf3xycShYZT9chaj6eIn92yKanrg=
-X-Received: by 2002:a5d:9c15:: with SMTP id 21mr5135825ioe.298.1574412834417;
- Fri, 22 Nov 2019 00:53:54 -0800 (PST)
+        id S1726500AbfKVJOS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 04:14:18 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60886 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726100AbfKVJOS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 04:14:18 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id AF8B2AC84;
+        Fri, 22 Nov 2019 09:14:13 +0000 (UTC)
+Subject: Re: [PATCH v2 00/15] scsi: qla2xxx: Bug fixes
+To:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     linux@yadro.com
+References: <20191120222723.27779-1-r.bolshakov@yadro.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <b84e274f-c20e-9351-27de-4cf1b34916d9@suse.de>
+Date:   Fri, 22 Nov 2019 10:14:13 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-References: <20191120135031.270708-1-colin.king@canonical.com>
-In-Reply-To: <20191120135031.270708-1-colin.king@canonical.com>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Fri, 22 Nov 2019 09:53:43 +0100
-Message-ID: <CAMGffE=dHSO8jW4+iVe7xe5n6esdEb0D9V61XvFr3=a-MAMJJw@mail.gmail.com>
-Subject: Re: [PATCH][next] scsi: pm80xx: fix logic to break out of loop when
- register value is 2 or 3
-To:     Colin King <colin.king@canonical.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Deepak Ukey <Deepak.Ukey@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20191120222723.27779-1-r.bolshakov@yadro.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 2:50 PM Colin King <colin.king@canonical.com> wrote:
->
-> From: Colin Ian King <colin.king@canonical.com>
->
-> The condition (reg_val != 2) || (reg_val != 3) will always be true because
-> reg_val cannot be equal to two different values at the same time. Fix this
-> by replacing the || operator with && so that the loop will loop if reg_val
-> is not a 2 and not a 3 as was originally intended.
->
-> Addresses-Coverity: ("Constant expression result")
-> Fixes: 50dc2f221455 ("scsi: pm80xx: Modified the logic to collect fatal dump")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-looks fine. thanks Colin.
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-> ---
->  drivers/scsi/pm8001/pm80xx_hwi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 19601138e889..d41908b23760 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -348,7 +348,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                         do {
->                                 reg_val = pm8001_mr32(fatal_table_address,
->                                         MPI_FATAL_EDUMP_TABLE_STATUS);
-> -                       } while (((reg_val != 2) || (reg_val != 3)) &&
-> +                       } while (((reg_val != 2) && (reg_val != 3)) &&
->                                         time_before(jiffies, start));
->
->                         if (reg_val < 2) {
-> --
-> 2.24.0
->
+On 11/20/19 11:27 PM, Roman Bolshakov wrote:
+> 
+> Hi Martin,
+> 
+> The patch series contains fixes for qla2xxx and solves two visible
+> issues:
+>   - Target port in N2N topology doesn't perform login if it has higher
+>     WWPN than initiator
+>   - ABORT TASK TMF leads to crash if it's received shortly after ACL of
+>     an initiator is deleted and there's active I/O from the initiator
+> 
+> It also contains reliability improvements and cleanups.
+> 
+> Unfortunately, there's still an issue the latest patch. The discard
+> works but ELS IOCB for LOGO is likely built incorrectly by
+> qla24xx_els_dcmd_iocb(). The issue can also be exposed when "1" is
+> written to fc_host/hostN/device/issue_logo file with logging turned on.
+> 
+> Changes since v1 (https://patchwork.kernel.org/cover/11141979/):
+> - Fixes target port in N2N mode were added (patches 5-11);
+> - Target port makes explicit LOGO on session teardown in the patch made
+>   by Quinn. Together with patch 1, it helps to immediately turn
+>   fc_remote_port to the Blocked stated on client side and avoids visibly
+>   stuck session;
+> - The last three patches address violation of FCP specification with
+>   regards to handling of ABTS-LS from ports that are not currently
+>   logged in.
+> 
+> Thank you,
+> Roman
+> 
+> Quinn Tran (1):
+>   scsi: qla2xxx: Use explicit LOGO in target mode
+> 
+> Roman Bolshakov (14):
+>   scsi: qla2xxx: Ignore NULL pointer in tcm_qla2xxx_free_mcmd
+>   scsi: qla2xxx: Initialize free_work before flushing it
+>   scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
+>   scsi: qla2xxx: Change discovery state before PLOGI
+>   scsi: qla2xxx: Allow PLOGI in target mode
+>   scsi: qla2xxx: Don't call qlt_async_event twice
+>   scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
+>   scsi: qla2xxx: Configure local loop for N2N target
+>   scsi: qla2xxx: Send Notify ACK after N2N PLOGI
+>   scsi: qla2xxx: Don't defer relogin unconditonally
+>   scsi: qla2xxx: Ignore PORT UPDATE after N2N PLOGI
+>   scsi: qla2xxx: Add async mode for qla24xx_els_dcmd_iocb
+>   scsi: qla2xxx: Add debug dump of LOGO payload and ELS IOCB
+>   scsi: qla2xxx: Handle ABTS according to FCP spec for logged out ports
+> 
+>  drivers/scsi/qla2xxx/qla_attr.c    |  2 +-
+>  drivers/scsi/qla2xxx/qla_def.h     |  1 +
+>  drivers/scsi/qla2xxx/qla_gbl.h     |  2 +-
+>  drivers/scsi/qla2xxx/qla_init.c    | 21 ++++++---------
+>  drivers/scsi/qla2xxx/qla_iocb.c    | 42 ++++++++++++++++++++++++------
+>  drivers/scsi/qla2xxx/qla_isr.c     |  4 ---
+>  drivers/scsi/qla2xxx/qla_mbx.c     |  3 ++-
+>  drivers/scsi/qla2xxx/qla_target.c  | 34 ++++++++++++++++--------
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  3 +++
+>  9 files changed, 73 insertions(+), 39 deletions(-)
+> 
+This patchset has the nice benefit that it has fixed the crashes on
+rmmod we had been seeing.
+
+So, for the entire patchset:
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 247165 (AG München), GF: Felix Imendörffer
