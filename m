@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78388C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C668DC432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FF1B2070B
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:19:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD9920674
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574403591;
-	bh=r3ucmFbcWpJNyhV1/cUTXuEJMILhTtPI5BcKyByQya8=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=d/rOMcNgydsHa4aX+uLvxb1q2HHjRKFZexwY2R9LV3EhAy5DKRZ/jOOWd6b/UP9F0
-	 9JwCoZkKk0Az3pBPGzIMsvjFWaQFeUaQShgAoUQ04R3sGCJTnlmupPf29bag5c7xHC
-	 w6v76FoZEFwMkVImzIM+WjvUHeu/9veOEecKGuOY=
+	s=default; t=1574403905;
+	bh=pyr9XZsOoczspHONhp+UVZ78Qtz7fW0rhW4q539hLko=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=W01XPflH4Wqo0ZCb84GV+vXw0a7BoigqpR1kwBn7nQuSCRxyEm7tWf3U7WefXKNbF
+	 anzrAurr3lNHfUBKXRM4pImzy9tXHWo8bFbCIXuPbZIyK3LGzxVggbQHTFxO2NVWxS
+	 HaRsJfPVq+XNOJz1hgqN3F7krsbdHOQ5uURu2K/g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728921AbfKVFzs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:55:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33400 "EHLO mail.kernel.org"
+        id S1728099AbfKVGZB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 01:25:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56300 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727506AbfKVFzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:55:47 -0500
+        id S1728083AbfKVFvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:51:19 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9252B20717;
-        Fri, 22 Nov 2019 05:55:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C4C002071C;
+        Fri, 22 Nov 2019 05:51:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402146;
-        bh=r3ucmFbcWpJNyhV1/cUTXuEJMILhTtPI5BcKyByQya8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lpokl0pX6fbLvM7NVnp+MdBmbiDUl6xq7i0CrsCOL3+7AaVtMA9TynU8912OATANc
-         6R7HcD9VVY5IR17P1rEf9uSOTGYlZXmwgmuz6t9I6zdZsRl4EQPMzIht1VQ6eU8zPh
-         /m6gw/2osCFMQk1zAwScPJdCAWMECZPk82KqwNK0=
+        s=default; t=1574401878;
+        bh=pyr9XZsOoczspHONhp+UVZ78Qtz7fW0rhW4q539hLko=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=J+KZ+G5xg5epDy/Yqkvz4Rt04Xc5ze9I+HiyhuPZbbSRA/es8HkQgam+vA22hcP9m
+         mXSfEFWcW2fvyItb7AgIgulz/fpwTTOkh/neyUhKzosA/NzjGuSylcgXbVMIziBp8W
+         xIM5opNHcm+w2gL9Ju3g8jmhq1zarAlI3iCe6qD0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Anatoliy Glagolev <glagolig@gmail.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 001/127] scsi: lpfc: Fix kernel Oops due to null pring pointers
-Date:   Fri, 22 Nov 2019 00:53:40 -0500
-Message-Id: <20191122055544.3299-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 113/219] scsi: qla2xxx: deadlock by configfs_depend_item
+Date:   Fri, 22 Nov 2019 00:47:25 -0500
+Message-Id: <20191122054911.1750-106-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
+References: <20191122054911.1750-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,91 +59,125 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Anatoliy Glagolev <glagolig@gmail.com>
 
-[ Upstream commit 5a9eeff57f340238c39c95d8e7e54c96fc722de7 ]
+[ Upstream commit 17b18eaa6f59044a5172db7d07149e31ede0f920 ]
 
-Driver is hitting null pring pointers in lpfc_do_work().
+The intent of invoking configfs_depend_item in commit 7474f52a82d51
+("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg")
+was to prevent a physical Fibre Channel port removal when
+virtual (NPIV) ports announced through that physical port are active.
+The change does not work as expected: it makes enabled physical port
+dependent on target configfs subsystem (the port's parent), something
+the configfs guarantees anyway.
 
-Pointer assignment occurs based on SLI-revision. If recovering after an
-error, its possible the sli revision for the port was cleared, making the
-lpfc_phba_elsring() not return a ring pointer, thus the null pointer.
+Besides, scheduling work in a worker thread and waiting for the work's
+completion is not really a valid workaround for the requirement not to call
+configfs_depend_item from a configfs callback: the call occasionally
+deadlocks.
 
-Add SLI revision checking to lpfc_phba_elsring() and status checking to all
-callers.
+Thus, removing configfs_depend_item calls does not break anything and fixes
+the deadlock problem.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 6 ++++++
- drivers/scsi/lpfc/lpfc_els.c  | 2 ++
- drivers/scsi/lpfc/lpfc_init.c | 7 ++++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 2 ++
- 4 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 48 +++++-------------------------
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |  3 --
+ 2 files changed, 8 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index bc61cc8bc6f02..03e95a3216c8c 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1239,6 +1239,12 @@ lpfc_sli_read_hs(struct lpfc_hba *phba)
- static inline struct lpfc_sli_ring *
- lpfc_phba_elsring(struct lpfc_hba *phba)
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index b8c1a739dfbd1..654e1af7f542c 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -926,38 +926,14 @@ static ssize_t tcm_qla2xxx_tpg_enable_show(struct config_item *item,
+ 			atomic_read(&tpg->lport_tpg_enabled));
+ }
+ 
+-static void tcm_qla2xxx_depend_tpg(struct work_struct *work)
+-{
+-	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
+-				struct tcm_qla2xxx_tpg, tpg_base_work);
+-	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
+-	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
+-
+-	if (!target_depend_item(&se_tpg->tpg_group.cg_item)) {
+-		atomic_set(&base_tpg->lport_tpg_enabled, 1);
+-		qlt_enable_vha(base_vha);
+-	}
+-	complete(&base_tpg->tpg_base_comp);
+-}
+-
+-static void tcm_qla2xxx_undepend_tpg(struct work_struct *work)
+-{
+-	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
+-				struct tcm_qla2xxx_tpg, tpg_base_work);
+-	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
+-	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
+-
+-	if (!qlt_stop_phase1(base_vha->vha_tgt.qla_tgt)) {
+-		atomic_set(&base_tpg->lport_tpg_enabled, 0);
+-		target_undepend_item(&se_tpg->tpg_group.cg_item);
+-	}
+-	complete(&base_tpg->tpg_base_comp);
+-}
+-
+ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
+ 		const char *page, size_t count)
  {
-+	/* Return NULL if sli_rev has become invalid due to bad fw */
-+	if (phba->sli_rev != LPFC_SLI_REV4  &&
-+	    phba->sli_rev != LPFC_SLI_REV3  &&
-+	    phba->sli_rev != LPFC_SLI_REV2)
-+		return NULL;
-+
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		if (phba->sli4_hba.els_wq)
- 			return phba->sli4_hba.els_wq->pring;
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index ddd29752d96dc..0032465d1b630 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1335,6 +1335,8 @@ lpfc_els_abort_flogi(struct lpfc_hba *phba)
- 			Fabric_DID);
+ 	struct se_portal_group *se_tpg = to_tpg(item);
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
+ 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
+ 			struct tcm_qla2xxx_tpg, se_tpg);
+ 	unsigned long op;
+@@ -976,24 +952,16 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
+ 		if (atomic_read(&tpg->lport_tpg_enabled))
+ 			return -EEXIST;
  
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return -EIO;
+-		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_depend_tpg);
++		atomic_set(&tpg->lport_tpg_enabled, 1);
++		qlt_enable_vha(vha);
+ 	} else {
+ 		if (!atomic_read(&tpg->lport_tpg_enabled))
+ 			return count;
  
- 	/*
- 	 * Check the txcmplq for an iocb that matches the nport the driver is
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 25612ccf6ff28..1da125afebddb 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1773,7 +1773,12 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
- 	lpfc_offline(phba);
- 	/* release interrupt for possible resource change */
- 	lpfc_sli4_disable_intr(phba);
--	lpfc_sli_brdrestart(phba);
-+	rc = lpfc_sli_brdrestart(phba);
-+	if (rc) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"6309 Failed to restart board\n");
-+		return rc;
-+	}
- 	/* request and enable interrupt */
- 	intr_mode = lpfc_sli4_enable_intr(phba, phba->intr_mode);
- 	if (intr_mode == LPFC_INTR_ERROR) {
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 6c2b098b76095..0128ea32b208f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4421,6 +4421,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- 	hba_aer_enabled = phba->hba_flag & HBA_AER_ENABLED;
+-		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_undepend_tpg);
++		atomic_set(&tpg->lport_tpg_enabled, 0);
++		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
+ 	}
+-	init_completion(&tpg->tpg_base_comp);
+-	schedule_work(&tpg->tpg_base_work);
+-	wait_for_completion(&tpg->tpg_base_comp);
  
- 	rc = lpfc_sli4_brdreset(phba);
-+	if (rc)
-+		return rc;
+-	if (op) {
+-		if (!atomic_read(&tpg->lport_tpg_enabled))
+-			return -ENODEV;
+-	} else {
+-		if (atomic_read(&tpg->lport_tpg_enabled))
+-			return -EPERM;
+-	}
+ 	return count;
+ }
  
- 	spin_lock_irq(&phba->hbalock);
- 	phba->pport->stopped = 0;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 7550ba2831c36..147cf6c903666 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -48,9 +48,6 @@ struct tcm_qla2xxx_tpg {
+ 	struct tcm_qla2xxx_tpg_attrib tpg_attrib;
+ 	/* Returned by tcm_qla2xxx_make_tpg() */
+ 	struct se_portal_group se_tpg;
+-	/* Items for dealing with configfs_depend_item */
+-	struct completion tpg_base_comp;
+-	struct work_struct tpg_base_work;
+ };
+ 
+ struct tcm_qla2xxx_fc_loopid {
 -- 
 2.20.1
 
