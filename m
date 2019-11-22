@@ -7,51 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BEEC43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADB73C43215
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:49:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D47B720708
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 841192070A
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:49:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574400541;
-	bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=hL7ehfYNGAb6j00IwGFXql1gX/ycmg8oMzbl8PmxvV826etcl3Istsjea/zjX7d2y
-	 d42dGQyDOrWEDjvtuFu3vM8eOn2xJ+UX71moBK5ykQ+1ePkCOcrI2XGNimYxPkK8pA
-	 soiulCizB6FOqHHBZciuZFVVcwnfw+OnhOvDhuUI=
+	s=default; t=1574401793;
+	bh=9Vyqt3zmn8NcG/gtQP2AQNm8fvqB9tSopBcJdG0d62E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=1MoQQvBmJ1C9jbE13MvbbKc5PjOi5/o7UZr1nRWARxiUsDeYL4wpCl8eeIR4m7mcF
+	 w6fkB+UAeWjEKC1ygur5LS8WRznE3UTumCoMoZImpMYuri8EwW8KHH6QVNrV5wV0sk
+	 PZco4QUeITFfgqIeBN8uKCfTA7MIzvEo7U0ixiuw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726775AbfKVF2k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:28:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46630 "EHLO mail.kernel.org"
+        id S1727333AbfKVFtw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:49:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54162 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726417AbfKVF2k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:28:40 -0500
+        id S1727312AbfKVFtv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:49:51 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 82B7820707;
-        Fri, 22 Nov 2019 05:28:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E297D2082F;
+        Fri, 22 Nov 2019 05:49:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574400519;
-        bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=vr2+MJ2b+zb3jgLdybeaBVVH/ztoImh8lzh6d3FrSqYIg8BiZ9GaW/Hpoi3N+LelI
-         3Uf6dqGb4HMgNFhvJufoVV7oRCvy3E+OWO5405jNRo0OJhqfH+Blu4zJHDu1NNAsN2
-         8hw5+6l/6vwRlusOMB9bCDUyEP2wS1sAZlcF2bqY=
+        s=default; t=1574401790;
+        bh=9Vyqt3zmn8NcG/gtQP2AQNm8fvqB9tSopBcJdG0d62E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ghl2ECi+jPhGhAD142ensyFs9fMnVkOtXn9tsh3EkhuubaIj8nIoLvmlPWAon4cak
+         DGOMxGjaAMP2WgogDLjna6W+xepuyXMDSPJtyvobdX93TTAUQgTcQiG9+F+6N4XMR6
+         Dc7CWYqHXJN9hVQw2JL5egvxG2WDtp2tFmsQ8V8Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        David Disseldorp <ddiss@suse.de>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Mike Christie <mchristi@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+Cc:     Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 001/219] scsi: target/tcmu: Fix queue_cmd_ring() declaration
-Date:   Fri, 22 Nov 2019 00:24:59 -0500
-Message-Id: <20191122052837.357-1-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 038/219] scsi: qla2xxx: Fix NPIV handling for FC-NVMe
+Date:   Fri, 22 Nov 2019 00:46:10 -0500
+Message-Id: <20191122054911.1750-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
+References: <20191122054911.1750-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,39 +58,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Himanshu Madhani <hmadhani@marvell.com>
 
-[ Upstream commit e7f411049f5164ee6db6c3434c07302846f09990 ]
+[ Upstream commit 5e6803b409ba3c18434de6693062d98a470bcb1e ]
 
-This patch does not change any functionality but avoids that sparse
-complains about the queue_cmd_ring() function and its callers.
+This patch fixes issues with NPIV port with FC-NVMe. Clean up code for
+remoteport delete and also call nvme_delete when deleting VPs.
 
-Fixes: 6fd0ce79724d ("tcmu: prep queue_cmd_ring to be used by unmap wq")
-Reviewed-by: David Disseldorp <ddiss@suse.de>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_nvme.c | 16 +++-------------
+ drivers/scsi/qla2xxx/qla_os.c   |  2 ++
+ 2 files changed, 5 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 7159e8363b83b..7ee0a75ce4526 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -962,7 +962,7 @@ static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
-  *  0 success
-  *  1 internally queued to wait for ring memory to free.
-  */
--static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
-+static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- {
- 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
- 	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index e6545cb9a2c19..5590d6e8b5762 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -474,21 +474,10 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 	int rval = -ENODEV;
+ 	srb_t *sp;
+ 	struct qla_qpair *qpair = hw_queue_handle;
+-	struct nvme_private *priv;
++	struct nvme_private *priv = fd->private;
+ 	struct qla_nvme_rport *qla_rport = rport->private;
+ 
+-	if (!fd || !qpair) {
+-		ql_log(ql_log_warn, NULL, 0x2134,
+-		    "NO NVMe request or Queue Handle\n");
+-		return rval;
+-	}
+-
+-	priv = fd->private;
+ 	fcport = qla_rport->fcport;
+-	if (!fcport) {
+-		ql_log(ql_log_warn, NULL, 0x210e, "No fcport ptr\n");
+-		return rval;
+-	}
+ 
+ 	vha = fcport->vha;
+ 
+@@ -517,6 +506,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
+ 	sp->name = "nvme_cmd";
+ 	sp->done = qla_nvme_sp_done;
+ 	sp->qpair = qpair;
++	sp->vha = vha;
+ 	nvme = &sp->u.iocb_cmd;
+ 	nvme->u.nvme.desc = fd;
+ 
+@@ -564,7 +554,7 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
+ 		schedule_work(&fcport->free_work);
+ 	}
+ 
+-	fcport->nvme_flag &= ~(NVME_FLAG_REGISTERED | NVME_FLAG_DELETING);
++	fcport->nvme_flag &= ~NVME_FLAG_DELETING;
+ 	ql_log(ql_log_info, fcport->vha, 0x2110,
+ 	    "remoteport_delete of %p completed.\n", fcport);
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 18ee614fe07f5..fb6b5de098f58 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3537,6 +3537,8 @@ qla2x00_delete_all_vps(struct qla_hw_data *ha, scsi_qla_host_t *base_vha)
+ 		spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 		mutex_unlock(&ha->vport_lock);
+ 
++		qla_nvme_delete(vha);
++
+ 		fc_vport_terminate(vha->fc_vport);
+ 		scsi_host_put(vha->host);
+ 
 -- 
 2.20.1
 
