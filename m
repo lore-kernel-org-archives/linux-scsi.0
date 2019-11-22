@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09102C43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 22:19:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 999D1C432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 22:23:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF87E2071C
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 22:19:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64C922071B
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 22:23:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbfKVWTv convert rfc822-to-8bit (ORCPT
+        id S1726568AbfKVWX6 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 17:19:51 -0500
-Received: from m4a0041g.houston.softwaregrp.com ([15.124.2.87]:40509 "EHLO
-        m4a0041g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726813AbfKVWTv (ORCPT
+        Fri, 22 Nov 2019 17:23:58 -0500
+Received: from m4a0039g.houston.softwaregrp.com ([15.124.2.85]:37462 "EHLO
+        m4a0039g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726089AbfKVWX5 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 17:19:51 -0500
-Received: FROM m4a0041g.houston.softwaregrp.com (15.120.17.147) BY m4a0041g.houston.softwaregrp.com WITH ESMTP;
- Fri, 22 Nov 2019 22:18:47 +0000
+        Fri, 22 Nov 2019 17:23:57 -0500
+Received: FROM m4a0039g.houston.softwaregrp.com (15.120.17.147) BY m4a0039g.houston.softwaregrp.com WITH ESMTP;
+ Fri, 22 Nov 2019 22:22:31 +0000
 Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
  M4W0335.microfocus.com (2002:f78:1193::f78:1193) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Fri, 22 Nov 2019 22:19:24 +0000
-Received: from NAM03-CO1-obe.outbound.protection.outlook.com (15.124.8.14) by
+ 15.1.1591.10; Fri, 22 Nov 2019 22:19:26 +0000
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (15.124.8.11) by
  M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Fri, 22 Nov 2019 22:19:24 +0000
+ 15.1.1591.10 via Frontend Transport; Fri, 22 Nov 2019 22:19:26 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Rve9EpgdURdrNj28v7O5wpetF76B5ZZ3RGXrhfK/HRO9RyhWjSnX7xfti6U0SB3n+gWX7tiXskBURL3F/M15g1LEc1zj1rhjPwB9V6VgoPlRomnFbq401L/MWZaPEnfqwjVMJ4MBWRe/BHWPm4fSUE0iWfnSNC8EKd8xTj81T1eFgDk5k/Gzy2Gc2DhMhlRlUyis4W3vpdVNrUE9vjfIH+nCjhCzNSGD7IoULGcIRlhZdIklFLTRWFCCyCzfgufQVqFm9FBDD/ElF2alfdjmw+72qhn4itSL/tPjzkVUjlRh/L0GQnyGacVapGTmWOgIc14WgIPwE463PLWoMNtSkA==
+ b=R2YUDBQhfmO8cRyVOeKC3aC9RZpHee04e2hkyOhqRgkIF0YOD2YPx9rXX8X53NnbqQJBtXqRtDvkapPe9SjIwsPGBQW0Ve959PVD6ytIpviha9aEWfOfdL/A+1o/9FpOEi8YiP9B2zfQvVovZDqSx1ySWSUWg2H5oqMSHleSf7HMkNIwjNK71vlNTDBZ2k+DfLDovkNrYOopVzKYPO8VPBGet73tOWoDcLwE9s7BJYwEjemR4LfcRHnfnBHEAPWMSmspVtmZQgf4I7U8rqN0SpmS5eujKoqiDix7IfQX2F6bpA9AmOSWmYO0s4QcLZmsY+dFZLTheA7080/xFJQyGA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=D/LoNxQs7SE/r6c0JbVef9aL+dWnNh4MSeWqltZb76M=;
- b=Qf9OcbXHZPzqAHM0lyXh/81wGIqTDx1kmhOf5oCPx06KgIrPrkuIwxWUyuFAIeXa8hypdwpIyMgPQU076lL7LvyA1TlTE+W+F/HCOLv2aUGrenLPsNENgQaW5OTQ5DucFvhpzSclBLrlfToc50kmA2e4DoBbFTg9Rw0794/Cy0hWbONKyvwJ9Y+PXpNTksT7RwAHPkv9R5g3hRQvsPqdt/KrY1UUH9Mw4aUD19S9mS8cC8aDE91bE5LowFkyzSWy6/cPW/1opzbQKVYOtBw4V87d5k+kDdkVtgi2TPgnzuUSC6C91/nZwkBp0fJ7+2vuxe/IGFDqg5o2ECNGzim8bQ==
+ bh=nT0nkjzIxQDzUHqOu6xwV02teZSuVChK9ysAn94P4gI=;
+ b=XpVEB7j8vCbBf/npVJe2UsOK3AmjBTHowY2efzQTCF2n8gaczu+cVnJPb9eRn7qzLLjLd6hEbpmOEvGyMSEb8Ti8O41hIjOxfAC/kKIMSlo5Lj85TaqD8MBboS30ucvkr5T3QYNadCGBfdOPgFjlzFvd87ih/NABZwCPs1lBmP4mXY0WUwQBBO48qhdut9auNU9m+Hw/K1ZgSKB6qg6agA9wtihUF2enMuegFteokonxt6NAzlq9SofeFfIoxmN+TxdE2nFISOxQMy2kaX5jfzdVqYgPUHqt3c9ANDxohivD6oaxozpP856VlEt061Nisa8NZmKFRezh45sa8EgF1A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
 Received: from DM5PR18MB1355.namprd18.prod.outlook.com (10.175.223.16) by
  DM5PR18MB0937.namprd18.prod.outlook.com (10.168.120.20) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2474.16; Fri, 22 Nov 2019 22:19:23 +0000
+ 15.20.2474.16; Fri, 22 Nov 2019 22:19:25 +0000
 Received: from DM5PR18MB1355.namprd18.prod.outlook.com
  ([fe80::b08c:34c6:ffb6:641c]) by DM5PR18MB1355.namprd18.prod.outlook.com
  ([fe80::b08c:34c6:ffb6:641c%12]) with mapi id 15.20.2474.021; Fri, 22 Nov
- 2019 22:19:23 +0000
+ 2019 22:19:25 +0000
 From:   Martin Wilck <Martin.Wilck@suse.com>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Himanshu Madhani <hmadhani@marvell.com>,
@@ -57,14 +57,12 @@ CC:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
         James Bottomley <jejb@linux.vnet.ibm.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Martin Wilck <Martin.Wilck@suse.com>,
-        "Hannes Reinecke" <hare@suse.de>, David Bond <DBond@suse.com>
-Subject: [PATCH 1/2] scsi: qla2xxx: fix rports not being mark as lost in sync
- fabric scan
-Thread-Topic: [PATCH 1/2] scsi: qla2xxx: fix rports not being mark as lost in
- sync fabric scan
-Thread-Index: AQHVoYLkwFqoUasa9EiZ/DVZox6sxA==
-Date:   Fri, 22 Nov 2019 22:19:22 +0000
-Message-ID: <20191122221912.20100-2-martin.wilck@suse.com>
+        "Hannes Reinecke" <hare@suse.de>, Jason Orendorf <orendorf@hpe.com>
+Subject: [PATCH 2/2] scsi: qla2xxx: unregister ports after GPN_FT failure
+Thread-Topic: [PATCH 2/2] scsi: qla2xxx: unregister ports after GPN_FT failure
+Thread-Index: AQHVoYLlB3orcmi/YEuTDAYLzDWODw==
+Date:   Fri, 22 Nov 2019 22:19:24 +0000
+Message-ID: <20191122221912.20100-3-martin.wilck@suse.com>
 References: <20191122221912.20100-1-martin.wilck@suse.com>
 In-Reply-To: <20191122221912.20100-1-martin.wilck@suse.com>
 Accept-Language: en-US
@@ -80,29 +78,29 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.24.0
 x-originating-ip: [2.206.153.8]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: ce71e0c3-c904-406b-7fc3-08d76f9a068b
+x-ms-office365-filtering-correlation-id: 880202c5-fb3f-43ed-8235-08d76f9a080f
 x-ms-traffictypediagnostic: DM5PR18MB0937:|DM5PR18MB0937:
 x-ld-processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd,ExtAddr
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM5PR18MB0937CB111A513ACE5895DC39FC490@DM5PR18MB0937.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4502;
+x-microsoft-antispam-prvs: <DM5PR18MB09375683FA954D422EA8390BFC490@DM5PR18MB0937.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
 x-forefront-prvs: 02296943FF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(396003)(366004)(346002)(39860400002)(376002)(199004)(189003)(8936002)(186003)(26005)(478600001)(54906003)(386003)(2616005)(36756003)(3846002)(76176011)(6506007)(5660300002)(6116002)(86362001)(305945005)(52116002)(4326008)(44832011)(446003)(14454004)(6512007)(66556008)(81156014)(81166006)(66946007)(66066001)(256004)(66446008)(66476007)(2906002)(6486002)(7736002)(71190400001)(11346002)(316002)(99286004)(25786009)(102836004)(71200400001)(1076003)(50226002)(8676002)(107886003)(110136005)(64756008)(6436002);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR18MB0937;H:DM5PR18MB1355.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(396003)(366004)(346002)(39860400002)(376002)(199004)(189003)(8936002)(186003)(26005)(478600001)(54906003)(386003)(2616005)(36756003)(3846002)(76176011)(6506007)(5660300002)(6116002)(86362001)(305945005)(52116002)(4326008)(14444005)(44832011)(446003)(14454004)(6512007)(66556008)(81156014)(81166006)(66946007)(66066001)(256004)(66446008)(66476007)(2906002)(6486002)(7736002)(71190400001)(11346002)(316002)(99286004)(25786009)(102836004)(71200400001)(1076003)(50226002)(8676002)(110136005)(64756008)(6436002);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR18MB0937;H:DM5PR18MB1355.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: suse.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: FQzC63luOzqm6aehiTouvA4iotgIfA1xODxU0xCSf0PMOYz8s8mLoWnRyPGlt75eJ+umSDz3jaDswgFCDR+6dpj5utPiGxHdvhhkfouE3bKJJG9Ue95RC6fMNvaBt0P9626W49ZWDspqLd0NpQPehfyLoEFK4dJ1CfVbhjfr4DGczvyYMLHtl3zkAXdsLCIewtMKYYegULh0Sd0jWToLraaoW5uZ4iSKBPVu0vtcuMtcweahxF1dAan7kHYq1QH+KBvsPkxU8Bb69//1TnO3sOdy0Iau+tCQRZygGXnBlrHNgEdnY/5iJOhIByDnh224TkPDnOMM7tn0DZ2k0hqhs/yrVmsirTDBB6XM0czkliPO5es2l++B3EasytIw5S0VD299Fvw7jgsPgTbOaypbWQh++FxH6Plx9LSXYsP/F64S5IMKYWfFM/Yipr361ZsF
+x-microsoft-antispam-message-info: qFogXKpAQJ4B4Uv3M8p9576hZldHg/9mFXiEoZy0RY4Urmd2DwbLQbwi7UwQD9VmN16STPcie+gRaz0ZGZXFKUwCbZDyGt0+N78YCYqgBK5U6nTpcqecvTEXWj0RrQc/LUpNc5AKGw0NQGIPOv+iujVskZ6PXDCTNKKSVwZCtTqz4nMxYLnzvKdPzPm1kH3rZ+SWTrIW7h1N7HRKYiy8iHZW5/GD1lwwvprYOfaBODzAl7PITkMEBXSFh+QmImVU4AnaJEWiuyXnCyGk6+6nJ37+hS5gJr5UPYG9xnyUXsAwq59ikQHGevJR3igZX08WqxMIKh1rFAks4KmGZJ8LyvqawZGuaXeM9IuhUF168uAD2E32ul5TIlaFieDOgcdOpY5TQxOdn9QCqpQsDX6xmYaSFD2qkeNwx2hfIBYxCzovMO73laei9Ph+WvFd40su
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: ce71e0c3-c904-406b-7fc3-08d76f9a068b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2019 22:19:22.8563
+X-MS-Exchange-CrossTenant-Network-Message-Id: 880202c5-fb3f-43ed-8235-08d76f9a080f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2019 22:19:24.9834
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 856b813c-16e5-49a5-85ec-6f081e13b527
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rR0IZ7dapZoryy5KWSvoCQCB/L+dln+Fnm+Tb/HiIPbI29z36Y/WaWPlyarbtG2tzQc8B6PuGaXAsJOl67LdoA==
+X-MS-Exchange-CrossTenant-userprincipalname: FQXs+s/UUo6wBxGi4XKR91P7FtO1EFBZyNiuMgVtVqhKHIj2u0DlZ3RD+FInLaaL1/jVJHzyYEOnWDfCdwWejQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR18MB0937
 X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
@@ -112,41 +110,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Martin Wilck <mwilck@suse.com>
 
-In qla2x00_find_all_fabric_devs(), fcport->flags & FCF_LOGIN_NEEDED
-is a necessary condition for logging into new rports, but not for
-dropping lost ones.
+When ports are lost due to unzoning them, and the initiator port
+is not part of any more zones, the GPN_FT command used for the
+fabric scan may fail. In this case, the current code simply gives
+up after a few retries. But if the zone is gone, all rports should
+actually be marked as lost.
 
-Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
-Tested-by: David Bond <dbond@suse.com>
+Fix this by jumping to the code that handles logout after GNN_FT
+after scan retries are exhausted.
+
+Fixes: f352eeb75419 ("scsi: qla2xxx: Add ability to use GPNFT/GNNFT for RSCN handling")
+Tested-by: Jason Orendorf <orendorf@hpe.com>
 Signed-off-by: Martin Wilck <mwilck@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_gs.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 1dbee88..6c28f38 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5898,8 +5898,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
- 		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
- 			break;
- 
--		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
--		    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
-+		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
- 			continue;
- 
- 		if (fcport->scan_state == QLA_FCPORT_SCAN) {
-@@ -5922,7 +5921,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
- 			}
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 6723068..446a9d6 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3587,12 +3587,23 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
+ 			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+ 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++			goto out;
+ 		} else {
+-			ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0xffff,
++			ql_dbg(ql_dbg_disc, vha, 0xffff,
+ 			    "%s: Fabric scan failed for %d retries.\n",
+ 			    __func__, vha->scan.scan_retry);
++			/*
++			 * Unable to scan any rports. logout loop below
++			 * will unregister all sessions.
++			 */
++			list_for_each_entry(fcport, &vha->vp_fcports, list) {
++				if ((fcport->flags & FCF_FABRIC_DEVICE) != 0) {
++					fcport->scan_state = QLA_FCPORT_SCAN;
++					fcport->logout_on_delete = 0;
++				}
++			}
++			goto login_logout;
  		}
- 
--		if (fcport->scan_state == QLA_FCPORT_FOUND)
-+		if (fcport->scan_state == QLA_FCPORT_FOUND &&
-+		    (fcport->flags & FCF_LOGIN_NEEDED) != 0)
- 			qla24xx_fcport_handle_login(vha, fcport);
+-		goto out;
  	}
- 	return (rval);
+ 	vha->scan.scan_retry = 0;
+ 
+@@ -3670,6 +3681,7 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 		    dup_cnt);
+ 	}
+ 
++login_logout:
+ 	/*
+ 	 * Logout all previous fabric dev marked lost, except FCP2 devices.
+ 	 */
 -- 
 2.24.0
 
