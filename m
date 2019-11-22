@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADB73C43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CEBC432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:51:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 841192070A
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:49:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80C9D2071F
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:51:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574401793;
-	bh=9Vyqt3zmn8NcG/gtQP2AQNm8fvqB9tSopBcJdG0d62E=;
+	s=default; t=1574401881;
+	bh=lNfL3J5Jv4t6e3+pymIv4mFUXzovMgP8gXFma0Mw6yI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1MoQQvBmJ1C9jbE13MvbbKc5PjOi5/o7UZr1nRWARxiUsDeYL4wpCl8eeIR4m7mcF
-	 w6fkB+UAeWjEKC1ygur5LS8WRznE3UTumCoMoZImpMYuri8EwW8KHH6QVNrV5wV0sk
-	 PZco4QUeITFfgqIeBN8uKCfTA7MIzvEo7U0ixiuw=
+	b=LUAxqr3bt2/H61j4M/Y1mxjBdcyua30apyko7umcV83cOYEDqoaZCrfDk2bzrpSSH
+	 rWvwbIniyB2XoLFrcNGTk/mDJV0VQE+2RAvq8BjVr11s5q7HlTFcb+mNTPxjlI3mlD
+	 1CVOlmvpaivuNYQGepwwd0mdNa2AtkiNgk2uuRfI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727333AbfKVFtw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:49:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54162 "EHLO mail.kernel.org"
+        id S1728096AbfKVFvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:51:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56342 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727312AbfKVFtv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:49:51 -0500
+        id S1728091AbfKVFvU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:51:20 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E297D2082F;
-        Fri, 22 Nov 2019 05:49:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E3F4A20855;
+        Fri, 22 Nov 2019 05:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401790;
-        bh=9Vyqt3zmn8NcG/gtQP2AQNm8fvqB9tSopBcJdG0d62E=;
+        s=default; t=1574401879;
+        bh=lNfL3J5Jv4t6e3+pymIv4mFUXzovMgP8gXFma0Mw6yI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ghl2ECi+jPhGhAD142ensyFs9fMnVkOtXn9tsh3EkhuubaIj8nIoLvmlPWAon4cak
-         DGOMxGjaAMP2WgogDLjna6W+xepuyXMDSPJtyvobdX93TTAUQgTcQiG9+F+6N4XMR6
-         Dc7CWYqHXJN9hVQw2JL5egvxG2WDtp2tFmsQ8V8Y=
+        b=tqHlGVeTNZmGcMHPn5lbl52LyfIDvc0OHTmP6SCKKMiZCRmFEluBeDLxDHrJGh3Lw
+         6+zLh6j6SlcYu4cGBF9vlUZ/IBQoH2NYqGU6OuIJOnU8vI2YOQy3z4un9qN4h3gYv5
+         ERoLvdMMm6qNYCc2tRYogdg1jCggZgEyovD2pKVg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Varun Prakash <varun@chelsio.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 038/219] scsi: qla2xxx: Fix NPIV handling for FC-NVMe
-Date:   Fri, 22 Nov 2019 00:46:10 -0500
-Message-Id: <20191122054911.1750-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 114/219] scsi: csiostor: fix incorrect dma device in case of vport
+Date:   Fri, 22 Nov 2019 00:47:26 -0500
+Message-Id: <20191122054911.1750-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -58,78 +58,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <hmadhani@marvell.com>
+From: Varun Prakash <varun@chelsio.com>
 
-[ Upstream commit 5e6803b409ba3c18434de6693062d98a470bcb1e ]
+[ Upstream commit 9934613edcb40b92a216122876cd3b7e76d08390 ]
 
-This patch fixes issues with NPIV port with FC-NVMe. Clean up code for
-remoteport delete and also call nvme_delete when deleting VPs.
+In case of ->vport_create() call scsi_add_host_with_dma() instead of
+scsi_add_host() to pass correct dma device.
 
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Varun Prakash <varun@chelsio.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 16 +++-------------
- drivers/scsi/qla2xxx/qla_os.c   |  2 ++
- 2 files changed, 5 insertions(+), 13 deletions(-)
+ drivers/scsi/csiostor/csio_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index e6545cb9a2c19..5590d6e8b5762 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -474,21 +474,10 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
- 	int rval = -ENODEV;
- 	srb_t *sp;
- 	struct qla_qpair *qpair = hw_queue_handle;
--	struct nvme_private *priv;
-+	struct nvme_private *priv = fd->private;
- 	struct qla_nvme_rport *qla_rport = rport->private;
+diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+index ed2dae657964b..1793981337dd9 100644
+--- a/drivers/scsi/csiostor/csio_init.c
++++ b/drivers/scsi/csiostor/csio_init.c
+@@ -649,7 +649,7 @@ csio_shost_init(struct csio_hw *hw, struct device *dev,
+ 	if (csio_lnode_init(ln, hw, pln))
+ 		goto err_shost_put;
  
--	if (!fd || !qpair) {
--		ql_log(ql_log_warn, NULL, 0x2134,
--		    "NO NVMe request or Queue Handle\n");
--		return rval;
--	}
--
--	priv = fd->private;
- 	fcport = qla_rport->fcport;
--	if (!fcport) {
--		ql_log(ql_log_warn, NULL, 0x210e, "No fcport ptr\n");
--		return rval;
--	}
+-	if (scsi_add_host(shost, dev))
++	if (scsi_add_host_with_dma(shost, dev, &hw->pdev->dev))
+ 		goto err_lnode_exit;
  
- 	vha = fcport->vha;
- 
-@@ -517,6 +506,7 @@ static int qla_nvme_post_cmd(struct nvme_fc_local_port *lport,
- 	sp->name = "nvme_cmd";
- 	sp->done = qla_nvme_sp_done;
- 	sp->qpair = qpair;
-+	sp->vha = vha;
- 	nvme = &sp->u.iocb_cmd;
- 	nvme->u.nvme.desc = fd;
- 
-@@ -564,7 +554,7 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
- 		schedule_work(&fcport->free_work);
- 	}
- 
--	fcport->nvme_flag &= ~(NVME_FLAG_REGISTERED | NVME_FLAG_DELETING);
-+	fcport->nvme_flag &= ~NVME_FLAG_DELETING;
- 	ql_log(ql_log_info, fcport->vha, 0x2110,
- 	    "remoteport_delete of %p completed.\n", fcport);
- }
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 18ee614fe07f5..fb6b5de098f58 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3537,6 +3537,8 @@ qla2x00_delete_all_vps(struct qla_hw_data *ha, scsi_qla_host_t *base_vha)
- 		spin_unlock_irqrestore(&ha->vport_slock, flags);
- 		mutex_unlock(&ha->vport_lock);
- 
-+		qla_nvme_delete(vha);
-+
- 		fc_vport_terminate(vha->fc_vport);
- 		scsi_host_put(vha->host);
- 
+ 	return ln;
 -- 
 2.20.1
 
