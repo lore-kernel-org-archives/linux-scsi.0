@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8C85C43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:10:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F74C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:14:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80B1120730
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:10:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFA2320726
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 06:14:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574403021;
-	bh=RW7bwmdzHleJQLSbNditI9A7eUXwuSN4dTehAe8Fghw=;
+	s=default; t=1574403258;
+	bh=ciyw++3xZyqHxnZ7BrAdNCJ4ZxjMZGzMxtvQRKjfYxE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=n+iTbn844Tex/uNVk7IzSxMCpVAtSdmI9B2YcKyqaf5nq3cdu1h/rZpTUJN41/nKw
-	 L/1ppnvNvjIGlhoXZ0RmRtjMUUz8eYXUoPEmgkHsok6WJdIHTPmC5TaAmvVSWquc5f
-	 aGevJ9JirHytj+j415ZEDyjuR7ib1x9pKQjduqwM=
+	b=NSI/XFlloMQTfUudsScPp71KLyYo+rPzbVGyFMZXAcqJ7fiPvvbrn1ZMCwhWaSaZe
+	 efWLKPWxW3ri25UKT17J35MBOu6BO/pliBXFoqIeaGO8Q/qAYXCc50OKkGsSKv5K4k
+	 JV2RinnaHM6k3ds8xmftudkDrp38McwLldSwdF9w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728882AbfKVGKS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:10:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34806 "EHLO mail.kernel.org"
+        id S1729701AbfKVGOR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 01:14:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51812 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729279AbfKVF4x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:56:53 -0500
+        id S1729689AbfKVGOP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 01:14:15 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A4DCD2071B;
-        Fri, 22 Nov 2019 05:56:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 79EFE20718;
+        Fri, 22 Nov 2019 06:14:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402212;
-        bh=RW7bwmdzHleJQLSbNditI9A7eUXwuSN4dTehAe8Fghw=;
+        s=default; t=1574403255;
+        bh=ciyw++3xZyqHxnZ7BrAdNCJ4ZxjMZGzMxtvQRKjfYxE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hsTvOMXHNLK45te9OEbZAD8xS1G+kJeF2FURjPO3a48Pb/IruTC6xfSoKoKPBh1Sg
-         wfV9owMC+OtctlFT6wu1WDdutcXea1gLvBOcRXJ+mLHtAlDJwdQUMsqm9kkZkHaKF6
-         Ik4aIvFawEo2Di6Zi/USrbOfsWGKzeL2rUN64aqk=
+        b=uONDs7wz4t3DbfqQVKUuaS6RPqj0iH4iNNb7Qi2ucAHGJ6N0Mo1tG2bK/b2Ehe/vW
+         1NdNS0xMI+sfOV8Q6y8wxxvX6BHI+Z/eJ7DEEIbh2Hj1Sv0SytuO+fmNTj3TKMPxzR
+         tumCuFUXb/Xl6+D3pKIYdjZAfcB+hZei/EpIWyw0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Anatoliy Glagolev <glagolig@gmail.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     John Garry <john.garry@huawei.com>, Jian Luo <luojian5@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 060/127] scsi: qla2xxx: deadlock by configfs_depend_item
-Date:   Fri, 22 Nov 2019 00:54:38 -0500
-Message-Id: <20191122055544.3299-59-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 64/68] scsi: libsas: Support SATA PHY connection rate unmatch fixing during discovery
+Date:   Fri, 22 Nov 2019 01:12:57 -0500
+Message-Id: <20191122061301.4947-63-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191122055544.3299-1-sashal@kernel.org>
-References: <20191122055544.3299-1-sashal@kernel.org>
+In-Reply-To: <20191122061301.4947-1-sashal@kernel.org>
+References: <20191122061301.4947-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,125 +58,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Anatoliy Glagolev <glagolig@gmail.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit 17b18eaa6f59044a5172db7d07149e31ede0f920 ]
+[ Upstream commit cec9771d2e954650095aa37a6a97722c8194e7d2 ]
 
-The intent of invoking configfs_depend_item in commit 7474f52a82d51
-("tcm_qla2xxx: Perform configfs depend/undepend for base_tpg")
-was to prevent a physical Fibre Channel port removal when
-virtual (NPIV) ports announced through that physical port are active.
-The change does not work as expected: it makes enabled physical port
-dependent on target configfs subsystem (the port's parent), something
-the configfs guarantees anyway.
+   +----------+             +----------+
+   |          |             |          |
+   |          |--- 3.0 G ---|          |--- 6.0 G --- SAS  disk
+   |          |             |          |
+   |          |--- 3.0 G ---|          |--- 6.0 G --- SAS  disk
+   |initiator |             |          |
+   | device   |--- 3.0 G ---| Expander |--- 6.0 G --- SAS  disk
+   |          |             |          |
+   |          |--- 3.0 G ---|          |--- 6.0 G --- SATA disk  -->failed to connect
+   |          |             |          |
+   |          |             |          |--- 6.0 G --- SATA disk  -->failed to connect
+   |          |             |          |
+   +----------+             +----------+
 
-Besides, scheduling work in a worker thread and waiting for the work's
-completion is not really a valid workaround for the requirement not to call
-configfs_depend_item from a configfs callback: the call occasionally
-deadlocks.
+According to Serial Attached SCSI - 1.1 (SAS-1.1):
+If an expander PHY attached to a SATA PHY is using a physical link rate
+greater than the maximum connection rate supported by the pathway from an
+STP initiator port, a management application client should use the SMP PHY
+CONTROL function (see 10.4.3.10) to set the PROGRAMMED MAXIMUM PHYSICAL
+LINK RATE field of the expander PHY to the maximum connection rate
+supported by the pathway from that STP initiator port.
 
-Thus, removing configfs_depend_item calls does not break anything and fixes
-the deadlock problem.
+Currently libsas does not support checking if this condition occurs, nor
+rectifying when it does.
 
-Signed-off-by: Anatoliy Glagolev <glagolig@gmail.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Such a condition is not at all common, however it has been seen on some
+pre-silicon environments where the initiator PHY only supports a 1.5 Gbit
+maximum linkrate, mated with 12G expander PHYs and 3/6G SATA phy.
+
+This patch adds support for checking and rectifying this condition during
+initial device discovery only.
+
+We do support checking min pathway connection rate during revalidation phase,
+when new devices can be detected in the topology. However we do not
+support in the case of the the user reprogramming PHY linkrates, such that
+min pathway condition is not met/maintained.
+
+A note on root port PHY rates:
+The libsas root port PHY rates calculation is broken. Libsas sets the
+rates (min, max, and current linkrate) of a root port to the same linkrate
+of the first PHY member of that same port. In doing so, it assumes that
+all other PHYs which subsequently join the port to have the same
+negotiated linkrate, when they could actually be different.
+
+In practice this doesn't happen, as initiator and expander PHYs are
+normally initialised with consistent min/max linkrates.
+
+This has not caused an issue so far, so leave alone for now.
+
+Tested-by: Jian Luo <luojian5@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 48 +++++-------------------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.h |  3 --
- 2 files changed, 8 insertions(+), 43 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 2fcdaadd10fa5..e08ac431bc496 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -903,38 +903,14 @@ static ssize_t tcm_qla2xxx_tpg_enable_show(struct config_item *item,
- 			atomic_read(&tpg->lport_tpg_enabled));
- }
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 400eee9d77832..ba16231665a5e 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -806,6 +806,26 @@ static struct domain_device *sas_ex_discover_end_dev(
  
--static void tcm_qla2xxx_depend_tpg(struct work_struct *work)
--{
--	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
--				struct tcm_qla2xxx_tpg, tpg_base_work);
--	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
--	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
--
--	if (!target_depend_item(&se_tpg->tpg_group.cg_item)) {
--		atomic_set(&base_tpg->lport_tpg_enabled, 1);
--		qlt_enable_vha(base_vha);
--	}
--	complete(&base_tpg->tpg_base_comp);
--}
--
--static void tcm_qla2xxx_undepend_tpg(struct work_struct *work)
--{
--	struct tcm_qla2xxx_tpg *base_tpg = container_of(work,
--				struct tcm_qla2xxx_tpg, tpg_base_work);
--	struct se_portal_group *se_tpg = &base_tpg->se_tpg;
--	struct scsi_qla_host *base_vha = base_tpg->lport->qla_vha;
--
--	if (!qlt_stop_phase1(base_vha->vha_tgt.qla_tgt)) {
--		atomic_set(&base_tpg->lport_tpg_enabled, 0);
--		target_undepend_item(&se_tpg->tpg_group.cg_item);
--	}
--	complete(&base_tpg->tpg_base_comp);
--}
--
- static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 		const char *page, size_t count)
- {
- 	struct se_portal_group *se_tpg = to_tpg(item);
-+	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
-+	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
-+			struct tcm_qla2xxx_lport, lport_wwn);
-+	struct scsi_qla_host *vha = lport->qla_vha;
- 	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
- 			struct tcm_qla2xxx_tpg, se_tpg);
- 	unsigned long op;
-@@ -953,24 +929,16 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 		if (atomic_read(&tpg->lport_tpg_enabled))
- 			return -EEXIST;
- 
--		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_depend_tpg);
-+		atomic_set(&tpg->lport_tpg_enabled, 1);
-+		qlt_enable_vha(vha);
- 	} else {
- 		if (!atomic_read(&tpg->lport_tpg_enabled))
- 			return count;
- 
--		INIT_WORK(&tpg->tpg_base_work, tcm_qla2xxx_undepend_tpg);
-+		atomic_set(&tpg->lport_tpg_enabled, 0);
-+		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
- 	}
--	init_completion(&tpg->tpg_base_comp);
--	schedule_work(&tpg->tpg_base_work);
--	wait_for_completion(&tpg->tpg_base_comp);
- 
--	if (op) {
--		if (!atomic_read(&tpg->lport_tpg_enabled))
--			return -ENODEV;
--	} else {
--		if (atomic_read(&tpg->lport_tpg_enabled))
--			return -EPERM;
--	}
- 	return count;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-index 7550ba2831c36..147cf6c903666 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
-@@ -48,9 +48,6 @@ struct tcm_qla2xxx_tpg {
- 	struct tcm_qla2xxx_tpg_attrib tpg_attrib;
- 	/* Returned by tcm_qla2xxx_make_tpg() */
- 	struct se_portal_group se_tpg;
--	/* Items for dealing with configfs_depend_item */
--	struct completion tpg_base_comp;
--	struct work_struct tpg_base_work;
- };
- 
- struct tcm_qla2xxx_fc_loopid {
+ #ifdef CONFIG_SCSI_SAS_ATA
+ 	if ((phy->attached_tproto & SAS_PROTOCOL_STP) || phy->attached_sata_dev) {
++		if (child->linkrate > parent->min_linkrate) {
++			struct sas_phy_linkrates rates = {
++				.maximum_linkrate = parent->min_linkrate,
++				.minimum_linkrate = parent->min_linkrate,
++			};
++			int ret;
++
++			pr_notice("ex %016llx phy%02d SATA device linkrate > min pathway connection rate, attempting to lower device linkrate\n",
++				   SAS_ADDR(child->sas_addr), phy_id);
++			ret = sas_smp_phy_control(parent, phy_id,
++						  PHY_FUNC_LINK_RESET, &rates);
++			if (ret) {
++				pr_err("ex %016llx phy%02d SATA device could not set linkrate (%d)\n",
++				       SAS_ADDR(child->sas_addr), phy_id, ret);
++				goto out_free;
++			}
++			pr_notice("ex %016llx phy%02d SATA device set linkrate successfully\n",
++				  SAS_ADDR(child->sas_addr), phy_id);
++			child->linkrate = child->min_linkrate;
++		}
+ 		res = sas_get_ata_info(child, phy);
+ 		if (res)
+ 			goto out_free;
 -- 
 2.20.1
 
