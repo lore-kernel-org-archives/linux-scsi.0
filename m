@@ -7,49 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A030C432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10205C432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:28:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4159D20708
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDE2120714
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:28:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574400487;
-	bh=Snhzch8azwuOYXbCQtEWlQY+Q47JjDAygTaC4J/qZj8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nUZ/qvZk9piDh59ccSeIhEjind+0CBZikw0giD3DNfShq6FKqe5NXdwK1yNRlgL5w
-	 I8uQD6hjtlkNoGRuzbEVKlCPSHqG8zU51JG2mfe7wqmpISYj2mIkVpGlV3urT9LVKM
-	 KZr/3q0UTa6ixc0oox81NXFo44F64q409Z6tbwP8=
+	s=default; t=1574400488;
+	bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=K4n+2M5t23V2/jo8P9+/tBAFbDj+tknK118t4U2yEcMC6mISWfrCLAQStxxCMQcug
+	 UEPkKT8rPSXL8hRTI39yIqI8qkKxOU/3cOu4De91+kwHKb11y6w7GK2MvyAwsqjsUL
+	 1numhJU/JrDHPrJT3zb88hbM7aR5Wn7mXBwkEs98=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726698AbfKVF1r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:27:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46036 "EHLO mail.kernel.org"
+        id S1726540AbfKVF1o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:27:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46030 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726655AbfKVF1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:27:45 -0500
+        id S1726018AbfKVF1o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:27:44 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 266722070A;
-        Fri, 22 Nov 2019 05:27:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 739F120707;
+        Fri, 22 Nov 2019 05:27:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574400464;
-        bh=Snhzch8azwuOYXbCQtEWlQY+Q47JjDAygTaC4J/qZj8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zbhrC1GwcNZ6NnLJJLA469LHDcsCXtPsItNlwGcgTqCcUq1Ck6gUZtV+1XfDVXKUz
-         q5klbtoyflO0oJR2qOCI7V24zbVFqT+ETqd5LW1tXT+n+AYPdAOC6r/zweDFWQ8eRb
-         OEovTWATUT5t6tcWAP8HKenc5TKkEDDin3ftBhag=
+        s=default; t=1574400463;
+        bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=UBJX3dUm/OaLPvv9GWUAR/fJe4aqN0awv/iKhrHVlLTnNZafj7piw7DBm50ZKmVMb
+         pSfo6I7XGyIWXLqBs4hynBOheZM1BykLRyX9clu7YiuwUxiMK69g1pnIWBzRCQOfme
+         ivH0lFHpMQRUvGBqUCUOZxAZ4CvcafWgWYC47VBo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        David Disseldorp <ddiss@suse.de>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Mike Christie <mchristi@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 002/219] scsi: lpfc: Fix kernel Oops due to null pring pointers
-Date:   Fri, 22 Nov 2019 00:24:04 -0500
-Message-Id: <20191122052741.32499-2-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 001/219] scsi: target/tcmu: Fix queue_cmd_ring() declaration
+Date:   Fri, 22 Nov 2019 00:24:03 -0500
+Message-Id: <20191122052741.32499-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191122052741.32499-1-sashal@kernel.org>
-References: <20191122052741.32499-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,91 +61,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 5a9eeff57f340238c39c95d8e7e54c96fc722de7 ]
+[ Upstream commit e7f411049f5164ee6db6c3434c07302846f09990 ]
 
-Driver is hitting null pring pointers in lpfc_do_work().
+This patch does not change any functionality but avoids that sparse
+complains about the queue_cmd_ring() function and its callers.
 
-Pointer assignment occurs based on SLI-revision. If recovering after an
-error, its possible the sli revision for the port was cleared, making the
-lpfc_phba_elsring() not return a ring pointer, thus the null pointer.
-
-Add SLI revision checking to lpfc_phba_elsring() and status checking to all
-callers.
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: 6fd0ce79724d ("tcmu: prep queue_cmd_ring to be used by unmap wq")
+Reviewed-by: David Disseldorp <ddiss@suse.de>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 6 ++++++
- drivers/scsi/lpfc/lpfc_els.c  | 2 ++
- drivers/scsi/lpfc/lpfc_init.c | 7 ++++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 2 ++
- 4 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/target/target_core_user.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 43732e8d13473..79c3b2f53828e 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1235,6 +1235,12 @@ lpfc_sli_read_hs(struct lpfc_hba *phba)
- static inline struct lpfc_sli_ring *
- lpfc_phba_elsring(struct lpfc_hba *phba)
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 7159e8363b83b..7ee0a75ce4526 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -962,7 +962,7 @@ static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
+  *  0 success
+  *  1 internally queued to wait for ring memory to free.
+  */
+-static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
++static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
  {
-+	/* Return NULL if sli_rev has become invalid due to bad fw */
-+	if (phba->sli_rev != LPFC_SLI_REV4  &&
-+	    phba->sli_rev != LPFC_SLI_REV3  &&
-+	    phba->sli_rev != LPFC_SLI_REV2)
-+		return NULL;
-+
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
- 		if (phba->sli4_hba.els_wq)
- 			return phba->sli4_hba.els_wq->pring;
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index f3c6801c0b312..3651c0fc88197 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1340,6 +1340,8 @@ lpfc_els_abort_flogi(struct lpfc_hba *phba)
- 			Fabric_DID);
- 
- 	pring = lpfc_phba_elsring(phba);
-+	if (unlikely(!pring))
-+		return -EIO;
- 
- 	/*
- 	 * Check the txcmplq for an iocb that matches the nport the driver is
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 9acb5b44ce4c1..dae0dd8066f04 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1801,7 +1801,12 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
- 	lpfc_offline(phba);
- 	/* release interrupt for possible resource change */
- 	lpfc_sli4_disable_intr(phba);
--	lpfc_sli_brdrestart(phba);
-+	rc = lpfc_sli_brdrestart(phba);
-+	if (rc) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"6309 Failed to restart board\n");
-+		return rc;
-+	}
- 	/* request and enable interrupt */
- 	intr_mode = lpfc_sli4_enable_intr(phba, phba->intr_mode);
- 	if (intr_mode == LPFC_INTR_ERROR) {
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a490e63c94b67..266e7101902ef 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4644,6 +4644,8 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- 	hba_aer_enabled = phba->hba_flag & HBA_AER_ENABLED;
- 
- 	rc = lpfc_sli4_brdreset(phba);
-+	if (rc)
-+		return rc;
- 
- 	spin_lock_irq(&phba->hbalock);
- 	phba->pport->stopped = 0;
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+ 	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
 -- 
 2.20.1
 
