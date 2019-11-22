@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CEBC432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D46C43215
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:54:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80C9D2071F
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAFE42068F
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:54:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574401881;
-	bh=lNfL3J5Jv4t6e3+pymIv4mFUXzovMgP8gXFma0Mw6yI=;
+	s=default; t=1574402056;
+	bh=0bjOreP6UDoqpGwH7kw2cdj5GUpaPE5SJN+86FJfrLs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LUAxqr3bt2/H61j4M/Y1mxjBdcyua30apyko7umcV83cOYEDqoaZCrfDk2bzrpSSH
-	 rWvwbIniyB2XoLFrcNGTk/mDJV0VQE+2RAvq8BjVr11s5q7HlTFcb+mNTPxjlI3mlD
-	 1CVOlmvpaivuNYQGepwwd0mdNa2AtkiNgk2uuRfI=
+	b=BiAgpa7b9F3JqTwLlc+USpDMX1Z0VwYjCJ5zczlDGweaTv2zF7oJj2OZCF7Mmajh0
+	 1fdYBTPBBZ1P58gTKvkpTRtISPvGmh9emlmJf3tK10Td9qKmrsdN8TDW/oHrJMVZN4
+	 dVuy3aWu95LiKbab3SyrKmBu0FG6BPDcLuRFBMis=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728096AbfKVFvU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:51:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56342 "EHLO mail.kernel.org"
+        id S1727979AbfKVFyI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:54:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728091AbfKVFvU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:51:20 -0500
+        id S1727637AbfKVFxN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:53:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E3F4A20855;
-        Fri, 22 Nov 2019 05:51:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A28112068F;
+        Fri, 22 Nov 2019 05:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401879;
-        bh=lNfL3J5Jv4t6e3+pymIv4mFUXzovMgP8gXFma0Mw6yI=;
+        s=default; t=1574401992;
+        bh=0bjOreP6UDoqpGwH7kw2cdj5GUpaPE5SJN+86FJfrLs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tqHlGVeTNZmGcMHPn5lbl52LyfIDvc0OHTmP6SCKKMiZCRmFEluBeDLxDHrJGh3Lw
-         6+zLh6j6SlcYu4cGBF9vlUZ/IBQoH2NYqGU6OuIJOnU8vI2YOQy3z4un9qN4h3gYv5
-         ERoLvdMMm6qNYCc2tRYogdg1jCggZgEyovD2pKVg=
+        b=JLA64H4z1E5/40H1Flsih58h+5WRau2VHyhBWRUcJEug0/c+VIOaa2wmD02ijL8Cs
+         N9n0Yh63TsjS/xf/B899pCxgNjav0rm8mbUTYi3PO/isTk+sjXneEZ3tDmk8ITviAk
+         3I5XSruvvJTGG3pirU1eU2O+XtM7TRyVHgj2+9ds=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Varun Prakash <varun@chelsio.com>,
+Cc:     John Garry <john.garry@huawei.com>, Jian Luo <luojian5@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 114/219] scsi: csiostor: fix incorrect dma device in case of vport
-Date:   Fri, 22 Nov 2019 00:47:26 -0500
-Message-Id: <20191122054911.1750-107-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 210/219] scsi: libsas: Check SMP PHY control function result
+Date:   Fri, 22 Nov 2019 00:49:01 -0500
+Message-Id: <20191122054911.1750-202-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -58,33 +58,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Varun Prakash <varun@chelsio.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit 9934613edcb40b92a216122876cd3b7e76d08390 ]
+[ Upstream commit 01929a65dfa13e18d89264ab1378854a91857e59 ]
 
-In case of ->vport_create() call scsi_add_host_with_dma() instead of
-scsi_add_host() to pass correct dma device.
+Currently the SMP PHY control execution result is checked, however the
+function result for the command is not.
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
+As such, we may be missing all potential errors, like SMP FUNCTION FAILED,
+INVALID REQUEST FRAME LENGTH, etc., meaning the PHY control request has
+failed.
+
+In some scenarios we need to ensure the function result is accepted, so add
+a check for this.
+
+Tested-by: Jian Luo <luojian5@huawei.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/csiostor/csio_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_expander.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index ed2dae657964b..1793981337dd9 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -649,7 +649,7 @@ csio_shost_init(struct csio_hw *hw, struct device *dev,
- 	if (csio_lnode_init(ln, hw, pln))
- 		goto err_shost_put;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 23b5516e80304..c6ed75b6abeec 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -614,7 +614,14 @@ int sas_smp_phy_control(struct domain_device *dev, int phy_id,
+ 	}
  
--	if (scsi_add_host(shost, dev))
-+	if (scsi_add_host_with_dma(shost, dev, &hw->pdev->dev))
- 		goto err_lnode_exit;
- 
- 	return ln;
+ 	res = smp_execute_task(dev, pc_req, PC_REQ_SIZE, pc_resp,PC_RESP_SIZE);
+-
++	if (res) {
++		pr_err("ex %016llx phy%02d PHY control failed: %d\n",
++		       SAS_ADDR(dev->sas_addr), phy_id, res);
++	} else if (pc_resp[2] != SMP_RESP_FUNC_ACC) {
++		pr_err("ex %016llx phy%02d PHY control failed: function result 0x%x\n",
++		       SAS_ADDR(dev->sas_addr), phy_id, pc_resp[2]);
++		res = pc_resp[2];
++	}
+ 	kfree(pc_resp);
+ 	kfree(pc_req);
+ 	return res;
 -- 
 2.20.1
 
