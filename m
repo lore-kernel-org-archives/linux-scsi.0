@@ -4,54 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2045C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F64C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A9922072D
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:19:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8F212070A
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 05:20:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574399970;
-	bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=I1G/hbWPsBSBNybw8VihfKYg70hVbrpwLiKoFo6HT3Rlufj/+PlEfaE0/b2vkoCvg
-	 SPaFz4PjN8IaAoZpf5Kx0w3KT0AqAvyngcj5oHtp4OghXFOULLS7dorGTkOYeY+QPo
-	 aMmYbfU3nTCZFZuiw5nf08i3IIsQKBSzgU0+6Q9Y=
+	s=default; t=1574400027;
+	bh=a84wFZWHFaoV0m4VFKLRCiScqrK5dvzdvTvmGaCGcfM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=TmI3ungUmHekbHb3nlYNefwpsM6K3DEIas333fOZPb5hhxFTy47WERXvmxbJZC5wi
+	 vNYbKbmWoJa7G1MUwOHgX01wFNmwQZZNQDCKyKo/EfRZpXuliuzc/3cUCG9zAynYt3
+	 WER/TjTvIbpNEovXPv7fsnKuQBGvtpJwVjZZxNJI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbfKVFTH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:19:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40958 "EHLO mail.kernel.org"
+        id S1727059AbfKVFU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 00:20:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42514 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726018AbfKVFTH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:19:07 -0500
+        id S1727040AbfKVFUZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:20:25 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 46BBA20708;
-        Fri, 22 Nov 2019 05:19:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4471420708;
+        Fri, 22 Nov 2019 05:20:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574399946;
-        bh=4UX+CxSvf6A7dtQ3cbPv4or4ULQtD3+cNrsIJxvQDp8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lOTXYr2aHwUZ4WyYpdUjHVb7kDRWz9xhzjFHYGzB21gTtsbdMAX26YwAOSOF9LD7K
-         SJlaefvbYk8ZSixifF80WhxwqXEjCUPlmi9+yr+H9KxYX2FBAZvhzm6FKtG6eLk2yF
-         0JFeK0E5+bfy7oSuZ0wZL5aWsfw/i+i3+cAcIkAo=
+        s=default; t=1574400025;
+        bh=a84wFZWHFaoV0m4VFKLRCiScqrK5dvzdvTvmGaCGcfM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=LfC7YDNZhKkusCCuG2CE4/JH1R7oW6OYmtnQ5BOSBIq2cPcbLzbpR51zLO0gFXG2X
+         VwamqKV+mufOMqSB5Oceqy3kVHVwU2mXAEpSTBo0tI+p42d2OqrJc88msr6X0VQrvS
+         Fqq+VylumrX6VEWyUG6fbmjM/jZiGt0bhIKUr8A4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        David Disseldorp <ddiss@suse.de>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Mike Christie <mchristi@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 001/219] scsi: target/tcmu: Fix queue_cmd_ring() declaration
-Date:   Fri, 22 Nov 2019 00:15:25 -0500
-Message-Id: <20191122051903.31749-1-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 002/127] scsi: lpfc: Fix dif and first burst use in write commands
+Date:   Fri, 22 Nov 2019 00:18:16 -0500
+Message-Id: <20191122052021.32062-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122052021.32062-1-sashal@kernel.org>
+References: <20191122052021.32062-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,39 +59,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit e7f411049f5164ee6db6c3434c07302846f09990 ]
+[ Upstream commit 7c4042a4d0b7532cfbc90478fd3084b2dab5849e ]
 
-This patch does not change any functionality but avoids that sparse
-complains about the queue_cmd_ring() function and its callers.
+When dif and first burst is used in a write command wqe, the driver was not
+properly setting fields in the io command request. This resulted in no dif
+bytes being sent and invalid xfer_rdy's, resulting in the io being aborted
+by the hardware.
 
-Fixes: 6fd0ce79724d ("tcmu: prep queue_cmd_ring to be used by unmap wq")
-Reviewed-by: David Disseldorp <ddiss@suse.de>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Correct the wqe initializaton when both dif and first burst are used.
+
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 7159e8363b83b..7ee0a75ce4526 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -962,7 +962,7 @@ static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
-  *  0 success
-  *  1 internally queued to wait for ring memory to free.
-  */
--static sense_reason_t queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, int *scsi_err)
-+static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
- {
- 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
- 	struct se_cmd *se_cmd = tcmu_cmd->se_cmd;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 07cb671bb8550..2eba0c39ac1c4 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2714,6 +2714,7 @@ lpfc_bg_scsi_prep_dma_buf_s3(struct lpfc_hba *phba,
+ 	int datasegcnt, protsegcnt, datadir = scsi_cmnd->sc_data_direction;
+ 	int prot_group_type = 0;
+ 	int fcpdl;
++	struct lpfc_vport *vport = phba->pport;
+ 
+ 	/*
+ 	 * Start the lpfc command prep by bumping the bpl beyond fcp_cmnd
+@@ -2819,6 +2820,14 @@ lpfc_bg_scsi_prep_dma_buf_s3(struct lpfc_hba *phba,
+ 	 */
+ 	iocb_cmd->un.fcpi.fcpi_parm = fcpdl;
+ 
++	/*
++	 * For First burst, we may need to adjust the initial transfer
++	 * length for DIF
++	 */
++	if (iocb_cmd->un.fcpi.fcpi_XRdy &&
++	    (fcpdl < vport->cfg_first_burst_size))
++		iocb_cmd->un.fcpi.fcpi_XRdy = fcpdl;
++
+ 	return 0;
+ err:
+ 	if (lpfc_cmd->seg_cnt)
+@@ -3371,6 +3380,7 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+ 	int datasegcnt, protsegcnt, datadir = scsi_cmnd->sc_data_direction;
+ 	int prot_group_type = 0;
+ 	int fcpdl;
++	struct lpfc_vport *vport = phba->pport;
+ 
+ 	/*
+ 	 * Start the lpfc command prep by bumping the sgl beyond fcp_cmnd
+@@ -3486,6 +3496,14 @@ lpfc_bg_scsi_prep_dma_buf_s4(struct lpfc_hba *phba,
+ 	 */
+ 	iocb_cmd->un.fcpi.fcpi_parm = fcpdl;
+ 
++	/*
++	 * For First burst, we may need to adjust the initial transfer
++	 * length for DIF
++	 */
++	if (iocb_cmd->un.fcpi.fcpi_XRdy &&
++	    (fcpdl < vport->cfg_first_burst_size))
++		iocb_cmd->un.fcpi.fcpi_XRdy = fcpdl;
++
+ 	/*
+ 	 * If the OAS driver feature is enabled and the lun is enabled for
+ 	 * OAS, set the oas iocb related flags.
 -- 
 2.20.1
 
