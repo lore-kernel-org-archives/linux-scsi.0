@@ -2,128 +2,112 @@ Return-Path: <SRS0=RMqd=ZO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAF4FC432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 19:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D85AC43215
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 20:46:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F2BC2071C
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 19:16:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="lAULhbd8"
+	by mail.kernel.org (Postfix) with ESMTP id 7B4D52070E
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 20:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbfKVTQe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 14:16:34 -0500
-Received: from mail-wm1-f49.google.com ([209.85.128.49]:38868 "EHLO
-        mail-wm1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726729AbfKVTQd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2019 14:16:33 -0500
-Received: by mail-wm1-f49.google.com with SMTP id z19so8896872wmk.3
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Nov 2019 11:16:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=kLw3pFSIZDVbnCzJ9DTnz/kpdFIQj08MUYSImiLSK9M=;
-        b=lAULhbd8gCUzzbSRRCbFnF6HAk0C7AHCoTACxfKB1tGKbxZSaDKIWDVgNHcAchLKv8
-         LDscNLVVrwROJqNW/pTga43LR4PFONqZ7jHpBUOBg71E3CkWo1YRYhaaqichBafqJfKF
-         y1rvUMfk4dHQAWQJDnFFWv26VPlA3Vqtqq2QWXvLiG0x0tMjKXr1IB3gh9MgBAFdtLVJ
-         as+HJxKP7zNBtroVe5un15GzXgCXdDsVj8YIZrYL8pjzhQHQvbOcOVFECaRLTc1enM3e
-         F2Q8pRjvMyCrDZYlMM9fVE1FRmDSieqznFogt6IAF67w6W8vbx5SUMzCF7Ycu1oo/c4b
-         hVHQ==
+        id S1726895AbfKVUqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 15:46:51 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:34119 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726089AbfKVUqv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2019 15:46:51 -0500
+Received: by mail-pj1-f65.google.com with SMTP id bo14so3532636pjb.1;
+        Fri, 22 Nov 2019 12:46:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=kLw3pFSIZDVbnCzJ9DTnz/kpdFIQj08MUYSImiLSK9M=;
-        b=g5VwZPLTyoSHiZ/mRQ+AC+EkDOd0oF8IGcrcejiEnfFDPG5uV63x0B7R8cTPRTouLD
-         onVgTW6LNtcivIcSCZYdgAMGSvFOoKthI6HcH2MYiVXrYcApHU98uNKQ8Z+138IbbQ8m
-         845F+xEUXGxhY+81QkqbRMjWjKxHaSVrPmIJ0xvb4e2NwlmwmQdDVW4V/xA0Y6LyjEP+
-         gDKr3hrgerV3bXvpDwOd4hQBTl1VQaoJRnwhOQl3qFFllB950LutPRIX5SO8VKaHUkwV
-         +P6iKXr+t2NM8VAmry4X22kCtFGOWnJXNHJPsPPDglUW6mxOvbRoaFBc5VLUUcAevhAB
-         Jn5w==
-X-Gm-Message-State: APjAAAXoAw73z2mDVjfZT9PC8ldSfARpZFaWoU6a8txwLJLvBWmB65w7
-        7EvNIlQC6iv1+VGXn5Qxy9ay9Q==
-X-Google-Smtp-Source: APXvYqyS5KI1oHFoY6/zQrlq8Yiqp7iqxRVDi01q+CokCcH37IjXgrnE6wN04s/h+IuCAivbEKXemw==
-X-Received: by 2002:a7b:c34a:: with SMTP id l10mr14130871wmj.66.1574450191767;
-        Fri, 22 Nov 2019 11:16:31 -0800 (PST)
-Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
-        by smtp.gmail.com with ESMTPSA id t14sm8525469wrw.87.2019.11.22.11.16.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2019 11:16:31 -0800 (PST)
-Message-ID: <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-From:   Andrea Vai <andrea.vai@unipv.it>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Date:   Fri, 22 Nov 2019 20:16:30 +0100
-In-Reply-To: <20191109222828.GA30568@ming.t460p>
-References: <Pine.LNX.4.44L0.1911061044070.1694-100000@iolanthe.rowland.org>
-         <BYAPR04MB5816640CEF40CB52430BBD3AE7790@BYAPR04MB5816.namprd04.prod.outlook.com>
-         <b22c1dd95e6a262cf2667bee3913b412c1436746.camel@unipv.it>
-         <BYAPR04MB58167B95AF6B7CDB39D24C52E7780@BYAPR04MB5816.namprd04.prod.outlook.com>
-         <CAOsYWL3NkDw6iK3q81=5L-02w=VgPF_+tYvfgnTihgCcwKgA+g@mail.gmail.com>
-         <20191109222828.GA30568@ming.t460p>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=tRGkdkyxPC2a5f5f/M+g90u8hYacc3x84KQ1p7aBVU4=;
+        b=TWyfVppZaTP0UPBWTRVvBsAFyUOIDVwLXbBHk4w+gLwWjsst6W7E36kmrrHV95iACr
+         Lxshsj0ZVIVq5+5dNRFqx5DAaay4fxFmSFodneot9YxT9dl5ficJ6FfNxa/auxsCPzOO
+         9InQXuSvYnsOuQHaACFUI1MQIRgnhfoIPIveKuZNOqtrOHIQBFMfdWwosUz9z+86CZ3j
+         a84WkPSDmfkGOenmqpW7V46gPCr+P1BtgvvtVRsH5O6r71APMs9axppcK1ayaLti8He0
+         UzfHRRfE9ZeWXtwEKvIfghx9poZCNvmkiqhG6Hl5fuWdFSkbtRC1spY3NlhX/dgIxzme
+         jW6g==
+X-Gm-Message-State: APjAAAXnsox9+JiqFf8hlvDdNuYllBwAFpE8OV83Po04EtciqsQPucpj
+        qBlc9B9kmbJ4wh4lnG3TWI8=
+X-Google-Smtp-Source: APXvYqxfLvlo3WiX+qOjLmNaHg4A8/Yr5/bhutdBvifKdrbNoMEoX19ki5EIzgAh3KQps1ab5imAJw==
+X-Received: by 2002:a17:902:8a8a:: with SMTP id p10mr16258912plo.300.1574455610529;
+        Fri, 22 Nov 2019 12:46:50 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id k6sm8361051pfi.119.2019.11.22.12.46.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Nov 2019 12:46:49 -0800 (PST)
+Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
+To:     James Smart <james.smart@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+References: <20191118103117.978-1-ming.lei@redhat.com>
+ <20191118103117.978-5-ming.lei@redhat.com>
+ <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
+ <20191121005323.GB24548@ming.t460p>
+ <336f35fc-2e22-c615-9405-50297b9737ea@suse.de>
+ <20191122080959.GC903@ming.t460p>
+ <5f84476f-95b4-79b6-f72d-4e2de447065c@acm.org>
+ <7e44d961-a089-e073-1e35-5890e75b0ba7@broadcom.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <1963d16a-a390-6a25-ec20-53c4b01dc98f@acm.org>
+Date:   Fri, 22 Nov 2019 12:46:48 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
+In-Reply-To: <7e44d961-a089-e073-1e35-5890e75b0ba7@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il giorno dom, 10/11/2019 alle 06.28 +0800, Ming Lei ha scritto:
-> Another thing we could try is to use 'none' via the following
-> command:
+On 11/22/19 10:26 AM, James Smart wrote:
+> On 11/22/2019 10:14 AM, Bart Van Assche wrote:
+>> Thanks for having shared these numbers. I think this is very useful 
+>> information. Do these results show the performance drop that happens 
+>> if /sys/block/.../device/queue_depth exceeds .can_queue? What I am 
+>> wondering about is how important these results are in the context of 
+>> this discussion. Are there any modern SCSI devices for which a SCSI 
+>> LLD sets scsi_host->can_queue and scsi_host->cmd_per_lun such that the 
+>> device responds with BUSY? What surprised me is that only three SCSI 
+>> LLDs call scsi_track_queue_full() (mptsas, bfa, esp_scsi). Does that 
+>> mean that BUSY responses from a SCSI device or HBA are rare?
 > 
->  echo none > /sys/block/sdh/queue/scheduler  #suppose 'sdh' points
-> to the usb storage disk
+> That's because most of the drivers, which had queue full ramp up/ramp 
+> down in them and would have called scsi_track_queue_full() converted 
+> over to the moved-queue-full-handling-in-the-mid-layer, indicated by 
+> sht->track_queue_depth = 1.
 > 
-> Because USB storage HBA is single hw queue, which depth is 1. This
-> way
-> should change to dispatch IO in the order of bio submission.
-> 
-> Andrea, could you switch io scheduler to none and update us if
-> difference
-> can be made?
+> Yes - it is still hit a lot!
 
-Using the new kernel, there is indeed a difference because the time to
-copy a file is 1800 seconds with [mq-deadline], and 340 seconds with
-[none]. But that is still far away from the old kernel, which performs
-the copy of the same file in 76 seconds.
+Hi James,
 
-Side notes:
+In the systems that I have been working on myself I made sure that the 
+BUSY condition is rarely or never encountered. Anyway, since there are 
+setups in which this condition is hit frequently we need to make sure 
+that these setups keep performing well. I'm wondering now whether we 
+should try to come up with an algorithm for maintaining 
+sdev->device_busy only if it improves performance and for not 
+maintaining sdev->device_busy for devices/HBAs that don't need it.
 
-- The numbers above are average values calculated on 100 trials for
-each  different situation. As previously noticed on this thread, with
-the new kernel the times are also very different among the different
-trials in the same situation. With the old kernel the standard
-deviation on the times in a set of 100 trials is much smaller (to give
-some mean/sigma values: m=1800->s=530; m=340->s=131; m=76->s=13; ).
-
-- The size of the transferred file has been 1GB in these trials.
-Smaller files don't always give appreciable differences, but if you
-want I can also provide those data. Of course, I can also provide the
-raw data of each set of trials.
-
-Thanks,
-and bye,
-
-Andrea
-
+Bart.
