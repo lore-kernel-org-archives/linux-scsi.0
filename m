@@ -2,112 +2,139 @@ Return-Path: <SRS0=RMqd=ZO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D85AC43215
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 20:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DBBC432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 21:35:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B4D52070E
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 20:46:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73CC62070E
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Nov 2019 21:35:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726895AbfKVUqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Nov 2019 15:46:51 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:34119 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726089AbfKVUqv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Nov 2019 15:46:51 -0500
-Received: by mail-pj1-f65.google.com with SMTP id bo14so3532636pjb.1;
-        Fri, 22 Nov 2019 12:46:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tRGkdkyxPC2a5f5f/M+g90u8hYacc3x84KQ1p7aBVU4=;
-        b=TWyfVppZaTP0UPBWTRVvBsAFyUOIDVwLXbBHk4w+gLwWjsst6W7E36kmrrHV95iACr
-         Lxshsj0ZVIVq5+5dNRFqx5DAaay4fxFmSFodneot9YxT9dl5ficJ6FfNxa/auxsCPzOO
-         9InQXuSvYnsOuQHaACFUI1MQIRgnhfoIPIveKuZNOqtrOHIQBFMfdWwosUz9z+86CZ3j
-         a84WkPSDmfkGOenmqpW7V46gPCr+P1BtgvvtVRsH5O6r71APMs9axppcK1ayaLti8He0
-         UzfHRRfE9ZeWXtwEKvIfghx9poZCNvmkiqhG6Hl5fuWdFSkbtRC1spY3NlhX/dgIxzme
-         jW6g==
-X-Gm-Message-State: APjAAAXnsox9+JiqFf8hlvDdNuYllBwAFpE8OV83Po04EtciqsQPucpj
-        qBlc9B9kmbJ4wh4lnG3TWI8=
-X-Google-Smtp-Source: APXvYqxfLvlo3WiX+qOjLmNaHg4A8/Yr5/bhutdBvifKdrbNoMEoX19ki5EIzgAh3KQps1ab5imAJw==
-X-Received: by 2002:a17:902:8a8a:: with SMTP id p10mr16258912plo.300.1574455610529;
-        Fri, 22 Nov 2019 12:46:50 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id k6sm8361051pfi.119.2019.11.22.12.46.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Nov 2019 12:46:49 -0800 (PST)
-Subject: Re: [PATCH 4/4] scsi: core: don't limit per-LUN queue depth for SSD
-To:     James Smart <james.smart@broadcom.com>,
-        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-References: <20191118103117.978-1-ming.lei@redhat.com>
- <20191118103117.978-5-ming.lei@redhat.com>
- <1081145f-3e17-9bc1-2332-50a4b5621ef7@suse.de>
- <20191121005323.GB24548@ming.t460p>
- <336f35fc-2e22-c615-9405-50297b9737ea@suse.de>
- <20191122080959.GC903@ming.t460p>
- <5f84476f-95b4-79b6-f72d-4e2de447065c@acm.org>
- <7e44d961-a089-e073-1e35-5890e75b0ba7@broadcom.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <1963d16a-a390-6a25-ec20-53c4b01dc98f@acm.org>
-Date:   Fri, 22 Nov 2019 12:46:48 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726690AbfKVVf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Nov 2019 16:35:28 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56654 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726089AbfKVVf2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Nov 2019 16:35:28 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 2BA40AB76;
+        Fri, 22 Nov 2019 21:35:26 +0000 (UTC)
+Message-ID: <139c4a1040a9077fff39486f47134960d543ca53.camel@suse.de>
+Subject: Re: [PATCH v2 00/15] scsi: qla2xxx: Bug fixes
+From:   Martin Wilck <mwilck@suse.de>
+To:     Hannes Reinecke <hare@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     linux@yadro.com
+Date:   Fri, 22 Nov 2019 22:36:06 +0100
+In-Reply-To: <b84e274f-c20e-9351-27de-4cf1b34916d9@suse.de>
+References: <20191120222723.27779-1-r.bolshakov@yadro.com>
+         <b84e274f-c20e-9351-27de-4cf1b34916d9@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.1 
 MIME-Version: 1.0
-In-Reply-To: <7e44d961-a089-e073-1e35-5890e75b0ba7@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/22/19 10:26 AM, James Smart wrote:
-> On 11/22/2019 10:14 AM, Bart Van Assche wrote:
->> Thanks for having shared these numbers. I think this is very useful 
->> information. Do these results show the performance drop that happens 
->> if /sys/block/.../device/queue_depth exceeds .can_queue? What I am 
->> wondering about is how important these results are in the context of 
->> this discussion. Are there any modern SCSI devices for which a SCSI 
->> LLD sets scsi_host->can_queue and scsi_host->cmd_per_lun such that the 
->> device responds with BUSY? What surprised me is that only three SCSI 
->> LLDs call scsi_track_queue_full() (mptsas, bfa, esp_scsi). Does that 
->> mean that BUSY responses from a SCSI device or HBA are rare?
+On Fri, 2019-11-22 at 10:14 +0100, Hannes Reinecke wrote:
+> On 11/20/19 11:27 PM, Roman Bolshakov wrote:
+> > Hi Martin,
+> > 
+> > The patch series contains fixes for qla2xxx and solves two visible
+> > issues:
+> >   - Target port in N2N topology doesn't perform login if it has
+> > higher
+> >     WWPN than initiator
+> >   - ABORT TASK TMF leads to crash if it's received shortly after
+> > ACL of
+> >     an initiator is deleted and there's active I/O from the
+> > initiator
+> > 
+> > It also contains reliability improvements and cleanups.
+> > 
+> > Unfortunately, there's still an issue the latest patch. The discard
+> > works but ELS IOCB for LOGO is likely built incorrectly by
+> > qla24xx_els_dcmd_iocb(). The issue can also be exposed when "1" is
+> > written to fc_host/hostN/device/issue_logo file with logging turned
+> > on.
+> > 
+> > Changes since v1 (https://patchwork.kernel.org/cover/11141979/):
+> > - Fixes target port in N2N mode were added (patches 5-11);
+> > - Target port makes explicit LOGO on session teardown in the patch
+> > made
+> >   by Quinn. Together with patch 1, it helps to immediately turn
+> >   fc_remote_port to the Blocked stated on client side and avoids
+> > visibly
+> >   stuck session;
+> > - The last three patches address violation of FCP specification
+> > with
+> >   regards to handling of ABTS-LS from ports that are not currently
+> >   logged in.
+> > 
+> > Thank you,
+> > Roman
+> > 
+> > Quinn Tran (1):
+> >   scsi: qla2xxx: Use explicit LOGO in target mode
+> > 
+> > Roman Bolshakov (14):
+> >   scsi: qla2xxx: Ignore NULL pointer in tcm_qla2xxx_free_mcmd
+> >   scsi: qla2xxx: Initialize free_work before flushing it
+> >   scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
+> >   scsi: qla2xxx: Change discovery state before PLOGI
+> >   scsi: qla2xxx: Allow PLOGI in target mode
+> >   scsi: qla2xxx: Don't call qlt_async_event twice
+> >   scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
+> >   scsi: qla2xxx: Configure local loop for N2N target
+> >   scsi: qla2xxx: Send Notify ACK after N2N PLOGI
+> >   scsi: qla2xxx: Don't defer relogin unconditonally
+> >   scsi: qla2xxx: Ignore PORT UPDATE after N2N PLOGI
+> >   scsi: qla2xxx: Add async mode for qla24xx_els_dcmd_iocb
+> >   scsi: qla2xxx: Add debug dump of LOGO payload and ELS IOCB
+> >   scsi: qla2xxx: Handle ABTS according to FCP spec for logged out
+> > ports
+> > 
+> >  drivers/scsi/qla2xxx/qla_attr.c    |  2 +-
+> >  drivers/scsi/qla2xxx/qla_def.h     |  1 +
+> >  drivers/scsi/qla2xxx/qla_gbl.h     |  2 +-
+> >  drivers/scsi/qla2xxx/qla_init.c    | 21 ++++++---------
+> >  drivers/scsi/qla2xxx/qla_iocb.c    | 42 ++++++++++++++++++++++++
+> > ------
+> >  drivers/scsi/qla2xxx/qla_isr.c     |  4 ---
+> >  drivers/scsi/qla2xxx/qla_mbx.c     |  3 ++-
+> >  drivers/scsi/qla2xxx/qla_target.c  | 34 ++++++++++++++++--------
+> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  3 +++
+> >  9 files changed, 73 insertions(+), 39 deletions(-)
+> > 
+> This patchset has the nice benefit that it has fixed the crashes on
+> rmmod we had been seeing.
+
+Well, I investigated two distinct crash-at-rmmod cases, and one was
+already fixed by the earlier commit f45bca8c5052 ("scsi: qla2xxx: Fix
+double scsi_done for abort path"), whereas the other is still present,
+even after applying this series.
+
+Not to say the series is bad - we just shouldn't raise expectations
+too high.
+
+Martin
+
 > 
-> That's because most of the drivers, which had queue full ramp up/ramp 
-> down in them and would have called scsi_track_queue_full() converted 
-> over to the moved-queue-full-handling-in-the-mid-layer, indicated by 
-> sht->track_queue_depth = 1.
+> So, for the entire patchset:
 > 
-> Yes - it is still hit a lot!
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Tested-by: Hannes Reinecke <hare@suse.de>
+> 
 
-Hi James,
 
-In the systems that I have been working on myself I made sure that the 
-BUSY condition is rarely or never encountered. Anyway, since there are 
-setups in which this condition is hit frequently we need to make sure 
-that these setups keep performing well. I'm wondering now whether we 
-should try to come up with an algorithm for maintaining 
-sdev->device_busy only if it improves performance and for not 
-maintaining sdev->device_busy for devices/HBAs that don't need it.
+> Cheers,
+> 
+> Hannes
 
-Bart.
+
