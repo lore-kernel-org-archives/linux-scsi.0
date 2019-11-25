@@ -7,53 +7,55 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84EE0C432C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C78C43215
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D1C22068E
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BCF420748
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="urUTe7EY"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="CnrIVa2r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728970AbfKYQ5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Nov 2019 11:57:19 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:39610 "EHLO mta-01.yadro.com"
+        id S1728976AbfKYQ5X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Nov 2019 11:57:23 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:39666 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728683AbfKYQ5R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Nov 2019 11:57:17 -0500
+        id S1728864AbfKYQ5V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Nov 2019 11:57:21 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 0DEAD43E16;
-        Mon, 25 Nov 2019 16:57:16 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 43C4843E18;
+        Mon, 25 Nov 2019 16:57:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1574701035; x=1576515436; bh=gc52EwDkDEt9wAxR8Pg6Hn1B2slRZekKWye
-        HyVxdA64=; b=urUTe7EYhFEp+X3XMiIta41cwol4yZlpgTRqo0tsslXQTfQ1koh
-        7NSzRp0LGLBJV3UhFzsbq/3X3Pffv4CHuDfcISM6A5vGjEyYivfNfmiLeJHWYiL0
-        8e0AIpCyc8/dvbGaRYCMy5Um4KdpbaHZqex/p7MIbjhomT7fTHk87ljs=
+        1574701039; x=1576515440; bh=rZtO/wergIa6ItjIvB5eZMH7G8WaU+ruf1M
+        CLEYwfYE=; b=CnrIVa2rdrh9CU3zZIREENU0X8mq3YDbagPXljuzLYqOt4DghD1
+        YWdzp8ymBy7AHpSLe9S/RUoa2iyYRWsljVb39QocjX9sijU4k9HxAEQM/DrXMlQO
+        DbUnTxYviMgk3orvSGMaV9ujVBfsYlysaBib+tHA56f9k1K0dVyUrQ08=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 9HwaZNyhvMyT; Mon, 25 Nov 2019 19:57:15 +0300 (MSK)
+        with ESMTP id XUiNOmX0nY04; Mon, 25 Nov 2019 19:57:19 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 5BDBC43D79;
-        Mon, 25 Nov 2019 19:57:14 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A186F43E04;
+        Mon, 25 Nov 2019 19:57:17 +0300 (MSK)
 Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 25
- Nov 2019 19:57:14 +0300
+ Nov 2019 19:57:17 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
 To:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
 CC:     <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>,
+        Krishna Kant <krishna.kant@purestorage.com>,
+        Alexei Potashnik <alexei@purestorage.com>,
         Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <hmadhani@marvell.com>,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3 04/13] scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
-Date:   Mon, 25 Nov 2019 19:56:53 +0300
-Message-ID: <20191125165702.1013-5-r.bolshakov@yadro.com>
+Subject: [PATCH v3 10/13] scsi: qla2xxx: Send Notify ACK after N2N PLOGI
+Date:   Mon, 25 Nov 2019 19:56:59 +0300
+Message-ID: <20191125165702.1013-11-r.bolshakov@yadro.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191125165702.1013-1-r.bolshakov@yadro.com>
 References: <20191125165702.1013-1-r.bolshakov@yadro.com>
@@ -68,31 +70,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-del_work is already initialized inside qla2x00_alloc_fcport, there's no
-need to overwrite it. Indeed, it might prevent complete traversal of
-workqueue list.
+qlt_handle_login schedules session for deletion even if a login is in
+progress. That causes login bouncing, i.e. a few logins are made before
+it settles down.
 
-Fixes: a01c77d2cbc45 ("scsi: qla2xxx: Move session delete to driver work queue")
-Cc: Quinn Tran <qutran@marvell.com>
+Complete the first login by sending Notify Acknowledge IOCB via
+qlt_plogi_ack_unref if the session is pending login completion.
+
+Fixes: 9cd883f07a54 ("scsi: qla2xxx: Fix session cleanup for N2N")
+Cc: Krishna Kant <krishna.kant@purestorage.com>
+Cc: Alexei Potashnik <alexei@purestorage.com>
+Acked-by: Quinn Tran <qutran@marvell.com>
 Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 74cfcb13fe8a..eeb069d52f3d 100644
+index eeb069d52f3d..68c14143e50e 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1265,7 +1265,6 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess)
- 	    "Scheduling sess %p for deletion %8phC\n",
- 	    sess, sess->port_name);
+@@ -4803,6 +4803,7 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
  
--	INIT_WORK(&sess->del_work, qla24xx_delete_sess_fn);
- 	WARN_ON(!queue_work(sess->vha->hw->wq, &sess->del_work));
- }
+ 	switch (sess->disc_state) {
+ 	case DSC_DELETED:
++	case DSC_LOGIN_PEND:
+ 		qlt_plogi_ack_unref(vha, pla);
+ 		break;
  
 -- 
 2.24.0
