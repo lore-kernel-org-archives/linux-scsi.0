@@ -7,53 +7,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DA99C432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD44AC43215
 	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0853120748
+	by mail.kernel.org (Postfix) with ESMTP id 9551C2068E
 	for <linux-scsi@archiver.kernel.org>; Mon, 25 Nov 2019 16:57:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="qiI3aUUN"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="KSahFrQe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728988AbfKYQ5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728989AbfKYQ5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 25 Nov 2019 11:57:25 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:39618 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:39630 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728962AbfKYQ5T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728853AbfKYQ5T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 25 Nov 2019 11:57:19 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 569D243E20;
-        Mon, 25 Nov 2019 16:57:18 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 5503E43E1B;
+        Mon, 25 Nov 2019 16:57:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1574701037; x=1576515438; bh=lpGxjIOl3eZ0Udn1AneDM5fucx9r1HvEc9S
-        2fLtwCYc=; b=qiI3aUUNS8YiT0UmYZ2wfB322VRvnSUHh3WsXZ23lD3kKj9I1hy
-        Fy4KxSdUennJief3SqHdiQWG5slbmrlTfbgb7aEEcQDYOOB8SMfVlBfh6QPafwuO
-        HVMh6C5OODxeHtd+X8JIiRuNUMo5vbrYmS3tE0zTtVjQbOjjZY5PpZsE=
+        1574701036; x=1576515437; bh=RGl9Y1wcxFdhzHYOksJaiTWGnbIV50A9rlN
+        hMV+th24=; b=KSahFrQerY1fLAUwxHVW3DkHnbHo3tyST5u0FHkRi8fx58rUOBg
+        E49v1XOtiv7ZCwWTprE9wOZqIyl4oFHtnKm/WJPH6P7WZhi4zYeu2+jei6VuvTHJ
+        GSdYwzGKpXjZZA4QdJQ04BO4oONf+EDRls0+JMuUCzCZ2r0WPkHHhBKg=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Pch-XajINWgy; Mon, 25 Nov 2019 19:57:17 +0300 (MSK)
+        with ESMTP id WRO3z6D13aev; Mon, 25 Nov 2019 19:57:16 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 703E743E08;
-        Mon, 25 Nov 2019 19:57:16 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 6DB5443E04;
+        Mon, 25 Nov 2019 19:57:15 +0300 (MSK)
 Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 25
- Nov 2019 19:57:16 +0300
+ Nov 2019 19:57:15 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
 To:     <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
 CC:     <linux@yadro.com>, Roman Bolshakov <r.bolshakov@yadro.com>,
         Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3 08/13] scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
-Date:   Mon, 25 Nov 2019 19:56:57 +0300
-Message-ID: <20191125165702.1013-9-r.bolshakov@yadro.com>
+        Himanshu Madhani <hmadhani@marvell.com>
+Subject: [PATCH v3 06/13] scsi: qla2xxx: Allow PLOGI in target mode
+Date:   Mon, 25 Nov 2019 19:56:55 +0300
+Message-ID: <20191125165702.1013-7-r.bolshakov@yadro.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191125165702.1013-1-r.bolshakov@yadro.com>
 References: <20191125165702.1013-1-r.bolshakov@yadro.com>
@@ -68,43 +67,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The size of the buffer is hardcoded as 0x70 or 112 bytes, while the
-size of ELS IOCB is 0x40 and the size of PLOGI payload returned by
-Get Parameters command is 0x74.
+According to FC-LS-3 (Fibre Channel Link Services) 6.3.2.4
+"N_Port Login - No Fabric present", if both parties in the point-to-point
+connection know N_Port_Names of each other, Nx_Port with the highest
+N_Port_name shall transmit PLOGI. The specification sets no restrictions
+on the port role that should send PLOGI.
+
+However, FCP-4 (Fibre Channel Protocol for SCSI, Fourth Version) 6.2
+"Overview of Process Login and Process Logout", instructs that in
+point-to-point topology, initiator shall send explicit PRLI ELS.
+
+The change fixes stuck P2P login, when target WWPN is higher than
+initiator WWPN.
 
 Cc: Quinn Tran <qutran@marvell.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Hannes Reinecke <hare@suse.de>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index c5a7736c45be..53ccbd6b71ed 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2684,7 +2684,8 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 		ql_dbg(ql_dbg_io + ql_dbg_buffer, vha, 0x3073,
- 		    "PLOGI ELS IOCB:\n");
- 		ql_dump_buffer(ql_log_info, vha, 0x0109,
--		    (uint8_t *)els_iocb, 0x70);
-+		    (uint8_t *)els_iocb,
-+		    sizeof(*els_iocb));
- 	} else {
- 		els_iocb->control_flags = 1 << 13;
- 		els_iocb->tx_byte_count =
-@@ -2942,7 +2943,8 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index fcb309be50d9..b4283a3126d0 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1527,8 +1527,8 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 		}
+ 	}
  
- 	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0x3073, "PLOGI buffer:\n");
- 	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x0109,
--	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld, 0x70);
-+	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
-+	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
+-	/* for pure Target Mode. Login will not be initiated */
+-	if (vha->host->active_mode == MODE_TARGET)
++	/* Target won't initiate port login if fabric is present */
++	if (vha->host->active_mode == MODE_TARGET && !N2N_TOPO(vha->hw))
+ 		return 0;
  
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS) {
+ 	if (fcport->flags & FCF_ASYNC_SENT) {
+@@ -1720,6 +1720,10 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ void qla_handle_els_plogi_done(scsi_qla_host_t *vha,
+ 				      struct event_arg *ea)
+ {
++	/* for pure Target Mode, PRLI will not be initiated */
++	if (vha->host->active_mode == MODE_TARGET)
++		return;
++
+ 	ql_dbg(ql_dbg_disc, vha, 0x2118,
+ 	    "%s %d %8phC post PRLI\n",
+ 	    __func__, __LINE__, ea->fcport->port_name);
 -- 
 2.24.0
 
