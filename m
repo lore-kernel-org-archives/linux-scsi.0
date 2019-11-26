@@ -2,106 +2,71 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C4BC432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:22:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92188C43215
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:55:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43B2720863
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:22:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66D352084B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726689AbfKZUV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 15:21:56 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52240 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726036AbfKZUV4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 15:21:56 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D5F01B147;
-        Tue, 26 Nov 2019 20:21:53 +0000 (UTC)
-Date:   Tue, 26 Nov 2019 21:21:51 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Hou Tao <houtao1@huawei.com>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
-        "Ewan D. Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
-Message-ID: <20191126202151.GY11661@kitsune.suse.cz>
-References: <cover.1574797504.git.msuchanek@suse.de>
- <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
+        id S1726701AbfKZUzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 15:55:22 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:36508 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726033AbfKZUzW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 15:55:22 -0500
+Received: by mail-pg1-f195.google.com with SMTP id k13so9616751pgh.3;
+        Tue, 26 Nov 2019 12:55:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=fd+09IorCIPtEgTvPZr5ANBerCHSTZCihmc7ysWdRDM=;
+        b=KlJSAK+qAKa9PXMnTVa2RUKXCQ+GKiSLRx5XGn/GG06XpU0UeZ+20JW/tDtPw6SGwv
+         hLU1fzbnGS/zoDVFiil8zgnk4NSYdv2wwgiigX7ZhvVo9x9XwtowcvR8kyKgtSUTdg7h
+         sI5BQE24tWCONM+DgaIcPKA45Ros3bzB5XE1cLl0j6mF43aMCJJO5jk45KdVAZOWyElJ
+         9nwQezjfx2fPowRwJW7yXfPSBpKvAiP5FwhR5ExaXI+dExmUY3X07nbKHbVnuHt/8T6u
+         yOFfZt6iS7DpEgbkwm/wzvWbLzDNjADKP+cKRzUvNO/SzuI2x4KkDzI5wfr1/V/ettRM
+         xnRw==
+X-Gm-Message-State: APjAAAXxRT5tCw7+xnIvXN4BhucQ1ZRd4nO7mlridEs1xOfxgkZz9YTL
+        VKUibNqjsgZfB37Aa3a53Oc=
+X-Google-Smtp-Source: APXvYqzHeCluBcsXo0DBvdJiyxRX1MNr5CNHEyx57/oA6BWx31p24839eAllahDr1zOyRIl8OJ4MXg==
+X-Received: by 2002:a63:774a:: with SMTP id s71mr522483pgc.57.1574801720025;
+        Tue, 26 Nov 2019 12:55:20 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id q13sm2819063pjc.4.2019.11.26.12.55.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Nov 2019 12:55:18 -0800 (PST)
+Subject: Re: [PATCH v3 01/13] scsi: qla2xxx: Ignore NULL pointer in
+ tcm_qla2xxx_free_mcmd
+To:     Roman Bolshakov <r.bolshakov@yadro.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     linux@yadro.com, Quinn Tran <qutran@marvell.com>,
+        Thomas Abraham <tabraham@suse.com>, stable@vger.kernel.org,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Hannes Reinecke <hare@suse.de>
+References: <20191125165702.1013-1-r.bolshakov@yadro.com>
+ <20191125165702.1013-2-r.bolshakov@yadro.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <4c8131c4-6386-860c-6dfc-695eabeedcb4@acm.org>
+Date:   Tue, 26 Nov 2019 12:55:17 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191125165702.1013-2-r.bolshakov@yadro.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 26, 2019 at 01:01:42PM -0700, Jens Axboe wrote:
-> On 11/26/19 12:54 PM, Michal Suchanek wrote:
-> > Hello,
-> > 
-> > there is cdrom autoclose feature that is supposed to close the tray,
-> > wait for the disc to become ready, and then open the device.
-> > 
-> > This used to work in ancient times. Then in old times there was a hack
-> > in util-linux which worked around the breakage which probably resulted
-> > from switching to scsi emulation.
-> > 
-> > Currently util-linux maintainer refuses to merge another hack on the
-> > basis that kernel still has the feature so it should be fixed there.
-> > The code needs not be replicated in every userspace utility like mount
-> > or dd which has no business knowing which devices are CD-roms and where
-> > the autoclose setting is in the kernel.
-> > 
-> > This is rebase on top of current master.
-> > 
-> > Also it seems that most people think that this is fix for WMware because
-> > there is one patch dealing with WMware.
-> 
-> I think the main complaint with this is that it's kind of a stretch to
-> add core functionality for a device type that's barely being
-> manufactured anymore and is mostly used in a virtualized fashion. I
-> think it you could fix this without 10 patches of churn and without
-> adding a new ->open() addition to fops, then people would be a lot more
-> receptive to the idea of improving cdrom auto-close.
+On 11/25/19 8:56 AM, Roman Bolshakov wrote:
+> If ABTS cannot be completed in target mode, the driver attempts to free [ ... ]
 
-I see no way to do that cleanly.
-
-There are two open modes for cdrom devices - blocking and non-blocking.
-
-In blocking mode open() should analyze the medium so that it's ready
-when it returns. In non-blocking mode it should return immediately so
-long as you can talk to the device.
-
-When waiting in open() with locks held the processes trying to open the
-device are locked out regradless of the mode they use.
-
-The only way to solve this is to pretend that the device is open and do
-the wait afterwards with the device unlocked.
-
-Thanks
-
-Michal
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
