@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C71E0C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A92C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:54:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB4572075C
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:53:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A7EE20727
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:54:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727171AbfKZGxy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 01:53:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43188 "EHLO mail.kernel.org"
+        id S1727217AbfKZGx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 01:53:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43328 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725765AbfKZGxx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 01:53:53 -0500
+        id S1725765AbfKZGx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Nov 2019 01:53:58 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 320A3C447B6; Tue, 26 Nov 2019 06:53:53 +0000 (UTC)
+        id C6662C447BD; Tue, 26 Nov 2019 06:53:57 +0000 (UTC)
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0013FC43383;
-        Tue, 26 Nov 2019 06:53:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0013FC43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A8A3C447B8;
+        Tue, 26 Nov 2019 06:53:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6A8A3C447B8
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=pass (p=none dis=none) header.from=qti.qualcomm.com
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=pass smtp.mailfrom=cang@qti.qualcomm.com
 From:   Can Guo <cang@qti.qualcomm.com>
@@ -40,14 +40,12 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
         Tomas Winkler <tomas.winkler@intel.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 1/4] scsi: ufs: Recheck bkops level if bkops is disabled
-Date:   Mon, 25 Nov 2019 22:53:30 -0800
-Message-Id: <1574751214-8321-2-git-send-email-cang@qti.qualcomm.com>
+Subject: [PATCH v3 2/4] scsi: ufs: Update VCCQ2 and VCCQ min/max voltage hard codes
+Date:   Mon, 25 Nov 2019 22:53:31 -0800
+Message-Id: <1574751214-8321-3-git-send-email-cang@qti.qualcomm.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1574751214-8321-1-git-send-email-cang@qti.qualcomm.com>
 References: <1574751214-8321-1-git-send-email-cang@qti.qualcomm.com>
@@ -56,53 +54,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Asutosh Das <asutoshd@codeaurora.org>
+From: Can Guo <cang@codeaurora.org>
 
-Bkops level should be rechecked upon receiving an exception.
-Currently the bkops level is being cached and never updated.
+Per UFS 3.0 JEDEC standard, the VCCQ2 min voltage is 1.7v and the VCCQ
+voltage range is 1.14v ~ 1.26v. Update their hard codes accordingly to
+make sure they work in a safe range compliant for ver 1.0/1.1/2.0/2.1/3.0
+UFS devices.
 
-Update the same each time the level is checked.
-Also do not use the cached bkops level value if it is disabled
-and then enabled.
-
-Fixes: afdfff59a0e0 (scsi: ufs: handle non spec compliant bkops behaviour by device)
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Tested-by: Alim Akhtar <alim.akhtar@samsung.com
 ---
- drivers/scsi/ufs/ufshcd.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/ufs/ufs.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3910c58..8e7c362 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5099,6 +5099,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 385bac8..0ded95e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -500,9 +500,9 @@ struct ufs_query_res {
+ #define UFS_VREG_VCC_MAX_UV	   3600000 /* uV */
+ #define UFS_VREG_VCC_1P8_MIN_UV    1700000 /* uV */
+ #define UFS_VREG_VCC_1P8_MAX_UV    1950000 /* uV */
+-#define UFS_VREG_VCCQ_MIN_UV	   1100000 /* uV */
+-#define UFS_VREG_VCCQ_MAX_UV	   1300000 /* uV */
+-#define UFS_VREG_VCCQ2_MIN_UV	   1650000 /* uV */
++#define UFS_VREG_VCCQ_MIN_UV	   1140000 /* uV */
++#define UFS_VREG_VCCQ_MAX_UV	   1260000 /* uV */
++#define UFS_VREG_VCCQ2_MIN_UV	   1700000 /* uV */
+ #define UFS_VREG_VCCQ2_MAX_UV	   1950000 /* uV */
  
- 	hba->auto_bkops_enabled = false;
- 	trace_ufshcd_auto_bkops_state(dev_name(hba->dev), "Disabled");
-+	hba->is_urgent_bkops_lvl_checked = false;
- out:
- 	return err;
- }
-@@ -5123,6 +5124,7 @@ static void ufshcd_force_reset_auto_bkops(struct ufs_hba *hba)
- 		hba->ee_ctrl_mask &= ~MASK_EE_URGENT_BKOPS;
- 		ufshcd_disable_auto_bkops(hba);
- 	}
-+	hba->is_urgent_bkops_lvl_checked = false;
- }
- 
- static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
-@@ -5169,6 +5171,7 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
- 		err = ufshcd_enable_auto_bkops(hba);
- 	else
- 		err = ufshcd_disable_auto_bkops(hba);
-+	hba->urgent_bkops_lvl = curr_status;
- out:
- 	return err;
- }
+ /*
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
