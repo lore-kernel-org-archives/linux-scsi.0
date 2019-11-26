@@ -2,110 +2,105 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33DCAC432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 05:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F4AC432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:15:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0714320659
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 05:16:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AE8E2068E
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 06:15:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MpkEXJFb";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="MwUgfEob"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725876AbfKZFQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 00:16:14 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:37042 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbfKZFQO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 00:16:14 -0500
-Received: by mail-pg1-f193.google.com with SMTP id b10so8366181pgd.4
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2019 21:16:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=xtYQbL2zT7uQ89wJejlPftbqYzlrdQZQzlH4tYN1U7U=;
-        b=sk8FE5J6ky0hCxA/UBtLTHBnKgBCV8HzIpQS6qkUsxDppj4lJ8RSrvS2bC7D+k1OvY
-         kf7Ggcjuw+66pQ8DzjoxH1ZDdoBQ6dCk12oaOsQ47KJUt+U+QNoZ5b2QVDm7KSl8SKEA
-         BPVBPNhBtm2MjqtBSA8nqIL1JDEMHrPsv4nuvokuD0MzbsdgHhVoK9Asxrvxc12WgyU9
-         H0JE2CzQZRFt1bGCZjxjjS9yyLJMCQQPOSEKUmMLURQ6cZUbWbmUJYackNx67QG/f3LG
-         93wM1aV41q+DF5GkCj0cuCCMFRH+P/p6arv6D8o+qwI4/LTcjy8c18XYQ8cbmXtvxcM5
-         lx9g==
-X-Gm-Message-State: APjAAAUmmHs5iR+g9MtKPnDyNySWAaaH5/Vx6v13PfSL9t6U1cHqfvb2
-        Uog6/Jvt/YvkcXMtj2T3jj8=
-X-Google-Smtp-Source: APXvYqyUG0FUB+IdZIGPGHb8dIdBkPwaQCpg10BScONZslX9vrl8MEv91P/SFhoAtpf1fAVmt//w/w==
-X-Received: by 2002:a63:d20f:: with SMTP id a15mr37927829pgg.268.1574745373081;
-        Mon, 25 Nov 2019 21:16:13 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:1248:b483:6049:6c3e:9659? ([2601:647:4000:1248:b483:6049:6c3e:9659])
-        by smtp.gmail.com with ESMTPSA id 193sm11071648pfv.18.2019.11.25.21.16.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Nov 2019 21:16:12 -0800 (PST)
-Subject: Re: [PATCH v6 4/4] ufs: Simplify the clock scaling mechanism
- implementation
-To:     dgilbert@interlog.com, cang@codeaurora.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        linux-scsi@vger.kernel.org, Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-References: <20191121220850.16195-1-bvanassche@acm.org>
- <20191121220850.16195-5-bvanassche@acm.org>
- <0101016ea17f117f-41755175-dc9e-4454-bda6-3653b9aa31ff-000000@us-west-2.amazonses.com>
- <c26ba983-b166-785f-86e8-dd60c802fa77@acm.org>
- <3cadd4df-13ee-fe65-32dc-6a3c583a4988@interlog.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <4ff965f1-20c9-d561-cd67-c1426466b39f@acm.org>
-Date:   Mon, 25 Nov 2019 21:16:11 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1725802AbfKZGPI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 01:15:08 -0500
+Received: from a27-185.smtp-out.us-west-2.amazonses.com ([54.240.27.185]:47944
+        "EHLO a27-185.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725730AbfKZGPI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Nov 2019 01:15:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574748907;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
+        bh=UGG0wLdU/KaEOFxGZcQLdMNAIrj7+qikMCcJHRJUVtQ=;
+        b=MpkEXJFb+PDdgpUGuJDLa1cWDm9UUJTHCjmqXwOIa69AoXr99b7l23oRdc96eJHc
+        c83E6pc96s0at+zXQopBuHzoc0njCye/kqWwecOvu+3ZyiViDz7IzkHvqbXHJqbQ8Xx
+        t3C6iXVZ8MszzJ//jm0LzarxiHI5VCgscC4aAm50=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574748907;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
+        bh=UGG0wLdU/KaEOFxGZcQLdMNAIrj7+qikMCcJHRJUVtQ=;
+        b=MwUgfEobsb66wlp5raQ9FbYqBb61nepGDJD2ebc88pGaWPg+AJNbvXpUzYyhsk4L
+        HV32mQJhMjOnBoad4A3DpjKrSBznJw9j5XDE3RXi2kJaCtzuU3080oqv3UBc8qJHchT
+        man9jSYo5FMnYgxLs3OFnQ7PD2MszK+LDynekNV0=
 MIME-Version: 1.0
-In-Reply-To: <3cadd4df-13ee-fe65-32dc-6a3c583a4988@interlog.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 26 Nov 2019 06:15:07 +0000
+From:   cang@codeaurora.org
+To:     Alim Akhtar <alim.akhtar@gmail.com>
+Cc:     Can Guo <cang@qti.qualcomm.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, Mark Salyzyn <salyzyn@google.com>
+Subject: Re: [PATCH v2 0/4] UFS driver general fixes bundle 5
+In-Reply-To: <CAGOxZ50cmTgcCXfzykQtJpO8ahXjhrXioq22s2DK_-W9KMGD0Q@mail.gmail.com>
+References: <1574049061-11417-1-git-send-email-cang@qti.qualcomm.com>
+ <CAGOxZ50cmTgcCXfzykQtJpO8ahXjhrXioq22s2DK_-W9KMGD0Q@mail.gmail.com>
+Message-ID: <0101016ea6596593-5660849a-9787-469d-b92b-6544c4dde9c6-000000@us-west-2.amazonses.com>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
+X-SES-Outgoing: 2019.11.26-54.240.27.185
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-11-25 21:00, Douglas Gilbert wrote:
-> On 2019-11-26 12:05 p.m., Bart Van Assche wrote:
->> -    start = ktime_get();
+On 2019-11-18 21:26, Alim Akhtar wrote:
+> Hi Can
 > 
-> Rather than throw away the high precision clock and resort to jiffies,
-> perhaps
-> you might try the middle road. For example: ktime_get_coarse().
+> On Mon, Nov 18, 2019 at 9:21 AM Can Guo <cang@qti.qualcomm.com> wrote:
+>> 
+>> This bundle includes 4 general fixes for UFS driver.
+>> 
+>> Changes since v1:
+>> - Incorporated review comments from Avri Altman.
+>> - Removed change "scsi: ufs: Add new bit field PA_INIT to UECDL 
+>> register".
+>> - Updated change "scsi: ufs: Complete pending requests in host reset 
+>> and restore path".
+>> 
+>> Asutosh Das (1):
+>>   scsi: ufs: Recheck bkops level if bkops is disabled
+>> 
+>> Can Guo (3):
+>>   scsi: ufs: Update VCCQ2 and VCCQ min/max voltage hard codes
+>>   scsi: ufs: Avoid messing up the compl_time_stamp of lrbs
+>>   scsi: ufs: Complete pending requests in host reset and restore path
+>> 
+>>  drivers/scsi/ufs/ufs.h    |  4 ++--
+>>  drivers/scsi/ufs/ufshcd.c | 31 +++++++++++++++----------------
+>>  drivers/scsi/ufs/ufshcd.h |  2 ++
+>>  3 files changed, 19 insertions(+), 18 deletions(-)
+>> 
+>> --
+> 
+> For this bundle, most of the review is done, so if you can send V3 of
+> these with the addressed 2/4 patch, this can merged.
+> Thanks
+> 
 
-Hi Doug,
+Thank you Alim. I will do it soon.
 
-Since HZ >= 100, I think that 1/HZ is more than accurate enough for a
-one second timeout.
+Regards,
+Can Guo.
 
-Bart.
+>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
+>> Forum,
+>> a Linux Foundation Collaborative Project
+>> 
