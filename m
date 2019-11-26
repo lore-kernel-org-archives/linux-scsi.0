@@ -2,27 +2,26 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1C9AC43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBFFC432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9069A20863
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59F0920866
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726947AbfKZTyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 14:54:43 -0500
-Received: from mx2.suse.de ([195.135.220.15]:40240 "EHLO mx1.suse.de"
+        id S1726232AbfKZTyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 14:54:40 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40116 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725970AbfKZTyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 14:54:43 -0500
+        id S1725970AbfKZTyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Nov 2019 14:54:40 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id A0A04B01C;
-        Tue, 26 Nov 2019 19:54:40 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id CB75BAD26;
+        Tue, 26 Nov 2019 19:54:37 +0000 (UTC)
 From:   Michal Suchanek <msuchanek@suse.de>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc:     Michal Suchanek <msuchanek@suse.de>,
@@ -45,12 +44,10 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         "Ewan D. Milne" <emilne@redhat.com>,
         Christoph Hellwig <hch@infradead.org>,
         Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 rebase 03/10] cdrom: wait for the tray to close
-Date:   Tue, 26 Nov 2019 20:54:22 +0100
-Message-Id: <e602b67d19dbbdc2009ec5932d2f5e9d33785144.1574797504.git.msuchanek@suse.de>
+Subject: [PATCH v4 rebase 00/10] Fix cdrom autoclose
+Date:   Tue, 26 Nov 2019 20:54:19 +0100
+Message-Id: <cover.1574797504.git.msuchanek@suse.de>
 X-Mailer: git-send-email 2.23.0
-In-Reply-To: <cover.1574797504.git.msuchanek@suse.de>
-References: <cover.1574797504.git.msuchanek@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -58,94 +55,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi command to close the tray only starts the motor and does not
-wait for the tray to close. Wait until the state chages from TRAY_OPEN
-so users do not race with the tray closing.
+Hello,
 
-This looks like inifinte wait but unless the drive is broken it either
-closes the tray shortly or reports an error when it detects the tray is
-blocked. At worst the wait can be interrupted by the user.
+there is cdrom autoclose feature that is supposed to close the tray,
+wait for the disc to become ready, and then open the device.
 
-Also wait for the drive to become ready once the tray closes.
+This used to work in ancient times. Then in old times there was a hack
+in util-linux which worked around the breakage which probably resulted
+from switching to scsi emulation.
 
-Signed-off-by: Michal Suchanek <msuchanek@suse.de>
----
-v2:
- - check drive_status exists before using it
- - rename tray_close -> cdrom_tray_close
- - also wait for drive to become ready after tray closes
- - do not wait in cdrom_ioctl_closetray
-v4: add a status change poll wrapper
----
- drivers/cdrom/cdrom.c | 36 +++++++++++++++++++++++++++++++++---
- 1 file changed, 33 insertions(+), 3 deletions(-)
+Currently util-linux maintainer refuses to merge another hack on the
+basis that kernel still has the feature so it should be fixed there.
+The code needs not be replicated in every userspace utility like mount
+or dd which has no business knowing which devices are CD-roms and where
+the autoclose setting is in the kernel.
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index bb32decdadf1..b2bc0c8f9a69 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1045,6 +1045,28 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
- 	       tracks->cdi, tracks->xa);
- }
- 
-+static int cdrom_wait_for_status_change(struct cdrom_device_info *cdi,
-+					int *status)
-+{
-+	int saved = *status;
-+	const struct cdrom_device_ops *cdo = cdi->ops;
-+
-+	return poll_event_interruptible(saved !=
-+			(*status = cdo->drive_status(cdi, CDSL_CURRENT)), 500);
-+}
-+
-+static int cdrom_tray_close(struct cdrom_device_info *cdi)
-+{
-+	int ret;
-+
-+	ret = cdi->ops->tray_move(cdi, 0);
-+	if (ret || !cdi->ops->drive_status)
-+		return ret;
-+
-+	ret = CDS_TRAY_OPEN;
-+	return cdrom_wait_for_status_change(cdi, &ret);
-+}
-+
- static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- {
- 	int ret;
-@@ -1062,14 +1084,14 @@ static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 				if (!(cdi->options & CDO_AUTO_CLOSE))
- 					return -ENOMEDIUM;
- 				cd_dbg(CD_OPEN, "trying to close the tray\n");
--				ret=cdo->tray_move(cdi,0);
-+				ret = cdrom_tray_close(cdi);
-+				if (ret == -ERESTARTSYS)
-+					return ret;
- 				if (ret) {
- 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
- 					return -ENOMEDIUM;
- 				}
- 				ret = cdo->drive_status(cdi, CDSL_CURRENT);
--				if (ret == CDS_TRAY_OPEN)
--					cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
- 				if (ret == CDS_NO_DISC)
- 					cd_dbg(CD_OPEN, "tray might not contain a medium\n");
- 			} else {
-@@ -1077,6 +1099,14 @@ static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- 				return -ENOMEDIUM;
- 			}
- 		}
-+		if (ret == CDS_DRIVE_NOT_READY) {
-+			int poll_res;
-+
-+			cd_dbg(CD_OPEN, "waiting for drive to become ready...\n");
-+			poll_res = cdrom_wait_for_status_change(cdi, &ret);
-+			if (poll_res == -ERESTARTSYS)
-+				return poll_res;
-+		}
- 		if (ret != CDS_DISC_OK)
- 			return -ENOMEDIUM;
- 	}
+This is rebase on top of current master.
+
+Also it seems that most people think that this is fix for WMware because
+there is one patch dealing with WMware.
+
+This is fix for Linux.
+
+Expected (ca Linux 2.4):
+
+eject
+< put CD on tray >
+mount /dev/cdrom
+...
+< cdrom now mounted >
+
+Actual:
+mount: /mnt: no medium found on /dev/sr0.
+
+Thanks
+
+Michal
+
+v3:
+- change the VMware workaround to use blacklist flag
+- use exported function instead of ioctl
+v4:
+- fix crash reported by kernel test robot
+- fix the debug message logic while refactoring cdrom_open
+- move repeated code out of __blkdev_get
+
+Link: https://lore.kernel.org/lkml/cover.1571834862.git.msuchanek@suse.de/
+Link: https://lore.kernel.org/lkml/cover.1513263482.git.msuchanek@suse.de/
+
+Michal Suchanek (10):
+  cdrom: add poll_event_interruptible
+  cdrom: factor out common open_for_* code
+  cdrom: wait for the tray to close
+  cdrom: export autoclose logic as a separate function
+  cdrom: unify log messages.
+  bdev: reset first_open when looping in __blkget_dev
+  bdev: separate parts of __blkdev_get as helper functions
+  bdev: add open_finish
+  scsi: blacklist: add VMware ESXi cdrom - broken tray emulation
+  scsi: sr: wait for the medium to become ready
+
+ Documentation/filesystems/locking.rst |   2 +
+ drivers/cdrom/cdrom.c                 | 471 +++++++++++++-------------
+ drivers/scsi/scsi_devinfo.c           |  15 +-
+ drivers/scsi/sr.c                     |  60 +++-
+ fs/block_dev.c                        |  72 ++--
+ include/linux/blkdev.h                |   1 +
+ include/linux/cdrom.h                 |   1 +
+ include/scsi/scsi_devinfo.h           |   7 +-
+ 8 files changed, 357 insertions(+), 272 deletions(-)
+
 -- 
 2.23.0
 
