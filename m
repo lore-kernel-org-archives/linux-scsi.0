@@ -2,30 +2,62 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7BB3C432C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 635A5C432C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:01:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BB8620684
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:55:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 375A620684
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:01:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="jCteqbHZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727310AbfKZTza (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 14:55:30 -0500
-Received: from mx2.suse.de ([195.135.220.15]:40204 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726036AbfKZTyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 14:54:43 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id ADBAFAE34;
-        Tue, 26 Nov 2019 19:54:39 +0000 (UTC)
-From:   Michal Suchanek <msuchanek@suse.de>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc:     Michal Suchanek <msuchanek@suse.de>,
-        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        id S1727033AbfKZUBt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 15:01:49 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:44909 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726571AbfKZUBs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 15:01:48 -0500
+Received: by mail-pj1-f65.google.com with SMTP id w8so8769770pjh.11
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2019 12:01:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=b4nMYyMZLdJTu1lsp2vJ7LJSFFbPniRCr7vgs74sWbM=;
+        b=jCteqbHZIlDVKF77LxJogeNq0ChJQpDzdTb8SfTvrCSoky7CKHFC5o66x3Zac7V8Le
+         MEUvAWyMsK6FMcJCKQtGwCCokHpV3OerEo8C0oirA53k+b4rVilYguFTDSJhQZ2Z+neu
+         gzViq+zCV8nrResRpHBZTSyXMgC+g7NoK4DFuziDj56v4GXPPhtTczkSSEmUPDWPpMq1
+         2mRCJTWA0J/IOK9OqwV9LvDqq47Cu99zA7MaT9Symp+NotD+Yg+yHhdlNFtD7EcwQ60z
+         tcXHCUfMGMxyqC8l8J7MIGI5P7js1NCrFu99jSix84tf0ba9h0yWl7xRB4lx81SK8YMM
+         qpsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=b4nMYyMZLdJTu1lsp2vJ7LJSFFbPniRCr7vgs74sWbM=;
+        b=Ywb/V1j7CyRwzPdXrYPpchANkgR0F1DPSmu6XWDXlkrQCABaSF5T18Ey1wCjZ0jpxM
+         CRH6DTl1KDBeK3tH/wih8gcp+z1Ih7rkbWmWYtjMKT/jUd38AiTFOYoR9k5/i+uvZZ+I
+         6tA7hyXjpwQFw1CJwGOFzSOPt5IQ/D24MXQvAa3p/g6nu7fHvl6nJwgPqUEW3WfKlxfQ
+         M04EaqwfCtE0TwbAPd3qJ5haOpOBOt6auQVYAhYQlNs9TcfS8VXsbTl1/5acEUPE9frA
+         5sgQ29H0ZhW+BBBkbdrxLhTp+u/f8/xNBEmXkdZ21BMUSDt4kTtBIn+1ZXV0kQ4g9C/P
+         OnHw==
+X-Gm-Message-State: APjAAAVLNA+ZaE9d9jbFbXPJiJ0kUu+BXqSf7nHnz7m0z5JBvt8YHQA0
+        q6DtBfJzRL2qWk48YNoezwYxYQ==
+X-Google-Smtp-Source: APXvYqzxZXjLZ+Y0q/kzUzpcJTVYX2YMUaQDISq6yRH+d/E+Tl5Yhl/S5xZe/N5wi80C6h7C9sLD+Q==
+X-Received: by 2002:a17:902:b101:: with SMTP id q1mr105469plr.154.1574798506461;
+        Tue, 26 Nov 2019 12:01:46 -0800 (PST)
+Received: from [192.168.1.188] ([66.219.217.79])
+        by smtp.gmail.com with ESMTPSA id u24sm13371114pfh.48.2019.11.26.12.01.43
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Nov 2019 12:01:45 -0800 (PST)
+Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
+To:     Michal Suchanek <msuchanek@suse.de>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org
+Cc:     Jonathan Corbet <corbet@lwn.net>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -44,209 +76,50 @@ Cc:     Michal Suchanek <msuchanek@suse.de>,
         "Ewan D. Milne" <emilne@redhat.com>,
         Christoph Hellwig <hch@infradead.org>,
         Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v4 rebase 02/10] cdrom: factor out common open_for_* code
-Date:   Tue, 26 Nov 2019 20:54:21 +0100
-Message-Id: <28ea5ed3fc07adba819bbcdb9fe9e969a727b203.1574797504.git.msuchanek@suse.de>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <cover.1574797504.git.msuchanek@suse.de>
 References: <cover.1574797504.git.msuchanek@suse.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
+Date:   Tue, 26 Nov 2019 13:01:42 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <cover.1574797504.git.msuchanek@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The open_for_audio and open_for_data copies are bitrotten in different
-ways already and will need to update the autoclose logic in both.
+On 11/26/19 12:54 PM, Michal Suchanek wrote:
+> Hello,
+> 
+> there is cdrom autoclose feature that is supposed to close the tray,
+> wait for the disc to become ready, and then open the device.
+> 
+> This used to work in ancient times. Then in old times there was a hack
+> in util-linux which worked around the breakage which probably resulted
+> from switching to scsi emulation.
+> 
+> Currently util-linux maintainer refuses to merge another hack on the
+> basis that kernel still has the feature so it should be fixed there.
+> The code needs not be replicated in every userspace utility like mount
+> or dd which has no business knowing which devices are CD-roms and where
+> the autoclose setting is in the kernel.
+> 
+> This is rebase on top of current master.
+> 
+> Also it seems that most people think that this is fix for WMware because
+> there is one patch dealing with WMware.
 
-Signed-off-by: Michal Suchanek <msuchanek@suse.de>
----
-v2: do not add unrelated whitespace changes
-v3: fix declaration style
-v4: fix the debug message logic around closing tray
----
- drivers/cdrom/cdrom.c | 118 ++++++++++++++----------------------------
- 1 file changed, 40 insertions(+), 78 deletions(-)
+I think the main complaint with this is that it's kind of a stretch to
+add core functionality for a device type that's barely being
+manufactured anymore and is mostly used in a virtualized fashion. I
+think it you could fix this without 10 patches of churn and without
+adding a new ->open() addition to fops, then people would be a lot more
+receptive to the idea of improving cdrom auto-close.
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 2ad6b73482fe..bb32decdadf1 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1045,13 +1045,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
- 	       tracks->cdi, tracks->xa);
- }
- 
--static
--int open_for_data(struct cdrom_device_info *cdi)
-+static int open_for_common(struct cdrom_device_info *cdi, tracktype *tracks)
- {
- 	int ret;
- 	const struct cdrom_device_ops *cdo = cdi->ops;
--	tracktype tracks;
--	cd_dbg(CD_OPEN, "entering open_for_data\n");
-+
-+	cd_dbg(CD_OPEN, "entering open_for_common\n");
- 	/* Check if the driver can report drive status.  If it can, we
- 	   can do clever things.  If it can't, well, we at least tried! */
- 	if (cdo->drive_status != NULL) {
-@@ -1059,49 +1058,48 @@ int open_for_data(struct cdrom_device_info *cdi)
- 		cd_dbg(CD_OPEN, "drive_status=%d\n", ret);
- 		if (ret == CDS_TRAY_OPEN) {
- 			cd_dbg(CD_OPEN, "the tray is open...\n");
--			/* can/may i close it? */
--			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
--			    cdi->options & CDO_AUTO_CLOSE) {
-+			if (CDROM_CAN(CDC_CLOSE_TRAY)) {
-+				if (!(cdi->options & CDO_AUTO_CLOSE))
-+					return -ENOMEDIUM;
- 				cd_dbg(CD_OPEN, "trying to close the tray\n");
- 				ret=cdo->tray_move(cdi,0);
- 				if (ret) {
- 					cd_dbg(CD_OPEN, "bummer. tried to close the tray but failed.\n");
--					/* Ignore the error from the low
--					level driver.  We don't care why it
--					couldn't close the tray.  We only care 
--					that there is no disc in the drive, 
--					since that is the _REAL_ problem here.*/
--					ret=-ENOMEDIUM;
--					goto clean_up_and_return;
-+					return -ENOMEDIUM;
- 				}
-+				ret = cdo->drive_status(cdi, CDSL_CURRENT);
-+				if (ret == CDS_TRAY_OPEN)
-+					cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
-+				if (ret == CDS_NO_DISC)
-+					cd_dbg(CD_OPEN, "tray might not contain a medium\n");
- 			} else {
- 				cd_dbg(CD_OPEN, "bummer. this drive can't close the tray.\n");
--				ret=-ENOMEDIUM;
--				goto clean_up_and_return;
--			}
--			/* Ok, the door should be closed now.. Check again */
--			ret = cdo->drive_status(cdi, CDSL_CURRENT);
--			if ((ret == CDS_NO_DISC) || (ret==CDS_TRAY_OPEN)) {
--				cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
--				cd_dbg(CD_OPEN, "tray might not contain a medium\n");
--				ret=-ENOMEDIUM;
--				goto clean_up_and_return;
-+				return -ENOMEDIUM;
- 			}
--			cd_dbg(CD_OPEN, "the tray is now closed\n");
--		}
--		/* the door should be closed now, check for the disc */
--		ret = cdo->drive_status(cdi, CDSL_CURRENT);
--		if (ret!=CDS_DISC_OK) {
--			ret = -ENOMEDIUM;
--			goto clean_up_and_return;
- 		}
-+		if (ret != CDS_DISC_OK)
-+			return -ENOMEDIUM;
- 	}
--	cdrom_count_tracks(cdi, &tracks);
--	if (tracks.error == CDS_NO_DISC) {
-+	cdrom_count_tracks(cdi, tracks);
-+	if (tracks->error == CDS_NO_DISC) {
- 		cd_dbg(CD_OPEN, "bummer. no disc.\n");
--		ret=-ENOMEDIUM;
--		goto clean_up_and_return;
-+		return -ENOMEDIUM;
- 	}
-+
-+	return 0;
-+}
-+
-+static int open_for_data(struct cdrom_device_info *cdi)
-+{
-+	int ret;
-+	const struct cdrom_device_ops *cdo = cdi->ops;
-+	tracktype tracks;
-+
-+	cd_dbg(CD_OPEN, "entering open_for_data\n");
-+	ret = open_for_common(cdi, &tracks);
-+	if (ret)
-+		goto clean_up_and_return;
-+
- 	/* CD-Players which don't use O_NONBLOCK, workman
- 	 * for example, need bit CDO_CHECK_TYPE cleared! */
- 	if (tracks.data==0) {
-@@ -1208,53 +1206,17 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
- /* This code is similar to that in open_for_data. The routine is called
-    whenever an audio play operation is requested.
- */
--static int check_for_audio_disc(struct cdrom_device_info *cdi,
--				const struct cdrom_device_ops *cdo)
-+static int check_for_audio_disc(struct cdrom_device_info *cdi)
- {
-         int ret;
- 	tracktype tracks;
- 	cd_dbg(CD_OPEN, "entering check_for_audio_disc\n");
- 	if (!(cdi->options & CDO_CHECK_TYPE))
- 		return 0;
--	if (cdo->drive_status != NULL) {
--		ret = cdo->drive_status(cdi, CDSL_CURRENT);
--		cd_dbg(CD_OPEN, "drive_status=%d\n", ret);
--		if (ret == CDS_TRAY_OPEN) {
--			cd_dbg(CD_OPEN, "the tray is open...\n");
--			/* can/may i close it? */
--			if (CDROM_CAN(CDC_CLOSE_TRAY) &&
--			    cdi->options & CDO_AUTO_CLOSE) {
--				cd_dbg(CD_OPEN, "trying to close the tray\n");
--				ret=cdo->tray_move(cdi,0);
--				if (ret) {
--					cd_dbg(CD_OPEN, "bummer. tried to close tray but failed.\n");
--					/* Ignore the error from the low
--					level driver.  We don't care why it
--					couldn't close the tray.  We only care 
--					that there is no disc in the drive, 
--					since that is the _REAL_ problem here.*/
--					return -ENOMEDIUM;
--				}
--			} else {
--				cd_dbg(CD_OPEN, "bummer. this driver can't close the tray.\n");
--				return -ENOMEDIUM;
--			}
--			/* Ok, the door should be closed now.. Check again */
--			ret = cdo->drive_status(cdi, CDSL_CURRENT);
--			if ((ret == CDS_NO_DISC) || (ret==CDS_TRAY_OPEN)) {
--				cd_dbg(CD_OPEN, "bummer. the tray is still not closed.\n");
--				return -ENOMEDIUM;
--			}	
--			if (ret!=CDS_DISC_OK) {
--				cd_dbg(CD_OPEN, "bummer. disc isn't ready.\n");
--				return -EIO;
--			}	
--			cd_dbg(CD_OPEN, "the tray is now closed\n");
--		}	
--	}
--	cdrom_count_tracks(cdi, &tracks);
--	if (tracks.error) 
--		return(tracks.error);
-+
-+	ret = open_for_common(cdi, &tracks);
-+	if (ret)
-+		return ret;
- 
- 	if (tracks.audio==0)
- 		return -EMEDIUMTYPE;
-@@ -2725,7 +2687,7 @@ static int cdrom_ioctl_play_trkind(struct cdrom_device_info *cdi,
- 	if (copy_from_user(&ti, argp, sizeof(ti)))
- 		return -EFAULT;
- 
--	ret = check_for_audio_disc(cdi, cdi->ops);
-+	ret = check_for_audio_disc(cdi);
- 	if (ret)
- 		return ret;
- 	return cdi->ops->audio_ioctl(cdi, CDROMPLAYTRKIND, &ti);
-@@ -2773,7 +2735,7 @@ static int cdrom_ioctl_audioctl(struct cdrom_device_info *cdi,
- 
- 	if (!CDROM_CAN(CDC_PLAY_AUDIO))
- 		return -ENOSYS;
--	ret = check_for_audio_disc(cdi, cdi->ops);
-+	ret = check_for_audio_disc(cdi);
- 	if (ret)
- 		return ret;
- 	return cdi->ops->audio_ioctl(cdi, cmd, NULL);
 -- 
-2.23.0
+Jens Axboe
 
