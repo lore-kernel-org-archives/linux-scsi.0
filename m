@@ -2,61 +2,156 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB8BCC432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 18:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD7A0C43215
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:54:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95EA920836
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 18:25:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6C522086A
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 19:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725933AbfKZSZx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 13:25:53 -0500
-Received: from mx2.suse.de ([195.135.220.15]:37126 "EHLO mx1.suse.de"
+        id S1727156AbfKZTyv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 14:54:51 -0500
+Received: from mx2.suse.de ([195.135.220.15]:40502 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725870AbfKZSZx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 13:25:53 -0500
+        id S1726618AbfKZTyu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Nov 2019 14:54:50 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8602DB3F5;
-        Tue, 26 Nov 2019 18:25:51 +0000 (UTC)
-Subject: Re: [PATCH 02/11] scsi: add scsi_host_flush_commands() helper
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20191120103114.24723-1-hare@suse.de>
- <20191120103114.24723-3-hare@suse.de> <20191126165533.GD8204@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <9c7abcf8-70ed-dc29-6092-07c2c9a1fee7@suse.de>
-Date:   Tue, 26 Nov 2019 19:25:49 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
+        by mx1.suse.de (Postfix) with ESMTP id 3E5CAAD26;
+        Tue, 26 Nov 2019 19:54:47 +0000 (UTC)
+From:   Michal Suchanek <msuchanek@suse.de>
+To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc:     Michal Suchanek <msuchanek@suse.de>,
+        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hou Tao <houtao1@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
+        "Ewan D. Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v4 rebase 10/10] scsi: sr: wait for the medium to become ready
+Date:   Tue, 26 Nov 2019 20:54:29 +0100
+Message-Id: <16e56013bf54485a98af855deddb660ade2136b8.1574797504.git.msuchanek@suse.de>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <cover.1574797504.git.msuchanek@suse.de>
+References: <cover.1574797504.git.msuchanek@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20191126165533.GD8204@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/26/19 5:55 PM, Christoph Hellwig wrote:
-> flush is such a heavіly overloaded term.  What about
-> scsi_host_complete_all_commands?
-> 
-Sure. As it happens I've been struggling with the function name, too,
-so any meaningful name is good with me.
+Use the autoclose function provided by cdrom driver to wait for drive to
+close in open_finish, and attempt to open once more after the door
+closes.
 
-Cheers,
+Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+---
+v3: use function call rather than IOCTL
+v4: fix reference leak on -ENXIO
+---
+ drivers/scsi/sr.c | 54 ++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 42 insertions(+), 12 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 07c319494bf4..41ddf08b4c7b 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -522,29 +522,58 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ 	return ret;
+ }
+ 
+-static int sr_block_open(struct block_device *bdev, fmode_t mode)
++static int __sr_block_open(struct block_device *bdev, fmode_t mode)
+ {
+-	struct scsi_cd *cd;
+-	struct scsi_device *sdev;
+-	int ret = -ENXIO;
+-
+-	cd = scsi_cd_get(bdev->bd_disk);
+-	if (!cd)
+-		goto out;
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++	int ret;
+ 
+-	sdev = cd->device;
+-	scsi_autopm_get_device(sdev);
+ 	check_disk_change(bdev);
+ 
+ 	mutex_lock(&sr_mutex);
+ 	ret = cdrom_open(&cd->cdi, bdev, mode);
+ 	mutex_unlock(&sr_mutex);
+ 
++	return ret;
++}
++
++static int sr_block_open(struct block_device *bdev, fmode_t mode)
++{
++	struct scsi_cd *cd = scsi_cd_get(bdev->bd_disk);
++	struct scsi_device *sdev;
++	int ret;
++
++	if (!cd)
++		return -ENXIO;
++
++	sdev = cd->device;
++	scsi_autopm_get_device(sdev);
++	ret = __sr_block_open(bdev, mode);
+ 	scsi_autopm_put_device(sdev);
+-	if (ret)
++
++	if ((ret == -ERESTARTSYS) || (ret == -ENXIO))
+ 		scsi_cd_put(cd);
+ 
+-out:
++	return ret;
++}
++
++static int sr_block_open_finish(struct block_device *bdev, fmode_t mode,
++				int ret)
++{
++	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++
++	/* wait for drive to get ready */
++	if ((ret == -ENOMEDIUM) && !(mode & FMODE_NDELAY)) {
++		struct scsi_device *sdev = cd->device;
++		/*
++		 * Cannot use sr_block_ioctl because it locks sr_mutex blocking
++		 * out any processes trying to access the drive
++		 */
++		scsi_autopm_get_device(sdev);
++		cdrom_autoclose(&cd->cdi);
++		ret = __sr_block_open(bdev, mode);
++		scsi_autopm_put_device(sdev);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -640,6 +669,7 @@ static const struct block_device_operations sr_bdops =
+ {
+ 	.owner		= THIS_MODULE,
+ 	.open		= sr_block_open,
++	.open_finish	= sr_block_open_finish,
+ 	.release	= sr_block_release,
+ 	.ioctl		= sr_block_ioctl,
+ 	.check_events	= sr_block_check_events,
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                              +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+2.23.0
+
