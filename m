@@ -4,24 +4,23 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5929C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 13:10:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC6CCC33CA1
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 13:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A540A2071E
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 13:10:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 889EE20870
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 13:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727453AbfKZNK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 08:10:29 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36546 "EHLO mx1.suse.de"
+        id S1727538AbfKZNKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 08:10:31 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36682 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726437AbfKZNK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Nov 2019 08:10:27 -0500
+        id S1727088AbfKZNKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Nov 2019 08:10:30 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2B2DCB2B7;
+        by mx1.suse.de (Postfix) with ESMTP id 8DD27B32A;
         Tue, 26 Nov 2019 13:10:25 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,10 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: [PATCH 2/8] blk-mq: rename BLK_MQ_F_TAG_SHARED as BLK_MQ_F_TAG_QUEUE_SHARED
-Date:   Tue, 26 Nov 2019 14:10:03 +0100
-Message-Id: <20191126131009.71726-3-hare@suse.de>
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 7/8] smartpqi: enable host tagset
+Date:   Tue, 26 Nov 2019 14:10:08 +0100
+Message-Id: <20191126131009.71726-8-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191126131009.71726-1-hare@suse.de>
 References: <20191126131009.71726-1-hare@suse.de>
@@ -42,163 +41,104 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+Enable host tagset for smartpqi; with this we can use the request
+tag to look command from the pool avoiding the list iteration in
+the hot path.
 
-BLK_MQ_F_TAG_SHARED actually means that tags is shared among request
-queues, all of which should belong to LUNs attached to same HBA.
-
-So rename it to make the point explicitly.
-
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- block/blk-mq-debugfs.c |  2 +-
- block/blk-mq-tag.c     |  2 +-
- block/blk-mq-tag.h     |  4 ++--
- block/blk-mq.c         | 20 ++++++++++----------
- include/linux/blk-mq.h |  2 +-
- 5 files changed, 15 insertions(+), 15 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 38 ++++++++++++++++++++++++++---------
+ 1 file changed, 28 insertions(+), 10 deletions(-)
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index b3f2ba483992..33a40ae1d60f 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -236,7 +236,7 @@ static const char *const alloc_policy_name[] = {
- #define HCTX_FLAG_NAME(name) [ilog2(BLK_MQ_F_##name)] = #name
- static const char *const hctx_flag_name[] = {
- 	HCTX_FLAG_NAME(SHOULD_MERGE),
--	HCTX_FLAG_NAME(TAG_SHARED),
-+	HCTX_FLAG_NAME(TAG_QUEUE_SHARED),
- 	HCTX_FLAG_NAME(BLOCKING),
- 	HCTX_FLAG_NAME(NO_SCHED),
- };
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 53b4a9414fbd..d7aa23c82dbf 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -73,7 +73,7 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
- {
- 	unsigned int depth, users;
- 
--	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_SHARED))
-+	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
- 		return true;
- 	if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
- 		return true;
-diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
-index 66d04dea0bdb..6c0f7c9ce9f6 100644
---- a/block/blk-mq-tag.h
-+++ b/block/blk-mq-tag.h
-@@ -55,7 +55,7 @@ extern void __blk_mq_tag_idle(struct blk_mq_hw_ctx *);
- 
- static inline bool blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
- {
--	if (!(hctx->flags & BLK_MQ_F_TAG_SHARED))
-+	if (!(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
- 		return false;
- 
- 	return __blk_mq_tag_busy(hctx);
-@@ -63,7 +63,7 @@ static inline bool blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
- 
- static inline void blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
- {
--	if (!(hctx->flags & BLK_MQ_F_TAG_SHARED))
-+	if (!(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
- 		return;
- 
- 	__blk_mq_tag_idle(hctx);
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 16aa20d23b67..6b39cf0efdcd 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -302,7 +302,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 		rq->tag = -1;
- 		rq->internal_tag = tag;
- 	} else {
--		if (data->hctx->flags & BLK_MQ_F_TAG_SHARED) {
-+		if (data->hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED) {
- 			rq_flags = RQF_MQ_INFLIGHT;
- 			atomic_inc(&data->hctx->nr_active);
- 		}
-@@ -1118,7 +1118,7 @@ static bool blk_mq_mark_tag_wait(struct blk_mq_hw_ctx *hctx,
- 	wait_queue_entry_t *wait;
- 	bool ret;
- 
--	if (!(hctx->flags & BLK_MQ_F_TAG_SHARED)) {
-+	if (!(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)) {
- 		blk_mq_sched_mark_restart_hctx(hctx);
- 
- 		/*
-@@ -1249,7 +1249,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 				 * For non-shared tags, the RESTART check
- 				 * will suffice.
- 				 */
--				if (hctx->flags & BLK_MQ_F_TAG_SHARED)
-+				if (hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
- 					no_tag = true;
- 				break;
- 			}
-@@ -2358,7 +2358,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
- 	spin_lock_init(&hctx->lock);
- 	INIT_LIST_HEAD(&hctx->dispatch);
- 	hctx->queue = q;
--	hctx->flags = set->flags & ~BLK_MQ_F_TAG_SHARED;
-+	hctx->flags = set->flags & ~BLK_MQ_F_TAG_QUEUE_SHARED;
- 
- 	INIT_LIST_HEAD(&hctx->hctx_list);
- 
-@@ -2575,9 +2575,9 @@ static void queue_set_hctx_shared(struct request_queue *q, bool shared)
- 
- 	queue_for_each_hw_ctx(q, hctx, i) {
- 		if (shared)
--			hctx->flags |= BLK_MQ_F_TAG_SHARED;
-+			hctx->flags |= BLK_MQ_F_TAG_QUEUE_SHARED;
- 		else
--			hctx->flags &= ~BLK_MQ_F_TAG_SHARED;
-+			hctx->flags &= ~BLK_MQ_F_TAG_QUEUE_SHARED;
- 	}
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 7b7ef3acb504..c17b533c84ad 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -575,17 +575,29 @@ static inline void pqi_reinit_io_request(struct pqi_io_request *io_request)
  }
  
-@@ -2603,7 +2603,7 @@ static void blk_mq_del_queue_tag_set(struct request_queue *q)
- 	list_del_rcu(&q->tag_set_list);
- 	if (list_is_singular(&set->tag_list)) {
- 		/* just transitioned to unshared */
--		set->flags &= ~BLK_MQ_F_TAG_SHARED;
-+		set->flags &= ~BLK_MQ_F_TAG_QUEUE_SHARED;
- 		/* update existing queue */
- 		blk_mq_update_tag_set_depth(set, false);
- 	}
-@@ -2620,12 +2620,12 @@ static void blk_mq_add_queue_tag_set(struct blk_mq_tag_set *set,
- 	 * Check to see if we're transitioning to shared (from 1 to 2 queues).
- 	 */
- 	if (!list_empty(&set->tag_list) &&
--	    !(set->flags & BLK_MQ_F_TAG_SHARED)) {
--		set->flags |= BLK_MQ_F_TAG_SHARED;
-+	    !(set->flags & BLK_MQ_F_TAG_QUEUE_SHARED)) {
-+		set->flags |= BLK_MQ_F_TAG_QUEUE_SHARED;
- 		/* update existing queue */
- 		blk_mq_update_tag_set_depth(set, true);
- 	}
--	if (set->flags & BLK_MQ_F_TAG_SHARED)
-+	if (set->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
- 		queue_set_hctx_shared(q, true);
- 	list_add_tail_rcu(&q->tag_set_list, &set->tag_list);
+ static struct pqi_io_request *pqi_alloc_io_request(
+-	struct pqi_ctrl_info *ctrl_info)
++	struct pqi_ctrl_info *ctrl_info, struct scsi_cmnd *scmd)
+ {
+ 	struct pqi_io_request *io_request;
++	unsigned int limit = PQI_RESERVED_IO_SLOTS;
+ 	u16 i = ctrl_info->next_io_request_slot;	/* benignly racy */
  
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 0bf056de5cc3..147185394a25 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -225,7 +225,7 @@ struct blk_mq_ops {
+-	while (1) {
++	if (scmd) {
++		u32 blk_tag = blk_mq_unique_tag(scmd->request);
++
++		i = blk_mq_unique_tag_to_tag(blk_tag) + limit;
+ 		io_request = &ctrl_info->io_request_pool[i];
+-		if (atomic_inc_return(&io_request->refcount) == 1)
+-			break;
+-		atomic_dec(&io_request->refcount);
+-		i = (i + 1) % ctrl_info->max_io_slots;
++		if (WARN_ON(atomic_inc_return(&io_request->refcount) > 1)) {
++			atomic_dec(&io_request->refcount);
++			return NULL;
++		}
++	} else {
++		while (1) {
++			io_request = &ctrl_info->io_request_pool[i];
++			if (atomic_inc_return(&io_request->refcount) == 1)
++				break;
++			atomic_dec(&io_request->refcount);
++			i = (i + 1) % limit;
++		}
+ 	}
  
- enum {
- 	BLK_MQ_F_SHOULD_MERGE	= 1 << 0,
--	BLK_MQ_F_TAG_SHARED	= 1 << 1,
-+	BLK_MQ_F_TAG_QUEUE_SHARED	= 1 << 1,
- 	BLK_MQ_F_BLOCKING	= 1 << 5,
- 	BLK_MQ_F_NO_SCHED	= 1 << 6,
- 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
+ 	/* benignly racy */
+@@ -4075,7 +4087,7 @@ static int pqi_submit_raid_request_synchronous(struct pqi_ctrl_info *ctrl_info,
+ 
+ 	atomic_inc(&ctrl_info->sync_cmds_outstanding);
+ 
+-	io_request = pqi_alloc_io_request(ctrl_info);
++	io_request = pqi_alloc_io_request(ctrl_info, NULL);
+ 
+ 	put_unaligned_le16(io_request->index,
+ 		&(((struct pqi_raid_path_request *)request)->request_id));
+@@ -5032,7 +5044,9 @@ static inline int pqi_raid_submit_scsi_cmd(struct pqi_ctrl_info *ctrl_info,
+ {
+ 	struct pqi_io_request *io_request;
+ 
+-	io_request = pqi_alloc_io_request(ctrl_info);
++	io_request = pqi_alloc_io_request(ctrl_info, scmd);
++	if (!io_request)
++		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ 	return pqi_raid_submit_scsi_cmd_with_io_request(ctrl_info, io_request,
+ 		device, scmd, queue_group);
+@@ -5230,7 +5244,10 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_io_request *io_request;
+ 	struct pqi_aio_path_request *request;
+ 
+-	io_request = pqi_alloc_io_request(ctrl_info);
++	io_request = pqi_alloc_io_request(ctrl_info, scmd);
++	if (!io_request)
++		return SCSI_MLQUEUE_HOST_BUSY;
++
+ 	io_request->io_complete_callback = pqi_aio_io_complete;
+ 	io_request->scmd = scmd;
+ 	io_request->raid_bypass = raid_bypass;
+@@ -5657,7 +5674,7 @@ static int pqi_lun_reset(struct pqi_ctrl_info *ctrl_info,
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	struct pqi_task_management_request *request;
+ 
+-	io_request = pqi_alloc_io_request(ctrl_info);
++	io_request = pqi_alloc_io_request(ctrl_info, NULL);
+ 	io_request->io_complete_callback = pqi_lun_reset_complete;
+ 	io_request->context = &wait;
+ 
+@@ -6504,6 +6521,7 @@ static struct scsi_host_template pqi_driver_template = {
+ 	.map_queues = pqi_map_queues,
+ 	.sdev_attrs = pqi_sdev_attrs,
+ 	.shost_attrs = pqi_shost_attrs,
++	.host_tagset = 1,
+ };
+ 
+ static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
 -- 
 2.16.4
 
