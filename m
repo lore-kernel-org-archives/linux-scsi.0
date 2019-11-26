@@ -2,70 +2,146 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AF00C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BB0C43141
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 23:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 390782084B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 20:57:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9796C20863
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 23:13:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="ykizGoPo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726199AbfKZU5k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 15:57:40 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:43023 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbfKZU5k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 15:57:40 -0500
-Received: by mail-pg1-f194.google.com with SMTP id b1so9589063pgq.10;
-        Tue, 26 Nov 2019 12:57:40 -0800 (PST)
+        id S1727073AbfKZXNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 18:13:38 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:39794 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726571AbfKZXNh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 18:13:37 -0500
+Received: by mail-pf1-f196.google.com with SMTP id x28so9956263pfo.6
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2019 15:13:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=xSdUXjteBaphnHhRVYPIlnexJspIHTPfIj7oTmOOWqw=;
+        b=ykizGoPowPRvzlrjQj+ToVpf+pjLi7FwSGkw5E+soY/g/azPWXFYfuqR0kJiysIeyg
+         aJpTkvd2bF6O743iR2cOQQwYnAuczqhVJx/2FazepSYURNSfGC31qu0XRnlW050VuPdO
+         1C5g2JstnKnP3eHJHNI3qfY/5wQV/gqj9+GiN/uC0lU5AYNcheWvWQ9VnQZMs933NXRj
+         U8gMr85pLeYWLzaqtKk08Rp5c8+WVIQNziQreEPSROTGq9Ji2kiXxp+1+7PzNs/0H8XL
+         04cQEkjtEuK/p8EsZh1hYh1yaIh7odJwI4ENbg9KCoKMuQsfPT5JSPzZvQuF1ZIsc0L1
+         9sSA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=r0S0arZ17+FJgM/rUvMmj5gqLzSZZABsLg0tsFcbNlA=;
-        b=IvQV619XOm2IhNYU/1aGqs8nbMVqxmsuI5YrK0eUWUsoyqlGR/tlxPyyPpP++nkA4f
-         pedcHJYhp2sPKmXBgahctEcgBbQ5kkhyiH0WdRnSbiibMP+sa7yg2ZlAZwMrRO6UFO8i
-         hDSIx3NPGi1ltxHBW7spBNKba2KAb9tPB8FEJzMNngtRvJluKbHtuWsoE99MNKUayNhZ
-         tysZDwPr9QhXiUo2PeQCU+eRCGcJQpfcnbCUtUg9lfhUSaBcHZLOomJpPSO/LsrG3Ulj
-         rnNeO6/xjYiLp3zV0UtMKX1r85jvanTUR3EIEuihap01aTXRNb40973uY9SaQIKOMpYW
-         TDUw==
-X-Gm-Message-State: APjAAAU2qCcK64dwPXQj+uuWUVvp+AoSIi+WJxkbmm9rxefSdXzDuiOU
-        /TIGz8TWj7863F+Y2NDPhOI=
-X-Google-Smtp-Source: APXvYqwC141moLT1tDBGB9wQdG7dNn7iL3yo7qkEWBBtCssT2HCX+lMOdgRww7pSP1GLcu3yGHrMtg==
-X-Received: by 2002:a63:c80e:: with SMTP id z14mr561281pgg.240.1574801859759;
-        Tue, 26 Nov 2019 12:57:39 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id y6sm12837936pfm.12.2019.11.26.12.57.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Nov 2019 12:57:39 -0800 (PST)
-Subject: Re: [PATCH v3 13/13] scsi: qla2xxx: Add debug dump of LOGO payload
- and ELS IOCB
-To:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     linux@yadro.com, Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>, Hannes Reinecke <hare@suse.de>
-References: <20191125165702.1013-1-r.bolshakov@yadro.com>
- <20191125165702.1013-14-r.bolshakov@yadro.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ee7b7512-8f47-15e5-b6a5-29914b1c4c00@acm.org>
-Date:   Tue, 26 Nov 2019 12:57:37 -0800
+        bh=xSdUXjteBaphnHhRVYPIlnexJspIHTPfIj7oTmOOWqw=;
+        b=jMWnl1pc7lexivYm5cvCQbTw1dw09eqqpSbMhHdD0iAA7vmCyrMWkMHs+zJF45utmo
+         C8zxZ/lt/PUBBGmF6k7yQwd/aNx63CMO8MZVl9X8zerVmazZ+DfB9yoSk/vuHwqpUPry
+         a6evNPIYVCHMgQPjhCyJxTcsXE9Xu+pzur9oJuBOltWKqEX9gy89xfW93pspFTerCA4U
+         mZAB0vHRtNQHjQPZodjbVaVtzhqzpp2bqzNStfKFRNwA+KjbYtTBJO1yP/txi6KBmT8T
+         qUHuRnPDEEZsxpZnLC4uWQQaA0v6rT9v76SBkc0o/Pbp2N/CLJ2KCM5qR04xe5tAZeAA
+         yv/Q==
+X-Gm-Message-State: APjAAAVTx/1cVW1XyUNMcM1G+CFSpe+IFuPGBuJKB5sybX1tvAptUnvB
+        KiBTQ2fDhLn5q5zcjjUQtry/EA==
+X-Google-Smtp-Source: APXvYqwTWZaVXuwFAks7r0KChnenItR97uS8QY0CqtfzkX1MG5v1WKjms2vTNvIhhMq9UxM1j8rZcA==
+X-Received: by 2002:a62:528d:: with SMTP id g135mr44527972pfb.172.1574810016976;
+        Tue, 26 Nov 2019 15:13:36 -0800 (PST)
+Received: from [192.168.1.188] ([66.219.217.79])
+        by smtp.gmail.com with ESMTPSA id o14sm14606693pfp.5.2019.11.26.15.13.33
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Nov 2019 15:13:35 -0800 (PST)
+Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
+To:     =?UTF-8?Q?Michal_Such=c3=a1nek?= <msuchanek@suse.de>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Jonathan Corbet <corbet@lwn.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hou Tao <houtao1@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
+        "Ewan D. Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>
+References: <cover.1574797504.git.msuchanek@suse.de>
+ <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
+ <20191126202151.GY11661@kitsune.suse.cz>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
+Date:   Tue, 26 Nov 2019 16:13:32 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20191125165702.1013-14-r.bolshakov@yadro.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20191126202151.GY11661@kitsune.suse.cz>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/25/19 8:57 AM, Roman Bolshakov wrote:
-> The change adds a way to debug LOGO ELS, likewise PLOGI.
+On 11/26/19 1:21 PM, Michal Suchánek wrote:
+> On Tue, Nov 26, 2019 at 01:01:42PM -0700, Jens Axboe wrote:
+>> On 11/26/19 12:54 PM, Michal Suchanek wrote:
+>>> Hello,
+>>>
+>>> there is cdrom autoclose feature that is supposed to close the tray,
+>>> wait for the disc to become ready, and then open the device.
+>>>
+>>> This used to work in ancient times. Then in old times there was a hack
+>>> in util-linux which worked around the breakage which probably resulted
+>>> from switching to scsi emulation.
+>>>
+>>> Currently util-linux maintainer refuses to merge another hack on the
+>>> basis that kernel still has the feature so it should be fixed there.
+>>> The code needs not be replicated in every userspace utility like mount
+>>> or dd which has no business knowing which devices are CD-roms and where
+>>> the autoclose setting is in the kernel.
+>>>
+>>> This is rebase on top of current master.
+>>>
+>>> Also it seems that most people think that this is fix for WMware because
+>>> there is one patch dealing with WMware.
+>>
+>> I think the main complaint with this is that it's kind of a stretch to
+>> add core functionality for a device type that's barely being
+>> manufactured anymore and is mostly used in a virtualized fashion. I
+>> think it you could fix this without 10 patches of churn and without
+>> adding a new ->open() addition to fops, then people would be a lot more
+>> receptive to the idea of improving cdrom auto-close.
+> 
+> I see no way to do that cleanly.
+> 
+> There are two open modes for cdrom devices - blocking and
+> non-blocking.
+> 
+> In blocking mode open() should analyze the medium so that it's ready
+> when it returns. In non-blocking mode it should return immediately so
+> long as you can talk to the device.
+> 
+> When waiting in open() with locks held the processes trying to open
+> the device are locked out regradless of the mode they use.
+> 
+> The only way to solve this is to pretend that the device is open and
+> do the wait afterwards with the device unlocked.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+How is this any different from an open on a file that needs to bring in
+meta data on a busy rotating device, which can also take seconds?
+
+-- 
+Jens Axboe
 
