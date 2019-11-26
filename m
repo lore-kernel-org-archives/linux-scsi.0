@@ -2,136 +2,110 @@ Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4807DC43215
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 02:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F863C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 03:13:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 240052080F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 02:33:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08FF92082F
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 03:13:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rh+OBdrv"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bxIFkbvN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727318AbfKZCdP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Nov 2019 21:33:15 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:57258 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727247AbfKZCdO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Nov 2019 21:33:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574735593;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RbRdWBhJ4blUfXgXJEf9JYkRJ6P4wp0pBcRs6Ey3L2A=;
-        b=Rh+OBdrvCtzDEVg+MCC9o7M1sKXNbTTmOpNyacKyQC+weHEyOOkXiP5FzzmRczJRHoWMv0
-        k1Ro25J+L9DXDayoJirNDCkmfz3jQet7rwUniZ0Y1tBaeTpV5EF7l26ZSCkMeZxBvh/os4
-        B/6WUDXbLNsqBSeiv+tftOCKYAM8eR0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-151-ATDMGVSrPGWP4Ti-y8ZjIw-1; Mon, 25 Nov 2019 21:33:10 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 153B5100550D;
-        Tue, 26 Nov 2019 02:33:08 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-20.pek2.redhat.com [10.72.8.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7A0C95C1D8;
-        Tue, 26 Nov 2019 02:32:57 +0000 (UTC)
-Date:   Tue, 26 Nov 2019 10:32:53 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191126023253.GA24501@ming.t460p>
-References: <20191109222828.GA30568@ming.t460p>
- <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>
- <20191123072726.GC25356@ming.t460p>
- <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>
- <20191125035437.GA3806@ming.t460p>
- <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>
- <20191125102928.GA20489@ming.t460p>
- <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>
- <20191125151535.GA8044@ming.t460p>
- <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
+        id S1727127AbfKZDNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Nov 2019 22:13:02 -0500
+Received: from mail-io1-f48.google.com ([209.85.166.48]:38575 "EHLO
+        mail-io1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726980AbfKZDNC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Nov 2019 22:13:02 -0500
+Received: by mail-io1-f48.google.com with SMTP id u24so17112251iob.5
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Nov 2019 19:13:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=QEIejJXcRC4WlPC8wmM6MfOLdn3fWdMUTlqgNdFaAWk=;
+        b=bxIFkbvN5t6g3gU9glU2iDTicMbwYw/F4tvvMgSdmhoOglsJ3qdh0qK8PuvOawG3Ri
+         mbC5x0WEoKo28M/F4ZicjlkUzOcqIE42ELcUCXyOSAus+Cw5x2dDnEneVBolYAIO1sh1
+         F9c8SA7AFRP/R3bJ6ZqBWNWQDycQHusNcxrgE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=QEIejJXcRC4WlPC8wmM6MfOLdn3fWdMUTlqgNdFaAWk=;
+        b=Pcs11UW0pf36anduoP+v+E+05TY+X11j4l6mMqigDz1LeWRdjA2l6escFCNA3etpN4
+         d6Y9Tj8ZyRl/N/FbgOau7QWKzemEL1yx+gm/ac7BCYa/rEKpdBDpc3J9aQXHNWbX2CDP
+         oxCeqW17VGJthYt+U0eAsbXSaiY/te5FE3EjTXPpj5RJh42DjdfUE/d4+iRFAgnTwu8P
+         z6GjLugLmNi0Kc8Wpx93Q+nioZDgL+SqJwSeIykIOlIn5wHjnRuZvtucyhQNTXWShvfR
+         rF2wgdbhc8LW015iMBPl/WUv2FK1EuOTjdbCQPmX2D1jMCQGqEIQ29mhsCE9y1dVXSH9
+         jnLw==
+X-Gm-Message-State: APjAAAWYuaiavj6NWASB7xbQ1G5ZNTlb4nTbLmD/EGfpP+7L3bQuNMSJ
+        MRhK2ZqAEoSTxzPcvIBaZGTQ+yScSe8ZOWDYYP92qg==
+X-Google-Smtp-Source: APXvYqwMjr1NzRfz7PLI7iRLKUS03EZe++YWkGhiTW60tgUub5D6Y96J/QeJBkDuoHxs6anlUIuYdwB7/8wr1+4jtJY=
+X-Received: by 2002:a02:7683:: with SMTP id z125mr28651246jab.84.1574737981691;
+ Mon, 25 Nov 2019 19:13:01 -0800 (PST)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20191118103117.978-1-ming.lei@redhat.com> <20191118103117.978-2-ming.lei@redhat.com>
+ <97bf460e-62c9-dc64-db4c-fb5540e70ae9@suse.de>
+In-Reply-To: <97bf460e-62c9-dc64-db4c-fb5540e70ae9@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-MC-Unique: ATDMGVSrPGWP4Ti-y8ZjIw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQH3BpsAXu9UwBJw1xp6lr9PVp09cQMYv4CvAYuhPOanNN3E8A==
+Date:   Tue, 26 Nov 2019 08:42:59 +0530
+Message-ID: <252362ee5ac748694d205441729c433f@mail.gmail.com>
+Subject: RE: [PATCH 1/4] scsi: megaraid_sas: use private counter for tracking
+ inflight per-LUN commands
+To:     Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 25, 2019 at 07:51:33PM +0100, Andrea Vai wrote:
-> Il giorno lun, 25/11/2019 alle 23.15 +0800, Ming Lei ha scritto:
-> > On Mon, Nov 25, 2019 at 03:58:34PM +0100, Andrea Vai wrote:
-> >=20
-> > [...]
-> >=20
-> > > What to try next?
-> >=20
-> > 1) cat /sys/kernel/debug/block/$DISK/hctx0/flags
-> result:
->=20
-> alloc_policy=3DFIFO SHOULD_MERGE|2
->=20
-> >=20
-> >=20
-> > 2) echo 128 > /sys/block/$DISK/queue/nr_requests and run your copy
-> > 1GB
-> > test again.
->=20
-> done, and still fails. What to try next?
+> >  drivers/scsi/megaraid/megaraid_sas.h        |  1 +
+> >  drivers/scsi/megaraid/megaraid_sas_base.c   | 15 +++++++++++++--
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 13 +++++++++----
+> >  3 files changed, 23 insertions(+), 6 deletions(-)
+> >
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-I just run 256M cp test to one USB storage device on patched kernel,
-and WRITE data IO is really in ascending order. The filesystem is ext4,
-and mount without '-o sync'. From previous discussion, looks that is
-exactly your test setting. The order can be observed via the following scri=
-pt:
+Ming - Sorry for delay. I will update this Patch. We prefer driver to
+avoid counter for per sdev if possible. We are currently testing driver
+using below changes.
 
-#!/bin/sh
-MAJ=3D$1
-MIN=3D$2
-MAJ=3D$(( $MAJ << 20 ))
-DEV=3D$(( $MAJ | $MIN ))
-/usr/share/bcc/tools/trace -t -C \
-  't:block:block_rq_issue (args->dev =3D=3D '$DEV') "%s %d %d", args->rwbs,=
- args->sector, args->nr_sector'
+inline unsigned long sdev_nr_inflight_request(struct request_queue *q) {
+    struct blk_mq_hw_ctx *hctx =3D q->queue_hw_ctx[0]
 
-$MAJ & $MIN can be retrieved via lsblk for your USB storage disk.
+    return atomic_read(&hctx->nr_active);
+}
 
-So I think we need to check if the patch is applied correctly first.
-
-If your kernel tree is managed via git, please post 'git diff'.
-Otherwise, share us your kernel version, and I will send you one
-backported patch on the kernel version.
-
-Meantime, you can collect IO order log via the above script as you did last
-time, then send us the log.
-
-Thanks,
-Ming
-
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke		      Teamlead Storage & Networking
+> hare@suse.de			                  +49 911 74053 688
+> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg =
+HRB
+> 247165 (AG M=C3=BCnchen), GF: Felix Imend=C3=B6rffer
