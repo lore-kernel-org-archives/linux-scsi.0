@@ -2,28 +2,60 @@ Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D01C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 13:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1552BC43215
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 14:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7C7F2075C
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 13:12:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFAD720863
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 14:21:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="Dzjk7puv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726694AbfK0NMH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Nov 2019 08:12:07 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38388 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726514AbfK0NMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Nov 2019 08:12:07 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8965DBA6F;
-        Wed, 27 Nov 2019 13:12:02 +0000 (UTC)
+        id S1726975AbfK0OVA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 09:21:00 -0500
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:45357 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726719AbfK0OVA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 09:21:00 -0500
+Received: by mail-pj1-f66.google.com with SMTP id r11so2179279pjp.12
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Nov 2019 06:20:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Bj00DfyqrS1lFmmD2TnrPmfMRi8T2obEvmf14xMUbN0=;
+        b=Dzjk7puvZwVSKZb5WAy96brJUIz5AyaLJXTVXKEj3ZucVFVna2cxJ2KufcbdUbhyuY
+         whT9N7Ne57aqJdS1oCER0anwwionOxvWy6tGiPSv8NlfygfA1DShVdD7KSPzQP/mqpOa
+         XMZ3tzfjgMjpu0jHNGSuVWVZuwsxmFb/WejADHAOGr7e7zXKT/5pot9gjP0dfPaNZrrK
+         Mrz8rDXsUkmQq6WkDMgRPC7J+BfXBGmhnaUsM6Cl919/sKWfH6dHlLsXk5/RwQghVYyL
+         7zcKFJkM2v0dfxu3HwH27R2cUCZjCKucqLl9VlhYgLkNJ+KMcaF2pau+uFwvC6EzF8cu
+         1exg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Bj00DfyqrS1lFmmD2TnrPmfMRi8T2obEvmf14xMUbN0=;
+        b=icyiwCScK03ZtBagWaeg4YpC1ZizatDQg+c/ua+qeVJ3Gkf0089gsBsJfBwFzb+oLN
+         /4dJKNfyykKb7N34CCyZpVsdx8oCrMWyvNedYj+EvoTRB03iKObkScGVNxTqcmjf40Ob
+         NBNGEID1NHgzQ5HhRtZ5Az/ZJEr03eUDvYhnS7KwmJchbMZsRAma5Jc6os9ZFnnQi2fM
+         qg5ero7Zmpo/IAr+vABF4rR+Vf2/XPO33gGx8KUSOPbRqF7ccEgZjwubwEcbozkDnnUv
+         2qsFRybzSfV0JQDPMz2Ks87pVb/O/yC6isHoftF89STKuNYepfLXa8/ZK9FAw8Rst4EU
+         ejlA==
+X-Gm-Message-State: APjAAAU6XMVuib3oeqxTsSRzv2z9eT//Ijj17Komo9bLMkO90skPwssS
+        Ptb22b0KKS5hQP6bRsbR9XB9pQ==
+X-Google-Smtp-Source: APXvYqy+QD5pnCN3ee600yhNeQEPnpp4+ZhQ/RKcZaB/pHeNfk6Qm1kB+xs0pBdyFfhr2aWC7wUXZw==
+X-Received: by 2002:a17:902:34d:: with SMTP id 71mr4288680pld.140.1574864458013;
+        Wed, 27 Nov 2019 06:20:58 -0800 (PST)
+Received: from ?IPv6:2605:e000:100e:8c61:c030:6a7d:9480:46b8? ([2605:e000:100e:8c61:c030:6a7d:9480:46b8])
+        by smtp.gmail.com with ESMTPSA id 203sm16967112pfy.185.2019.11.27.06.20.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Nov 2019 06:20:56 -0800 (PST)
 Subject: Re: [PATCH 3/8] blk-mq: Use a pointer for sbitmap
-To:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
+To:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
@@ -40,115 +72,71 @@ References: <20191126091416.20052-1-hare@suse.de>
  <157f3e58-1d16-cc6b-52aa-15a6e1ac828a@huawei.com>
  <1add0896-4867-12c5-4507-76526c27fb56@kernel.dk>
  <4a780199-7997-b677-b184-411afdeabba5@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <b2810d59-5e74-87d9-3199-69e7c7bfcd37@suse.de>
-Date:   Wed, 27 Nov 2019 14:12:01 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+ <b2810d59-5e74-87d9-3199-69e7c7bfcd37@suse.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <9b1b6d8f-8bf5-1b2f-ca9b-a4b1e2c071fe@kernel.dk>
+Date:   Wed, 27 Nov 2019 06:20:54 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
-In-Reply-To: <4a780199-7997-b677-b184-411afdeabba5@huawei.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b2810d59-5e74-87d9-3199-69e7c7bfcd37@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/27/19 2:05 PM, John Garry wrote:
-> On 27/11/2019 01:46, Jens Axboe wrote:
->>>> Would be interesting to check the generated code for that, ideally we'd
->>>> get rid of the extra load for that case, even if it is in the same
->>>> cacheline.
+On 11/27/19 6:12 AM, Hannes Reinecke wrote:
+> On 11/27/19 2:05 PM, John Garry wrote:
+>> On 27/11/2019 01:46, Jens Axboe wrote:
+>>>>> Would be interesting to check the generated code for that, ideally we'd
+>>>>> get rid of the extra load for that case, even if it is in the same
+>>>>> cacheline.
+>>>>>
+>>>> I checked the disassembly and we still have the load instead of the add.
 >>>>
->>> I checked the disassembly and we still have the load instead of the add.
->>>
->>> This is not surprising, as the compiler would not know for certain that
->>> we point to a field within the same struct. But at least we still should
->>> point to a close memory.
->>>
->>> Note that the pointer could be dropped, which would remove the load, but
->>> then we have many if-elses which could be slower, not to mention that
->>> the blk-mq-tag code deals in bitmap pointers anyway.
-> 
-> Hi Jens,
-> 
->> It might still be worthwhile to do:
+>>>> This is not surprising, as the compiler would not know for certain that
+>>>> we point to a field within the same struct. But at least we still should
+>>>> point to a close memory.
+>>>>
+>>>> Note that the pointer could be dropped, which would remove the load, but
+>>>> then we have many if-elses which could be slower, not to mention that
+>>>> the blk-mq-tag code deals in bitmap pointers anyway.
 >>
->> if (tags->ptr == &tags->__default)
->>     foo(&tags->__default);
+>> Hi Jens,
 >>
->> to make it clear, as that branch will predict easily. 
+>>> It might still be worthwhile to do:
+>>>
+>>> if (tags->ptr == &tags->__default)
+>>>      foo(&tags->__default);
+>>>
+>>> to make it clear, as that branch will predict easily.
+>>
+>> Not sure. So this code does produce the same assembly, as we still need
+>> to do the tags->ptr load for the comparison.
+>>
+>> And then if you consider blk_mq_get_tags() as an example, there is no
+>> other hot value available to indicate whether the shared tags are used
+>> to decide whether to use  &tags->__default.
+>>
+>> I'll consider it more.
+>>
+> After talking to our compiler folks I guess it should be possible to
+> resurrect your original patch (with both the embedded bitmap and the
+> point to the bitmap), linking the pointer to the embedded bitmap in the
+> non-shared case.
 > 
-> Not sure. So this code does produce the same assembly, as we still need
-> to do the tags->ptr load for the comparison.
+> Then we can access the pointer in all cases, but in the non-shared case
+> that will then point to the embedded one, thus avoiding the possible
+> cache miss.
 > 
-> And then if you consider blk_mq_get_tags() as an example, there is no
-> other hot value available to indicate whether the shared tags are used
-> to decide whether to use  &tags->__default.
-> 
-> I'll consider it more.
-> 
-After talking to our compiler folks I guess it should be possible to
-resurrect your original patch (with both the embedded bitmap and the
-point to the bitmap), linking the pointer to the embedded bitmap in the
-non-shared case.
+> I'll see how that goes.
 
-Then we can access the pointer in all cases, but in the non-shared case
-that will then point to the embedded one, thus avoiding the possible
-cache miss.
+That's exactly what I suggested yesterday, the discussion now is on how
+to make that work in the cleanest way.
 
-I'll see how that goes.
-
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Jens Axboe
+
