@@ -3,156 +3,75 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC7AC432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 035A9C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:07:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6BDB20885
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D68A320885
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727175AbfK0SC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Nov 2019 13:02:56 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2131 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726990AbfK0SCz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Nov 2019 13:02:55 -0500
-Received: from LHREML712-CAH.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 8E396E04F001CCB1D93E;
-        Wed, 27 Nov 2019 18:02:54 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML712-CAH.china.huawei.com (10.201.108.35) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 27 Nov 2019 18:02:54 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 27 Nov
- 2019 18:02:54 +0000
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 3/8] blk-mq: Use a pointer for sbitmap
-To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "Bart van Assche" <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>
-References: <20191126091416.20052-1-hare@suse.de>
- <20191126091416.20052-4-hare@suse.de>
- <8f0522ee-2a81-c2ae-d111-3ff89ee6f93e@kernel.dk>
- <62838bca-cd3c-fccf-767c-76d8bea12324@huawei.com>
- <00a6d920-1855-c861-caa3-e845dcbe1fd8@kernel.dk>
- <baffb360-56c0-3da5-9a52-400fb763adbf@huawei.com>
- <9290eb7f-8d0b-8012-f9a4-a49c068def1b@kernel.dk>
- <157f3e58-1d16-cc6b-52aa-15a6e1ac828a@huawei.com>
- <1add0896-4867-12c5-4507-76526c27fb56@kernel.dk>
- <4a780199-7997-b677-b184-411afdeabba5@huawei.com>
- <5bc7b976-845c-92ec-6ccc-8e43237313bc@kernel.dk>
- <dbd917cc-f8a2-a410-5c2b-79670ede440d@huawei.com>
- <58875c2b-5141-b8be-a086-4fa29137d1e6@suse.de>
-Message-ID: <e139ee5a-1797-0e82-90c8-1cf08c6de6e3@huawei.com>
-Date:   Wed, 27 Nov 2019 18:02:52 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727200AbfK0SHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 13:07:49 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:42974 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726576AbfK0SHs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 13:07:48 -0500
+Received: by mail-pj1-f65.google.com with SMTP id y21so10365048pjn.9;
+        Wed, 27 Nov 2019 10:07:48 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=XaNcptt5JOTBwtSroj+ydYGlh1N5E9Y6StuuTHLWEXM=;
+        b=VTEiRg2St4Tt+V2M3hSqFcn0IYiqpCvoN9uD/5GYp6uejPJKf4EPB6PJ+unmz/Q12Q
+         1uHL+vfok43QhrONu/OuG5A+lme2iNOgisRt96yvK12FLHxXKnw+gSaepoD4bG8jL/VI
+         j7im10/Wt8R0OcPrQ/v3oEiXEpL/OmSxjEkrNLHS+KuII0MEHGYGWRZHDsJvHr/orzoT
+         siEOl/bn6d8DaZOO0BqNAd/tjKKh9EwZVqPOoZ8hAja/k0/940I5P4QGTurKBkUklTbG
+         ErA1nwb6gIOODCHzdXLiYnrF9RJX58y9QklfbfBsj4/N2ma0zdaUM3FAJGlfnv5cQeMs
+         2sKQ==
+X-Gm-Message-State: APjAAAWPlK7pxOQ5vbejFDL/E6k1427+h7NOwo6sNJqz3fCtGUP0us7Y
+        N+yBlKepCBQZhinJL1mUbGQ=
+X-Google-Smtp-Source: APXvYqzmi1sTtfjlu4oRd+L662PQX3u2Rr0PhWY+LYbbmu8INk3EProl4I+1RiiEHFx3UH+l9R81dw==
+X-Received: by 2002:a17:902:7485:: with SMTP id h5mr5458293pll.265.1574878068012;
+        Wed, 27 Nov 2019 10:07:48 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id z6sm7990456pjd.9.2019.11.27.10.07.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Nov 2019 10:07:46 -0800 (PST)
+Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V4
+To:     Mike Christie <mchristi@redhat.com>, linux-api@vger.kernel.org,
+        idryomov@gmail.com, mhocko@kernel.org, david@fromorbit.com,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, martin@urbackup.org,
+        Damien.LeMoal@wdc.com
+Cc:     Michal Hocko <mhocko@suse.com>,
+        Masato Suzuki <masato.suzuki@wdc.com>
+References: <20191112001900.9206-1-mchristi@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <24073284-ee53-d22d-dcef-277231283d75@acm.org>
+Date:   Wed, 27 Nov 2019 10:07:45 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <58875c2b-5141-b8be-a086-4fa29137d1e6@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20191112001900.9206-1-mchristi@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml720-chm.china.huawei.com (10.201.108.71) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/11/2019 16:52, Hannes Reinecke wrote:
-> On 11/27/19 3:44 PM, John Garry wrote:
->> On 27/11/2019 14:21, Jens Axboe wrote:
->>> On 11/27/19 6:05 AM, John Garry wrote:
->>>> On 27/11/2019 01:46, Jens Axboe wrote:
->>>>>>> Would be interesting to check the generated code for that, 
->>>>>>> ideally we'd
->>>>>>> get rid of the extra load for that case, even if it is in the same
->>>>>>> cacheline.
->>>>>>>
->>>>>> I checked the disassembly and we still have the load instead of 
->>>>>> the add.
->>>>>>
->>>>>> This is not surprising, as the compiler would not know for certain 
->>>>>> that
->>>>>> we point to a field within the same struct. But at least we still 
->>>>>> should
->>>>>> point to a close memory.
->>>>>>
->>>>>> Note that the pointer could be dropped, which would remove the 
->>>>>> load, but
->>>>>> then we have many if-elses which could be slower, not to mention that
->>>>>> the blk-mq-tag code deals in bitmap pointers anyway.
->>>>
->>>> Hi Jens,
->>>>
->>>>> It might still be worthwhile to do:
->>>>>
->>>>> if (tags->ptr == &tags->__default)
->>>>>     foo(&tags->__default);
->>>>>
->>>>> to make it clear, as that branch will predict easily.
->>>>
->>>> Not sure. So this code does produce the same assembly, as we still need
->>>> to do the tags->ptr load for the comparison.
->>>
->>
->> Hi Jens,
->>
->>> How can it be the same? The approach in the patchset needs to load
->>> *tags->ptr, this one needs tags->ptr. That's the big difference.
->>>
->>
->> In the patch for this thread, we have:
->>
->> @@ -121,10 +121,10 @@ unsigned int blk_mq_get_tag(struct 
->> blk_mq_alloc_data *data)
->>               WARN_ON_ONCE(1);
->>               return BLK_MQ_TAG_FAIL;
->>           }
->> -        bt = &tags->breserved_tags;
->> +        bt = tags->breserved_tags;
->>           tag_offset = 0;
->>       } else {
->> -        bt = &tags->bitmap_tags;
->> +        bt = tags->bitmap_tags;
->>           tag_offset = tags->nr_reserved_tags;
->>       }
->>
->>
->> So current code gets bt pointer by simply offsetting a certain 
->> distance from tags pointer - that is the add I mention.
->>
->> With the change in this patch, we need to load memory at address 
->> &tags->bitmap_tags to get bt - this is the load I mention.
->>
->> So for this:
->>
->> if (tags->ptr == &tags->__default)
->>
->> We load &tags->ptr to get the pointer value for comparison vs 
->> &tags->__default.
->>
->> There must be something I'm missing...
->>
-> The point here was that the load might refer to _other_ memory locations 
-> (as it's being allocated separately),
+On 11/11/19 4:19 PM, Mike Christie wrote:
+> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
+> amd nbd that have userspace components that can run in the IO path. For
+> example, iscsi and nbd's userspace deamons may need to recreate a socket
+> and/or send IO on it, and dm-multipath's daemon multipathd may need to
+> send SG IO or read/write IO to figure out the state of paths and re-set
+> them up.
 
-I think that we're talking about something different.
-
-  thus incurring a cache miss.
-> With embedded tag bitmaps we'll load from the same cache line 
-> (hopefully), and won't get a performance hit.
-
-But I'll just wait to see what you come up with.
-
-Thanks,
-John
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
