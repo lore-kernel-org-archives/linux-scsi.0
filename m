@@ -2,72 +2,154 @@ Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26104C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 00:21:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B404BC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 01:46:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0655920674
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 00:21:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 864C8207DD
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 01:46:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="Zymz3q9j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbfK0AVQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 19:21:16 -0500
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:53984 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726980AbfK0AVQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 19:21:16 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id E5F1122C35;
-        Tue, 26 Nov 2019 19:21:11 -0500 (EST)
-Date:   Wed, 27 Nov 2019 11:21:13 +1100 (AEDT)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Andrea Vai <andrea.vai@unipv.it>
-cc:     Ming Lei <ming.lei@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-In-Reply-To: <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
-Message-ID: <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
-References: <20191109222828.GA30568@ming.t460p>         <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>         <20191123072726.GC25356@ming.t460p>         <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>         <20191125035437.GA3806@ming.t460p>
-         <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>         <20191125102928.GA20489@ming.t460p>         <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>         <20191125151535.GA8044@ming.t460p>        
- <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>         <20191126023253.GA24501@ming.t460p> <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+        id S1726539AbfK0Bqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 20:46:39 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35880 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725871AbfK0Bqi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 20:46:38 -0500
+Received: by mail-pg1-f194.google.com with SMTP id k13so9975139pgh.3
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2019 17:46:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=D6t9Cwt+Vu79N9+2JsQ1/zQXaSAT/1qvtlCuPBuDo8A=;
+        b=Zymz3q9jURrU5FWSHJlr1GHmy0KXKpQRbpaT+mpyCIM6X8m7MWlfItXpI12x1Tj7XT
+         dm8zaLwcvx/77aFcBkQ14wMUJj45rJnAETXnDGW+JGXz9wBIR/WC60nrxRep2HXa5QBx
+         PDfnahavm/RIb0AWaKn7QLEQFXzNxFYjt5mh+Pq0KhoXMuzMAYRUgL79PYpAz+rvm8J3
+         UpAGtNjF5eDkdAAXhmbY3essF17yoBwSwTXfIEb2S71HqOUt32rlmshgBYAeLt9b4SnI
+         jthVMSMJ2AmdKg9rkni1L985wJB4YcArZMCnorIAbeGVt7EAm6nGdVsUBJzHpYxocO0m
+         5nmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=D6t9Cwt+Vu79N9+2JsQ1/zQXaSAT/1qvtlCuPBuDo8A=;
+        b=W0EiXt3/rescQy/kxI1pOoFjoRCmvtA/a7XHOe05GIXDNO3ydWvZhWlxHtC62kYlaF
+         2ilQIY/3wb29x1X/sWrB38zZcjS4nFNg8NYQYAwHTj7npBvIZxleG8rHEccjvnqAvUz4
+         2kb6q4KcwlmhrQnVdJjdf1c7bbTIsKYk4i/sShI1qmeK3TE/uuPXV3fbdTcm4Dr+jwaH
+         asNjHFmBj1GdfI3v4i/mfTclQkDDMF0cUeOb0HHqY7G9tqUsKHPjebZw8BIvsVmr8h1q
+         xSwhVqGfEC3+Cl+iW/kgx7qHU86DqvVvN21drB9eyMzDWD7gwfjyMH8wQBo2nUhwYcFi
+         4XAg==
+X-Gm-Message-State: APjAAAUng/evhxlGivZaFud40BJGIpvGmp+WZmN3c5vA7D23TLK/tC6V
+        ADdaFrW++As75Si7TsYVfKZgPw==
+X-Google-Smtp-Source: APXvYqyCJKfzwwNPf310bwKtxlvevUZMBUOEBy9JduvNDkVO9b2zlRXIvUINsnf3eswEtAtOiRUx9w==
+X-Received: by 2002:a63:4501:: with SMTP id s1mr1892695pga.5.1574819197761;
+        Tue, 26 Nov 2019 17:46:37 -0800 (PST)
+Received: from ?IPv6:2600:380:7746:eea0:4854:d740:64b2:1b9b? ([2600:380:7746:eea0:4854:d740:64b2:1b9b])
+        by smtp.gmail.com with ESMTPSA id z29sm9533pge.21.2019.11.26.17.46.34
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Nov 2019 17:46:36 -0800 (PST)
+Subject: Re: [PATCH 3/8] blk-mq: Use a pointer for sbitmap
+To:     John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20191126091416.20052-1-hare@suse.de>
+ <20191126091416.20052-4-hare@suse.de>
+ <8f0522ee-2a81-c2ae-d111-3ff89ee6f93e@kernel.dk>
+ <62838bca-cd3c-fccf-767c-76d8bea12324@huawei.com>
+ <00a6d920-1855-c861-caa3-e845dcbe1fd8@kernel.dk>
+ <baffb360-56c0-3da5-9a52-400fb763adbf@huawei.com>
+ <9290eb7f-8d0b-8012-f9a4-a49c068def1b@kernel.dk>
+ <157f3e58-1d16-cc6b-52aa-15a6e1ac828a@huawei.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <1add0896-4867-12c5-4507-76526c27fb56@kernel.dk>
+Date:   Tue, 26 Nov 2019 18:46:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <157f3e58-1d16-cc6b-52aa-15a6e1ac828a@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 26 Nov 2019, Andrea Vai wrote:
-
-> Then I started another set of 100 trials and let them run tonight, and 
-> the first 10 trials were around 1000s, then gradually decreased to 
-> ~300s, and finally settled around 200s with some trials below 70-80s. 
-> This to say, times are extremely variable and for the first time I 
-> noticed a sort of "performance increase" with time.
+On 11/26/19 11:08 AM, John Garry wrote:
+> On 26/11/2019 17:25, Jens Axboe wrote:
+>> On 11/26/19 10:23 AM, John Garry wrote:
+>>> On 26/11/2019 17:11, Jens Axboe wrote:
+>>>> On 11/26/19 9:54 AM, John Garry wrote:
+>>>>> On 26/11/2019 15:14, Jens Axboe wrote:
+>>>>>> On 11/26/19 2:14 AM, Hannes Reinecke wrote:
+>>>>>>> Instead of allocating the tag bitmap in place we should be using a
+>>>>>>> pointer. This is in preparation for shared host-wide bitmaps.
+>>>>>>
+>>>>>> Not a huge fan of this, it's an extra indirection in the hot path
+>>>>>> of both submission and completion.
+>>>>>
+>>>>> Hi Jens,
+>>>>>
+>>>>> Thanks for having a look.
+>>>>>
+>>>>> I checked the disassembly for blk_mq_get_tag() as a sample - which I
+>>>>> assume is one hot path function which you care about - and the cost of
+>>>>> the indirection is a load instruction instead of an add, denoted by ***,
+>>>>> below:
+>>>>
+>>>
+>>> Hi Jens,
+>>>
+>>>> I'm not that worried about an extra instruction, my worry is the extra
+>>>> load is from different memory. When it's embedded in the struct, we're
+>>>> on the same cache line or adjacent.
+>>>
+>>> Right, so the earlier iteration of this series kept the embedded struct
+>>> and we simply pointed at that, so I wouldn't expect a caching issue of
+>>> different memory in that case.
+>>
 > 
+> Hi Jens,
+> 
+>> That would be a much better solution for the common case, my concern
+>> here is slowing down the fast path for device that don't need shared
+>> tags.
+>>
+>> Would be interesting to check the generated code for that, ideally we'd
+>> get rid of the extra load for that case, even if it is in the same
+>> cacheline.
+>>
+> 
+> I checked the disassembly and we still have the load instead of the add.
+> 
+> This is not surprising, as the compiler would not know for certain that
+> we point to a field within the same struct. But at least we still should
+> point to a close memory.
+> 
+> Note that the pointer could be dropped, which would remove the load, but
+> then we have many if-elses which could be slower, not to mention that
+> the blk-mq-tag code deals in bitmap pointers anyway.
 
-The sheer volume of testing (probably some terabytes by now) would 
-exercise the wear leveling algorithm in the FTL.
+It might still be worthwhile to do:
 
-This in itself seems unlikely to improve performance significantly. But if 
-the flash memory came from a bad batch, perhaps it would have that effect.
+if (tags->ptr == &tags->__default)
+	foo(&tags->__default);
 
-To find out, someone may need to source another (genuine) Kingston 
-DataTraveller device.
+to make it clear, as that branch will predict easily. If if can be done
+in a nice enough fashion and not sprinkled everywhere, in some fashion.
+
+Should be testable, though.
 
 -- 
+Jens Axboe
+
