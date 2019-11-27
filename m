@@ -2,76 +2,87 @@ Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 035A9C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B644CC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 21:50:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D68A320885
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8853C20870
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 21:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727200AbfK0SHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Nov 2019 13:07:49 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:42974 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbfK0SHs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 13:07:48 -0500
-Received: by mail-pj1-f65.google.com with SMTP id y21so10365048pjn.9;
-        Wed, 27 Nov 2019 10:07:48 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=XaNcptt5JOTBwtSroj+ydYGlh1N5E9Y6StuuTHLWEXM=;
-        b=VTEiRg2St4Tt+V2M3hSqFcn0IYiqpCvoN9uD/5GYp6uejPJKf4EPB6PJ+unmz/Q12Q
-         1uHL+vfok43QhrONu/OuG5A+lme2iNOgisRt96yvK12FLHxXKnw+gSaepoD4bG8jL/VI
-         j7im10/Wt8R0OcPrQ/v3oEiXEpL/OmSxjEkrNLHS+KuII0MEHGYGWRZHDsJvHr/orzoT
-         siEOl/bn6d8DaZOO0BqNAd/tjKKh9EwZVqPOoZ8hAja/k0/940I5P4QGTurKBkUklTbG
-         ErA1nwb6gIOODCHzdXLiYnrF9RJX58y9QklfbfBsj4/N2ma0zdaUM3FAJGlfnv5cQeMs
-         2sKQ==
-X-Gm-Message-State: APjAAAWPlK7pxOQ5vbejFDL/E6k1427+h7NOwo6sNJqz3fCtGUP0us7Y
-        N+yBlKepCBQZhinJL1mUbGQ=
-X-Google-Smtp-Source: APXvYqzmi1sTtfjlu4oRd+L662PQX3u2Rr0PhWY+LYbbmu8INk3EProl4I+1RiiEHFx3UH+l9R81dw==
-X-Received: by 2002:a17:902:7485:: with SMTP id h5mr5458293pll.265.1574878068012;
-        Wed, 27 Nov 2019 10:07:48 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id z6sm7990456pjd.9.2019.11.27.10.07.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Nov 2019 10:07:46 -0800 (PST)
-Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V4
-To:     Mike Christie <mchristi@redhat.com>, linux-api@vger.kernel.org,
-        idryomov@gmail.com, mhocko@kernel.org, david@fromorbit.com,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, martin@urbackup.org,
-        Damien.LeMoal@wdc.com
-Cc:     Michal Hocko <mhocko@suse.com>,
-        Masato Suzuki <masato.suzuki@wdc.com>
-References: <20191112001900.9206-1-mchristi@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <24073284-ee53-d22d-dcef-277231283d75@acm.org>
-Date:   Wed, 27 Nov 2019 10:07:45 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1727420AbfK0VuA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 16:50:00 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49304 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727194AbfK0Vt7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 16:49:59 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 7D0BD22B48;
+        Wed, 27 Nov 2019 16:49:55 -0500 (EST)
+Date:   Thu, 28 Nov 2019 08:49:53 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>
+cc:     Andrea Vai <andrea.vai@unipv.it>, Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+In-Reply-To: <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+Message-ID: <alpine.LNX.2.21.1.1911280830520.8@nippy.intranet>
+References: <20191109222828.GA30568@ming.t460p>         <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>         <20191123072726.GC25356@ming.t460p>         <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>         <20191125035437.GA3806@ming.t460p>
+         <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>         <20191125102928.GA20489@ming.t460p>         <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>         <20191125151535.GA8044@ming.t460p>        
+ <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>         <20191126023253.GA24501@ming.t460p> <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it> <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+ <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
 MIME-Version: 1.0
-In-Reply-To: <20191112001900.9206-1-mchristi@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/11/19 4:19 PM, Mike Christie wrote:
-> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
-> amd nbd that have userspace components that can run in the IO path. For
-> example, iscsi and nbd's userspace deamons may need to recreate a socket
-> and/or send IO on it, and dm-multipath's daemon multipathd may need to
-> send SG IO or read/write IO to figure out the state of paths and re-set
-> them up.
+On Wed, 27 Nov 2019, Schmid, Carsten wrote:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> > 
+> > The sheer volume of testing (probably some terabytes by now) would 
+> > exercise the wear leveling algorithm in the FTL.
+> > 
+> But with "old kernel" the copy operation still is "fast", as far as i 
+> understood. If FTL (e.g. wear leveling) would slow down, we would see 
+> that also in the old kernel, right?
+> 
+> Andrea, can you confirm that the same device used with the old fast 
+> kernel is still fast today?
+
+You seem to be saying we should optimize the kernel for a pathological 
+use-case merely because it used to be fast before the blk-mq conversion. 
+That makes no sense to me. I suppose you have information that I don't.
+
+I assume that your employer (and the other corporations involved in this) 
+have plenty of regression test results from a variety of flash hardware to 
+show that the regression is real and the device is not pathological.
+
+I'm not privy to any of that information so I will shut up and leave you 
+guys to it.
+
+-- 
+
+> > This in itself seems unlikely to improve performance significantly. 
+> > But if the flash memory came from a bad batch, perhaps it would have 
+> > that effect.
+> > 
+> > To find out, someone may need to source another (genuine) Kingston 
+> > DataTraveller device.
+> > 
