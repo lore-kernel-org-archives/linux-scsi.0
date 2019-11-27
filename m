@@ -2,128 +2,106 @@ Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4C2C43141
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:11:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85798C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C4222073F
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:11:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 674012070B
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726240AbfK0ILu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Nov 2019 03:11:50 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58342 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726125AbfK0ILu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Nov 2019 03:11:50 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 26FB3B9F7;
-        Wed, 27 Nov 2019 08:11:47 +0000 (UTC)
-Date:   Wed, 27 Nov 2019 09:11:44 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1726252AbfK0IOu convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 03:14:50 -0500
+Received: from esa3.mentor.iphmx.com ([68.232.137.180]:25273 "EHLO
+        esa3.mentor.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726125AbfK0IOu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 03:14:50 -0500
+IronPort-SDR: vOSqOyXw8HC05bJhzZP6FTTg6h4fSPJPvO1Fb/JUKcrhi9bpGsvBbE7s5YDuAzFxMnG55KrSIv
+ Tu/xSe4DvlTNXUfL0f6uhFUnDeLuglWw45XXDkeywb3YTT3sFNbWmuJSrLwmUXIKAPOHx2AsTN
+ S6KhqrhjxV2PQhT2Wse1f4PYWwGKo6DcF9rGDN4e5p5o2TliBZF1IRbgDG5g3jZiYpP+vLSj8E
+ OmOMOIY4KfGn3yUSpOUraeBNo1arbfG16oii1vzVh/2uwt1NLHhXPoziu73zCAWVI8vUZOBqbQ
+ Iqo=
+X-IronPort-AV: E=Sophos;i="5.69,248,1571731200"; 
+   d="scan'208";a="43556738"
+Received: from orw-gwy-02-in.mentorg.com ([192.94.38.167])
+  by esa3.mentor.iphmx.com with ESMTP; 27 Nov 2019 00:14:49 -0800
+IronPort-SDR: BX04e9T2j+gJ4hVUyHYeKaKEEuYFQjU4MfwcvPoT0NPPhyNItdfQayTeyclKm7vY8pxc+SuyYt
+ LMTPOnfCybjTbuI2XZOVq6LYbF73aNyNUgGn2v6HUusqVk47dblNyej1Pgjy3X2Z/ZFaCt8n7j
+ vb2fLrbqanyEuMzDN+xAHJ90QXdSZ3CM7W9TB9w/Jkx4CLCetFNQBqyghf2YJVIg/4Q/dhU4G4
+ QmmQsYmDGnrMeg/ohsZjppVgcW+1+8Enh8sbw7MPQeqCQ3ao4zL278Da2oGzmm9qW2pdtxFahQ
+ pIU=
+From:   "Schmid, Carsten" <Carsten_Schmid@mentor.com>
+To:     Finn Thain <fthain@telegraphics.com.au>,
+        Andrea Vai <andrea.vai@unipv.it>
+CC:     Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Hou Tao <houtao1@huawei.com>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
-        "Ewan D. Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
-Message-ID: <20191127081144.GZ11661@kitsune.suse.cz>
-References: <cover.1574797504.git.msuchanek@suse.de>
- <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
- <20191126202151.GY11661@kitsune.suse.cz>
- <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Subject: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Thread-Topic: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Thread-Index: AQHVV3qcHF7jYFXqX02A+/ZaS0pzdqeAjBMAgANe+wCAFDitAIAAzHgAgACKv4CAAl41gIAAaSkAgAAFKQCAAEsvAIAABMGAgAA8WICAAIDlgIAAV4SAgAEWB4CAAIOAUA==
+Date:   Wed, 27 Nov 2019 08:14:43 +0000
+Message-ID: <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+References: <20191109222828.GA30568@ming.t460p>
+         <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>
+         <20191123072726.GC25356@ming.t460p>
+         <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>
+         <20191125035437.GA3806@ming.t460p>
+         <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>
+         <20191125102928.GA20489@ming.t460p>
+         <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>
+         <20191125151535.GA8044@ming.t460p>
+         <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
+         <20191126023253.GA24501@ming.t460p>
+ <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+ <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+In-Reply-To: <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+Accept-Language: de-DE, en-IE, en-US
+Content-Language: de-DE
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [137.202.0.90]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 26, 2019 at 04:13:32PM -0700, Jens Axboe wrote:
-> On 11/26/19 1:21 PM, Michal Suchánek wrote:
-> > On Tue, Nov 26, 2019 at 01:01:42PM -0700, Jens Axboe wrote:
-> >> On 11/26/19 12:54 PM, Michal Suchanek wrote:
-> >>> Hello,
-> >>>
-> >>> there is cdrom autoclose feature that is supposed to close the tray,
-> >>> wait for the disc to become ready, and then open the device.
-> >>>
-> >>> This used to work in ancient times. Then in old times there was a hack
-> >>> in util-linux which worked around the breakage which probably resulted
-> >>> from switching to scsi emulation.
-> >>>
-> >>> Currently util-linux maintainer refuses to merge another hack on the
-> >>> basis that kernel still has the feature so it should be fixed there.
-> >>> The code needs not be replicated in every userspace utility like mount
-> >>> or dd which has no business knowing which devices are CD-roms and where
-> >>> the autoclose setting is in the kernel.
-> >>>
-> >>> This is rebase on top of current master.
-> >>>
-> >>> Also it seems that most people think that this is fix for WMware because
-> >>> there is one patch dealing with WMware.
-> >>
-> >> I think the main complaint with this is that it's kind of a stretch to
-> >> add core functionality for a device type that's barely being
-> >> manufactured anymore and is mostly used in a virtualized fashion. I
-> >> think it you could fix this without 10 patches of churn and without
-> >> adding a new ->open() addition to fops, then people would be a lot more
-> >> receptive to the idea of improving cdrom auto-close.
-> > 
-> > I see no way to do that cleanly.
-> > 
-> > There are two open modes for cdrom devices - blocking and
-> > non-blocking.
-> > 
-> > In blocking mode open() should analyze the medium so that it's ready
-> > when it returns. In non-blocking mode it should return immediately so
-> > long as you can talk to the device.
-> > 
-> > When waiting in open() with locks held the processes trying to open
-> > the device are locked out regradless of the mode they use.
-> > 
-> > The only way to solve this is to pretend that the device is open and
-> > do the wait afterwards with the device unlocked.
 > 
-> How is this any different from an open on a file that needs to bring in
-> meta data on a busy rotating device, which can also take seconds?
+> > Then I started another set of 100 trials and let them run tonight, and
+> > the first 10 trials were around 1000s, then gradually decreased to
+> > ~300s, and finally settled around 200s with some trials below 70-80s.
+> > This to say, times are extremely variable and for the first time I
+> > noticed a sort of "performance increase" with time.
+> >
+> 
+> The sheer volume of testing (probably some terabytes by now) would
+> exercise the wear leveling algorithm in the FTL.
+> 
+But with "old kernel" the copy operation still is "fast", as far as i understood.
+If FTL (e.g. wear leveling) would slow down, we would see that also in
+the old kernel, right?
 
-First, accessing a file will take seconds only when your system is
-seriously overloaded or misconfigured. The access time for rotational
-storage is tens of milliseconds. With cdrom the access time after
-closing the door is measured in tens of seconds on common hardware. It
-can be shorter but also possibly longer. I am not aware of any limit
-there. It may be reasonable to want to get device status during this
-time.
+Andrea, can you confirm that the same device used with the old fast
+kernel is still fast today?
 
-Second, fetching the metadata for the file does not block operations that
-don't need the metadata. Here waiting for the drive to get ready blocks
-all access. You could get drive status if you did not try to open it
-but once you do you can no longer talk to it.
-
-Thanks
-
-Michal
+BR
+Carsten
