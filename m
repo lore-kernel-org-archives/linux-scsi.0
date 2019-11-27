@@ -6,95 +6,153 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26BD5C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 17:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC7AC432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:02:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3E082073F
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 17:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6BDB20885
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 18:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbfK0Ree (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Nov 2019 12:34:34 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:33981 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726655AbfK0Ree (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Nov 2019 12:34:34 -0500
-Received: by mail-pf1-f194.google.com with SMTP id n13so11376970pff.1;
-        Wed, 27 Nov 2019 09:34:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=lYbQXx2Q7vU4bWeO+6Aod/O84LeoB/V0z58WhrtpaIQ=;
-        b=q44IOwfR+LLd8UruF6AMFVnBIR2BD+nRhp8meB0tTl+37klkpjErIqf0WpMeQVSZ7Y
-         9qDLIdC17PMkoDKPVcF3DeQaZPqdrcfAVMoKedH/ii5rDsYEIqWkYWWTpcqXSfjs0umD
-         TaD3zlfo/5MuWv1VxJD45Xc08RipE3TU8DntuQSRnC2PpbPkduP9+d1LeIOMmRzP+Vvy
-         jRUZVRwqjtHv4lc/+5OHVqBzNGmE9aorYhzSwEM/lg7A5tc7rWM/fB0pmlbJu5DAiQGH
-         dOQLkgwz3dfjrzFgyOWUy64+QIVYv72PA0osn60sR7DB4gq/Q5WAwNkj0uBxycBXalK7
-         pzQA==
-X-Gm-Message-State: APjAAAWMyCYnZmS7ytXdc9Nh7fNCHc97gUVZlegEbTNP+UGcokGMUUKy
-        RonezUp0NgconepJIMWJM7c=
-X-Google-Smtp-Source: APXvYqxsM3mozkLbHky4xv9oqwU+j1zl9iy5Obs/yG29rzSvxcPxD5AE058ZK3CjPGIOwRO1FKf3qw==
-X-Received: by 2002:a62:5216:: with SMTP id g22mr46872242pfb.78.1574876073414;
-        Wed, 27 Nov 2019 09:34:33 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id o8sm2913355pjo.7.2019.11.27.09.34.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 Nov 2019 09:34:32 -0800 (PST)
-Subject: Re: [PATCH v3 00/13] scsi: qla2xxx: Bug fixes
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux@yadro.com
-References: <20191125165702.1013-1-r.bolshakov@yadro.com>
- <347fd571-89d7-2b7e-fd88-1711002c3fb9@acm.org>
- <20191127172427.jpqfopou7y6kyrev@SPB-NB-133.local>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <d9366987-ab6a-9124-39e1-d70887c88757@acm.org>
-Date:   Wed, 27 Nov 2019 09:34:31 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1727175AbfK0SC4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 13:02:56 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2131 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726990AbfK0SCz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Nov 2019 13:02:55 -0500
+Received: from LHREML712-CAH.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 8E396E04F001CCB1D93E;
+        Wed, 27 Nov 2019 18:02:54 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ LHREML712-CAH.china.huawei.com (10.201.108.35) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Wed, 27 Nov 2019 18:02:54 +0000
+Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 27 Nov
+ 2019 18:02:54 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 3/8] blk-mq: Use a pointer for sbitmap
+To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "Bart van Assche" <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>
+References: <20191126091416.20052-1-hare@suse.de>
+ <20191126091416.20052-4-hare@suse.de>
+ <8f0522ee-2a81-c2ae-d111-3ff89ee6f93e@kernel.dk>
+ <62838bca-cd3c-fccf-767c-76d8bea12324@huawei.com>
+ <00a6d920-1855-c861-caa3-e845dcbe1fd8@kernel.dk>
+ <baffb360-56c0-3da5-9a52-400fb763adbf@huawei.com>
+ <9290eb7f-8d0b-8012-f9a4-a49c068def1b@kernel.dk>
+ <157f3e58-1d16-cc6b-52aa-15a6e1ac828a@huawei.com>
+ <1add0896-4867-12c5-4507-76526c27fb56@kernel.dk>
+ <4a780199-7997-b677-b184-411afdeabba5@huawei.com>
+ <5bc7b976-845c-92ec-6ccc-8e43237313bc@kernel.dk>
+ <dbd917cc-f8a2-a410-5c2b-79670ede440d@huawei.com>
+ <58875c2b-5141-b8be-a086-4fa29137d1e6@suse.de>
+Message-ID: <e139ee5a-1797-0e82-90c8-1cf08c6de6e3@huawei.com>
+Date:   Wed, 27 Nov 2019 18:02:52 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191127172427.jpqfopou7y6kyrev@SPB-NB-133.local>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <58875c2b-5141-b8be-a086-4fa29137d1e6@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.226.46]
+X-ClientProxiedBy: lhreml720-chm.china.huawei.com (10.201.108.71) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/27/19 9:24 AM, Roman Bolshakov wrote:
-> On Tue, Nov 26, 2019 at 12:56:51PM -0800, Bart Van Assche wrote:
->> On 11/25/19 8:56 AM, Roman Bolshakov wrote:
->>> The patch series contains fixes for qla2xxx and solves two visible
->>> issues: [ ... ]
+On 27/11/2019 16:52, Hannes Reinecke wrote:
+> On 11/27/19 3:44 PM, John Garry wrote:
+>> On 27/11/2019 14:21, Jens Axboe wrote:
+>>> On 11/27/19 6:05 AM, John Garry wrote:
+>>>> On 27/11/2019 01:46, Jens Axboe wrote:
+>>>>>>> Would be interesting to check the generated code for that, 
+>>>>>>> ideally we'd
+>>>>>>> get rid of the extra load for that case, even if it is in the same
+>>>>>>> cacheline.
+>>>>>>>
+>>>>>> I checked the disassembly and we still have the load instead of 
+>>>>>> the add.
+>>>>>>
+>>>>>> This is not surprising, as the compiler would not know for certain 
+>>>>>> that
+>>>>>> we point to a field within the same struct. But at least we still 
+>>>>>> should
+>>>>>> point to a close memory.
+>>>>>>
+>>>>>> Note that the pointer could be dropped, which would remove the 
+>>>>>> load, but
+>>>>>> then we have many if-elses which could be slower, not to mention that
+>>>>>> the blk-mq-tag code deals in bitmap pointers anyway.
+>>>>
+>>>> Hi Jens,
+>>>>
+>>>>> It might still be worthwhile to do:
+>>>>>
+>>>>> if (tags->ptr == &tags->__default)
+>>>>>     foo(&tags->__default);
+>>>>>
+>>>>> to make it clear, as that branch will predict easily.
+>>>>
+>>>> Not sure. So this code does produce the same assembly, as we still need
+>>>> to do the tags->ptr load for the comparison.
+>>>
 >>
->> As explained in Documentation/process/2.Process.rst, please post patches
->> outside the merge window.
-> 
-> Thank you for the reference. Could you please assess if my understanding
-> of the document is correct:
-> 	The fixes might go into 5.5-rc2 after the release of rc1 which
-> 	closes the merge window.
-> 
-> 	No patches except critical for -rc1 should be posted when the
-> 	merge window is opened.
+>> Hi Jens,
+>>
+>>> How can it be the same? The approach in the patchset needs to load
+>>> *tags->ptr, this one needs tags->ptr. That's the big difference.
+>>>
+>>
+>> In the patch for this thread, we have:
+>>
+>> @@ -121,10 +121,10 @@ unsigned int blk_mq_get_tag(struct 
+>> blk_mq_alloc_data *data)
+>>               WARN_ON_ONCE(1);
+>>               return BLK_MQ_TAG_FAIL;
+>>           }
+>> -        bt = &tags->breserved_tags;
+>> +        bt = tags->breserved_tags;
+>>           tag_offset = 0;
+>>       } else {
+>> -        bt = &tags->bitmap_tags;
+>> +        bt = tags->bitmap_tags;
+>>           tag_offset = tags->nr_reserved_tags;
+>>       }
+>>
+>>
+>> So current code gets bt pointer by simply offsetting a certain 
+>> distance from tags pointer - that is the add I mention.
+>>
+>> With the change in this patch, we need to load memory at address 
+>> &tags->bitmap_tags to get bt - this is the load I mention.
+>>
+>> So for this:
+>>
+>> if (tags->ptr == &tags->__default)
+>>
+>> We load &tags->ptr to get the pointer value for comparison vs 
+>> &tags->__default.
+>>
+>> There must be something I'm missing...
+>>
+> The point here was that the load might refer to _other_ memory locations 
+> (as it's being allocated separately),
 
-Hi Roman,
+I think that we're talking about something different.
 
-During the merge window many maintainers and core contributors are busy 
-with identifying and addressing regressions introduced during the merge 
-window. I think that is why the merge window is not the best time to 
-post patches and why that text was added to the kernel documentation.
+  thus incurring a cache miss.
+> With embedded tag bitmaps we'll load from the same cache line 
+> (hopefully), and won't get a performance hit.
 
-What happens with patches posted during the merge window depends on the 
-maintainer (Martin Petersen). Sometimes patches posted during the merge 
-window are ignored. Sometimes such patches are queued after the merge 
-window has closed. Sometimes contributors are asked after the merge 
-window has closed to rebase their patch series, to retest it and to 
-repost it. The latter makes sense because the changes accepted during 
-the merge window (e.g. core kernel API changes) may require matching 
-changes in a patch series. You may want to ask Martin directly which 
-approach he prefers after the merge window has closed.
+But I'll just wait to see what you come up with.
 
-Bart.
+Thanks,
+John
