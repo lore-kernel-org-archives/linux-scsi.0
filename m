@@ -2,127 +2,128 @@ Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 244E2C43215
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 04:15:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4C2C43141
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:11:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB19B2071E
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 04:15:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pjEVQil8"
+	by mail.kernel.org (Postfix) with ESMTP id 5C4222073F
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 08:11:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbfK0EPq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 23:15:46 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:46446 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726526AbfK0EPq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 23:15:46 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id xAR4FL1f026273;
-        Tue, 26 Nov 2019 22:15:21 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1574828121;
-        bh=wT3uBStmO0zs8CxdsXEg1fyzmCCiuamwhYlq5icphfU=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=pjEVQil8AxS5Wu73HXta+uN5kXPDTns/4nN/OolK1peBL1nosjT0+L5MF4z3k1ZYp
-         1pO8N52mZWPI5DZF8pK3UbxIYK01LnKFCiwWeSMos2HFxEZ1Mo1/SoNRSrLfSFhgmJ
-         opCmtmRHviuHHmPAxMutSSxi0qo/MKCXGfy2FZDY=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xAR4FL93065540;
-        Tue, 26 Nov 2019 22:15:21 -0600
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Tue, 26
- Nov 2019 22:15:20 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Tue, 26 Nov 2019 22:15:20 -0600
-Received: from [172.24.145.136] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id xAR4FE36093524;
-        Tue, 26 Nov 2019 22:15:16 -0600
-Subject: Re: [PATCH RESEND 2/2] scsi: ufs: Update L4 attributes on manual
- hibern8 exit in Cadence UFS.
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        "'Alim Akhtar'" <alim.akhtar@gmail.com>,
-        "'sheebab'" <sheebab@cadence.com>
-CC:     "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Pedro Sousa'" <pedrom.sousa@synopsys.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        "'Stanley Chu'" <stanley.chu@mediatek.com>,
-        "'Bean Huo (beanhuo)'" <beanhuo@micron.com>,
-        <yuehaibing@huawei.com>, <linux-scsi@vger.kernel.org>,
-        "'open list'" <linux-kernel@vger.kernel.org>,
-        <linux-block@vger.kernel.org>, <rafalc@cadence.com>,
-        <mparab@cadence.com>
-References: <1574147082-22725-1-git-send-email-sheebab@cadence.com>
- <1574147082-22725-3-git-send-email-sheebab@cadence.com>
- <CAGOxZ53Lotp6sBUryHsE2S1dbkQNZhPhWNMXidoi=BOmV074VA@mail.gmail.com>
- <CGME20191121105613epcas4p1a83df10f9f8dcf9edaa583648cad449e@epcas4p1.samsung.com>
- <cfc2c86f-f9ae-ac91-39ac-8bb48c41b243@ti.com>
- <08c701d5a4d4$b20c7300$16255900$@samsung.com>
-From:   Vignesh Raghavendra <vigneshr@ti.com>
-Message-ID: <69e16181-e01c-1120-2074-80b9c1eb19ce@ti.com>
-Date:   Wed, 27 Nov 2019 09:45:45 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726240AbfK0ILu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Nov 2019 03:11:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:58342 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726125AbfK0ILu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Nov 2019 03:11:50 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 26FB3B9F7;
+        Wed, 27 Nov 2019 08:11:47 +0000 (UTC)
+Date:   Wed, 27 Nov 2019 09:11:44 +0100
+From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Jonathan Corbet <corbet@lwn.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Eric Biggers <ebiggers@google.com>,
+        "J. Bruce Fields" <bfields@redhat.com>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hou Tao <houtao1@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
+        "Ewan D. Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
+Message-ID: <20191127081144.GZ11661@kitsune.suse.cz>
+References: <cover.1574797504.git.msuchanek@suse.de>
+ <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
+ <20191126202151.GY11661@kitsune.suse.cz>
+ <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
 MIME-Version: 1.0
-In-Reply-To: <08c701d5a4d4$b20c7300$16255900$@samsung.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Alim,
-
-On 27/11/19 9:12 AM, Alim Akhtar wrote:
+On Tue, Nov 26, 2019 at 04:13:32PM -0700, Jens Axboe wrote:
+> On 11/26/19 1:21 PM, Michal Suchánek wrote:
+> > On Tue, Nov 26, 2019 at 01:01:42PM -0700, Jens Axboe wrote:
+> >> On 11/26/19 12:54 PM, Michal Suchanek wrote:
+> >>> Hello,
+> >>>
+> >>> there is cdrom autoclose feature that is supposed to close the tray,
+> >>> wait for the disc to become ready, and then open the device.
+> >>>
+> >>> This used to work in ancient times. Then in old times there was a hack
+> >>> in util-linux which worked around the breakage which probably resulted
+> >>> from switching to scsi emulation.
+> >>>
+> >>> Currently util-linux maintainer refuses to merge another hack on the
+> >>> basis that kernel still has the feature so it should be fixed there.
+> >>> The code needs not be replicated in every userspace utility like mount
+> >>> or dd which has no business knowing which devices are CD-roms and where
+> >>> the autoclose setting is in the kernel.
+> >>>
+> >>> This is rebase on top of current master.
+> >>>
+> >>> Also it seems that most people think that this is fix for WMware because
+> >>> there is one patch dealing with WMware.
+> >>
+> >> I think the main complaint with this is that it's kind of a stretch to
+> >> add core functionality for a device type that's barely being
+> >> manufactured anymore and is mostly used in a virtualized fashion. I
+> >> think it you could fix this without 10 patches of churn and without
+> >> adding a new ->open() addition to fops, then people would be a lot more
+> >> receptive to the idea of improving cdrom auto-close.
+> > 
+> > I see no way to do that cleanly.
+> > 
+> > There are two open modes for cdrom devices - blocking and
+> > non-blocking.
+> > 
+> > In blocking mode open() should analyze the medium so that it's ready
+> > when it returns. In non-blocking mode it should return immediately so
+> > long as you can talk to the device.
+> > 
+> > When waiting in open() with locks held the processes trying to open
+> > the device are locked out regradless of the mode they use.
+> > 
+> > The only way to solve this is to pretend that the device is open and
+> > do the wait afterwards with the device unlocked.
 > 
-[...]
->>>> Backup L4 attributes duirng manual hibern8 entry and restore the L4
->>>> attributes on manual hibern8 exit as per JESD220C.
->>>>
->>> Can you point me to the relevant section on the spec?
->>>
->>
->> Per JESD 220C 9.4 UniPro/UFS Control Interface (Control Plane):
->>
->> "NOTE After exit from Hibernate all UniPro Transport Layer attributes (including
->> L4 T_PeerDeviceID,
->>
->> L4 T_PeerCPortID, L4 T_ConnectionState, etc.) will be reset to their reset values.
->> All required attributes
->>
->> must be restored properly on both ends before communication can resume."
->>
->> But its not clear whether SW needs to restore these attributes or hardware
->>
-> Thanks Vignesh for pointing out the spec section, yes it is not clear, one way to confirm this is just by read L4 attributes before 
-> And after hinern8 entry/exit.
+> How is this any different from an open on a file that needs to bring in
+> meta data on a busy rotating device, which can also take seconds?
 
-I know that on Cadence UFS controller L4 attributes are definitely lost
-on hibernation entry/exit and therefore needs to be restored. But not
-sure of other controllers. If this issue is seen on other controllers as
-well, then we should probably consider moving this code to core driver
-so that there is code reuse.
+First, accessing a file will take seconds only when your system is
+seriously overloaded or misconfigured. The access time for rotational
+storage is tens of milliseconds. With cdrom the access time after
+closing the door is measured in tens of seconds on common hardware. It
+can be shorter but also possibly longer. I am not aware of any limit
+there. It may be reasonable to want to get device status during this
+time.
 
-> (at least in the current platform it is not being done)
-> AFA this patch is concerns, this looks ok to me.
-> @ Avri , any thought on this?
-> 
->> Regards
->> Vignesh
->>
+Second, fetching the metadata for the file does not block operations that
+don't need the metadata. Here waiting for the drive to get ready blocks
+all access. You could get drive status if you did not try to open it
+but once you do you can no longer talk to it.
 
-[...]
--- 
-Regards
-Vignesh
+Thanks
+
+Michal
