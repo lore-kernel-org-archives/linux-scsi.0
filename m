@@ -7,70 +7,69 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47674C432C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 02:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11431C432C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 02:32:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DF012071A
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 02:30:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBD232071A
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 02:32:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="O5px3CgA"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rUTlJamT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfK0Cau (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 21:30:50 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48432 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbfK0Cau (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 21:30:50 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAR2TIVC024463;
-        Wed, 27 Nov 2019 02:30:43 GMT
+        id S1726852AbfK0Ccx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 21:32:53 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:41084 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726529AbfK0Ccx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 21:32:53 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAR2TEBP028991;
+        Wed, 27 Nov 2019 02:32:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=JrGo/aJN1mHO7VqhwYPgcCJ1sYT7BsnzcntD5cWkBbM=;
- b=O5px3CgARI4MisIKP4S7176PGnbI4gAJu45IxJfj8iU5Z2mQovu8FNcaAemuhcRHlouP
- p5x+EKF6noEVQ1BU1UQ8TtUPa/Fij62/k+GpLETFZYumOCWXU5rnuOdxgHHRX23iQfna
- 9OIGJpPOgsl6Santlw0uTvKPpnWu17F6TO6hyVq4KDC+cwAHN7iflL81Vyvr0mHgXw3q
- ozqulC5L+5eAH00xijaMJprY/Wq77M5getG3oungIrU9yu4MHAr/JBBIyA4oQ7nUqMXm
- 1Jxc5Xp5NBeUKp5UEoOfw6sL8DCMKyDolBBo9Cksnf796galju9b2MlTZwfiB+aA3tWS GA== 
+ bh=BDARO1EZRMsSbnFuuhhcIRXRYRq04c/kEza5FeFKkWc=;
+ b=rUTlJamTrn0fixCKb8CDwFrhP2DxN3/0kbOBOE2QquYs6SY2LWNi6MqLtC0sji6l0ier
+ 0fGUdUlhT3J3jVEMPWB8sTxz8nyE8QdrI1jF7csEgYRTv4H+CvriQfldVLyfJkAPZFaQ
+ uqdCGhqVYVBP+ry2bI/A2sY73iXp7vGZ4NOS+5GD5fMZuv3/v6e0RbHzd+HsqeLUQ9Yk
+ PnLki+alx1z535BKYmpQZSv8RIqFeL4vRiKMKGDPMdn9++0ptD5aVerf1n2d/kukEtU+
+ uKhmEw45rO/NyPFZbrsSo6qhqFFpevRgDkgogRtUPgMzCCfYPf2X1PwbzJDNsKJrBS1b Iw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2wevqqag1e-1
+        by userp2130.oracle.com with ESMTP id 2wev6uafn5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 02:30:43 +0000
+        Wed, 27 Nov 2019 02:32:38 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAR2TBGT151171;
-        Wed, 27 Nov 2019 02:30:42 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2wgvhb8da8-1
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAR2TCkG151355;
+        Wed, 27 Nov 2019 02:32:38 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2wgvhb8fkh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Nov 2019 02:30:42 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAR2UcuK026703;
-        Wed, 27 Nov 2019 02:30:38 GMT
+        Wed, 27 Nov 2019 02:32:38 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xAR2Wae8002571;
+        Wed, 27 Nov 2019 02:32:37 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 26 Nov 2019 18:30:38 -0800
-To:     Colin King <colin.king@canonical.com>
+        with ESMTP ; Tue, 26 Nov 2019 18:32:36 -0800
+To:     YueHaibing <yuehaibing@huawei.com>
 Cc:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Deepak Ukey <Deepak.Ukey@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: pm80xx: fix logic to break out of loop when register value is 2 or 3
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH -next] scsi: pm80xx: Remove unused including <linux/version.h>
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20191120135031.270708-1-colin.king@canonical.com>
-Date:   Tue, 26 Nov 2019 21:30:35 -0500
-In-Reply-To: <20191120135031.270708-1-colin.king@canonical.com> (Colin King's
-        message of "Wed, 20 Nov 2019 13:50:31 +0000")
-Message-ID: <yq136ea9hkk.fsf@oracle.com>
+References: <20191122020911.33269-1-yuehaibing@huawei.com>
+Date:   Tue, 26 Nov 2019 21:32:34 -0500
+In-Reply-To: <20191122020911.33269-1-yuehaibing@huawei.com>
+        (yuehaibing@huawei.com's message of "Fri, 22 Nov 2019 02:09:11 +0000")
+Message-ID: <yq1y2w282wt.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9453 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=975
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=998
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-1911270018
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9453 signatures=668685
@@ -85,13 +84,9 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Colin,
+YueHaibing,
 
-> The condition (reg_val != 2) || (reg_val != 3) will always be true
-> because reg_val cannot be equal to two different values at the same
-> time. Fix this by replacing the || operator with && so that the loop
-> will loop if reg_val is not a 2 and not a 3 as was originally
-> intended.
+> Remove including <linux/version.h> that don't need it.
 
 Applied to 5.5/scsi-queue, thanks!
 
