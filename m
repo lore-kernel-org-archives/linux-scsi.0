@@ -1,147 +1,73 @@
-Return-Path: <SRS0=v3DL=ZS=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=HsAm=ZT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BB0C43141
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 23:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26104C432C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 00:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9796C20863
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Nov 2019 23:13:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="ykizGoPo"
+	by mail.kernel.org (Postfix) with ESMTP id 0655920674
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Nov 2019 00:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbfKZXNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Nov 2019 18:13:38 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:39794 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726571AbfKZXNh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 18:13:37 -0500
-Received: by mail-pf1-f196.google.com with SMTP id x28so9956263pfo.6
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Nov 2019 15:13:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xSdUXjteBaphnHhRVYPIlnexJspIHTPfIj7oTmOOWqw=;
-        b=ykizGoPowPRvzlrjQj+ToVpf+pjLi7FwSGkw5E+soY/g/azPWXFYfuqR0kJiysIeyg
-         aJpTkvd2bF6O743iR2cOQQwYnAuczqhVJx/2FazepSYURNSfGC31qu0XRnlW050VuPdO
-         1C5g2JstnKnP3eHJHNI3qfY/5wQV/gqj9+GiN/uC0lU5AYNcheWvWQ9VnQZMs933NXRj
-         U8gMr85pLeYWLzaqtKk08Rp5c8+WVIQNziQreEPSROTGq9Ji2kiXxp+1+7PzNs/0H8XL
-         04cQEkjtEuK/p8EsZh1hYh1yaIh7odJwI4ENbg9KCoKMuQsfPT5JSPzZvQuF1ZIsc0L1
-         9sSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xSdUXjteBaphnHhRVYPIlnexJspIHTPfIj7oTmOOWqw=;
-        b=jMWnl1pc7lexivYm5cvCQbTw1dw09eqqpSbMhHdD0iAA7vmCyrMWkMHs+zJF45utmo
-         C8zxZ/lt/PUBBGmF6k7yQwd/aNx63CMO8MZVl9X8zerVmazZ+DfB9yoSk/vuHwqpUPry
-         a6evNPIYVCHMgQPjhCyJxTcsXE9Xu+pzur9oJuBOltWKqEX9gy89xfW93pspFTerCA4U
-         mZAB0vHRtNQHjQPZodjbVaVtzhqzpp2bqzNStfKFRNwA+KjbYtTBJO1yP/txi6KBmT8T
-         qUHuRnPDEEZsxpZnLC4uWQQaA0v6rT9v76SBkc0o/Pbp2N/CLJ2KCM5qR04xe5tAZeAA
-         yv/Q==
-X-Gm-Message-State: APjAAAVTx/1cVW1XyUNMcM1G+CFSpe+IFuPGBuJKB5sybX1tvAptUnvB
-        KiBTQ2fDhLn5q5zcjjUQtry/EA==
-X-Google-Smtp-Source: APXvYqwTWZaVXuwFAks7r0KChnenItR97uS8QY0CqtfzkX1MG5v1WKjms2vTNvIhhMq9UxM1j8rZcA==
-X-Received: by 2002:a62:528d:: with SMTP id g135mr44527972pfb.172.1574810016976;
-        Tue, 26 Nov 2019 15:13:36 -0800 (PST)
-Received: from [192.168.1.188] ([66.219.217.79])
-        by smtp.gmail.com with ESMTPSA id o14sm14606693pfp.5.2019.11.26.15.13.33
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 26 Nov 2019 15:13:35 -0800 (PST)
-Subject: Re: [PATCH v4 rebase 00/10] Fix cdrom autoclose
-To:     =?UTF-8?Q?Michal_Such=c3=a1nek?= <msuchanek@suse.de>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1727073AbfK0AVQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Nov 2019 19:21:16 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:53984 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726980AbfK0AVQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Nov 2019 19:21:16 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id E5F1122C35;
+        Tue, 26 Nov 2019 19:21:11 -0500 (EST)
+Date:   Wed, 27 Nov 2019 11:21:13 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Andrea Vai <andrea.vai@unipv.it>
+cc:     Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Eric Biggers <ebiggers@google.com>,
-        "J. Bruce Fields" <bfields@redhat.com>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Hou Tao <houtao1@huawei.com>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Hannes Reinecke <hare@suse.com>,
-        "Ewan D. Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>
-References: <cover.1574797504.git.msuchanek@suse.de>
- <c6fe572c-530e-93eb-d62a-cb2f89c7b4ec@kernel.dk>
- <20191126202151.GY11661@kitsune.suse.cz>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <08bcfd0a-7433-2fa4-9ca2-ea008836b747@kernel.dk>
-Date:   Tue, 26 Nov 2019 16:13:32 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+In-Reply-To: <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+Message-ID: <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+References: <20191109222828.GA30568@ming.t460p>         <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>         <20191123072726.GC25356@ming.t460p>         <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>         <20191125035437.GA3806@ming.t460p>
+         <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>         <20191125102928.GA20489@ming.t460p>         <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>         <20191125151535.GA8044@ming.t460p>        
+ <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>         <20191126023253.GA24501@ming.t460p> <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
 MIME-Version: 1.0
-In-Reply-To: <20191126202151.GY11661@kitsune.suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/26/19 1:21 PM, Michal Suchánek wrote:
-> On Tue, Nov 26, 2019 at 01:01:42PM -0700, Jens Axboe wrote:
->> On 11/26/19 12:54 PM, Michal Suchanek wrote:
->>> Hello,
->>>
->>> there is cdrom autoclose feature that is supposed to close the tray,
->>> wait for the disc to become ready, and then open the device.
->>>
->>> This used to work in ancient times. Then in old times there was a hack
->>> in util-linux which worked around the breakage which probably resulted
->>> from switching to scsi emulation.
->>>
->>> Currently util-linux maintainer refuses to merge another hack on the
->>> basis that kernel still has the feature so it should be fixed there.
->>> The code needs not be replicated in every userspace utility like mount
->>> or dd which has no business knowing which devices are CD-roms and where
->>> the autoclose setting is in the kernel.
->>>
->>> This is rebase on top of current master.
->>>
->>> Also it seems that most people think that this is fix for WMware because
->>> there is one patch dealing with WMware.
->>
->> I think the main complaint with this is that it's kind of a stretch to
->> add core functionality for a device type that's barely being
->> manufactured anymore and is mostly used in a virtualized fashion. I
->> think it you could fix this without 10 patches of churn and without
->> adding a new ->open() addition to fops, then people would be a lot more
->> receptive to the idea of improving cdrom auto-close.
-> 
-> I see no way to do that cleanly.
-> 
-> There are two open modes for cdrom devices - blocking and
-> non-blocking.
-> 
-> In blocking mode open() should analyze the medium so that it's ready
-> when it returns. In non-blocking mode it should return immediately so
-> long as you can talk to the device.
-> 
-> When waiting in open() with locks held the processes trying to open
-> the device are locked out regradless of the mode they use.
-> 
-> The only way to solve this is to pretend that the device is open and
-> do the wait afterwards with the device unlocked.
+On Tue, 26 Nov 2019, Andrea Vai wrote:
 
-How is this any different from an open on a file that needs to bring in
-meta data on a busy rotating device, which can also take seconds?
+> Then I started another set of 100 trials and let them run tonight, and 
+> the first 10 trials were around 1000s, then gradually decreased to 
+> ~300s, and finally settled around 200s with some trials below 70-80s. 
+> This to say, times are extremely variable and for the first time I 
+> noticed a sort of "performance increase" with time.
+> 
+
+The sheer volume of testing (probably some terabytes by now) would 
+exercise the wear leveling algorithm in the FTL.
+
+This in itself seems unlikely to improve performance significantly. But if 
+the flash memory came from a bad batch, perhaps it would have that effect.
+
+To find out, someone may need to source another (genuine) Kingston 
+DataTraveller device.
 
 -- 
-Jens Axboe
-
