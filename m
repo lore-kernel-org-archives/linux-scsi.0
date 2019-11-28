@@ -2,156 +2,132 @@ Return-Path: <SRS0=EtEA=ZU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 703F3C432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 05:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B46CC432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 07:47:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4495B208E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 05:52:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68A47216F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 07:47:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3NN7fiH"
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="sIsfCzbG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726778AbfK1FwK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Nov 2019 00:52:10 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:37755 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbfK1FwJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Nov 2019 00:52:09 -0500
-Received: by mail-ot1-f66.google.com with SMTP id k14so5526519otn.4;
-        Wed, 27 Nov 2019 21:52:08 -0800 (PST)
+        id S1727414AbfK1HrB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Nov 2019 02:47:01 -0500
+Received: from mail-wr1-f46.google.com ([209.85.221.46]:32786 "EHLO
+        mail-wr1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbfK1HrA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Nov 2019 02:47:00 -0500
+Received: by mail-wr1-f46.google.com with SMTP id b6so197304wrq.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Nov 2019 23:46:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=MdEQJsY/Utok4Nn4+LSSZV9QETD4DTsPXrGDp9ayac4=;
-        b=Z3NN7fiHFI9tkEJAgOlXc51rDZn+xxgMgdk7rPkm9wgF4Zz+vN7+/qRf7w68iU0HqU
-         tR53nYsKhSUS7MzbIxv1z6l+WafuABRpWjliag64+oXmT44ZS5s56lTO+6mrhoWRRsju
-         Klbt3nY54+8Li5g0+aYbfmu6ZHajsExFHUw6OPuvB8ExHiXpU92jAQ0+7vIJpGvNxEEH
-         2q6aY+dRWWDRM9igBG52X1ZAwdREsfDG8xlB0q+lXOKvImYblnPlueY10Nuwh0ThP1rP
-         f8WmfTQ4vJ/qa2CibOatlR+zpSJiYoGsEw6rdOep/88R8M8qMnlJ5DgQiMgjUGnSGboZ
-         MeUw==
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=VFy1sFwSgg5UC5QpoP/yzBe3ULMeokNC0smHjyZo8m4=;
+        b=sIsfCzbGKgcWkjWZs8tRQZ8ly2AgdodFKrI77iPfs/g9E0h8uFx+PaxeLU8aUgCW6H
+         yHFUBD7sJ47+sIOlOIGV8RKGI2MfjNjG462r0TntGLDw1nWlthY6JnsFVJtR/go5nAsp
+         AQsff9HkdTPEWczYjhOO6oo1kY6E4btCGBpLW07kz94HBRW7zV7dQZIfZdlBnAgN8W9j
+         mbp5hvlcLo/enGp+Uow9dpJMOr+zW11oonCSjEaKCYusq29/zHWQvk1LUAURLinBXSxu
+         ZBIZbytrJ6aqHEi4SQ07nbyRkJWEOBBSIPFQcLGaHF/oeVmea7AMKxSRqOGcb7ucAWIQ
+         Upxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=MdEQJsY/Utok4Nn4+LSSZV9QETD4DTsPXrGDp9ayac4=;
-        b=b185ckKuy5QCIcV2HuLwvIY1GGHiCZj+5/l0XUI+SaWEtGS9omfZ42BVxf5aiuR0TZ
-         mixibzGPcY1q1ndu63hLJ7l4THwXV91rWgkzQ8RJDu6Ly1lQu36wsvqrRuEyaKKOAQS6
-         utYLgHPcUzk2yukOc8n49DxUo8lLTywqaAhY1wEvuMJo/4P2gaOQr4QUOeNQV4Jzbodj
-         cyRJo4ICmndHcKR2FNnthxiIliexkjzXVajhonMzDdhOvZ3uciv7S+pE0qbsdHekJwAZ
-         dD3yoFKop5nJ1jYkMTfdkyDBQXx5JFUJcfnXjbWItviG5digyfhYNVzhIBAhkfP6BbSA
-         e/Sw==
-X-Gm-Message-State: APjAAAWq9pyysncPKCRHqbODvUnQWeCV6+TnC7smM7pJDEB2rgyksyaq
-        mHJjtKW1jI59p+REdO+bB1K5ajOBCrdaZ2GSGl8=
-X-Google-Smtp-Source: APXvYqzInsY7hophOQP2+nEZGGNXBok7RANKqxBeOZYae1OgjLLxGPRqV70MTIeInLmoCGA432X8l3eaGcInyEDdSxg=
-X-Received: by 2002:a05:6830:1158:: with SMTP id x24mr6121936otq.109.1574920328102;
- Wed, 27 Nov 2019 21:52:08 -0800 (PST)
-MIME-Version: 1.0
-References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
- <20191128015748.GA3277@ming.t460p> <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
- <20191128025822.GC3277@ming.t460p> <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
- <CAAFE1bdGCx96tLKgSkNf7=MDZEZMnC==PJghpsRctvZpPLaX5w@mail.gmail.com>
-In-Reply-To: <CAAFE1bdGCx96tLKgSkNf7=MDZEZMnC==PJghpsRctvZpPLaX5w@mail.gmail.com>
-Reply-To: Rob.Townley@gmail.com
-From:   Rob Townley <rob.townley@gmail.com>
-Date:   Wed, 27 Nov 2019 23:51:56 -0600
-Message-ID: <CA+VdTb-HTXidfFVmzV2ynJgOGdmb-Ps=j9vQfZ-iZBPFm4RWJg@mail.gmail.com>
-Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
-To:     Stephen Rust <srust@blockbridge.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, target-devel@vger.kernel.org
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=VFy1sFwSgg5UC5QpoP/yzBe3ULMeokNC0smHjyZo8m4=;
+        b=A8Xpe9/PJeNw9v4B08ZW2mmWJKg3F/FsW0TbpoiPc7RlTyNVoDctJrpi3bbaYavskX
+         AJXGrWuv2yhYATfgl5PUwP6gSA8uIxCDF5erfyXc7ctvGWV+TA+UHuIhP5j+U63CJVO5
+         TocrN0pkRzHKte0J1VbnLimH3tj9PrrGZt55Z0ia//LVNB5IYws+G3Dz1rX/RiuQyGrF
+         S8TRImsTvUYb6GRSdb5gNzUySWFQV+wDgHbdLwIu3BTm+W7Tmg1UXIcHClQEezs2zwH+
+         p3k2+/WwumAxTkOVkDW+X8YGG0Q82Gja8W/V0YUNNO8GnYTXZqiTZfvinmm5HwbWyobm
+         ujZA==
+X-Gm-Message-State: APjAAAVAraFBOYcsx1WGOMj17jAVZwogOGDUP1spFA0+Gvfaufn0bqY/
+        2ONw6njLx3lshrTFDXRFeBhkfQ==
+X-Google-Smtp-Source: APXvYqxCSYsgjrZbWU5SOnX8qESM6uMlLYOpke32BDxN1R/HG9BIzYO5SpnDKowE/yTBZtmSSEZhXg==
+X-Received: by 2002:adf:ef4e:: with SMTP id c14mr11747570wrp.142.1574927218879;
+        Wed, 27 Nov 2019 23:46:58 -0800 (PST)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id 19sm25110905wrc.47.2019.11.27.23.46.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Nov 2019 23:46:58 -0800 (PST)
+Message-ID: <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Date:   Thu, 28 Nov 2019 08:46:57 +0100
+In-Reply-To: <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+References: <20191109222828.GA30568@ming.t460p>
+         <fa3b0cf1f88e42e1200101bccbc797e4e7778d58.camel@unipv.it>
+         <20191123072726.GC25356@ming.t460p>
+         <a9ffcca93657cbbb56819fd883c474a702423b41.camel@unipv.it>
+         <20191125035437.GA3806@ming.t460p>
+         <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>
+         <20191125102928.GA20489@ming.t460p>
+         <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>
+         <20191125151535.GA8044@ming.t460p>
+         <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
+         <20191126023253.GA24501@ming.t460p>
+         <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+         <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+         <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
 Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Interesting case to follow as there are many types of RamDisks.  The
-common tmpfs kind will use its RAM allocation and all free harddrive
-space.
+Il giorno mer, 27/11/2019 alle 08.14 +0000, Schmid, Carsten ha
+scritto:
+> > 
+> > > Then I started another set of 100 trials and let them run
+> tonight, and
+> > > the first 10 trials were around 1000s, then gradually decreased
+> to
+> > > ~300s, and finally settled around 200s with some trials below
+> 70-80s.
+> > > This to say, times are extremely variable and for the first time
+> I
+> > > noticed a sort of "performance increase" with time.
+> > >
+> > 
+> > The sheer volume of testing (probably some terabytes by now) would
+> > exercise the wear leveling algorithm in the FTL.
+> > 
+> But with "old kernel" the copy operation still is "fast", as far as
+> i understood.
+> If FTL (e.g. wear leveling) would slow down, we would see that also
+> in
+> the old kernel, right?
+> 
+> Andrea, can you confirm that the same device used with the old fast
+> kernel is still fast today?
 
-The ramdisk in CentOS 7 backed by LIO will overflow its size in RAM
-and fill up all remaining free space on spinning platters.  So if the
-RamDisk is 4GB out of 192GB RAM in the lightly used machine. Free
-filesystem space is 16GB.  Writes to the 4GB RamDisk will only error
-out at 21GB when there is no space left on filesystem.
+Yes, it is still fast. Just ran a 100 trials test and got an average
+of 70 seconds with standard deviation = 6 seconds, aligned with the
+past values of the same kernel.
 
-dd if=/dev/zero of=/dev/iscsiRamDisk
-Will keep writing way past 4GB and not stop till hardrive is full
-which is totally different than normal disks.
+Thanks,
+Andrea
 
-Wonder what exact kind of RamDisk is in that kernel?
-
-On Wed, Nov 27, 2019 at 10:26 PM Stephen Rust <srust@blockbridge.com> wrote:
->
-> [Apologies for dup, re-sending without text formatting to lists]
->
-> Hi,
->
-> Thanks for your reply.
->
-> I agree it does seem surprising that the git bisect pointed to this
-> particular commit when tracking down this issue.
->
-> > Stephen, could you share us how you setup the ramdisk in your test?
->
-> The ramdisk we export in LIO is a standard "brd" module ramdisk (ie:
-> /dev/ram*). We configure it as a "block" backstore in LIO, not using
-> the built-in LIO ramdisk.
->
-> LIO configuration is as follows:
->
->   o- backstores .......................................................... [...]
->   | o- block .............................................. [Storage Objects: 1]
->   | | o- Blockbridge-952f0334-2535-5fae-9581-6c6524165067
-> [/dev/ram-bb.952f0334-2535-5fae-9581-6c6524165067.cm2 (16.0MiB)
-> write-thru activated]
->   | |   o- alua ............................................... [ALUA Groups: 1]
->   | |     o- default_tg_pt_gp ................... [ALUA state: Active/optimized]
->   | o- fileio ............................................. [Storage Objects: 0]
->   | o- pscsi .............................................. [Storage Objects: 0]
->   | o- ramdisk ............................................ [Storage Objects: 0]
->   o- iscsi ........................................................ [Targets: 1]
->   | o- iqn.2009-12.com.blockbridge:rda:1:952f0334-2535-5fae-9581-6c6524165067:rda
->  [TPGs: 1]
->   |   o- tpg1 ...................................... [no-gen-acls, auth per-acl]
->   |     o- acls ...................................................... [ACLs: 1]
->   |     | o- iqn.1994-05.com.redhat:115ecc56a5c .. [mutual auth, Mapped LUNs: 1]
->   |     |   o- mapped_lun0  [lun0
-> block/Blockbridge-952f0334-2535-5fae-9581-6c6524165067 (rw)]
->   |     o- luns ...................................................... [LUNs: 1]
->   |     | o- lun0
-> [block/Blockbridge-952f0334-2535-5fae-9581-6c6524165067
-> (/dev/ram-bb.952f0334-2535-5fae-9581-6c6524165067.cm2)
-> (default_tg_pt_gp)]
->   |     o- portals ................................................ [Portals: 1]
->   |       o- 0.0.0.0:3260 ............................................... [iser]
->
-> > > > Could you explain a bit what is iSCSI attached with iSER / RDMA? Is the
-> > > > actual transport TCP over RDMA? What is related target driver involved?
->
-> iSER is the iSCSI extension for RDMA, and it is important to note that
-> we have _only_ reproduced this when the writes occur over RDMA, with
-> the target portal in LIO having enabled "iser". The iscsi client
-> (using iscsiadm) connects to the target directly over iSER. We use the
-> Mellanox ConnectX-5 Ethernet NICs (mlx5* module) for this purpose,
-> which utilizes RoCE (RDMA over Converged Ethernet) instead of TCP.
->
-> The identical ramdisk configuration using TCP/IP target in LIO has
-> _not_ reproduced this issue for us.
->
-> > > > /usr/share/bcc/tools/stackcount -K rd_execute_rw
->
-> I installed bcc and used the stackcount tool to trace rd_execute_rw,
-> but I suspect because we are not using the built-in LIO ramdisk this
-> did not catch anything. Are there other function traces we can provide
-> for you?
->
-> Thanks,
-> Steve
