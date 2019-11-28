@@ -7,62 +7,78 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 237FCC432C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 09:12:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77419C432C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 09:17:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEF1B21781
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 09:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B39D21781
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Nov 2019 09:17:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C6qAKSku"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BI8clD1t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726181AbfK1JMb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Nov 2019 04:12:31 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:40783 "EHLO
+        id S1726716AbfK1JRi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Nov 2019 04:17:38 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:27507 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726143AbfK1JMa (ORCPT
+        by vger.kernel.org with ESMTP id S1726092AbfK1JRh (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Nov 2019 04:12:30 -0500
+        Thu, 28 Nov 2019 04:17:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574932349;
+        s=mimecast20190719; t=1574932657;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=93nTBfXZSHlR8+dS6GNm1bAKHx8uhAYoz9B1bYNCDvo=;
-        b=C6qAKSkuwRCnct1FekBqh2V4g1MfLksmOJFS7EmBjXWY1pB/BkEF0gBe9OYOYxGsiWHDuW
-        V1xRMz0cCJWhV78YC77VaRCdcB8L8mjSfpCw0NJVPdF2BKndKyD2afwB0crxq5WP66ln4w
-        sLlSBmj5TsZWWxLYAbH0EweLz6G7piY=
+        bh=i0SBG/w7iwc1VC5pdiCftNu6+szwsgUJz8hkCGOzsEs=;
+        b=BI8clD1tWsyNwOgGl6gFUy1Xn6kW/iyWhWDmPFKcx4JMIgZUTw7QDiVztFANjr+TuMulUG
+        SBeo4UmjBQk3hrVs33nbYALV4xU41PTtU/K51/WVRlNmOHN8LLlFGETZ7SqOMMdDQ6wrmB
+        SONswyVcPg19wDl9Bg+fbEquqsUGD2Y=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-404-rBL7dYfcNgmQmzjigss6Gg-1; Thu, 28 Nov 2019 04:12:25 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-23-ylZ3XNEdMrS6uXP-I6wdZg-1; Thu, 28 Nov 2019 04:17:32 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5E65B593A0;
-        Thu, 28 Nov 2019 09:12:24 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9102810054E3;
+        Thu, 28 Nov 2019 09:17:29 +0000 (UTC)
 Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 499746084E;
-        Thu, 28 Nov 2019 09:12:15 +0000 (UTC)
-Date:   Thu, 28 Nov 2019 17:12:10 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1E92B600C8;
+        Thu, 28 Nov 2019 09:17:18 +0000 (UTC)
+Date:   Thu, 28 Nov 2019 17:17:12 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     Stephen Rust <srust@blockbridge.com>
-Cc:     Rob Townley <rob.townley@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        target-devel@vger.kernel.org
-Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
-Message-ID: <20191128091210.GC15549@ming.t460p>
-References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
- <20191128015748.GA3277@ming.t460p>
- <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
- <20191128025822.GC3277@ming.t460p>
- <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+To:     Andrea Vai <andrea.vai@unipv.it>
+Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Message-ID: <20191128091712.GD15549@ming.t460p>
+References: <bf47a6c620b847fa9e27f8542eb761529f3e0381.camel@unipv.it>
+ <20191125102928.GA20489@ming.t460p>
+ <e5093535c60fd5dff8f92b76dcd52a1030938f62.camel@unipv.it>
+ <20191125151535.GA8044@ming.t460p>
+ <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
+ <20191126023253.GA24501@ming.t460p>
+ <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+ <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+ <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+ <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
 MIME-Version: 1.0
-In-Reply-To: <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+In-Reply-To: <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-MC-Unique: rBL7dYfcNgmQmzjigss6Gg-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-MC-Unique: ylZ3XNEdMrS6uXP-I6wdZg-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
@@ -72,111 +88,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 27, 2019 at 11:14:46PM -0500, Stephen Rust wrote:
-> Hi,
+On Thu, Nov 28, 2019 at 08:46:57AM +0100, Andrea Vai wrote:
+> Il giorno mer, 27/11/2019 alle 08.14 +0000, Schmid, Carsten ha
+> scritto:
+> > >=20
+> > > > Then I started another set of 100 trials and let them run
+> > tonight, and
+> > > > the first 10 trials were around 1000s, then gradually decreased
+> > to
+> > > > ~300s, and finally settled around 200s with some trials below
+> > 70-80s.
+> > > > This to say, times are extremely variable and for the first time
+> > I
+> > > > noticed a sort of "performance increase" with time.
+> > > >
+> > >=20
+> > > The sheer volume of testing (probably some terabytes by now) would
+> > > exercise the wear leveling algorithm in the FTL.
+> > >=20
+> > But with "old kernel" the copy operation still is "fast", as far as
+> > i understood.
+> > If FTL (e.g. wear leveling) would slow down, we would see that also
+> > in
+> > the old kernel, right?
+> >=20
+> > Andrea, can you confirm that the same device used with the old fast
+> > kernel is still fast today?
 >=20
-> Thanks for your reply.
->=20
-> I agree it does seem surprising that the git bisect pointed to this
-> particular commit when tracking down this issue.
->=20
-> The ramdisk we export in LIO is a standard "brd" module ramdisk (ie:
-> /dev/ram*). We configure it as a "block" backstore in LIO, not using the
-> built-in LIO ramdisk.
+> Yes, it is still fast. Just ran a 100 trials test and got an average
+> of 70 seconds with standard deviation =3D 6 seconds, aligned with the
+> past values of the same kernel.
 
-Then it isn't strange any more, since iblock code uses bio interface.
+Then can you collect trace on the old kernel via the previous script?
 
->=20
-> LIO configuration is as follows:
->=20
->   o- backstores .........................................................=
-.
-> [...]
->   | o- block .............................................. [Storage
-> Objects: 1]
->   | | o- Blockbridge-952f0334-2535-5fae-9581-6c6524165067
->  [/dev/ram-bb.952f0334-2535-5fae-9581-6c6524165067.cm2 (16.0MiB) write-th=
-ru
-> activated]
->   | |   o- alua ............................................... [ALUA
-> Groups: 1]
->   | |     o- default_tg_pt_gp ................... [ALUA state:
-> Active/optimized]
->   | o- fileio ............................................. [Storage
-> Objects: 0]
->   | o- pscsi .............................................. [Storage
-> Objects: 0]
->   | o- ramdisk ............................................ [Storage
-> Objects: 0]
->   o- iscsi ........................................................
-> [Targets: 1]
->   | o-
-> iqn.2009-12.com.blockbridge:rda:1:952f0334-2535-5fae-9581-6c6524165067:rd=
-a
->  [TPGs: 1]
->   |   o- tpg1 ...................................... [no-gen-acls, auth
-> per-acl]
->   |     o- acls ......................................................
-> [ACLs: 1]
->   |     | o- iqn.1994-05.com.redhat:115ecc56a5c .. [mutual auth, Mapped
-> LUNs: 1]
->   |     |   o- mapped_lun0  [lun0
-> block/Blockbridge-952f0334-2535-5fae-9581-6c6524165067 (rw)]
->   |     o- luns ......................................................
-> [LUNs: 1]
->   |     | o- lun0  [block/Blockbridge-952f0334-2535-5fae-9581-6c652416506=
-7
-> (/dev/ram-bb.952f0334-2535-5fae-9581-6c6524165067.cm2) (default_tg_pt_gp)=
-]
->   |     o- portals ................................................
-> [Portals: 1]
->   |       o- 0.0.0.0:3260 ...............................................
-> [iser]
->=20
->=20
-> iSER is the iSCSI extension for RDMA, and it is important to note that we
-> have _only_ reproduced this when the writes occur over RDMA, with the
-> target portal in LIO having enabled "iser". The iscsi client (using
-> iscsiadm) connects to the target directly over iSER. We use the Mellanox
-> ConnectX-5 Ethernet NICs (mlx5* module) for this purpose, which utilizes
-> RoCE (RDMA over Converged Ethernet) instead of TCP.
+#!/bin/sh
 
-I may get one machine with Mellanox NIC, is it easy to setup & reproduce
-just in the local machine(both host and target are setup on same machine)?
+MAJ=3D$1
+MIN=3D$2
+MAJ=3D$(( $MAJ << 20 ))
+DEV=3D$(( $MAJ | $MIN ))
 
->=20
-> The identical ramdisk configuration using TCP/IP target in LIO has _not_
-> reproduced this issue for us.
+/usr/share/bcc/tools/trace -t -C \
+    't:block:block_rq_issue (args->dev =3D=3D '$DEV') "%s %d %d", args->rwb=
+s, args->sector, args->nr_sector' \
+    't:block:block_rq_insert (args->dev =3D=3D '$DEV') "%s %d %d", args->rw=
+bs, args->sector, args->nr_sector'
 
-Yeah, I just tried iblock over brd, and can't reproduce it.
+Both the two trace points and bcc should be available on the old kernel.
 
->=20
-> I installed bcc and used the stackcount tool to trace rd_execute_rw, but =
-I
-> suspect because we are not using the built-in LIO ramdisk this did not
-> catch anything. Are there other function traces we can provide for you?
-
-Please try to trace bio_add_page() a bit via 'bpftrace ./ilo.bt'.
-
-[root@ktest-01 func]# cat ilo.bt
-kprobe:iblock_execute_rw
-{
-    @start[tid]=3D1;
-}
-
-kretprobe:iblock_execute_rw
-{
-    @start[tid]=3D0;
-}
-
-kprobe:bio_add_page
-/@start[tid]/
-{
-  printf("%d %d\n", arg2, arg3);
-}
-
-
-
-Thanks,=20
+Thanks,
 Ming
 
