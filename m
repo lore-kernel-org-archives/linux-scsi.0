@@ -2,208 +2,174 @@ Return-Path: <SRS0=Uo2m=ZV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB774C432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 02:36:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B395C432C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 03:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F8EC21736
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 02:36:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JaVKfBEt"
+	by mail.kernel.org (Postfix) with ESMTP id 2009121774
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 03:03:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfK2CgS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Nov 2019 21:36:18 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:24353 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726734AbfK2CgS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Nov 2019 21:36:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574994977;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=jDF7Q7V50OQ37uKqyTz79/2jEQE/f9lemxhgikNLHpM=;
-        b=JaVKfBEtG+qH5ZeuGI3L27IMT0IJYgdZ20K1WaLPpFeTk/AgSHHaxYlMMXAsYNV8CUhus7
-        UbAZ61EkvE0CY3jU14cc5bXOsi2MNTAdubZszTrqfba3ifIDAy7h9YjLVZj4awWS4/EbgI
-        9c+m3Tr6gqgjpGOPhPNNJTU+xLyBK9I=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-306-CZ9IrU96NzK7m1UWnHMAlQ-1; Thu, 28 Nov 2019 21:36:14 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E5EAC10054E3;
-        Fri, 29 Nov 2019 02:36:11 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3922910013A7;
-        Fri, 29 Nov 2019 02:36:00 +0000 (UTC)
-Date:   Fri, 29 Nov 2019 10:35:55 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191129023555.GA8620@ming.t460p>
-References: <20191125151535.GA8044@ming.t460p>
- <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
- <20191126023253.GA24501@ming.t460p>
- <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
- <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
- <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
- <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
- <20191128091712.GD15549@ming.t460p>
- <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
- <20191129005734.GB1829@ming.t460p>
+        id S1726747AbfK2DDT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Nov 2019 22:03:19 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:38826 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726729AbfK2DDT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Nov 2019 22:03:19 -0500
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 47B7B1D6D8A002D4449A;
+        Fri, 29 Nov 2019 11:03:14 +0800 (CST)
+Received: from huawei.com (10.175.124.28) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Fri, 29 Nov 2019
+ 11:03:05 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <dan.j.williams@intel.com>,
+        <jthumshirn@suse.de>, <hch@lst.de>, <john.garry@huawei.com>,
+        Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] scsi: libsas: stop discovering if oob mode is disconnected
+Date:   Fri, 29 Nov 2019 11:24:13 +0800
+Message-ID: <20191129032413.36092-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.17.2
 MIME-Version: 1.0
-In-Reply-To: <20191129005734.GB1829@ming.t460p>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: CZ9IrU96NzK7m1UWnHMAlQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.28]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
-> On Thu, Nov 28, 2019 at 06:34:32PM +0100, Andrea Vai wrote:
-> > Il giorno gio, 28/11/2019 alle 17.17 +0800, Ming Lei ha scritto:
-> > > On Thu, Nov 28, 2019 at 08:46:57AM +0100, Andrea Vai wrote:
-> > > > Il giorno mer, 27/11/2019 alle 08.14 +0000, Schmid, Carsten ha
-> > > > scritto:
-> > > > > >=20
-> > > > > > > Then I started another set of 100 trials and let them run
-> > > > > tonight, and
-> > > > > > > the first 10 trials were around 1000s, then gradually
-> > > decreased
-> > > > > to
-> > > > > > > ~300s, and finally settled around 200s with some trials
-> > > below
-> > > > > 70-80s.
-> > > > > > > This to say, times are extremely variable and for the first
-> > > time
-> > > > > I
-> > > > > > > noticed a sort of "performance increase" with time.
-> > > > > > >
-> > > > > >=20
-> > > > > > The sheer volume of testing (probably some terabytes by now)
-> > > would
-> > > > > > exercise the wear leveling algorithm in the FTL.
-> > > > > >=20
-> > > > > But with "old kernel" the copy operation still is "fast", as far
-> > > as
-> > > > > i understood.
-> > > > > If FTL (e.g. wear leveling) would slow down, we would see that
-> > > also
-> > > > > in
-> > > > > the old kernel, right?
-> > > > >=20
-> > > > > Andrea, can you confirm that the same device used with the old
-> > > fast
-> > > > > kernel is still fast today?
-> > > >=20
-> > > > Yes, it is still fast. Just ran a 100 trials test and got an
-> > > average
-> > > > of 70 seconds with standard deviation =3D 6 seconds, aligned with
-> > > the
-> > > > past values of the same kernel.
-> > >=20
-> > > Then can you collect trace on the old kernel via the previous
-> > > script?
-> > >=20
-> > > #!/bin/sh
-> > >=20
-> > > MAJ=3D$1
-> > > MIN=3D$2
-> > > MAJ=3D$(( $MAJ << 20 ))
-> > > DEV=3D$(( $MAJ | $MIN ))
-> > >=20
-> > > /usr/share/bcc/tools/trace -t -C \
-> > >     't:block:block_rq_issue (args->dev =3D=3D '$DEV') "%s %d %d", arg=
-s-
-> > > >rwbs, args->sector, args->nr_sector' \
-> > >     't:block:block_rq_insert (args->dev =3D=3D '$DEV') "%s %d %d", ar=
-gs-
-> > > >rwbs, args->sector, args->nr_sector'
-> > >=20
-> > > Both the two trace points and bcc should be available on the old
-> > > kernel.
-> > >=20
-> >=20
-> > Trace attached. Produced by: start the trace script
-> > (with the pendrive already plugged), wait some seconds, run the test
-> > (1 trial, 1 GB), wait for the test to finish, stop the trace.
-> >=20
-> > The copy took 73 seconds, roughly as already seen before with the fast
-> > old kernel.
->=20
-> This trace shows a good write IO order because the writeback IOs are
-> queued to block layer serially from the 'cp' task and writeback wq.
->=20
-> However, writeback IO order is changed in current linus tree because
-> the IOs are queued to block layer concurrently from the 'cp' task
-> and writeback wq. It might be related with killing queue_congestion
-> by blk-mq.
->=20
-> The performance effect could be not only on this specific USB drive,
-> but also on all HDD., I guess.
->=20
-> However, I still can't reproduce it in my VM even though I built it
-> with similar setting of Andrea's test machine. Maybe the emulated disk
-> is too fast than Andrea's.
->=20
-> Andrea, can you collect the following log when running the test
-> on current new(bad) kernel?
->=20
-> =09/usr/share/bcc/tools/stackcount  -K blk_mq_make_request
+The discovering of sas port is driving by workqueue in libsas. When
+libsas is processing port events or phy events in workqueue, new evnets
+may rise up and change the state of some structures such as asd_sas_phy.
+This may cause some problems such as follows:
 
-Instead, please run the following trace, given insert may be
-called from other paths, such as flush plug:
+==>thread 1                       ==>thread 2
 
-=09/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
+                                  ==>phy up
+                                  ==>phy_up_v3_hw()
+                                    ==>oob_mode = SATA_OOB_MODE;
+                                  ==>phy donw quickly
+                                  ==>hisi_sas_phy_down()
+                                    ==>sas_ha->notify_phy_event()
+                                    ==>sas_phy_disconnected()
+                                      ==>oob_mode = OOB_NOT_CONNECTED
+==>workqueue wakeup
+==>sas_form_port()
+  ==>sas_discover_domain()
+    ==>sas_get_port_device()
+      ==>oob_mode is OOB_NOT_CONNECTED and device
+         is wrongly taken as expander
 
-If you are using python3, the following failure may be triggered:
+This at last lead to the panic when libsas trying to issue a command to
+discover the device.
 
-=09"cannot use a bytes pattern on a string-like object"
+[183047.614035] Unable to handle kernel NULL pointer dereference at
+virtual address 0000000000000058
+[183047.622896] Mem abort info:
+[183047.625762]   ESR = 0x96000004
+[183047.628893]   Exception class = DABT (current EL), IL = 32 bits
+[183047.634888]   SET = 0, FnV = 0
+[183047.638015]   EA = 0, S1PTW = 0
+[183047.641232] Data abort info:
+[183047.644189]   ISV = 0, ISS = 0x00000004
+[183047.648100]   CM = 0, WnR = 0
+[183047.651145] user pgtable: 4k pages, 48-bit VAs, pgdp =
+00000000b7df67be
+[183047.657834] [0000000000000058] pgd=0000000000000000
+[183047.662789] Internal error: Oops: 96000004 [#1] SMP
+[183047.667740] Process kworker/u16:2 (pid: 31291, stack limit =
+0x00000000417c4974)
+[183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
+W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
+[183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
+BIOS 0.15 10/22/2019
+[183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
+[183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
+[183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+[183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
+[183047.717153] sp : ffff00000f28ba60
+[183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
+[183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
+[183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
+[183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
+[183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
+[183047.747464] x19: 0000000000f80800 x18: 0000000000000010
+[183047.752848] x17: 0000000000000000 x16: 0000000000000000
+[183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
+[183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
+[183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
+[183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
+[183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
+[183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
+[183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
+[183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
+[183047.801307] Call trace:
+[183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+[183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
+[183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
+[183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
+[183047.826757]  smp_execute_task_sg+0xec/0x218
+[183047.831013]  smp_execute_task+0x74/0xa0
+[183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
+[183047.839959]  sas_discover_root_expander+0x90/0x160
+[183047.844822]  sas_discover_domain+0x1b8/0x1e8
+[183047.849164]  process_one_work+0x1b4/0x3f8
+[183047.853246]  worker_thread+0x54/0x470
+[183047.856981]  kthread+0x134/0x138
+[183047.860283]  ret_from_fork+0x10/0x18
+[183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
+[183047.870097] kernel fault(0x1) notification starting on CPU 0
+[183047.875828] kernel fault(0x1) notification finished on CPU 0
+[183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
+hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
+[183047.892418] ---[ end trace 4cc26083fc11b783  ]---
+[183047.897107] Kernel panic - not syncing: Fatal exception
+[183047.902403] kernel fault(0x5) notification starting on CPU 0
+[183047.908134] kernel fault(0x5) notification finished on CPU 0
+[183047.913865] SMP: stopping secondary CPUs
+[183047.917861] Kernel Offset: disabled
+[183047.921422] CPU features: 0x2,a2a00a38
+[183047.925243] Memory Limit: none
+[183047.928372] kernel reboot(0x2) notification starting on CPU 0
+[183047.934190] kernel reboot(0x2) notification finished on CPU 0
+[183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
+]---
 
-Then apply the following fix on /usr/lib/python3.7/site-packages/bcc/__init=
-__.py
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Reported-by: Gao Chuan <gaochuan4@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/libsas/sas_discover.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/src/python/bcc/__init__.py b/src/python/bcc/__init__.py
-index 6f114de8..bff5f282 100644
---- a/src/python/bcc/__init__.py
-+++ b/src/python/bcc/__init__.py
-@@ -769,7 +769,7 @@ class BPF(object):
-                 evt_dir =3D os.path.join(cat_dir, event)
-                 if os.path.isdir(evt_dir):
-                     tp =3D ("%s:%s" % (category, event))
--                    if re.match(tp_re, tp):
-+                    if re.match(tp_re.decode(), tp):
-                         results.append(tp)
-         return results
-
-Thanks,
-Ming
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index f47b4b281b14..23fdbc8fa05a 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -81,12 +81,18 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 		else
+ 			dev->dev_type = SAS_SATA_DEV;
+ 		dev->tproto = SAS_PROTOCOL_SATA;
+-	} else {
++	} else if (port->oob_mode == SAS_OOB_MODE) {
+ 		struct sas_identify_frame *id =
+ 			(struct sas_identify_frame *) dev->frame_rcvd;
+ 		dev->dev_type = id->dev_type;
+ 		dev->iproto = id->initiator_bits;
+ 		dev->tproto = id->target_bits;
++	} else {
++		/* If the oob mode is OOB_NOT_CONNECTED, the port is
++		 * disconnected due to race with PHY down. We cannot
++		 * continue to discover this port */
++		sas_put_device(dev);
++		return rc;
+ 	}
+ 
+ 	sas_init_dev(dev);
+-- 
+2.17.2
 
