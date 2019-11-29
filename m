@@ -2,208 +2,187 @@ Return-Path: <SRS0=Uo2m=ZV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	ZIPFILE autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BE6C432C0
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 13:58:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19CE2C432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 14:41:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76E2C217BC
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 13:58:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE8F421736
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 14:41:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="oQRm0AlH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726785AbfK2N6Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Nov 2019 08:58:24 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2142 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726741AbfK2N6Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 29 Nov 2019 08:58:24 -0500
-Received: from lhreml708-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 662A1C8A970CABB83A99;
-        Fri, 29 Nov 2019 13:58:22 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml708-cah.china.huawei.com (10.201.108.49) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Fri, 29 Nov 2019 13:58:21 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Fri, 29 Nov
- 2019 13:58:21 +0000
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH] scsi: libsas: stop discovering if oob mode is
- disconnected
-To:     yanaijie <yanaijie@huawei.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "jthumshirn@suse.de" <jthumshirn@suse.de>,
-        "hch@lst.de" <hch@lst.de>, chenxiang <chenxiang66@hisilicon.com>
-References: <20191129032413.36092-1-yanaijie@huawei.com>
-Message-ID: <b59a5d52-f663-2772-fc5d-201eeaed1d52@huawei.com>
-Date:   Fri, 29 Nov 2019 13:58:20 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727072AbfK2OlI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Nov 2019 09:41:08 -0500
+Received: from mail-wm1-f44.google.com ([209.85.128.44]:35204 "EHLO
+        mail-wm1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726908AbfK2OlH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2019 09:41:07 -0500
+Received: by mail-wm1-f44.google.com with SMTP id n5so15346376wmc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2019 06:41:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=unipv-it.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version;
+        bh=ZfM3GovPXzN4SKlLoN9sS3h6HAqKDeCW7nRc1sCilh8=;
+        b=oQRm0AlHFMiZ4UNhJ4OAPY98dzpKCaf4jdTuY1b92ZKXEWbO82fDgPns6BFK7Krhcw
+         fULlRHHrnz9uFT+hFnHyA6P/DK0ygLE+PkiAVUs+3xa4/fI6FX8s130Q1zCOI4BSE96A
+         82Ynb8noyaBtEtrlmIPFwlhqHHcrtOF6u/vayy3R87MxP9FTWk1AUMtXhXDxhC+TOtgD
+         DJJ0NkMV4PukiW5FjU5hK2N6AdDAwYmvBw7doeAiAXWNkPdP5EZVSbEDNQZkLGO3zV6/
+         0b2ZYqTBOV1dUSP0j95vDto7+IGAD0NwmUhlG31vYeddvQw95f9gggcqb2cMRJcMIDme
+         U8XA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version;
+        bh=ZfM3GovPXzN4SKlLoN9sS3h6HAqKDeCW7nRc1sCilh8=;
+        b=iYCEDJj6n0ArxtNpHiAtBEN+fqLGti8jxNdrRPkwa9/hhCSOJqWnIKaJcl/5sVPjMS
+         JRfDCDkjjqH9Xt7XQHVsZCtcOPpqHqtFRJYwLzLIYDKk3h5uX7q+/TpAdlFh41abkr4Y
+         swLwKMtnCRCeeSvWdm7+3RVpi8qrN2B2zots8XblmvzjnPk6ci93uZPg1kFsjRlB8+gk
+         I56RLAUi6LXkm7liqgnVbVhgHZ4wrHOUWusaPeD560tNE6AkR/MQpkg0IHT25xbEmCOr
+         BMdZpmoDVjPbw5vqSM/vpFGUj3w80/782Y5OQMk5nARtUHMYYr4LSBlnxnUHPv23MEus
+         J4tg==
+X-Gm-Message-State: APjAAAUAGhu7Ji++3vVnwz7c2IeGIoEsm0+U0UEqvPygdXc3vVDVQ1ju
+        Y7gOrfdtDuMJWQcqxICxk1qB4w==
+X-Google-Smtp-Source: APXvYqzHd7/v31vJYF6fqLZilk5NEJtU4jsvxvMsbZLpASuasxWvkHojZ7vYtZ5TtWmMa+5eTc4TPg==
+X-Received: by 2002:a7b:cb59:: with SMTP id v25mr14908984wmj.159.1575038463923;
+        Fri, 29 Nov 2019 06:41:03 -0800 (PST)
+Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
+        by smtp.gmail.com with ESMTPSA id n188sm9216845wme.14.2019.11.29.06.41.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Nov 2019 06:41:02 -0800 (PST)
+Message-ID: <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+From:   Andrea Vai <andrea.vai@unipv.it>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>
+Date:   Fri, 29 Nov 2019 15:41:01 +0100
+In-Reply-To: <20191129023555.GA8620@ming.t460p>
+References: <20191125151535.GA8044@ming.t460p>
+         <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
+         <20191126023253.GA24501@ming.t460p>
+         <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+         <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+         <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+         <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
+         <20191128091712.GD15549@ming.t460p>
+         <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
+         <20191129005734.GB1829@ming.t460p> <20191129023555.GA8620@ming.t460p>
+Content-Type: multipart/mixed; boundary="=-HIAul2oAsNr1EC1inCjc"
+User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
 MIME-Version: 1.0
-In-Reply-To: <20191129032413.36092-1-yanaijie@huawei.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml720-chm.china.huawei.com (10.201.108.71) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29/11/2019 03:24, yanaijie wrote:
-> The discovering of sas port is driving by workqueue in libsas. When
-> libsas is processing port events or phy events in workqueue, new evnets
 
-/s/evnets/events/
+--=-HIAul2oAsNr1EC1inCjc
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-> may rise up and change the state of some structures such as asd_sas_phy.
-> This may cause some problems such as follows:
+Il giorno ven, 29/11/2019 alle 10.35 +0800, Ming Lei ha scritto:
+> On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
 > 
-> ==>thread 1                       ==>thread 2
+> > [...]
 > 
->                                    ==>phy up
->                                    ==>phy_up_v3_hw()
->                                      ==>oob_mode = SATA_OOB_MODE;
->                                    ==>phy donw quickly
-
-down
-
->                                    ==>hisi_sas_phy_down()
->                                      ==>sas_ha->notify_phy_event()
->                                      ==>sas_phy_disconnected()
->                                        ==>oob_mode = OOB_NOT_CONNECTED
-> ==>workqueue wakeup
-> ==>sas_form_port()
->    ==>sas_discover_domain()
->      ==>sas_get_port_device()
->        ==>oob_mode is OOB_NOT_CONNECTED and device
->           is wrongly taken as expander
+> > Andrea, can you collect the following log when running the test
+> > on current new(bad) kernel?
+> > 
+> > 	/usr/share/bcc/tools/stackcount  -K blk_mq_make_request
 > 
-> This at last lead to the panic when libsas trying to issue a command to
-> discover the device.
+> Instead, please run the following trace, given insert may be
+> called from other paths, such as flush plug:
 > 
-> [183047.614035] Unable to handle kernel NULL pointer dereference at
-> virtual address 0000000000000058
-> [183047.622896] Mem abort info:
-> [183047.625762]   ESR = 0x96000004
-> [183047.628893]   Exception class = DABT (current EL), IL = 32 bits
-> [183047.634888]   SET = 0, FnV = 0
-> [183047.638015]   EA = 0, S1PTW = 0
-> [183047.641232] Data abort info:
-> [183047.644189]   ISV = 0, ISS = 0x00000004
-> [183047.648100]   CM = 0, WnR = 0
-> [183047.651145] user pgtable: 4k pages, 48-bit VAs, pgdp =
-> 00000000b7df67be
-> [183047.657834] [0000000000000058] pgd=0000000000000000
-> [183047.662789] Internal error: Oops: 96000004 [#1] SMP
-> [183047.667740] Process kworker/u16:2 (pid: 31291, stack limit =
-> 0x00000000417c4974)
-> [183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
-> W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
-> [183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
-> BIOS 0.15 10/22/2019
-> [183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
-> [183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
-> [183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+> 	/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
 
-Can you explain how we discover an expander device yet try to send an 
-ATA command?
+Attached, for new (patched) bad kernel.
 
-> [183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
-> [183047.717153] sp : ffff00000f28ba60
-> [183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
-> [183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
-> [183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
-> [183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
-> [183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
-> [183047.747464] x19: 0000000000f80800 x18: 0000000000000010
-> [183047.752848] x17: 0000000000000000 x16: 0000000000000000
-> [183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
-> [183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
-> [183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
-> [183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
-> [183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
-> [183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
-> [183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
-> [183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
-> [183047.801307] Call trace:
-> [183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
-> [183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
-> [183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
-> [183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
-> [183047.826757]  smp_execute_task_sg+0xec/0x218
-> [183047.831013]  smp_execute_task+0x74/0xa0
-> [183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
-> [183047.839959]  sas_discover_root_expander+0x90/0x160
-> [183047.844822]  sas_discover_domain+0x1b8/0x1e8
-> [183047.849164]  process_one_work+0x1b4/0x3f8
-> [183047.853246]  worker_thread+0x54/0x470
-> [183047.856981]  kthread+0x134/0x138
-> [183047.860283]  ret_from_fork+0x10/0x18
-> [183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
-> [183047.870097] kernel fault(0x1) notification starting on CPU 0
-> [183047.875828] kernel fault(0x1) notification finished on CPU 0
-> [183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
-> hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
-> [183047.892418] ---[ end trace 4cc26083fc11b783  ]---
-> [183047.897107] Kernel panic - not syncing: Fatal exception
-> [183047.902403] kernel fault(0x5) notification starting on CPU 0
-> [183047.908134] kernel fault(0x5) notification finished on CPU 0
-> [183047.913865] SMP: stopping secondary CPUs
-> [183047.917861] Kernel Offset: disabled
-> [183047.921422] CPU features: 0x2,a2a00a38
-> [183047.925243] Memory Limit: none
-> [183047.928372] kernel reboot(0x2) notification starting on CPU 0
-> [183047.934190] kernel reboot(0x2) notification finished on CPU 0
-> [183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
-> ]---
-> 
-> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Produced by: start the trace script (with the pendrive already
+plugged), wait some seconds, run the test (1 trial, 1 GB), wait for
+the test to finish, stop the trace.
 
-I am not sure if it is appropriate to identify this as what we're 
-fixing, since we changed significantly the event processing in libsas 
-since 2908d778ab3e?
+The copy took ~1700 seconds.
 
-> Reported-by: Gao Chuan <gaochuan4@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_discover.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index f47b4b281b14..23fdbc8fa05a 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -81,12 +81,18 @@ static int sas_get_port_device(struct asd_sas_port *port)
->   		else
->   			dev->dev_type = SAS_SATA_DEV;
->   		dev->tproto = SAS_PROTOCOL_SATA;
-> -	} else {
-> +	} else if (port->oob_mode == SAS_OOB_MODE) {
+Thanks,
+Andrea
 
-This just looks racy. We're sending an event and then checking some 
-volatile shared memory in the event processing :(
+--=-HIAul2oAsNr1EC1inCjc
+Content-Type: application/zip; name="log_ming_20191129_150609.zip"
+Content-Disposition: attachment; filename="log_ming_20191129_150609.zip"
+Content-Transfer-Encoding: base64
 
->   		struct sas_identify_frame *id =
->   			(struct sas_identify_frame *) dev->frame_rcvd;
->   		dev->dev_type = id->dev_type;
->   		dev->iproto = id->initiator_bits;
->   		dev->tproto = id->target_bits;
-> +	} else {
-> +		/* If the oob mode is OOB_NOT_CONNECTED, the port is
-> +		 * disconnected due to race with PHY down. We cannot
-> +		 * continue to discover this port */
-> +		sas_put_device(dev);
-> +		return rc;
->   	}
->   
->   	sas_init_dev(dev);
-> 
+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
+
+
+--=-HIAul2oAsNr1EC1inCjc--
 
