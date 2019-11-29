@@ -2,187 +2,156 @@ Return-Path: <SRS0=Uo2m=ZV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	ZIPFILE autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19CE2C432C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 14:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE1BC432C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 20:27:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE8F421736
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 14:41:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="oQRm0AlH"
+	by mail.kernel.org (Postfix) with ESMTP id 1840C21774
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Nov 2019 20:27:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727072AbfK2OlI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Nov 2019 09:41:08 -0500
-Received: from mail-wm1-f44.google.com ([209.85.128.44]:35204 "EHLO
-        mail-wm1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbfK2OlH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Nov 2019 09:41:07 -0500
-Received: by mail-wm1-f44.google.com with SMTP id n5so15346376wmc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Nov 2019 06:41:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version;
-        bh=ZfM3GovPXzN4SKlLoN9sS3h6HAqKDeCW7nRc1sCilh8=;
-        b=oQRm0AlHFMiZ4UNhJ4OAPY98dzpKCaf4jdTuY1b92ZKXEWbO82fDgPns6BFK7Krhcw
-         fULlRHHrnz9uFT+hFnHyA6P/DK0ygLE+PkiAVUs+3xa4/fI6FX8s130Q1zCOI4BSE96A
-         82Ynb8noyaBtEtrlmIPFwlhqHHcrtOF6u/vayy3R87MxP9FTWk1AUMtXhXDxhC+TOtgD
-         DJJ0NkMV4PukiW5FjU5hK2N6AdDAwYmvBw7doeAiAXWNkPdP5EZVSbEDNQZkLGO3zV6/
-         0b2ZYqTBOV1dUSP0j95vDto7+IGAD0NwmUhlG31vYeddvQw95f9gggcqb2cMRJcMIDme
-         U8XA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version;
-        bh=ZfM3GovPXzN4SKlLoN9sS3h6HAqKDeCW7nRc1sCilh8=;
-        b=iYCEDJj6n0ArxtNpHiAtBEN+fqLGti8jxNdrRPkwa9/hhCSOJqWnIKaJcl/5sVPjMS
-         JRfDCDkjjqH9Xt7XQHVsZCtcOPpqHqtFRJYwLzLIYDKk3h5uX7q+/TpAdlFh41abkr4Y
-         swLwKMtnCRCeeSvWdm7+3RVpi8qrN2B2zots8XblmvzjnPk6ci93uZPg1kFsjRlB8+gk
-         I56RLAUi6LXkm7liqgnVbVhgHZ4wrHOUWusaPeD560tNE6AkR/MQpkg0IHT25xbEmCOr
-         BMdZpmoDVjPbw5vqSM/vpFGUj3w80/782Y5OQMk5nARtUHMYYr4LSBlnxnUHPv23MEus
-         J4tg==
-X-Gm-Message-State: APjAAAUAGhu7Ji++3vVnwz7c2IeGIoEsm0+U0UEqvPygdXc3vVDVQ1ju
-        Y7gOrfdtDuMJWQcqxICxk1qB4w==
-X-Google-Smtp-Source: APXvYqzHd7/v31vJYF6fqLZilk5NEJtU4jsvxvMsbZLpASuasxWvkHojZ7vYtZ5TtWmMa+5eTc4TPg==
-X-Received: by 2002:a7b:cb59:: with SMTP id v25mr14908984wmj.159.1575038463923;
-        Fri, 29 Nov 2019 06:41:03 -0800 (PST)
-Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
-        by smtp.gmail.com with ESMTPSA id n188sm9216845wme.14.2019.11.29.06.41.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Nov 2019 06:41:02 -0800 (PST)
-Message-ID: <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-From:   Andrea Vai <andrea.vai@unipv.it>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>
-Date:   Fri, 29 Nov 2019 15:41:01 +0100
-In-Reply-To: <20191129023555.GA8620@ming.t460p>
-References: <20191125151535.GA8044@ming.t460p>
-         <0876e232feace900735ac90d27136288b54dafe1.camel@unipv.it>
-         <20191126023253.GA24501@ming.t460p>
-         <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
-         <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
-         <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
-         <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
-         <20191128091712.GD15549@ming.t460p>
-         <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
-         <20191129005734.GB1829@ming.t460p> <20191129023555.GA8620@ming.t460p>
-Content-Type: multipart/mixed; boundary="=-HIAul2oAsNr1EC1inCjc"
-User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
+        id S1727051AbfK2U1c convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Nov 2019 15:27:32 -0500
+Received: from m4a0040g.houston.softwaregrp.com ([15.124.2.86]:33198 "EHLO
+        m4a0040g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726970AbfK2U1c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 29 Nov 2019 15:27:32 -0500
+Received: FROM m4a0040g.houston.softwaregrp.com (15.120.17.146) BY m4a0040g.houston.softwaregrp.com WITH ESMTP;
+ Fri, 29 Nov 2019 20:25:32 +0000
+Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
+ M4W0334.microfocus.com (2002:f78:1192::f78:1192) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10; Fri, 29 Nov 2019 20:26:35 +0000
+Received: from NAM01-SN1-obe.outbound.protection.outlook.com (15.124.8.10) by
+ M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10 via Frontend Transport; Fri, 29 Nov 2019 20:26:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gAwQLNXttPbOp7B9rCLzDiTDkQSoFE4lOs7P873Kzlm0CHmr8mF4iou31Tq5upEbJV6i/X2QWmnhJQqa5kAs7iUSFL/2HXb/3X/gXjgUIRQ7G8tbZwK8JJO56BTpSZ/0XUU0XzIKZza/TxkepZpdy2s51flY/D5WKqXhSQW/PfURniKtgtPM9dYNT8CFlvJ9GjRQBE3HCgmenuh6TfvS3kg+MP4Bqy8CCGO9mamG8dYEGHFoMdPZemQod17FE+wiJI7RXA2hIu5PPXR6igMmbyzEeAigqifef+wEKS68+ILaSba9/V39b/SEoKWf1dwN+mOZmL77Fi48AccnRoGA5w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fZPn2ISs3Lntt7Ku90L0fT0Tdc8NdnjeplO4m/4YzOk=;
+ b=MyRCzfy9vZkzfm0UiRz0LqGj7xaD3BKqgyeQ8529rzjXxTt76cVXZqln74bFRGVULhOoX39LQha44B2AVzHN/LywcWI+r/fIzUCYPRhBD3NC2kqSk6LsIpazm/Ss9r0EZDzfRLJMhgHQxxooKhWcqQpY17s9N4lSQvaAkrr7e30TcEvs1BIqkt+W9EvKquwsfFm2YtR8VW8NhgaOsp/rYgf5D2bHbSFTahZRIVTbLwzbHOoXFRNuleuBSas5SbJ7prWA5Ww6X2nOi03S7L/9+7zEp+cgH98GGkFiplAxrozCgkzO2eonW3jX69QphI03VlxWfeyvQvHpe+jJU17NOA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Received: from DM5PR18MB1355.namprd18.prod.outlook.com (10.175.223.16) by
+ DM5PR18MB1644.namprd18.prod.outlook.com (10.175.224.138) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2474.21; Fri, 29 Nov 2019 20:26:34 +0000
+Received: from DM5PR18MB1355.namprd18.prod.outlook.com
+ ([fe80::b08c:34c6:ffb6:641c]) by DM5PR18MB1355.namprd18.prod.outlook.com
+ ([fe80::b08c:34c6:ffb6:641c%12]) with mapi id 15.20.2495.014; Fri, 29 Nov
+ 2019 20:26:34 +0000
+From:   Martin Wilck <Martin.Wilck@suse.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>
+CC:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Martin Wilck <Martin.Wilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: [PATCH 1/2] scsi: qla2xxx: avoid sending mailbox commands if firmware
+ is stopped
+Thread-Topic: [PATCH 1/2] scsi: qla2xxx: avoid sending mailbox commands if
+ firmware is stopped
+Thread-Index: AQHVpvNKYCEBiNY4p0Wmj1jkBPK5ag==
+Date:   Fri, 29 Nov 2019 20:26:34 +0000
+Message-ID: <20191129202627.19624-1-martin.wilck@suse.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: AM4P190CA0022.EURP190.PROD.OUTLOOK.COM
+ (2603:10a6:200:56::32) To DM5PR18MB1355.namprd18.prod.outlook.com
+ (2603:10b6:3:14a::16)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Martin.Wilck@suse.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.24.0
+x-originating-ip: [2.206.153.8]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e395b220-01c3-4dce-6021-08d7750a6d2c
+x-ms-traffictypediagnostic: DM5PR18MB1644:|DM5PR18MB1644:
+x-ld-processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM5PR18MB16442D8DB09B5B5E605AA5E8FC460@DM5PR18MB1644.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:115;
+x-forefront-prvs: 0236114672
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(366004)(136003)(396003)(39860400002)(376002)(189003)(199004)(6116002)(71190400001)(71200400001)(3846002)(4326008)(6512007)(6506007)(25786009)(64756008)(66446008)(305945005)(44832011)(7736002)(6436002)(6486002)(66556008)(66946007)(66476007)(386003)(8676002)(8936002)(14444005)(316002)(186003)(50226002)(99286004)(36756003)(5660300002)(86362001)(81166006)(81156014)(1076003)(52116002)(14454004)(102836004)(26005)(66066001)(110136005)(54906003)(2616005)(478600001)(256004)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR18MB1644;H:DM5PR18MB1355.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: suse.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: vB5k+qG5NT84qMgsxjXi3m64HHeFDRMnVbPJi1vJ9Be8MX5WYpi4vy4lzdvSU8BkIbzX3Fl2d36PcbStOyr3lwCFVzKPNq8xI06Y76yf6vdkck0M4MLEg7X9bOOFvw2vnosIkiRoqYhmd+kZjjdkg9WFIamEFSvIZ6QSkdJ+2icCFvEL8m+bYj75xW+lCEXnSFgnNOoxcOrwC1yvYO+dEcUd5GdbySU2pToz37GqaQyNCtybF/BpNton3PJx6oGr4yrQR2JTJx95cZuY1iW5QsjqrywkMtx+t2t4fVh9R1AKhj7jpWY1I4YNgMA5Duavwhv3MfqNL1tomDLd67a/+Kp/cRhb76Lx8yd+w7vcv5QJ38WM1reSjE9DJ2Pe+KvZevhTJk+fJwdyb8b4S69yrOpp0N4wgg6XQp8w1iAictalnGyxOAvl8NxQUup3uy4m
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: e395b220-01c3-4dce-6021-08d7750a6d2c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Nov 2019 20:26:34.2220
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 856b813c-16e5-49a5-85ec-6f081e13b527
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: DVmCQqoL8ckQv9IT9WZ5/UL/NmFioZSEAx6GeF619Fd2N0u7IiMTl51P1fb0Qirz1iTowPSggtB+DgbJ6+DUvg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR18MB1644
+X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Martin Wilck <mwilck@suse.com>
 
---=-HIAul2oAsNr1EC1inCjc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+After commit 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting
+down chip"), it is possible that FC commands are scheduled after the
+adapter firmware has been shut down. IO sent to the firmware in this
+situation hangs indefinitely. Avoid this for the LOGO code path that is
+typically taken when adapters are shut down.
 
-Il giorno ven, 29/11/2019 alle 10.35 +0800, Ming Lei ha scritto:
-> On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
-> 
-> > [...]
-> 
-> > Andrea, can you collect the following log when running the test
-> > on current new(bad) kernel?
-> > 
-> > 	/usr/share/bcc/tools/stackcount  -K blk_mq_make_request
-> 
-> Instead, please run the following trace, given insert may be
-> called from other paths, such as flush plug:
-> 
-> 	/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
+Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 3 +++
+ drivers/scsi/qla2xxx/qla_os.c  | 3 +++
+ 2 files changed, 6 insertions(+)
 
-Attached, for new (patched) bad kernel.
-
-Produced by: start the trace script (with the pendrive already
-plugged), wait some seconds, run the test (1 trial, 1 GB), wait for
-the test to finish, stop the trace.
-
-The copy took ~1700 seconds.
-
-Thanks,
-Andrea
-
---=-HIAul2oAsNr1EC1inCjc
-Content-Type: application/zip; name="log_ming_20191129_150609.zip"
-Content-Disposition: attachment; filename="log_ming_20191129_150609.zip"
-Content-Transfer-Encoding: base64
-
-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
-
-
---=-HIAul2oAsNr1EC1inCjc--
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index bb6811b..e129df4 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2643,6 +2643,9 @@ qla24xx_fabric_logout(scsi_qla_host_t *vha, uint16_t loop_id, uint8_t domain,
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x106d,
+ 	    "Entered %s.\n", __func__);
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	lg = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &lg_dma);
+ 	if (lg == NULL) {
+ 		ql_log(ql_log_warn, vha, 0x106e,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2450ba9..43d0aa0 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4891,6 +4891,9 @@ qla2x00_post_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
+ 	unsigned long flags;
+ 	bool q = false;
+ 
++	if (!vha->hw->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	spin_lock_irqsave(&vha->work_lock, flags);
+ 	list_add_tail(&e->list, &vha->work_list);
+ 
+-- 
+2.24.0
 
