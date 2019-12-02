@@ -2,55 +2,53 @@ Return-Path: <SRS0=lopX=ZY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D06C432C0
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 11:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F16DC43215
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 14:15:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28F93206F0
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 11:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F17642084F
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 14:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727332AbfLBL0v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 06:26:51 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2147 "EHLO huawei.com"
+        id S1727423AbfLBOPp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 09:15:45 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2148 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726330AbfLBL0v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Dec 2019 06:26:51 -0500
-Received: from lhreml708-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id DFE2B47361643A3B0BDD;
-        Mon,  2 Dec 2019 11:26:49 +0000 (GMT)
+        id S1727362AbfLBOPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Dec 2019 09:15:45 -0500
+Received: from lhreml702-cah.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 63DF09670B666654D8C7;
+        Mon,  2 Dec 2019 14:15:42 +0000 (GMT)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml708-cah.china.huawei.com (10.201.108.49) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 2 Dec 2019 11:26:49 +0000
+ lhreml702-cah.china.huawei.com (10.201.108.43) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 2 Dec 2019 14:15:41 +0000
 Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5; Mon, 2 Dec 2019
- 11:26:49 +0000
-Subject: Re: [PATCH] scsi: libsas: stop discovering if oob mode is
- disconnected
-To:     yanaijie <yanaijie@huawei.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "jthumshirn@suse.de" <jthumshirn@suse.de>,
-        "hch@lst.de" <hch@lst.de>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>
-References: <20191129032413.36092-1-yanaijie@huawei.com>
- <b59a5d52-f663-2772-fc5d-201eeaed1d52@huawei.com>
- <437a8952-780a-aa5c-d060-c20a530f3808@huawei.com>
+ 14:15:41 +0000
+Subject: Re: [blk] 017e1adde9: BUG:kernel_NULL_pointer_dereference,address
+To:     kernel test robot <lkp@intel.com>, Hannes Reinecke <hare@suse.de>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        "Ming Lei" <ming.lei@redhat.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "lkp@lists.01.org" <lkp@lists.01.org>
+References: <20191201145716.GB18573@shao2-debian>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <eda7f801-4f01-c88a-ef36-bb74b13ce46b@huawei.com>
-Date:   Mon, 2 Dec 2019 11:26:48 +0000
+Message-ID: <42eb0e2d-346b-c5b5-153d-b34329413a9f@huawei.com>
+Date:   Mon, 2 Dec 2019 14:15:41 +0000
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <437a8952-780a-aa5c-d060-c20a530f3808@huawei.com>
+In-Reply-To: <20191201145716.GB18573@shao2-debian>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.202.226.46]
 X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
@@ -60,203 +58,142 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
->>> 0x00000000417c4974)
->>> [183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
->>> W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
->>> [183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
->>> BIOS 0.15 10/22/2019
->>> [183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
->>> [183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
->>> [183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
->>
->> Can you explain how we discover an expander device yet try to send an
->> ATA command?
+On 01/12/2019 14:57, kernel test robot wrote:
+> FYI, we noticed the following commit (built with gcc-7):
 > 
-> In sas_get_port_device() when oob mode is not SATA_OOB_MODE, we get into
-> the branch that use the sas_identify_frame instead of dev_to_host_fis to
-> determine the device type and protocal, which is a totally wrong
-> structure. And the dev_type is expander, but the tproto is
-> SAS_PROTOCOL_SATA or SAS_PROTOCOL_STP in this case:
+> commit: 017e1adde9cfd7e488e6e8328d98f9d84e5f8fb8 ("[PATCH 4/8] blk-mq: Facilitate a shared sbitmap per tagset")
+> url: https://github.com/0day-ci/linux/commits/Hannes-Reinecke/blk-mq-scsi-Provide-hostwide-shared-tags-for-SCSI-HBAs/20191126-234036
+> base: https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git for-next
+> 
+> in testcase: boot
+> 
+> on test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp 2 -m 8G
+> 
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
 > 
 > 
-> 
-> 	if (dev->frame_rcvd[0] == 0x34 && port->oob_mode == SATA_OOB_MODE) {
-> 		struct dev_to_host_fis *fis =
-> 			(struct dev_to_host_fis *) dev->frame_rcvd;
-> 		if (fis->interrupt_reason == 1 && fis->lbal == 1 &&
-> 		    fis->byte_count_low==0x69 && fis->byte_count_high == 0x96
-> 		    && (fis->device & ~0x10) == 0)
-> 			dev->dev_type = SAS_SATA_PM;
-> 		else
-> 			dev->dev_type = SAS_SATA_DEV;
-> 		dev->tproto = SAS_PROTOCOL_SATA;
-> 	} else {
-> 		struct sas_identify_frame *id =
-> 			(struct sas_identify_frame *) dev->frame_rcvd;
-> 		dev->dev_type = id->dev_type;
-> 		dev->iproto = id->initiator_bits;
-> 		dev->tproto = id->target_bits;
-> 	}
 
-Ah, yes, I get it.
+Thanks to kernel test robot.
 
-> 
-> 
->>
->>> [183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
->>> [183047.717153] sp : ffff00000f28ba60
->>> [183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
->>> [183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
->>> [183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
->>> [183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
->>> [183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
->>> [183047.747464] x19: 0000000000f80800 x18: 0000000000000010
->>> [183047.752848] x17: 0000000000000000 x16: 0000000000000000
->>> [183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
->>> [183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
->>> [183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
->>> [183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
->>> [183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
->>> [183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
->>> [183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
->>> [183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
->>> [183047.801307] Call trace:
+So this looks like it is caused by the reason mentioned in Bart's review:
 
-is there any guard which we should add in the LLDD for this also?
+On 27/11/2019 17:03, Bart Van Assche wrote:
+ >
+ >> +struct blk_mq_tags *blk_mq_init_tags(struct blk_mq_tag_set *set,
+ >> +                     unsigned int total_tags,
+ >>                        unsigned int reserved_tags,
+ >> -                     int node, int alloc_policy)
+ >> +                     int node, int alloc_policy,
+ >> +                     bool shared_tags)
+ >>   {
+ >>       struct blk_mq_tags *tags;
+ >> @@ -488,9 +517,11 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int
+ >> total_tags,
+ >>       tags->nr_tags = total_tags;
+ >>       tags->nr_reserved_tags = reserved_tags;
+ >> -    if (blk_mq_init_bitmap_tags(tags, node, alloc_policy) < 0) {
+ >> -        kfree(tags);
+ >> -        tags = NULL;
+ >> +    if (shared_tags) {
 
->>> [183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
->>> [183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
->>> [183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
->>> [183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
->>> [183047.826757]  smp_execute_task_sg+0xec/0x218
->>> [183047.831013]  smp_execute_task+0x74/0xa0
->>> [183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
->>> [183047.839959]  sas_discover_root_expander+0x90/0x160
->>> [183047.844822]  sas_discover_domain+0x1b8/0x1e8
->>> [183047.849164]  process_one_work+0x1b4/0x3f8
->>> [183047.853246]  worker_thread+0x54/0x470
->>> [183047.856981]  kthread+0x134/0x138
->>> [183047.860283]  ret_from_fork+0x10/0x18
->>> [183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
->>> [183047.870097] kernel fault(0x1) notification starting on CPU 0
->>> [183047.875828] kernel fault(0x1) notification finished on CPU 0
->>> [183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
->>> hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
->>> [183047.892418] ---[ end trace 4cc26083fc11b783  ]---
->>> [183047.897107] Kernel panic - not syncing: Fatal exception
->>> [183047.902403] kernel fault(0x5) notification starting on CPU 0
->>> [183047.908134] kernel fault(0x5) notification finished on CPU 0
->>> [183047.913865] SMP: stopping secondary CPUs
->>> [183047.917861] Kernel Offset: disabled
->>> [183047.921422] CPU features: 0x2,a2a00a38
->>> [183047.925243] Memory Limit: none
->>> [183047.928372] kernel reboot(0x2) notification starting on CPU 0
->>> [183047.934190] kernel reboot(0x2) notification finished on CPU 0
->>> [183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
->>> ]---
->>>
->>> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
->>
->> I am not sure if it is appropriate to identify this as what we're
->> fixing, since we changed significantly the event processing in libsas
->> since 2908d778ab3e?
->>
-> 
-> It's ok. Even before 2908d778ab3e we have this issue too. The workqueue
-> process is always late and far after the interrupt.
-> 
->>> Reported-by: Gao Chuan <gaochuan4@huawei.com>
->>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
->>> ---
->>>    drivers/scsi/libsas/sas_discover.c | 8 +++++++-
->>>    1 file changed, 7 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_discover.c
->>> b/drivers/scsi/libsas/sas_discover.c
->>> index f47b4b281b14..23fdbc8fa05a 100644
->>> --- a/drivers/scsi/libsas/sas_discover.c
->>> +++ b/drivers/scsi/libsas/sas_discover.c
->>> @@ -81,12 +81,18 @@ static int sas_get_port_device(struct asd_sas_port
->>> *port)
->>>            else
->>>                dev->dev_type = SAS_SATA_DEV;
->>>            dev->tproto = SAS_PROTOCOL_SATA;
->>> -    } else {
->>> +    } else if (port->oob_mode == SAS_OOB_MODE) {
->>
->> This just looks racy. We're sending an event and then checking some
->> volatile shared memory in the event processing :(
-> 
-> It's not me doing this. I add this here because the branch above which
-> already doing this.
+Indeed, this is wrong - the logic is inverted.
 
-Yes, right, I was just commenting on the current code.
-
-> 
-> And It's true that it is racy. libsas is doing this all the time, not
-> only here. The LLDD and libsas share many structures such as
-> asd_sas_port, asd_sas_phy and so on and they access these structures in
-> deferent contexts. This is a wrong design.
-
-But I didn't think any were as bad as this.
-
->  > Or we can delete the
-> "port->oob_mode == SATA_OOB_MODE" above to fix this issue?
-> 
-> Becuase "dev->frame_rcvd[0] == 0x34" is enough to determine that if this
-> is a "dev_to_host_fis" or a "sas_identify_frame":
-> 
-> 
-> 	if (dev->frame_rcvd[0] == 0x34) {
-> 		struct dev_to_host_fis *fis =
-> 			(struct dev_to_host_fis *) dev->frame_rcvd;
-> 		if (fis->interrupt_reason == 1 && fis->lbal == 1 &&
-> 		    fis->byte_count_low==0x69 && fis->byte_count_high == 0x96
-> 		    && (fis->device & ~0x10) == 0)
-> 			dev->dev_type = SAS_SATA_PM;
-> 		else
-> 			dev->dev_type = SAS_SATA_DEV;
-> 		dev->tproto = SAS_PROTOCOL_SATA;
-> 	} else {
-> 		struct sas_identify_frame *id =
-> 			(struct sas_identify_frame *) dev->frame_rcvd;
-
-nit: we could add a add newline. I know other code does not follow this 
-rule, but I see no reason to continue doing it.
+ >> +        if (blk_mq_init_bitmap_tags(tags, node, alloc_policy) < 0) {
+ >> +            kfree(tags);
+ >> +            tags = NULL;
+ >> +        }
+ >>       }
+ >>       return tags;
+ >>   }
+ >
+ > The above looks weird to me: the existing code path is only called if
+ > shared tags are enabled? Shouldn't "if (shared_tags)" be changed into
+ > "if (!shared_tags)"?
 
 
-> 		dev->dev_type = id->dev_type;
-> 		dev->iproto = id->initiator_bits;
-> 		dev->tproto = id->target_bits;
-> 	}
-> 
->>
->>>            struct sas_identify_frame *id =
->>>                (struct sas_identify_frame *) dev->frame_rcvd;
->>>            dev->dev_type = id->dev_type;
->>>            dev->iproto = id->initiator_bits;
->>>            dev->tproto = id->target_bits;
->>> +    } else {
->>> +        /* If the oob mode is OOB_NOT_CONNECTED, the port is
->>> +         * disconnected due to race with PHY down. We cannot
->>> +         * continue to discover this port */
->>> +        sas_put_device(dev);
->>> +        return rc;
-
-So your fix in the original patch looks ok. I would prefer if we could 
-stop using rc or remove it, but that's just a slight preference.
-
-Another thought is to add some print to warn/inform of this.
-
->>>        }
->>>        sas_init_dev(dev);
->>>
->>
->>
->> .
-> 
-
-
-thanks,
+Thanks,
 John
+
+
+
+> +---------------------------------------------+------------+------------+
+> |                                             | 240a6aa94a | 017e1adde9 |
+> +---------------------------------------------+------------+------------+
+> | boot_successes                              | 4          | 0          |
+> | boot_failures                               | 0          | 4          |
+> | BUG:kernel_NULL_pointer_dereference,address | 0          | 4          |
+> | Oops:#[##]                                  | 0          | 4          |
+> | RIP:__sbitmap_queue_get                     | 0          | 4          |
+> | Kernel_panic-not_syncing:Fatal_exception    | 0          | 4          |
+> +---------------------------------------------+------------+------------+
+> 
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kernel test robot <lkp@intel.com>
+> 
+> 
+> [    8.258248] BUG: kernel NULL pointer dereference, address: 0000000000000018
+> [    8.259858] #PF: supervisor read access in kernel mode
+> [    8.261077] #PF: error_code(0x0000) - not-present page
+> [    8.262296] PGD 0 P4D 0
+> [    8.263028] Oops: 0000 [#1] SMP PTI
+> [    8.263943] CPU: 1 PID: 189 Comm: kworker/u4:2 Not tainted 5.4.0-rc1-00274-g017e1adde9cfd #1
+> [    8.265919] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> [    8.267892] Workqueue: events_unbound async_run_entry_fn
+> [    8.269148] RIP: 0010:__sbitmap_queue_get+0x7/0x90
+> [    8.270303] Code: 41 5e 41 5f c3 41 8b 4f 04 d3 e3 01 d8 5b 5d 41 5c 41 5d 41 5e 41 5f c3 66 66 2e 0f 1f 84 00 00 00 00 00 41 54 55 53 48 89 fb <48> 8b 47 18 65 8b 28 44 8b 27 41 39 ec 76 50 0f b6 53 34 89 ee 48
+> [    8.274368] RSP: 0018:ffffc90000107b38 EFLAGS: 00010246
+> [    8.275608] RAX: ffff8881f1ec2800 RBX: 0000000000000000 RCX: 0000000000000000
+> [    8.277193] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+> [    8.278781] RBP: 0000000000000000 R08: 0000000000000024 R09: 0000000000000000
+> [    8.280372] R10: ffffc90000107b50 R11: ffff8881ef073047 R12: 0000000000000000
+> [    8.281966] R13: 0000000000000000 R14: 0000000000000001 R15: ffffc90000107d0f
+> [    8.283557] FS:  0000000000000000(0000) GS:ffff88823fd00000(0000) knlGS:0000000000000000
+> [    8.285471] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    8.286794] CR2: 0000000000000018 CR3: 00000001f319c000 CR4: 00000000000406e0
+> [    8.288397] Call Trace:
+> [    8.289707]  blk_mq_get_tag+0xf1/0x250
+> [    8.290721]  ? finish_wait+0x80/0x80
+> [    8.291666]  blk_mq_get_request+0xda/0x380
+> [    8.292692]  blk_mq_alloc_request+0x84/0xd0
+> [    8.293729]  blk_get_request+0x22/0x60
+> [    8.294687]  __scsi_execute+0x38/0x250
+> [    8.295650]  scsi_probe_and_add_lun+0x22d/0xda0
+> [    8.296827]  __scsi_scan_target+0xf9/0x620
+> [    8.297916]  ? __switch_to_asm+0x34/0x70
+> [    8.298903]  ? __switch_to_asm+0x40/0x70
+> [    8.299895]  ? __switch_to_asm+0x34/0x70
+> [    8.300882]  ? __switch_to_asm+0x34/0x70
+> [    8.301866]  ? __switch_to_asm+0x40/0x70
+> [    8.302853]  scsi_scan_channel+0x5a/0x80
+> [    8.303844]  scsi_scan_host_selected+0xe3/0x150
+> [    8.304944]  do_scan_async+0x17/0x1a0
+> [    8.305881]  async_run_entry_fn+0x39/0x160
+> [    8.306901]  process_one_work+0x1ae/0x3d0
+> [    8.307911]  worker_thread+0x3c/0x3b0
+> [    8.308850]  ? process_one_work+0x3d0/0x3d0
+> [    8.309884]  kthread+0x11e/0x140
+> [    8.310740]  ? kthread_park+0x90/0x90
+> [    8.311686]  ret_from_fork+0x35/0x40
+> [    8.312609] Modules linked in: serio_raw libata(+) virtio_scsi i2c_piix4 parport_pc(+) parport floppy ip_tables
+> [    8.315085] CR2: 0000000000000018
+> [    8.315978] ---[ end trace 808f3f155f356740 ]---
+> 
+> 
+> To reproduce:
+> 
+>          # build kernel
+> 	cd linux
+> 	cp config-5.4.0-rc1-00274-g017e1adde9cfd .config
+> 	make HOSTCC=gcc-7 CC=gcc-7 ARCH=x86_64 olddefconfig prepare modules_prepare bzImage
+> 
+>          git clone https://github.com/intel/lkp-tests.git
+>          cd lkp-tests
+>          bin/lkp qemu -k <bzImage> job-script # job-script is attached in this email
+> 
+> 
+> 
+> Thanks,
+> lkp
+> 
+
