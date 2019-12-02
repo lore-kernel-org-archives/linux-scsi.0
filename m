@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6043C33C99
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7F1C47410
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 15:39:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BFE52084F
+	by mail.kernel.org (Postfix) with ESMTP id A84AE20881
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 15:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727602AbfLBPjd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727600AbfLBPjd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Dec 2019 10:39:33 -0500
-Received: from mx2.suse.de ([195.135.220.15]:44836 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:44832 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727566AbfLBPjb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727549AbfLBPjb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Dec 2019 10:39:31 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 0D881C1A9;
+        by mx1.suse.de (Postfix) with ESMTP id 0D84DC1A8;
         Mon,  2 Dec 2019 15:39:26 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -28,11 +28,10 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 09/11] megaraid_sas: switch fusion adapters to MQ
-Date:   Mon,  2 Dec 2019 16:39:12 +0100
-Message-Id: <20191202153914.84722-10-hare@suse.de>
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 06/11] blk-mq: move shared sbitmap into elevator queue
+Date:   Mon,  2 Dec 2019 16:39:09 +0100
+Message-Id: <20191202153914.84722-7-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191202153914.84722-1-hare@suse.de>
 References: <20191202153914.84722-1-hare@suse.de>
@@ -41,246 +40,290 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fusion adapters can steer completions to individual queues, and
-we now have support for shared host-wide tags.
-So we can enable multiqueue support for fusion adapters and
-drop the hand-crafted interrupt affinity settings.
+When an elevator is present the sbitmap is actually per request queue,
+so modifying the tagset queue depth in the shared sbitmap case will
+be doing the wrong thing as it'll change the queue depth for all
+request queues.
+So this patch moves the shared scheduler sbitmap into struct
+elevator queue, thereby insulating any modifications to this
+request queue only.
+And with that we can increase the number of requests for the
+shared sbitmap case to the queue depth times the number of queues,
+as now all tags are allocated from the same bitmap.
+This also solves the problem of sbitmap resizing in the shared sbitmap
+case; we can simply require an elevator to be present if the queue depth
+needs to be modified, as then the queue depth will be modified for this
+particular request queue only.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  1 -
- drivers/scsi/megaraid/megaraid_sas_base.c   | 65 +++++++++--------------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 14 ++++---
- 3 files changed, 28 insertions(+), 52 deletions(-)
+ block/blk-mq-sched.c     | 14 +++++++++++---
+ block/blk-mq-tag.c       | 30 ++++++++++++++++--------------
+ block/blk-mq-tag.h       |  8 +++++---
+ block/blk-mq.c           | 41 +++++++++++++++--------------------------
+ block/blk-sysfs.c        |  7 +++++++
+ include/linux/blk-mq.h   |  4 ----
+ include/linux/elevator.h |  3 +++
+ 7 files changed, 57 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index bd8184072bed..844ea2d6dbb8 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2261,7 +2261,6 @@ enum MR_PERF_MODE {
- 
- struct megasas_instance {
- 
--	unsigned int *reply_map;
- 	__le32 *producer;
- 	dma_addr_t producer_h;
- 	__le32 *consumer;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index a4bc81479284..9d0d74e3d491 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -37,6 +37,7 @@
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
- #include <linux/irq_poll.h>
-+#include <linux/blk-mq-pci.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -3106,6 +3107,19 @@ megasas_bios_param(struct scsi_device *sdev, struct block_device *bdev,
- 	return 0;
- }
- 
-+static int megasas_map_queues(struct Scsi_Host *shost)
-+{
-+	struct megasas_instance *instance;
-+
-+	instance = (struct megasas_instance *)shost->hostdata;
-+
-+	if (!instance->smp_affinity_enable)
-+		return 0;
-+
-+	return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-+			instance->pdev, instance->low_latency_index_start);
-+}
-+
- static void megasas_aen_polling(struct work_struct *work);
- 
- /**
-@@ -3414,9 +3428,11 @@ static struct scsi_host_template megasas_template = {
- 	.eh_timed_out = megasas_reset_timer,
- 	.shost_attrs = megaraid_host_attrs,
- 	.bios_param = megasas_bios_param,
-+	.map_queues = megasas_map_queues,
- 	.change_queue_depth = scsi_change_queue_depth,
- 	.max_segment_size = 0xffffffff,
- 	.no_write_same = 1,
-+	.host_tagset = 1,
- };
- 
- /**
-@@ -5695,34 +5711,6 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
- 		instance->use_seqnum_jbod_fp = false;
- }
- 
--static void megasas_setup_reply_map(struct megasas_instance *instance)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu, low_latency_index_start;
--
--	low_latency_index_start = instance->low_latency_index_start;
--
--	for (queue = low_latency_index_start; queue < instance->msix_vectors; queue++) {
--		mask = pci_irq_get_affinity(instance->pdev, queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			instance->reply_map[cpu] = queue;
--	}
--	return;
--
--fallback:
--	queue = low_latency_index_start;
--	for_each_possible_cpu(cpu) {
--		instance->reply_map[cpu] = queue;
--		if (queue == (instance->msix_vectors - 1))
--			queue = low_latency_index_start;
--		else
--			queue++;
--	}
--}
--
- /**
-  * megasas_get_device_list -	Get the PD and LD device list from FW.
-  * @instance:			Adapter soft state
-@@ -6021,12 +6009,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 					instance->is_rdpq = (scratch_pad_1 & MR_RDPQ_MODE_OFFSET) ?
- 								1 : 0;
- 
--				if (instance->adapter_type >= INVADER_SERIES &&
--				    !instance->msix_combined) {
--					instance->msix_load_balance = true;
--					instance->smp_affinity_enable = false;
--				}
--
- 				/* Save 1-15 reply post index address to local memory
- 				 * Index 0 is already saved from reg offset
- 				 * MPI2_REPLY_POST_HOST_INDEX_OFFSET
-@@ -6145,8 +6127,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			goto fail_init_adapter;
- 	}
- 
--	megasas_setup_reply_map(instance);
--
- 	dev_info(&instance->pdev->dev,
- 		"current msix/online cpus\t: (%d/%d)\n",
- 		instance->msix_vectors, (unsigned int)num_online_cpus());
-@@ -6780,6 +6760,9 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
- 	host->max_lun = MEGASAS_MAX_LUN;
- 	host->max_cmd_len = 16;
-+	if (instance->adapter_type != MFI_SERIES && instance->msix_vectors > 0)
-+		host->nr_hw_queues = instance->msix_vectors -
-+			instance->low_latency_index_start;
- 
- 	/*
- 	 * Notify the mid-layer about the new controller
-@@ -6947,11 +6930,6 @@ static inline int megasas_alloc_mfi_ctrl_mem(struct megasas_instance *instance)
-  */
- static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
- {
--	instance->reply_map = kcalloc(nr_cpu_ids, sizeof(unsigned int),
--				      GFP_KERNEL);
--	if (!instance->reply_map)
--		return -ENOMEM;
--
- 	switch (instance->adapter_type) {
- 	case MFI_SERIES:
- 		if (megasas_alloc_mfi_ctrl_mem(instance))
-@@ -6968,8 +6946,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
- 
- 	return 0;
-  fail:
--	kfree(instance->reply_map);
--	instance->reply_map = NULL;
- 	return -ENOMEM;
- }
- 
-@@ -6982,7 +6958,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
-  */
- static inline void megasas_free_ctrl_mem(struct megasas_instance *instance)
- {
--	kfree(instance->reply_map);
- 	if (instance->adapter_type == MFI_SERIES) {
- 		if (instance->producer)
- 			dma_free_coherent(&instance->pdev->dev, sizeof(u32),
-@@ -7645,8 +7620,6 @@ megasas_resume(struct pci_dev *pdev)
- 	if (rval < 0)
- 		goto fail_reenable_msix;
- 
--	megasas_setup_reply_map(instance);
--
- 	if (instance->adapter_type != MFI_SERIES) {
- 		megasas_reset_reply_desc(instance);
- 		if (megasas_ioc_init_fusion(instance)) {
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index e301458bcbae..bae96b82bb10 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2731,6 +2731,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	struct MR_PRIV_DEVICE *mrdev_priv;
- 	struct RAID_CONTEXT *rctx;
- 	struct RAID_CONTEXT_G35 *rctx_g35;
-+	u32 tag = blk_mq_unique_tag(scp->request);
- 
- 	device_id = MEGASAS_DEV_INDEX(scp);
- 
-@@ -2837,7 +2838,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				    instance->msix_vectors));
- 	else
- 		cmd->request_desc->SCSIIO.MSIxIndex =
--			instance->reply_map[raw_smp_processor_id()];
-+			blk_mq_unique_tag_to_hwq(tag);
- 
- 	if (instance->adapter_type >= VENTURA_SERIES) {
- 		/* FP for Optimal raid level 1.
-@@ -3080,6 +3081,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 	u16 pd_index = 0;
- 	u16 os_timeout_value;
- 	u16 timeout_limit;
-+	u32 tag = blk_mq_unique_tag(scmd->request);
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
- 	struct RAID_CONTEXT	*pRAID_Context;
- 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
-@@ -3169,7 +3171,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 				    instance->msix_vectors));
- 	else
- 		cmd->request_desc->SCSIIO.MSIxIndex =
--			instance->reply_map[raw_smp_processor_id()];
-+			blk_mq_unique_tag_to_hwq(tag);
- 
- 	if (!fp_possible) {
- 		/* system pd firmware path */
-@@ -3373,7 +3375,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- {
- 	struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
--	u32 index;
-+	u32 index, blk_tag, unique_tag;
- 
- 	if ((megasas_cmd_type(scmd) == READ_WRITE_LDIO) &&
- 		instance->ldio_threshold &&
-@@ -3389,7 +3391,9 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
--	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
-+	unique_tag = blk_mq_unique_tag(scmd->request);
-+	blk_tag = blk_mq_unique_tag_to_tag(unique_tag);
-+	cmd = megasas_get_cmd_fusion(instance, blk_tag);
- 
- 	if (!cmd) {
- 		atomic_dec(&instance->fw_outstanding);
-@@ -3430,7 +3434,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 1855f8f5edd4..f2184199a1b7 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -511,6 +511,12 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
  	 */
- 	if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
- 		r1_cmd = megasas_get_cmd_fusion(instance,
--				(scmd->request->tag + instance->max_fw_cmds));
-+				(blk_tag + instance->max_fw_cmds));
- 		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
+ 	q->nr_requests = 2 * min_t(unsigned int, q->tag_set->queue_depth,
+ 				   BLKDEV_MAX_RQ);
++	/*
++	 * For the shared sbitmap case it's per request queue, so multiply
++	 * with the number of hw queues
++	 */
++	if (blk_mq_is_sbitmap_shared(tag_set))
++		q->nr_requests *= q->nr_hw_queues;
+ 
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+ 		ret = blk_mq_sched_alloc_tags(q, hctx, i);
+@@ -539,15 +545,16 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
  	}
  
+ 	if (blk_mq_is_sbitmap_shared(tag_set)) {
+-		if (!blk_mq_init_sched_shared_sbitmap(tag_set, q->nr_requests)) {
++		eq = q->elevator;
++		if (!blk_mq_init_elevator_sbitmap(q, eq, q->nr_requests)) {
+ 			ret = -ENOMEM;
+ 			goto err;
+ 		}
+ 		queue_for_each_hw_ctx(q, hctx, i) {
+ 			struct blk_mq_tags *tags = hctx->sched_tags;
+ 
+-			tags->bitmap_tags = &tag_set->__sched_bitmap_tags;
+-			tags->breserved_tags = &tag_set->__sched_breserved_tags;
++			tags->bitmap_tags = &eq->__bitmap_tags;
++			tags->breserved_tags = &eq->__breserved_tags;
+ 		}
+ 	}
+ 
+@@ -591,5 +598,6 @@ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)
+ 	if (e->type->ops.exit_sched)
+ 		e->type->ops.exit_sched(e);
+ 	blk_mq_sched_tags_teardown(q);
++	blk_mq_exit_elevator_sbitmap(q, e);
+ 	q->elevator = NULL;
+ }
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 2e714123e846..39c7beffdd04 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -491,35 +491,37 @@ void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *tag_set)
+ 	}
+ }
+ 
+-bool blk_mq_init_sched_shared_sbitmap(struct blk_mq_tag_set *tag_set,
+-				      unsigned long nr_requests)
++bool blk_mq_init_elevator_sbitmap(struct request_queue *q,
++				  struct elevator_queue *eq,
++				  unsigned int nr_requests)
+ {
+-	unsigned int depth = nr_requests -tag_set->reserved_tags;
++	struct blk_mq_tag_set *tag_set = q->tag_set;
++	unsigned int depth = nr_requests - tag_set->reserved_tags;
+ 	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(tag_set->flags);
+ 	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+ 	int node = tag_set->numa_node;
+ 
+-	if (tag_set->flags & BLK_MQ_F_TAG_SCHED_BITMAP_ALLOCATED)
+-		return false;
+-	if (bt_alloc(&tag_set->__sched_bitmap_tags, depth, round_robin, node))
++	if (!blk_mq_is_sbitmap_shared(q->tag_set))
++		return true;
++
++	if (bt_alloc(&eq->__bitmap_tags, depth, round_robin, node))
+ 		return false;
+-	if (bt_alloc(&tag_set->__sched_breserved_tags, tag_set->reserved_tags,
++	if (bt_alloc(&eq->__breserved_tags, tag_set->reserved_tags,
+ 		     round_robin, node))
+ 		goto free_bitmap_tags;
+ 
+-	tag_set->flags |= BLK_MQ_F_TAG_SCHED_BITMAP_ALLOCATED;
+ 	return true;
+ free_bitmap_tags:
+-	sbitmap_queue_free(&tag_set->__sched_bitmap_tags);
++	sbitmap_queue_free(&eq->__bitmap_tags);
+ 	return false;
+ }
+ 
+-void blk_mq_exit_shared_sched_sbitmap(struct blk_mq_tag_set *tag_set)
++void blk_mq_exit_elevator_sbitmap(struct request_queue *q,
++				  struct elevator_queue *eq)
+ {
+-	if (tag_set->flags & BLK_MQ_F_TAG_SCHED_BITMAP_ALLOCATED) {
+-		sbitmap_queue_free(&tag_set->__sched_bitmap_tags);
+-		sbitmap_queue_free(&tag_set->__sched_breserved_tags);
+-		tag_set->flags &= ~BLK_MQ_F_TAG_SCHED_BITMAP_ALLOCATED;
++	if (blk_mq_is_sbitmap_shared(q->tag_set)) {
++		sbitmap_queue_free(&eq->__bitmap_tags);
++		sbitmap_queue_free(&eq->__breserved_tags);
+ 	}
+ }
+ 
+diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
+index 9463b878462f..31a42d50a8f1 100644
+--- a/block/blk-mq-tag.h
++++ b/block/blk-mq-tag.h
+@@ -27,9 +27,11 @@ struct blk_mq_tags {
+ 
+ extern bool blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *tag_set);
+ extern void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *tag_set);
+-extern bool blk_mq_init_sched_shared_sbitmap(struct blk_mq_tag_set *tag_set,
+-					     unsigned long nr_requests);
+-extern void blk_mq_exit_shared_sched_sbitmap(struct blk_mq_tag_set *tag_set);
++extern bool blk_mq_init_elevator_sbitmap(struct request_queue *q,
++					 struct elevator_queue *eq,
++					 unsigned int nr_tags);
++extern void blk_mq_exit_elevator_sbitmap(struct request_queue *q,
++					 struct elevator_queue *eq);
+ extern struct blk_mq_tags *blk_mq_init_tags(struct blk_mq_tag_set *tag_set,
+ 					    unsigned int nr_tags,
+ 					    unsigned int reserved_tags,
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 054c0597c052..c5cff1de56b3 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3142,7 +3142,6 @@ void blk_mq_free_tag_set(struct blk_mq_tag_set *set)
+ 	for (i = 0; i < nr_hw_queues(set); i++)
+ 		blk_mq_free_map_and_requests(set, i);
+ 
+-	blk_mq_exit_shared_sched_sbitmap(set);
+ 	blk_mq_exit_shared_sbitmap(set);
+ 
+ 	for (j = 0; j < set->nr_maps; j++) {
+@@ -3159,12 +3158,14 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ {
+ 	struct blk_mq_tag_set *set = q->tag_set;
+ 	struct blk_mq_hw_ctx *hctx;
+-	bool sched_tags = false;
+ 	int i, ret;
+ 
+ 	if (!set)
+ 		return -EINVAL;
+ 
++	if (blk_mq_is_sbitmap_shared(set) && !q->elevator)
++		return -EINVAL;
++
+ 	if (q->nr_requests == nr)
+ 		return 0;
+ 
+@@ -3183,7 +3184,6 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ 			ret = blk_mq_tag_update_depth(hctx, &hctx->tags, nr,
+ 							false);
+ 		} else {
+-			sched_tags = true;
+ 			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
+ 							nr, true);
+ 		}
+@@ -3199,29 +3199,18 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ 	 * if some are updated, we should probably roll back the change altogether. FIXME
+ 	 */
+ 	if (!ret) {
+-		if (blk_mq_is_sbitmap_shared(set)) {
+-			if (sched_tags) {
+-				blk_mq_exit_shared_sched_sbitmap(set);
+-				if (!blk_mq_init_sched_shared_sbitmap(set, nr))
+-					return -ENOMEM; /* fixup error handling */
+-
+-				queue_for_each_hw_ctx(q, hctx, i) {
+-					hctx->sched_tags->bitmap_tags =
+-						&set->__sched_bitmap_tags;
+-					hctx->sched_tags->breserved_tags =
+-						&set->__sched_breserved_tags;
+-				}
+-			} else {
+-				blk_mq_exit_shared_sbitmap(set);
+-				if (!blk_mq_init_shared_sbitmap(set))
+-					return -ENOMEM; /* fixup error handling */
+-
+-				queue_for_each_hw_ctx(q, hctx, i) {
+-					hctx->tags->bitmap_tags =
+-						&set->__bitmap_tags;
+-					hctx->tags->breserved_tags =
+-						&set->__breserved_tags;
+-				}
++		if (blk_mq_is_sbitmap_shared(set) && q->elevator) {
++			struct elevator_queue *eq = q->elevator;
++
++			blk_mq_exit_elevator_sbitmap(q, eq);
++			if (!blk_mq_init_elevator_sbitmap(q, eq, nr))
++				return -ENOMEM; /* fixup error handling */
++
++			queue_for_each_hw_ctx(q, hctx, i) {
++				hctx->sched_tags->bitmap_tags =
++					&eq->__bitmap_tags;
++				hctx->sched_tags->breserved_tags =
++					&eq->__breserved_tags;
+ 			}
+ 		}
+ 		q->nr_requests = nr;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 46f5198be017..01e644b1cba5 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -78,6 +78,13 @@ queue_requests_store(struct request_queue *q, const char *page, size_t count)
+ 	if (nr < BLKDEV_MIN_RQ)
+ 		nr = BLKDEV_MIN_RQ;
+ 
++	/*
++	 * We can only modify the queue depth for shared sbitmaps
++	 * if an I/O scheduler is set.
++	 */
++	if (blk_mq_is_sbitmap_shared(q->tag_set) && !q->elevator)
++		return -EINVAL;
++
+ 	err = blk_mq_update_nr_requests(q, nr);
+ 	if (err)
+ 		return err;
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 10c9ed3dbe80..b4515bb862d4 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -112,9 +112,6 @@ struct blk_mq_tag_set {
+ 	struct sbitmap_queue	__bitmap_tags;
+ 	struct sbitmap_queue	__breserved_tags;
+ 
+-	struct sbitmap_queue	__sched_bitmap_tags;
+-	struct sbitmap_queue	__sched_breserved_tags;
+-
+ 	struct blk_mq_tags	**tags;
+ 
+ 	struct mutex		tag_list_lock;
+@@ -234,7 +231,6 @@ enum {
+ 	BLK_MQ_F_TAG_QUEUE_SHARED	= 1 << 1,
+ 	BLK_MQ_F_TAG_HCTX_SHARED	= 1 << 2,
+ 	BLK_MQ_F_TAG_BITMAP_ALLOCATED	= 1 << 3,
+-	BLK_MQ_F_TAG_SCHED_BITMAP_ALLOCATED = 1 << 4,
+ 	BLK_MQ_F_BLOCKING	= 1 << 5,
+ 	BLK_MQ_F_NO_SCHED	= 1 << 6,
+ 	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
+diff --git a/include/linux/elevator.h b/include/linux/elevator.h
+index 901bda352dcb..11d492f56089 100644
+--- a/include/linux/elevator.h
++++ b/include/linux/elevator.h
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/percpu.h>
+ #include <linux/hashtable.h>
++#include <linux/sbitmap.h>
+ 
+ #ifdef CONFIG_BLOCK
+ 
+@@ -104,6 +105,8 @@ struct elevator_queue
+ 	void *elevator_data;
+ 	struct kobject kobj;
+ 	struct mutex sysfs_lock;
++	struct sbitmap_queue __bitmap_tags;
++	struct sbitmap_queue __breserved_tags;
+ 	unsigned int registered:1;
+ 	DECLARE_HASHTABLE(hash, ELV_HASH_BITS);
+ };
 -- 
 2.16.4
 
