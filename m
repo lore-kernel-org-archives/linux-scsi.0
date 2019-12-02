@@ -6,66 +6,66 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 146ACC432C0
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 07:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E8ADC432C0
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 07:44:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC9F4215F1
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 07:42:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A166215F1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 07:44:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BLSnN7Gp";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="yvPs3yY8"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iTnuWDHf";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="kIUfdlWM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726106AbfLBHm3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 02:42:29 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:56503 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726030AbfLBHm3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 02:42:29 -0500
+        id S1726106AbfLBHoE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 02:44:04 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:21490 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726010AbfLBHoD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 02:44:03 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1575272548; x=1606808548;
+  t=1575272696; x=1606808696;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=TM7mKDa2Sc/9hBg7mKLakDMx/I/eZFhUKUg/BbqUEGs=;
-  b=BLSnN7Gpp+uSOnuwZ86SIxhz9wa5y+DTxtf0msfVCObu2D+vUtV0NWaw
-   z2TuyW5H6g8wauBn68Lp/c+HZH9yZLO0Lj2AiLKc3Itw4gwInoHkMf2H/
-   pjup+7d8T0pInAqfsPIkCFm4j+bNkcOOsoddU9mTbjtBgZHFNwZREr59e
-   zggTUhiXXFpM8udFXsZpepLQ3liMHkNNi1GVpscMYDMpqjatorca0Yxnz
-   C9RfdEfZSabpGmLeuApFZ4StTdvITEswh+tsLm5FbHwcl0rxJyWLj9cZM
-   za7rC+DrCfSMwyPDhA53PdV0w1gkgj3gd2Af2YuSXhHbp1eG8Kbx+EALX
-   Q==;
-IronPort-SDR: 2OOgFbU9t/RkbATxgeQsghe0OfBadKjqmP09GDrF0p/b9j1dQFnNCCBDY4T4TPc1T+cLQSqpzw
- OCPQ30pE1Vki7KINqGnp+JLzGU7YSnzS0SpophJDzFm75i7yem0ZMjK+itdiHVnEP5h8az+qgR
- lN2gR0KGGQRDA6RiYkkIGf5IJzMuhr/vQHKOX9f2hR0EkbEvW+8vHhP3bzNmKvJE9xxqfaJQm4
- pu9sUXqG92mLr3nUcEyYYCMz5OOux/bF0GFgVl00TW5kOpAhW+qSBYgT9r1xi/lmqR+Ax93YN0
- d7Y=
+  bh=vAgUmA4OpOQAlsw3GcFrud6/8ONddjz2C4MYkVcD28Q=;
+  b=iTnuWDHfOStZXU08o31dn/CNn6vFGoq9keOifBNNvNkgEsptxv2j+nw+
+   wY1SO5pRsFAPG4WEXHuqrSYtcJRFCXitXeoQrOKDETgI8J5HOyea16blb
+   XntZbMk/giH1OdcCbqngy+T4YK6WzEiUEVnbloVuuK9NnzDS6DIUkbI8F
+   aH8cRvdGF1JOxHRMQe2zfQwxwfwSZltwjsa/k9SBtkISll4NeFI/Q8Y8X
+   iEuvTaS51qNvWPzho5EU5CzgtFyA+0P3DQ4NY1M0cSVdDTYa29WIzgEb0
+   99VjqJ7jB+b9e+LDPqJVTz/7eg2Z71ofBeWE0fjQIi6S52jfkQpW1Jz7E
+   g==;
+IronPort-SDR: 9BqpK6+WLl5fkFqJ/WgYmfF4a+zt55x012qvQsFr1BBWDLRcr7wESbYWzClRw1ezSvZ0rkG05i
+ Rqi59nUoQpYhxFkbd3ziBacpp43HgdIMPicg1EvpPjTpZvUqkeGC5jwkGCGialWTFSGYy4N/om
+ ydut8JKDVLzTCD9sNon1Ce2bZPgx1wOm1+mDCz0GUfW0U5OTYlxCrKzwIJhX0poRd+dyLgC2FE
+ XulghAfDENNTF9EbMKM0BYNr1dzSVfs5TkPAAGYvDGcTuC/b5WlU5nU8YjA8hoqkk8jWnUhLSR
+ h/E=
 X-IronPort-AV: E=Sophos;i="5.69,268,1571673600"; 
-   d="scan'208";a="231871101"
-Received: from mail-dm3nam05lp2050.outbound.protection.outlook.com (HELO NAM05-DM3-obe.outbound.protection.outlook.com) ([104.47.49.50])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2019 15:42:01 +0800
+   d="scan'208";a="225827260"
+Received: from mail-co1nam04lp2055.outbound.protection.outlook.com (HELO NAM04-CO1-obe.outbound.protection.outlook.com) ([104.47.45.55])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2019 15:44:52 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bb4XW7JX5+CdWis2EBokLFUdUVZYKCS+tIBT5qUZBzHXBr3CHAzbYm/SFJtJ3B+t5GxLSRwjzF7V+x5PF94GAxmumnO3NwfayAhu0eDFU1M+yRQlgOlWd2hguHW7RZ5+16itOTey4oeDxhhqyRN3JisFfj8pCkBotRHGmwk5Hk4PzC2ckXfoOrvk41OyRq6Nl30hTGioyTkU0B0Oc9ffAumx0OFGyJK7PFcwNyxdu84G2AwscaqfXIDrFONuO/KOFvZREz9B7seJQXdhgBVv5phczn5E64ydd16kdvq8eMGMUR3UFS0ITNq2fX0w6eQo7TLsOGrumO1ApC6yMEwaXQ==
+ b=nLONDm/FGVuL2LdaWRt0uY2s+COYyxwS0iwuXFStLCLCxljirc5eUFz8KqAX2862zma0v7FmCF07yb6/f0pF5dlgUZndTgSeg0vWqVwhgDE1gVG5++RAUEKX1PD3po/6kFnR+h8AdnWBeOoq6hDEOAp53yt14DNfYgh6fW4HIkzVVEiUX5D/9Fs/TjSbpODmv8HY7i42axZmUBbgOm3E0sDdssbE4Ou6JoU+MKUDmE2hN+7RXIX2SdQ0HrI0VtX4/QPvjXbogR1tbGkEPjzdgaJpivmofeFiiw7RysYd+OAUZxv/7IE+J6BR3YGxwvPPXDY8beLbnkF7of+u+ZfS3A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TM7mKDa2Sc/9hBg7mKLakDMx/I/eZFhUKUg/BbqUEGs=;
- b=ddeVe7cl8JGXqSUqhd3oJLR7Nx8rN2swih/tyogK5MD0xQG3VPCUfrqq7/hvSFbeYbLp8WJPCtzhImrsV+ZkwJ1imzyhvVAlTFYU6TSIo05ZB+CFtrghrLYkHXS8qj99O8pVJq2WPupL21u+KdWkqTMFG7KPFj673kavXAlYPWYAkDSJ4iDNwxjWv4lD2hyKtJNz9X9ilNL4f3hqngys7ehgTc8MS9680XPTOR+yrkD+3qu8MgHut5nhSBqgjCObCqrBbvkKGrLQeQeXe4c4KJJc6mpjo0Nqhbv/T6Ixh47399wwt1DxXmujX6qT7tvfWMxXwED6v7WI0JbSK/E6qg==
+ bh=vAgUmA4OpOQAlsw3GcFrud6/8ONddjz2C4MYkVcD28Q=;
+ b=U1Zm6F2zq/GuCUi877mFzY21Yspl/+cAsZNCVuUmt5XmCmywhYssIPtHvXRgDqbNOZ7uAnCAvRu1ilNvWk3tf4J5IXa0PL043FBmy3cm/GQ9ihH62RIKkR13N8x3MDmz95PNgx+2qJ+Bjejzalacdk62jzG3gpgTVxhxcLgTKdxSabbgq4HBkVfQ0K3euYDqowraC6s3gEwSMlZqBeSlfUPY0/kH9afBr8RSbMpWi/yR5zNz6RLszTIbzdCjUEG64rvAs7i+U30X84ro15pcLy48kXEJfW419XsFE/94iZOFWLb8LRjv2tlKEJZpqwst7hyJM8pmW6k4V5xxgWCxbw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TM7mKDa2Sc/9hBg7mKLakDMx/I/eZFhUKUg/BbqUEGs=;
- b=yvPs3yY8zkA7Mjw3/v1+dsv/TWtEsxWcKnJwg3z06ff6jdsscB2200l/Xp8Qh609XKYwTzQjyD0FbAPN6C80dh1jCxgCZwiXNRWaKeRfYcU459fZ9I/0CG8ifLgyIiw4FDoYKdViQkqkwpclpOkDhBb5Sz/r3nqkSgj+xYUz9qc=
+ bh=vAgUmA4OpOQAlsw3GcFrud6/8ONddjz2C4MYkVcD28Q=;
+ b=kIUfdlWMd2gJvYw5mWAfXD+Gjyl21L7c8advkTFoQ6rlT6Ix4dUMTKIMfU3voollKKubh7J3pp/UrMSBhDYOabqlqTdzZc3iReuDijlEidbJSNi4xrd/D3TDPTu5N1V+KGDLh0E47cLQESG/ZhVrVXd0LBCP+DzA9GNwhSSb1iQ=
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
- MN2PR04MB5744.namprd04.prod.outlook.com (20.179.20.146) with Microsoft SMTP
+ MN2PR04MB6765.namprd04.prod.outlook.com (10.141.117.71) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2495.20; Mon, 2 Dec 2019 07:42:01 +0000
+ 15.20.2495.21; Mon, 2 Dec 2019 07:44:00 +0000
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::9447:fa71:53df:f866]) by MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::9447:fa71:53df:f866%3]) with mapi id 15.20.2495.014; Mon, 2 Dec 2019
- 07:42:01 +0000
+ 07:44:00 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     "cang@codeaurora.org" <cang@codeaurora.org>
 CC:     "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
@@ -76,7 +76,6 @@ CC:     "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         "saravanak@google.com" <saravanak@google.com>,
         "salyzyn@google.com" <salyzyn@google.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
@@ -86,15 +85,18 @@ CC:     "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         Allison Randal <allison@lohutok.net>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v4 4/5] scsi: ufs: Do not clear the DL layer timers
-Thread-Topic: [PATCH v4 4/5] scsi: ufs: Do not clear the DL layer timers
-Thread-Index: AQHVqOJi9Uj0xO4g1EKSBfsTmVIai6emdJLA
-Date:   Mon, 2 Dec 2019 07:42:00 +0000
-Message-ID: <MN2PR04MB69916189C31D58EB6DCB71E9FC430@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1573624824-671-1-git-send-email-cang@codeaurora.org>
- <1573624824-671-5-git-send-email-cang@codeaurora.org>
- <0101016ec584a776-2140a805-4b1d-4a3d-af0a-f073425be2d6-000000@us-west-2.amazonses.com>
-In-Reply-To: <0101016ec584a776-2140a805-4b1d-4a3d-af0a-f073425be2d6-000000@us-west-2.amazonses.com>
+Subject: RE: [PATCH v3 2/4] scsi: ufs: Update VCCQ2 and VCCQ min/max voltage
+ hard codes
+Thread-Topic: [PATCH v3 2/4] scsi: ufs: Update VCCQ2 and VCCQ min/max voltage
+ hard codes
+Thread-Index: AQHVpCZIZTJgFdv/r0O4vZ8y+z7ltKedCXxggAk6IYCAADxtEA==
+Date:   Mon, 2 Dec 2019 07:44:00 +0000
+Message-ID: <MN2PR04MB6991D119205D95E43677036AFC430@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1574751214-8321-1-git-send-email-cang@qti.qualcomm.com>
+ <1574751214-8321-3-git-send-email-cang@qti.qualcomm.com>
+ <MN2PR04MB6991F3919641BB0F60BAA03CFC450@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <0101016ec4ca5743-ec27a8f4-b0cd-427b-a65e-e6a26b10d45a-000000@us-west-2.amazonses.com>
+In-Reply-To: <0101016ec4ca5743-ec27a8f4-b0cd-427b-a65e-e6a26b10d45a-000000@us-west-2.amazonses.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -104,47 +106,39 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 5a684202-ea10-49cd-07ef-08d776fb1e21
-x-ms-traffictypediagnostic: MN2PR04MB5744:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR04MB5744FB3411CD86BCF0F9007AFC430@MN2PR04MB5744.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 58580ee5-ed3a-4577-ca1f-08d776fb652f
+x-ms-traffictypediagnostic: MN2PR04MB6765:
+x-microsoft-antispam-prvs: <MN2PR04MB67659F9E13BE6BAEBB69E8F6FC430@MN2PR04MB6765.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-ms-oob-tlc-oobclassifiers: OLM:3826;
 x-forefront-prvs: 0239D46DB6
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(376002)(396003)(346002)(366004)(39860400002)(189003)(199004)(6916009)(186003)(86362001)(478600001)(229853002)(6246003)(14454004)(6436002)(33656002)(71190400001)(71200400001)(9686003)(7416002)(5660300002)(52536014)(55016002)(76176011)(7696005)(66946007)(4744005)(66476007)(66556008)(66446008)(64756008)(5640700003)(102836004)(76116006)(6506007)(25786009)(7736002)(74316002)(81156014)(305945005)(8936002)(2906002)(54906003)(1730700003)(81166006)(316002)(2501003)(4326008)(446003)(11346002)(256004)(3846002)(66066001)(8676002)(26005)(99286004)(2351001)(6116002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB5744;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(39860400002)(376002)(396003)(136003)(346002)(199004)(189003)(25786009)(6116002)(15650500001)(6246003)(76176011)(2501003)(8676002)(33656002)(71200400001)(71190400001)(102836004)(1730700003)(6506007)(55016002)(54906003)(74316002)(9686003)(229853002)(6436002)(305945005)(7736002)(2351001)(81156014)(7696005)(26005)(14444005)(7416002)(66066001)(5640700003)(256004)(52536014)(446003)(11346002)(186003)(99286004)(14454004)(4326008)(8936002)(316002)(81166006)(4744005)(5660300002)(6916009)(86362001)(66946007)(66476007)(66556008)(64756008)(76116006)(2906002)(478600001)(66446008)(3846002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6765;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: NjSTlZ9YqxBN/D7mxw7rcu9eAqPO6qkRMts2darDa9DBKjzbVdF0OOwD8UibMOnKWBoF/bO22GpkhWH6Hu0d/qnnozmJETgdvp4SBVp1O2SRdStkdct5Ld6cmcpGyrB0cOPAZ8r8Kc6Xxp3VDfU9qRBiRAsod2269nnEQg5DZfCpMTIcRsZ0gvOhJY3fPKD9n1fuoyvZcyUtQ9C1YSD7PIZJwI/SgYL5ku4ZzCDh11SXSpWuGD0rO3mknMiqtmn3a/8NefHMxLA91SBfsCAqg+Gqoq0nvGMtkJbjmCkHJSUAHFnFaOB/NZrTCZ+lGOkCup4kPmNJkLsv6rKkQfgFqeLxdcKAoDm2IE83Oomr53Qf2Scw8WaYu2BBBJBtnrwFq51By/5w4xY/XcMcWd7qzMANwD/NKPR2KMa68WNTIunbSUhlJarBIOIwoFZ3zUiN
+x-microsoft-antispam-message-info: mfeJKGKOaVFTVXwg9OkA+roXOz0b0D409pIw0zZW2KBEDkQ7Rd2C3npBp8aUS9RA6SJ5IaZE/Q9gTstA9Af7jIqfk3MwRYe+7y/+IWEYNYM7GuJy3Q+4UGDOXb6CGf5TDtJ23vmsG6UWVMrQ9SQn3uiS1n4MnmMF6PwzmAfoPpx5M5wqubKSU71dt7eShM+zWw+Yf40kxySlt6+lkXKG7/F9LjwWxe8aSPwJwMFXkEoupkfseE5frSr4u8GqPqpo1XiPyw7LFiyNl8jwMVzgwdDdMbsk/1v+s42C1TVbJdyOqCMwtlCLoUOiozbPk8G+aYrM/guAJRDjZU7e3wEPcMaacSeY8dJAO2IYOWo0LgU8SwyqcdeMTxlEivg77r7EZu2wIYUx7wdkUoGkOoudMMvaFW5ty9xO1SfMG5tNOIZIvo++mUjxTGjyC5lAta+Q
+x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5a684202-ea10-49cd-07ef-08d776fb1e21
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Dec 2019 07:42:00.8732
+X-MS-Exchange-CrossTenant-Network-Message-Id: 58580ee5-ed3a-4577-ca1f-08d776fb652f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Dec 2019 07:44:00.0842
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: xjDX6PoljUH3G0lmbNWDywsuhHnavCHCcaQqUcJgsfgbQQEQ8/BEl8DdhJH0tiat2rKf9vAW6XICeBsw5u5PsQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB5744
+X-MS-Exchange-CrossTenant-userprincipalname: 3SAqfbMZnA630aAWnCvf13D+KGXbEEfrjYBnLM7k1nxKTOzwyvnSYy1hSaAQRg29L9bXRuPoPtZ3swcb8WbE2g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6765
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-> During power mode change, PACP_PWR_Req frame sends
-> PAPowerModeUserData parameters (and they are considered valid by device i=
-f
-> Flags[4] - UserDataValid bit is set in the same frame).
-> Currently we don't set these PAPowerModeUserData parameters and hardware
-> always sets UserDataValid bit which would clear all the DL layer timeout =
-values
-> of the peer device after the power mode change.
->=20
-> This change sets the PAPowerModeUserData[0..5] to UniPro specification
-> recommended default values, in addition we are also setting the relevant
-> DME_LOCAL_* timer attributes as required by UFS HCI specification.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
+> >> Per UFS 3.0 JEDEC standard, the VCCQ2 min voltage is 1.7v and the
+> >> VCCQ voltage range is 1.14v ~ 1.26v. Update their hard codes
+> >> accordingly to make sure they work in a safe range compliant for ver
+> >> 1.0/1.1/2.0/2.1/3.0 UFS devices.
+> >>
+> >> Signed-off-by: Can Guo <cang@codeaurora.org>
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
