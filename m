@@ -2,114 +2,129 @@ Return-Path: <SRS0=KpyL=ZZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEA2C432C0
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 19:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 320B5C43141
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 19:56:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2954220803
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 19:41:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0584C20833
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 19:56:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=shipmail.org header.i=@shipmail.org header.b="jUDRzMDs"
+	dkim=pass (2048-bit key) header.d=blockbridge-com.20150623.gappssmtp.com header.i=@blockbridge-com.20150623.gappssmtp.com header.b="wLTIGZ++"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726991AbfLCTlO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Dec 2019 14:41:14 -0500
-Received: from pio-pvt-msa2.bahnhof.se ([79.136.2.41]:40380 "EHLO
-        pio-pvt-msa2.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726640AbfLCTlO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 14:41:14 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTP id 538823F79C;
-        Tue,  3 Dec 2019 20:31:10 +0100 (CET)
-Authentication-Results: pio-pvt-msa2.bahnhof.se;
-        dkim=pass (1024-bit key; unprotected) header.d=shipmail.org header.i=@shipmail.org header.b=jUDRzMDs;
-        dkim-atps=neutral
-X-Virus-Scanned: Debian amavisd-new at bahnhof.se
-Received: from pio-pvt-msa2.bahnhof.se ([127.0.0.1])
-        by localhost (pio-pvt-msa2.bahnhof.se [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id hehyB8a_Sx59; Tue,  3 Dec 2019 20:31:09 +0100 (CET)
-Received: from mail1.shipmail.org (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
-        (Authenticated sender: mb878879)
-        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTPA id A66153F4CF;
-        Tue,  3 Dec 2019 20:31:08 +0100 (CET)
-Received: from localhost.localdomain.localdomain (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
-        by mail1.shipmail.org (Postfix) with ESMTPSA id 2375B362501;
-        Tue,  3 Dec 2019 20:31:08 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=shipmail.org; s=mail;
-        t=1575401468; bh=GgpXsnJVZPKyPe+h+0gIt+VQkmGTuW5nmRdMrtnMCT8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jUDRzMDsGPJvk0017GCqWL8w/RwWA/9L3q2eiH3OKffW6LTeyvYqK2UFvt561ftiN
-         wasrY82tz2l++RDhSJKGJbIhKugSzN9YtRvhKCaaVEFsvvagkkJ+o/SZEyF3ve9iUe
-         edTj+I5iYtmQCNd02pOlVcQTXfeGs3fZE13W2wOQ=
-From:   =?UTF-8?q?Thomas=20Hellstr=C3=B6m=20=28VMware=29?= 
-        <thomas_os@shipmail.org>
-To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        pv-drivers@vmware.com
-Cc:     Thomas Hellstrom <thellstrom@vmware.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jim Gill <jgill@vmware.com>
-Subject: [PATCH RESEND 2/2] scsi: vmw_pvscsi: Silence dma mapping errors
-Date:   Tue,  3 Dec 2019 20:30:52 +0100
-Message-Id: <20191203193052.7583-2-thomas_os@shipmail.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20191203193052.7583-1-thomas_os@shipmail.org>
-References: <20191203193052.7583-1-thomas_os@shipmail.org>
+        id S1726564AbfLCT4V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Dec 2019 14:56:21 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:42072 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726955AbfLCT4U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 14:56:20 -0500
+Received: by mail-ot1-f66.google.com with SMTP id 66so4062149otd.9
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Dec 2019 11:56:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=blockbridge-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=c2eSaP9cJhqPHyzDC8w3CbFx7JCZ6KKxOyraLwR9PhA=;
+        b=wLTIGZ++NbsJM2gFEzkW3jFKZShTPG1f0lsuIQOltlAXcRb5EdTwEBJEbZqvi56cYV
+         PxGHzJBqm2IUSJUdsJnmk+JX0dumKWOVdZo56piubBOVXekQKPppFIt64Nd1w467qyEE
+         RIcaiqRojms1cvrkcuLcWooyxWpal0suWcPT3OTSqHS3RpJzFukQBKDAkIWaUFG3fEHn
+         uWRLqYak21px3vZvwIXwHiydJOe6Uj1/z4PDOQxlJgF9+vZxpVVMPsb3OUBPAJy6FgFX
+         aCFMxshhUvyvHYW6naiBXQQ6k8gmWf/cJg/Ce+oSdkMWYIm9IPawU2/E2H564UQnyidg
+         MXqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=c2eSaP9cJhqPHyzDC8w3CbFx7JCZ6KKxOyraLwR9PhA=;
+        b=PzGMfkdDB1d4edpr7PX6l04gnvGLWpC5A/jHbRgVgq0J0Rp/op6rD3t5FjF93vG31g
+         3MyHvsxUNIVO6SqeBRZz3zCWeU2Hf3GocwgP7hfJwOcETL9A1ootvYkeomjZZbE2I/lR
+         LAnDZNk6YKVBCD631pzT8MNbvp7mrIFBiyKP6R4vNsi77efhCnWOuUnTajfqZDV2udLf
+         d3BumJ3oGiFHhCADYVPOV4igxIKfRnaTxshcPPpR19Injg+6AE3GpejJhLhqMN/M8ekx
+         nwKgUPsJ+Xo6FLsjKDZ7I9w9R0EIjF714bOfESIAjrzuvlXci0BpLNAP44BsFeIp22aj
+         X8cw==
+X-Gm-Message-State: APjAAAVpu6Dpo2xrSRLdfoaLxuoQr+OrHUv0e7FTvgmjatpztLSNPTU9
+        SSS8AMFRvZvVFsgaoeCSrEpsWcWdOF7nkMUPXUW7OA==
+X-Google-Smtp-Source: APXvYqwe49MzVy71zFCSDiZoF+VH7cE8Gtkn2FX6bQOskDctJh/Gw/DbDHrh82SW4A7nARSNeWI6ROO1GDn0hqM3dG4=
+X-Received: by 2002:a05:6830:58:: with SMTP id d24mr4555139otp.356.1575402979934;
+ Tue, 03 Dec 2019 11:56:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
+ <20191128025822.GC3277@ming.t460p> <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+ <20191128091210.GC15549@ming.t460p> <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+ <20191203005849.GB25002@ming.t460p> <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
+ <20191203031444.GB6245@ming.t460p> <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
+ <CAAFE1bfpUWCZrtR8v3S++0-+gi8DJ79X3e0XqDe93i8nuGTnNg@mail.gmail.com> <20191203124558.GA22805@ming.t460p>
+In-Reply-To: <20191203124558.GA22805@ming.t460p>
+From:   Stephen Rust <srust@blockbridge.com>
+Date:   Tue, 3 Dec 2019 14:56:08 -0500
+Message-ID: <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Rob Townley <rob.townley@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        target-devel@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Thomas Hellstrom <thellstrom@vmware.com>
+Hi Ming,
 
-These errors typically occur with swiotlb when the swiotlb buffer is full.
-But they are transient and would typically unnecessarily worry a user.
-Instead of errors, print debug messages.
+Thanks very much for the patch.
 
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
-Acked-by: Jim Gill <jgill@vmware.com>
----
- drivers/scsi/vmw_pvscsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> BTW, you may try the attached test patch. If the issue can be fixed by
+> this patch, that means it is really caused by un-aligned buffer, and
+> the iser driver needs to be fixed.
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 8a09d184a320..c3f010df641e 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -365,7 +365,7 @@ static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
- 		int segs = scsi_dma_map(cmd);
- 
- 		if (segs == -ENOMEM) {
--			scmd_printk(KERN_ERR, cmd,
-+			scmd_printk(KERN_DEBUG, cmd,
- 				    "vmw_pvscsi: Failed to map cmd sglist for DMA.\n");
- 			return -ENOMEM;
- 		} else if (segs > 1) {
-@@ -392,7 +392,7 @@ static int pvscsi_map_buffers(struct pvscsi_adapter *adapter,
- 		ctx->dataPA = dma_map_single(&adapter->dev->dev, sg, bufflen,
- 					     cmd->sc_data_direction);
- 		if (dma_mapping_error(&adapter->dev->dev, ctx->dataPA)) {
--			scmd_printk(KERN_ERR, cmd,
-+			scmd_printk(KERN_DEBUG, cmd,
- 				    "vmw_pvscsi: Failed to map direct data buffer for DMA.\n");
- 			return -ENOMEM;
- 		}
-@@ -725,7 +725,7 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
- 				cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				DMA_FROM_DEVICE);
- 		if (dma_mapping_error(&adapter->dev->dev, ctx->sensePA)) {
--			scmd_printk(KERN_ERR, cmd,
-+			scmd_printk(KERN_DEBUG, cmd,
- 				    "vmw_pvscsi: Failed to map sense buffer for DMA.\n");
- 			ctx->sensePA = 0;
- 			return -ENOMEM;
--- 
-2.21.0
+I have tried the patch, and re-run the test. Results are mixed.
 
+To recap, our test writes the last bytes of an iser attached iscsi
+device. The target device is a LIO iblock, backed by a brd ramdisk.
+The client does a simple `dd`, doing a seek to "size - offset" of the
+device, and writing a buffer of "length" which is equivalent to the
+offset.
+
+For example, to test a write at a 512 offset, seek to device "size -
+512", and write a length of data 512 bytes.
+
+WITHOUT the patch, writing data at the following offsets from the end
+of the device failed to write all the correct data (rather, the write
+succeeded, but reading the data back it was invalid):
+
+- failed: 512,1024, 2048, 4096, 8192
+
+Anything larger worked fine.
+
+WITH the patch applied, writing data up to an offset of 4096 all now
+worked and verified correctly. However, offsets between 4096 and 8192
+all still failed. I started at 512, and incremented by 512 all the way
+up to 16384. The following offsets all failed to verify the write:
+
+- failed: 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192
+
+Anything larger continues to work fine with the patch.
+
+As an example, for the failed 8192 case, the `bpftrace lio.bt` trace shows:
+
+8192 76
+4096 0
+4096 0
+8192 76
+4096 0
+4096 0
+...
+[snip]
+
+What do you think are appropriate next steps? Do you think you have an
+idea on why the specific "multi-page bvec helpers" commit could have
+exposed this particular latent issue? Please let me know what else I
+can try, or additional data I can provide for you.
+
+Thanks,
+Steve
