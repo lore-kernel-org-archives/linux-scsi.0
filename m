@@ -7,63 +7,79 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91413C432C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 00:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8737C432C3
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:24:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6954820705
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 00:59:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B11FE206DC
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:24:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ino9xIkz"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JOfNcYP+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725997AbfLCA7I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 19:59:08 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:58164 "EHLO
+        id S1726330AbfLCCYA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 21:24:00 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:51526 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726105AbfLCA7I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 19:59:08 -0500
+        by vger.kernel.org with ESMTP id S1726298AbfLCCX7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 21:23:59 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575334746;
+        s=mimecast20190719; t=1575339838;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DJsbufhtBhVAM9akbCFhx8OR37KN18Pkh0f3aJ/wr48=;
-        b=Ino9xIkzmEb9DHkvfwl6hvT8TMRg7FxvCDLcN/ReYqwcgwP7xLVuZATO8bEwJnfBmv3DVm
-        IIUaMtNs6BtxAKVs9d/HdcF+Ux88Gd6Ft7C5iVzKGKT86xAjeJoiJ15s07IeqHXFbIIBO8
-        JW1DWOgAeBCTMcKLLc3c5XMkN7xA9Mw=
+        bh=O0EX3vVcvGDZXblDe7Rv/FsS5mhTO0YUbuVmRSPhwMA=;
+        b=JOfNcYP+tQLdE4QsiUXNjjhhJ7qei9NVmFOCzyJuMMcCkN+TkDyY8K/L3poDUxkNMXUvHc
+        L4oRMqPqH3LjuKwO5FUijqMNUi1si1oT1BdE54gRE9dnPP5AgTpzEBGGtWu10WdSliG0xV
+        eyAyQQ83IIACz6AjGPGCt9AJqFVx8CI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-35-id8hnlJZMgy_H_WpJIWsrQ-1; Mon, 02 Dec 2019 19:59:02 -0500
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-368-2M_xvtKyM3isUt9S-04QCw-1; Mon, 02 Dec 2019 21:23:55 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3A00E800D41;
-        Tue,  3 Dec 2019 00:59:01 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7833CDB62;
+        Tue,  3 Dec 2019 02:23:52 +0000 (UTC)
 Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D658619C68;
-        Tue,  3 Dec 2019 00:58:53 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 08:58:49 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9E10B10016DA;
+        Tue,  3 Dec 2019 02:23:41 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 10:23:37 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     Stephen Rust <srust@blockbridge.com>
-Cc:     Rob Townley <rob.townley@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        target-devel@vger.kernel.org
-Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
-Message-ID: <20191203005849.GB25002@ming.t460p>
-References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
- <20191128015748.GA3277@ming.t460p>
- <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
- <20191128025822.GC3277@ming.t460p>
- <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
- <20191128091210.GC15549@ming.t460p>
- <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+To:     Andrea Vai <andrea.vai@unipv.it>
+Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Message-ID: <20191203022337.GE25002@ming.t460p>
+References: <20191126023253.GA24501@ming.t460p>
+ <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
+ <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
+ <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+ <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
+ <20191128091712.GD15549@ming.t460p>
+ <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
+ <20191129005734.GB1829@ming.t460p>
+ <20191129023555.GA8620@ming.t460p>
+ <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
 MIME-Version: 1.0
-In-Reply-To: <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+In-Reply-To: <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: id8hnlJZMgy_H_WpJIWsrQ-1
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: 2M_xvtKyM3isUt9S-04QCw-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: quoted-printable
@@ -73,65 +89,102 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 02, 2019 at 01:42:15PM -0500, Stephen Rust wrote:
-> Hi Ming,
+On Fri, Nov 29, 2019 at 03:41:01PM +0100, Andrea Vai wrote:
+> Il giorno ven, 29/11/2019 alle 10.35 +0800, Ming Lei ha scritto:
+> > On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
+> >=20
+> > > [...]
+> >=20
+> > > Andrea, can you collect the following log when running the test
+> > > on current new(bad) kernel?
+> > >=20
+> > > =09/usr/share/bcc/tools/stackcount  -K blk_mq_make_request
+> >=20
+> > Instead, please run the following trace, given insert may be
+> > called from other paths, such as flush plug:
+> >=20
+> > =09/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
 >=20
-> > I may get one machine with Mellanox NIC, is it easy to setup & reproduc=
-e
-> > just in the local machine(both host and target are setup on same machin=
-e)?
+> Attached, for new (patched) bad kernel.
 >=20
-> Yes, I have reproduced locally on one machine (using the IP address of
-> the Mellanox NIC as the target IP), with iser enabled on the target,
-> and iscsiadm connected via iser.
+> Produced by: start the trace script (with the pendrive already
+> plugged), wait some seconds, run the test (1 trial, 1 GB), wait for
+> the test to finish, stop the trace.
 >=20
-> e.g.:
-> target:
-> /iscsi/iqn.20.../0.0.0.0:3260> enable_iser true
-> iSER enable now: True
->=20
->   | |   o- portals
-> .........................................................................=
-...........................
-> [Portals: 1]
->   | |     o- 0.0.0.0:3260
-> .........................................................................=
-..........................
-> [iser]
->=20
-> client:
-> # iscsiadm -m node -o update --targetname <target> -n
-> iface.transport_name -v iser
-> # iscsiadm -m node --targetname <target> --login
-> # iscsiadm -m session
-> iser: [3] 172.16.XX.XX:3260,1
-> iqn.2003-01.org.linux-iscsi.x8664:sn.c46c084919b0 (non-flash)
->=20
-> > Please try to trace bio_add_page() a bit via 'bpftrace ./ilo.bt'.
->=20
-> Here is the output of this trace from a failed run:
->=20
-> # bpftrace lio.bt
-> modprobe: FATAL: Module kheaders not found.
-> Attaching 3 probes...
-> 512 76
-> 4096 0
-> 4096 0
-> 4096 0
-> 4096 76
+> The copy took ~1700 seconds.
 
-The above buffer might be the reason, 4096 is length, and 76 is the
-offset, that means the added buffer crosses two pages, meantime the
-buffer isn't aligned.
+See the two path[1][2] of inserting request, and path[1] is triggered
+4358 times, and the path[2] is triggered 5763 times.
 
-We need to figure out why the magic 76 offset is passed from target or
-driver.
+The path[2] is expected behaviour. Not sure path [1] is correct, given
+ext4_release_file() is supposed to be called when this inode is
+released. That means the file is closed 4358 times during 1GB file
+copying to usb storage.
 
-Please install bcc and collect the following log:
+Cc filesystem list.
 
-/usr/share/bcc/tools/trace -K 'bio_add_page ((arg4 & 512) !=3D 0) "%d %d", =
-arg3, arg4 '
 
+[1] insert requests when returning to user mode from syscall
+
+  b'blk_mq_sched_request_inserted'
+  b'blk_mq_sched_request_inserted'
+  b'dd_insert_requests'
+  b'blk_mq_sched_insert_requests'
+  b'blk_mq_flush_plug_list'
+  b'blk_flush_plug_list'
+  b'io_schedule_prepare'
+  b'io_schedule'
+  b'rq_qos_wait'
+  b'wbt_wait'
+  b'__rq_qos_throttle'
+  b'blk_mq_make_request'
+  b'generic_make_request'
+  b'submit_bio'
+  b'ext4_io_submit'
+  b'ext4_writepages'
+  b'do_writepages'
+  b'__filemap_fdatawrite_range'
+  b'ext4_release_file'
+  b'__fput'
+  b'task_work_run'
+  b'exit_to_usermode_loop'
+  b'do_syscall_64'
+  b'entry_SYSCALL_64_after_hwframe'
+    4358
+
+[2] insert requests from writeback wq context
+
+  b'blk_mq_sched_request_inserted'
+  b'blk_mq_sched_request_inserted'
+  b'dd_insert_requests'
+  b'blk_mq_sched_insert_requests'
+  b'blk_mq_flush_plug_list'
+  b'blk_flush_plug_list'
+  b'io_schedule_prepare'
+  b'io_schedule'
+  b'rq_qos_wait'
+  b'wbt_wait'
+  b'__rq_qos_throttle'
+  b'blk_mq_make_request'
+  b'generic_make_request'
+  b'submit_bio'
+  b'ext4_io_submit'
+  b'ext4_bio_write_page'
+  b'mpage_submit_page'
+  b'mpage_process_page_bufs'
+  b'mpage_prepare_extent_to_map'
+  b'ext4_writepages'
+  b'do_writepages'
+  b'__writeback_single_inode'
+  b'writeback_sb_inodes'
+  b'__writeback_inodes_wb'
+  b'wb_writeback'
+  b'wb_workfn'
+  b'process_one_work'
+  b'worker_thread'
+  b'kthread'
+  b'ret_from_fork'
+    5763
 
 Thanks,
 Ming
