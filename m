@@ -2,86 +2,110 @@ Return-Path: <SRS0=KpyL=ZZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6700BC432C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 03:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 483FAC43215
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 03:26:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 380622068E
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 03:15:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2043B206DC
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 03:26:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eYomzYuU"
+	dkim=pass (2048-bit key) header.d=blockbridge-com.20150623.gappssmtp.com header.i=@blockbridge-com.20150623.gappssmtp.com header.b="uMRhepsM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726564AbfLCDPA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 22:15:00 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:49579 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726214AbfLCDPA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 22:15:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575342900;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=08LSHP3i4KAxSfFtz46KlYbHrqxFlYZ5I+U9GzefzGw=;
-        b=eYomzYuURRWoBtVOOg3/YLFcaLr13PFkTkS64nv3YjRyDr7xJNrv452H3sBLXVf8VQ3drs
-        Da31+S+dC2ULNVoKyFmbL2BmxdlDu1k6fD2mBAO4QqJ7Jv5WQYomfUJ9cui5j8l9TAWaw1
-        2iP/yhAFq1dnCMz1yvfH4qFD1IvYG20=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-399-2aGRxKaSPSulL06JJzt_Dg-1; Mon, 02 Dec 2019 22:14:58 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F30F2107ACC5;
-        Tue,  3 Dec 2019 03:14:56 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AA49B5DA60;
-        Tue,  3 Dec 2019 03:14:49 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 11:14:44 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Stephen Rust <srust@blockbridge.com>
+        id S1726707AbfLCD0k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 22:26:40 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:45605 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726684AbfLCD0j (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 22:26:39 -0500
+Received: by mail-oi1-f196.google.com with SMTP id 14so1905097oir.12
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2019 19:26:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=blockbridge-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LwpIDBucvKjpCN15l8CmiENKWiJ3fV7rlV+B6EGUY/Q=;
+        b=uMRhepsMu54o9CknQNkBGlVn/d9qy8xO+eU0zmh4MITzbVKaCBeSRy+aJ/PP3/JOMQ
+         n5zQiSfEKe35TPViuH2uRohl67uxsx9P1Z63dXSkXzveAEGVF3xEqnFY3reQYbHZJYB+
+         5aGzLn+qzcY4WFFKjE9rRNtySBtfsawB08cY/e8Ajku/lxSAcuBkTvXYl6oRD5DcsB/x
+         foQMpBqwsmXvd50oD3SNv8pgWLRUHRJxkNYN8+Arr6U3m++sENJzesJ54aDM9MWMYH+5
+         XOrtAKD6WJhlLK9pU5XPW0pFlsZpN5E1C8XLc6mJTd8MG47+iMbtPDYjA1EdNeyToH26
+         Xk2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LwpIDBucvKjpCN15l8CmiENKWiJ3fV7rlV+B6EGUY/Q=;
+        b=nVuQp+9eOSMGOhOE+znK+fJUer7lTERpFNKGqfktYvBnTCLAgGSS5fIM/Rc660kiqe
+         cCmp8A2/wPnYrRHG+9neWwRZtIIEyjaL650RTQ2D9hEnClyFDmusrbztvJoRaJqEXci7
+         hvRKXVwe3j7vFSQy0Wy7ecocyPKBYVf7qweDjsbUgBu2PqF+SeBJdSbVwUFyb/TEw/z+
+         GDne84AJrzycCRDyjzeDakuDcP4+7TCXGPoVNiMfj6u370q2XSfDBIHNwr4geFZz8pFK
+         kK2hjeAPmTVT3jDY5IhAvPDAGo5ly9EW5ulOz4Erg/x5LizGi7Qpj/Z2gvZXnuSiQKod
+         jf+g==
+X-Gm-Message-State: APjAAAWR5pKh36/25Bk5734ekPbF/gZe8UJ4QOXLGIBsqQ8NKicG8Q3b
+        AY5OVqxSBbvf7ckiexQYF8pEzvffcQOjlRl6CdlFbA==
+X-Google-Smtp-Source: APXvYqwz4mfuLXrSsp718O29itUq1yXjgDG5hOd8dyAdMUbt6utvr7bHWcM09Cww6W0Y6cXJadQ8xNl2lKC2MLvNsE0=
+X-Received: by 2002:a05:6808:b2d:: with SMTP id t13mr2009175oij.83.1575343599018;
+ Mon, 02 Dec 2019 19:26:39 -0800 (PST)
+MIME-Version: 1.0
+References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
+ <20191128015748.GA3277@ming.t460p> <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
+ <20191128025822.GC3277@ming.t460p> <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+ <20191128091210.GC15549@ming.t460p> <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+ <20191203005849.GB25002@ming.t460p> <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
+ <20191203031444.GB6245@ming.t460p>
+In-Reply-To: <20191203031444.GB6245@ming.t460p>
+From:   Stephen Rust <srust@blockbridge.com>
+Date:   Mon, 2 Dec 2019 22:26:28 -0500
+Message-ID: <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+To:     Ming Lei <ming.lei@redhat.com>
 Cc:     Rob Townley <rob.townley@gmail.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
         linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         target-devel@vger.kernel.org
-Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
-Message-ID: <20191203031444.GB6245@ming.t460p>
-References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
- <20191128015748.GA3277@ming.t460p>
- <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
- <20191128025822.GC3277@ming.t460p>
- <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
- <20191128091210.GC15549@ming.t460p>
- <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
- <20191203005849.GB25002@ming.t460p>
- <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: 2aGRxKaSPSulL06JJzt_Dg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 02, 2019 at 10:04:20PM -0500, Stephen Rust wrote:
-> Hi Ming,
->=20
-> The log you requested with the (arg4 & 512 !=3D 0) predicate did not
+> oops, it should have been (arg4 & 511) != 0.
 
-oops, it should have been (arg4 & 511) !=3D 0.
+Yep, there they are:
 
-Thanks,
-Ming
+# /usr/share/bcc/tools/trace -K 'bio_add_page ((arg4 & 511) != 0) "%d
+%d", arg3, arg4'
+PID     TID     COMM            FUNC             -
+7411    7411    kworker/31:1H   bio_add_page     512 76
+        bio_add_page+0x1 [kernel]
+        sbc_execute_rw+0x28 [kernel]
+        __target_execute_cmd+0x2e [kernel]
+        target_execute_cmd+0x1c1 [kernel]
+        iscsit_execute_cmd+0x1e7 [kernel]
+        iscsit_sequence_cmd+0xdc [kernel]
+        isert_recv_done+0x780 [kernel]
+        __ib_process_cq+0x78 [kernel]
+        ib_cq_poll_work+0x29 [kernel]
+        process_one_work+0x179 [kernel]
+        worker_thread+0x4f [kernel]
+        kthread+0x105 [kernel]
+        ret_from_fork+0x1f [kernel]
 
+7753    7753    kworker/26:1H   bio_add_page     4096 76
+        bio_add_page+0x1 [kernel]
+        sbc_execute_rw+0x28 [kernel]
+        __target_execute_cmd+0x2e [kernel]
+        target_execute_cmd+0x1c1 [kernel]
+        iscsit_execute_cmd+0x1e7 [kernel]
+        iscsit_sequence_cmd+0xdc [kernel]
+        isert_recv_done+0x780 [kernel]
+        __ib_process_cq+0x78 [kernel]
+        ib_cq_poll_work+0x29 [kernel]
+        process_one_work+0x179 [kernel]
+        worker_thread+0x4f [kernel]
+        kthread+0x105 [kernel]
+        ret_from_fork+0x1f [kernel]
