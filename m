@@ -2,164 +2,165 @@ Return-Path: <SRS0=KpyL=ZZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 244CDC432C0
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 10:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84222C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 10:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E54072073B
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 10:09:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51C932073C
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 10:31:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="NxSgFEvp";
-	dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b="qaQTVPpf"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gG6Bc6JV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726254AbfLCKJj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Dec 2019 05:09:39 -0500
-Received: from mx0a-0014ca01.pphosted.com ([208.84.65.235]:49308 "EHLO
-        mx0a-0014ca01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725773AbfLCKJj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 05:09:39 -0500
-Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
-        by mx0a-0014ca01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xB3A2coa011638;
-        Tue, 3 Dec 2019 02:09:10 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=proofpoint;
- bh=50YHPMnClc61y8E3qh+3v63XznlfGECyAICWaX5OsL8=;
- b=NxSgFEvpFkQE0pfwi0S2zOsQ7Kp5OywBjdntmVMR5LSNs9+UxlY8IORLUw5gxDjGVXe+
- puse0yjeZzhyULeYjEhUz1YuHBwZrpLTBOfWLr0kaqc6DaM8r/LVTsjnrfU2YogXSajT
- OyILl8wGJN8MZPIR2AWbBngGHCFcaTcD3Us0aKFcUZXSqqtUovv8o0UUzI5ALYKiTWKx
- Qqu2blFJkV+gQF8FthNOQW7OGfnW1IGKd8z4bCE6X4I8PiSN7lcw3dWnFHpNO1HRQn+Y
- 9t2lF09AeCZ3cwXe3a9hFPntde6gZSyuA0yxvDBsZPwiI8k4nzQQxJG6lZWdfqXMFsTO yg== 
-Received: from nam05-co1-obe.outbound.protection.outlook.com (mail-co1nam05lp2056.outbound.protection.outlook.com [104.47.48.56])
-        by mx0a-0014ca01.pphosted.com with ESMTP id 2wknv0ujrr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 03 Dec 2019 02:09:10 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WIujyRhxPgc1CNnZrBXvp2VTyzG1c3qdeovOU/FaO/VWwUmxXJJPnFjL7hYCi6WRuLhzz62rnaPULgRE5nDnrIpAQpx0V0yxqz7VPvlN2fl4eiTd+72cfX8S48YIIgQ+Xi8OLwCauhMejPA3sEbCWd9xbzZJpFXl0kbav4QhxQfyBaWhH5E9yWLw9cx2Ef1AOq23AY8Bafqc81pYeAlHxCDwcqWww5wYChhflDAzXSrIRspOid8+XtZHuv5v0FEA40w8EI2ExR0B05AC4+Wk9ls39c0Y60ui5WG3iN9+pTVa/jEhBA2WfBVSYc4O2oDJkv2tgFCBFe5R8inGNkSoJA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=50YHPMnClc61y8E3qh+3v63XznlfGECyAICWaX5OsL8=;
- b=Eyo/pnO89MdLrRwEUfe2DYMyHu2KbfBaqXG+pUnSp3E8gFI/NKVrCpWlTggFJEZLgznjLHV6lmlcqFD9Zt5wHUT8vMJEDcIRiaLPaG0fwlppnm/B1GoXEb/2nW5DeWUdBUVQzFw0zxtN0yFYHsnPL7HnNNll14Rcn7qRYJjqDJV0XSKpwI28UBuJ4Kp6YyZRGS/HGajg0ifnS3GktLjs/cH4yHqYcnAJ7Ks633B1W/roAwWoUeO4OlTz/+lwYIyHxKsx+gziPtr7NETmT5ndkFmm0V0oi3WX2RVcLHPAELmBvNeNNFAvsxrX6f1CZeTydgUvyWXCAU+/RZpkd/8SMA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
- is 158.140.1.28) smtp.rcpttodomain=linux.ibm.com smtp.mailfrom=cadence.com;
- dmarc=fail (p=none sp=none pct=100) action=none header.from=cadence.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=50YHPMnClc61y8E3qh+3v63XznlfGECyAICWaX5OsL8=;
- b=qaQTVPpfmFranOx4hY9tQmxpRhh/71Hxb9qLtV6TT89Jo77AxgHTwbD/MQqX/799TSfvbHnMqoaC3JLI55b+CQHiKVbjLKwwVclXEvbIHHh29TnszCpjlmN8/xxWoWMr2ZI/nQsBZA2TlQrUbrdgpFY/LNotavrdrxSvNBLJMnM=
-Received: from CY1PR07CA0018.namprd07.prod.outlook.com
- (2a01:111:e400:c60a::28) by BY5PR07MB6754.namprd07.prod.outlook.com
- (2603:10b6:a03:195::23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2495.19; Tue, 3 Dec
- 2019 10:09:07 +0000
-Received: from MW2NAM12FT019.eop-nam12.prod.protection.outlook.com
- (2a01:111:f400:fe5a::203) by CY1PR07CA0018.outlook.office365.com
- (2a01:111:e400:c60a::28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2495.19 via Frontend
- Transport; Tue, 3 Dec 2019 10:09:06 +0000
-Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
- cadence.com discourages use of 158.140.1.28 as permitted sender)
-Received: from sjmaillnx1.cadence.com (158.140.1.28) by
- MW2NAM12FT019.mail.protection.outlook.com (10.13.180.86) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2495.18 via Frontend Transport; Tue, 3 Dec 2019 10:09:06 +0000
-Received: from maileu3.global.cadence.com (maileu3.cadence.com [10.160.88.99])
-        by sjmaillnx1.cadence.com (8.14.4/8.14.4) with ESMTP id xB3A92Au016941
-        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK);
-        Tue, 3 Dec 2019 02:09:03 -0800
-X-CrossPremisesHeadersFilteredBySendConnector: maileu3.global.cadence.com
-Received: from maileu3.global.cadence.com (10.160.88.99) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3; Tue, 3 Dec 2019 11:09:01 +0100
-Received: from vleu-orange.cadence.com (10.160.88.83) by
- maileu3.global.cadence.com (10.160.88.99) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Tue, 3 Dec 2019 11:09:01 +0100
-Received: from vleu-orange.cadence.com (localhost.localdomain [127.0.0.1])
-        by vleu-orange.cadence.com (8.14.4/8.14.4) with ESMTP id xB3A91h2024901;
-        Tue, 3 Dec 2019 11:09:01 +0100
-Received: (from sheebab@localhost)
-        by vleu-orange.cadence.com (8.14.4/8.14.4/Submit) id xB3A8vUW024826;
-        Tue, 3 Dec 2019 11:08:57 +0100
-From:   sheebab <sheebab@cadence.com>
-To:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        id S1726365AbfLCKbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Dec 2019 05:31:31 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:30817 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726114AbfLCKba (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 05:31:30 -0500
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20191203103127epoutp04bc4fed1e7285aef1ad9188ddadf63a9c~c1da9NP802448924489epoutp04b
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Dec 2019 10:31:27 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20191203103127epoutp04bc4fed1e7285aef1ad9188ddadf63a9c~c1da9NP802448924489epoutp04b
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1575369087;
+        bh=k4smPxscGQus0agxESMLr3cncxJ0TeOpX6R7z78OuEs=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=gG6Bc6JVvPPaTqo7CSH5SH6VhThgD2GfwerLqxYmMHO1GmjGJvb0SsqQgNJCVtkyy
+         qgG6jVw+dGAJ+qlbo4DwH44pl3rCMv4ic37RBNXEVXqCt1vLH8et8AGnSGq4KN9s9a
+         kq86eLFWGvfLw/SRKbuwkr6sKpXSIdakuX79whc8=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20191203103127epcas5p1f7d66300090a96eb363dad698a7cce92~c1daM2YXb0700907009epcas5p1B;
+        Tue,  3 Dec 2019 10:31:27 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        30.A7.19629.F7936ED5; Tue,  3 Dec 2019 19:31:27 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20191203103126epcas5p440b714f961f05ce87fcf35f70699c689~c1dZm-Yup0517505175epcas5p4h;
+        Tue,  3 Dec 2019 10:31:26 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20191203103126epsmtrp1cd47add7f9a16655907182e738965c9b~c1dZmIGvl0666506665epsmtrp1J;
+        Tue,  3 Dec 2019 10:31:26 +0000 (GMT)
+X-AuditID: b6c32a4b-345ff70000014cad-43-5de6397ff18c
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        DA.50.06569.E7936ED5; Tue,  3 Dec 2019 19:31:26 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.111.84.32]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20191203103122epsmtip22107dabcbc4b6ebbe155a966bc08959d~c1dVjMGzp1815318153epsmtip2W;
+        Tue,  3 Dec 2019 10:31:22 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'sheebab'" <sheebab@cadence.com>, <avri.altman@wdc.com>,
         <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <stanley.chu@mediatek.com>,
         <beanhuo@micron.com>, <yuehaibing@huawei.com>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <vigneshr@ti.com>
-CC:     <mparab@cadence.com>, <rafalc@cadence.com>,
-        sheebab <sheebab@cadence.com>
-Subject: [PATCH] scsi: ufs: Disable autohibern8 feature in Cadence UFS
-Date:   Tue, 3 Dec 2019 11:07:15 +0100
-Message-ID: <1575367635-22662-1-git-send-email-sheebab@cadence.com>
-X-Mailer: git-send-email 2.4.5
+Cc:     <mparab@cadence.com>, <rafalc@cadence.com>
+In-Reply-To: <1575367635-22662-1-git-send-email-sheebab@cadence.com>
+Subject: RE: [PATCH] scsi: ufs: Disable autohibern8 feature in Cadence UFS
+Date:   Tue, 3 Dec 2019 16:01:18 +0530
+Message-ID: <011201d5a9c4$d0f99780$72ecc680$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-OrganizationHeadersPreserved: maileu3.global.cadence.com
-X-EOPAttributedMessage: 0
-X-Forefront-Antispam-Report: CIP:158.140.1.28;IPV:CAL;SCL:-1;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(4636009)(346002)(136003)(39860400002)(396003)(376002)(36092001)(189003)(199004)(2616005)(2906002)(426003)(51416003)(356004)(6666004)(4744005)(36756003)(16586007)(316002)(336012)(186003)(26005)(54906003)(110136005)(8936002)(2201001)(8676002)(76130400001)(70586007)(42186006)(86362001)(246002)(50226002)(4326008)(107886003)(5660300002)(7636002)(305945005)(478600001)(87636003)(70206006)(26826003)(50466002)(48376002)(7416002)(921003)(83996005)(1121003)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:BY5PR07MB6754;H:sjmaillnx1.cadence.com;FPR:;SPF:SoftFail;LANG:en;PTR:corp.Cadence.COM;MX:1;A:1;
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ba5795fa-6b1a-438d-03af-08d777d8d4bd
-X-MS-TrafficTypeDiagnostic: BY5PR07MB6754:
-X-Microsoft-Antispam-PRVS: <BY5PR07MB67543CD08BCABE862B997801A4420@BY5PR07MB6754.namprd07.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5516;
-X-Forefront-PRVS: 02408926C4
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: K07IJPSn8a7kXgxz6racdf4gEl58V7gh+GZrCDW0BbH31tLX6HLlug1JjitZe5zcupDvKtKS2c32/aMn/8qSXD5H7j6iQmohjiriaH21ZUwLR2JgExOM6qh+hBtfrFq1qMZUevM8WwivhWOLX29g2kv3dPMZ9LC4DARiKhq0Rxra6mrEdzP/j2QtEZGz32RVw+yjLmuFsc7rfkV8ET6NWYwq/zYF6lcOfPFWvezmUtaZS82nX9F1JTIQGUuStUaUTQK2o88ER3nipxIGX6znBrdJe7kZlgpZ6bivk/S6gLhziiAhsjFRjeJ8mj2rO6S/F6eUEBH5pMj4MMOwjgY/lnES1jOrOoB61YCeu+Ai1uO7/8bNXaGNKTRLr03vVJ0+lCcVcTG6/YYQwq6dhQX2O1wIU93Qp+q9gfD5hO4trzPWoIwaBTbXrPkq1OzO7e8+
-X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Dec 2019 10:09:06.1442
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ba5795fa-6b1a-438d-03af-08d777d8d4bd
-X-MS-Exchange-CrossTenant-Id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d36035c5-6ce6-4662-a3dc-e762e61ae4c9;Ip=[158.140.1.28];Helo=[sjmaillnx1.cadence.com]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR07MB6754
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-12-03_02:2019-11-29,2019-12-03 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 adultscore=0
- spamscore=0 suspectscore=0 clxscore=1015 mlxlogscore=853 phishscore=0
- impostorscore=0 malwarescore=0 bulkscore=0 lowpriorityscore=0
- priorityscore=1501 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-1910280000 definitions=main-1912030081
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQFBe579HXcCclZGAfVZug4m7IsA/AH+fHYWqMCd0NA=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SfUhTYRTGee/ee3c3XVxn6EnLahSlpFYqXCPKoOhmCfZHZNGokTcVdemm
+        piU4afg1q6UEOURSK6EWlpiaWS7zI4s+SIdmpVjOz5TULEapOa+R/z3nnN/zPufAS4vk/aQH
+        HaNO4jVqVZyCkuKa597evhnBg8qtnx6T7IjdSrHP+nMxW9ZdQ7Ad9cUUa+iqo9iKtjmC7X01
+        hVl96wxmddXXKbbkvo5gbz38gNj519/F7KeZIRwi48y5YwSnbx4nOWOZBXH69kbM/arMobhJ
+        Ww/mqhunEdfWXUtw01VeXLbFQIRLj0t3RvJxMSm8xn/XKWn0bKVTQqdz6qtrdrEOtUjzkIQG
+        JhDelXZReUhKy5nHCLpts6RQTCHos5uRUPxEMJ87KfpnyZ8yL1meIGjoK8VCMYpgYnCeclAU
+        4wt15VmL1ErmAQH2sR7CMRAxfmDOLMIOLWH2QmlhB3JoVyYUbK+fLzKY2QAVN+cW+zImGL61
+        FZKCdoH2ogEsvLMWaseLl1ZaB3bb7QWGXgjbAdnWNQLiDi32fJFjB2CeisFS8JFyMLCQa3x2
+        RLC6wmhbtVjQHjByJUssILGQXx8gtNPhVkkrFvRusHQWYwciYryhst5fSFoBl34PEIJTBjlZ
+        coHeCBcnrEtOT7hqMJCC5mDSOEoZ0XrTsrNMy84yLdvf9D/sBsJ30Co+QRsfxWuDEgLU/Dk/
+        rSpem6yO8jt9Nr4KLX48n4N1qOrNoSbE0EjhLLP8GVDKSVWKNi2+CQEtUqyU1YBNKZdFqtLO
+        85qzJzXJcby2CXnSWOEuKyCtJ+RMlCqJj+X5BF7zb0rQEg8d2vCjavXny4pHeud5p95Y6NwX
+        dIBTeYVl7EfTpoKOtzNfXsRlhXk5l+P+4cN3twy7TGd7kGfuHfTe7NOsbl9RsTczXXNREr5H
+        E9EwkfjeGhja3VRvN/QE9OUZTUMBEalG8eimr+MnT710CxnS8W4TsH2wr7rxQuLRgkmlZKZ5
+        5JgCa6NV23xEGq3qL+yuwe10AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKIsWRmVeSWpSXmKPExsWy7bCSvG6d5bNYg84pYhYvf15lszj4sJPF
+        YtGNbUwWl3fNYbPovr6DzWL58X9MFvdOf2KxaDn2lcWiYcsMNot5GxqYLJZuvclo8f/sB3aL
+        O1+fszjweqzpfM3k0XLkLavHhEUHGD1aTu5n8fi+voPN4+PTWyweW/Z/ZvQ4fmM7k8fnTXIe
+        7Qe6mQK4orhsUlJzMstSi/TtErgy/q7nLrjCU3F66k/2BsajXF2MnBwSAiYSPZ/WsHUxcnEI
+        CexmlHh+YRITREJa4vrGCewQtrDEyn/P2SGKXjBK3H58kRkkwSagK7FjcRtYt4jAXiaJOTen
+        gXUwCxhIfHz5gRGiYyqjxMPd+8A6OAVcJBZOvswIYgsLeEk8PXsYbB2LgIrE8iX/wOK8ApYS
+        b45PZoWwBSVOznzC0sXIATRUT6JtIyPEfHmJ7W/nMENcpyDx8+kyVpASEQErifarshAl4hJH
+        f/YwT2AUnoVk0CyEQbOQDJqFpGMBI8sqRsnUguLc9NxiwwKjvNRyveLE3OLSvHS95PzcTYzg
+        yNXS2sF44kT8IUYBDkYlHt6MX09ihVgTy4orcw8xSnAwK4nwbpN4GivEm5JYWZValB9fVJqT
+        WnyIUZqDRUmcVz7/WKSQQHpiSWp2ampBahFMlomDU6qBcX7klbvKU+IFShgrhLarnLt74vH9
+        g2sC20L6nn3Y/JynruyO6fvSi/eCD/lsPrZtclfg4dMvGwp5lr9keMh24FlGtvSjHl+NFQGP
+        /s+VEjH/v6F42oJNXIt0tKJ+664p6DJZbGvdJjNvXsPx4NZr10TnP3Dbrr2o+ZvPVBcva/WU
+        7RcMDLQsq5RYijMSDbWYi4oTAWIkvUXYAgAA
+X-CMS-MailID: 20191203103126epcas5p440b714f961f05ce87fcf35f70699c689
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20191203100929epcas3p3e781cc87ff70f82bc1e708ba654456d2
+References: <CGME20191203100929epcas3p3e781cc87ff70f82bc1e708ba654456d2@epcas3p3.samsung.com>
+        <1575367635-22662-1-git-send-email-sheebab@cadence.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch disables autohibern8 feature in Cadence UFS. 
-The autohibern8 feature has issues due to which unexpected interrupt
-trigger is happening. After the interrupt issue is sorted out autohibern8
-feature will be re-enabled
 
-Signed-off-by: sheebab <sheebab@cadence.com>
----
- drivers/scsi/ufs/cdns-pltfrm.c | 6 ++++++
- 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
-index b2af04c57a39..882425d1166b 100644
---- a/drivers/scsi/ufs/cdns-pltfrm.c
-+++ b/drivers/scsi/ufs/cdns-pltfrm.c
-@@ -98,6 +98,12 @@ static int cdns_ufs_link_startup_notify(struct ufs_hba *hba,
- 	 * completed.
- 	 */
- 	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
-+
-+	/*
-+	 * Disabling Autohibern8 feature in cadence UFS
-+	 * to mask unexpected interrupt trigger.
-+	 */
-+	hba->ahit = 0;
- 
- 	return 0;
- }
--- 
-2.17.1
+> -----Original Message-----
+> From: sheebab <sheebab@cadence.com>
+> Sent: 03 December 2019 15:37
+> To: alim.akhtar@samsung.com; avri.altman@wdc.com;
+> pedrom.sousa@synopsys.com; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; stanley.chu@mediatek.com;
+> beanhuo@micron.com; yuehaibing@huawei.com; linux-scsi@vger.kernel.org;
+> linux-kernel@vger.kernel.org; vigneshr@ti.com
+> Cc: mparab@cadence.com; rafalc@cadence.com; sheebab
+> <sheebab@cadence.com>
+> Subject: [PATCH] scsi: ufs: Disable autohibern8 feature in Cadence UFS
+> 
+> This patch disables autohibern8 feature in Cadence UFS.
+> The autohibern8 feature has issues due to which unexpected interrupt
+trigger is
+> happening. After the interrupt issue is sorted out autohibern8 feature
+will be re-
+> enabled
+> 
+> Signed-off-by: sheebab <sheebab@cadence.com>
+> ---
+Probably we want to mark this as FIX for the older kernel version?
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+
+>  drivers/scsi/ufs/cdns-pltfrm.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c
+b/drivers/scsi/ufs/cdns-pltfrm.c index
+> b2af04c57a39..882425d1166b 100644
+> --- a/drivers/scsi/ufs/cdns-pltfrm.c
+> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
+> @@ -98,6 +98,12 @@ static int cdns_ufs_link_startup_notify(struct ufs_hba
+> *hba,
+>  	 * completed.
+>  	 */
+>  	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
+> +
+> +	/*
+> +	 * Disabling Autohibern8 feature in cadence UFS
+> +	 * to mask unexpected interrupt trigger.
+> +	 */
+> +	hba->ahit = 0;
+> 
+>  	return 0;
+>  }
+> --
+> 2.17.1
+
 
