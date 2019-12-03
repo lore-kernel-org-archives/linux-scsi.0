@@ -1,159 +1,138 @@
-Return-Path: <SRS0=lopX=ZY=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=KpyL=ZZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78E8BC43215
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 22:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91413C432C3
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 00:59:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E42620722
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Dec 2019 22:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6954820705
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 00:59:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Q/TFhfb1";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Q/TFhfb1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ino9xIkz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725939AbfLBWkk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 17:40:40 -0500
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49156 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725853AbfLBWkk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 17:40:40 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6FCBA8EE180;
-        Mon,  2 Dec 2019 14:40:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1575326439;
-        bh=w/oP+1BA9PA+20BsnpDXfjU/W0UeBcXPQE9EA4rXG7E=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Q/TFhfb106IByr2UHFDTsb5mKi9sCvOku2EZUYITsc1bD181AripSFV7XVrDcvMHw
-         ry0b18H8qc/HfPIROWBWvNQf9ou/Rm3IT0I78hArcBZ30hmdEdhgbawqno+xNVWxd7
-         LCm7UPVKKssPKqK52/5mrTiJbngcGlUwAcRsDpvg=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id tlDozYtRc6qk; Mon,  2 Dec 2019 14:40:39 -0800 (PST)
-Received: from jarvis.lan (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1725997AbfLCA7I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 19:59:08 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:58164 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726105AbfLCA7I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 19:59:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575334746;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DJsbufhtBhVAM9akbCFhx8OR37KN18Pkh0f3aJ/wr48=;
+        b=Ino9xIkzmEb9DHkvfwl6hvT8TMRg7FxvCDLcN/ReYqwcgwP7xLVuZATO8bEwJnfBmv3DVm
+        IIUaMtNs6BtxAKVs9d/HdcF+Ux88Gd6Ft7C5iVzKGKT86xAjeJoiJ15s07IeqHXFbIIBO8
+        JW1DWOgAeBCTMcKLLc3c5XMkN7xA9Mw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-35-id8hnlJZMgy_H_WpJIWsrQ-1; Mon, 02 Dec 2019 19:59:02 -0500
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id BF5558EE11D;
-        Mon,  2 Dec 2019 14:40:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1575326439;
-        bh=w/oP+1BA9PA+20BsnpDXfjU/W0UeBcXPQE9EA4rXG7E=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Q/TFhfb106IByr2UHFDTsb5mKi9sCvOku2EZUYITsc1bD181AripSFV7XVrDcvMHw
-         ry0b18H8qc/HfPIROWBWvNQf9ou/Rm3IT0I78hArcBZ30hmdEdhgbawqno+xNVWxd7
-         LCm7UPVKKssPKqK52/5mrTiJbngcGlUwAcRsDpvg=
-Message-ID: <1575326437.24227.19.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 5.4+ merge window
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Mon, 02 Dec 2019 14:40:37 -0800
-In-Reply-To: <CAHk-=wjWNpPW91wyEj4FC4pOimWEUtLVb_RwQgB+9h2OO6ynyA@mail.gmail.com>
-References: <1575137443.5563.18.camel@HansenPartnership.com>
-         <CAHk-=wjWNpPW91wyEj4FC4pOimWEUtLVb_RwQgB+9h2OO6ynyA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3A00E800D41;
+        Tue,  3 Dec 2019 00:59:01 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D658619C68;
+        Tue,  3 Dec 2019 00:58:53 +0000 (UTC)
+Date:   Tue, 3 Dec 2019 08:58:49 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Stephen Rust <srust@blockbridge.com>
+Cc:     Rob Townley <rob.townley@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        target-devel@vger.kernel.org
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+Message-ID: <20191203005849.GB25002@ming.t460p>
+References: <CAAFE1bd9wuuobpe4VK7Ty175j7mWT+kRmHCNhVD+6R8MWEAqmw@mail.gmail.com>
+ <20191128015748.GA3277@ming.t460p>
+ <CA+VdTb_-CGaPjKUQteKVFSGqDz-5o-tuRRkJYqt8B9iOQypiwQ@mail.gmail.com>
+ <20191128025822.GC3277@ming.t460p>
+ <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+ <20191128091210.GC15549@ming.t460p>
+ <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-MC-Unique: id8hnlJZMgy_H_WpJIWsrQ-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2019-12-02 at 13:57 -0800, Linus Torvalds wrote:
-> On Sat, Nov 30, 2019 at 10:10 AM James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > 
-> >    The two major core
-> > changes are Al Viro's reworking of sg's handling of copy to/from
-> > user, Ming Lei's removal of the host busy counter to avoid
-> > contention in the multiqueue case and Damien Le Moal's fixing of
-> > residual tracking across error handling.
-> 
-> Math is hard. You say "The two major core changes are.." and then you
-> list _three_ changes.
+On Mon, Dec 02, 2019 at 01:42:15PM -0500, Stephen Rust wrote:
+> Hi Ming,
+>=20
+> > I may get one machine with Mellanox NIC, is it easy to setup & reproduc=
+e
+> > just in the local machine(both host and target are setup on same machin=
+e)?
+>=20
+> Yes, I have reproduced locally on one machine (using the IP address of
+> the Mellanox NIC as the target IP), with iser enabled on the target,
+> and iscsiadm connected via iser.
+>=20
+> e.g.:
+> target:
+> /iscsi/iqn.20.../0.0.0.0:3260> enable_iser true
+> iSER enable now: True
+>=20
+>   | |   o- portals
+> .........................................................................=
+...........................
+> [Portals: 1]
+>   | |     o- 0.0.0.0:3260
+> .........................................................................=
+..........................
+> [iser]
+>=20
+> client:
+> # iscsiadm -m node -o update --targetname <target> -n
+> iface.transport_name -v iser
+> # iscsiadm -m node --targetname <target> --login
+> # iscsiadm -m session
+> iser: [3] 172.16.XX.XX:3260,1
+> iqn.2003-01.org.linux-iscsi.x8664:sn.c46c084919b0 (non-flash)
+>=20
+> > Please try to trace bio_add_page() a bit via 'bpftrace ./ilo.bt'.
+>=20
+> Here is the output of this trace from a failed run:
+>=20
+> # bpftrace lio.bt
+> modprobe: FATAL: Module kheaders not found.
+> Attaching 3 probes...
+> 512 76
+> 4096 0
+> 4096 0
+> 4096 0
+> 4096 76
 
-Oh ... I wasn't expecting the Spanish Inquisition.
+The above buffer might be the reason, 4096 is length, and 76 is the
+offset, that means the added buffer crosses two pages, meantime the
+buffer isn't aligned.
 
-> Anyway, the sg copyin/out changes by Al conflicted fairly badly with
-> Arnd's compat_ioctl changes.
-> 
-> Al did
-> 
->   c35a5cfb4150 ("scsi: sg: sg_read(): simplify reading ->pack_id of
-> userland sg_io_hdr_t")
-> 
-> which avoided doing a whole allocation of an 'sg_io_hdr_t' to just
-> read the one field of it.
-> 
-> But Arnd did
-> 
->   98aaaec4a150 ("compat_ioctl: reimplement SG_IO handling")
-> 
-> which created a get_sg_io_hdr() helper that copied the 'sg_io_hdr_t'
-> from user space the right way for both compat and native, which
-> basically relied on the old approach.
-> 
-> So I effectively reverted Al's patch in order to take Arnd's patch in
-> the crazy sg legacy case that presumably nobody really cares about
-> anyway, since everybody should use SG_IO rather than the sg_read()
-> thing. But I know not everybody is.
-> 
-> I added a comment in that place:
-> 
->               /*
->                * This is stupid.
->                *
->                * We're copying the whole sg_io_hdr_t from user
->                * space just to get the 'pack_id' field. But the
->                * field is at different offsets for the compat
->                * case, so we'll use "get_sg_io_hdr()" to copy
->                * the whole thing and convert it.
->                *
->                * We could do something like just calculating the
->                * offset based of 'in_compat_syscall()', but the
->                * 'compat_sg_io_hdr' definition is in the wrong
->                * place for that.
->                */
-> 
-> since it turns out that the one 'pack_id' field we want does have the
-> same format in compat  mode as in native mode ("int" and
-> "compat_int_t" are the same), it's just at different offsets. But the
-> definition of 'compat_sg_io_hdr' isn't available in that place.
-> 
-> I'm leaving it to Al and Arnd to decide if they want to fix the
-> stupidity. I tried to make the minimally invasive merge resolution.
-> 
-> Al, Arnd? Comments?
-> 
-> It looks like linux-next punted on this entirely, and took Al's
-> simplified version that doesn't work with the compat case. Maybe I
-> should have done the same - if you use read() on the /dev/sg* device,
-> you deserve to get broken for the compat case. And it didn't
-> historically work anyway. But it was kind of sad to see how Arnd
-> fixed it, and then it got broken again.
+We need to figure out why the magic 76 offset is passed from target or
+driver.
 
-Sorry, I did do a test merge with the current state of your tree when I
-sent the pull request, but, obviously, that didn't include the Arnd
-changes and I've taken to rely on linux-next as the merge problem
-canary for trees you haven't yet pulled.
+Please install bcc and collect the following log:
 
-> I really really wish we could get rid of sg_read/sg_write() entirely,
-> and have SG_IO_SUBMIT and SG_IO_RECEIVE ioctl's that can handle the
-> queued cases that apparently some people need. Because the read/write
-> case really is disgusting.
+/usr/share/bcc/tools/trace -K 'bio_add_page ((arg4 & 512) !=3D 0) "%d %d", =
+arg3, arg4 '
 
-We're definitely not having a read/write case for the proposed v4
-protocol ... however we are a bit stuck with it for the existing v3
-case.
 
-James
+Thanks,
+Ming
 
