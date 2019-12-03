@@ -2,190 +2,140 @@ Return-Path: <SRS0=KpyL=ZZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8737C432C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E74C432C0
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:37:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B11FE206DC
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:24:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JOfNcYP+"
+	by mail.kernel.org (Postfix) with ESMTP id D4A16206DC
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Dec 2019 02:37:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726330AbfLCCYA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Dec 2019 21:24:00 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:51526 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726298AbfLCCX7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 21:23:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575339838;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=O0EX3vVcvGDZXblDe7Rv/FsS5mhTO0YUbuVmRSPhwMA=;
-        b=JOfNcYP+tQLdE4QsiUXNjjhhJ7qei9NVmFOCzyJuMMcCkN+TkDyY8K/L3poDUxkNMXUvHc
-        L4oRMqPqH3LjuKwO5FUijqMNUi1si1oT1BdE54gRE9dnPP5AgTpzEBGGtWu10WdSliG0xV
-        eyAyQQ83IIACz6AjGPGCt9AJqFVx8CI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-368-2M_xvtKyM3isUt9S-04QCw-1; Mon, 02 Dec 2019 21:23:55 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7833CDB62;
-        Tue,  3 Dec 2019 02:23:52 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9E10B10016DA;
-        Tue,  3 Dec 2019 02:23:41 +0000 (UTC)
-Date:   Tue, 3 Dec 2019 10:23:37 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191203022337.GE25002@ming.t460p>
-References: <20191126023253.GA24501@ming.t460p>
- <0598fe2754bf0717d81f7e72d3e9b3230c608cc6.camel@unipv.it>
- <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
- <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
- <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
- <20191128091712.GD15549@ming.t460p>
- <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
- <20191129005734.GB1829@ming.t460p>
- <20191129023555.GA8620@ming.t460p>
- <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
+        id S1726086AbfLCChA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Dec 2019 21:37:00 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:33903 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725941AbfLCChA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Dec 2019 21:37:00 -0500
+Received: by mail-pj1-f65.google.com with SMTP id t21so841587pjq.1
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Dec 2019 18:36:59 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=+2FlEDTILozPJjxn5b8IV9h9F+kHoEKXnmIrvHaSCwg=;
+        b=IOfz/Dmwl0/8f/Lttvkor8pbb4BMrE6bWa/9F/YRlugvwfCRE8vBCV9krqusqxeR29
+         cVCoLX5YUU0Lt7lUhdQfm/CaC+coTv2dr//2e1fGfF3tuucK5UOYhxGiKbaxgolwdTib
+         355OV2CZVrZZbi6oWYYtjsVW+mA/5i1RptfXWrWAGS+kZMNZfI/tmIEIU3SOCtrb0Nal
+         uJl7P9moYNVx+cuE0JRhiI+UEsRvF4S5Xv8AR9NXnWelsbrIEbOVJCq1SM03tJB9ejNZ
+         XqZHV0mqUTbjeWlNn0D63+TM99G8tPfw7aucQ/BtuDfnv5sB2IlO2mOrTJ8sDR7wiJS0
+         m68w==
+X-Gm-Message-State: APjAAAUrrmxizNSTzJvfAORVUYcqRkTjYWbGItrBPiBpmwd0j3blobFn
+        52rOnc6zWU1lYO6B6W75mbg=
+X-Google-Smtp-Source: APXvYqyGd7BxfcHW9RAV/9HvADAlH2gdCycojPg6IwbxN8AYB2/25xBGK/Ou7uTX6QQBhZNgRzMT+g==
+X-Received: by 2002:a17:902:9309:: with SMTP id bc9mr2567988plb.273.1575340619094;
+        Mon, 02 Dec 2019 18:36:59 -0800 (PST)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id s15sm674628pjp.3.2019.12.02.18.36.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Dec 2019 18:36:58 -0800 (PST)
+Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
+To:     Roman Bolshakov <r.bolshakov@yadro.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+References: <20191109042135.12125-1-bvanassche@acm.org>
+ <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
+ <af903206-ce02-ef50-567f-d647efe0476a@acm.org>
+ <20191202205554.5p77fyot6bc2ij6t@SPB-NB-133.local>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <10e0c0c1-f3ad-7233-995d-59f1b748e39f@acm.org>
+Date:   Mon, 2 Dec 2019 18:34:43 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: 2M_xvtKyM3isUt9S-04QCw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+In-Reply-To: <20191202205554.5p77fyot6bc2ij6t@SPB-NB-133.local>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Nov 29, 2019 at 03:41:01PM +0100, Andrea Vai wrote:
-> Il giorno ven, 29/11/2019 alle 10.35 +0800, Ming Lei ha scritto:
-> > On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
-> >=20
-> > > [...]
-> >=20
-> > > Andrea, can you collect the following log when running the test
-> > > on current new(bad) kernel?
-> > >=20
-> > > =09/usr/share/bcc/tools/stackcount  -K blk_mq_make_request
-> >=20
-> > Instead, please run the following trace, given insert may be
-> > called from other paths, such as flush plug:
-> >=20
-> > =09/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
->=20
-> Attached, for new (patched) bad kernel.
->=20
-> Produced by: start the trace script (with the pendrive already
-> plugged), wait some seconds, run the test (1 trial, 1 GB), wait for
-> the test to finish, stop the trace.
->=20
-> The copy took ~1700 seconds.
+On 2019-12-02 12:55, Roman Bolshakov wrote:
+> On Mon, Dec 02, 2019 at 08:40:17AM -0800, Bart Van Assche wrote:
+>> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+>> index b25f87ff8cde..e2e91b3f2e65 100644
+>> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+>> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+>> @@ -2656,10 +2656,16 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+>>  	els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+>>  	els_iocb->port_id[1] = sp->fcport->d_id.b.area;
+>>  	els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+>> -	/* For SID the byte order is different than DID */
+>> -	els_iocb->s_id[1] = vha->d_id.b.al_pa;
+>> -	els_iocb->s_id[2] = vha->d_id.b.area;
+>> -	els_iocb->s_id[0] = vha->d_id.b.domain;
+>> +	if (IS_QLA23XX(vha->hw) || IS_QLA24XX(vha->hw) || IS_QLA25XX(vha->hw)) {
+>> +		els_iocb->s_id[0] = vha->d_id.b.al_pa;
+>> +		els_iocb->s_id[1] = vha->d_id.b.area;
+>> +		els_iocb->s_id[2] = vha->d_id.b.domain;
+>> +	} else {
+>> +		/* For SID the byte order is different than DID */
+>> +		els_iocb->s_id[1] = vha->d_id.b.al_pa;
+>> +		els_iocb->s_id[2] = vha->d_id.b.area;
+>> +		els_iocb->s_id[0] = vha->d_id.b.domain;
+>> +	}
+>>
+>>  	if (elsio->u.els_logo.els_cmd == ELS_DCMD_PLOGI) {
+>>  		els_iocb->control_flags = 0;
+> 
+> Hi Bart,
+> 
+> I'm fine as long as it works for old and new HBAs. I don't have docs to
+> 2300/2400 series and the HBAs. Are you sure it follows the same S_ID
+> order as 2500?
+> 
+> Regardless of that, it should work for the last 4 series of the HBAs,
+> Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 
-See the two path[1][2] of inserting request, and path[1] is triggered
-4358 times, and the path[2] is triggered 5763 times.
+Hi Roman,
 
-The path[2] is expected behaviour. Not sure path [1] is correct, given
-ext4_release_file() is supposed to be called when this inode is
-released. That means the file is closed 4358 times during 1GB file
-copying to usb storage.
+Thanks for the review. In my copy of the 25xx firmware manual the s_id[]
+field has been marked as RESERVED. I have tried not to write into s_id[]
+but that was not sufficient to restore point-to-point mode.
 
-Cc filesystem list.
+Older versions of the qla2xxx driver did not initialize s_id[]. I think
+that commit edd05de19759 ("scsi: qla2xxx: Changes to support N2N
+logins") is the commit that introduced initialization of s_id[]. Is that
+value passed to the target port? Did that commit perhaps introduce code
+that checks the value received by the target?
 
-
-[1] insert requests when returning to user mode from syscall
-
-  b'blk_mq_sched_request_inserted'
-  b'blk_mq_sched_request_inserted'
-  b'dd_insert_requests'
-  b'blk_mq_sched_insert_requests'
-  b'blk_mq_flush_plug_list'
-  b'blk_flush_plug_list'
-  b'io_schedule_prepare'
-  b'io_schedule'
-  b'rq_qos_wait'
-  b'wbt_wait'
-  b'__rq_qos_throttle'
-  b'blk_mq_make_request'
-  b'generic_make_request'
-  b'submit_bio'
-  b'ext4_io_submit'
-  b'ext4_writepages'
-  b'do_writepages'
-  b'__filemap_fdatawrite_range'
-  b'ext4_release_file'
-  b'__fput'
-  b'task_work_run'
-  b'exit_to_usermode_loop'
-  b'do_syscall_64'
-  b'entry_SYSCALL_64_after_hwframe'
-    4358
-
-[2] insert requests from writeback wq context
-
-  b'blk_mq_sched_request_inserted'
-  b'blk_mq_sched_request_inserted'
-  b'dd_insert_requests'
-  b'blk_mq_sched_insert_requests'
-  b'blk_mq_flush_plug_list'
-  b'blk_flush_plug_list'
-  b'io_schedule_prepare'
-  b'io_schedule'
-  b'rq_qos_wait'
-  b'wbt_wait'
-  b'__rq_qos_throttle'
-  b'blk_mq_make_request'
-  b'generic_make_request'
-  b'submit_bio'
-  b'ext4_io_submit'
-  b'ext4_bio_write_page'
-  b'mpage_submit_page'
-  b'mpage_process_page_bufs'
-  b'mpage_prepare_extent_to_map'
-  b'ext4_writepages'
-  b'do_writepages'
-  b'__writeback_single_inode'
-  b'writeback_sb_inodes'
-  b'__writeback_inodes_wb'
-  b'wb_writeback'
-  b'wb_workfn'
-  b'process_one_work'
-  b'worker_thread'
-  b'kthread'
-  b'ret_from_fork'
-    5763
-
-Thanks,
-Ming
-
+Bart.
