@@ -2,88 +2,144 @@ Return-Path: <SRS0=+pba=Z2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB47CC2BC73
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 10:24:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D23EC43603
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 12:07:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B82AC20833
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 10:24:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D206020803
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 12:07:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="sMBn4FtE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727469AbfLDKYg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Dec 2019 05:24:36 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2154 "EHLO huawei.com"
+        id S1727469AbfLDMHT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Dec 2019 07:07:19 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:34034 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726899AbfLDKYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Dec 2019 05:24:36 -0500
-Received: from lhreml707-cah.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 8B14B77D71B06C2BE9CD;
-        Wed,  4 Dec 2019 10:24:35 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml707-cah.china.huawei.com (10.201.108.48) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 4 Dec 2019 10:24:35 +0000
-Received: from [127.0.0.1] (10.202.226.46) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5; Wed, 4 Dec 2019
- 10:24:35 +0000
-Subject: Re: [PATCH 04/11] blk-mq: Facilitate a shared sbitmap per tagset
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        "James Bottomley" <james.bottomley@hansenpartnership.com>,
-        Ming Lei <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
-        <linux-block@vger.kernel.org>
-References: <20191202153914.84722-1-hare@suse.de>
- <20191202153914.84722-5-hare@suse.de>
- <ab7555b2-2e95-6fb1-2e44-fe3a323a24e4@huawei.com>
- <5beb7d51-500e-5bda-4e46-8414fd8b64ff@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <6c8b8676-a3c7-6fd5-3b6d-c0b469c80756@huawei.com>
-Date:   Wed, 4 Dec 2019 10:24:34 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727445AbfLDMHT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Dec 2019 07:07:19 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 1BC49439EC;
+        Wed,  4 Dec 2019 12:07:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1575461236;
+         x=1577275637; bh=oDwI7/KbktXqyroHAQEgk4iRwnK5ayog4DCgaHlwp5Q=; b=
+        sMBn4FtELEBgf62bjn3U2ijsnPuU+UIUatovvaC8juX1jJGxwZ0J+fbLPt54KiJ6
+        KzL/Psx8Jguqsf5Y9meclO3rbw+/2V6uVAsjCKZwjPBiEO2dpThHYa3hJS3MJgJO
+        9Msq1JU3+OLTTS6SJSrkGfIPWBrZyZERhkkNYnzheDs=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id nA3IOX8cKVCL; Wed,  4 Dec 2019 15:07:16 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 120FF411FD;
+        Wed,  4 Dec 2019 15:07:16 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 4 Dec
+ 2019 15:07:15 +0300
+Date:   Wed, 4 Dec 2019 15:07:15 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Subject: Re: [PATCH] Revert "qla2xxx: Fix Nport ID display value"
+Message-ID: <20191204120715.dgpr6xcdcckkae4q@SPB-NB-133.local>
+References: <20191109042135.12125-1-bvanassche@acm.org>
+ <20191111112804.nycfzaddewlz6yzl@SPB-NB-133.local>
+ <af903206-ce02-ef50-567f-d647efe0476a@acm.org>
+ <20191202205554.5p77fyot6bc2ij6t@SPB-NB-133.local>
+ <10e0c0c1-f3ad-7233-995d-59f1b748e39f@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <5beb7d51-500e-5bda-4e46-8414fd8b64ff@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.226.46]
-X-ClientProxiedBy: lhreml702-chm.china.huawei.com (10.201.108.51) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <10e0c0c1-f3ad-7233-995d-59f1b748e39f@acm.org>
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/12/2019 15:02, Hannes Reinecke wrote:
->>> +     */
->> If you don't have a shared sched bitmap - which I didn't think we needed
->> - then all we need is a simple sbitmap_queue_resize(&tagset->__bitmap_tags)
->>
->> Otherwise it's horrible to resize shared sched bitmaps...
->>
-> Resizing shared sched bitmaps is done in patch 6/11.
-> General idea is to move the scheduler bitmap into the request queue
-> (well, actually the elevator), as this gives us a per-request_queue
-> bitmap. Which is actually what we want here, as the scheduler will need
-> to look at all requests, hence needing to access to the same bitmap.
-> And it also gives us an easy way of resizing the sched tag bitmap, as
-> then we can resize the bitmap on a per-queue basis, and leave the
-> underlying tagset bitmap untouched.
+On Mon, Dec 02, 2019 at 06:34:43PM -0800, Bart Van Assche wrote:
+> On 2019-12-02 12:55, Roman Bolshakov wrote:
+> > On Mon, Dec 02, 2019 at 08:40:17AM -0800, Bart Van Assche wrote:
+> >> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+> >> index b25f87ff8cde..e2e91b3f2e65 100644
+> >> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+> >> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+> >> @@ -2656,10 +2656,16 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+> >>  	els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+> >>  	els_iocb->port_id[1] = sp->fcport->d_id.b.area;
+> >>  	els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+> >> -	/* For SID the byte order is different than DID */
+> >> -	els_iocb->s_id[1] = vha->d_id.b.al_pa;
+> >> -	els_iocb->s_id[2] = vha->d_id.b.area;
+> >> -	els_iocb->s_id[0] = vha->d_id.b.domain;
+> >> +	if (IS_QLA23XX(vha->hw) || IS_QLA24XX(vha->hw) || IS_QLA25XX(vha->hw)) {
+> >> +		els_iocb->s_id[0] = vha->d_id.b.al_pa;
+> >> +		els_iocb->s_id[1] = vha->d_id.b.area;
+> >> +		els_iocb->s_id[2] = vha->d_id.b.domain;
+> >> +	} else {
+> >> +		/* For SID the byte order is different than DID */
+> >> +		els_iocb->s_id[1] = vha->d_id.b.al_pa;
+> >> +		els_iocb->s_id[2] = vha->d_id.b.area;
+> >> +		els_iocb->s_id[0] = vha->d_id.b.domain;
+> >> +	}
+> >>
+> >>  	if (elsio->u.els_logo.els_cmd == ELS_DCMD_PLOGI) {
+> >>  		els_iocb->control_flags = 0;
+> > 
+> > Hi Bart,
+> > 
+> > I'm fine as long as it works for old and new HBAs. I don't have docs to
+> > 2300/2400 series and the HBAs. Are you sure it follows the same S_ID
+> > order as 2500?
+> > 
+> > Regardless of that, it should work for the last 4 series of the HBAs,
+> > Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> 
+> Hi Roman,
+> 
+> Thanks for the review. In my copy of the 25xx firmware manual the s_id[]
+> field has been marked as RESERVED. I have tried not to write into s_id[]
+> but that was not sufficient to restore point-to-point mode.
+> 
 
-OK, but I am just concerned if that is really required in this series 
-and whether it is just another obstacle to getting it accepted.
+Hi Bart,
+
+IMO that means the field is undocumented rather than RESERVED on 2500
+series chips.
+
+> Older versions of the qla2xxx driver did not initialize s_id[]. I think
+> that commit edd05de19759 ("scsi: qla2xxx: Changes to support N2N
+> logins") is the commit that introduced initialization of s_id[]. Is that
+> value passed to the target port? Did that commit perhaps introduce code
+> that checks the value received by the target?
+> 
+
+Firmware can do implicit login, and this is how it worked for a while.
+
+Then explicit login was introduced in the commit you referenced by
+setting bit 8 in IFCB fimwrare options 3 for 2600/2700 series and
+issuing ELS IOCB. However, for 2500 series, bit 7 should be set to
+disable implicit logins.
+
+The latest commits that touches the bit is 8777e4314d397 ("scsi: qla2xxx:
+Migrate NVME N2N handling into state machine"). It sets the bit in
+qla24xx_nvram_config regadless of chip.
+
+Does it help to set bit 7 in IFCB, firmware options 3 for 2500 series
+and leave the RESERVED S_ID field untouched?
 
 Thanks,
-John
-
-> 
-> [ .. ]
->>> diff --git a/block/blk-mq.h b/block/blk-mq.h
->>> index 78d38b5f2793..4c1ea206d3f4 100644
->>> --- a/block/blk-mq.h
->>> +++ b/block/blk-mq.h
-
+Roman
