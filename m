@@ -2,117 +2,118 @@ Return-Path: <SRS0=+pba=Z2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9167EC43603
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 13:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BCCC43603
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:05:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6053420803
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 13:36:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Le1QT0gf"
+	by mail.kernel.org (Postfix) with ESMTP id A7CC320833
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:05:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727965AbfLDNgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Dec 2019 08:36:21 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:53522 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727530AbfLDNgU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2019 08:36:20 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id xB4DZgfg076462;
-        Wed, 4 Dec 2019 07:35:42 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1575466542;
-        bh=xCS1lfwtIPofr9BfV2xLTa/QhcNCHCI0ym0C/edSDAw=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=Le1QT0gfKf0J1Zmr9pgZT9X4k12QhPopGG8dlQQnQX17lGcjpYaQEaHQIDQIuB5SZ
-         Nau+DeyJIwhRkh8TnJxm2B8csKx1i7fkqPQeKFe6wB/yfcqY/zD+yUO53XMcrzdyz6
-         FvNdmCsdCiPdp3KBEcryhCKib2EYO0TMAtA5OIg4=
-Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB4DZg7J115194;
-        Wed, 4 Dec 2019 07:35:42 -0600
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 4 Dec
- 2019 07:35:42 -0600
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Wed, 4 Dec 2019 07:35:42 -0600
-Received: from [172.24.145.136] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id xB4DZcZa084113;
-        Wed, 4 Dec 2019 07:35:38 -0600
-Subject: Re: [PATCH] scsi: ufs: Disable autohibern8 feature in Cadence UFS
-To:     sheebab <sheebab@cadence.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <pedrom.sousa@synopsys.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <stanley.chu@mediatek.com>, <beanhuo@micron.com>,
-        <yuehaibing@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <mparab@cadence.com>, <rafalc@cadence.com>
-References: <1575367635-22662-1-git-send-email-sheebab@cadence.com>
-From:   Vignesh Raghavendra <vigneshr@ti.com>
-Message-ID: <38cfe842-c07a-410f-97f1-f2bf13fd2655@ti.com>
-Date:   Wed, 4 Dec 2019 19:06:09 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
+        id S1727889AbfLDOFd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Dec 2019 09:05:33 -0500
+Received: from mout.kundenserver.de ([212.227.126.135]:50247 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727828AbfLDOFc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2019 09:05:32 -0500
+Received: from mail-qk1-f175.google.com ([209.85.222.175]) by
+ mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1MirX2-1i6Rn50Zng-00ev0t; Wed, 04 Dec 2019 15:05:31 +0100
+Received: by mail-qk1-f175.google.com with SMTP id q28so7198988qkn.10;
+        Wed, 04 Dec 2019 06:05:30 -0800 (PST)
+X-Gm-Message-State: APjAAAUsxupyB35Eg91X2CCVgjevsbc+DPAi1dkr6WyAuKf85HWRPZ9N
+        OmU1XbjO2IHuTdIRgkv+tYx664ym8c9qeVZsQcc=
+X-Google-Smtp-Source: APXvYqx7JslI8mWkoxNJ0fjl5MarFjwC/GOiLTgjegA+w4l2OCEv4HdCV/vhy3jf8P3GwW/qYyA89iXWINrzIH936oc=
+X-Received: by 2002:ae9:eb12:: with SMTP id b18mr2945260qkg.3.1575468329900;
+ Wed, 04 Dec 2019 06:05:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1575367635-22662-1-git-send-email-sheebab@cadence.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <1575137443.5563.18.camel@HansenPartnership.com> <CAHk-=wjWNpPW91wyEj4FC4pOimWEUtLVb_RwQgB+9h2OO6ynyA@mail.gmail.com>
+In-Reply-To: <CAHk-=wjWNpPW91wyEj4FC4pOimWEUtLVb_RwQgB+9h2OO6ynyA@mail.gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 4 Dec 2019 15:05:09 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a33oETbN-60VjpNNeuW1U1Wzb4juVzdiw1ESdses6m3bw@mail.gmail.com>
+Message-ID: <CAK8P3a33oETbN-60VjpNNeuW1U1Wzb4juVzdiw1ESdses6m3bw@mail.gmail.com>
+Subject: Re: [GIT PULL] first round of SCSI updates for the 5.4+ merge window
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Doug Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:PrJhNMzdEgu7HmHaW+4RW1cXQjySBFOSIdr0MN+9q8+AAumf1ZC
+ /TtNLgSii9Az1L54qsdqb0uigh2N6vR0vs4+82h5TlbWTett89W8mB/GZo9Mg6FUXdUpH24
+ bSN1WLvdmqoEvPBYf78vkh41nVblJYfnTg4eTqc2S9aRZQRmIeSaOjJN9+4WxtPOZya03QE
+ qSY9EUxrqm5ulPtPdUbag==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:lFv8KiEf6Aw=:YEgixR4fabBY/FVMQbUVqM
+ lZY7gBr2acWKbCobF3jNMCJK+ls92OP09fAd73jHzRkoyna8it37BiRle7KLp2LRO31/Ro1U+
+ U8+0+PO4lTleqRLK7Xyfzu/mENEVSZ7LdOl+OSmDhytga9Nuiuf1IvM/53s7y5sfbNIUY8Mfq
+ 3kBKLqZNNnXU+Od+PhiczIjxDt+u7Y3W0H4C0NLnqANQ7ehALKiqRVW0s+QrpIdzPkh8CXZvX
+ iDc2p6KRJQXRPdO836rKCitcoSc6eTXe5tTXxgyN4dL0qbd175BCTa+lm+2FxCUwNJn7mFYZS
+ 9nya4sxsEg8sMJhOvZ5LMARY4uln+at0p10Sz8FozrzFebjsOZheFMqWIHDq3sCpjFBqW5J1t
+ s5YUFYcEsCsJaHjk9VcUrwr4TOCZtbf1qtaS96FMNve+PhbfKAGoaDHCyneqVtpd41LtgBKCG
+ AEuFvaxCWjTg7nU/E4LVvVDptjVZkpEbjTvGlGo+caV2XsuzhGl3y9esZ83zHEGnEy8gnCk9m
+ 4KNq1F6ysMfK47q6IifGdp2VDdG8hFWGFtReLGR48AHMEyiOElt8GHe3ZZAGChKtHormBaevt
+ NlgGWRbHj1yNiIpEdgQXoOUfTTrqn/D3cEbIkvPpy2i4qM/kOPlvo4huw2dimCaRKwX0lnMM+
+ I0E1wZL8E34PsMRi8BY623L4ssrcNZMThWMOY9sIDuPilqw4aeF+TyWKy/Y4rTXFdNelTFyVh
+ xxQATf0Vml7RznJ+KaOmUnhrj1NDoFpNw4sw9BC5XjJvIHiaLiptOvFvN38i4rQoFioN8O+Ct
+ I6Qyv2CysvUW6Ia7uwyghGZEPVavUvUukZdtAvXTIDKDyka7dOXSkHBY7se1FikYQLsfF2GXR
+ iumaF+m0hcsOd0Ta94MQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon, Dec 2, 2019 at 10:58 PM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> Anyway, the sg copyin/out changes by Al conflicted fairly badly with
+> Arnd's compat_ioctl changes.
+>
+> Al did
+>
+>   c35a5cfb4150 ("scsi: sg: sg_read(): simplify reading ->pack_id of
+> userland sg_io_hdr_t")
+>
+> which avoided doing a whole allocation of an 'sg_io_hdr_t' to just
+> read the one field of it.
+>
+> But Arnd did
+>
+>   98aaaec4a150 ("compat_ioctl: reimplement SG_IO handling")
+>
+> which created a get_sg_io_hdr() helper that copied the 'sg_io_hdr_t'
+> from user space the right way for both compat and native, which
+> basically relied on the old approach.
 
+Right, I also failed to notice that the linux-next conflict resolution
+was breaking my changes, the fixup looked simple enough there. :-(
 
-On 03/12/19 3:37 pm, sheebab wrote:
-> This patch disables autohibern8 feature in Cadence UFS. 
-> The autohibern8 feature has issues due to which unexpected interrupt
-> trigger is happening. After the interrupt issue is sorted out autohibern8
-> feature will be re-enabled
-> 
-> Signed-off-by: sheebab <sheebab@cadence.com>
-> ---
+> since it turns out that the one 'pack_id' field we want does have the
+> same format in compat  mode as in native mode ("int" and
+> "compat_int_t" are the same), it's just at different offsets. But the
+> definition of 'compat_sg_io_hdr' isn't available in that place.
+>
+> I'm leaving it to Al and Arnd to decide if they want to fix the
+> stupidity. I tried to make the minimally invasive merge resolution.
+>
+> Al, Arnd? Comments?
+>
+> It looks like linux-next punted on this entirely, and took Al's
+> simplified version that doesn't work with the compat case. Maybe I
+> should have done the same - if you use read() on the /dev/sg* device,
+> you deserve to get broken for the compat case. And it didn't
+> historically work anyway. But it was kind of sad to see how Arnd fixed
+> it, and then it got broken again.
 
-Tested-by: Vignesh Raghavendra <vigneshr@ti.com>
+I've tried now to move the pack_id logic into a separate function
+and, in doing so noticed a bug in my own patch: sg_new_read()
+needs to check for the compat_sg_io_hdr size, which also
+depends on the struct definition. I've drafted a patch that should
+do this right, but we could also just -EINVAL in compat mode here
+if that's too complex.
 
-You will have to repost patch 2/2[1] of your previous series as that
-patch no longer applies cleanly anymore given that we no longer want 1/2
-to be merged.
-
-[1]
-https://lore.kernel.org/linux-scsi/1574147082-22725-3-git-send-email-sheebab@cadence.com/
-
-
->  drivers/scsi/ufs/cdns-pltfrm.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
-> index b2af04c57a39..882425d1166b 100644
-> --- a/drivers/scsi/ufs/cdns-pltfrm.c
-> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
-> @@ -98,6 +98,12 @@ static int cdns_ufs_link_startup_notify(struct ufs_hba *hba,
->  	 * completed.
->  	 */
->  	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
-> +
-> +	/*
-> +	 * Disabling Autohibern8 feature in cadence UFS
-> +	 * to mask unexpected interrupt trigger.
-> +	 */
-> +	hba->ahit = 0;
->  
->  	return 0;
->  }
-> 
-
--- 
-Regards
-Vignesh
+       Arnd
