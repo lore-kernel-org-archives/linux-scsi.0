@@ -6,32 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E889C43603
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F45C2BD09
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5429E20833
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1929F2084F
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728110AbfLDO70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Dec 2019 09:59:26 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36200 "EHLO mx1.suse.de"
+        id S1728124AbfLDO72 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Dec 2019 09:59:28 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36336 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727889AbfLDO7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Dec 2019 09:59:25 -0500
+        id S1728120AbfLDO71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Dec 2019 09:59:27 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D948CADB5;
-        Wed,  4 Dec 2019 14:59:23 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id BF449AF7A;
+        Wed,  4 Dec 2019 14:59:25 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Bart van Assche <bvanassche@acm.org>,
         Balsundar P <balsundar.p@microchip.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/13] scsi: add scsi_host_complete_all_commands() helper
-Date:   Wed,  4 Dec 2019 15:59:07 +0100
-Message-Id: <20191204145918.143134-3-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Subject: [PATCH 06/13] aacraid: replace aac_flush_ios() with midlayer helper
+Date:   Wed,  4 Dec 2019 15:59:11 +0100
+Message-Id: <20191204145918.143134-7-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191204145918.143134-1-hare@suse.de>
 References: <20191204145918.143134-1-hare@suse.de>
@@ -40,63 +41,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper scsi_host_complete_all_commands() to terminate all outstanding
-commands on a scsi host.
+Use the midlayer helper scsi_host_complete_all_commands() to flush all
+outstanding commands.
 
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Balsundar P <balsundar.p@microchip.com>
 ---
- drivers/scsi/hosts.c     | 28 ++++++++++++++++++++++++++++
- include/scsi/scsi_host.h |  1 +
- 2 files changed, 29 insertions(+)
+ drivers/scsi/aacraid/linit.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1d669e47b692..00ae9d43ce9f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -650,3 +650,31 @@ void scsi_flush_work(struct Scsi_Host *shost)
- 	flush_workqueue(shost->work_q);
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index ee6bc2f9b80a..4d5b34e0d3a9 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1977,26 +1977,6 @@ static void aac_remove_one(struct pci_dev *pdev)
+ 	}
  }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
-+
-+static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
-+{
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	int status = *(int *)data;
-+
-+	scsi_dma_unmap(scmd);
-+	scmd->result = status << 16;
-+	scmd->scsi_done(scmd);
-+	return true;
-+}
-+
-+/**
-+ * scsi_host_complete_all_commands - Terminate all running commands
-+ * @shost:	Scsi Host on which commands should be terminated
-+ * @status:	Status to be set for the terminated commands
-+ *
-+ * There is no protection against modification of the number
-+ * of outstanding commands. It is the responsibility of the
-+ * caller to ensure that concurrent I/O submission and/or
-+ * completion is stopped when calling this function.
-+ */
-+void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status)
-+{
-+	blk_mq_tagset_busy_iter(&shost->tag_set, complete_all_cmds_iter,
-+				&status);
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_complete_all_commands);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f577647bf5f2..5c61f128f8e6 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -735,6 +735,7 @@ extern int scsi_host_busy(struct Scsi_Host *shost);
- extern void scsi_host_put(struct Scsi_Host *t);
- extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern const char *scsi_host_state_name(enum scsi_host_state);
-+extern void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status);
  
- static inline int __must_check scsi_add_host(struct Scsi_Host *host,
- 					     struct device *dev)
+-static void aac_flush_ios(struct aac_dev *aac)
+-{
+-	int i;
+-	struct scsi_cmnd *cmd;
+-
+-	for (i = 0; i < aac->scsi_host_ptr->can_queue; i++) {
+-		cmd = (struct scsi_cmnd *)aac->fibs[i].callback_data;
+-		if (cmd && (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
+-			scsi_dma_unmap(cmd);
+-
+-			if (aac->handle_pci_error)
+-				cmd->result = DID_NO_CONNECT << 16;
+-			else
+-				cmd->result = DID_RESET << 16;
+-
+-			cmd->scsi_done(cmd);
+-		}
+-	}
+-}
+-
+ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+ 					enum pci_channel_state error)
+ {
+@@ -2013,7 +1993,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+ 
+ 		scsi_block_requests(aac->scsi_host_ptr);
+ 		aac_cancel_rescan_worker(aac);
+-		aac_flush_ios(aac);
++		scsi_host_complete_all_commands(shost, DID_NO_CONNECT);
+ 		aac_release_resources(aac);
+ 
+ 		pci_disable_pcie_error_reporting(pdev);
+@@ -2023,7 +2003,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+ 	case pci_channel_io_perm_failure:
+ 		aac->handle_pci_error = 1;
+ 
+-		aac_flush_ios(aac);
++		scsi_host_complete_all_commands(shost, DID_NO_CONNECT);
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
 -- 
 2.16.4
 
