@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57C29C2BD09
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0013C43603
 	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 386AD20833
+	by mail.kernel.org (Postfix) with ESMTP id C74E620833
 	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728135AbfLDO7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Dec 2019 09:59:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36382 "EHLO mx1.suse.de"
+        id S1728117AbfLDO7d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Dec 2019 09:59:33 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36330 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728068AbfLDO72 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Dec 2019 09:59:28 -0500
+        id S1728115AbfLDO71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Dec 2019 09:59:27 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 449B0AF81;
-        Wed,  4 Dec 2019 14:59:26 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 976FAAF77;
+        Wed,  4 Dec 2019 14:59:25 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -29,11 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Balsundar P <balsundar.p@microchip.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Balsundar P <balsundar.p@microsemi.com>,
         Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Subject: [PATCH 07/13] aacraid: move scsi_(block,unblock)_requests out of _aac_reset_adapter()
-Date:   Wed,  4 Dec 2019 15:59:12 +0100
-Message-Id: <20191204145918.143134-8-hare@suse.de>
+Subject: [PATCH 01/13] dpt_i2o: rename adpt_i2o_to_scsi() to adpt_i2o_scsi_complete()
+Date:   Wed,  4 Dec 2019 15:59:06 +0100
+Message-Id: <20191204145918.143134-2-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191204145918.143134-1-hare@suse.de>
 References: <20191204145918.143134-1-hare@suse.de>
@@ -42,73 +41,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-_aac_reset_adapter() only has one caller, and that one already calls
-scsi_block_requests(). So move the calls out of _aac_reset_adapter()
-to avoid calling scsi_block_requests() twice.
+Rename the badly named function into adpt_i2o_scsi_complete(),
+and make it a void function as the return value is never used.
+This also fixes a potential use-after free as the return value
+might be evaluated from the command result after the command
+has been freed.
 
-Cc: Balsundar P <balsundar.p@microsemi.com>
 Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/aacraid/commsup.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/dpt_i2o.c | 5 ++---
+ drivers/scsi/dpti.h    | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 8736a540a048..0d8c1ee40759 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1476,7 +1476,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index abc74fd474dc..c30ace9f251e 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -2173,7 +2173,7 @@ static irqreturn_t adpt_isr(int irq, void *dev_id)
+ 						 readl(reply + 12) - 1);
+ 			if(cmd != NULL){
+ 				scsi_dma_unmap(cmd);
+-				adpt_i2o_to_scsi(reply, cmd);
++				adpt_i2o_scsi_complete(reply, cmd);
+ 			}
+ 		}
+ 		writel(m, pHba->reply_port);
+@@ -2341,7 +2341,7 @@ static s32 adpt_scsi_host_alloc(adpt_hba* pHba, struct scsi_host_template *sht)
+ }
+ 
+ 
+-static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd)
++static void adpt_i2o_scsi_complete(void __iomem *reply, struct scsi_cmnd *cmd)
  {
- 	int index, quirks;
- 	int retval;
--	struct Scsi_Host *host;
-+	struct Scsi_Host *host = aac->scsi_host_ptr;
- 	struct scsi_device *dev;
- 	int jafo = 0;
- 	int bled;
-@@ -1493,8 +1493,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 *	- The card is dead, or will be very shortly ;-/ so no new
- 	 *	  commands are completing in the interrupt service.
- 	 */
--	host = aac->scsi_host_ptr;
--	scsi_block_requests(host);
- 	aac_adapter_disable_int(aac);
- 	if (aac->thread && aac->thread->pid != current->pid) {
- 		spin_unlock_irq(host->host_lock);
-@@ -1619,7 +1617,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	adpt_hba* pHba;
+ 	u32 hba_status;
+@@ -2459,7 +2459,6 @@ static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd)
+ 	if(cmd->scsi_done != NULL){
+ 		cmd->scsi_done(cmd);
+ 	} 
+-	return cmd->result;
+ }
  
- out:
- 	aac->in_reset = 0;
--	scsi_unblock_requests(host);
  
- 	/*
- 	 * Issue bus rescan to catch any configuration that might have
-@@ -1640,7 +1637,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- {
- 	unsigned long flagv = 0;
- 	int retval;
--	struct Scsi_Host * host;
-+	struct Scsi_Host * host = aac->scsi_host_ptr;
- 	int bled;
- 
- 	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
-@@ -1658,7 +1655,6 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 * target (block maximum 60 seconds). Although not necessary,
- 	 * it does make us a good storage citizen.
- 	 */
--	host = aac->scsi_host_ptr;
- 	scsi_block_requests(host);
- 
- 	/* Quiesce build, flush cache, write through mode */
-@@ -1670,6 +1666,8 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	retval = _aac_reset_adapter(aac, bled, reset_type);
- 	spin_unlock_irqrestore(host->host_lock, flagv);
- 
-+	scsi_unblock_requests(host);
-+
- 	if ((forced < 2) && (retval == -ENODEV)) {
- 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
- 		struct fib * fibctx = aac_fib_alloc(aac);
+diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
+index 42b1e28b5884..3ec391134bb0 100644
+--- a/drivers/scsi/dpti.h
++++ b/drivers/scsi/dpti.h
+@@ -286,7 +286,7 @@ static s32 adpt_i2o_status_get(adpt_hba* pHba);
+ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba);
+ static s32 adpt_i2o_hrt_get(adpt_hba* pHba);
+ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, struct adpt_device* dptdevice);
+-static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd);
++static void adpt_i2o_scsi_complete(void __iomem *reply, struct scsi_cmnd *cmd);
+ static s32 adpt_scsi_host_alloc(adpt_hba* pHba,struct scsi_host_template * sht);
+ static s32 adpt_hba_reset(adpt_hba* pHba);
+ static s32 adpt_i2o_reset_hba(adpt_hba* pHba);
 -- 
 2.16.4
 
