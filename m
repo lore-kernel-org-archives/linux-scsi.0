@@ -2,120 +2,150 @@ Return-Path: <SRS0=+pba=Z2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D755FC432C0
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B4CC432C0
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 02:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98AA22068E
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:45:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FE442068E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 02:40:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="eN8Ce7Dd"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eJ6yMl5Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbfLDBpM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Dec 2019 20:45:12 -0500
-Received: from mail-eopbgr790051.outbound.protection.outlook.com ([40.107.79.51]:54144
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726107AbfLDBpM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 3 Dec 2019 20:45:12 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XsqnFOBq6WmkmmMqjcQIJDVdUY8WBTkFRYRU+EQUoVSdSch+to8x15OnlWeQk9asToNH80Hv37ixw6W5maFSK/j4ayrQbAor7jFeZPTG8AKDb8I+33RtCz0pFuJHXpMb87cuELYacuTtwVBbhJJcKCOrOweKrYGrH+z+QBOpicCyKgGGiuW5ZNkBGHqM1wSGG6DVNtMutL1UOJBY5jAblvg8FpIzdHSPM92WISIvHeTN4umOyYFBO2Z12Uk+GHB3CCMjWD3LFP3bJzposwi5jBvf0x17aDhrJaIB5gYoQZosFLAc20XgCRT2Z+ekdyDDGMZaH6bMLU47COap8TIOeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rvH99oyk+DJnMWdWXtkTMNeZAbblvOP1vZ9RuBX7u60=;
- b=KP0zN+xhq5N7h73q7fl9baaS1mXONHf29ElzJtQJYzLBBiTIJE/hMtXDPEA6apbLKfSH5sO7bMQLMYICvfgs4HLDVwQYCKNhWdH511EWrd24pp5q1oxH0iRocRbwIQsJyWidKnDFcUgTdD2U81uJeYcFuuzFf3mav67VnIBiGLKVZhiUddpp/bR7mhoDKNbBgvNlauSzczRO9e/XvkNYIdyJkVYrfqu26NXSrGkk24Ts03AGJ4tJBBVb3zY2MmKWAb2/xP6TyMEeAlybVqMk9jWmyngdDAjJI/cJ5ISc4WzhF4pTuFLBhuCQONW46elPaZndSqsWbt+kgmRDbSeGQQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rvH99oyk+DJnMWdWXtkTMNeZAbblvOP1vZ9RuBX7u60=;
- b=eN8Ce7DdiWxDQDsow+/hT9G3BkMvt1qp9aa0w1ov0lfubigNt9nyeWU0r9PkEv87KE7oRBVaomtyD6+SNkwE2C7xjQZHUk/UAj0ci8Q9KNsCxjV5wH/kcK1bZGCsUwqKWcgcKafWb3e8JT/tdYJn3b/g6nUfgG4499PJhdOTns4=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB6035.namprd08.prod.outlook.com (20.176.28.138) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2495.17; Wed, 4 Dec 2019 01:45:09 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::28af:57b0:8402:1d1c]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::28af:57b0:8402:1d1c%5]) with mapi id 15.20.2516.003; Wed, 4 Dec 2019
- 01:45:09 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-CC:     "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Allison Randal <allison@lohutok.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] RE: [PATCH v4 4/5] scsi: ufs: Do not clear the DL layer
- timers
-Thread-Topic: [EXT] RE: [PATCH v4 4/5] scsi: ufs: Do not clear the DL layer
- timers
-Thread-Index: AQHVqOQNwDcb8USDR0+gqvh+u9nzJqepM5Iw
-Date:   Wed, 4 Dec 2019 01:45:08 +0000
-Message-ID: <BN7PR08MB56849D5E6A623C1AA37C5F7ADB5D0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <1573624824-671-1-git-send-email-cang@codeaurora.org>
- <1573624824-671-5-git-send-email-cang@codeaurora.org>
- <0101016ec584a776-2140a805-4b1d-4a3d-af0a-f073425be2d6-000000@us-west-2.amazonses.com>
- <MN2PR04MB69916189C31D58EB6DCB71E9FC430@MN2PR04MB6991.namprd04.prod.outlook.com>
-In-Reply-To: <MN2PR04MB69916189C31D58EB6DCB71E9FC430@MN2PR04MB6991.namprd04.prod.outlook.com>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLWIxOTdlOTU3LTE2MzctMTFlYS04Yjg2LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFxiMTk3ZTk1OC0xNjM3LTExZWEtOGI4Ni1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjI1MyIgdD0iMTMyMTk4OTc1MDU3NTA2MzE5IiBoPSJLaDRUNzM3WlYrS2hzY1YxZFR5dEVmc0REUE09IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [165.225.86.139]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: aa31b492-2a3d-41a7-bb44-08d7785b9861
-x-ms-traffictypediagnostic: BN7PR08MB6035:|BN7PR08MB6035:|BN7PR08MB6035:
-x-microsoft-antispam-prvs: <BN7PR08MB603555DDBE6CD96DC6F27478DB5D0@BN7PR08MB6035.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:400;
-x-forefront-prvs: 0241D5F98C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(39860400002)(136003)(346002)(376002)(366004)(396003)(199004)(189003)(316002)(305945005)(5660300002)(81166006)(7736002)(33656002)(74316002)(7416002)(4326008)(99286004)(66476007)(66556008)(54906003)(6436002)(66946007)(64756008)(6246003)(186003)(2501003)(66446008)(76116006)(110136005)(9686003)(55016002)(229853002)(558084003)(25786009)(2906002)(446003)(11346002)(6506007)(256004)(52536014)(14454004)(26005)(478600001)(8676002)(71200400001)(86362001)(6116002)(81156014)(71190400001)(55236004)(102836004)(8936002)(76176011)(3846002)(7696005);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB6035;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: UIWMT8WvzujSzERHyaxt7Hb80BM5/BEmjMmTPCZ6pm/aCH223/Qe0MR2kYi/bOHMxKsi0w/9yql/p5k0YOL4aYQHea/uqEHeaWsZRt+oZ3OjnechjJ4xx5c86HjNRYkAUB3Vov7RfSIMIuuUI51tpp18RR2xvDI/KG0gzk03FWbwXi6IeJSb10WBzcTUFahl7c2phRe3M3QkyAMM07CbaQ7QlDhahwu+2hc6/+1+43SNI+NEiTkGLQ7wZ0eDKNS2aRyBnmUrTDgoGrpnSNvPg3f1AKnE6kHFIWz4xT96Wil/bEa7K2Oj0PnIq5u0rQ22+8RYnDV8y3/Ynqq/8fi7E8dLiObvssRzVCN0iNLBfMym1OujftfsdnrLQuhGSr30XKMhFeLaKBPo/C61hE6h2xwQ5HF6KGf21Lu7VB1ybzg6ga1WtYLa+LgFr7z3k26i
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726917AbfLDCkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Dec 2019 21:40:00 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:27733 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726856AbfLDCj7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 21:39:59 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575427199;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lUNcibfkDj9cICd3L3313R4P5SZt0kUgexQ7UYbZQvw=;
+        b=eJ6yMl5YXoveElD3aSR0Pnld+fedmrUFcjnlNpqzKmOCQdF4229NhtsOAfpVMlT0+ooqIF
+        4HDunz6/0jvA9DyabHyzwn0rm4hlBYZ2Ix0Odvyf2cj1Glvh3P8kKe8UUQ2+J6Lro4fGzf
+        NijyYtGAZjjH1d+2vd4xN7AexSka5iA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-407-eal7FyFpPpS8Ce4pW7mcwg-1; Tue, 03 Dec 2019 21:39:55 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E3DFA10054E3;
+        Wed,  4 Dec 2019 02:39:53 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CBA6C5D6AE;
+        Wed,  4 Dec 2019 02:39:44 +0000 (UTC)
+Date:   Wed, 4 Dec 2019 10:39:39 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Stephen Rust <srust@blockbridge.com>
+Cc:     Rob Townley <rob.townley@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        target-devel@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+Message-ID: <20191204023939.GD3910@ming.t460p>
+References: <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+ <20191128091210.GC15549@ming.t460p>
+ <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+ <20191203005849.GB25002@ming.t460p>
+ <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
+ <20191203031444.GB6245@ming.t460p>
+ <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
+ <CAAFE1bfpUWCZrtR8v3S++0-+gi8DJ79X3e0XqDe93i8nuGTnNg@mail.gmail.com>
+ <20191203124558.GA22805@ming.t460p>
+ <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aa31b492-2a3d-41a7-bb44-08d7785b9861
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Dec 2019 01:45:08.8064
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: UQ0k+uvChgmSxh1nI+vVk5XF/j375aKW7b+OYQJdH47iLME/9tbI5tohtaRtxQKI0kT9Q2szFqNzLkbuTFA9Pg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB6035
+In-Reply-To: <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: eal7FyFpPpS8Ce4pW7mcwg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >
-> > Signed-off-by: Can Guo <cang@codeaurora.org>
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+On Tue, Dec 03, 2019 at 02:56:08PM -0500, Stephen Rust wrote:
+> Hi Ming,
+>=20
+> Thanks very much for the patch.
+>=20
+> > BTW, you may try the attached test patch. If the issue can be fixed by
+> > this patch, that means it is really caused by un-aligned buffer, and
+> > the iser driver needs to be fixed.
+>=20
+> I have tried the patch, and re-run the test. Results are mixed.
+>=20
+> To recap, our test writes the last bytes of an iser attached iscsi
+> device. The target device is a LIO iblock, backed by a brd ramdisk.
+> The client does a simple `dd`, doing a seek to "size - offset" of the
+> device, and writing a buffer of "length" which is equivalent to the
+> offset.
+>=20
+> For example, to test a write at a 512 offset, seek to device "size -
+> 512", and write a length of data 512 bytes.
+>=20
+> WITHOUT the patch, writing data at the following offsets from the end
+> of the device failed to write all the correct data (rather, the write
+> succeeded, but reading the data back it was invalid):
+>=20
+> - failed: 512,1024, 2048, 4096, 8192
+>=20
+> Anything larger worked fine.
+>=20
+> WITH the patch applied, writing data up to an offset of 4096 all now
+> worked and verified correctly. However, offsets between 4096 and 8192
+> all still failed. I started at 512, and incremented by 512 all the way
+> up to 16384. The following offsets all failed to verify the write:
+>=20
+> - failed: 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192
+>=20
+> Anything larger continues to work fine with the patch.
+>=20
+> As an example, for the failed 8192 case, the `bpftrace lio.bt` trace show=
+s:
+>=20
+> 8192 76
+> 4096 0
+> 4096 0
+> 8192 76
+> 4096 0
+> 4096 0
+
+The following delta change against last patch should fix the issue
+with >4096 bvec length:
+
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 9ea1894c820d..49e37a7dda63 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -308,7 +308,7 @@ static blk_qc_t brd_make_request(struct request_queue *=
+q, struct bio *bio)
+                if (err)
+                        goto io_error;
+                sector +=3D secs;
+-               offset_in_sec =3D len - (secs << SECTOR_SHIFT);
++               offset_in_sec +=3D len - (secs << SECTOR_SHIFT);
+        }
+
+        bio_endio(bio);
+
+However, the change on brd is a workaround just for confirming the
+issue.
+
+
+Thanks,=20
+Ming
 
