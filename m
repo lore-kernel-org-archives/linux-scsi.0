@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 143D5C2D0BF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57C29C2BD09
 	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E82E920833
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 386AD20833
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 14:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728137AbfLDO7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728135AbfLDO7c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 4 Dec 2019 09:59:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36328 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36382 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728117AbfLDO71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Dec 2019 09:59:27 -0500
+        id S1728068AbfLDO72 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Dec 2019 09:59:28 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 969EDAF10;
-        Wed,  4 Dec 2019 14:59:25 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 449B0AF81;
+        Wed,  4 Dec 2019 14:59:26 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -29,10 +29,11 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Balsundar P <balsundar.p@microchip.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Balsundar P <balsundar.p@microsemi.com>,
         Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Subject: [PATCH 12/13] aacraid: use scsi_host_busy_iter() in get_num_of_incomplete_fibs()
-Date:   Wed,  4 Dec 2019 15:59:17 +0100
-Message-Id: <20191204145918.143134-13-hare@suse.de>
+Subject: [PATCH 07/13] aacraid: move scsi_(block,unblock)_requests out of _aac_reset_adapter()
+Date:   Wed,  4 Dec 2019 15:59:12 +0100
+Message-Id: <20191204145918.143134-8-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20191204145918.143134-1-hare@suse.de>
 References: <20191204145918.143134-1-hare@suse.de>
@@ -41,125 +42,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the scsi midlayer helper to traverse the number of outstanding
-commands. This also eliminates the last usage for the cmd_list
-functionality so we can drop it.
+_aac_reset_adapter() only has one caller, and that one already calls
+scsi_block_requests(). So move the calls out of _aac_reset_adapter()
+to avoid calling scsi_block_requests() twice.
 
+Cc: Balsundar P <balsundar.p@microsemi.com>
 Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Balsundar P <balsundar.p@microchip.com>
 ---
- drivers/scsi/aacraid/linit.c | 81 ++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 40 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 877464e9d520..d0d1f3072c0c 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -622,54 +622,56 @@ static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 	return aac_do_ioctl(dev, cmd, arg);
- }
- 
--static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+struct fib_count_data {
-+	int mlcnt;
-+	int llcnt;
-+	int ehcnt;
-+	int fwcnt;
-+	int krlcnt;
-+};
-+
-+static bool fib_count_iter(struct scsi_cmnd *scmnd, void *data, bool reserved)
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 8736a540a048..0d8c1ee40759 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1476,7 +1476,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
  {
-+	struct fib_count_data *fib_count = data;
+ 	int index, quirks;
+ 	int retval;
+-	struct Scsi_Host *host;
++	struct Scsi_Host *host = aac->scsi_host_ptr;
+ 	struct scsi_device *dev;
+ 	int jafo = 0;
+ 	int bled;
+@@ -1493,8 +1493,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	 *	- The card is dead, or will be very shortly ;-/ so no new
+ 	 *	  commands are completing in the interrupt service.
+ 	 */
+-	host = aac->scsi_host_ptr;
+-	scsi_block_requests(host);
+ 	aac_adapter_disable_int(aac);
+ 	if (aac->thread && aac->thread->pid != current->pid) {
+ 		spin_unlock_irq(host->host_lock);
+@@ -1619,7 +1617,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 
+ out:
+ 	aac->in_reset = 0;
+-	scsi_unblock_requests(host);
+ 
+ 	/*
+ 	 * Issue bus rescan to catch any configuration that might have
+@@ -1640,7 +1637,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ {
+ 	unsigned long flagv = 0;
+ 	int retval;
+-	struct Scsi_Host * host;
++	struct Scsi_Host * host = aac->scsi_host_ptr;
+ 	int bled;
+ 
+ 	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
+@@ -1658,7 +1655,6 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	 * target (block maximum 60 seconds). Although not necessary,
+ 	 * it does make us a good storage citizen.
+ 	 */
+-	host = aac->scsi_host_ptr;
+ 	scsi_block_requests(host);
+ 
+ 	/* Quiesce build, flush cache, write through mode */
+@@ -1670,6 +1666,8 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	retval = _aac_reset_adapter(aac, bled, reset_type);
+ 	spin_unlock_irqrestore(host->host_lock, flagv);
+ 
++	scsi_unblock_requests(host);
 +
-+	switch (scmnd->SCp.phase) {
-+	case AAC_OWNER_FIRMWARE:
-+		fib_count->fwcnt++;
-+		break;
-+	case AAC_OWNER_ERROR_HANDLER:
-+		fib_count->ehcnt++;
-+		break;
-+	case AAC_OWNER_LOWLEVEL:
-+		fib_count->llcnt++;
-+		break;
-+	case AAC_OWNER_MIDLEVEL:
-+		fib_count->mlcnt++;
-+		break;
-+	default:
-+		fib_count->krlcnt++;
-+		break;
-+	}
-+	return true;
-+}
- 
--	unsigned long flags;
--	struct scsi_device *sdev = NULL;
-+/* Called during SCSI EH, so we don't need to block requests */
-+static int get_num_of_incomplete_fibs(struct aac_dev *aac)
-+{
- 	struct Scsi_Host *shost = aac->scsi_host_ptr;
--	struct scsi_cmnd *scmnd = NULL;
- 	struct device *ctrl_dev;
-+	struct fib_count_data fcnt = { };
- 
--	int mlcnt  = 0;
--	int llcnt  = 0;
--	int ehcnt  = 0;
--	int fwcnt  = 0;
--	int krlcnt = 0;
--
--	__shost_for_each_device(sdev, shost) {
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_for_each_entry(scmnd, &sdev->cmd_list, list) {
--			switch (scmnd->SCp.phase) {
--			case AAC_OWNER_FIRMWARE:
--				fwcnt++;
--				break;
--			case AAC_OWNER_ERROR_HANDLER:
--				ehcnt++;
--				break;
--			case AAC_OWNER_LOWLEVEL:
--				llcnt++;
--				break;
--			case AAC_OWNER_MIDLEVEL:
--				mlcnt++;
--				break;
--			default:
--				krlcnt++;
--				break;
--			}
--		}
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--	}
-+	scsi_host_busy_iter(shost, fib_count_iter, &fcnt);
- 
- 	ctrl_dev = &aac->pdev->dev;
- 
--	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", mlcnt);
--	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", llcnt);
--	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", ehcnt);
--	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fwcnt);
--	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", krlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: midlevel-%d\n", fcnt.mlcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: lowlevel-%d\n", fcnt.llcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: error handler-%d\n", fcnt.ehcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: firmware-%d\n", fcnt.fwcnt);
-+	dev_info(ctrl_dev, "outstanding cmd: kernel-%d\n", fcnt.krlcnt);
- 
--	return mlcnt + llcnt + ehcnt + fwcnt;
-+	return fcnt.mlcnt + fcnt.llcnt + fcnt.ehcnt + fcnt.fwcnt;
- }
- 
- static int aac_eh_abort(struct scsi_cmnd* cmd)
-@@ -1675,7 +1677,6 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->irq = pdev->irq;
- 	shost->unique_id = unique_id;
- 	shost->max_cmd_len = 16;
--	shost->use_cmd_list = 1;
- 
- 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
- 		aac_init_char();
+ 	if ((forced < 2) && (retval == -ENODEV)) {
+ 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
+ 		struct fib * fibctx = aac_fib_alloc(aac);
 -- 
 2.16.4
 
