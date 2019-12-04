@@ -2,103 +2,173 @@ Return-Path: <SRS0=+pba=Z2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D4BC432C3
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:05:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D53C43141
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:05:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 284B921556
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:05:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 566FD20656
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Dec 2019 01:05:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qTO+I90c"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iEN/Izj3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726418AbfLDBFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Dec 2019 20:05:02 -0500
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:36980 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbfLDBFC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 20:05:02 -0500
-Received: by mail-wm1-f67.google.com with SMTP id f129so6064213wmf.2;
-        Tue, 03 Dec 2019 17:05:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=d1Atz/XejS8mWz5qCtXz1nNzHlSaf2idDPU/vTS2lvc=;
-        b=qTO+I90cj6g2LDEoq+53RmUOc+wQ/rvg8PCvxoHV/TKq/hlqinkmZfUVAMsUl+DbLv
-         AnyiF2eu9+uVXR+D9oUO4RmCqVifaN393leL3CJtlptPcnwUSYtujZnr1a+kCtreEywP
-         qHMvhQDKXBdNuCnVB8edTw+DGIKfcZfx64rYX8EMn7+3+vBKd+kUaJ1Qmw22kmmYrCxB
-         y2fsGhkJTNl5m1BhmLI5KzQFhYz4TckDHwV3DTKT/CwWiom+Cje3/R6Pc1elKP0cKZiY
-         NIUSrWTlJuy7x3t4PRjvXiy96BAGAUtt+7FZPawHB5ci7LHowVENZyhw87lQziArxQJL
-         DNqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=d1Atz/XejS8mWz5qCtXz1nNzHlSaf2idDPU/vTS2lvc=;
-        b=o6gWIZ1mu0Y5Qt3TmsiBdCcWZguD5pCRxNlOtXswfQoQOtdIDwKcVcXrKh/XoxgQc9
-         EOhs2H8Yxh8J65YFC5d7KVCopJ7sutDbfSM8DmSzYwxy5/2W7jfPfNeccfviJsJmfBVz
-         GKZ98ZmzwMuDXcYO+aldD5yYRI5H2aL04LL2Xajsh2FPOPQsVfVOSaZY7Zk/O7VHqstV
-         XmKdRK19RGpvPNUJzoLUClabe7zNjKlB7Be+GrZAYfooNo3WAsznVkDX3wAkv4X6eu2G
-         G9IWqHsIgl3clJFFgLf0cohAP00YaFLXNVaqqKBZ96RaoKIuElWX0GCf+5bDN8OQrn+M
-         lViw==
-X-Gm-Message-State: APjAAAX7scsm/3+/QJsB5Gg09L/m6VqZ+J26m/q/q7pZpCKqXUka1EP4
-        YMyFLVZ3t80AngF6vtsYud8=
-X-Google-Smtp-Source: APXvYqwY7LkfIYy5X6aBfUL4S1sCgNiiFrCxqm6rBAL3vy0LiScxFGOA/y8y1n7bKj3egRD5VfOyxA==
-X-Received: by 2002:a7b:c778:: with SMTP id x24mr22192300wmk.119.1575421500392;
-        Tue, 03 Dec 2019 17:05:00 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bfdc6.dynamic.kabel-deutschland.de. [95.91.253.198])
-        by smtp.gmail.com with ESMTPSA id y139sm5072161wmd.24.2019.12.03.17.04.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Dec 2019 17:04:59 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: delete unsued structure filed tc
-Date:   Wed,  4 Dec 2019 02:04:14 +0100
-Message-Id: <20191204010414.3776-1-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726593AbfLDBFz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Dec 2019 20:05:55 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:58834 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726592AbfLDBFz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Dec 2019 20:05:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1575421554;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mb2uA8H8LkeFlI3MZDn+f+z590eg/6oojJfUikjRY5I=;
+        b=iEN/Izj3DsrL34qziqj7Fgw+OA0WcimyH4s8NkYWnFHhMoJfhydTZst7Zk8sjD23eIizw+
+        waMrwvRk1uoh5VyHC6EWGsbSy7T5lWLS5CyzbgJgHw6usNa6pmeH98/qLsxD9nkg7ychdw
+        N58rP4SeaFp7yMzSfUcR1mVUVYFUcMc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-233-oxdtObirPLa0FlLmaJrW7g-1; Tue, 03 Dec 2019 20:05:50 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4AD3218557C2;
+        Wed,  4 Dec 2019 01:05:42 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6EEEF100194E;
+        Wed,  4 Dec 2019 01:05:34 +0000 (UTC)
+Date:   Wed, 4 Dec 2019 09:05:29 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Stephen Rust <srust@blockbridge.com>
+Cc:     Rob Townley <rob.townley@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        target-devel@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+Message-ID: <20191204010529.GA3910@ming.t460p>
+References: <CAAFE1bfsXsKGyw7SU_z4NanT+wmtuJT=XejBYbHHMCDQwm73sw@mail.gmail.com>
+ <20191128091210.GC15549@ming.t460p>
+ <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+ <20191203005849.GB25002@ming.t460p>
+ <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
+ <20191203031444.GB6245@ming.t460p>
+ <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
+ <CAAFE1bfpUWCZrtR8v3S++0-+gi8DJ79X3e0XqDe93i8nuGTnNg@mail.gmail.com>
+ <20191203124558.GA22805@ming.t460p>
+ <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: oxdtObirPLa0FlLmaJrW7g-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Tue, Dec 03, 2019 at 02:56:08PM -0500, Stephen Rust wrote:
+> Hi Ming,
+>=20
+> Thanks very much for the patch.
+>=20
+> > BTW, you may try the attached test patch. If the issue can be fixed by
+> > this patch, that means it is really caused by un-aligned buffer, and
+> > the iser driver needs to be fixed.
+>=20
+> I have tried the patch, and re-run the test. Results are mixed.
+>=20
+> To recap, our test writes the last bytes of an iser attached iscsi
+> device. The target device is a LIO iblock, backed by a brd ramdisk.
+> The client does a simple `dd`, doing a seek to "size - offset" of the
+> device, and writing a buffer of "length" which is equivalent to the
+> offset.
+>=20
+> For example, to test a write at a 512 offset, seek to device "size -
+> 512", and write a length of data 512 bytes.
+>=20
+> WITHOUT the patch, writing data at the following offsets from the end
+> of the device failed to write all the correct data (rather, the write
+> succeeded, but reading the data back it was invalid):
+>=20
+> - failed: 512,1024, 2048, 4096, 8192
+>=20
+> Anything larger worked fine.
+>=20
+> WITH the patch applied, writing data up to an offset of 4096 all now
+> worked and verified correctly. However, offsets between 4096 and 8192
+> all still failed. I started at 512, and incremented by 512 all the way
+> up to 16384. The following offsets all failed to verify the write:
+>=20
+> - failed: 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192
+>=20
+> Anything larger continues to work fine with the patch.
+>=20
+> As an example, for the failed 8192 case, the `bpftrace lio.bt` trace show=
+s:
+>=20
+> 8192 76
+> 4096 0
+> 4096 0
+> 8192 76
+> 4096 0
+> 4096 0
+> ...
+> [snip]
+>=20
+> What do you think are appropriate next steps?
 
-Delete unused structure field tc in structure utp_upiu_req, since no person
-uses it for task management.
+OK, my guess should be correct, and the issue is related with un-aligned
+bvec->bv_offset.
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- include/uapi/scsi/scsi_bsg_ufs.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+So firstly, I'd suggest to investigate from RDMA driver side to see why
+un-aligned buffer is passed to block layer.
 
-diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bsg_ufs.h
-index 9988db6ad244..d55f2176dfd4 100644
---- a/include/uapi/scsi/scsi_bsg_ufs.h
-+++ b/include/uapi/scsi/scsi_bsg_ufs.h
-@@ -68,14 +68,13 @@ struct utp_upiu_cmd {
-  * @header:UPIU header structure DW-0 to DW-2
-  * @sc: fields structure for scsi command DW-3 to DW-7
-  * @qr: fields structure for query request DW-3 to DW-7
-+ * @uc: use utp_upiu_query to host the 4 dwords of uic command
-  */
- struct utp_upiu_req {
- 	struct utp_upiu_header header;
- 	union {
- 		struct utp_upiu_cmd		sc;
- 		struct utp_upiu_query		qr;
--		struct utp_upiu_query		tr;
--		/* use utp_upiu_query to host the 4 dwords of uic command */
- 		struct utp_upiu_query		uc;
- 	};
- };
--- 
-2.17.1
+According to previous discussion, 512 aligned buffer should be provided
+to block layer.
+
+So looks the driver needs to be fixed.
+
+> Do you think you have an
+> idea on why the specific "multi-page bvec helpers" commit could have
+> exposed this particular latent issue? Please let me know what else I
+> can try, or additional data I can provide for you.
+=20
+The patch might not cover the big offset case, could you collect bpftrace
+via the following script when you reproduce the issue with >4096 offset?
+
+kprobe:iblock_execute_rw
+{
+    @start[tid]=3D1;
+}
+
+kretprobe:iblock_execute_rw
+{
+    @start[tid]=3D0;
+}
+
+kprobe:bio_add_page
+/@start[tid]/
+{
+  printf("%d %d\n", arg2, arg3);
+}
+
+kprobe:brd_do_bvec
+{
+  printf("%d %d %d %d\n", arg2, arg3, arg4, arg5);
+}
+
+
+Thanks,
+Ming
 
