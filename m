@@ -2,104 +2,176 @@ Return-Path: <SRS0=amAE=Z3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB7EC2D0BF
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 10:32:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EF30C43603
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 11:20:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3A7A24655
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 10:32:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LVhKlAce"
+	by mail.kernel.org (Postfix) with ESMTP id 191B82464F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 11:20:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729235AbfLEKcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Dec 2019 05:32:07 -0500
-Received: from mail-il1-f172.google.com ([209.85.166.172]:43131 "EHLO
-        mail-il1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729222AbfLEKcH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Dec 2019 05:32:07 -0500
-Received: by mail-il1-f172.google.com with SMTP id u16so2509927ilg.10
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2019 02:32:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=h484k0glhkWeW7tP68ByhNvi+fZQlOfa529/H5/kNzA=;
-        b=LVhKlAce8nAuTjqLQ28M/88nHeVSCvpmtTONx/gjfJqFdGC/R8/YkSGJDRpDJDSbw9
-         5vPQo/2kfj2dYZWBK97sUBtvNS/Ska8w0jTzqvQbfQrwaaCmKtdqbRaJEq4UyGNfQMht
-         huXO4gIrtGC2LSyy+7jgXUpMa3DNxai+/P/Gc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=h484k0glhkWeW7tP68ByhNvi+fZQlOfa529/H5/kNzA=;
-        b=aQrkmRWtIhEYe97AmS+IXVZlrkXPeUCMZy1sejz3JMCtaSaCXqZKxVOCiTEOjvlrlV
-         Fim/UtsFrU8GtuGKk7pw6XWagFWPof0X1AGYwtOqmub5FO5xH+4vhyMDvdbnOHBuV/AM
-         iQc5tFoCL4oDlFquyMtpx5FKDQfo9RbaPLiToyQJSNFwHpXvYjjqlTGf3ThoS0m8YMSL
-         wDJ8DMtPzYzSg72pb5C89YciFL54E3s3Z8MIY9nh0PYEMwEKefWQIXZcKsQuikhx6GBr
-         MYYMldv2liWeXVH2NCD9wIqZQY+ylUSTaP9DkQVMK91kZB6zAvufGqJhgblCzyWt5dNr
-         W+Gg==
-X-Gm-Message-State: APjAAAUYZQH5cyPBLp//5PTD4cab7teaWpngk0KfMDKjbjgvfS+nWHtC
-        g6olimMTvGqwzL/L3PH1giZ9vXr+di0n1KcQaGFryA==
-X-Google-Smtp-Source: APXvYqxwhy+zfXnDguKWuxWVMyh43pDCuX4H5mcMy0JqTok7fhi3XNR7px97f46ryUjNHKzGu6gxNo0BVOSYw6Qxgrs=
-X-Received: by 2002:a92:d38e:: with SMTP id o14mr8336126ilo.238.1575541926514;
- Thu, 05 Dec 2019 02:32:06 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <20191118103117.978-1-ming.lei@redhat.com> <20191118103117.978-2-ming.lei@redhat.com>
- <97bf460e-62c9-dc64-db4c-fb5540e70ae9@suse.de> <252362ee5ac748694d205441729c433f@mail.gmail.com>
- <20191126033755.GE24501@ming.t460p>
-In-Reply-To: <20191126033755.GE24501@ming.t460p>
+        id S1729074AbfLELUn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Dec 2019 06:20:43 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:49156 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729017AbfLELUn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Dec 2019 06:20:43 -0500
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 07D5C93DC865E40D7508;
+        Thu,  5 Dec 2019 19:20:41 +0800 (CST)
+Received: from huawei.com (10.175.124.28) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.439.0; Thu, 5 Dec 2019
+ 19:20:30 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, <john.garry@huawei.com>,
+        Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH v2] scsi: libsas: stop discovering if oob mode is disconnected
+Date:   Thu, 5 Dec 2019 19:41:44 +0800
+Message-ID: <20191205114144.39640-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.17.2
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQH3BpsAXu9UwBJw1xp6lr9PVp09cQMYv4CvAYuhPOYB9sdvUQFPdxjBpylKwxA=
-Date:   Thu, 5 Dec 2019 16:02:03 +0530
-Message-ID: <1925bc9a900aac610d9623ce1a96389a@mail.gmail.com>
-Subject: RE: [PATCH 1/4] scsi: megaraid_sas: use private counter for tracking
- inflight per-LUN commands
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.28]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > Ming - Sorry for delay. I will update this Patch. We prefer driver to
-> > avoid counter for per sdev if possible. We are currently testing
-> > driver using below changes.
-> >
-> > inline unsigned long sdev_nr_inflight_request(struct request_queue *q)
-{
-> >     struct blk_mq_hw_ctx *hctx = q->queue_hw_ctx[0]
-> >
-> >     return atomic_read(&hctx->nr_active); }
->
-> OK, I am fine with this way, given it is just used for balancing irq
-load.
+The discovering of sas port is driving by workqueue in libsas. When
+libsas is processing port events or phy events in workqueue, new evnets
+may rise up and change the state of some structures such as asd_sas_phy.
+This may cause some problems such as follows:
 
-We have removed sdev->device_busy check from megaraid_sas and mpt3sas
-drive.  I am able to get required performance 3.0M IOPs on Aero controller
-using <hctx->nr_active>
-Since this is not urgent, we will wait for some testing done by Broadcom.
-We will post this specific change as Driver update.
+==>thread 1                       ==>thread 2
 
->
->
-> Thanks,
-> Ming
+                                  ==>phy up
+                                  ==>phy_up_v3_hw()
+                                    ==>oob_mode = SATA_OOB_MODE;
+                                  ==>phy donw quickly
+                                  ==>hisi_sas_phy_down()
+                                    ==>sas_ha->notify_phy_event()
+                                    ==>sas_phy_disconnected()
+                                      ==>oob_mode = OOB_NOT_CONNECTED
+==>workqueue wakeup
+==>sas_form_port()
+  ==>sas_discover_domain()
+    ==>sas_get_port_device()
+      ==>oob_mode is OOB_NOT_CONNECTED and device
+         is wrongly taken as expander
+
+This at last lead to the panic when libsas trying to issue a command to
+discover the device.
+
+[183047.614035] Unable to handle kernel NULL pointer dereference at
+virtual address 0000000000000058
+[183047.622896] Mem abort info:
+[183047.625762]   ESR = 0x96000004
+[183047.628893]   Exception class = DABT (current EL), IL = 32 bits
+[183047.634888]   SET = 0, FnV = 0
+[183047.638015]   EA = 0, S1PTW = 0
+[183047.641232] Data abort info:
+[183047.644189]   ISV = 0, ISS = 0x00000004
+[183047.648100]   CM = 0, WnR = 0
+[183047.651145] user pgtable: 4k pages, 48-bit VAs, pgdp =
+00000000b7df67be
+[183047.657834] [0000000000000058] pgd=0000000000000000
+[183047.662789] Internal error: Oops: 96000004 [#1] SMP
+[183047.667740] Process kworker/u16:2 (pid: 31291, stack limit =
+0x00000000417c4974)
+[183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
+W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
+[183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
+BIOS 0.15 10/22/2019
+[183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
+[183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
+[183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+[183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
+[183047.717153] sp : ffff00000f28ba60
+[183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
+[183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
+[183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
+[183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
+[183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
+[183047.747464] x19: 0000000000f80800 x18: 0000000000000010
+[183047.752848] x17: 0000000000000000 x16: 0000000000000000
+[183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
+[183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
+[183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
+[183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
+[183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
+[183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
+[183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
+[183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
+[183047.801307] Call trace:
+[183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+[183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
+[183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
+[183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
+[183047.826757]  smp_execute_task_sg+0xec/0x218
+[183047.831013]  smp_execute_task+0x74/0xa0
+[183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
+[183047.839959]  sas_discover_root_expander+0x90/0x160
+[183047.844822]  sas_discover_domain+0x1b8/0x1e8
+[183047.849164]  process_one_work+0x1b4/0x3f8
+[183047.853246]  worker_thread+0x54/0x470
+[183047.856981]  kthread+0x134/0x138
+[183047.860283]  ret_from_fork+0x10/0x18
+[183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
+[183047.870097] kernel fault(0x1) notification starting on CPU 0
+[183047.875828] kernel fault(0x1) notification finished on CPU 0
+[183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
+hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
+[183047.892418] ---[ end trace 4cc26083fc11b783  ]---
+[183047.897107] Kernel panic - not syncing: Fatal exception
+[183047.902403] kernel fault(0x5) notification starting on CPU 0
+[183047.908134] kernel fault(0x5) notification finished on CPU 0
+[183047.913865] SMP: stopping secondary CPUs
+[183047.917861] Kernel Offset: disabled
+[183047.921422] CPU features: 0x2,a2a00a38
+[183047.925243] Memory Limit: none
+[183047.928372] kernel reboot(0x2) notification starting on CPU 0
+[183047.934190] kernel reboot(0x2) notification finished on CPU 0
+[183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
+]---
+
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Reported-by: Gao Chuan <gaochuan4@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/libsas/sas_discover.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index f47b4b281b14..cb5d40d963e3 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -81,12 +81,21 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 		else
+ 			dev->dev_type = SAS_SATA_DEV;
+ 		dev->tproto = SAS_PROTOCOL_SATA;
+-	} else {
++	} else if (port->oob_mode == SAS_OOB_MODE) {
+ 		struct sas_identify_frame *id =
+ 			(struct sas_identify_frame *) dev->frame_rcvd;
+ 		dev->dev_type = id->dev_type;
+ 		dev->iproto = id->initiator_bits;
+ 		dev->tproto = id->target_bits;
++	} else {
++		/* If the oob mode is OOB_NOT_CONNECTED, the port is
++		 * disconnected due to race with PHY down. We cannot
++		 * continue to discover this port
++		 */
++		sas_put_device(dev);
++		pr_warn("Port %16llx is disconnected when discovering\n",
++			SAS_ADDR(port->attached_sas_addr));
++		return -ENODEV;
+ 	}
+ 
+ 	sas_init_dev(dev);
+-- 
+2.17.2
+
