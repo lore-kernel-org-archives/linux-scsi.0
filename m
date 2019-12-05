@@ -2,95 +2,87 @@ Return-Path: <SRS0=amAE=Z3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2539DC2D0BE
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 00:16:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF5AC43603
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 02:05:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 061F1214B2
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 00:16:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92DFE2077B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 02:05:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QGe7yryn";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="IW1yh45a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728481AbfLEAQT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Dec 2019 19:16:19 -0500
-Received: from mail-pl1-f172.google.com ([209.85.214.172]:40817 "EHLO
-        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728011AbfLEAQT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2019 19:16:19 -0500
-Received: by mail-pl1-f172.google.com with SMTP id g6so428420plp.7;
-        Wed, 04 Dec 2019 16:16:18 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=QXOTNbfvt4PQWE1w6GCGy81Vtob2l8oNprwO21T/FYw=;
-        b=AUCmDxMl8POPp4XTUrkOvywntVNS/GSITi++pgoQinhP0W/pqLrTm4QhpuhbjCUKXI
-         dpHH2pYh/3/poaczzL6Vl5JrWGJEBYI9IT4RAoYe+xMAlVQxpClo9uRQIarpQtnlHpTE
-         2aWvmcjnGnuiv0tBOAqolGAhhYnRr8C692inPfaX4MTGh1S2cqI2r1zq/iZcnxVWviZs
-         FLx3sq6RUXcQ0mZXA/OGfTQ+fOjYvqKJ4kcn7n1HsToajLfzLOIdwtSmPAlFkoUfVibM
-         8SMHuEFq877fQQlkUWh/zGksy6WIzSXtmzfuqDvZakWgiB1ev7pwCJQTsSz0wgbcficB
-         jA6A==
-X-Gm-Message-State: APjAAAW1o74uLrZIA9tXnUGD/LhS2PzuTCFqBZUnhzE9tswBDC1oGAZP
-        AKssTV3Fk5C1KUCqvfd/GuM=
-X-Google-Smtp-Source: APXvYqyfQGVYaulKAcmWLg8fai9mIRBmWJGk9hRhnBoL3l1xWDIXRBc1Ryagoc5Iin7/tcdwRgWdAw==
-X-Received: by 2002:a17:90a:23a9:: with SMTP id g38mr6397637pje.128.1575504978148;
-        Wed, 04 Dec 2019 16:16:18 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id s22sm7374112pjr.5.2019.12.04.16.16.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Dec 2019 16:16:17 -0800 (PST)
-Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
-To:     Ming Lei <ming.lei@redhat.com>,
-        Stephen Rust <srust@blockbridge.com>
-Cc:     Rob Townley <rob.townley@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        target-devel@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Max Gurtovoy <maxg@mellanox.com>
-References: <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
- <20191203005849.GB25002@ming.t460p>
- <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
- <20191203031444.GB6245@ming.t460p>
- <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
- <CAAFE1bfpUWCZrtR8v3S++0-+gi8DJ79X3e0XqDe93i8nuGTnNg@mail.gmail.com>
- <20191203124558.GA22805@ming.t460p>
- <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
- <20191204010529.GA3910@ming.t460p>
- <CAAFE1bcJmRP5OSu=5asNTpvkF=kjEZu=GafaS9h52776tVgpPA@mail.gmail.com>
- <20191204230225.GA26189@ming.t460p>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <683a4567-6b34-ac3b-93ff-74d788ac4242@acm.org>
-Date:   Wed, 4 Dec 2019 16:16:15 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <20191204230225.GA26189@ming.t460p>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1728374AbfLECFB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Dec 2019 21:05:01 -0500
+Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:49672
+        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728121AbfLECFB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Dec 2019 21:05:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575511500;
+        h=From:To:Subject:Date:Message-Id;
+        bh=vyvGcgBI7os0/RQ9E+t+2CCYMsngA0mSYgHkHtO/PQ4=;
+        b=QGe7yrynOy+iksO3RSzanaIURE7fnEbbuWO8xaSZ6RSXdMmoIJ8nZO6ZOFZrSWc0
+        7oPwh3Yygw3YYMIV1IFEuX1YlrNa/4Qql+NzpiE+jE/l1sHeotETQVYTji8ONASvkMg
+        gcPMtVdARPgvfZYs2AC/mcwAdI/4BM/FOmrY8teI=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575511500;
+        h=From:To:Subject:Date:Message-Id:Feedback-ID;
+        bh=vyvGcgBI7os0/RQ9E+t+2CCYMsngA0mSYgHkHtO/PQ4=;
+        b=IW1yh45a6ru7UAbF5bJjg2a97xYiUD9lVgEoF74AO5oK6CSkwnmOxP3oCyJfQl9Z
+        PHXhqbZLscMsMosy/kus2l954JDX/2JPPR18bHJBZlP4fPOeK9Hvsprhb1OaDsfFsSM
+        y5fBBGNdBdG2E6UmzHHP+uL/cbr7N7V85S3X7Eyk=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E9268C4479C
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Subject: [PATCH v5 0/5] UFS driver general fixes bundle 1
+Date:   Thu, 5 Dec 2019 02:05:00 +0000
+Message-ID: <0101016ed3cda4e8-ec071148-9851-413f-8c16-4f79f540f090-000000@us-west-2.amazonses.com>
+X-Mailer: git-send-email 1.9.1
+X-SES-Outgoing: 2019.12.05-54.240.27.56
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/4/19 3:02 PM, Ming Lei wrote:
-> On Wed, Dec 04, 2019 at 12:23:39PM -0500, Stephen Rust wrote:
->> Presumably non-brd devices, ie: real scsi devices work for these test
->> cases because they accept un-aligned buffers?
-> 
-> Right, not every driver supports such un-aligned buffer.
-> 
-> I am not familiar with RDMA, but from the trace we have done so far,
-> it is highly related with iser driver.
+This bundle includes 5 general fixes for UFS driver.
 
-Hi Stephen,
+Changes since v4:
+- Incorporated review comments from Avri Altman and Bean Huo.
 
-Do you need the iSER protocol? I think that the NVMeOF and SRP drivers 
-also support RoCE and that these align data buffers on a 512 byte boundary.
+Changes since v3:
+- Incorporated review comments from Martin K. Petersen.
 
-Bart.
+Changes since v2:
+- Incorporated review comments from Mark Salyzyn
+
+Changes since v1:
+- Incorporated review comments from Bart Van Assche.
+
+
+Can Guo (5):
+  scsi: Adjust DBD setting in mode sense for caching mode page per LLD
+  scsi: ufs: Use DBD setting in mode sense
+  scsi: ufs: Release clock if DMA map fails
+  scsi: ufs: Do not clear the DL layer timers
+  scsi: ufs: Do not free irq in suspend
+
+ drivers/scsi/scsi_lib.c    |  2 ++
+ drivers/scsi/ufs/ufshcd.c  | 42 ++++++++++++++++++++++++++++--------------
+ drivers/scsi/ufs/unipro.h  | 11 +++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 42 insertions(+), 14 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
