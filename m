@@ -1,262 +1,229 @@
-Return-Path: <SRS0=amAE=Z3=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=vR/u=Z4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 871E8C43603
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 22:43:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCB6C43603
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 00:41:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46C922464E
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Dec 2019 22:43:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bMqRNKM2"
+	by mail.kernel.org (Postfix) with ESMTP id D44BB2077B
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 00:41:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726505AbfLEWnm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Dec 2019 17:43:42 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:36321 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbfLEWnm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Dec 2019 17:43:42 -0500
-Received: by mail-ot1-f67.google.com with SMTP id i4so4150918otr.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Dec 2019 14:43:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gHtk9ElDRlq0lq4u0NPjLGH1Txh8nv1jVGUFuyfxbww=;
-        b=bMqRNKM2P2LAnRWC8z0KWyOpXI7OVxnN9tuounehotHmmNo6mRJXIaIKjoF0fqRp61
-         eFxPsdIomtX9l7K9FlgwtqlsPQmLGYibI2aBrvLuk7I1U+dlkmAxnCYhoQ91tAA+caL4
-         gTewKRU2LTRkvff8iY/ZepkRz4SWFcK2lb4mikPYo+ymZdcWdiFisK6RRYCvTfV2ksmJ
-         wlT3ayvZQbbcshonnryTLBIIwA14lUeNLsNUZDsNbBbvvvqw572oCht0hUDhAcAZyvra
-         ojUnbZ642uER7o5nL+R4EryosFLRpsySDuqpLbvW+Kfj6rq4+mCDlyrQHLlLJD3yoM6x
-         mLeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gHtk9ElDRlq0lq4u0NPjLGH1Txh8nv1jVGUFuyfxbww=;
-        b=Aa14BOUXzeX1AaBxMLiKeeZvyoJ7ElFlp+qP8VhpoFoMy6z6MHMAJ/3BT4TBGpLlOG
-         X9686nm3mL9zjtiqvxWoxTscSz0PWOxKUjpvtyGGx3ff2ZPshuUuONiJzKSohwgYlekO
-         ZdK2Z+CA6uVC0xJpjSg1wTRQ3U7vMoG71VSkChG1jSNe1iYa8ffQiOjygHjP4ma1/L9Y
-         EMysAmkAKOLxfzBuOH/J8UNX28d7WNf2ladR8fuGonT4Z09Yv+CcCSIzeEplDnpnP+Wh
-         4YIShfjP8cWzhfzokocWB+Cop65Kfyne7g76F4YWMHzXlH2C9v8Sgw/to+xLFiiIja4/
-         97HQ==
-X-Gm-Message-State: APjAAAWURPWTliSXI5Pi6qcOs0ikA8TxpgQlTytIZ9nzZwxTYNsauv2d
-        gyN2W0ps7iVnWsAwO6NgfnAllmNHISC8rY5c9DSHjg==
-X-Google-Smtp-Source: APXvYqy+leRhWNDTZep6R8GEh7Ra+JauuhEV9tZ4BzRTHVHL6e527jC5pmTiMG1fq8PSVSJe27n0Km09D/IblJ9iXio=
-X-Received: by 2002:a05:6830:2141:: with SMTP id r1mr8208158otd.124.1575585820837;
- Thu, 05 Dec 2019 14:43:40 -0800 (PST)
+        id S1726037AbfLFAlJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Dec 2019 19:41:09 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6757 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725988AbfLFAlJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Dec 2019 19:41:09 -0500
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 93440E92F0FE012276D2;
+        Fri,  6 Dec 2019 08:41:06 +0800 (CST)
+Received: from [127.0.0.1] (10.173.221.195) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Fri, 6 Dec 2019
+ 08:41:00 +0800
+Subject: Re: [PATCH v2] scsi: libsas: stop discovering if oob mode is
+ disconnected
+To:     John Garry <john.garry@huawei.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+References: <20191205114144.39640-1-yanaijie@huawei.com>
+ <8c398c9d-19ac-09ca-4f42-0c955814c0fd@huawei.com>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <a7ab1027-9e22-238a-8600-8fee1b1654b7@huawei.com>
+Date:   Fri, 6 Dec 2019 08:40:59 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-References: <20191112001900.9206-1-mchristi@redhat.com>
-In-Reply-To: <20191112001900.9206-1-mchristi@redhat.com>
-From:   Shakeel Butt <shakeelb@google.com>
-Date:   Thu, 5 Dec 2019 14:43:29 -0800
-Message-ID: <CALvZod47XyD2x8TuZcb9PgeVY14JBwNhsUpN3RAeAt+RJJC=hg@mail.gmail.com>
-Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V4
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     linux-api@vger.kernel.org, idryomov@gmail.com,
-        Michal Hocko <mhocko@kernel.org>, david@fromorbit.com,
-        Linux MM <linux-mm@kvack.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-block@vger.kernel.org, martin@urbackup.org,
-        Damien.LeMoal@wdc.com, Mike Christie <mchristi@redhat.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Masato Suzuki <masato.suzuki@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <8c398c9d-19ac-09ca-4f42-0c955814c0fd@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.173.221.195]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 11, 2019 at 4:19 PM Mike Christie <mchristi@redhat.com> wrote:
->
-> There are several storage drivers like dm-multipath, iscsi, tcmu-runner,
-> amd nbd that have userspace components that can run in the IO path. For
-> example, iscsi and nbd's userspace deamons may need to recreate a socket
-> and/or send IO on it, and dm-multipath's daemon multipathd may need to
-> send SG IO or read/write IO to figure out the state of paths and re-set
-> them up.
->
-> In the kernel these drivers have access to GFP_NOIO/GFP_NOFS and the
-> memalloc_*_save/restore functions to control the allocation behavior,
-> but for userspace we would end up hitting an allocation that ended up
-> writing data back to the same device we are trying to allocate for.
-> The device is then in a state of deadlock, because to execute IO the
-> device needs to allocate memory, but to allocate memory the memory
-> layers want execute IO to the device.
->
-> Here is an example with nbd using a local userspace daemon that performs
-> network IO to a remote server. We are using XFS on top of the nbd device,
-> but it can happen with any FS or other modules layered on top of the nbd
-> device that can write out data to free memory.  Here a nbd daemon helper
-> thread, msgr-worker-1, is performing a write/sendmsg on a socket to execute
-> a request. This kicks off a reclaim operation which results in a WRITE to
-> the nbd device and the nbd thread calling back into the mm layer.
->
-> [ 1626.609191] msgr-worker-1   D    0  1026      1 0x00004000
-> [ 1626.609193] Call Trace:
-> [ 1626.609195]  ? __schedule+0x29b/0x630
-> [ 1626.609197]  ? wait_for_completion+0xe0/0x170
-> [ 1626.609198]  schedule+0x30/0xb0
-> [ 1626.609200]  schedule_timeout+0x1f6/0x2f0
-> [ 1626.609202]  ? blk_finish_plug+0x21/0x2e
-> [ 1626.609204]  ? _xfs_buf_ioapply+0x2e6/0x410
-> [ 1626.609206]  ? wait_for_completion+0xe0/0x170
-> [ 1626.609208]  wait_for_completion+0x108/0x170
-> [ 1626.609210]  ? wake_up_q+0x70/0x70
-> [ 1626.609212]  ? __xfs_buf_submit+0x12e/0x250
-> [ 1626.609214]  ? xfs_bwrite+0x25/0x60
-> [ 1626.609215]  xfs_buf_iowait+0x22/0xf0
-> [ 1626.609218]  __xfs_buf_submit+0x12e/0x250
-> [ 1626.609220]  xfs_bwrite+0x25/0x60
-> [ 1626.609222]  xfs_reclaim_inode+0x2e8/0x310
-> [ 1626.609224]  xfs_reclaim_inodes_ag+0x1b6/0x300
-> [ 1626.609227]  xfs_reclaim_inodes_nr+0x31/0x40
-> [ 1626.609228]  super_cache_scan+0x152/0x1a0
-> [ 1626.609231]  do_shrink_slab+0x12c/0x2d0
-> [ 1626.609233]  shrink_slab+0x9c/0x2a0
-> [ 1626.609235]  shrink_node+0xd7/0x470
-> [ 1626.609237]  do_try_to_free_pages+0xbf/0x380
-> [ 1626.609240]  try_to_free_pages+0xd9/0x1f0
-> [ 1626.609245]  __alloc_pages_slowpath+0x3a4/0xd30
-> [ 1626.609251]  ? ___slab_alloc+0x238/0x560
-> [ 1626.609254]  __alloc_pages_nodemask+0x30c/0x350
-> [ 1626.609259]  skb_page_frag_refill+0x97/0xd0
-> [ 1626.609274]  sk_page_frag_refill+0x1d/0x80
-> [ 1626.609279]  tcp_sendmsg_locked+0x2bb/0xdd0
-> [ 1626.609304]  tcp_sendmsg+0x27/0x40
-> [ 1626.609307]  sock_sendmsg+0x54/0x60
-> [ 1626.609308]  ___sys_sendmsg+0x29f/0x320
-> [ 1626.609313]  ? sock_poll+0x66/0xb0
-> [ 1626.609318]  ? ep_item_poll.isra.15+0x40/0xc0
-> [ 1626.609320]  ? ep_send_events_proc+0xe6/0x230
-> [ 1626.609322]  ? hrtimer_try_to_cancel+0x54/0xf0
-> [ 1626.609324]  ? ep_read_events_proc+0xc0/0xc0
-> [ 1626.609326]  ? _raw_write_unlock_irq+0xa/0x20
-> [ 1626.609327]  ? ep_scan_ready_list.constprop.19+0x218/0x230
-> [ 1626.609329]  ? __hrtimer_init+0xb0/0xb0
-> [ 1626.609331]  ? _raw_spin_unlock_irq+0xa/0x20
-> [ 1626.609334]  ? ep_poll+0x26c/0x4a0
-> [ 1626.609337]  ? tcp_tsq_write.part.54+0xa0/0xa0
-> [ 1626.609339]  ? release_sock+0x43/0x90
-> [ 1626.609341]  ? _raw_spin_unlock_bh+0xa/0x20
-> [ 1626.609342]  __sys_sendmsg+0x47/0x80
-> [ 1626.609347]  do_syscall_64+0x5f/0x1c0
-> [ 1626.609349]  ? prepare_exit_to_usermode+0x75/0xa0
-> [ 1626.609351]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
->
-> This patch adds a new prctl command that daemons can use after they have
-> done their initial setup, and before they start to do allocations that
-> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
-> flags so both userspace block and FS threads can use it to avoid the
-> allocation recursion and try to prevent from being throttled while
-> writing out data to free up memory.
->
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
-> Tested-by: Masato Suzuki <masato.suzuki@wdc.com>
-> Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-I suppose this patch should be routed through MM tree, so, CCing Andrew.
 
->
-> ---
->
-> V4:
-> - Fix PR_GET_IO_FLUSHER check to match SET.
->
-> V3:
-> - Drop NOFS, set PF_LESS_THROTTLE and rename prctl flag to reflect it
-> is more general and can support both FS and block devices. Both fuse
-> and block device daemons, nbd and tcmu-runner, have been tested to
-> confirm the more restrictive PF_MEMALLOC_NOIO also works for fuse.
->
-> - Use CAP_SYS_RESOURCE instead of admin.
->
-> V2:
-> - Use prctl instead of procfs.
-> - Add support for NOFS for fuse.
-> - Check permissions.
->
->
->  include/uapi/linux/capability.h |  1 +
->  include/uapi/linux/prctl.h      |  4 ++++
->  kernel/sys.c                    | 25 +++++++++++++++++++++++++
->  3 files changed, 30 insertions(+)
->
-> diff --git a/include/uapi/linux/capability.h b/include/uapi/linux/capability.h
-> index 240fdb9a60f6..272dc69fa080 100644
-> --- a/include/uapi/linux/capability.h
-> +++ b/include/uapi/linux/capability.h
-> @@ -301,6 +301,7 @@ struct vfs_ns_cap_data {
->  /* Allow more than 64hz interrupts from the real-time clock */
->  /* Override max number of consoles on console allocation */
->  /* Override max number of keymaps */
-> +/* Control memory reclaim behavior */
->
->  #define CAP_SYS_RESOURCE     24
->
-> diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
-> index 7da1b37b27aa..07b4f8131e36 100644
-> --- a/include/uapi/linux/prctl.h
-> +++ b/include/uapi/linux/prctl.h
-> @@ -234,4 +234,8 @@ struct prctl_mm_map {
->  #define PR_GET_TAGGED_ADDR_CTRL                56
->  # define PR_TAGGED_ADDR_ENABLE         (1UL << 0)
->
-> +/* Control reclaim behavior when allocating memory */
-> +#define PR_SET_IO_FLUSHER              57
-> +#define PR_GET_IO_FLUSHER              58
-> +
->  #endif /* _LINUX_PRCTL_H */
-> diff --git a/kernel/sys.c b/kernel/sys.c
-> index a611d1d58c7d..c1a360370d09 100644
-> --- a/kernel/sys.c
-> +++ b/kernel/sys.c
-> @@ -2259,6 +2259,8 @@ int __weak arch_prctl_spec_ctrl_set(struct task_struct *t, unsigned long which,
->         return -EINVAL;
->  }
->
-> +#define PR_IO_FLUSHER (PF_MEMALLOC_NOIO | PF_LESS_THROTTLE)
-> +
->  SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
->                 unsigned long, arg4, unsigned long, arg5)
->  {
-> @@ -2486,6 +2488,29 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
->                         return -EINVAL;
->                 error = GET_TAGGED_ADDR_CTRL();
->                 break;
-> +       case PR_SET_IO_FLUSHER:
-> +               if (!capable(CAP_SYS_RESOURCE))
-> +                       return -EPERM;
-> +
-> +               if (arg3 || arg4 || arg5)
-> +                       return -EINVAL;
-> +
-> +               if (arg2 == 1)
-> +                       current->flags |= PR_IO_FLUSHER;
-> +               else if (!arg2)
-> +                       current->flags &= ~PR_IO_FLUSHER;
-> +               else
-> +                       return -EINVAL;
-> +               break;
-> +       case PR_GET_IO_FLUSHER:
-> +               if (!capable(CAP_SYS_RESOURCE))
-> +                       return -EPERM;
-> +
-> +               if (arg2 || arg3 || arg4 || arg5)
-> +                       return -EINVAL;
-> +
-> +               error = (current->flags & PR_IO_FLUSHER) == PR_IO_FLUSHER;
-> +               break;
->         default:
->                 error = -EINVAL;
->                 break;
-> --
-> 2.20.1
->
+在 2019/12/5 19:36, John Garry 写道:
+> On 05/12/2019 11:41, yanaijie wrote:
+>> The discovering of sas port is driving by workqueue in libsas. When
+> 
+> /s/driving/driven/
+> 
+
+Oh, sorry I forgot to change these typos. I will fix these right now.
+
+
+>> libsas is processing port events or phy events in workqueue, new evnets
+> 
+> again,
+> /s/evnets/events/
+> 
+>> may rise up and change the state of some structures such as asd_sas_phy.
+>> This may cause some problems such as follows:
+>>
+>> ==>thread 1                       ==>thread 2
+>>
+>>                                    ==>phy up
+>>                                    ==>phy_up_v3_hw()
+>>                                      ==>oob_mode = SATA_OOB_MODE;
+>>                                    ==>phy donw quickly
+> 
+> and again,
+> 
+> /s/donw/down/
+> 
+>>                                    ==>hisi_sas_phy_down()
+>>                                      ==>sas_ha->notify_phy_event()
+>>                                      ==>sas_phy_disconnected()
+>>                                        ==>oob_mode = OOB_NOT_CONNECTED
+>> ==>workqueue wakeup
+>> ==>sas_form_port()
+>>    ==>sas_discover_domain()
+>>      ==>sas_get_port_device()
+>>        ==>oob_mode is OOB_NOT_CONNECTED and device
+>>           is wrongly taken as expander
+>>
+>> This at last lead to the panic when libsas trying to issue a command to
+>> discover the device.
+>>
+>> [183047.614035] Unable to handle kernel NULL pointer dereference at
+>> virtual address 0000000000000058
+>> [183047.622896] Mem abort info:
+>> [183047.625762]   ESR = 0x96000004
+>> [183047.628893]   Exception class = DABT (current EL), IL = 32 bits
+>> [183047.634888]   SET = 0, FnV = 0
+>> [183047.638015]   EA = 0, S1PTW = 0
+>> [183047.641232] Data abort info:
+>> [183047.644189]   ISV = 0, ISS = 0x00000004
+>> [183047.648100]   CM = 0, WnR = 0
+>> [183047.651145] user pgtable: 4k pages, 48-bit VAs, pgdp =
+>> 00000000b7df67be
+>> [183047.657834] [0000000000000058] pgd=0000000000000000
+>> [183047.662789] Internal error: Oops: 96000004 [#1] SMP
+>> [183047.667740] Process kworker/u16:2 (pid: 31291, stack limit =
+>> 0x00000000417c4974)
+>> [183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
+>> W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
+>> [183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
+>> BIOS 0.15 10/22/2019
+>> [183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
+>> [183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
+>> [183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+>> [183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
+>> [183047.717153] sp : ffff00000f28ba60
+>> [183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
+>> [183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
+>> [183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
+>> [183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
+>> [183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
+>> [183047.747464] x19: 0000000000f80800 x18: 0000000000000010
+>> [183047.752848] x17: 0000000000000000 x16: 0000000000000000
+>> [183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
+>> [183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
+>> [183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
+>> [183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
+>> [183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
+>> [183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
+>> [183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
+>> [183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
+>> [183047.801307] Call trace:
+>> [183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
+>> [183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
+>> [183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
+>> [183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
+>> [183047.826757]  smp_execute_task_sg+0xec/0x218
+>> [183047.831013]  smp_execute_task+0x74/0xa0
+>> [183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
+>> [183047.839959]  sas_discover_root_expander+0x90/0x160
+>> [183047.844822]  sas_discover_domain+0x1b8/0x1e8
+>> [183047.849164]  process_one_work+0x1b4/0x3f8
+>> [183047.853246]  worker_thread+0x54/0x470
+>> [183047.856981]  kthread+0x134/0x138
+>> [183047.860283]  ret_from_fork+0x10/0x18
+>> [183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
+>> [183047.870097] kernel fault(0x1) notification starting on CPU 0
+>> [183047.875828] kernel fault(0x1) notification finished on CPU 0
+>> [183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
+>> hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
+>> [183047.892418] ---[ end trace 4cc26083fc11b783  ]---
+>> [183047.897107] Kernel panic - not syncing: Fatal exception
+>> [183047.902403] kernel fault(0x5) notification starting on CPU 0
+>> [183047.908134] kernel fault(0x5) notification finished on CPU 0
+>> [183047.913865] SMP: stopping secondary CPUs
+>> [183047.917861] Kernel Offset: disabled
+>> [183047.921422] CPU features: 0x2,a2a00a38
+>> [183047.925243] Memory Limit: none
+>> [183047.928372] kernel reboot(0x2) notification starting on CPU 0
+>> [183047.934190] kernel reboot(0x2) notification finished on CPU 0
+>> [183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
+>> ]---
+>>
+>> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+>> Reported-by: Gao Chuan <gaochuan4@huawei.com>
+>> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+> 
+> Apart from typos:
+> Reviewed-by: John Garry <john.garry@huawei.com>
+> 
+
+Thanks.
+
+>> ---
+>>   drivers/scsi/libsas/sas_discover.c | 11 ++++++++++-
+>>   1 file changed, 10 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_discover.c 
+>> b/drivers/scsi/libsas/sas_discover.c
+>> index f47b4b281b14..cb5d40d963e3 100644
+>> --- a/drivers/scsi/libsas/sas_discover.c
+>> +++ b/drivers/scsi/libsas/sas_discover.c
+>> @@ -81,12 +81,21 @@ static int sas_get_port_device(struct asd_sas_port 
+>> *port)
+>>           else
+>>               dev->dev_type = SAS_SATA_DEV;
+>>           dev->tproto = SAS_PROTOCOL_SATA;
+>> -    } else {
+>> +    } else if (port->oob_mode == SAS_OOB_MODE) {
+>>           struct sas_identify_frame *id =
+>>               (struct sas_identify_frame *) dev->frame_rcvd;
+>>           dev->dev_type = id->dev_type;
+>>           dev->iproto = id->initiator_bits;
+>>           dev->tproto = id->target_bits;
+>> +    } else {
+>> +        /* If the oob mode is OOB_NOT_CONNECTED, the port is
+>> +         * disconnected due to race with PHY down. We cannot
+>> +         * continue to discover this port
+>> +         */
+>> +        sas_put_device(dev);
+>> +        pr_warn("Port %16llx is disconnected when discovering\n",
+>> +            SAS_ADDR(port->attached_sas_addr));
+> 
+> note: there seems to be an inconsistency in libsas in format specifiers 
+> for printing a SAS address. We have a mix of %16llx, %llx, %016llx.
+> 
+> And then we have something like pm8001_ctl_host_sas_address_show(), 
+> which uses 0x%016llx, and not SAS_ADDR() macro.
+> 
+> Maybe we can tidy all that up separately.
+> 
+
+Agree.
+
+> Thanks
+> 
+>> +        return -ENODEV;
+>>       }
+>>       sas_init_dev(dev);
+>>
+> 
+> 
+> .
+
