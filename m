@@ -2,177 +2,157 @@ Return-Path: <SRS0=vR/u=Z4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73246C43603
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 01:11:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B140FC43603
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 02:32:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 401962077B
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 01:11:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 870CE2075C
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Dec 2019 02:32:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="J4+5j2tX";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="av8IuSlc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726171AbfLFBL4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Dec 2019 20:11:56 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:58990 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725959AbfLFBL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Dec 2019 20:11:56 -0500
-Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 858105EC6FBED0EC5558;
-        Fri,  6 Dec 2019 09:11:53 +0800 (CST)
-Received: from huawei.com (10.175.124.28) by DGGEMS406-HUB.china.huawei.com
- (10.3.19.206) with Microsoft SMTP Server id 14.3.439.0; Fri, 6 Dec 2019
- 09:11:44 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <john.garry@huawei.com>,
-        Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v3] scsi: libsas: stop discovering if oob mode is disconnected
-Date:   Fri, 6 Dec 2019 09:11:18 +0800
-Message-ID: <20191206011118.46909-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.17.2
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.124.28]
-X-CFilter-Loop: Reflected
+        id S1726242AbfLFCcF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Dec 2019 21:32:05 -0500
+Received: from a27-11.smtp-out.us-west-2.amazonses.com ([54.240.27.11]:55848
+        "EHLO a27-11.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726160AbfLFCcF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Dec 2019 21:32:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575599524;
+        h=From:To:Cc:Subject:Date:Message-Id;
+        bh=dbpQ33z0+MU9P4fX+5DhPUfJ1DnpVxYrmcfpMV8MJaI=;
+        b=J4+5j2tXiA8fSOxzRwBXkhxhFSPJ7hFwa2L2jF63lKosOWWgoCCJMwHZj8dYHbd4
+        zSBRbhcxOQpMcXQ4iK2wF2m+Ht2uGSW3FxtvzHWFDNbqyPMrdaDsSV5uDRL9m0TjFPH
+        WHv/DhkjTY/gdEtdsa+HjEK3g6UKfniV1HZY1lok=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575599524;
+        h=From:To:Cc:Subject:Date:Message-Id:Feedback-ID;
+        bh=dbpQ33z0+MU9P4fX+5DhPUfJ1DnpVxYrmcfpMV8MJaI=;
+        b=av8IuSlcY46Zd9obFJpbpiy/vBakrI94qBLC/sy6rVV/9wDGeLqYl78Ax630M4bP
+        hJh7shrH7j32Quc3XwvSIzbdd+HFhmS0GkSYXRosO3bCmcblcLwssTkaekz/8h4gb7b
+        6XvNruGFtB6BJlZVdXxXdBDRxaPHSGMT8+Nocap0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 921A8C4479F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        cang@codeaurora.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: ufs: Export query request interfaces
+Date:   Fri, 6 Dec 2019 02:32:04 +0000
+Message-ID: <0101016ed90ccaa9-28e4056b-b182-4739-80e0-c9f1dff0f257-000000@us-west-2.amazonses.com>
+X-Mailer: git-send-email 1.9.1
+X-SES-Outgoing: 2019.12.06-54.240.27.11
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The discovering of sas port is driven by workqueue in libsas. When
-libsas is processing port events or phy events in workqueue, new events
-may rise up and change the state of some structures such as asd_sas_phy.
-This may cause some problems such as follows:
+Vendor drivers may need to send query requests in proprietary
+implementations. Hence, export the query request interfaces
+so that vendor drivers can use them.
 
-==>thread 1                       ==>thread 2
+Signed-off-by: Can Guo <cang@codeaurora.org>
 
-                                  ==>phy up
-                                  ==>phy_up_v3_hw()
-                                    ==>oob_mode = SATA_OOB_MODE;
-                                  ==>phy down quickly
-                                  ==>hisi_sas_phy_down()
-                                    ==>sas_ha->notify_phy_event()
-                                    ==>sas_phy_disconnected()
-                                      ==>oob_mode = OOB_NOT_CONNECTED
-==>workqueue wakeup
-==>sas_form_port()
-  ==>sas_discover_domain()
-    ==>sas_get_port_device()
-      ==>oob_mode is OOB_NOT_CONNECTED and device
-         is wrongly taken as expander
-
-This at last lead to the panic when libsas trying to issue a command to
-discover the device.
-
-[183047.614035] Unable to handle kernel NULL pointer dereference at
-virtual address 0000000000000058
-[183047.622896] Mem abort info:
-[183047.625762]   ESR = 0x96000004
-[183047.628893]   Exception class = DABT (current EL), IL = 32 bits
-[183047.634888]   SET = 0, FnV = 0
-[183047.638015]   EA = 0, S1PTW = 0
-[183047.641232] Data abort info:
-[183047.644189]   ISV = 0, ISS = 0x00000004
-[183047.648100]   CM = 0, WnR = 0
-[183047.651145] user pgtable: 4k pages, 48-bit VAs, pgdp =
-00000000b7df67be
-[183047.657834] [0000000000000058] pgd=0000000000000000
-[183047.662789] Internal error: Oops: 96000004 [#1] SMP
-[183047.667740] Process kworker/u16:2 (pid: 31291, stack limit =
-0x00000000417c4974)
-[183047.675208] CPU: 0 PID: 3291 Comm: kworker/u16:2 Tainted: G
-W  OE 4.19.36-vhulk1907.1.0.h410.eulerosv2r8.aarch64 #1
-[183047.687015] Hardware name: N/A N/A/Kunpeng Desktop Board D920S10,
-BIOS 0.15 10/22/2019
-[183047.695007] Workqueue: 0000:74:02.0_disco_q sas_discover_domain
-[183047.700999] pstate: 20c00009 (nzCv daif +PAN +UAO)
-[183047.705864] pc : prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
-[183047.711510] lr : prep_ata_v3_hw+0xb0/0x230 [hisi_sas_v3_hw]
-[183047.717153] sp : ffff00000f28ba60
-[183047.720541] x29: ffff00000f28ba60 x28: ffff8026852d7228
-[183047.725925] x27: ffff8027dba3e0a8 x26: ffff8027c05fc200
-[183047.731310] x25: 0000000000000000 x24: ffff8026bafa8dc0
-[183047.736695] x23: ffff8027c05fc218 x22: ffff8026852d7228
-[183047.742079] x21: ffff80007c2f2940 x20: ffff8027c05fc200
-[183047.747464] x19: 0000000000f80800 x18: 0000000000000010
-[183047.752848] x17: 0000000000000000 x16: 0000000000000000
-[183047.758232] x15: ffff000089a5a4ff x14: 0000000000000005
-[183047.763617] x13: ffff000009a5a50e x12: ffff8026bafa1e20
-[183047.769001] x11: ffff0000087453b8 x10: ffff00000f28b870
-[183047.774385] x9 : 0000000000000000 x8 : ffff80007e58f9b0
-[183047.779770] x7 : 0000000000000000 x6 : 000000000000003f
-[183047.785154] x5 : 0000000000000040 x4 : ffffffffffffffe0
-[183047.790538] x3 : 00000000000000f8 x2 : 0000000002000007
-[183047.795922] x1 : 0000000000000008 x0 : 0000000000000000
-[183047.801307] Call trace:
-[183047.803827]  prep_ata_v3_hw+0xf8/0x230 [hisi_sas_v3_hw]
-[183047.809127]  hisi_sas_task_prep+0x750/0x888 [hisi_sas_main]
-[183047.814773]  hisi_sas_task_exec.isra.7+0x88/0x1f0 [hisi_sas_main]
-[183047.820939]  hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
-[183047.826757]  smp_execute_task_sg+0xec/0x218
-[183047.831013]  smp_execute_task+0x74/0xa0
-[183047.834921]  sas_discover_expander.part.7+0x9c/0x5f8
-[183047.839959]  sas_discover_root_expander+0x90/0x160
-[183047.844822]  sas_discover_domain+0x1b8/0x1e8
-[183047.849164]  process_one_work+0x1b4/0x3f8
-[183047.853246]  worker_thread+0x54/0x470
-[183047.856981]  kthread+0x134/0x138
-[183047.860283]  ret_from_fork+0x10/0x18
-[183047.863931] Code: f9407a80 528000e2 39409281 72a04002 (b9405800)
-[183047.870097] kernel fault(0x1) notification starting on CPU 0
-[183047.875828] kernel fault(0x1) notification finished on CPU 0
-[183047.881559] Modules linked in: unibsp(OE) hns3(OE) hclge(OE)
-hnae3(OE) mem_drv(OE) hisi_sas_v3_hw(OE) hisi_sas_main(OE)
-[183047.892418] ---[ end trace 4cc26083fc11b783  ]---
-[183047.897107] Kernel panic - not syncing: Fatal exception
-[183047.902403] kernel fault(0x5) notification starting on CPU 0
-[183047.908134] kernel fault(0x5) notification finished on CPU 0
-[183047.913865] SMP: stopping secondary CPUs
-[183047.917861] Kernel Offset: disabled
-[183047.921422] CPU features: 0x2,a2a00a38
-[183047.925243] Memory Limit: none
-[183047.928372] kernel reboot(0x2) notification starting on CPU 0
-[183047.934190] kernel reboot(0x2) notification finished on CPU 0
-[183047.940008] ---[ end Kernel panic - not syncing: Fatal exception
-]---
-
-Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
-Reported-by: Gao Chuan <gaochuan4@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/libsas/sas_discover.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index f47b4b281b14..d7302c2052f9 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -81,12 +81,21 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 		else
- 			dev->dev_type = SAS_SATA_DEV;
- 		dev->tproto = SAS_PROTOCOL_SATA;
--	} else {
-+	} else if (port->oob_mode == SAS_OOB_MODE) {
- 		struct sas_identify_frame *id =
- 			(struct sas_identify_frame *) dev->frame_rcvd;
- 		dev->dev_type = id->dev_type;
- 		dev->iproto = id->initiator_bits;
- 		dev->tproto = id->target_bits;
-+	} else {
-+		/* If the oob mode is OOB_NOT_CONNECTED, the port is
-+		 * disconnected due to race with PHY down. We cannot
-+		 * continue to discover this port
-+		 */
-+		sas_put_device(dev);
-+		pr_warn("Port %016llx is disconnected when discovering\n",
-+			SAS_ADDR(port->attached_sas_addr));
-+		return -ENODEV;
- 	}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c449b68..0d1667d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2737,7 +2737,7 @@ static inline void ufshcd_init_query(struct ufs_hba *hba,
+ 	(*request)->upiu_req.selector = selector;
+ }
  
- 	sas_init_dev(dev);
+-static int ufshcd_query_flag_retry(struct ufs_hba *hba,
++int ufshcd_query_flag_retry(struct ufs_hba *hba,
+ 	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
+ {
+ 	int ret;
+@@ -2759,6 +2759,7 @@ static int ufshcd_query_flag_retry(struct ufs_hba *hba,
+ 			__func__, opcode, idn, ret, retries);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_query_flag_retry);
+ 
+ /**
+  * ufshcd_query_flag() - API function for sending flag query requests
+@@ -2826,6 +2827,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	ufshcd_release(hba);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_query_flag);
+ 
+ /**
+  * ufshcd_query_attr - API function for sending attribute requests
+@@ -2890,6 +2892,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 	ufshcd_release(hba);
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_query_attr);
+ 
+ /**
+  * ufshcd_query_attr_retry() - API function for sending query
+@@ -2904,7 +2907,7 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+  *
+  * Returns 0 for success, non-zero in case of failure
+ */
+-static int ufshcd_query_attr_retry(struct ufs_hba *hba,
++int ufshcd_query_attr_retry(struct ufs_hba *hba,
+ 	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
+ 	u32 *attr_val)
+ {
+@@ -2927,6 +2930,7 @@ static int ufshcd_query_attr_retry(struct ufs_hba *hba,
+ 			__func__, idn, ret, QUERY_REQ_RETRIES);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_query_attr_retry);
+ 
+ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
+ 			enum query_opcode opcode, enum desc_idn idn, u8 index,
+@@ -3024,6 +3028,7 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+ 
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_query_descriptor_retry);
+ 
+ /**
+  * ufshcd_read_desc_length - read the specified descriptor length from header
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index e0fe247..a1d27e6 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -923,8 +923,13 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 			   u8 param_size);
+ int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
++int ufshcd_query_attr_retry(struct ufs_hba *hba, enum query_opcode opcode,
++			    enum attr_idn idn, u8 index, u8 selector,
++			    u32 *attr_val);
+ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	enum flag_idn idn, bool *flag_res);
++int ufshcd_query_flag_retry(struct ufs_hba *hba, enum query_opcode opcode,
++			    enum flag_idn idn, bool *flag_res);
+ 
+ #define SD_ASCII_STD true
+ #define SD_RAW false
 -- 
-2.17.2
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
