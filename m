@@ -2,107 +2,139 @@ Return-Path: <SRS0=c8H+=2A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 989B5C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 01:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A033C2D0BE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 04:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FEE72073D
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 01:40:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D3AD207FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 04:48:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="h12ow5T7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j04JV50r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726589AbfLJBkT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Dec 2019 20:40:19 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:38626 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726538AbfLJBkT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2019 20:40:19 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBA1YOVS103590;
-        Tue, 10 Dec 2019 01:39:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=oyUzKzdeM0sxcJ7Rn8NSTTlnn7CO7NRM2Vib/efPBPs=;
- b=h12ow5T7teHpqRI6Npdj7UzbVXmJKU77i1ypMi9Q13tfEXzCbqI/8nxxi6U+KvUVY7tg
- 5u974DQR736kYxbORtmpntRzpITG2VW8T/xIATmTkLpECXRahq8fsSqlj6NDa9GNnL+z
- QOcm4B4pBSCTDN4QRl3JSzDcdj1LZPRgJuthK/7FF38rAaPzY2D4x/mzkpEirmOuVL7Z
- Ik+fMuiUOkm8A5SfjeL50aQctQmBliPGjCUEq3AjC5pDRwI4SpjB7GVtM29M65dLrAl9
- suwIc07TDWl91LASdYvApd275xT6bt1yJgwmosLvJUPIh/pmn0jLRAEAxuPd0TQgG/7Y rA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2wrw4myy6r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Dec 2019 01:39:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBA1cvni170721;
-        Tue, 10 Dec 2019 01:39:55 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2wsv8awr0m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Dec 2019 01:39:55 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBA1dqKd019213;
-        Tue, 10 Dec 2019 01:39:52 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 09 Dec 2019 17:39:51 -0800
-To:     Lee Duncan <LDuncan@suse.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "wubo \(T\)" <wubo40@huawei.com>,
-        "cleech\@redhat.com" <cleech@redhat.com>,
-        "jejb\@linux.ibm.com" <jejb@linux.ibm.com>,
-        "open-iscsi\@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "linux-scsi\@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>,
-        Mingfangsen <mingfangsen@huawei.com>,
-        "liuzhiqiang \(I\)" <liuzhiqiang26@huawei.com>
-Subject: Re: [PATCH V4] scsi: avoid potential deadlock in iscsi_if_rx func
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E3D4D2@dggeml505-mbx.china.huawei.com>
-        <yq1o8whqem3.fsf@oracle.com>
-        <ccda52ac-2ea7-b0d2-e36e-08f162569c7c@suse.com>
-Date:   Mon, 09 Dec 2019 20:39:49 -0500
-In-Reply-To: <ccda52ac-2ea7-b0d2-e36e-08f162569c7c@suse.com> (Lee Duncan's
-        message of "Tue, 10 Dec 2019 00:40:59 +0000")
-Message-ID: <yq18snlnel6.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726926AbfLJEsp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Dec 2019 23:48:45 -0500
+Received: from mail-io1-f41.google.com ([209.85.166.41]:38554 "EHLO
+        mail-io1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726841AbfLJEsp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Dec 2019 23:48:45 -0500
+Received: by mail-io1-f41.google.com with SMTP id v3so350634ioj.5;
+        Mon, 09 Dec 2019 20:48:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=JqQAW5M+Dz64POoDX3kKE3QnRN5AZsvU4kacJVjWMM4=;
+        b=j04JV50rUqL7yGGFbW3486OoTYcm+k/Ph4IrE8Wr5bzFIqw9Fu4P19kh6cS9+LZiBI
+         uuwgj9CQC3kMZ4apOPi2gn6zamVxj+VryOEH7MDfiX2/1NVYnJLhZTB4VEbsp/Ax8OdQ
+         9NqEOrde+mq24Rk6mLKGZe0vngnekkzuxdO6YqxtnFjpu1xDw3X1Qul+GExFEWHEyRMw
+         RXKGO2TSQk94uW8BeOEiixKF+W7w62InRIWPG5KU35UJ0lJWWtGjq2X/WIz4hMFW9Lgf
+         C5FjVtWJPNrv82aoCdvVFXgzhwG4lDdS1x3j8C89iNBxsF4h1kgT6o/I576gLBamaNDy
+         7pVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=JqQAW5M+Dz64POoDX3kKE3QnRN5AZsvU4kacJVjWMM4=;
+        b=qCjCkjf97/NrHLoRGNVCbePKacpg1c/YEA2WvfUcvFaS2XK7qdPt+wj2Of5d8rNxix
+         fQGVGm7dhMkzY56hthoTEQ31SmWgxZTna0vv2zaNUh3lkq5mtjiqcZJCYPgqHy3dkgQf
+         JUIlP+CyPMQPFrDH0VK+X3PhS9lZ6SsH1dRJ1v6HXY93kV6EGAxNzhOpS6d3YJUstf2z
+         KoaJ4wepOhiMKaergPYqgua3bfdOY7SYmyekVlB8PYAnOFhui+AceZCb8OGCNN3lj1fq
+         X0IyBhYDjhz+Zon85e17Oe0HJfsnjCC2vUPTYHDDF9MVQdeHjYW7uRtErtkfgIbRiNij
+         5TtA==
+X-Gm-Message-State: APjAAAULSZwWDyM66lYoMomucPE6IbTZn8V5jhWv2Nz3RJuMhxOMs2nQ
+        ZyLuw9XMotAv2iA7IfL8RohQrUt7fZL/M5YTujZQEU7d
+X-Google-Smtp-Source: APXvYqyntXLSfPVP66IHT6eRdhPoTzNH7GkZzI4IZCWKH2x2QrDgqMvPQI3fzTaFKqL1SEz26LgGFxxJKZdJG6aEDp0=
+X-Received: by 2002:a05:6638:762:: with SMTP id y2mr27583524jad.78.1575953324305;
+ Mon, 09 Dec 2019 20:48:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9466 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=797
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912100013
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9466 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=860 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912100013
+From:   Steve French <smfrench@gmail.com>
+Date:   Mon, 9 Dec 2019 22:48:33 -0600
+Message-ID: <CAH2r5muJSARbGJ4cOZoGy32mCtUTG9wyEyw8aF06zexshAmqfQ@mail.gmail.com>
+Subject: [PATCH] smb3: fix refcount underflow warning on unmount when no
+ directory leases
+To:     CIFS <linux-cifs@vger.kernel.org>
+Cc:     SCSI development list <linux-scsi@vger.kernel.org>,
+        Arthur Marsh <arthur.marsh@internode.on.net>
+Content-Type: multipart/mixed; boundary="000000000000140bee0599523ac1"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+--000000000000140bee0599523ac1
+Content-Type: text/plain; charset="UTF-8"
 
-Lee,
+Fix refcount underflow warning when unmounting to servers which didn't grant
+directory leases.
 
-> My sincere apologies. I told wubo I had already reviewed the patch, so
-> he didn't need another Reviewed-by from me. I see I was wrong.
+[  301.680095] refcount_t: underflow; use-after-free.
+[  301.680192] WARNING: CPU: 1 PID: 3569 at lib/refcount.c:28
+refcount_warn_saturate+0xb4/0xf3
+...
+[  301.682139] Call Trace:
+[  301.682240]  close_shroot+0x97/0xda [cifs]
+[  301.682351]  SMB2_tdis+0x7c/0x176 [cifs]
+[  301.682456]  ? _get_xid+0x58/0x91 [cifs]
+[  301.682563]  cifs_put_tcon.part.0+0x99/0x202 [cifs]
+[  301.682637]  ? ida_free+0x99/0x10a
+[  301.682727]  ? cifs_umount+0x3d/0x9d [cifs]
+[  301.682829]  cifs_put_tlink+0x3a/0x50 [cifs]
+[  301.682929]  cifs_umount+0x44/0x9d [cifs]
 
-OK.
+Fixes: 72e73c78c446 ("cifs: close the shared root handle on tree disconnect")
 
-The patch was all mangled so I had to apply the changes by hand. Can't
-say that I'm a big fan of retries going negative but I guess that's just
-personal taste.
-
-Applied to 5.5/scsi-fixes. Thanks!
+Signed-off-by: Steve French <stfrench@microsoft.com>
+Acked-by: Ronnie Sahlberg <lsahlber@redhat.com>
+Reviewed-by: Aurelien Aptel <aaptel@suse.com>
+Reviewed-by: Pavel Shilovsky <pshilov@microsoft.com>
+Reported-and-tested-by: Arthur Marsh <arthur.marsh@internode.on.net>
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+
+Steve
+
+--000000000000140bee0599523ac1
+Content-Type: text/x-patch; charset="US-ASCII"; 
+	name="0001-smb3-fix-refcount-underflow-warning-on-unmount-when-.patch"
+Content-Disposition: attachment; 
+	filename="0001-smb3-fix-refcount-underflow-warning-on-unmount-when-.patch"
+Content-Transfer-Encoding: base64
+Content-ID: <f_k3zdwsyh0>
+X-Attachment-Id: f_k3zdwsyh0
+
+RnJvbSAyODEzOTM4OTRhZjljYzNmOTQ4MzIwNDQ3NTAxNGU4OWQ3Mjg5ODdjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBTdGV2ZSBGcmVuY2ggPHN0ZnJlbmNoQG1pY3Jvc29mdC5jb20+
+CkRhdGU6IE1vbiwgOSBEZWMgMjAxOSAxOTo0NzoxMCAtMDYwMApTdWJqZWN0OiBbUEFUQ0ggMS8y
+XSBzbWIzOiBmaXggcmVmY291bnQgdW5kZXJmbG93IHdhcm5pbmcgb24gdW5tb3VudCB3aGVuIG5v
+CiBkaXJlY3RvcnkgbGVhc2VzCgpGaXggcmVmY291bnQgdW5kZXJmbG93IHdhcm5pbmcgd2hlbiB1
+bm1vdW50aW5nIHRvIHNlcnZlcnMgd2hpY2ggZGlkbid0IGdyYW50CmRpcmVjdG9yeSBsZWFzZXMu
+CgpbICAzMDEuNjgwMDk1XSByZWZjb3VudF90OiB1bmRlcmZsb3c7IHVzZS1hZnRlci1mcmVlLgpb
+ICAzMDEuNjgwMTkyXSBXQVJOSU5HOiBDUFU6IDEgUElEOiAzNTY5IGF0IGxpYi9yZWZjb3VudC5j
+OjI4CnJlZmNvdW50X3dhcm5fc2F0dXJhdGUrMHhiNC8weGYzCi4uLgpbICAzMDEuNjgyMTM5XSBD
+YWxsIFRyYWNlOgpbICAzMDEuNjgyMjQwXSAgY2xvc2Vfc2hyb290KzB4OTcvMHhkYSBbY2lmc10K
+WyAgMzAxLjY4MjM1MV0gIFNNQjJfdGRpcysweDdjLzB4MTc2IFtjaWZzXQpbICAzMDEuNjgyNDU2
+XSAgPyBfZ2V0X3hpZCsweDU4LzB4OTEgW2NpZnNdClsgIDMwMS42ODI1NjNdICBjaWZzX3B1dF90
+Y29uLnBhcnQuMCsweDk5LzB4MjAyIFtjaWZzXQpbICAzMDEuNjgyNjM3XSAgPyBpZGFfZnJlZSsw
+eDk5LzB4MTBhClsgIDMwMS42ODI3MjddICA/IGNpZnNfdW1vdW50KzB4M2QvMHg5ZCBbY2lmc10K
+WyAgMzAxLjY4MjgyOV0gIGNpZnNfcHV0X3RsaW5rKzB4M2EvMHg1MCBbY2lmc10KWyAgMzAxLjY4
+MjkyOV0gIGNpZnNfdW1vdW50KzB4NDQvMHg5ZCBbY2lmc10KCkZpeGVzOiA3MmU3M2M3OGM0NDYg
+KCJjaWZzOiBjbG9zZSB0aGUgc2hhcmVkIHJvb3QgaGFuZGxlIG9uIHRyZWUgZGlzY29ubmVjdCIp
+CgpTaWduZWQtb2ZmLWJ5OiBTdGV2ZSBGcmVuY2ggPHN0ZnJlbmNoQG1pY3Jvc29mdC5jb20+CkFj
+a2VkLWJ5OiBSb25uaWUgU2FobGJlcmcgPGxzYWhsYmVyQHJlZGhhdC5jb20+ClJldmlld2VkLWJ5
+OiBBdXJlbGllbiBBcHRlbCA8YWFwdGVsQHN1c2UuY29tPgpSZXZpZXdlZC1ieTogUGF2ZWwgU2hp
+bG92c2t5IDxwc2hpbG92QG1pY3Jvc29mdC5jb20+ClJlcG9ydGVkLWFuZC10ZXN0ZWQtYnk6IEFy
+dGh1ciBNYXJzaCA8YXJ0aHVyLm1hcnNoQGludGVybm9kZS5vbi5uZXQ+Ci0tLQogZnMvY2lmcy9z
+bWIycGR1LmMgfCAzICsrLQogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxl
+dGlvbigtKQoKZGlmZiAtLWdpdCBhL2ZzL2NpZnMvc21iMnBkdS5jIGIvZnMvY2lmcy9zbWIycGR1
+LmMKaW5kZXggMGFiNmIxMjAwMjg4Li5kMjY1OGY1MWZmNjAgMTAwNjQ0Ci0tLSBhL2ZzL2NpZnMv
+c21iMnBkdS5jCisrKyBiL2ZzL2NpZnMvc21iMnBkdS5jCkBAIC0xODQ3LDcgKzE4NDcsOCBAQCBT
+TUIyX3RkaXMoY29uc3QgdW5zaWduZWQgaW50IHhpZCwgc3RydWN0IGNpZnNfdGNvbiAqdGNvbikK
+IAlpZiAoKHRjb24tPm5lZWRfcmVjb25uZWN0KSB8fCAodGNvbi0+c2VzLT5uZWVkX3JlY29ubmVj
+dCkpCiAJCXJldHVybiAwOwogCi0JY2xvc2Vfc2hyb290KCZ0Y29uLT5jcmZpZCk7CisJaWYgKHRj
+b24tPmNyZmlkLmlzX3ZhbGlkKQorCQljbG9zZV9zaHJvb3QoJnRjb24tPmNyZmlkKTsKIAogCXJj
+ID0gc21iMl9wbGFpbl9yZXFfaW5pdChTTUIyX1RSRUVfRElTQ09OTkVDVCwgdGNvbiwgKHZvaWQg
+KiopICZyZXEsCiAJCQkgICAgICZ0b3RhbF9sZW4pOwotLSAKMi4yMy4wCgo=
+--000000000000140bee0599523ac1--
