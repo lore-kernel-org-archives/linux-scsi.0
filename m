@@ -2,214 +2,109 @@ Return-Path: <SRS0=c8H+=2A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 929C2C2D0C4
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 08:06:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4946C2D0C4
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 09:45:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 686F42077B
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 08:06:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D42420663
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 09:45:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DcSTjB+H"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eYtAXHNj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbfLJIGU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Dec 2019 03:06:20 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:54064 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726071AbfLJIGT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Dec 2019 03:06:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575965177;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BiwVSVrkVC5x1zEcwCmZ0emg/mFsMseNMfs46qx16pM=;
-        b=DcSTjB+HDsCZOsGU6mizQKAG430HCIana6gUScdszullzDN8QrFW/3Ycv43Y+wO1JtvczP
-        p6Wl2FZnX+i73jEz6r7qRAY/ttrNM0Bz7UqRLgMuBUMZZZAbCdEBhRpZs6P44VKJ8ma+ep
-        OiGLAyR8AciEd+aIWiwHIh4Hmx2Qego=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-192-4ovWJzv0PRWwsIUU_SAzXQ-1; Tue, 10 Dec 2019 03:06:12 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 712341852E23;
-        Tue, 10 Dec 2019 08:06:09 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-26.pek2.redhat.com [10.72.8.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EB2415D70D;
-        Tue, 10 Dec 2019 08:05:55 +0000 (UTC)
-Date:   Tue, 10 Dec 2019 16:05:50 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191210080550.GA5699@ming.t460p>
-References: <alpine.LNX.2.21.1.1911271055200.8@nippy.intranet>
- <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
- <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
- <20191128091712.GD15549@ming.t460p>
- <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
- <20191129005734.GB1829@ming.t460p>
- <20191129023555.GA8620@ming.t460p>
- <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
- <20191203022337.GE25002@ming.t460p>
- <8196b014b1a4d91169bf3b0d68905109aeaf2191.camel@unipv.it>
+        id S1727022AbfLJJpN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Dec 2019 04:45:13 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:42972 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbfLJJpN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Dec 2019 04:45:13 -0500
+Received: by mail-ot1-f68.google.com with SMTP id 66so14947458otd.9
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Dec 2019 01:45:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=f0hX1Q9n2M6XKrv28o3J4nDH2VccV/c+e5EpwuDXaV8=;
+        b=eYtAXHNjbJi0coWRbSWx/MvEE1yATN8Gf5ucGHbk8+GIV8B+gUo0G6Rl1iXdXwCu9h
+         AbjbQbUWzVO/Bg2sZ5hP7E2TUpAmKWVNxbhVJPF4B/wATGIilAc/aF+BL/Xc2O+uJbjy
+         fuAzaQr/FOWKBKl3+R0ue65031yPbkBhG3ZeQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=f0hX1Q9n2M6XKrv28o3J4nDH2VccV/c+e5EpwuDXaV8=;
+        b=DeoqgQ1Deos7SfIxD6PDm5UnYNK/5Tqu/6MhRvh3Qs7Lpcwt2yJhKETgw+hdTQKjSC
+         mHjJrOdSqkqMBodZN/Kvgmoidkk2t/5eIN/TWYkwXuWHT7/YadOF06uaiWC3qgVTw7TF
+         FDwk0b1emMU/X5K9GhfFuo5twgiPoHtNTZvh3mx6J5H7fmWtKjBVr+8t/NKBqG8M2Hly
+         BJRGIgO0ncoJJabsgon6ridG3v8IaiBZ65jaRcbJvtj1GEh1aDOLXWjIdKBS7EAmiULd
+         qhq/Ix2rNQKjMfIr3TqX4kqhVu/pX4leLvwsJbZl8cqkIyMkF0Xza8o++JnYbcxYldIK
+         LGrQ==
+X-Gm-Message-State: APjAAAVB2S9z8R+Fy4RHjg2eQYt8/Oy81T/a8BqtnvO3Zyy1FMwfgAUD
+        cQSCFqCgXVx2UHaTMw2QW+HmBpORKCbUhQmeWDROXQ==
+X-Google-Smtp-Source: APXvYqzXmWF7kmHvwlQo+xBOGKIDgKUXO26i22KHYHNWJeQSopq7Stgp7SZXldjNy69rP8d22wWHs8UPpwcU7bWGHKg=
+X-Received: by 2002:a9d:76c5:: with SMTP id p5mr10471945otl.61.1575971112100;
+ Tue, 10 Dec 2019 01:45:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <8196b014b1a4d91169bf3b0d68905109aeaf2191.camel@unipv.it>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: 4ovWJzv0PRWwsIUU_SAzXQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+References: <20191203093652.gyntgvnkw2udatyc@kili.mountain>
+In-Reply-To: <20191203093652.gyntgvnkw2udatyc@kili.mountain>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Tue, 10 Dec 2019 15:15:00 +0530
+Message-ID: <CAK=zhgrQ_9R+kWhMWG7D0iqsoTb=Q6WQKhN3ydeCxt-uK-CL-g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Fix double free in attach error handling
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Dec 10, 2019 at 08:35:43AM +0100, Andrea Vai wrote:
-> Il giorno mar, 03/12/2019 alle 10.23 +0800, Ming Lei ha scritto:
-> > On Fri, Nov 29, 2019 at 03:41:01PM +0100, Andrea Vai wrote:
-> > > Il giorno ven, 29/11/2019 alle 10.35 +0800, Ming Lei ha scritto:
-> > > > On Fri, Nov 29, 2019 at 08:57:34AM +0800, Ming Lei wrote:
-> > > >=20
-> > > > > [...]
-> > > >=20
-> > > > > Andrea, can you collect the following log when running the
-> > test
-> > > > > on current new(bad) kernel?
-> > > > >=20
-> > > > > =09/usr/share/bcc/tools/stackcount  -K
-> > blk_mq_make_request
-> > > >=20
-> > > > Instead, please run the following trace, given insert may be
-> > > > called from other paths, such as flush plug:
-> > > >=20
-> > > > =09/usr/share/bcc/tools/stackcount -K t:block:block_rq_insert
-> > >=20
-> > > Attached, for new (patched) bad kernel.
-> > >=20
-> > > Produced by: start the trace script (with the pendrive already
-> > > plugged), wait some seconds, run the test (1 trial, 1 GB), wait
-> > for
-> > > the test to finish, stop the trace.
-> > >=20
-> > > The copy took ~1700 seconds.
-> >=20
-> > See the two path[1][2] of inserting request, and path[1] is
-> > triggered
-> > 4358 times, and the path[2] is triggered 5763 times.
-> >=20
-> > The path[2] is expected behaviour. Not sure path [1] is correct,
-> > given
-> > ext4_release_file() is supposed to be called when this inode is
-> > released. That means the file is closed 4358 times during 1GB file
-> > copying to usb storage.
-> >=20
-> > Cc filesystem list.
-> >=20
-> >=20
-> > [1] insert requests when returning to user mode from syscall
-> >=20
-> >   b'blk_mq_sched_request_inserted'
-> >   b'blk_mq_sched_request_inserted'
-> >   b'dd_insert_requests'
-> >   b'blk_mq_sched_insert_requests'
-> >   b'blk_mq_flush_plug_list'
-> >   b'blk_flush_plug_list'
-> >   b'io_schedule_prepare'
-> >   b'io_schedule'
-> >   b'rq_qos_wait'
-> >   b'wbt_wait'
-> >   b'__rq_qos_throttle'
-> >   b'blk_mq_make_request'
-> >   b'generic_make_request'
-> >   b'submit_bio'
-> >   b'ext4_io_submit'
-> >   b'ext4_writepages'
-> >   b'do_writepages'
-> >   b'__filemap_fdatawrite_range'
-> >   b'ext4_release_file'
-> >   b'__fput'
-> >   b'task_work_run'
-> >   b'exit_to_usermode_loop'
-> >   b'do_syscall_64'
-> >   b'entry_SYSCALL_64_after_hwframe'
-> >     4358
-> >=20
-> > [2] insert requests from writeback wq context
-> >=20
-> >   b'blk_mq_sched_request_inserted'
-> >   b'blk_mq_sched_request_inserted'
-> >   b'dd_insert_requests'
-> >   b'blk_mq_sched_insert_requests'
-> >   b'blk_mq_flush_plug_list'
-> >   b'blk_flush_plug_list'
-> >   b'io_schedule_prepare'
-> >   b'io_schedule'
-> >   b'rq_qos_wait'
-> >   b'wbt_wait'
-> >   b'__rq_qos_throttle'
-> >   b'blk_mq_make_request'
-> >   b'generic_make_request'
-> >   b'submit_bio'
-> >   b'ext4_io_submit'
-> >   b'ext4_bio_write_page'
-> >   b'mpage_submit_page'
-> >   b'mpage_process_page_bufs'
-> >   b'mpage_prepare_extent_to_map'
-> >   b'ext4_writepages'
-> >   b'do_writepages'
-> >   b'__writeback_single_inode'
-> >   b'writeback_sb_inodes'
-> >   b'__writeback_inodes_wb'
-> >   b'wb_writeback'
-> >   b'wb_workfn'
-> >   b'process_one_work'
-> >   b'worker_thread'
-> >   b'kthread'
-> >   b'ret_from_fork'
-> >     5763
-> >=20
-> > Thanks,
-> > Ming
-> >=20
->=20
-> Is there any update on this? Sorry if I am making noise, but I would
-> like to help to improve the kernel (or fix it) if I can help.
-> Otherwise, please let me know how to consider this case,
+On Tue, Dec 3, 2019 at 3:07 PM Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>
+> The caller also calls _base_release_memory_pools() on error so it
+> leads to a number of double frees:
+>
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->chain_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->hpr_lookup' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->internal_lookup' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->pcie_sgl_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_free_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_post_free_array_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_post_free_dma_pool' double freed
+> drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->sense_dma_pool' double freed
+>
+> Fixes: 74522a92bbf0 ("scsi: mpt3sas: Optimize I/O memory consumption in driver.")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-IMO, the extra write path from exit_to_usermode_loop() isn't expected,
-that should be the reason why write IO order is changed, then performance
-drops on your USB storage.
-
-We need our fs/ext4 experts to take a look.
-
-Or can you reproduce the issue on xfs or btrfs?
-
-Thanks,
-Ming
-
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 848fbec7bda6..45fd8dfb7c40 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -5248,7 +5248,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>                                         &ct->chain_buffer_dma);
+>                         if (!ct->chain_buffer) {
+>                                 ioc_err(ioc, "chain_lookup: pci_pool_alloc failed\n");
+> -                               _base_release_memory_pools(ioc);
+>                                 goto out;
+>                         }
+>                 }
+> --
+> 2.11.0
+>
