@@ -2,191 +2,114 @@ Return-Path: <SRS0=c8H+=2A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E53A0C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 11:47:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E35C43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 12:47:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1F05206D5
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 11:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D2E02073B
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 12:47:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="hhBlP788"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727306AbfLJLrK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Dec 2019 06:47:10 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52920 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727272AbfLJLrK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Dec 2019 06:47:10 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id C9434AC44;
-        Tue, 10 Dec 2019 11:47:07 +0000 (UTC)
-Message-ID: <f7a05e5696b1942b3303e20fe0e6891bc9a61090.camel@suse.de>
-Subject: Re: [PATCH 2/4] qla2xxx: Simplify the code for aborting SCSI
- commands
-From:   Martin Wilck <mwilck@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Cc:     linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Date:   Tue, 10 Dec 2019 12:47:57 +0100
-In-Reply-To: <20191209180223.194959-3-bvanassche@acm.org>
-References: <20191209180223.194959-1-bvanassche@acm.org>
-         <20191209180223.194959-3-bvanassche@acm.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.34.2 
+        id S1727412AbfLJMq4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Dec 2019 07:46:56 -0500
+Received: from mout.gmx.net ([212.227.15.15]:54749 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727131AbfLJMqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Dec 2019 07:46:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1575982008;
+        bh=qd6qYQjvAd9VTFlGBK9Mkz5yHOz8UjRTgv5aTL5Cw3Y=;
+        h=X-UI-Sender-Class:To:Cc:From:Subject:Date;
+        b=hhBlP7887M824IbKa7I7yDYEPHAQfH3TMeebNPBLjGWljwdBv2FV/Fm6zl7Of3lBH
+         Ollw67OrhmET+Irwo8BLaoU2YYWW5dDQk+jyLfYqQYqH0GKZgQSpFfloOpzKTfFmZU
+         QGez7W/yJxwtOfYS+Ylc75lQurXYYAoh1I/8oppI=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from [172.17.64.14] ([192.166.200.216]) by mail.gmx.com (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MOA3P-1iP2nZ039V-00OXRx; Tue, 10
+ Dec 2019 13:46:48 +0100
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com
+From:   Arne Jansen <sensille@gmx.net>
+Subject: [PATCH] bnx2fc: protect kref_put by tgt_lock
+Message-ID: <fca82c66-89cd-58fa-22a3-da628f85d1ff@gmx.net>
+Date:   Tue, 10 Dec 2019 13:46:47 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:fzDZQzJWHugSdDAjPOMOchWakvhnamcnXmO126KB0Lus9WTmmDv
+ wU/CcPvk4oobHEO7+ENQSuMQImQrWl6OnMTpApcbQgfnSTX5jbD4Eh1P9VK8qDComfZR/L0
+ r3cu8P5OnOZJm0QyjWCp6qilcFs9Hu4hjjhp4YYrw+/iPRJtfVAYgbE5k/qFnLKkhKzpIcr
+ txc0TMofgOf8U9Y7ZpZDg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:QJOTFJrty3g=:oQzq05IhX8fJue3oJP8hQ9
+ oYJD/7GfrHZXZDqlYM0GhG5MMKBVKaRkblmk2sF+fu+z1pNJqM1QtagW3pcmsvQmZ42nxV+KP
+ n+NKAtqpEb2uJ0sQIzQCFM+/h/cUYRKkESwbRi4J3G8BDteyiBS8+lnMRDuGLVav6+kKp0lO6
+ 7IDoY+ffkETL4FB2aM9rr/hGY4r4KsBtp5C1BuVw7MWRDLOa43WF+SV+klYoo3rq5N5HITzEH
+ diBLNwuu2VM2qWwVK7BO8lqZtYktj/puOJ1gkBWi4yzsC/iY8E5+mQKPx192OWGFRAIHgsf3X
+ A1IUCYcGXw2S8/V0Mk67En8/x3nLJo5fZm8mV+8FBiqCNLXHIm47rM+6ZK0bOSqZXm572JTKG
+ GgSK3SR8NKs9b2n9fySrE0pzXEVMIvFJcxTimSDTq20UTlJsgnkNwZgVvCyv7WyNKKHiLWuia
+ IOB+gtNGamMoWcF/u5s+WEfF1ijYcAjU1CvINIoAJRiAuk66V4csYJ0ZxSDe2ZLvruMM3R9VG
+ nfzkRSobJMREula6WVJq8VLrEN3NiQG/mP39dJ3gjMJr8t4NMbu82wqK3WW8utzfoeVpu1V4h
+ VD1Z9v+UE1Z/NN1+JmZnMQT2DWxI+V5nbNi7Q/FQ0MaWF+Gutw003yvOKmNsw4AXA1SyIvvbb
+ t5KV6jQYNKFUVdyMANrU9T6vt/Tp06wsOke/TybKzj5YVP2EwlsU1iYsHDoshHLJbbmPADkE5
+ kSA7vv/P9+NEIlCvgqap3oQYPTiFweCLZ7xpMg3jswsYkLYsRc+gKlCeXNw31YdHepu4/O7DZ
+ Y/ceqNrS0l8747AzKgT20K50CarGi0BiZ5kdlzTpuqNvUh1oU1Uo3BgWGKtT2qo+CyfYuUp8Q
+ RpENnbNnDGnAZbd9IR3IKusnkcIRsJloEZY/i8WK70TA1zMgxoBMQKzFM1QqfK6Uf0qUbt3w6
+ eN+TiPZDuwd9fqcuZLHJ+3c2hfZI93jgQagDjI9GPzF5b8rhOgxb0Gio9FiI6zwKKJp0I0Jni
+ /arQAAGz+6J7OAkMpACFCEBJHuG2bbz06rJKL77A5bF/uWk5lLng5u+iVpQfiuYkginq8dKB0
+ KBMBEEOuq6mgCOXAGhqsN1cgH6yLsHuDX8DvfSO1X4+Qs272wiUKhaOTBNV26avaYLZpBOtQD
+ DRXgfx4KMJ1lOtYSc0R+dIuClTCGHD9fVimjtSpD9shomTmFJrPR3tJdX+zWcCLzFHU3jgBYs
+ WwUoUWFalykYf/Tm2HNNNLLA5LYST/oaHgOwsMw8oxgBT7jSHBNa7o5JjEDI=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+We have seen several kernel warning about list corruptions involving
+bnx2fc_cmd.link. Reviewing the locking of this element showed that
+in one instance a kref_put on io_req->refcount has been called without
+tgt_lock. As the io_req might still be enqueued on a list protected by
+this lock, this patch adds it. This was the only call site without it.
 
-On Mon, 2019-12-09 at 10:02 -0800, Bart Van Assche wrote:
-> Since the SCSI core does not reuse the tag of the SCSI command that
-> is
-> being aborted by .eh_abort() before .eh_abort() has finished it is
-> not
-> necessary to check from inside that callback whether or not the SCSI
-> command
-> has already completed. Instead, rely on the firmware to return an
-> error code
-> when attempting to abort a command that has already completed.
-> Additionally,
-> rely on the firmware to return an error code when attempting to abort
-> an
-> already aborted command.
+Signed-off-by: Arne Jansen <sensille@gmx.net>
+=2D--
+  drivers/scsi/bnx2fc/bnx2fc_io.c | 5 +++--
+  1 file changed, 3 insertions(+), 2 deletions(-)
 
-Do we have evidence that the firmware can truly be relied upon in this
-respect? It's at least not impossible that the FW (or some version of
-it) relies on the driver not trying to abort commands that have been
-aborted or completed already, and crashes if that assumption is
-violated.
-
-> 
-> In qla2x00_abort_srb(), use blk_mq_request_started() instead of
-> sp->completed and sp->aborted.
-
-See below.
-
-> This patch eliminates several race conditions triggered by the
-> removed member
-> variables.
-> 
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h |  3 ---
->  drivers/scsi/qla2xxx/qla_isr.c |  5 -----
->  drivers/scsi/qla2xxx/qla_os.c  | 15 ++-------------
->  3 files changed, 2 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h
-> b/drivers/scsi/qla2xxx/qla_def.h
-> index 460f443f6471..ab7424318ee8 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -597,9 +597,6 @@ typedef struct srb {
->  	struct fc_port *fcport;
->  	struct scsi_qla_host *vha;
->  	unsigned int start_timer:1;
-> -	unsigned int abort:1;
-> -	unsigned int aborted:1;
-> -	unsigned int completed:1;
->  
->  	uint32_t handle;
->  	uint16_t flags;
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c
-> b/drivers/scsi/qla2xxx/qla_isr.c
-> index 2601d7673c37..721a8d83e350 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -2487,11 +2487,6 @@ qla2x00_status_entry(scsi_qla_host_t *vha,
-> struct rsp_que *rsp, void *pkt)
->  		return;
->  	}
->  
-> -	if (sp->abort)
-> -		sp->aborted = 1;
-> -	else
-> -		sp->completed = 1;
-> -
->  	if (sp->cmd_type != TYPE_SRB) {
->  		req->outstanding_cmds[handle] = NULL;
->  		ql_dbg(ql_dbg_io, vha, 0x3015,
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c
-> b/drivers/scsi/qla2xxx/qla_os.c
-> index 145ea93206f0..2231d99d311b 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -1253,17 +1253,6 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
->  		return SUCCESS;
->  
->  	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
-> -	if (sp->completed) {
-> -		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
-> -		return SUCCESS;
-> -	}
-> -
-> -	if (sp->abort || sp->aborted) {
-> -		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
-> -		return FAILED;
-> -	}
-> -
-> -	sp->abort = 1;
->  	sp->comp = &comp;
->  	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
->  
-> @@ -1696,6 +1685,7 @@ static void qla2x00_abort_srb(struct qla_qpair
-> *qp, srb_t *sp, const int res,
->  	DECLARE_COMPLETION_ONSTACK(comp);
->  	scsi_qla_host_t *vha = qp->vha;
->  	struct qla_hw_data *ha = vha->hw;
-> +	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
->  	int rval;
->  	bool ret_cmd;
->  	uint32_t ratov_j;
-> @@ -1717,7 +1707,6 @@ static void qla2x00_abort_srb(struct qla_qpair
-> *qp, srb_t *sp, const int res,
->  		}
->  
->  		sp->comp = &comp;
-> -		sp->abort =  1;
->  		spin_unlock_irqrestore(qp->qp_lock_ptr, *flags);
->  
->  		rval = ha->isp_ops->abort_command(sp);
-> @@ -1741,7 +1730,7 @@ static void qla2x00_abort_srb(struct qla_qpair
-> *qp, srb_t *sp, const int res,
->  		}
->  
->  		spin_lock_irqsave(qp->qp_lock_ptr, *flags);
-> -		if (ret_cmd && (!sp->completed || !sp->aborted))
-> +		if (ret_cmd && blk_mq_request_started(cmd->request))
->  			sp->done(sp, res);
->  	} else {
->  		sp->done(sp, res);
-
-blk_mq_request_started() returns true for requests in MQ_RQ_COMPLETE
-state. Is this really an equivalent condition?
-
-That said, the condition in the current code is sort of strange, as
-it's equivalent to !(sp->completed && sp->aborted). I'm wondering what
-it means if a command is both completed and aborted. Naïvely thinking
-(and inferring from the current code) this condition could never be
-met, and thus its negation would hold for every command. Perhaps Quinn
-meant "!(sp->completed || sp->aborted)" ?
-
-Regards,
-Martin
-
-
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c
+b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 4c8122a82322..d0d465271e5c 100644
+=2D-- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1097,6 +1097,9 @@ static int bnx2fc_abts_cleanup(struct bnx2fc_cmd
+*io_req)
+          */
+         time_left =3D wait_for_completion_timeout(&io_req->cleanup_done,
+                                                 BNX2FC_FW_TIMEOUT);
++
++       spin_lock_bh(&tgt->tgt_lock);
++
+         if (!time_left) {
+                 BNX2FC_IO_DBG(io_req, "%s(): Wait for cleanup timed
+out.\n",
+                               __func__);
+@@ -1107,8 +1110,6 @@ static int bnx2fc_abts_cleanup(struct bnx2fc_cmd
+*io_req)
+                  */
+                 kref_put(&io_req->refcount, bnx2fc_cmd_release);
+         }
+-
+-       spin_lock_bh(&tgt->tgt_lock);
+         io_req->wait_for_cleanup_comp =3D 0;
+         return SUCCESS;
+  }
+=2D-
+2.11.0
