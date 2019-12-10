@@ -2,98 +2,85 @@ Return-Path: <SRS0=c8H+=2A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 890E7C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 19:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E43AC2D0BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 20:28:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5DF20652
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 19:43:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF9252073D
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Dec 2019 20:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726062AbfLJTn6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Dec 2019 14:43:58 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51308 "EHLO mx1.suse.de"
+        id S1726623AbfLJU2q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Dec 2019 15:28:46 -0500
+Received: from mx2.suse.de ([195.135.220.15]:37336 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726018AbfLJTn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Dec 2019 14:43:58 -0500
+        id S1725999AbfLJU2q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Dec 2019 15:28:46 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 3047CAC81;
-        Tue, 10 Dec 2019 19:43:56 +0000 (UTC)
-Message-ID: <7b0d5e88bd230600ff866ac4a7e88149b2cb9047.camel@suse.de>
-Subject: Re: [PATCH 3/4] qla2xxx: Fix point-to-point mode for qla25xx and
- older
+        by mx1.suse.de (Postfix) with ESMTP id C324BAC9A;
+        Tue, 10 Dec 2019 20:28:44 +0000 (UTC)
+Message-ID: <1755e03c0aba7c684bdf387780bc526ddcc2647c.camel@suse.de>
+Subject: Re: [PATCH 2/4] qla2xxx: Simplify the code for aborting SCSI
+ commands
 From:   Martin Wilck <mwilck@suse.de>
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Cc:     linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>,
         Daniel Wagner <dwagner@suse.de>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Date:   Tue, 10 Dec 2019 20:44:46 +0100
-In-Reply-To: <0c381a12-95c0-054a-a829-4adf3da25381@acm.org>
+Date:   Tue, 10 Dec 2019 21:29:35 +0100
+In-Reply-To: <658d52fb-c614-9ee5-f95f-81509a9de771@acm.org>
 References: <20191209180223.194959-1-bvanassche@acm.org>
-         <20191209180223.194959-4-bvanassche@acm.org>
-         <fdff60ffaacad1b3a850942f61bdd92ab5bc6d12.camel@suse.de>
-         <0c381a12-95c0-054a-a829-4adf3da25381@acm.org>
+         <20191209180223.194959-3-bvanassche@acm.org>
+         <f7a05e5696b1942b3303e20fe0e6891bc9a61090.camel@suse.de>
+         <658d52fb-c614-9ee5-f95f-81509a9de771@acm.org>
 Content-Type: text/plain; charset="ISO-8859-15"
 User-Agent: Evolution 3.34.2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-On Tue, 2019-12-10 at 13:00 -0500, Bart Van Assche wrote:
-> On 12/10/19 5:52 AM, Martin Wilck wrote:
-> > Hello Bart,
+On Tue, 2019-12-10 at 12:57 -0500, Bart Van Assche wrote:
+> On 12/10/19 6:47 AM, Martin Wilck wrote:
+> > blk_mq_request_started() returns true for requests in
+> > MQ_RQ_COMPLETE
+> > state. Is this really an equivalent condition?
 > > 
-> > On Mon, 2019-12-09 at 10:02 -0800, Bart Van Assche wrote:
-> > > Restore point-to-point for qla25xx and older. Although this patch
-> > > initializes
-> > > a field (s_id) that has been marked as "reserved" in the firmware
-> > > manual, it
-> > > works fine on my setup.
-> > > 
-> > > Cc: Quinn Tran <qutran@marvell.com>
-> > > Cc: Martin Wilck <mwilck@suse.com>
-> > > Cc: Daniel Wagner <dwagner@suse.de>
-> > > Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> > > Fixes: 0aabb6b699f7 ("scsi: qla2xxx: Fix Nport ID display value")
-> > > Fixes: edd05de19759 ("scsi: qla2xxx: Changes to support N2N
-> > > logins")
-> > > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> > > ---
-> > >  drivers/scsi/qla2xxx/qla_iocb.c | 14 ++++++++++----
-> > >  1 file changed, 10 insertions(+), 4 deletions(-)
-> > 
-> > Having followed the discussion between you and Roman, I guess this
-> > is
-> > ok. However I'd like to understand better in what ways the N2N
-> > topology
-> > was broken for you. After all, this patch affects only the LOGO
-> > payload. Was it a logout / relogin issue? Were wrong ports being
-> > logged
-> > out?
+> > That said, the condition in the current code is sort of strange, as
+> > it's equivalent to !(sp->completed && sp->aborted). I'm wondering
+> > what
+> > it means if a command is both completed and aborted. Naïvely
+> > thinking
+> > (and inferring from the current code) this condition could never be
+> > met, and thus its negation would hold for every command. Perhaps
+> > Quinn
+> > meant "!(sp->completed || sp->aborted)" ?
 > 
 > Hi Martin,
 > 
-> Without this patch N2N login fails for 25xx adapters. With this patch
-> N2N login succeeds for 25xx adapters. You may have noticed that
-> Martin
-> Petersen asked Himanshu for advice in another e-mail thread about how
-> to
-> address this regression.
+> The only caller of qla2x00_abort_srb() is qla2x00_abort_all_cmds().
+> That
+> function should only be called after completion interrupts have been
+> disabled. In other words, I don't think that we have to worry about
+> blk_mq_request_started() encountering the MQ_RQ_COMPLETE state. No
+> request should have that state when qla2x00_abort_all_cmds() is
+> called.
 
-Of course I did. It still kind of baffles me that a change in the LOGO
-iocb causes LOGIN to fail, but whatever.
+I thought avoiding a race between completion and abort was the whole
+point of f45bca8c5052 ("scsi: qla2xxx: Fix double scsi_done for abort
+path"), which introduced the code that you're now changing. But I must
+be overlooking something then, as Himanshu has acked this.
 
 Martin
+
 
 
