@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 894C8C00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68576C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 605CD24654
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F9FC24654
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078902;
-	bh=Qg9zV/+M2zmODgLZIIMHmF0ZnnWlnBh71Hg7gizc5U0=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=BUphFk4JQNMr7mtpNmIbUJ8O5/hAiiQRrublSjAvR8n6ywOFTe5CJMLqjE8mwNmmJ
-	 Ub7hgXsSvmIceJxtcUthCn/LiHDisHiPzyGfCYUt6cAK4T2Qt295mcn1AomTrlFnIk
-	 T5wFuU6/v6d9UMsb8C23GuMglPhovsgP6qK41KbM=
+	s=default; t=1576078903;
+	bh=MZsrq9kkQXCkYz6GWktLYGpue3EYTn3MVXewmYPrJN0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=F7V2iYErQjW3Y+rizHW8ZdpjuSx13qW0+VmP83F+WfOfg75kJogZ8jvcurTjS5cqg
+	 jpgt6/urnbhVg0RJEiyasQdb6rokETFeE+uFCD5TMiPPgU6tjmyjtHsUGmgl09C0xu
+	 vl4QwoHIkUA8F1+ogYukffEUU/yCotd/4Ip9aB+E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388628AbfLKPlj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:41:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43940 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387890AbfLKPfM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2387844AbfLKPfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 11 Dec 2019 10:35:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33906 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733014AbfLKP17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:27:59 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E04F2173E;
-        Wed, 11 Dec 2019 15:35:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0B7BC2467F;
+        Wed, 11 Dec 2019 15:27:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078512;
-        bh=Qg9zV/+M2zmODgLZIIMHmF0ZnnWlnBh71Hg7gizc5U0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=O4b4ZjcnOZZUPSd0073TJyIr8owKi5SRdnv0IjO+5+SrkXO9u8yJIuEuwA43lPKi3
-         kcS9L7X3f40y8WrTA+7BZ040cYY5IYBG9QpAr+dJg5ODzxkSSLf6JkXp1M2Lfm1mC4
-         IvNEbI6/qmZ1ey+MniKBrwfinA7e306fOo0rOxjk=
+        s=default; t=1576078078;
+        bh=MZsrq9kkQXCkYz6GWktLYGpue3EYTn3MVXewmYPrJN0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=1rJBjVU0GA3qi2QFmch5HLgefkvHKSFGacAeype7nANfzSlKmbDlPS1tuw7yxwD/d
+         LKTMImWoNgB03QAkmtbxyZv4xl0E14w6SOz0nEwfhgHkotq5uYB0f7kGtQFyki1U1M
+         AAhrT8D1obqB1Q0vupTsM/VVEyCygtW/Mb3EH5o4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 01/42] scsi: mpt3sas: Fix clear pending bit in ioctl status
-Date:   Wed, 11 Dec 2019 10:34:29 -0500
-Message-Id: <20191211153510.23861-1-sashal@kernel.org>
+Cc:     =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>,
+        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 69/79] cdrom: respect device capabilities during opening action
+Date:   Wed, 11 Dec 2019 10:26:33 -0500
+Message-Id: <20191211152643.23056-69-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
+References: <20191211152643.23056-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -57,43 +59,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Diego Elio Pettenò <flameeyes@flameeyes.com>
 
-[ Upstream commit 782b281883caf70289ba6a186af29441a117d23e ]
+[ Upstream commit 366ba7c71ef77c08d06b18ad61b26e2df7352338 ]
 
-When user issues diag register command from application with required size,
-and if driver unable to allocate the memory, then it will fail the register
-command. While failing the register command, driver is not currently
-clearing MPT3_CMD_PENDING bit in ctl_cmds.status variable which was set
-before trying to allocate the memory. As this bit is set, subsequent
-register command will be failed with BUSY status even when user wants to
-register the trace buffer will less memory.
+Reading the TOC only works if the device can play audio, otherwise
+these commands fail (and possibly bring the device to an unhealthy
+state.)
 
-Clear MPT3_CMD_PENDING bit in ctl_cmds.status before returning the diag
-register command with no memory status.
+Similarly, cdrom_mmc3_profile() should only be called if the device
+supports generic packet commands.
 
-Link: https://lore.kernel.org/r/1568379890-18347-4-git-send-email-sreekanth.reddy@broadcom.com
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Diego Elio Pettenò <flameeyes@flameeyes.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/cdrom/cdrom.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 26cdc127ac89c..90a87e59ff602 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1465,7 +1465,8 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
- 			    " for diag buffers, requested size(%d)\n",
- 			    ioc->name, __func__, request_data_sz);
- 			mpt3sas_base_free_smid(ioc, smid);
--			return -ENOMEM;
-+			rc = -ENOMEM;
-+			goto out;
- 		}
- 		ioc->diag_buffer[buffer_type] = request_data;
- 		ioc->diag_buffer_sz[buffer_type] = request_data_sz;
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 933268b8d6a54..d3947388a3ef3 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -996,6 +996,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	tracks->xa = 0;
+ 	tracks->error = 0;
+ 	cd_dbg(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n");
++
++	if (!CDROM_CAN(CDC_PLAY_AUDIO)) {
++		tracks->error = CDS_NO_INFO;
++		return;
++	}
++
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header);
+ 	if (ret) {
+@@ -1162,7 +1168,8 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+ 		ret = open_for_data(cdi);
+ 		if (ret)
+ 			goto err;
+-		cdrom_mmc3_profile(cdi);
++		if (CDROM_CAN(CDC_GENERIC_PACKET))
++			cdrom_mmc3_profile(cdi);
+ 		if (mode & FMODE_WRITE) {
+ 			ret = -EROFS;
+ 			if (cdrom_open_write(cdi))
+@@ -2882,6 +2889,9 @@ int cdrom_get_last_written(struct cdrom_device_info *cdi, long *last_written)
+ 	   it doesn't give enough information or fails. then we return
+ 	   the toc contents. */
+ use_toc:
++	if (!CDROM_CAN(CDC_PLAY_AUDIO))
++		return -ENOSYS;
++
+ 	toc.cdte_format = CDROM_MSF;
+ 	toc.cdte_track = CDROM_LEADOUT;
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &toc)))
 -- 
 2.20.1
 
