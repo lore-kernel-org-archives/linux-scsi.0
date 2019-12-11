@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD797C2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:37:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9DF4C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:38:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A448624654
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:37:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BB1D2077B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:38:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078666;
-	bh=VmnMhx9FNOZ2yZciQgrjukwhK32OsvDogO8aEa19icI=;
+	s=default; t=1576078694;
+	bh=PUapq7A9/OUb4u2QU0C4bn2vpupibtTpKF043A5SH50=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=XBzcvUupziqAVcaT6VgpyCoOoljJ5TmVgPQopCroCaBFoAqfNFJRd5a50nfoSnPD9
-	 yksjoYIpJCBP+hta6xi2VuILb9U5p5Y/Cf3zqEXAHvSm31s5b/nHM8JfsHxyrr5AdR
-	 xNf4aoyaE3FWR+lQMoNuKrO41ZKKPMH3BsaSv80Q=
+	b=H5QYcr32w5UhcshW1FlWYVfdKf7Mu64eTHGJwPadj4xd8C1T9dlvJTnd1XfHUvgLu
+	 0z39RLK9QyneZjMl9OQBW2leBDKsQ5M43KbxAFUnD63aOUDNU/LyLXZ3tOlbHmiOMx
+	 swwemwej2CU2Z1Bp7ZfI3bK4O/Gx6VSvfa1X5Dhk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388121AbfLKPhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:37:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44350 "EHLO mail.kernel.org"
+        id S2388108AbfLKPfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:35:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44112 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388149AbfLKPf2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:35:28 -0500
+        id S2388094AbfLKPfT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:35:19 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C4C5724656;
-        Wed, 11 Dec 2019 15:35:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C4CF624656;
+        Wed, 11 Dec 2019 15:35:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078527;
-        bh=VmnMhx9FNOZ2yZciQgrjukwhK32OsvDogO8aEa19icI=;
+        s=default; t=1576078518;
+        bh=PUapq7A9/OUb4u2QU0C4bn2vpupibtTpKF043A5SH50=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VVp/crhsZiiKKieC34MK+FFRCduCNeTv+OHmlLaWRbLx6NshtRNcXlfQbFFqLYYhg
-         pw2o6Agj9gytVBmFLeiogOZLEkGV8YxQy6yUydCzPENEAlrs9BVfVKx63lzqaD63oo
-         6NVkQj9tuSBRULNLo7uVC3gpsrltxfZyOdG1JzA4=
+        b=eZMGsYjfVIKaAT5FMsH59Vgm9C6U2nIOeOFfgzzXADZwDTiZ3pJPjlt+Lpk2gBECI
+         eLX4rdVtXvpR4h7pcbkVEtcgApSdFlLuldrrYjDKRQH5f3NdQJ5C5UNDjLO5YvVpEQ
+         pRPIi07u8BxeGUNRqHsbIDDuZs+k9A04Nx7dTu5w=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 16/42] scsi: lpfc: Fix duplicate unreg_rpi error in port offline flow
-Date:   Wed, 11 Dec 2019 10:34:44 -0500
-Message-Id: <20191211153510.23861-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 07/42] scsi: csiostor: Don't enable IRQs too early
+Date:   Wed, 11 Dec 2019 10:34:35 -0500
+Message-Id: <20191211153510.23861-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211153510.23861-1-sashal@kernel.org>
 References: <20191211153510.23861-1-sashal@kernel.org>
@@ -59,52 +58,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 7cfd5639d99bec0d27af089d0c8c114330e43a72 ]
+[ Upstream commit d6c9b31ac3064fbedf8961f120a4c117daa59932 ]
 
-If the driver receives a login that is later then LOGO'd by the remote port
-(aka ndlp), the driver, upon the completion of the LOGO ACC transmission,
-will logout the node and unregister the rpi that is being used for the
-node.  As part of the unreg, the node's rpi value is replaced by the
-LPFC_RPI_ALLOC_ERROR value.  If the port is subsequently offlined, the
-offline walks the nodes and ensures they are logged out, which possibly
-entails unreg'ing their rpi values.  This path does not validate the node's
-rpi value, thus doesn't detect that it has been unreg'd already.  The
-replaced rpi value is then used when accessing the rpi bitmask array which
-tracks active rpi values.  As the LPFC_RPI_ALLOC_ERROR value is not a valid
-index for the bitmask, it may fault the system.
+These are called with IRQs disabled from csio_mgmt_tmo_handler() so we
+can't call spin_unlock_irq() or it will enable IRQs prematurely.
 
-Revise the rpi release code to detect when the rpi value is the replaced
-RPI_ALLOC_ERROR value and ignore further release steps.
-
-Link: https://lore.kernel.org/r/20191105005708.7399-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: a3667aaed569 ("[SCSI] csiostor: Chelsio FCoE offload driver")
+Link: https://lore.kernel.org/r/20191019085913.GA14245@mwanda
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/csiostor/csio_lnode.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 1eb9d5f6cea05..cbe808e83f477 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -15995,6 +15995,13 @@ lpfc_sli4_alloc_rpi(struct lpfc_hba *phba)
- static void
- __lpfc_sli4_free_rpi(struct lpfc_hba *phba, int rpi)
- {
-+	/*
-+	 * if the rpi value indicates a prior unreg has already
-+	 * been done, skip the unreg.
-+	 */
-+	if (rpi == LPFC_RPI_ALLOC_ERROR)
-+		return;
-+
- 	if (test_and_clear_bit(rpi, phba->sli4_hba.rpi_bmask)) {
- 		phba->sli4_hba.rpi_count--;
- 		phba->sli4_hba.max_cfg_param.rpi_used--;
+diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+index be5ee2d378155..957767d383610 100644
+--- a/drivers/scsi/csiostor/csio_lnode.c
++++ b/drivers/scsi/csiostor/csio_lnode.c
+@@ -301,6 +301,7 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	struct fc_fdmi_port_name *port_name;
+ 	uint8_t buf[64];
+ 	uint8_t *fc4_type;
++	unsigned long flags;
+ 
+ 	if (fdmi_req->wr_status != FW_SUCCESS) {
+ 		csio_ln_dbg(ln, "WR error:%x in processing fdmi rhba cmd\n",
+@@ -377,13 +378,13 @@ csio_ln_fdmi_rhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	len = (uint32_t)(pld - (uint8_t *)cmd);
+ 
+ 	/* Submit FDMI RPA request */
+-	spin_lock_irq(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_done,
+ 				FCOE_CT, &fdmi_req->dma_buf, len)) {
+ 		CSIO_INC_STATS(ln, n_fdmi_err);
+ 		csio_ln_dbg(ln, "Failed to issue fdmi rpa req\n");
+ 	}
+-	spin_unlock_irq(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ }
+ 
+ /*
+@@ -404,6 +405,7 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	struct fc_fdmi_rpl *reg_pl;
+ 	struct fs_fdmi_attrs *attrib_blk;
+ 	uint8_t buf[64];
++	unsigned long flags;
+ 
+ 	if (fdmi_req->wr_status != FW_SUCCESS) {
+ 		csio_ln_dbg(ln, "WR error:%x in processing fdmi dprt cmd\n",
+@@ -483,13 +485,13 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	attrib_blk->numattrs = htonl(numattrs);
+ 
+ 	/* Submit FDMI RHBA request */
+-	spin_lock_irq(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_rhba_cbfn,
+ 				FCOE_CT, &fdmi_req->dma_buf, len)) {
+ 		CSIO_INC_STATS(ln, n_fdmi_err);
+ 		csio_ln_dbg(ln, "Failed to issue fdmi rhba req\n");
+ 	}
+-	spin_unlock_irq(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ }
+ 
+ /*
+@@ -504,6 +506,7 @@ csio_ln_fdmi_dhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	void *cmd;
+ 	struct fc_fdmi_port_name *port_name;
+ 	uint32_t len;
++	unsigned long flags;
+ 
+ 	if (fdmi_req->wr_status != FW_SUCCESS) {
+ 		csio_ln_dbg(ln, "WR error:%x in processing fdmi dhba cmd\n",
+@@ -534,13 +537,13 @@ csio_ln_fdmi_dhba_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	len += sizeof(*port_name);
+ 
+ 	/* Submit FDMI request */
+-	spin_lock_irq(&hw->lock);
++	spin_lock_irqsave(&hw->lock, flags);
+ 	if (csio_ln_mgmt_submit_req(fdmi_req, csio_ln_fdmi_dprt_cbfn,
+ 				FCOE_CT, &fdmi_req->dma_buf, len)) {
+ 		CSIO_INC_STATS(ln, n_fdmi_err);
+ 		csio_ln_dbg(ln, "Failed to issue fdmi dprt req\n");
+ 	}
+-	spin_unlock_irq(&hw->lock);
++	spin_unlock_irqrestore(&hw->lock, flags);
+ }
+ 
+ /**
 -- 
 2.20.1
 
