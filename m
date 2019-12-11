@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D27C2D0C6
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3330EC2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62185222C4
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 089F7208C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080622;
-	bh=Lw/7K344nPqJmhUu7zRAQPfP9oBF4Zhz7FkPv0BldDE=;
+	s=default; t=1576080637;
+	bh=IEnGbHhjufnM9qjTz5KDmsgsmuFWeWtUss7UjrnQLrA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rUNePJGFCZH3ihEkWB0f7vkvyytAneMItzAd++48jdoPPBhiPa16FZ4zFbqku+VOJ
-	 sdc1+OVpaDMyrZXE79ZwuzInVko8+/uVSBhPKKvyL2qec8CWaBlt5T5NMSuK2g8eUL
-	 nB2mwQpVjYvIwP+hBzMG/dR1KvqMI6v+xc8r8d04=
+	b=ILkL+xPXQc7dteF1Djm8Rc70anZd6KLqQpurVZjFyIzGHTnT8LMjVymDm2tUcOvh0
+	 GyCqMm5OMc76E21y15wenr/dzEM6FjaYG4pxpn/4xoK2fwFn/euL1ahgQeQXD4SXjD
+	 7fzXmesMtjb/85bZRgh7Y9larD2diW2Yu7e6Xuyg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730350AbfLKPL7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:11:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60946 "EHLO mail.kernel.org"
+        id S1731011AbfLKPL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:11:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729513AbfLKPL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:11:59 -0500
+        id S1730036AbfLKPL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:11:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B332D20663;
-        Wed, 11 Dec 2019 15:11:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E9C024658;
+        Wed, 11 Dec 2019 15:11:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077118;
-        bh=Lw/7K344nPqJmhUu7zRAQPfP9oBF4Zhz7FkPv0BldDE=;
+        s=default; t=1576077115;
+        bh=IEnGbHhjufnM9qjTz5KDmsgsmuFWeWtUss7UjrnQLrA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v/ghKvYIg7mrHjUwCu8w1GJdTFsWfZpLSNkn9i6j1eZ4ZsJSz1BRqOVsMLNYXqbBc
-         nNCbyTzN9GQyhH2vZrUnuilz+7Or6mAGTTWertQSChxcwdJAf29mqOll/zAMcoAeKM
-         SgocMiRSGTRDMICJoz3Sv8Cf1BAg81QV7fuWE1AQ=
+        b=T9JenNQy/YMaEcF2I6+IZvWU5BdDvJ0e6szuW/575cGz853cTzo0okGunxqA+1CPe
+         2JtsyAh2tRGmtP007nwbGqg86pXV1t1JkFR5LSzrJZItNQwaqCXB1RjXh0bJygM7L1
+         CxezlxRKkt4TSGH2mOAeX/RGUxFkcNNUdK4X3VLE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 007/134] scsi: lpfc: Fix list corruption in lpfc_sli_get_iocbq
-Date:   Wed, 11 Dec 2019 10:09:43 -0500
-Message-Id: <20191211151150.19073-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 004/134] scsi: lpfc: Fix locking on mailbox command completion
+Date:   Wed, 11 Dec 2019 10:09:40 -0500
+Message-Id: <20191211151150.19073-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -61,113 +61,64 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 15498dc1a55b7aaea4b51ff03e3ff0f662e73f44 ]
+[ Upstream commit 07b8582430370097238b589f4e24da7613ca6dd3 ]
 
-After study, it was determined there was a double free of a CT iocb during
-execution of lpfc_offline_prep and lpfc_offline.  The prep routine issued
-an abort for some CT iocbs, but the aborts did not complete fast enough for
-a subsequent routine that waits for completion. Thus the driver proceeded
-to lpfc_offline, which releases any pending iocbs. Unfortunately, the
-completions for the aborts were then received which re-released the ct
-iocbs.
+Symptoms were seen of the driver not having valid data for mailbox
+commands. After debugging, the following sequence was found:
 
-Turns out the issue for why the aborts didn't complete fast enough was not
-their time on the wire/in the adapter. It was the lpfc_work_done routine,
-which requires the adapter state to be UP before it calls
-lpfc_sli_handle_slow_ring_event() to process the completions. The issue is
-the prep routine takes the link down as part of it's processing.
+The driver maintains a port-wide pointer of the mailbox command that is
+currently in execution. Once finished, the port-wide pointer is cleared
+(done in lpfc_sli4_mq_release()). The next mailbox command issued will set
+the next pointer and so on.
 
-To fix, the following was performed:
+The mailbox response data is only copied if there is a valid port-wide
+pointer.
 
- - Prevent the offline routine from releasing iocbs that have had aborts
-   issued on them. Defer to the abort completions. Also means the driver
-   fully waits for the completions.  Given this change, the recognition of
-   "driver-generated" status which then releases the iocb is no longer
-   valid. As such, the change made in the commit 296012285c90 is reverted.
-   As recognition of "driver-generated" status is no longer valid, this
-   patch reverts the changes made in
-   commit 296012285c90 ("scsi: lpfc: Fix leak of ELS completions on adapter reset")
+In the failing case, it was seen that a new mailbox command was being
+attempted in parallel with the completion.  The parallel path was seeing
+the mailbox no long in use (flag check under lock) and thus set the port
+pointer.  The completion path had cleared the active flag under lock, but
+had not touched the port pointer.  The port pointer is cleared after the
+lock is released. In this case, the completion path cleared the just-set
+value by the parallel path.
 
- - Modify lpfc_work_done to allow slow path completions so that the abort
-   completions aren't ignored.
+Fix by making the calls that clear mbox state/port pointer while under
+lock.  Also slightly cleaned up the error path.
 
- - Updated the fdmi path to recognize a CT request that fails due to the
-   port being unusable. This stops FDMI retries. FDMI will be restarted on
-   next link up.
-
-Link: https://lore.kernel.org/r/20190922035906.10977-14-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20190922035906.10977-8-jsmart2021@gmail.com
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_ct.c      | 6 ++++++
- drivers/scsi/lpfc/lpfc_els.c     | 3 +++
- drivers/scsi/lpfc/lpfc_hbadisc.c | 5 ++++-
- drivers/scsi/lpfc/lpfc_sli.c     | 3 ---
- 4 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 25e86706e2072..f883fac2d2b1d 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1868,6 +1868,12 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT) {
- 			switch ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK)) {
- 			case IOERR_SLI_ABORTED:
-+			case IOERR_SLI_DOWN:
-+				/* Driver aborted this IO.  No retry as error
-+				 * is likely Offline->Online or some adapter
-+				 * error.  Recovery will try again.
-+				 */
-+				break;
- 			case IOERR_ABORT_IN_PROGRESS:
- 			case IOERR_SEQUENCE_TIMEOUT:
- 			case IOERR_ILLEGAL_FRAME:
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 0052b341587d9..f293b48616ae9 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8016,6 +8016,9 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 		if (piocb->vport != vport)
- 			continue;
- 
-+		if (piocb->iocb_flag & LPFC_DRIVER_ABORTED)
-+			continue;
-+
- 		/* On the ELS ring we can have ELS_REQUESTs or
- 		 * GEN_REQUESTs waiting for a response.
- 		 */
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index f7c205e1da485..1286c658ba34f 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -700,7 +700,10 @@ lpfc_work_done(struct lpfc_hba *phba)
- 			if (!(phba->hba_flag & HBA_SP_QUEUE_EVT))
- 				set_bit(LPFC_DATA_READY, &phba->data_flags);
- 		} else {
--			if (phba->link_state >= LPFC_LINK_UP ||
-+			/* Driver could have abort request completed in queue
-+			 * when link goes down.  Allow for this transition.
-+			 */
-+			if (phba->link_state >= LPFC_LINK_DOWN ||
- 			    phba->link_flag & LS_MDS_LOOPBACK) {
- 				pring->flag &= ~LPFC_DEFERRED_RING_EVENT;
- 				lpfc_sli_handle_slow_ring_event(phba, pring,
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index e5413d52e49a2..995a2b56a35ee 100644
+index 614f78dddafe0..e5413d52e49a2 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -11050,9 +11050,6 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				irsp->ulpStatus, irsp->un.ulpWord[4]);
+@@ -13158,13 +13158,19 @@ send_current_mbox:
+ 	phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
+ 	/* Setting active mailbox pointer need to be in sync to flag clear */
+ 	phba->sli.mbox_active = NULL;
++	if (bf_get(lpfc_trailer_consumed, mcqe))
++		lpfc_sli4_mq_release(phba->sli4_hba.mbx_wq);
+ 	spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 	/* Wake up worker thread to post the next pending mailbox command */
+ 	lpfc_worker_wake_up(phba);
++	return workposted;
++
+ out_no_mqe_complete:
++	spin_lock_irqsave(&phba->hbalock, iflags);
+ 	if (bf_get(lpfc_trailer_consumed, mcqe))
+ 		lpfc_sli4_mq_release(phba->sli4_hba.mbx_wq);
+-	return workposted;
++	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	return false;
+ }
  
- 		spin_unlock_irq(&phba->hbalock);
--		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
--		    irsp->un.ulpWord[4] == IOERR_SLI_ABORTED)
--			lpfc_sli_release_iocbq(phba, abort_iocb);
- 	}
- release_iocb:
- 	lpfc_sli_release_iocbq(phba, cmdiocb);
+ /**
 -- 
 2.20.1
 
