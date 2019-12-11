@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D8D1C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7E0FC2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17F5A2467B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD8792077B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078530;
-	bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
+	s=default; t=1576078536;
+	bh=oCM1UPKZGfugxY/zFkaEvRN39bNFEO/SayzMnW2mjgA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=i4DS7AeuoIkaSTZkgHJOAVfYiXJykWbf1xMRyMsgiNJ6WbSBry7kbtfmeXSJ7w64E
-	 bmZAnTJBVfkpfYf/giV1PrEIVQBHARZYOkBDLsBTs5E+QeitCVqKtdX5nrkRvQuq28
-	 G9BSMQ+LeNtOIu0bjvDTZ+DWjX42b+gL7vsZJ30c=
+	b=qVF2hFEAhu774wJW6fTjp4Efq0pv0mn1KaxiEXxXzCLygzqEgI6eS9CnmswgDINBk
+	 X6KDEr/dhs1G8fbm0so4qqIXgicghQV+oF5b7w6Av08tChLXnkIzyH5H/ujg0o3K0y
+	 BhH22evFR4G9PBJ2zLtS5VU30qhC0XhW+2phSOXI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387619AbfLKPf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:35:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44328 "EHLO mail.kernel.org"
+        id S2388178AbfLKPff (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:35:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44546 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388145AbfLKPf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:35:27 -0500
+        id S1733091AbfLKPfe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:35:34 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8E5E72173E;
-        Wed, 11 Dec 2019 15:35:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C353824658;
+        Wed, 11 Dec 2019 15:35:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078526;
-        bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
+        s=default; t=1576078533;
+        bh=oCM1UPKZGfugxY/zFkaEvRN39bNFEO/SayzMnW2mjgA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fF0k86jz5tguddmwPgzuP/yekRSyKh5RksYRAPwaA6BrGbOSx1g8qvo5KP7VCFtf/
-         7m16013crOifQ3LGU3OczTvDnW6TeTyp/8eyLFydCEhaG9n5kJXrEbyyUn8zbACR0s
-         HwmmHdvfhwUF0fCafbObep695j1SEPA6SJcL+CV8=
+        b=pGnjHdpTSL6eXb0KsUuVN+qCz8Gz332th/d5S7HhP9eDO57chaE2wAx35gd7iYQiI
+         MAxItOXEXOUbO1vY7d2HP1Wl/iz4bEsRQj6eGzNmCBpAP9E+sq9m7OKcpMdWuuYAkE
+         rU5NvtAsZzYAMyfDHRPUwGUPTcz0aC+gIoiDs1Kk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        coverity-bot <keescook+coverity-bot@chromium.org>,
+        James Bottomley <James.Bottomley@SteelEye.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 15/42] scsi: tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
-Date:   Wed, 11 Dec 2019 10:34:43 -0500
-Message-Id: <20191211153510.23861-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 22/42] scsi: lpfc: fix: Coverity: lpfc_cmpl_els_rsp(): Null pointer dereferences
+Date:   Wed, 11 Dec 2019 10:34:50 -0500
+Message-Id: <20191211153510.23861-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211153510.23861-1-sashal@kernel.org>
 References: <20191211153510.23861-1-sashal@kernel.org>
@@ -61,52 +63,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit f6b8540f40201bff91062dd64db8e29e4ddaaa9d ]
+[ Upstream commit 6c6d59e0fe5b86cf273d6d744a6a9768c4ecc756 ]
 
-According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
-blocks must be transferred. Make the SCSI tracing code follow SBC-2.
+Coverity reported the following:
 
-Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Link: https://lore.kernel.org/r/20191105215553.185018-1-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+*** CID 101747:  Null pointer dereferences  (FORWARD_NULL)
+/drivers/scsi/lpfc/lpfc_els.c: 4439 in lpfc_cmpl_els_rsp()
+4433     			kfree(mp);
+4434     		}
+4435     		mempool_free(mbox, phba->mbox_mem_pool);
+4436     	}
+4437     out:
+4438     	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
+vvv     CID 101747:  Null pointer dereferences  (FORWARD_NULL)
+vvv     Dereferencing null pointer "shost".
+4439     		spin_lock_irq(shost->host_lock);
+4440     		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
+4441     		spin_unlock_irq(shost->host_lock);
+4442
+4443     		/* If the node is not being used by another discovery thread,
+4444     		 * and we are sending a reject, we are done with it.
+
+Fix by adding a check for non-null shost in line 4438.
+The scenario when shost is set to null is when ndlp is null.
+As such, the ndlp check present was sufficient. But better safe
+than sorry so add the shost check.
+
+Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+Addresses-Coverity-ID: 101747 ("Null pointer dereferences")
+Fixes: 2e0fef85e098 ("[SCSI] lpfc: NPIV: split ports")
+
+CC: James Bottomley <James.Bottomley@SteelEye.com>
+CC: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+CC: linux-next@vger.kernel.org
+Link: https://lore.kernel.org/r/20191111230401.12958-3-jsmart2021@gmail.com
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_trace.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 0ff083bbf5b1f..617a607375908 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -30,15 +30,18 @@ static const char *
- scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
-+	u32 lba = 0, txlen;
- 
- 	lba |= ((cdb[1] & 0x1F) << 16);
- 	lba |=  (cdb[2] << 8);
- 	lba |=   cdb[3];
--	txlen = cdb[4];
-+	/*
-+	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
-+	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
-+	 */
-+	txlen = cdb[4] ? cdb[4] : 256;
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 3702497b5b169..4901bf24916b5 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3863,7 +3863,7 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		mempool_free(mbox, phba->mbox_mem_pool);
+ 	}
+ out:
+-	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
++	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
+ 		spin_lock_irq(shost->host_lock);
+ 		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
+ 		spin_unlock_irq(shost->host_lock);
 -- 
 2.20.1
 
