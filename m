@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 466CCC00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D8D1C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 105502173E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F5A2467B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078519;
-	bh=HNbg6bCPyKPQgU9SbP1UWq4zicPzmIxrkPeN4xAmf0M=;
+	s=default; t=1576078530;
+	bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bofwqdIp0X9AzP2cOzF25kC8+o2Q6LWKassPlL5bFPMYzNXV/wTWgRyFGHHSguCtw
-	 +K4VoRp9QuJuKAuF8GkI1mrJBWzw/H0C6IBJ9/b45S+n7w/ejhiHxIXhC9Yi1la6k8
-	 GQ+VHJigIAh+L2SlvK+RKVRyYDpzo2DvlyhdaXI0=
+	b=i4DS7AeuoIkaSTZkgHJOAVfYiXJykWbf1xMRyMsgiNJ6WbSBry7kbtfmeXSJ7w64E
+	 bmZAnTJBVfkpfYf/giV1PrEIVQBHARZYOkBDLsBTs5E+QeitCVqKtdX5nrkRvQuq28
+	 G9BSMQ+LeNtOIu0bjvDTZ+DWjX42b+gL7vsZJ30c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388078AbfLKPfR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:35:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44062 "EHLO mail.kernel.org"
+        id S2387619AbfLKPf2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:35:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44328 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388061AbfLKPfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:35:17 -0500
+        id S2388145AbfLKPf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:35:27 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7AD472173E;
-        Wed, 11 Dec 2019 15:35:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E5E72173E;
+        Wed, 11 Dec 2019 15:35:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078516;
-        bh=HNbg6bCPyKPQgU9SbP1UWq4zicPzmIxrkPeN4xAmf0M=;
+        s=default; t=1576078526;
+        bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cvbFFqblLAS/5m9ZvYm688pdQloEQfEpDYan7JQ0SO5gycse3RdNIhngSIxyO9yXa
-         c7NphTp5jkugO7jdwofPEBC6+wYqOX1lqIF5fLsSvmStxmATkM51I9vvWQVNbkXdqq
-         d5CZOyc97wLx4RGY6ghA84VO6kceEHXMJeZvCmb0=
+        b=fF0k86jz5tguddmwPgzuP/yekRSyKh5RksYRAPwaA6BrGbOSx1g8qvo5KP7VCFtf/
+         7m16013crOifQ3LGU3OczTvDnW6TeTyp/8eyLFydCEhaG9n5kJXrEbyyUn8zbACR0s
+         HwmmHdvfhwUF0fCafbObep695j1SEPA6SJcL+CV8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     David Disseldorp <ddiss@suse.de>, Lee Duncan <lduncan@suse.com>,
-        Mike Christie <mchristi@redhat.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 05/42] scsi: target: compare full CHAP_A Algorithm strings
-Date:   Wed, 11 Dec 2019 10:34:33 -0500
-Message-Id: <20191211153510.23861-5-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 15/42] scsi: tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
+Date:   Wed, 11 Dec 2019 10:34:43 -0500
+Message-Id: <20191211153510.23861-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211153510.23861-1-sashal@kernel.org>
 References: <20191211153510.23861-1-sashal@kernel.org>
@@ -60,51 +61,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: David Disseldorp <ddiss@suse.de>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 9cef2a7955f2754257a7cddedec16edae7b587d0 ]
+[ Upstream commit f6b8540f40201bff91062dd64db8e29e4ddaaa9d ]
 
-RFC 2307 states:
+According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
+blocks must be transferred. Make the SCSI tracing code follow SBC-2.
 
-  For CHAP [RFC1994], in the first step, the initiator MUST send:
-
-      CHAP_A=<A1,A2...>
-
-   Where A1,A2... are proposed algorithms, in order of preference.
-...
-   For the Algorithm, as stated in [RFC1994], one value is required to
-   be implemented:
-
-       5     (CHAP with MD5)
-
-LIO currently checks for this value by only comparing a single byte in
-the tokenized Algorithm string, which means that any value starting with
-a '5' (e.g. "55") is interpreted as "CHAP with MD5". Fix this by
-comparing the entire tokenized string.
-
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Signed-off-by: David Disseldorp <ddiss@suse.de>
-Link: https://lore.kernel.org/r/20190912095547.22427-2-ddiss@suse.de
+Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Link: https://lore.kernel.org/r/20191105215553.185018-1-bvanassche@acm.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_auth.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_trace.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index f0d97305575d7..aa3f98994c7d6 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -74,7 +74,7 @@ static int chap_check_algorithm(const char *a_str)
- 		if (!token)
- 			goto out;
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 0ff083bbf5b1f..617a607375908 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -30,15 +30,18 @@ static const char *
+ scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
+ {
+ 	const char *ret = trace_seq_buffer_ptr(p);
+-	sector_t lba = 0, txlen = 0;
++	u32 lba = 0, txlen;
  
--		if (!strncmp(token, "5", 1)) {
-+		if (!strcmp(token, "5")) {
- 			pr_debug("Selected MD5 Algorithm\n");
- 			kfree(orig);
- 			return CHAP_DIGEST_MD5;
+ 	lba |= ((cdb[1] & 0x1F) << 16);
+ 	lba |=  (cdb[2] << 8);
+ 	lba |=   cdb[3];
+-	txlen = cdb[4];
++	/*
++	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
++	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
++	 */
++	txlen = cdb[4] ? cdb[4] : 256;
+ 
+-	trace_seq_printf(p, "lba=%llu txlen=%llu",
+-			 (unsigned long long)lba, (unsigned long long)txlen);
++	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
+ 	trace_seq_putc(p, 0);
+ 
+ 	return ret;
 -- 
 2.20.1
 
