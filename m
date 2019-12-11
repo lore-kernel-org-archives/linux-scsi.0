@@ -7,46 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5B5EC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0EE7C00454
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:45:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD15124654
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:45:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB2492173E
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:45:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576079111;
-	bh=tj9wfogutwTq7jhUxlzPs51lqLar4v91elPNG30PenA=;
+	s=default; t=1576079112;
+	bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lAIBCyvwCOtnSc9W5ALOBpyDyKtTQt2Z4XWHuQTUXZju9nCCyY0nBQ5pdjRfEmeeY
-	 OhCuDOGMS6sUbJhVbJuQwRC8V3A/FJYktm4HYFRdLsxsOw6owPhfLwF+ELbkvS/49z
-	 TUlkz+uvAiNnE+YU+ninFVi3PqGUy/+Z6/xDucgc=
+	b=E8MUqVhVfliESvEzybWA90xFdc71ecIkSWRy2JkpfWEemX44Z3i4Yb68aIjKjeTzr
+	 C5hj4PHnLAUPPUb3ywHSdCNK1GjMIFMssSQi3k5AFdBdYB9krFqPWFmxlgS4m1jBAd
+	 4wq3NDar3OJ0wMHXt9kenqU9HxzXpU5XfgEsCZiY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387809AbfLKPpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:45:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:32768 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733271AbfLKP1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1733269AbfLKP1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 11 Dec 2019 10:27:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60986 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732764AbfLKP1M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:27:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 69B8122527;
-        Wed, 11 Dec 2019 15:27:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2E9A624679;
+        Wed, 11 Dec 2019 15:27:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078033;
-        bh=tj9wfogutwTq7jhUxlzPs51lqLar4v91elPNG30PenA=;
+        s=default; t=1576078032;
+        bh=Jviwh3vJgi74E19q35hueu7i1yLk6agFMCkrNyCram8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UHQIX2Dmte15qtiZT6+UfxvcW+qO6NwMeWN+I3H4NDGTXYQIyqrh/PvzMafkfNUDx
-         //vVcXedqMQ1kZ+Oug7QpyvJMP02Ps59/uC8L/bcHh4Ip9A0KMKSBeG16pCkW2Vj+j
-         hw3UX4zbeb0y22+8Ue/XlCQL5PtVj4FJOwndgXcg=
+        b=zLRiNA45b2Xzf6EV+nRkCgj8HXukKAr0GexYttDJtR1MfM3/hOrlo9xeFeoTFf93g
+         wwFZuV6COlzopC/mWfFoensWU1AMWUP6xuTt7LwQuqRyKPEUhuTpzbp2jeJ/4Dt+a3
+         Tg2pLXNbNngmD+4z4aGOwOkyMrDhvZfLAmilIoVI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 27/79] scsi: lpfc: Fix duplicate unreg_rpi error in port offline flow
-Date:   Wed, 11 Dec 2019 10:25:51 -0500
-Message-Id: <20191211152643.23056-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 26/79] scsi: tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
+Date:   Wed, 11 Dec 2019 10:25:50 -0500
+Message-Id: <20191211152643.23056-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 References: <20191211152643.23056-1-sashal@kernel.org>
@@ -59,52 +61,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 7cfd5639d99bec0d27af089d0c8c114330e43a72 ]
+[ Upstream commit f6b8540f40201bff91062dd64db8e29e4ddaaa9d ]
 
-If the driver receives a login that is later then LOGO'd by the remote port
-(aka ndlp), the driver, upon the completion of the LOGO ACC transmission,
-will logout the node and unregister the rpi that is being used for the
-node.  As part of the unreg, the node's rpi value is replaced by the
-LPFC_RPI_ALLOC_ERROR value.  If the port is subsequently offlined, the
-offline walks the nodes and ensures they are logged out, which possibly
-entails unreg'ing their rpi values.  This path does not validate the node's
-rpi value, thus doesn't detect that it has been unreg'd already.  The
-replaced rpi value is then used when accessing the rpi bitmask array which
-tracks active rpi values.  As the LPFC_RPI_ALLOC_ERROR value is not a valid
-index for the bitmask, it may fault the system.
+According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
+blocks must be transferred. Make the SCSI tracing code follow SBC-2.
 
-Revise the rpi release code to detect when the rpi value is the replaced
-RPI_ALLOC_ERROR value and ignore further release steps.
-
-Link: https://lore.kernel.org/r/20191105005708.7399-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Link: https://lore.kernel.org/r/20191105215553.185018-1-bvanassche@acm.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/scsi_trace.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 51b06b8a1dc72..969e0c176ed1d 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -17875,6 +17875,13 @@ lpfc_sli4_alloc_rpi(struct lpfc_hba *phba)
- static void
- __lpfc_sli4_free_rpi(struct lpfc_hba *phba, int rpi)
+diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
+index 0ff083bbf5b1f..617a607375908 100644
+--- a/drivers/scsi/scsi_trace.c
++++ b/drivers/scsi/scsi_trace.c
+@@ -30,15 +30,18 @@ static const char *
+ scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
  {
+ 	const char *ret = trace_seq_buffer_ptr(p);
+-	sector_t lba = 0, txlen = 0;
++	u32 lba = 0, txlen;
+ 
+ 	lba |= ((cdb[1] & 0x1F) << 16);
+ 	lba |=  (cdb[2] << 8);
+ 	lba |=   cdb[3];
+-	txlen = cdb[4];
 +	/*
-+	 * if the rpi value indicates a prior unreg has already
-+	 * been done, skip the unreg.
++	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
++	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
 +	 */
-+	if (rpi == LPFC_RPI_ALLOC_ERROR)
-+		return;
-+
- 	if (test_and_clear_bit(rpi, phba->sli4_hba.rpi_bmask)) {
- 		phba->sli4_hba.rpi_count--;
- 		phba->sli4_hba.max_cfg_param.rpi_used--;
++	txlen = cdb[4] ? cdb[4] : 256;
+ 
+-	trace_seq_printf(p, "lba=%llu txlen=%llu",
+-			 (unsigned long long)lba, (unsigned long long)txlen);
++	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
+ 	trace_seq_putc(p, 0);
+ 
+ 	return ret;
 -- 
 2.20.1
 
