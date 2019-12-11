@@ -2,246 +2,355 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3DC0C2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:45:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A40C2D0C7
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:46:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3644222C4
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:45:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB973206A5
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbfLKUpc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 15:45:32 -0500
-Received: from mout.kundenserver.de ([212.227.17.13]:53105 "EHLO
+        id S1726901AbfLKUqG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 15:46:06 -0500
+Received: from mout.kundenserver.de ([212.227.17.13]:40797 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726141AbfLKUpb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:45:31 -0500
+        with ESMTP id S1726890AbfLKUqE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:46:04 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MF35K-1iUAUW2lIm-00FVsT; Wed, 11 Dec 2019 21:43:48 +0100
+ 1Mzhf5-1hjio20Ph3-00vbw4; Wed, 11 Dec 2019 21:44:23 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Arnd Bergmann <arnd@arndb.de>
 Cc:     linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
-        Arnd Bergmann <arnd@arndb.de>, corbet@lwn.net,
-        catalin.marinas@arm.com, will@kernel.org, jdike@addtoit.com,
-        richard@nod.at, anton.ivanov@cambridgegreys.com,
-        fujita.tomonori@lab.ntt.co.jp, justin@coraid.com,
-        efremov@linux.com, tim@cyberelk.net, mst@redhat.com,
-        jasowang@redhat.com, pbonzini@redhat.com, stefanha@redhat.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, konrad.wilk@oracle.com,
-        roger.pau@citrix.com, bp@alien8.de, davem@davemloft.net,
-        john.garry@huawei.com, brking@us.ibm.com,
-        intel-linux-scu@intel.com, artur.paszkiewicz@intel.com,
-        jinpu.wang@cloud.ionos.com, dgilbert@interlog.com,
-        Kai.Makisara@kolumbus.fi, damien.lemoal@hgst.com, hare@suse.com,
-        linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-um@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 00/24] block, scsi: final compat_ioctl cleanup
-Date:   Wed, 11 Dec 2019 21:42:34 +0100
-Message-Id: <20191211204306.1207817-1-arnd@arndb.de>
+        Steffen Maier <maier@linux.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-block@vger.kernel.org
+Subject: [PATCH 02/24] compat: scsi: sg: fix v3 compat read/write interface
+Date:   Wed, 11 Dec 2019 21:42:36 +0100
+Message-Id: <20191211204306.1207817-3-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
+In-Reply-To: <20191211204306.1207817-1-arnd@arndb.de>
+References: <20191211204306.1207817-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:tZdBk04hRhASKvxNK9GoShdQF2eDzAxPp3Cg+nGJZHfdv+pgn9O
- kwmXMRprVfQ0pim31l7qW7s2PAdADCj/awdh7RjgyY/fpM05v6Q4FPoPxGv7M/voa/433hE
- iMtmqCgX/c3+k4mAysDUXpBN3iwaTARXVJkOprXX/vYPQFVr07NqenTLneDPM6daZwlm0hy
- 0YX0ky3/WBqCzIZatfYnA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:a4B9TvEXteU=:6Cc91AD+KrupUd8aoLdxST
- pLfWD4GRVX78zFLH10jxyBk47NToOUHPMzZ76AUs4LjwJIXCgzQ8lswxiYHO149apHXiNngIl
- vL6/HJ1QNL3gHBiZC6xbd/blGxhvEYzR/6K861xG028YhtTZyjkgvzNI4s+ZxjZQY3dBZXdtj
- UdsvdU9++f/akx191P/dx25X1cmHruMzPZ01VXH8m97YsuLMWM+B8G5ivaA4v8fCixGGXLAMr
- Clon04TCHz/QZelKq5De+Y09hFfQZgKM59HeSRuO4E8YOnKSt5nLG3kilomFqHSACrCSSUjNR
- 5tt2Vr5wZDgiCBh6PCcBH9RXJWu24f2jptleN0EgRsm4faACe0x+A3CkdVquadMyd+E7vcK0F
- 105IejPyxALlM8fACy6sEuAcTCVpa1DNJgOnvrswp8DOGcGj4NQZgnygKvVkbF+ctQC1kuH0L
- CVdoCkBlR77nIRW086rlN5fqFeDgoOz++WPC+Z4RCiMRqNzSjTG5SNIwoPEJPB3xGl1JU4v8V
- Jt4bKd6rB7CDuqggZ9Lsevm9gESw8V6Z6QaEmmL1k9s0p2g2y6fY67sAaVS1tSdXC4RZhAWZp
- 5w4jEC/3SXNjtkR/AxiNrVjmpWvyUvgOV5XWSwU6IfzHdLcduFtRVwtpupm4YQYPDtyP/X3GU
- ofUZ0OsCJl1LWPytMLCf41zavpNOa86cXoxxvpFBVy98fkEnxsUymIsSb4p637NQQcFmz5Y1G
- m0RHQzeIuHR+dythmrWwFtBfI1/olCBtw3mimdzdploPhmuM8DjlS8eyzmuooX0ApryMh/GNn
- XsTJ05wjvOw24IeAQNMPLG2EGrP55tZFrElwpprXZDRQVPzCOL1+o/9scTvPzLZqh6Bi59Iy3
- t9uhoj8CKsmpUlIUsX+FRJzTifWm/uGhMxGlgIorYAUlSm90Ef5Z5WRQiZoQZ+6MedLbr5hqH
- WXA8oae97alSp0RHkhZOcO6ctORW1LVM=
+X-Provags-ID: V03:K1:DlM8/RSZOaYg5JzO7DSn/knKPUvnvQmVJDNmgl9LouBnU4D8Xp1
+ /K/nZQCkejcMwqd34K2Q2OBGVdjrDhpVh8FPdUh0byRt9SW3BLbCX0oUB4xrMRk2xwLEfnB
+ RlZHYWzNGZ9YtHMdiUUn1opDUpu7tCIjKc27WFY9HYeiSanGdlq9NRJjwNv7rVKJxk32BCY
+ AE8eyDTr8OCkKgIhZDYog==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:57TTBnsP064=:xol5gk1SJmTe2qSSdWnL0w
+ 3a3nqIlxgWVtGDMKinfkP6M90bf9xUBEtxuQBD88/UGfqgJAYOiM7L3PPdvTmo9lkvzTpZQu0
+ aUTZ4eiVwRshqensZ4GKhfWdBPld8QbYTSY9AVe0TMeyObvH+y9LetKeAUGCABADtnS5Qkw5G
+ EcSoZvnK5Lh3Epls01CDs91roWqGa/ZaB1C5nZLdrpsVFCSavlzMrMmw9kK5LCanpNY/QQACE
+ obCPL+eBF62x1XXEBpYGO8jj61UjgoLj5JcB1en4jh6StDSuF4kmBkDPiRKfFH/4Ny7uCuau9
+ IBq38vB01H0aEfl268UwWIhsAkmlYXh5yab5jslBPHtuXVZSHql+g6klZ2QWwISYO+TIbWmIG
+ 5g9r0L3ulEJvK/xWDYygijvQo87e6JaMDPWEfVegNznVpasGpwDFZbpn6jq6BKlAee1nL/Aee
+ F8iDOJ6oHpHeDJ+Eu+Z39lV64O9xRSJnuwiFTjIA0agfWveVlmVDoAE8X1t9EcG48N0TRFAqQ
+ Gboa2XdlGNmU4keGeZkZmppSFyE43e/M2U4qftHy1xXmF8xIVVmLRIPp80G1F1A7JvaYLKCCq
+ exaZWu1X5Bj8e8K5pTct5soi2v5F6KiJSu0rOxoIqd4Wvntn9bIrtn8sYFqtnYMphzH6FmHUB
+ XY0X4+deX3vRvsf8L5WE89BH8edm6St/YYxJM2hqRjUIg4Y1x/H+vfQx01oxzSZSpRrExc8v4
+ L3VXA8er+Zo+OFOvu4LSXOhlYxpXUf/nzl2mA8g6uFBRVQJIxz9vpVSXs9O7Csk/l762+jDUa
+ JAewa1xpYzvxig7e+Gw4SqhYNWc2KYC3u7/Amh+SzvE+r0Zdg4ZchYXdUubg2vH0DZ5gAGXr6
+ zbeTPLkZhfhYLYWMIQfQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Jens, James and Martin,
+In the v5.4 merge window, a cleanup patch from Al Viro conflicted
+with my rework of the compat handling for sg.c read(). Linus Torvalds
+did a correct merge but pointed out that the resulting code is still
+unsatisfactory.
 
-This series concludes the work I did for linux-5.5 on the compat_ioctl()
-cleanup, killing off fs/compat_ioctl.c and block/compat_ioctl.c by moving
-everything into drivers.
+I later noticed that the sg_new_read() function still gets the compat
+mode wrong, when the 'count' argument is large enough to pass a
+compat_sg_io_hdr object, but not a nativ sg_io_hdr.
 
-Overall this would be a reduction both in complexity and line count, but
-as I'm also adding documentation the overall number of lines increases
-in the end.
+To address both of these, move the definition of compat_sg_io_hdr
+into a scsi/sg.h to make it visible to sg.c and rewrite the logic
+for reading req_pack_id as well as the size check to a simpler
+version that gets the expected results.
 
-My plan was originally to keep the SCSI and block parts separate.
-This did not work easily because of interdependencies: I cannot
-do the final SCSI cleanup in a good way without first addressing the
-CDROM ioctls, so this is one series that I hope could be merged through
-either the block or the scsi git trees, or possibly both if you can
-pull in the same branch.
+Fixes: c35a5cfb4150 ("scsi: sg: sg_read(): simplify reading ->pack_id of userland sg_io_hdr_t")
+Fixes: 98aaaec4a150 ("compat_ioctl: reimplement SG_IO handling")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ block/scsi_ioctl.c |  29 +----------
+ drivers/scsi/sg.c  | 125 +++++++++++++++++++++------------------------
+ include/scsi/sg.h  |  30 +++++++++++
+ 3 files changed, 89 insertions(+), 95 deletions(-)
 
-The series comes in these steps:
-
-1. clean up the sg v3 interface as suggested by Linus. I have
-   talked about this with Doug Gilbert as well, and he would
-   rebase his sg v4 patches on top of "compat: scsi: sg: fix v3
-   compat read/write interface"
-
-2. Four patches for missing block compat_ioctl handlers, to be
-   backported into stable kernels. Separate patches because they
-   are needed in different stable versions.
-
-3. Actually moving handlers out of block/compat_ioctl.c and
-   block/scsi_ioctl.c into drivers, mixed in with cleanup
-   patches
-
-4. Document how to do this right. I keep getting asked about this,
-   and it helps to point to some documentation file.
-
-The series is avaialable for testing at [1].
-
-       Arnd
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git/log/?h=compat-ioctl-endgame
-
-Arnd Bergmann (24):
-  compat: ARM64: always include asm-generic/compat.h
-  compat: scsi: sg: fix v3 compat read/write interface
-  compat_ioctl: block: handle BLKREPORTZONE/BLKRESETZONE
-  compat_ioctl: block: handle BLKGETZONESZ/BLKGETNRZONES
-  compat_ioctl: block: handle add zone open, close and finish ioctl
-  compat_ioctl: block: handle Persistent Reservations
-  compaT_ioctl: ubd, aoe: use blkdev_compat_ptr_ioctl
-  compat_ioctl: move CDROM_SEND_PACKET handling into scsi
-  compat_ioctl: move CDROMREADADIO to cdrom.c
-  compat_ioctl: cdrom: handle CDROM_LAST_WRITTEN
-  compat_ioctl: block: handle cdrom compat ioctl in non-cdrom drivers
-  compat_ioctl: add scsi_compat_ioctl
-  compat_ioctl: bsg: add handler
-  compat_ioctl: ide: floppy: add handler
-  compat_ioctl: scsi: move ioctl handling into drivers
-  compat_ioctl: move sys_compat_ioctl() to ioctl.c
-  compat_ioctl: simplify the implementation
-  compat_ioctl: move cdrom commands into cdrom.c
-  compat_ioctl: scsi: handle HDIO commands from drivers
-  compat_ioctl: move HDIO ioctl handling into drivers/ide
-  compat_ioctl: block: move blkdev_compat_ioctl() into ioctl.c
-  compat_ioctl: block: simplify compat_blkpg_ioctl()
-  compat_ioctl: simplify up block/ioctl.c
-  Documentation: document ioctl interfaces better
-
- Documentation/core-api/index.rst       |   1 +
- Documentation/core-api/ioctl.rst       | 250 +++++++++++++++
- arch/arm64/include/asm/compat.h        |   5 +-
- arch/um/drivers/ubd_kern.c             |   1 +
- block/Makefile                         |   1 -
- block/bsg.c                            |   1 +
- block/compat_ioctl.c                   | 411 -------------------------
- block/ioctl.c                          | 319 +++++++++++++++----
- block/scsi_ioctl.c                     | 214 ++++++++-----
- drivers/ata/libata-scsi.c              |   9 +
- drivers/block/aoe/aoeblk.c             |   1 +
- drivers/block/floppy.c                 |   3 +
- drivers/block/paride/pcd.c             |   3 +
- drivers/block/paride/pd.c              |   1 +
- drivers/block/paride/pf.c              |   1 +
- drivers/block/pktcdvd.c                |  26 +-
- drivers/block/sunvdc.c                 |   1 +
- drivers/block/virtio_blk.c             |   3 +
- drivers/block/xen-blkfront.c           |   1 +
- drivers/cdrom/cdrom.c                  |  35 ++-
- drivers/cdrom/gdrom.c                  |   3 +
- drivers/ide/ide-cd.c                   |  40 +++
- drivers/ide/ide-disk.c                 |   3 +
- drivers/ide/ide-floppy.c               |   4 +
- drivers/ide/ide-floppy.h               |   2 +
- drivers/ide/ide-floppy_ioctl.c         |  35 +++
- drivers/ide/ide-gd.c                   |  14 +
- drivers/ide/ide-ioctls.c               |  47 ++-
- drivers/ide/ide-tape.c                 |  14 +
- drivers/scsi/aic94xx/aic94xx_init.c    |   3 +
- drivers/scsi/ch.c                      |   9 +-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   3 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   3 +
- drivers/scsi/ipr.c                     |   3 +
- drivers/scsi/isci/init.c               |   3 +
- drivers/scsi/mvsas/mv_init.c           |   3 +
- drivers/scsi/pm8001/pm8001_init.c      |   3 +
- drivers/scsi/scsi_ioctl.c              |  54 +++-
- drivers/scsi/sd.c                      |  50 ++-
- drivers/scsi/sg.c                      | 169 +++++-----
- drivers/scsi/sr.c                      |  53 +++-
- drivers/scsi/st.c                      |  51 +--
- fs/Makefile                            |   2 +-
- fs/compat_ioctl.c                      | 261 ----------------
- fs/internal.h                          |   6 -
- fs/ioctl.c                             | 131 +++++---
- include/linux/blkdev.h                 |   7 +
- include/linux/falloc.h                 |   2 -
- include/linux/fs.h                     |   4 -
- include/linux/ide.h                    |   2 +
- include/linux/libata.h                 |   6 +
- include/scsi/scsi_ioctl.h              |   1 +
- include/scsi/sg.h                      |  30 ++
- 54 files changed, 1249 insertions(+), 1062 deletions(-)
- create mode 100644 Documentation/core-api/ioctl.rst
- delete mode 100644 block/compat_ioctl.c
- delete mode 100644 fs/compat_ioctl.c
-
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 650bade5ea5a..b61dbf4d8443 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -20,6 +20,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/sg.h>
+ 
+ struct blk_cmd_filter {
+ 	unsigned long read_ok[BLK_SCSI_CMD_PER_LONG];
+@@ -550,34 +551,6 @@ static inline int blk_send_start_stop(struct request_queue *q,
+ 	return __blk_send_generic(q, bd_disk, GPCMD_START_STOP_UNIT, data);
+ }
+ 
+-#ifdef CONFIG_COMPAT
+-struct compat_sg_io_hdr {
+-	compat_int_t interface_id;	/* [i] 'S' for SCSI generic (required) */
+-	compat_int_t dxfer_direction;	/* [i] data transfer direction  */
+-	unsigned char cmd_len;		/* [i] SCSI command length ( <= 16 bytes) */
+-	unsigned char mx_sb_len;	/* [i] max length to write to sbp */
+-	unsigned short iovec_count;	/* [i] 0 implies no scatter gather */
+-	compat_uint_t dxfer_len;	/* [i] byte count of data transfer */
+-	compat_uint_t dxferp;		/* [i], [*io] points to data transfer memory
+-						or scatter gather list */
+-	compat_uptr_t cmdp;		/* [i], [*i] points to command to perform */
+-	compat_uptr_t sbp;		/* [i], [*o] points to sense_buffer memory */
+-	compat_uint_t timeout;		/* [i] MAX_UINT->no timeout (unit: millisec) */
+-	compat_uint_t flags;		/* [i] 0 -> default, see SG_FLAG... */
+-	compat_int_t pack_id;		/* [i->o] unused internally (normally) */
+-	compat_uptr_t usr_ptr;		/* [i->o] unused internally */
+-	unsigned char status;		/* [o] scsi status */
+-	unsigned char masked_status;	/* [o] shifted, masked scsi status */
+-	unsigned char msg_status;	/* [o] messaging level data (optional) */
+-	unsigned char sb_len_wr;	/* [o] byte count actually written to sbp */
+-	unsigned short host_status;	/* [o] errors from host adapter */
+-	unsigned short driver_status;	/* [o] errors from software driver */
+-	compat_int_t resid;		/* [o] dxfer_len - actual_transferred */
+-	compat_uint_t duration;		/* [o] time taken by cmd (unit: millisec) */
+-	compat_uint_t info;		/* [o] auxiliary information */
+-};
+-#endif
+-
+ int put_sg_io_hdr(const struct sg_io_hdr *hdr, void __user *argp)
+ {
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 160748ad9c0f..985546aac236 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -198,6 +198,7 @@ static void sg_device_destroy(struct kref *kref);
+ 
+ #define SZ_SG_HEADER sizeof(struct sg_header)
+ #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
++#define SZ_COMPAT_SG_IO_HDR sizeof(struct compat_sg_io_hdr)
+ #define SZ_SG_IOVEC sizeof(sg_iovec_t)
+ #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
+ 
+@@ -405,6 +406,36 @@ sg_release(struct inode *inode, struct file *filp)
+ 	return 0;
+ }
+ 
++static int get_sg_io_pack_id(int *pack_id, void __user *buf, size_t count)
++{
++	struct sg_header __user *old_hdr = buf;
++	int reply_len;
++
++	if (count < SZ_SG_HEADER)
++		goto unknown_id;
++
++	/* negative reply_len means v3 format, otherwise v1/v2 */
++	if (get_user(reply_len, &old_hdr->reply_len))
++		return -EFAULT;
++	if (reply_len >= 0)
++		return get_user(*pack_id, &old_hdr->pack_id);
++
++	if (in_compat_syscall() && count >= SZ_COMPAT_SG_IO_HDR) {
++		struct compat_sg_io_hdr __user *hp = buf;
++		return get_user(*pack_id, &hp->pack_id);
++	}
++
++	if (count >= SZ_SG_IO_HDR) {
++		struct sg_io_hdr __user *hp = buf;
++		return get_user(*pack_id, &hp->pack_id);
++	}
++
++unknown_id:
++	/* no valid header was passed, so ignore the pack_id */
++	*pack_id = -1;
++	return 0;
++}
++
+ static ssize_t
+ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ {
+@@ -413,8 +444,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	Sg_request *srp;
+ 	int req_pack_id = -1;
+ 	sg_io_hdr_t *hp;
+-	struct sg_header *old_hdr = NULL;
+-	int retval = 0;
++	struct sg_header *old_hdr;
++	int retval;
+ 
+ 	/*
+ 	 * This could cause a response to be stranded. Close the associated
+@@ -429,79 +460,34 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+ 				      "sg_read: count=%d\n", (int) count));
+ 
+-	if (sfp->force_packid && (count >= SZ_SG_HEADER)) {
+-		old_hdr = memdup_user(buf, SZ_SG_HEADER);
+-		if (IS_ERR(old_hdr))
+-			return PTR_ERR(old_hdr);
+-		if (old_hdr->reply_len < 0) {
+-			if (count >= SZ_SG_IO_HDR) {
+-				/*
+-				 * This is stupid.
+-				 *
+-				 * We're copying the whole sg_io_hdr_t from user
+-				 * space just to get the 'pack_id' field. But the
+-				 * field is at different offsets for the compat
+-				 * case, so we'll use "get_sg_io_hdr()" to copy
+-				 * the whole thing and convert it.
+-				 *
+-				 * We could do something like just calculating the
+-				 * offset based of 'in_compat_syscall()', but the
+-				 * 'compat_sg_io_hdr' definition is in the wrong
+-				 * place for that.
+-				 */
+-				sg_io_hdr_t *new_hdr;
+-				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
+-				if (!new_hdr) {
+-					retval = -ENOMEM;
+-					goto free_old_hdr;
+-				}
+-				retval = get_sg_io_hdr(new_hdr, buf);
+-				req_pack_id = new_hdr->pack_id;
+-				kfree(new_hdr);
+-				if (retval) {
+-					retval = -EFAULT;
+-					goto free_old_hdr;
+-				}
+-			}
+-		} else
+-			req_pack_id = old_hdr->pack_id;
+-	}
++	if (sfp->force_packid)
++		retval = get_sg_io_pack_id(&req_pack_id, buf, count);
++	if (retval)
++		return retval;
++
+ 	srp = sg_get_rq_mark(sfp, req_pack_id);
+ 	if (!srp) {		/* now wait on packet to arrive */
+-		if (atomic_read(&sdp->detaching)) {
+-			retval = -ENODEV;
+-			goto free_old_hdr;
+-		}
+-		if (filp->f_flags & O_NONBLOCK) {
+-			retval = -EAGAIN;
+-			goto free_old_hdr;
+-		}
++		if (atomic_read(&sdp->detaching))
++			return -ENODEV;
++		if (filp->f_flags & O_NONBLOCK)
++			return -EAGAIN;
+ 		retval = wait_event_interruptible(sfp->read_wait,
+ 			(atomic_read(&sdp->detaching) ||
+ 			(srp = sg_get_rq_mark(sfp, req_pack_id))));
+-		if (atomic_read(&sdp->detaching)) {
+-			retval = -ENODEV;
+-			goto free_old_hdr;
+-		}
+-		if (retval) {
++		if (atomic_read(&sdp->detaching))
++			return -ENODEV;
++		if (retval)
+ 			/* -ERESTARTSYS as signal hit process */
+-			goto free_old_hdr;
+-		}
+-	}
+-	if (srp->header.interface_id != '\0') {
+-		retval = sg_new_read(sfp, buf, count, srp);
+-		goto free_old_hdr;
++			return retval;
+ 	}
++	if (srp->header.interface_id != '\0')
++		return sg_new_read(sfp, buf, count, srp);
+ 
+ 	hp = &srp->header;
+-	if (old_hdr == NULL) {
+-		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
+-		if (! old_hdr) {
+-			retval = -ENOMEM;
+-			goto free_old_hdr;
+-		}
+-	}
+-	memset(old_hdr, 0, SZ_SG_HEADER);
++	old_hdr = kzalloc(SZ_SG_HEADER, GFP_KERNEL);
++	if (!old_hdr)
++		return -ENOMEM;
++
+ 	old_hdr->reply_len = (int) hp->timeout;
+ 	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
+ 	old_hdr->pack_id = hp->pack_id;
+@@ -575,7 +561,12 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
+ 	int err = 0, err2;
+ 	int len;
+ 
+-	if (count < SZ_SG_IO_HDR) {
++	if (in_compat_syscall()) {
++		if (count < SZ_COMPAT_SG_IO_HDR) {
++			err = -EINVAL;
++			goto err_out;
++		}
++	} else if (count < SZ_SG_IO_HDR) {
+ 		err = -EINVAL;
+ 		goto err_out;
+ 	}
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index f91bcca604e4..29c7ad04d2e2 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -68,6 +68,36 @@ typedef struct sg_io_hdr
+     unsigned int info;          /* [o] auxiliary information */
+ } sg_io_hdr_t;  /* 64 bytes long (on i386) */
+ 
++#if defined(__KERNEL__)
++#include <linux/compat.h>
++
++struct compat_sg_io_hdr {
++	compat_int_t interface_id;	/* [i] 'S' for SCSI generic (required) */
++	compat_int_t dxfer_direction;	/* [i] data transfer direction  */
++	unsigned char cmd_len;		/* [i] SCSI command length ( <= 16 bytes) */
++	unsigned char mx_sb_len;	/* [i] max length to write to sbp */
++	unsigned short iovec_count;	/* [i] 0 implies no scatter gather */
++	compat_uint_t dxfer_len;	/* [i] byte count of data transfer */
++	compat_uint_t dxferp;		/* [i], [*io] points to data transfer memory
++						or scatter gather list */
++	compat_uptr_t cmdp;		/* [i], [*i] points to command to perform */
++	compat_uptr_t sbp;		/* [i], [*o] points to sense_buffer memory */
++	compat_uint_t timeout;		/* [i] MAX_UINT->no timeout (unit: millisec) */
++	compat_uint_t flags;		/* [i] 0 -> default, see SG_FLAG... */
++	compat_int_t pack_id;		/* [i->o] unused internally (normally) */
++	compat_uptr_t usr_ptr;		/* [i->o] unused internally */
++	unsigned char status;		/* [o] scsi status */
++	unsigned char masked_status;	/* [o] shifted, masked scsi status */
++	unsigned char msg_status;	/* [o] messaging level data (optional) */
++	unsigned char sb_len_wr;	/* [o] byte count actually written to sbp */
++	unsigned short host_status;	/* [o] errors from host adapter */
++	unsigned short driver_status;	/* [o] errors from software driver */
++	compat_int_t resid;		/* [o] dxfer_len - actual_transferred */
++	compat_uint_t duration;		/* [o] time taken by cmd (unit: millisec) */
++	compat_uint_t info;		/* [o] auxiliary information */
++};
++#endif
++
+ #define SG_INTERFACE_ID_ORIG 'S'
+ 
+ /* Use negative values to flag difference from original sg_header structure */
 -- 
 2.20.0
 
-Cc: corbet@lwn.net
-Cc: catalin.marinas@arm.com
-Cc: will@kernel.org
-Cc: jdike@addtoit.com
-Cc: richard@nod.at
-Cc: anton.ivanov@cambridgegreys.com
-Cc: fujita.tomonori@lab.ntt.co.jp
-Cc: justin@coraid.com
-Cc: efremov@linux.com
-Cc: tim@cyberelk.net
-Cc: mst@redhat.com
-Cc: jasowang@redhat.com
-Cc: pbonzini@redhat.com
-Cc: stefanha@redhat.com
-Cc: boris.ostrovsky@oracle.com
-Cc: jgross@suse.com
-Cc: sstabellini@kernel.org
-Cc: konrad.wilk@oracle.com
-Cc: roger.pau@citrix.com
-Cc: bp@alien8.de
-Cc: davem@davemloft.net
-Cc: john.garry@huawei.com
-Cc: brking@us.ibm.com
-Cc: intel-linux-scu@intel.com
-Cc: artur.paszkiewicz@intel.com
-Cc: jinpu.wang@cloud.ionos.com
-Cc: dgilbert@interlog.com
-Cc: Kai.Makisara@kolumbus.fi
-Cc: arnd@arndb.de
-Cc: damien.lemoal@hgst.com
-Cc: hare@suse.com
-Cc: linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-um@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
-Cc: virtualization@lists.linux-foundation.org
-Cc: xen-devel@lists.xenproject.org
-Cc: linux-fsdevel@vger.kernel.org
