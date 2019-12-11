@@ -4,49 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5119FC2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73554C00454
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 251912073B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 429302073D
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:44:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576079081;
-	bh=UNiTk+f8fE9Yz8lhsQdrFBLP5bg3jUY8qkUscn+BsVg=;
+	s=default; t=1576079086;
+	bh=1+PYsgrlVIXcy1sg+TkUNOPdnuEJTx9tNxWeA9loVaw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RtbdQhelFh6KrwwzmzjUNUhVZV0oeJ/KrwWwvnMfTQGT3RpBVWJAo8tqAwB3M1ywt
-	 uVplp/EYcMgvuzXWnPOVNZNpptThBMSQWUR95X/kOJOoP9HPRA3In2mUCTe9FW3jtR
-	 8SrEZAhULCh90dByTI9NEZHS7aBEV4bZnzqOqqZo=
+	b=ioYOw9OwJuO8TWzVPA3qLLZdkbnFPr/JCEkewpWPdLt71+L7T7lnBSHtuSsiYa+4a
+	 byNMGqe1xdqBzrDfL4UZdV0DRpzTHQiM4YndkNqb44m7MBeHHDzTDBU70bTn2Axf3Y
+	 GifDnFbKalaBS3K9qduK97lVXhsDuLgDOOG7L/8A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387414AbfLKP1Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:27:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:32992 "EHLO mail.kernel.org"
+        id S2387407AbfLKP1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:27:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:32948 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733063AbfLKP1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1732967AbfLKP1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 11 Dec 2019 10:27:23 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 21EB224671;
-        Wed, 11 Dec 2019 15:27:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C8F924680;
+        Wed, 11 Dec 2019 15:27:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078042;
-        bh=UNiTk+f8fE9Yz8lhsQdrFBLP5bg3jUY8qkUscn+BsVg=;
+        s=default; t=1576078041;
+        bh=1+PYsgrlVIXcy1sg+TkUNOPdnuEJTx9tNxWeA9loVaw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=byX56x9yKEvGMaPN82OMwHr52hwGn3bwCJqFi4JBE1rPoupLDp4p3clHcZZ6tgRbx
-         BytbWSDZu/+pIkltDbkZ+B7aTdDZsmHwo7jLIQ+o0tgJK8f6WRy5d2sW/PDkq7Tztw
-         ypw0VwrmTrH1pAgtMI65mGXEfUyJuF80MOn6n6vA=
+        b=uuZDXOIG0qB2lgJw6W3jWOep+mtmFpWT+p2wkkoIf+OFvekYDLJMISGtOQ7QCPJd6
+         owci1RkA6PDWp6UktpVEtyqCDxCdVun31YsYjRZMFY0WCu/Sb4II/6xB+GCu4Ueav6
+         7X9JhCky0jbToIWGplT0Xu83X2dNP5n3WiShHxjg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kars de Jong <jongk@linux-m68k.org>,
-        Finn Thain <fthain@telegraphics.com.au>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        coverity-bot <keescook+coverity-bot@chromium.org>,
+        James Bottomley <James.Bottomley@SteelEye.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org, "Ewan D . Milne" <emilne@redhat.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 36/79] scsi: zorro_esp: Limit DMA transfers to 65536 bytes (except on Fastlane)
-Date:   Wed, 11 Dec 2019 10:26:00 -0500
-Message-Id: <20191211152643.23056-36-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 35/79] scsi: lpfc: fix: Coverity: lpfc_cmpl_els_rsp(): Null pointer dereferences
+Date:   Wed, 11 Dec 2019 10:25:59 -0500
+Message-Id: <20191211152643.23056-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 References: <20191211152643.23056-1-sashal@kernel.org>
@@ -59,67 +63,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Kars de Jong <jongk@linux-m68k.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 02f7e9f351a9de95577eafdc3bd413ed1c3b589f ]
+[ Upstream commit 6c6d59e0fe5b86cf273d6d744a6a9768c4ecc756 ]
 
-When using this driver on a Blizzard 1260, there were failures whenever DMA
-transfers from the SCSI bus to memory of 65535 bytes were followed by a DMA
-transfer of 1 byte. This caused the byte at offset 65535 to be overwritten
-with 0xff. The Blizzard hardware can't handle single byte DMA transfers.
+Coverity reported the following:
 
-Besides this issue, limiting the DMA length to something that is not a
-multiple of the page size is very inefficient on most file systems.
+*** CID 101747:  Null pointer dereferences  (FORWARD_NULL)
+/drivers/scsi/lpfc/lpfc_els.c: 4439 in lpfc_cmpl_els_rsp()
+4433     			kfree(mp);
+4434     		}
+4435     		mempool_free(mbox, phba->mbox_mem_pool);
+4436     	}
+4437     out:
+4438     	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
+vvv     CID 101747:  Null pointer dereferences  (FORWARD_NULL)
+vvv     Dereferencing null pointer "shost".
+4439     		spin_lock_irq(shost->host_lock);
+4440     		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
+4441     		spin_unlock_irq(shost->host_lock);
+4442
+4443     		/* If the node is not being used by another discovery thread,
+4444     		 * and we are sending a reject, we are done with it.
 
-It seems this limit was chosen because the DMA transfer counter of the ESP
-by default is 16 bits wide, thus limiting the length to 65535 bytes.
-However, the value 0 means 65536 bytes, which is handled by the ESP and the
-Blizzard just fine. It is also the default maximum used by esp_scsi when
-drivers don't provide their own dma_length_limit() function.
+Fix by adding a check for non-null shost in line 4438.
+The scenario when shost is set to null is when ndlp is null.
+As such, the ndlp check present was sufficient. But better safe
+than sorry so add the shost check.
 
-The limit of 65536 bytes can be used by all boards except the Fastlane. The
-old driver used a limit of 65532 bytes (0xfffc), which is reintroduced in
-this patch.
+Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+Addresses-Coverity-ID: 101747 ("Null pointer dereferences")
+Fixes: 2e0fef85e098 ("[SCSI] lpfc: NPIV: split ports")
 
-Fixes: b7ded0e8b0d1 ("scsi: zorro_esp: Limit DMA transfers to 65535 bytes")
-Link: https://lore.kernel.org/r/20191112175523.23145-1-jongk@linux-m68k.org
-Signed-off-by: Kars de Jong <jongk@linux-m68k.org>
-Reviewed-by: Finn Thain <fthain@telegraphics.com.au>
+CC: James Bottomley <James.Bottomley@SteelEye.com>
+CC: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+CC: linux-next@vger.kernel.org
+Link: https://lore.kernel.org/r/20191111230401.12958-3-jsmart2021@gmail.com
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/zorro_esp.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/zorro_esp.c b/drivers/scsi/zorro_esp.c
-index be79127db5946..6a5b547eae590 100644
---- a/drivers/scsi/zorro_esp.c
-+++ b/drivers/scsi/zorro_esp.c
-@@ -245,7 +245,14 @@ static int fastlane_esp_irq_pending(struct esp *esp)
- static u32 zorro_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
- 					u32 dma_len)
- {
--	return dma_len > 0xFFFF ? 0xFFFF : dma_len;
-+	return dma_len > (1U << 16) ? (1U << 16) : dma_len;
-+}
-+
-+static u32 fastlane_esp_dma_length_limit(struct esp *esp, u32 dma_addr,
-+					u32 dma_len)
-+{
-+	/* The old driver used 0xfffc as limit, so do that here too */
-+	return dma_len > 0xfffc ? 0xfffc : dma_len;
- }
- 
- static void zorro_esp_reset_dma(struct esp *esp)
-@@ -818,7 +825,7 @@ static const struct esp_driver_ops fastlane_esp_ops = {
- 	.unmap_single		= zorro_esp_unmap_single,
- 	.unmap_sg		= zorro_esp_unmap_sg,
- 	.irq_pending		= fastlane_esp_irq_pending,
--	.dma_length_limit	= zorro_esp_dma_length_limit,
-+	.dma_length_limit	= fastlane_esp_dma_length_limit,
- 	.reset_dma		= zorro_esp_reset_dma,
- 	.dma_drain		= zorro_esp_dma_drain,
- 	.dma_invalidate		= fastlane_esp_dma_invalidate,
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 4f4d1b3b3bbc4..7398350b08b41 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4110,7 +4110,7 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		mempool_free(mbox, phba->mbox_mem_pool);
+ 	}
+ out:
+-	if (ndlp && NLP_CHK_NODE_ACT(ndlp)) {
++	if (ndlp && NLP_CHK_NODE_ACT(ndlp) && shost) {
+ 		spin_lock_irq(shost->host_lock);
+ 		ndlp->nlp_flag &= ~(NLP_ACC_REGLOGIN | NLP_RM_DFLT_RPI);
+ 		spin_unlock_irq(shost->host_lock);
 -- 
 2.20.1
 
