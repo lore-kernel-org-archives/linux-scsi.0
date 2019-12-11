@@ -7,55 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EB1C00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B11C0C2D0C7
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:42:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BACA12464B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86C5022527
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:42:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078926;
-	bh=3IyTP+HgmOf3ouQI07HLcTP/5j+L5uTqAAGuWiefhM4=;
+	s=default; t=1576078932;
+	bh=V5VW/BJI2DIgFPgZfp2GrIv0w5byFbwK++BfbOvXEdU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aJPIh10TaykQGsr+MdWqIWLDRFj4HlLgwrGZOeTbwBSx6Ix2af/yhNOpqaZhJLTxM
-	 v8/jJxHyeUqa04oGCirR1ZmVKMW31hz9B+NBxnnmgsziY3RI0QcV0zhT4YFqaR14CX
-	 6xkIgd7NMMCyPnpGRfhuGF3mc1QKT7+qXX8hiW6s=
+	b=JTAhbw5UqWfdRDwU2nylG5E/q4qlVgSqE73NabCEqRy9PaDLQjndkmp2CGfb/VEg+
+	 ddWMxjLvWztSbyd0K3g9wChXO6khgOQY7m2C7tSnaWRfjMybeUalusGO09ypuL3XIs
+	 TzRkben4gZR88BMZqW7q5MIw+AUb/mPIOe6vV/gs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388341AbfLKPmF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:42:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33684 "EHLO mail.kernel.org"
+        id S2388652AbfLKPmL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:42:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33592 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733037AbfLKP1v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:27:51 -0500
+        id S2387475AbfLKP1r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:27:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 208F524654;
-        Wed, 11 Dec 2019 15:27:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B85BC24654;
+        Wed, 11 Dec 2019 15:27:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078070;
-        bh=3IyTP+HgmOf3ouQI07HLcTP/5j+L5uTqAAGuWiefhM4=;
+        s=default; t=1576078066;
+        bh=V5VW/BJI2DIgFPgZfp2GrIv0w5byFbwK++BfbOvXEdU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DOc0jvUrbngswqwbx2QutCn5VwMnFEqRZ34MDUEToF6Uo1Y07uqaAn4g3K/v2m/rU
-         e021n5VaMQHh/Eg22G5Q6uFmhDX25lmE3aIXhbJPDBig9K324tE+Qpf9MsPSh7eemB
-         n5jQvPIy+wW0UZyqRH29uvITnpNNWPxx0Fl0CDPA=
+        b=Yt3quFED6ZQE2MueqEbEMf88W2r9t5r2ygx2UxV1fitvwebMRBQeXoBkSHF2u93dm
+         oK6wVnBGVX8GWAxpIg2Kew9tnqMx5Bq8TGsJLgb4zrMe1Ck4I5MjCQqtJXCqFPjHCE
+         LJ08b3YpedGO+ljuMC3ANEWkIwAj7at0XP+wD5M8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Anatol Pomazau <anatol@google.com>,
-        Frank Mayhar <fmayhar@google.com>,
-        Bharath Ravi <rbharath@google.com>,
-        Khazhimsel Kumykov <khazhy@google.com>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        Lee Duncan <lduncan@suse.com>,
+Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 61/79] scsi: iscsi: Don't send data to unbound connection
-Date:   Wed, 11 Dec 2019 10:26:25 -0500
-Message-Id: <20191211152643.23056-61-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 58/79] scsi: ufs: Fix error handing during hibern8 enter
+Date:   Wed, 11 Dec 2019 10:26:22 -0500
+Message-Id: <20191211152643.23056-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 References: <20191211152643.23056-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -64,94 +61,81 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Anatol Pomazau <anatol@google.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-[ Upstream commit 238191d65d7217982d69e21c1d623616da34b281 ]
+[ Upstream commit 6d303e4b19d694cdbebf76bcdb51ada664ee953d ]
 
-If a faulty initiator fails to bind the socket to the iSCSI connection
-before emitting a command, for instance, a subsequent send_pdu, it will
-crash the kernel due to a null pointer dereference in sock_sendmsg(), as
-shown in the log below.  This patch makes sure the bind succeeded before
-trying to use the socket.
+During clock gating (ufshcd_gate_work()), we first put the link hibern8 by
+calling ufshcd_uic_hibern8_enter() and if ufshcd_uic_hibern8_enter()
+returns success (0) then we gate all the clocks.  Now let’s zoom in to what
+ufshcd_uic_hibern8_enter() does internally: It calls
+__ufshcd_uic_hibern8_enter() and if failure is encountered, link recovery
+shall put the link back to the highest HS gear and returns success (0) to
+ufshcd_uic_hibern8_enter() which is the issue as link is still in active
+state due to recovery!  Now ufshcd_uic_hibern8_enter() returns success to
+ufshcd_gate_work() and hence it goes ahead with gating the UFS clock while
+link is still in active state hence I believe controller would raise UIC
+error interrupts. But when we service the interrupt, clocks might have
+already been disabled!
 
-BUG: kernel NULL pointer dereference, address: 0000000000000018
- #PF: supervisor read access in kernel mode
- #PF: error_code(0x0000) - not-present page
-PGD 0 P4D 0
-Oops: 0000 [#1] SMP PTI
-CPU: 3 PID: 7 Comm: kworker/u8:0 Not tainted 5.4.0-rc2.iscsi+ #13
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
-[   24.158246] Workqueue: iscsi_q_0 iscsi_xmitworker
-[   24.158883] RIP: 0010:apparmor_socket_sendmsg+0x5/0x20
-[...]
-[   24.161739] RSP: 0018:ffffab6440043ca0 EFLAGS: 00010282
-[   24.162400] RAX: ffffffff891c1c00 RBX: ffffffff89d53968 RCX: 0000000000000001
-[   24.163253] RDX: 0000000000000030 RSI: ffffab6440043d00 RDI: 0000000000000000
-[   24.164104] RBP: 0000000000000030 R08: 0000000000000030 R09: 0000000000000030
-[   24.165166] R10: ffffffff893e66a0 R11: 0000000000000018 R12: ffffab6440043d00
-[   24.166038] R13: 0000000000000000 R14: 0000000000000000 R15: ffff9d5575a62e90
-[   24.166919] FS:  0000000000000000(0000) GS:ffff9d557db80000(0000) knlGS:0000000000000000
-[   24.167890] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   24.168587] CR2: 0000000000000018 CR3: 000000007a838000 CR4: 00000000000006e0
-[   24.169451] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   24.170320] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[   24.171214] Call Trace:
-[   24.171537]  security_socket_sendmsg+0x3a/0x50
-[   24.172079]  sock_sendmsg+0x16/0x60
-[   24.172506]  iscsi_sw_tcp_xmit_segment+0x77/0x120
-[   24.173076]  iscsi_sw_tcp_pdu_xmit+0x58/0x170
-[   24.173604]  ? iscsi_dbg_trace+0x63/0x80
-[   24.174087]  iscsi_tcp_task_xmit+0x101/0x280
-[   24.174666]  iscsi_xmit_task+0x83/0x110
-[   24.175206]  iscsi_xmitworker+0x57/0x380
-[   24.175757]  ? __schedule+0x2a2/0x700
-[   24.176273]  process_one_work+0x1b5/0x360
-[   24.176837]  worker_thread+0x50/0x3c0
-[   24.177353]  kthread+0xf9/0x130
-[   24.177799]  ? process_one_work+0x360/0x360
-[   24.178401]  ? kthread_park+0x90/0x90
-[   24.178915]  ret_from_fork+0x35/0x40
-[   24.179421] Modules linked in:
-[   24.179856] CR2: 0000000000000018
-[   24.180327] ---[ end trace b4b7674b6df5f480 ]---
+This change fixes for this by returning failure from
+__ufshcd_uic_hibern8_enter() if recovery succeeds as link is still not in
+hibern8, upon receiving the error ufshcd_hibern8_enter() would initiate
+retry to put the link state back into hibern8.
 
-Signed-off-by: Anatol Pomazau <anatol@google.com>
-Co-developed-by: Frank Mayhar <fmayhar@google.com>
-Signed-off-by: Frank Mayhar <fmayhar@google.com>
-Co-developed-by: Bharath Ravi <rbharath@google.com>
-Signed-off-by: Bharath Ravi <rbharath@google.com>
-Co-developed-by: Khazhimsel Kumykov <khazhy@google.com>
-Signed-off-by: Khazhimsel Kumykov <khazhy@google.com>
-Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
-Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Link: https://lore.kernel.org/r/1573798172-20534-8-git-send-email-cang@codeaurora.org
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/iscsi_tcp.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 23354f206533b..55181d28291e7 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -374,8 +374,16 @@ static int iscsi_sw_tcp_pdu_xmit(struct iscsi_task *task)
- {
- 	struct iscsi_conn *conn = task->conn;
- 	unsigned int noreclaim_flag;
-+	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-+	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 	int rc = 0;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 7510d8328d4dd..3601e770da162 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3875,15 +3875,24 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
  
-+	if (!tcp_sw_conn->sock) {
-+		iscsi_conn_printk(KERN_ERR, conn,
-+				  "Transport not bound to socket!\n");
-+		return -EINVAL;
-+	}
+ 	if (ret) {
++		int err;
 +
- 	noreclaim_flag = memalloc_noreclaim_save();
+ 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
+ 			__func__, ret);
  
- 	while (iscsi_sw_tcp_xmit_qlen(conn)) {
+ 		/*
+-		 * If link recovery fails then return error so that caller
+-		 * don't retry the hibern8 enter again.
++		 * If link recovery fails then return error code returned from
++		 * ufshcd_link_recovery().
++		 * If link recovery succeeds then return -EAGAIN to attempt
++		 * hibern8 enter retry again.
+ 		 */
+-		if (ufshcd_link_recovery(hba))
+-			ret = -ENOLINK;
++		err = ufshcd_link_recovery(hba);
++		if (err) {
++			dev_err(hba->dev, "%s: link recovery failed", __func__);
++			ret = err;
++		} else {
++			ret = -EAGAIN;
++		}
+ 	} else
+ 		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER,
+ 								POST_CHANGE);
+@@ -3897,7 +3906,7 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ 
+ 	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
+ 		ret = __ufshcd_uic_hibern8_enter(hba);
+-		if (!ret || ret == -ENOLINK)
++		if (!ret)
+ 			goto out;
+ 	}
+ out:
 -- 
 2.20.1
 
