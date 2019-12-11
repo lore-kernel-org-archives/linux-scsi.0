@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 579B2C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D27C2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F0C120836
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:09:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62185222C4
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080556;
-	bh=VH0BMsB28T3mrEZ4A0ujM9x+cN5vLsmbHMZIRlhmU1w=;
+	s=default; t=1576080622;
+	bh=Lw/7K344nPqJmhUu7zRAQPfP9oBF4Zhz7FkPv0BldDE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kdA6dOYZcdYimF54LB9LCbv9E2a1ZS/kFYhGoe5rtMd/vyOSReJcfA4mJWxKXX7QB
-	 Dce1n9LUwNFsZ5H9xcE/vDFGPaCZTUepYjOo+Pme6B5AOVT8axL8Ydg55i6E4vQzGO
-	 ze0SYsuPadPCIut6er8SXTlkbM62POPVhD5JjhpE=
+	b=rUNePJGFCZH3ihEkWB0f7vkvyytAneMItzAd++48jdoPPBhiPa16FZ4zFbqku+VOJ
+	 sdc1+OVpaDMyrZXE79ZwuzInVko8+/uVSBhPKKvyL2qec8CWaBlt5T5NMSuK2g8eUL
+	 nB2mwQpVjYvIwP+hBzMG/dR1KvqMI6v+xc8r8d04=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731682AbfLKQJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:09:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33220 "EHLO mail.kernel.org"
+        id S1730350AbfLKPL7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:11:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730281AbfLKPMK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:12:10 -0500
+        id S1729513AbfLKPL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:11:59 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B8FF32467E;
-        Wed, 11 Dec 2019 15:12:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B332D20663;
+        Wed, 11 Dec 2019 15:11:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077129;
-        bh=VH0BMsB28T3mrEZ4A0ujM9x+cN5vLsmbHMZIRlhmU1w=;
+        s=default; t=1576077118;
+        bh=Lw/7K344nPqJmhUu7zRAQPfP9oBF4Zhz7FkPv0BldDE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JxmM+SgU2D0+Ofq++5/etUGv7amGM7sI7Ucff8X7XC6gEL4THgDVAQa37WXkukF0n
-         Kq0/MheDG+cM5qOJ02fh7hppiifo34HKtEApckTyI7fqvN5JQQ8YsC7NwThI0c4PuR
-         Nlhkjf0P1SE3hartyIY6VsxfyVR/sapf5wIGQLtc=
+        b=v/ghKvYIg7mrHjUwCu8w1GJdTFsWfZpLSNkn9i6j1eZ4ZsJSz1BRqOVsMLNYXqbBc
+         nNCbyTzN9GQyhH2vZrUnuilz+7Or6mAGTTWertQSChxcwdJAf29mqOll/zAMcoAeKM
+         SgocMiRSGTRDMICJoz3Sv8Cf1BAg81QV7fuWE1AQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     David Disseldorp <ddiss@suse.de>, Lee Duncan <lduncan@suse.com>,
-        Mike Christie <mchristi@redhat.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 017/134] scsi: target: compare full CHAP_A Algorithm strings
-Date:   Wed, 11 Dec 2019 10:09:53 -0500
-Message-Id: <20191211151150.19073-17-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 007/134] scsi: lpfc: Fix list corruption in lpfc_sli_get_iocbq
+Date:   Wed, 11 Dec 2019 10:09:43 -0500
+Message-Id: <20191211151150.19073-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -60,51 +59,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: David Disseldorp <ddiss@suse.de>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 9cef2a7955f2754257a7cddedec16edae7b587d0 ]
+[ Upstream commit 15498dc1a55b7aaea4b51ff03e3ff0f662e73f44 ]
 
-RFC 2307 states:
+After study, it was determined there was a double free of a CT iocb during
+execution of lpfc_offline_prep and lpfc_offline.  The prep routine issued
+an abort for some CT iocbs, but the aborts did not complete fast enough for
+a subsequent routine that waits for completion. Thus the driver proceeded
+to lpfc_offline, which releases any pending iocbs. Unfortunately, the
+completions for the aborts were then received which re-released the ct
+iocbs.
 
-  For CHAP [RFC1994], in the first step, the initiator MUST send:
+Turns out the issue for why the aborts didn't complete fast enough was not
+their time on the wire/in the adapter. It was the lpfc_work_done routine,
+which requires the adapter state to be UP before it calls
+lpfc_sli_handle_slow_ring_event() to process the completions. The issue is
+the prep routine takes the link down as part of it's processing.
 
-      CHAP_A=<A1,A2...>
+To fix, the following was performed:
 
-   Where A1,A2... are proposed algorithms, in order of preference.
-...
-   For the Algorithm, as stated in [RFC1994], one value is required to
-   be implemented:
+ - Prevent the offline routine from releasing iocbs that have had aborts
+   issued on them. Defer to the abort completions. Also means the driver
+   fully waits for the completions.  Given this change, the recognition of
+   "driver-generated" status which then releases the iocb is no longer
+   valid. As such, the change made in the commit 296012285c90 is reverted.
+   As recognition of "driver-generated" status is no longer valid, this
+   patch reverts the changes made in
+   commit 296012285c90 ("scsi: lpfc: Fix leak of ELS completions on adapter reset")
 
-       5     (CHAP with MD5)
+ - Modify lpfc_work_done to allow slow path completions so that the abort
+   completions aren't ignored.
 
-LIO currently checks for this value by only comparing a single byte in
-the tokenized Algorithm string, which means that any value starting with
-a '5' (e.g. "55") is interpreted as "CHAP with MD5". Fix this by
-comparing the entire tokenized string.
+ - Updated the fdmi path to recognize a CT request that fails due to the
+   port being unusable. This stops FDMI retries. FDMI will be restarted on
+   next link up.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Signed-off-by: David Disseldorp <ddiss@suse.de>
-Link: https://lore.kernel.org/r/20190912095547.22427-2-ddiss@suse.de
+Link: https://lore.kernel.org/r/20190922035906.10977-14-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/iscsi/iscsi_target_auth.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_ct.c      | 6 ++++++
+ drivers/scsi/lpfc/lpfc_els.c     | 3 +++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 5 ++++-
+ drivers/scsi/lpfc/lpfc_sli.c     | 3 ---
+ 4 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index 51ddca2033e0a..8fe9b12a07a4d 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -70,7 +70,7 @@ static int chap_check_algorithm(const char *a_str)
- 		if (!token)
- 			goto out;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 25e86706e2072..f883fac2d2b1d 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1868,6 +1868,12 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT) {
+ 			switch ((irsp->un.ulpWord[4] & IOERR_PARAM_MASK)) {
+ 			case IOERR_SLI_ABORTED:
++			case IOERR_SLI_DOWN:
++				/* Driver aborted this IO.  No retry as error
++				 * is likely Offline->Online or some adapter
++				 * error.  Recovery will try again.
++				 */
++				break;
+ 			case IOERR_ABORT_IN_PROGRESS:
+ 			case IOERR_SEQUENCE_TIMEOUT:
+ 			case IOERR_ILLEGAL_FRAME:
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 0052b341587d9..f293b48616ae9 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8016,6 +8016,9 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
+ 		if (piocb->vport != vport)
+ 			continue;
  
--		if (!strncmp(token, "5", 1)) {
-+		if (!strcmp(token, "5")) {
- 			pr_debug("Selected MD5 Algorithm\n");
- 			kfree(orig);
- 			return CHAP_DIGEST_MD5;
++		if (piocb->iocb_flag & LPFC_DRIVER_ABORTED)
++			continue;
++
+ 		/* On the ELS ring we can have ELS_REQUESTs or
+ 		 * GEN_REQUESTs waiting for a response.
+ 		 */
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index f7c205e1da485..1286c658ba34f 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -700,7 +700,10 @@ lpfc_work_done(struct lpfc_hba *phba)
+ 			if (!(phba->hba_flag & HBA_SP_QUEUE_EVT))
+ 				set_bit(LPFC_DATA_READY, &phba->data_flags);
+ 		} else {
+-			if (phba->link_state >= LPFC_LINK_UP ||
++			/* Driver could have abort request completed in queue
++			 * when link goes down.  Allow for this transition.
++			 */
++			if (phba->link_state >= LPFC_LINK_DOWN ||
+ 			    phba->link_flag & LS_MDS_LOOPBACK) {
+ 				pring->flag &= ~LPFC_DEFERRED_RING_EVENT;
+ 				lpfc_sli_handle_slow_ring_event(phba, pring,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index e5413d52e49a2..995a2b56a35ee 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -11050,9 +11050,6 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				irsp->ulpStatus, irsp->un.ulpWord[4]);
+ 
+ 		spin_unlock_irq(&phba->hbalock);
+-		if (irsp->ulpStatus == IOSTAT_LOCAL_REJECT &&
+-		    irsp->un.ulpWord[4] == IOERR_SLI_ABORTED)
+-			lpfc_sli_release_iocbq(phba, abort_iocb);
+ 	}
+ release_iocb:
+ 	lpfc_sli_release_iocbq(phba, cmdiocb);
 -- 
 2.20.1
 
