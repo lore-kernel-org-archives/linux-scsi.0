@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F38B9C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 08:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E718C2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 08:49:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9E462077B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 08:49:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4401322B48
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 08:49:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gWZG/xhG";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="EYOzsNOv"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OehO6YRP";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="V10fMwyL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728272AbfLKIs4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 03:48:56 -0500
-Received: from a27-10.smtp-out.us-west-2.amazonses.com ([54.240.27.10]:59802
-        "EHLO a27-10.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728104AbfLKIs4 (ORCPT
+        id S1728104AbfLKItS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 03:49:18 -0500
+Received: from a27-55.smtp-out.us-west-2.amazonses.com ([54.240.27.55]:44728
+        "EHLO a27-55.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727829AbfLKItS (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 03:48:56 -0500
+        Wed, 11 Dec 2019 03:49:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1576054135;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1576054157;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        bh=UEwfi+RZS/vW/w3fh/SVyY2n5RGl+a32Uty8VCq8WgU=;
-        b=gWZG/xhGLStkvRr14AxgB8yrikFmYur/jSrA7tuVzNQ5aSR+b5gZtEOB2m48aUo7
-        gp2hThpFL43ee0BzmcKkbCWfgBlmfnbEoWu1OMcRnp1kh05+DkJjFQSIrzN+LUEMiCW
-        j4Mv6fkCSMxvNB86dN50mcmCnbx3Tq0MydDVqlm0=
+        bh=/BB5ljNCe9y+zTWw1QriJNl51YdSMi3VwWBeDJgmCQ8=;
+        b=OehO6YRPEBSiKcuUnhykMHGPQtOR0U9KQlw5b8F/dlHKrBH4Fz88e5kWmPzWHTNb
+        auiHqT6wTmpzFgCwcm0Nig7qcNNLh2aaYiEh3ALMKcJ2TnmMBe3m0qwcJxZwSV3IKlA
+        1RQSAje8dmKG1wmP8ECCuQ38Co2oNlcaiXNZVwi0=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1576054135;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1576054157;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
-        bh=UEwfi+RZS/vW/w3fh/SVyY2n5RGl+a32Uty8VCq8WgU=;
-        b=EYOzsNOvAjdT8y/l4XDkfKuyLgtFEMVqq0NhvjPUjJzPRdqHgtWPlWiqvNxqYviW
-        +C9E1S6n69yTAVDl/KcdzPple3piA4NNWTYbJYI6eq63nTGewz6r0FpUT/bjF37u2DA
-        WdpH3vVnxdM4wtZ0fTf6GY4IkVoB4G/gcCnsbV7o=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 46976C447AA
+        bh=/BB5ljNCe9y+zTWw1QriJNl51YdSMi3VwWBeDJgmCQ8=;
+        b=V10fMwyLYj5b49Z2I5oeX81mULEbnYqdP7lzL6Ohqvu+bNbsIpEihUeNvFnw9bBS
+        pU3P/MJTRZopO2gsSrBUZEXnTNDZL3NuyUkU6U9tMSZy+QdmP6o5MD3E/KCRqnyimg9
+        IMOa8/KHbf2BxwxqWElZOd6O58LVGQ/2P0OGuZJ0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5260EC4479C
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -50,44 +50,310 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Stephen Boyd <swboyd@chromium.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
         Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 1/3] scsi: ufs: Put SCSI host after remove it
-Date:   Wed, 11 Dec 2019 08:48:55 +0000
-Message-ID: <0101016ef4259a7c-76bdf010-88b1-4309-ba24-8c874734184e-000000@us-west-2.amazonses.com>
+Subject: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
+Date:   Wed, 11 Dec 2019 08:49:17 +0000
+Message-ID: <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
 References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
-X-SES-Outgoing: 2019.12.11-54.240.27.10
+X-SES-Outgoing: 2019.12.11-54.240.27.55
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In ufshcd_remove(), after SCSI host is removed, put it once so that its
-resources can be released.
+In order to improve the flexibility of ufs-bsg, modulizing it is a good
+choice. This change introduces tristate to ufs-bsg to allow users compile
+it as an external module.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/ufs/Kconfig   |  3 ++-
+ drivers/scsi/ufs/Makefile  |  2 +-
+ drivers/scsi/ufs/ufs_bsg.c | 49 +++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ufs/ufs_bsg.h |  8 --------
+ drivers/scsi/ufs/ufshcd.c  | 36 ++++++++++++++++++++++++++++++----
+ drivers/scsi/ufs/ufshcd.h  |  7 ++++++-
+ 6 files changed, 87 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index d14c224..72620ce 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -38,6 +38,7 @@ config SCSI_UFSHCD
+ 	select PM_DEVFREQ
+ 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+ 	select NLS
++	select BLK_DEV_BSGLIB
+ 	---help---
+ 	This selects the support for UFS devices in Linux, say Y and make
+ 	  sure that you know the name of your UFS host adapter (the card
+@@ -143,7 +144,7 @@ config SCSI_UFS_TI_J721E
+ 	  If unsure, say N.
+ 
+ config SCSI_UFS_BSG
+-	bool "Universal Flash Storage BSG device node"
++	tristate "Universal Flash Storage BSG device node"
+ 	depends on SCSI_UFSHCD
+ 	select BLK_DEV_BSGLIB
+ 	help
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 94c6c5d..904eff1 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -6,7 +6,7 @@ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+ ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+-ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
++obj-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
+index 3a2e68f..302222f 100644
+--- a/drivers/scsi/ufs/ufs_bsg.c
++++ b/drivers/scsi/ufs/ufs_bsg.c
+@@ -164,13 +164,15 @@ static int ufs_bsg_request(struct bsg_job *job)
+  */
+ void ufs_bsg_remove(struct ufs_hba *hba)
+ {
+-	struct device *bsg_dev = &hba->bsg_dev;
++	struct device *bsg_dev = hba->bsg_dev;
+ 
+ 	if (!hba->bsg_queue)
+ 		return;
+ 
+ 	bsg_remove_queue(hba->bsg_queue);
+ 
++	hba->bsg_dev = NULL;
++	hba->bsg_queue = NULL;
+ 	device_del(bsg_dev);
+ 	put_device(bsg_dev);
+ }
+@@ -178,6 +180,7 @@ void ufs_bsg_remove(struct ufs_hba *hba)
+ static inline void ufs_bsg_node_release(struct device *dev)
+ {
+ 	put_device(dev->parent);
++	kfree(dev);
+ }
+ 
+ /**
+@@ -186,14 +189,19 @@ static inline void ufs_bsg_node_release(struct device *dev)
+  *
+  * Called during initial loading of the driver, and before scsi_scan_host.
+  */
+-int ufs_bsg_probe(struct ufs_hba *hba)
++static int ufs_bsg_probe(struct ufs_hba *hba)
+ {
+-	struct device *bsg_dev = &hba->bsg_dev;
++	struct device *bsg_dev;
+ 	struct Scsi_Host *shost = hba->host;
+ 	struct device *parent = &shost->shost_gendev;
+ 	struct request_queue *q;
+ 	int ret;
+ 
++	bsg_dev = kzalloc(sizeof(*bsg_dev), GFP_KERNEL);
++	if (!bsg_dev)
++		return -ENOMEM;
++
++	hba->bsg_dev = bsg_dev;
+ 	device_initialize(bsg_dev);
+ 
+ 	bsg_dev->parent = get_device(parent);
+@@ -217,6 +225,41 @@ int ufs_bsg_probe(struct ufs_hba *hba)
+ 
+ out:
+ 	dev_err(bsg_dev, "fail to initialize a bsg dev %d\n", shost->host_no);
++	hba->bsg_dev = NULL;
+ 	put_device(bsg_dev);
+ 	return ret;
+ }
++
++static int __init ufs_bsg_init(void)
++{
++	struct list_head *hba_list = NULL;
++	struct ufs_hba *hba;
++	int ret = 0;
++
++	ufshcd_get_hba_list_lock(&hba_list);
++	list_for_each_entry(hba, hba_list, list) {
++		ret = ufs_bsg_probe(hba);
++		if (ret)
++			break;
++	}
++	ufshcd_put_hba_list_unlock();
++
++	return ret;
++}
++
++static void __exit ufs_bsg_exit(void)
++{
++	struct list_head *hba_list = NULL;
++	struct ufs_hba *hba;
++
++	ufshcd_get_hba_list_lock(&hba_list);
++	list_for_each_entry(hba, hba_list, list)
++		ufs_bsg_remove(hba);
++	ufshcd_put_hba_list_unlock();
++}
++
++late_initcall_sync(ufs_bsg_init);
++module_exit(ufs_bsg_exit);
++
++MODULE_ALIAS("ufs-bsg");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/scsi/ufs/ufs_bsg.h b/drivers/scsi/ufs/ufs_bsg.h
+index d099187..9d922c0 100644
+--- a/drivers/scsi/ufs/ufs_bsg.h
++++ b/drivers/scsi/ufs/ufs_bsg.h
+@@ -12,12 +12,4 @@
+ #include "ufshcd.h"
+ #include "ufs.h"
+ 
+-#ifdef CONFIG_SCSI_UFS_BSG
+-void ufs_bsg_remove(struct ufs_hba *hba);
+-int ufs_bsg_probe(struct ufs_hba *hba);
+-#else
+-static inline void ufs_bsg_remove(struct ufs_hba *hba) {}
+-static inline int ufs_bsg_probe(struct ufs_hba *hba) {return 0; }
+-#endif
+-
+ #endif /* UFS_BSG_H */
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index b5966fa..a86b0fd 100644
+index a86b0fd..7a83a8f 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8251,6 +8251,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufs_bsg_remove(hba);
+@@ -108,6 +108,22 @@
+ 		       16, 4, buf, __len, false);                        \
+ } while (0)
+ 
++static LIST_HEAD(ufs_hba_list);
++static DEFINE_MUTEX(ufs_hba_list_lock);
++
++void ufshcd_get_hba_list_lock(struct list_head **list)
++{
++	mutex_lock(&ufs_hba_list_lock);
++	*list = &ufs_hba_list;
++}
++EXPORT_SYMBOL_GPL(ufshcd_get_hba_list_lock);
++
++void ufshcd_put_hba_list_unlock(void)
++{
++	mutex_unlock(&ufs_hba_list_lock);
++}
++EXPORT_SYMBOL_GPL(ufshcd_put_hba_list_unlock);
++
+ int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+ 		     const char *prefix)
+ {
+@@ -2093,6 +2109,7 @@ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	ufshcd_release(hba);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_send_uic_cmd);
+ 
+ /**
+  * ufshcd_map_sg - Map scatter-gather list to prdt
+@@ -6024,6 +6041,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 
+ 	return err;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_exec_raw_upiu_cmd);
+ 
+ /**
+  * ufshcd_eh_device_reset_handler - device reset handler registered to
+@@ -7043,9 +7061,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 			}
+ 			hba->clk_scaling.is_allowed = true;
+ 		}
+-
+-		ufs_bsg_probe(hba);
+-
+ 		scsi_scan_host(hba->host);
+ 		pm_runtime_put_sync(hba->dev);
+ 	}
+@@ -8248,7 +8263,16 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+  */
+ void ufshcd_remove(struct ufs_hba *hba)
+ {
+-	ufs_bsg_remove(hba);
++	struct device *bsg_dev = hba->bsg_dev;
++
++	mutex_lock(&ufs_hba_list_lock);
++	list_del(&hba->list);
++	if (hba->bsg_queue) {
++		bsg_remove_queue(hba->bsg_queue);
++		device_del(bsg_dev);
++		put_device(bsg_dev);
++	}
++	mutex_unlock(&ufs_hba_list_lock);
  	ufs_sysfs_remove_nodes(hba->dev);
  	scsi_remove_host(hba->host);
-+	scsi_host_put(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba, true);
+ 	scsi_host_put(hba->host);
+@@ -8494,6 +8518,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	async_schedule(ufshcd_async_scan, hba);
+ 	ufs_sysfs_add_nodes(hba->dev);
+ 
++	mutex_lock(&ufs_hba_list_lock);
++	list_add_tail(&hba->list, &ufs_hba_list);
++	mutex_unlock(&ufs_hba_list_lock);
++
+ 	return 0;
+ 
+ out_remove_scsi_host:
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2740f69..893debc 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -74,6 +74,9 @@
+ 
+ struct ufs_hba;
+ 
++void ufshcd_get_hba_list_lock(struct list_head **list);
++void ufshcd_put_hba_list_unlock(void);
++
+ enum dev_cmd_type {
+ 	DEV_CMD_TYPE_NOP		= 0x0,
+ 	DEV_CMD_TYPE_QUERY		= 0x1,
+@@ -473,6 +476,7 @@ struct ufs_stats {
+ 
+ /**
+  * struct ufs_hba - per adapter private structure
++ * @list: Anchored at ufs_hba_list
+  * @mmio_base: UFSHCI base register address
+  * @ucdl_base_addr: UFS Command Descriptor base address
+  * @utrdl_base_addr: UTP Transfer Request Descriptor base address
+@@ -527,6 +531,7 @@ struct ufs_stats {
+  * @scsi_block_reqs_cnt: reference counting for scsi block requests
+  */
+ struct ufs_hba {
++	struct list_head list;
+ 	void __iomem *mmio_base;
+ 
+ 	/* Virtual memory reference */
+@@ -734,7 +739,7 @@ struct ufs_hba {
+ 	struct ufs_desc_size desc_size;
+ 	atomic_t scsi_block_reqs_cnt;
+ 
+-	struct device		bsg_dev;
++	struct device		*bsg_dev;
+ 	struct request_queue	*bsg_queue;
+ };
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
