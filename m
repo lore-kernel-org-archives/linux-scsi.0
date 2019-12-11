@@ -7,249 +7,259 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB316C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A699C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABF6B2054F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F343620836
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbfLKUum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 15:50:42 -0500
-Received: from mout.kundenserver.de ([212.227.17.24]:56963 "EHLO
+        id S1726718AbfLKUvu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 15:51:50 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:45853 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726368AbfLKUum (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:50:42 -0500
+        with ESMTP id S1726494AbfLKUvt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:51:49 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MLz7f-1iNCZv1Qiv-00HtOe; Wed, 11 Dec 2019 21:50:18 +0100
+ 1N4R0a-1hhIFG2CJi-011RMZ; Wed, 11 Dec 2019 21:51:32 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>
+        John Garry <john.garry@huawei.com>,
+        Brian King <brking@us.ibm.com>,
+        Intel SCU Linux support <intel-linux-scu@intel.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>
 Cc:     linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
-        Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>,
-        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 18/24] compat_ioctl: move cdrom commands into cdrom.c
-Date:   Wed, 11 Dec 2019 21:42:52 +0100
-Message-Id: <20191211204306.1207817-19-arnd@arndb.de>
+        Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 19/24] compat_ioctl: scsi: handle HDIO commands from drivers
+Date:   Wed, 11 Dec 2019 21:42:53 +0100
+Message-Id: <20191211204306.1207817-20-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191211204306.1207817-1-arnd@arndb.de>
 References: <20191211204306.1207817-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:YCC/4Cjm3aDYhGrVvv4vw+/A3W06RkJIX2vxsyaBWOwABLnpSY0
- RA84rLENvr6GZ+SZrzgiGodaxTM+m2zHv3jC9nZ8PvrEgP8TU/0gCkO5D18uiAal4+0hFFX
- jiegrBrTxABAqlc+aLlM3EscQFWgbVf0ARY6eFMRjNjOwndlfTuEaI40MMv7h4v9UeeEbxl
- VP6Uq+ZvyoT7YYcZT9kjw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:9xEE4g5+y1E=:Hp3/3rN4TA2XdTQ/ZzXAp4
- glzcY9TOBSffEXTuRYc+dcmHJcrbZ1Ab3/tuAZkfYu333ipdoJTFtSo6lNpNhw4crqPOdVqLN
- j9YyG25B9AFvowzc7CnNFLuuqoLimhcP6XpF1yHYBHGh34IxMThn6VFzdR4l4Lj2zPKRVhKCJ
- E6L5QZwADcGrpq1Eu6dULOLqU+3oSDvKHt7UtiqrTqi0edht+RxPSyuy0nF/EkBdC+5fJTech
- U/Snv0uPIaKE5ctkJC+gqh3DhM85vd0t9PGFy4sHDKTQ88N/QPnkQ4QoFBJrCXhqeir6Rrrn+
- L+2DLl4DYXaFjcQlPqiCtgYajpR+LyzAszZFeETOEpCXJo9uozCMFOfvyfksQiXPwtDn1Q5v5
- l3zsAgiBHMMR23H6Uzwtn8SuWQIUMlG0t65UDQIHn76EMu6r0ivfx0cUl8arB23+ejKyMJ6XR
- Y1MdzkFHwTGMi+MWNVyRY7yBkVPza6h6wBE0pfZitdd5ELziQbA3T9rgS1p51eZjee7DDQ2yT
- szzl3/5Nwbjtl+fKDwLeQM2uFkYNM9WzpWLsZ2c1jYYyxc32w7sKepB3Fp5V0vcqXOEZ/pSNT
- xnBnq0oxtC9mG+cLRI8JJIBoLbC446PHO/nRGNPYeY6LqswkFVXZE8Uli3sMNgocJEaVlBvdv
- jY71lV/obi6/1Gk6bhSftJ1ztMGw4ePxgEnfVBDoBN/IA4nqbwy7QXtjeUuOPqlg9iPlqtWvW
- BFruKHq0q3mTkhQyuAnYIFqeKBPLawr7DdtOXL/Br/Bq/JqZIdyLWjxKCRtaO+zhINgjy/W/O
- 8HA4p80/KqA6pkRfIkbE2l7kclxzRZMo7EoNUuEaZuD+1w1OMvLgmE+5jejt0zE1D0ehy166M
- 1XyCth261VtdB0xAEmow==
+X-Provags-ID: V03:K1:VLpQgUZjxMkjb5YR1h3oCFegmEv0coXfNiTrkHDQbxAgyNP2E6r
+ MhXP2DgggU3oHmH6OM02Nk4EdkpfukoiVoudcNxW0gfqQQUukVExLJ7qPeUaC3clym7QDC0
+ nxat+UUyfjMPDoRwh/vX8d4K73OhBvOqGwqCeFzy/lYeu2qwmuA9trb2+GROu1JTOt3YvxB
+ MLF8IJwkJNZW0Nm7LIFpw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Px569MvALqc=:ysQLWqqciSyF15brchKM3I
+ AbgC7DJI/etNcD+NoccD2d9MqjmlCKi5QZwvOSVw3d5aEnupRdMueWRTKTtD0L/Gr8TRj3Y72
+ iSBCbkqGkDo9MTm1JFmOcpGjOGvXfaysP0YDObPqS7ydxwRCxsfpE7hTcmwswcvBl5iQfrjhu
+ eKLPypYh9ZvSyzYcB3mZkDpPngBv6/lCuW9PX9VMtpb5aoj0T4k9M1lqHBVTdiOUMc5CvcAjR
+ mcUHXeEJvTsU03QjrFBk+VT3A0Hlsaw9UvkIYfK74sBafee67riQ0pcmXlw+HYzF4gDuoDtZI
+ Jt6AhxBwKxun6NVYFVjTkJlsIDsEm6bBQU8ZH1267i8g7SgZucFxe7Ix8cfgdh9JZS0m0Gxdc
+ mQsnRZPAxsSS64lpve3Is6NbsTN9AiORby8p0ywPyvZWYFS0DJoV2gbbx9Fv7lkUa3DiKNung
+ X9ASeZFO3SP2nNFfwTpE4M5dy04rABfp+TP7ymdgx6Npw3jvzEYMJRbaFqdcgI4SfO6BrgbZR
+ uF7gIhgrSKYmunLQ7S3JU+NbclFRBThXEPe81WzG3q/o6LR6RchCoSiQtqCgpDHQvK6R+W72D
+ 8htJh+GZOeT7VW3gyPgN6Pns/RBZuCRJvFsbVBKI5oNXNZyt5+nmlGk6CG4lTm5jCzCrG8b5n
+ T9iHACHK0zsazU8SackkzxZkdJXhU5jrxwL2CQqeMlcIit9bWKIYIfcBjcnGEhjBKaosW7PFS
+ PvI7Vp1Bm6nCKKDOQMMg3wWYXZcu1ljfBPF+W+1becYC/U0WLm6L91VeAQv6GFQ6I+HopLzkJ
+ TTnWy3eGhD4EZBkg/3QdrcNxVcufdDAKajSMPDmwzy6Vo8bVL8QzKfKQFu/AhtH0qHPyJE7vZ
+ KDXp5oroB2gZemEXwXBQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need for the special cases for the cdrom ioctls any more now,
-so make sure that each cdrom driver has a .compat_ioctl() callback and
-calls cdrom_compat_ioctl() directly there.
+The ata_sas_scsi_ioctl() function implements a number of HDIO_* commands
+for SCSI devices, it is used by all libata drivers as well as a few
+drivers that support SAS attached SATA drives.
+
+The only command that is not safe for compat ioctls here is
+HDIO_GET_32BIT. Change the implementation to check for in_compat_syscall()
+in order to do both cases correctly, and change all callers to use it
+as both native and compat callback pointers, including the indirect
+callers through sas_ioctl and ata_scsi_ioctl.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- block/compat_ioctl.c       | 45 --------------------------------------
- drivers/block/paride/pcd.c |  3 +++
- drivers/cdrom/gdrom.c      |  3 +++
- drivers/ide/ide-cd.c       | 36 ++++++++++++++++++++++++++++++
- drivers/scsi/sr.c          | 10 +++------
- 5 files changed, 45 insertions(+), 52 deletions(-)
+ drivers/ata/libata-scsi.c              | 9 +++++++++
+ drivers/scsi/aic94xx/aic94xx_init.c    | 3 +++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 +++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 +++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +++
+ drivers/scsi/ipr.c                     | 3 +++
+ drivers/scsi/isci/init.c               | 3 +++
+ drivers/scsi/mvsas/mv_init.c           | 3 +++
+ drivers/scsi/pm8001/pm8001_init.c      | 3 +++
+ include/linux/libata.h                 | 6 ++++++
+ 10 files changed, 39 insertions(+)
 
-diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
-index cf136bc2c9fc..7cb534d6e767 100644
---- a/block/compat_ioctl.c
-+++ b/block/compat_ioctl.c
-@@ -159,42 +159,6 @@ static int compat_blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
- 	case HDIO_DRIVE_CMD:
- 	/* 0x330 is reserved -- it used to be HDIO_GETGEO_BIG */
- 	case 0x330:
--	/* CDROM stuff */
--	case CDROMPAUSE:
--	case CDROMRESUME:
--	case CDROMPLAYMSF:
--	case CDROMPLAYTRKIND:
--	case CDROMREADTOCHDR:
--	case CDROMREADTOCENTRY:
--	case CDROMSTOP:
--	case CDROMSTART:
--	case CDROMEJECT:
--	case CDROMVOLCTRL:
--	case CDROMSUBCHNL:
--	case CDROMMULTISESSION:
--	case CDROM_GET_MCN:
--	case CDROMRESET:
--	case CDROMVOLREAD:
--	case CDROMSEEK:
--	case CDROMPLAYBLK:
--	case CDROMCLOSETRAY:
--	case CDROM_DISC_STATUS:
--	case CDROM_CHANGER_NSLOTS:
--	case CDROM_GET_CAPABILITY:
--	case CDROM_SEND_PACKET:
--	/* Ignore cdrom.h about these next 5 ioctls, they absolutely do
--	 * not take a struct cdrom_read, instead they take a struct cdrom_msf
--	 * which is compatible.
--	 */
--	case CDROMREADMODE2:
--	case CDROMREADMODE1:
--	case CDROMREADRAW:
--	case CDROMREADCOOKED:
--	case CDROMREADALL:
--	/* DVD ioctls */
--	case DVD_READ_STRUCT:
--	case DVD_WRITE_STRUCT:
--	case DVD_AUTH:
- 		arg = (unsigned long)compat_ptr(arg);
- 	/* These intepret arg as an unsigned long, not as a pointer,
- 	 * so we must not do compat_ptr() conversion. */
-@@ -210,15 +174,6 @@ static int compat_blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
- 	case HDIO_SET_ACOUSTIC:
- 	case HDIO_SET_BUSSTATE:
- 	case HDIO_SET_ADDRESS:
--	case CDROMEJECT_SW:
--	case CDROM_SET_OPTIONS:
--	case CDROM_CLEAR_OPTIONS:
--	case CDROM_SELECT_SPEED:
--	case CDROM_SELECT_DISC:
--	case CDROM_MEDIA_CHANGED:
--	case CDROM_DRIVE_STATUS:
--	case CDROM_LOCKDOOR:
--	case CDROM_DEBUG:
- 		break;
- 	default:
- 		/* unknown ioctl number */
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index 636bfea2de6f..117cfc8cd05a 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -275,6 +275,9 @@ static const struct block_device_operations pcd_bdops = {
- 	.open		= pcd_block_open,
- 	.release	= pcd_block_release,
- 	.ioctl		= pcd_block_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.ioctl		= blkdev_compat_ptr_ioctl,
-+#endif
- 	.check_events	= pcd_block_check_events,
- };
- 
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index 5b21dc421c94..886b2638c730 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -518,6 +518,9 @@ static const struct block_device_operations gdrom_bdops = {
- 	.release		= gdrom_bdops_release,
- 	.check_events		= gdrom_bdops_check_events,
- 	.ioctl			= gdrom_bdops_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.ioctl			= blkdev_compat_ptr_ioctl,
-+#endif
- };
- 
- static irqreturn_t gdrom_command_interrupt(int irq, void *dev_id)
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 9d117936bee1..2de6e8ace957 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -25,6 +25,7 @@
- 
- #define IDECD_VERSION "5.00"
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 58e09ffe8b9c..eb2eb599e602 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -17,6 +17,7 @@
+  *  - http://www.t13.org/
+  */
  
 +#include <linux/compat.h>
- #include <linux/module.h>
- #include <linux/types.h>
+ #include <linux/slab.h>
  #include <linux/kernel.h>
-@@ -1710,6 +1711,38 @@ static int idecd_ioctl(struct block_device *bdev, fmode_t mode,
- 	return ret;
+ #include <linux/blkdev.h>
+@@ -761,6 +762,10 @@ static int ata_ioc32(struct ata_port *ap)
+ 	return 0;
  }
  
++/*
++ * This handles both native and compat commands, so anything added
++ * here must have a compatible argument, or check in_compat_syscall()
++ */
+ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ 		     unsigned int cmd, void __user *arg)
+ {
+@@ -773,6 +778,10 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ 		spin_lock_irqsave(ap->lock, flags);
+ 		val = ata_ioc32(ap);
+ 		spin_unlock_irqrestore(ap->lock, flags);
 +#ifdef CONFIG_COMPAT
-+static int idecd_locked_compat_ioctl(struct block_device *bdev, fmode_t mode,
-+			unsigned int cmd, unsigned long arg)
-+{
-+	struct cdrom_info *info = ide_drv_g(bdev->bd_disk, cdrom_info);
-+	int err;
-+
-+	switch (cmd) {
-+	case CDROMSETSPINDOWN:
-+		return idecd_set_spindown(&info->devinfo, arg);
-+	case CDROMGETSPINDOWN:
-+		return idecd_get_spindown(&info->devinfo, arg);
-+	default:
-+		break;
-+	}
-+
-+	return cdrom_ioctl(&info->devinfo, bdev, mode, cmd,
-+			   (unsigned long)compat_ptr(arg));
-+}
-+
-+static int idecd_compat_ioctl(struct block_device *bdev, fmode_t mode,
-+			     unsigned int cmd, unsigned long arg)
-+{
-+	int ret;
-+
-+	mutex_lock(&ide_cd_mutex);
-+	ret = idecd_locked_compat_ioctl(bdev, mode, cmd, arg);
-+	mutex_unlock(&ide_cd_mutex);
-+
-+	return ret;
-+}
++		if (in_compat_syscall())
++			return put_user(val, (compat_ulong_t __user *)arg);
 +#endif
+ 		return put_user(val, (unsigned long __user *)arg);
  
- static unsigned int idecd_check_events(struct gendisk *disk,
- 				       unsigned int clearing)
-@@ -1732,6 +1765,9 @@ static const struct block_device_operations idecd_ops = {
- 	.open			= idecd_open,
- 	.release		= idecd_release,
- 	.ioctl			= idecd_ioctl,
+ 	case HDIO_SET_32BIT:
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index f5781e31f57c..d022407e5645 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -54,6 +54,9 @@ static struct scsi_host_template aic94xx_sht = {
+ 	.eh_target_reset_handler	= sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
 +#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= idecd_compat_ioctl,
++	.compat_ioctl		= sas_ioctl,
 +#endif
- 	.check_events		= idecd_check_events,
- 	.revalidate_disk	= idecd_revalidate_disk
+ 	.track_queue_depth	= 1,
  };
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 6033a886c42c..0fbb8fe6e521 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -628,13 +628,9 @@ static int sr_block_compat_ioctl(struct block_device *bdev, fmode_t mode, unsign
- 		goto put;
- 	}
  
--	/*
--	 * CDROM ioctls are handled in the block layer, but
--	 * do the scsi blk ioctls here.
--	 */
--	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
--	if (ret != -ENOTTY)
--		return ret;
-+	ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, (unsigned long)argp);
-+	if (ret != -ENOSYS)
-+		goto put;
- 
- 	ret = scsi_compat_ioctl(sdev, cmd, argp);
- 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 3af53cc42bd6..fa25766502a2 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1772,6 +1772,9 @@ static struct scsi_host_template sht_v1_hw = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= sas_ioctl,
++#endif
+ 	.shost_attrs		= host_attrs_v1_hw,
+ 	.host_reset             = hisi_sas_host_reset,
+ };
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 61b1e2693b08..545eaff5f3ee 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3551,6 +3551,9 @@ static struct scsi_host_template sht_v2_hw = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= sas_ioctl,
++#endif
+ 	.shost_attrs		= host_attrs_v2_hw,
+ 	.host_reset		= hisi_sas_host_reset,
+ };
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index bf5d5f138437..fa05e612d85a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3075,6 +3075,9 @@ static struct scsi_host_template sht_v3_hw = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= sas_ioctl,
++#endif
+ 	.shost_attrs		= host_attrs_v3_hw,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+ 	.host_reset             = hisi_sas_host_reset,
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 079c04bc448a..ae45cbe98ae2 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6727,6 +6727,9 @@ static struct scsi_host_template driver_template = {
+ 	.name = "IPR",
+ 	.info = ipr_ioa_info,
+ 	.ioctl = ipr_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl = ipr_ioctl,
++#endif
+ 	.queuecommand = ipr_queuecommand,
+ 	.eh_abort_handler = ipr_eh_abort,
+ 	.eh_device_reset_handler = ipr_eh_dev_reset,
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 1727d0c71b12..b48aac8dfcb8 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -168,6 +168,9 @@ static struct scsi_host_template isci_sht = {
+ 	.eh_target_reset_handler        = sas_eh_target_reset_handler,
+ 	.target_destroy			= sas_target_destroy,
+ 	.ioctl				= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl			= sas_ioctl,
++#endif
+ 	.shost_attrs			= isci_host_attrs,
+ 	.track_queue_depth		= 1,
+ };
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index da719b0694dc..7af9173c4925 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -47,6 +47,9 @@ static struct scsi_host_template mvs_sht = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= sas_ioctl,
++#endif
+ 	.shost_attrs		= mvst_host_attrs,
+ 	.track_queue_depth	= 1,
+ };
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index ff618ad80ebd..3c6076e4c6d2 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -101,6 +101,9 @@ static struct scsi_host_template pm8001_sht = {
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= sas_ioctl,
++#endif
+ 	.shost_attrs		= pm8001_host_attrs,
+ 	.track_queue_depth	= 1,
+ };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d3bbfddf616a..e68d05febe5a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1109,6 +1109,11 @@ extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_op
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+ 			  void __user *arg);
++#ifdef CONFIG_COMPAT
++#define ATA_SCSI_COMPAT_IOCTL .compat_ioctl = ata_scsi_ioctl,
++#else
++#define ATA_SCSI_COMPAT_IOCTL /* empty */
++#endif
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ 			    unsigned int cmd, void __user *arg);
+@@ -1340,6 +1345,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
+ 	.module			= THIS_MODULE,			\
+ 	.name			= drv_name,			\
+ 	.ioctl			= ata_scsi_ioctl,		\
++	ATA_SCSI_COMPAT_IOCTL					\
+ 	.queuecommand		= ata_scsi_queuecmd,		\
+ 	.can_queue		= ATA_DEF_QUEUE,		\
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
 -- 
 2.20.0
 
