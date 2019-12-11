@@ -4,55 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E61ABC2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8810FC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:02:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA85E2073D
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F49F214D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:02:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080088;
-	bh=OcyEzfTXpAYKuruNL2d1bm6fV7j6InQkUk4GWQFj5q4=;
+	s=default; t=1576080165;
+	bh=zhohHsVX+GTtYTqbaLSoGKPyiR4OLejXpIJpJGzzvqw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=stE6+s7eY6v+bpRX+ddeGN+Pde6AKLa4J4kKhb+Mb1Cm+hQP1FmPjNXb3Q8hhtTNJ
-	 XD7JAglCcNcwhEAdw4W8sLYEYufI7IpQZ2BO12Xpczqz2nJptCKDt8KEwa4CXesyQX
-	 Z0dZl5b5GhhuVgO4ZxF9piz0KEAke7wr7WNWAO8w=
+	b=o/crgc5lCETNSie2xUj6/lxs5CUCFuw7IimRzhPH5IenrICCl29pSAft85O6tnpfn
+	 t5ldl72+v/ygjDxeKnW4CTZsp+b6Zyf1dXzFQUzrGW1qRogVRnQI0EFDpl7inq00DL
+	 nco4jv+/+S6Le6O+FLFsT5HWq3kTeYukAZdxe84o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387957AbfLKQB2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:01:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37158 "EHLO mail.kernel.org"
+        id S1731573AbfLKQCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 11:02:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36152 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731430AbfLKPNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:13:31 -0500
+        id S1731264AbfLKPNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:13:09 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EFBD824671;
-        Wed, 11 Dec 2019 15:13:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3A94122B48;
+        Wed, 11 Dec 2019 15:13:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077210;
-        bh=OcyEzfTXpAYKuruNL2d1bm6fV7j6InQkUk4GWQFj5q4=;
+        s=default; t=1576077189;
+        bh=zhohHsVX+GTtYTqbaLSoGKPyiR4OLejXpIJpJGzzvqw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2EIrP/pahzTQwqhtdqIKIVRPUEqoGCTY+zN5y87zWKpsM4wGrrKkUpwj3LkC7L1Os
-         sw6nINEHGS0AxWNiDqb+RyltlcvFExAsLdmAOYclzz+IxJiy+ZAddLc7upMZzVlxby
-         ejLfhArf3QFLOo/PY5XNPeF6WF8M21ln3Kim88E0=
+        b=MTVMzuuzFCh6WBnGHxnLFtVpP6ZpSrk3FavYCmtKt8HgBs3yDyvJX0DLHWObaVQYx
+         U6F0mnMHuLsdQKgaA2jXX9UIHE0aw+tLaW2X4jj2Rg6FKN2+P7B723Le3wUzqjMOX3
+         y8XgetJbny8Io9D5ueBIvl5QVlmDwHS5SHsvZKCE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 092/134] scsi: ufs: Fix error handing during hibern8 enter
-Date:   Wed, 11 Dec 2019 10:11:08 -0500
-Message-Id: <20191211151150.19073-92-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 072/134] scsi: atari_scsi: sun3_scsi: Set sg_tablesize to 1 instead of SG_NONE
+Date:   Wed, 11 Dec 2019 10:10:48 -0500
+Message-Id: <20191211151150.19073-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -61,81 +59,161 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+From: Finn Thain <fthain@telegraphics.com.au>
 
-[ Upstream commit 6d303e4b19d694cdbebf76bcdb51ada664ee953d ]
+[ Upstream commit 79172ab20bfd8437b277254028efdb68484e2c21 ]
 
-During clock gating (ufshcd_gate_work()), we first put the link hibern8 by
-calling ufshcd_uic_hibern8_enter() and if ufshcd_uic_hibern8_enter()
-returns success (0) then we gate all the clocks.  Now let’s zoom in to what
-ufshcd_uic_hibern8_enter() does internally: It calls
-__ufshcd_uic_hibern8_enter() and if failure is encountered, link recovery
-shall put the link back to the highest HS gear and returns success (0) to
-ufshcd_uic_hibern8_enter() which is the issue as link is still in active
-state due to recovery!  Now ufshcd_uic_hibern8_enter() returns success to
-ufshcd_gate_work() and hence it goes ahead with gating the UFS clock while
-link is still in active state hence I believe controller would raise UIC
-error interrupts. But when we service the interrupt, clocks might have
-already been disabled!
+Since the scsi subsystem adopted the blk-mq API, a host with zero
+sg_tablesize crashes with a NULL pointer dereference.
 
-This change fixes for this by returning failure from
-__ufshcd_uic_hibern8_enter() if recovery succeeds as link is still not in
-hibern8, upon receiving the error ufshcd_hibern8_enter() would initiate
-retry to put the link state back into hibern8.
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+scsi target0:0:0: Beginning Domain Validation
+scsi target0:0:0: Domain Validation skipping write tests
+scsi target0:0:0: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:1:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+scsi target0:0:1: Beginning Domain Validation
+scsi target0:0:1: Domain Validation skipping write tests
+scsi target0:0:1: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.5+ PQ: 0 ANSI: 5
+scsi target0:0:2: Beginning Domain Validation
+scsi target0:0:2: Domain Validation skipping write tests
+scsi target0:0:2: Ending Domain Validation
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+blk_queue_max_segments: set to minimum 1
+sr 0:0:2:0: Power-on or device reset occurred
+sd 0:0:0:0: Power-on or device reset occurred
+sd 0:0:1:0: Power-on or device reset occurred
+sd 0:0:0:0: [sda] 10485762 512-byte logical blocks: (5.37 GB/5.00 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Unable to handle kernel NULL pointer dereference at virtual address (ptrval)
+Oops: 00000000
+Modules linked in:
+PC: [<001cd874>] blk_mq_free_request+0x66/0xe2
+SR: 2004  SP: (ptrval)  a2: 00874520
+d0: 00000000    d1: 00000000    d2: 009ba800    d3: 00000000
+d4: 00000000    d5: 08000002    a0: 0087be68    a1: 009a81e0
+Process kworker/u2:2 (pid: 15, task=(ptrval))
+Frame format=7 eff addr=0000007a ssw=0505 faddr=0000007a
+wb 1 stat/addr/data: 0000 00000000 00000000
+wb 2 stat/addr/data: 0000 00000000 00000000
+wb 3 stat/addr/data: 0000 0000007a 00000000
+push data: 00000000 00000000 00000000 00000000
+Stack from 0087bd98:
+        00000002 00000000 0087be72 009a7820 0087bdb4 001c4f6c 009a7820 0087bdd4
+        0024d200 009a7820 0024d0dc 0087be72 009baa00 0087be68 009a5000 0087be7c
+        00265d10 009a5000 0087be72 00000003 00000000 00000000 00000000 0087be68
+        00000bb8 00000005 00000000 00000000 00000000 00000000 00265c56 00000000
+        009ba60c 0036ddf4 00000002 ffffffff 009baa00 009ba600 009a50d6 0087be74
+        00227ba0 009baa08 00000001 009baa08 009ba60c 0036ddf4 00000000 00000000
+Call Trace: [<001c4f6c>] blk_put_request+0xe/0x14
+ [<0024d200>] __scsi_execute+0x124/0x174
+ [<0024d0dc>] __scsi_execute+0x0/0x174
+ [<00265d10>] sd_revalidate_disk+0xba/0x1f02
+ [<00265c56>] sd_revalidate_disk+0x0/0x1f02
+ [<0036ddf4>] strlen+0x0/0x22
+ [<00227ba0>] device_add+0x3da/0x604
+ [<0036ddf4>] strlen+0x0/0x22
+ [<00267e64>] sd_probe+0x30c/0x4b4
+ [<0002da44>] process_one_work+0x0/0x402
+ [<0022b978>] really_probe+0x226/0x354
+ [<0022bc34>] driver_probe_device+0xa4/0xf0
+ [<0002da44>] process_one_work+0x0/0x402
+ [<0022bcd0>] __driver_attach_async_helper+0x50/0x70
+ [<00035dae>] async_run_entry_fn+0x36/0x130
+ [<0002db88>] process_one_work+0x144/0x402
+ [<0002e1aa>] worker_thread+0x0/0x570
+ [<0002e29a>] worker_thread+0xf0/0x570
+ [<0002e1aa>] worker_thread+0x0/0x570
+ [<003768d8>] schedule+0x0/0xb8
+ [<0003f58c>] __init_waitqueue_head+0x0/0x12
+ [<00033e92>] kthread+0xc2/0xf6
+ [<000331e8>] kthread_parkme+0x0/0x4e
+ [<003768d8>] schedule+0x0/0xb8
+ [<00033dd0>] kthread+0x0/0xf6
+ [<00002c10>] ret_from_kernel_thread+0xc/0x14
+Code: 0280 0006 0800 56c0 4400 0280 0000 00ff <52b4> 0c3a 082b 0006 0013 6706 2042 53a8 00c4 4ab9 0047 3374 6640 202d 000c 670c
+Disabling lock debugging due to kernel taint
 
-Link: https://lore.kernel.org/r/1573798172-20534-8-git-send-email-cang@codeaurora.org
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Avoid this by setting sg_tablesize = 1.
+
+Link: https://lore.kernel.org/r/4567bcae94523b47d6f3b77450ba305823bca479.1572656814.git.fthain@telegraphics.com.au
+Reported-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+References: commit 68ab2d76e4be ("scsi: cxlflash: Set sg_tablesize to 1 instead of SG_NONE")
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ drivers/scsi/atari_scsi.c | 6 +++---
+ drivers/scsi/mac_scsi.c   | 2 +-
+ drivers/scsi/sun3_scsi.c  | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 358ff7b015680..0036dcffc4a90 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3885,15 +3885,24 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 
- 	if (ret) {
-+		int err;
-+
- 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
- 			__func__, ret);
- 
- 		/*
--		 * If link recovery fails then return error so that caller
--		 * don't retry the hibern8 enter again.
-+		 * If link recovery fails then return error code returned from
-+		 * ufshcd_link_recovery().
-+		 * If link recovery succeeds then return -EAGAIN to attempt
-+		 * hibern8 enter retry again.
- 		 */
--		if (ufshcd_link_recovery(hba))
--			ret = -ENOLINK;
-+		err = ufshcd_link_recovery(hba);
-+		if (err) {
-+			dev_err(hba->dev, "%s: link recovery failed", __func__);
-+			ret = err;
-+		} else {
-+			ret = -EAGAIN;
-+		}
- 	} else
- 		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER,
- 								POST_CHANGE);
-@@ -3907,7 +3916,7 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 
- 	for (retries = UIC_HIBERN8_ENTER_RETRIES; retries > 0; retries--) {
- 		ret = __ufshcd_uic_hibern8_enter(hba);
--		if (!ret || ret == -ENOLINK)
-+		if (!ret)
- 			goto out;
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index e809493d0d063..a82b63a666356 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -742,7 +742,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ 		atari_scsi_template.sg_tablesize = SG_ALL;
+ 	} else {
+ 		atari_scsi_template.can_queue    = 1;
+-		atari_scsi_template.sg_tablesize = SG_NONE;
++		atari_scsi_template.sg_tablesize = 1;
  	}
- out:
+ 
+ 	if (setup_can_queue > 0)
+@@ -751,8 +751,8 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ 	if (setup_cmd_per_lun > 0)
+ 		atari_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+ 
+-	/* Leave sg_tablesize at 0 on a Falcon! */
+-	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize >= 0)
++	/* Don't increase sg_tablesize on Falcon! */
++	if (ATARIHW_PRESENT(TT_SCSI) && setup_sg_tablesize > 0)
+ 		atari_scsi_template.sg_tablesize = setup_sg_tablesize;
+ 
+ 	if (setup_hostid >= 0) {
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index 9c5566217ef6a..b5dde9d0d0545 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -464,7 +464,7 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
+ 		mac_scsi_template.can_queue = setup_can_queue;
+ 	if (setup_cmd_per_lun > 0)
+ 		mac_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
++	if (setup_sg_tablesize > 0)
+ 		mac_scsi_template.sg_tablesize = setup_sg_tablesize;
+ 	if (setup_hostid >= 0)
+ 		mac_scsi_template.this_id = setup_hostid & 7;
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 955e4c938d49e..701b842296f05 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -501,7 +501,7 @@ static struct scsi_host_template sun3_scsi_template = {
+ 	.eh_host_reset_handler	= sun3scsi_host_reset,
+ 	.can_queue		= 16,
+ 	.this_id		= 7,
+-	.sg_tablesize		= SG_NONE,
++	.sg_tablesize		= 1,
+ 	.cmd_per_lun		= 2,
+ 	.dma_boundary		= PAGE_SIZE - 1,
+ 	.cmd_size		= NCR5380_CMD_SIZE,
+@@ -523,7 +523,7 @@ static int __init sun3_scsi_probe(struct platform_device *pdev)
+ 		sun3_scsi_template.can_queue = setup_can_queue;
+ 	if (setup_cmd_per_lun > 0)
+ 		sun3_scsi_template.cmd_per_lun = setup_cmd_per_lun;
+-	if (setup_sg_tablesize >= 0)
++	if (setup_sg_tablesize > 0)
+ 		sun3_scsi_template.sg_tablesize = setup_sg_tablesize;
+ 	if (setup_hostid >= 0)
+ 		sun3_scsi_template.this_id = setup_hostid & 7;
 -- 
 2.20.1
 
