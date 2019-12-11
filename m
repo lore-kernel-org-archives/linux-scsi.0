@@ -7,53 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50FB5C2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9404C00454
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:36:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E86324658
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:35:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F7C72077B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078547;
-	bh=hem3ebfjLNtne7dQ8qxpZB4aD9lv/NFaA3OZLHfUMIs=;
+	s=default; t=1576078586;
+	bh=/+6g7v4r3IpGywefIv8ZdFwib2PrWscyPGU9R1Zcsw8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=njgCWwlKLPZlgnyJmiEfAKLZL1aYHL0m0BGUq2YaRUHD3ecLOMrwhF4XuNMfAUMLi
-	 g9FG7GD20OHjFf9KAq2mPVmGHmBls9YhR/I2Mt/uGICYFCHplcKMygBuNjJlSggCaP
-	 RdilzSueadY9+gwaAva+Y4inyQmwGyxja1T6e7c4=
+	b=z8fmaM28NOGU0vc8e9Q4bjsXiB2YuXnvaSzwSu3RMcTCwPWGGxcQlPVNFMRlirLil
+	 rvcAyvCrM6sL5xahc9/PxuKccIDz29+bO/g+xmIP7I+imv149+baRhtxSWzI/t5c4l
+	 OGw3NIldF8FcoTiDekjwyEeE3ciB9kGJfJElZeY8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387571AbfLKPfq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:35:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44948 "EHLO mail.kernel.org"
+        id S2388237AbfLKPfv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:35:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733091AbfLKPfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:35:45 -0500
+        id S2387831AbfLKPfu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:35:50 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CA34522B48;
-        Wed, 11 Dec 2019 15:35:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5D37C24656;
+        Wed, 11 Dec 2019 15:35:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078544;
-        bh=hem3ebfjLNtne7dQ8qxpZB4aD9lv/NFaA3OZLHfUMIs=;
+        s=default; t=1576078550;
+        bh=/+6g7v4r3IpGywefIv8ZdFwib2PrWscyPGU9R1Zcsw8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oEXtlU0gc69RLA2tQuvFfBp2P8pZWgsXQnHl5XgMivCfNrXtuxbnRCOLlvJ2Tz4lk
-         K3Yl3zRvDHs+sPJ8ML6DfBfycWpvKS8MxU+U+VeOKG6bj1HnKbSq28ecy9A/UT2hYS
-         q90ZSIRBqz22TJ8JhoupRd4FLpIr4MdoqKS0UxJ4=
+        b=O55GThCb8BrUm2PHe3V6Y5+gWlkvaYwICoo9/OmEgLhymN0KnaEsM+0e26KSTNTy8
+         sfXtouxpCrs2J5g6gSq4j0DIV4P4OlqsM316b5vXaNRffWeRrB0pDje0k2ETzt8S/l
+         oSDyWifvg9swnW/rRZxSZPVrJUQdS6Ha+59cSQZg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     peter chang <dpf@google.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Deepak Ukey <deepak.ukey@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, pmchba@pmcs.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 32/42] scsi: pm80xx: Fix for SATA device discovery
-Date:   Wed, 11 Dec 2019 10:35:00 -0500
-Message-Id: <20191211153510.23861-32-sashal@kernel.org>
+Cc:     =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>,
+        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 37/42] cdrom: respect device capabilities during opening action
+Date:   Wed, 11 Dec 2019 10:35:05 -0500
+Message-Id: <20191211153510.23861-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211153510.23861-1-sashal@kernel.org>
 References: <20191211153510.23861-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -62,39 +59,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: peter chang <dpf@google.com>
+From: Diego Elio Pettenò <flameeyes@flameeyes.com>
 
-[ Upstream commit ce21c63ee995b7a8b7b81245f2cee521f8c3c220 ]
+[ Upstream commit 366ba7c71ef77c08d06b18ad61b26e2df7352338 ]
 
-Driver was missing complete() call in mpi_sata_completion which result in
-SATA abort error handling timing out. That causes the device to be left in
-the in_recovery state so subsequent commands sent to the device fail and
-the OS removes access to it.
+Reading the TOC only works if the device can play audio, otherwise
+these commands fail (and possibly bring the device to an unhealthy
+state.)
 
-Link: https://lore.kernel.org/r/20191114100910.6153-2-deepak.ukey@microchip.com
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
-Signed-off-by: peter chang <dpf@google.com>
-Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Similarly, cdrom_mmc3_profile() should only be called if the device
+supports generic packet commands.
+
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Diego Elio Pettenò <flameeyes@flameeyes.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/cdrom/cdrom.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 9edd61c063a1a..df5f0bc295875 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -2368,6 +2368,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 			pm8001_printk("task 0x%p done with io_status 0x%x"
- 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
- 			t, status, ts->resp, ts->stat));
-+		if (t->slow_task)
-+			complete(&t->slow_task->completion);
- 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
- 	} else {
- 		spin_unlock_irqrestore(&t->task_state_lock, flags);
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index a46f188f679e7..782dbab5ad56a 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -998,6 +998,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	tracks->xa = 0;
+ 	tracks->error = 0;
+ 	cd_dbg(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n");
++
++	if (!CDROM_CAN(CDC_PLAY_AUDIO)) {
++		tracks->error = CDS_NO_INFO;
++		return;
++	}
++
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header);
+ 	if (ret) {
+@@ -1164,7 +1170,8 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+ 		ret = open_for_data(cdi);
+ 		if (ret)
+ 			goto err;
+-		cdrom_mmc3_profile(cdi);
++		if (CDROM_CAN(CDC_GENERIC_PACKET))
++			cdrom_mmc3_profile(cdi);
+ 		if (mode & FMODE_WRITE) {
+ 			ret = -EROFS;
+ 			if (cdrom_open_write(cdi))
+@@ -2873,6 +2880,9 @@ int cdrom_get_last_written(struct cdrom_device_info *cdi, long *last_written)
+ 	   it doesn't give enough information or fails. then we return
+ 	   the toc contents. */
+ use_toc:
++	if (!CDROM_CAN(CDC_PLAY_AUDIO))
++		return -ENOSYS;
++
+ 	toc.cdte_format = CDROM_MSF;
+ 	toc.cdte_track = CDROM_LEADOUT;
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &toc)))
 -- 
 2.20.1
 
