@@ -7,350 +7,159 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A40C2D0C7
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC92BC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB973206A5
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:46:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8F7E2054F
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 20:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726901AbfLKUqG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 15:46:06 -0500
-Received: from mout.kundenserver.de ([212.227.17.13]:40797 "EHLO
+        id S1726494AbfLKUrQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 15:47:16 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:53299 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726890AbfLKUqE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:46:04 -0500
+        with ESMTP id S1726345AbfLKUrQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 15:47:16 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1Mzhf5-1hjio20Ph3-00vbw4; Wed, 11 Dec 2019 21:44:23 +0100
+ 1N7Qt9-1heGB12Xy1-017l1U; Wed, 11 Dec 2019 21:47:02 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Arnd Bergmann <arnd@arndb.de>
+        Alexander Viro <viro@zeniv.linux.org.uk>
 Cc:     linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-block@vger.kernel.org
-Subject: [PATCH 02/24] compat: scsi: sg: fix v3 compat read/write interface
-Date:   Wed, 11 Dec 2019 21:42:36 +0100
-Message-Id: <20191211204306.1207817-3-arnd@arndb.de>
+        Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 12/24] compat_ioctl: add scsi_compat_ioctl
+Date:   Wed, 11 Dec 2019 21:42:46 +0100
+Message-Id: <20191211204306.1207817-13-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191211204306.1207817-1-arnd@arndb.de>
 References: <20191211204306.1207817-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:DlM8/RSZOaYg5JzO7DSn/knKPUvnvQmVJDNmgl9LouBnU4D8Xp1
- /K/nZQCkejcMwqd34K2Q2OBGVdjrDhpVh8FPdUh0byRt9SW3BLbCX0oUB4xrMRk2xwLEfnB
- RlZHYWzNGZ9YtHMdiUUn1opDUpu7tCIjKc27WFY9HYeiSanGdlq9NRJjwNv7rVKJxk32BCY
- AE8eyDTr8OCkKgIhZDYog==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:57TTBnsP064=:xol5gk1SJmTe2qSSdWnL0w
- 3a3nqIlxgWVtGDMKinfkP6M90bf9xUBEtxuQBD88/UGfqgJAYOiM7L3PPdvTmo9lkvzTpZQu0
- aUTZ4eiVwRshqensZ4GKhfWdBPld8QbYTSY9AVe0TMeyObvH+y9LetKeAUGCABADtnS5Qkw5G
- EcSoZvnK5Lh3Epls01CDs91roWqGa/ZaB1C5nZLdrpsVFCSavlzMrMmw9kK5LCanpNY/QQACE
- obCPL+eBF62x1XXEBpYGO8jj61UjgoLj5JcB1en4jh6StDSuF4kmBkDPiRKfFH/4Ny7uCuau9
- IBq38vB01H0aEfl268UwWIhsAkmlYXh5yab5jslBPHtuXVZSHql+g6klZ2QWwISYO+TIbWmIG
- 5g9r0L3ulEJvK/xWDYygijvQo87e6JaMDPWEfVegNznVpasGpwDFZbpn6jq6BKlAee1nL/Aee
- F8iDOJ6oHpHeDJ+Eu+Z39lV64O9xRSJnuwiFTjIA0agfWveVlmVDoAE8X1t9EcG48N0TRFAqQ
- Gboa2XdlGNmU4keGeZkZmppSFyE43e/M2U4qftHy1xXmF8xIVVmLRIPp80G1F1A7JvaYLKCCq
- exaZWu1X5Bj8e8K5pTct5soi2v5F6KiJSu0rOxoIqd4Wvntn9bIrtn8sYFqtnYMphzH6FmHUB
- XY0X4+deX3vRvsf8L5WE89BH8edm6St/YYxJM2hqRjUIg4Y1x/H+vfQx01oxzSZSpRrExc8v4
- L3VXA8er+Zo+OFOvu4LSXOhlYxpXUf/nzl2mA8g6uFBRVQJIxz9vpVSXs9O7Csk/l762+jDUa
- JAewa1xpYzvxig7e+Gw4SqhYNWc2KYC3u7/Amh+SzvE+r0Zdg4ZchYXdUubg2vH0DZ5gAGXr6
- zbeTPLkZhfhYLYWMIQfQ==
+X-Provags-ID: V03:K1:K9j2t2hRIDN1s24Qc+2ApYId+NR70I0ahQXZVZus7eh7p5W3KwC
+ BexL4HNQXEGo1mU+/z+mF+nWOdFPvBBNu+B3O+hhRy6chSEBu6VtLmq6zXb4gdu/3JIZkWp
+ fxlku3lFgKF/LiyPgpzzL8FHeSh1jnUjSLS5XVoRw4PLA0ipNO8wXuf5fhuEbAVIaJ5e9cD
+ Xp7cjFIB9kwrj12+7CkmA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:iCPMOUwnMGU=:56ma4IjE+C5v8tJDupanbg
+ ffaWXakkoowFJced4omf+RzDDMZK7NMo9/Q1isuFrGMdxbOrbBfPNB4zVP292J9Lbze6z2vby
+ 06MP9oMvdo6eX2EQ+g6AyzUwrOXltJyuT/hOYV6Su2QTSINt/C4WWoqEXtdSge4uz7tfCyCfM
+ NAUvMG9TLvoWOo7S8XMZgeW9VdarpO8Z6RaMpJWsAqIEFK7gKubRgL8PBHYuUNrnT6DkeHy6Y
+ D2RgrNSWuI3nI0AUGGni+g0HZzWgwLC5QtKsxsQj9gSQytfqAuiY5q/RIT/0Jd5MHcv6ouf+x
+ EEB3nJoKwgCYlh8Lx79x5uuRLFOQpSySmOqaD7P17FrJWT2sby0FrSqCrNx82EaFhOFk0y8B1
+ eVwHci2CU8wKbf3Tt2N3rLVN+DK/ozFKAXNYPJbwcpoQRIHtcXAuCVgELFDqYsGkUa+ql2gvC
+ I32A8I4uzEqukJM7Z9b+D9DNGfOl2HZvnkR/ZhmtObpEo5/pUFMfj11wTiSsTYebpdrhG8+HY
+ 8c/NxNufKbs+tpi1t5B/poXDjXurDqYNvg+E5zjGn8xLXJivGVlsSEEEwwvZU94xH2RO97qTk
+ sd9kyb/N8K8jMfqZqEz8RnBPgNlLtXMRO04cU0ns0ZvRQbc6aumAItMheTcPj+ZUIQPfCTPWK
+ oAVIFgY8NprWEIdqZfjvA01MQ2v5Zo3hXfyOGYaXQlRWV74VXSf4th8Xzis0k/650QKI8mrDK
+ cQqX4kJHyT/K3IX6moEX6stv8hy4WfiXEZf8ZfqNZXgEK9idm51FpDCc6gyFKsAtIGdDb4bZ5
+ uVs5sguZu62Bjex2nnONT0YwfyPyRwY1tNjMH6PcTOBj5p2/ohWqRAkR/T3GTfRVOUcCbpZ1w
+ vdIHEV5oDXVh+MX6OPeA==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the v5.4 merge window, a cleanup patch from Al Viro conflicted
-with my rework of the compat handling for sg.c read(). Linus Torvalds
-did a correct merge but pointed out that the resulting code is still
-unsatisfactory.
+In order to move the compat handling for SCSI ioctl commands out of
+fs/compat_ioctl.c into the individual drivers, we need a helper function
+first to match the native ioctl handler called by sd, sr, st, etc.
 
-I later noticed that the sg_new_read() function still gets the compat
-mode wrong, when the 'count' argument is large enough to pass a
-compat_sg_io_hdr object, but not a nativ sg_io_hdr.
-
-To address both of these, move the definition of compat_sg_io_hdr
-into a scsi/sg.h to make it visible to sg.c and rewrite the logic
-for reading req_pack_id as well as the size check to a simpler
-version that gets the expected results.
-
-Fixes: c35a5cfb4150 ("scsi: sg: sg_read(): simplify reading ->pack_id of userland sg_io_hdr_t")
-Fixes: 98aaaec4a150 ("compat_ioctl: reimplement SG_IO handling")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- block/scsi_ioctl.c |  29 +----------
- drivers/scsi/sg.c  | 125 +++++++++++++++++++++------------------------
- include/scsi/sg.h  |  30 +++++++++++
- 3 files changed, 89 insertions(+), 95 deletions(-)
+ drivers/scsi/scsi_ioctl.c | 54 +++++++++++++++++++++++++++++----------
+ include/scsi/scsi_ioctl.h |  1 +
+ 2 files changed, 41 insertions(+), 14 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 650bade5ea5a..b61dbf4d8443 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -20,6 +20,7 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/sg.h>
- 
- struct blk_cmd_filter {
- 	unsigned long read_ok[BLK_SCSI_CMD_PER_LONG];
-@@ -550,34 +551,6 @@ static inline int blk_send_start_stop(struct request_queue *q,
- 	return __blk_send_generic(q, bd_disk, GPCMD_START_STOP_UNIT, data);
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 57bcd05605bf..8f3af87b6bb0 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -189,17 +189,7 @@ static int scsi_ioctl_get_pci(struct scsi_device *sdev, void __user *arg)
  }
  
--#ifdef CONFIG_COMPAT
--struct compat_sg_io_hdr {
--	compat_int_t interface_id;	/* [i] 'S' for SCSI generic (required) */
--	compat_int_t dxfer_direction;	/* [i] data transfer direction  */
--	unsigned char cmd_len;		/* [i] SCSI command length ( <= 16 bytes) */
--	unsigned char mx_sb_len;	/* [i] max length to write to sbp */
--	unsigned short iovec_count;	/* [i] 0 implies no scatter gather */
--	compat_uint_t dxfer_len;	/* [i] byte count of data transfer */
--	compat_uint_t dxferp;		/* [i], [*io] points to data transfer memory
--						or scatter gather list */
--	compat_uptr_t cmdp;		/* [i], [*i] points to command to perform */
--	compat_uptr_t sbp;		/* [i], [*o] points to sense_buffer memory */
--	compat_uint_t timeout;		/* [i] MAX_UINT->no timeout (unit: millisec) */
--	compat_uint_t flags;		/* [i] 0 -> default, see SG_FLAG... */
--	compat_int_t pack_id;		/* [i->o] unused internally (normally) */
--	compat_uptr_t usr_ptr;		/* [i->o] unused internally */
--	unsigned char status;		/* [o] scsi status */
--	unsigned char masked_status;	/* [o] shifted, masked scsi status */
--	unsigned char msg_status;	/* [o] messaging level data (optional) */
--	unsigned char sb_len_wr;	/* [o] byte count actually written to sbp */
--	unsigned short host_status;	/* [o] errors from host adapter */
--	unsigned short driver_status;	/* [o] errors from software driver */
--	compat_int_t resid;		/* [o] dxfer_len - actual_transferred */
--	compat_uint_t duration;		/* [o] time taken by cmd (unit: millisec) */
--	compat_uint_t info;		/* [o] auxiliary information */
--};
--#endif
--
- int put_sg_io_hdr(const struct sg_io_hdr *hdr, void __user *argp)
+ 
+-/**
+- * scsi_ioctl - Dispatch ioctl to scsi device
+- * @sdev: scsi device receiving ioctl
+- * @cmd: which ioctl is it
+- * @arg: data associated with ioctl
+- *
+- * Description: The scsi_ioctl() function differs from most ioctls in that it
+- * does not take a major/minor number as the dev field.  Rather, it takes
+- * a pointer to a &struct scsi_device.
+- */
+-int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int scsi_ioctl_common(struct scsi_device *sdev, int cmd, void __user *arg)
  {
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 160748ad9c0f..985546aac236 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -198,6 +198,7 @@ static void sg_device_destroy(struct kref *kref);
- 
- #define SZ_SG_HEADER sizeof(struct sg_header)
- #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
-+#define SZ_COMPAT_SG_IO_HDR sizeof(struct compat_sg_io_hdr)
- #define SZ_SG_IOVEC sizeof(sg_iovec_t)
- #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
- 
-@@ -405,6 +406,36 @@ sg_release(struct inode *inode, struct file *filp)
- 	return 0;
- }
- 
-+static int get_sg_io_pack_id(int *pack_id, void __user *buf, size_t count)
-+{
-+	struct sg_header __user *old_hdr = buf;
-+	int reply_len;
-+
-+	if (count < SZ_SG_HEADER)
-+		goto unknown_id;
-+
-+	/* negative reply_len means v3 format, otherwise v1/v2 */
-+	if (get_user(reply_len, &old_hdr->reply_len))
-+		return -EFAULT;
-+	if (reply_len >= 0)
-+		return get_user(*pack_id, &old_hdr->pack_id);
-+
-+	if (in_compat_syscall() && count >= SZ_COMPAT_SG_IO_HDR) {
-+		struct compat_sg_io_hdr __user *hp = buf;
-+		return get_user(*pack_id, &hp->pack_id);
-+	}
-+
-+	if (count >= SZ_SG_IO_HDR) {
-+		struct sg_io_hdr __user *hp = buf;
-+		return get_user(*pack_id, &hp->pack_id);
-+	}
-+
-+unknown_id:
-+	/* no valid header was passed, so ignore the pack_id */
-+	*pack_id = -1;
-+	return 0;
+ 	char scsi_cmd[MAX_COMMAND_SIZE];
+ 	struct scsi_sense_hdr sense_hdr;
+@@ -266,14 +256,50 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+                 return scsi_ioctl_get_pci(sdev, arg);
+ 	case SG_SCSI_RESET:
+ 		return scsi_ioctl_reset(sdev, arg);
+-	default:
+-		if (sdev->host->hostt->ioctl)
+-			return sdev->host->hostt->ioctl(sdev, cmd, arg);
+ 	}
++	return -ENOIOCTLCMD;
 +}
 +
- static ssize_t
- sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- {
-@@ -413,8 +444,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	Sg_request *srp;
- 	int req_pack_id = -1;
- 	sg_io_hdr_t *hp;
--	struct sg_header *old_hdr = NULL;
--	int retval = 0;
-+	struct sg_header *old_hdr;
-+	int retval;
- 
- 	/*
- 	 * This could cause a response to be stranded. Close the associated
-@@ -429,79 +460,34 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
- 				      "sg_read: count=%d\n", (int) count));
- 
--	if (sfp->force_packid && (count >= SZ_SG_HEADER)) {
--		old_hdr = memdup_user(buf, SZ_SG_HEADER);
--		if (IS_ERR(old_hdr))
--			return PTR_ERR(old_hdr);
--		if (old_hdr->reply_len < 0) {
--			if (count >= SZ_SG_IO_HDR) {
--				/*
--				 * This is stupid.
--				 *
--				 * We're copying the whole sg_io_hdr_t from user
--				 * space just to get the 'pack_id' field. But the
--				 * field is at different offsets for the compat
--				 * case, so we'll use "get_sg_io_hdr()" to copy
--				 * the whole thing and convert it.
--				 *
--				 * We could do something like just calculating the
--				 * offset based of 'in_compat_syscall()', but the
--				 * 'compat_sg_io_hdr' definition is in the wrong
--				 * place for that.
--				 */
--				sg_io_hdr_t *new_hdr;
--				new_hdr = kmalloc(SZ_SG_IO_HDR, GFP_KERNEL);
--				if (!new_hdr) {
--					retval = -ENOMEM;
--					goto free_old_hdr;
--				}
--				retval = get_sg_io_hdr(new_hdr, buf);
--				req_pack_id = new_hdr->pack_id;
--				kfree(new_hdr);
--				if (retval) {
--					retval = -EFAULT;
--					goto free_old_hdr;
--				}
--			}
--		} else
--			req_pack_id = old_hdr->pack_id;
--	}
-+	if (sfp->force_packid)
-+		retval = get_sg_io_pack_id(&req_pack_id, buf, count);
-+	if (retval)
-+		return retval;
++/**
++ * scsi_ioctl - Dispatch ioctl to scsi device
++ * @sdev: scsi device receiving ioctl
++ * @cmd: which ioctl is it
++ * @arg: data associated with ioctl
++ *
++ * Description: The scsi_ioctl() function differs from most ioctls in that it
++ * does not take a major/minor number as the dev field.  Rather, it takes
++ * a pointer to a &struct scsi_device.
++ */
++int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++{
++	int ret = scsi_ioctl_common(sdev, cmd, arg);
 +
- 	srp = sg_get_rq_mark(sfp, req_pack_id);
- 	if (!srp) {		/* now wait on packet to arrive */
--		if (atomic_read(&sdp->detaching)) {
--			retval = -ENODEV;
--			goto free_old_hdr;
--		}
--		if (filp->f_flags & O_NONBLOCK) {
--			retval = -EAGAIN;
--			goto free_old_hdr;
--		}
-+		if (atomic_read(&sdp->detaching))
-+			return -ENODEV;
-+		if (filp->f_flags & O_NONBLOCK)
-+			return -EAGAIN;
- 		retval = wait_event_interruptible(sfp->read_wait,
- 			(atomic_read(&sdp->detaching) ||
- 			(srp = sg_get_rq_mark(sfp, req_pack_id))));
--		if (atomic_read(&sdp->detaching)) {
--			retval = -ENODEV;
--			goto free_old_hdr;
--		}
--		if (retval) {
-+		if (atomic_read(&sdp->detaching))
-+			return -ENODEV;
-+		if (retval)
- 			/* -ERESTARTSYS as signal hit process */
--			goto free_old_hdr;
--		}
--	}
--	if (srp->header.interface_id != '\0') {
--		retval = sg_new_read(sfp, buf, count, srp);
--		goto free_old_hdr;
-+			return retval;
- 	}
-+	if (srp->header.interface_id != '\0')
-+		return sg_new_read(sfp, buf, count, srp);
- 
- 	hp = &srp->header;
--	if (old_hdr == NULL) {
--		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
--		if (! old_hdr) {
--			retval = -ENOMEM;
--			goto free_old_hdr;
--		}
--	}
--	memset(old_hdr, 0, SZ_SG_HEADER);
-+	old_hdr = kzalloc(SZ_SG_HEADER, GFP_KERNEL);
-+	if (!old_hdr)
-+		return -ENOMEM;
++	if (ret != -ENOIOCTLCMD)
++		return ret;
 +
- 	old_hdr->reply_len = (int) hp->timeout;
- 	old_hdr->pack_len = old_hdr->reply_len; /* old, strange behaviour */
- 	old_hdr->pack_id = hp->pack_id;
-@@ -575,7 +561,12 @@ sg_new_read(Sg_fd * sfp, char __user *buf, size_t count, Sg_request * srp)
- 	int err = 0, err2;
- 	int len;
- 
--	if (count < SZ_SG_IO_HDR) {
-+	if (in_compat_syscall()) {
-+		if (count < SZ_COMPAT_SG_IO_HDR) {
-+			err = -EINVAL;
-+			goto err_out;
-+		}
-+	} else if (count < SZ_SG_IO_HDR) {
- 		err = -EINVAL;
- 		goto err_out;
- 	}
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index f91bcca604e4..29c7ad04d2e2 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -68,6 +68,36 @@ typedef struct sg_io_hdr
-     unsigned int info;          /* [o] auxiliary information */
- } sg_io_hdr_t;  /* 64 bytes long (on i386) */
- 
-+#if defined(__KERNEL__)
-+#include <linux/compat.h>
++	if (sdev->host->hostt->ioctl)
++		return sdev->host->hostt->ioctl(sdev, cmd, arg);
 +
-+struct compat_sg_io_hdr {
-+	compat_int_t interface_id;	/* [i] 'S' for SCSI generic (required) */
-+	compat_int_t dxfer_direction;	/* [i] data transfer direction  */
-+	unsigned char cmd_len;		/* [i] SCSI command length ( <= 16 bytes) */
-+	unsigned char mx_sb_len;	/* [i] max length to write to sbp */
-+	unsigned short iovec_count;	/* [i] 0 implies no scatter gather */
-+	compat_uint_t dxfer_len;	/* [i] byte count of data transfer */
-+	compat_uint_t dxferp;		/* [i], [*io] points to data transfer memory
-+						or scatter gather list */
-+	compat_uptr_t cmdp;		/* [i], [*i] points to command to perform */
-+	compat_uptr_t sbp;		/* [i], [*o] points to sense_buffer memory */
-+	compat_uint_t timeout;		/* [i] MAX_UINT->no timeout (unit: millisec) */
-+	compat_uint_t flags;		/* [i] 0 -> default, see SG_FLAG... */
-+	compat_int_t pack_id;		/* [i->o] unused internally (normally) */
-+	compat_uptr_t usr_ptr;		/* [i->o] unused internally */
-+	unsigned char status;		/* [o] scsi status */
-+	unsigned char masked_status;	/* [o] shifted, masked scsi status */
-+	unsigned char msg_status;	/* [o] messaging level data (optional) */
-+	unsigned char sb_len_wr;	/* [o] byte count actually written to sbp */
-+	unsigned short host_status;	/* [o] errors from host adapter */
-+	unsigned short driver_status;	/* [o] errors from software driver */
-+	compat_int_t resid;		/* [o] dxfer_len - actual_transferred */
-+	compat_uint_t duration;		/* [o] time taken by cmd (unit: millisec) */
-+	compat_uint_t info;		/* [o] auxiliary information */
-+};
+ 	return -EINVAL;
+ }
+ EXPORT_SYMBOL(scsi_ioctl);
+ 
++#ifdef CONFIG_COMPAT
++int scsi_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++{
++	int ret = scsi_ioctl_common(sdev, cmd, arg);
++
++	if (ret != -ENOIOCTLCMD)
++		return ret;
++
++	if (sdev->host->hostt->compat_ioctl)
++		return sdev->host->hostt->compat_ioctl(sdev, cmd, arg);
++
++	return ret;
++}
++EXPORT_SYMBOL(scsi_compat_ioctl);
 +#endif
 +
- #define SG_INTERFACE_ID_ORIG 'S'
+ /*
+  * We can process a reset even when a device isn't fully operable.
+  */
+diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+index 5101e987c0ef..4fe69d863b5d 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/scsi/scsi_ioctl.h
+@@ -44,6 +44,7 @@ typedef struct scsi_fctargaddress {
+ int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
+ 		int cmd, bool ndelay);
+ extern int scsi_ioctl(struct scsi_device *, int, void __user *);
++extern int scsi_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
  
- /* Use negative values to flag difference from original sg_header structure */
+ #endif /* __KERNEL__ */
+ #endif /* _SCSI_IOCTL_H */
 -- 
 2.20.0
 
