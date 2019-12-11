@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11CCEC00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1A4C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DCE3622B48
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2277522527
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:41:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078871;
-	bh=ys9FpzFo0o8D1xty71NRiow1xBrNJTDXhBCms8rNtE0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=V2t8Vh4tS7v+sqOwLOurp8+wcrUpraDIoCNgoKErcOlpMZF6w/PqiiI647/ZWpTh3
-	 DIzMgTqsvAnGvTxCnFAoQyKSu34t0Kzg22JgJgJyPq3+cZ0EDrGjeVQEiUTYvkiQK+
-	 Cf6sosWS62xR4HRp73m38WZb/zXkZ2gxiODxyPU0=
+	s=default; t=1576078882;
+	bh=hon6A9klB+m9g7Vf6dP4zanubdHbEyoXgoOWgLB5qeM=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=Dss1nYTUuFtf+umMQu3YRvNnZ7csJcfdEKMtSFX6ec76yE2qkvG2IfarnLsjbh6Y7
+	 j+V1UVbx1PfFLlHVGfAZdqqWUxkYX+K4NwMtPGYxrlGGtxfH6DfxXEoSFbXSYW1kGw
+	 gTtJfVV+a4MDaPVNJ5s4Pqx2xnQ4BKvNiveF2VFk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388352AbfLKPiR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:38:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48604 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388267AbfLKPiQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2388347AbfLKPiQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 11 Dec 2019 10:38:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48540 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388215AbfLKPiP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:38:15 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 803D12077B;
-        Wed, 11 Dec 2019 15:38:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84AEC222C4;
+        Wed, 11 Dec 2019 15:38:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078696;
-        bh=ys9FpzFo0o8D1xty71NRiow1xBrNJTDXhBCms8rNtE0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=K7qNMyrj25/OPa+BRZPQAF1wmoNcJC4rfInAcwrndf8M26daQJZJf5C3LpI3TTcI9
-         Gp008Au4vQoX7a6yQh6C8kaBo7zoIXX1GqymRHF2tYZRX1AXJhMZ/EH/3TQ4mCMk29
-         iNx4lYlnJU+qjHfOA+5NFT6JtM+sb9gCn5G8zGBs=
+        s=default; t=1576078695;
+        bh=hon6A9klB+m9g7Vf6dP4zanubdHbEyoXgoOWgLB5qeM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=OJskQAM1Wn9F5rbaeWvbJBXOzDH+N/k2zs+4wdy6yLu9krH1oxF9q/6JNq4q+2H4L
+         oJVUjoIxXRtA4mz9dolmQPoe2vBiBeoxDalPIWfAFogV8htLo3wmpKL9pVTqSUg6wp
+         JOlNm9kVOeRf5h8HYHXddRUsSBlc6TZdz03gZ3t0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 02/37] scsi: lpfc: Fix locking on mailbox command completion
-Date:   Wed, 11 Dec 2019 10:37:38 -0500
-Message-Id: <20191211153813.24126-2-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 01/37] scsi: mpt3sas: Fix clear pending bit in ioctl status
+Date:   Wed, 11 Dec 2019 10:37:37 -0500
+Message-Id: <20191211153813.24126-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191211153813.24126-1-sashal@kernel.org>
-References: <20191211153813.24126-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,66 +57,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit 07b8582430370097238b589f4e24da7613ca6dd3 ]
+[ Upstream commit 782b281883caf70289ba6a186af29441a117d23e ]
 
-Symptoms were seen of the driver not having valid data for mailbox
-commands. After debugging, the following sequence was found:
+When user issues diag register command from application with required size,
+and if driver unable to allocate the memory, then it will fail the register
+command. While failing the register command, driver is not currently
+clearing MPT3_CMD_PENDING bit in ctl_cmds.status variable which was set
+before trying to allocate the memory. As this bit is set, subsequent
+register command will be failed with BUSY status even when user wants to
+register the trace buffer will less memory.
 
-The driver maintains a port-wide pointer of the mailbox command that is
-currently in execution. Once finished, the port-wide pointer is cleared
-(done in lpfc_sli4_mq_release()). The next mailbox command issued will set
-the next pointer and so on.
+Clear MPT3_CMD_PENDING bit in ctl_cmds.status before returning the diag
+register command with no memory status.
 
-The mailbox response data is only copied if there is a valid port-wide
-pointer.
-
-In the failing case, it was seen that a new mailbox command was being
-attempted in parallel with the completion.  The parallel path was seeing
-the mailbox no long in use (flag check under lock) and thus set the port
-pointer.  The completion path had cleared the active flag under lock, but
-had not touched the port pointer.  The port pointer is cleared after the
-lock is released. In this case, the completion path cleared the just-set
-value by the parallel path.
-
-Fix by making the calls that clear mbox state/port pointer while under
-lock.  Also slightly cleaned up the error path.
-
-Link: https://lore.kernel.org/r/20190922035906.10977-8-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/1568379890-18347-4-git-send-email-sreekanth.reddy@broadcom.com
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 523a1058078a5..9b8867c023b93 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -11759,13 +11759,19 @@ send_current_mbox:
- 	phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
- 	/* Setting active mailbox pointer need to be in sync to flag clear */
- 	phba->sli.mbox_active = NULL;
-+	if (bf_get(lpfc_trailer_consumed, mcqe))
-+		lpfc_sli4_mq_release(phba->sli4_hba.mbx_wq);
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	/* Wake up worker thread to post the next pending mailbox command */
- 	lpfc_worker_wake_up(phba);
-+	return workposted;
-+
- out_no_mqe_complete:
-+	spin_lock_irqsave(&phba->hbalock, iflags);
- 	if (bf_get(lpfc_trailer_consumed, mcqe))
- 		lpfc_sli4_mq_release(phba->sli4_hba.mbx_wq);
--	return workposted;
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+	return false;
- }
- 
- /**
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 4ccde5a05b701..7874b989d2f4b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1456,7 +1456,8 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+ 			    " for diag buffers, requested size(%d)\n",
+ 			    ioc->name, __func__, request_data_sz);
+ 			mpt3sas_base_free_smid(ioc, smid);
+-			return -ENOMEM;
++			rc = -ENOMEM;
++			goto out;
+ 		}
+ 		ioc->diag_buffer[buffer_type] = request_data;
+ 		ioc->diag_buffer_sz[buffer_type] = request_data_sz;
 -- 
 2.20.1
 
