@@ -2,111 +2,81 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEAB4C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1995C2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:40:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89A952464B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:40:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078837;
-	bh=YDTVD4QiSfF95CsPZAPYB9nF6X4QVRMAdw/4MY99k9w=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cfKSevNiKm/EskEdUwSqVWKfxjvm13TwGZtDNAeyVOU40+AteNOOFCihKz5Y9kfCc
-	 OFkPe1xzsyWUaSzJJ1oHzmJNDN/oHAOXQBGqwpoXm6M0kzlapMpwL/c6uGFomIfnvN
-	 vOkkMGgYx9bvluEZ3uoQ8fIxnpdWwVtabqPkJNqk=
+	by mail.kernel.org (Postfix) with ESMTP id CD3DD21556
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:40:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388415AbfLKPkg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:40:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48914 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733115AbfLKPi2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:38:28 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A9AE42077B;
-        Wed, 11 Dec 2019 15:38:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078707;
-        bh=YDTVD4QiSfF95CsPZAPYB9nF6X4QVRMAdw/4MY99k9w=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gZtFsLfgc7z3Elm6wnbxJX/2N+c5kUhb388t6jE35oRgK7xXDuE3OtKtuUJ9Uwnrz
-         r+2ZcNHDmq4DWHkqttdNhGAvLnvCl6faeKJTXhwxFEEy8/iMfNB7FCeMu9SVpfossh
-         gEXJZQxnb18ebtpygk7SddYlyoQy+pRlZ5l6FcO0=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
+        id S2388056AbfLKPkw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:40:52 -0500
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:43341 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2388535AbfLKPkv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 10:40:51 -0500
+Received: from Internal Mail-Server by MTLPINE1 (envelope-from israelr@mellanox.com)
+        with ESMTPS (AES256-SHA encrypted); 11 Dec 2019 17:40:44 +0200
+Received: from rsws50.mtr.labs.mlnx (rsws50.mtr.labs.mlnx [10.209.40.61])
+        by labmailer.mlnx (8.13.8/8.13.8) with ESMTP id xBBFeiBC013485;
+        Wed, 11 Dec 2019 17:40:44 +0200
+From:   Israel Rukshin <israelr@mellanox.com>
+To:     Target-devel <target-devel@vger.kernel.org>,
+        Linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Israel Rukshin <israelr@mellanox.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 13/37] scsi: tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
-Date:   Wed, 11 Dec 2019 10:37:49 -0500
-Message-Id: <20191211153813.24126-13-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191211153813.24126-1-sashal@kernel.org>
-References: <20191211153813.24126-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: target/iblock: Fix protection error with sectors greater than 512B
+Date:   Wed, 11 Dec 2019 17:36:02 +0200
+Message-Id: <1576078562-15240-1-git-send-email-israelr@mellanox.com>
+X-Mailer: git-send-email 1.8.4.3
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+The sector size of the block layer is 512 bytes, but integrity interval
+size might be different (in case of 4K block size of the media). At the
+initiator side the virtual start sector is the one that was originally
+submitted by the block layer (512 bytes) for the Reftag usage. The
+initiator converts the Reftag to integrity interval units and sends it to
+the target. So the target virtual start sector should be calculated at
+integrity interval units. prepare_fn() and complete_fn() don't remap
+correctly the Reftag when using incorrect units of the virtual start
+sector, which leads to the following protection error at the device:
 
-[ Upstream commit f6b8540f40201bff91062dd64db8e29e4ddaaa9d ]
+"blk_update_request: protection error, dev sdb, sector 2048 op 0x0:(READ)
+flags 0x10000 phys_seg 1 prio class 0"
 
-According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
-blocks must be transferred. Make the SCSI tracing code follow SBC-2.
+To fix that, set the seed in integrity interval units.
 
-Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Link: https://lore.kernel.org/r/20191105215553.185018-1-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Israel Rukshin <israelr@mellanox.com>
+Reviewed-by: Max Gurtovoy <maxg@mellanox.com>
 ---
- drivers/scsi/scsi_trace.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/target/target_core_iblock.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 08bb47b53bc3e..551fd0329bca8 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -29,15 +29,18 @@ static const char *
- scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
-+	u32 lba = 0, txlen;
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 6949ea8..51ffd5c 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -646,7 +646,9 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
+ 	}
  
- 	lba |= ((cdb[1] & 0x1F) << 16);
- 	lba |=  (cdb[2] << 8);
- 	lba |=   cdb[3];
--	txlen = cdb[4];
-+	/*
-+	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
-+	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
-+	 */
-+	txlen = cdb[4] ? cdb[4] : 256;
+ 	bip->bip_iter.bi_size = bio_integrity_bytes(bi, bio_sectors(bio));
+-	bip_set_seed(bip, bio->bi_iter.bi_sector);
++	/* virtual start sector must be in integrity interval units */
++	bip_set_seed(bip, bio->bi_iter.bi_sector >>
++				  (bi->interval_exp - SECTOR_SHIFT));
  
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
+ 	pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_iter.bi_size,
+ 		 (unsigned long long)bip->bip_iter.bi_sector);
 -- 
-2.20.1
+1.8.3.1
 
