@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E6CC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F890C2D0C6
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C557222C4
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3C1924654
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080522;
-	bh=O/W07dSdGlWbNDMUsUSBXfWXUFhILzgxa65l8f5AhjE=;
+	s=default; t=1576080535;
+	bh=Ms3Wl74bBHdAlMZIcbx6tr5jGXgIbn7MxDxHqZ4+IKc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=N5MEXXyJolQT9mimv66QJYsyiTqvGvQM4LN4JSiJ93l8hNGZJyi9TuyES6Bqdb/Gw
-	 dprdN+J8RwJlGAGTZBWsW8GJnpZCqI8fqqdJlD5bRkomrRjKegLxy08SVmPVcUvAuK
-	 CfeQy90BZQ6koFaxu0DnzyG1KoB+E9P1FPTS1JuA=
+	b=ST6zb/YcZq528UiUAdaviZmFoi8QAyk4P0SyTIgXxe5B6G75CLgmv0QnXj127bc0N
+	 sBMl18z2sIAUysXikXw5Y3MbycRgmq+MED4vV+UyvyrhFjLA8wmhSz9LOcZyhOc+v5
+	 a0OvYs+28lh6f87l+UjYyPLtkljq/y1F/3TQuVYo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731411AbfLKQIe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:08:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33460 "EHLO mail.kernel.org"
+        id S2387510AbfLKQIo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 11:08:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33350 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731071AbfLKPMO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:12:14 -0500
+        id S1731066AbfLKPMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:12:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3B048208C3;
-        Wed, 11 Dec 2019 15:12:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2BF4E2465C;
+        Wed, 11 Dec 2019 15:12:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077134;
-        bh=O/W07dSdGlWbNDMUsUSBXfWXUFhILzgxa65l8f5AhjE=;
+        s=default; t=1576077131;
+        bh=Ms3Wl74bBHdAlMZIcbx6tr5jGXgIbn7MxDxHqZ4+IKc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cf//cW48+l1aSKwTZOFOjoK8qE8LEFp4E9cmHVgmfChpEDwMRxc5bYWY++0apO3lE
-         eRW5lL+SxnFBO967YxgtPjJBVg3PLVZRwR8+tSrdsi6VF5iSeu7QdgXUAujZ6EBkaw
-         jD4BnM8mDRPaIRJxJBqeaN5siI1O215Y41/527EA=
+        b=rXO/1/st0sSuHPmYaMR3NX7GEynpC+x/kMZfWOCozrlYBIBOvI5kTSaCo4P39v4ec
+         vL/rQcs+JnHthIxPSNehYZ0onz7Va/F3XV9w1NSTEEzTxkVqlHVEuAy9gUakG+pAcX
+         HDQoXvGTXgqMNSvEi/z8+Kb93+YfwaYsGl2cAOuc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 021/134] scsi: hisi_sas: Replace in_softirq() check in hisi_sas_task_exec()
-Date:   Wed, 11 Dec 2019 10:09:57 -0500
-Message-Id: <20191211151150.19073-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 019/134] scsi: lpfc: Fix SLI3 hba in loop mode not discovering devices
+Date:   Wed, 11 Dec 2019 10:09:55 -0500
+Message-Id: <20191211151150.19073-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -59,83 +59,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 550c0d89d52d3bec5c299f69b4ed5d2ee6b8a9a6 ]
+[ Upstream commit feff8b3d84d3d9570f893b4d83e5eab6693d6a52 ]
 
-For IOs from upper layer, preemption may be disabled as it may be called by
-function __blk_mq_delay_run_hw_queue which will call get_cpu() (it disables
-preemption). So if flags HISI_SAS_REJECT_CMD_BIT is set in function
-hisi_sas_task_exec(), it may disable preempt twice after down() and up()
-which will cause following call trace:
+When operating in private loop mode, PLOGI exchanges are racing and the
+driver tries to abort it's PLOGI. But the PLOGI abort ends up terminating
+the login with the other end causing the other end to abort its PLOGI as
+well. Discovery never fully completes.
 
-BUG: scheduling while atomic: fio/60373/0x00000002
-Call trace:
-dump_backtrace+0x0/0x150
-show_stack+0x24/0x30
-dump_stack+0xa0/0xc4
-__schedule_bug+0x68/0x88
-__schedule+0x4b8/0x548
-schedule+0x40/0xd0
-schedule_timeout+0x200/0x378
-__down+0x78/0xc8
-down+0x54/0x70
-hisi_sas_task_exec.isra.10+0x598/0x8d8 [hisi_sas_main]
-hisi_sas_queue_command+0x28/0x38 [hisi_sas_main]
-sas_queuecommand+0x168/0x1b0 [libsas]
-scsi_queue_rq+0x2ac/0x980
-blk_mq_dispatch_rq_list+0xb0/0x550
-blk_mq_do_dispatch_sched+0x6c/0x110
-blk_mq_sched_dispatch_requests+0x114/0x1d8
-__blk_mq_run_hw_queue+0xb8/0x130
-__blk_mq_delay_run_hw_queue+0x1c0/0x220
-blk_mq_run_hw_queue+0xb0/0x128
-blk_mq_sched_insert_requests+0xdc/0x208
-blk_mq_flush_plug_list+0x1b4/0x3a0
-blk_flush_plug_list+0xdc/0x110
-blk_finish_plug+0x3c/0x50
-blkdev_direct_IO+0x404/0x550
-generic_file_read_iter+0x9c/0x848
-blkdev_read_iter+0x50/0x78
-aio_read+0xc8/0x170
-io_submit_one+0x1fc/0x8d8
-__arm64_sys_io_submit+0xdc/0x280
-el0_svc_common.constprop.0+0xe0/0x1e0
-el0_svc_handler+0x34/0x90
-el0_svc+0x10/0x14
-...
+Fix by disabling the PLOGI abort when private loop and letting the state
+machine play out.
 
-To solve the issue, check preemptible() to avoid disabling preempt multiple
-when flag HISI_SAS_REJECT_CMD_BIT is set.
-
-Link: https://lore.kernel.org/r/1571926105-74636-5-git-send-email-john.garry@huawei.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/20191018211832.7917-5-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 0847e682797be..20f0cb4698b7f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -587,7 +587,13 @@ static int hisi_sas_task_exec(struct sas_task *task, gfp_t gfp_flags,
- 	dev = hisi_hba->dev;
- 
- 	if (unlikely(test_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags))) {
--		if (in_softirq())
-+		/*
-+		 * For IOs from upper layer, it may already disable preempt
-+		 * in the IO path, if disable preempt again in down(),
-+		 * function schedule() will report schedule_bug(), so check
-+		 * preemptible() before goto down().
-+		 */
-+		if (!preemptible())
- 			return -EINVAL;
- 
- 		down(&hisi_hba->sem);
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index fc6e4546d738a..6961713825585 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -484,8 +484,10 @@ lpfc_rcv_plogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	 * single discovery thread, this will cause a huge delay in
+ 	 * discovery. Also this will cause multiple state machines
+ 	 * running in parallel for this node.
++	 * This only applies to a fabric environment.
+ 	 */
+-	if (ndlp->nlp_state == NLP_STE_PLOGI_ISSUE) {
++	if ((ndlp->nlp_state == NLP_STE_PLOGI_ISSUE) &&
++	    (vport->fc_flag & FC_FABRIC)) {
+ 		/* software abort outstanding PLOGI */
+ 		lpfc_els_abort(phba, ndlp);
+ 	}
 -- 
 2.20.1
 
