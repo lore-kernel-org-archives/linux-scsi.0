@@ -7,46 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE0EC00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A407FC00454
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50FDB2464B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:12:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70A122464B
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576077162;
-	bh=KhsJlt8mJmKhtd62rZZlnvygPNnMkacTIfjNnVH+Zqo=;
+	s=default; t=1576077211;
+	bh=k9dpj1B8c41icXDmGXJ4tL8WRoMBs6eIybywBy7mBVY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nh+qj4E4QiQ8HmMdMdtKaypg/Xq9GgFHcBoZFjEaz3N/j5E4H9/RRx3TinNbslpaw
-	 DvC72DkMhGnXpZtqB+zkmdvFUoYJgpbsNuZtAGzVXgvESZX84IY3wwB4H2XbKgQ1wh
-	 m6SbNvumu2wkWwstzpJMDIcQ62yMM95oswynmJAg=
+	b=R06HCHbMIw1HWHaL5eKmGfykmCNvoxu/IXj3dm4IO1S8yvV/D7ZmbxzhVGeE0K1GQ
+	 qjh+OmbliQJcyQmNsbBva6Ub6TP6J8KZzAw+G4O2xnR9+j2bsfNHrF7o98h/DTFUCJ
+	 a1wZ9XPt8KfjMoKQuHNyRJKUpSlaSYPiYS+GgSVc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731209AbfLKPMl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:12:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34742 "EHLO mail.kernel.org"
+        id S1731428AbfLKPNa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:13:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37080 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730815AbfLKPMk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:12:40 -0500
+        id S1730331AbfLKPNa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:13:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C6E262465E;
-        Wed, 11 Dec 2019 15:12:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A12CF208C3;
+        Wed, 11 Dec 2019 15:13:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077159;
-        bh=KhsJlt8mJmKhtd62rZZlnvygPNnMkacTIfjNnVH+Zqo=;
+        s=default; t=1576077209;
+        bh=k9dpj1B8c41icXDmGXJ4tL8WRoMBs6eIybywBy7mBVY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L/eth3NzEXp8Jn9p5ESnx1AYIKTLibV02Y4/2RkzRIyX8OJ19Y/wAzq9q04z7p6Ak
-         kEytisqzA3/5MUgNxiOUZqQgE25mZx5yRlK05NF7D/aGm7KRgFVPMwaQiSPrQ0PGFE
-         bmfZDM3cpIFBMIKuZQUVJR/RbUl2qJT+mWjYyu1c=
+        b=wFbTK89bLpnS/iCAF2NPvF/0kJQw+WJCWj/Ueh76608vOEkTz+4S9JjWNxnrarCFU
+         70HETL0VcgaVB1vyU5o8Z/GvqYnsE2wdgUjW3h8JcIEH7bzKP8Ljiu8iGPoQriZavz
+         TaJDX+IZg/bXvzDZ6kPTnTTfJxIUlP04jTAqNdGw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     peter chang <dpf@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Deepak Ukey <deepak.ukey@microchip.com>,
+        Viswas G <Viswas.G@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 045/134] scsi: lpfc: Fix unexpected error messages during RSCN handling
-Date:   Wed, 11 Dec 2019 10:10:21 -0500
-Message-Id: <20191211151150.19073-45-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, pmchba@pmcs.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 091/134] scsi: pm80xx: Fix for SATA device discovery
+Date:   Wed, 11 Dec 2019 10:11:07 -0500
+Message-Id: <20191211151150.19073-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -59,89 +62,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: peter chang <dpf@google.com>
 
-[ Upstream commit 2332e6e475b016e2026763f51333f84e2e6c57a3 ]
+[ Upstream commit ce21c63ee995b7a8b7b81245f2cee521f8c3c220 ]
 
-During heavy RCN activity and log_verbose = 0 we see these messages:
+Driver was missing complete() call in mpi_sata_completion which result in
+SATA abort error handling timing out. That causes the device to be left in
+the in_recovery state so subsequent commands sent to the device fail and
+the OS removes access to it.
 
-  2754 PRLI failure DID:521245 Status:x9/xb2c00, data: x0
-  0231 RSCN timeout Data: x0 x3
-  0230 Unexpected timeout, hba link state x5
-
-This is due to delayed RSCN activity.
-
-Correct by avoiding the timeout thus the messages by restarting the
-discovery timeout whenever an rscn is received.
-
-Filter PRLI responses such that severity depends on whether expected for
-the configuration or not. For example, PRLI errors on a fabric will be
-informational (they are expected), but Point-to-Point errors are not
-necessarily expected so they are raised to an error level.
-
-Link: https://lore.kernel.org/r/20191105005708.7399-5-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20191114100910.6153-2-deepak.ukey@microchip.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: peter chang <dpf@google.com>
+Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index f293b48616ae9..4794a58deaf3c 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2236,6 +2236,7 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
- 	IOCB_t *irsp;
- 	struct lpfc_nodelist *ndlp;
-+	char *mode;
- 
- 	/* we pass cmdiocb to state machine which needs rspiocb as well */
- 	cmdiocb->context_un.rsp_iocb = rspiocb;
-@@ -2273,8 +2274,17 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			goto out;
- 		}
- 
-+		/* If we don't send GFT_ID to Fabric, a PRLI error
-+		 * could be expected.
-+		 */
-+		if ((vport->fc_flag & FC_FABRIC) ||
-+		    (vport->cfg_enable_fc4_type != LPFC_ENABLE_BOTH))
-+			mode = KERN_ERR;
-+		else
-+			mode = KERN_INFO;
-+
- 		/* PRLI failed */
--		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-+		lpfc_printf_vlog(vport, mode, LOG_ELS,
- 				 "2754 PRLI failure DID:%06X Status:x%x/x%x, "
- 				 "data: x%x\n",
- 				 ndlp->nlp_DID, irsp->ulpStatus,
-@@ -6455,7 +6465,7 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	uint32_t payload_len, length, nportid, *cmd;
- 	int rscn_cnt;
- 	int rscn_id = 0, hba_id = 0;
--	int i;
-+	int i, tmo;
- 
- 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
- 	lp = (uint32_t *) pcmd->virt;
-@@ -6561,6 +6571,13 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 
- 		spin_lock_irq(shost->host_lock);
- 		vport->fc_flag |= FC_RSCN_DEFERRED;
-+
-+		/* Restart disctmo if its already running */
-+		if (vport->fc_flag & FC_DISC_TMO) {
-+			tmo = ((phba->fc_ratov * 3) + 3);
-+			mod_timer(&vport->fc_disctmo,
-+				  jiffies + msecs_to_jiffies(1000 * tmo));
-+		}
- 		if ((rscn_cnt < FC_MAX_HOLD_RSCN) &&
- 		    !(vport->fc_flag & FC_RSCN_DISCOVERY)) {
- 			vport->fc_flag |= FC_RSCN_MODE;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 73261902d75d5..161bf4760eac7 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2382,6 +2382,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			pm8001_printk("task 0x%p done with io_status 0x%x"
+ 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
+ 			t, status, ts->resp, ts->stat));
++		if (t->slow_task)
++			complete(&t->slow_task->completion);
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
 -- 
 2.20.1
 
