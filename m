@@ -2,111 +2,98 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB69BC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0ECC00454
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85A9C214D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:06:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080394;
-	bh=/smzVxQI60i2p8rqZW5npyc1NOFErmUZYkcaCGjFXQs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hGT4rmBx1VoSiv3g+BgXD3hoBAM8O1lzYGbMwyL7tQo0O9MNpdYwfWHSqW8ab+WLE
-	 VSCN7e7JmXq6nkcPs838yeOOwgu295RtjoZyD36h0btF4aWPKqtcMnzoX9OOgMgjDQ
-	 P53NmYU8RXCZI59WY607HK9yFtewoS5tVneNtInw=
+	by mail.kernel.org (Postfix) with ESMTP id E08D3208C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:08:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731835AbfLKQGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:06:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34698 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731191AbfLKPMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:12:39 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 85BEB222C4;
-        Wed, 11 Dec 2019 15:12:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077158;
-        bh=/smzVxQI60i2p8rqZW5npyc1NOFErmUZYkcaCGjFXQs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YMOBACORzF9Ks30ssMWhXKoictxxvu8jke8gy13f5CoNcA3qHgn13UYZkG78xYL/z
-         YL/YlX0ViqyCwM5YJZAHsON4QYktaWlG5THORW1WI+3cftPB+Z5lwZJxv8i1JNJJES
-         6wcbCeZbT04VnJjRiuDrJf3SJna06GlDUrEcqOyQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
+        id S2388888AbfLKQIO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 11:08:14 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:54485 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731122AbfLKQIN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 11:08:13 -0500
+Received: from callcc.thunk.org (guestnat-104-132-34-105.corp.google.com [104.132.34.105] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id xBBG7jbj026860
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 11 Dec 2019 11:07:46 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id A4C13421A48; Wed, 11 Dec 2019 11:07:45 -0500 (EST)
+Date:   Wed, 11 Dec 2019 11:07:45 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Andrea Vai <andrea.vai@unipv.it>,
+        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
         Hannes Reinecke <hare@suse.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 044/134] scsi: tracing: Fix handling of TRANSFER LENGTH == 0 for READ(6) and WRITE(6)
-Date:   Wed, 11 Dec 2019 10:10:20 -0500
-Message-Id: <20191211151150.19073-44-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
-References: <20191211151150.19073-1-sashal@kernel.org>
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Message-ID: <20191211160745.GA129186@mit.edu>
+References: <20191128091712.GD15549@ming.t460p>
+ <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
+ <20191129005734.GB1829@ming.t460p>
+ <20191129023555.GA8620@ming.t460p>
+ <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
+ <20191203022337.GE25002@ming.t460p>
+ <8196b014b1a4d91169bf3b0d68905109aeaf2191.camel@unipv.it>
+ <20191210080550.GA5699@ming.t460p>
+ <20191211024137.GB61323@mit.edu>
+ <20191211040058.GC6864@ming.t460p>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191211040058.GC6864@ming.t460p>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+On Wed, Dec 11, 2019 at 12:00:58PM +0800, Ming Lei wrote:
+> I didn't reproduce the issue in my test environment, and follows
+> Andrea's test commands[1]:
+> 
+>   mount UUID=$uuid /mnt/pendrive 2>&1 |tee -a $logfile
+>   SECONDS=0
+>   cp $testfile /mnt/pendrive 2>&1 |tee -a $logfile
+>   umount /mnt/pendrive 2>&1 |tee -a $logfile
+> 
+> The 'cp' command supposes to open/close the file just once, however
+> ext4_release_file() & write pages is observed to run for 4358 times
+> when executing the above 'cp' test.
 
-[ Upstream commit f6b8540f40201bff91062dd64db8e29e4ddaaa9d ]
+Why are we sure the ext4_release_file() / _fput() is coming from the
+cp command, as opposed to something else that might be running on the
+system under test?  _fput() is called by the kernel when the last
+reference to a struct file is released.  (Specifically, if you have a
+fd which is dup'ed, it's only when the last fd corresponding to the
+struct file is closed, and the struct file is about to be released,
+does the file system's f_ops->release function get called.)
 
-According to SBC-2 a TRANSFER LENGTH field of zero means that 256 logical
-blocks must be transferred. Make the SCSI tracing code follow SBC-2.
+So the first question I'd ask is whether there is anything else going
+on the system, and whether the writes are happening to the USB thumb
+drive, or to some other storage device.  And if there is something
+else which is writing to the pendrive, maybe that's why no one else
+has been able to reproduce the OP's complaint....
 
-Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Link: https://lore.kernel.org/r/20191105215553.185018-1-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/scsi_trace.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 0f17e7dac1b08..07a2425ffa2c2 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -18,15 +18,18 @@ static const char *
- scsi_trace_rw6(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
-+	u32 lba = 0, txlen;
- 
- 	lba |= ((cdb[1] & 0x1F) << 16);
- 	lba |=  (cdb[2] << 8);
- 	lba |=   cdb[3];
--	txlen = cdb[4];
-+	/*
-+	 * From SBC-2: a TRANSFER LENGTH field set to zero specifies that 256
-+	 * logical blocks shall be read (READ(6)) or written (WRITE(6)).
-+	 */
-+	txlen = cdb[4] ? cdb[4] : 256;
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%u txlen=%u", lba, txlen);
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
--- 
-2.20.1
-
+    	      	 	    	     - Ted
