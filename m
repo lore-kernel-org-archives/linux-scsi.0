@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D58DC00454
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:27:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93D16C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:27:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E89F62173E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:27:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61273222C4
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:27:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576078049;
-	bh=VBqmgu+/fTCK3LmeGT4lLrSBpbjP6+bqqfjkjkKKYmk=;
+	s=default; t=1576078069;
+	bh=QzNDaq2BvpCKmi7xO06govvZMk9GjZdENqHwCpuM2kE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lzEkLNnQIBB/pouF6c8JxwvvnGLzefQj4fn4yCkU/feBFrAOu90qOBvOp5Bmu30KP
-	 pLsyXtkpB7NPTxwHjWoY0YQX1gXjY6m009jhRIE9CVWlDfT99Qj6D0SAuJ1rZhiU0E
-	 mCiuJ1BkUXFX+CIX5uN8oA+CJFFoKguW4GtxcrGo=
+	b=vL3RR2BfMxq0HUCTgRtKc/VemlAu7/eUZqJbcvzdB25uX22M4Ms8BbO5E4924XJDw
+	 HxzF1ChyGKkCkA1kKltbJfS12+UupX8aovr5sPOkZtLIcL7ccLr/foJ00NfPgodbG/
+	 ijMQpICfoEMaMJsmeimCvbYCaCetl4N7o1AqNm8M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387426AbfLKP11 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:27:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33056 "EHLO mail.kernel.org"
+        id S2387476AbfLKP1s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:27:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33542 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387416AbfLKP10 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:27:26 -0500
+        id S2387468AbfLKP1q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:27:46 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3DC4D2468F;
-        Wed, 11 Dec 2019 15:27:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 700B4222C4;
+        Wed, 11 Dec 2019 15:27:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576078045;
-        bh=VBqmgu+/fTCK3LmeGT4lLrSBpbjP6+bqqfjkjkKKYmk=;
+        s=default; t=1576078065;
+        bh=QzNDaq2BvpCKmi7xO06govvZMk9GjZdENqHwCpuM2kE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1S+7xJ2ME5sk0GDe59c/VuD6VfC2vokWTFnBcGUqhG/t8LtX+AhC18akEZDmkFomQ
-         OVbit9vWZJ7tCrNW2Ic16hD5RvhkahGPphJwxQg/kKHkABM+GkUhpBtBgoHTy22AzO
-         mGyvLU9v/yXGJuau9BKaVPz3gJSDBSOZg/s9uNQU=
+        b=uTn+k0toIjGbgd9b4YqqwKopRQaz6zn8QjFwaHzVzvM82+/4ipem/qrrq46c0EhST
+         7uAHamEmRnofs9Gs+z53AKBg3+odo6oQ2T7reDgZWc23/O332sOqk2n1B3/88fziLC
+         cTlbVNPHMV/k+OsL9C+YH/4AtZFP0pVYcmbM8F0U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bean Huo <beanhuo@micron.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     peter chang <dpf@google.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Deepak Ukey <deepak.ukey@microchip.com>,
+        Viswas G <Viswas.G@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 38/79] scsi: ufs: fix potential bug which ends in system hang
-Date:   Wed, 11 Dec 2019 10:26:02 -0500
-Message-Id: <20191211152643.23056-38-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, pmchba@pmcs.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 57/79] scsi: pm80xx: Fix for SATA device discovery
+Date:   Wed, 11 Dec 2019 10:26:21 -0500
+Message-Id: <20191211152643.23056-57-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211152643.23056-1-sashal@kernel.org>
 References: <20191211152643.23056-1-sashal@kernel.org>
@@ -60,80 +62,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+From: peter chang <dpf@google.com>
 
-[ Upstream commit cfcbae3895b86c390ede57b2a8f601dd5972b47b ]
+[ Upstream commit ce21c63ee995b7a8b7b81245f2cee521f8c3c220 ]
 
-In function __ufshcd_query_descriptor(), in the event of an error
-happening, we directly goto out_unlock and forget to invaliate
-hba->dev_cmd.query.descriptor pointer. This results in this pointer still
-valid in ufshcd_copy_query_response() for other query requests which go
-through ufshcd_exec_raw_upiu_cmd(). This will cause __memcpy() crash and
-system hangs. Log as shown below:
+Driver was missing complete() call in mpi_sata_completion which result in
+SATA abort error handling timing out. That causes the device to be left in
+the in_recovery state so subsequent commands sent to the device fail and
+the OS removes access to it.
 
-Unable to handle kernel paging request at virtual address
-ffff000012233c40
-Mem abort info:
-   ESR = 0x96000047
-   Exception class = DABT (current EL), IL = 32 bits
-   SET = 0, FnV = 0
-   EA = 0, S1PTW = 0
-Data abort info:
-   ISV = 0, ISS = 0x00000047
-   CM = 0, WnR = 1
-swapper pgtable: 4k pages, 48-bit VAs, pgdp = 0000000028cc735c
-[ffff000012233c40] pgd=00000000bffff003, pud=00000000bfffe003,
-pmd=00000000ba8b8003, pte=0000000000000000
- Internal error: Oops: 96000047 [#2] PREEMPT SMP
- ...
- Call trace:
-  __memcpy+0x74/0x180
-  ufshcd_issue_devman_upiu_cmd+0x250/0x3c0
-  ufshcd_exec_raw_upiu_cmd+0xfc/0x1a8
-  ufs_bsg_request+0x178/0x3b0
-  bsg_queue_rq+0xc0/0x118
-  blk_mq_dispatch_rq_list+0xb0/0x538
-  blk_mq_sched_dispatch_requests+0x18c/0x1d8
-  __blk_mq_run_hw_queue+0xb4/0x118
-  blk_mq_run_work_fn+0x28/0x38
-  process_one_work+0x1ec/0x470
-  worker_thread+0x48/0x458
-  kthread+0x130/0x138
-  ret_from_fork+0x10/0x1c
- Code: 540000ab a8c12027 a88120c7 a8c12027 (a88120c7)
- ---[ end trace 793e1eb5dff69f2d ]---
- note: kworker/0:2H[2054] exited with preempt_count 1
-
-This patch is to move "descriptor = NULL" down to below the label
-"out_unlock".
-
-Fixes: d44a5f98bb49b2(ufs: query descriptor API)
-Link: https://lore.kernel.org/r/20191112223436.27449-3-huobean@gmail.com
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
+Link: https://lore.kernel.org/r/20191114100910.6153-2-deepak.ukey@microchip.com
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Signed-off-by: peter chang <dpf@google.com>
+Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/pm8001/pm80xx_hwi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 8bce755e0f5bc..7510d8328d4dd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3011,10 +3011,10 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
- 		goto out_unlock;
- 	}
- 
--	hba->dev_cmd.query.descriptor = NULL;
- 	*buf_len = be16_to_cpu(response->upiu_res.length);
- 
- out_unlock:
-+	hba->dev_cmd.query.descriptor = NULL;
- 	mutex_unlock(&hba->dev_cmd.lock);
- out:
- 	ufshcd_release(hba);
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 5021aed87f33a..8627feb80261a 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -2382,6 +2382,8 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 			pm8001_printk("task 0x%p done with io_status 0x%x"
+ 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",
+ 			t, status, ts->resp, ts->stat));
++		if (t->slow_task)
++			complete(&t->slow_task->completion);
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
 -- 
 2.20.1
 
