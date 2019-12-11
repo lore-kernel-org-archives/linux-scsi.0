@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2E4C3F68F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CACD2C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01ADB2468E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A298E24686
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 15:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576077217;
-	bh=MzlIvXr9+RGOexb48ThAFvhkwgmA9P8oKt1C0+tnpHE=;
+	s=default; t=1576077221;
+	bh=jnI2aVqd+dVMKXXNwURJnPVtBpfgcrJFRoJasNHLwH4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=D3bJxyBfDTjW4rA/QJ7588To+kCOVYvkQnLF8GzNzLo3rcmjGnvpqfe+06kFlGNX4
-	 eUa3En74qzAcOlpdFOVn+DK8RrPkaNQVRkJmuS8XdvJAs4L4lnamxFcWvrZXhogcA4
-	 UEC1UfAIUpnE/eHXyF1cRcCG7m9/OPVWRtoYUYp0=
+	b=mLRc2iN8kY31GRV6+IvbZtN5M+SR9/aRPeC+KE+TkZ3Y4gEEn/uvvEpFMhnRhovGY
+	 +2IDJ5I9AQ+Fp1kIUDelEd9qrlAzDHKlX2VpzT8RMlDWm+yBGzHNFY3jWRr8bxemzO
+	 HBfIf3DQPFom4wVvpWO3hFtPdIAeNFoWbkoB2xfY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731456AbfLKPNg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:13:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37320 "EHLO mail.kernel.org"
+        id S1730406AbfLKPNk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 10:13:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731446AbfLKPNf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:13:35 -0500
+        id S1731467AbfLKPNj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:13:39 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 518DE24671;
-        Wed, 11 Dec 2019 15:13:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 845602465C;
+        Wed, 11 Dec 2019 15:13:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077214;
-        bh=MzlIvXr9+RGOexb48ThAFvhkwgmA9P8oKt1C0+tnpHE=;
+        s=default; t=1576077218;
+        bh=jnI2aVqd+dVMKXXNwURJnPVtBpfgcrJFRoJasNHLwH4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AUFnv4ZkqTJ6rnFuPsFNolLSDbjwb2Q4MYf+KB7kquYNo9siCjAx5tlCtJnUg9AGZ
-         LNabxGIyNr0yGijgUkvPPlHZGWuW7XFeg7HJHDoois4hftzoAJ241heoLwbikIokid
-         D4mohKGAl4j4JlZWn3PI6+LlFBpAguu9GKPyd+Sw=
+        b=GB7VUd3LkwWcmtrfEB+rk3OtfGnh8O78nDeOXATIsZjq1GRvfRGY5/GBrk6GCoa2Y
+         kY0T+yD+5mesYZwvuzZaLZ9ZMpSjucqk3K6/kRd05xW5irW7FY4JruyQ27qKnLt7yk
+         Tsw24W7WUGD+gP9xAowsDYaLpl90uxwuuY6YXhZI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -45,11 +45,10 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Roman Bolshakov <r.bolshakov@yadro.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        bcm-kernel-feedback-list@broadcom.com
-Subject: [PATCH AUTOSEL 5.4 095/134] scsi: target: core: Release SPC-2 reservations when closing a session
-Date:   Wed, 11 Dec 2019 10:11:11 -0500
-Message-Id: <20191211151150.19073-95-sashal@kernel.org>
+        target-devel@vger.kernel.org, open-iscsi@googlegroups.com
+Subject: [PATCH AUTOSEL 5.4 098/134] scsi: target: iscsi: Wait for all commands to finish before freeing a session
+Date:   Wed, 11 Dec 2019 10:11:14 -0500
+Message-Id: <20191211151150.19073-98-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -64,124 +63,139 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 80647a89eaf3f2549741648f3230cd6ff68c23b4 ]
+[ Upstream commit e9d3009cb936bd0faf0719f68d98ad8afb1e613b ]
 
-The SCSI specs require releasing SPC-2 reservations when a session is
-closed. Make sure that the target core does this.
+The iSCSI target driver is the only target driver that does not wait for
+ongoing commands to finish before freeing a session. Make the iSCSI target
+driver wait for ongoing commands to finish before freeing a session. This
+patch fixes the following KASAN complaint:
 
-Running the libiscsi tests triggers the KASAN complaint shown below.  This
-patch fixes that use-after-free.
+BUG: KASAN: use-after-free in __lock_acquire+0xb1a/0x2710
+Read of size 8 at addr ffff8881154eca70 by task kworker/0:2/247
 
-BUG: KASAN: use-after-free in target_check_reservation+0x171/0x980 [target_core_mod]
-Read of size 8 at addr ffff88802ecd1878 by task iscsi_trx/17200
-
-CPU: 0 PID: 17200 Comm: iscsi_trx Not tainted 5.4.0-rc1-dbg+ #1
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+CPU: 0 PID: 247 Comm: kworker/0:2 Not tainted 5.4.0-rc1-dbg+ #6
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
+Workqueue: target_completion target_complete_ok_work [target_core_mod]
 Call Trace:
  dump_stack+0x8a/0xd6
  print_address_description.constprop.0+0x40/0x60
- __kasan_report.cold+0x1b/0x34
+ __kasan_report.cold+0x1b/0x33
  kasan_report+0x16/0x20
  __asan_load8+0x58/0x90
- target_check_reservation+0x171/0x980 [target_core_mod]
- __target_execute_cmd+0xb1/0xf0 [target_core_mod]
- target_execute_cmd+0x22d/0x4d0 [target_core_mod]
- transport_generic_new_cmd+0x31f/0x5b0 [target_core_mod]
- transport_handle_cdb_direct+0x6f/0x90 [target_core_mod]
- iscsit_execute_cmd+0x381/0x3f0 [iscsi_target_mod]
- iscsit_sequence_cmd+0x13b/0x1f0 [iscsi_target_mod]
- iscsit_process_scsi_cmd+0x4c/0x130 [iscsi_target_mod]
- iscsit_get_rx_pdu+0x8e8/0x15f0 [iscsi_target_mod]
- iscsi_target_rx_thread+0x105/0x1b0 [iscsi_target_mod]
+ __lock_acquire+0xb1a/0x2710
+ lock_acquire+0xd3/0x200
+ _raw_spin_lock_irqsave+0x43/0x60
+ target_release_cmd_kref+0x162/0x7f0 [target_core_mod]
+ target_put_sess_cmd+0x2e/0x40 [target_core_mod]
+ lio_check_stop_free+0x12/0x20 [iscsi_target_mod]
+ transport_cmd_check_stop_to_fabric+0xd8/0xe0 [target_core_mod]
+ target_complete_ok_work+0x1b0/0x790 [target_core_mod]
+ process_one_work+0x549/0xa40
+ worker_thread+0x7a/0x5d0
  kthread+0x1bc/0x210
  ret_from_fork+0x24/0x30
 
-Allocated by task 1079:
+Allocated by task 889:
  save_stack+0x23/0x90
  __kasan_kmalloc.constprop.0+0xcf/0xe0
  kasan_slab_alloc+0x12/0x20
- kmem_cache_alloc+0xfe/0x3a0
+ kmem_cache_alloc+0xf6/0x360
  transport_alloc_session+0x29/0x80 [target_core_mod]
- iscsi_target_login_thread+0xceb/0x1920 [iscsi_target_mod]
+ iscsi_target_login_thread+0xcd6/0x18f0 [iscsi_target_mod]
  kthread+0x1bc/0x210
  ret_from_fork+0x24/0x30
 
-Freed by task 17193:
+Freed by task 1025:
  save_stack+0x23/0x90
  __kasan_slab_free+0x13a/0x190
  kasan_slab_free+0x12/0x20
- kmem_cache_free+0xc8/0x3e0
+ kmem_cache_free+0x146/0x400
  transport_free_session+0x179/0x2f0 [target_core_mod]
- transport_deregister_session+0x121/0x170 [target_core_mod]
+ transport_deregister_session+0x130/0x180 [target_core_mod]
  iscsit_close_session+0x12c/0x350 [iscsi_target_mod]
  iscsit_logout_post_handler+0x136/0x380 [iscsi_target_mod]
- iscsit_response_queue+0x8fa/0xc00 [iscsi_target_mod]
- iscsi_target_tx_thread+0x28e/0x390 [iscsi_target_mod]
+ iscsit_response_queue+0x8de/0xbe0 [iscsi_target_mod]
+ iscsi_target_tx_thread+0x27f/0x370 [iscsi_target_mod]
  kthread+0x1bc/0x210
  ret_from_fork+0x24/0x30
 
-The buggy address belongs to the object at ffff88802ecd1860
+The buggy address belongs to the object at ffff8881154ec9c0
  which belongs to the cache se_sess_cache of size 352
-The buggy address is located 24 bytes inside of
- 352-byte region [ffff88802ecd1860, ffff88802ecd19c0)
+The buggy address is located 176 bytes inside of
+ 352-byte region [ffff8881154ec9c0, ffff8881154ecb20)
 The buggy address belongs to the page:
-page:ffffea0000bb3400 refcount:1 mapcount:0 mapping:ffff8880bef2ed00 index:0x0 compound_mapcount: 0
-flags: 0x1000000000010200(slab|head)
-raw: 1000000000010200 dead000000000100 dead000000000122 ffff8880bef2ed00
-raw: 0000000000000000 0000000080270027 00000001ffffffff 0000000000000000
+page:ffffea0004553b00 refcount:1 mapcount:0 mapping:ffff888101755400 index:0x0 compound_mapcount: 0
+flags: 0x2fff000000010200(slab|head)
+raw: 2fff000000010200 dead000000000100 dead000000000122 ffff888101755400
+raw: 0000000000000000 0000000080130013 00000001ffffffff 0000000000000000
 page dumped because: kasan: bad access detected
 
 Memory state around the buggy address:
- ffff88802ecd1700: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff88802ecd1780: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->ffff88802ecd1800: fb fb fb fb fc fc fc fc fc fc fc fc fb fb fb fb
-                                                                ^
- ffff88802ecd1880: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff88802ecd1900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881154ec900: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff8881154ec980: fc fc fc fc fc fc fc fc fb fb fb fb fb fb fb fb
+>ffff8881154eca00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                             ^
+ ffff8881154eca80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff8881154ecb00: fb fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc
 
 Cc: Mike Christie <mchristi@redhat.com>
-Link: https://lore.kernel.org/r/20191113220508.198257-2-bvanassche@acm.org
+Link: https://lore.kernel.org/r/20191113220508.198257-3-bvanassche@acm.org
 Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_transport.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/target/iscsi/iscsi_target.c | 10 ++++++++--
+ include/scsi/iscsi_proto.h          |  1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7f06a62f8661d..eda8b4736c158 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -584,6 +584,15 @@ void transport_free_session(struct se_session *se_sess)
- }
- EXPORT_SYMBOL(transport_free_session);
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index d19e051f2bc23..f194ffc4699e0 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1165,7 +1165,9 @@ int iscsit_setup_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
+ 		hdr->cmdsn, be32_to_cpu(hdr->data_length), payload_length,
+ 		conn->cid);
  
-+static int target_release_res(struct se_device *dev, void *data)
-+{
-+	struct se_session *sess = data;
-+
-+	if (dev->reservation_holder == sess)
-+		target_release_reservation(dev);
-+	return 0;
-+}
-+
- void transport_deregister_session(struct se_session *se_sess)
- {
- 	struct se_portal_group *se_tpg = se_sess->se_tpg;
-@@ -600,6 +609,12 @@ void transport_deregister_session(struct se_session *se_sess)
- 	se_sess->fabric_sess_ptr = NULL;
- 	spin_unlock_irqrestore(&se_tpg->session_lock, flags);
+-	target_get_sess_cmd(&cmd->se_cmd, true);
++	if (target_get_sess_cmd(&cmd->se_cmd, true) < 0)
++		return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_WAITING_FOR_LOGOUT, buf);
  
-+	/*
-+	 * Since the session is being removed, release SPC-2
-+	 * reservations held by the session that is disappearing.
-+	 */
-+	target_for_each_device(target_release_res, se_sess);
-+
- 	pr_debug("TARGET_CORE[%s]: Deregistered fabric_sess\n",
- 		se_tpg->se_tpg_tfo->fabric_name);
+ 	cmd->sense_reason = transport_lookup_cmd_lun(&cmd->se_cmd,
+ 						     scsilun_to_int(&hdr->lun));
+@@ -2002,7 +2004,9 @@ iscsit_handle_task_mgt_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
+ 			      conn->sess->se_sess, 0, DMA_NONE,
+ 			      TCM_SIMPLE_TAG, cmd->sense_buffer + 2);
+ 
+-	target_get_sess_cmd(&cmd->se_cmd, true);
++	if (target_get_sess_cmd(&cmd->se_cmd, true) < 0)
++		return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_WAITING_FOR_LOGOUT, buf);
+ 
  	/*
+ 	 * TASK_REASSIGN for ERL=2 / connection stays inside of
+@@ -4232,6 +4236,8 @@ int iscsit_close_connection(
+ 	 * must wait until they have completed.
+ 	 */
+ 	iscsit_check_conn_usage_count(conn);
++	target_sess_cmd_list_set_waiting(sess->se_sess);
++	target_wait_for_sess_cmds(sess->se_sess);
+ 
+ 	ahash_request_free(conn->conn_tx_hash);
+ 	if (conn->conn_rx_hash) {
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index b71b5c4f418c5..533f56733ba84 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -627,6 +627,7 @@ struct iscsi_reject {
+ #define ISCSI_REASON_BOOKMARK_INVALID	9
+ #define ISCSI_REASON_BOOKMARK_NO_RESOURCES	10
+ #define ISCSI_REASON_NEGOTIATION_RESET	11
++#define ISCSI_REASON_WAITING_FOR_LOGOUT	12
+ 
+ /* Max. number of Key=Value pairs in a text message */
+ #define MAX_KEY_VALUE_PAIRS	8192
 -- 
 2.20.1
 
