@@ -2,144 +2,85 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6303C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0145C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 19:03:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BCEA20836
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:10:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080653;
-	bh=oBUjJzCoe8zgacm8z7ZITBOVvNWJ1Ca3PatKMSnOb9g=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=aL9Y1FGu+0tybgdmjZDgO7yHS99KhdqlL3AKHh95X7kbdnvtqlsWulm166d3nizAb
-	 O8bmPQRw4xQgfXSb8ivLecfKo1AH+kFzZb6rFVXVt+sdd7vj6verzdt3SAQAaCvfLY
-	 08KOPxDASS801ISg+Td9IJq1ebG5Z8mZeXNvOOnU=
+	by mail.kernel.org (Postfix) with ESMTP id B4A0B20836
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 19:03:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="NF+ntqkC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731324AbfLKQKw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:10:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730195AbfLKPLx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:11:53 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1728216AbfLKTDP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 14:03:15 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:32802 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726877AbfLKTDO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 14:03:14 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B8C4A42A6D;
+        Wed, 11 Dec 2019 19:03:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1576090992;
+         x=1577905393; bh=E02CgP3TxqWrxw1Pzy4A7H7JaK/5T5ZWIQWEym1SJZY=; b=
+        NF+ntqkCievCmmSWYDnuN935I5GqOhxWNciFF46U1dPaIE5iaAiCgUopvjXqdYYq
+        q0NIFcAHL3UQl2NuT3T2YBqKt9C68COS9ONOvjoZym+z0+QcyJc2xHHUAXWVXEkS
+        +5URYFLJ+rAmw0fiXFgwt92q9YCzYv4aSVq2ybAGRi0=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id IkKeNKdMHBJx; Wed, 11 Dec 2019 22:03:12 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6787E222C4;
-        Wed, 11 Dec 2019 15:11:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077112;
-        bh=oBUjJzCoe8zgacm8z7ZITBOVvNWJ1Ca3PatKMSnOb9g=;
-        h=From:To:Cc:Subject:Date:From;
-        b=18ZYV2shQzxpBxBXgt8iKcbNRQgrvEn769hlMaJkc1aJNUyW3JR9gdjv5YNBYRsXJ
-         LpTMFZNXJQRkb/RLKJY0X8iBaAhTX2nrz7uzArWYD9zr2znBRL19dsimrwWmHn1IA4
-         sGDPh89kp2zMhtl/OZFXIphdZSMff+sFqBvwGlNE=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 001/134] scsi: lpfc: Fix spinlock_irq issues in lpfc_els_flush_cmd()
-Date:   Wed, 11 Dec 2019 10:09:37 -0500
-Message-Id: <20191211151150.19073-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
+        by mta-01.yadro.com (Postfix) with ESMTPS id 3694F4120B;
+        Wed, 11 Dec 2019 22:03:11 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 11
+ Dec 2019 22:03:10 +0300
+Date:   Wed, 11 Dec 2019 22:03:10 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
+Subject: Re: [PATCH 1/4] qla2xxx: Check locking assumptions at runtime in
+ qla2x00_abort_srb()
+Message-ID: <20191211190310.a4nqtwbnkx32aevq@SPB-NB-133.local>
+References: <20191209180223.194959-1-bvanassche@acm.org>
+ <20191209180223.194959-2-bvanassche@acm.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20191209180223.194959-2-bvanassche@acm.org>
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+On Mon, Dec 09, 2019 at 10:02:20AM -0800, Bart Van Assche wrote:
+> Document the locking assumptions this function relies on and also verify these
+> locking assumptions at runtime.
+> 
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
 
-[ Upstream commit d38b4a527fe898f859f74a3a43d4308f48ac7855 ]
-
-While reviewing the CT behavior, issues with spinlock_irq were seen. The
-driver should be using spinlock_irqsave/irqrestore in the els flush
-routine.
-
-Changed to spinlock_irqsave/irqrestore.
-
-Link: https://lore.kernel.org/r/20190922035906.10977-15-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/lpfc/lpfc_els.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index d5303994bfd62..0052b341587d9 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -7986,20 +7986,22 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	struct lpfc_sli_ring *pring;
- 	struct lpfc_iocbq *tmp_iocb, *piocb;
- 	IOCB_t *cmd = NULL;
-+	unsigned long iflags = 0;
- 
- 	lpfc_fabric_abort_vport(vport);
-+
- 	/*
- 	 * For SLI3, only the hbalock is required.  But SLI4 needs to coordinate
- 	 * with the ring insert operation.  Because lpfc_sli_issue_abort_iotag
- 	 * ultimately grabs the ring_lock, the driver must splice the list into
- 	 * a working list and release the locks before calling the abort.
- 	 */
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irqsave(&phba->hbalock, iflags);
- 	pring = lpfc_phba_elsring(phba);
- 
- 	/* Bail out if we've no ELS wq, like in PCI error recovery case. */
- 	if (unlikely(!pring)) {
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 		return;
- 	}
- 
-@@ -8037,21 +8039,21 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_unlock(&pring->ring_lock);
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
- 	/* Abort each txcmpl iocb on aborted list and remove the dlist links. */
- 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
--		spin_lock_irq(&phba->hbalock);
-+		spin_lock_irqsave(&phba->hbalock, iflags);
- 		list_del_init(&piocb->dlist);
- 		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
- 	}
- 	if (!list_empty(&abort_list))
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
- 				 "3387 abort list for txq not empty\n");
- 	INIT_LIST_HEAD(&abort_list);
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irqsave(&phba->hbalock, iflags);
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_lock(&pring->ring_lock);
- 
-@@ -8091,7 +8093,7 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4)
- 		spin_unlock(&pring->ring_lock);
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
- 
- 	/* Cancel all the IOCBs from the completions list */
- 	lpfc_sli_cancel_iocbs(phba, &abort_list,
--- 
-2.20.1
-
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
