@@ -2,221 +2,224 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F239CC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 05:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BCBC3F68F
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 06:16:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD9B32077B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 05:57:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3D60214AF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 06:16:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oMpWaVYh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BOnJpTYy";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="dB6BCVZE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726750AbfLKF52 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 00:57:28 -0500
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:33679 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725800AbfLKF52 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 00:57:28 -0500
-Received: by mail-pj1-f67.google.com with SMTP id r67so8492596pjb.0;
-        Tue, 10 Dec 2019 21:57:27 -0800 (PST)
+        id S1727800AbfLKGQg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 01:16:36 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:14901 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726687AbfLKGQf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 01:16:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1576044995; x=1607580995;
+  h=from:to:cc:subject:date:message-id:
+   content-transfer-encoding:mime-version;
+  bh=wKrKs4Fth6/z7XFVwrltfSTgFcadUHn/ome+7YOJHIc=;
+  b=BOnJpTYyYZjUFUd5oFSkmE/2htVbayySEIdrzb1bGuB3BQJk+dlxqJU0
+   5P2/bADSTZ9/0Oz4dKp/cFLqo34dbemlJxWETaYD8+jkAh5COXbxobC0x
+   rm4g60Rh1eyekjXiOcM0kzQSl9wR0vaFKRCYABc6ZOoSW9pgO4hOItWLC
+   UdUM9EmYl3+Fzig9Rtw+1iG/Vnm7TDaz00iDmX/i/PWjPR3PCHBBhParB
+   rYuHzNPRfI+P7/LoBhak3xnn/2npTxwCxhOw+2GLlg2sMxG1B+lLD13Bm
+   wji8iU8vHQCZ3+eN+1ea2l56D1qCTRUVe+pxx2lj4QeTeO599QKjP2W05
+   w==;
+IronPort-SDR: TRk11DTviKUKVUeYCXqNc6aCA0MqYZpXyPv6AZpK4I5MVyxnVQtTfkDHcpiHfwpw8uI7ZnpIru
+ zHExT22uBdfR/c5uiJkkdXxDjW8eHqEWO1IeGrigeYgBNORDKAi+gEaSNqjW9EX7ESzNi2J2CG
+ Pahtc2zTe2PslwOwk0PCEVOSkKpSAWmUfqAt+LeiS8PAylOIZtxGDezw53cRhp7fd0rHdrkLoS
+ 9LP4f8tbS+FB7vtIeTMk6t2P7ffQ+3BHYvsmFcNXjJQ4NMtrAhw6sggEdODdnFexC0E5HAkivq
+ H34=
+X-IronPort-AV: E=Sophos;i="5.69,301,1571673600"; 
+   d="scan'208";a="232612405"
+Received: from mail-bn8nam12lp2176.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.176])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Dec 2019 14:16:32 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iH076ko/hl+QLTg85syzEVpe6oxJmZqyVgxcVGQ//ncz6X1dEqHloWt7n45OhQs03Q3FEgy1Pe8LUhGlXcO8bq9cU7PzS1k8jBdB2pYLQl9/yy0eXLqKMf8AB2tWwt29dQxWAmH+JrOuSpQ+viN/JCrGO4olBawmB/q55LOLEuLsm/oBQn/b60XIAIkyZmdu3JRIPu9Ri8TXq961isq6oVUlchC7WFmVESWz2fJwB1FYZ29XgCtd0ShwgFJFAx6p3Xsjs1qr4gqvL+E9F6YIQ6V1osacZWRqL7dvj4pCoiQje6pEPGJIAbG62R24YFQtQSYizU9tCptcTsy2BRYpxQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5oAeDD/L0QXcCKoeafAvIYqBW/ibXXcwGxdJT2kQA98=;
+ b=MC1WUYCxJB2hjAEmkE08/qmjBqM0nQ389gvWGFcL1bNvw8MWifnPaJnvvP1cHlRE2+t6bMZl+LuHNWgMIl1m+BCUUT5F7q6ujKYAL6Uh7Zlzu+5LN6dnh426ki3fyFO7XIdVA9ID4eHrWFQsKw+pXdgMiNhKa1ZN7x4Vl6C+22z0WD7uTzylXqeRLcE8GgQ2JK+1bLp5rmDUZFj1ntGOSkn5kgWe8VATpEY/FIFM3cpfxmtdmC/5yO01DTjRo9ZRyI7mGdR39iGQghPF9LtiMdc1UprtGamoe3tc6DZ+lUmTK8cIvuwY4+Aw01H3xj85lqjL/rOVF9pbGRnZ1oZ4gg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=V1z4CnyL3vaFU5di2fW8JaESd5vrN6gXo8REKlU0IHE=;
-        b=oMpWaVYhbS6/S2DwY4jMKB/K77Bxlv7L5muzU6qOD17UaI96otfmXj30fJMHI9F1AM
-         bGkhaW7Cza6EclGAR4CQhRASPCpegLrjD/lTTCBiq840f6Gi3ryj3b9UxyGv/897Vnqm
-         8BD/4EpT4zWqX+fT5lDJTXqn/mOyxWOI1VjZno2O75V7qk9rFyhE6bdxWaszpj0Iwd1v
-         cZZ2LmlirJfqSRrHUe39tqhJi713+oK/2WxOHsdwWEmqPo8Dxiwb3n0tuYFrcq0OwJjw
-         BHV3Kkhs6zM8PMcurIOjDdMsFX8dtwHhUA7j7BRBAxVn6hi5APZHpMCRO6miTbNWUGIP
-         ajxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=V1z4CnyL3vaFU5di2fW8JaESd5vrN6gXo8REKlU0IHE=;
-        b=rZ0eAP4O5hJ2ELb02/Xjet1vO+tz1yD/hSXwMoT2nAxe+0xfew9zIMwTVL58NhVDdF
-         jtITtMCMfvC8A1DQX2RV2H8cyRNvjHAIbAbFPIFYa+xKUev5saZAp7+QsSJJm9KlnV01
-         1F9kERuBhJjqTixeOrs9L7kffYot+/bP+YFwqtxPd8EdADLe2jPNS+y4K/DA2HOi2aG+
-         2v0eoZMM9nA/nKtG2Iid0CUkReLM4kn1Uzoi8prZ0m0hU7zNoMYIRkOFnWUhxIyQDbf7
-         vC03Z6D7HdJ+UiSVfrJhPshJG7cLYE8GZncJ/xczWm/TPbLVg7Ujla0hFkHK2UK0aRdX
-         hLzg==
-X-Gm-Message-State: APjAAAVIgqVxHSlgFfO/q2/FkgaEB34B/Nujt3htd62DT0I3obJ0GryL
-        qQFam7J327JLqhY7jJcwvj0DhmSN
-X-Google-Smtp-Source: APXvYqy0xa3OZvG6JsEDVhji1MGlsG5ZsNmSjOva8TPWeHXDmIGQKnHq3z+biQHL71vKoS3YHBEYFg==
-X-Received: by 2002:a17:902:a404:: with SMTP id p4mr1463174plq.266.1576043846703;
-        Tue, 10 Dec 2019 21:57:26 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id s7sm912914pjk.22.2019.12.10.21.57.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Dec 2019 21:57:25 -0800 (PST)
-Subject: Re: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA
- drives
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20191209052119.32072-1-linux@roeck-us.net>
- <yq15zinmrmj.fsf@oracle.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <67b75394-801d-ce91-55f2-f0c0db9cfffc@roeck-us.net>
-Date:   Tue, 10 Dec 2019 21:57:24 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
-MIME-Version: 1.0
-In-Reply-To: <yq15zinmrmj.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5oAeDD/L0QXcCKoeafAvIYqBW/ibXXcwGxdJT2kQA98=;
+ b=dB6BCVZEXvycpOlR3LQ6hsqVwa04jwKFKmWdFVQjyXxMSL/86cIT4I/MTe0eST8i9zevZF9uMCDJ0nOpdacU84W7EP6woa963v5CbpFuJUwg5FjOsTIJDJaoNhHFCpsH6ImmFJymC4uCF2ehY2swn5d+cmo3KsSTkt+ZsXxRWhU=
+Received: from BYAPR04MB5749.namprd04.prod.outlook.com (20.179.57.21) by
+ BYAPR04MB6232.namprd04.prod.outlook.com (20.178.232.207) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2538.15; Wed, 11 Dec 2019 06:16:29 +0000
+Received: from BYAPR04MB5749.namprd04.prod.outlook.com
+ ([fe80::c3e:e0b4:872:e851]) by BYAPR04MB5749.namprd04.prod.outlook.com
+ ([fe80::c3e:e0b4:872:e851%7]) with mapi id 15.20.2516.018; Wed, 11 Dec 2019
+ 06:16:29 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Matias Bjorling <Matias.Bjorling@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>
+Subject: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
+ extension support
+Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
+ extension support
+Thread-Index: AQHVr+qGZa1SvOsf40W81LFPPtqF+Q==
+Date:   Wed, 11 Dec 2019 06:16:29 +0000
+Message-ID: <BYAPR04MB5749B4DC50C43EE845A04612865A0@BYAPR04MB5749.namprd04.prod.outlook.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chaitanya.Kulkarni@wdc.com; 
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 8b4ea572-9091-42b9-709e-08d77e01a944
+x-ms-traffictypediagnostic: BYAPR04MB6232:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB6232E5FDAC18FAED4AA2FE58865A0@BYAPR04MB6232.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 024847EE92
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(39860400002)(366004)(376002)(346002)(396003)(199004)(189003)(78114003)(71200400001)(186003)(26005)(52536014)(5660300002)(7696005)(6506007)(4326008)(966005)(86362001)(316002)(478600001)(2906002)(54906003)(81166006)(9686003)(8936002)(8676002)(81156014)(7416002)(6916009)(66946007)(64756008)(66446008)(66476007)(33656002)(76116006)(55016002)(66556008)(21314003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB6232;H:BYAPR04MB5749.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: jitJ1K7ITxNBu9+GmPVPzwWBsyV9o8I1dykswJhMK7/YOziHaJL5RDIX8hZx9ZDKAPtwvPOUWJXET4KcWIl+n9Vzajj9yYqEe6jr5FyyiVFyirP+D5vtq2jaGFmNiz/B1NoQpl1XBwI0K8hruTDrIwtbTd8k6BHyz0QjHkJYT3Mz5EkftVfBj9Yvw+1y5sC+3UbIF1kZ5P54BNSqxDiQViEL6iOzL0BwRRalt8b8k3Vx7M8itLCPdlZA1wIUn6OoTmVdjszBYDuxLUv/Tlbd8YDDrtXPQh81eJnZIiM9M6hue9dnljE/QL2aYNrLCuZ7NP1LHe1ss7qC48nz+s82ZzSpvCnvDgMtBOTtTI1mMNoiAC2kRiTyIv6VY0hIu6lDcTSbuDx5fdq8EoD4HfwOAS5OyfB0yhFkY/KrwTdMfymtxdxxdFD5e9OYpDKIKbKzLZFE6bH3pahWlOJuIXvWdqOWtC4ioHKA2j8miimVpIDCYF8RLlVh6PcmmwFRTP09VJw9MadIbVPeq6oU2wVFGEcNeNMxqS7GhZ8L1Nr3+gFfJt8cLtviwYxMo0DYDfYG
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b4ea572-9091-42b9-709e-08d77e01a944
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Dec 2019 06:16:29.4347
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7Mtgm4EzbLIE2WEMlfCWpKPYXQLWrPYboSw3VXb/hBNtdz8NGvcuoSlGXoD21MslNdCfrk/Y1NUtNaQvzSJ5OMx1dq1mL+VI7JWGTkJ/xjg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB6232
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
-
-On 12/10/19 8:08 PM, Martin K. Petersen wrote:
-> 
-> Hi Guenter,
-> 
->> The most recent attempt was [1] by Linus Walleij. It went through a total
->> of seven iterations. At the end, it was rejected for a number of reasons;
->> see the provided link for details. This implementation resides in the
->> SCSI core. It originally resided in libata but was moved to SCSI per
->> maintainer request, where it was ultimately rejected.
-> 
-> While I am sure I come across as a curmudgeon, regressions is a major
-> concern for me. That, and making sure we pick the right architecture. I
-> thought we were making good progress in that department when Linus
-> abandoned the effort.
-> 
-
-If anything, I am surprised that he did not give up earlier. Personally
-I did not see a path to success after v7 of the patch set was rejected.
-
-I also no longer believe that temperature monitoring of SATA drives
-should be implemented within the ATA or SCSI subsystem. I came to the
-conclusion that it is much better suited as separate hardware monitoring
-driver. As separate driver, its instantiation is in full control of
-the user. If it causes trouble (or, as mentioned separately, if it adds
-too much instantiation time, or if it is considered to be too large),
-it can simply be disabled in a given system by blacklisting it (or,
-rather, by not explicitly loading it in the first place). With that,
-there is no real compatibility concern. If and when drives are detected
-which report bad information, such drives can be added to a blacklist
-without impact on the core SCSI or ATA code. Until that happens, not
-loading the driver solves the problem on any affected system.
-
->> The feedback on this approach suggests to use the SCSI Temperature log
->> page [0x0d] as means to access drive temperature information. It is
->> unknown if this is implemented in any real SCSI drive.
-> 
-> Almost every SCSI drive has it.
-> 
-Good to hear.
-
->> The feedback also suggests to obtain temperature from ATA drives,
->> convert it into the SCSI temperature log page in libata-scsi, and to
->> use that information in a hardware monitoring driver. The format and
->> method to do this is documented in [3]. This is not currently
->> implemented in the Linux kernel.
-> 
-> Correct, but I have no qualms over exporting the SCSI temperature log
-> page. The devices that export that page are generally well-behaved.
-> 
-Also good to hear. However, for my part, I have no means to test such
-code since I don't have any SCSI drives.
-
-> My concerns are wrt. identifying whether SMART data is available for
-> USB/UAS. I am not too worried about ATA and "real" SCSI (ignoring RAID
-> controllers that hide the real drives in various ways).
-> 
-
-The one USB/UAS connected SATA drive I have (a WD passport) reports
-itself as "WD      ", not as "ATA     ". I would expect other drives
-to do the same. That drive reports (via smartctl) that it supports
-both SCT and SMART data. It doesn't report temperatures through SCT,
-but it does report the drive temperature with SMART attribute 194.
-I did not attempt to add support for this and similar drives since
-I don't know if I can reliably detect it. The potential benefit
-compared to the risk seemed too low (we would be getting into
-possible regression space) for me to try. Such code (effectively
-it boils down to relaxing SATA drive detection) can always be added
-at a later time.
-
-> I am not sure why the SCSI temperature log page parsing would be
-> complex. I will have to go check smartmontools to see what that is all
-
-Not as much the parsing, but detection if the information is there.
-
-> about. The spec is as simple as can be.
-> 
-
-Possibly. I personally also find it quite vague. It is definitely not
-something I would want to try to implement without ability to see how
-the data actually looks like as reported by a real drive, and without
-ability to test the code.
-
-> Anyway. I think the overall approach wrt. SCT and falling back to
-> well-known SMART fields is reasonably sane and fine for libata. But I
-> don't understand the pushback wrt. using the SCSI temperature log page
-> as a conduit. I think it would be fine if this worked out of the box for
-
-This is not a pushback per se. It is simply a matter of ability (or lack
-of it) to test any such code.
-
-Regarding "conduit", I assume you mean converting SATA/SCT information
-into SCST temperature pages and reporting temperature purely based
-on those. I personally think that this would be the wrong approach:
-It would effectively require code in the ATA core which is not really
-needed there. This would bloat the ATA code with no real advantage.
-In my opinion, available temperature information should be interpreted
-where it is needed, and only there, not in several places. I see that
-as much less risky and error prone than spreading the code to multiple
-places.
-
-> both SCSI and ATA drives.
-> 
-The elegance of my approach is that adding support for reading temperatures
-from SCSI drives (or, for that matter, USB/UAS drives) would be
-straightforward. All one would need to do is to implement the necessary
-detection code as well as a function to actually read the information
-from the drive. This can be done at any time, and, again, it should be
-done by someone with the ability to test the code.
-
-> The elephant in the room remains USB. And coming up with a way we can
-> reliably detect whether it is safe to start poking at the device to
-> discover if SMART is provided. If we eventually want to pursue USB,  > think your heuristic stuff needs to be a library that can be leveraged
-> by both libata and USB. But that doesn't have to be part of the initial
-> effort.
-> 
-> And finally, my concerns wrt. reacting to bad sensors remain. Not too
-> familiar with hwmon, but I would still like any actions based on
-> reported temperatures to be under user control and not the kernel.
-> 
-All sensors can report bad information, and quite often they do.
-This is actually quite normal in any given system. That doesn't mean
-that the available (connected) sensors should be ignored.
-
-Also, when it comes to actions, the one subsystem performing any actions
-in the kernel based on temperature sensor information is the thermal
-subsystem, and that is on purpose implemented in the kernel.
-The hardware monitoring subsystem, on its own, is purely passive
-and only reports sensor information; it does not act on it. Any action
-will either be done by userspace (eg with fancontrol) or by the thermal
-subsystem.
-
-Overall, I understand the desire to also support temperature reporting
-for SCSI and USB/UAS drives. As hardware monitoring maintainer, I'd
-be happy to accept patches implementing that support. However, I don't
-see this as immediately necessary, and I would want to have some
-reassurance that such code is well tested and doesn't cause any
-regressions (especially since concerns about possible regressions were
-mentioned several times in the context of the previous submissions).
-
-Thanks,
-Guenter
+Hi,=0A=
+=0A=
+* Background:-=0A=
+-----------------------------------------------------------------------=0A=
+=0A=
+Linux Kernel Block layer now supports new Zone Management operations=0A=
+(REQ_OP_ZONE_[OPEN/CLOSE/FINISH] [1]).=0A=
+=0A=
+These operations are added mainly to support NVMe Zoned Namespces=0A=
+(ZNS) [2]. We are adding support for ZNS in Linux Kernel Block layer,=0A=
+user-space tools (sys-utils/nvme-cli), NVMe driver, File Systems,=0A=
+Device-mapper in order to support these devices in the field.=0A=
+=0A=
+Over the years Linux kernel block layer tracing infrastructure=0A=
+has proven to be not only extremely useful but essential for:-=0A=
+=0A=
+1. Debugging the problems in the development of kernel block drivers.=0A=
+2. Solving the issues at the customer sites.=0A=
+3. Speeding up the development for the file system developers.=0A=
+4. Finding the device-related issues on the fly without modifying=0A=
+    the kernel.=0A=
+5. Building white box test-cases around the complex areas in the=0A=
+    linux-block layer.=0A=
+=0A=
+* Problem with block layer tracing infrastructure:-=0A=
+-----------------------------------------------------------------------=0A=
+=0A=
+If blktrace is such a great tool why we need this session for ?=0A=
+=0A=
+Existing blktrace infrastructure lacks the number of free bits that are=0A=
+available to track the new trace category. With the addition of new=0A=
+REQ_OP_ZONE_XXX we need more bits to expand the blktrace so that we can=0A=
+track more number of requests.=0A=
+=0A=
+* Current state of the work:-=0A=
+-----------------------------------------------------------------------=0A=
+=0A=
+RFC implementations [3] has been posted with the addition of new IOCTLs=0A=
+which is far from the production so that it can provide a basis to get=0A=
+the discussion started.=0A=
+=0A=
+This RFC implementation provides:-=0A=
+1. Extended bits to track new trace categories.=0A=
+2. Support for tracing per trace priorities.=0A=
+3. Support for priority mask.=0A=
+4. New IOCTLs so that user-space tools can setup the extensions.=0A=
+5. Ability to track the integrity fields.=0A=
+6. blktrace and blkparse implementation which supports the above=0A=
+    mentioned features.=0A=
+=0A=
+Bart and Martin has suggested changes which I've incorporated in the RFC =
+=0A=
+revisions.=0A=
+=0A=
+* What we will discuss in the proposed session ?=0A=
+-----------------------------------------------------------------------=0A=
+=0A=
+I'd like to propose a session for Storage track to go over the following=0A=
+discussion points:-=0A=
+=0A=
+1. What is the right approach to move this work forward?=0A=
+2. What are the other information bits we need to add which will help=0A=
+    kernel community to speed up the development and improve tracing?=0A=
+3. What are the other tracepoints we need to add in the block layer=0A=
+    to improve the tracing?=0A=
+4. What are device driver callbacks tracing we can add in the block=0A=
+    layer?=0A=
+5. Since polling is becoming popular what are the new tracepoints=0A=
+    we need to improve debugging ?=0A=
+ =0A=
+=0A=
+* Required Participants:-=0A=
+-----------------------------------------------------------------------=0A=
+=0A=
+I'd like to invite block layer, device drivers and file system=0A=
+developers to:-=0A=
+=0A=
+1. Share their opinion on the topic.=0A=
+2. Share their experience and any other issues with blktrace=0A=
+    infrastructure.=0A=
+3. Uncover additional details that are missing from this proposal.=0A=
+=0A=
+Regards,=0A=
+Chaitanya=0A=
+=0A=
+References :-=0A=
+=0A=
+[1] https://www.spinics.net/lists/linux-block/msg46043.html=0A=
+[2] https://nvmexpress.org/new-nvmetm-specification-defines-zoned-=0A=
+namespaces-zns-as-go-to-industry-technology/=0A=
+[3] https://www.spinics.net/lists/linux-btrace/msg01106.html=0A=
+     https://www.spinics.net/lists/linux-btrace/msg01002.html=0A=
+     https://www.spinics.net/lists/linux-btrace/msg01042.html=0A=
+     https://www.spinics.net/lists/linux-btrace/msg00880.html=0A=
