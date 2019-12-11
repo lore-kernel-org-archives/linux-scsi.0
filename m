@@ -2,113 +2,127 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EFFC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 11:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5485AC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 12:06:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1ED322073D
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 11:45:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="o88nLTeN";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="dfaKObj6"
+	by mail.kernel.org (Postfix) with ESMTP id 3142E208C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 12:06:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729032AbfLKLp2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 06:45:28 -0500
-Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:41558
-        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727365AbfLKLp2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 06:45:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1576064727;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
-        bh=JiPXq/eUqhlCbHe6rPsNhUYA8v5Xs7QVIRqJ0vKWarc=;
-        b=o88nLTeNBNMz266JfaBhfh1U4vFIK/tNpuvCWfneAv96iHYlViOkkTaY1pWu5AXW
-        D/0UShqZl/L9SX5X1FuoCTi413eui3ul5jBd1G3aO1YNEl9Lv25MpLY9ci55kkdnBYH
-        Ykv+rSeUvkf8/YWx6vKxwkIWq51DctTvduQR5hFA=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1576064727;
-        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
-        bh=JiPXq/eUqhlCbHe6rPsNhUYA8v5Xs7QVIRqJ0vKWarc=;
-        b=dfaKObj6pfCLm2/VKuhOQ6vUwvnzdelWdoUL0vOe4iucihFqvvFQY8WNu+DOb8by
-        18YRj4KnaiD95dNoJ3OTCWgAei7vcEkG9IgW8dVtz20I3Xio8OkaRnzazMLZYfbWHbF
-        lNs7RekohSwrnBXwgfmQ1ZOL1tDHBAMLVs+YJNTU=
+        id S1728265AbfLKMGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 07:06:17 -0500
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:35112 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727851AbfLKMGR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Dec 2019 07:06:17 -0500
+Received: by mail-qk1-f195.google.com with SMTP id z76so2719105qka.2
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2019 04:06:16 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=8QCObTd6Fx49Qt/ObrGypJRrxHQ04jjBjaB09dYnYT8=;
+        b=A2fv6Ggc2DpAM5QR7pqgf9ohRqlKZ11bLTq8QJLwSFNXxc+0+sLjSbmE8ixpjSxdRL
+         Y6P09XmqQssxRgbhnTo8+T5LjEydJZEH+pr6eTY0QmKVZKW+P++gQaHNBpNaSZIKiNZP
+         KpPXaawHTWd3og0GdY/hlHKYisVK+OVRVFG4jmTMXmJWJrvVJ6prf7xZ9W83DOWS2SVK
+         NZUq0IumoFNbdCkiuDl5QKKV8wNL26sp6jpyykRe+SwCJ2LuEZZIDglVqiWTRb/f1Rzg
+         m8Gtwfx+uIvCK+N/mwyGxCuMsOPBbsMbDEFr64Dy8g2UWDziUZq+ixtply9Fv9w0BwW/
+         NLww==
+X-Gm-Message-State: APjAAAV2fzshc5TVjmJ59+Qj3AVRCfY6J7zl9ebDGf13K6cnCJO4nzU9
+        uqo1lEIxGc9GqwRcwa5NYWUG4d5P
+X-Google-Smtp-Source: APXvYqzsNoSTyVC41oO9dni3xMMElwe0tp1A/FXrREJt1kx1v00niqrMPG1ijob1CuHbRQlmGxFstQ==
+X-Received: by 2002:a05:620a:1191:: with SMTP id b17mr2410161qkk.404.1576065975540;
+        Wed, 11 Dec 2019 04:06:15 -0800 (PST)
+Received: from [172.20.7.93] ([162.219.216.181])
+        by smtp.gmail.com with ESMTPSA id c20sm841472qtc.13.2019.12.11.04.06.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Dec 2019 04:06:14 -0800 (PST)
+Subject: Re: [PATCH 2/2] scsi: qla2xxx: don't shut down firmware before
+ closing sessions
+To:     Martin Wilck <Martin.Wilck@suse.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>
+Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20191129202627.19624-1-martin.wilck@suse.com>
+ <20191129202627.19624-2-martin.wilck@suse.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <5730b94d-4f9f-310b-0f6f-40ff8739e6eb@acm.org>
+Date:   Wed, 11 Dec 2019 07:06:13 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <20191129202627.19624-2-martin.wilck@suse.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date:   Wed, 11 Dec 2019 11:45:27 +0000
-From:   cang@codeaurora.org
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
-        Olof Johansson <olof@lixom.net>,
-        Aisheng Dong <aisheng.dong@nxp.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Anson Huang <Anson.Huang@nxp.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        Dinh Nguyen <dinguyen@kernel.org>,
-        =?UTF-8?Q?Cl=C3=A9ment_P=C3=A9ron?= <peron.clem@gmail.com>,
-        Marcin Juszkiewicz <marcin.juszkiewicz@linaro.org>,
-        "moderated list:ARM64 PORT (AARCH64 ARCHITECTURE)" 
-        <linux-arm-kernel@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] arm64: defconfig: Compile ufs-bsg as a module
-In-Reply-To: <MN2PR04MB6991B27D797044D8FFDFAE8FFC5A0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <0101016ef43c56d3-c7064a44-6025-4349-afd4-a2c91a9d9ffe-000000@us-west-2.amazonses.com>
- <MN2PR04MB6991B27D797044D8FFDFAE8FFC5A0@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <0101016ef4c73939-4ac7175d-40e4-4b34-bfbf-3f921a785503-000000@us-west-2.amazonses.com>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
-X-SES-Outgoing: 2019.12.11-54.240.27.21
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-11 19:11, Avri Altman wrote:
->> 
->> Compiling ufs-bsg as a module to improve flexibility of its usage.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
-> Not sure we want to make it loadable by default.
-> The platform vendor should decide if this module is available or not,
-> Don't you think?
+On 11/29/19 3:26 PM, Martin Wilck wrote:
+> From: Martin Wilck <mwilck@suse.com>
 > 
+> Since 45235022da99, the firmware is shut down early in the controller
+> shutdown process. This causes commands sent to the firmware (such as LOGO)
+> to hang forever. Eventually one or more timeouts will be triggered.
+> Move the stopping of the firmware until after sessions have terminated.
 > 
+> Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
+> Signed-off-by: Martin Wilck <mwilck@suse.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_os.c | 21 ++++++++++-----------
+>   1 file changed, 10 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 43d0aa0..0cc127d 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -3710,6 +3710,16 @@ qla2x00_remove_one(struct pci_dev *pdev)
+>   	}
+>   	qla2x00_wait_for_hba_ready(base_vha);
+>   
+> +	qla2x00_wait_for_sess_deletion(base_vha);
+> +
+> +	/*
+> +	 * if UNLOAD flag is already set, then continue unload,
+> +	 * where it was set first.
+> +	 */
+> +	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+> +		return;
+> +
+> +	set_bit(UNLOADING, &base_vha->dpc_flags);
+>   	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+>   	    IS_QLA28XX(ha)) {
+>   		if (ha->flags.fw_started)
+> @@ -3726,17 +3736,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+>   		qla2x00_try_to_stop_firmware(base_vha);
+>   	}
+>   
+> -	qla2x00_wait_for_sess_deletion(base_vha);
+> -
+> -	/*
+> -	 * if UNLOAD flag is already set, then continue unload,
+> -	 * where it was set first.
+> -	 */
+> -	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+> -		return;
+> -
+> -	set_bit(UNLOADING, &base_vha->dpc_flags);
+> -
+>   	qla_nvme_delete(base_vha);
+>   
+>   	dma_free_coherent(&ha->pdev->dev,
 
-Agree, I will remove this change from patchset in next versioin of it.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Thanks,
 
-Can Guo.
-
->> ---
->>  arch/arm64/configs/defconfig | 1 +
->>  1 file changed, 1 insertion(+)
->> 
->> diff --git a/arch/arm64/configs/defconfig 
->> b/arch/arm64/configs/defconfig index
->> 8e05c39..169a6e6 100644
->> --- a/arch/arm64/configs/defconfig
->> +++ b/arch/arm64/configs/defconfig
->> @@ -227,6 +227,7 @@ CONFIG_SCSI_UFSHCD=y
->> CONFIG_SCSI_UFSHCD_PLATFORM=y  CONFIG_SCSI_UFS_QCOM=m
->> CONFIG_SCSI_UFS_HISI=y
->> +CONFIG_SCSI_UFS_BSG=m
->>  CONFIG_ATA=y
->>  CONFIG_SATA_AHCI=y
->>  CONFIG_SATA_AHCI_PLATFORM=y
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
->> a Linux Foundation Collaborative Project
