@@ -4,51 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49ED5C2D0C6
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5684CC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:06:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2183A2073D
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26E1A214D8
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 16:06:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576080351;
-	bh=yh3ml+xLLZtTq6OwV4H71CWStS2hc1TgeU9LOfQMSzo=;
+	s=default; t=1576080391;
+	bh=yIYASKeplFhWxKQ5n3/bqsdIR4dQIZXYzR3I0t1xTIA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=N18m0q2Bxq/FdOitgiJ9KNMT7sy4i9VaeGuHuREyhXx5kfNLmA+OUjtYaxhZK1A9Z
-	 +spyPFnkpHhstSOSjXeH5OzVuC2Ob6PUXtUFVKAUQnUDnB9otlPC0rLDoCuPmBiTrH
-	 N/ovWdxehqmL172IpMQ3+3ryL+PIUXdGaCx/+ikg=
+	b=lilJcEGtKSrTzpXEmT5Oh/DQJhsZOyyTUyRK74kn4Bq+hZaM57aJzA4SDZTzF7PxE
+	 MFJYTWZQ8QMlhYlYIO6XKDEW6HBDeNlkfUURl9tlyEzMEMWeAKGBZfbJM5ZftGSJYx
+	 hiqaFwru83s3+gnjHs8ZlDpR2btzQsaEgYcFBTXo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388824AbfLKQFu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 11:05:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35038 "EHLO mail.kernel.org"
+        id S1732769AbfLKQG0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 11:06:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731228AbfLKPMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:12:46 -0500
+        id S1731201AbfLKPMl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:12:41 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3C86F2467C;
-        Wed, 11 Dec 2019 15:12:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E0A7B208C3;
+        Wed, 11 Dec 2019 15:12:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576077166;
-        bh=yh3ml+xLLZtTq6OwV4H71CWStS2hc1TgeU9LOfQMSzo=;
+        s=default; t=1576077160;
+        bh=yIYASKeplFhWxKQ5n3/bqsdIR4dQIZXYzR3I0t1xTIA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v3EE2+zMs6s2PhDGUgkFwHn9avqqkAIrYK2grHmsEOlRIt1z1zBkIf5KqpV6xYjop
-         2h5c3qkrMePfjvcOSyZPG8zghlTZ5SAghx1jZGUkpkuCSjKXnq2Bc0KwPxAgAigGX7
-         2f2k7+MHqH6ZR41nsmG4jU0uGLgrdJbXOiHs8Hag=
+        b=U+3eZqNNUe34MC4vXOGKm/XZ2TmGMEsChTlAsfPjoJ36CAVDxznwJKg+0g0HkzhV7
+         HN+oRO3IbjmJEbYUWyFrXeDvEnzdR8nSOXbUFLbgM32/3aSAF+Du3MJGCB27CwTGeO
+         9k4Ueo2/QidutpxvfyfufedpBPeB+JK2raqhymlA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Michael Hernandez <mhernandez@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 051/134] scsi: qla2xxx: Fix a dma_pool_free() call
-Date:   Wed, 11 Dec 2019 10:10:27 -0500
-Message-Id: <20191211151150.19073-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 046/134] scsi: lpfc: Fix duplicate unreg_rpi error in port offline flow
+Date:   Wed, 11 Dec 2019 10:10:22 -0500
+Message-Id: <20191211151150.19073-46-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191211151150.19073-1-sashal@kernel.org>
 References: <20191211151150.19073-1-sashal@kernel.org>
@@ -61,60 +59,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 162b805e38327135168cb0938bd37b131b481cb0 ]
+[ Upstream commit 7cfd5639d99bec0d27af089d0c8c114330e43a72 ]
 
-This patch fixes the following kernel warning:
+If the driver receives a login that is later then LOGO'd by the remote port
+(aka ndlp), the driver, upon the completion of the LOGO ACC transmission,
+will logout the node and unregister the rpi that is being used for the
+node.  As part of the unreg, the node's rpi value is replaced by the
+LPFC_RPI_ALLOC_ERROR value.  If the port is subsequently offlined, the
+offline walks the nodes and ensures they are logged out, which possibly
+entails unreg'ing their rpi values.  This path does not validate the node's
+rpi value, thus doesn't detect that it has been unreg'd already.  The
+replaced rpi value is then used when accessing the rpi bitmask array which
+tracks active rpi values.  As the LPFC_RPI_ALLOC_ERROR value is not a valid
+index for the bitmask, it may fault the system.
 
-DMA-API: qla2xxx 0000:00:0a.0: device driver frees DMA memory with different size [device address=0x00000000c7b60000] [map size=4088 bytes] [unmap size=512 bytes]
-WARNING: CPU: 3 PID: 1122 at kernel/dma/debug.c:1021 check_unmap+0x4d0/0xbd0
-CPU: 3 PID: 1122 Comm: rmmod Tainted: G           O      5.4.0-rc1-dbg+ #1
-RIP: 0010:check_unmap+0x4d0/0xbd0
-Call Trace:
- debug_dma_free_coherent+0x123/0x173
- dma_free_attrs+0x76/0xe0
- qla2x00_mem_free+0x329/0xc40 [qla2xxx_scst]
- qla2x00_free_device+0x170/0x1c0 [qla2xxx_scst]
- qla2x00_remove_one+0x4f0/0x6d0 [qla2xxx_scst]
- pci_device_remove+0xd5/0x1f0
- device_release_driver_internal+0x159/0x280
- driver_detach+0x8b/0xf2
- bus_remove_driver+0x9a/0x15a
- driver_unregister+0x51/0x70
- pci_unregister_driver+0x2d/0x130
- qla2x00_module_exit+0x1c/0xbc [qla2xxx_scst]
- __x64_sys_delete_module+0x22a/0x300
- do_syscall_64+0x6f/0x2e0
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+Revise the rpi release code to detect when the rpi value is the replaced
+RPI_ALLOC_ERROR value and ignore further release steps.
 
-Fixes: 3f006ac342c0 ("scsi: qla2xxx: Secure flash update support for ISP28XX") # v5.2-rc1~130^2~270.
-Cc: Michael Hernandez <mhernandez@marvell.com>
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Link: https://lore.kernel.org/r/20191106044226.5207-3-bvanassche@acm.org
-Reviewed-by: Martin Wilck <mwilck@suse.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20191105005708.7399-2-jsmart2021@gmail.com
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 726ad4cbf4a64..9fc0789c9d3c3 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4666,7 +4666,8 @@ qla2x00_mem_free(struct qla_hw_data *ha)
- 	ha->sfp_data = NULL;
- 
- 	if (ha->flt)
--		dma_free_coherent(&ha->pdev->dev, SFP_DEV_SIZE,
-+		dma_free_coherent(&ha->pdev->dev,
-+		    sizeof(struct qla_flt_header) + FLT_REGIONS_SIZE,
- 		    ha->flt, ha->flt_dma);
- 	ha->flt = NULL;
- 	ha->flt_dma = 0;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 995a2b56a35ee..cf95249985bc4 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -18184,6 +18184,13 @@ lpfc_sli4_alloc_rpi(struct lpfc_hba *phba)
+ static void
+ __lpfc_sli4_free_rpi(struct lpfc_hba *phba, int rpi)
+ {
++	/*
++	 * if the rpi value indicates a prior unreg has already
++	 * been done, skip the unreg.
++	 */
++	if (rpi == LPFC_RPI_ALLOC_ERROR)
++		return;
++
+ 	if (test_and_clear_bit(rpi, phba->sli4_hba.rpi_bmask)) {
+ 		phba->sli4_hba.rpi_count--;
+ 		phba->sli4_hba.max_cfg_param.rpi_used--;
 -- 
 2.20.1
 
