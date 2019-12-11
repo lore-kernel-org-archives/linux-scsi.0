@@ -2,93 +2,128 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D96BC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 09:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A4DC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 10:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73CA1214AF
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 09:13:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TlJRvRJH";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="WN6lb6Gw"
+	by mail.kernel.org (Postfix) with ESMTP id A27A121556
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 10:25:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728409AbfLKJNq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Dec 2019 04:13:46 -0500
-Received: from a27-18.smtp-out.us-west-2.amazonses.com ([54.240.27.18]:48974
-        "EHLO a27-18.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727253AbfLKJNq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Dec 2019 04:13:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1576055625;
-        h=From:To:Cc:Subject:Date:Message-Id;
-        bh=42yNDIrjy8vmTGZpCOEq/aiq1nTIM3d9+rZoTsv/drQ=;
-        b=TlJRvRJHI9bvVQ3XjG87h4UaQzFj8t2FzMYfDzDYSeIJHz7wtXBI4J+LvvCi2uVt
-        JMecs7KV9e2IqYz9gsRIJycWldJWH2DgndPDxAhT1vn/U7avICEnERW8Ok6P57SvlIf
-        iYdZ3bhMq9qFAEtE5buyKjAShr71V6nZhBuXlVUQ=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1576055625;
-        h=From:To:Cc:Subject:Date:Message-Id:Feedback-ID;
-        bh=42yNDIrjy8vmTGZpCOEq/aiq1nTIM3d9+rZoTsv/drQ=;
-        b=WN6lb6GwWL7Ae7tSzls9fhSZGoK4I/DGDhKXv6OKYJVJPI+VZguokGPkZgnmZeqi
-        ghfxG4TXA2MWcBUxDSYcjU+EqBNIkZhJ8MhchpY8a36eZzokPDQefZjSLb4qJ4NstfR
-        pv6pzvrL1iuNNRDSMnR21HltyIYwWUy1bofV0xYM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4B186C4479C
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        cang@codeaurora.org
-Cc:     Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
-        Olof Johansson <olof@lixom.net>,
-        Aisheng Dong <aisheng.dong@nxp.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Anson Huang <Anson.Huang@nxp.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        Dinh Nguyen <dinguyen@kernel.org>,
-        =?UTF-8?q?Cl=C3=A9ment=20P=C3=A9ron?= <peron.clem@gmail.com>,
-        Marcin Juszkiewicz <marcin.juszkiewicz@linaro.org>,
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM64 PORT
-        (AARCH64 ARCHITECTURE)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 3/3] arm64: defconfig: Compile ufs-bsg as a module
-Date:   Wed, 11 Dec 2019 09:13:45 +0000
-Message-ID: <0101016ef43c56d3-c7064a44-6025-4349-afd4-a2c91a9d9ffe-000000@us-west-2.amazonses.com>
-X-Mailer: git-send-email 1.9.1
-X-SES-Outgoing: 2019.12.11-54.240.27.18
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+        id S1728891AbfLKKZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Dec 2019 05:25:59 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50276 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728888AbfLKKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Dec 2019 05:25:59 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 18AEAAE37;
+        Wed, 11 Dec 2019 10:25:57 +0000 (UTC)
+Message-ID: <fae628a795fe71c86deefbf57d52954dad5f96c4.camel@suse.de>
+Subject: Re: [PATCH 2/4] qla2xxx: Simplify the code for aborting SCSI
+ commands
+From:   Martin Wilck <mwilck@suse.de>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Cc:     linux-scsi@vger.kernel.org, Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Date:   Wed, 11 Dec 2019 11:26:47 +0100
+In-Reply-To: <125b4d82-c579-eab1-ff1f-6df7508dce97@acm.org>
+References: <20191209180223.194959-1-bvanassche@acm.org>
+         <20191209180223.194959-3-bvanassche@acm.org>
+         <f7a05e5696b1942b3303e20fe0e6891bc9a61090.camel@suse.de>
+         <658d52fb-c614-9ee5-f95f-81509a9de771@acm.org>
+         <1755e03c0aba7c684bdf387780bc526ddcc2647c.camel@suse.de>
+         <125b4d82-c579-eab1-ff1f-6df7508dce97@acm.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.34.2 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Compiling ufs-bsg as a module to improve flexibility of its usage.
+Hi Bart,
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+On Tue, 2019-12-10 at 15:45 -0500, Bart Van Assche wrote:
+> On 12/10/19 3:29 PM, Martin Wilck wrote:
+> > On Tue, 2019-12-10 at 12:57 -0500, Bart Van Assche wrote:
+> > > On 12/10/19 6:47 AM, Martin Wilck wrote:
+> > > > blk_mq_request_started() returns true for requests in
+> > > > MQ_RQ_COMPLETE
+> > > > state. Is this really an equivalent condition?
+> > > > 
+> > > > That said, the condition in the current code is sort of
+> > > > strange, as
+> > > > it's equivalent to !(sp->completed && sp->aborted). I'm
+> > > > wondering
+> > > > what
+> > > > it means if a command is both completed and aborted. Naïvely
+> > > > thinking
+> > > > (and inferring from the current code) this condition could
+> > > > never be
+> > > > met, and thus its negation would hold for every command.
+> > > > Perhaps
+> > > > Quinn
+> > > > meant "!(sp->completed || sp->aborted)" ?
+> > > 
+> > > Hi Martin,
+> > > 
+> > > The only caller of qla2x00_abort_srb() is
+> > > qla2x00_abort_all_cmds().
+> > > That
+> > > function should only be called after completion interrupts have
+> > > been
+> > > disabled. In other words, I don't think that we have to worry
+> > > about
+> > > blk_mq_request_started() encountering the MQ_RQ_COMPLETE state.
+> > > No
+> > > request should have that state when qla2x00_abort_all_cmds() is
+> > > called.
+> > 
+> > I thought avoiding a race between completion and abort was the
+> > whole
+> > point of f45bca8c5052 ("scsi: qla2xxx: Fix double scsi_done for
+> > abort
+> > path"), which introduced the code that you're now changing. But I
+> > must
+> > be overlooking something then, as Himanshu has acked this.
+> 
+> Hi Martin,
+> 
+> My understanding of commit f45bca8c5052 ("scsi: qla2xxx: Fix double
+> scsi_done for abort path") is as follows:
+> * A long time ago a scsi_done() call was introduced in
+> qla2xxx_eh_abort(). Maybe this commit introduced that call:
+> 083a469db4ec
+> ("[SCSI] qla2xxx: Correct use-after-free oops seen during EH-
+> abort.").
+> * Calling scsi_done() from qla2xxx_eh_abort() is only fine if the
+> firmware does not report a completion after having processed an abort
+> request. My conclusion from commit f45bca8c5052 is that the firmware
+> does report a completion after having processed an abort request.
+> Hence
+> the removal of that scsi_done call from qla2xxx_eh_abort().
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 8e05c39..169a6e6 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -227,6 +227,7 @@ CONFIG_SCSI_UFSHCD=y
- CONFIG_SCSI_UFSHCD_PLATFORM=y
- CONFIG_SCSI_UFS_QCOM=m
- CONFIG_SCSI_UFS_HISI=y
-+CONFIG_SCSI_UFS_BSG=m
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
- CONFIG_SATA_AHCI_PLATFORM=y
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+I think it depends on the scenario in which commands are aborted.
+For "regular" aborts, you're certainly right. But in certain scenarios,
+e.g. controller removal or module unloading, the current driver shuts
+down the firmware early in the shutdown process, and once the firmware
+is stopped, I suppose it will not report completions any more.
+
+Whether it was a good idea in the first place to shut down the FW so
+early is a different issue, which I tried to adress with the 2 patches
+I submitted on Nov. 29th.
+
+Regards,
+Martin
+
 
