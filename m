@@ -2,244 +2,138 @@ Return-Path: <SRS0=S2y6=2B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C61C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 00:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7466C2D0BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 02:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5A78206EC
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 00:23:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZykUzkaW"
+	by mail.kernel.org (Postfix) with ESMTP id A6BD120836
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Dec 2019 02:42:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726959AbfLKAXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Dec 2019 19:23:12 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:32663 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726913AbfLKAXM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Dec 2019 19:23:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576023790;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=T0DHq5jomRtzqdp4ZrTNBO19gEa7DeelApPK/zuSVrE=;
-        b=ZykUzkaWD19gzir1O9uwr0tKvV/eMfGvlqhkJYH3axZoFm9Qw0BlpZdxom+Xnu98HxFUK0
-        OeiyaRoLgbBpKwdxKTwCI5sZgeZ3Jn1lo8pTCp/LracWGtUmP5dhorA2W0eVkoReKLROzr
-        4+cKQmYVuIa4Nz22mrXQCC3UYNek/cE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-249-YqUUItqXMga3HYiAQj_UhQ-1; Tue, 10 Dec 2019 19:23:08 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD897801E76;
-        Wed, 11 Dec 2019 00:23:06 +0000 (UTC)
-Received: from [10.10.120.90] (ovpn-120-90.rdu2.redhat.com [10.10.120.90])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5225D1001925;
-        Wed, 11 Dec 2019 00:23:03 +0000 (UTC)
-Subject: Re: [PATCH] iscsi: Perform connection failure entirely in kernel
- space
-To:     Gabriel Krisman Bertazi <krisman@collabora.com>, lduncan@suse.com,
-        cleech@redhat.com, martin.petersen@oracle.com
-References: <20191209182054.1287374-1-krisman@collabora.com>
- <5DF032BD.3070509@redhat.com>
-Cc:     linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        Bharath Ravi <rbharath@google.com>, kernel@collabora.com,
-        Dave Clausen <dclausen@google.com>,
-        Nick Black <nlb@google.com>,
-        Vaibhav Nagarnaik <vnagarnaik@google.com>,
-        Anatol Pomazau <anatol@google.com>,
-        Tahsin Erdogan <tahsin@google.com>,
-        Frank Mayhar <fmayhar@google.com>, Junho Ryu <jayr@google.com>,
-        Khazhismel Kumykov <khazhy@google.com>
-From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <5DF036E6.9080907@redhat.com>
-Date:   Tue, 10 Dec 2019 18:23:02 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101
- Thunderbird/38.6.0
+        id S1727751AbfLKCmJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Dec 2019 21:42:09 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:54503 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726619AbfLKCmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Dec 2019 21:42:09 -0500
+Received: from callcc.thunk.org (guestnat-104-132-34-105.corp.google.com [104.132.34.105] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id xBB2fb0M007024
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 10 Dec 2019 21:41:38 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 9BA5D421A48; Tue, 10 Dec 2019 21:41:37 -0500 (EST)
+Date:   Tue, 10 Dec 2019 21:41:37 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Andrea Vai <andrea.vai@unipv.it>,
+        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Message-ID: <20191211024137.GB61323@mit.edu>
+References: <cb6e84781c4542229a3f31572cef19ab@SVR-IES-MBX-03.mgc.mentorg.com>
+ <c1358b840b3a4971aa35a25d8495c2c8953403ea.camel@unipv.it>
+ <20191128091712.GD15549@ming.t460p>
+ <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
+ <20191129005734.GB1829@ming.t460p>
+ <20191129023555.GA8620@ming.t460p>
+ <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
+ <20191203022337.GE25002@ming.t460p>
+ <8196b014b1a4d91169bf3b0d68905109aeaf2191.camel@unipv.it>
+ <20191210080550.GA5699@ming.t460p>
 MIME-Version: 1.0
-In-Reply-To: <5DF032BD.3070509@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: YqUUItqXMga3HYiAQj_UhQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191210080550.GA5699@ming.t460p>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/10/2019 06:05 PM, Mike Christie wrote:
-> On 12/09/2019 12:20 PM, Gabriel Krisman Bertazi wrote:
->> From: Bharath Ravi <rbharath@google.com>
->>
->> Connection failure processing depends on a daemon being present to (at
->> least) stop the connection and start recovery.  This is a problem on a
->> multipath scenario, where if the daemon failed for whatever reason, the
->> SCSI path is never marked as down, multipath won't perform the
->> failover and IO to the device will be forever waiting for that
->> connection to come back.
->>
->> This patch implements an optional feature in the iscsi module, to
->> perform the connection failure inside the kernel.  This way, the
->> failover can happen and pending IO can continue even if the daemon is
->> dead. Once the daemon comes alive again, it can perform recovery
->> procedures if applicable.
->>
->> Co-developed-by: Dave Clausen <dclausen@google.com>
->> Signed-off-by: Dave Clausen <dclausen@google.com>
->> Co-developed-by: Nick Black <nlb@google.com>
->> Signed-off-by: Nick Black <nlb@google.com>
->> Co-developed-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
->> Signed-off-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
->> Co-developed-by: Anatol Pomazau <anatol@google.com>
->> Signed-off-by: Anatol Pomazau <anatol@google.com>
->> Co-developed-by: Tahsin Erdogan <tahsin@google.com>
->> Signed-off-by: Tahsin Erdogan <tahsin@google.com>
->> Co-developed-by: Frank Mayhar <fmayhar@google.com>
->> Signed-off-by: Frank Mayhar <fmayhar@google.com>
->> Co-developed-by: Junho Ryu <jayr@google.com>
->> Signed-off-by: Junho Ryu <jayr@google.com>
->> Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
->> Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
->> Signed-off-by: Bharath Ravi <rbharath@google.com>
->> Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
->> Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
->> ---
->>  drivers/scsi/scsi_transport_iscsi.c | 46 +++++++++++++++++++++++++++++
->>  include/scsi/scsi_transport_iscsi.h |  1 +
->>  2 files changed, 47 insertions(+)
->>
->> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
->> index 417b868d8735..7251b2b5b272 100644
->> --- a/drivers/scsi/scsi_transport_iscsi.c
->> +++ b/drivers/scsi/scsi_transport_iscsi.c
->> @@ -36,6 +36,12 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_session);
->>  EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_tcp);
->>  EXPORT_TRACEPOINT_SYMBOL_GPL(iscsi_dbg_sw_tcp);
->>  
->> +static bool kern_conn_failure;
->> +module_param(kern_conn_failure, bool, S_IRUGO|S_IWUSR);
->> +MODULE_PARM_DESC(kern_conn_failure,
->> +		 "Allow the kernel to detect and disable broken connections "
->> +		 "without requiring userspace intervention");
->> +
->>  static int dbg_session;
->>  module_param_named(debug_session, dbg_session, int,
->>  		   S_IRUGO | S_IWUSR);
->> @@ -84,6 +90,12 @@ struct iscsi_internal {
->>  	struct transport_container session_cont;
->>  };
->>  
->> +/* Worker to perform connection failure on unresponsive connections
->> + * completely in kernel space.
->> + */
->> +static void stop_conn_work_fn(struct work_struct *work);
->> +static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
->> +
->>  static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
->>  static struct workqueue_struct *iscsi_eh_timer_workq;
->>  
->> @@ -1609,6 +1621,7 @@ static DEFINE_MUTEX(rx_queue_mutex);
->>  static LIST_HEAD(sesslist);
->>  static DEFINE_SPINLOCK(sesslock);
->>  static LIST_HEAD(connlist);
->> +static LIST_HEAD(connlist_err);
->>  static DEFINE_SPINLOCK(connlock);
->>  
->>  static uint32_t iscsi_conn_get_sid(struct iscsi_cls_conn *conn)
->> @@ -2245,6 +2258,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
->>  
->>  	mutex_init(&conn->ep_mutex);
->>  	INIT_LIST_HEAD(&conn->conn_list);
->> +	INIT_LIST_HEAD(&conn->conn_list_err);
->>  	conn->transport = transport;
->>  	conn->cid = cid;
->>  
->> @@ -2291,6 +2305,7 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
->>  
->>  	spin_lock_irqsave(&connlock, flags);
->>  	list_del(&conn->conn_list);
->> +	list_del(&conn->conn_list_err);
->>  	spin_unlock_irqrestore(&connlock, flags);
->>  
->>  	transport_unregister_device(&conn->dev);
->> @@ -2405,6 +2420,28 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
->>  }
->>  EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
->>  
->> +static void stop_conn_work_fn(struct work_struct *work)
->> +{
->> +	struct iscsi_cls_conn *conn, *tmp;
->> +	unsigned long flags;
->> +	LIST_HEAD(recovery_list);
->> +
->> +	spin_lock_irqsave(&connlock, flags);
->> +	if (list_empty(&connlist_err)) {
->> +		spin_unlock_irqrestore(&connlock, flags);
->> +		return;
->> +	}
->> +	list_splice_init(&connlist_err, &recovery_list);
->> +	spin_unlock_irqrestore(&connlock, flags);
->> +
->> +	mutex_lock(&rx_queue_mutex);
->> +	list_for_each_entry_safe(conn, tmp, &recovery_list, conn_list_err) {
->> +		conn->transport->stop_conn(conn, STOP_CONN_RECOVER);
->> +		list_del_init(&conn->conn_list_err);
->> +	}
->> +	mutex_unlock(&rx_queue_mutex);
->> +}
->> +
->>  void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
->>  {
->>  	struct nlmsghdr	*nlh;
->> @@ -2412,6 +2449,15 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
->>  	struct iscsi_uevent *ev;
->>  	struct iscsi_internal *priv;
->>  	int len = nlmsg_total_size(sizeof(*ev));
->> +	unsigned long flags;
->> +
->> +	if (kern_conn_failure) {
->> +		spin_lock_irqsave(&connlock, flags);
->> +		list_add(&conn->conn_list_err, &connlist_err);
->> +		spin_unlock_irqrestore(&connlock, flags);
->> +
->> +		queue_work(system_unbound_wq, &stop_conn_work);
->> +	}
->>  
-> 
-> Do you need the modparam? I think you could handle this issue and the
-> similar one during shutdown at the same time, and you would always want
-> to do the kernel based error handler when userspace is not answering for
-> both cases.
-> 
-> You could do the following:
-> 
-> - Modify __iscsi_block_session so it does the stop_conn callout instead
-> of reverse, and change the iscsi_stop_conn/ISCSI_UEVENT_STOP_CONN:
-> related code accordingly.
+On Tue, Dec 10, 2019 at 04:05:50PM +0800, Ming Lei wrote:
+> > > The path[2] is expected behaviour. Not sure path [1] is correct,
+> > > given
+> > > ext4_release_file() is supposed to be called when this inode is
+> > > released. That means the file is closed 4358 times during 1GB file
+> > > copying to usb storage.
+> > > 
+> > > [1] insert requests when returning to user mode from syscall
+> > > 
+> > >   b'blk_mq_sched_request_inserted'
+> > >   b'blk_mq_sched_request_inserted'
+> > >   b'dd_insert_requests'
+> > >   b'blk_mq_sched_insert_requests'
+> > >   b'blk_mq_flush_plug_list'
+> > >   b'blk_flush_plug_list'
+> > >   b'io_schedule_prepare'
+> > >   b'io_schedule'
+> > >   b'rq_qos_wait'
+> > >   b'wbt_wait'
+> > >   b'__rq_qos_throttle'
+> > >   b'blk_mq_make_request'
+> > >   b'generic_make_request'
+> > >   b'submit_bio'
+> > >   b'ext4_io_submit'
+> > >   b'ext4_writepages'
+> > >   b'do_writepages'
+> > >   b'__filemap_fdatawrite_range'
+> > >   b'ext4_release_file'
+> > >   b'__fput'
+> > >   b'task_work_run'
+> > >   b'exit_to_usermode_loop'
+> > >   b'do_syscall_64'
+> > >   b'entry_SYSCALL_64_after_hwframe'
+> > >     4358
 
-Oh yeah, on second thought, I think I like how your new function above
-calls into the stop_conn callout and everything works like it did
-before. Ignore the __iscsi_block_session changes. But, I would drop the
-modparam, always queue the work, and then fix up the system_state check.
+I'm guessing that your workload is repeatedly truncating a file (or
+calling open with O_TRUNC) and then writing data to it.  When you do
+this, then when the file is closed, we assume that since you were
+replacing the previous contents of a file with new contents, that you
+would be unhappy if the file contents was replaced by a zero length
+file after a crash.  That's because ten years, ago there were a *huge*
+number of crappy applications that would replace a file by reading it
+into memory, truncating it, and then write out the new contents of the
+file.  This could be a high score file for a game, or a KDE or GNOME
+state file, etc.
 
+So if someone does open, truncate, write, close, we still immediately
+writing out the data on the close, assuming that the programmer really
+wanted open, truncate, write, fsync, close, but was too careless to
+actually do the right thing.
 
+Some workaround[1] like this is done by all of the major file systems,
+and was fallout the agreement from the "O_PONIES"[2] controversy.
+This was discussed and agreed to at the 2009 LSF/MM workshop.  (See
+the "rename, fsync, and ponies" section.)
 
-> 
-> - In iscsi_conn_error_event you would then do:
-> 
-> iscsi_multicast_skb();
-> iscsi_block_session();
-> 
-> - You can then drop the system_state check in iscsi_eh_cmd_timed_out
-> because those running commands are always handled by the stop_conn call
-> in __iscsi_block_session now.
-> 
+[1] https://bugs.launchpad.net/ubuntu/+source/linux/+bug/317781/comments/45
+[2] https://blahg.josefsipek.net/?p=364
+[3] https://lwn.net/Articles/327601/
 
+So if you're seeing a call to filemap_fdatawrite_range as the result
+of a fput, that's why.
+
+In any case, this behavior has been around for a decade, and it
+appears to be incidental to your performance difficulties with your
+USB thumbdrive and block-mq.
+
+						- Ted
