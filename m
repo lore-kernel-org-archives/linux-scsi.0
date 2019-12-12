@@ -2,120 +2,159 @@ Return-Path: <SRS0=+Znx=2C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CFD9C2D0C9
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C159BC43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:33:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF1D2253D
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:19:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576189199;
-	bh=6wqM/8nuJbTo8PW4nFbDaXSi3DHfDv/lnU1COiTALT0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=zZeuwZvvcMmc/eTEMlGAM2RWyCo2wBFV5oQa1Tr1p7DvnEG8b5sm/DSahWqpGxami
-	 KquFl/Yz8/St8OvMjR6eOE/dP4dAermM1PzaGYIsq9Gt1PGKE2ZY8VlCXJb4KJARiZ
-	 T7xzZBb1CquGbKM6OKWkZ+vfmg/7zF7eplpBOeJU=
+	by mail.kernel.org (Postfix) with ESMTP id 9436A21556
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:33:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gpQRyl32"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731298AbfLLWT6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Dec 2019 17:19:58 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52406 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730896AbfLLWT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Dec 2019 17:19:58 -0500
-Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 311EB2173E;
-        Thu, 12 Dec 2019 22:19:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576189196;
-        bh=6wqM/8nuJbTo8PW4nFbDaXSi3DHfDv/lnU1COiTALT0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C76X7I0W/t6+u5063t1CUZHbu2JgTgOITbvJUNsHXwayJspBGLMpc+rJIUgo55wUs
-         CrsJuLwBlLeAT5tyll96S6sUmKgWNFrH/Qy5R93yQVPUkyMy9R7ahMIrkh3jN3EcwY
-         hifbQMvc3earqiuVJYueHl3lcBab6aVb05yEPy10=
-Date:   Fri, 13 Dec 2019 07:19:47 +0900
-From:   Keith Busch <kbusch@kernel.org>
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-Cc:     "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
- extension support
-Message-ID: <20191212221947.GA32142@redsun51.ssa.fujisawa.hgst.com>
-References: <BYAPR04MB5749B4DC50C43EE845A04612865A0@BYAPR04MB5749.namprd04.prod.outlook.com>
+        id S1731034AbfLLWdf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Dec 2019 17:33:35 -0500
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:34590 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731007AbfLLWde (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 17:33:34 -0500
+Received: by mail-lf1-f68.google.com with SMTP id l18so492596lfc.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2019 14:33:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uNFsQyJIBMP610s+itpyeXuJ5AUNsir6dpBt7MH9KCs=;
+        b=gpQRyl32JgLNoYvplD3NJnHKCMfmAtJwwP/Uje32i2vycfQId3lC7NGwJ02bPHxkPl
+         416/v8p3WKzukSO9ASd6S83IL+etsV7SDfX6Ei4AfcyKmGzdpQkTC6K6780v/HUGj3RR
+         iLUfie1VoKjVKeIGJT87YTn0GXTHkKQi7NqNy/9KSjErrhDPtSknZgkYNBhXB0T/pE2d
+         y0moZcvaKx6gmRQ4SegnrlCg+6OhLNIwi27yH3HnFB8LmmmZPhmcqxjFh1dxsy+5pV7P
+         i2pAe++sZ0c+QzV1r+3l8WmQ8Y9hGv/sFjnVAC/HxIM+9lEQVAmXNGxNi5Vh7wSJ4bDW
+         WWFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uNFsQyJIBMP610s+itpyeXuJ5AUNsir6dpBt7MH9KCs=;
+        b=IDUMbVc/w+2QWPvfrE77M3o2A7gfdwqzBG9kpRBa3lOWko/FKGQ0h5EU0mKQB37+HE
+         xRQzSU6UWFKMSuuNrs4V2lwoRvFSy4HWz/BL790CjEZ8EYq4mLL/LNis3cgGKmQ4OLJE
+         5H9WNw9cH31YzpbmXrQ/WoJK2nEhEmAeiDtR29P7sevK5Ryw6WFpaNhL52YZ9LXVVtWl
+         K5ss2/W4dP2n7ZT5ACLYehI3Zhld9MuQYsbfOXpKDDendV6KKfRPakMuzAMy36/Ati93
+         MS/8fOyHeTTuGiaRq0LW8bTvE3BktRqXjHaNsOM65kU6hFPohvRpVScviH3t9zjRoOti
+         smdQ==
+X-Gm-Message-State: APjAAAWcKsUDLSH0ZY0PFX1TnWkQXv0wrDMB4FNfjlwXcoM3Bfuknt1t
+        izPVN334Lv/bIwFhdhYI8p16NcX1jkU+tFjpF6B3Bg==
+X-Google-Smtp-Source: APXvYqxBNleWcBiVw8vm+KLiN9cqlOqFb4vt8UFlmyhiMj4gyQ/eihgXoJiUMkAfFT3r7gvQyvk8XyGDODnEWS6zG6M=
+X-Received: by 2002:ac2:55a8:: with SMTP id y8mr6997366lfg.117.1576190012878;
+ Thu, 12 Dec 2019 14:33:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BYAPR04MB5749B4DC50C43EE845A04612865A0@BYAPR04MB5749.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+References: <20191209052119.32072-1-linux@roeck-us.net> <20191209052119.32072-2-linux@roeck-us.net>
+In-Reply-To: <20191209052119.32072-2-linux@roeck-us.net>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Thu, 12 Dec 2019 23:33:21 +0100
+Message-ID: <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
+Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 11, 2019 at 06:16:29AM +0000, Chaitanya Kulkarni wrote:
-> * Current state of the work:-
-> -----------------------------------------------------------------------
-> 
-> RFC implementations [3] has been posted with the addition of new IOCTLs
-> which is far from the production so that it can provide a basis to get
-> the discussion started.
-> 
-> This RFC implementation provides:-
-> 1. Extended bits to track new trace categories.
-> 2. Support for tracing per trace priorities.
-> 3. Support for priority mask.
-> 4. New IOCTLs so that user-space tools can setup the extensions.
-> 5. Ability to track the integrity fields.
-> 6. blktrace and blkparse implementation which supports the above
->     mentioned features.
-> 
-> Bart and Martin has suggested changes which I've incorporated in the RFC 
-> revisions.
-> 
-> * What we will discuss in the proposed session ?
-> -----------------------------------------------------------------------
-> 
-> I'd like to propose a session for Storage track to go over the following
-> discussion points:-
-> 
-> 1. What is the right approach to move this work forward?
-> 2. What are the other information bits we need to add which will help
->     kernel community to speed up the development and improve tracing?
-> 3. What are the other tracepoints we need to add in the block layer
->     to improve the tracing?
-> 4. What are device driver callbacks tracing we can add in the block
->     layer?
+Hi Guenther,
 
-I would like seeing driver/protocol specific tracepoint decoding for
-users common under a single blkparse utility. For nvme, it'd be great if
-we could set a fixed ABI, as people keep changing it by burdening the
-kernel with making events more human readable. I'd prefer to simplify
-the driver's tracepoints and do the decoding from userspace so that it's
-forward compatible.
+needless to say I am a big fan of this patch, so:
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-> 5. Since polling is becoming popular what are the new tracepoints
->     we need to improve debugging ?
+It's a nice addition with the SCT command, I never
+figured that part out. Also nice how you register the
+scsi class interface I never saw that before, it makes it
+a very neat plug-in.
 
-Regarding polling, but not tracepoint related, but it'd be nice if
-we had a new cpu state for this. Right now it just looks like all CPU
-utilization from systat says 'system', which isn't really helpful with
-analyzing how the hardware is doing.
+The comments are more discussion points on how to
+(maybe) take it further after this.
+
+On Mon, Dec 9, 2019 at 6:21 AM Guenter Roeck <linux@roeck-us.net> wrote:
+
+> If the drive supports SCT transport and reports temperature limits,
+> those are reported as well.
+
+If I understand the patch correctly it will prefer to use
+SCT transport to read the temperature, and only fall back
+to the SMART attributes if this is not working, so I guess the
+commit message should state the heuristics used here.
+
+> +++ b/Documentation/hwmon/satatemp.rst
+
+Excellent doc.
+
+> + * If the SCT Command Transport feature set is not available, drive temperatures
+> + * may be readable through SMART attributes. Since SMART attributes are not well
+> + * defined, this method is only used as fallback mechanism.
+
+So this maybe cut/paste to commit message as well so people understand
+the commit fully.
+
+> +       for (i = 0; i < ATA_MAX_SMART_ATTRS; i++) {
+> +               u8 *attr = buf + i * 12;
+> +               int id = attr[2];
+> +
+> +               if (!id)
+> +                       continue;
+> +
+> +               if (id == SMART_TEMP_PROP_190) {
+> +                       temp_raw = attr[7];
+> +                       have_temp = true;
+> +               }
+> +               if (id == SMART_TEMP_PROP_194) {
+> +                       temp_raw = attr[7];
+> +                       have_temp = true;
+> +                       break;
+> +               }
+> +       }
+> +
+> +       if (have_temp) {
+> +               *temp = temp_raw * 1000;
+> +               return 0;
+> +       }
+
+This looks like it will work fine, I had some heuristics to determine
+the vendor-specific max/min temperatures in property 194 in my
+patch, but I can certainly add that back in later.
+
+> +static const struct hwmon_channel_info *satatemp_info[] = {
+> +       HWMON_CHANNEL_INFO(chip,
+> +                          HWMON_C_REGISTER_TZ),
+
+I suppose this means I will also have a temperature zone as
+I want :D
+
+When I read the comments from the previous thread I got the
+impression the SCSI people wanted me to use something like
+the SCT transport and the hook in the SMART thing in the
+libata back-end specifically for [S]ATA in response to the
+SCT read log command.
+
+In  drivers/ata/libata-scsi.c I suppose.
+
+I guess one thing doesn't exclude the other though.
+
+We can attempt to move the code for [S]ATA over to libata
+at some point and respond to the SCT read log command
+from within the library in that case.
+
+I don't understand if that means the SCT read log also works
+on some SCSI drives, or if it is just a slot-in thing for
+ATA translation that has no meaning on SCSI drives.
+But that can be resolved by people who want to use this
+for SCSI drives and not by us.
+
+Yours,
+Linus Walleij
