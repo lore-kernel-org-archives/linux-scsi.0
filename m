@@ -2,114 +2,313 @@ Return-Path: <SRS0=+Znx=2C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2780EC43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 16:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42FB6C43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 16:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDDDC2073B
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 16:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDC17227BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 16:45:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="xbcplkXM"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eqmoKdoc";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="Dfv/wf4u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729930AbfLLQf0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Dec 2019 11:35:26 -0500
-Received: from mail-il1-f194.google.com ([209.85.166.194]:35904 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729591AbfLLQf0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 11:35:26 -0500
-Received: by mail-il1-f194.google.com with SMTP id b15so2572200iln.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2019 08:35:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=3FtLIVj+wnM2ARUnkHjLCIs+M1M/IA6PpWp8jtXGxBs=;
-        b=xbcplkXMsLKBVhI2XoEAIhOCDrqD47HX6n1yvO5V22GmwrrQQBKbWggYHs4jvP1r5e
-         d06kkPEOnjJE94l1i8s0OQBGyq2uCnz06HSXakJyefIeamZrYC04IsPHZG0q8AamKYX7
-         hQiBFF2unkfh+vzBU4sfnsk8eFSJqiqGb27+ELN3raRO+1VzqxuUmJvQteWCoq4j74gw
-         zDZjlxcYlLJc7nj02zY/1J5oio91PD6bX3m6ftojddzXMI4lyWGMcOBLF2IgQDl1+DS4
-         M8/9vHNTZSCqOo/1DexoCnH9ZtJ4bViECOh2oT+MHZ1qxnhhm7JEOSFNx7VJQCROP4qJ
-         4jQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3FtLIVj+wnM2ARUnkHjLCIs+M1M/IA6PpWp8jtXGxBs=;
-        b=Gtoy3WZC7cyTooWTS9UdQ8DF2c5f7AG7gaTTupsYZjIqPM/cBZT43eoOXvnBRTwkKc
-         nHbcGAnapVSGvWiy2C0xLup40aPeEcvLWdQKNWNHJQZlRvqp7Uu9UddD5eY6XSBDchl3
-         x94LouifkJWHqNz3ShtDNE3pDJ5ez5odSSLkm3lSCmoJ3pn2J3/QF3PxLJRAiA3wcAIy
-         kk/x24UXvt05J4M8NOiV8mrVcqRpMLdqsNa4sLnDpIYfY1FiiCXDYKSgjmM+rqWcd/3N
-         VfPf17Gf43Bb4dn5suMxjgY0JG24/txorq+LE9zDtVQL7BdkmN5ieo7OUV6xyLMhj2ru
-         mrYA==
-X-Gm-Message-State: APjAAAUtBvGZhB79Cu4nms7FtyjiA5H1VtGomA47dSzVHwVDEAFm9ba6
-        cFgTCqlyisK/Eb/cgp3q49u4ZQ==
-X-Google-Smtp-Source: APXvYqxAPt9ybQh/T8WYBX6qxbHJzz4zpYaVA1B8qE0Zhi2chspe24qfeJl3SeUOs00SEoxpnZbeng==
-X-Received: by 2002:a92:5d03:: with SMTP id r3mr8554165ilb.278.1576168525332;
-        Thu, 12 Dec 2019 08:35:25 -0800 (PST)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id x62sm1843784ill.86.2019.12.12.08.35.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Dec 2019 08:35:24 -0800 (PST)
-Subject: Re: [PATCH 15/24] compat_ioctl: scsi: move ioctl handling into
- drivers
-To:     Christoph Hellwig <hch@infradead.org>,
-        Paolo Bonzini <pbonzini@redhat.com>
-Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
-        Arnd Bergmann <arnd@arndb.de>,
+        id S1729961AbfLLQpu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Dec 2019 11:45:50 -0500
+Received: from a27-18.smtp-out.us-west-2.amazonses.com ([54.240.27.18]:57118
+        "EHLO a27-18.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729101AbfLLQpu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Dec 2019 11:45:50 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1576169149;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
+        bh=dMWFqUj597OGNQyE6eCSrcQ6gjogdNfAxXsK5ao5IKc=;
+        b=eqmoKdocYDAw+g413RVy4yGWfUpgo9J2oyjSG3JRQZGbVGjKhk7xetaogySXKgwg
+        6rt3kRnEt2m8AdkC1aICilRdZ/zxZmWNoybIpZraKiMlVyb4vVbHHM/bLbMz9RYRny6
+        s7+bqCJcxD53SeGkApXj5pvyUQLLo4RovUwbGbhI=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1576169149;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
+        bh=dMWFqUj597OGNQyE6eCSrcQ6gjogdNfAxXsK5ao5IKc=;
+        b=Dfv/wf4uRqlKx3xKOpvY1Y4SSD/7SLo43F9PdPCCeNN1xLCV+K2YyxjhXkbwIFBh
+        GL3c1iPX3a/PppvC6yk46LXc+yQm+BFnB9h8uw7QdFAkjG4QRw637OYdPD9gUde8TV8
+        WoyKQvxgkI4pOkJxsuXgX/vILFZMJTa2VNTO6FQQ=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 12 Dec 2019 16:45:49 +0000
+From:   cang@codeaurora.org
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Jason Wang <jasowang@redhat.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>,
-        linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
-        Stefan Hajnoczi <stefanha@redhat.com>,
+        Evan Green <evgreen@chromium.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Bean Huo <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        John Garry <john.garry@huawei.com>,
-        virtualization@lists.linux-foundation.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20191211204306.1207817-1-arnd@arndb.de>
- <20191211204306.1207817-16-arnd@arndb.de>
- <20191211180155-mutt-send-email-mst@kernel.org>
- <858768fb-5f79-8259-eb6a-a26f18fb0e04@redhat.com>
- <20191212162729.GB27991@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <6e265890-23e5-6368-4e36-d59ff47879b2@kernel.dk>
-Date:   Thu, 12 Dec 2019 09:35:22 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
-MIME-Version: 1.0
-In-Reply-To: <20191212162729.GB27991@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
+In-Reply-To: <20191212063703.GC415177@yoga>
+References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
+ <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
+ <20191212045357.GA415177@yoga>
+ <0101016ef8b2e2f8-72260b08-e6ad-42fc-bd4b-4a0a72c5c9b3-000000@us-west-2.amazonses.com>
+ <20191212063703.GC415177@yoga>
+Message-ID: <0101016efb009269-0de7af38-196d-4a10-8c06-3ca91d2c9177-000000@us-west-2.amazonses.com>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
+X-SES-Outgoing: 2019.12.12-54.240.27.18
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/12/19 9:27 AM, Christoph Hellwig wrote:
-> On Thu, Dec 12, 2019 at 01:28:08AM +0100, Paolo Bonzini wrote:
->> I think it's because the only ioctl for virtio-blk is SG_IO.  It makes
->> sense to lump it in with scsi, but I wouldn't mind getting rid of
->> CONFIG_VIRTIO_BLK_SCSI altogether.
+On 2019-12-12 14:37, Bjorn Andersson wrote:
+> On Wed 11 Dec 22:01 PST 2019, cang@codeaurora.org wrote:
 > 
-> CONFIG_VIRTIO_BLK_SCSI has been broken for about two years, as it
-> never set the QUEUE_FLAG_SCSI_PASSTHROUGH flag after that was
-> introduced.  I actually have a patch that I plan to send to remove
-> this support as it was a really idea to start with (speaking as
-> the person who had that idea back in the day).
+>> On 2019-12-12 12:53, Bjorn Andersson wrote:
+>> > On Wed 11 Dec 00:49 PST 2019, Can Guo wrote:
+>> >
+>> > > In order to improve the flexibility of ufs-bsg, modulizing it is a
+>> > > good
+>> > > choice. This change introduces tristate to ufs-bsg to allow users
+>> > > compile
+>> > > it as an external module.
+>> >
+>> > Can you please elaborate on what this "flexibility" is and why it's a
+>> > good thing?
+>> >
+>> 
+>> ufs-bsg is a helpful gadget for debug/test purpose. But neither
+>> disabling it nor enabling it is the best way on a commercialized
+>> device. Disabling it means we cannot use it, while enabling it
+>> by default will expose all the DEVM/UIC/TM interfaces to user space,
+>> which is not "safe" on a commercialized device to let users play with 
+>> it.
+>> Making it a module can resolve this, because only vendors can install 
+>> it
+>> as they have the root permissions.
+>> 
+>> > >
+>> > > Signed-off-by: Can Guo <cang@codeaurora.org>
+>> > > ---
+>> > >  drivers/scsi/ufs/Kconfig   |  3 ++-
+>> > >  drivers/scsi/ufs/Makefile  |  2 +-
+>> > >  drivers/scsi/ufs/ufs_bsg.c | 49
+>> > > +++++++++++++++++++++++++++++++++++++++++++---
+>> > >  drivers/scsi/ufs/ufs_bsg.h |  8 --------
+>> > >  drivers/scsi/ufs/ufshcd.c  | 36 ++++++++++++++++++++++++++++++----
+>> > >  drivers/scsi/ufs/ufshcd.h  |  7 ++++++-
+>> > >  6 files changed, 87 insertions(+), 18 deletions(-)
+>> > >
+>> > > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+>> > > index d14c224..72620ce 100644
+>> > > --- a/drivers/scsi/ufs/Kconfig
+>> > > +++ b/drivers/scsi/ufs/Kconfig
+>> > > @@ -38,6 +38,7 @@ config SCSI_UFSHCD
+>> > >  	select PM_DEVFREQ
+>> > >  	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+>> > >  	select NLS
+>> > > +	select BLK_DEV_BSGLIB
+>> >
+>> > Why is this needed?
+>> >
+>> 
+>> Because ufshcd.c needs to call some funcs defined in bsg lib.
+>> 
+>> > >  	---help---
+>> > >  	This selects the support for UFS devices in Linux, say Y and make
+>> > >  	  sure that you know the name of your UFS host adapter (the card
+>> > > @@ -143,7 +144,7 @@ config SCSI_UFS_TI_J721E
+>> > >  	  If unsure, say N.
+>> > >
+>> > >  config SCSI_UFS_BSG
+>> > > -	bool "Universal Flash Storage BSG device node"
+>> > > +	tristate "Universal Flash Storage BSG device node"
+>> > >  	depends on SCSI_UFSHCD
+>> > >  	select BLK_DEV_BSGLIB
+>> > >  	help
+>> > > diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+>> > > index 94c6c5d..904eff1 100644
+>> > > --- a/drivers/scsi/ufs/Makefile
+>> > > +++ b/drivers/scsi/ufs/Makefile
+>> > > @@ -6,7 +6,7 @@ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+>> > >  obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+>> > >  obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+>> > >  ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+>> > > -ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+>> > > +obj-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+>> > >  obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+>> > >  obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>> > >  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>> > > diff --git a/drivers/scsi/ufs/ufs_bsg.c b/drivers/scsi/ufs/ufs_bsg.c
+>> > > index 3a2e68f..302222f 100644
+>> > > --- a/drivers/scsi/ufs/ufs_bsg.c
+>> > > +++ b/drivers/scsi/ufs/ufs_bsg.c
+>> > > @@ -164,13 +164,15 @@ static int ufs_bsg_request(struct bsg_job *job)
+>> > >   */
+>> > >  void ufs_bsg_remove(struct ufs_hba *hba)
+>> > >  {
+>> > > -	struct device *bsg_dev = &hba->bsg_dev;
+>> > > +	struct device *bsg_dev = hba->bsg_dev;
+>> > >
+>> > >  	if (!hba->bsg_queue)
+>> > >  		return;
+>> > >
+>> > >  	bsg_remove_queue(hba->bsg_queue);
+>> > >
+>> > > +	hba->bsg_dev = NULL;
+>> > > +	hba->bsg_queue = NULL;
+>> > >  	device_del(bsg_dev);
+>> > >  	put_device(bsg_dev);
+>> > >  }
+>> > > @@ -178,6 +180,7 @@ void ufs_bsg_remove(struct ufs_hba *hba)
+>> > >  static inline void ufs_bsg_node_release(struct device *dev)
+>> > >  {
+>> > >  	put_device(dev->parent);
+>> > > +	kfree(dev);
+>> > >  }
+>> > >
+>> > >  /**
+>> > > @@ -186,14 +189,19 @@ static inline void ufs_bsg_node_release(struct
+>> > > device *dev)
+>> > >   *
+>> > >   * Called during initial loading of the driver, and before
+>> > > scsi_scan_host.
+>> > >   */
+>> > > -int ufs_bsg_probe(struct ufs_hba *hba)
+>> > > +static int ufs_bsg_probe(struct ufs_hba *hba)
+>> > >  {
+>> > > -	struct device *bsg_dev = &hba->bsg_dev;
+>> > > +	struct device *bsg_dev;
+>> > >  	struct Scsi_Host *shost = hba->host;
+>> > >  	struct device *parent = &shost->shost_gendev;
+>> > >  	struct request_queue *q;
+>> > >  	int ret;
+>> > >
+>> > > +	bsg_dev = kzalloc(sizeof(*bsg_dev), GFP_KERNEL);
+>> > > +	if (!bsg_dev)
+>> > > +		return -ENOMEM;
+>> > > +
+>> > > +	hba->bsg_dev = bsg_dev;
+>> > >  	device_initialize(bsg_dev);
+>> > >
+>> > >  	bsg_dev->parent = get_device(parent);
+>> > > @@ -217,6 +225,41 @@ int ufs_bsg_probe(struct ufs_hba *hba)
+>> > >
+>> > >  out:
+>> > >  	dev_err(bsg_dev, "fail to initialize a bsg dev %d\n",
+>> > > shost->host_no);
+>> > > +	hba->bsg_dev = NULL;
+>> > >  	put_device(bsg_dev);
+>> > >  	return ret;
+>> > >  }
+>> > > +
+>> > > +static int __init ufs_bsg_init(void)
+>> > > +{
+>> > > +	struct list_head *hba_list = NULL;
+>> > > +	struct ufs_hba *hba;
+>> > > +	int ret = 0;
+>> > > +
+>> > > +	ufshcd_get_hba_list_lock(&hba_list);
+>> > > +	list_for_each_entry(hba, hba_list, list) {
+>> > > +		ret = ufs_bsg_probe(hba);
+>> > > +		if (ret)
+>> > > +			break;
+>> > > +	}
+>> >
+>> > So what happens if I go CONFIG_SCSI_UFS_BSG=y and
+>> > CONFIG_SCSI_UFS_QCOM=y?
+>> >
+>> > Wouldn't that mean that ufs_bsg_init() is called before ufshcd_init()
+>> > has added the controller to the list? And even in the even that they are
+>> > both =m, what happens if they are invoked in the "wrong" order?
+>> >
+>> 
+>> In the case that CONFIG_SCSI_UFS_BSG=y and CONFIG_SCSI_UFS_QCOM=y,
+>> I give late_initcall_sync(ufs_bsg_init) to make sure ufs_bsg_init
+>> is invoked only after platform driver is probed. I tested this 
+>> combination.
+>> 
+>> In the case that both of them are "m", installing ufs-bsg before 
+>> ufs-qcom
+>> is installed would have no effect as ufs_hba_list is empty, which is
+>> expected.
+> 
+> Why is it the expected behavior that bsg may or may not probe depending
+> on the driver load order and potentially timing of the initialization.
+> 
+>> And in real cases, as the UFS is the boot device, UFS driver will 
+>> always
+>> be probed during bootup.
+>> 
+> 
+> The UFS driver will load and probe because it's mentioned in the
+> devicetree, but if either the ufs drivers or any of its dependencies
+> (phy, resets, clocks, etc) are built as modules it might very well
+> finish probing after lateinitcall.
+> 
+> So in the even that the bsg is =y and any of these drivers are =m, or 
+> if
+> you're having bad luck with your timing, the list will be empty.
+> 
+> As described below, if bsg=m, then there's nothing that will load the
+> module and the bsg will not probe...
+> 
+> [..]
+>> > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> [..]
+>> > >  void ufshcd_remove(struct ufs_hba *hba)
+>> > >  {
+>> > > -	ufs_bsg_remove(hba);
+>> > > +	struct device *bsg_dev = hba->bsg_dev;
+>> > > +
+>> > > +	mutex_lock(&ufs_hba_list_lock);
+>> > > +	list_del(&hba->list);
+>> > > +	if (hba->bsg_queue) {
+>> > > +		bsg_remove_queue(hba->bsg_queue);
+>> > > +		device_del(bsg_dev);
+>> >
+>> > Am I reading this correct in that you probe the bsg_dev form initcall
+>> > and you delete it as the ufshcd instance is removed? That's not okay.
+>> >
+>> > Regards,
+>> > Bjorn
+>> >
+>> 
+>> If ufshcd is removed, its ufs-bsg, if exists, should also be removed.
+>> Could you please enlighten me a better way to do this? Thanks.
+>> 
+> 
+> It's the asymmetry that I don't like.
+> 
+> Perhaps if you instead make ufshcd platform_device_register_data() the
+> bsg device you would solve the probe ordering, the remove will be
+> symmetric and module autoloading will work as well (although then you
+> need a MODULE_ALIAS of platform:device-name).
+> 
+> Regards,
+> Bjorn
 
-We had this very discussion two years ago, and we never got it removed.
-Let's please get it done.
+Thanks for the suggestion! I didn't even think about this before. I
+will go with the platform_device_register_data() way, it will be much
+easier. After I get my new patchset tested I will upload it for review.
 
--- 
-Jens Axboe
-
+Best Regards,
+Can Guo.
