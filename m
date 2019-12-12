@@ -2,159 +2,153 @@ Return-Path: <SRS0=+Znx=2C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C159BC43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2591C43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 23:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9436A21556
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 22:33:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5465214D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 23:22:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gpQRyl32"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="owIJkdWZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731034AbfLLWdf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Dec 2019 17:33:35 -0500
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:34590 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731007AbfLLWde (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 17:33:34 -0500
-Received: by mail-lf1-f68.google.com with SMTP id l18so492596lfc.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Dec 2019 14:33:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=uNFsQyJIBMP610s+itpyeXuJ5AUNsir6dpBt7MH9KCs=;
-        b=gpQRyl32JgLNoYvplD3NJnHKCMfmAtJwwP/Uje32i2vycfQId3lC7NGwJ02bPHxkPl
-         416/v8p3WKzukSO9ASd6S83IL+etsV7SDfX6Ei4AfcyKmGzdpQkTC6K6780v/HUGj3RR
-         iLUfie1VoKjVKeIGJT87YTn0GXTHkKQi7NqNy/9KSjErrhDPtSknZgkYNBhXB0T/pE2d
-         y0moZcvaKx6gmRQ4SegnrlCg+6OhLNIwi27yH3HnFB8LmmmZPhmcqxjFh1dxsy+5pV7P
-         i2pAe++sZ0c+QzV1r+3l8WmQ8Y9hGv/sFjnVAC/HxIM+9lEQVAmXNGxNi5Vh7wSJ4bDW
-         WWFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uNFsQyJIBMP610s+itpyeXuJ5AUNsir6dpBt7MH9KCs=;
-        b=IDUMbVc/w+2QWPvfrE77M3o2A7gfdwqzBG9kpRBa3lOWko/FKGQ0h5EU0mKQB37+HE
-         xRQzSU6UWFKMSuuNrs4V2lwoRvFSy4HWz/BL790CjEZ8EYq4mLL/LNis3cgGKmQ4OLJE
-         5H9WNw9cH31YzpbmXrQ/WoJK2nEhEmAeiDtR29P7sevK5Ryw6WFpaNhL52YZ9LXVVtWl
-         K5ss2/W4dP2n7ZT5ACLYehI3Zhld9MuQYsbfOXpKDDendV6KKfRPakMuzAMy36/Ati93
-         MS/8fOyHeTTuGiaRq0LW8bTvE3BktRqXjHaNsOM65kU6hFPohvRpVScviH3t9zjRoOti
-         smdQ==
-X-Gm-Message-State: APjAAAWcKsUDLSH0ZY0PFX1TnWkQXv0wrDMB4FNfjlwXcoM3Bfuknt1t
-        izPVN334Lv/bIwFhdhYI8p16NcX1jkU+tFjpF6B3Bg==
-X-Google-Smtp-Source: APXvYqxBNleWcBiVw8vm+KLiN9cqlOqFb4vt8UFlmyhiMj4gyQ/eihgXoJiUMkAfFT3r7gvQyvk8XyGDODnEWS6zG6M=
-X-Received: by 2002:ac2:55a8:: with SMTP id y8mr6997366lfg.117.1576190012878;
- Thu, 12 Dec 2019 14:33:32 -0800 (PST)
-MIME-Version: 1.0
-References: <20191209052119.32072-1-linux@roeck-us.net> <20191209052119.32072-2-linux@roeck-us.net>
-In-Reply-To: <20191209052119.32072-2-linux@roeck-us.net>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Thu, 12 Dec 2019 23:33:21 +0100
-Message-ID: <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        id S1731184AbfLLXWT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Dec 2019 18:22:19 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57820 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730965AbfLLXWT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 18:22:19 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBCNJ09m104641;
+        Thu, 12 Dec 2019 23:21:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=gL2RVRF5gBvNEMpviEan8qRutQzV9WYQZ6sHqExKWQQ=;
+ b=owIJkdWZzawlLdlC4lX52lWskCIAPJTexKl1L09ghjDSYGPxzDys+YG4DCE7W+N3jh6M
+ ih0atxUd1KmFDdYYVmqHsoSDSKzUlfkAs5y+Wh4YnG0Xz3mv6pJ+AZUqjz8CmRqs0WpD
+ sM+JzUUhx/pzELbcFRsuUrZFB2ym79lCCpuC7+DZFb1mtepd0BmPy0QUr2Yi0UgoUU6Z
+ 6NFBSsxGF+/aGEEa/Iaoj2VLakJM0G4A0AU9stxR21kPJk0l2Der2domtwnjpsRlbvz7
+ BW5BP/hh/xl8nJOXXGzvwqD6laRuzbK16f7xhISWItnF+4Dx1IEfgptvyfSE7AxaoEMM nQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wrw4njxat-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Dec 2019 23:21:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBCNJgtf175278;
+        Thu, 12 Dec 2019 23:21:54 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2wumsa5jqh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Dec 2019 23:21:53 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBCNLqoa015393;
+        Thu, 12 Dec 2019 23:21:52 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 12 Dec 2019 15:21:52 -0800
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Guenter Roeck <linux@roeck-us.net>, linux-hwmon@vger.kernel.org,
+        Jean Delvare <jdelvare@suse.com>,
         Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         Chris Healy <cphealy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191209052119.32072-1-linux@roeck-us.net>
+        <20191209052119.32072-2-linux@roeck-us.net>
+        <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
+Date:   Thu, 12 Dec 2019 18:21:49 -0500
+In-Reply-To: <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
+        (Linus Walleij's message of "Thu, 12 Dec 2019 23:33:21 +0100")
+Message-ID: <yq1wob1jfjm.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9469 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912120179
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9469 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912120179
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Guenther,
 
-needless to say I am a big fan of this patch, so:
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Linus,
 
-It's a nice addition with the SCT command, I never
-figured that part out. Also nice how you register the
-scsi class interface I never saw that before, it makes it
-a very neat plug-in.
+> It's a nice addition with the SCT command, I never figured that part
+> out. Also nice how you register the scsi class interface I never saw
+> that before, it makes it a very neat plug-in.
 
-The comments are more discussion points on how to
-(maybe) take it further after this.
+Yep, I agree that the patch looks pretty good in general. There are just
+a few wrinkles in the detection heuristics I would like to tweak. More
+on that later.
 
-On Mon, Dec 9, 2019 at 6:21 AM Guenter Roeck <linux@roeck-us.net> wrote:
+Yesterday I added support for the SCSI temperature log page and am
+working through some kinks wrt. making this work for USB as well.
 
-> If the drive supports SCT transport and reports temperature limits,
-> those are reported as well.
+> When I read the comments from the previous thread I got the impression
+> the SCSI people wanted me to use something like the SCT transport and
+> the hook in the SMART thing in the libata back-end specifically for
+> [S]ATA in response to the SCT read log command.
 
-If I understand the patch correctly it will prefer to use
-SCT transport to read the temperature, and only fall back
-to the SMART attributes if this is not working, so I guess the
-commit message should state the heuristics used here.
+Our recommendation was for libata-scsi.c to export the SCSI temperature
+log page, just like we do for all the other ATA parameters.
 
-> +++ b/Documentation/hwmon/satatemp.rst
+However, in tinkering with this the last couple of days, I find myself
+torn on the subject. For two reasons. First of all, there is no 1:1
+sensor mapping unless you implement the slightly more complex
+environmental log page. Which isn't a big deal, except out of the
+hundred or so SCSI devices I have here there isn't a single one that
+supports it it. So in practice this interface would probably only exist
+for the purpose of the libata SATL.
 
-Excellent doc.
+The other reason the libata approach is slightly less attractive is that
+we need all the same SMART parsing for USB as well. So while it is
+cleaner to hide everything ATA in libata, the reality of USB-ATA bridges
+gets in the way. That is why I previously suggested having a libsmart or
+similar with those common bits.
 
-> + * If the SCT Command Transport feature set is not available, drive temperatures
-> + * may be readable through SMART attributes. Since SMART attributes are not well
-> + * defined, this method is only used as fallback mechanism.
+Anyway, based on what I've worked on today, I'm not sure that libata is
+necessarily the way to go. Sorry about giving bad advice! We've
+successfully implemented translations for everything else in libata over
+the years without too much trouble. And it's not really that the
+translation is bad. It's more the need to support it for USB as well
+that makes things clunky.
 
-So this maybe cut/paste to commit message as well so people understand
-the commit fully.
+> I don't understand if that means the SCT read log also works
+> on some SCSI drives, or if it is just a slot-in thing for
+> ATA translation that has no meaning on SCSI drives.
 
-> +       for (i = 0; i < ATA_MAX_SMART_ATTRS; i++) {
-> +               u8 *attr = buf + i * 12;
-> +               int id = attr[2];
-> +
-> +               if (!id)
-> +                       continue;
-> +
-> +               if (id == SMART_TEMP_PROP_190) {
-> +                       temp_raw = attr[7];
-> +                       have_temp = true;
-> +               }
-> +               if (id == SMART_TEMP_PROP_194) {
-> +                       temp_raw = attr[7];
-> +                       have_temp = true;
-> +                       break;
-> +               }
-> +       }
-> +
-> +       if (have_temp) {
-> +               *temp = temp_raw * 1000;
-> +               return 0;
-> +       }
+It's an ATA command.
 
-This looks like it will work fine, I had some heuristics to determine
-the vendor-specific max/min temperatures in property 194 in my
-patch, but I can certainly add that back in later.
+One concern I have is wrt. to sensor naming. Maybe my /usr/bin/sensors
+command is too old. But it's pretty hopeless to get sensor readings for
+100 drives without being able to tell which sensor is for which
+device. Haven't looked into that yet. The links exist in
+/sys/class/hwmon that would allow vendor/model/serial to be queried.
 
-> +static const struct hwmon_channel_info *satatemp_info[] = {
-> +       HWMON_CHANNEL_INFO(chip,
-> +                          HWMON_C_REGISTER_TZ),
+Oh, and another issue. While technically legal according to the spec, I
+am not sure it's a good idea to export a sensor per scsi_device. I have
+moved things to scsi_target instead to avoid having bazillions of
+sensors show up. Multi-actuator drives are already shipping.
 
-I suppose this means I will also have a temperature zone as
-I want :D
+If I recall correctly, though, I seem to recall that you had some sort
+of multi-LUN external disk box that warranted you working on this in the
+first place. Is that correct? Can you refresh my memory?
 
-When I read the comments from the previous thread I got the
-impression the SCSI people wanted me to use something like
-the SCT transport and the hook in the SMART thing in the
-libata back-end specifically for [S]ATA in response to the
-SCT read log command.
-
-In  drivers/ata/libata-scsi.c I suppose.
-
-I guess one thing doesn't exclude the other though.
-
-We can attempt to move the code for [S]ATA over to libata
-at some point and respond to the SCT read log command
-from within the library in that case.
-
-I don't understand if that means the SCT read log also works
-on some SCSI drives, or if it is just a slot-in thing for
-ATA translation that has no meaning on SCSI drives.
-But that can be resolved by people who want to use this
-for SCSI drives and not by us.
-
-Yours,
-Linus Walleij
+-- 
+Martin K. Petersen	Oracle Linux Engineering
