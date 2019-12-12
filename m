@@ -2,181 +2,126 @@ Return-Path: <SRS0=+Znx=2C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CEAC2D0C9
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 07:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4701AC2D0C9
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 09:18:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88B802465A
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 07:34:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=unipv-it.20150623.gappssmtp.com header.i=@unipv-it.20150623.gappssmtp.com header.b="lmtQeDO0"
+	by mail.kernel.org (Postfix) with ESMTP id 28BAF2173E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Dec 2019 09:18:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728143AbfLLHec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Dec 2019 02:34:32 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:43532 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728072AbfLLHeb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 02:34:31 -0500
-Received: by mail-wr1-f68.google.com with SMTP id d16so1518683wre.10
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Dec 2019 23:34:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unipv-it.20150623.gappssmtp.com; s=20150623;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=Ouu20+mE9n/tPYHmfkHzcHWK0RTLjVdq3889eJu3VP0=;
-        b=lmtQeDO0RVMVq5UaQ/yHPY07AfXs62TQ590bzWxxhQaAA/OaOB21aNqrC1Zlo45s+i
-         0vqOpszc8Sfm2BBuncYr8tlj7W9bIc7EYH4J1UDr3BBFEYge7eIFNYAJWO2NQIzACRy8
-         sSVzNMIr1hZEY5iikGTDJf2NPrHPoeHl5AG5OylC98AeaeJw96Euvod9mMvblTCJGjD9
-         6qsE8uOYHKRAsu1xmiY5Az/7p9YfDoB1FtlTfUJDUJsN9RxZJ0sIKI+lDVR/bCYUud7F
-         n3m5AqVOLGyqEbqy9t5Cdr6E/ifNMpVhVtWyCb8LVjExB3CRLPxurspWLQshKirl27l9
-         TJtA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=Ouu20+mE9n/tPYHmfkHzcHWK0RTLjVdq3889eJu3VP0=;
-        b=DO4ZR67Vh3yNs7iBc/pX6GRj2dax4+GY+ZMBlAGPuDF3D5Vi1vNku6HT4l397wIdn2
-         40Lm9VbJIzNWvwGeyyMk4m+htajjaMoL0Rul17+se0YVLU4hmbQh1zonOZUJ4mELC+92
-         8LxJ3fET+eaQZxGCPFoWek15eRGB6bKtcV5qmJk/FRKT7GKs9Zv8TgxZh7XQlEuz6ef0
-         /RZCcHal2DGfSezeorI/m9HUPPzAVRiY/vUwWbha5qe+v+j9e3aGtiKw2Ryp/+IyFmJ2
-         dgU2Z8r134Duf2OnJ2t6ZjJPcJKRrcCs8SCevZ1v6yGIR859qU31TOpcgcOvRoXejKtt
-         t/Jg==
-X-Gm-Message-State: APjAAAXUTSGbh0iEGgmWsS4ZfT19/8CCOBeGo9Yf2rwBcBfIaIA5hL6j
-        xeeK3qCnHGc5NfIJP4638mZh7g==
-X-Google-Smtp-Source: APXvYqwlTzWP0XWOqGIJf4UvsmxnRFuIxB+FV85xriWGt31SdJo44/OLaYrtTWBOIOO+0sMh8wDsnw==
-X-Received: by 2002:a5d:6802:: with SMTP id w2mr4385600wru.353.1576136068427;
-        Wed, 11 Dec 2019 23:34:28 -0800 (PST)
-Received: from angus.unipv.it (angus.unipv.it. [193.206.67.163])
-        by smtp.gmail.com with ESMTPSA id o66sm1101251wmo.20.2019.12.11.23.34.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2019 23:34:27 -0800 (PST)
-Message-ID: <430b562eeba371ef3b917193246b9eb6c46be71e.camel@unipv.it>
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-From:   Andrea Vai <andrea.vai@unipv.it>
-To:     Ming Lei <ming.lei@redhat.com>, "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Date:   Thu, 12 Dec 2019 08:34:26 +0100
-In-Reply-To: <20191211213316.GA14983@ming.t460p>
-References: <f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it>
-         <20191129005734.GB1829@ming.t460p> <20191129023555.GA8620@ming.t460p>
-         <320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it>
-         <20191203022337.GE25002@ming.t460p>
-         <8196b014b1a4d91169bf3b0d68905109aeaf2191.camel@unipv.it>
-         <20191210080550.GA5699@ming.t460p> <20191211024137.GB61323@mit.edu>
-         <20191211040058.GC6864@ming.t460p> <20191211160745.GA129186@mit.edu>
-         <20191211213316.GA14983@ming.t460p>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
+        id S1728314AbfLLJSD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Dec 2019 04:18:03 -0500
+Received: from mout.kundenserver.de ([212.227.126.133]:41161 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728198AbfLLJSD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Dec 2019 04:18:03 -0500
+Received: from mail-qk1-f177.google.com ([209.85.222.177]) by
+ mrelayeu.kundenserver.de (mreue010 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1MYvoW-1iAeaH2EHg-00UtcV; Thu, 12 Dec 2019 10:18:01 +0100
+Received: by mail-qk1-f177.google.com with SMTP id k6so1027076qki.5;
+        Thu, 12 Dec 2019 01:18:01 -0800 (PST)
+X-Gm-Message-State: APjAAAU0UtilEnUCQTaJYmBUXTRahod+qULvJwS1XeKjKQFtJ0CwesBs
+        e4tLZV27XkGr9zodnIP0oANEw+fK0owckrsCN/g=
+X-Google-Smtp-Source: APXvYqxQ00UNQvIg4lRrwqZ6prCq1ld+K+cVy4gCbiI7WVM1uWsZJdRSTMNOdaexs+HkrBjFyzUyLfqiJWBof8X+Tg8=
+X-Received: by 2002:a37:5b45:: with SMTP id p66mr7106225qkb.394.1576142280134;
+ Thu, 12 Dec 2019 01:18:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+References: <20191211204306.1207817-1-arnd@arndb.de> <20191211204306.1207817-16-arnd@arndb.de>
+ <20191211180155-mutt-send-email-mst@kernel.org> <858768fb-5f79-8259-eb6a-a26f18fb0e04@redhat.com>
+In-Reply-To: <858768fb-5f79-8259-eb6a-a26f18fb0e04@redhat.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 12 Dec 2019 10:17:44 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a2hxD9aaabf2sK3ozqVdr2pbDS10W+Z6oT4idk=AitwVQ@mail.gmail.com>
+Message-ID: <CAK8P3a2hxD9aaabf2sK3ozqVdr2pbDS10W+Z6oT4idk=AitwVQ@mail.gmail.com>
+Subject: Re: [PATCH 15/24] compat_ioctl: scsi: move ioctl handling into drivers
+To:     Paolo Bonzini <pbonzini@redhat.com>
+Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Jason Wang <jasowang@redhat.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        virtualization@lists.linux-foundation.org,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:etAzTzAXTBuE1n7+RgDQ+4qewvW2SmRgdxlCZwQKwACTZ0dz46t
+ uvymLy48UI4w/Ne1YF85QhRqNe+A38yuaXH2ehQFJF/qMb55lDdn2eD2rQDSGqwpT5tYr4j
+ Vbk74ffHDk5L7vaPzcr3wT5bAsdHAo6DPQnCjQZSsKQMJprIh4+ZgGANy9m2XC3TfzY1ZhP
+ MkpvfSl1bPLcfpV8NO4aw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:yoo1EQsxf+0=:9LgzVd8CwF7yxMCHZSmNWu
+ WnBvulPLYwgf38Zp4K0uCs1cYV5iPCSXtFGTmjOgRQ9JifXQ+32SrQYJHyWlkOmKhW/sqAORB
+ 4GMTFDK2+VswTTv53x9LjylGqrdlr3Mr9ull+Xkh9EH+eyAa2oggDcenwKfGuhqAz0EX0sbYI
+ 3l6g61e5RpsTD7+35HNH4Ic4Ceh9IV+GxyStxizrOeYYieb9+b68SyoRjdB9rPmvMzFw8JMgS
+ no7x7+u0z9/EzualpgN5UZjVtZwogbxmeWqZIcuVFy3Wue2/fj9x5887PtsWC2HFKiVUbCm34
+ /1zPQlQtL0ipLgp1UkozTy0kQp4UoPgcmFuW7rmliP0oxcvRPzG+oYp/Gk5Nt3nBiETuO6SXK
+ 9B1lzKXf/Fee8nbmoMdUIl8YC7VkPeV53+oiWVEm8SWGJrF3QDiDLkBCUKKpS3tmAQGIz16Jk
+ e5ZRYy5Vjpb0nUQcJrt/DCZoW0H7Hp8tK1gJLuYDdvSnHYDvjQhkpR1coIDk6ATkmyBiQzsAL
+ bLOhOVYS6vG5Bc4y/dcDHnCk0sQET77QG56/ZZecBvsMQWoOJVDpvioIr1wOTRmnFb9b4BNa4
+ TYstnQmBCTV94YmDRffcDU565z087vhJs2CIvttvMWhB1dS8sdp3UDdXdTOTzL6MkjNJni2fL
+ UMwe/9x5lm8Fkr5Uv8PEv/zN85zC0WCE7/wXDEYMBIpCguBtVoqBGbstw8xJJuWq9Bz9gDx6q
+ r3Zjes2Gh/vZMTUoZiSGa2GuQk0+q/16wU8eyFD9oaWfVOnjFE37C3BAqEduZt6eFSO6Gte9p
+ kWkVq7AYrX6JA9IWhQYFXe2VuXwBBEt0wiVFkqOA16shup+GNRN0qFlL9e+qhfScuIe9VUS6A
+ 0pH7F4DrlVid+mTCKSNA==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Il giorno gio, 12/12/2019 alle 05.33 +0800, Ming Lei ha scritto:
-> On Wed, Dec 11, 2019 at 11:07:45AM -0500, Theodore Y. Ts'o wrote:
-> > On Wed, Dec 11, 2019 at 12:00:58PM +0800, Ming Lei wrote:
-> > > I didn't reproduce the issue in my test environment, and follows
-> > > Andrea's test commands[1]:
-> > > 
-> > >   mount UUID=$uuid /mnt/pendrive 2>&1 |tee -a $logfile
-> > >   SECONDS=0
-> > >   cp $testfile /mnt/pendrive 2>&1 |tee -a $logfile
-> > >   umount /mnt/pendrive 2>&1 |tee -a $logfile
-> > > 
-> > > The 'cp' command supposes to open/close the file just once,
-> however
-> > > ext4_release_file() & write pages is observed to run for 4358
-> times
-> > > when executing the above 'cp' test.
-> > 
-> > Why are we sure the ext4_release_file() / _fput() is coming from
-> the
-> > cp command, as opposed to something else that might be running on
-> the
-> > system under test?  _fput() is called by the kernel when the last
-> 
-> Please see the log:
-> 
-> https://lore.kernel.org/linux-scsi/3af3666920e7d46f8f0c6d88612f143ffabc743c.camel@unipv.it/2-log_ming.zip
-> 
-> Which is collected by:
-> 
-> #!/bin/sh
-> MAJ=$1
-> MIN=$2
-> MAJ=$(( $MAJ << 20 ))
-> DEV=$(( $MAJ | $MIN ))
-> 
-> /usr/share/bcc/tools/trace -t -C \
->     't:block:block_rq_issue (args->dev == '$DEV') "%s %d %d", args-
-> >rwbs, args->sector, args->nr_sector' \
->     't:block:block_rq_insert (args->dev == '$DEV') "%s %d %d", args-
-> >rwbs, args->sector, args->nr_sector'
-> 
-> $MAJ:$MIN points to the USB storage disk.
-> 
-> From the above IO trace, there are two write paths, one is from cp,
-> another is from writeback wq.
-> 
-> The stackcount trace[1] is consistent with the IO trace log since it
-> only shows two IO paths, that is why I concluded that the write done
-> via
-> ext4_release_file() is from 'cp'.
-> 
-> [1] 
-> https://lore.kernel.org/linux-scsi/320b315b9c87543d4fb919ecbdf841596c8fbcea.camel@unipv.it/2-log_ming_20191129_150609.zip
-> 
-> > reference to a struct file is released.  (Specifically, if you
-> have a
-> > fd which is dup'ed, it's only when the last fd corresponding to
-> the
-> > struct file is closed, and the struct file is about to be
-> released,
-> > does the file system's f_ops->release function get called.)
-> > 
-> > So the first question I'd ask is whether there is anything else
-> going
-> > on the system, and whether the writes are happening to the USB
-> thumb
-> > drive, or to some other storage device.  And if there is something
-> > else which is writing to the pendrive, maybe that's why no one
-> else
-> > has been able to reproduce the OP's complaint....
-> 
-> OK, we can ask Andrea to confirm that via the following trace, which
-> will add pid/comm info in the stack trace:
-> 
-> /usr/share/bcc/tools/stackcount  blk_mq_sched_request_inserted
-> 
-> Andrea, could you collect the above log again when running new/bad
-> kernel for confirming if the write done by ext4_release_file() is
-> from
-> the 'cp' process?
+On Thu, Dec 12, 2019 at 1:28 AM Paolo Bonzini <pbonzini@redhat.com> wrote:
+> On 12/12/19 00:05, Michael S. Tsirkin wrote:
+> >> @@ -405,6 +405,9 @@ static int virtblk_getgeo(struct block_device *bd, struct hd_geometry *geo)
+> >>
+> >>  static const struct block_device_operations virtblk_fops = {
+> >>      .ioctl  = virtblk_ioctl,
+> >> +#ifdef CONFIG_COMPAT
+> >> +    .compat_ioctl = blkdev_compat_ptr_ioctl,
+> >> +#endif
+> >>      .owner  = THIS_MODULE,
+> >>      .getgeo = virtblk_getgeo,
+> >>  };
+> > Hmm - is virtio blk lumped in with scsi things intentionally?
+>
+> I think it's because the only ioctl for virtio-blk is SG_IO.  It makes
+> sense to lump it in with scsi, but I wouldn't mind getting rid of
+> CONFIG_VIRTIO_BLK_SCSI altogether.
 
-Yes, I will try to do it as soon as possible and let you know.
-I will also try xfs or btrfs, as you suggested in another message.
+It currently calls scsi_cmd_blk_ioctl(), which implements a bunch of ioctl
+commands, including some that are unrelated to SG_IO:
 
-Thanks, and bye
-Andrea
+                case SG_GET_VERSION_NUM:
+                case SCSI_IOCTL_GET_IDLUN:
+                case SCSI_IOCTL_GET_BUS_NUMBER:
+                case SG_SET_TIMEOUT:
+                case SG_GET_TIMEOUT:
+                case SG_GET_RESERVED_SIZE:
+                case SG_SET_RESERVED_SIZE:
+                case SG_EMULATED_HOST:
+                case SG_IO: {
+                case CDROM_SEND_PACKET:
+                case SCSI_IOCTL_SEND_COMMAND:
+                case CDROMCLOSETRAY:
+                case CDROMEJECT:
 
+My patch changes all callers of this function, and the idea is
+to preserve the existing behavior through my series, so I think
+it makes sense to keep my patch as is.
+
+I would assume that calling scsi_cmd_blk_ioctl() is harmless
+here, but if you want to remove it or limit the set of supported
+commands, that should be independent of my change.
+
+       Arnd
