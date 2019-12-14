@@ -2,126 +2,129 @@ Return-Path: <SRS0=d1zv=2E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE69C43603
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 12:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA57C43603
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 12:35:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D95F620706
-	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 12:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB46C20706
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 12:35:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="MYHrXh5q"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AI4YD0ij"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725943AbfLNMda (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 14 Dec 2019 07:33:30 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:36710 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725872AbfLNMda (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 14 Dec 2019 07:33:30 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 5F91A41200;
-        Sat, 14 Dec 2019 12:33:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1576326807;
-         x=1578141208; bh=94OA89nMXIsmf+XkNB5AlmMLpSaErqIqZEBUPf3v4GI=; b=
-        MYHrXh5q908hjx/tOyMcL0bvM83DbKu5XNB/gSiBUkRQzfxpUl7sWYLr6XCnJFm3
-        aL57hjks0qqoeJxMSfNJoDw/F1w3QYFsom9Q+E6hqo6IxrrosPCaAWJHZybYo1M8
-        nirl4tnsKlbitzNdYaOwUBtPwCLyGKaF9pJogU1msbY=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id zCNllUKENg8F; Sat, 14 Dec 2019 15:33:27 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        id S1725895AbfLNMfw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 Dec 2019 07:35:52 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:30895 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725872AbfLNMfw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 14 Dec 2019 07:35:52 -0500
+X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Sat, 14 Dec 2019 07:35:50 EST
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576326951; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=nEhgWqsCxMZod3X8xArRbg45hp9WJhR8VXPah4HQGdA=;
+ b=AI4YD0ijHVwyUmJkiJJixE6XL1hVK175UUXMkH0mWntCpv88ZPh/DZpf8X9jPTornCE8z1fd
+ pm/Cywl/22wEwhpSNwXemJWLD7tCkpSqnubBbzNBOlomC9Y1FhAfpVVjfC/s9TdSySY56cIQ
+ qChmPitbd1iLdVs5weawHuo0n0c=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5df4d5f5.7f0a44f89a08-smtp-out-n02;
+ Sat, 14 Dec 2019 12:30:45 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A22C1C447A3; Sat, 14 Dec 2019 12:30:45 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 6514C411F8;
-        Sat, 14 Dec 2019 15:33:26 +0300 (MSK)
-Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Sat, 14
- Dec 2019 15:33:26 +0300
-Date:   Sat, 14 Dec 2019 15:33:25 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
-Subject: Re: [PATCH 4/4] qla2xxx: Micro-optimize
- qla2x00_configure_local_loop()
-Message-ID: <20191214123325.q6mvmke5htwit3l7@SPB-NB-133.local>
-References: <20191209180223.194959-1-bvanassche@acm.org>
- <20191209180223.194959-5-bvanassche@acm.org>
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9749DC433CB;
+        Sat, 14 Dec 2019 12:30:44 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20191209180223.194959-5-bvanassche@acm.org>
-X-Originating-IP: [172.17.128.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Sat, 14 Dec 2019 20:30:44 +0800
+From:   cang@codeaurora.org
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Avri Altman <Avri.Altman@wdc.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
+In-Reply-To: <20191212182411.GE415177@yoga>
+References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
+ <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
+ <20191212045357.GA415177@yoga>
+ <0101016ef8b2e2f8-72260b08-e6ad-42fc-bd4b-4a0a72c5c9b3-000000@us-west-2.amazonses.com>
+ <20191212063703.GC415177@yoga>
+ <MN2PR04MB69919AA0C345E7D6620C3ADFFC550@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <0101016efb07efac-32cf270a-68dd-455a-b037-9fac2f3834cd-000000@us-west-2.amazonses.com>
+ <20191212182411.GE415177@yoga>
+Message-ID: <0baa9d993cf9cb3e6c94f4c4440e9f95@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 09, 2019 at 10:02:23AM -0800, Bart Van Assche wrote:
-> Instead of changing endianness in-place and copying the data in two steps,
-> do this in one step. This patch makes is a preparation step for fixing the
-> endianness warnings reported by 'sparse' for the qla2xxx driver.
+On 2019-12-13 02:24, Bjorn Andersson wrote:
+> On Thu 12 Dec 08:53 PST 2019, cang@codeaurora.org wrote:
 > 
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h  | 2 +-
->  drivers/scsi/qla2xxx/qla_init.c | 9 ++++-----
->  2 files changed, 5 insertions(+), 6 deletions(-)
+>> On 2019-12-12 15:00, Avri Altman wrote:
+>> > > On Wed 11 Dec 22:01 PST 2019, cang@codeaurora.org wrote:
+>> > > > On 2019-12-12 12:53, Bjorn Andersson wrote:
+>> > > > > On Wed 11 Dec 00:49 PST 2019, Can Guo wrote:
+> [..]
+>> > > > And in real cases, as the UFS is the boot device, UFS driver will always
+>> > > > be probed during bootup.
+>> > > >
+>> > >
+>> > > The UFS driver will load and probe because it's mentioned in the
+>> > > devicetree, but if either the ufs drivers or any of its dependencies
+>> > > (phy, resets, clocks, etc) are built as modules it might very well
+>> > > finish probing after lateinitcall.
+>> > >
+>> > > So in the even that the bsg is =y and any of these drivers are =m,
+>> > > or if
+>> > > you're having bad luck with your timing, the list will be empty.
+>> > >
+>> > > As described below, if bsg=m, then there's nothing that will load the
+>> > > module and the bsg will not probe...
+>> > Right.
+>> > bsg=y and ufshcd=m is a bad idea, and should be avoided.
+>> >
+>> 
+>> Yeah, I will get it addressed in the next patchset.
+>> 
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index ab7424318ee8..cf23f10d27fe 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -414,7 +414,7 @@ struct els_logo_payload {
->  struct els_plogi_payload {
->  	uint8_t opcode;
->  	uint8_t rsvd[3];
-> -	uint8_t data[112];
-> +	__be32	data[112 / 4];
->  };
->  
->  struct ct_arg {
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 6c28f38f8021..ddd8bf7997a8 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -5047,13 +5047,12 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
->  			rval = qla24xx_get_port_login_templ(vha,
->  			    ha->init_cb_dma, (void *)ha->init_cb, sz);
->  			if (rval == QLA_SUCCESS) {
-> +				__be32 *q = &ha->plogi_els_payld.data[0];
-> +
->  				bp = (uint32_t *)ha->init_cb;
-> -				for (i = 0; i < sz/4 ; i++, bp++)
-> -					*bp = cpu_to_be32(*bp);
-> +				for (i = 0; i < sz/4 ; i++, bp++, q++)
-> +					*q = cpu_to_be32(*bp);
->  
+> If you build this around platform_device_register_data() from ufshcd I
+> don't see a reason to add additional restrictions on this combination
+> (even though it might not make much sense for people to use this
+> combination).
+> 
+> Regards,
+> Bjorn
 
-How about cpu_to_be32_array() instead of the hand-written loop?
+Agree, thanks.
 
-> -				memcpy(&ha->plogi_els_payld.data,
-> -				    (void *)ha->init_cb,
-> -				    sizeof(ha->plogi_els_payld.data));
->  				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
->  			} else {
->  				ql_dbg(ql_dbg_init, vha, 0x00d1,
-
-Thanks,
-Roman
+Regards,
+Can Guo.
