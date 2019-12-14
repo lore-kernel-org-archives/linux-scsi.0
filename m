@@ -1,155 +1,213 @@
-Return-Path: <SRS0=SQ1Y=2D=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=d1zv=2E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0BCC2D0CB
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Dec 2019 21:00:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F20DCC43603
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 01:04:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A9302465E
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Dec 2019 21:00:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9F9121655
+	for <linux-scsi@archiver.kernel.org>; Sat, 14 Dec 2019 01:04:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="uRbpCHY1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726623AbfLMVAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Dec 2019 16:00:04 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:32789 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725937AbfLMVAE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Dec 2019 16:00:04 -0500
-Received: by mail-pl1-f195.google.com with SMTP id c13so1746511pls.0;
-        Fri, 13 Dec 2019 13:00:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+hqr72PqUIxaNHoI7oLvHLPcCc2ckec5rmVfoIaLp1w=;
-        b=V7Qt04xApwcMvSImCrv5Fzm10eoQVu4QY3yPmhD+OqccaDX24rdxlHtGBFI4AS2J84
-         fhf5l8Xge3bhynRSUPszZgFeAmDcwU0XJaWFibTDhrHNVEl0oO74w8rQuiyXAbDg98jV
-         YqhMJyc30IQtykTb4FHSk8qfIAGAMZvQUicpTGrj+jmtJaLrJuEFQlY6eKSMMAUHbrdi
-         bX1HcFXXwwI9O3SUUKj5kpMqI67TETNMqn/o1o9QBCzadMqH6Ey5hRgUrYgO9uk4FxhW
-         GaghaJf0o8n4Xdv/AMlFmRRhzX3jLGj2SGNzKozrYVY6gooE4KCGuQreC+g+eXmtI5fP
-         eW6Q==
-X-Gm-Message-State: APjAAAU23/Jy2tq0ro7nVfp6Zx+vXaSkf3w/pGOIxPZ1Z/ZqlBKM/TOI
-        +3lrJjME6CatDHUvq57XHiigUTdKc8U=
-X-Google-Smtp-Source: APXvYqwTTBroPHZG57UDlXK8ZOVGzNiM3x+9KlnFXCGmXzrfx8jOtQg/5P1uWsnqIQ38W6V549B1aQ==
-X-Received: by 2002:a17:90a:e4f:: with SMTP id p15mr1577202pja.90.1576270802809;
-        Fri, 13 Dec 2019 13:00:02 -0800 (PST)
-Received: from [172.19.248.113] ([38.98.37.141])
-        by smtp.gmail.com with ESMTPSA id i127sm12711144pfc.55.2019.12.13.12.59.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 Dec 2019 13:00:01 -0800 (PST)
-Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Evan Green <evgreen@chromium.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
- <0101016ef425e749-1808e138-740e-4036-922f-7a49ec02c2b8-000000@us-west-2.amazonses.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <9c31a7f5-a39b-02e6-350f-5fe51f1c4275@acm.org>
-Date:   Fri, 13 Dec 2019 13:59:18 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1726691AbfLNBEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Dec 2019 20:04:05 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:54272 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726422AbfLNBEF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Dec 2019 20:04:05 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 5D05543611;
+        Sat, 14 Dec 2019 01:04:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1576285441;
+         x=1578099842; bh=hpSfxinLphpVnOkNhZzuJOOjwpq36pMK55zPPhxtdDk=; b=
+        uRbpCHY1Xnk2QPkBu92wUlEnv6bjs1C1LzpRrL9vSTIgchjHmEw/tQAT5TEDM1V0
+        85rqaZTMSNq09w1ivjei4smyyeGENXOyajMwMhzE+TonRND/LznNPEhL4BnuuGDg
+        TlvLFviqUEmtUlM+gqBpgv7gDuuyiJGekAXlnDIzDqs=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id NdVsmwNoNysR; Sat, 14 Dec 2019 04:04:01 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1882D411FF;
+        Sat, 14 Dec 2019 04:04:01 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Sat, 14
+ Dec 2019 04:04:00 +0300
+Date:   Sat, 14 Dec 2019 04:04:00 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Martin Wilck <mwilck@suse.de>, Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>, <linux@yadro.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Fix point-to-point mode for qla25xx and
+ older
+Message-ID: <20191214010400.r6ord53kwbh2lmlm@SPB-NB-133.local>
+References: <20191209180223.194959-1-bvanassche@acm.org>
+ <20191209180223.194959-4-bvanassche@acm.org>
+ <fdff60ffaacad1b3a850942f61bdd92ab5bc6d12.camel@suse.de>
+ <20191212200720.wbq2en3pnnpegrij@SPB-NB-133.local>
 MIME-Version: 1.0
-In-Reply-To: <0101016ef425e749-1808e138-740e-4036-922f-7a49ec02c2b8-000000@us-west-2.amazonses.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20191212200720.wbq2en3pnnpegrij@SPB-NB-133.local>
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/11/19 3:49 AM, Can Guo wrote:
-> In order to improve the flexibility of ufs-bsg, modulizing it is a good
-> choice. This change introduces tristate to ufs-bsg to allow users compile
-> it as an external module.
+On Thu, Dec 12, 2019 at 11:07:20PM +0300, Roman Bolshakov wrote:
+> On Tue, Dec 10, 2019 at 11:52:11AM +0100, Martin Wilck wrote:
+> > On Mon, 2019-12-09 at 10:02 -0800, Bart Van Assche wrote:
+> > > Restore point-to-point for qla25xx and older. Although this patch
+> > > initializes
+> > > a field (s_id) that has been marked as "reserved" in the firmware
+> > > manual, it
+> > > works fine on my setup.
+> > > 
+> > 
+> > Having followed the discussion between you and Roman, I guess this is
+> > ok. However I'd like to understand better in what ways the N2N topology
+> > was broken for you. After all, this patch affects only the LOGO
+> > payload. Was it a logout / relogin issue? Were wrong ports being logged
+> > out?
+> > 
+> 
+> I think your concern is indeed valid. I didn't have a chance to test the
+> P2P target on QLE2562 earlier. Here's the log that shows the issue
+> Bart is experiencing:
+> 
+> [  179.925639] qla2xxx [0000:00:05.0]-1959:0: Entered qla24xx_get_port_login_templ.
+> [  179.925689] qla2xxx [0000:00:05.0]-1800:0: Entered qla2x00_mailbox_command.
+> [  179.925731] qla2xxx [0000:00:05.0]-1806:0: Prepare to issue mbox cmd=0x5a.
+> [  179.925771] qla2xxx [0000:00:05.0]-1911:0: Mailbox registers (OUT):
+> [  179.925813] qla2xxx [0000:00:05.0]-1912:0: mbox[0]<-0x005a
+> [  179.925856] qla2xxx [0000:00:05.0]-1912:0: mbox[1]<-0x0700
+> [  179.925897] qla2xxx [0000:00:05.0]-1912:0: mbox[2]<-0x3000
+> [  179.925939] qla2xxx [0000:00:05.0]-1912:0: mbox[3]<-0x0000
+> [  179.925981] qla2xxx [0000:00:05.0]-1912:0: mbox[4]<-0x0003
+> [  179.926021] qla2xxx [0000:00:05.0]-1912:0: mbox[5]<-0x0000
+> [  179.926063] qla2xxx [0000:00:05.0]-1912:0: mbox[6]<-0x0000
+> [  179.926105] qla2xxx [0000:00:05.0]-1912:0: mbox[7]<-0x0000
+> [  179.926147] qla2xxx [0000:00:05.0]-1912:0: mbox[8]<-0x001d
+> [  179.926188] qla2xxx [0000:00:05.0]-1917:0: I/O Address = 00000000167c2ddb.
+> [  179.926230] qla2xxx [0000:00:05.0]-180f:0: Going to unlock irq & waiting for interrupts. jiffies=ffffd115.
+> [  179.926367] qla2xxx [0000:00:05.0]-1814:0: Cmd=5a completed.
+> [  179.926413] qla2xxx [0000:00:05.0]-1913:0: Mailbox registers (IN):
+> [  179.926456] qla2xxx [0000:00:05.0]-1914:0: mbox[0]->0x4000
+> [  179.926489] qla2xxx [0000:00:05.0]-1914:0: mbox[1]->0x0700
+> [  179.926522] qla2xxx [0000:00:05.0]-1821:0: Done qla2x00_mailbox_command.
+> [  179.926566] qla2xxx [0000:00:05.0]-195b:0: Done qla24xx_get_port_login_templ.
+> [  179.926617] qla2xxx [0000:00:05.0]-28d8:0: qla24xx_fcport_handle_login 21:00:00:24:ff:7f:35:c7 DS 0 LS 4 P 0 fl 0 confl 00000000f1f36df6 rscn 0|0 login 1 lid 0 scan 2
+> [  179.926709] qla2xxx [0000:00:05.0]-2869:0: LOOP READY.
+> [  179.926751] qla2xxx [0000:00:05.0]-286b:0: qla2x00_configure_loop: exiting normally.
+> [  179.926801] qla2xxx [0000:00:05.0]-4810:0: Loop resync end.
+> [  179.926836] qla2xxx [0000:00:05.0]-4800:0: DPC handler sleeping.
+> [  179.926879] qla2xxx [0000:00:05.0]-28d9:0: Async-gnlist WWPN 21:00:00:24:ff:7f:35:c7
+> [  179.926928] qla2xxx [0000:00:05.0]-28da:0: Async-gnlist - OUT WWPN 21:00:00:24:ff:7f:35:c7 hndl 0
+> [  179.928148] qla2xxx [0000:00:05.0]-28e7:0: Async done-gnlist res 0 mb[1]=50 mb[2]=301a
+> [  179.928222] qla2xxx [0000:00:05.0]-28e8:0: qla24xx_async_gnl_sp_done 21:00:00:24:ff:7f:35:c7 00:00:01 CLS 4/4 lid 0
+> [  179.928295] qla2xxx [0000:00:05.0]-28e8:0: qla24xx_async_gnl_sp_done 21:00:00:24:ff:7f:35:c7 ff:ff:fe CLS 4/4 lid 7fe
+> [  179.928368] qla2xxx [0000:00:05.0]-107ff:0: qla24xx_handle_gnl_done_event 21:00:00:24:ff:7f:35:c7 DS 2 LS rc 4 0 login 1|1 rscn 0|0 lid 0
+> [  179.928449] qla2xxx [0000:00:05.0]-28e1:0: qla24xx_handle_gnl_done_event 725 21:00:00:24:ff:7f:35:c7 n 2 000001 lid 0
+> [  179.928520] qla2xxx [0000:00:05.0]-28e2:0: qla24xx_handle_gnl_done_event found 21:00:00:24:ff:7f:35:c7 CLS [4|4] fc4_type 1 ID[000001|000001] lid[0|0]
+> [  179.928611] qla2xxx [0000:00:05.0]-28d8:0: qla24xx_fcport_handle_login 21:00:00:24:ff:7f:35:c7 DS 2 LS 4 P 0 fl 0 confl 00000000f1f36df6 rscn 0|0 login 1 lid 0 scan 2
+> 
+> If discovery state is DSC_GNL and fcport->current_login_state & 0xf ==
+> 6, target tries to do PRLI (which should be prohibited because
+> qlini_mode=disabled on the machine and scsi_host active_mode is
+> "Target"):
+> 
+> [  179.928706] qla2xxx [0000:00:05.0]-2918:0: qla24xx_fcport_handle_login 1595 21:00:00:24:ff:7f:35:c7 post FC PRLI
+> [  179.928828] qla2xxx [0000:00:05.0]-291b:0: Async-prli - 21:00:00:24:ff:7f:35:c7 hdl=0, loopid=0 portid=000001 retries=30 fc.
+> [  179.928969] qla2xxx [0000:00:05.0]-5836:0: Async-prli complete - 21:00:00:24:ff:7f:35:c7 hdl=4 portid=000001 iop0=422.
+> [  179.929053] qla2xxx [0000:00:05.0]-2929:0: qla2x00_async_prli_sp_done 21:00:00:24:ff:7f:35:c7 res 0
+> [  179.929118] qla2xxx [0000:00:05.0]-2918:0: qla24xx_handle_prli_done_event 1872 21:00:00:24:ff:7f:35:c7 post gpdb
+> [  179.929224] qla2xxx [0000:00:05.0]-28dc:0: Async-gpdb 21:00:00:24:ff:7f:35:c7 hndl 0 opt 0
+> [  179.929320] qla2xxx [0000:00:05.0]-28db:0: Async done-gpdb res 0, WWPN 21:00:00:24:ff:7f:35:c7 mb[1]=0 mb[2]=3011
+> [  179.929394] qla2xxx [0000:00:05.0]-28d2:0: qla24xx_handle_gpdb_event 21:00:00:24:ff:7f:35:c7 DS 5 LS 6 fc4_type 1 rc 0
+> [  179.929490] qla2xxx [0000:00:05.0]-28ef:0: qla2x00_update_fcport 21:00:00:24:ff:7f:35:c7
+> 
+> qla2x00_update_fcport sets discovery state to DSC_LOGIN_COMPLETE.
+> 
+> [  179.929720] qla2xxx [0000:00:05.0]-f806:0: Adding sess 000000005ec6d065 se_sess 00000000f0daac7c  to tgt 00000000dde86879 sess_count 1
+> [  179.929803] qla2xxx [0000:00:05.0]-f84b:0: qla_target(0): session for wwn 21:00:00:24:ff:7f:35:c7 (loop_id 0, s_id 0:0:1, confirmed completion not supported) added
+> [  179.929900] qla2xxx [0000:00:05.0]-287d:0: FCPort 21:00:00:24:ff:7f:35:c7 state transitioned from UNCONFIGURED to ONLINE - portid=000001.
+> [  180.773031] qla2xxx [0000:00:05.0]-e872:0: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+> [  180.773123] qla2xxx [0000:00:05.0]-e82e:0: IMMED_NOTIFY ATIO
+> [  180.773126] qla2xxx [0000:00:05.0]-f826:0: qla_target(0): Port ID: 00:00:01 ELS opcode: 0x03 lid 0 21:00:00:24:ff:7f:35:c7
+> [  180.773243] qla2xxx [0000:00:05.0]-f897:0: Linking sess 000000005ec6d065 [0] wwn 21:00:00:24:ff:7f:35:c7 with PLOGI ACK to wwn 21:00:00:24:ff:7f:35:c7 s_id 00:00:01, ref=1 pla 00000000e7b769c4 link 0
+> [  180.773354] qla2xxx [0000:00:05.0]-28f9:0: qlt_handle_login 4802 21:00:00:24:ff:7f:35:c7  DS 7
+> 
+> So, if Discovery State is DSC_LOGIN_COMPLETE, let's nuke the session:
+> 
+> [  180.773413] qla2xxx [0000:00:05.0]-28f9:0: qlt_handle_login 4834 21:00:00:24:ff:7f:35:c7 post del sess
+> [  180.773471] qla2xxx [0000:00:05.0]-e801:0: Scheduling sess 000000005ec6d065 for deletion 21:00:00:24:ff:7f:35:c7
+> [  180.773544] qla2xxx [0000:00:05.0]-f826:0: qla_target(0): Exit ELS opcode: 0x03 res 0
+> [  180.773619] qla2xxx [0000:00:05.0]-290a:0: qlt_unreg_sess sess 000000005ec6d065 for deletion 21:00:00:24:ff:7f:35:c7
+> [  180.773692] qla2xxx [0000:00:05.0]-f884:0: qlt_free_session_done: se_sess 00000000f0daac7c / sess 000000005ec6d065 from port 21:00:00:24:ff:7f:35:c7 loop_id 0x00 s_id 00:00:01 logout 1 keep 1 els_logo 0
+> [  180.773800] qla2xxx [0000:00:05.0]-287d:0: FCPort 21:00:00:24:ff:7f:35:c7 state transitioned from ONLINE to LOST - portid=000001.
+> [  180.773886] qla2xxx [0000:00:05.0]-2870:0: Async-logout - hdl=0 loop-id=0 portid=000001 21:00:00:24:ff:7f:35:c7.
+> 
+> And here's the LOGO you was worried about:
+> 
+> [  180.774077] qla2xxx [0000:00:05.0]-5836:0: Async-logout complete - 21:00:00:24:ff:7f:35:c7 hdl=6 portid=000001 iop0=0.
+> [  180.774150] qla2xxx [0000:00:05.0]-f893:0: qlt_logo_completion_handler: se_sess 00000000f0daac7c / sess 000000005ec6d065 from port 21:00:00:24:ff:7f:35:c7 loop_id 0x00 s_id 00:00:01 LOGO failed: 0x0
+> [  180.829063] qla2xxx [0000:00:05.0]-f887:0: qlt_free_session_done: sess 000000005ec6d065 logout completed
+> [  180.829182] qla2xxx [0000:00:05.0]-f89a:0: se_sess 00000000f1f36df6 / sess 000000005ec6d065 port 21:00:00:24:ff:7f:35:c7 is gone, releasing own PLOGI (ref=1)
+> [  180.829276] qla2xxx [0000:00:05.0]-5889:0: Sending PLOGI ACK to wwn 21:00:00:24:ff:7f:35:c7 s_id 00:00:01 loop_id 0x00 exch 0x1155f0 ox_id 0x4
+> [  180.829364] qla2xxx [0000:00:05.0]-f801:0: Unregistration of sess 000000005ec6d065 21:00:00:24:ff:7f:35:c7 finished fcp_cnt 0
+> [  180.829445] qla2xxx [0000:00:05.0]-28f4:0: Async-nack 21:00:00:24:ff:7f:35:c7 hndl 0 PLOGI
+> [  180.829566] qla2xxx [0000:00:05.0]-28f2:0: Async done-nack res 0 21:00:00:24:ff:7f:35:c7  type 16
+> 
+> Then initiator sends a PLOGI:
+> 
+> [  181.810543] qla2xxx [0000:00:05.0]-e872:0: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
+> [  181.810641] qla2xxx [0000:00:05.0]-e82e:0: IMMED_NOTIFY ATIO
+> [  181.810645] qla2xxx [0000:00:05.0]-f826:0: qla_target(0): Port ID: 00:00:01 ELS opcode: 0x03 lid 0 21:00:00:24:ff:7f:35:c7
+> [  181.810785] qla2xxx [0000:00:05.0]-f897:0: Linking sess 000000005ec6d065 [0] wwn 21:00:00:24:ff:7f:35:c7 with PLOGI ACK to wwn 21:00:00:24:ff:7f:35:c7 s_id 00:00:01, ref=1 pla 00000000eebd5532 link 0
+> [  181.810918] qla2xxx [0000:00:05.0]-28f9:0: qlt_handle_login 4802 21:00:00:24:ff:7f:35:c7  DS 0
+> [  181.810992] qla2xxx [0000:00:05.0]-5889:0: Sending PLOGI ACK to wwn 21:00:00:24:ff:7f:35:c7 s_id 00:00:01 loop_id 0x00 exch 0x115620 ox_id 0x5
+> [  181.811106] qla2xxx [0000:00:05.0]-f826:0: qla_target(0): Exit ELS opcode: 0x03 res 0
+> [  181.811251] qla2xxx [0000:00:05.0]-28f4:0: Async-nack 21:00:00:24:ff:7f:35:c7 hndl 0 PLOGI
+> [  181.811361] qla2xxx [0000:00:05.0]-28f2:0: Async done-nack res 0 21:00:00:24:ff:7f:35:c7  type 16
+> 
+> The block of messages just above can be seen a few more times which
+> means initiator sends multiple PLOGI requests.
+> 
+> I'll try to figure out the reason why qla24xx_fcport_handle_login
+> doesn't quit immediately.
+> 
 
-Did you perhaps mean "modularize" instead of "modulize"? Additionally, 
-should "modulizing" perhaps be changed into "modularizing"?
+Martin, Bart,
 
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index d14c224..72620ce 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -38,6 +38,7 @@ config SCSI_UFSHCD
->   	select PM_DEVFREQ
->   	select DEVFREQ_GOV_SIMPLE_ONDEMAND
->   	select NLS
-> +	select BLK_DEV_BSGLIB
->   	---help---
->   	This selects the support for UFS devices in Linux, say Y and make
->   	  sure that you know the name of your UFS host adapter (the card
+I have noticed the issue only when I use SLE15 as initiator (I haven't
+tried centos/rhel kernels yet). SLE15 initiator sends PLOGI multiple
+times by a reason unknown to me in spite of LS_ACC response from target
+on each PLOGI.
 
-I do not understand the above change. Doesn't moving the BSG code into a 
-separate module remove the dependency of SCSI_UFSHCD on BLK_DEV_BSGLIB?
+Login works flawlessly if I use the latest kernel on initiator (5.5/scsi
+fixes + the first two patches from the patchset).
+qla24xx_fcport_handle_login is invoked on target when current link state
+is PRLI COMPLETED, so it doesn't do PRLI and doesn't invoke LOGO.
 
-> +static int __init ufs_bsg_init(void)
-> +{
-> +	struct list_head *hba_list = NULL;
-> +	struct ufs_hba *hba;
-> +	int ret = 0;
-> +
-> +	ufshcd_get_hba_list_lock(&hba_list);
-> +	list_for_each_entry(hba, hba_list, list) {
-> +		ret = ufs_bsg_probe(hba);
-> +		if (ret)
-> +			break;
-> +	}
-> +	ufshcd_put_hba_list_unlock();
-> +
-> +	return ret;
-> +}
+Bart, what kernel do you use on initiator? Should we bring in
+workarounds for initiators into mainline?
 
-What if ufs_bsg_probe() succeeds for some UFS adapters but not for 
-others? Shouldn't ufs_bgs_remove() be called in that case for the 
-adapters for which ufs_bsg_probe() succeeded?
-
-> +late_initcall_sync(ufs_bsg_init);
-> +module_exit(ufs_bsg_exit);
-
-Why late_initcall_sync() instead of module_init()?
-
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index a86b0fd..7a83a8f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -108,6 +108,22 @@
->   		       16, 4, buf, __len, false);                        \
->   } while (0)
->   
-> +static LIST_HEAD(ufs_hba_list);
-> +static DEFINE_MUTEX(ufs_hba_list_lock);
-> +
-> +void ufshcd_get_hba_list_lock(struct list_head **list)
-> +{
-> +	mutex_lock(&ufs_hba_list_lock);
-> +	*list = &ufs_hba_list;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_get_hba_list_lock);
-
-Please make ufshcd_get_hba_list_lock() return the list_head pointer 
-instead of the above.
-
-Thanks,
-
-Bart.
+Best regards,
+Roman
