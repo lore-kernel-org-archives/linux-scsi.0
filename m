@@ -2,161 +2,163 @@ Return-Path: <SRS0=xzXz=2F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	HK_RANDOM_FROM,HK_RANDOM_REPLYTO,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD854C43603
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Dec 2019 06:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1B21C43603
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Dec 2019 07:12:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7036822B48
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Dec 2019 06:06:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mlSxhO4G";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="m1UODq//"
+	by mail.kernel.org (Postfix) with ESMTP id B3CEB2253D
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Dec 2019 07:12:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726081AbfLOGGh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Dec 2019 01:06:37 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:11500 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725788AbfLOGGh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Dec 2019 01:06:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1576389997; x=1607925997;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=8rYYX4vygTB3N0/+YPAYRb6zZBDm490vSGCxfUAgCss=;
-  b=mlSxhO4GPQtwRf3js2cFZUWmkEZ7HqvoBKeCUhQf9mihNTKndiS2Esuq
-   kM+wSyZPnbfYBd7qdIqSqa9U8tWBadTMART0PGaBjRQ4bsNpBuuuBc40B
-   EPUqA8WE+vRwtMc1qIyh1s24VbhpuPodOK1sarlWhBO3rbZ2wTqffjnB2
-   kTnd6TFXBRzERxBFGmeSc3VO4ZQv+z6g34b5C036lT97E6RDUHg1Wi1r2
-   y5QJRmtxpqZjhTvVcAqNqM1bdEmrdLY1p0kpemEx5dz1d/ahBfmBc8qtL
-   F0Z5xlZ4PnYoIMsjPXDjBTFwTQYK4EmZ02fQ2N0FH3FIl14ozHLsIjg85
-   w==;
-IronPort-SDR: Og9C9MlwUSSgcfJUk/72s7ij2vPD2kkKSKH6ubz73wnmSZ5BD2BT5IBzGy6Zp9mJ4O9frRcRy8
- FVDVZwJ/ozMYTerNONedHIT9VhbJNeRXl/L1ze6nEojNkS2TnDFnOSEs4ggUQ9uZOl85LstN8a
- Owrjv4gO7loRuthRk6FYYpMXDloytMAuT5BG9B0KRboZlqJ8UP47xpKm5xR8yvyUbBVyizwJ/q
- pgGcM//zqn8tmlU4fFjQjBPX/hkM3Ila0stM7pXKipJskh1c2BxNY1w4+EOm3j0Bg2J8ohe11K
- slg=
-X-IronPort-AV: E=Sophos;i="5.69,316,1571673600"; 
-   d="scan'208";a="129807856"
-Received: from mail-co1nam04lp2056.outbound.protection.outlook.com (HELO NAM04-CO1-obe.outbound.protection.outlook.com) ([104.47.45.56])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Dec 2019 14:06:35 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PHCxcTg5oNkjSbZU5a/JhFptL1rTz6XENGpjfOJn/WWBaSss3aI041e6daUiXiZmz09VMhGmt+wAvW5H+K/4f3K0KBM/pPcZq2MY2n5KhJ3zaWQiiaA/9CY+jqNFxJ54LQ5NDFO8MsfFlaMFERiWg+vmuJOsF7ZmIKj6SGIy2Nnf1DSS8Ok7wkLTG9rztaGTz12qTTzSZlWJ+3uBzSi2XEz2m6W0voloIWU2y41oZq16tTROuRmkGlq9xM11VsEhyr2rLIsMtaavQeho9hUtG30H4088C3xcLl0L+qDAeMcTlDDwJphlRh+5orq3NgHO0FCDDHXH1VCqePNBog/UDw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=70niOLmNCXaoQMsAxghgvfC8Wr7jOrZopcvLNCIzi08=;
- b=DgGyWBX/HbAja9NG0UvJqwa/jag7kNWH+CA+ms0C2iEO1u4IAxgneO70QObwGzCbRTN5ThDjhC3kUGjWLrG9fLUMiMadjLObrS9XADcUVuHMyz5BsuloYN/U/OFNb/UiIFlw9iDbBizsTWRYsum3HLyTAn8pjHLmuJ0hI4NfW4o8edQnh5plMWyDUkTgDYgjZSIrhySt31s9coj/LogsWC/Ie2aTgzFAa0mbQcVanhq/90GAjgOuSqizq7Xkhf4HA+eiuwfnDl7M/6CMwmzUp3VYH6bmsN8mG/c0uLd6cuzOOn4LOVP+qwpd0p+N+eQlOClFul4NUouUp7I36+0/iQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=70niOLmNCXaoQMsAxghgvfC8Wr7jOrZopcvLNCIzi08=;
- b=m1UODq//YyM4sTJKmXCh6E/6l6d1oiFcykbigxCQEo/tJFYOKja3s4KgLa7ZL8/X1U8MmorlBz6/Zswc3yFkS6pPFpib6KPVvoAOM/DuimiI66KurRUE5LYZLZJYRS2aPKj70aSaCiMUhGd5QEGI8/BSxKuIM3Dt0BoAnPXCv7c=
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
- MN2PR04MB6464.namprd04.prod.outlook.com (52.132.170.80) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2538.17; Sun, 15 Dec 2019 06:06:33 +0000
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::9447:fa71:53df:f866]) by MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::9447:fa71:53df:f866%3]) with mapi id 15.20.2538.019; Sun, 15 Dec 2019
- 06:06:33 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>
-CC:     Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [PATCH 2/2] scsi: ufs: Simplify a condition
-Thread-Topic: [PATCH 2/2] scsi: ufs: Simplify a condition
-Thread-Index: AQHVsaNnMibuQ0RuH0C5boyF+d+K9Ke6uBIA
-Date:   Sun, 15 Dec 2019 06:06:32 +0000
-Message-ID: <MN2PR04MB6991BEAE05458E3C4B079720FC560@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <20191213104828.7i64cpoof26rc4fw@kili.mountain>
- <20191213104935.wgpq2epaz6zh5zus@kili.mountain>
-In-Reply-To: <20191213104935.wgpq2epaz6zh5zus@kili.mountain>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 988a0c56-d532-43b5-c07e-08d78124ef55
-x-ms-traffictypediagnostic: MN2PR04MB6464:
-x-microsoft-antispam-prvs: <MN2PR04MB64649669D2870206040E13E3FC560@MN2PR04MB6464.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4303;
-x-forefront-prvs: 02524402D6
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(366004)(136003)(396003)(346002)(376002)(189003)(199004)(9686003)(64756008)(66446008)(66946007)(66556008)(66476007)(76116006)(7416002)(55016002)(316002)(54906003)(110136005)(71200400001)(81166006)(8676002)(7696005)(6506007)(86362001)(4744005)(5660300002)(52536014)(81156014)(186003)(4326008)(478600001)(2906002)(8936002)(26005)(33656002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6464;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ikEtQm2Il4wWPabxf8iZp7AksWy8/G/1SgrtLllXSPtSVXJs2FvuJ4B+ASGgSXUerJYy0Ym4aSBXrUyMqQjjZMyjAH6n0HeYBWrX4+QBz/OaV+awRdQBIyJCHH0DVrVmBd12rRDuxSHPxuaQRahF0Tc4MYcHojzbx4wheYyt7OFD2fNqWwuePj+7/L4NJhKNjTpJtdNwgKk0bld7G7UljtiDTJ6O5gSO0ohoufraKg47E9zSBfvGa66hJg5FjrbQfNl1bTEGOSoZaWbJ9gj6isIfJc2GPn+oGiFpAhfAleIER9FM4m95CtY6I0+khu18JX1gCKwmmeZJgAAZCycmujteN72OIWCO3+rBUJddBTl3r56BsJ1jR1KoFZiq5NpLS2ylJJYBH62tSgFuFzGj5Cg722XgX2kDB8WVDIvekZa7zqMI1jrGyMkzDfl7zbYH
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726039AbfLOHMx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Dec 2019 02:12:53 -0500
+Received: from mout.perfora.net ([74.208.4.197]:46455 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725861AbfLOHMx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 15 Dec 2019 02:12:53 -0500
+Received: from [192.168.0.76] ([108.168.115.113]) by mrelay.perfora.net
+ (mreueus001 [74.208.5.2]) with ESMTPSA (Nemesis) id 0Luv03-1hgLFT1Khl-01088H;
+ Sun, 15 Dec 2019 08:07:30 +0100
+Reply-To: tomkcpr@mdevsys.com
+Subject: Re: Latest versions of rtslib, configshell and targetcli
+From:   TomK <tomkcpr@mdevsys.com>
+To:     "J. Roeleveld" <joost@antarean.org>,
+        targetcli-fb-devel@lists.fedorahosted.org,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     linux-scsi@vger.kernel.org
+References: <486dab9b-e3ad-9fdd-7c1e-511a660de6c0@mdevsys.com>
+ <20190328174252.GA30597@infradead.org>
+ <1A374E24-19FF-41A9-ADB1-02B020EACC4B@antarean.org>
+ <3eb6b1f2-d50a-2465-b1e9-2eddd7c829f9@mdevsys.com>
+Message-ID: <7880c75c-f44a-8f32-c5fd-28f2a4db13fc@mdevsys.com>
+Date:   Sun, 15 Dec 2019 02:07:27 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 988a0c56-d532-43b5-c07e-08d78124ef55
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Dec 2019 06:06:32.9100
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vGr+Osd9TDmxyLxLWsSqrgQuHdIvSfqWCk+OPBLyAqe8A4LxDbYVib6hi3EBFPBpdyyt2SLHnF4tdf5oBkKBwQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6464
+In-Reply-To: <3eb6b1f2-d50a-2465-b1e9-2eddd7c829f9@mdevsys.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:7pj9Nm4fkWG1TC5JxafUqskLZSE60XUQdIFXwwyBHb2hekdp6ns
+ FOGVaW36wGlX1oGOEqClsmohJ83vOBMx4PZ/BlasA2Ohy+lX/+acS2O3assh24bb0ETkTsq
+ iR95+gA9ZeWi/jauu/6WgBTXy2euaQtQD2YdnwgSfnjOc63RgQqdrKIW1RWnw8o1GEyNr62
+ 5zbA75i4zNkzS6IduyQDA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:oC3p/xhHi6U=:iZvmgs9wgCu/IkYywmlIuY
+ /kj98bDdA27shBgirjw5JoecCAj3zfgJt5OXaNxfxTKIboWDqDG27Hoe9+gu3DBzWYFz3hUDa
+ iptVVI/G1oTajotTAJLlOIOkiLxP8KhEOtG9bdzG1Nl0BqWuPouxcuvaKZcNbu1lJ22fg+Qz3
+ Dy7eF4DzRo/+ToWyZ7aIoDMb5VCIcVOANKYJyWgDyIlu0eYqd7eF6VnlgQpeIdCmezJ4gJV3D
+ 239EwdHiZV2y7pYa7zFfVlYyZXvSqzq0o2e1jyNthVQmyNEc/4Cf/p1TkQXOS9hEnEI+4w9kL
+ s7q0V3H7qHK/0l2J87MhEeERlTajWlvgXmFYciOWF1IJFIzJuWPu6w/Mhb5lfjkoTPwkWfc7F
+ stplCgQvgQcPshwbr/7nx+Wtr6eJ2SOeDuDxLcNCvurZxDouVgqgX+LC78f7omAoFmGRXbg8m
+ kwGNKld5u9fOc2xx2Pfs9VkoJ3nRxm2xfUmpVuRyxb18XjtCN2HU7XzhvPc4GvTrMocg3FHzD
+ tHA2xArXbt5fEnmeGHs4NS1n+LOz4UyPrBOMrWKmD9ciZng4w8UUl2qvgWmyfJ2M3bCIBPB8o
+ qZw8K/9mrO3lBG0dfa3WTecYIHP/CWRsZriXANOH26r2CjXsFG2FwOWKhdMYb5vyVdx1EsBa/
+ CA51qv4qsQpVlFNVwl6ljhVFfYSSBeWogbpz8eht0Sa9HnrZJINuv10jGa1eBa7Btp+XvDql8
+ WlKUA42N590eOYAC+6aFOK4KOvnQzqZF1bzgx7INZFeBBu2mY4rbDL0334hkIk5M+qUYl5bZh
+ FbFsdgUZyy2wYkDiJj72/bQ2dIsoXQtvmCxuXrg0XcisFUClNS6e+HHRC0PAFbTDFWUKvdjYE
+ 39ky3GnVxEAeKGEVuK0UkYY3vx+h8mwqPzEpG6ZMM=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
->=20
-> We know that "check_for_bkops" is non-zero on this side of the || because=
- it
-> was checked on the other side.
->=20
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Allright.  Gave the -fb versions a try.
 
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> bf981f0ea74c..c299c5feaf1a 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -7684,8 +7684,7 @@ static int ufshcd_link_state_transition(struct ufs_=
-hba
-> *hba,
->          * turning off the link would also turn off the device.
->          */
->         else if ((req_link_state =3D=3D UIC_LINK_OFF_STATE) &&
-> -                  (!check_for_bkops || (check_for_bkops &&
-> -                   !hba->auto_bkops_enabled))) {
-> +                (!check_for_bkops || !hba->auto_bkops_enabled)) {
->                 /*
->                  * Let's make sure that link is in low power mode, we are=
- doing
->                  * this currently by putting the link in Hibern8. Otherwa=
-y to
-> --
-> 2.11.0
+790037 -rw-r--r--.   1 root root 18100 Dec 14 23:22 scsi_target.lio
+786433 drwxr-xr-x. 155 root root 12288 Dec 14 23:52 ..
+787390 -rw-------.   1 root root    71 Dec 15 01:43 saveconfig.json
 
+They use json instead of the old .lio format for storing the config. 
+And so won't let me restore my old config:
+
+
+/> restoreconfig /etc/target/scsi_target.lio
+Error parsing savefile: /etc/target/scsi_target.lio
+/>
+
+
+The -fb version however supports the force_pr_aptpl option:
+
+config# load /etc/target/scsi_target.lio
+Replace the current configuration with /etc/target/scsi_target.lio? [y/N] y
+
+*** Unknown attribute: storage fileio disk mdsesxip01-d01.img attribute 
+force_pr_aptpl
+config#
+
+[root@nexus01 target]# grep -EiR force_pr_aptpl *
+
+targetcli-fb/build/targetcli-fb-2.1.51.2.g94d971d/targetcli/ui_backstore.py: 
+        'force_pr_aptpl': ('number', 'If set to 1, force SPC-3 PR 
+Activate Persistence across Target Power Loss operation.'),
+targetcli-fb/targetcli/ui_backstore.py:        'force_pr_aptpl': 
+('number', 'If set to 1, force SPC-3 PR Activate Persistence across 
+Target Power Loss operation.'),
+
+So just want to bring up the question once more: which version of 
+targetcli, rtslib and configshell did folks here find most compatible? 
+Still the -fb version?
+
+Thx,
+TK
+
+On 4/7/2019 12:30 AM, TomK wrote:
+> On 3/28/2019 1:53 PM, J. Roeleveld wrote:
+>> On March 28, 2019 5:42:52 PM UTC, Christoph Hellwig 
+>> <hch@infradead.org> wrote:
+>>
+>>     On Fri, Mar 22, 2019 at 11:26:13PM -0400, TomK wrote:
+>>
+>>         Hey All,
+>>
+>>         I'm wondering if there are newer versions of the following
+>>         packages still
+>>         available and where I could download them from? The github link
+>>         hasn't
+>>         been updated in quite some time:
+>>
+>>
+>>     I think you want to look for the versions with the -fb postfix.  They
+>>     aren't 100% compatible, but a lot more actively maintained.
+>>
+>>     I've Cced the mailing list for the project, although I haven't gotten
+>>     a single mail from that list for more than a year either..
+>>     
+>> ------------------------------------------------------------------------
+>>     targetcli-fb-devel mailing list -- 
+>> targetcli-fb-devel@lists.fedorahosted.org
+>>     To unsubscribe send an email to 
+>> targetcli-fb-devel-leave@lists.fedorahosted.org
+>>     Fedora Code of Conduct:https://getfedora.org/code-of-conduct.html
+>>     List 
+>> Guidelines:https://fedoraproject.org/wiki/Mailing_list_guidelines
+>>     List 
+>> Archives:https://lists.fedorahosted.org/archives/list/targetcli-fb-devel@lists.fedorahosted.org 
+>>
+>>
+>>
+>> I have been using the -fb versions for a while now and not had any 
+>> issues with them.
+>> You do need to use either the -fb versions for all, or the non-fb 
+>> versions for all. Mix and match is not supported and can lead to 
+>> strange results (if it even works).
+>>
+>> I also don't remember getting any emails on this list for a while either.
+>>
+>> -- 
+>> Joost
+>> -- 
+>> Sent from my Android device with K-9 Mail. Please excuse my brevity.
+> 
+> Thanks all!
+> 
+> If targetcli or the -fb version isn't maintained much anymore, I'm 
+> wondering what else I could use in it's place?
+> 
+
+
+-- 
+Thx,
+TK.
