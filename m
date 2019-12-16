@@ -2,53 +2,49 @@ Return-Path: <SRS0=9qbq=2G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8FB3C43603
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 14:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C85C43603
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 17:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD57B2067C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 14:31:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tD6v3m6E"
+	by mail.kernel.org (Postfix) with ESMTP id 0DBD120717
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 17:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728090AbfLPObh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Dec 2019 09:31:37 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:50920 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727579AbfLPObh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Dec 2019 09:31:37 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576506696; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=89aeAE4p0vIjzskvdLk1qVvaFpos+JuHN3FX5cvcZAc=;
- b=tD6v3m6EEY+lsJW18mzQpKVFU+LbmX9Kb/N7r3BI0wt5N31nrF80SvTh1/FlyrePZWS762/O
- Y9A3gkNrY0/2MHSaKI4haCQ6i9212lFn401Ud00zC5/qSPwfvLOw2nRbBtUn/3JuzmJ5ZTLx
- Htx1qUfC/gmzPmmcrqELUije0tU=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df79544.7f5d70246bc8-smtp-out-n03;
- Mon, 16 Dec 2019 14:31:32 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 62B76C433CB; Mon, 16 Dec 2019 14:31:31 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 333BDC43383;
-        Mon, 16 Dec 2019 14:31:29 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 16 Dec 2019 22:31:29 +0800
-From:   cang@codeaurora.org
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        id S1726275AbfLPRWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Dec 2019 12:22:25 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:37100 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726141AbfLPRWY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2019 12:22:24 -0500
+Received: by mail-pj1-f65.google.com with SMTP id ep17so3263065pjb.4;
+        Mon, 16 Dec 2019 09:22:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=v2qcov+FADvqNKCZLTTFv4XXmMDQ6mSro4B3OA7yDB4=;
+        b=YLApVkzXcoH9sYQXo6mubykVkMquzm4hPnOO2VYMdFTpdtjkwLBqLxMy5aRo/fpYiw
+         z199KvvkQzFkZxcukgOia5eV+SjGDcqP7CioizzE6UMFy6q/yrBwgqbZUasv8DeIAKnk
+         +EsZYxdbsRZKe7F1x+AcoLBQMJrvhe3IgL7xvsA2m0XMctCMGuHl+IRFvic48fE3fFL4
+         UJkKpttLNafXzX+/LYI48JaLKjhzlJWufz0ycibsaM86sHvaoPsYS1soW8GU5XZXEXyT
+         qB/qKYKefZtDb+xtWhWwJLBpWWcZlI6duU00/RE014KUUM133nr4bZmvMNWV9x3Ilw2w
+         qmPQ==
+X-Gm-Message-State: APjAAAX4vy2EicBRyoO73LzQVVDQ89uGpHD/THtu/2gNFvdFrNEuB8+4
+        qVxJ1TLoWuzU+q/9kmH2r0wkdhf4yYA=
+X-Google-Smtp-Source: APXvYqxldVMknpdg/eYJWmUNo2cFG3KPf6KXVYwf96AKErLg1KEQQefR53J33LuhjIbPJ3XNpWpZ0A==
+X-Received: by 2002:a17:90a:cc02:: with SMTP id b2mr66257pju.137.1576516943602;
+        Mon, 16 Dec 2019 09:22:23 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id c8sm23384328pfo.163.2019.12.16.09.22.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Dec 2019 09:22:22 -0800 (PST)
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
+To:     cang@codeaurora.org
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         Alim Akhtar <alim.akhtar@samsung.com>,
@@ -56,77 +52,84 @@ Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Stephen Boyd <swboyd@chromium.org>,
         Stanley Chu <stanley.chu@mediatek.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
         Bean Huo <beanhuo@micron.com>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] scsi: ufs: Put SCSI host after remove it
-In-Reply-To: <85475247-efd5-732e-ae74-6d9a11e1bdf2@acm.org>
-References: <1576328616-30404-1-git-send-email-cang@codeaurora.org>
- <1576328616-30404-2-git-send-email-cang@codeaurora.org>
- <85475247-efd5-732e-ae74-6d9a11e1bdf2@acm.org>
-Message-ID: <cd6dc7c90d43b8ca8254a43da48334fc@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
+ <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
+ <20191212045357.GA415177@yoga>
+ <0101016ef8b2e2f8-72260b08-e6ad-42fc-bd4b-4a0a72c5c9b3-000000@us-west-2.amazonses.com>
+ <20191212063703.GC415177@yoga> <5691bfa1-42e5-3c5f-2497-590bcc0cb2b1@acm.org>
+ <926dd55d8d0dc762b1f6461495fc747a@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <62933901-fcdf-b5ae-431d-e1fbfc897128@acm.org>
+Date:   Mon, 16 Dec 2019 09:22:21 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
+MIME-Version: 1.0
+In-Reply-To: <926dd55d8d0dc762b1f6461495fc747a@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-15 02:32, Bart Van Assche wrote:
-> On 12/14/19 8:03 AM, Can Guo wrote:
->> In ufshcd_remove(), after SCSI host is removed, put it once so that 
->> its
->> resources can be released.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b5966fa..a86b0fd 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -8251,6 +8251,7 @@ void ufshcd_remove(struct ufs_hba *hba)
->>   	ufs_bsg_remove(hba);
->>   	ufs_sysfs_remove_nodes(hba->dev);
->>   	scsi_remove_host(hba->host);
->> +	scsi_host_put(hba->host);
->>   	/* disable interrupts */
->>   	ufshcd_disable_intr(hba, hba->intr_mask);
->>   	ufshcd_hba_stop(hba, true);
-> 
-> Hi Can,
-> 
-> The UFS driver may queue work asynchronously and that asynchronous
-> work may refer to the SCSI host, e.g. ufshcd_err_handler(). Is it
-> guaranteed that all that asynchronous work has finished before
-> scsi_host_put() is called?
-> 
-> Thanks,
-> 
-> Bart.
+On 12/15/19 8:36 PM, cang@codeaurora.org wrote:
+> On 2019-12-16 05:49, Bart Van Assche wrote:
+>> On 2019-12-11 22:37, Bjorn Andersson wrote:
+>>> It's the asymmetry that I don't like.
+>>>
+>>> Perhaps if you instead make ufshcd platform_device_register_data() the
+>>> bsg device you would solve the probe ordering, the remove will be
+>>> symmetric and module autoloading will work as well (although then you
+>>> need a MODULE_ALIAS of platform:device-name).
+>>
+>> Hi Bjorn,
+>>
+>> From Documentation/driver-api/driver-model/platform.rst:
+>> "Platform devices are devices that typically appear as autonomous
+>> entities in the system. This includes legacy port-based devices and
+>> host bridges to peripheral buses, and most controllers integrated
+>> into system-on-chip platforms.  What they usually have in common
+>> is direct addressing from a CPU bus.  Rarely, a platform_device will
+>> be connected through a segment of some other kind of bus; but its
+>> registers will still be directly addressable."
+>>
+>> Do you agree that the above description is not a good match for the
+>> ufs-bsg kernel module?
+>
+> I missed this one.
+> How about making it a plain device and add it from ufs driver?
 
-Hi Bart,
+Hi Can,
 
-As SCSI host is allocated in ufshcd_platform_init() during platform
-drive probe, it is much more appropriate if platform driver calls
-ufshcd_dealloc_host() in their own drv->remove() path. How do you
-think if I change it as below? If it is OK to you, please ignore my
-previous mails.
+Since the ufs_bsg kernel module already creates one device node under 
+/dev/bsg for each UFS host I don't think that we need to create any 
+additional device nodes for ufs-bsg devices. My proposal is to modify 
+the original patch 2/3 from this series as follows:
+* Use module_init() instead of late_initcall_sync().
+* Remove the ufshcd_get_hba_list_lock() and
+   ufshcd_put_hba_list_unlock() functions.
+* Implement a notification mechanism in the UFS core that invokes a
+   callback function after an UFS host has been created and also after an
+   UFS host has been removed.
+* Register for these notifications from inside the ufs-bsg driver.
+* During registration for notifications, invoke the UFS host creation
+   callback function for all known UFS hosts.
+* If the UFS core is unloaded, invoke the UFS host removal callback
+   function for all known UFS hosts.
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3d4582e..ea45756 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -3239,6 +3239,7 @@ static int ufs_qcom_remove(struct platform_device 
-*pdev)
+I think there are several examples of similar notification mechanisms in 
+the Linux kernel, e.g. the probe and remove callback functions in struct 
+pci_driver.
 
-         pm_runtime_get_sync(&(pdev)->dev);
-         ufshcd_remove(hba);
-+       ufshcd_dealloc_host(hba);
-         return 0;
-  }
-
-Thanks,
-
-Can Guo.
+Bart.
