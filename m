@@ -2,90 +2,119 @@ Return-Path: <SRS0=9qbq=2G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A11C43603
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 03:53:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68275C43603
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 04:36:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADF3D22B48
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 03:53:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 386DC20674
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 04:36:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bh6KUwlk"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="HuDiOAgv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726718AbfLPDxA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Dec 2019 22:53:00 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:58814 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726704AbfLPDxA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Dec 2019 22:53:00 -0500
-X-UUID: 1f40dedb05484bf79ec042414cecbf52-20191216
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=5K/XbBKs8iA6ab+03BUBztdPLrJv72ygYwkxrqAIQ9U=;
-        b=bh6KUwlkLwzGgZnlR+cuClZ/hjtLp+eIRQIbEtrhd6Mt/ZtPR2P+kfmdWKMT+mCO0HmeTtPhU7oav/7+WJG98HjJOe8Mq+8SRo5pQOr+oOgwYwzh/YvTcjkXAKf/BX+G60suXHd1wA2lRRo0bkdcF6e4hlK3ynQmhqx7QhmHIuA=;
-X-UUID: 1f40dedb05484bf79ec042414cecbf52-20191216
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 86540602; Mon, 16 Dec 2019 11:52:51 +0800
-Received: from mtkcas09.mediatek.inc (172.21.101.178) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 16 Dec 2019 11:51:41 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas09.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 16 Dec 2019 11:52:51 +0800
-Message-ID: <1576468370.13056.2.camel@mtkswgap22>
-Subject: Re: [PATCH v2 1/2 RESEND] soc: mediatek: add header for SiP service
- interface
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        <f.fainelli@gmail.com>, <matthias.bgg@gmail.com>
-CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "pedrom.sousa@synopsys.com" <pedrom.sousa@synopsys.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "f.fainelli@gmail.com" <f.fainelli@gmail.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        Kuohong Wang =?UTF-8?Q?=28=E7=8E=8B=E5=9C=8B=E9=B4=BB=29?= 
-        <kuohong.wang@mediatek.com>,
-        Peter Wang =?UTF-8?Q?=28=E7=8E=8B=E4=BF=A1=E5=8F=8B=29?= 
-        <peter.wang@mediatek.com>,
-        Chun-Hung Wu =?UTF-8?Q?=28=E5=B7=AB=E9=A7=BF=E5=AE=8F=29?= 
-        <Chun-hung.Wu@mediatek.com>,
-        Andy Teng =?UTF-8?Q?=28=E9=84=A7=E5=A6=82=E5=AE=8F=29?= 
-        <Andy.Teng@mediatek.com>,
-        Leon Chen =?UTF-8?Q?=28=E9=99=B3=E6=96=87=E9=8F=98=29?= 
-        <Leon.Chen@mediatek.com>
-Date:   Mon, 16 Dec 2019 11:52:50 +0800
-In-Reply-To: <1576468137-17220-2-git-send-email-stanley.chu@mediatek.com>
-References: <1576468137-17220-1-git-send-email-stanley.chu@mediatek.com>
-         <1576468137-17220-2-git-send-email-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726769AbfLPEgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Dec 2019 23:36:20 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:37891 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726646AbfLPEgU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 15 Dec 2019 23:36:20 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576470979; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=1IOCtn9qRak1dMm874uHU1b5mpiz11s+B6M7qcU1U20=;
+ b=HuDiOAgv2cXnqngWojwwCw+N43wFzhVablWGufZ83OwAkFsllZu6jUinCBk3zIagrhMD5nrU
+ qK+79LCMobT19t2v3/IwpC+l9fqoY8ogqyeyaI0hKD1rdxgQxieGV9GZofRELMxtXt0UVVFg
+ Si9Idn5S+Cghyb+72GEi9jUiGwA=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5df709bd.7f17c1ea4b90-smtp-out-n01;
+ Mon, 16 Dec 2019 04:36:13 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4C25CC447A2; Mon, 16 Dec 2019 04:36:11 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 69947C433CB;
+        Mon, 16 Dec 2019 04:36:10 +0000 (UTC)
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 89A95AE056A1C55C4F5ED8FC96F4CCD94C675532D4D860D6EF86D25D953A31ED2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 16 Dec 2019 12:36:10 +0800
+From:   cang@codeaurora.org
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
+In-Reply-To: <5691bfa1-42e5-3c5f-2497-590bcc0cb2b1@acm.org>
+References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
+ <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
+ <20191212045357.GA415177@yoga>
+ <0101016ef8b2e2f8-72260b08-e6ad-42fc-bd4b-4a0a72c5c9b3-000000@us-west-2.amazonses.com>
+ <20191212063703.GC415177@yoga>
+ <5691bfa1-42e5-3c5f-2497-590bcc0cb2b1@acm.org>
+Message-ID: <926dd55d8d0dc762b1f6461495fc747a@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgTWF0dGhpYXMgYW5kIEZsb3JpYW4sDQoNCkNvdWxkIHlvdSBwbGVhc2UgaGVscCByZXZpZXcg
-dGhpcyByZXZpc2VkIHYyIHBhdGNoID8NCg0KT3IgcGxlYXNlIGFkdmlzZSBpZiBhbnkgZXhwZXJ0
-IGNvdWxkIGhlbHAgPw0KDQpUaGFua3Mgc28gbXVjaC4NClN0YW5sZXkNCg0KT24gTW9uLCAyMDE5
-LTEyLTE2IGF0IDExOjQ4ICswODAwLCBTdGFubGV5IENodSB3cm90ZToNCj4gQWRkIGEgaGVhZGVy
-IGZvciB0aGUgU2lQIHNlcnZpY2UgaW50ZXJmYWNlIGluIG9yZGVyIHRvIGFjY2Vzcw0KPiB0aGUg
-VUZTSENJIGNvbnRyb2xsZXIgZm9yIHNlY3VyZSBjb21tYW5kIGhhbmRsaW5nIGluIE1lZGlhVGVr
-IENoaXBzZXRzLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1
-QG1lZGlhdGVrLmNvbT4NCg0K
+On 2019-12-16 05:49, Bart Van Assche wrote:
+> On 2019-12-11 22:37, Bjorn Andersson wrote:
+>> It's the asymmetry that I don't like.
+>> 
+>> Perhaps if you instead make ufshcd platform_device_register_data() the
+>> bsg device you would solve the probe ordering, the remove will be
+>> symmetric and module autoloading will work as well (although then you
+>> need a MODULE_ALIAS of platform:device-name).
+> 
+> Hi Bjorn,
+> 
+> From Documentation/driver-api/driver-model/platform.rst:
+> "Platform devices are devices that typically appear as autonomous
+> entities in the system. This includes legacy port-based devices and
+> host bridges to peripheral buses, and most controllers integrated
+> into system-on-chip platforms.  What they usually have in common
+> is direct addressing from a CPU bus.  Rarely, a platform_device will
+> be connected through a segment of some other kind of bus; but its
+> registers will still be directly addressable."
+> 
+> Do you agree that the above description is not a good match for the
+> ufs-bsg kernel module?
+> 
+> Thanks,
+> 
+> Bart.
 
+Hi Bart,
+
+I missed this one.
+How about making it a plain device and add it from ufs driver?
+
+Thanks,
+
+Can Guo.
