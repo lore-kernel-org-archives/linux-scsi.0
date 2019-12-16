@@ -2,145 +2,98 @@ Return-Path: <SRS0=9qbq=2G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58D9EC43603
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 11:45:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F42C43603
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 13:17:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A110206EC
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 11:45:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Xbrug2hT"
+	by mail.kernel.org (Postfix) with ESMTP id 77CAE20684
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Dec 2019 13:17:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727425AbfLPLpl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Dec 2019 06:45:41 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:36832 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727286AbfLPLpk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Dec 2019 06:45:40 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 2B95A411F8;
-        Mon, 16 Dec 2019 11:45:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1576496736;
-         x=1578311137; bh=uPD/fbHoiIx1bTPx6jKKHiwZUnE1+lK4eMqoYLbWwhg=; b=
-        Xbrug2hTKp69j39aGJx4RXAxb7CI04UCBEApbqhS1K84EP4PInXHmFs0DYJqKq9R
-        1t581oOhaMzapMlzFI9j+z/CjyjzL1airOMJdybgCNt6y1fq7fOH2QFanDFouPqd
-        iK0C2SfuhjoMxS8V/gETSC8WpI56rhSa/Y2EW/cgXeE=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id bbLv69KnqkCf; Mon, 16 Dec 2019 14:45:36 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 0C02A43C73;
-        Mon, 16 Dec 2019 14:45:36 +0300 (MSK)
-Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 16
- Dec 2019 14:45:35 +0300
-Date:   Mon, 16 Dec 2019 14:45:35 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     Martin Wilck <mwilck@suse.de>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>, <linux@yadro.com>
-Subject: Re: [PATCH 3/4] qla2xxx: Fix point-to-point mode for qla25xx and
- older
-Message-ID: <20191216114535.7ijs2nwqwrljq6pa@SPB-NB-133.local>
-References: <20191209180223.194959-1-bvanassche@acm.org>
- <20191209180223.194959-4-bvanassche@acm.org>
- <fdff60ffaacad1b3a850942f61bdd92ab5bc6d12.camel@suse.de>
- <20191212200720.wbq2en3pnnpegrij@SPB-NB-133.local>
- <20191214010400.r6ord53kwbh2lmlm@SPB-NB-133.local>
- <86234568-0ab4-4efa-5f4f-05b0d604be3a@acm.org>
+        id S1727716AbfLPNRZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Dec 2019 08:17:25 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:34735 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727653AbfLPNRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2019 08:17:24 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue107 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1MA88C-1iZjVc380Y-00BfWR; Mon, 16 Dec 2019 14:17:02 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: fix build failure with DEBUGFS disabled
+Date:   Mon, 16 Dec 2019 14:16:49 +0100
+Message-Id: <20191216131701.3125077-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <86234568-0ab4-4efa-5f4f-05b0d604be3a@acm.org>
-X-Originating-IP: [172.17.128.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:muNsOaQMWt/pgvfzkrJbpOqFT5GN9UxG1fJWHJjZeBLFKbF8xfp
+ yYlQCzvOEkCpvq2JejmOFD9/vaq7yUpfys1l15/URUlHWQewyx9fudWty+/T1TOEnBSPy7t
+ y86BXPNYUBhEBTi8jaZoZT+jKHpS7XEwcrrv3NCt6+xaEKYSi4siJ3QOVyOZE8nHesakQ1I
+ CpmdMy0/GkkPS9opsYdgQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:r4lXlfYw3sY=:eBDEz/XTIQGoh0b+8pb1TU
+ sQifTHqB+yB4EgWPe3jvYkp3clTkvFkkAthqxhhimxeHTA7ofmGaiwGTQGuZYN/Mk0n62L1iw
+ XUPSDox/UTo3J10ByoDooy61vg548vyvZXTAPQWveqdMRjn+cYjUeQR3SLkr85PpqRof8oPOF
+ ZzpMUyGB93DXsY1xww+D7hFuaQ20a57RW3rM0+g6ZAkPgTrUX3mWfFEdNwfgdCVlhuKewKGqH
+ arEbuP53MbAQL9zDaWY9wR/NHXsBg0i+gV0xIqJKSeor7Qt4yy7w3XZuHl4D9doEKZDvI33zs
+ 8Kco9v7HRVg6P07UQ+l2mnWoxa4aUaiEpSIDaBES3C5wJpChbdmxJ++qiZFTuKQa5khtjcpWn
+ IoelE7YI2pE9x7Q1nyBQFf3V99f7zS7apJPXKi3eXt0rST7RFvvAe8/WeQx3lsA7WdvBykMbb
+ JT7APJlx4rtzBppaPZGI/nCkUPwZXq2lbSGHT9sulfFeszLUdyTzwcaOK0j08t9gIm/zfiMNv
+ sSJ+2UD2+rWX/sfVKp9SsAVMNdJgFUr/8nNtgAGu5ZQTjOnUKshSIVOYfKyKdclOAq6p6ToNl
+ msgVL/mHB2MmsdILy+O35Mg3Kn96TDEDhS/L6hGnTFwVc9mt/Mmqlc84cN/Ee7vyFXo7Mdd8C
+ 2fqOTkxhjX00MzUbUBGbYYnrl/RJf8PiSWi5SUErqQwQWeKmlsgQw8fL/lXafLFXW0sR7c7mk
+ vzWHKI38u8woNdXghUVKEMfCfSHulKIe2xL8o1v9hMHQSTOJ6qyQK7OmPTiB+mUNfMbFVJMgr
+ LVA/H5l46kwyQPFNG6aWY+cTL9g58t96PqJtK7xX5J86QacuOCLdKgXleuXI0H38G9rk0nxLh
+ mjhdjssjRfyjybr7Ccpw==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Dec 14, 2019 at 04:09:41PM -0800, Bart Van Assche wrote:
-> On 2019-12-13 17:04, Roman Bolshakov wrote:
-> > Bart, what kernel do you use on initiator? Should we bring in
-> > workarounds for initiators into mainline?
-> 
-> The setup I use to test point-to-point mode is as follows:
-> * A single server equipped with a QLE2562 adapter.
-> * The two ports of the QLE2562 adapter directly connected to each other.
-> * Both FC ports are assigned to a VM such that if a kernel crash occurs
->   only the VM has to be rebooted (PCIe-passthrough).
-> * The following in /etc/modprobe.d/qla2xxx.conf of the VM used for
->   testing:
-> 
-> options qla2xxx qlini_mode=dual ql2xextended_error_logging=0x5200b000
-> 
-> With this setup it is guaranteed that initiator and target are running
-> the same kernel version.
-> 
-> I run all my tests with mainline kernels. Typically I run my tests on
-> top of a merge of Martin's scsi-fixes and scsi-queue branches. Since the
-> regression that I reported is a regression in the upstream kernel I
-> think the fix should go into the upstream kernel.
-> 
+A recent change appears to have moved an #endif by accident:
 
-Hi Bart,
+drivers/scsi/lpfc/lpfc_debugfs.c:5393:18: error: 'lpfc_debugfs_dumpHBASlim_open' undeclared here (not in a function); did you mean 'lpfc_debugfs_op_dumpHBASlim'?
+drivers/scsi/lpfc/lpfc_debugfs.c:5394:18: error: 'lpfc_debugfs_lseek' undeclared here (not in a function); did you mean 'lpfc_debugfs_nvme_trc'?
+drivers/scsi/lpfc/lpfc_debugfs.c:5395:18: error: 'lpfc_debugfs_read' undeclared here (not in a function); did you mean 'lpfc_debug_dump_q'?
+drivers/scsi/lpfc/lpfc_debugfs.c:5396:18: error: 'lpfc_debugfs_release' undeclared here (not in a function); did you mean 'lpfc_debugfs_terminate'?
+drivers/scsi/lpfc/lpfc_debugfs.c:5402:18: error: 'lpfc_debugfs_dumpHostSlim_open' undeclared here (not in a function); did you mean 'lpfc_debugfs_op_dumpHostSlim'?
 
-The setup details are helpful. Yes, I can reproduce it with
-qlini_mode=dual. But it works with qlini_mode=disabled.
+Move it back to where it was previously.
 
-But, qlini_mode=dual works if target is created before initiator is
-started.  So, the transition from initiator mode to target is the one
-that needs a fix.
+Fixes: 95bfc6d8ad86 ("scsi: lpfc: Make FW logging dynamically configurable")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-There first PLOGI after target creation fails because it complains about
-wrong D_ID in Login/Logout IOCB:
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 2e6a68d9ea4f..a5ecbce4eda2 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -5385,7 +5385,6 @@ static const struct file_operations lpfc_debugfs_ras_log = {
+ 	.read =         lpfc_debugfs_read,
+ 	.release =      lpfc_debugfs_ras_log_release,
+ };
+-#endif
+ 
+ #undef lpfc_debugfs_op_dumpHBASlim
+ static const struct file_operations lpfc_debugfs_op_dumpHBASlim = {
+@@ -5557,7 +5556,7 @@ static const struct file_operations lpfc_idiag_op_extAcc = {
+ 	.write =        lpfc_idiag_extacc_write,
+ 	.release =      lpfc_idiag_cmd_release,
+ };
+-
++#endif
+ 
+ /* lpfc_idiag_mbxacc_dump_bsg_mbox - idiag debugfs dump bsg mailbox command
+  * @phba: Pointer to HBA context object.
+-- 
+2.20.0
 
-qla2xxx [0000:00:07.0]-3873:1: Enter: PLOGI portid=0000ef
-qla2xxx [0000:00:07.0]-3873:1: PLOGI 00000000003b33d0 00000000f1800318
-qla2xxx [0000:00:07.0]-3873:1: PLOGI buffer:
-qla2xxx [0000:00:07.0]-0909:1: +116   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
-qla2xxx [0000:00:07.0]-0909:1: ----- -----------------------------------------------
-qla2xxx [0000:00:07.0]-0909:1: 0000: 03 00 00 00 20 20 00 0c 88 00 08 00 00 ff 00 1f
-qla2xxx [0000:00:07.0]-0909:1: 0010: 00 00 07 d0 21 00 00 24 ff 7f 35 c7 20 00 00 24
-qla2xxx [0000:00:07.0]-0909:1: 0020: ff 7f 35 c7 00 00 00 00 00 00 00 00 00 00 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0030: 00 00 00 00 00 00 00 00 20 00 08 00 00 ff 00 04
-qla2xxx [0000:00:07.0]-0909:1: 0040: 00 01 00 00 80 00 00 00 00 00 08 00 00 ff 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0050: 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0070: 00 00 00 00
-qla2xxx [0000:00:07.0]-3873:1: PLOGI ELS IOCB:
-qla2xxx [0000:00:07.0]-0909:1: +64    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
-qla2xxx [0000:00:07.0]-0909:1: ----- -----------------------------------------------
-qla2xxx [0000:00:07.0]-0909:1: 0000: 53 01 00 00 05 00 00 00 00 00 00 00 01 00 00 10
-qla2xxx [0000:00:07.0]-0909:1: 0010: 00 00 00 00 01 00 03 00 ef 00 00 00 ef 00 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0020: 74 00 00 00 74 00 00 00 00 00 a5 30 00 00 00 00
-qla2xxx [0000:00:07.0]-0909:1: 0030: 74 00 00 00 00 00 a6 30 00 00 00 00 74 00 00 00
-qla2xxx [0000:00:07.0]-3874:1: ELS_DCMD PLOGI sent, hdl=5, loopid=0, to port_id 0000ef from port_id 0000ef
-qla2xxx [0000:00:07.0]-583f:1: ELS IOCB Done -Driver ELS logo error hdl=5 comp_status=0x31 error subcode 1=0x19 error subcode 2=0x18 total_byte=0x74
-qla2xxx [0000:00:07.0]-3872:1: ELS_DCMD ELS done rc 458752 hdl=5, portid=0000ef 21:00:00:24:ff:12:b1:a0
-qla2xxx [0000:00:07.0]-28eb:1: qla2x00_els_dcmd2_sp_done 21:00:00:24:ff:12:b1:a0 cmd error fw_status 0x31 0x19 0x18
-
-Also note, that the IOCB is sent from port 0000ef to port 0000ef. This
-is definitely wrong and should be fixed. I'm still looking how it
-reached the invalid state.
-
-If qla2xxx target is started with qlini_mode=disabled in P2P mode,
-initiator/target have port ids 000001/000002. The port with bigger WWPN
-in the pair typically assigns 000001 to itself and 000002 to the peer.
-
-Roman
