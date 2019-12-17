@@ -2,157 +2,115 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BCEC2D0C8
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 03:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 050CBC43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 04:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C62D2176D
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 03:57:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uHcqm7W3"
+	by mail.kernel.org (Postfix) with ESMTP id CFBF921835
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 04:13:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576556032;
+	bh=TQMMeBBZrVKYEy0YvA+gnlD3IzbyNHER3EDmj07O190=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=B/B+qZXIGZHp96Qp4SLWNGAN49OnIBgpNL4raU7I6lu54+QGeQAfuTrMHMrdyLjvL
+	 h3MKEQCO0EZuz4dFwJXkno9eK2X7kKiIoGxGXnBox/BEoMhQQGDy1A6L3J3hfIVruB
+	 5JvIlFaUuQHRd4MUvw0c73EVTUA6q7BkW1hQtFZU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727241AbfLQD5g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Dec 2019 22:57:36 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:46097 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726296AbfLQD5g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Dec 2019 22:57:36 -0500
-Received: by mail-pf1-f193.google.com with SMTP id y14so6756206pfm.13;
-        Mon, 16 Dec 2019 19:57:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=iCxYfSe4wfh5Oa268U6X7/B5eWsDv/JbGRRyvV87dDA=;
-        b=uHcqm7W3PzpQu2wXLlo4vlInUiEOW1NW0HRrtfokI3T2/O6wtgcmbRjOQG3F0ks8J2
-         UU1yGhmsq1uf6vX6kyu/Cg/X2dJSAjVi+3WBQAPjE2LsohRsR80Yx6O9RKAhmnchdmRd
-         58/JYZS1v3AGwzP0V6ez8ryQ0A+cjh/+KzkEzFJ5nlOH+fA1ZxoCkw45BXj4b1wZT9BI
-         6OuKZHqMh3uheN+xo/dL8tSU8DytbAUt709MyVg+JfTgaGkjKWgpFeViQenhRgENiz53
-         kyjR1e5ivK0EHyYNTY1z+48hBh2auVjWcmNNTxjuLlw52nJ6ih49uHt+xnoy1dnSwQAF
-         n6xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=iCxYfSe4wfh5Oa268U6X7/B5eWsDv/JbGRRyvV87dDA=;
-        b=liPz62p4MMYBQJ1bFzfHOyooYGHvo/+bvIPDyk1vvWxnc5jSJpzEn+z1J82aplHTrz
-         EAoLzI6NQdRRn7wKi3avlNYi9JcodHW3GCkk7+9aXULTAERVs1/ipk8GJOOCiOCzd6JA
-         QCXyPqmRBzejWcksbZ9GKb3XwSpf7XCT2xK3D76DP2POlcf5kz/PPW0F7vkJbQ1In8x1
-         AFQh6knYUknEfo5ZpHC1W8uHOCjGbkprywVDqTXcZ853O0h0hKsHn05EZGaeaEYm2As4
-         0XZoMC5H2BnH0sGzDVa5NpYLsphqFFDa1H6hsgD9kEnTgYnv7bgPaQsDsqAVOS6HZFfF
-         d8tQ==
-X-Gm-Message-State: APjAAAVRY22/ufvfbUg0l5JTeYBY1Aor8HwZHd/mPqr0WT+XT6oyf6Va
-        ayxR733Xacejthx9/Rcv6crroozI
-X-Google-Smtp-Source: APXvYqxWfrO+VkUtpr7Mu+1RYEbPbCCigVRj4dF8yKxw2ueMgAOyXi/Y+7TLPLC6K+Y43BudQixSuQ==
-X-Received: by 2002:a63:5407:: with SMTP id i7mr22917017pgb.330.1576555055209;
-        Mon, 16 Dec 2019 19:57:35 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id d85sm24508645pfd.146.2019.12.16.19.57.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 16 Dec 2019 19:57:32 -0800 (PST)
-Subject: Re: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA
- drives
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20191209052119.32072-1-linux@roeck-us.net>
- <yq15zinmrmj.fsf@oracle.com>
- <67b75394-801d-ce91-55f2-f0c0db9cfffc@roeck-us.net>
- <yq1y2vbhe6i.fsf@oracle.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <83d528fc-42b7-aa3f-5dd9-a000268da38e@roeck-us.net>
-Date:   Mon, 16 Dec 2019 19:57:31 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1727504AbfLQENt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Dec 2019 23:13:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35914 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725836AbfLQENt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Dec 2019 23:13:49 -0500
+Received: from localhost (unknown [171.61.91.91])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 95A23206E6;
+        Tue, 17 Dec 2019 04:13:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576556028;
+        bh=TQMMeBBZrVKYEy0YvA+gnlD3IzbyNHER3EDmj07O190=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xJmHkIQcN4IiGutvhNuTe5LhQqWgs03XXk8b1vSQECWNfA31QEDiw7XQ2/6Omsx+L
+         N3Ne/OmncLMpEHBBhuRJ82BZkKTT5/xa3O8cO6H5Fl9aYEjvFfC4ZmAy6ZhgmY/V+A
+         Uurc8yJvr+4ET0UVLz/jET1qyN23Kv7XeGPf4dz0=
+Date:   Tue, 17 Dec 2019 09:43:42 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     cang@codeaurora.org
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for
+ host controller
+Message-ID: <20191217041342.GM2536@vkoul-mobl>
+References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
+ <1573798172-20534-3-git-send-email-cang@codeaurora.org>
+ <20191216190415.GL2536@vkoul-mobl>
+ <CAOCk7NpAp+DHBp-owyKGgJFLRajfSQR6ff1XMmAj6A4nM3VnMQ@mail.gmail.com>
+ <091562cbe7d88ca1c30638bc10197074@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <yq1y2vbhe6i.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <091562cbe7d88ca1c30638bc10197074@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/16/19 6:35 PM, Martin K. Petersen wrote:
-> 
-> Guenter,
-> 
->> If and when drives are detected which report bad information, such
->> drives can be added to a blacklist without impact on the core SCSI or
->> ATA code. Until that happens, not loading the driver solves the
->> problem on any affected system.
-> 
-> My only concern with that is that we'll have blacklisting several
-> places. We already have ATA and SCSI blacklists. If we now add a third
-> place, that's going to be a maintenance nightmare.
-> 
-> More on that below.
-> 
->>> My concerns are wrt. identifying whether SMART data is available for
->>> USB/UAS. I am not too worried about ATA and "real" SCSI (ignoring RAID
->>> controllers that hide the real drives in various ways).
-> 
-> OK, so I spent my weekend tinkering with 15+ years of accumulated USB
-> devices. And my conclusion is that no, we can't in any sensible manner,
-> support USB storage monitoring in the kernel. There is no heuristic that
-> I can find that identifies that "this is a hard drive or an SSD and
-> attempting one of the various SMART methods may be safe". As opposed to
-> "this is a USB key that's likely to lock up if you try". And that's
-> ignoring the drives with USB-ATA bridges that I managed to wedge in my
-> attempt at sending down commands.
-> 
-> Even smartmontools is failing to work on a huge part of my vintage
-> collection.  Thanks to a wide variety of bridges with random, custom
-> interfaces.
-> 
-> So my stance on all this is that I'm fine with your general approach for
-> ATA. I will post a patch adding the required bits for SCSI. And if a
-> device does not implement either of the two standard methods, people
-> should use smartmontools.
-> 
-> Wrt. name, since I've added SCSI support, satatemp is a bit of a
-> misnomer. drivetemp, maybe? No particular preference.
-> 
-Agreed, if we extend this to SCSI, satatemp is less than perfect.
-drivetemp ? disktemp ? I am open to suggestions, with maybe a small
-personal preference for disktemp out of those two.
+Hi Can,
 
->> The one USB/UAS connected SATA drive I have (a WD passport) reports
->> itself as "WD      ", not as "ATA     ". I would expect other drives
->> to do the same.
+On 17-12-19, 08:37, cang@codeaurora.org wrote:
+> On 2019-12-17 03:12, Jeffrey Hugo wrote:
+> > On Mon, Dec 16, 2019 at 12:05 PM Vinod Koul <vkoul@kernel.org> wrote:
+> > > 
+> > > Hi Can,
+> > > 
+> > > On 14-11-19, 22:09, Can Guo wrote:
+> > > > Add reset control for host controller so that host controller can be reset
+> > > > as required in its power up sequence.
+> > > 
+> > > I am seeing a regression on UFS on SM8150-mtp with this patch. I think
+> > > Jeff is seeing same one lenove laptop on 8998.
+> > 
+> > Confirmed.
+> > 
+> > > 
+> > > 845 does not seem to have this issue and only thing I can see is
+> > > that on
+> > > sm8150 and 8998 we define reset as:
+> > > 
+> > >                         resets = <&gcc GCC_UFS_BCR>;
+> > >                         reset-names = "rst";
+> > > 
 > 
-> Yes. Most vendors are too fond of their brand names to put "ATA" in
-> there. So my suggestion is to relax the heuristic to trigger on the ATA
-> Information VPD page only and ignore the name.
+> Hi Jeffrey and Vinod,
 > 
+> Thanks for reporting this. May I know what kind of regression do you see on
+> 8150 and 8998?
+> BTW, do you have reset control for UFS PHY in your DT?
+> See 71278b058a9f8752e51030e363b7a7306938f64e.
+> 
+> FYI, we use reset control on all of our platforms and it is
+> a must during our power up sequence.
 
-Fine with me. I wanted to be as restrictive as possible.
+Yes we do have this and additionally both the DTS describe a 'rst' reset
+and this patch tries to use this.
 
-> Also, there are some devices that will lock up the way you access that
-> VPD page. So a tweak is also required there.
-> 
-Do you have details ? Do I need to add a call to scsi_device_supports_vpd(),
-maybe ?
+Can you please tell me which platform this was tested on how the reset
+was described in DT
 
-> To avoid the multiple blacklists and heuristic collections my suggestion
-> is that I introduce a helper function in SCSI (based on what I did in
-> the disk driver) that can be called to identify whether something is an
-> ATA device. And then the hwmon driver can call that and we can keep the
-> heuristics in one place.
-> 
-> If a device turns out to be problematic wrt. getting the ATA VPD for the
-> purpose of SMART, for instance, it will also need to be blacklisted for
-> other reasons in SCSI. So I would really like to keep the heuristics in
-> one place.
-> 
-Fine with me. My only concern is that I don't want the driver to disappear
-into nowhere-land (again).
-
-Thanks,
-Guenter
+Thanks
+-- 
+~Vinod
