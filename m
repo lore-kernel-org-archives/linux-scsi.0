@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEA3C2D0CD
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:20:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9F22C2D0D1
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:22:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B094205ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:20:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BC1F24676
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:22:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726296AbfLQWRf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:17:35 -0500
-Received: from mout.kundenserver.de ([212.227.17.13]:43261 "EHLO
+        id S1726721AbfLQWWl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:22:41 -0500
+Received: from mout.kundenserver.de ([217.72.192.75]:43763 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725886AbfLQWRf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:35 -0500
+        with ESMTP id S1725975AbfLQWWk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:22:40 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1Ma1sQ-1iDauk3LgC-00W0Di; Tue, 17 Dec 2019 23:17:22 +0100
+ 1N4yyQ-1hiwzo35zY-010xJi; Tue, 17 Dec 2019 23:17:24 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -30,65 +30,63 @@ Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Christoph Hellwig <hch@lst.de>,
         Ben Hutchings <ben.hutchings@codethink.co.uk>,
         linux-doc@vger.kernel.org, corbet@lwn.net, viro@zeniv.linux.org.uk,
-        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 01/27] pktcdvd: fix regression on 64-bit architectures
-Date:   Tue, 17 Dec 2019 23:16:42 +0100
-Message-Id: <20191217221708.3730997-2-arnd@arndb.de>
+        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH v2 04/27] compat_ioctl: block: handle add zone open, close and finish ioctl
+Date:   Tue, 17 Dec 2019 23:16:45 +0100
+Message-Id: <20191217221708.3730997-5-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
 References: <20191217221708.3730997-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:QMSOPeED49s201CoV/Q/8aHXf5yX2aoiUQkXnT4FSnobAR1P+ZS
- AjHcXURC1TcBRJslcM0go+hX9iCUkxwOPBvAe3WaNg3lqMqQFjSIfMlrLToOT1N/tCw6hO2
- zOwEghWIgnPEe89YRhjL6pmHZYOlIxHRc6VqAA5VLAnaxIqc9epmlzoZE2W28a+I11/E1T8
- eN7v7rzsLAL52VPep87VA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:q3r9egq/gLI=:eaRnFNzwV13WGZeABhyoCa
- kG6pSxM3N1jBbw3ItFcU5G6gCoLl6A20jd6nWRhp35jlLNyqBxWhRYZ8QIRjtnoL5Qk8vjNQm
- hDtQSpTngcgQO89psiQHtXxIsxlggGZOlPf2yawlOrfLb/SvakZpuY7BQCrV0WRG0LTyw4gvy
- afJx3VGKecnLAuvMQaV22cGRGlyz9pZfPQG0ygZVSYZV1FiyYh5ZQSX+mer5k6mfvHmkUn+3T
- YzHfUa+OyIC/Mamfdnu/bjuJG52WXGYFay1onrbGSNYms13077RIudBaIaWiHWBIh+3LJAIHS
- pKIe4/iNUYIIiYdcFx/p/jkg0JYMmWMKOB++MhNCdcsCKvcboEVQyzF2580ni2QV9L79sfSpp
- f3M4Cg7b9wWO9696JpTfpFoSCF7L6Ojt2W5tFp+nAn4i7ZHtyNgKpE2PxoI9zyMdm8/88wo5o
- Ir0gAKQcWJCyrIh461fpNETWT9UdaCZPt5J/vI3O9R4hzGIzm9nS4z55DqcTBmqWc8KQxS+5u
- xpUha18j3X3Tvf/Ckcq0vJ7SnSm4QOI1m9Hk7Roul2tz5+HL9bXEaJ6O4aBACvZiBAK0NQfO2
- 55iUqzA2Do9ZUxr07cSZOMz6j2VB80hXlCcQKu0g8HWsp73LJmFQ5VlD7Vm3DZ9R1M+w72zX2
- bhQFI10kiVC9sGNSOIemMXU5lYjvDynxia/KafBznmGNhDIkQ5P8QyElg37HCZVjQuxzmKiw9
- 5U/sNmQG2oheV7assA7oI62z+vjrg2xZC6KBoiGsoM1iB4lNjM9ql5Y7ZR9Ulz5ZtDhCqMlxd
- ihoE9fwLKdX3XySzRDbM3JoPdOb04RmsNAiVkkeIasEjWfw6dgd8mdLqt5JWldxd3/cM/tc61
- af5LnUUHqowZxtUs87eg==
+X-Provags-ID: V03:K1:gu/sZ8TIEZHaNMokJWZJ2X/rL2ysrVtrFNyi0SMX6prix2pGIWW
+ bAPVJ8fwpN8E/mH6Nc/QBm6u/qo4Tvn5SQjEffGJQQ0pqczFhRJkII1FGsCprkk0Bm9Mp7S
+ bPZtEphmmlcYdUTV6MyI0eM1M+OkiwJopBU1dcguNoVzj0J/NcGJldmWoOE4st0Vk3Wc+EZ
+ AsAGp/sInmVO2GHX+D+bg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:PZzd4xrTh1k=:O4HFuv5nV8diiq/ph5n5Gr
+ qf4n+7oCpROKsWo1y2SYeW91P85f6Qflgw/6lY7L1mr97wtEbH6FSNZD5YVHljnyqEpuEge/x
+ igMySXnwDbTKop7DCYDSAsYWFVUMr82xvXBwq9CPkuIyH3mWCbap4y+gTZtGuR5UVlO9XD0DX
+ csBbpzz/fdeVdn18z9BVw7IF0cP3xbNq9ATsOs4oO2D23gSuRlETFGY32yYd+mld9NAAfFFID
+ VntMuQCrGbwBsICwhCOcBfGmUQFGHlG8hOaNOHQPQNgbo2l5f0h0uSF0wQCr3UQG1a7jLq0zP
+ E8hunDXra3WNSNh+Fb48UCaYoj1hqmAylf69bDnJJNO1AMGd4ydVAj1sGBqKEjliixmMVBQ6D
+ aybJCJCv/RJiJMT8Lvh3jgCFKX9VURq5G/vMOvSArwRi7Bp1/IQCuAkhvIXPQKed4dFIMy7qj
+ GGZ0FmDM1X/sOr2EDL572pMUoPN8lDpApPfjkar0u31u3tzsmWWpPIIw3DAb9bMOOCIH101zL
+ /z6ilD/gTLCeVqMjNQXZH34TDDsMp8sjlHLXGBmC0jdp8OyQsWNpOL4nOZFdbxPq/nbXE+97f
+ NeW73c8z807bRs9C15zVqFwVrTZHPWYl9fq20EOQG8FStNxQx7028GQpWMPvqxFiZPcpOyUxf
+ a4r8+swDX3SaUnxU5fiwKyqNrx5bfGZ/kl4iNtSz8xpXT68QSSY1JZ4chjAiHdtk0/k+lk1iP
+ +s8EGZZJVn+Hqf8F/NdDYJZM0dpzajmFia1hLchlr6J7nLCK+yEzAdNmhVGQwLPV1hC1U1szV
+ 4PY/3xiTfZkiaDLxyvlIrB5l+LE7JEd/x7p0JTG5Ze7QPa1vX/AeCbYOtkhpJYT5ZwM0lqEUY
+ C1MhosgOmGZqGHhJZDIw==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The support for the compat ioctl did not actually do what it was
-supposed to do because of a typo, instead it broke native support for
-CDROM_LAST_WRITTEN and CDROM_SEND_PACKET on all architectures with
-CONFIG_COMPAT enabled.
+These were added to blkdev_ioctl() in linux-5.5 but not
+blkdev_compat_ioctl, so add them now.
 
-Fixes: 1b114b0817cc ("pktcdvd: add compat_ioctl handler")
+Fixes: e876df1fe0ad ("block: add zone open, close and finish ioctl support")
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-----
-Please apply for v5.5, I just noticed the regression while
-rebasing some of the patches I created on top.
 ---
- drivers/block/pktcdvd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/compat_ioctl.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index ee67bf929fac..861fc65a1b75 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -2707,7 +2707,7 @@ static const struct block_device_operations pktcdvd_ops = {
- 	.release =		pkt_close,
- 	.ioctl =		pkt_ioctl,
- #ifdef CONFIG_COMPAT
--	.ioctl =		pkt_compat_ioctl,
-+	.compat_ioctl =		pkt_compat_ioctl,
- #endif
- 	.check_events =		pkt_check_events,
- };
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index f5c1140b8624..5b13e344229c 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -356,6 +356,9 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+ 	case BLKRRPART:
+ 	case BLKREPORTZONE:
+ 	case BLKRESETZONE:
++	case BLKOPENZONE:
++	case BLKCLOSEZONE:
++	case BLKFINISHZONE:
+ 	case BLKGETZONESZ:
+ 	case BLKGETNRZONES:
+ 		return blkdev_ioctl(bdev, mode, cmd,
 -- 
 2.20.0
 
