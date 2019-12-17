@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5B0C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8110C2D0BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A59120716
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B71920716
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:07:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="euvQ9dlA"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="AfAT90j6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbfLQWHI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:07:08 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36992 "EHLO
+        id S1726143AbfLQWHJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:07:09 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18482 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725940AbfLQWHI (ORCPT
+        by vger.kernel.org with ESMTP id S1725892AbfLQWHJ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Dec 2019 17:07:08 -0500
+        Tue, 17 Dec 2019 17:07:09 -0500
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBHM5eEk030252;
-        Tue, 17 Dec 2019 14:07:02 -0800
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBHM5eEi030252;
+        Tue, 17 Dec 2019 14:06:58 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=Ebq53QuRTAp8aqWEOR5SSU1w1JA2TbERbJoKSlspFkg=;
- b=euvQ9dlAW4SlQrfBQ58KE0KTdFC9975jmQIyqJ7R/xRk3YSest+aV2xeMfnkstSg6WYu
- AUL+XedZgclW1bZqOcZwHZ12Ka2yGMVupajlZNfcQ1gQGx2eTm707yWA2G80qHGnaaik
- llYVMqD/tFcyzMjKQPjOr7dPMz/t8BPqZ2TdZFDmY6KhdQjrrtwgrs5W3nRUXMb/hBgd
- hIQnLohZ0BZC1XvZR8D7YnUzyOlrfUztd5fIzZTkAZzqCDJWmQ7FcwqDmzVdS6dNRYif
- VOCESHXIiEIOro4yxFlYHFaqlSjXndwI8koeTgeK57w+YfPOgCV1qmDnbqem+YJz2hFf bQ== 
+ content-type; s=pfpt0818; bh=SDbvJtU3roYOI7CiVauVB9hPw7X40NhAxoM3ijObLq0=;
+ b=AfAT90j6N25lOb7JqniCLc8rxvKHFT4lgNy6+gQy+/xuQclYLz5MsLX5movhIB0LNLsN
+ vO9SpIczRykf9NG6TMzGLoz0JSh3vyvCB516SopWb4UiuuXu8hJ0tYl2HYnZAmrnk7AO
+ j/ONNt/Dz8XJvR0r64y6ooD8p56ZG+F94C9NB84csSLEnPLvEj6ksTi4/QfPv2QOrXrU
+ anmSaK9PnFQ5yp3Q+QsJdm1XcDFyfJvYx4dVWGf5C6751ZDNuWNtH7heD1R/KO1lkpgb
+ /topWFLft259+6ZzbxzQ5oidCot6RB7OAywcce4UncyS96Cn5SlOw8locutfS1Zi9AUj ww== 
 Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2wxn0wm224-17
+        by mx0b-0016f401.pphosted.com with ESMTP id 2wxn0wm224-8
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 17 Dec 2019 14:07:02 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
+        Tue, 17 Dec 2019 14:06:58 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
  (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 17 Dec
- 2019 14:06:54 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 17 Dec 2019 14:06:54 -0800
+ 2019 14:06:41 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 17 Dec 2019 14:06:41 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id DC1A43F703F;
-        Tue, 17 Dec 2019 14:06:54 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 4E8D03F703F;
+        Tue, 17 Dec 2019 14:06:41 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id xBHM6som028175;
-        Tue, 17 Dec 2019 14:06:54 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id xBHM6faA028159;
+        Tue, 17 Dec 2019 14:06:41 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id xBHM6sQa028174;
-        Tue, 17 Dec 2019 14:06:54 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id xBHM6fG1028158;
+        Tue, 17 Dec 2019 14:06:41 -0800
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 12/14] qla2xxx: Fix stuck session in GNL
-Date:   Tue, 17 Dec 2019 14:06:15 -0800
-Message-ID: <20191217220617.28084-13-hmadhani@marvell.com>
+Subject: [PATCH 08/14] qla2xxx: Fix stuck login session using prli_pend_timer
+Date:   Tue, 17 Dec 2019 14:06:11 -0800
+Message-ID: <20191217220617.28084-9-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20191217220617.28084-1-hmadhani@marvell.com>
 References: <20191217220617.28084-1-hmadhani@marvell.com>
@@ -73,146 +73,132 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-Fix race condition between GNL completion processing and
-GNL request. Late submission of GNL request was not seen
-by the GNL completion thread. This patch will re-submit
-the GNL request for late submission fcport.
+Session is stuck if driver sees FW has received a PRLI. Driver
+allows FW to finish with processing of PRLI by checking back with
+FW at a later time to see if the PRLI has finished. Instead, driver
+failed to push forward after re-checking PRLI completion.
 
+Fixes: 974950710e2a ("qla2xxx: Fix stuck login session")
+Cc: stable@vger.kernel.org # 5.3
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c   | 15 +++++++++++++--
- drivers/scsi/qla2xxx/qla_target.c | 21 +++++++++++++++------
- 2 files changed, 28 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  5 +++++
+ drivers/scsi/qla2xxx/qla_init.c   | 34 ++++++++++++++++++++++++++--------
+ drivers/scsi/qla2xxx/qla_target.c |  1 +
+ 3 files changed, 32 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 3b9ecdeecc8e..90dae8f2d080 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2402,6 +2402,7 @@ typedef struct fc_port {
+ 	unsigned int scan_needed:1;
+ 	unsigned int n2n_flag:1;
+ 	unsigned int explicit_logout:1;
++	unsigned int prli_pend_timer:1;
+ 
+ 	struct completion nvme_del_done;
+ 	uint32_t nvme_prli_service_param;
+@@ -2428,6 +2429,7 @@ typedef struct fc_port {
+ 	struct work_struct free_work;
+ 	struct work_struct reg_work;
+ 	uint64_t jiffies_at_registration;
++	unsigned long prli_expired;
+ 	struct qlt_plogi_ack_t *plogi_link[QLT_PLOGI_LINK_MAX];
+ 
+ 	uint16_t tgt_id;
+@@ -4858,6 +4860,9 @@ struct sff_8247_a0 {
+ 	(ha->fc4_type_priority == FC4_PRIORITY_NVME)) || \
+ 	NVME_ONLY_TARGET(fcport)) \
+ 
++#define PRLI_PHASE(_cls) \
++	((_cls == DSC_LS_PRLI_PEND) || (_cls == DSC_LS_PRLI_COMP))
++
+ #include "qla_target.h"
+ #include "qla_gbl.h"
+ #include "qla_dbg.h"
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4f849b12b546..a5076f43edea 100644
+index 67f7c21edb4c..37aad8da7934 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -990,7 +990,7 @@ static void qla24xx_async_gnl_sp_done(srb_t *sp, int res)
- 		set_bit(loop_id, vha->hw->loop_id_map);
- 		wwn = wwn_to_u64(e->port_name);
+@@ -675,7 +675,7 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
+ 	port_id_t id;
+ 	u64 wwn;
+ 	u16 data[2];
+-	u8 current_login_state;
++	u8 current_login_state, nvme_cls;
  
--		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0x20e8,
-+		ql_dbg(ql_dbg_disc, vha, 0x20e8,
- 		    "%s %8phC %02x:%02x:%02x CLS %x/%x lid %x \n",
- 		    __func__, (void *)&wwn, e->port_id[2], e->port_id[1],
- 		    e->port_id[0], e->current_login_state, e->last_login_state,
-@@ -1049,6 +1049,16 @@ static void qla24xx_async_gnl_sp_done(srb_t *sp, int res)
+ 	fcport = ea->fcport;
+ 	ql_dbg(ql_dbg_disc, vha, 0xffff,
+@@ -734,10 +734,17 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
  
- 	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 	vha->gnl.sent = 0;
-+	if (!list_empty(&vha->gnl.fcports)) {
-+		/* retrigger gnl */
-+		list_for_each_entry_safe(fcport, tf, &vha->gnl.fcports,
-+		    gnl_entry) {
-+			list_del_init(&fcport->gnl_entry);
-+			fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
-+			if (qla24xx_post_gnl_work(vha, fcport) == QLA_SUCCESS)
-+				break;
+ 		loop_id = le16_to_cpu(e->nport_handle);
+ 		loop_id = (loop_id & 0x7fff);
+-		if (NVME_TARGET(vha->hw, fcport))
+-			current_login_state = e->current_login_state >> 4;
+-		else
+-			current_login_state = e->current_login_state & 0xf;
++		nvme_cls = e->current_login_state >> 4;
++		current_login_state = e->current_login_state & 0xf;
++
++		if (PRLI_PHASE(nvme_cls)) {
++			current_login_state = nvme_cls;
++			fcport->fc4_type &= ~FS_FC4TYPE_FCP;
++			fcport->fc4_type |= FS_FC4TYPE_NVME;
++		} else if (PRLI_PHASE(current_login_state)) {
++			fcport->fc4_type |= FS_FC4TYPE_FCP;
++			fcport->fc4_type &= ~FS_FC4TYPE_NVME;
 +		}
+ 
+ 		ql_dbg(ql_dbg_disc, vha, 0x20e2,
+ 		    "%s found %8phC CLS [%x|%x] fc4_type %d ID[%06x|%06x] lid[%d|%d]\n",
+@@ -1207,12 +1214,19 @@ qla24xx_async_prli(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	struct srb_iocb *lio;
+ 	int rval = QLA_FUNCTION_FAILED;
+ 
+-	if (!vha->flags.online)
++	if (!vha->flags.online) {
++		ql_dbg(ql_dbg_disc, vha, 0xffff, "%s %d %8phC exit\n",
++		    __func__, __LINE__, fcport->port_name);
+ 		return rval;
 +	}
- 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
  
- 	sp->free(sp);
-@@ -2000,7 +2010,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 			qla24xx_post_prli_work(vha, ea->fcport);
- 		} else {
- 			ql_dbg(ql_dbg_disc, vha, 0x20ea,
--			    "%s %d %8phC LoopID 0x%x in use with %06x. post gnl\n",
-+			    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
- 			    __func__, __LINE__, ea->fcport->port_name,
- 			    ea->fcport->loop_id, ea->fcport->d_id.b24);
+-	if (fcport->fw_login_state == DSC_LS_PLOGI_PEND ||
+-	    fcport->fw_login_state == DSC_LS_PRLI_PEND)
++	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND ||
++	    fcport->fw_login_state == DSC_LS_PRLI_PEND) &&
++	    qla_dual_mode_enabled(vha)) {
++		ql_dbg(ql_dbg_disc, vha, 0xffff, "%s %d %8phC exit\n",
++		    __func__, __LINE__, fcport->port_name);
+ 		return rval;
++	}
  
-@@ -2071,6 +2081,7 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 			set_bit(lid, vha->hw->loop_id_map);
- 			ea->fcport->loop_id = lid;
- 			ea->fcport->keep_nport_handle = 0;
-+			ea->fcport->logout_on_delete = 1;
- 			qlt_schedule_sess_for_deletion(ea->fcport);
- 		}
- 		break;
+ 	sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
+ 	if (!sp)
+@@ -1591,6 +1605,10 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 			break;
+ 		default:
+ 			if (fcport->login_pause) {
++				ql_dbg(ql_dbg_disc, vha, 0x20d8,
++				    "%s %d %8phC exit\n",
++				    __func__, __LINE__,
++				    fcport->port_name);
+ 				fcport->last_rscn_gen = fcport->rscn_gen;
+ 				fcport->last_login_gen = fcport->login_gen;
+ 				set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 0ef76743a26d..97af678ed9e0 100644
+index fecc2b2aabf9..0ef76743a26d 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -958,7 +958,7 @@ void qlt_free_session_done(struct work_struct *work)
- 	struct qlt_plogi_ack_t *own =
- 		sess->plogi_link[QLT_PLOGI_LINK_SAME_WWN];
- 
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf084,
-+	ql_dbg(ql_dbg_disc, vha, 0xf084,
- 		"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
- 		" s_id %02x:%02x:%02x logout %d keep %d els_logo %d\n",
- 		__func__, sess->se_sess, sess, sess->port_name, sess->loop_id,
-@@ -1025,7 +1025,7 @@ void qlt_free_session_done(struct work_struct *work)
- 
- 		while (!READ_ONCE(sess->logout_completed)) {
- 			if (!traced) {
--				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf086,
-+				ql_dbg(ql_dbg_disc, vha, 0xf086,
- 					"%s: waiting for sess %p logout\n",
- 					__func__, sess);
- 				traced = true;
-@@ -1046,6 +1046,10 @@ void qlt_free_session_done(struct work_struct *work)
- 			(struct imm_ntfy_from_isp *)sess->iocb, SRB_NACK_LOGO);
- 	}
- 
-+	spin_lock_irqsave(&vha->work_lock, flags);
-+	sess->flags &= ~FCF_ASYNC_SENT;
-+	spin_unlock_irqrestore(&vha->work_lock, flags);
-+
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	if (sess->se_sess) {
- 		sess->se_sess = NULL;
-@@ -1109,7 +1113,7 @@ void qlt_free_session_done(struct work_struct *work)
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 	sess->free_pending = 0;
- 
--	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf001,
-+	ql_dbg(ql_dbg_disc, vha, 0xf001,
- 	    "Unregistration of sess %p %8phC finished fcp_cnt %d\n",
- 		sess, sess->port_name, vha->fcport_count);
- 
-@@ -1152,6 +1156,11 @@ void qlt_unreg_sess(struct fc_port *sess)
- 		return;
- 	}
- 	sess->free_pending = 1;
-+	/*
-+	 * Use FCF_ASYNC_SENT flag to block other cmds used in sess
-+	 * management from being sent.
-+	 */
-+	sess->flags |= FCF_ASYNC_SENT;
+@@ -1258,6 +1258,7 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess)
+ 	sess->deleted = QLA_SESS_DELETION_IN_PROGRESS;
  	spin_unlock_irqrestore(&sess->vha->work_lock, flags);
  
- 	if (sess->se_sess)
-@@ -4581,7 +4590,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 		/* find other sess with nport_id collision */
- 		if (port_id.b24 == other_sess->d_id.b24) {
- 			if (loop_id != other_sess->loop_id) {
--				ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000c,
-+				ql_dbg(ql_dbg_disc, vha, 0x1000c,
- 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
- 				    other_sess, other_sess->loop_id, other_wwn);
++	sess->prli_pend_timer = 0;
+ 	qla2x00_set_fcport_disc_state(sess, DSC_DELETE_PEND);
  
-@@ -4597,7 +4606,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 				 * Another wwn used to have our s_id/loop_id
- 				 * kill the session, but don't free the loop_id
- 				 */
--				ql_dbg(ql_dbg_tgt_tmr, vha, 0xf01b,
-+				ql_dbg(ql_dbg_disc, vha, 0xf01b,
- 				    "Invalidating sess %p loop_id %d wwn %llx.\n",
- 				    other_sess, other_sess->loop_id, other_wwn);
- 
-@@ -4612,7 +4621,7 @@ qlt_find_sess_invalidate_other(scsi_qla_host_t *vha, uint64_t wwn,
- 		/* find other sess with nport handle collision */
- 		if ((loop_id == other_sess->loop_id) &&
- 			(loop_id != FC_NO_LOOP_ID)) {
--			ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000d,
-+			ql_dbg(ql_dbg_disc, vha, 0x1000d,
- 			       "Invalidating sess %p loop_id %d wwn %llx.\n",
- 			       other_sess, other_sess->loop_id, other_wwn);
- 
+ 	qla24xx_chk_fcp_state(sess);
 -- 
 2.12.0
 
