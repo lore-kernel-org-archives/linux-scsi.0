@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1DFC2D0BF
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 207D6C2D0CD
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49B7F21775
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDA562465E
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726734AbfLQWTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:19:02 -0500
-Received: from mout.kundenserver.de ([212.227.17.13]:42327 "EHLO
+        id S1726670AbfLQWRm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:17:42 -0500
+Received: from mout.kundenserver.de ([217.72.192.74]:47167 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726638AbfLQWRn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:43 -0500
+        with ESMTP id S1726616AbfLQWRk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:40 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MPGNn-1iJtNk0HCn-00PeZf; Tue, 17 Dec 2019 23:17:29 +0100
+ 1N7Qt9-1hc4Aj0to5-017p51; Tue, 17 Dec 2019 23:17:24 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -30,110 +30,64 @@ Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Christoph Hellwig <hch@lst.de>,
         Ben Hutchings <ben.hutchings@codethink.co.uk>,
         linux-doc@vger.kernel.org, corbet@lwn.net, viro@zeniv.linux.org.uk,
-        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 13/27] compat_ioctl: cdrom: handle CDROM_LAST_WRITTEN
-Date:   Tue, 17 Dec 2019 23:16:54 +0100
-Message-Id: <20191217221708.3730997-14-arnd@arndb.de>
+        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        stable@vger.kernel.org, Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH v2 03/27] compat_ioctl: block: handle BLKGETZONESZ/BLKGETNRZONES
+Date:   Tue, 17 Dec 2019 23:16:44 +0100
+Message-Id: <20191217221708.3730997-4-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
 References: <20191217221708.3730997-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:wpOzJeFufAHUVew0tCAOYce8zMXOPidyJEDHZ6pQ5GaUKg8+CDX
- h7MBzbcLPVMio9kfQoSfOTfY3vxyKEJ51kkTL2W9m6KoiixxPeES/rPHhLYMS3HLccXegsv
- k2H3sqymCqH2WEdNBVYO+Pa/7nVD5p4xIpTPyQbpKaEF5BnOtpu5V76Hk5QKEhX0c57O6+9
- iqqUYAqmFhuT18BCsoAUg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:CIB+4OQSR64=:WBhyckcX/5l7eAeTjvEoM/
- w4upkT4JvAY0/CRT9+NICNrKfxWQgzFpdAAXj+N/219xyoUp3i3ArASxNj5M5wRYKgkvQZQxH
- CxE3wmmlICtVcCt38Iyj0fCz219veSow7XvDStghM7YdHK3Dyc6tvlWWXjGrbbVRnSjwPfDRg
- eVtYANDyKpGQXAf9W7W90lMaNv5QMnxNMgyq39t/ISQtLXqABgziP8W2h45E7twP5VBot7roC
- GL1ML1O03UlrCwfpOAkcgAdPWAHJZqUm3sBBK5njNHfVE35o5IBtcTuXdtKRnOvtk0yQoGDSJ
- VvyZRKQAB0hgxPqN29PkxvMSJi7nxkkeU4eEQ5e5E0s4OkSUgjPjtxtDSBpGBgdgb26I7jH2L
- WThg17UcmwvgV1keBdbZ4b/FITTwdodVlLprRQoVJYBHU+DHryNHvKqiVjmu2hjYvq+APMZRQ
- 8CqFFoQLK9j+/z4XOJvkjTBW3oFG5EyvDNVM6yeAWb/gJ/Q/cK4dMzs8/h2w38PPOyVOH+8CJ
- GIOD1toGYO9NJ1N9oFYeeglO/lAFX7OvezRPohzgPi2aoCJB6ApyXKb4gonN+8Fv4HMFm0YAn
- arCC0GtPppbxPq3gxhB8lsLrZSS2AFE+ix/mk7W8HSVu6ItzoancGQHxY/wKZjbbETFZm5fPJ
- /14Hk/KHBiHbbD+jpVUF0Y+Gf1ti/u7yMF0lQGlVccJE3OH+qD4WefTxzFl5aPUrsX15aFR1w
- Cc0R5lYy8WI3de9J8he5JIBk4eYo4gSYrrHC7sS4ng7SAXuIfuf+vpYVaZYyqumJzv7yGEiiG
- i+9Lx5d/5ai3pOwDpQnQJJ3YqYcqWsPmuRATJOiCUiObGVXUhY5YSaDw3y0R2ptIuC1ixKtTh
- QEy6XnI1qqp/ZZw4o4iQ==
+X-Provags-ID: V03:K1:qZe5YHLKHLHpHJZclyVZA0fCxWsO2YWO0AhXGovOQ1fZAYHfawL
+ PlgMmuwRjxPbewOZKAHylAsdjtO5Fe/LyB5CoqTBmrCuAd/xJZkTNN2Xe6IE5gl9V6JPzSt
+ wvrf4HNaht3Bulo2IXSq2733GPK1CFCKtmRyV0YYyH/U4G/08T9e4oHS3EjXjMzJqv1R6qu
+ YXpz3kgtPpBQ+l8/25RAg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Hk6RW/QL2Xc=:a9P9ugAbeQlBAd8QTVyh2z
+ 5InWQgdBINeinSpZATAEdhQ/i9YNLE4Cs+a4GFKgz8jKOPxplXc0dczKp/R69c5g8upJqXc65
+ Inze+14ZfZRZaI0BopuCyPY5TUVy08obBhggcQi+WudXUEHWwBsXUFluiycvo4Qaurb+6rEtF
+ wl/PyloS7vvgNbHp3oizoL/VE9M/fDRKOZnJVXS33E5tAxmuyEeS+c06bSgvorA2N0WUlGegL
+ JR96X/5oeTYQNiS6LNCZOFNiaK7DxSoFNL2X//sV4r/tkqil9NVYbVqSA57bXb27MZdAlvzce
+ teYoIFLXA6UzJ6tlnlyGnkX0lzqkCqNUxxn2Vz3OLxiBy708VuKvki7fpMwIoFK5zb8uismKl
+ NVnMG3k+kqutWYugmpAYLlsd46sD0BA3aS7H/7sbtwCkJbLmSHzGzUzT3QwFLvufPwS7gjtVa
+ LkVlGEraoHwX6J/Aq5FlQxnpaZCOZaoD2ipgjveEAiRud97oZd3v0U1P+jQVsZ31Vd+ZmWrGT
+ 99AZMqe5M7rDHP9ViRtLfEhibVOQhXjLSW+6xch6lCzJ219MgwF1MnPomwWr/0C9C2kvM0BuW
+ j5FGSpZiAZjCLNLEkmuBo6gIivj9IxCbQPMRAzV5rRkt2cZS6sEc13znh6WL9OTKMbXBlAoEg
+ 92vBK+F5J4ulrPf/6JaQ+KO+dW1b0XoqtMB47HnrBzadfiYpZbvLrSGZ9glboP6AhZN/k8rL7
+ bCxTfErhrRnqMpnIuouQQawVleSt5C4nvOHsvTHLrT7EfkeC0Orh2YFb1qjgwN0bBoM067VZr
+ rD9N8ZXHsBYH9Hk++YNJRhYpCVImlVrPMX8irVmtJnFkRUa5wg509PSNNIxy3I6lxJmDXGb5E
+ AEnRWMTVaEAGbAC7t4wA==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is the only ioctl command that does not have a proper
-compat handler. Making the normal implementation do the
-right thing is actually very simply, so just do that by
-using an in_compat_syscall() check to avoid the special
-case in the pkcdvd driver.
+These were added to blkdev_ioctl() in v4.20 but not blkdev_compat_ioctl,
+so add them now.
 
+Cc: <stable@vger.kernel.org> # v4.20+
+Fixes: 72cd87576d1d ("block: Introduce BLKGETZONESZ ioctl")
+Fixes: 65e4e3eee83d ("block: Introduce BLKGETNRZONES ioctl")
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/block/pktcdvd.c | 24 +-----------------------
- drivers/cdrom/cdrom.c   |  7 ++++---
- 2 files changed, 5 insertions(+), 26 deletions(-)
+ block/compat_ioctl.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index ab4d3be4b646..5f970a7d32c0 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -2663,26 +2663,6 @@ static int pkt_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd,
- 	return ret;
- }
- 
--#ifdef CONFIG_COMPAT
--static int pkt_compat_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
--{
--	switch (cmd) {
--	/* compatible */
--	case CDROMEJECT:
--	case CDROMMULTISESSION:
--	case CDROMREADTOCENTRY:
--	case CDROM_SEND_PACKET: /* compat mode handled in scsi_cmd_ioctl */
--	case SCSI_IOCTL_SEND_COMMAND:
--		return pkt_ioctl(bdev, mode, cmd, (unsigned long)compat_ptr(arg));
--
--	/* FIXME: no handler so far */
--	default:
--	case CDROM_LAST_WRITTEN:
--		return -ENOIOCTLCMD;
--	}
--}
--#endif
--
- static unsigned int pkt_check_events(struct gendisk *disk,
- 				     unsigned int clearing)
- {
-@@ -2704,9 +2684,7 @@ static const struct block_device_operations pktcdvd_ops = {
- 	.open =			pkt_open,
- 	.release =		pkt_close,
- 	.ioctl =		pkt_ioctl,
--#ifdef CONFIG_COMPAT
--	.compat_ioctl =		pkt_compat_ioctl,
--#endif
-+	.compat_ioctl =		blkdev_compat_ptr_ioctl,
- 	.check_events =		pkt_check_events,
- };
- 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 48095025e588..faca0f346fff 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -3293,9 +3293,10 @@ static noinline int mmc_ioctl_cdrom_last_written(struct cdrom_device_info *cdi,
- 	ret = cdrom_get_last_written(cdi, &last);
- 	if (ret)
- 		return ret;
--	if (copy_to_user((long __user *)arg, &last, sizeof(last)))
--		return -EFAULT;
--	return 0;
-+	if (in_compat_syscall())
-+		return put_user(last, (__s32 __user *)arg);
-+
-+	return put_user(last, (long __user *)arg);
- }
- 
- static int mmc_ioctl(struct cdrom_device_info *cdi, unsigned int cmd,
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index 830f91e05fe3..f5c1140b8624 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -356,6 +356,8 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+ 	case BLKRRPART:
+ 	case BLKREPORTZONE:
+ 	case BLKRESETZONE:
++	case BLKGETZONESZ:
++	case BLKGETNRZONES:
+ 		return blkdev_ioctl(bdev, mode, cmd,
+ 				(unsigned long)compat_ptr(arg));
+ 	case BLKBSZSET_32:
 -- 
 2.20.0
 
