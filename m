@@ -2,119 +2,273 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A3BC43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 15:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B11F1C2D0BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 15:09:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 996AF218AC
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 15:05:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EDFA218AC
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 15:09:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576595345;
+	bh=/L/YM9y3EQ7M7j9OCsHkTEAc9CxXqYwxEwd5UfUTk6Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jAYgkpXGLWuPKxGVA9/pZigbPI6Jaz54qhnyBlrM0X1mhuirzfIKm3oY22GJ7dM8R
+	 Mdg322b/dJeB1j4wNnjVID0PA8XWSHEJNMT8FuNvhAQyg72Pu75Stv1F2tr4iLUIwT
+	 Pjg8OzxGvrDMlZvWLq0LmF38FL8HZSkpQwOiOY2A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728247AbfLQPFv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 10:05:51 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:46823 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727576AbfLQPFu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 10:05:50 -0500
-Received: by mail-pj1-f68.google.com with SMTP id z21so4705584pjq.13;
-        Tue, 17 Dec 2019 07:05:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=lwDHFMooL9fOlM9zyGVa3WovEZDDyFpSkh2Rh2NW+qA=;
-        b=ad+x5rbvfEGAzfE7lEA9IgEfJmpRNYvqkVHAifBOI5TWYplVoLV6EKiDtXHTyco6sX
-         90d9HPIpVSeEGZi9j8eZIVw3auPdMkoFcfsNWWsD6obMJTR/Vloxtu+sHo7XvE20dykd
-         BdRonBq2nVhGIf1GFiMoihMYYmDf1/ic11ZrZqA44Isbdy+WC8SYdqXN6qT8fKRQugCs
-         4BmVeswCTqVaIa6V66OyiOhjq8TY6Dez+XlwG8kwrVkmhrOm+Qhi7JeGtYiRPwLYb/la
-         tXet3MkbjOZ05AlbOgViLO3uQSluGnzJNt3R0BdBf+egf/TfojxP+PxVAXAoVaHKqCdG
-         66sg==
-X-Gm-Message-State: APjAAAX8wCMB46s+9G7OhJmMgQzvTL5vEc8dNIJkIKLK18xvIK6zCsz6
-        UiiMmG7J1KND39f5POmcwLU=
-X-Google-Smtp-Source: APXvYqwHJPjdu2AoUsOFl80E08yD2tKyqMk2aTI1hq9D+fsSGBE65MMENSz5+4bZiI8mHS5le87ksw==
-X-Received: by 2002:a17:90a:2569:: with SMTP id j96mr6456477pje.79.1576595149826;
-        Tue, 17 Dec 2019 07:05:49 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:110a:a9aa:d433:235e:1129? ([2601:647:4000:110a:a9aa:d433:235e:1129])
-        by smtp.gmail.com with ESMTPSA id k1sm5593624pgk.90.2019.12.17.07.05.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Dec 2019 07:05:48 -0800 (PST)
-Subject: Re: [PATCH] scsi:remove unreachable code on scsi_decide_disposition
- func
-To:     "wubo (T)" <wubo40@huawei.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc:     Mingfangsen <mingfangsen@huawei.com>
-References: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E9A7FD@dggeml505-mbx.china.huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <613e2596-07cc-aca9-2c7b-b0a0563353a1@acm.org>
-Date:   Tue, 17 Dec 2019 07:05:47 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
+        id S1728020AbfLQPJB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 10:09:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51300 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727797AbfLQPJA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Dec 2019 10:09:00 -0500
+Received: from localhost (unknown [171.61.91.91])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 704FA24650;
+        Tue, 17 Dec 2019 15:08:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576595339;
+        bh=/L/YM9y3EQ7M7j9OCsHkTEAc9CxXqYwxEwd5UfUTk6Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=0ZPiHOIUfYeqe3hTMlvEFMuq2TmDsxx8do47dSTBK2TGNl+oQKocRpRjU4uKWVbzl
+         /Il8UsW1uG7zFY0EzWuje88/uPzAyK0J7uk9XsCVxkaQddP/Vxcjt//Ug8SsnCusDk
+         YkC70lZ4aFsOO02BD5CoGYcBkAGTaXLss5AMVgx4=
+Date:   Tue, 17 Dec 2019 20:38:52 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     cang@codeaurora.org
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for
+ host controller
+Message-ID: <20191217150852.GO2536@vkoul-mobl>
+References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
+ <1573798172-20534-3-git-send-email-cang@codeaurora.org>
+ <20191216190415.GL2536@vkoul-mobl>
+ <CAOCk7NpAp+DHBp-owyKGgJFLRajfSQR6ff1XMmAj6A4nM3VnMQ@mail.gmail.com>
+ <091562cbe7d88ca1c30638bc10197074@codeaurora.org>
+ <20191217041342.GM2536@vkoul-mobl>
+ <763d7b30593b31646f3c198c2be99671@codeaurora.org>
+ <20191217092433.GN2536@vkoul-mobl>
+ <fc8952a0eee5c010fe14e5f107d89e64@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E9A7FD@dggeml505-mbx.china.huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fc8952a0eee5c010fe14e5f107d89e64@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-17 03:53, wubo (T) wrote:
-> From: Wu Bo <wubo40@huawei.com>
+On 17-12-19, 18:09, cang@codeaurora.org wrote:
+> On 2019-12-17 17:24, Vinod Koul wrote:
+> > Hi Can,
+> > 
+> > On 17-12-19, 15:10, cang@codeaurora.org wrote:
+> > > On 2019-12-17 12:13, Vinod Koul wrote:
+> > > > Hi Can,
+> > > >
+> > > > On 17-12-19, 08:37, cang@codeaurora.org wrote:
+> > > > > On 2019-12-17 03:12, Jeffrey Hugo wrote:
+> > > > > > On Mon, Dec 16, 2019 at 12:05 PM Vinod Koul <vkoul@kernel.org> wrote:
+> > > > > > >
+> > > > > > > Hi Can,
+> > > > > > >
+> > > > > > > On 14-11-19, 22:09, Can Guo wrote:
+> > > > > > > > Add reset control for host controller so that host controller can be reset
+> > > > > > > > as required in its power up sequence.
+> > > > > > >
+> > > > > > > I am seeing a regression on UFS on SM8150-mtp with this patch. I think
+> > > > > > > Jeff is seeing same one lenove laptop on 8998.
+> > > > > >
+> > > > > > Confirmed.
+> > > > > >
+> > > > > > >
+> > > > > > > 845 does not seem to have this issue and only thing I can see is
+> > > > > > > that on
+> > > > > > > sm8150 and 8998 we define reset as:
+> > > > > > >
+> > > > > > >                         resets = <&gcc GCC_UFS_BCR>;
+> > > > > > >                         reset-names = "rst";
+> > > > > > >
+> > > > >
+> > > > > Hi Jeffrey and Vinod,
+> > > > >
+> > > > > Thanks for reporting this. May I know what kind of regression do you
+> > > > > see on
+> > > > > 8150 and 8998?
+> > > > > BTW, do you have reset control for UFS PHY in your DT?
+> > > > > See 71278b058a9f8752e51030e363b7a7306938f64e.
+> > > > >
+> > > > > FYI, we use reset control on all of our platforms and it is
+> > > > > a must during our power up sequence.
+> > > >
+> > > > Yes we do have this and additionally both the DTS describe a 'rst' reset
+> > > > and this patch tries to use this.
+> > > >
+> > > > Can you please tell me which platform this was tested on how the reset
+> > > > was described in DT
+> > > >
+> > > > Thanks
+> > > 
+> > > Hi Vinod,
+> > > 
+> > > If you are using the 8998's DT present on upstream, you may also
+> > > need to
+> > > enable
+> > > device reset on your platform. (We usually do a device reset before
+> > > call
+> > > ufshcd_hba_enable())
+> > > Given that 845 works fine, it may be the difference you have with
+> > > 845. 845
+> > > has device
+> > > reset support ready in upstream code, you can check sdm845-mtp.dts.
+> > > It is same for 8150, which is a lack of device reset support in
+> > > upstream
+> > > code base.
+> > 
+> > I am using 8150mtp and you can see the DTS at [1]
+> > with this patch I get phy timeout error
+> > 
+> > [    2.532594] qcom-qmp-phy 1d87000.phy: phy initialization timed-out
+> > 
+> > If i revert this patch the Timeout goes away. UFS node for this platform
+> > is enabled in [2] and [3]
+> > 
+> > I did add the GPIO as well for testing but that doesnt work, only thing
+> > that makes it work is rename the reset line to something other that
+> > 'rst'
+> > 
+> > I found that with this patch the reset is invoked twice, not sure why!
+> > 
+> > The 845 does not define a reset 'rst' but both 8150 and 8998 define
+> > that!
+> > 
+> > [1]:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/log/?h=for-next
+> > [2]:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3834a2e92229ef26d30de28acb698b2b23d3e397
+> > [3]:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3e5bf28d2c3981f949e848eec8a60e0b9b61189d
+> > > 
+> > > To enable UFS device reset, please see
+> > > 1. https://lore.kernel.org/linux-arm-msm/20190828191756.24312-4-bjorn.andersson@linaro.org/
+> > > 2. 53a5372ce326116f3e3d3f1d701113b2542509f4
+> > 
+> > Yes both are added for UFS and I am testing with these..
+> > > 
+> > > FYI, I tested the patch on 8250 and its family platforms. In my
+> > > build, I
+> > > ported
+> > > change in #2 to my code base (in your case, make change to
+> > > drivers/pinctrl/qcom/pinctrl-msm8998.c) and enable the GPIO in DT like
+> > > sdm845-mtp.dts
+> > 
+> > Please see drivers/pinctrl/qcom/pinctrl-sm8150.c upstream
+> > 
+> > >         reset-gpios = <&tlmm 150 GPIO_ACTIVE_LOW>;
+> > 
+> > Yup, added:
+> > 
+> >         reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
 > 
-> Remove unreachable code on scsi_decide_disposition func.
+> Hi Vinod,
 > 
-> Signed-off-by: Wu Bo <wubo40@huawei.com>
-> ---
->  drivers/scsi/scsi_error.c | 1 -
->  1 file changed, 1 deletion(-)
+> What do you mean by the reset is invoked twice?
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index ae2fa17..c5e05c4 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1934,7 +1934,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
->         default:
->                 return FAILED;
->         }
-> -       return FAILED;
+> Renaming 'rst' to something else equals disabling this patch.
 > 
->  maybe_retry:
+> You said 845 has not this problem, I thought you tested the patch on 845
+> with
+> the same 'rst' defined on 8998 and 8150. If 'rst' is not present in 845's
+> DT,
+> it means this patch has no impact on 845.
 
-I'm not sure it's worth to address this issue. If
-scsi_decide_disposition() is changed I prefer to remove the "default:
-return FAILED;" code because compilers can provide more useful
-diagnostics about switch/case statements that do not have a default
-statement, especially if the "switch" applies to a value with
-enumeration type.
+To clarify: This problem is not seen in 845 with upstream kernel ie
+5.5-rc1 but regression is observed in sm8150 and 8998 (Jeff)
 
-Bart.
+And if I add the reset line to 845 (i am testing on dragon board
+RB3, I am seeing same issue here as well)
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -1374,6 +1374,8 @@
+                        lanes-per-direction = <2>;
+                        power-domains = <&gcc UFS_PHY_GDSC>;
+                        #reset-cells = <1>;
++                       resets = <&gcc GCC_UFS_PHY_BCR>;
++                       reset-names = "rst";
+ 
+                        iommus = <&apps_smmu 0x100 0xf>;
+ 
+
+And on boot i am seeing UFS failing:
+
+[    3.205567] qcom-qmp-phy 88eb000.phy: Registered Qcom-QMP phy
+[    3.215440] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
+[    3.226315] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq-supply regulator, assuming enabled
+[    3.236844] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
+[    3.257053] scsi host0: ufshcd
+[    3.275109] qcom-qmp-phy 1d87000.phy: phy initialization timed-out
+[    3.283677] qcom_rpmh TCS Busy, retrying RPMH message send: addr=0x40904
+[    3.290508] phy phy-1d87000.phy.0: phy poweron failed --> -110
+[    3.296407] ufshcd-qcom 1d84000.ufshc: ufs_qcom_power_up_sequence: phy power on failed, ret = -110
+[    3.360851] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[    3.366838] ufshcd-qcom 1d84000.ufshc: Host controller enable failed
+
+> Actually, in our code base, we are not using phy-qcom-qmp.c. Instead,
+> we are using phy-qcom-ufs.c. phy-qcom-ufs.c is the one we use in all of our
+> mobile projects. Although both have the same functionality,
+> but in phy-qcom-ufs.c, the PCS ready bit polling timeout is 1000000us,
+> while in phy-qcom-qmp.c the PCS ready bit polling timeout is 1000us.
+> Would you mind give below change a try?
+
+Sure and this seems to do the trick on 845 with resets defined, Jeff can
+you try this on your laptop
+
+But I dont get same result on sm8150-mtp, i am still seeing timeout with
+1000000us.
+
+The bigger question is why is the reset causing the timeout to be
+increased for sdm845 and not to work in case of sm8150!
+
+> FYI, I tried the opposite change on my board (decrease the PCS polling
+> timeout
+> used in phy-qcom-ufs.c), I did see PCS polling timeout, which is the same
+> failure
+> you encountered.
+> 
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> index 39e8deb..0ee9149 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> @@ -66,7 +66,7 @@
+>  /* QPHY_V3_PCS_MISC_CLAMP_ENABLE register bits */
+>  #define CLAMP_EN                               BIT(0) /* enables i/o
+> clamp_n */
+> 
+> -#define PHY_INIT_COMPLETE_TIMEOUT              1000
+> +#define PHY_INIT_COMPLETE_TIMEOUT              1000000
+>  #define POWER_DOWN_DELAY_US_MIN                        10
+>  #define POWER_DOWN_DELAY_US_MAX                        11
+> 
+> On 845, if there is 'rst'
+> 
+> Thanks.
+
+-- 
+~Vinod
