@@ -2,171 +2,175 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DBDC43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 08:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F22B7C43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 09:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 710212176D
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 08:56:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bPoj1k7J"
+	by mail.kernel.org (Postfix) with ESMTP id C7E0B207FF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 09:24:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576574684;
+	bh=6PIWuEhtUI+RkhpqPasL8EtWun3CNaybdET+BC/Pf1o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=B+yRAvKjdHdgopzW7WMvNvLQ4FO+JNSLLhciVaYReYUPUvTLiUeUOz2DPHVzqsFV2
+	 aqCuJW58K5A0VGPIq4dp/+F3fwk03O0IO7YrEX2fFlrtQRUQBClPctdAzzuB3NhsUe
+	 CJRTK/urOv+d4e1DmWoA49rmTiawpH6davS6xV0Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727120AbfLQI4b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 03:56:31 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:43294 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727096AbfLQI4b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Dec 2019 03:56:31 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576572990; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=ZJq7Qp3bn1KsgMY+MZCRUXUmBAGCDF5Rh8QzjkblaaY=;
- b=bPoj1k7Je11sJPa9xjm5pwnhuZmpKhA2yLSgx/L4AMvuguhtTbVan2EiUZDzZDFASJLqD1Is
- Vonxa8BFtaZcY6ly2gJ+foXq6VW27SoYPgcH+5x8LZmrg/2TiVbpJYQzqN/FGuBn0pu112I+
- n87MFONvYhGGMRhzm8rj2UhiuMM=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df8983b.7f2a43eacbc8-smtp-out-n02;
- Tue, 17 Dec 2019 08:56:27 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 703BFC447AE; Tue, 17 Dec 2019 08:56:25 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S1726984AbfLQJYl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 04:24:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48632 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726787AbfLQJYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Dec 2019 04:24:41 -0500
+Received: from localhost (unknown [171.61.91.91])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6B16BC433CB;
-        Tue, 17 Dec 2019 08:56:23 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Tue, 17 Dec 2019 16:56:23 +0800
-From:   cang@codeaurora.org
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        by mail.kernel.org (Postfix) with ESMTPSA id 340EE20663;
+        Tue, 17 Dec 2019 09:24:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576574680;
+        bh=6PIWuEhtUI+RkhpqPasL8EtWun3CNaybdET+BC/Pf1o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jBOtG8aieLBaEgJ6VXz/jZiiZBqVTdZo9U55uaWsKr/rMu+uoS9UYhhAyEbLmGRoX
+         pGhT6zuLkRfycTJImZKGRzjNjGGrE78LzYGMnrXiKWWD4G6qcKbuB7czPQERTrEtZ0
+         FwGKXtjk9hyaSmN9OzhI5jQVwfaiSug4bA7HiWfk=
+Date:   Tue, 17 Dec 2019 14:54:33 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     cang@codeaurora.org
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Evan Green <evgreen@chromium.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: Modulize ufs-bsg
-In-Reply-To: <62933901-fcdf-b5ae-431d-e1fbfc897128@acm.org>
-References: <1576054123-16417-1-git-send-email-cang@codeaurora.org>
- <0101016ef425ef65-5c4508cc-5e76-4107-bb27-270f66acaa9a-000000@us-west-2.amazonses.com>
- <20191212045357.GA415177@yoga>
- <0101016ef8b2e2f8-72260b08-e6ad-42fc-bd4b-4a0a72c5c9b3-000000@us-west-2.amazonses.com>
- <20191212063703.GC415177@yoga>
- <5691bfa1-42e5-3c5f-2497-590bcc0cb2b1@acm.org>
- <926dd55d8d0dc762b1f6461495fc747a@codeaurora.org>
- <62933901-fcdf-b5ae-431d-e1fbfc897128@acm.org>
-Message-ID: <b3fee6ea02c4c3c46eeba81b0bdcf7c4@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Subject: Re: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for
+ host controller
+Message-ID: <20191217092433.GN2536@vkoul-mobl>
+References: <1573798172-20534-1-git-send-email-cang@codeaurora.org>
+ <1573798172-20534-3-git-send-email-cang@codeaurora.org>
+ <20191216190415.GL2536@vkoul-mobl>
+ <CAOCk7NpAp+DHBp-owyKGgJFLRajfSQR6ff1XMmAj6A4nM3VnMQ@mail.gmail.com>
+ <091562cbe7d88ca1c30638bc10197074@codeaurora.org>
+ <20191217041342.GM2536@vkoul-mobl>
+ <763d7b30593b31646f3c198c2be99671@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <763d7b30593b31646f3c198c2be99671@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-17 01:22, Bart Van Assche wrote:
-> On 12/15/19 8:36 PM, cang@codeaurora.org wrote:
->> On 2019-12-16 05:49, Bart Van Assche wrote:
->>> On 2019-12-11 22:37, Bjorn Andersson wrote:
->>>> It's the asymmetry that I don't like.
->>>> 
->>>> Perhaps if you instead make ufshcd platform_device_register_data() 
->>>> the
->>>> bsg device you would solve the probe ordering, the remove will be
->>>> symmetric and module autoloading will work as well (although then 
->>>> you
->>>> need a MODULE_ALIAS of platform:device-name).
->>> 
->>> Hi Bjorn,
->>> 
->>> From Documentation/driver-api/driver-model/platform.rst:
->>> "Platform devices are devices that typically appear as autonomous
->>> entities in the system. This includes legacy port-based devices and
->>> host bridges to peripheral buses, and most controllers integrated
->>> into system-on-chip platforms.  What they usually have in common
->>> is direct addressing from a CPU bus.  Rarely, a platform_device will
->>> be connected through a segment of some other kind of bus; but its
->>> registers will still be directly addressable."
->>> 
->>> Do you agree that the above description is not a good match for the
->>> ufs-bsg kernel module?
->> 
->> I missed this one.
->> How about making it a plain device and add it from ufs driver?
+Hi Can,
+
+On 17-12-19, 15:10, cang@codeaurora.org wrote:
+> On 2019-12-17 12:13, Vinod Koul wrote:
+> > Hi Can,
+> > 
+> > On 17-12-19, 08:37, cang@codeaurora.org wrote:
+> > > On 2019-12-17 03:12, Jeffrey Hugo wrote:
+> > > > On Mon, Dec 16, 2019 at 12:05 PM Vinod Koul <vkoul@kernel.org> wrote:
+> > > > >
+> > > > > Hi Can,
+> > > > >
+> > > > > On 14-11-19, 22:09, Can Guo wrote:
+> > > > > > Add reset control for host controller so that host controller can be reset
+> > > > > > as required in its power up sequence.
+> > > > >
+> > > > > I am seeing a regression on UFS on SM8150-mtp with this patch. I think
+> > > > > Jeff is seeing same one lenove laptop on 8998.
+> > > >
+> > > > Confirmed.
+> > > >
+> > > > >
+> > > > > 845 does not seem to have this issue and only thing I can see is
+> > > > > that on
+> > > > > sm8150 and 8998 we define reset as:
+> > > > >
+> > > > >                         resets = <&gcc GCC_UFS_BCR>;
+> > > > >                         reset-names = "rst";
+> > > > >
+> > > 
+> > > Hi Jeffrey and Vinod,
+> > > 
+> > > Thanks for reporting this. May I know what kind of regression do you
+> > > see on
+> > > 8150 and 8998?
+> > > BTW, do you have reset control for UFS PHY in your DT?
+> > > See 71278b058a9f8752e51030e363b7a7306938f64e.
+> > > 
+> > > FYI, we use reset control on all of our platforms and it is
+> > > a must during our power up sequence.
+> > 
+> > Yes we do have this and additionally both the DTS describe a 'rst' reset
+> > and this patch tries to use this.
+> > 
+> > Can you please tell me which platform this was tested on how the reset
+> > was described in DT
+> > 
+> > Thanks
 > 
-> Hi Can,
+> Hi Vinod,
 > 
-> Since the ufs_bsg kernel module already creates one device node under
-> /dev/bsg for each UFS host I don't think that we need to create any
-> additional device nodes for ufs-bsg devices. My proposal is to modify
-> the original patch 2/3 from this series as follows:
-> * Use module_init() instead of late_initcall_sync().
-> * Remove the ufshcd_get_hba_list_lock() and
->   ufshcd_put_hba_list_unlock() functions.
-> * Implement a notification mechanism in the UFS core that invokes a
->   callback function after an UFS host has been created and also after 
-> an
->   UFS host has been removed.
-> * Register for these notifications from inside the ufs-bsg driver.
-> * During registration for notifications, invoke the UFS host creation
->   callback function for all known UFS hosts.
-> * If the UFS core is unloaded, invoke the UFS host removal callback
->   function for all known UFS hosts.
+> If you are using the 8998's DT present on upstream, you may also need to
+> enable
+> device reset on your platform. (We usually do a device reset before call
+> ufshcd_hba_enable())
+> Given that 845 works fine, it may be the difference you have with 845. 845
+> has device
+> reset support ready in upstream code, you can check sdm845-mtp.dts.
+> It is same for 8150, which is a lack of device reset support in upstream
+> code base.
+
+I am using 8150mtp and you can see the DTS at [1]
+with this patch I get phy timeout error
+
+[    2.532594] qcom-qmp-phy 1d87000.phy: phy initialization timed-out
+
+If i revert this patch the Timeout goes away. UFS node for this platform
+is enabled in [2] and [3]
+
+I did add the GPIO as well for testing but that doesnt work, only thing
+that makes it work is rename the reset line to something other that 'rst'
+
+I found that with this patch the reset is invoked twice, not sure why!
+
+The 845 does not define a reset 'rst' but both 8150 and 8998 define
+that!
+
+[1]: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/log/?h=for-next
+[2]: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3834a2e92229ef26d30de28acb698b2b23d3e397
+[3]: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3e5bf28d2c3981f949e848eec8a60e0b9b61189d
 > 
-> I think there are several examples of similar notification mechanisms
-> in the Linux kernel, e.g. the probe and remove callback functions in
-> struct pci_driver.
+> To enable UFS device reset, please see
+> 1. https://lore.kernel.org/linux-arm-msm/20190828191756.24312-4-bjorn.andersson@linaro.org/
+> 2. 53a5372ce326116f3e3d3f1d701113b2542509f4
+
+Yes both are added for UFS and I am testing with these..
 > 
-> Bart.
+> FYI, I tested the patch on 8250 and its family platforms. In my build, I
+> ported
+> change in #2 to my code base (in your case, make change to
+> drivers/pinctrl/qcom/pinctrl-msm8998.c) and enable the GPIO in DT like
+> sdm845-mtp.dts
 
-Hi Bart,
+Please see drivers/pinctrl/qcom/pinctrl-sm8150.c upstream
 
-Even in the current ufs_bsg.c, it creates two devices, one is ufs-bsg,
-one is the char dev node under /dev/bsg. Why this becomes a problem
-after make it a module?
+>         reset-gpios = <&tlmm 150 GPIO_ACTIVE_LOW>;
 
-I took a look into the pci_driver, it is no different than making 
-ufs-bsg
-a plain device. The only special place about pci_driver is that it has 
-its
-own probe() and remove(), and the probe() in its bus_type calls the
-probe() in pci_driver. Meaning the bus->probe() is an intermediate call
-used to pass whatever needed by pci_driver->probe().
+Yup, added:
 
-Of course we can also do this, but isn't it too much for ufs-bsg?
-For our case, calling set_dev_drvdata(bsg_dev, hba) to pass hba to
-ufs_bsg.c would be enough.
+        reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
 
-If you take a look at the V3 patch, the change makes the ufs_bsg.c
-much conciser. platform_device_register_data() does everything for us,
-initialize the device, set device name, provide the match func,
-bus type and release func.
-
-Since ufs-bsg is somewhat not a platform device, we can still add it
-as a plain device, just need a few more lines to get it initialized.
-This allows us leverage kernel's device driver model. Just like Greg
-commented, we don't need to re-implement the mechanism again.
-
-Thanks,
-Can Guo.
+-- 
+~Vinod
