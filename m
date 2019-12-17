@@ -2,93 +2,313 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C9BAC43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A68D7C43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:17:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D016E20716
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:09:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="yDL5abiI"
+	by mail.kernel.org (Postfix) with ESMTP id 6D0F2218AC
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:17:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726569AbfLQWJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:09:16 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3062 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726565AbfLQWJQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Dec 2019 17:09:16 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBHM5aBu029957;
-        Tue, 17 Dec 2019 14:07:15 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=ig48D6gFrR4B8N8mvuJOW7YJboCiYzTKQBeOjeojz6w=;
- b=yDL5abiIoeFkwfvO209k/NoBAivOOu4ujX/L0V8m4iob94DEFTVlTnH/+bXNTX2q4mCN
- AYY6FJD1N/YB2tvySKW9FAOhoiYVTMIfQJz1kMDI676HI09oxZlSztRrJ72+GwaXn4DO
- nUkZ2np+QA7SlwHtIzgunfKqPOZ8OBDirY+1p4EsaQqzjvXby98ZsJPHSCSVxCC5dGm4
- eKO9x0CZVRLvwU2iI82cHaFUKf3BMbL+inK4qudFzSVDUEiwmcoR4OMENTIgVbwdIDzY
- Ywasx2RjX8e0zaIEs/bMRIgOaiCPLluTZKnMkSirx8Bi4VxuvzS/WXcE5FbVe1laxrHk ZQ== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2wxn0wm22h-20
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 17 Dec 2019 14:07:15 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 17 Dec
- 2019 14:07:01 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 17 Dec 2019 14:07:01 -0800
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id A136F3F703F;
-        Tue, 17 Dec 2019 14:07:01 -0800 (PST)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id xBHM71mo028183;
-        Tue, 17 Dec 2019 14:07:01 -0800
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id xBHM7183028182;
-        Tue, 17 Dec 2019 14:07:01 -0800
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>
-CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 14/14] qla2xxx: Update driver version to 10.01.00.22-k
-Date:   Tue, 17 Dec 2019 14:06:17 -0800
-Message-ID: <20191217220617.28084-15-hmadhani@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20191217220617.28084-1-hmadhani@marvell.com>
-References: <20191217220617.28084-1-hmadhani@marvell.com>
+        id S1726721AbfLQWRq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:17:46 -0500
+Received: from mout.kundenserver.de ([212.227.17.13]:59431 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726704AbfLQWRp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:45 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1MYeZB-1iClIj1FHX-00VjN7; Tue, 17 Dec 2019 23:17:26 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Ben Hutchings <ben.hutchings@codethink.co.uk>,
+        linux-doc@vger.kernel.org, corbet@lwn.net, viro@zeniv.linux.org.uk,
+        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 07/27] compat: provide compat_ptr() on all architectures
+Date:   Tue, 17 Dec 2019 23:16:48 +0100
+Message-Id: <20191217221708.3730997-8-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
+In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
+References: <20191217221708.3730997-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
- definitions=2019-12-17_04:2019-12-17,2019-12-17 signatures=0
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:JQSrPBZB1v54Yak8eCxwsTN2osR5c2EDNvd2k/ZMRPAcktmSN0p
+ 0fdwV7ZLRKeFe22G22lsYhOVb7fG8iMrKpNMhA31Ai70EsIcBqiwRSIRz0TaOov3uJNwpM8
+ E7OhyP/EXJFunAt6QnSJpCwKkqFNH7+wrY2aODNXbKUqkd+b5BPWLaLHXbThNqv5JMiq4NG
+ Im68FZLXOCLcTEu9dIi/w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:SU+7KpO9Vlo=:IymVgWc94KXwaMyZQlHkxU
+ BOOd8tlE2cnTW2MvLxOion+33s57k6FjyPd7rKinV0H3dz+KmdD/evvVKhnUMABxn+b00xCuu
+ o/npD4lIIJI4P/kYPC43N0VqKYay/3o1lR6k8gVP4B8BsCGE34HJUOeqMDPvGw2aXU+HaPgVY
+ EZ9F+sG1CluLGd5DLGKDpqEQ9kseqCkQHkxHP4ZoqbTuM+25Im3fouqTeqYgQeNs690gOTXHH
+ x0fnsDxJcFxMpsmhSVWfDw4ONU77MlG692O1y4OjYs2Tvp5a68CsW9vftGnhm94l4dEL/l5bT
+ EWeKpphlgJgYsHcM3bHOXp9MSEc8GyeREGfPcFiGVvXuVAaO7tLlqxTirbh/c/JoLcf7l9yER
+ l7mqFc9qjeWIk5nHLsHKQEBGYTdliY6ouRe5YNNel4VuiNqz9mBhvb42Q5n+PdnPyXgK8w+/h
+ 8S8bzNO9XoOQSGFzDaz9DvBmFMft5VI/Cc0QkPIZOxB8iSDr+NYsfEzkOR2Y97RlTBNpyw0vU
+ iMP3UoVKuxRkIB+2D7XTPvcDh1WJGvjg3yT3UZNaSW86f4seyz0vd0sGVDLNEInJgRadp8VeG
+ YGx4A8+q4/WdWRn9lL06Kami1FMJda5mm350WsvKTFT8Xm3yHDpVh9mKA7k3lF0ZQfaAh76qs
+ PS5g5Rd7T75Z8i5NmvHEKkS8q7PMBzsvMicAg4x7rxxsH7/KDB5sn/7kOuMV1Wpc/6wMgg0xE
+ vm5TLPMfcGfm8wnQ76w09fCVRt6AFS9lsNRTynMX8kM6yTvIOJmiE4h8qXpAFCbKAJCLs/wXg
+ q/KyMKqUtjSx/JJ4+dp90OW3lcafIOkTUavcY+uXgYS9XKscy11asz0jREQHu5j2AowzaVJav
+ 4WLifMKTsbfDkjC9gOMQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In order to avoid needless #ifdef CONFIG_COMPAT checks,
+move the compat_ptr() definition to linux/compat.h
+where it can be seen by any file regardless of the
+architecture.
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 03bd3b712b77..bb03c022e023 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.01.00.21-k"
-+#define QLA2XXX_VERSION      "10.01.00.22-k"
+Only s390 needs a special definition, this can use the
+self-#define trick we have elsewhere.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm64/include/asm/compat.h   | 17 -----------------
+ arch/mips/include/asm/compat.h    | 18 ------------------
+ arch/parisc/include/asm/compat.h  | 17 -----------------
+ arch/powerpc/include/asm/compat.h | 17 -----------------
+ arch/powerpc/oprofile/backtrace.c |  2 +-
+ arch/s390/include/asm/compat.h    |  6 +-----
+ arch/sparc/include/asm/compat.h   | 17 -----------------
+ arch/x86/include/asm/compat.h     | 17 -----------------
+ include/linux/compat.h            | 18 ++++++++++++++++++
+ 9 files changed, 20 insertions(+), 109 deletions(-)
+
+diff --git a/arch/arm64/include/asm/compat.h b/arch/arm64/include/asm/compat.h
+index 7b4172ce497c..935d2aa231bf 100644
+--- a/arch/arm64/include/asm/compat.h
++++ b/arch/arm64/include/asm/compat.h
+@@ -114,23 +114,6 @@ typedef u32		compat_sigset_word;
  
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	1
+ #define COMPAT_OFF_T_MAX	0x7fffffff
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	return (void __user *)(unsigned long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ #define compat_user_stack_pointer() (user_stack_pointer(task_pt_regs(current)))
+ #define COMPAT_MINSIGSTKSZ	2048
+ 
+diff --git a/arch/mips/include/asm/compat.h b/arch/mips/include/asm/compat.h
+index c99166eadbde..255afcdd79c9 100644
+--- a/arch/mips/include/asm/compat.h
++++ b/arch/mips/include/asm/compat.h
+@@ -100,24 +100,6 @@ typedef u32		compat_sigset_word;
+ 
+ #define COMPAT_OFF_T_MAX	0x7fffffff
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	/* cast to a __user pointer via "unsigned long" makes sparse happy */
+-	return (void __user *)(unsigned long)(long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ static inline void __user *arch_compat_alloc_user_space(long len)
+ {
+ 	struct pt_regs *regs = (struct pt_regs *)
+diff --git a/arch/parisc/include/asm/compat.h b/arch/parisc/include/asm/compat.h
+index e03e3c849f40..2f4f66a3bac0 100644
+--- a/arch/parisc/include/asm/compat.h
++++ b/arch/parisc/include/asm/compat.h
+@@ -173,23 +173,6 @@ struct compat_shmid64_ds {
+ #define COMPAT_ELF_NGREG 80
+ typedef compat_ulong_t compat_elf_gregset_t[COMPAT_ELF_NGREG];
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	return (void __user *)(unsigned long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ static __inline__ void __user *arch_compat_alloc_user_space(long len)
+ {
+ 	struct pt_regs *regs = &current->thread.regs;
+diff --git a/arch/powerpc/include/asm/compat.h b/arch/powerpc/include/asm/compat.h
+index 74d0db511099..3e3cdfaa76c6 100644
+--- a/arch/powerpc/include/asm/compat.h
++++ b/arch/powerpc/include/asm/compat.h
+@@ -96,23 +96,6 @@ typedef u32		compat_sigset_word;
+ 
+ #define COMPAT_OFF_T_MAX	0x7fffffff
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	return (void __user *)(unsigned long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ static inline void __user *arch_compat_alloc_user_space(long len)
+ {
+ 	struct pt_regs *regs = current->thread.regs;
+diff --git a/arch/powerpc/oprofile/backtrace.c b/arch/powerpc/oprofile/backtrace.c
+index 43245f4a9bcb..6ffcb80cf844 100644
+--- a/arch/powerpc/oprofile/backtrace.c
++++ b/arch/powerpc/oprofile/backtrace.c
+@@ -9,7 +9,7 @@
+ #include <linux/sched.h>
+ #include <asm/processor.h>
+ #include <linux/uaccess.h>
+-#include <asm/compat.h>
++#include <linux/compat.h>
+ #include <asm/oprofile_impl.h>
+ 
+ #define STACK_SP(STACK)		*(STACK)
+diff --git a/arch/s390/include/asm/compat.h b/arch/s390/include/asm/compat.h
+index 63b46e30b2c3..9547cd5d6cdc 100644
+--- a/arch/s390/include/asm/compat.h
++++ b/arch/s390/include/asm/compat.h
+@@ -177,11 +177,7 @@ static inline void __user *compat_ptr(compat_uptr_t uptr)
+ {
+ 	return (void __user *)(unsigned long)(uptr & 0x7fffffffUL);
+ }
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
++#define compat_ptr(uptr) compat_ptr(uptr)
+ 
+ #ifdef CONFIG_COMPAT
+ 
+diff --git a/arch/sparc/include/asm/compat.h b/arch/sparc/include/asm/compat.h
+index 30b1763580b1..40a267b3bd52 100644
+--- a/arch/sparc/include/asm/compat.h
++++ b/arch/sparc/include/asm/compat.h
+@@ -125,23 +125,6 @@ typedef u32		compat_sigset_word;
+ 
+ #define COMPAT_OFF_T_MAX	0x7fffffff
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	return (void __user *)(unsigned long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ #ifdef CONFIG_COMPAT
+ static inline void __user *arch_compat_alloc_user_space(long len)
+ {
+diff --git a/arch/x86/include/asm/compat.h b/arch/x86/include/asm/compat.h
+index 22c4dfe65992..52e9f3480f69 100644
+--- a/arch/x86/include/asm/compat.h
++++ b/arch/x86/include/asm/compat.h
+@@ -177,23 +177,6 @@ typedef struct user_regs_struct compat_elf_gregset_t;
+ 	(!!(task_pt_regs(current)->orig_ax & __X32_SYSCALL_BIT))
+ #endif
+ 
+-/*
+- * A pointer passed in from user mode. This should not
+- * be used for syscall parameters, just declare them
+- * as pointers because the syscall entry code will have
+- * appropriately converted them already.
+- */
+-
+-static inline void __user *compat_ptr(compat_uptr_t uptr)
+-{
+-	return (void __user *)(unsigned long)uptr;
+-}
+-
+-static inline compat_uptr_t ptr_to_compat(void __user *uptr)
+-{
+-	return (u32)(unsigned long)uptr;
+-}
+-
+ static inline void __user *arch_compat_alloc_user_space(long len)
+ {
+ 	compat_uptr_t sp;
+diff --git a/include/linux/compat.h b/include/linux/compat.h
+index 68f79d855c3d..11083d84eb23 100644
+--- a/include/linux/compat.h
++++ b/include/linux/compat.h
+@@ -958,4 +958,22 @@ static inline bool in_compat_syscall(void) { return false; }
+ 
+ #endif /* CONFIG_COMPAT */
+ 
++/*
++ * A pointer passed in from user mode. This should not
++ * be used for syscall parameters, just declare them
++ * as pointers because the syscall entry code will have
++ * appropriately converted them already.
++ */
++#ifndef compat_ptr
++static inline void __user *compat_ptr(compat_uptr_t uptr)
++{
++	return (void __user *)(unsigned long)uptr;
++}
++#endif
++
++static inline compat_uptr_t ptr_to_compat(void __user *uptr)
++{
++	return (u32)(unsigned long)uptr;
++}
++
+ #endif /* _LINUX_COMPAT_H */
 -- 
-2.12.0
+2.20.0
 
