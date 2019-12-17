@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5281C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CABC43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B081521582
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E37D121775
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727150AbfLQWTM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:19:12 -0500
-Received: from mout.kundenserver.de ([217.72.192.74]:37289 "EHLO
+        id S1727270AbfLQWTd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:19:33 -0500
+Received: from mout.kundenserver.de ([212.227.17.10]:58457 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726638AbfLQWTL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:19:11 -0500
+        with ESMTP id S1726808AbfLQWTd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:19:33 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MUXh8-1iGuJ51tR2-00QWZS; Tue, 17 Dec 2019 23:17:35 +0100
+ 1MHX7f-1iTskR0T7B-00DVzz; Tue, 17 Dec 2019 23:17:34 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -31,318 +31,533 @@ Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Ben Hutchings <ben.hutchings@codethink.co.uk>,
         linux-doc@vger.kernel.org, corbet@lwn.net, viro@zeniv.linux.org.uk,
         linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 27/27] Documentation: document ioctl interfaces better
-Date:   Tue, 17 Dec 2019 23:17:08 +0100
-Message-Id: <20191217221708.3730997-28-arnd@arndb.de>
+Subject: [PATCH v2 24/27] compat_ioctl: block: move blkdev_compat_ioctl() into ioctl.c
+Date:   Tue, 17 Dec 2019 23:17:05 +0100
+Message-Id: <20191217221708.3730997-25-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
 References: <20191217221708.3730997-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:8tW/r52hvfNOEZl1WWrXLsD17pNONxauwO7dPhEDVrEw3kNuL7z
- IXZZg+A7l6N3v5JfsZS7pQF0AUwC/zif6XF4hJTU/aQ5MqAYz7kCbVw177pXy/zticcsE1s
- QHqIifY6CcVz4kqmZhRoyPK/Viq1pgVoOnN+j9OGkEb07n14JjBLduBFKbBfxQfgwdITv0N
- HVu3bO762YQn1UILnHPkQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:A4PK+//HA2s=:Cs4X/p8qr+Ea3Qt18U6i+y
- T5KG1wqBLjS3dSyhUDAVKuYKUplMefw3WfMHMnDX8vn4+bbG7AcdXkoMsRAo6kd7lsN4GV2JL
- Ic5i1relVarommCWBIleIXuW/JMmtllCvkpWoHm3JsW28YSw3NYVKMSU9q+X+ZiL6BNSG+FTS
- JtspZY160vZtCwLXUzXQxqMLUbtKfOgV6hpJlOeFFJGAILNFq/97dXR6ziX3oi9rUfAPSDsc0
- 3Q32Z0yZt+cHN7Acx9nGtEthkMIZt6xcQ3/Ie94HxRJ/HiRc83vVMoHNUAOmQkM7IUxKFFiht
- X1mTIfYkXAJkWo/8NjXFQkL3l+yVfUnLz5L2/2z6kwvda+ZkGPchTmQ5F1fG0UYuD02Zyj0qi
- bbVMRgZIqQcSRNzGvTBvXcfLIJLNVchUZmhTg9Bp9lYPtPAc+2wGsgBfFYYwzxNahxZSqgcsG
- p+ekXyxHOQ/h9CGfMcDwrxadceo2IOQ2Mpad1e/dHjoRRnuXivWuqLqo80Bq9k55Ov8g98Q1a
- TZM17zSbQwjkLagkCZFks+0wToa8cUNMZXuFB9Ya32glfx9Dkh2u8ssP/LPRqkwzI6PuUifTO
- JJBN/6etrjwKWK2nU07RKrnmwmC0MX2bJ90vpO6W4DaQn8ww/iY64FVUzaeEJofEEgpO1jCYt
- jKXZNslKGyq26H4vrlebtPI/pOAH5LXwTdzfUI0igK5LmuaPP9leobbOPD0o1E9GZSFsEVYC1
- CWUrJ6D8Hq8HNO4mUVZkdXd6BLlRzHd2RA44zZoaiiUeDDbKkgvtJPG7XcwS1xraiuL3yNmRD
- em/9nH/tiZjZZEaTGgpeLT84EWe6rcMs+wF9GDeksl5mMwx4TlYQFKKUfhjkfG6gmS7TiRBDH
- Faiw4UKM+MW4KL0lqcwQ==
+X-Provags-ID: V03:K1:PSAD9bl0CFKl/aF5LKUPzusxXoxLYNJ5KzrK6e2MQW/9n3CWnjv
+ YS4eBKkXR1HztidqHI91DDyXR/AQfN87JIhMu94SIu4GxAELbMeRJVmpCa6nOBSmtEasanl
+ AZE7bG2pC1HRVU9ryXnwF5XG5ymueLsxU/kTFX+LrhBBYUcVVHLF2nZI3tqzs9q4fJz9dmN
+ zRS+YuAuqB0r/0v+rTEpA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:gbhqN5RdKj0=:BWK8lhBEG/MD40PIuhTUnG
+ YyDSCscLh9YKImGCbbZipadpWoCh10HeOaNyzo1PaxTLF4rN9pzZYFp2t5ntmeiTZbHfoaCe0
+ 3cotpxM/Eb1shhdcImLbF6GRrJqKUhruGnep5BCSyf/MuVThSQ/DxzWt3EUmiC6cvZ8YBSQJy
+ ZnHHZtrS70kowS/WIyRQCz5g5ypBBZmXHSGE+8V49MJQrGY5kbb1bqG2yXzBrLwovSWJ7M2vy
+ dKtq4nrrHcA7Htra+aDTXJqavU1ul99amdZ81t9xuwOLlTdGKGGgoLtX7dNYOuJ7KVJ5ph2Ko
+ IGFwCNKZH50bZi+DbHiIv6INtG3I8jNzZ0wBwBsvexAcg5kbjDi65qJuTe3dH7jK9gUrwn0cX
+ kumKT2I94RYeeO6mhl+lBdau2ppo8YOslhuObl62S7i861y4voirlm9eDKPMAPPtdTJ7XAjdv
+ fTdeoH+aDVL3CbwAeipSQYE3gUixsRGuKHk425h4PZaJkwF+oCitrM0pdzBl37vnOB1YuVJxc
+ XkEk6OgqxwypuyZCSmMUr3ujKwTRYAo6MbFj7oJEwCT9nezvq+Psdjwngb2/L1/3286e3Hwol
+ 3DBrkgZZHpDeoGEZmkr/KEUKaGF+FTytTvUB3JPeerPi5484jRWVYGD+UYWzfBKsgzZvG4IjE
+ maAvR5WrNc2Vc49PSNk0aTOAj8D4j5F1m8cPzHI69Do/3WHA6hivRG41ihl1/YJmdDT42kkLO
+ FEG24mrkj42RCIc0k7ZJpc6oVx06fi5a8KDd+Oorx655Y5+EeN3NGq2OX0imStKFInD0flEqo
+ WpoBJAHn0Pu3+DST8DW+Ow28tRRW5Q/l6gfIoqa42qGwDHFyprv4yld/kyZop0h+oPHh9pO4c
+ XaD08gxbDhYNk5xezrZg==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Documentation/process/botching-up-ioctls.rst was orignally
-written as a blog post for DRM driver writers, so it it misses
-some points while going into a lot of detail on others.
-
-Try to provide a replacement that addresses typical issues
-across a wider range of subsystems, and follows the style of
-the core-api documentation better.
+Having both in the same file allows a number of simplifications
+to the compat path, and makes it more likely that changes to
+the native path get applied to the compat version as well.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- Documentation/core-api/index.rst |   1 +
- Documentation/core-api/ioctl.rst | 248 +++++++++++++++++++++++++++++++
- 2 files changed, 249 insertions(+)
- create mode 100644 Documentation/core-api/ioctl.rst
+ block/Makefile       |   1 -
+ block/compat_ioctl.c | 225 -------------------------------------------
+ block/ioctl.c        | 219 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 219 insertions(+), 226 deletions(-)
+ delete mode 100644 block/compat_ioctl.c
 
-diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
-index ab0eae1c153a..3f28b2f668be 100644
---- a/Documentation/core-api/index.rst
-+++ b/Documentation/core-api/index.rst
-@@ -39,6 +39,7 @@ Core utilities
-    ../RCU/index
-    gcc-plugins
-    symbol-namespaces
-+   ioctl
+diff --git a/block/Makefile b/block/Makefile
+index 205a5f2fef17..1f70c73ea83d 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -25,7 +25,6 @@ obj-$(CONFIG_MQ_IOSCHED_KYBER)	+= kyber-iosched.o
+ bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
+ obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
  
+-obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
+ obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
+ obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o
+ obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+deleted file mode 100644
+index 765aa5357655..000000000000
+--- a/block/compat_ioctl.c
++++ /dev/null
+@@ -1,225 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-#include <linux/blkdev.h>
+-#include <linux/blkpg.h>
+-#include <linux/blktrace_api.h>
+-#include <linux/cdrom.h>
+-#include <linux/compat.h>
+-#include <linux/elevator.h>
+-#include <linux/hdreg.h>
+-#include <linux/slab.h>
+-#include <linux/syscalls.h>
+-#include <linux/types.h>
+-#include <linux/uaccess.h>
+-
+-static int compat_put_ushort(unsigned long arg, unsigned short val)
+-{
+-	return put_user(val, (unsigned short __user *)compat_ptr(arg));
+-}
+-
+-static int compat_put_int(unsigned long arg, int val)
+-{
+-	return put_user(val, (compat_int_t __user *)compat_ptr(arg));
+-}
+-
+-static int compat_put_uint(unsigned long arg, unsigned int val)
+-{
+-	return put_user(val, (compat_uint_t __user *)compat_ptr(arg));
+-}
+-
+-static int compat_put_long(unsigned long arg, long val)
+-{
+-	return put_user(val, (compat_long_t __user *)compat_ptr(arg));
+-}
+-
+-static int compat_put_ulong(unsigned long arg, compat_ulong_t val)
+-{
+-	return put_user(val, (compat_ulong_t __user *)compat_ptr(arg));
+-}
+-
+-static int compat_put_u64(unsigned long arg, u64 val)
+-{
+-	return put_user(val, (compat_u64 __user *)compat_ptr(arg));
+-}
+-
+-struct compat_hd_geometry {
+-	unsigned char heads;
+-	unsigned char sectors;
+-	unsigned short cylinders;
+-	u32 start;
+-};
+-
+-static int compat_hdio_getgeo(struct gendisk *disk, struct block_device *bdev,
+-			struct compat_hd_geometry __user *ugeo)
+-{
+-	struct hd_geometry geo;
+-	int ret;
+-
+-	if (!ugeo)
+-		return -EINVAL;
+-	if (!disk->fops->getgeo)
+-		return -ENOTTY;
+-
+-	memset(&geo, 0, sizeof(geo));
+-	/*
+-	 * We need to set the startsect first, the driver may
+-	 * want to override it.
+-	 */
+-	geo.start = get_start_sect(bdev);
+-	ret = disk->fops->getgeo(bdev, &geo);
+-	if (ret)
+-		return ret;
+-
+-	ret = copy_to_user(ugeo, &geo, 4);
+-	ret |= put_user(geo.start, &ugeo->start);
+-	if (ret)
+-		ret = -EFAULT;
+-
+-	return ret;
+-}
+-
+-struct compat_blkpg_ioctl_arg {
+-	compat_int_t op;
+-	compat_int_t flags;
+-	compat_int_t datalen;
+-	compat_caddr_t data;
+-};
+-
+-static int compat_blkpg_ioctl(struct block_device *bdev, fmode_t mode,
+-		unsigned int cmd, struct compat_blkpg_ioctl_arg __user *ua32)
+-{
+-	struct blkpg_ioctl_arg __user *a = compat_alloc_user_space(sizeof(*a));
+-	compat_caddr_t udata;
+-	compat_int_t n;
+-	int err;
+-
+-	err = get_user(n, &ua32->op);
+-	err |= put_user(n, &a->op);
+-	err |= get_user(n, &ua32->flags);
+-	err |= put_user(n, &a->flags);
+-	err |= get_user(n, &ua32->datalen);
+-	err |= put_user(n, &a->datalen);
+-	err |= get_user(udata, &ua32->data);
+-	err |= put_user(compat_ptr(udata), &a->data);
+-	if (err)
+-		return err;
+-
+-	return blkdev_ioctl(bdev, mode, cmd, (unsigned long)a);
+-}
+-
+-#define BLKBSZGET_32		_IOR(0x12, 112, int)
+-#define BLKBSZSET_32		_IOW(0x12, 113, int)
+-#define BLKGETSIZE64_32		_IOR(0x12, 114, int)
+-
+-/* Most of the generic ioctls are handled in the normal fallback path.
+-   This assumes the blkdev's low level compat_ioctl always returns
+-   ENOIOCTLCMD for unknown ioctls. */
+-long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+-{
+-	int ret = -ENOIOCTLCMD;
+-	struct inode *inode = file->f_mapping->host;
+-	struct block_device *bdev = inode->i_bdev;
+-	struct gendisk *disk = bdev->bd_disk;
+-	fmode_t mode = file->f_mode;
+-	loff_t size;
+-	unsigned int max_sectors;
+-
+-	/*
+-	 * O_NDELAY can be altered using fcntl(.., F_SETFL, ..), so we have
+-	 * to updated it before every ioctl.
+-	 */
+-	if (file->f_flags & O_NDELAY)
+-		mode |= FMODE_NDELAY;
+-	else
+-		mode &= ~FMODE_NDELAY;
+-
+-	switch (cmd) {
+-	case HDIO_GETGEO:
+-		return compat_hdio_getgeo(disk, bdev, compat_ptr(arg));
+-	case BLKPBSZGET:
+-		return compat_put_uint(arg, bdev_physical_block_size(bdev));
+-	case BLKIOMIN:
+-		return compat_put_uint(arg, bdev_io_min(bdev));
+-	case BLKIOOPT:
+-		return compat_put_uint(arg, bdev_io_opt(bdev));
+-	case BLKALIGNOFF:
+-		return compat_put_int(arg, bdev_alignment_offset(bdev));
+-	case BLKDISCARDZEROES:
+-		return compat_put_uint(arg, 0);
+-	case BLKFLSBUF:
+-	case BLKROSET:
+-	case BLKDISCARD:
+-	case BLKSECDISCARD:
+-	case BLKZEROOUT:
+-	/*
+-	 * the ones below are implemented in blkdev_locked_ioctl,
+-	 * but we call blkdev_ioctl, which gets the lock for us
+-	 */
+-	case BLKRRPART:
+-	case BLKREPORTZONE:
+-	case BLKRESETZONE:
+-	case BLKOPENZONE:
+-	case BLKCLOSEZONE:
+-	case BLKFINISHZONE:
+-	case BLKGETZONESZ:
+-	case BLKGETNRZONES:
+-		return blkdev_ioctl(bdev, mode, cmd,
+-				(unsigned long)compat_ptr(arg));
+-	case BLKBSZSET_32:
+-		return blkdev_ioctl(bdev, mode, BLKBSZSET,
+-				(unsigned long)compat_ptr(arg));
+-	case BLKPG:
+-		return compat_blkpg_ioctl(bdev, mode, cmd, compat_ptr(arg));
+-	case BLKRAGET:
+-	case BLKFRAGET:
+-		if (!arg)
+-			return -EINVAL;
+-		return compat_put_long(arg,
+-			       (bdev->bd_bdi->ra_pages * PAGE_SIZE) / 512);
+-	case BLKROGET: /* compatible */
+-		return compat_put_int(arg, bdev_read_only(bdev) != 0);
+-	case BLKBSZGET_32: /* get the logical block size (cf. BLKSSZGET) */
+-		return compat_put_int(arg, block_size(bdev));
+-	case BLKSSZGET: /* get block device hardware sector size */
+-		return compat_put_int(arg, bdev_logical_block_size(bdev));
+-	case BLKSECTGET:
+-		max_sectors = min_t(unsigned int, USHRT_MAX,
+-				    queue_max_sectors(bdev_get_queue(bdev)));
+-		return compat_put_ushort(arg, max_sectors);
+-	case BLKROTATIONAL:
+-		return compat_put_ushort(arg,
+-					 !blk_queue_nonrot(bdev_get_queue(bdev)));
+-	case BLKRASET: /* compatible, but no compat_ptr (!) */
+-	case BLKFRASET:
+-		if (!capable(CAP_SYS_ADMIN))
+-			return -EACCES;
+-		bdev->bd_bdi->ra_pages = (arg * 512) / PAGE_SIZE;
+-		return 0;
+-	case BLKGETSIZE:
+-		size = i_size_read(bdev->bd_inode);
+-		if ((size >> 9) > ~0UL)
+-			return -EFBIG;
+-		return compat_put_ulong(arg, size >> 9);
+-
+-	case BLKGETSIZE64_32:
+-		return compat_put_u64(arg, i_size_read(bdev->bd_inode));
+-
+-	case BLKTRACESETUP32:
+-	case BLKTRACESTART: /* compatible */
+-	case BLKTRACESTOP:  /* compatible */
+-	case BLKTRACETEARDOWN: /* compatible */
+-		ret = blk_trace_ioctl(bdev, cmd, compat_ptr(arg));
+-		return ret;
+-	case IOC_PR_REGISTER:
+-	case IOC_PR_RESERVE:
+-	case IOC_PR_RELEASE:
+-	case IOC_PR_PREEMPT:
+-	case IOC_PR_PREEMPT_ABORT:
+-	case IOC_PR_CLEAR:
+-		return blkdev_ioctl(bdev, mode, cmd,
+-				(unsigned long)compat_ptr(arg));
+-	default:
+-		if (disk->fops->compat_ioctl)
+-			ret = disk->fops->compat_ioctl(bdev, mode, cmd, arg);
+-		return ret;
+-	}
+-}
+diff --git a/block/ioctl.c b/block/ioctl.c
+index e728331d1a5b..f8c4e2649335 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -269,6 +269,38 @@ static int put_u64(unsigned long arg, u64 val)
+ 	return put_user(val, (u64 __user *)arg);
+ }
  
- Interfaces for kernel debugging
-diff --git a/Documentation/core-api/ioctl.rst b/Documentation/core-api/ioctl.rst
-new file mode 100644
-index 000000000000..99892f96c5cb
---- /dev/null
-+++ b/Documentation/core-api/ioctl.rst
-@@ -0,0 +1,248 @@
-+======================
-+ioctl based interfaces
-+======================
++#ifdef CONFIG_COMPAT
++static int compat_put_ushort(unsigned long arg, unsigned short val)
++{
++	return put_user(val, (unsigned short __user *)compat_ptr(arg));
++}
 +
-+ioctl() is the most common way for applications to interface
-+with device drivers. It is flexible and easily extended by adding new
-+commands and can be passed through character devices, block devices as
-+well as sockets and other special file descriptors.
++static int compat_put_int(unsigned long arg, int val)
++{
++	return put_user(val, (compat_int_t __user *)compat_ptr(arg));
++}
 +
-+However, it is also very easy to get ioctl command definitions wrong,
-+and hard to fix them later without breaking existing applications,
-+so this documentation tries to help developers get it right.
++static int compat_put_uint(unsigned long arg, unsigned int val)
++{
++	return put_user(val, (compat_uint_t __user *)compat_ptr(arg));
++}
 +
-+Command number definitions
-+==========================
++static int compat_put_long(unsigned long arg, long val)
++{
++	return put_user(val, (compat_long_t __user *)compat_ptr(arg));
++}
 +
-+The command number, or request number, is the second argument passed to
-+the ioctl system call. While this can be any 32-bit number that uniquely
-+identifies an action for a particular driver, there are a number of
-+conventions around defining them.
++static int compat_put_ulong(unsigned long arg, compat_ulong_t val)
++{
++	return put_user(val, (compat_ulong_t __user *)compat_ptr(arg));
++}
 +
-+``include/uapi/asm-generic/ioctl.h`` provides four macros for defining
-+ioctl commands that follow modern conventions: ``_IO``, ``_IOR``,
-+``_IOW``, and ``_IORW``. These should be used for all new commands,
-+with the correct parameters:
++static int compat_put_u64(unsigned long arg, u64 val)
++{
++	return put_user(val, (compat_u64 __user *)compat_ptr(arg));
++}
++#endif
 +
-+_IO/_IOR/_IOW/_IOWR
-+   The macro name determines whether the argument is used for passing
-+   data into kernel (_IOW), from the kernel (_IOR), both (_IOWR) or is
-+   not a pointer (_IO). It is possible but not recommended to pass an
-+   integer value instead of a pointer with _IO.
+ int __blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
+ 			unsigned cmd, unsigned long arg)
+ {
+@@ -476,6 +508,44 @@ static int blkdev_getgeo(struct block_device *bdev,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_COMPAT
++struct compat_hd_geometry {
++	unsigned char heads;
++	unsigned char sectors;
++	unsigned short cylinders;
++	u32 start;
++};
 +
-+type
-+   An 8-bit number, often a character literal, specific to a subsystem
-+   or driver, and listed in :doc:`../userspace-api/ioctl/ioctl-number`
++static int compat_hdio_getgeo(struct gendisk *disk, struct block_device *bdev,
++			struct compat_hd_geometry __user *ugeo)
++{
++	struct hd_geometry geo;
++	int ret;
 +
-+nr
-+  An 8-bit number identifying the specific command, unique for a give
-+  value of 'type'
++	if (!ugeo)
++		return -EINVAL;
++	if (!disk->fops->getgeo)
++		return -ENOTTY;
 +
-+data_type
-+  The name of the data type pointed to by the argument, the command number
-+  encodes the ``sizeof(data_type)`` value in a 13-bit or 14-bit integer,
-+  leading to a limit of 8191 bytes for the maximum size of the argument.
-+  Note: do not pass sizeof(data_type) type into _IOR/IOW, as that will
-+  lead to encoding sizeof(sizeof(data_type)), i.e. sizeof(size_t).
++	memset(&geo, 0, sizeof(geo));
++	/*
++	 * We need to set the startsect first, the driver may
++	 * want to override it.
++	 */
++	geo.start = get_start_sect(bdev);
++	ret = disk->fops->getgeo(bdev, &geo);
++	if (ret)
++		return ret;
 +
++	ret = copy_to_user(ugeo, &geo, 4);
++	ret |= put_user(geo.start, &ugeo->start);
++	if (ret)
++		ret = -EFAULT;
 +
-+Interface versions
-+==================
++	return ret;
++}
++#endif
 +
-+Some subsystems use version numbers in data structures to overload
-+commands with different interpretations of the argument.
+ /* set the logical block size */
+ static int blkdev_bszset(struct block_device *bdev, fmode_t mode,
+ 		int __user *argp)
+@@ -604,3 +674,152 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(blkdev_ioctl);
 +
-+This is generally a bad idea, since changes to existing commands tend
-+to break existing applications.
++#ifdef CONFIG_COMPAT
++struct compat_blkpg_ioctl_arg {
++	compat_int_t op;
++	compat_int_t flags;
++	compat_int_t datalen;
++	compat_caddr_t data;
++};
 +
-+A better approach is to add a new ioctl command with a new number. The
-+old command still needs to be implemented in the kernel for compatibility,
-+but this can be a wrapper around the new implementation.
++static int compat_blkpg_ioctl(struct block_device *bdev, fmode_t mode,
++		unsigned int cmd, struct compat_blkpg_ioctl_arg __user *ua32)
++{
++	struct blkpg_ioctl_arg __user *a = compat_alloc_user_space(sizeof(*a));
++	compat_caddr_t udata;
++	compat_int_t n;
++	int err;
 +
-+Return code
-+===========
++	err = get_user(n, &ua32->op);
++	err |= put_user(n, &a->op);
++	err |= get_user(n, &ua32->flags);
++	err |= put_user(n, &a->flags);
++	err |= get_user(n, &ua32->datalen);
++	err |= put_user(n, &a->datalen);
++	err |= get_user(udata, &ua32->data);
++	err |= put_user(compat_ptr(udata), &a->data);
++	if (err)
++		return err;
 +
-+ioctl commands can return negative error codes as documented in errno(3),
-+these get turned into errno values in user space. On success, the return
-+code should be zero. It is also possible but not recommended to return
-+a positive 'long' value.
++	return blkdev_ioctl(bdev, mode, cmd, (unsigned long)a);
++}
 +
-+When the ioctl callback is called with an unknown command number, the
-+handler returns either -ENOTTY or -ENOIOCTLCMD, which also results in
-+-ENOTTY being returned from the system call. Some subsystems return
-+-ENOSYS or -EINVAL here for historic reasons, but this is wrong.
++#define BLKBSZGET_32		_IOR(0x12, 112, int)
++#define BLKBSZSET_32		_IOW(0x12, 113, int)
++#define BLKGETSIZE64_32		_IOR(0x12, 114, int)
 +
-+Prior to Linux-5.5, compat_ioctl handlers were required to return
-+-ENOIOCTLCMD in order to use the fallback conversion into native
-+commands. As all subsystems are now responsible for handling compat
-+mode themselves, this is no longer needed, but it may be important to
-+consider when backporting bug fixes to older kernels.
++/* Most of the generic ioctls are handled in the normal fallback path.
++   This assumes the blkdev's low level compat_ioctl always returns
++   ENOIOCTLCMD for unknown ioctls. */
++long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
++{
++	int ret = -ENOIOCTLCMD;
++	struct inode *inode = file->f_mapping->host;
++	struct block_device *bdev = inode->i_bdev;
++	struct gendisk *disk = bdev->bd_disk;
++	fmode_t mode = file->f_mode;
++	loff_t size;
++	unsigned int max_sectors;
 +
-+Timestamps
-+==========
++	/*
++	 * O_NDELAY can be altered using fcntl(.., F_SETFL, ..), so we have
++	 * to updated it before every ioctl.
++	 */
++	if (file->f_flags & O_NDELAY)
++		mode |= FMODE_NDELAY;
++	else
++		mode &= ~FMODE_NDELAY;
 +
-+Traditionally, timestamps and timeout values are passed as ``struct
-+timespec`` or ``struct timeval``, but these are problematic because of
-+incompatible definitions of these structures in user space after the
-+move to 64-bit time_t.
++	switch (cmd) {
++	case HDIO_GETGEO:
++		return compat_hdio_getgeo(disk, bdev, compat_ptr(arg));
++	case BLKPBSZGET:
++		return compat_put_uint(arg, bdev_physical_block_size(bdev));
++	case BLKIOMIN:
++		return compat_put_uint(arg, bdev_io_min(bdev));
++	case BLKIOOPT:
++		return compat_put_uint(arg, bdev_io_opt(bdev));
++	case BLKALIGNOFF:
++		return compat_put_int(arg, bdev_alignment_offset(bdev));
++	case BLKDISCARDZEROES:
++		return compat_put_uint(arg, 0);
++	case BLKFLSBUF:
++	case BLKROSET:
++	case BLKDISCARD:
++	case BLKSECDISCARD:
++	case BLKZEROOUT:
++	/*
++	 * the ones below are implemented in blkdev_locked_ioctl,
++	 * but we call blkdev_ioctl, which gets the lock for us
++	 */
++	case BLKRRPART:
++	case BLKREPORTZONE:
++	case BLKRESETZONE:
++	case BLKOPENZONE:
++	case BLKCLOSEZONE:
++	case BLKFINISHZONE:
++	case BLKGETZONESZ:
++	case BLKGETNRZONES:
++		return blkdev_ioctl(bdev, mode, cmd,
++				(unsigned long)compat_ptr(arg));
++	case BLKBSZSET_32:
++		return blkdev_ioctl(bdev, mode, BLKBSZSET,
++				(unsigned long)compat_ptr(arg));
++	case BLKPG:
++		return compat_blkpg_ioctl(bdev, mode, cmd, compat_ptr(arg));
++	case BLKRAGET:
++	case BLKFRAGET:
++		if (!arg)
++			return -EINVAL;
++		return compat_put_long(arg,
++			       (bdev->bd_bdi->ra_pages * PAGE_SIZE) / 512);
++	case BLKROGET: /* compatible */
++		return compat_put_int(arg, bdev_read_only(bdev) != 0);
++	case BLKBSZGET_32: /* get the logical block size (cf. BLKSSZGET) */
++		return compat_put_int(arg, block_size(bdev));
++	case BLKSSZGET: /* get block device hardware sector size */
++		return compat_put_int(arg, bdev_logical_block_size(bdev));
++	case BLKSECTGET:
++		max_sectors = min_t(unsigned int, USHRT_MAX,
++				    queue_max_sectors(bdev_get_queue(bdev)));
++		return compat_put_ushort(arg, max_sectors);
++	case BLKROTATIONAL:
++		return compat_put_ushort(arg,
++					 !blk_queue_nonrot(bdev_get_queue(bdev)));
++	case BLKRASET: /* compatible, but no compat_ptr (!) */
++	case BLKFRASET:
++		if (!capable(CAP_SYS_ADMIN))
++			return -EACCES;
++		bdev->bd_bdi->ra_pages = (arg * 512) / PAGE_SIZE;
++		return 0;
++	case BLKGETSIZE:
++		size = i_size_read(bdev->bd_inode);
++		if ((size >> 9) > ~0UL)
++			return -EFBIG;
++		return compat_put_ulong(arg, size >> 9);
 +
-+The __kernel_timespec type can be used instead to be embedded in other
-+data structures when separate second/nanosecond values are desired,
-+or passed to user space directly. This is still not ideal though,
-+as the structure matches neither the kernel's timespec64 nor the user
-+space timespec exactly. The get_timespec64() and put_timespec64() helper
-+functions can be used to ensure that the layout remains compatible with
-+user space and the padding is treated correctly.
++	case BLKGETSIZE64_32:
++		return compat_put_u64(arg, i_size_read(bdev->bd_inode));
 +
-+As it is cheap to convert seconds to nanoseconds, but the opposite
-+requires an expensive 64-bit division, a simple __u64 nanosecond value
-+can be simpler and more efficient.
-+
-+Timeout values and timestamps should ideally use CLOCK_MONOTONIC time,
-+as returned by ktime_get_ns() or ktime_get_ts64().  Unlike
-+CLOCK_REALTIME, this makes the timestamps immune from jumping backwards
-+or forwards due to leap second adjustments and clock_settime() calls.
-+
-+ktime_get_real_ns() can be used for CLOCK_REALTIME timestamps that
-+need to be persistent across a reboot or between multiple machines.
-+
-+32-bit compat mode
-+==================
-+
-+In order to support 32-bit user space running on a 64-bit machine, each
-+subsystem or driver that implements an ioctl callback handler must also
-+implement the corresponding compat_ioctl handler.
-+
-+As long as all the rules for data structures are followed, this is as
-+easy as setting the .compat_ioctl pointer to a helper function such as
-+compat_ptr_ioctl() or blkdev_compat_ptr_ioctl().
-+
-+compat_ptr()
-+------------
-+
-+On the s/390 architecture, 31-bit user space has ambiguous representations
-+for data pointers, with the upper bit being ignored. When running such
-+a process in compat mode, the compat_ptr() helper must be used to
-+clear the upper bit of a compat_uptr_t and turn it into a valid 64-bit
-+pointer.  On other architectures, this macro only performs a cast to a
-+``void __user *`` pointer.
-+
-+In an compat_ioctl() callback, the last argument is an unsigned long,
-+which can be interpreted as either a pointer or a scalar depending on
-+the command. If it is a scalar, then compat_ptr() must not be used, to
-+ensure that the 64-bit kernel behaves the same way as a 32-bit kernel
-+for arguments with the upper bit set.
-+
-+The compat_ptr_ioctl() helper can be used in place of a custom
-+compat_ioctl file operation for drivers that only take arguments that
-+are pointers to compatible data structures.
-+
-+Structure layout
-+----------------
-+
-+Compatible data structures have the same layout on all architectures,
-+avoiding all problematic members:
-+
-+* ``long`` and ``unsigned long`` are the size of a register, so
-+  they can be either 32-bit or 64-bit wide and cannot be used in portable
-+  data structures. Fixed-length replacements are ``__s32``, ``__u32``,
-+  ``__s64`` and ``__u64``.
-+
-+* Pointers have the same problem, in addition to requiring the
-+  use of compat_ptr(). The best workaround is to use ``__u64``
-+  in place of pointers, which requires a cast to ``uintptr_t`` in user
-+  space, and the use of u64_to_user_ptr() in the kernel to convert
-+  it back into a user pointer.
-+
-+* On the x86-32 (i386) architecture, the alignment of 64-bit variables
-+  is only 32-bit, but they are naturally aligned on most other
-+  architectures including x86-64. This means a structure like::
-+
-+    struct foo {
-+        __u32 a;
-+        __u64 b;
-+        __u32 c;
-+    };
-+
-+  has four bytes of padding between a and b on x86-64, plus another four
-+  bytes of padding at the end, but no padding on i386, and it needs a
-+  compat_ioctl conversion handler to translate between the two formats.
-+
-+  To avoid this problem, all structures should have their members
-+  naturally aligned, or explicit reserved fields added in place of the
-+  implicit padding.
-+
-+* On ARM OABI user space, 16-bit member variables have 32-bit
-+  alignment, making them incompatible with modern EABI kernels.
-+  Conversely, on the m68k architecture, struct members are not
-+  guaranteed to have an alignment greater than 16-bit.
-+  These rarely cause problems as neither ARM-OABI nor m68k are
-+  supported by any compat mode, but for consistency, it is best
-+  to completely avoid 16-bit member variables.
-+
-+
-+* Bitfields and enums generally work as one would expect them to,
-+  but some properties of them are implementation-defined, so it is better
-+  to avoid them completely in ioctl interfaces.
-+
-+* ``char`` members can be either signed or unsigned, depending on
-+  the architecture, so the __u8 and __s8 types should be used for 8-bit
-+  integer values, though char arrays are clearer for fixed-length strings.
-+
-+Information leaks
-+=================
-+
-+Uninitialized data must not be copied back to user space, as this can
-+cause an information leak, which can be used to defeat kernel address
-+space layout randomization (KASLR), helping in an attack.
-+
-+As explained for the compat mode, it is best to not avoid any implicit
-+padding in data structures, but if there is already padding in existing
-+structures, the kernel driver must be careful to zero out the padding
-+using memset() or similar before copying it to user space.
-+
-+Subsystem abstractions
-+======================
-+
-+While some device drivers implement their own ioctl function, most
-+subsystems implement the same command for multiple drivers.  Ideally the
-+subsystem has an .ioctl() handler that copies the arguments from and
-+to user space, passing them into subsystem specific callback functions
-+through normal kernel pointers.
-+
-+This helps in various ways:
-+
-+* Applications written for one driver are more likely to work for
-+  another one in the same subsystem if there are no subtle differences
-+  in the user space ABI.
-+
-+* The complexity of user space access and data structure layout is done
-+  in one place, reducing the potential for implementation bugs.
-+
-+* It is more likely to be reviewed by experienced developers
-+  that can spot problems in the interface when the ioctl is shared
-+  between multiple drivers than when it is only used in a single driver.
-+
-+Alternatives to ioctl
-+=====================
-+
-+There are many cases in which ioctl is not the best solution for a
-+problem. Alternatives include:
-+
-+* System calls are a better choice for a system-wide feature that
-+  is not tied to a physical device or constrained by the file system
-+  permissions of a character device node
-+
-+* netlink is the preferred way of configuring any network related
-+  objects through sockets.
-+
-+* debugfs is used for ad-hoc interfaces for debugging functionality
-+  that does not need to be exposed as a stable interface to applications.
-+
-+* sysfs is a good way to expose the state of an in-kernel object
-+  that is not tied to a file descriptor.
-+
-+* configfs can be used for more complex configuration than sysfs
-+
-+* A custom file system can provide extra flexibility with a simple
-+  user interface but add a lot of complexity to the implementation.
++	case BLKTRACESETUP32:
++	case BLKTRACESTART: /* compatible */
++	case BLKTRACESTOP:  /* compatible */
++	case BLKTRACETEARDOWN: /* compatible */
++		ret = blk_trace_ioctl(bdev, cmd, compat_ptr(arg));
++		return ret;
++	case IOC_PR_REGISTER:
++	case IOC_PR_RESERVE:
++	case IOC_PR_RELEASE:
++	case IOC_PR_PREEMPT:
++	case IOC_PR_PREEMPT_ABORT:
++	case IOC_PR_CLEAR:
++		return blkdev_ioctl(bdev, mode, cmd,
++				(unsigned long)compat_ptr(arg));
++	default:
++		if (disk->fops->compat_ioctl)
++			ret = disk->fops->compat_ioctl(bdev, mode, cmd, arg);
++		return ret;
++	}
++}
++#endif
 -- 
 2.20.0
 
