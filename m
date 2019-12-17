@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9D7C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1DFC2D0BF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2805224672
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49B7F21775
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726682AbfLQWRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:17:43 -0500
-Received: from mout.kundenserver.de ([217.72.192.74]:49705 "EHLO
+        id S1726734AbfLQWTC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:19:02 -0500
+Received: from mout.kundenserver.de ([212.227.17.13]:42327 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726613AbfLQWRk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:40 -0500
+        with ESMTP id S1726638AbfLQWRn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:17:43 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MFba4-1iTcQl3JfS-00H5hY; Tue, 17 Dec 2019 23:17:25 +0100
+ 1MPGNn-1iJtNk0HCn-00PeZf; Tue, 17 Dec 2019 23:17:29 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -30,74 +30,110 @@ Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         Christoph Hellwig <hch@lst.de>,
         Ben Hutchings <ben.hutchings@codethink.co.uk>,
         linux-doc@vger.kernel.org, corbet@lwn.net, viro@zeniv.linux.org.uk,
-        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will@kernel.org>
-Subject: [PATCH v2 06/27] compat: ARM64: always include asm-generic/compat.h
-Date:   Tue, 17 Dec 2019 23:16:47 +0100
-Message-Id: <20191217221708.3730997-7-arnd@arndb.de>
+        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 13/27] compat_ioctl: cdrom: handle CDROM_LAST_WRITTEN
+Date:   Tue, 17 Dec 2019 23:16:54 +0100
+Message-Id: <20191217221708.3730997-14-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
 References: <20191217221708.3730997-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:KL1ro4KGbRgth3ZyPB/rUAk9SI9caDwc2wmp7lID3j5UJuG/6zE
- jjRLuKXhvnIFa8qaMfReNfEXctttFgrIVqB/F8fk6VYQq40G8/4HFBUMSIUgljh/CHDrt8Q
- 69toNQfZopjNWJs7hsjfa6yd254sA/h57NFTXYoc3PkHXFksuk6NUBA9BahejYNLdG0/ZsG
- N/KriVo2wRDf+NrqqW4hg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:QObuhZbO9AY=:n0QH6H90N+kFOplb/DnWZ7
- AlmmIj0UejnAga/WbAExgs2nDVyWB/XfJ7GAn2Q1LEIaRzeMt+5oc3DltGf1LAybWfMe+LsWq
- qRT0IBjoptB0bN/M4aR7pGKQY9o275avtkdPO4ix1KuMR6QAf7CihdPYXkrrEWtF6y6HbQjGn
- +j7YNZ4ske8uUFEkTuPGN9vtjsXUD/g++1sMeTvNA0pysgKnDz1AcBec0pa6U2mC56CYbzz2O
- FAGnT6Rqnp7h8cluJ5tY52HItYlR8nB0dLN3UCUNFh9LKryA1hcvslQubQq5btgxFZ5ufDTtt
- aF4gllxZynPOzLuJ6cAgQU4GIEsPUXY7UKLnuvQmmrPh425Jxsg8lvAgtx9SBxdBK6Oe+Kgh0
- JtarlkrG8OBIigoaX0oxhJDADSiQhBBrun0in9FXXqCqYjv9Q+5TOn6Sgv8bFVs3gmik7UpS9
- YpU9Af5Fo18iTuNJYU7DsfcvLLKsd3Dig4yL8fNgjsWED2ZtnqCrtp8PAapztEhl18QRjRmf2
- ZgwhrhZLP9qUXMW0EqH5thD1lHVAgMk4h6T7N7lAdvpdXxQ3dLpHb4QYh2d3YdPOZ8aU648pX
- zpj0K2wvorwOq6gIzurxnQu7AEgQ2rSPqauCjyu4gwNwYXNnsXHoWZtn9HhC4RCP3vcV8Ahq1
- sY3YxVYa9uKMpx9ESnHjo0R6GMvaMBdYyb4e0JIsoY27AcD+gO56rXtfn5LzpdRpAuxxUQptk
- DVbjSB82MpSC8bXKr2ErxNXQ6NDIbDkAA8XwMFByKjYLaRu/w3DUnx9iiq6UBFIIGOIdgjMbw
- sNM/QJbtJxuaa5VyyvbYnk9ng7001Wn0sqVDJTkJ8VQkBltfwzmRa5Q0WYKHP5MJkQ2WoSspl
- VXUq4MYIhhGNm4ZWEO0w==
+X-Provags-ID: V03:K1:wpOzJeFufAHUVew0tCAOYce8zMXOPidyJEDHZ6pQ5GaUKg8+CDX
+ h7MBzbcLPVMio9kfQoSfOTfY3vxyKEJ51kkTL2W9m6KoiixxPeES/rPHhLYMS3HLccXegsv
+ k2H3sqymCqH2WEdNBVYO+Pa/7nVD5p4xIpTPyQbpKaEF5BnOtpu5V76Hk5QKEhX0c57O6+9
+ iqqUYAqmFhuT18BCsoAUg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:CIB+4OQSR64=:WBhyckcX/5l7eAeTjvEoM/
+ w4upkT4JvAY0/CRT9+NICNrKfxWQgzFpdAAXj+N/219xyoUp3i3ArASxNj5M5wRYKgkvQZQxH
+ CxE3wmmlICtVcCt38Iyj0fCz219veSow7XvDStghM7YdHK3Dyc6tvlWWXjGrbbVRnSjwPfDRg
+ eVtYANDyKpGQXAf9W7W90lMaNv5QMnxNMgyq39t/ISQtLXqABgziP8W2h45E7twP5VBot7roC
+ GL1ML1O03UlrCwfpOAkcgAdPWAHJZqUm3sBBK5njNHfVE35o5IBtcTuXdtKRnOvtk0yQoGDSJ
+ VvyZRKQAB0hgxPqN29PkxvMSJi7nxkkeU4eEQ5e5E0s4OkSUgjPjtxtDSBpGBgdgb26I7jH2L
+ WThg17UcmwvgV1keBdbZ4b/FITTwdodVlLprRQoVJYBHU+DHryNHvKqiVjmu2hjYvq+APMZRQ
+ 8CqFFoQLK9j+/z4XOJvkjTBW3oFG5EyvDNVM6yeAWb/gJ/Q/cK4dMzs8/h2w38PPOyVOH+8CJ
+ GIOD1toGYO9NJ1N9oFYeeglO/lAFX7OvezRPohzgPi2aoCJB6ApyXKb4gonN+8Fv4HMFm0YAn
+ arCC0GtPppbxPq3gxhB8lsLrZSS2AFE+ix/mk7W8HSVu6ItzoancGQHxY/wKZjbbETFZm5fPJ
+ /14Hk/KHBiHbbD+jpVUF0Y+Gf1ti/u7yMF0lQGlVccJE3OH+qD4WefTxzFl5aPUrsX15aFR1w
+ Cc0R5lYy8WI3de9J8he5JIBk4eYo4gSYrrHC7sS4ng7SAXuIfuf+vpYVaZYyqumJzv7yGEiiG
+ i+9Lx5d/5ai3pOwDpQnQJJ3YqYcqWsPmuRATJOiCUiObGVXUhY5YSaDw3y0R2ptIuC1ixKtTh
+ QEy6XnI1qqp/ZZw4o4iQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In order to use compat_* type defininitions in device drivers
-outside of CONFIG_COMPAT, move the inclusion of asm-generic/compat.h
-ahead of the #ifdef.
+This is the only ioctl command that does not have a proper
+compat handler. Making the normal implementation do the
+right thing is actually very simply, so just do that by
+using an in_compat_syscall() check to avoid the special
+case in the pkcdvd driver.
 
-All other architectures already do this.
-
-Acked-by: Will Deacon <will@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm64/include/asm/compat.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/block/pktcdvd.c | 24 +-----------------------
+ drivers/cdrom/cdrom.c   |  7 ++++---
+ 2 files changed, 5 insertions(+), 26 deletions(-)
 
-diff --git a/arch/arm64/include/asm/compat.h b/arch/arm64/include/asm/compat.h
-index b0d53a265f1d..7b4172ce497c 100644
---- a/arch/arm64/include/asm/compat.h
-+++ b/arch/arm64/include/asm/compat.h
-@@ -4,6 +4,9 @@
-  */
- #ifndef __ASM_COMPAT_H
- #define __ASM_COMPAT_H
-+
-+#include <asm-generic/compat.h>
-+
- #ifdef CONFIG_COMPAT
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index ab4d3be4b646..5f970a7d32c0 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -2663,26 +2663,6 @@ static int pkt_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd,
+ 	return ret;
+ }
  
- /*
-@@ -13,8 +16,6 @@
- #include <linux/sched.h>
- #include <linux/sched/task_stack.h>
- 
--#include <asm-generic/compat.h>
+-#ifdef CONFIG_COMPAT
+-static int pkt_compat_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
+-{
+-	switch (cmd) {
+-	/* compatible */
+-	case CDROMEJECT:
+-	case CDROMMULTISESSION:
+-	case CDROMREADTOCENTRY:
+-	case CDROM_SEND_PACKET: /* compat mode handled in scsi_cmd_ioctl */
+-	case SCSI_IOCTL_SEND_COMMAND:
+-		return pkt_ioctl(bdev, mode, cmd, (unsigned long)compat_ptr(arg));
 -
- #define COMPAT_USER_HZ		100
- #ifdef __AARCH64EB__
- #define COMPAT_UTS_MACHINE	"armv8b\0\0"
+-	/* FIXME: no handler so far */
+-	default:
+-	case CDROM_LAST_WRITTEN:
+-		return -ENOIOCTLCMD;
+-	}
+-}
+-#endif
+-
+ static unsigned int pkt_check_events(struct gendisk *disk,
+ 				     unsigned int clearing)
+ {
+@@ -2704,9 +2684,7 @@ static const struct block_device_operations pktcdvd_ops = {
+ 	.open =			pkt_open,
+ 	.release =		pkt_close,
+ 	.ioctl =		pkt_ioctl,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl =		pkt_compat_ioctl,
+-#endif
++	.compat_ioctl =		blkdev_compat_ptr_ioctl,
+ 	.check_events =		pkt_check_events,
+ };
+ 
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 48095025e588..faca0f346fff 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -3293,9 +3293,10 @@ static noinline int mmc_ioctl_cdrom_last_written(struct cdrom_device_info *cdi,
+ 	ret = cdrom_get_last_written(cdi, &last);
+ 	if (ret)
+ 		return ret;
+-	if (copy_to_user((long __user *)arg, &last, sizeof(last)))
+-		return -EFAULT;
+-	return 0;
++	if (in_compat_syscall())
++		return put_user(last, (__s32 __user *)arg);
++
++	return put_user(last, (long __user *)arg);
+ }
+ 
+ static int mmc_ioctl(struct cdrom_device_info *cdi, unsigned int cmd,
 -- 
 2.20.0
 
