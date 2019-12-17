@@ -2,116 +2,124 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85663C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 21:22:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7852EC43603
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:06:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51B722146E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 21:22:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41BD320716
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:06:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="FvyIhtqi"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ZXSofAHl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727869AbfLQVWU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 16:22:20 -0500
-Received: from mta-p8.oit.umn.edu ([134.84.196.208]:51224 "EHLO
-        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727335AbfLQVWU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 16:22:20 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p8.oit.umn.edu (Postfix) with ESMTP id 47crgv6Hnbz9vYwq
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2019 21:22:19 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p8.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id bwj4vEpwSq-D for <linux-scsi@vger.kernel.org>;
-        Tue, 17 Dec 2019 15:22:19 -0600 (CST)
-Received: from mail-yw1-f70.google.com (mail-yw1-f70.google.com [209.85.161.70])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id 47crgv57Mxz9vYwf
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2019 15:22:19 -0600 (CST)
-Received: by mail-yw1-f70.google.com with SMTP id r75so2904963ywg.19
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Dec 2019 13:22:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=xKSXDJGEfO6XnQrXdIqcw1t4M7GCKuGkDlvUOYzoj9E=;
-        b=FvyIhtqi2TU6dCcZtEq40XFqYCUpKactMnMWvPoLcHOE9a7z+IblwJjvMhVVwWPxew
-         m/n+MdzJ2U442WIYSPvp8Kts3/SOHeEomUEyux07PFqecBWnGNOZcbDjw1n5zWRsvxKn
-         sjcoIsj3FFfgdymVtZDdKoYDd9NnuDpymNvESEGgmpDLnWQT8ZO7+66Jr5XZayEDiEWl
-         5G5fbB53ZC81eAW+R/uip0uEIjmSjqJMPk/+HI5KhrTmkpzM2aDCgO6YZcnqmhwZz0PW
-         MhowlFaOU3sJQ7aYfmyaE8viHJfljLoKzAIGOk+JcqqmJXMNA6HWwTXV7QLCdmvnhbLq
-         n3sg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=xKSXDJGEfO6XnQrXdIqcw1t4M7GCKuGkDlvUOYzoj9E=;
-        b=aocL6NIlo2Bt9wvveVEkSoGcvupgFELkX/DNTYhdhLfpDTUA97DYlpXNSGFTH5w8MO
-         0/Ez0gqnSZt4p46Pd5BnceujTvFBu6U7YLkGQNzjU9fQWVriHdZRiGDhTQUL3ZTVuaU2
-         LQSJtwEA6pRqJZMPMgk+bQMg1WmO4y72eYADeNEwkfE+3RjIdkxLwPD49pOT+4Hfbnbj
-         nEV3CinTvltOyKPqA2zJtVn+NeMbOTSQw78Qr6sW4ZR02TYYGsjrQN6R5d86x7gl/I7m
-         tIYSHJvST4YlHD9bPm/9t5GleIP0btS841qJYEP69kK7n5r6vWhIbjybhOLsyfLlFhDZ
-         WKOg==
-X-Gm-Message-State: APjAAAUBoYJqwBYC4S+u8+r8OUjC0q6wIQm6vGIRmMsxOxzfet2rGIt1
-        Pje1Bd5Xn/ZoxkvbYR+SHcfddUBV2Einlj/19yKO+JQm8vRQTyNF6MDjIWbLAQIdHllHGMW8Uz4
-        tkN8Q5bdCqxtM31eGLM3jcHq3yA==
-X-Received: by 2002:a81:de03:: with SMTP id k3mr693550ywj.504.1576617739218;
-        Tue, 17 Dec 2019 13:22:19 -0800 (PST)
-X-Google-Smtp-Source: APXvYqy6+drdAHEBR8pRqveMcJwWGEBYCzK6y5x7+hFckUzevP2NHLT1ZNcmcUQ00ImO6UEXbJBcgw==
-X-Received: by 2002:a81:de03:: with SMTP id k3mr693534ywj.504.1576617738960;
-        Tue, 17 Dec 2019 13:22:18 -0800 (PST)
-Received: from cs-u-syssec1.dtc.umn.edu (cs-u-syssec1.cs.umn.edu. [128.101.106.66])
-        by smtp.gmail.com with ESMTPSA id m7sm22002ywh.24.2019.12.17.13.22.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Dec 2019 13:22:18 -0800 (PST)
-From:   Aditya Pakki <pakki001@umn.edu>
-To:     pakki001@umn.edu
-Cc:     kjlu@umn.edu, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Allison Randal <allison@lohutok.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: libfc: remove unnecessary assertion on ep variable
-Date:   Tue, 17 Dec 2019 15:22:13 -0600
-Message-Id: <20191217212214.30722-1-pakki001@umn.edu>
-X-Mailer: git-send-email 2.20.1
+        id S1725892AbfLQWGs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 17:06:48 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27246 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725856AbfLQWGr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Dec 2019 17:06:47 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBHM5Z0d027861;
+        Tue, 17 Dec 2019 14:06:25 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=GATTFdqTiEImayWQWKV2NMaKOSwaMuTkRFERVXRoeiU=;
+ b=ZXSofAHlEm8FHVKT64yFa1pDCzIIEoh5bJe68z0RJKKAGubINLX/mjVnvZriLEDM9l91
+ 9emryGNTGn85TcbmCBdQ1N/7NoRVDSjo4S6llwJmUTExuvzDffyI64NBehYD1+TBBAln
+ 36riCgsVOh3Dhi9k/HqQAGQhaDwL1jQ5E4XVz5SMHzASLg41lziJx3MsuJY65phaOCu2
+ OWkGP5HGsoAXhdH1ouwaw9kV0r9QYJYf1bjevdRn7Mc6WpIX3BWUl9eBVNibJnIr9y57
+ fmsK2UR2aQJM0Da/9ej3aSz9+pp5qkOVFuBt7V/b0yGXVSWofomp2F8kC1E8ChI453eA NQ== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2wxneav071-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 17 Dec 2019 14:06:25 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 17 Dec
+ 2019 14:06:17 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 17 Dec 2019 14:06:17 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id C6CD73F7041;
+        Tue, 17 Dec 2019 14:06:17 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id xBHM6HGO028119;
+        Tue, 17 Dec 2019 14:06:17 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id xBHM6HvR028118;
+        Tue, 17 Dec 2019 14:06:17 -0800
+From:   Himanshu Madhani <hmadhani@marvell.com>
+To:     <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH 00/14] qla2xxx: Fixes for the driver 
+Date:   Tue, 17 Dec 2019 14:06:03 -0800
+Message-ID: <20191217220617.28084-1-hmadhani@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-12-17_04:2019-12-17,2019-12-17 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In ft_recv_write_data(), the pointer ep is dereferenced first and
-then asserts for NULL. The patch removes the unnecessary assertion.
+Hi Martin,
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
----
- drivers/target/tcm_fc/tfc_io.c | 1 -
- 1 file changed, 1 deletion(-)
+This is usual update to the driver. this series fixes issues
+mainly in the area of fabric scan and Login handling.
 
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 1354a157e9af..6a38ff936389 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -221,7 +221,6 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
- 	ep = fc_seq_exch(seq);
- 	lport = ep->lp;
- 	if (cmd->was_ddp_setup) {
--		BUG_ON(!ep);
- 		BUG_ON(!lport);
- 		/*
- 		 * Since DDP (Large Rx offload) was setup for this request,
+Please apply this series to 5.6/scsi-queue at your earliest
+convenience.
+
+Thanks,
+Himanshu
+
+Himanshu Madhani (3):
+  qla2xxx: Remove defer flag to indicate immeadiate port loss
+  qla2xxx: Fix update_fcport for current_topology
+  qla2xxx: Update driver version to 10.01.00.22-k
+
+Joe Carnuccio (1):
+  qla2xxx: Add D-Port Diagnostic reason explanation logs
+
+Quinn Tran (7):
+  qla2xxx: Fix fabric scan hang
+  qla2xxx: Use common routine to free fcport struct
+  qla2xxx: Fix stuck login session using prli_pend_timer
+  qla2xxx: Consolidate fabric scan
+  qla2xxx: Fix RIDA Format-2
+  qla2xxx: Fix stuck session in GNL
+  qla2xxx: Fix mtcp dump collection failure
+
+Shyam Sundar (3):
+  qla2xxx: Add a shadow variable to hold disc_state history of fcport
+  qla2xxx: Cleanup unused async_logout_done
+  qla2xxx: Correct fcport flags handling
+
+ drivers/scsi/qla2xxx/qla_bsg.c     |   9 ++-
+ drivers/scsi/qla2xxx/qla_dbg.c     |   2 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  20 ++++-
+ drivers/scsi/qla2xxx/qla_fw.h      |  35 ++++----
+ drivers/scsi/qla2xxx/qla_gbl.h     |  11 ++-
+ drivers/scsi/qla2xxx/qla_gs.c      |   6 +-
+ drivers/scsi/qla2xxx/qla_init.c    | 158 +++++++++++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_inline.h  |  24 ++++++
+ drivers/scsi/qla2xxx/qla_iocb.c    |  51 +++++++++---
+ drivers/scsi/qla2xxx/qla_isr.c     |  48 +++++++----
+ drivers/scsi/qla2xxx/qla_mbx.c     |   3 +-
+ drivers/scsi/qla2xxx/qla_mid.c     |   6 +-
+ drivers/scsi/qla2xxx/qla_mr.c      |  16 ++--
+ drivers/scsi/qla2xxx/qla_nx.c      |   2 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  64 +++++----------
+ drivers/scsi/qla2xxx/qla_target.c  |  35 +++++---
+ drivers/scsi/qla2xxx/qla_version.h |   2 +-
+ 17 files changed, 292 insertions(+), 200 deletions(-)
+
 -- 
-2.20.1
+2.12.0
 
