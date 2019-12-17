@@ -2,94 +2,118 @@ Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 612D1C43603
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84393C2D0CD
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 23:25:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 328FD21582
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 22:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57F4621582
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 23:25:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k7XGpINc"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pEKyMxys"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbfLQW3S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 17:29:18 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:57830 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726699AbfLQW3S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 17:29:18 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBHMT4QX084634;
-        Tue, 17 Dec 2019 22:29:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=WinYCZ/RHcEQP5GUOI5SFMAS3SdpMxoM5iaMD28Lx8U=;
- b=k7XGpINcjCLf5XAOrXKHTVx/ZHVsue9yEyN/KKr1a+CQBNTECo1sAneTg5+WsW4sWXKT
- 56k77uZaBpUOkNv+LztXxyXW/2AMBK3hfvTILs5NBnLOiUQmoApEX9u/8Ugpswk+V+w5
- uK7rfwe6XsIsB1BW/swJ+HLbLjGmOgMcOCXoxus/Y0GaoKoQnr2zhmJbS48FW+uyKbD9
- Aj1Wbw/d6vWunLA8hSMrcTm0dLw/pjA+qGlVZQxPrzJHxLeTgvWTvoBIJrlLltLFD7ib
- dBwfwUhBNX0LpH0ShKpS9PGXD3hxL9dNxPq9yOS6Op3kxXDMUIXAS5N7WAjYP82s7aA0 mg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2wvrcr9mhv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 22:29:13 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBHMSvEO028614;
-        Tue, 17 Dec 2019 22:29:12 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2wxm4wdppd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 22:29:08 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBHMSVxp026592;
-        Tue, 17 Dec 2019 22:28:31 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 17 Dec 2019 14:28:31 -0800
-To:     Michal Suchanek <msuchanek@suse.de>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: blacklist: add VMware ESXi cdrom - broken tray emulation
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191217180840.9414-1-msuchanek@suse.de>
-Date:   Tue, 17 Dec 2019 17:28:28 -0500
-In-Reply-To: <20191217180840.9414-1-msuchanek@suse.de> (Michal Suchanek's
-        message of "Tue, 17 Dec 2019 19:08:40 +0100")
-Message-ID: <yq1bls6h9ir.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726383AbfLQXZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 18:25:33 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:46521 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726205AbfLQXZc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Dec 2019 18:25:32 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576625132; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=YJEwly1+ltZDuvrkRrwDOT3yLn4EXIUPFyMApEtgGuc=; b=pEKyMxysmfBKyQC9dZAmvgCV3lBjsLFBWUUl5hADHxfcsLWvPsT7hbGbpPR0ZE0svKnyMwCa
+ ZKod/Kol6gplkYZ0XeW+SQcvGU8220RnPqCJvehC6T6LRd4tz8E73bdtH7wSrb/HR1+Sj6am
+ VaLLEB0kbVKb305dgl1OjgFADr8=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5df963eb.7fefd4384a08-smtp-out-n02;
+ Tue, 17 Dec 2019 23:25:31 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A9800C447A3; Tue, 17 Dec 2019 23:25:29 +0000 (UTC)
+Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 480D5C433CB;
+        Tue, 17 Dec 2019 23:25:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 480D5C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v1 2/2] scsi: ufs: disable interrupt during clock-gating
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, pedrom.sousa@synopsys.com,
+        jejb@linux.ibm.com, matthias.bgg@gmail.com
+Cc:     linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        beanhuo@micron.com, kuohong.wang@mediatek.com,
+        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        andy.teng@mediatek.com
+References: <1575721321-8071-1-git-send-email-stanley.chu@mediatek.com>
+ <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
+Date:   Tue, 17 Dec 2019 15:25:27 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=961
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912170179
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912170179
+In-Reply-To: <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 12/7/2019 4:22 AM, Stanley Chu wrote:
+> Similar to suspend, ufshcd interrupt can be disabled since
+> there won't be any host controller transaction expected till
+> clocks ungated.
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f80bd4e811cb..5de105e82c32 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1490,6 +1490,8 @@ static void ufshcd_ungate_work(struct work_struct *work)
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>   	ufshcd_setup_clocks(hba, true);
+>   
+> +	ufshcd_enable_irq(hba);
+> +
+>   	/* Exit from hibern8 */
+>   	if (ufshcd_can_hibern8_during_gating(hba)) {
+>   		/* Prevent gating in this path */
+> @@ -1636,6 +1638,8 @@ static void ufshcd_gate_work(struct work_struct *work)
+>   		ufshcd_set_link_hibern8(hba);
+>   	}
+>   
+> +	ufshcd_disable_irq(hba);
+> +
+>   	if (!ufshcd_is_link_active(hba))
+>   		ufshcd_setup_clocks(hba, false);
+>   	else
+> 
 
-Michal,
+Hi,
+Does this save significant power? I see that gate/ungate of clocks 
+happen far too frequently than suspend/resume.
 
-> +	{"VMware", "VMware", NULL, BLIST_NO_MATCH_VENDOR | BLIST_NO_TRAY},
+Have you considered how much latency this would add to the 
+gating/ungating path?
 
-Please don't introduce a blist flag to work around deficiencies in the
-matching interface. I suggest you tweak the matching functions so they
-handle a NULL vendor string correctly.
+-asd
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
