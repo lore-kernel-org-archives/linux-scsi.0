@@ -8,62 +8,63 @@ X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5059BC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E74A1C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:53:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 252F1206EC
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:47:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B908B21835
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:53:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ejtmUYb4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="as//1I4T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbfLRBrc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 20:47:32 -0500
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:35439 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726227AbfLRBrb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 20:47:31 -0500
-Received: by mail-ot1-f68.google.com with SMTP id f71so358798otf.2;
-        Tue, 17 Dec 2019 17:47:31 -0800 (PST)
+        id S1726558AbfLRBw6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 20:52:58 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:45159 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725975AbfLRBw6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 20:52:58 -0500
+Received: by mail-ot1-f66.google.com with SMTP id 59so325657otp.12;
+        Tue, 17 Dec 2019 17:52:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=fK7652sfa7E29q2xM3IFKXXWsa6prHuIfKMbUEKFJ90=;
-        b=ejtmUYb4OU/fbQQWxkWWCGczZmjyD5jlerT2WiBX6aKrp1H+ay/3LyzTGll5chaLhj
-         3pgXMWvaOa2He8yrR9fj6dEpWiljxo2CYQTgZRfbk3MbuJUNYIAk5sL5yIjh1pVLLQ4B
-         6G2wd95EwoeMVp9MRAfzTNqu7R6iamaGG2K8ESaAK3qgrbEVN1CAD+G15OkbDOBloSYP
-         Shviw/BJ47Gdjpgo9fwM64MzXRznYIKDtRPPfebstXppeVCy10H2hdSJev/OkKLflJZm
-         attquMR3nhCKsnwGBg73JYNgLuE/nt1DHaR4CJZTSx8ac4raWn6jHetypRKIWlMmmmNO
-         TGlw==
+        bh=5JPROeomugbS9mLeFJJ5jabbve8scXzl7BwrEThoADw=;
+        b=as//1I4Ta7JpUaGIQEI+vtdK3ny4nBtnqsLDS7yKqxrn+9titvy7b45FCzeQ4OIadE
+         fkM32IcZp/Ri5kznzY16uv5H353AowD1NXl3VAP/K6hAHx0JukAnDaMT8oXlz4O0O70k
+         L5YZhvRK39OLMlTmBXxhy5TSFBy6q2cW59bn7+dYHjOVxYH9opwPlWiP0QXVoAoS+FR+
+         zmdzrjVjGORwqMwIA3aF4scib3Oi/dEP0V3C6OvU8jMJS1TX7MlCfv7M6rS5Gcukdlrl
+         /PsEyFck6se/4Yq7ZX7cgRhQtGfno47Yt1Ww87hxuEffTPSGi9azAz06OiaJkU+RTw79
+         o0gA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=fK7652sfa7E29q2xM3IFKXXWsa6prHuIfKMbUEKFJ90=;
-        b=osYRf/3EWenCR7DiO98q+zO5DAy4E9lNi97NtoU2hY84TTJZbC7o4KsUsLk4b5IysH
-         VRxfYtLjhZc9uQBPX1odBWLhnxFiN9xXd1FiieBgKykxJhuiTBFltqUI5Blk5GEIL0v0
-         qTHJQaRPUsKyFMexjzbyt6xyAOJxCWmrwCejfm2bstnWWJNtaikS4QhBRPJuIlB50DAd
-         AjGDCi+ys17bmqXL87baviA8bgxxsfaWDS1Lyv9EQ1WlIqFa8QnK2Nxr8yRI+0pfMaMW
-         tRAhIIgD7LDlQrAhGgGqTlnPrNglmqj1FihwxITNuA2hTGnmUyjedApDcnkSAEJQwA4h
-         i3cw==
-X-Gm-Message-State: APjAAAVp+Ah5acyA/LlPIFn2E4qxHA74oCflvbpmAoG+C7bhNtHlL6Ge
-        jdFjWUuSkkuLx49qPZiQu60=
-X-Google-Smtp-Source: APXvYqzTKnBpHOzeVNBHDCs5lMGd8//DgIxwXoSBSwnQhZyZpV0Z/t5jxg40ZDwIMXtsUB50yhoFVw==
-X-Received: by 2002:a9d:7495:: with SMTP id t21mr335119otk.86.1576633650807;
-        Tue, 17 Dec 2019 17:47:30 -0800 (PST)
+        bh=5JPROeomugbS9mLeFJJ5jabbve8scXzl7BwrEThoADw=;
+        b=Hfoxe2yDTBWTY78ocDqg0ilbhvOlhSidAtUEosrrS8nR5E0P+nDbIV1oBVBuR/GMDS
+         URgagsrNVay6bmP88L0cWo8NiM4gd/RLMk+5wfBOHxYwBuKLh30DnDrtyb0nA8acVa7n
+         b0N591TN70KbT80/qKmHozJHRYyR/9oAjjOJuz5zq5KgWoFlxT3AKQHRiqqd0VWa8e7P
+         MwDMVObs8KJmqJmPFizSMZ7EMbSA9hsTyegJLiPBcjAFRJSESTle/+2s3Qm9q3D2z2o1
+         Z69VoZYNC3cQYIPzAHM/+lI8kOa2tFwJZocGqzeMX7qHjCEzA4pLD/OEEgMeRyr00z9+
+         kPYQ==
+X-Gm-Message-State: APjAAAUUBuKhbw0ELJtfAUikvcju4FgQTZXebm784otjEOHOq8esr2iO
+        I/OCQQxt70aVGjNdrFbrxvdTtx/Z
+X-Google-Smtp-Source: APXvYqy1dnjjHAYTKRAwou3Za6zOmAVJg/VMZ/bbBOObvgBVPmDoOogJZ5cK0DRAKl91q+q5w8pXwQ==
+X-Received: by 2002:a9d:7b50:: with SMTP id f16mr364425oto.18.1576633977191;
+        Tue, 17 Dec 2019 17:52:57 -0800 (PST)
 Received: from localhost.localdomain ([2604:1380:4111:8b00::1])
-        by smtp.gmail.com with ESMTPSA id z12sm237462oti.22.2019.12.17.17.47.30
+        by smtp.gmail.com with ESMTPSA id r205sm269702oih.54.2019.12.17.17.52.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Dec 2019 17:47:30 -0800 (PST)
+        Tue, 17 Dec 2019 17:52:56 -0800 (PST)
 From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+To:     QLogic-Storage-Upstream@qlogic.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         clang-built-linux@googlegroups.com,
         Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: csiostor: Adjust indentation in csio_device_reset
-Date:   Tue, 17 Dec 2019 18:47:26 -0700
-Message-Id: <20191218014726.8455-1-natechancellor@gmail.com>
+Subject: [PATCH] scsi: qla4xxx: Adjust indentation in qla4xxx_mem_free
+Date:   Tue, 17 Dec 2019 18:52:52 -0700
+Message-Id: <20191218015252.20890-1-natechancellor@gmail.com>
 X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
 X-Patchwork-Bot: notify
@@ -75,14 +76,14 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Clang warns:
 
-../drivers/scsi/csiostor/csio_scsi.c:1386:3: warning: misleading
+../drivers/scsi/qla4xxx/ql4_os.c:4148:3: warning: misleading
 indentation; statement is not part of the previous 'if'
 [-Wmisleading-indentation]
-         csio_lnodes_exit(hw, 1);
+         if (ha->fw_dump)
          ^
-../drivers/scsi/csiostor/csio_scsi.c:1382:2: note: previous statement is
+../drivers/scsi/qla4xxx/ql4_os.c:4144:2: note: previous statement is
 here
-        if (*buf != '1')
+        if (ha->queues)
         ^
 1 warning generated.
 
@@ -90,26 +91,26 @@ This warning occurs because there is a space after the tab on this line.
 Remove it so that the indentation is consistent with the Linux kernel
 coding style and clang no longer warns.
 
-Fixes: a3667aaed569 ("[SCSI] csiostor: Chelsio FCoE offload driver")
-Link: https://github.com/ClangBuiltLinux/linux/issues/818
+Fixes: 068237c87c64 ("[SCSI] qla4xxx: Capture minidump for ISP82XX on firmware failure")
+Link: https://github.com/ClangBuiltLinux/linux/issues/819
 Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 2 +-
+ drivers/scsi/qla4xxx/ql4_os.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 469d0bc9f5fe..00cf33573136 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1383,7 +1383,7 @@ csio_device_reset(struct device *dev,
- 		return -EINVAL;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 2323432a0edb..5504ab11decc 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -4145,7 +4145,7 @@ static void qla4xxx_mem_free(struct scsi_qla_host *ha)
+ 		dma_free_coherent(&ha->pdev->dev, ha->queues_len, ha->queues,
+ 				  ha->queues_dma);
  
- 	/* Delete NPIV lnodes */
--	 csio_lnodes_exit(hw, 1);
-+	csio_lnodes_exit(hw, 1);
+-	 if (ha->fw_dump)
++	if (ha->fw_dump)
+ 		vfree(ha->fw_dump);
  
- 	/* Block upper IOs */
- 	csio_lnodes_block_request(hw);
+ 	ha->queues_len = 0;
 -- 
 2.24.1
 
