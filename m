@@ -1,119 +1,118 @@
-Return-Path: <SRS0=0Ioj=2H=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84393C2D0CD
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 23:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAB09C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57F4621582
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Dec 2019 23:25:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FE2124650
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:42:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pEKyMxys"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ecRHVN3Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726383AbfLQXZd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 18:25:33 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:46521 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726205AbfLQXZc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Dec 2019 18:25:32 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576625132; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=YJEwly1+ltZDuvrkRrwDOT3yLn4EXIUPFyMApEtgGuc=; b=pEKyMxysmfBKyQC9dZAmvgCV3lBjsLFBWUUl5hADHxfcsLWvPsT7hbGbpPR0ZE0svKnyMwCa
- ZKod/Kol6gplkYZ0XeW+SQcvGU8220RnPqCJvehC6T6LRd4tz8E73bdtH7wSrb/HR1+Sj6am
- VaLLEB0kbVKb305dgl1OjgFADr8=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df963eb.7fefd4384a08-smtp-out-n02;
- Tue, 17 Dec 2019 23:25:31 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A9800C447A3; Tue, 17 Dec 2019 23:25:29 +0000 (UTC)
-Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 480D5C433CB;
-        Tue, 17 Dec 2019 23:25:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 480D5C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 2/2] scsi: ufs: disable interrupt during clock-gating
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, pedrom.sousa@synopsys.com,
-        jejb@linux.ibm.com, matthias.bgg@gmail.com
-Cc:     linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        beanhuo@micron.com, kuohong.wang@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        andy.teng@mediatek.com
-References: <1575721321-8071-1-git-send-email-stanley.chu@mediatek.com>
- <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
-Date:   Tue, 17 Dec 2019 15:25:27 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+        id S1726463AbfLRBm2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 20:42:28 -0500
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:36414 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726401AbfLRBm2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 20:42:28 -0500
+Received: by mail-oi1-f193.google.com with SMTP id c16so283592oic.3;
+        Tue, 17 Dec 2019 17:42:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=N+bs2iNFWfw8K4kc9VbekWaGMeOdYHefRD+wtZgGsIg=;
+        b=ecRHVN3QxjPmXu/OGHNX3KkhC4Gw7arD5IGwKraGon4GcCc5a3LHIWVGmuoIxRXC1G
+         Q7acVs/R7eyN41d0RpgisRAaELzJdDyh9Wso8d+KN/HCR6OQdizosgOihcGfMHQ6IgFk
+         +81aToAfygpEbhCDsvD5489bTuS/gqQYlvMcmilDenHb0LLk4sRQzGHzCyQpHmj52lIU
+         p6vJBA/Z+FDvxGYqgYxae2uCuAzGFO8gsqcF4j812f8Gyu1jMSb1EeBGm5MJD5Gx6BUh
+         U77xiDfQ+OX2nD57HP3AcUmxxH30q/K+CyfuFutCVBbCzA9ciYFJGP2P4IeS/nl8+liC
+         HzJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=N+bs2iNFWfw8K4kc9VbekWaGMeOdYHefRD+wtZgGsIg=;
+        b=VcbfNqStKlaKlqUGfBbSWgLU6t0M3PSjLpFBqSaM9bI95rwcjrKP1WDruHslBb/tSf
+         SA2eISL84E0pAozEBdSJ0y2WuW7sk1rKmDAiR40nQtrZ6+Km0wmgXMeb8DkaIwO6/Wcg
+         UdLpYbni1mL7UIDVRd8ak/BGIYCn0508CVEdiMnrpAdRU5hB86vWyd/ohKlcv3uGWnKq
+         9t/W6HfeBWVOzxt11YHCfAKeOws1f3D7QqYPfh4U9saZEbJgoRlDzHaouthJHeEVEZ1u
+         hP0T0ccXx2RZuL9p1eoDDIc2Z6vgLJwv6EA12T/0hsQVTEtq+NetkweyIiktqtprBz2X
+         4U4Q==
+X-Gm-Message-State: APjAAAVHnq/59xJe+qZZZNKMIUU702Ogw9/EAxf/3Foo8SDbI00UJd9t
+        2aWmy3bp47kgJ55FjNFZMA9voTre
+X-Google-Smtp-Source: APXvYqwK75exxun+25KzMqZtBIlf8NvNj2yKQBQoFyGOJlSWHDS84TqIRtTVjLsMDYVJ4652keUdNA==
+X-Received: by 2002:aca:5f87:: with SMTP id t129mr115076oib.36.1576633347229;
+        Tue, 17 Dec 2019 17:42:27 -0800 (PST)
+Received: from localhost.localdomain ([2604:1380:4111:8b00::1])
+        by smtp.gmail.com with ESMTPSA id n2sm248564oia.58.2019.12.17.17.42.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Dec 2019 17:42:26 -0800 (PST)
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Hannes Reinecke <hare@suse.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
+        Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] scsi: aic7xxx: Adjust indentation in ahc_find_syncrate
+Date:   Tue, 17 Dec 2019 18:42:20 -0700
+Message-Id: <20191218014220.52746-1-natechancellor@gmail.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-In-Reply-To: <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Patchwork-Bot: notify
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/7/2019 4:22 AM, Stanley Chu wrote:
-> Similar to suspend, ufshcd interrupt can be disabled since
-> there won't be any host controller transaction expected till
-> clocks ungated.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 4 ++++
->   1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index f80bd4e811cb..5de105e82c32 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1490,6 +1490,8 @@ static void ufshcd_ungate_work(struct work_struct *work)
->   	spin_unlock_irqrestore(hba->host->host_lock, flags);
->   	ufshcd_setup_clocks(hba, true);
->   
-> +	ufshcd_enable_irq(hba);
-> +
->   	/* Exit from hibern8 */
->   	if (ufshcd_can_hibern8_during_gating(hba)) {
->   		/* Prevent gating in this path */
-> @@ -1636,6 +1638,8 @@ static void ufshcd_gate_work(struct work_struct *work)
->   		ufshcd_set_link_hibern8(hba);
->   	}
->   
-> +	ufshcd_disable_irq(hba);
-> +
->   	if (!ufshcd_is_link_active(hba))
->   		ufshcd_setup_clocks(hba, false);
->   	else
-> 
+Clang warns:
 
-Hi,
-Does this save significant power? I see that gate/ungate of clocks 
-happen far too frequently than suspend/resume.
+../drivers/scsi/aic7xxx/aic7xxx_core.c:2317:5: warning: misleading
+indentation; statement is not part of the previous 'if'
+[-Wmisleading-indentation]
+                        if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
+                        ^
+../drivers/scsi/aic7xxx/aic7xxx_core.c:2310:4: note: previous statement
+is here
+                        if (syncrate == &ahc_syncrates[maxsync])
+                        ^
+1 warning generated.
 
-Have you considered how much latency this would add to the 
-gating/ungating path?
+This warning occurs because there is a space amongst the tabs on this
+line. Remove it so that the indentation is consistent with the Linux
+kernel coding style and clang no longer warns.
 
--asd
+This has been a problem since the beginning of git history hence no
+fixes tag.
 
+Link: https://github.com/ClangBuiltLinux/linux/issues/817
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index a9d40d3b90ef..4190a025381a 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -2314,7 +2314,7 @@ ahc_find_syncrate(struct ahc_softc *ahc, u_int *period,
+ 			 * At some speeds, we only support
+ 			 * ST transfers.
+ 			 */
+-		 	if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
++			if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
+ 				*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+ 			break;
+ 		}
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.24.1
+
