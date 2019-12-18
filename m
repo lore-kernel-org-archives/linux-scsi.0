@@ -2,115 +2,132 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E74A1C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7355C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:40:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B908B21835
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 01:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCFF621835
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:40:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="as//1I4T"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jVGSSstu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbfLRBw6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 20:52:58 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:45159 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbfLRBw6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 20:52:58 -0500
-Received: by mail-ot1-f66.google.com with SMTP id 59so325657otp.12;
-        Tue, 17 Dec 2019 17:52:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=5JPROeomugbS9mLeFJJ5jabbve8scXzl7BwrEThoADw=;
-        b=as//1I4Ta7JpUaGIQEI+vtdK3ny4nBtnqsLDS7yKqxrn+9titvy7b45FCzeQ4OIadE
-         fkM32IcZp/Ri5kznzY16uv5H353AowD1NXl3VAP/K6hAHx0JukAnDaMT8oXlz4O0O70k
-         L5YZhvRK39OLMlTmBXxhy5TSFBy6q2cW59bn7+dYHjOVxYH9opwPlWiP0QXVoAoS+FR+
-         zmdzrjVjGORwqMwIA3aF4scib3Oi/dEP0V3C6OvU8jMJS1TX7MlCfv7M6rS5Gcukdlrl
-         /PsEyFck6se/4Yq7ZX7cgRhQtGfno47Yt1Ww87hxuEffTPSGi9azAz06OiaJkU+RTw79
-         o0gA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=5JPROeomugbS9mLeFJJ5jabbve8scXzl7BwrEThoADw=;
-        b=Hfoxe2yDTBWTY78ocDqg0ilbhvOlhSidAtUEosrrS8nR5E0P+nDbIV1oBVBuR/GMDS
-         URgagsrNVay6bmP88L0cWo8NiM4gd/RLMk+5wfBOHxYwBuKLh30DnDrtyb0nA8acVa7n
-         b0N591TN70KbT80/qKmHozJHRYyR/9oAjjOJuz5zq5KgWoFlxT3AKQHRiqqd0VWa8e7P
-         MwDMVObs8KJmqJmPFizSMZ7EMbSA9hsTyegJLiPBcjAFRJSESTle/+2s3Qm9q3D2z2o1
-         Z69VoZYNC3cQYIPzAHM/+lI8kOa2tFwJZocGqzeMX7qHjCEzA4pLD/OEEgMeRyr00z9+
-         kPYQ==
-X-Gm-Message-State: APjAAAUUBuKhbw0ELJtfAUikvcju4FgQTZXebm784otjEOHOq8esr2iO
-        I/OCQQxt70aVGjNdrFbrxvdTtx/Z
-X-Google-Smtp-Source: APXvYqy1dnjjHAYTKRAwou3Za6zOmAVJg/VMZ/bbBOObvgBVPmDoOogJZ5cK0DRAKl91q+q5w8pXwQ==
-X-Received: by 2002:a9d:7b50:: with SMTP id f16mr364425oto.18.1576633977191;
-        Tue, 17 Dec 2019 17:52:57 -0800 (PST)
-Received: from localhost.localdomain ([2604:1380:4111:8b00::1])
-        by smtp.gmail.com with ESMTPSA id r205sm269702oih.54.2019.12.17.17.52.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Dec 2019 17:52:56 -0800 (PST)
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     QLogic-Storage-Upstream@qlogic.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
-        Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] scsi: qla4xxx: Adjust indentation in qla4xxx_mem_free
-Date:   Tue, 17 Dec 2019 18:52:52 -0700
-Message-Id: <20191218015252.20890-1-natechancellor@gmail.com>
-X-Mailer: git-send-email 2.24.1
+        id S1726518AbfLRDkB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 22:40:01 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59848 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726454AbfLRDkB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 22:40:01 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dbKd117311;
+        Wed, 18 Dec 2019 03:39:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=8IAu41A0ROVfnDWMZhCpBuGeJC+jZ2Wigf/4tr6lnzM=;
+ b=jVGSSstumhiA6eWydK51KgVcr9RgGcwslrbhh28s0pNJalGmNqBqg2x8/GDGsslkrH9E
+ Suzgnc7JfszD2CH+QQ1vgu0XAAHZFVLXbiyr0BzZqeP3ypK9g7SknPmnpE6uPqanM7lT
+ UaykzEV+5ZG0i7OFamBFq7NUm+DufGD2i2awn+/YXlE+PBfc1U0kWxPwCEPU0Sts+X+3
+ K6kN27SlC+i8DXVvudga8LXIuqzdO91Bgu1S17UCUOtfGcqvwq7aRAXS3AbBlt8p5X7D
+ PSXnO6FONm3LwqSUR7Sao8c4pOCYJMwUeuM0nxhnpyTNX7/eo4ngl3u192OPEr7M+0bE wA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2wvqpqav23-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 03:39:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dPB7078330;
+        Wed, 18 Dec 2019 03:39:37 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2wxm5pbcdv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 03:39:36 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBI3dTJu021649;
+        Wed, 18 Dec 2019 03:39:29 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 17 Dec 2019 19:39:29 -0800
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191209052119.32072-1-linux@roeck-us.net>
+        <20191209052119.32072-2-linux@roeck-us.net>
+        <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
+        <yq1wob1jfjm.fsf@oracle.com>
+        <541a7ddd-f4c9-5d5f-4f43-0ae5bc46aef6@roeck-us.net>
+        <yq1tv5zhdn5.fsf@oracle.com>
+        <c5689126-46bc-b551-11d7-e5bd8c01f82c@roeck-us.net>
+Date:   Tue, 17 Dec 2019 22:39:26 -0500
+In-Reply-To: <c5689126-46bc-b551-11d7-e5bd8c01f82c@roeck-us.net> (Guenter
+        Roeck's message of "Mon, 16 Dec 2019 20:20:57 -0800")
+Message-ID: <yq14kxygv4h.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=790
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912180026
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=848 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912180026
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Clang warns:
 
-../drivers/scsi/qla4xxx/ql4_os.c:4148:3: warning: misleading
-indentation; statement is not part of the previous 'if'
-[-Wmisleading-indentation]
-         if (ha->fw_dump)
-         ^
-../drivers/scsi/qla4xxx/ql4_os.c:4144:2: note: previous statement is
-here
-        if (ha->queues)
-        ^
-1 warning generated.
+Guenter,
 
-This warning occurs because there is a space after the tab on this line.
-Remove it so that the indentation is consistent with the Linux kernel
-coding style and clang no longer warns.
+> If there are 100 physical drives, you would actually want to see the
+> temperature of each drive separately, as one of them might be
+> overheating due to some internal failure.
 
-Fixes: 068237c87c64 ("[SCSI] qla4xxx: Capture minidump for ISP82XX on firmware failure")
-Link: https://github.com/ClangBuiltLinux/linux/issues/819
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/scsi/qla4xxx/ql4_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yep. However, for "big boxes" you'll typically get that information from
+SAF-TE or SES enclosure services and not from the drive itself.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 2323432a0edb..5504ab11decc 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -4145,7 +4145,7 @@ static void qla4xxx_mem_free(struct scsi_qla_host *ha)
- 		dma_free_coherent(&ha->pdev->dev, ha->queues_len, ha->queues,
- 				  ha->queues_dma);
- 
--	 if (ha->fw_dump)
-+	if (ha->fw_dump)
- 		vfree(ha->fw_dump);
- 
- 	ha->queues_len = 0;
+SES allows you to monitor power supplies, drive bays, hot swap events,
+thermals, etc. We have a SES driver in SCSI that exposes all these
+things in sysfs. It is not currently tied into hwmon.
+
+> If the storage array is represented to the system as single huge
+> physical drive, which is then split into logical entities not related
+> to physical drives, I guess that would represent a problem for system
+> management overall.
+
+Yep. That's why there's dedicated plumbing in smartmontools to handle
+various RAID controller interfaces for accessing physical drive
+information. It's typically highly vendor-specific.
+
+> I would not mind to tie the hardware monitoring device to something
+> else than the scsi device if the scsi device does not always have a
+> physical representation. Is there a way to determine if a scsi device
+> is virtual or real ?
+
+Not really. Target is usually a pretty good approximation, although some
+arrays introduce virtual targets because of limited LUN (scsi_device)
+numbering capabilities. However, arrays generally don't support per-LUN
+temperature because it makes no sense.
+
+I'm trying to gauge how much a pain potentially redundant sensors would
+be for userland monitoring tooling vs. how many oddball devices we'd not
+be able to support if we were to use scsi_target as parent (or restrict
+the sensor binding to LUN 0).
+
 -- 
-2.24.1
-
+Martin K. Petersen	Oracle Linux Engineering
