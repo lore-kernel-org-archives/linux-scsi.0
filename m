@@ -2,165 +2,100 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5086FC2D0D2
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 631BAC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C9B722314
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:53:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AC7B21582
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bmvBQTxr"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jgjo7Tj0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726680AbfLRXxp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:53:45 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:55644 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726620AbfLRXxo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Dec 2019 18:53:44 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576713223; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=+dFcC2QCZE4EMyWiuaOLbaCWdMrLQF93LI0XXqLXM9Q=; b=bmvBQTxrxQyWxx8kMA5url77p7X1lp2MNwy6F2lKl3AlcLcm9wiVMBSaYnWMmbfqfy/BVD9c
- XJkpreSkCnDvrvu6YLkyBaUBMZK+ENDj04gVXN+oBW/vdD1GK59SzAo+V2/lPTqhkO8HTuyo
- 8MEqqxvngDv5cs9YTRvCvezUFO8=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfabc03.7f8ab9da1148-smtp-out-n01;
- Wed, 18 Dec 2019 23:53:39 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D2FE3C447A0; Wed, 18 Dec 2019 23:53:39 +0000 (UTC)
-Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 090F0C433A2;
-        Wed, 18 Dec 2019 23:53:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 090F0C433A2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 2/4] scsi: ufs: export ufshcd_auto_hibern8_update for
- vendor usage
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, pedrom.sousa@synopsys.com,
-        jejb@linux.ibm.com, matthias.bgg@gmail.com
-Cc:     linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        beanhuo@micron.com, kuohong.wang@mediatek.com,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        andy.teng@mediatek.com
-References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com>
- <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <ad0153db-93ad-0ecf-c2f3-1b76dda778d3@codeaurora.org>
-Date:   Wed, 18 Dec 2019 15:53:37 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
-MIME-Version: 1.0
-In-Reply-To: <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726561AbfLRX6U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:58:20 -0500
+Received: from mail-wr1-f41.google.com ([209.85.221.41]:41592 "EHLO
+        mail-wr1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726536AbfLRX6U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 18:58:20 -0500
+Received: by mail-wr1-f41.google.com with SMTP id c9so4129608wrw.8
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 15:58:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=p/EYMLCi6Bh0bEFmyhkesPANqGMLzDPNhqQ8fX9uOuc=;
+        b=Jgjo7Tj0N+60fXIxAjXbwKkeAAm7377mojMrVFU9+j0UnOoV/ADVnf9vLb3W/bfbIX
+         05/IxZAiQ6Xw5I1FsfwYyKDL4EdcPnWPB8NjwikWpT+uiCA8VSd3AGIIh41MdrCTjlJh
+         A8xAIp3HnKKmohmsP8uq/lUhhD5Y7gTbJ9vLBviiioQOHjPZUPWPi8xXGHBVuy45VS9d
+         pvPCM+W4nKeqeeBl8QrygJjRY8W8mHz2Wy0U8lEoeAVUUfPSG675YAz8D2zh/+NlYAxW
+         zluG3A048kJHs3XNfpK2dtKAHNQBbZ5JlhqPVSMvp360LPbMG285qRrJKly8p0e4JmnT
+         PcsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=p/EYMLCi6Bh0bEFmyhkesPANqGMLzDPNhqQ8fX9uOuc=;
+        b=IsWKqY0I51Jus6aG7ERaqM5/IL3FAZ1xHul4ZkCPXO9OHP3dWh31XZ931v/E+u9fYp
+         JRQB1JkJyqgCN4quOVE4TCOJaX8XvDimtb79pxCTEJhIXIseaBC2A8pTlYAx5h29MiMA
+         U3FNEa2GviYCG8AO8mIbWDit3DQVG/+E94t2o7JtwxxjXkFi7ek9bGXZKcAda+Ti1Fyb
+         Xh9C9mLdnkYX6g3uqcgHvVhhmY6ah5a7MMXmNK1Ir0uC4tiJZ3b7iQumz82WNNFp4H/2
+         8KCiWbfbbMOQRY4GchHdfHKx0L/VWU4iNJKEPq+56pU9lTFehci8U7ULZRKLqxMGBYTY
+         EaEw==
+X-Gm-Message-State: APjAAAUby/XhMKSmNoxtGs1ZJlpAW0ndvO+X87Fqs2maM2zyIAnn+oh+
+        UAtOWF0uT0bTOkzwU1Hw+1yDfl3+
+X-Google-Smtp-Source: APXvYqye8fcL/fJ4PxHdxQdKJwGcIIjDkB90VbsE0LD/ioIV5K5lzIrpkM36lKfn7r1/7gwV2M67oA==
+X-Received: by 2002:adf:e984:: with SMTP id h4mr5651918wrm.275.1576713498093;
+        Wed, 18 Dec 2019 15:58:18 -0800 (PST)
+Received: from os42.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id x11sm4240731wmg.46.2019.12.18.15.58.16
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 18 Dec 2019 15:58:17 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH 00/10] lpfc: Update lpfc to revision 12.6.0.3
+Date:   Wed, 18 Dec 2019 15:57:58 -0800
+Message-Id: <20191218235808.31922-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/13/2019 12:11 AM, Stanley Chu wrote:
-> Export ufshcd_auto_hibern8_update to allow vendors to use common
-> interface to customize auto-hibernate timer.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->   drivers/scsi/ufs/ufs-sysfs.c | 20 --------------------
->   drivers/scsi/ufs/ufshcd.c    | 18 ++++++++++++++++++
->   drivers/scsi/ufs/ufshcd.h    |  1 +
->   3 files changed, 19 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index ad2abc96c0f1..720be3f64be7 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -118,26 +118,6 @@ static ssize_t spm_target_link_state_show(struct device *dev,
->   				ufs_pm_lvl_states[hba->spm_lvl].link_state));
->   }
->   
-> -static void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
-> -{
-> -	unsigned long flags;
-> -
-> -	if (!ufshcd_is_auto_hibern8_supported(hba))
-> -		return;
-> -
-> -	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (hba->ahit != ahit)
-> -		hba->ahit = ahit;
-> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -	if (!pm_runtime_suspended(hba->dev)) {
-> -		pm_runtime_get_sync(hba->dev);
-> -		ufshcd_hold(hba, false);
-> -		ufshcd_auto_hibern8_enable(hba);
-> -		ufshcd_release(hba);
-> -		pm_runtime_put(hba->dev);
-> -	}
-> -}
-> -
->   /* Convert Auto-Hibernate Idle Timer register value to microseconds */
->   static int ufshcd_ahit_to_us(u32 ahit)
->   {
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b5966faf3e98..589f519316aa 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3956,6 +3956,24 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
->   	return ret;
->   }
->   
-> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
-> +{
-> +	unsigned long flags;
-> +
-> +	if (!(hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT))
-> +		return;
-> +
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	if (hba->ahit == ahit)
-> +		goto out_unlock;
-> +	hba->ahit = ahit;
-> +	if (!pm_runtime_suspended(hba->dev))
-> +		ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +out_unlock:
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
-> +
->   void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
->   {
->   	unsigned long flags;
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 2740f6941ec6..86586a0b9aa5 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -927,6 +927,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->   	enum flag_idn idn, bool *flag_res);
->   
->   void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
-> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
->   
->   #define SD_ASCII_STD true
->   #define SD_RAW false
-> 
+Update lpfc to revision 12.6.0.3
 
-Looks good to me.
+This patch set contains nine fixes.
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+The patches were cut against Martin's 5.6/scsi-queue tree
+
+James Smart (10):
+  lpfc: Fix incomplete NVME discovery when target
+  lpfc: Fix: Rework setting of fdmi symbolic node name registration
+  lpfc: Fix missing check for CSF in Write Object Mbox Rsp
+  lpfc: Fix Fabric hostname registration if system hostname changes
+  lpfc: Fix ras_log via debugfs
+  lpfc: Fix disablement of FC-AL on lpe35000 models
+  lpfc: Fix unmap of dpp bars affecting next driver load
+  lpfc: Fix MDS Latency Diagnostics Err-drop rates
+  lpfc: Fix improper flag check for IO type
+  lpfc: Update lpfc version to 12.6.0.3
+
+ drivers/scsi/lpfc/lpfc.h           |   2 +
+ drivers/scsi/lpfc/lpfc_attr.c      |   9 ++--
+ drivers/scsi/lpfc/lpfc_crtn.h      |   2 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  88 +++++++++++++++++++-----------
+ drivers/scsi/lpfc/lpfc_debugfs.c   |  11 +++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |   5 ++
+ drivers/scsi/lpfc/lpfc_hw4.h       |   3 ++
+ drivers/scsi/lpfc/lpfc_init.c      |  12 ++---
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 108 +++++++++++++++++++++++++++++++++----
+ drivers/scsi/lpfc/lpfc_scsi.c      |   4 +-
+ drivers/scsi/lpfc/lpfc_sli.c       |  25 +++++++--
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 12 files changed, 209 insertions(+), 62 deletions(-)
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.13.7
+
