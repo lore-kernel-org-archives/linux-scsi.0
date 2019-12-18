@@ -2,103 +2,90 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2E19C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C9AC43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:53:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 777B82146E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B3E6218AC
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 03:53:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="L2n1EUf2"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DDowWujp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726622AbfLRDnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Dec 2019 22:43:07 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:52036 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbfLRDnG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 22:43:06 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dROh116939;
-        Wed, 18 Dec 2019 03:42:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=PjGUM/EnuhLBD6aKzM6coivdq8W0PG7m5U8o0IABAVg=;
- b=L2n1EUf2W36k0n0SLzEzRS5mRleuhAiZLTWF2cVaoef+/bbmgj6sirqHeSZqJQy3h2SQ
- anW2nKv8BTszFhNrI0iuWry8y9aB0Bp93w/FOFQs9aiIOtc91dlG1F7U/iJG2HOLUIbg
- uc5oPT0WygsTi2uBl1Fho7olpa/8NBiedAadKXDO8BpvsLzJ+My8qc89cm3KteNKD2Ya
- MWfp5gcHRmnrmHd7cXmTDkx+F4/oABZ4RTBTKJVbT+bmWpImNxCFtPR8XmlGi9XfNG0H
- xRd4EaKx92vcpj8KSixmbwnFlHS5KccK/vNkF17kW4dEkabnBHbU9n65+flkKUJff+zZ lA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2wvrcrat71-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 03:42:43 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dVGK129935;
-        Wed, 18 Dec 2019 03:42:42 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2wxm4wrpfv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 03:42:42 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBI3geCG003973;
-        Wed, 18 Dec 2019 03:42:40 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 17 Dec 2019 19:42:39 -0800
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA drives
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191209052119.32072-1-linux@roeck-us.net>
-        <yq15zinmrmj.fsf@oracle.com>
-        <67b75394-801d-ce91-55f2-f0c0db9cfffc@roeck-us.net>
-        <yq1y2vbhe6i.fsf@oracle.com>
-        <83d528fc-42b7-aa3f-5dd9-a000268da38e@roeck-us.net>
-Date:   Tue, 17 Dec 2019 22:42:37 -0500
-In-Reply-To: <83d528fc-42b7-aa3f-5dd9-a000268da38e@roeck-us.net> (Guenter
-        Roeck's message of "Mon, 16 Dec 2019 19:57:31 -0800")
-Message-ID: <yq1zhfqfgeq.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726510AbfLRDw7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Dec 2019 22:52:59 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:53447 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726402AbfLRDw7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Dec 2019 22:52:59 -0500
+X-UUID: 505a971fa5ad43c092ee4ae90a93eb10-20191218
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=JgEIyQg1MGN6RIP2uMOeIekA1H6Nku9DNihrJErp254=;
+        b=DDowWujpl4LXOfs+8FR768+1sjfc2gOhPQSOyaGFp2Uexv1aALgK/rcNe/G576vU+A6DxqkEbw4qQKdeST7OASumbNuWG3DyXAQNnJ1rr4gW6NjXvomZbLaD9hDcyPZuiWIT45hJPspX5wYa7VvMJF4ASx4HiF4gHeV0n1s9Lxk=;
+X-UUID: 505a971fa5ad43c092ee4ae90a93eb10-20191218
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 197169922; Wed, 18 Dec 2019 11:52:52 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Wed, 18 Dec 2019 11:52:19 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Wed, 18 Dec 2019 11:52:23 +0800
+Message-ID: <1576641171.13056.16.camel@mtkswgap22>
+Subject: Re: [PATCH v1 2/2] scsi: ufs: disable interrupt during clock-gating
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+CC:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
+        <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <beanhuo@micron.com>,
+        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>
+Date:   Wed, 18 Dec 2019 11:52:51 +0800
+In-Reply-To: <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
+References: <1575721321-8071-1-git-send-email-stanley.chu@mediatek.com>
+         <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
+         <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=776
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912180026
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=834 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912180026
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+SGkgQXN1dG9zaCwNCg0KT24gVHVlLCAyMDE5LTEyLTE3IGF0IDE1OjI1IC0wODAwLCBBc3V0b3No
+IERhcyAoYXNkKSB3cm90ZToNCj4gPiANCj4gDQo+IEhpLA0KPiBEb2VzIHRoaXMgc2F2ZSBzaWdu
+aWZpY2FudCBwb3dlcj8gSSBzZWUgdGhhdCBnYXRlL3VuZ2F0ZSBvZiBjbG9ja3MgDQo+IGhhcHBl
+biBmYXIgdG9vIGZyZXF1ZW50bHkgdGhhbiBzdXNwZW5kL3Jlc3VtZS4NCj4gDQo+IEhhdmUgeW91
+IGNvbnNpZGVyZWQgaG93IG11Y2ggbGF0ZW5jeSB0aGlzIHdvdWxkIGFkZCB0byB0aGUgDQo+IGdh
+dGluZy91bmdhdGluZyBwYXRoPw0KPiANCj4gLWFzZA0KPiANCg0KWWVzLCB3ZSBoYXZlIG1lYXN1
+cmVkIDIwMCB0aW1lcyBjbGstZ2F0aW5nL2Nsay11bmdhdGluZyBhbmQgbGF0ZW5jeSBkYXRhDQpp
+cyBzaG93ZWQgYXMgYmVsb3csDQoNCkZvciBjbGstZ2F0aW5nIHdpdGggaW50ZXJydXB0IGRpc2Fi
+bGluZyB0b2dnbGVkLA0KDQoJQXZlcmFnZSBsYXRlbmN5IG9mIGVhY2ggY2xrLWdhdGluZzogNTUu
+MTE3IHVzDQoJQXZlcmFnZSBsYXRlbmN5IG9mIGlycS1kaXNhYmxpbmcgZHVyaW5nIGNsay1nYXRp
+bmc6IDQuMiB1cw0KDQpGb3IgY2xrLXVuZ2F0aW5nIHdpdGggaW50ZXJydXB0IGVuYWJsaW5nIHRv
+Z2dsZWQsDQoJQXZlcmFnZSBsYXRlbmN5IG9mIGVhY2ggY2xrLXVuZ2F0aW5nOiAxMTguMzI0IHVz
+DQoJQXZlcmFnZSBsYXRlbmN5IG9mIGlycS1lbmFibGluZyBkdXJpbmcgY2xrLXVuZ2F0aW5nOiAy
+LjkgdXMNCg0KVGhlIGV2YWx1YXRpb24gaGVyZSBpcyBiYXNlZCBvbiBiZWxvdyBDYW4ncyBwYXRj
+aCB0aGVyZWZvcmUgdGhlDQppbnRlcnJ1cHQgY29udHJvbCAoZW5hYmxlX2lycS9kaXNhYmxlX2ly
+cSkgbGF0ZW5jeSBpcyBtdWNoIHNob3J0ZXIgdGhhbg0KYmVmb3JlIChyZXF1ZXN0X2lycS9mcmVl
+X2lycSkuDQoNCnNjc2k6IHVmczogRG8gbm90IGZyZWUgaXJxIGluIHN1c3BlbmQNCmh0dHBzOi8v
+Z2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L25leHQvbGludXgtbmV4dC5n
+aXQvY29tbWl0L2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmM/aWQ9ODcwOWMxZjY4NTM2ZTI1NjY2
+ODgxMjc4OGFmNWIyYmIwMjdmNDljMw0KDQpCVFcsIHRoZSBtYWluIHB1cnBvc2Ugb2YgdGhpcyBw
+YXRjaCBpcyBhaW1lZCB0byBwcm90ZWN0IHVmc2hjZCByZWdpc3Rlcg0KZnJvbSBhY2Nlc3Npbmcg
+d2hpbGUgaG9zdCBjbG9ja3MgYXJlIGRpc2FibGVkIHRvIGZpeCBwb3RlbnRpYWwgc3lzdGVtDQpo
+YW5nIGlzc3VlLiBUaGUgcG9zc2libGUgc2NlbmFyaW8gaXMgbWVudGlvbmVkIGluIGNvbW1pdCBt
+ZXNzYWdlIG9mDQpwYXRjaCAic2NzaTogdWZzOiBkaXNhYmxlIGlycSBiZWZvcmUgZGlzYWJsaW5n
+IGNsb2NrcyIgaW4gdGhlIHNhbWUNCnNlcmllcy4NCg0KVGhhbmtzDQpTdGFubGV5DQo=
 
-Guenter,
-
->> Also, there are some devices that will lock up the way you access that
->> VPD page. So a tweak is also required there.
->>
-> Do you have details ? Do I need to add a call to scsi_device_supports_vpd(),
-> maybe ?
-
-Some devices lock up if you ask for too much data. I actually discovered
-a VPD handling regression in 5.5 while working on a series of prep
-patches for you today. Working on a fix. I'll try to get a patch series
-out for review tomorrow.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
