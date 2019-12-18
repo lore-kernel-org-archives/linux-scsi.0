@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B215EC2D0D1
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D62FEC2D0D2
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88FFB21582
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC6AA21582
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:58:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uFAfZExO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rDNFYNp7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726623AbfLRX6Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:58:24 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:46714 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726599AbfLRX6X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 18:58:23 -0500
-Received: by mail-wr1-f67.google.com with SMTP id z7so4100145wrl.13
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 15:58:22 -0800 (PST)
+        id S1726633AbfLRX6Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:58:25 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37227 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726536AbfLRX6Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 18:58:25 -0500
+Received: by mail-wm1-f67.google.com with SMTP id f129so3796721wmf.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 15:58:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=tBzoLDfsGDQQ26HQ8iwBTSmaqU98MBum7xIMsbjIVjw=;
-        b=uFAfZExO+DNXpGSlFmZ/utGMaLN8E1xB2NQsqDZ2eEBgpzx7hIM/GbyueToDJiEcDd
-         2RBAz5kuR+TE/fAmQm2MM2iPlL3jK4x8VEpQzOCSLT5num8CUMNTOWGRZ5bgYZg3NAQE
-         tWkWrtjoSw+6lNeeKGn8FqtJkel0Y7I2sD5p2CPbjV+/V3iF1mWtgAGpt7BeGJu4waSH
-         wXea1OLXKxEdLlmwMYyYjdx30panElUa0TNRtx9+pot/MunZ1IyNo+5ubNrYisUioVxL
-         FLNdHL8L7iWU4RpJQNqHzLorT/hHJ7OcDHDLTOehgFRkc+kl6zdBdLmsG/zZ4MHl6iQe
-         9oDQ==
+        bh=j3AYhR6iXywWYQ/K9jqjM0MdVWjyW/M1px4KFelLlME=;
+        b=rDNFYNp7ctg5oSsCtX/MMucIw9vv+INwBg23zEaV0G1+w8BxgASsuvh7pvFX8w+ZOB
+         gzEaVJQpGFHEQF7ZE+qLo0mk6aHvo/YJe4wT9Jvv1eV/IUWW2p5Fr5Vxn9uuU8OLZGH8
+         5qlmdOnFLSdNinLxG4m04/Tosx1rt0ZIV/olViFvHpnC0u1jfLUEFPbsdt2WcdeurB/r
+         7oH0fwFRfvg7YjR0Eey2C0NHsddWhJMIPDx7oMHAeOnDDdr/h7wdpb2ijLKJ/lAmn90U
+         N2TustW8TsqcA2hz0E4iDjFIbECjivOFkVwnTH6d1WFs2xgV/jB2KywiYDpOLEWK1bB+
+         WkMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=tBzoLDfsGDQQ26HQ8iwBTSmaqU98MBum7xIMsbjIVjw=;
-        b=bsspZ7yGkjdCRrBx94if4C1UVA4KmGmEYBLzqWKH6BnXyDO+caUu4pDSjRThTQPGMY
-         HTfryXrEbph0hwmNVZ1BlEOEtCNXWyKP0/CJ2DABwPTqWGdF1q9ofQKo0KOrVSR0zaDv
-         nwKHBxMwKx35qCHcKEaFnVpG0jutCEE0fn0QKk527Bukrc51SNyerO9Lj3FcRMy+yRlM
-         cEGNzl15vcwe39ahzZFK6bZUWcp5hiAVAgL1ndynUEZ7cpLjmKQLq8DtuwwJFSFlNE88
-         NS9lRulXRwTri3nGh6wR0qOjnZfq5jIK/ZJsF2+CIRtHd8k0fxXo8lD6H/kdn3UXfiuI
-         GnUQ==
-X-Gm-Message-State: APjAAAXAh2iHouUoF9l2YEu0/rm+BR00+q3AcVOZy57JVAo5xmTOHKfH
-        AQBWE8LvX9XcXrSSbP054DTsYAem
-X-Google-Smtp-Source: APXvYqzhLWN7kBjH/xpFNJo8AiTA/UshT5Bx54cAvmoRK2pPgZCazIRUnYlQ619km8lD8lJLhPoq/A==
-X-Received: by 2002:a5d:6349:: with SMTP id b9mr6038286wrw.346.1576713501403;
-        Wed, 18 Dec 2019 15:58:21 -0800 (PST)
+        bh=j3AYhR6iXywWYQ/K9jqjM0MdVWjyW/M1px4KFelLlME=;
+        b=RPJ0V0IoBjIvLfnjhAr373c0xrTZYHUTlYTwD21KpBs7vbKXFnetQEC2ry0r/aE4/D
+         RgSU9TNiomokYu1DMX9AfYVspNVY9WpORTqh7UEBl8x4goa5n5wwbOiMvW7mfh7IBBMh
+         9VxXjUI2Xk4ji5KKtpOZgc7R8W3qdyqfFue8CGwtegyUxSti8owctJbmgJU6WibjqhNp
+         acwDEQ7vA8wvo7oSFxoBLc4iDQNVtAxUWYIDitzYE+8w2rs5T7gKcKhIuvDhAZTpdFQD
+         G1YJ3dawvmB3EZPhaYpNbxDPBF0soaM1q5CiEFrRqykUIwt94OElFrfj2S3AOBio+xI3
+         SYxQ==
+X-Gm-Message-State: APjAAAX0kDRutSbZkPFMVrcl99XywCTKgfYYgoz3iVt1EUy5y/DSUY5m
+        eLBOYtxk2yiqW3xT2v0dtQC8b8/i
+X-Google-Smtp-Source: APXvYqzDQn8crWdCY5gWx0hwd0WIbUNRV/Qju1rTXAKqQaDc/MBNH6xi79GEwhZyTRZTp6kwVey6dg==
+X-Received: by 2002:a7b:c00c:: with SMTP id c12mr6268921wmb.174.1576713503054;
+        Wed, 18 Dec 2019 15:58:23 -0800 (PST)
 Received: from os42.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id x11sm4240731wmg.46.2019.12.18.15.58.19
+        by smtp.gmail.com with ESMTPSA id x11sm4240731wmg.46.2019.12.18.15.58.21
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 18 Dec 2019 15:58:20 -0800 (PST)
+        Wed, 18 Dec 2019 15:58:22 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 02/10] lpfc: Fix: Rework setting of fdmi symbolic node name registration
-Date:   Wed, 18 Dec 2019 15:58:00 -0800
-Message-Id: <20191218235808.31922-3-jsmart2021@gmail.com>
+Subject: [PATCH 03/10] lpfc: Fix missing check for CSF in Write Object Mbox Rsp
+Date:   Wed, 18 Dec 2019 15:58:01 -0800
+Message-Id: <20191218235808.31922-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191218235808.31922-1-jsmart2021@gmail.com>
 References: <20191218235808.31922-1-jsmart2021@gmail.com>
@@ -69,81 +69,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch reworks the fdmi symbolic node name data for the following
-two issues:
-- Correcting extraneous periods following the DV and HN fdmi data fields.
-- Avoiding buffer overflow issues when formatting the data.
+When the WriteObject mailbox response has change_status set to is 0x2
+(Firmware Reset) or 0x04 (Port Migration Reset), the CSF field should
+also be checked to see if a fw reset is sufficient to enable all new
+features in the updated firmware image. If not, a fw reset would start
+the new firmware, but with a feature level equal to existing firmware.
+To enable the new features, a chip reset/pci slot reset would be
+required.
 
-The fix to the fist issue is to just remove the characters.
-The fix to the second issue has all data being staged in temporary
-storage before being moved to the real buffer.
+Check the CSF bit when change_status is 0x2 or 0x4 to know whether to
+perform a pci bus reset or fw reset.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 42 ++++++++++++++++++++++--------------------
- 1 file changed, 22 insertions(+), 20 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h |  3 +++
+ drivers/scsi/lpfc/lpfc_sli.c | 12 +++++++++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 99c9bb249758..1b4dbb28fb41 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1493,33 +1493,35 @@ int
- lpfc_vport_symbolic_node_name(struct lpfc_vport *vport, char *symbol,
- 	size_t size)
- {
--	char fwrev[FW_REV_STR_SIZE];
--	int n;
-+	char fwrev[FW_REV_STR_SIZE] = {0};
-+	char tmp[MAXHOSTNAMELEN] = {0};
- 
--	lpfc_decode_firmware_rev(vport->phba, fwrev, 0);
-+	memset(symbol, 0, size);
- 
--	n = scnprintf(symbol, size, "Emulex %s", vport->phba->ModelName);
--	if (size < n)
--		return n;
-+	scnprintf(tmp, sizeof(tmp), "Emulex %s", vport->phba->ModelName);
-+	if (strlcat(symbol, tmp, size) >= size)
-+		goto buffer_done;
- 
--	n += scnprintf(symbol + n, size - n, " FV%s", fwrev);
--	if (size < n)
--		return n;
-+	lpfc_decode_firmware_rev(vport->phba, fwrev, 0);
-+	scnprintf(tmp, sizeof(tmp), " FV%s", fwrev);
-+	if (strlcat(symbol, tmp, size) >= size)
-+		goto buffer_done;
- 
--	n += scnprintf(symbol + n, size - n, " DV%s.",
--		      lpfc_release_version);
--	if (size < n)
--		return n;
-+	scnprintf(tmp, sizeof(tmp), " DV%s", lpfc_release_version);
-+	if (strlcat(symbol, tmp, size) >= size)
-+		goto buffer_done;
- 
--	n += scnprintf(symbol + n, size - n, " HN:%s.",
--		      init_utsname()->nodename);
--	if (size < n)
--		return n;
-+	scnprintf(tmp, sizeof(tmp), " HN:%s", init_utsname()->nodename);
-+	if (strlcat(symbol, tmp, size) >= size)
-+		goto buffer_done;
- 
- 	/* Note :- OS name is "Linux" */
--	n += scnprintf(symbol + n, size - n, " OS:%s",
--		      init_utsname()->sysname);
--	return n;
-+	scnprintf(tmp, sizeof(tmp), " OS:%s", init_utsname()->sysname);
-+	strlcat(symbol, tmp, size);
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 25cdcbc2b02f..9a064b96e570 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -3925,6 +3925,9 @@ struct lpfc_mbx_wr_object {
+ #define LPFC_CHANGE_STATUS_FW_RESET		0x02
+ #define LPFC_CHANGE_STATUS_PORT_MIGRATION	0x04
+ #define LPFC_CHANGE_STATUS_PCI_RESET		0x05
++#define lpfc_wr_object_csf_SHIFT		8
++#define lpfc_wr_object_csf_MASK			0x00000001
++#define lpfc_wr_object_csf_WORD			word5
+ 		} response;
+ 	} u;
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c82b5792da98..12319f63cb45 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -19449,7 +19449,7 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 	struct lpfc_mbx_wr_object *wr_object;
+ 	LPFC_MBOXQ_t *mbox;
+ 	int rc = 0, i = 0;
+-	uint32_t shdr_status, shdr_add_status, shdr_change_status;
++	uint32_t shdr_status, shdr_add_status, shdr_change_status, shdr_csf;
+ 	uint32_t mbox_tmo;
+ 	struct lpfc_dmabuf *dmabuf;
+ 	uint32_t written = 0;
+@@ -19506,6 +19506,16 @@ lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
+ 	if (check_change_status) {
+ 		shdr_change_status = bf_get(lpfc_wr_object_change_status,
+ 					    &wr_object->u.response);
 +
-+buffer_done:
-+	return strnlen(symbol, size);
++		if (shdr_change_status == LPFC_CHANGE_STATUS_FW_RESET ||
++		    shdr_change_status == LPFC_CHANGE_STATUS_PORT_MIGRATION) {
++			shdr_csf = bf_get(lpfc_wr_object_csf,
++					  &wr_object->u.response);
++			if (shdr_csf)
++				shdr_change_status =
++						   LPFC_CHANGE_STATUS_PCI_RESET;
++		}
 +
- }
- 
- static uint32_t
+ 		switch (shdr_change_status) {
+ 		case (LPFC_CHANGE_STATUS_PHYS_DEV_RESET):
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
 -- 
 2.13.7
 
