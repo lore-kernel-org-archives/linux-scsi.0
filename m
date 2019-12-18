@@ -2,89 +2,91 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1E51C2D0CD
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 16:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA2CC2D0BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 17:24:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A41CF218AC
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 16:51:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D16120717
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 17:24:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbfLRQvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 11:51:49 -0500
-Received: from h4.fbrelay.privateemail.com ([131.153.2.45]:47347 "EHLO
-        h4.fbrelay.privateemail.com." rhost-flags-OK-OK-FAIL-FAIL)
-        by vger.kernel.org with ESMTP id S1727217AbfLRQvt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Dec 2019 11:51:49 -0500
-Received: from MTA-06-3.privateemail.com (mta-06.privateemail.com [68.65.122.16])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by h3.fbrelay.privateemail.com (Postfix) with ESMTPS id F105080A23
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 11:40:26 -0500 (EST)
-Received: from MTA-06.privateemail.com (localhost [127.0.0.1])
-        by MTA-06.privateemail.com (Postfix) with ESMTP id F103160043;
-        Wed, 18 Dec 2019 11:40:25 -0500 (EST)
-Received: from localhost.localdomain (unknown [10.20.151.206])
-        by MTA-06.privateemail.com (Postfix) with ESMTPA id 458D06004F;
-        Wed, 18 Dec 2019 16:40:25 +0000 (UTC)
-From:   rattard@ryanattard.info
-To:     axboe@kernel.dk, linux-scsi@vger.kernel.org, dgilbert@interlog.com,
-        JBottomley@parallels.com
-Subject: [PATCH 0/1] Allow non-root users to perform ZBC commands 
-Date:   Wed, 18 Dec 2019 10:40:07 -0600
-Message-Id: <20191218164008.99155-1-rattard@ryanattard.info>
-X-Mailer: git-send-email 2.24.0
+        id S1727505AbfLRRYw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 12:24:52 -0500
+Received: from mout.kundenserver.de ([217.72.192.75]:56179 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727421AbfLRRYw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 12:24:52 -0500
+Received: from mail-qk1-f178.google.com ([209.85.222.178]) by
+ mrelayeu.kundenserver.de (mreue106 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1M9Ezx-1ie4xy3w9P-006OkQ; Wed, 18 Dec 2019 18:24:50 +0100
+Received: by mail-qk1-f178.google.com with SMTP id x1so2188813qkl.12;
+        Wed, 18 Dec 2019 09:24:49 -0800 (PST)
+X-Gm-Message-State: APjAAAVXfTLNz8CslELgOfx/whf7bJynMYr+1RoXR7XgH0b/wBmABeaa
+        K5S/8uy/H00fG/L6wYmbH856Lhm56mOcPG7rTOs=
+X-Google-Smtp-Source: APXvYqyNJEBloZ1YqNMcwCEEBSPalbN1+SGYcbTZM7WF7GsOI/WVULRZC6cWixz2rQbuIblJbLHmDbv7N0/KEb50vz0=
+X-Received: by 2002:a37:b283:: with SMTP id b125mr3790918qkf.352.1576689888424;
+ Wed, 18 Dec 2019 09:24:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Virus-Scanned: ClamAV using ClamSMTP
+References: <20191217221708.3730997-1-arnd@arndb.de>
+In-Reply-To: <20191217221708.3730997-1-arnd@arndb.de>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 18 Dec 2019 18:24:32 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a3fsDRsZh--vn4SWA-NfeeSpzueqGDvjF5jDSZ91P9+Hw@mail.gmail.com>
+Message-ID: <CAK8P3a3fsDRsZh--vn4SWA-NfeeSpzueqGDvjF5jDSZ91P9+Hw@mail.gmail.com>
+Subject: Re: [GIT PULL v2 00/27] block, scsi: final compat_ioctl cleanup
+To:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Ben Hutchings <ben.hutchings@codethink.co.uk>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:2yS9E+h3iiHLMSpr5Oh8QkPIqh/ADGCowjCUJa4BCmSJZisJXDU
+ 9FQQIivHcX6CjxWkchwJ5jtwZ78lyJnp7HGjOWtGkQM7R6W2haa9g/EWb8BARbQxEafXQjd
+ cHFBF68pN/FQPhSJ8d2u6zzngsRMJih9uhI501zg4jSLvB1Mdfd9ZiRvnuP1WjMogC0fW8n
+ PCKXpGfe6dIy3kLQ+NtkQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Nsc1mGgJPC8=:l98U0iLtPWXLaCrol5kh8i
+ 5jxpqkJxR8p/2dDN9RZuOgt+RItYvjwTnYFTqwScAIbHbkjDAPuZvWZEmCQoAM2e1v495lZda
+ CSrsVs8izEjV6eVvWFGcV0z3dIU49G5DrhyFonUiuiI4260okE8wXfvcgPWVeR4O58UkoPvmg
+ VS9KgIz7snMm5W9F27h9nXnjLSmUHgG+UcVPsQq7uuKgDyTomltqfmfmzreN8amH8B1Xf9f1b
+ CnpJj+pHKeZDwwpSALnHU6rkwmoWJGwY2zrgVvlbhwAr6ow5+RfOEMcUj0Qy8PnhnkiHiS2Q/
+ xFTHkWN8u5jvNSwKSP4O2Le+pAl/LmowS6mCqRjPrXsRei4k90YEqyyZkoRXzqf1pJ5pWc4o4
+ oM2mEJb1kRL+w4mscgkEVMFuFv2hsZExn/HqIfp5qHzURkBkPT6FKoNALuCOZ7k/fR5MlR8F3
+ eJ6k66mnlvVQ3ZTZ7iWuA+EbVjfyt6tdaFtyoFgfrkId7L/f1HoTsx3XcUzHza5UrtfhPk54m
+ ZRc77vl9b/HRWBIeNGWTP/7C4JoIBHImj9LyHk25mkWybdac2fDvPOgUBRPj3f5RaLFyhFAFX
+ c7JgaZpsuuEwniRmBeUZHmQunx48BiGNf7M2XugatqoyD3gLZEWB37cuYoEMmCjHT7pUE2+Na
+ g+m49nPBcGpRonpFEA/3eKtTFaD9OxRC7T4giRBioFpL/5YnmCEsf40Ev68OSo6Hzu04NGvKg
+ B9iMjyQlhQBIgtKBGvYa+MnTiI8qylh5IwW4AtXAWsTtPo89C/EhTAZhzzMQK0IXhlL4IvU6S
+ nTQE60gykztYji474VdaTc0t5K02c3sJazbA2bA3R8s80EGme8CqkMbhkPdFp0F8s6WL2DQhV
+ qOIqjWjFptnMpgjs5BKw==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The source of this issue is that a group is configured that allows a service 
-user to perform read and writes to a specific set of disks, and the permissions 
-on the sd device entries for a host managed device have permissions 0660, same 
-as the sg device entry. Operations succeed on the sg device (since there is
-a different code path for handling those operations). 
+On Tue, Dec 17, 2019 at 11:17 PM Arnd Bergmann <arnd@arndb.de> wrote:
+> My plan was originally to keep the SCSI and block parts separate.
+> This did not work easily because of interdependencies: I cannot
+> do the final SCSI cleanup in a good way without first addressing the
+> CDROM ioctls, so this is one series that I hope could be merged through
+> either the block or the scsi git trees, or possibly both if you can
+> pull in the same branch.
 
-There was some hand wringing around adding CAP_SYS_RAWIO capabilities to that 
-user, since it includes things like /dev/mem access which was not desired or 
-required to perform disk write operations. 
+I have included the branch in my y2038 branch now, it should show up
+in the following linux-next snapshots, but I'm still hoping for the block
+or scsi maintainers to merge the pull request into their trees for v5.6
 
-Example failure:
-root@device_with_zbc_disks:~# su -s /bin/bash -c 'sg_rep_zones -vv /dev/sdh -m 128' USER_LOW_PERMS
-open /dev/sdh with flags=0x802
-    Report zones cdb: 95 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00
-ioctl(SG_IO v3) failed: Operation not permitted (errno=1)
-report zones: pass through os error: Operation not permitted
-Report zones command: Sense category: -1
-root@device_with_zbc_disks:~# su -s /bin/bash -c 'sg_rep_zones -vv /dev/sg7 -m 128' USER_LOW_PERMS
-open /dev/sdh with flags=0x802
-    Report zones cdb: 95 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00
-zl_len available is 2624, response length is 128
-Report zones response:
-  Same=0: zone type and length may differ in each descriptor
-<snip>
+Jens, James, Martin:
 
+Any suggestion for how this should be merged?
 
-Example with patch:
-root@device_with_zbc_disks:~# su -s /bin/bash -c 'sg_rep_zones -vv /dev/sdh -m 128' USER_LOW_PERMS
-open /dev/sdh with flags=0x802
-    Report zones cdb: 95 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00
-zl_len available is 2624, response length is 128
-Report zones response:
-  Same=0: zone type and length may differ in each descriptor
-<snip>
-
-
-Thanks,
-
-Ryan
-
-
-
-
+        Arnd
