@@ -2,268 +2,132 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E2FC43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 22:45:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EF1C43603
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA44721D7D
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 22:45:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22E4E24650
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:37:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Zw03CRGi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726733AbfLRWpf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 17:45:35 -0500
-Received: from imap2.colo.codethink.co.uk ([78.40.148.184]:44768 "EHLO
-        imap2.colo.codethink.co.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726387AbfLRWpd (ORCPT
+        id S1726721AbfLRXhf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:37:35 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:26665 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726671AbfLRXhd (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Dec 2019 17:45:33 -0500
-Received: from [167.98.27.226] (helo=xylophone)
-        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
-        id 1ihi4I-0005B3-TV; Wed, 18 Dec 2019 22:45:23 +0000
-Message-ID: <53cd123fdcb893df36e0b3bf9dddbfe08f9c545e.camel@codethink.co.uk>
-Subject: Re: [PATCH v2 27/27] Documentation: document ioctl interfaces better
-From:   Ben Hutchings <ben.hutchings@codethink.co.uk>
-To:     Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>, linux-doc@vger.kernel.org,
-        corbet@lwn.net, viro@zeniv.linux.org.uk,
-        linux-fsdevel@vger.kernel.org
-Date:   Wed, 18 Dec 2019 22:45:22 +0000
-In-Reply-To: <20191217221708.3730997-28-arnd@arndb.de>
-References: <20191217221708.3730997-1-arnd@arndb.de>
-         <20191217221708.3730997-28-arnd@arndb.de>
-Organization: Codethink Ltd.
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1.1 
+        Wed, 18 Dec 2019 18:37:33 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576712253; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=aOyF/9vjrq0zND57ZRP80ePOcz7ZOQqlqlcaCLPEKJg=; b=Zw03CRGi75UoNlS9hc45vK2pSM1l4OQryM+VA/E1VM9XazZluTIX8+bCy44R98ONyKfVNXLT
+ A0LsVKkS4JtMxE4dZqjqwHnpj1QwoGe8dDEkFyA9psIdcoy3MXqK/sOMDo3lTntE72BnTs/9
+ PqN61st7xHT05NE8dAcGRMGSp80=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5dfab839.7f34256a3f10-smtp-out-n02;
+ Wed, 18 Dec 2019 23:37:29 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 726A6C447AA; Wed, 18 Dec 2019 23:37:29 +0000 (UTC)
+Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 016A9C4479C;
+        Wed, 18 Dec 2019 23:37:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 016A9C4479C
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v1 2/2] scsi: ufs: disable interrupt during clock-gating
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com,
+        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
+        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        beanhuo@micron.com, kuohong.wang@mediatek.com,
+        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
+        andy.teng@mediatek.com
+References: <1575721321-8071-1-git-send-email-stanley.chu@mediatek.com>
+ <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
+ <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
+ <1576641171.13056.16.camel@mtkswgap22>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <7756630e-adf2-47e9-4815-ba2306a9dd16@codeaurora.org>
+Date:   Wed, 18 Dec 2019 15:37:26 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
 MIME-Version: 1.0
+In-Reply-To: <1576641171.13056.16.camel@mtkswgap22>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2019-12-17 at 23:17 +0100, Arnd Bergmann wrote:
-[...]
-> --- /dev/null
-> +++ b/Documentation/core-api/ioctl.rst
-> @@ -0,0 +1,248 @@
-> +======================
-> +ioctl based interfaces
-> +======================
-> +
-> +ioctl() is the most common way for applications to interface
-> +with device drivers. It is flexible and easily extended by adding new
-> +commands and can be passed through character devices, block devices as
-> +well as sockets and other special file descriptors.
-> +
-> +However, it is also very easy to get ioctl command definitions wrong,
-> +and hard to fix them later without breaking existing applications,
-> +so this documentation tries to help developers get it right.
-> +
-> +Command number definitions
-> +==========================
-> +
-> +The command number, or request number, is the second argument passed to
-> +the ioctl system call. While this can be any 32-bit number that uniquely
-> +identifies an action for a particular driver, there are a number of
-> +conventions around defining them.
-> +
-> +``include/uapi/asm-generic/ioctl.h`` provides four macros for defining
-> +ioctl commands that follow modern conventions: ``_IO``, ``_IOR``,
-> +``_IOW``, and ``_IORW``. These should be used for all new commands,
+On 12/17/2019 7:52 PM, Stanley Chu wrote:
+> Hi Asutosh,
+> 
+> On Tue, 2019-12-17 at 15:25 -0800, Asutosh Das (asd) wrote:
+>>>
+>>
+>> Hi,
+>> Does this save significant power? I see that gate/ungate of clocks
+>> happen far too frequently than suspend/resume.
+>>
+>> Have you considered how much latency this would add to the
+>> gating/ungating path?
+>>
+>> -asd
+>>
+> 
+> Yes, we have measured 200 times clk-gating/clk-ungating and latency data
+> is showed as below,
+> 
+> For clk-gating with interrupt disabling toggled,
+> 
+> 	Average latency of each clk-gating: 55.117 us
+> 	Average latency of irq-disabling during clk-gating: 4.2 us
+> 
+> For clk-ungating with interrupt enabling toggled,
+> 	Average latency of each clk-ungating: 118.324 us
+> 	Average latency of irq-enabling during clk-ungating: 2.9 us
+> 
+> The evaluation here is based on below Can's patch therefore the
+> interrupt control (enable_irq/disable_irq) latency is much shorter than
+> before (request_irq/free_irq).
+> 
+> scsi: ufs: Do not free irq in suspend
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/drivers/scsi/ufs/ufshcd.c?id=8709c1f68536e256668812788af5b2bb027f49c3
+> 
+> BTW, the main purpose of this patch is aimed to protect ufshcd register
+> from accessing while host clocks are disabled to fix potential system
+> hang issue. The possible scenario is mentioned in commit message of
+> patch "scsi: ufs: disable irq before disabling clocks" in the same
+> series.
+> 
+> Thanks
+> Stanley
+> 
 
-Typo: "_IORW" should be "_IOWR".
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-> +with the correct parameters:
-> +
-> +_IO/_IOR/_IOW/_IOWR
-> +   The macro name determines whether the argument is used for passing
-> +   data into kernel (_IOW), from the kernel (_IOR), both (_IOWR) or is
-> +   not a pointer (_IO). It is possible but not recommended to pass an
-> +   integer value instead of a pointer with _IO.
+Thanks for the data.
+It'd be interesting to know more on the - misrouted interrupt recovery 
+feature though.
 
-I feel the explanation of _IO here could be confusing.  I think what
-you meant to say was that it is possible, but not recommended, to pass
-integers directly (arg is integer) rather than indirectly (arg is
-pointer to integer).  I suggest the alternate wording:
-
-The macro name specifies how the argument will be used.  It may be a
-pointer to data to be passed into the kernel (_IOW), out of the kernel
-(_IOR), or both (_IOWR).  The argument may also be an integer value
-instead of a pointer (_IO), but this is not recommended.
-
-> +type
-> +   An 8-bit number, often a character literal, specific to a subsystem
-> +   or driver, and listed in :doc:`../userspace-api/ioctl/ioctl-number`
-> +
-> +nr
-> +  An 8-bit number identifying the specific command, unique for a give
-> +  value of 'type'
-> +
-> +data_type
-> +  The name of the data type pointed to by the argument, the command number
-> +  encodes the ``sizeof(data_type)`` value in a 13-bit or 14-bit integer,
-> +  leading to a limit of 8191 bytes for the maximum size of the argument.
-> +  Note: do not pass sizeof(data_type) type into _IOR/IOW, as that will
-> +  lead to encoding sizeof(sizeof(data_type)), i.e. sizeof(size_t).
-
-You left out _IOWR here.  It might also be worth mentioning that _IO
-doesn't have this parameter.
-
-[...]
-> +Return code
-> +===========
-> +
-> +ioctl commands can return negative error codes as documented in errno(3),
-> +these get turned into errno values in user space.
-
-Use a semi-colon instead of a comma, or change "these" to "which".
-
-> On success, the return
-> +code should be zero. It is also possible but not recommended to return
-> +a positive 'long' value.
-> +
-> +When the ioctl callback is called with an unknown command number, the
-> +handler returns either -ENOTTY or -ENOIOCTLCMD, which also results in
-> +-ENOTTY being returned from the system call. Some subsystems return
-> +-ENOSYS or -EINVAL here for historic reasons, but this is wrong.
-> +
-> +Prior to Linux-5.5, compat_ioctl handlers were required to return
-
-Space instead of hyphen.
-
-> +-ENOIOCTLCMD in order to use the fallback conversion into native
-> +commands. As all subsystems are now responsible for handling compat
-> +mode themselves, this is no longer needed, but it may be important to
-> +consider when backporting bug fixes to older kernels.
-> +
-> +Timestamps
-> +==========
-> +
-> +Traditionally, timestamps and timeout values are passed as ``struct
-> +timespec`` or ``struct timeval``, but these are problematic because of
-> +incompatible definitions of these structures in user space after the
-> +move to 64-bit time_t.
-> +
-> +The __kernel_timespec type can be used instead to be embedded in other
-
-It's not a typedef, so ``struct __kernel_timespec``.
-
-[...]
-> +32-bit compat mode
-> +==================
-> +
-> +In order to support 32-bit user space running on a 64-bit machine, each
-> +subsystem or driver that implements an ioctl callback handler must also
-> +implement the corresponding compat_ioctl handler.
-> +
-> +As long as all the rules for data structures are followed, this is as
-> +easy as setting the .compat_ioctl pointer to a helper function such as
-> +compat_ptr_ioctl() or blkdev_compat_ptr_ioctl().
-> +
-> +compat_ptr()
-> +------------
-> +
-> +On the s/390 architecture, 31-bit user space has ambiguous representations
-
-IBM never used the name "S/390" for the 64-bit mainframe architecture,
-but they have rebranded it several times.  Rather than trying to follow
-what it's called this year, maybe just write "s390" to match what we
-usually call it?
-
-[...]
-> +Structure layout
-> +----------------
-> +
-> +Compatible data structures have the same layout on all architectures,
-> +avoiding all problematic members:
-> +
-> +* ``long`` and ``unsigned long`` are the size of a register, so
-> +  they can be either 32-bit or 64-bit wide and cannot be used in portable
-> +  data structures. Fixed-length replacements are ``__s32``, ``__u32``,
-> +  ``__s64`` and ``__u64``.
-> +
-> +* Pointers have the same problem, in addition to requiring the
-> +  use of compat_ptr(). The best workaround is to use ``__u64``
-> +  in place of pointers, which requires a cast to ``uintptr_t`` in user
-> +  space, and the use of u64_to_user_ptr() in the kernel to convert
-> +  it back into a user pointer.
-> +
-> +* On the x86-32 (i386) architecture, the alignment of 64-bit variables
-> +  is only 32-bit, but they are naturally aligned on most other
-> +  architectures including x86-64. This means a structure like::
-> +
-> +    struct foo {
-> +        __u32 a;
-> +        __u64 b;
-> +        __u32 c;
-> +    };
-> +
-> +  has four bytes of padding between a and b on x86-64, plus another four
-> +  bytes of padding at the end, but no padding on i386, and it needs a
-> +  compat_ioctl conversion handler to translate between the two formats.
-> +
-> +  To avoid this problem, all structures should have their members
-> +  naturally aligned, or explicit reserved fields added in place of the
-> +  implicit padding.
-
-This should explain how to check that - presumably by running pahole on
-some sensible architecture.
-
-> +* On ARM OABI user space, 16-bit member variables have 32-bit
-> +  alignment, making them incompatible with modern EABI kernels.
-
-I thought that OABI required structures as a whole to have alignment of
-4, not individual members?  Which obviously does affect small
-structures as members of other structures.
-
-[...]
-> +Information leaks
-> +=================
-> +
-> +Uninitialized data must not be copied back to user space, as this can
-> +cause an information leak, which can be used to defeat kernel address
-> +space layout randomization (KASLR), helping in an attack.
-> +
-> +As explained for the compat mode, it is best to not avoid any implicit
-
-Delete "not".
-
-> +padding in data structures, but if there is already padding in existing
-> +structures, the kernel driver must be careful to zero out the padding
-> +using memset() or similar before copying it to user space.
-
-This sentence is rather too long.  Also it can be read as suggesting
-that one should somehow identify and memset() the padding just before
-copying to user-space.  I suggest an alternate wording:
-
-For this reason (and for compat support) it is best to avoid any
-implicit padding in data structures.  Where there is implicit padding
-in an existing structure, kernel drivers must be careful to fully
-initialize an instance of the structure before copying it to user
-space.  This is usually done by calling memset() before assigning to
-individual members.
-
-[...]
-> +Alternatives to ioctl
-> +=====================
-[...]
-> +* A custom file system can provide extra flexibility with a simple
-> +  user interface but add a lot of complexity to the implementation.
-
-Typo: "add" should be "adds".
-
-Anyway, it's great to have documentation for this all in one place.
-
-Ben.
+-
+Thanks
+Asutosh
 
 -- 
-Ben Hutchings, Software Developer                         Codethink Ltd
-https://www.codethink.co.uk/                 Dale House, 35 Dale Street
-                                     Manchester, M1 2HF, United Kingdom
-
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
