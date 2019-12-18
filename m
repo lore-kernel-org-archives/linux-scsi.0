@@ -2,103 +2,125 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D79B2C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 21:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43230C2D0BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 22:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7519218AC
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 21:25:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mMpmzkws"
+	by mail.kernel.org (Postfix) with ESMTP id 16C5421D7D
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 22:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726571AbfLRVZv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 16:25:51 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:48002 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbfLRVZu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 16:25:50 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBIL9ubq024580;
-        Wed, 18 Dec 2019 21:25:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=o0Ec6O81R9S/s1aFgVFSRf2acsKPiDwr5VOnJ+jfnv8=;
- b=mMpmzkws+v31mLu/VlvZnAUKkcGHP6plUjCvB2GGXXq3LAAtECCEK/gdYL4ExBxv0S9n
- /jEtn3HJ7VVEUYv+EXkztASzutP5ltutquVsTZHg9G/Zjl9aEQNq3t4kILILagMb9AIu
- dq0QY9pIPV8z3Z4ITvf1c35zRzvN49mqesNdu+PVp89NlF+ouc9UkUY5GWlHFQ6Y6kQ6
- w2cRE0WKJ/kpqjgxwtB/hH2Scis+xrvMPCK671uOlw8BiugMNc69vg2feShxxd2AcO4b
- UrarR2dgvf8NVMMoZdTs/VL5h/oiDsYwCTyAuUcnfo3gWbo4QVTQA3pmDRcFISrAWebt VA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2wvq5urcae-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:25:32 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBILAtB4186597;
-        Wed, 18 Dec 2019 21:25:32 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2wyut48eeq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Dec 2019 21:25:31 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBILPVFJ003758;
-        Wed, 18 Dec 2019 21:25:31 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 13:25:31 -0800
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191218145136.172774-1-satyat@google.com>
-        <20191218145136.172774-3-satyat@google.com>
-        <20191218212116.GA7476@magnolia>
-Date:   Wed, 18 Dec 2019 16:25:28 -0500
-In-Reply-To: <20191218212116.GA7476@magnolia> (Darrick J. Wong's message of
-        "Wed, 18 Dec 2019 13:21:16 -0800")
-Message-ID: <yq1y2v9e37b.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726680AbfLRWSI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 17:18:08 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:57147 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726463AbfLRWSI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 17:18:08 -0500
+Received: from mail-qv1-f53.google.com ([209.85.219.53]) by
+ mrelayeu.kundenserver.de (mreue106 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1MCb2L-1iYayM1wPr-009kFD; Wed, 18 Dec 2019 23:18:05 +0100
+Received: by mail-qv1-f53.google.com with SMTP id t6so1417050qvs.5;
+        Wed, 18 Dec 2019 14:18:04 -0800 (PST)
+X-Gm-Message-State: APjAAAVaZD2Eg3fQdtcxD5JNcEDeSWedyMkZnQMYrHy4zAjY87Gesyih
+        JnguV6JWq6ALfPIct0HX+dvV0SENfOwKpuyDtco=
+X-Google-Smtp-Source: APXvYqyDPnpRg6mwfTYotGIKOQD9lfniBnekpDffjnBEQMcvT9QFg9SCGIabTN09eE8JL5PLpkkzWzeQzawX7/VdQRw=
+X-Received: by 2002:a0c:bd20:: with SMTP id m32mr4714621qvg.197.1576707483927;
+ Wed, 18 Dec 2019 14:18:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=981
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912180163
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912180163
+References: <20191217221708.3730997-1-arnd@arndb.de> <20191217221708.3730997-24-arnd@arndb.de>
+ <a75a7d44ebd9ff65499445dd6b087c92345af2e4.camel@codethink.co.uk>
+In-Reply-To: <a75a7d44ebd9ff65499445dd6b087c92345af2e4.camel@codethink.co.uk>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 18 Dec 2019 23:17:47 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a28Qn22Cx-bVhY5rjZVuhRXE2Jb0rezCozAhC0DZqxcUg@mail.gmail.com>
+Message-ID: <CAK8P3a28Qn22Cx-bVhY5rjZVuhRXE2Jb0rezCozAhC0DZqxcUg@mail.gmail.com>
+Subject: Re: [PATCH v2 23/27] compat_ioctl: move HDIO ioctl handling into drivers/ide
+To:     Ben Hutchings <ben.hutchings@codethink.co.uk>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:1PWPgZSgrRh6EkOUrB3DH+xnzxWn4VChdd2c+XUEePlmPgEeiRT
+ WBXUNhoDFsWsB3hFwrB8BWcaTMZ98sEXhl1yhopz051z3GfzrXW2sjnLGTDTOgoI7h4ZrkA
+ Wz3r1NRM3OTTjWJyMOoGBcMyG/0eU2luHF/loRr6FvQzgmZY4FgQyKSCOUwwNZYetGTXSc3
+ ObsQGsD1xEzW1TOWm0zkw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:RCLkvQsMPHY=:VDRkTzHgQuVwKcfZTX1u3c
+ Odf9cE7PFpDFxH3rWds5DWffyWo9xpGYD7HllVmGHIspdwdcy8OWnDb6pRjzRcR6n10keYisV
+ 54NYj3peZVr6V5wA2l18peGWDmj/2oNEiDnNQqV4QrQkUVstQdKiwM0GUjU9fwRZvAPIa23bI
+ ikebAXX+CkFGogZzFsE/I8FOmKMevGeslbyQkZ0A1bSygpO3h+F8YCaoz0HlcGdaQ+fJUHba1
+ eGZRftu6zpBq9CDHpqmPcojBvh6UvPa0IHRmLJlucWmVL88GEYDJQoQ+If9zX40UJWukt+0RT
+ uS81BK/d6enp8kTOg2C+EK8/lLgQy/MT2S7Hq+Hxx+O1vD9MjjtDpbH4gzjTr1haxyTe7h6UJ
+ drby9OJqq4bBuGnx/Oi8LXaUecAe/X749by6S4hbU+JzZAKpRmBW6XvMDhN5p5LbOF3O1W1pB
+ Gyd+HaTpFjrAGa7hxcClEwNU/A5+NBig8cyg+fuLgKUFlDEYsnG2NTx/0uFQuEVFwyqM/NO+V
+ ozWcER5O2eJfCOF7c/67Nj03gtVSaKj3NDgg4MKsiLE4UJAtqm37csxazsTgaXv7Qp2j5to3O
+ C7ba353V33oTdnoV9ODoqWhWxBhciNbwOZp11vTPS5g7OBLzcLYLZA0SZ+JTi4jBWf5UJY2Wb
+ 1/5L0N/zuxJuXpRYOj7W7Qy0OyDntmqjCkn6bGqJx19rNVdMjdHMjl4cNHVcPwzm77W7WrJs3
+ PKpnpTi8q8uD3GFPW+4nJxbZa6/DLbV0VmpbSZqYDlBC0lzNFEcuU93gd0Vcqu++u6sk2DvPv
+ pxugqTtQ6rZ9OGTHmD641paRuungUXGui8mJUrTAHJ0x6CjQ9SAnLzWiUAg+YrjD6b1CnP4W/
+ DH3Ifk4KJjOivfjXflFw==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-Darrick,
-
->> +#ifdef CONFIG_BLK_INLINE_ENCRYPTION
->> +	struct bio_crypt_ctx	*bi_crypt_context;
->> +#endif
+On Wed, Dec 18, 2019 at 10:11 PM Ben Hutchings
+<ben.hutchings@codethink.co.uk> wrote:
+> On Tue, 2019-12-17 at 23:17 +0100, Arnd Bergmann wrote:
+> > Most of the HDIO ioctls are only used by the obsolete drivers/ide
+> > subsystem, these can be handled by changing ide_cmd_ioctl() to be aware
+> > of compat mode and doing the correct transformations in place and using
+> > it as both native and compat handlers for all drivers.
+> >
+> > The SCSI drivers implementing the same commands are already doing
+> > this in the drivers, so the compat_blkdev_driver_ioctl() function
+> > is no longer needed now.
+> >
+> > The BLKSECTSET and HDIO_GETGEO_BIG ioctls are not implemented
+> > in any driver any more and no longer need any conversion.
+> [...]
 >
-> This grows struct bio even if we aren't actively using bi_crypt_context,
-> and I thought Jens told us to stop making it bigger. :)
+> I noticed that HDIO_DRIVE_TASKFILE, handled by ide_taskfile_ioctl() in
+> drivers/ide/ide-taskfile.c, never had compat handling before.  After
+> this patch it does, but its argument isn't passed through compat_ptr().
+> Again, doesn't really matter because IDE isn't a thing on s390.
 
-Yeah. Why not use the bio integrity plumbing? It was explicitly designed
-to attach things to a bio and have them consumed by the device driver.
+I checked again, and I think it's worse than that: ide_taskfile_ioctl()
+takes an ide_task_request_t argument, which is not compatible
+at all (it has two long members). I suspect what happened here
+is that I confused it with ide_cmd_ioctl(), which takes a 'struct
+ide_taskfile' argument that /is/ compatible.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I don't think there is a point in adding a handler now: most
+users of drivers/ide are 32-bit only, and nobody complained
+so far, but I would add this change if you agree:
+
+diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
+index f6497c817493..83afee3983fe 100644
+--- a/drivers/ide/ide-ioctls.c
++++ b/drivers/ide/ide-ioctls.c
+@@ -270,6 +270,9 @@ int generic_ide_ioctl(ide_drive_t *drive, struct
+block_device *bdev,
+        case HDIO_DRIVE_TASKFILE:
+                if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+                        return -EACCES;
++               /* missing compat handler for HDIO_DRIVE_TASKFILE */
++               if (in_compat_syscall())
++                       return -ENOTTY;
+                if (drive->media == ide_disk)
+                        return ide_taskfile_ioctl(drive, arg);
+                return -ENOMSG;
+
+
+
+         Arnd
