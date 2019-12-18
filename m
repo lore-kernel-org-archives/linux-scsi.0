@@ -2,69 +2,68 @@ Return-Path: <SRS0=fPmA=2I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EF1C43603
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5086FC2D0D2
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22E4E24650
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:37:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C9B722314
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Dec 2019 23:53:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Zw03CRGi"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bmvBQTxr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726721AbfLRXhf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 18:37:35 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:26665 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726671AbfLRXhd (ORCPT
+        id S1726680AbfLRXxp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 18:53:45 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:55644 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726620AbfLRXxo (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Dec 2019 18:37:33 -0500
+        Wed, 18 Dec 2019 18:53:44 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576712253; h=Content-Transfer-Encoding: Content-Type:
+ s=smtp; t=1576713223; h=Content-Transfer-Encoding: Content-Type:
  In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=aOyF/9vjrq0zND57ZRP80ePOcz7ZOQqlqlcaCLPEKJg=; b=Zw03CRGi75UoNlS9hc45vK2pSM1l4OQryM+VA/E1VM9XazZluTIX8+bCy44R98ONyKfVNXLT
- A0LsVKkS4JtMxE4dZqjqwHnpj1QwoGe8dDEkFyA9psIdcoy3MXqK/sOMDo3lTntE72BnTs/9
- PqN61st7xHT05NE8dAcGRMGSp80=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ Subject: Sender; bh=+dFcC2QCZE4EMyWiuaOLbaCWdMrLQF93LI0XXqLXM9Q=; b=bmvBQTxrxQyWxx8kMA5url77p7X1lp2MNwy6F2lKl3AlcLcm9wiVMBSaYnWMmbfqfy/BVD9c
+ XJkpreSkCnDvrvu6YLkyBaUBMZK+ENDj04gVXN+oBW/vdD1GK59SzAo+V2/lPTqhkO8HTuyo
+ 8MEqqxvngDv5cs9YTRvCvezUFO8=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfab839.7f34256a3f10-smtp-out-n02;
- Wed, 18 Dec 2019 23:37:29 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5dfabc03.7f8ab9da1148-smtp-out-n01;
+ Wed, 18 Dec 2019 23:53:39 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 726A6C447AA; Wed, 18 Dec 2019 23:37:29 +0000 (UTC)
+        id D2FE3C447A0; Wed, 18 Dec 2019 23:53:39 +0000 (UTC)
 Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 016A9C4479C;
-        Wed, 18 Dec 2019 23:37:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 016A9C4479C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 090F0C433A2;
+        Wed, 18 Dec 2019 23:53:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 090F0C433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 2/2] scsi: ufs: disable interrupt during clock-gating
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+Subject: Re: [PATCH v1 2/4] scsi: ufs: export ufshcd_auto_hibern8_update for
+ vendor usage
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, pedrom.sousa@synopsys.com,
+        jejb@linux.ibm.com, matthias.bgg@gmail.com
+Cc:     linux-mediatek@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         beanhuo@micron.com, kuohong.wang@mediatek.com,
         peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
         andy.teng@mediatek.com
-References: <1575721321-8071-1-git-send-email-stanley.chu@mediatek.com>
- <1575721321-8071-3-git-send-email-stanley.chu@mediatek.com>
- <a36d111e-ef7f-9f9b-6f6a-692a9980103a@codeaurora.org>
- <1576641171.13056.16.camel@mtkswgap22>
+References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com>
+ <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
 From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <7756630e-adf2-47e9-4815-ba2306a9dd16@codeaurora.org>
-Date:   Wed, 18 Dec 2019 15:37:26 -0800
+Message-ID: <ad0153db-93ad-0ecf-c2f3-1b76dda778d3@codeaurora.org>
+Date:   Wed, 18 Dec 2019 15:53:37 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.1
 MIME-Version: 1.0
-In-Reply-To: <1576641171.13056.16.camel@mtkswgap22>
+In-Reply-To: <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -73,60 +72,94 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/17/2019 7:52 PM, Stanley Chu wrote:
-> Hi Asutosh,
+On 12/13/2019 12:11 AM, Stanley Chu wrote:
+> Export ufshcd_auto_hibern8_update to allow vendors to use common
+> interface to customize auto-hibernate timer.
 > 
-> On Tue, 2019-12-17 at 15:25 -0800, Asutosh Das (asd) wrote:
->>>
->>
->> Hi,
->> Does this save significant power? I see that gate/ungate of clocks
->> happen far too frequently than suspend/resume.
->>
->> Have you considered how much latency this would add to the
->> gating/ungating path?
->>
->> -asd
->>
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>   drivers/scsi/ufs/ufs-sysfs.c | 20 --------------------
+>   drivers/scsi/ufs/ufshcd.c    | 18 ++++++++++++++++++
+>   drivers/scsi/ufs/ufshcd.h    |  1 +
+>   3 files changed, 19 insertions(+), 20 deletions(-)
 > 
-> Yes, we have measured 200 times clk-gating/clk-ungating and latency data
-> is showed as below,
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index ad2abc96c0f1..720be3f64be7 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -118,26 +118,6 @@ static ssize_t spm_target_link_state_show(struct device *dev,
+>   				ufs_pm_lvl_states[hba->spm_lvl].link_state));
+>   }
+>   
+> -static void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+> -{
+> -	unsigned long flags;
+> -
+> -	if (!ufshcd_is_auto_hibern8_supported(hba))
+> -		return;
+> -
+> -	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	if (hba->ahit != ahit)
+> -		hba->ahit = ahit;
+> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> -	if (!pm_runtime_suspended(hba->dev)) {
+> -		pm_runtime_get_sync(hba->dev);
+> -		ufshcd_hold(hba, false);
+> -		ufshcd_auto_hibern8_enable(hba);
+> -		ufshcd_release(hba);
+> -		pm_runtime_put(hba->dev);
+> -	}
+> -}
+> -
+>   /* Convert Auto-Hibernate Idle Timer register value to microseconds */
+>   static int ufshcd_ahit_to_us(u32 ahit)
+>   {
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index b5966faf3e98..589f519316aa 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -3956,6 +3956,24 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>   	return ret;
+>   }
+>   
+> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+> +{
+> +	unsigned long flags;
+> +
+> +	if (!(hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT))
+> +		return;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (hba->ahit == ahit)
+> +		goto out_unlock;
+> +	hba->ahit = ahit;
+> +	if (!pm_runtime_suspended(hba->dev))
+> +		ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +out_unlock:
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
+> +
+>   void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
+>   {
+>   	unsigned long flags;
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 2740f6941ec6..86586a0b9aa5 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -927,6 +927,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+>   	enum flag_idn idn, bool *flag_res);
+>   
+>   void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
+> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+>   
+>   #define SD_ASCII_STD true
+>   #define SD_RAW false
 > 
-> For clk-gating with interrupt disabling toggled,
-> 
-> 	Average latency of each clk-gating: 55.117 us
-> 	Average latency of irq-disabling during clk-gating: 4.2 us
-> 
-> For clk-ungating with interrupt enabling toggled,
-> 	Average latency of each clk-ungating: 118.324 us
-> 	Average latency of irq-enabling during clk-ungating: 2.9 us
-> 
-> The evaluation here is based on below Can's patch therefore the
-> interrupt control (enable_irq/disable_irq) latency is much shorter than
-> before (request_irq/free_irq).
-> 
-> scsi: ufs: Do not free irq in suspend
-> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/drivers/scsi/ufs/ufshcd.c?id=8709c1f68536e256668812788af5b2bb027f49c3
-> 
-> BTW, the main purpose of this patch is aimed to protect ufshcd register
-> from accessing while host clocks are disabled to fix potential system
-> hang issue. The possible scenario is mentioned in commit message of
-> patch "scsi: ufs: disable irq before disabling clocks" in the same
-> series.
-> 
-> Thanks
-> Stanley
-> 
+
+Looks good to me.
 
 Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-
-Thanks for the data.
-It'd be interesting to know more on the - misrouted interrupt recovery 
-feature though.
-
--
-Thanks
-Asutosh
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
