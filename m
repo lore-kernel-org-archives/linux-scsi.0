@@ -2,232 +2,129 @@ Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65096C2D0C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 07:12:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B480CC3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 07:37:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A1DB2465E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 07:12:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AE182146E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 07:37:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="HKuq9hGl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RppPDfWt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726620AbfLSHM3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 02:12:29 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:12175 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726303AbfLSHM3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Dec 2019 02:12:29 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576739548; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=p6F+HJf9pwTVCYkBLIDwl50rIboYlyyDoCq2S3Q3fjA=;
- b=HKuq9hGl1ty67HQS65483tahWgw9CSmJSvuxa4+O7YGoenkG86/IPDUb478b1Og/eWgNeJWE
- BXwmgpsdLUfAg0bOke/PJkXOrob8FriC4lBuiQb3fPtp9SDPwWa8wVMjXlpeo59sO8l1Vj4T
- lAjBQoSluy8dmuMsL8RzGrBGRxE=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfb22da.7f8ab5a5d458-smtp-out-n01;
- Thu, 19 Dec 2019 07:12:26 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B099FC63C6C; Thu, 19 Dec 2019 07:12:26 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6AB2DC494BC;
-        Thu, 19 Dec 2019 07:12:25 +0000 (UTC)
+        id S1726715AbfLSHhv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 02:37:51 -0500
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:50584 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726498AbfLSHhv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 02:37:51 -0500
+Received: by mail-pj1-f67.google.com with SMTP id r67so2098204pjb.0;
+        Wed, 18 Dec 2019 23:37:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=0nx8L7SUVUpwZ2hHI379dkMfkYdwVJx/h+xm8bvbJTk=;
+        b=RppPDfWtAF2/78ZaqvoheL1TQLs+e51ZH1gVEgdKQIpkiez/5Q8Wr/YF9Ffs87OlWh
+         +0QTXE9zrmiP10IM+/vBzP1urUkk0hgLRFQp3+Nnaj6QroNO2EMUYcRJfuq4sGLNZwBM
+         flUyjTnsuqI5WEoOsW33M3wGm0x3jYpNr1RfUZTcP97rDyfpOvjJ6CorymapkR/GJp+p
+         Qd4cAYqeyMiW0sGir5FaaYfgSRomJ6wCCkenp1i7P+l6zTQ0E6RkMe6PpZjE8pdZW845
+         Q8aq5GwowoxjemsBR0ZbmGJYQrj5mhD5jIXnD25lPeoU38JYt+BipmcK6VEylZouupzG
+         sv9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0nx8L7SUVUpwZ2hHI379dkMfkYdwVJx/h+xm8bvbJTk=;
+        b=Em1vPcc7BTxmQU8woXy20JfdqqScdU2Ob8EgiU/BFrrCqUjxDlzPg/NOusa+DV9xi1
+         dhqhFk4UB0BzIyGh64WKf6wwB3I90Ww98K7DWIIDBba74Y4NJO/Zl45NC9hGN/v6XM0m
+         sZPqp6v3SMAXc2SYxfYR8kaFZRsszMI1ALWZYT4WxTgObWu+pu17yl+N8f6RuaOMpu6e
+         ZwVmrLNSCktytUhgr81L0cE/KHn8sKVy3fYczYzYBgnaYlrGXhOxe+4i7AOQXt89bhfK
+         di63812aaReZgGcFxzSYL3/pUVDytV8EUl6xgdZeXNGNPqdevYWJT0HwAmmd1lSA7fUF
+         n8AA==
+X-Gm-Message-State: APjAAAU2EaRF6Q0kMhomLCdO8hhqFCZ30v5GAsHg1FGHbRFykuCpAL1k
+        qEkO7gRiCjPaaWFkklk8lnO3GKTH
+X-Google-Smtp-Source: APXvYqy6Zi45dKUBsN0A3zZlJRUeD/RU79k4wl44YxSfuWyLsO/jzk8oOCtvuT8Isz69mo20xLT4ZA==
+X-Received: by 2002:a17:90a:94c1:: with SMTP id j1mr8181360pjw.2.1576741070618;
+        Wed, 18 Dec 2019 23:37:50 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id i22sm4714674pfd.19.2019.12.18.23.37.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Dec 2019 23:37:48 -0800 (PST)
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+References: <20191215174509.1847-1-linux@roeck-us.net>
+ <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <f2b90347-66db-16f9-44b1-b6c7df319331@roeck-us.net>
+Date:   Wed, 18 Dec 2019 23:37:47 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+In-Reply-To: <yq1r211dvck.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 19 Dec 2019 15:12:25 +0800
-From:   cang@codeaurora.org
-To:     Vinod Koul <vkoul@kernel.org>
-Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, Mark Salyzyn <salyzyn@google.com>,
-        Andy Gross <agross@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for host
- controller
-In-Reply-To: <20191218041200.GP2536@vkoul-mobl>
-References: <20191216190415.GL2536@vkoul-mobl>
- <CAOCk7NpAp+DHBp-owyKGgJFLRajfSQR6ff1XMmAj6A4nM3VnMQ@mail.gmail.com>
- <091562cbe7d88ca1c30638bc10197074@codeaurora.org>
- <20191217041342.GM2536@vkoul-mobl>
- <763d7b30593b31646f3c198c2be99671@codeaurora.org>
- <20191217092433.GN2536@vkoul-mobl>
- <fc8952a0eee5c010fe14e5f107d89e64@codeaurora.org>
- <20191217150852.GO2536@vkoul-mobl>
- <CAOCk7Np691Hau1FdJqWs1UY6jvEvYfzA6NnG9U--ZcRsuV5=Zw@mail.gmail.com>
- <75f7065d08f450c6cbb2b2662658ecaa@codeaurora.org>
- <20191218041200.GP2536@vkoul-mobl>
-Message-ID: <983c21bb5ad2d38e11c074528d8898b9@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-18 12:12, Vinod Koul wrote:
-> On 18-12-19, 02:44, cang@codeaurora.org wrote:
+Hi Martin,
+
+On 12/18/19 4:15 PM, Martin K. Petersen wrote:
 > 
->> Hi Vinod and Jeffrey,
->> 
->> Let me summary here, now the 1000000us timeout works for both 845 and 
->> 8998.
->> However, 8150 still fails.
->> 
->> > > The bigger question is why is the reset causing the timeout to be
->> > > increased for sdm845 and not to work in case of sm8150! (Vinod)
->> 
->> I would not say this patch increases the timeout. With this patch,
->> the PCS polling timeout, per my profiling, the PCS ready usually needs
->> less than 5000us, which is the actual time needed for PCS bit to be 
->> ready.
->> 
->> The reason why 1000us worked for you is because, w/o the patch, UFS 
->> PHY
->> registers are retained from pre-kernel stage (bootloader i.e.), the 
->> PCS
->> ready
->> bit was set to 1 in pre-kernel stage, so when kernel driver reads it, 
->> it
->> returns
->> 1, not even to be polled at all. It may seem "faster", but not the 
->> right
->> thing to do, because kernel stage may need different PHY settings than
->> pre-kernel stage, keeping the settings configured in pre-kernel stage 
->> is not
->> always right, so this patch is needed. And increasing 1000us to 
->> 1000000us
->> is the right thing to do, but not a hack.
->> 
->> As reg for the phy initialization timeout on 8150, I found there is
->> something
->> wrong with its settings in /drivers/phy/qualcomm/phy-qcom-qmp.c
->> 
->> static const struct qmp_phy_init_tbl sm8150_ufsphy_serdes_tbl[] = {
->> 	QMP_PHY_INIT_CFG(QPHY_POWER_DOWN_CONTROL, 0x01),
->> 	QMP_PHY_INIT_CFG(QSERDES_V4_COM_SYSCLK_EN_SEL, 0xd9),
->> 
->> "QMP_PHY_INIT_CFG(QPHY_POWER_DOWN_CONTROL, 0x01)" should NOT appear in 
->> the
->> serdes
->> table! I haven't check who made this change, but please have a try 
->> after
->> remove
->> this line from sm8150_ufsphy_serdes_tbl.
+> Guenter,
 > 
-> That is me :) Looks like I made an error while porting from downstream. 
-> I
-> did a quick check to remove this and it doesn't work yet, let me 
-> recheck
-> the settings again ...
+>> This driver solves this problem by adding support for reading the
+>> temperature of SATA drives from the kernel using the hwmon API and
+>> by adding a temperature zone for each drive.
 > 
-> Thanks for your help!
+> My working tree is available here:
+> 
+>    https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=5.6/drivetemp
+> 
 
-Hi Vinod,
+I had a quick look at the patch. Looks good overall. I think you should be able
+to use the buffer allocated in struct drivetemp_data (named smartdata). Maybe
+rename it to something more generic. If it needs to be dma-aligned, maybe we
+can use kzalloc() to allocate it. Only reason I didn't use it for vpd was because
+that needed 1024 bytes.
 
-Indeed, you need to tweak your settings. I spent some time help you
-figure this out. Try below change and please let me know if it can
-resolve your problem.
+> A few notes:
+> 
+>   - Before applying your patch I did s/satatemp/drivetemp/
+> 
+>   - I get a crash in the driver core during probe if the drivetemp module
+>     is loaded prior to loading ahci or a SCSI HBA driver. This crash is
+>     unrelated to my changes. Haven't had time to debug.
+> 
+Definitely something we'll need to look into. Do you have a traceback ?
 
-I would not say this is a regression caused by my patch, it is just
-my patch reveals something incorrect in the settings.
+Thanks,
+Guenter
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c 
-b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 8e642a6..0cc9044 100755
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -66,7 +66,7 @@
-  /* QPHY_V3_PCS_MISC_CLAMP_ENABLE register bits */
-  #define CLAMP_EN                               BIT(0) /* enables i/o 
-clamp_n */
+>   - I tweaked your ATA detection heuristics and now use the cached VPD
+>     page 0x89 instead of fetching one from the device.
+> 
+>   - I also added support for reading the temperature log page on SCSI
+>     drives.
+> 
+>   - Tested with a mixed bag of about 40 SCSI and SATA drives attached.
+> 
+>   - I still think sensor naming needs work. How and where are the
+>     "drivetemp-scsi-8-140" names generated?
+> 
+> I'll tinker some more but thought I'd share what I have for now.
+> 
 
--#define PHY_INIT_COMPLETE_TIMEOUT              1000
-+#define PHY_INIT_COMPLETE_TIMEOUT              1000000
-  #define POWER_DOWN_DELAY_US_MIN                        10
-  #define POWER_DOWN_DELAY_US_MAX                        11
-
-@@ -166,6 +166,7 @@ static const unsigned int 
-sdm845_ufsphy_regs_layout[] = {
-  };
-
-  static const unsigned int sm8150_ufsphy_regs_layout[] = {
-+       [QPHY_SW_RESET]                 = 0x08,
-         [QPHY_START_CTRL]               = 0x00,
-         [QPHY_PCS_READY_STATUS]         = 0x180,
-  };
-@@ -885,7 +886,6 @@ static const struct qmp_phy_init_tbl 
-msm8998_usb3_pcs_tbl[] = {
-  };
-
-  static const struct qmp_phy_init_tbl sm8150_ufsphy_serdes_tbl[] = {
--       QMP_PHY_INIT_CFG(QPHY_POWER_DOWN_CONTROL, 0x01),
-         QMP_PHY_INIT_CFG(QSERDES_V4_COM_SYSCLK_EN_SEL, 0xd9),
-         QMP_PHY_INIT_CFG(QSERDES_V4_COM_HSCLK_SEL, 0x11),
-         QMP_PHY_INIT_CFG(QSERDES_V4_COM_HSCLK_HS_SWITCH_SEL, 0x00),
-@@ -1390,7 +1390,6 @@ static const struct qmp_phy_cfg sm8150_ufsphy_cfg 
-= {
-         .pwrdn_ctrl             = SW_PWRDN,
-
-         .is_dual_lane_phy       = true,
--       .no_pcs_sw_reset        = true,
-  };
-
-  static void qcom_qmp_phy_configure(void __iomem *base,
----
-
-Aside of the phy settings, your DT needs some modifications too,
-seems you copied most of them from sdm845.
-https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3834a2e92229ef26d30de28acb698b2b23d3e397
-
-<--snip-->
-> +		ufs_mem_phy: phy@1d87000 {
-> +			compatible = "qcom,sm8150-qmp-ufs-phy";
-> +			reg = <0 0x01d87000 0 0x18c>;
-
-The size 0x18c is wrong, in the code you are even accessing registers
-whose offsets are beyond 0x18c, see
-
-#define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE1_MODE0	0x1ac
-#define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE2_MODE0	0x1b0
-#define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE1_MODE1	0x1b4
-#define QSERDES_V4_COM_BIN_VCOCAL_HSCLK_SEL		0x1bc
-#define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE2_MODE1	0x1b8
-
-FYI, the total size of serdes registers is 0x1c0.
-
-<--snip-->
-> +			ufs_mem_phy_lanes: lanes@1d87400 {
-> +				reg = <0 0x01d87400 0 0x108>,
-> +				      <0 0x01d87600 0 0x1e0>,
-> +				      <0 0x01d87c00 0 0x1dc>,
-
-Same as above, see
-
-#define QPHY_V4_MULTI_LANE_CTRL1			0x1e0
-
-FYI, the total size of PCS registers is 0x200
-
-> +				      <0 0x01d87800 0 0x108>,
-> +				      <0 0x01d87a00 0 0x1e0>;
-> +				#phy-cells = <0>;
-> +			};
-<--snip-->
