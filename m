@@ -2,239 +2,185 @@ Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D26C43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 05:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 922A1C43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 05:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4212021582
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 05:50:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4855E227BF
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 05:55:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="D8DXLk/e";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="bnnEHC3e"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="qB/TGdCa";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="Wlgampbx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726656AbfLSFuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 00:50:21 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:54237 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726338AbfLSFuV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 00:50:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1576734622; x=1608270622;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=GSbrsWDTBXgHv3L5mAv4ZzvX+qsh5gMKdqmsq6Kw2gs=;
-  b=D8DXLk/exUy2cOv46NoOgm3NId9Onj5wDG+uWYSrGQ6odqKYGB2LUOr7
-   K4080cRuxxJJnMul6/vriJ6PStzjalLihQtLplKcTV/y6tlMsxKrvTqEy
-   oqJYGaopxnJQz96/7zleDY6OIJEIEzCARsHcobfmYrtFzho3YXHHIZovo
-   VANV9bI0nGKXwts+MhR3+0feaSCexIVhmityDhx9Sv/BxIp0rgUHOGL/H
-   CmHnKQMK/jeUxI+DgK58KMbf/Ekxn2reqAh6KSHK4UDSk4MeyIOxooTcu
-   2nvzp2nHFG+QChksq2LO8niUTwpb6Hi2QRZNEyb5rh2frAGkgnpTAA9vN
-   A==;
-IronPort-SDR: pl8jH+D7IjC8IEupgG3gTKHC/ULEzq1wb/aF+3Orm7DMhtzoNJeXpA9b5S1bwQiJvSPE9m0NE6
- qTJxeS+y+rIepVt25BigOTYx1eybaRY5/ZkM3t8/pm4drai4kINQtJQcGv0HQhC0F0fLGbfnnk
- oHxP1Uq19j9A0XXkQJe6QzSpgjiGH0Jfsx/+j1/HT30H7FkRdAZaIfyMoZz1fRXpeEWghneyhE
- pklqpcAVNoir0y8fM07vDATa22i2BneVOSZ7KFs9/u6Z5cBwfdhIvyFYdMj/po7iiSOsQAfBkO
- C/s=
-X-IronPort-AV: E=Sophos;i="5.69,330,1571673600"; 
-   d="scan'208";a="227287347"
-Received: from mail-bn7nam10lp2104.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.104])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Dec 2019 13:50:18 +0800
+        id S1726155AbfLSFzy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 00:55:54 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53700 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725821AbfLSFzy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Dec 2019 00:55:54 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xBJ5tn8R019697;
+        Wed, 18 Dec 2019 21:55:49 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=qw5oUp9krnNDjUaPn+q6MTYZm2jYH6NJzEZ2HyyXoQM=;
+ b=qB/TGdCa2PODoEMhX6RDW+hKtTnk8Cg4RrenEU6/fBCIOB/vZgeqZYB1k7aycTfhZ7Q9
+ OAFMgJ8iWPW9XKK5acx/+sSXFwpgNn/gvQaW98HwPHv015zq7uL5IiOf8UkFgelDMpo6
+ IUDGFTeNMg9Tq16vUbJRwDh0C2YSrDLfYZpJUBPXU6yRubTCWNuq/X2nkAzDgoo3LDiD
+ /8OhxKRN7eOtJhCxUiFI0MZpt16fnGP8tLY78bVPPnduMtqWOgitGoCyTymfWLLKRVFN
+ NbeRO6BbwiL7z+D7o9SIPX704b94raw0lMFTlstE4cYXIZhWvJT6/lgx0f+32Kj+H70p +g== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2wxneb1s4v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 18 Dec 2019 21:55:49 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 18 Dec
+ 2019 21:55:47 -0800
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.106)
+ by SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Wed, 18 Dec 2019 21:55:47 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=C7Gwy03+7HYqeulaUjJhPbMdmxSjxQGLF4ZZTIp4tWtaUG6061BZA7kC3uVc0rINxOawR/HXXy0Y55+7nrRG5ZOgo7WJDFn3CBK24qPX7EaUyN/i30RzaxwLL6UdILgI0Fa20TPItywLE/ZLc7oDu/xlWr3xkM8af2y0927zRFc4AKfAdtY5mYurkU4dSOBf3YhFiE8bHgiawj1H4Zph7pLXGMpsfQHRlxYDuaQqq371P5atkBJFLbAOz4TAs3BN7CVKXX2XaATwnS5rXRxEvV5PFcyyBdhGAXpQHBuBhvWIMSwFfrIo6BfsrJHHeSigrHG0k5HZieHq34jYn8/Znw==
+ b=EKTmPq1TTb7iNR31vnJTCZ/AZAAQEAlW3uANFAg9f8Zzi+ln5++4aQgt0/l6EgYhkQ2jJT5ODcPbXS4fmntNGFWETteJhNo3L0hnN9sNSq1SR+bW8K9lakT2IYSSvs64ELUOkvXROCqZB1UG41KCMMJ1MkuO2+oTUPfs/b87hgLxLkbT6GNt7Jj8BGDLfGObidcL5hJV3V4h1SP09n4hOREzgVdy9Gqz07a0sbzxroGlbSVQ+vY08XpABAEBIKo0uJqYzPaBeWiViZGXxE5yZ1mGM0e/1nnN3LR5/TcFNSUltNINtCzBFS4E7HyCuvUkiA1zILdV/4Qk+QR75+IkXQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=au2TeOyuXzWOq3tHvcR/f6Kt/0KqUXEd2nKodGWrGOQ=;
- b=JWvN8L+4b2b5S7BrrBE+ZD61mGqeKknHB/ck8sUxDmgDe8Egx1ZtJaMEqtQL03oUSzOocy5FWUxYlmoeWRTnndWAqVc4VF5yMMsf2RIMHGxQA4Z/ZffnfoWnV/WHQ41g2CcwQchEvdUZEZqnMhDMVEp978BUpX50bnwjPeFkItM1L6F7JHLhr/CqL+K5VJ7WhBjWsEjY+s3BiDDsjEyIxhY+OgTYHNRX5upkEEJSxkBzniZBgSL5QtuLy0gY02a7MK8pJWWkyVnGX7nR9kVgSGKb7PGa+bYRYcIfeXyXcXte4Zi/S4nIjHbWPM2PlJDdSp9QwatqQMZjwPdejRojTA==
+ bh=qw5oUp9krnNDjUaPn+q6MTYZm2jYH6NJzEZ2HyyXoQM=;
+ b=KYM2RCByGe+dILEO0ThNVts0eB2gvoNh3Iy/1bHYQZWyYEp1KXtK82gEUQDDe9qIFBxIjb7Z8Dtj0YNUdqlTuiaWki+Bq0ZxOzZokzi/faYv6MmFgkZe4A7UsEs2Zh7AekfUB4HpNqnLEnfbiHjOQ0IfuiLM4BAhdr4Do1Ecxp/tHBReTPaXv1RxmprJiWmG2kETuXpEQuPvxijX78patmkIyX+I1rZgNl7G58UhVSbiLOSQo8c0aENozHgQzXbGO73ImMPW8CnrybTz+y5eLGwUCKa30w5dwPeyBYr2jZ7lQIOcaRibCnatMwGqM8Q8FU4VVg1EqgRYJjV3Hg2K7g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=au2TeOyuXzWOq3tHvcR/f6Kt/0KqUXEd2nKodGWrGOQ=;
- b=bnnEHC3ecIk8rxI3H9QJYZIGI2Bq3CsbV7zEQ9C126r2g2vYH5i71v1Q523HlxXHxbbzIUIrpufwcCavlBANl+RgjsrhQbrp2zOKwLc4uVUcxhIApqWA1criVRhreDYpyKtVN5KQtb5MH3+yMqei7fzXbxhnwetTltlHPFHXcIk=
-Received: from BYAPR04MB5749.namprd04.prod.outlook.com (20.179.57.21) by
- BYAPR04MB4232.namprd04.prod.outlook.com (20.176.250.157) with Microsoft SMTP
+ bh=qw5oUp9krnNDjUaPn+q6MTYZm2jYH6NJzEZ2HyyXoQM=;
+ b=WlgampbxJC1UBjbp35MGOBpJdqcCulmtFCtNVSXn9ImfNUIgDKbTrkNibJzEamqyYhsVRZuPxfwvMLlUvoJEeiOoUqw1Px7TZ8HjFZDsTaTZbeFBEvwMle3ImQ2MN9nlrfJtGs8RH0rzlc9Y8QObcPya692nDu2ITyQEzGX5nHw=
+Received: from MN2PR18MB3022.namprd18.prod.outlook.com (20.179.81.79) by
+ MN2PR18MB2814.namprd18.prod.outlook.com (20.179.23.20) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2538.19; Thu, 19 Dec 2019 05:50:17 +0000
-Received: from BYAPR04MB5749.namprd04.prod.outlook.com
- ([fe80::a8ea:4ba9:cb57:e90f]) by BYAPR04MB5749.namprd04.prod.outlook.com
- ([fe80::a8ea:4ba9:cb57:e90f%5]) with mapi id 15.20.2559.015; Thu, 19 Dec 2019
- 05:50:17 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
- extension support
-Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
- extension support
-Thread-Index: AQHVr+qGZa1SvOsf40W81LFPPtqF+Q==
-Date:   Thu, 19 Dec 2019 05:50:16 +0000
-Message-ID: <BYAPR04MB5749EDD9E5928E769413B38086520@BYAPR04MB5749.namprd04.prod.outlook.com>
-References: <BYAPR04MB5749B4DC50C43EE845A04612865A0@BYAPR04MB5749.namprd04.prod.outlook.com>
+ 15.20.2559.14; Thu, 19 Dec 2019 05:55:46 +0000
+Received: from MN2PR18MB3022.namprd18.prod.outlook.com
+ ([fe80::71b6:15a6:296b:d72e]) by MN2PR18MB3022.namprd18.prod.outlook.com
+ ([fe80::71b6:15a6:296b:d72e%5]) with mapi id 15.20.2538.022; Thu, 19 Dec 2019
+ 05:55:45 +0000
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     Nathan Chancellor <natechancellor@gmail.com>,
+        "QLogic-Storage-Upstream@qlogic.com" 
+        <QLogic-Storage-Upstream@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "clang-built-linux@googlegroups.com" 
+        <clang-built-linux@googlegroups.com>
+Subject: RE: [PATCH] scsi: qla4xxx: Adjust indentation in qla4xxx_mem_free
+Thread-Topic: [PATCH] scsi: qla4xxx: Adjust indentation in qla4xxx_mem_free
+Thread-Index: AQHVtUXiqoQyQCCWl0SuaAvTA+GDZ6fA9vfw
+Date:   Thu, 19 Dec 2019 05:55:45 +0000
+Message-ID: <MN2PR18MB30227FB22733182ACF0BEFD8D8520@MN2PR18MB3022.namprd18.prod.outlook.com>
+References: <20191218015252.20890-1-natechancellor@gmail.com>
+In-Reply-To: <20191218015252.20890-1-natechancellor@gmail.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Chaitanya.Kulkarni@wdc.com; 
-x-originating-ip: [199.255.45.62]
+x-originating-ip: [114.143.185.87]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 01e547f0-d8db-49fe-b66c-08d784475340
-x-ms-traffictypediagnostic: BYAPR04MB4232:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB4232FC16811E558C08DC976686520@BYAPR04MB4232.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-ms-office365-filtering-correlation-id: 30dbd85b-fc7c-4c20-0958-08d784481747
+x-ms-traffictypediagnostic: MN2PR18MB2814:
+x-microsoft-antispam-prvs: <MN2PR18MB28140AD3B1D71450D9FCBFE3D8520@MN2PR18MB2814.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:79;
 x-forefront-prvs: 0256C18696
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(396003)(39860400002)(136003)(376002)(346002)(78114003)(189003)(199004)(66476007)(66556008)(8676002)(66446008)(54906003)(4326008)(53546011)(71200400001)(8936002)(9686003)(7416002)(76116006)(478600001)(64756008)(186003)(316002)(52536014)(26005)(5660300002)(33656002)(6916009)(55016002)(86362001)(7696005)(81166006)(81156014)(2906002)(66946007)(6506007)(966005)(21314003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4232;H:BYAPR04MB5749.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(136003)(396003)(39850400004)(376002)(346002)(199004)(189003)(13464003)(33656002)(19627235002)(9686003)(52536014)(81156014)(71200400001)(7696005)(54906003)(110136005)(81166006)(8676002)(4326008)(66476007)(64756008)(76116006)(316002)(5660300002)(966005)(478600001)(66556008)(66446008)(66946007)(26005)(2906002)(186003)(8936002)(55016002)(86362001)(53546011)(6506007)(32563001);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2814;H:MN2PR18MB3022.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 3U/+slddiThf7MTVPaAj1qHkNMn7HrKngqwUfK7uY2PQcLvCxvA+u4i5+FX+snXBBHbZSnqcOZLlomtRjSPySuyEqvHmIC+CLplYU0EsgH7Cj+Zhhu8flzFNoiB3kHFVXv6i2MKJAg1uyhZS/FsZCVTpwk3slZ14YUZpT0smwHOXVbLrwFQEasIn9p46YejttIqOQUGoIzSWzOXBbgttZDy5iFo0vhPasWGFwR31pOJlpXjrp3jEJ3MkWZ3NuehI9NmyMnywG9b+FNvfPS4JnBNKasVAWZrn7K8EYVwHGxZ5XywISw362a+NA23OtvaGMv2LEVmBo0s9IjffF4YGFjz9Lc2aGJlSH3QHeHvE03qD+/PitxmjOLwgw+WA2oLdZLF/Merx0EhyzWZ8ewJjnqcLEra/1vxWyXf6/ZOU6v3DqRqIharuOud25SwSz2Eokfm9Gl6F37VIj5/7CjnNctL0CbFrfU3vGBORVYb/0hsK47pxTdtoznv5W8br1IJWGkw+bXEXf4bBVK2q339bS3SihRKjyDPvw/xcYO4aCFxwkulyNbojAG1lEf+g64yf
+x-microsoft-antispam-message-info: lRmnKY7r/tf/Ag7blQCG1S81wxE7TQJvJK2ViY7afZ8YR0MxeRbanz4qG/CguEkVDQ/HFAd8BebfGxVFPgTSU68A8KXrWegTlhfIGIjLbc0GwCUD/wEDHcDyq2jYWnbg/lHvJGzGm29in/PluJYEYs2uXYnBg78Tn4yT3zz7+rldipzB2ncLT3cgwf2kkdUNtnzDFYPhJs0XcBonYwESa2tg3dpgLeChKXXyxTCPZy+UFWy+CBJyXNlr3NiG6HWnR5qzPUtzeWKyw/ccSpJNxLqNQe5OlzOfSsovTbBeZ+ZdHa791n1snt58p8QnfpEdRbwiT7s49AfOVyiWofI68Y370wQ80dLt89vNeIJRT084Qnm0UbWSBfoQd4Typc5gaUJLqWmsg7nnarXbVMKEYfeuQlpoB0WHawiO1rJtVx31T6YADtE/XqLi0N7Umi18Vj8BM7gSNF7F1g/+NqsY+zthSz0tIv+l4yIAc1Uvyao7iyyZA4YWHWEPZrAr7tXwBvUUteNsx2IUQsh6bN3QueMuHLRmOKXvpFnRGKt61xE=
+x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 01e547f0-d8db-49fe-b66c-08d784475340
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Dec 2019 05:50:16.9489
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30dbd85b-fc7c-4c20-0958-08d784481747
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Dec 2019 05:55:45.7328
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Btgr0pNs1NbnT8VTmGcUIAO7ay+JEmp8bo4mKNJufK3bl9s67FcTmLE2Dkic13v2SQo+OiK9XNME6S7dA+rUSCTN2PweK8dAS0uFzh/IJVc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4232
+X-MS-Exchange-CrossTenant-userprincipalname: 3kcUL4iNB2bZCLVsMPcCbIJ5EHnQ/71kuZ6TOXyu8dEkdKAnh5esrrdZ5dWdhkAXdio6i12oPeTeOIhw85ocCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2814
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-12-18_08:2019-12-17,2019-12-18 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adding Damien to this thread.=0A=
-On 12/10/2019 10:17 PM, Chaitanya Kulkarni wrote:=0A=
-> Hi,=0A=
->=0A=
-> * Background:-=0A=
-> -----------------------------------------------------------------------=
-=0A=
->=0A=
-> Linux Kernel Block layer now supports new Zone Management operations=0A=
-> (REQ_OP_ZONE_[OPEN/CLOSE/FINISH] [1]).=0A=
->=0A=
-> These operations are added mainly to support NVMe Zoned Namespces=0A=
-> (ZNS) [2]. We are adding support for ZNS in Linux Kernel Block layer,=0A=
-> user-space tools (sys-utils/nvme-cli), NVMe driver, File Systems,=0A=
-> Device-mapper in order to support these devices in the field.=0A=
->=0A=
-> Over the years Linux kernel block layer tracing infrastructure=0A=
-> has proven to be not only extremely useful but essential for:-=0A=
->=0A=
-> 1. Debugging the problems in the development of kernel block drivers.=0A=
-> 2. Solving the issues at the customer sites.=0A=
-> 3. Speeding up the development for the file system developers.=0A=
-> 4. Finding the device-related issues on the fly without modifying=0A=
->      the kernel.=0A=
-> 5. Building white box test-cases around the complex areas in the=0A=
->      linux-block layer.=0A=
->=0A=
-> * Problem with block layer tracing infrastructure:-=0A=
-> -----------------------------------------------------------------------=
-=0A=
->=0A=
-> If blktrace is such a great tool why we need this session for ?=0A=
->=0A=
-> Existing blktrace infrastructure lacks the number of free bits that are=
-=0A=
-> available to track the new trace category. With the addition of new=0A=
-> REQ_OP_ZONE_XXX we need more bits to expand the blktrace so that we can=
-=0A=
-> track more number of requests.=0A=
->=0A=
-> * Current state of the work:-=0A=
-> -----------------------------------------------------------------------=
-=0A=
->=0A=
-> RFC implementations [3] has been posted with the addition of new IOCTLs=
-=0A=
-> which is far from the production so that it can provide a basis to get=0A=
-> the discussion started.=0A=
->=0A=
-> This RFC implementation provides:-=0A=
-> 1. Extended bits to track new trace categories.=0A=
-> 2. Support for tracing per trace priorities.=0A=
-> 3. Support for priority mask.=0A=
-> 4. New IOCTLs so that user-space tools can setup the extensions.=0A=
-> 5. Ability to track the integrity fields.=0A=
-> 6. blktrace and blkparse implementation which supports the above=0A=
->      mentioned features.=0A=
->=0A=
-> Bart and Martin has suggested changes which I've incorporated in the RFC=
-=0A=
-> revisions.=0A=
->=0A=
-> * What we will discuss in the proposed session ?=0A=
-> -----------------------------------------------------------------------=
-=0A=
->=0A=
-> I'd like to propose a session for Storage track to go over the following=
-=0A=
-> discussion points:-=0A=
->=0A=
-> 1. What is the right approach to move this work forward?=0A=
-> 2. What are the other information bits we need to add which will help=0A=
->      kernel community to speed up the development and improve tracing?=0A=
-> 3. What are the other tracepoints we need to add in the block layer=0A=
->      to improve the tracing?=0A=
-> 4. What are device driver callbacks tracing we can add in the block=0A=
->      layer?=0A=
-> 5. Since polling is becoming popular what are the new tracepoints=0A=
->      we need to improve debugging ?=0A=
->=0A=
->=0A=
-> * Required Participants:-=0A=
-> -----------------------------------------------------------------------=
-=0A=
->=0A=
-> I'd like to invite block layer, device drivers and file system=0A=
-> developers to:-=0A=
->=0A=
-> 1. Share their opinion on the topic.=0A=
-> 2. Share their experience and any other issues with blktrace=0A=
->      infrastructure.=0A=
-> 3. Uncover additional details that are missing from this proposal.=0A=
->=0A=
-> Regards,=0A=
-> Chaitanya=0A=
->=0A=
-> References :-=0A=
->=0A=
-> [1] https://www.spinics.net/lists/linux-block/msg46043.html=0A=
-> [2] https://nvmexpress.org/new-nvmetm-specification-defines-zoned-=0A=
-> namespaces-zns-as-go-to-industry-technology/=0A=
-> [3] https://www.spinics.net/lists/linux-btrace/msg01106.html=0A=
->       https://www.spinics.net/lists/linux-btrace/msg01002.html=0A=
->       https://www.spinics.net/lists/linux-btrace/msg01042.html=0A=
->       https://www.spinics.net/lists/linux-btrace/msg00880.html=0A=
->=0A=
-=0A=
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org <linux-scsi-
+> owner@vger.kernel.org> On Behalf Of Nathan Chancellor
+> Sent: Wednesday, December 18, 2019 7:23 AM
+> To: QLogic-Storage-Upstream@qlogic.com; James E.J. Bottomley
+> <jejb@linux.ibm.com>; Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; clang-built=
+-
+> linux@googlegroups.com; Nathan Chancellor <natechancellor@gmail.com>
+> Subject: [PATCH] scsi: qla4xxx: Adjust indentation in qla4xxx_mem_free
+>=20
+> Clang warns:
+>=20
+> ../drivers/scsi/qla4xxx/ql4_os.c:4148:3: warning: misleading indentation;
+> statement is not part of the previous 'if'
+> [-Wmisleading-indentation]
+>          if (ha->fw_dump)
+>          ^
+> ../drivers/scsi/qla4xxx/ql4_os.c:4144:2: note: previous statement is here
+>         if (ha->queues)
+>         ^
+> 1 warning generated.
+>=20
+> This warning occurs because there is a space after the tab on this line.
+> Remove it so that the indentation is consistent with the Linux kernel cod=
+ing
+> style and clang no longer warns.
+>=20
+> Fixes: 068237c87c64 ("[SCSI] qla4xxx: Capture minidump for ISP82XX on
+> firmware failure")
+> Link: https://urldefense.proofpoint.com/v2/url?u=3Dhttps-
+> 3A__github.com_ClangBuiltLinux_linux_issues_819&d=3DDwIDAg&c=3DnKjWec
+> 2b6R0mOyPaz7xtfQ&r=3DAt6ko6G2bmE5NMB-
+> 6KMSliwRneAzZrOmmK21YHGCrqw&m=3DuRvAonUUcyFaz2S6vZ8po-
+> QrrPYNB3gw84QZKl9wS78&s=3Dt3EPVR3mOgGj_emNe0i_rdomyiK4K9noSBB
+> WMFBt2Ag&e=3D
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+> ---
+>  drivers/scsi/qla4xxx/ql4_os.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
+c
+> index 2323432a0edb..5504ab11decc 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -4145,7 +4145,7 @@ static void qla4xxx_mem_free(struct
+> scsi_qla_host *ha)
+>  		dma_free_coherent(&ha->pdev->dev, ha->queues_len, ha-
+> >queues,
+>  				  ha->queues_dma);
+>=20
+> -	 if (ha->fw_dump)
+> +	if (ha->fw_dump)
+>  		vfree(ha->fw_dump);
+>=20
+>  	ha->queues_len =3D 0;
+> --
+
+Thanks
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
