@@ -2,133 +2,110 @@ Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2B3C3F68F
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:48:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEFBDC43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:49:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FE7621D7D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:48:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kwma+DRo"
+	by mail.kernel.org (Postfix) with ESMTP id A8A2D21D7D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726623AbfLSAs2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 19:48:28 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:36292 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbfLSAs2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 19:48:28 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJ0iMd9157571;
-        Thu, 19 Dec 2019 00:48:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=VjYqnKsbKLbGD7l5o8X0VpqMjq3yPMzJMi6BXtsxD14=;
- b=kwma+DRoyxBskpnclqNLB0aDpF8HvXVbZH5jt+b/PdrMyJ+FBk7t8gL8mXeDEZ0u3IBo
- y/C9i9XvRGsuPEl3K8HpoK9JzdIwSlIxpnpItdtDtCt4RqTRhlDwojFLly31r0a+Inoe
- 8AuCKirdNfDtYUjcc5bSkigVGtjkuRlPX+DKwppFj9Cbe29e0+7aZqU0yNkoXD7mYeaF
- 4MUnRb+s/oYwBx8RAZIBEuNqGvAXKOJeF7XJG2midn8083OJtmXiJe5ELYKRdYU/Jvh5
- a5I502v6Sz/24k9eRkPuMCA7Nt4AVB+dQrbQqWHP1aTS2E6hMqprfyOpi+ieq94hY0qZ Ow== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2wvqpqgxbx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Dec 2019 00:48:02 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJ0iOtp112735;
-        Thu, 19 Dec 2019 00:48:01 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2wyp08j1hj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Dec 2019 00:48:01 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBJ0lxd5003393;
-        Thu, 19 Dec 2019 00:47:59 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Dec 2019 16:47:59 -0800
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Satya Tangirala <satyat@google.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191218145136.172774-1-satyat@google.com>
-        <20191218145136.172774-3-satyat@google.com>
-        <20191218212116.GA7476@magnolia> <yq1y2v9e37b.fsf@oracle.com>
-        <20191218222726.GC47399@gmail.com>
-Date:   Wed, 18 Dec 2019 19:47:56 -0500
-In-Reply-To: <20191218222726.GC47399@gmail.com> (Eric Biggers's message of
-        "Wed, 18 Dec 2019 14:27:26 -0800")
-Message-ID: <yq1fthhdttv.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726561AbfLSAtM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 19:49:12 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:43786 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726463AbfLSAtM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 19:49:12 -0500
+Received: by mail-pg1-f195.google.com with SMTP id k197so2167643pga.10
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 16:49:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2LpIrygf1W1+CgcfyxcxDZpe539lsLVbxUb7BcWapY0=;
+        b=ZUc+Y7YgILmUeSbgKE5z4xexh+rzUstT7M/QKupP9+b6iGZxmZfCQgQu7AeFbTZiAU
+         dlxRVKICZ08U2PE+wyY4eLHL87DLnZqE5T9mJJSUXFjb8jA1qy/6ST9cbJIUr1pXMHRv
+         mWEuB5krOmtxEwND46YLeMTUNGspwjS+NLhTcMrbaBzQ17GpyXBzHXZ3GsPVVDQcqboO
+         lRrHS36I7fsreF/8gZ6CQT93iSmYZg4yXF8Zz+jR7+o98KtWFz4ejlQeEpNs3y25mkUl
+         CJqk83iQF8xhRcxftX6eS/s62j4MGht1hCM216RhH6Y5OBRoItLvCjUQsbARhWXnBSzR
+         N4ng==
+X-Gm-Message-State: APjAAAX7H7HjRLopVk4azlvY6bFQMVniiRHBZuUiZVId5Oovqa2B49q+
+        EnOM2wttNLvmo2I5HOmmO90c/B/W
+X-Google-Smtp-Source: APXvYqz+bbJ4QVlpNkQtVg7FoIn8e2sOApUj+Zjj3nlfsE1agzaNmdAmn9i3qDMyZt/XkOX7dhLyIA==
+X-Received: by 2002:a63:28a:: with SMTP id 132mr6026761pgc.165.1576716551531;
+        Wed, 18 Dec 2019 16:49:11 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id r7sm5118256pfg.34.2019.12.18.16.49.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Dec 2019 16:49:10 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH] qla2xxx: Fix the endianness of the qla82xx_get_fw_size() return type
+Date:   Wed, 18 Dec 2019 16:49:05 -0800
+Message-Id: <20191219004905.39586-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.24.1.735.g03f4e72817-goog
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912190005
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912190005
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Since qla82xx_get_fw_size() returns a number in CPU-endian format, change
+its return type from __le32 into u32. This patch does not change any
+functionality.
 
-Eric,
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+Fixes: 9c2b297572bf ("[SCSI] qla2xxx: Support for loading Unified ROM Image (URI) format firmware file.")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/qla2xxx/qla_nx.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> There's not really any such thing as "use the bio integrity plumbing".
-> blk-integrity just does blk-integrity; it's not a plumbing layer that
-> allows other features to be supported.  Well, in theory we could
-> refactor and rename all the hooks to "blk-extra" and make them
-> delegate to either blk-integrity or blk-crypto, but I think that would
-> be overkill.
-
-I certainly don't expect your crypto stuff to plug in without any
-modification to what we currently have. I'm just observing that the
-existing plumbing is designed to have pluggable functions that let
-filesystems attach additional information to bios on writes and process
-additional attached information on reads. And the block layer already
-handles slicing and dicing these attachments as the I/O traverses the
-stack.
-
-There's also other stuff that probably won't be directly applicable or
-interesting for your use case. It just seems like identifying actual
-commonalities and differences would be worthwhile.
-
-Note that substantial changes to the integrity code would inevitably
-lead to a lot of pain and suffering for me. So from that perspective I
-am very happy if you leave it alone. From an architectural viewpoint,
-however, it seems that there are more similarities than differences
-between crypto and integrity. And we should avoid duplication where
-possible. That's all.
-
-> What we could do, though, is say that at most one of blk-crypto and
-> blk-integrity can be used at once on a given bio, and put the
-> bi_integrity and bi_crypt_context pointers in union.  (That would
-> require allocating a REQ_INLINECRYPT bit so that we can tell what the
-> pointer points to.)
-
-Absolutely. That's why it's a union. Putting your stuff there is a
-prerequisite as far as I'm concerned. No need to grow the bio when the
-two features are unlikely to coexist. We can revisit that later should
-the need arise.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 2b2028f2383e..c855d013ba8a 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1612,8 +1612,7 @@ qla82xx_get_bootld_offset(struct qla_hw_data *ha)
+ 	return (u8 *)&ha->hablob->fw->data[offset];
+ }
+ 
+-static __le32
+-qla82xx_get_fw_size(struct qla_hw_data *ha)
++static u32 qla82xx_get_fw_size(struct qla_hw_data *ha)
+ {
+ 	struct qla82xx_uri_data_desc *uri_desc = NULL;
+ 
+@@ -1624,7 +1623,7 @@ qla82xx_get_fw_size(struct qla_hw_data *ha)
+ 			return cpu_to_le32(uri_desc->size);
+ 	}
+ 
+-	return cpu_to_le32(*(u32 *)&ha->hablob->fw->data[FW_SIZE_OFFSET]);
++	return get_unaligned_le32(&ha->hablob->fw->data[FW_SIZE_OFFSET]);
+ }
+ 
+ static u8 *
+@@ -1816,7 +1815,7 @@ qla82xx_fw_load_from_blob(struct qla_hw_data *ha)
+ 	}
+ 
+ 	flashaddr = FLASH_ADDR_START;
+-	size = (__force u32)qla82xx_get_fw_size(ha) / 8;
++	size = qla82xx_get_fw_size(ha) / 8;
+ 	ptr64 = (u64 *)qla82xx_get_fw_offs(ha);
+ 
+ 	for (i = 0; i < size; i++) {
