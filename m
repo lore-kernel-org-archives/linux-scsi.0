@@ -2,164 +2,188 @@ Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 519CBC43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 08:44:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72AECC43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 11:40:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F8E324650
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 08:44:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49B3D24672
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 11:40:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726652AbfLSIoK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 03:44:10 -0500
-Received: from mx2.suse.de ([195.135.220.15]:41364 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726620AbfLSIoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Dec 2019 03:44:10 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3C46DABCD;
-        Thu, 19 Dec 2019 08:44:08 +0000 (UTC)
-Date:   Thu, 19 Dec 2019 09:44:39 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH] qla2xxx: Use get_unaligned_*() instead of open-coding
- these functions
-Message-ID: <20191219084439.prp2kdpufukjyhxm@boron>
-References: <20191219005050.40193-1-bvanassche@acm.org>
+        id S1726840AbfLSLkv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 06:40:51 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7719 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726692AbfLSLkv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Dec 2019 06:40:51 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 1341DFDCE93905C41A01;
+        Thu, 19 Dec 2019 19:40:47 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.439.0; Thu, 19 Dec 2019 19:40:40 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
+CC:     <yanaijie@huawei.com>, <chenxiang66@hisilicon.com>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: libsas: Tidy SAS address print format
+Date:   Thu, 19 Dec 2019 19:37:17 +0800
+Message-ID: <1576755437-188389-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191219005050.40193-1-bvanassche@acm.org>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 04:50:50PM -0800, Bart Van Assche wrote:
-> This patch improves readability and does not change any functionality.
-> 
-> Cc: Himanshu Madhani <hmadhani@marvell.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Currently we use a mixture of %016llx, %llx, and %16llx when printing a
+SAS address.
 
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Typically byte 0 will be 0x50, so this formatting is not so important -
+but some fake SAS addresses for SATA devices may not be. And we have
+mangled/invalid address to consider also. And it's better to be consistent
+in the code, so use a fixed format.
 
-> ---
->  drivers/scsi/qla2xxx/qla_bsg.c    |  2 +-
->  drivers/scsi/qla2xxx/qla_isr.c    | 12 ++++++------
->  drivers/scsi/qla2xxx/qla_nx.c     |  6 +++---
->  drivers/scsi/qla2xxx/qla_target.c | 12 ++++++------
->  drivers/scsi/qla2xxx/qla_target.h |  3 +--
->  5 files changed, 17 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-> index cbaf178fc979..941c40e13acc 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -796,7 +796,7 @@ qla2x00_process_loopback(struct bsg_job *bsg_job)
->  
->  	if (atomic_read(&vha->loop_state) == LOOP_READY &&
->  	    (ha->current_topology == ISP_CFG_F ||
-> -	    (le32_to_cpu(*(uint32_t *)req_data) == ELS_OPCODE_BYTE &&
-> +	    (get_unaligned_le32(req_data) == ELS_OPCODE_BYTE &&
->  	     req_data_len == MAX_ELS_FRAME_PAYLOAD)) &&
->  	    elreq.options == EXTERNAL_LOOPBACK) {
->  		type = "FC_BSG_HST_VENDOR_ECHO_DIAG";
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index ddd73b7c14d5..efb3ac31138d 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -2152,12 +2152,12 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
->  	 * swab32 of the "data" field in the beginning of qla2x00_status_entry()
->  	 * would make guard field appear at offset 2
->  	 */
-> -	a_guard   = le16_to_cpu(*(uint16_t *)(ap + 2));
-> -	a_app_tag = le16_to_cpu(*(uint16_t *)(ap + 0));
-> -	a_ref_tag = le32_to_cpu(*(uint32_t *)(ap + 4));
-> -	e_guard   = le16_to_cpu(*(uint16_t *)(ep + 2));
-> -	e_app_tag = le16_to_cpu(*(uint16_t *)(ep + 0));
-> -	e_ref_tag = le32_to_cpu(*(uint32_t *)(ep + 4));
-> +	a_guard   = get_unaligned_le16(ap + 2);
-> +	a_app_tag = get_unaligned_le16(ap + 0);
-> +	a_ref_tag = get_unaligned_le32(ap + 4);
-> +	e_guard   = get_unaligned_le16(ep + 2);
-> +	e_app_tag = get_unaligned_le16(ep + 0);
-> +	e_ref_tag = get_unaligned_le32(ep + 4);
->  
->  	ql_dbg(ql_dbg_io, vha, 0x3023,
->  	    "iocb(s) %p Returned STATUS.\n", sts24);
-> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-> index c855d013ba8a..49b1a43802c1 100644
-> --- a/drivers/scsi/qla2xxx/qla_nx.c
-> +++ b/drivers/scsi/qla2xxx/qla_nx.c
-> @@ -1882,7 +1882,7 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
->  static int
->  qla82xx_validate_firmware_blob(scsi_qla_host_t *vha, uint8_t fw_type)
->  {
-> -	__le32 val;
-> +	uint32_t val;
->  	uint32_t min_size;
->  	struct qla_hw_data *ha = vha->hw;
->  	const struct firmware *fw = ha->hablob->fw;
-> @@ -1895,8 +1895,8 @@ qla82xx_validate_firmware_blob(scsi_qla_host_t *vha, uint8_t fw_type)
->  
->  		min_size = QLA82XX_URI_FW_MIN_SIZE;
->  	} else {
-> -		val = cpu_to_le32(*(u32 *)&fw->data[QLA82XX_FW_MAGIC_OFFSET]);
-> -		if ((__force u32)val != QLA82XX_BDINFO_MAGIC)
-> +		val = get_unaligned_le32(&fw->data[QLA82XX_FW_MAGIC_OFFSET]);
-> +		if (val != QLA82XX_BDINFO_MAGIC)
->  			return -EINVAL;
->  
->  		min_size = QLA82XX_FW_MIN_SIZE;
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index 68c14143e50e..7d6132ce67b5 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -3446,13 +3446,13 @@ qlt_handle_dif_error(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
->  
->  	cmd->trc_flags |= TRC_DIF_ERR;
->  
-> -	cmd->a_guard   = be16_to_cpu(*(uint16_t *)(ap + 0));
-> -	cmd->a_app_tag = be16_to_cpu(*(uint16_t *)(ap + 2));
-> -	cmd->a_ref_tag = be32_to_cpu(*(uint32_t *)(ap + 4));
-> +	cmd->a_guard   = get_unaligned_be16(ap + 0);
-> +	cmd->a_app_tag = get_unaligned_be16(ap + 2);
-> +	cmd->a_ref_tag = get_unaligned_be32(ap + 4);
->  
-> -	cmd->e_guard   = be16_to_cpu(*(uint16_t *)(ep + 0));
-> -	cmd->e_app_tag = be16_to_cpu(*(uint16_t *)(ep + 2));
-> -	cmd->e_ref_tag = be32_to_cpu(*(uint32_t *)(ep + 4));
-> +	cmd->e_guard   = get_unaligned_be16(ep + 0);
-> +	cmd->e_app_tag = get_unaligned_be16(ep + 2);
-> +	cmd->e_ref_tag = get_unaligned_be32(ep + 4);
->  
->  	ql_dbg(ql_dbg_tgt_dif, vha, 0xf075,
->  	    "%s: aborted %d state %d\n", __func__, cmd->aborted, cmd->state);
-> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-> index d006f0a97b8c..6539499e9e95 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.h
-> +++ b/drivers/scsi/qla2xxx/qla_target.h
-> @@ -379,8 +379,7 @@ static inline int get_datalen_for_atio(struct atio_from_isp *atio)
->  {
->  	int len = atio->u.isp24.fcp_cmnd.add_cdb_len;
->  
-> -	return (be32_to_cpu(get_unaligned((uint32_t *)
-> -	    &atio->u.isp24.fcp_cmnd.add_cdb[len * 4])));
-> +	return get_unaligned_be32(&atio->u.isp24.fcp_cmnd.add_cdb[len * 4]);
->  }
->  
->  #define CTIO_TYPE7 0x12 /* Continue target I/O entry (for 24xx) */
+The SAS address is a fixed size at 64b, so we want to 0 byte extend to 16
+nibbles, so use %016llx globally.
+
+Also make some prints to be explicitly hex, and tidy some whitespace issue.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index e9e00740f7ca..c5a828a041e0 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -137,7 +137,7 @@ static void sas_ata_task_done(struct sas_task *task)
+ 	} else {
+ 		ac = sas_to_ata_err(stat);
+ 		if (ac) {
+-			pr_warn("%s: SAS error %x\n", __func__, stat->stat);
++			pr_warn("%s: SAS error 0x%x\n", __func__, stat->stat);
+ 			/* We saw a SAS error. Send a vague error. */
+ 			if (!link->sactive) {
+ 				qc->err_mask = ac;
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index f47b4b281b14..fef58185a644 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -170,7 +170,7 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
+ 
+ 	res = i->dft->lldd_dev_found(dev);
+ 	if (res) {
+-		pr_warn("driver on host %s cannot handle device %llx, error:%d\n",
++		pr_warn("driver on host %s cannot handle device %016llx, error:%d\n",
+ 			dev_name(sas_ha->dev),
+ 			SAS_ADDR(dev->sas_addr), res);
+ 	}
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 9fdb9c9fbda4..ab671cdd4cfb 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -500,7 +500,7 @@ static int sas_ex_general(struct domain_device *dev)
+ 		ex_assign_report_general(dev, rg_resp);
+ 
+ 		if (dev->ex_dev.configuring) {
+-			pr_debug("RG: ex %llx self-configuring...\n",
++			pr_debug("RG: ex %016llx self-configuring...\n",
+ 				 SAS_ADDR(dev->sas_addr));
+ 			schedule_timeout_interruptible(5*HZ);
+ 		} else
+@@ -881,7 +881,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 
+ 		res = sas_discover_end_dev(child);
+ 		if (res) {
+-			pr_notice("sas_discover_end_dev() for device %16llx at %016llx:%02d returned 0x%x\n",
++			pr_notice("sas_discover_end_dev() for device %016llx at %016llx:%02d returned 0x%x\n",
+ 				  SAS_ADDR(child->sas_addr),
+ 				  SAS_ADDR(parent->sas_addr), phy_id, res);
+ 			goto out_list_del;
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 01f1738ce6df..1f1d01901978 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -107,7 +107,7 @@ static inline void sas_smp_host_handler(struct bsg_job *job,
+ 
+ static inline void sas_fail_probe(struct domain_device *dev, const char *func, int err)
+ {
+-	pr_warn("%s: for %s device %16llx returned %d\n",
++	pr_warn("%s: for %s device %016llx returned %d\n",
+ 		func, dev->parent ? "exp-attached" :
+ 		"direct-attached",
+ 		SAS_ADDR(dev->sas_addr), err);
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 7c86fd248129..19cf418928fa 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -165,7 +165,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 	}
+ 	sas_port_add_phy(port->port, phy->phy);
+ 
+-	pr_debug("%s added to %s, phy_mask:0x%x (%16llx)\n",
++	pr_debug("%s added to %s, phy_mask:0x%x (%016llx)\n",
+ 		 dev_name(&phy->phy->dev), dev_name(&port->port->dev),
+ 		 port->phy_mask,
+ 		 SAS_ADDR(port->attached_sas_addr));
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index bec83eb8ab87..9e0975e55c27 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -330,7 +330,7 @@ static int sas_recover_lu(struct domain_device *dev, struct scsi_cmnd *cmd)
+ 
+ 	int_to_scsilun(cmd->device->lun, &lun);
+ 
+-	pr_notice("eh: device %llx LUN %llx has the task\n",
++	pr_notice("eh: device %016llx LUN 0x%llx has the task\n",
+ 		  SAS_ADDR(dev->sas_addr),
+ 		  cmd->device->lun);
+ 
+@@ -615,7 +615,7 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
+  reset:
+ 			tmf_resp = sas_recover_lu(task->dev, cmd);
+ 			if (tmf_resp == TMF_RESP_FUNC_COMPLETE) {
+-				pr_notice("dev %016llx LU %llx is recovered\n",
++				pr_notice("dev %016llx LU 0x%llx is recovered\n",
+ 					  SAS_ADDR(task->dev),
+ 					  cmd->device->lun);
+ 				sas_eh_finish_cmd(cmd);
+@@ -666,7 +666,7 @@ static void sas_eh_handle_sas_errors(struct Scsi_Host *shost, struct list_head *
+ 			 * of effort could recover from errors.  Quite
+ 			 * possibly the HA just disappeared.
+ 			 */
+-			pr_err("error from  device %llx, LUN %llx couldn't be recovered in any way\n",
++			pr_err("error from device %016llx, LUN 0x%llx couldn't be recovered in any way\n",
+ 			       SAS_ADDR(task->dev->sas_addr),
+ 			       cmd->device->lun);
+ 
+@@ -851,7 +851,7 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
+ 	if (scsi_dev->tagged_supported) {
+ 		scsi_change_queue_depth(scsi_dev, SAS_DEF_QD);
+ 	} else {
+-		pr_notice("device %llx, LUN %llx doesn't support TCQ\n",
++		pr_notice("device %016llx, LUN 0x%llx doesn't support TCQ\n",
+ 			  SAS_ADDR(dev->sas_addr), scsi_dev->lun);
+ 		scsi_change_queue_depth(scsi_dev, 1);
+ 	}
+diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
+index 1ded7d85027e..e2d42593ce52 100644
+--- a/drivers/scsi/libsas/sas_task.c
++++ b/drivers/scsi/libsas/sas_task.c
+@@ -27,7 +27,7 @@ void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+ 		memcpy(tstat->buf, iu->sense_data, tstat->buf_valid_size);
+ 
+ 		if (iu->status != SAM_STAT_CHECK_CONDITION)
+-			dev_warn(dev, "dev %llx sent sense data, but stat(%x) is not CHECK CONDITION\n",
++			dev_warn(dev, "dev %016llx sent sense data, but stat(0x%x) is not CHECK CONDITION\n",
+ 				 SAS_ADDR(task->dev->sas_addr), iu->status);
+ 	}
+ 	else
+-- 
+2.17.1
+
