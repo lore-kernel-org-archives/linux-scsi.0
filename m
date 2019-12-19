@@ -2,175 +2,133 @@ Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E90CC2D0D1
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2B3C3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:48:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F260222C2
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FE7621D7D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 00:48:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kwma+DRo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726616AbfLSArO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Dec 2019 19:47:14 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:33636 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726463AbfLSArN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 19:47:13 -0500
-Received: by mail-pf1-f194.google.com with SMTP id z16so2187211pfk.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Dec 2019 16:47:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=J2MV+o4FbKOKEbUkzlqFKi4g2nXUjmbvBDb07qWwKjU=;
-        b=Ww6900h0dWd2rnyqXkDB52d9q+/zRnpkpb0/hjpWLt+0FfG0VM6S4S10uLD+mmlffU
-         xSe4ucJXjnjyh5TqEJeR28/q0rneg9N8/425iRjaod6z4M44NPVlm7D71U8S4aOcXkrS
-         W5G07FWuISEAuICq0LWrYB3s+wSk/oN+KPTgU0+UF+zyq1UOKO6qNmEigVQ2q2etq3jc
-         K0Hp03Nh7lWHPj+jhyc2q7DmvIz+0UL1jJ/E4dNwkjrfvhHKxzjXvi+D0c84zTMLb6+v
-         DQPAKv0u+ATCuo35WanVAv2ry4qaLpznfV9IZDfn966HWiPQEibE5wNH85RnKKOcOYA6
-         i6Kg==
-X-Gm-Message-State: APjAAAXdjY6qTHMgMz2frs+rytjJGlKj5FGB0hkxDkbd/pPRHd3m+JwW
-        0NvMdGHn1mbweRjWdT2qxCboQ3x6
-X-Google-Smtp-Source: APXvYqxC6f2iR9/6pjjG8XRnbLMyf081Unn5TQmJj/q5Gli69s1Y2U6kCpJ0L/+Vdx6x9xte4UVYRA==
-X-Received: by 2002:a63:dc0d:: with SMTP id s13mr5916601pgg.129.1576716432967;
-        Wed, 18 Dec 2019 16:47:12 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id 207sm5098894pfu.88.2019.12.18.16.47.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Dec 2019 16:47:12 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH] qla2xxx: Improve readability of the code that handles qla_flt_header
-Date:   Wed, 18 Dec 2019 16:47:06 -0800
-Message-Id: <20191219004706.39039-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.24.1.735.g03f4e72817-goog
+        id S1726623AbfLSAs2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Dec 2019 19:48:28 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:36292 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726518AbfLSAs2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Dec 2019 19:48:28 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJ0iMd9157571;
+        Thu, 19 Dec 2019 00:48:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=VjYqnKsbKLbGD7l5o8X0VpqMjq3yPMzJMi6BXtsxD14=;
+ b=kwma+DRoyxBskpnclqNLB0aDpF8HvXVbZH5jt+b/PdrMyJ+FBk7t8gL8mXeDEZ0u3IBo
+ y/C9i9XvRGsuPEl3K8HpoK9JzdIwSlIxpnpItdtDtCt4RqTRhlDwojFLly31r0a+Inoe
+ 8AuCKirdNfDtYUjcc5bSkigVGtjkuRlPX+DKwppFj9Cbe29e0+7aZqU0yNkoXD7mYeaF
+ 4MUnRb+s/oYwBx8RAZIBEuNqGvAXKOJeF7XJG2midn8083OJtmXiJe5ELYKRdYU/Jvh5
+ a5I502v6Sz/24k9eRkPuMCA7Nt4AVB+dQrbQqWHP1aTS2E6hMqprfyOpi+ieq94hY0qZ Ow== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2wvqpqgxbx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Dec 2019 00:48:02 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJ0iOtp112735;
+        Thu, 19 Dec 2019 00:48:01 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2wyp08j1hj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Dec 2019 00:48:01 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBJ0lxd5003393;
+        Thu, 19 Dec 2019 00:47:59 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 18 Dec 2019 16:47:59 -0800
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191218145136.172774-1-satyat@google.com>
+        <20191218145136.172774-3-satyat@google.com>
+        <20191218212116.GA7476@magnolia> <yq1y2v9e37b.fsf@oracle.com>
+        <20191218222726.GC47399@gmail.com>
+Date:   Wed, 18 Dec 2019 19:47:56 -0500
+In-Reply-To: <20191218222726.GC47399@gmail.com> (Eric Biggers's message of
+        "Wed, 18 Dec 2019 14:27:26 -0800")
+Message-ID: <yq1fthhdttv.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912190005
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9475 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912190005
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Declare qla_hw_data.flt as a qla_flt_header pointer instead of as a void
-pointer. Add a zero-length array at the end of struct qla_flt_header to
-make it clear that qla_flt_header and qla_flt_region are contiguous. This
-patch removes several casts but does not change any functionality.
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Martin Wilck <mwilck@suse.com>
-Cc: Daniel Wagner <dwagner@suse.de>
-Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/qla2xxx/qla_def.h |  2 +-
- drivers/scsi/qla2xxx/qla_fw.h  | 15 ++++++++-------
- drivers/scsi/qla2xxx/qla_os.c  |  2 ++
- drivers/scsi/qla2xxx/qla_sup.c | 11 ++++-------
- 4 files changed, 15 insertions(+), 15 deletions(-)
+Eric,
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 35a979b55063..e55baec3db68 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3950,7 +3950,7 @@ struct qla_hw_data {
- 	void		*sfp_data;
- 	dma_addr_t	sfp_data_dma;
- 
--	void		*flt;
-+	struct qla_flt_header *flt;
- 	dma_addr_t	flt_dma;
- 
- #define XGMAC_DATA_SIZE	4096
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 9dc09c117416..5668b31db1ea 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1470,13 +1470,6 @@ struct qla_flt_location {
- 	uint16_t checksum;
- };
- 
--struct qla_flt_header {
--	uint16_t version;
--	uint16_t length;
--	uint16_t checksum;
--	uint16_t unused;
--};
--
- #define FLT_REG_FW		0x01
- #define FLT_REG_BOOT_CODE	0x07
- #define FLT_REG_VPD_0		0x14
-@@ -1537,6 +1530,14 @@ struct qla_flt_region {
- 	uint32_t end;
- };
- 
-+struct qla_flt_header {
-+	uint16_t version;
-+	uint16_t length;
-+	uint16_t checksum;
-+	uint16_t unused;
-+	struct qla_flt_region region[0];
-+};
-+
- #define FLT_REGION_SIZE		16
- #define FLT_MAX_REGIONS		0xFF
- #define FLT_REGIONS_SIZE	(FLT_REGION_SIZE * FLT_MAX_REGIONS)
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d19bf5225f4a..326f1b2dc0a2 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7273,6 +7273,8 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
- 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
-+	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
-+	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
- 
- 	/* Allocate cache for SRBs. */
- 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index bbe90354f49b..76a38bf86cbc 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -669,8 +669,8 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
- 
- 	struct qla_hw_data *ha = vha->hw;
- 	uint32_t def = IS_QLA81XX(ha) ? 2 : IS_QLA25XX(ha) ? 1 : 0;
--	struct qla_flt_header *flt = (void *)ha->flt;
--	struct qla_flt_region *region = (void *)&flt[1];
-+	struct qla_flt_header *flt = ha->flt;
-+	struct qla_flt_region *region = &flt->region[0];
- 	uint16_t *wptr, cnt, chksum;
- 	uint32_t start;
- 
-@@ -2652,18 +2652,15 @@ qla28xx_get_flash_region(struct scsi_qla_host *vha, uint32_t start,
-     struct qla_flt_region *region)
- {
- 	struct qla_hw_data *ha = vha->hw;
--	struct qla_flt_header *flt;
--	struct qla_flt_region *flt_reg;
-+	struct qla_flt_header *flt = ha->flt;
-+	struct qla_flt_region *flt_reg = &flt->region[0];
- 	uint16_t cnt;
- 	int rval = QLA_FUNCTION_FAILED;
- 
- 	if (!ha->flt)
- 		return QLA_FUNCTION_FAILED;
- 
--	flt = (struct qla_flt_header *)ha->flt;
--	flt_reg = (struct qla_flt_region *)&flt[1];
- 	cnt = le16_to_cpu(flt->length) / sizeof(struct qla_flt_region);
--
- 	for (; cnt; cnt--, flt_reg++) {
- 		if (flt_reg->start == start) {
- 			memcpy((uint8_t *)region, flt_reg,
+> There's not really any such thing as "use the bio integrity plumbing".
+> blk-integrity just does blk-integrity; it's not a plumbing layer that
+> allows other features to be supported.  Well, in theory we could
+> refactor and rename all the hooks to "blk-extra" and make them
+> delegate to either blk-integrity or blk-crypto, but I think that would
+> be overkill.
+
+I certainly don't expect your crypto stuff to plug in without any
+modification to what we currently have. I'm just observing that the
+existing plumbing is designed to have pluggable functions that let
+filesystems attach additional information to bios on writes and process
+additional attached information on reads. And the block layer already
+handles slicing and dicing these attachments as the I/O traverses the
+stack.
+
+There's also other stuff that probably won't be directly applicable or
+interesting for your use case. It just seems like identifying actual
+commonalities and differences would be worthwhile.
+
+Note that substantial changes to the integrity code would inevitably
+lead to a lot of pain and suffering for me. So from that perspective I
+am very happy if you leave it alone. From an architectural viewpoint,
+however, it seems that there are more similarities than differences
+between crypto and integrity. And we should avoid duplication where
+possible. That's all.
+
+> What we could do, though, is say that at most one of blk-crypto and
+> blk-integrity can be used at once on a given bio, and put the
+> bi_integrity and bi_crypt_context pointers in union.  (That would
+> require allocating a REQ_INLINECRYPT bit so that we can tell what the
+> pointer points to.)
+
+Absolutely. That's why it's a union. Putting your stuff there is a
+prerequisite as far as I'm concerned. No need to grow the bio when the
+two features are unlikely to coexist. We can revisit that later should
+the need arise.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
