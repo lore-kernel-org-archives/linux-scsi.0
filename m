@@ -7,57 +7,56 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F74C43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22CC5C3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:33:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C81D8222C2
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDB042467B
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:33:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="glXTEz6x"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FkJK2kMX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726959AbfLSSdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 13:33:00 -0500
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:36517 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726858AbfLSSdA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 13:33:00 -0500
-Received: by mail-ua1-f68.google.com with SMTP id k33so2320431uag.3;
-        Thu, 19 Dec 2019 10:32:59 -0800 (PST)
+        id S1726959AbfLSSdo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 13:33:44 -0500
+Received: from mail-vk1-f194.google.com ([209.85.221.194]:37962 "EHLO
+        mail-vk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726858AbfLSSdo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 13:33:44 -0500
+Received: by mail-vk1-f194.google.com with SMTP id d17so1907638vke.5;
+        Thu, 19 Dec 2019 10:33:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=VOyymaYGcmSJ1WRzuqz4Ak0rmhgIqLCqZ8zG2kPHNMo=;
-        b=glXTEz6xo8pZIYtMNXBEZKiZ6kJgRXxgzHEMYNU3S58gEmx1YdW2HvnbOPO9ixmQ1w
-         JTqyRLAr76LLdCT4bxMI1SmmDS/6dXWPYgyri6gBmzDXrBgFdhKFUgezb0cIDPigANgE
-         E9IZQvFNURFRyGqU7OKos8+sbog3m8xUCEzQCYb4PR/viN3IIsMviu0e1K/E5IbFVg4t
-         oPHGjpJNZInKrcf3fI8mbv5IeegUQpAy8NxZ4n9nvDz3nSOZYq9q7WQZ9J6+V08tlCJl
-         sylHG8fEiJAvulZsLjgf3pWqz+Jj4RgxEue9g0gKXdrtHYI/6Nz0A9v/zZ5U0kZbdVX0
-         awWg==
+        bh=Ml4mAJAjd+UzALjuvInIbq2ljDjbxyxCZlmTfZ9UxCk=;
+        b=FkJK2kMXU/9fnYvBIr1pmuDBc/Q4Sb9TKnfUaJQ1oGe4RNu9T/nhYd4+rUNAmtJyvv
+         8Q2KMCV8W5KOW3EqmHVLyLsU2HGFdKykwecFg/lDk4PIhR+U0jWK61TeH0Fh5w4S+UTl
+         vZcLbPi306O1yUfb/1DudDZsFoHN7K9Ad6Jivgm5IjuxpJNLGsMUokzNv2e1gNtmORX3
+         w1HfECY+fFGnurtud2eXIApj668AfEunCX9Ulm/vVb59FhI5uYFQnvtn+5fgZrJNICwP
+         104Vfo66LHfLmpTygUCT0XLGtVbGeds4qm27YjzLyEA41/YL2LrmwuctfqITBeB7jRWK
+         U9pQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=VOyymaYGcmSJ1WRzuqz4Ak0rmhgIqLCqZ8zG2kPHNMo=;
-        b=mxtjBEeEKNZyTak+W9hlYkZ3xTpgE0hb/9FroS+ZixytH6tiJU3DHUVmPTIFI1zoPd
-         RqIuPjxg5kgEAn5z+ptAD/Q5QTpOdVkSJkUcJh80k4fq5J8xyPt/SXWljEQac/FVkq3a
-         2tHOmJ+QX+MpoyJ7e0PFg6jmQQdtXd+RtpnQ06HWazKTPqaU6mNmGvw6x4cxpCnlhpG4
-         w7ZEd3NpJy1gTHMfpirHmtj0hlKFu7FiXcgk8zirO4lVyjv4n/zMhYre2d/g//ZRDgGL
-         m9LAc4QO6bIjAWjMdJAYl7lU4rfTqY9VzBTHywgnWTcGJDuwHo8/KT5S6ath5YzGODsY
-         OMzA==
-X-Gm-Message-State: APjAAAV7LVPtp7Q4vtDUJo0Dnweu0XTtKP5y9qg7AWh9jHK+wnlkL3h2
-        zQZwxOOWerj4nvVjpGdEYAlyvw0xOakgSABdKTo=
-X-Google-Smtp-Source: APXvYqwM3UEwSjHttH0IdDl/GVqzd05+x7SvoHGEo+WgDCx2bVOHaGPhK0SsHTOHsJq/GpXPgXIoNGKQmA3xGy6FlWA=
-X-Received: by 2002:ab0:7049:: with SMTP id v9mr6389360ual.95.1576780379310;
- Thu, 19 Dec 2019 10:32:59 -0800 (PST)
+        bh=Ml4mAJAjd+UzALjuvInIbq2ljDjbxyxCZlmTfZ9UxCk=;
+        b=d8XhkVTrHBZjcRu5JUmAo/edBE6t9PGwoJB3qvXOui63GUAfVYqzxipFEu9ru8YfwP
+         Db4ftfIHdXMUIfILzpT//Ime2LL1qxDLpV+Ie0R7iIj+SCyQ95SkMnQBv5yOfMhW0LHN
+         gt4MaWbpqCXsmjbb/v6s6jIIUmUKNVlpi0JfnFoq0WAA279dpPG5TAwMAHze0HkoDzYh
+         P799FwkC2uNJFZIkvKypskzZ4oitPTTm4XL0eX4QxqIcsABbFo8So+BWbjYih33CGfK8
+         xZn6shqlVAqqy/I6RpRnq+7UtH8yQTwyys01TET/1fV4lDlvF24OHQPARoCRb7NKxuNC
+         F+4g==
+X-Gm-Message-State: APjAAAWfXAolkweTnz6hLTjROsBPCzueR3bYmqIiw8UM98APcL7u38vZ
+        MijCe6dXtEVpo7sRzLhjwZ31yayqsyxS2tfoXW4=
+X-Google-Smtp-Source: APXvYqzIKnrV2MFDOoxVD8lAQN7aW5bueKopZBhGbsA12grhFVgxAF32grZKsQMBuFY1Kl4E16Tfj31nxPSxsQzBbPE=
+X-Received: by 2002:a1f:db81:: with SMTP id s123mr7008579vkg.45.1576780423321;
+ Thu, 19 Dec 2019 10:33:43 -0800 (PST)
 MIME-Version: 1.0
-References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com> <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
-In-Reply-To: <1576224695-22657-3-git-send-email-stanley.chu@mediatek.com>
+References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com> <1576224695-22657-5-git-send-email-stanley.chu@mediatek.com>
+In-Reply-To: <1576224695-22657-5-git-send-email-stanley.chu@mediatek.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Fri, 20 Dec 2019 00:02:22 +0530
-Message-ID: <CAGOxZ52ffkFwkcrdyq+gjuXarjr-aqGRw2ck25Yu0QgppGh9hQ@mail.gmail.com>
-Subject: Re: [PATCH v1 2/4] scsi: ufs: export ufshcd_auto_hibern8_update for
- vendor usage
+Date:   Fri, 20 Dec 2019 00:03:07 +0530
+Message-ID: <CAGOxZ524P=fDR3Y7+EH381xex8RHWT0Qgw3GvVaAMJsdJZFtgQ@mail.gmail.com>
+Subject: Re: [PATCH v1 4/4] scsi: ufs-mediatek: configure and enable clk-gating
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -78,93 +77,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 2:07 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
+On Fri, Dec 13, 2019 at 2:42 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
 >
-> Export ufshcd_auto_hibern8_update to allow vendors to use common
-> interface to customize auto-hibernate timer.
+> Enable clk-gating with customized delayed timer value in
+> MediaTek Chipsets.
 >
 > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
 > ---
->  drivers/scsi/ufs/ufs-sysfs.c | 20 --------------------
->  drivers/scsi/ufs/ufshcd.c    | 18 ++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h    |  1 +
->  3 files changed, 19 insertions(+), 20 deletions(-)
+>  drivers/scsi/ufs/ufs-mediatek.c | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
 >
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-> index ad2abc96c0f1..720be3f64be7 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -118,26 +118,6 @@ static ssize_t spm_target_link_state_show(struct device *dev,
->                                 ufs_pm_lvl_states[hba->spm_lvl].link_state));
->  }
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> index 71e2e0e4ea11..282ad06ec846 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -205,6 +205,9 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+>         /* Enable runtime autosuspend */
+>         hba->caps |= UFSHCD_CAP_RPM_AUTOSUSPEND;
 >
-> -static void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
-> -{
-> -       unsigned long flags;
-> -
-> -       if (!ufshcd_is_auto_hibern8_supported(hba))
-> -               return;
-> -
-> -       spin_lock_irqsave(hba->host->host_lock, flags);
-> -       if (hba->ahit != ahit)
-> -               hba->ahit = ahit;
-> -       spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -       if (!pm_runtime_suspended(hba->dev)) {
-> -               pm_runtime_get_sync(hba->dev);
-> -               ufshcd_hold(hba, false);
-> -               ufshcd_auto_hibern8_enable(hba);
-> -               ufshcd_release(hba);
-> -               pm_runtime_put(hba->dev);
-> -       }
-> -}
-> -
->  /* Convert Auto-Hibernate Idle Timer register value to microseconds */
->  static int ufshcd_ahit_to_us(u32 ahit)
->  {
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b5966faf3e98..589f519316aa 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3956,6 +3956,24 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+> +       /* Enable clock-gating */
+> +       hba->caps |= UFSHCD_CAP_CLK_GATING;
+> +
+>         /*
+>          * ufshcd_vops_init() is invoked after
+>          * ufshcd_setup_clock(true) in ufshcd_hba_init() thus
+> @@ -293,6 +296,23 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
 >         return ret;
 >  }
 >
-> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+> +static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
 > +{
 > +       unsigned long flags;
+> +       u32 ah_ms;
 > +
-> +       if (!(hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT))
-> +               return;
-> +
-> +       spin_lock_irqsave(hba->host->host_lock, flags);
-> +       if (hba->ahit == ahit)
-> +               goto out_unlock;
-> +       hba->ahit = ahit;
-> +       if (!pm_runtime_suspended(hba->dev))
-> +               ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +out_unlock:
-> +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +       if (ufshcd_is_clkgating_allowed(hba)) {
+> +               if (ufshcd_is_auto_hibern8_supported(hba) && hba->ahit)
+> +                       ah_ms = FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK,
+> +                                         hba->ahit);
+> +               else
+> +                       ah_ms = 10;
+> +               spin_lock_irqsave(hba->host->host_lock, flags);
+> +               hba->clk_gating.delay_ms = ah_ms + 5;
+> +               spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +       }
 > +}
-> +EXPORT_SYMBOL_GPL(ufshcd_auto_hibern8_update);
 > +
->  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba)
+>  static int ufs_mtk_post_link(struct ufs_hba *hba)
 >  {
->         unsigned long flags;
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 2740f6941ec6..86586a0b9aa5 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -927,6 +927,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->         enum flag_idn idn, bool *flag_res);
+>         /* disable device LCC */
+> @@ -308,6 +328,8 @@ static int ufs_mtk_post_link(struct ufs_hba *hba)
+>                         FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3));
+>         }
 >
->  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
-> +void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+> +       ufs_mtk_setup_clk_gating(hba);
+> +
+>         return 0;
+>  }
 >
->  #define SD_ASCII_STD true
->  #define SD_RAW false
 > --
 > 2.18.0
 
