@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E05C2D0C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40428C43603
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA7A324672
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:18:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 180DE24679
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 18:26:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tCS54bJd"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="njedkY2J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726911AbfLSSSh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 13:18:37 -0500
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:46018 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726797AbfLSSSg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 13:18:36 -0500
-Received: by mail-vs1-f66.google.com with SMTP id b4so3902857vsa.12;
-        Thu, 19 Dec 2019 10:18:35 -0800 (PST)
+        id S1726884AbfLSS0T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 13:26:19 -0500
+Received: from mail-vs1-f68.google.com ([209.85.217.68]:38833 "EHLO
+        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726797AbfLSS0T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 13:26:19 -0500
+Received: by mail-vs1-f68.google.com with SMTP id v12so4374596vsv.5;
+        Thu, 19 Dec 2019 10:26:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=hdfl3j3PUu29KvhFJr+t8q9A7l1fLtUS6dfELY8PVLE=;
-        b=tCS54bJd6f3428WApblIOzLQvg9gXUk1ry2iLEcNoz5mn+Ev/It5H2F9ixzC8H3L7O
-         gy0IKkXEef1q6L0ksBFGDnOsjR/d7EBCW93dzLdMYSzBycxQDu5ezgzhvuFSzH3C8Lm/
-         JlAmLHyjT024P+gfLHAh9AEPlaXfFD3YP4yLDycw9CpwqSePfClSIox4XVdEvj5Nr5Bn
-         FjVC6LL8OR3gYVOQ86fmVwGRCASN1MYtioAty36QxsKkpWaLkkDWk5onwgp+d+6B+dOw
-         +x6EdoeRB0BmdvaglW+aUzVAef6OztV1h6RgZVussRPpI7Udtcb9/edVA/g/XEvrPZnk
-         C5rA==
+        bh=rFab9TFuVyy0B0hidssVyx0Ip53fX/LaEkCJxLNWYBA=;
+        b=njedkY2JO/DXhybGjAgtuJQ3ELQtSyBbr4LtklvedJ40JfEyQUuq/88wWz760rpihi
+         +QPs+7JUh2ExfDnz5RJ3yVQD2clbnAeeCYgLgYcuhXKFx/trbXWgVvIHtzuyiEmHwh8U
+         umfPvRs60aCXka/6STVBQOfMateoMZaMcaQtstMCwwVW4Qyja8DM8evmAdjcWrmW/WlP
+         W1o0SpPgU/y0ughI3pA5oqlSyOSguwQzm/lfh9fgPHYF6ItaxFmzBhBvMX3OCu3Ka2kh
+         dDp42dc9BynBuc2KdnyZo+QZ8KUWSZpBqcdXmcy9G/UA52saC7UhjAhmdqSzAG1DVI8c
+         SVNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=hdfl3j3PUu29KvhFJr+t8q9A7l1fLtUS6dfELY8PVLE=;
-        b=aY7Ka4mrPmCTOs/GoLBItS/dODCuFKyS+2DQoHImWqRC0mOavV4ZooPBlRfCKX97ZY
-         LZqaV4nUMz1YGHZAZViyIAkvrM2m35TuJd4zrnj/kayC1QEZW0WYM/wZuBjsje5VkG1x
-         QOcrG+Ik0/m35kELUrtdDl4e15VyYDvRYdw6NnAY7bha7vAIq5PbybuGqJJMURl9OM0T
-         AbuU/Rgv3XSbTMUH6HRCRbHteXxbOeUg1i945sr593cudXiWEKVVEgtl+kkQhywILSL6
-         8LBvb5BWyxdSEkWlCzVOj5Pnh1SBphRHI+baoVtE9+wYqylPE3MZxFy/F3Ir8r3MhJlT
-         XTNQ==
-X-Gm-Message-State: APjAAAW7Hkt8wcmRBdq11MQ4Sf/X3TJ00z5XcoLBTMtJ/HukAEJpUBpS
-        PkkDRZRYU4mxedP5F51r3U0tle7YFDvhgzIehtdpe1SC
-X-Google-Smtp-Source: APXvYqx2+nDxq2ixPv2h29IpGt0iubjleAq9aMOGE+An5nayL0a+8XISERr+3e5yfQuKP1zTRewKys0Qg4k4OKGNcqU=
-X-Received: by 2002:a05:6102:204a:: with SMTP id q10mr6222578vsr.127.1576779515189;
- Thu, 19 Dec 2019 10:18:35 -0800 (PST)
+        bh=rFab9TFuVyy0B0hidssVyx0Ip53fX/LaEkCJxLNWYBA=;
+        b=LhQ3EWdp3eqGjaWae8O394wIcS+Ip6r6AaIm0DxOfye0j9+DflJHoDkDFsjIOiFKMo
+         mQ97JxPMQ+gODEllC8+qRtjgkqMypU1OzD2dy50E5/0474Y6gDcCJmi7PEQimv1UYxMz
+         h9cHh8BrcuO8x0HRXbzObVKhHCKy7Oq1778ursxgvzrmZsLSqwI9TU1NqklhPHCUmGI0
+         ZWJWrK3wbOZJg+5KSpDelm3ItWTmvo0TK7tx3dMWoOHnZaZ/fJazsNqJ4vB8oNzWTg1F
+         BEn4NNUnJkgVd53ukb3n77qk2ayRteJpjdHkMNUBOaGNwCDOMrOi2axHUiK99K6pdSCG
+         ySFg==
+X-Gm-Message-State: APjAAAX6hyckeg96UhsW654zRQxlBt+Z8usAKmPhLLn1065Q9BceEZnT
+        E00GI5ArFUsp/UHEiaQowbwExA9SJpw0SfFochhxNVS/OUg=
+X-Google-Smtp-Source: APXvYqyLPE/PUdXmbPKj8EMXclPSXyJgYJpxajEIC9HQ1RfZo8Iy2l7Mc313mPx7rnQ5LEzufff/eY7Ua8VC1PyZ+ag=
+X-Received: by 2002:a67:fb14:: with SMTP id d20mr5904491vsr.136.1576779977603;
+ Thu, 19 Dec 2019 10:26:17 -0800 (PST)
 MIME-Version: 1.0
-References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com> <1576224695-22657-2-git-send-email-stanley.chu@mediatek.com>
-In-Reply-To: <1576224695-22657-2-git-send-email-stanley.chu@mediatek.com>
+References: <1576224695-22657-1-git-send-email-stanley.chu@mediatek.com> <1576224695-22657-4-git-send-email-stanley.chu@mediatek.com>
+In-Reply-To: <1576224695-22657-4-git-send-email-stanley.chu@mediatek.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Thu, 19 Dec 2019 23:47:59 +0530
-Message-ID: <CAGOxZ539Fr5Vxg8Zg=LpYhxTacwh81Ee+S9MWFybwbAPr5RgYQ@mail.gmail.com>
-Subject: Re: [PATCH v1 1/4] scsi: ufs-mediatek: introduce reference clock control
+Date:   Thu, 19 Dec 2019 23:55:41 +0530
+Message-ID: <CAGOxZ50orn8JYxvCv4S6ziMdnB6+BG0DSdkand=x9Vw3H-Dejw@mail.gmail.com>
+Subject: Re: [PATCH v1 3/4] scsi: ufs-mediatek: configure customized
+ auto-hibern8 timer
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -78,177 +79,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Dec 13, 2019 at 2:23 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
+On Fri, Dec 13, 2019 at 3:04 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
 >
-> Introduce reference clock control in MediaTek Chipset in order
-> to disable it if it is not necessary by UFS device to save system power.
->
-> Currently reference clock can be disabled during system suspend, runtime
-> suspend and clock-gating after link enters hibernate state.
+> Configure customized auto-hibern8 timer in MediaTek Chipsets.
 >
 > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-
 > ---
->  drivers/scsi/ufs/ufs-mediatek.c | 64 ++++++++++++++++++++++++++++++---
->  drivers/scsi/ufs/ufs-mediatek.h | 20 +++++++++--
->  2 files changed, 78 insertions(+), 6 deletions(-)
+>  drivers/scsi/ufs/ufs-mediatek.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 >
 > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index 6a3ec11b16db..690483c78212 100644
+> index 690483c78212..71e2e0e4ea11 100644
 > --- a/drivers/scsi/ufs/ufs-mediatek.c
 > +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -18,6 +18,11 @@
->  #include "unipro.h"
->  #include "ufs-mediatek.h"
->
-> +#define ufs_mtk_ref_clk_notify(on, res) \
-> +       arm_smccc_smc(MTK_SIP_UFS_CONTROL, \
-> +                     UFS_MTK_SIP_REF_CLK_NOTIFICATION, \
-> +                     on, 0, 0, 0, 0, 0, &(res))
-> +
->  static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
->  {
->         u32 tmp;
-> @@ -83,6 +88,49 @@ static int ufs_mtk_bind_mphy(struct ufs_hba *hba)
->         return err;
->  }
->
-> +static int ufs_mtk_setup_ref_clk(struct ufs_hba *hba, bool on)
-> +{
-> +       struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-> +       struct arm_smccc_res res;
-> +       unsigned long timeout;
-> +       u32 value;
-> +
-> +       if (host->ref_clk_enabled == on)
-> +               return 0;
-> +
-> +       if (on) {
-> +               ufs_mtk_ref_clk_notify(on, res);
-> +               ufshcd_writel(hba, REFCLK_REQUEST, REG_UFS_REFCLK_CTRL);
-> +       } else {
-> +               ufshcd_writel(hba, REFCLK_RELEASE, REG_UFS_REFCLK_CTRL);
-> +       }
-> +
-> +       /* Wait for ack */
-> +       timeout = jiffies + msecs_to_jiffies(REFCLK_REQ_TIMEOUT_MS);
-> +       do {
-> +               value = ufshcd_readl(hba, REG_UFS_REFCLK_CTRL);
-> +
-> +               /* Wait until ack bit equals to req bit */
-> +               if (((value & REFCLK_ACK) >> 1) == (value & REFCLK_REQUEST))
-> +                       goto out;
-> +
-> +               usleep_range(100, 200);
-> +       } while (time_before(jiffies, timeout));
-> +
-> +       dev_err(hba->dev, "missing ack of refclk req, reg: 0x%x\n", value);
-> +
-> +       ufs_mtk_ref_clk_notify(host->ref_clk_enabled, res);
-> +
-> +       return -ETIMEDOUT;
-> +
-> +out:
-> +       host->ref_clk_enabled = on;
-> +       if (!on)
-> +               ufs_mtk_ref_clk_notify(on, res);
-> +
-> +       return 0;
-> +}
-> +
->  /**
->   * ufs_mtk_setup_clocks - enables/disable clocks
->   * @hba: host controller instance
-> @@ -107,12 +155,16 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
->
->         switch (status) {
->         case PRE_CHANGE:
-> -               if (!on)
-> +               if (!on) {
-> +                       ufs_mtk_setup_ref_clk(hba, on);
->                         ret = phy_power_off(host->mphy);
-> +               }
->                 break;
->         case POST_CHANGE:
-> -               if (on)
-> +               if (on) {
->                         ret = phy_power_on(host->mphy);
-> +                       ufs_mtk_setup_ref_clk(hba, on);
-> +               }
->                 break;
->         }
->
-> @@ -299,8 +351,10 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  {
->         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
->
-> -       if (ufshcd_is_link_hibern8(hba))
-> +       if (ufshcd_is_link_hibern8(hba)) {
->                 phy_power_off(host->mphy);
-> +               ufs_mtk_setup_ref_clk(hba, false);
-> +       }
->
->         return 0;
->  }
-> @@ -309,8 +363,10 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  {
->         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
->
-> -       if (ufshcd_is_link_hibern8(hba))
-> +       if (ufshcd_is_link_hibern8(hba)) {
-> +               ufs_mtk_setup_ref_clk(hba, true);
->                 phy_power_on(host->mphy);
-> +       }
->
->         return 0;
->  }
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.h b/drivers/scsi/ufs/ufs-mediatek.h
-> index b03f601d3a9e..14f8a8357c09 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.h
-> +++ b/drivers/scsi/ufs/ufs-mediatek.h
-> @@ -6,7 +6,21 @@
->  #ifndef _UFS_MEDIATEK_H
->  #define _UFS_MEDIATEK_H
->
-> -#include <linux/bitops.h>
-> +/*
-> + * Vendor specific UFSHCI Registers
-> + */
-> +#define REG_UFS_REFCLK_CTRL         0x144
-> +
-> +/*
-> + * Ref-clk control
-> + *
-> + * Values for register REG_UFS_REFCLK_CTRL
-> + */
-> +#define REFCLK_RELEASE              0x0
-> +#define REFCLK_REQUEST              BIT(0)
-> +#define REFCLK_ACK                  BIT(1)
-> +
-> +#define REFCLK_REQ_TIMEOUT_MS       3
->
->  /*
->   * Vendor specific pre-defined parameters
-> @@ -34,7 +48,8 @@
->  /*
->   * SiP commands
+> @@ -7,6 +7,7 @@
 >   */
-> -#define UFS_MTK_SIP_DEVICE_RESET    BIT(1)
-> +#define UFS_MTK_SIP_DEVICE_RESET          BIT(1)
-> +#define UFS_MTK_SIP_REF_CLK_NOTIFICATION  BIT(3)
 >
->  /*
->   * VS_DEBUGCLOCKENABLE
-> @@ -55,6 +70,7 @@ enum {
->  struct ufs_mtk_host {
->         struct ufs_hba *hba;
->         struct phy *mphy;
-> +       bool ref_clk_enabled;
->  };
+>  #include <linux/arm-smccc.h>
+> +#include <linux/bitfield.h>
+>  #include <linux/of.h>
+>  #include <linux/of_address.h>
+>  #include <linux/phy/phy.h>
+> @@ -300,6 +301,13 @@ static int ufs_mtk_post_link(struct ufs_hba *hba)
+>         /* enable unipro clock gating feature */
+>         ufs_mtk_cfg_unipro_cg(hba, true);
 >
->  #endif /* !_UFS_MEDIATEK_H */
+> +       /* configure auto-hibern8 timer to 10ms */
+> +       if (ufshcd_is_auto_hibern8_supported(hba)) {
+> +               ufshcd_auto_hibern8_update(hba,
+> +                       FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 10) |
+> +                       FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3));
+> +       }
+> +
+>         return 0;
+>  }
+>
 > --
 > 2.18.0
 
