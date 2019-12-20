@@ -2,146 +2,143 @@ Return-Path: <SRS0=ZPSI=2K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD6BC43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 07:58:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54397C43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 08:36:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4055720716
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 07:58:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 208A124680
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 08:36:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iSVESJ9A"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="uQwfVO/g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727135AbfLTH62 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 02:58:28 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:17693 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfLTH61 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 02:58:27 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1576828706; x=1608364706;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=w6qdMFq6hk3CvIqCMFquodJHaCAxb9EoKcudmEE+Xvw=;
-  b=iSVESJ9AgKqOISJQmQjbIClkI/WUaE0MB1bqo2CnLGEuiUjXZwwkM9Hd
-   dOh/K2F5BNXQSGAdEDnrsbcXygRk9Y7VJznNOXdnFRqwgjPYxwkMeIFd8
-   Yf/Fi0XPp4O8V1m93bEz4h9X4wbI9gI/2Iw8dD1hHg1aWlGkTUGQ3cdUl
-   UvDGiwQOUdta25fqycPwENEzWqN/YsFKUNylb0/f7Ml1FKqrDTj+qUXov
-   xGEQLjSucoYKhADUQKbLVKlAr/Is373fozskVTxysFgtlgX5LgehUNreH
-   IeBP7z9Z7DedaET8Sn3dkpRKNhcbu1gsCj1zDhdlcB21OZuYk90Q8QfhN
-   A==;
-IronPort-SDR: aGN3fRhGwGRQzGiGuQ3oCMqK2z/KPucQfD0CSe6z+ZJkc5e7kVedS1zE+82rJyvAGtwr5roiaM
- Jk0e1yEc84K+ZluzZJFs1jyAUe3HUwvfKD1xVE5jWTm9mnUg6a8nK9TVVyGPaIHsUqOLXuc/k1
- T+28iUDM0LV3MR5B5F2HRgpHK/R6RJsPXRCQhd1y9+lzRo5P7PcSKiCWf2Mxm6YZZf77MG6Kf0
- iKp/r/bZRv4LTO+lQ/kpjGloe6V8cUl73BCENgdGwvGVkSkOOmk0gnCVcoCdGLGxqMNIDYHkGw
- mLs=
-X-IronPort-AV: E=Sophos;i="5.69,335,1571673600"; 
-   d="scan'208";a="233424643"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Dec 2019 15:58:26 +0800
-IronPort-SDR: hFnG4nW2Byrq0Hvc83H+skbZHGahJTZu1rHCu5K6g2WpeihtDQ9iDHA4yVJACRqy/BcUa/iZQT
- +M7hcoMkXYlCj72pKaVBndoD1iUz6ekXHgZGhu0Q9iFW9IQHnHue3XAQr9J7z4SdvivPAo2C9L
- fne1srhp6G9iP8kixFI9UlWz//RfUoAhdj8BnH4bxPNgiLgN7k6PT4fIQSgJ4cPs/UDO7YMFIc
- +QZmmyWEGiIclIKCbmICZ0B6WC/kmcOVfsb4okypf8UTGUUseLbfvdE/gMvk6CXP1iw1ypxwDU
- hk5NEZkEGIeDM8wnA/Um/Bg1
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2019 23:52:46 -0800
-IronPort-SDR: 9Ggj4jnzl0k9ECJ8ubBtP4xJ+guOC4A72ZKEIZso6F8n6qWNAwW2NpObcBtFI5yT93HYaSxeKI
- f75U+95h+zQE02vGl94GmHnY+fd4ySFBQsnkj9YJypcD5HaVGwPjGouLUnHZD4wqRkr7KWOcSG
- 6eLrrnWhhx5jwi5QuEvM5pFqMhjt6pNeJD21WAM3E8AjTr1NuqqXqz4YA+B1H1qOyIaNxGpPc9
- 8RBs9AypPdpytsD62rxQlc3c39InfMPoShVrvtme+M1HW7T8+Y39nch7jEK3DAfq0bvPFeIN2f
- ZWc=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 19 Dec 2019 23:58:26 -0800
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/2] scsi: sd_zbc: Rename sd_zbc_check_zones()
-Date:   Fri, 20 Dec 2019 16:58:23 +0900
-Message-Id: <20191220075823.400072-3-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191220075823.400072-1-damien.lemoal@wdc.com>
-References: <20191220075823.400072-1-damien.lemoal@wdc.com>
+        id S1727169AbfLTIgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 03:36:45 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:19551 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727279AbfLTIgo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 03:36:44 -0500
+X-UUID: e809115f14cc43d3ae7ee384d7a2f3e6-20191220
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=FQ9iJGiHG3tZx1pkXd4zqWoMs5/8XtOFzIai6fL+Jjs=;
+        b=uQwfVO/ghclJh1xap9nNHFy0FEPrnt7hhpewz4BoQODRk0bxxRDVW/V1WErS/blS+c+hjOGCIHp4ZLaFPbHeeS36xPt6VKSEi2kDxbh+APLeLDUM/qWj63b3akI5tWQWhVwpbPyvKnPaPvDS4Vh353GbVplEY9aJSEXfdY05aVM=;
+X-UUID: e809115f14cc43d3ae7ee384d7a2f3e6-20191220
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1238035670; Fri, 20 Dec 2019 16:36:33 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Fri, 20 Dec 2019 16:35:58 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 20 Dec 2019 16:35:38 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
+        <matthias.bgg@gmail.com>, <f.fainelli@gmail.com>
+CC:     <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <beanhuo@micron.com>,
+        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>,
+        <leon.chen@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 3/6] scsi: ufs-mediatek: introduce reference clock control
+Date:   Fri, 20 Dec 2019 16:36:25 +0800
+Message-ID: <1576830988-22435-4-git-send-email-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <1576830988-22435-1-git-send-email-stanley.chu@mediatek.com>
+References: <1576830988-22435-1-git-send-email-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the block layer implement zone checks on revalidate,
-sd_zbc_check_zones() is reduced getting the zone size and verifying the
-device capacity for device with RC_BASIS=0. Be clear about this by
-renaming sd_zbc_check_zones() to sd_zbc_check_capacity() and updating
-the function description and comments.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/scsi/sd_zbc.c | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index aca6367ced06..e4282bce5834 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -325,19 +325,21 @@ static int sd_zbc_check_zoned_characteristics(struct scsi_disk *sdkp,
- }
- 
- /**
-- * sd_zbc_check_zones - Check the device capacity and zone size
-+ * sd_zbc_check_capacity - Check the device capacity
-  * @sdkp: Target disk
-+ * @buf: command buffer
-+ * @zblock: zone size in number of blocks
-  *
-- * Check that the device capacity as reported by READ CAPACITY matches the
-- * max_lba value (plus one)of the report zones command reply.
-+ * Get the device zone size and check that the device capacity as reported
-+ * by READ CAPACITY matches the max_lba value (plus one) of the report zones
-+ * command reply for devices with RC_BASIS == 0.
-  *
-- * Returns the zone size in number of blocks upon success or an error code
-- * upon failure.
-+ * Returns 0 upon success or an error code upon failure.
-  */
--static int sd_zbc_check_zones(struct scsi_disk *sdkp, unsigned char *buf,
--			      u32 *zblocks)
-+static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
-+				 u32 *zblocks)
- {
--	u64 zone_blocks = 0;
-+	u64 zone_blocks;
- 	sector_t max_lba;
- 	unsigned char *rec;
- 	int ret;
-@@ -360,7 +362,7 @@ static int sd_zbc_check_zones(struct scsi_disk *sdkp, unsigned char *buf,
- 		}
- 	}
- 
--	/* Parse REPORT ZONES header */
-+	/* Get the size of the first reported zone */
- 	rec = buf + 64;
- 	zone_blocks = get_unaligned_be64(&rec[8]);
- 	if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
-@@ -394,11 +396,8 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	if (ret)
- 		goto err;
- 
--	/*
--	 * Check zone size: only devices with a constant zone size (except
--	 * an eventual last runt zone) that is a power of 2 are supported.
--	 */
--	ret = sd_zbc_check_zones(sdkp, buf, &zone_blocks);
-+	/* Check the device capacity reported by report zones */
-+	ret = sd_zbc_check_capacity(sdkp, buf, &zone_blocks);
- 	if (ret != 0)
- 		goto err;
- 
--- 
-2.23.0
+SW50cm9kdWNlIHJlZmVyZW5jZSBjbG9jayBjb250cm9sIGluIE1lZGlhVGVrIENoaXBzZXQgaW4g
+b3JkZXINCnRvIGRpc2FibGUgaXQgaWYgaXQgaXMgbm90IG5lY2Vzc2FyeSBieSBVRlMgZGV2aWNl
+IHRvIHNhdmUgc3lzdGVtIHBvd2VyLg0KDQpDdXJyZW50bHkgcmVmZXJlbmNlIGNsb2NrIGNhbiBi
+ZSBkaXNhYmxlZCBkdXJpbmcgc3lzdGVtIHN1c3BlbmQsIHJ1bnRpbWUNCnN1c3BlbmQgYW5kIGNs
+b2NrLWdhdGluZyBhZnRlciBsaW5rIGVudGVycyBoaWJlcm5hdGUgc3RhdGUuDQoNClNpZ25lZC1v
+ZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQpSZXZpZXdlZC1i
+eTogQWxpbSBBa2h0YXIgPGFsaW0uYWtodGFyQHNhbXN1bmcuY29tPg0KLS0tDQogZHJpdmVycy9z
+Y3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYyB8IDY0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+Ky0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmggfCAyMCArKysrKysrKystLQ0K
+IDIgZmlsZXMgY2hhbmdlZCwgNzggaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkNCg0KZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMgYi9kcml2ZXJzL3Njc2kv
+dWZzL3Vmcy1tZWRpYXRlay5jDQppbmRleCA2YTNlYzExYjE2ZGIuLjY5MDQ4M2M3ODIxMiAxMDA2
+NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCisrKyBiL2RyaXZlcnMv
+c2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCkBAIC0xOCw2ICsxOCwxMSBAQA0KICNpbmNsdWRlICJ1
+bmlwcm8uaCINCiAjaW5jbHVkZSAidWZzLW1lZGlhdGVrLmgiDQogDQorI2RlZmluZSB1ZnNfbXRr
+X3JlZl9jbGtfbm90aWZ5KG9uLCByZXMpIFwNCisJYXJtX3NtY2NjX3NtYyhNVEtfU0lQX1VGU19D
+T05UUk9MLCBcDQorCQkgICAgICBVRlNfTVRLX1NJUF9SRUZfQ0xLX05PVElGSUNBVElPTiwgXA0K
+KwkJICAgICAgb24sIDAsIDAsIDAsIDAsIDAsICYocmVzKSkNCisNCiBzdGF0aWMgdm9pZCB1ZnNf
+bXRrX2NmZ191bmlwcm9fY2coc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBlbmFibGUpDQogew0K
+IAl1MzIgdG1wOw0KQEAgLTgzLDYgKzg4LDQ5IEBAIHN0YXRpYyBpbnQgdWZzX210a19iaW5kX21w
+aHkoc3RydWN0IHVmc19oYmEgKmhiYSkNCiAJcmV0dXJuIGVycjsNCiB9DQogDQorc3RhdGljIGlu
+dCB1ZnNfbXRrX3NldHVwX3JlZl9jbGsoc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBvbikNCit7
+DQorCXN0cnVjdCB1ZnNfbXRrX2hvc3QgKmhvc3QgPSB1ZnNoY2RfZ2V0X3ZhcmlhbnQoaGJhKTsN
+CisJc3RydWN0IGFybV9zbWNjY19yZXMgcmVzOw0KKwl1bnNpZ25lZCBsb25nIHRpbWVvdXQ7DQor
+CXUzMiB2YWx1ZTsNCisNCisJaWYgKGhvc3QtPnJlZl9jbGtfZW5hYmxlZCA9PSBvbikNCisJCXJl
+dHVybiAwOw0KKw0KKwlpZiAob24pIHsNCisJCXVmc19tdGtfcmVmX2Nsa19ub3RpZnkob24sIHJl
+cyk7DQorCQl1ZnNoY2Rfd3JpdGVsKGhiYSwgUkVGQ0xLX1JFUVVFU1QsIFJFR19VRlNfUkVGQ0xL
+X0NUUkwpOw0KKwl9IGVsc2Ugew0KKwkJdWZzaGNkX3dyaXRlbChoYmEsIFJFRkNMS19SRUxFQVNF
+LCBSRUdfVUZTX1JFRkNMS19DVFJMKTsNCisJfQ0KKw0KKwkvKiBXYWl0IGZvciBhY2sgKi8NCisJ
+dGltZW91dCA9IGppZmZpZXMgKyBtc2Vjc190b19qaWZmaWVzKFJFRkNMS19SRVFfVElNRU9VVF9N
+Uyk7DQorCWRvIHsNCisJCXZhbHVlID0gdWZzaGNkX3JlYWRsKGhiYSwgUkVHX1VGU19SRUZDTEtf
+Q1RSTCk7DQorDQorCQkvKiBXYWl0IHVudGlsIGFjayBiaXQgZXF1YWxzIHRvIHJlcSBiaXQgKi8N
+CisJCWlmICgoKHZhbHVlICYgUkVGQ0xLX0FDSykgPj4gMSkgPT0gKHZhbHVlICYgUkVGQ0xLX1JF
+UVVFU1QpKQ0KKwkJCWdvdG8gb3V0Ow0KKw0KKwkJdXNsZWVwX3JhbmdlKDEwMCwgMjAwKTsNCisJ
+fSB3aGlsZSAodGltZV9iZWZvcmUoamlmZmllcywgdGltZW91dCkpOw0KKw0KKwlkZXZfZXJyKGhi
+YS0+ZGV2LCAibWlzc2luZyBhY2sgb2YgcmVmY2xrIHJlcSwgcmVnOiAweCV4XG4iLCB2YWx1ZSk7
+DQorDQorCXVmc19tdGtfcmVmX2Nsa19ub3RpZnkoaG9zdC0+cmVmX2Nsa19lbmFibGVkLCByZXMp
+Ow0KKw0KKwlyZXR1cm4gLUVUSU1FRE9VVDsNCisNCitvdXQ6DQorCWhvc3QtPnJlZl9jbGtfZW5h
+YmxlZCA9IG9uOw0KKwlpZiAoIW9uKQ0KKwkJdWZzX210a19yZWZfY2xrX25vdGlmeShvbiwgcmVz
+KTsNCisNCisJcmV0dXJuIDA7DQorfQ0KKw0KIC8qKg0KICAqIHVmc19tdGtfc2V0dXBfY2xvY2tz
+IC0gZW5hYmxlcy9kaXNhYmxlIGNsb2Nrcw0KICAqIEBoYmE6IGhvc3QgY29udHJvbGxlciBpbnN0
+YW5jZQ0KQEAgLTEwNywxMiArMTU1LDE2IEBAIHN0YXRpYyBpbnQgdWZzX210a19zZXR1cF9jbG9j
+a3Moc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBvbiwNCiANCiAJc3dpdGNoIChzdGF0dXMpIHsN
+CiAJY2FzZSBQUkVfQ0hBTkdFOg0KLQkJaWYgKCFvbikNCisJCWlmICghb24pIHsNCisJCQl1ZnNf
+bXRrX3NldHVwX3JlZl9jbGsoaGJhLCBvbik7DQogCQkJcmV0ID0gcGh5X3Bvd2VyX29mZihob3N0
+LT5tcGh5KTsNCisJCX0NCiAJCWJyZWFrOw0KIAljYXNlIFBPU1RfQ0hBTkdFOg0KLQkJaWYgKG9u
+KQ0KKwkJaWYgKG9uKSB7DQogCQkJcmV0ID0gcGh5X3Bvd2VyX29uKGhvc3QtPm1waHkpOw0KKwkJ
+CXVmc19tdGtfc2V0dXBfcmVmX2NsayhoYmEsIG9uKTsNCisJCX0NCiAJCWJyZWFrOw0KIAl9DQog
+DQpAQCAtMjk5LDggKzM1MSwxMCBAQCBzdGF0aWMgaW50IHVmc19tdGtfc3VzcGVuZChzdHJ1Y3Qg
+dWZzX2hiYSAqaGJhLCBlbnVtIHVmc19wbV9vcCBwbV9vcCkNCiB7DQogCXN0cnVjdCB1ZnNfbXRr
+X2hvc3QgKmhvc3QgPSB1ZnNoY2RfZ2V0X3ZhcmlhbnQoaGJhKTsNCiANCi0JaWYgKHVmc2hjZF9p
+c19saW5rX2hpYmVybjgoaGJhKSkNCisJaWYgKHVmc2hjZF9pc19saW5rX2hpYmVybjgoaGJhKSkg
+ew0KIAkJcGh5X3Bvd2VyX29mZihob3N0LT5tcGh5KTsNCisJCXVmc19tdGtfc2V0dXBfcmVmX2Ns
+ayhoYmEsIGZhbHNlKTsNCisJfQ0KIA0KIAlyZXR1cm4gMDsNCiB9DQpAQCAtMzA5LDggKzM2Mywx
+MCBAQCBzdGF0aWMgaW50IHVmc19tdGtfcmVzdW1lKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0g
+dWZzX3BtX29wIHBtX29wKQ0KIHsNCiAJc3RydWN0IHVmc19tdGtfaG9zdCAqaG9zdCA9IHVmc2hj
+ZF9nZXRfdmFyaWFudChoYmEpOw0KIA0KLQlpZiAodWZzaGNkX2lzX2xpbmtfaGliZXJuOChoYmEp
+KQ0KKwlpZiAodWZzaGNkX2lzX2xpbmtfaGliZXJuOChoYmEpKSB7DQorCQl1ZnNfbXRrX3NldHVw
+X3JlZl9jbGsoaGJhLCB0cnVlKTsNCiAJCXBoeV9wb3dlcl9vbihob3N0LT5tcGh5KTsNCisJfQ0K
+IA0KIAlyZXR1cm4gMDsNCiB9DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVk
+aWF0ZWsuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmgNCmluZGV4IGIwM2Y2MDFk
+M2E5ZS4uMTRmOGE4MzU3YzA5IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVk
+aWF0ZWsuaA0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KQEAgLTYsNyAr
+NiwyMSBAQA0KICNpZm5kZWYgX1VGU19NRURJQVRFS19IDQogI2RlZmluZSBfVUZTX01FRElBVEVL
+X0gNCiANCi0jaW5jbHVkZSA8bGludXgvYml0b3BzLmg+DQorLyoNCisgKiBWZW5kb3Igc3BlY2lm
+aWMgVUZTSENJIFJlZ2lzdGVycw0KKyAqLw0KKyNkZWZpbmUgUkVHX1VGU19SRUZDTEtfQ1RSTCAg
+ICAgICAgIDB4MTQ0DQorDQorLyoNCisgKiBSZWYtY2xrIGNvbnRyb2wNCisgKg0KKyAqIFZhbHVl
+cyBmb3IgcmVnaXN0ZXIgUkVHX1VGU19SRUZDTEtfQ1RSTA0KKyAqLw0KKyNkZWZpbmUgUkVGQ0xL
+X1JFTEVBU0UgICAgICAgICAgICAgIDB4MA0KKyNkZWZpbmUgUkVGQ0xLX1JFUVVFU1QgICAgICAg
+ICAgICAgIEJJVCgwKQ0KKyNkZWZpbmUgUkVGQ0xLX0FDSyAgICAgICAgICAgICAgICAgIEJJVCgx
+KQ0KKw0KKyNkZWZpbmUgUkVGQ0xLX1JFUV9USU1FT1VUX01TICAgICAgIDMNCiANCiAvKg0KICAq
+IFZlbmRvciBzcGVjaWZpYyBwcmUtZGVmaW5lZCBwYXJhbWV0ZXJzDQpAQCAtMzQsNyArNDgsOCBA
+QA0KIC8qDQogICogU2lQIGNvbW1hbmRzDQogICovDQotI2RlZmluZSBVRlNfTVRLX1NJUF9ERVZJ
+Q0VfUkVTRVQgICAgQklUKDEpDQorI2RlZmluZSBVRlNfTVRLX1NJUF9ERVZJQ0VfUkVTRVQgICAg
+ICAgICAgQklUKDEpDQorI2RlZmluZSBVRlNfTVRLX1NJUF9SRUZfQ0xLX05PVElGSUNBVElPTiAg
+QklUKDMpDQogDQogLyoNCiAgKiBWU19ERUJVR0NMT0NLRU5BQkxFDQpAQCAtNTUsNiArNzAsNyBA
+QCBlbnVtIHsNCiBzdHJ1Y3QgdWZzX210a19ob3N0IHsNCiAJc3RydWN0IHVmc19oYmEgKmhiYTsN
+CiAJc3RydWN0IHBoeSAqbXBoeTsNCisJYm9vbCByZWZfY2xrX2VuYWJsZWQ7DQogfTsNCiANCiAj
+ZW5kaWYgLyogIV9VRlNfTUVESUFURUtfSCAqLw0KLS0gDQoyLjE4LjANCg==
 
