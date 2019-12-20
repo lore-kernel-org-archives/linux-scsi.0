@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBB8C43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA36FC43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 376B024679
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 921C724679
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="A9GAVaz8"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MDnJU1Bb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727235AbfLTKc1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 05:32:27 -0500
-Received: from mail-pl1-f182.google.com ([209.85.214.182]:39073 "EHLO
-        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726210AbfLTKc0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 05:32:26 -0500
-Received: by mail-pl1-f182.google.com with SMTP id g6so966416plp.6
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2019 02:32:26 -0800 (PST)
+        id S1727270AbfLTKca (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 05:32:30 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:39006 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727262AbfLTKca (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 05:32:30 -0500
+Received: by mail-pj1-f65.google.com with SMTP id t101so3939930pjb.4
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2019 02:32:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=FGhoDrm5LlSTCqbDElMc3SFvAISmG3NJrSEhNWEkzko=;
-        b=A9GAVaz8PxIGqav+C2+pFnRqli6JrZNhqiJ7Z9NvOZQCy6UV3uXz6XK0TSfd41t6eV
-         ZKDIm/S4EsP7hTc667eajkh8+P2lVF7ajq4lBdHDKaxLN1xvOjkYxOgKal2Lk3F6vP3j
-         CwygcRrqnbQo0VsEnnj36UDlxTehHrhltthZU=
+        bh=mY5vV0qAVJNWhYnbmE4p+BQzZ7aNxRMinTe3PEDTAiU=;
+        b=MDnJU1Bb6gX24fR7o370Hf4UrH5knyJrUaTkpNH4zSnb+5jLcN5WWj5iZMT0FoH9xi
+         TIrkYMSF76JB+ef0qyK1tqCTss7lf3yiUgx46gzcFFUoZKSFffBFSTg25W+nFMr7kj+Q
+         PGqwryBIJ5Ze+TbeBBK4pQTx7YJfWdhTOuFQ0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=FGhoDrm5LlSTCqbDElMc3SFvAISmG3NJrSEhNWEkzko=;
-        b=EtzE57AFLSEOmTpxzXhZcOsZZ4hopiEDJ6BpJ5CIC6O0hDicz4syWWaKsc2GZLNXse
-         2U6TZfadMhZ4soJFWZOGNUq7FpnhcgLNmE+/RCOb0CUQRpFf77wtWh6+MtfmltZjx6v4
-         UfPZdSgL/AUREoB+1QuaiX9vCIwxDL/OkJ30Z23WY0WrBQHDyuyCIc+Ag9xMvDm8NWjE
-         srtWBDjHToKd//CO5fpxvxNpxwpXwi3D5tFI89VMR6WDAv53ksne2+iiZ87E6OtacTgk
-         Od5ZkEFS9+DIYCDz5qEQcPz7Z4oXuDaxoHJ3IxHm/UiGShH9eIpYYxoJpbg38wLgXKoU
-         jrJQ==
-X-Gm-Message-State: APjAAAXhcYKPRa8UsSPNWHjaam8CZf2XAgbUZOPN4xai7/xc6ZlX1i9n
-        TrlJ2olmeOuFDJFstvB4LxnXBlEwVjeOsKLF8lmzWimjCAT6lpuuxGtyzvfKdF+oG98JuO+DAYo
-        vS0qaDkZI1DygYG0wxKTveIf9NrmPaY7NFsRTnlUPW6JhI5ixm64cFvYYUMTYsbabgyUnohQZEG
-        71XQ5rbISES+hH2Nk8DA==
-X-Google-Smtp-Source: APXvYqxP2ndPxUb6CSQ6wDi4NcHoaPzKh1hOUgd4yi4f/5Aldd2yg1s0LvkjP7AyV+vvwqmCYKnT4Q==
-X-Received: by 2002:a17:90a:7f89:: with SMTP id m9mr15269735pjl.143.1576837945275;
-        Fri, 20 Dec 2019 02:32:25 -0800 (PST)
+        bh=mY5vV0qAVJNWhYnbmE4p+BQzZ7aNxRMinTe3PEDTAiU=;
+        b=ACC4G8qfz5IFXWheJjNGLHW4sLhafEmWKpHZDunT+a9NBIexXLjGSkcqD68vFk6CKS
+         Su+OtH3MoldU8s59I6s68uymQifu3CRjw5m+2zXjXVNAS/PVyGt2U3POLmjcjjMO6et0
+         CRhKGlpwSwXrFJuKpLSuuLyDQm2iQqnwOl1LcUdC4I2ulP54DzWuY+497I/pO4r4kNMj
+         +CKD89UpBEP+f463qaV3dnQ2h+yWjFe3rzuaZeYMryd8V0aQltNcmUQqRUl4G1WrgcSM
+         GUNE3P0O/QyxGwtVbFqUl9cWdpnlThU43NRL8Q4WxkCks7aNxoHwR3zER10DHKMyH45V
+         fIMg==
+X-Gm-Message-State: APjAAAU4nHj1XJz+P0zH8zrDQhmd6E11y83+BrozNFxeF1l8Dcxfxx+G
+        LT7Q762rOI/0RD8za/0W4hf9vcyt2XclP9Ge29DI9jkXDcqFWbJPIu+2Czp/UYu71KP8uwRuZNg
+        ZmNm8i5FMm6AgrpD8xLXVgYYwfwo6LB/QYJJAAGWL7TvbUUO/mYuCVCHvFhDWS0RFjT5pWSw+wh
+        l27A/4E8JTE6dnLOMyIw==
+X-Google-Smtp-Source: APXvYqyqnEL4yiRqoh2QqFtlQS/uHwa7vg+otXB5wEnBO6OC4vDHbrrciaWDZXO4eSTb17AWgFI9Og==
+X-Received: by 2002:a17:90a:a60c:: with SMTP id c12mr15412712pjq.61.1576837948813;
+        Fri, 20 Dec 2019 02:32:28 -0800 (PST)
 Received: from dhcp-10-123-20-125.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 200sm12185364pfz.121.2019.12.20.02.32.22
+        by smtp.gmail.com with ESMTPSA id 200sm12185364pfz.121.2019.12.20.02.32.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Dec 2019 02:32:24 -0800 (PST)
+        Fri, 20 Dec 2019 02:32:28 -0800 (PST)
 From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com,
         kashyap.desai@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 01/10] mpt3sas: Update MPI Headers to v02.00.57
-Date:   Fri, 20 Dec 2019 05:32:01 -0500
-Message-Id: <20191220103210.43631-2-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 02/10] mpt3sas: Add support for NVMe shutdown.
+Date:   Fri, 20 Dec 2019 05:32:02 -0500
+Message-Id: <20191220103210.43631-3-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 2.18.2
 In-Reply-To: <20191220103210.43631-1-suganath-prabu.subramani@broadcom.com>
 References: <20191220103210.43631-1-suganath-prabu.subramani@broadcom.com>
@@ -68,171 +68,319 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update MPI Headers to version 02.00.57.
+Introduce function _scsih_nvme_shutdown() to issue IO Unit Control
+message to IOC firmware with operation code 'shutdown'. So that IOC
+firmware issues NVMe shutdown commands to all NVMe drives attached
+to it.
+
+NVMe Shutdown:
+NVMe devices need to have a specific shutdown sequence performed
+before power is removed, For this IOC firmware needs to be notified
+when the system is being shutdown.
+So during the system shutdown time, Driver issue an
+IO Unit Control request with operation code
+MPI26_CTRL_OP_SHUTDOWN to inform firmware that a shutdown is
+initiated.
+
+This shutdown command is issued only if NVMe devices are
+attached to the controller.
+
+During each nvme device addition, Driver reads pcie device page2
+to get shutdown latency (.e. drive's RTD3 Entry Latency) and updates
+the max latency value among the added NVMe drives in
+ioc->max_shutdown_latency.
+This is used as the timeout value for Io Unit Control command
+at the time of shutdown.
+
+When a NVMe drive is removed and it's shutdown latency matches
+which ioc->max_shutdown_latency then ioc->max_shutdown_latency is
+updated to next max value (By iterating over the list of
+available devices).
+If the shutdown latency is 0, then default timeout is set to
+six seconds.
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2.h       |  6 +++++-
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h  | 19 +++++++++++++++----
- drivers/scsi/mpt3sas/mpi/mpi2_image.h |  7 +++++++
- drivers/scsi/mpt3sas/mpi/mpi2_ioc.h   |  8 +++++++-
- 4 files changed, 34 insertions(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |   9 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 136 +++++++++++++++++++++++++++
+ 2 files changed, 144 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2.h b/drivers/scsi/mpt3sas/mpi/mpi2.h
-index 18b1e31..ed3923f 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2.h
-@@ -122,6 +122,9 @@
-  * 08-28-18  02.00.53  Bumped MPI2_HEADER_VERSION_UNIT.
-  *                     Added MPI2_IOCSTATUS_FAILURE
-  * 12-17-18  02.00.54  Bumped MPI2_HEADER_VERSION_UNIT
-+ * 06-24-19  02.00.55  Bumped MPI2_HEADER_VERSION_UNIT
-+ * 08-01-19  02.00.56  Bumped MPI2_HEADER_VERSION_UNIT
-+ * 10-02-19  02.00.57  Bumped MPI2_HEADER_VERSION_UNIT
-  *  --------------------------------------------------------------------------
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 4ebf81e..a4f308f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -140,6 +140,7 @@
+ #define MAX_CHAIN_ELEMT_SZ		16
+ #define DEFAULT_NUM_FWCHAIN_ELEMTS	8
+ 
++#define IO_UNIT_CONTROL_SHUTDOWN_TIMEOUT 6
+ #define FW_IMG_HDR_READ_TIMEOUT	15
+ 
+ #define IOC_OPERATIONAL_WAIT_COUNT	10
+@@ -589,6 +590,7 @@ static inline void sas_device_put(struct _sas_device *s)
+  * @connector_name: ASCII value of the Connector's name
+  * @serial_number: pointer of serial number string allocated runtime
+  * @access_status: Device's Access Status
++ * @shutdown_latency: NVMe device's RTD3 Entry Latency
+  * @refcount: reference count for deletion
   */
+ struct _pcie_device {
+@@ -611,6 +613,7 @@ struct _pcie_device {
+ 	u8	*serial_number;
+ 	u8	reset_timeout;
+ 	u8	access_status;
++	u16	shutdown_latency;
+ 	struct kref refcount;
+ };
+ /**
+@@ -1073,6 +1076,10 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @event_context: unique id for each logged event
+  * @event_log: event log pointer
+  * @event_masks: events that are masked
++ * @max_shutdown_latency: timeout value for NVMe shutdown operation,
++ *			which is equal that NVMe drive's RTD3 Entry Latency
++ *			which has reported maximum RTD3 Entry Latency value
++ *			among attached NVMe drives.
+  * @facts: static facts data
+  * @prev_fw_facts: previous fw facts data
+  * @pfacts: static port facts data
+@@ -1283,7 +1290,7 @@ struct MPT3SAS_ADAPTER {
  
-@@ -162,7 +165,7 @@
+ 	u8		tm_custom_handling;
+ 	u8		nvme_abort_timeout;
+-
++	u16		max_shutdown_latency;
+ 
+ 	/* static config pages */
+ 	struct mpt3sas_facts facts;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a038be8..c451e57 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1049,6 +1049,34 @@ mpt3sas_get_pdev_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	return pcie_device;
+ }
+ 
++/**
++ * _scsih_set_nvme_max_shutdown_latency - Update max_shutdown_latency.
++ * @ioc: per adapter object
++ * Context: This function will acquire ioc->pcie_device_lock
++ *
++ * Update ioc->max_shutdown_latency to that NVMe drives RTD3 Entry Latency
++ * which has reported maximum among all available NVMe drives.
++ * Minimum max_shutdown_latency will be six seconds.
++ */
++static void
++_scsih_set_nvme_max_shutdown_latency(struct MPT3SAS_ADAPTER *ioc)
++{
++	struct _pcie_device *pcie_device;
++	unsigned long flags;
++	u16 shutdown_latency = IO_UNIT_CONTROL_SHUTDOWN_TIMEOUT;
++
++	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
++	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list) {
++		if (pcie_device->shutdown_latency) {
++			if (shutdown_latency < pcie_device->shutdown_latency)
++				shutdown_latency =
++					pcie_device->shutdown_latency;
++		}
++	}
++	ioc->max_shutdown_latency = shutdown_latency;
++	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
++}
++
+ /**
+  * _scsih_pcie_device_remove - remove pcie_device from list.
+  * @ioc: per adapter object
+@@ -1063,6 +1091,7 @@ _scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
+ {
+ 	unsigned long flags;
+ 	int was_on_pcie_device_list = 0;
++	u8 update_latency;
+ 
+ 	if (!pcie_device)
+ 		return;
+@@ -1082,11 +1111,22 @@ _scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
+ 		list_del_init(&pcie_device->list);
+ 		was_on_pcie_device_list = 1;
+ 	}
++	if (pcie_device->shutdown_latency == ioc->max_shutdown_latency)
++		update_latency = 1;
+ 	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+ 	if (was_on_pcie_device_list) {
+ 		kfree(pcie_device->serial_number);
+ 		pcie_device_put(pcie_device);
+ 	}
++
++	/*
++	 * As this device's RTD3 Entry Latency matches with
++	 * IOC's max_shutdown_latency and hence recalculate
++	 * IOC's max_shutdown_latency from the available drives
++	 * as current drive is getting removed.
++	 */
++	if (update_latency)
++		_scsih_set_nvme_max_shutdown_latency(ioc);
+ }
  
  
- /* Unit and Dev versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x36)
-+#define MPI2_HEADER_VERSION_UNIT            (0x39)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -181,6 +184,7 @@
- #define MPI2_IOC_STATE_READY               (0x10000000)
- #define MPI2_IOC_STATE_OPERATIONAL         (0x20000000)
- #define MPI2_IOC_STATE_FAULT               (0x40000000)
-+#define MPI2_IOC_STATE_COREDUMP            (0x50000000)
+@@ -1101,6 +1141,7 @@ _scsih_pcie_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	struct _pcie_device *pcie_device;
+ 	unsigned long flags;
+ 	int was_on_pcie_device_list = 0;
++	u8 update_latency = 0;
  
- #define MPI2_IOC_STATE_MASK                (0xF0000000)
- #define MPI2_IOC_STATE_SHIFT               (28)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-index 3a6871a..43a3bf8 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
-@@ -249,6 +249,8 @@
-  * 08-28-18  02.00.46  Added NVMs Write Cache flag to IOUnitPage1
-  *                     Added DMDReport Delay Time defines to PCIeIOUnitPage1
-  * 12-17-18  02.00.47  Swap locations of Slotx2 and Slotx4 in ManPage 7.
-+ * 08-01-19  02.00.49  Add MPI26_MANPAGE7_FLAG_X2_X4_SLOT_INFO_VALID
-+ *                     Add MPI26_IOUNITPAGE1_NVME_WRCACHE_SHIFT
-  */
+ 	if (ioc->shost_recovery)
+ 		return;
+@@ -1113,12 +1154,23 @@ _scsih_pcie_device_remove_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 			was_on_pcie_device_list = 1;
+ 			pcie_device_put(pcie_device);
+ 		}
++		if (pcie_device->shutdown_latency == ioc->max_shutdown_latency)
++			update_latency = 1;
+ 	}
+ 	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+ 	if (was_on_pcie_device_list) {
+ 		_scsih_pcie_device_remove_from_sml(ioc, pcie_device);
+ 		pcie_device_put(pcie_device);
+ 	}
++
++	/*
++	 * As this device's RTD3 Entry Latency matches with
++	 * IOC's max_shutdown_latency and hence recalculate
++	 * IOC's max_shutdown_latency from the available drives
++	 * as current drive is getting removed.
++	 */
++	if (update_latency)
++		_scsih_set_nvme_max_shutdown_latency(ioc);
+ }
  
- #ifndef MPI2_CNFG_H
-@@ -891,6 +893,8 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7 {
- #define MPI2_MANPAGE7_FLAG_EVENTREPLAY_SLOT_ORDER       (0x00000002)
- #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+ /**
+@@ -6933,6 +6985,16 @@ _scsih_pcie_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+ 	    le32_to_cpu(pcie_device_pg0.DeviceInfo)))) {
+ 		pcie_device->nvme_mdts =
+ 		    le32_to_cpu(pcie_device_pg2.MaximumDataTransferSize);
++		pcie_device->shutdown_latency =
++			le16_to_cpu(pcie_device_pg2.ShutdownLatency);
++		/*
++		 * Set IOC's max_shutdown_latency to drive's RTD3 Entry Latency
++		 * if drive's RTD3 Entry Latency is greater then IOC's
++		 * max_shutdown_latency.
++		 */
++		if (pcie_device->shutdown_latency > ioc->max_shutdown_latency)
++			ioc->max_shutdown_latency =
++				pcie_device->shutdown_latency;
+ 		if (pcie_device_pg2.ControllerResetTO)
+ 			pcie_device->reset_timeout =
+ 			    pcie_device_pg2.ControllerResetTO;
+@@ -9357,6 +9419,7 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 		}
+ 		_scsih_remove_unresponding_devices(ioc);
+ 		_scsih_scan_for_devices_after_reset(ioc);
++		_scsih_set_nvme_max_shutdown_latency(ioc);
+ 		break;
+ 	case MPT3SAS_PORT_ENABLE_COMPLETE:
+ 		ioc->start_scan = 0;
+@@ -9659,6 +9722,75 @@ _scsih_expander_node_remove(struct MPT3SAS_ADAPTER *ioc,
+ 	kfree(sas_expander);
+ }
  
-+#define MPI26_MANPAGE7_FLAG_CONN_LANE_USE_PINOUT        (0x00000020)
-+#define MPI26_MANPAGE7_FLAG_X2_X4_SLOT_INFO_VALID       (0x00000010)
++/**
++ * _scsih_nvme_shutdown - NVMe shutdown notification
++ * @ioc: per adapter object
++ *
++ * Sending IoUnitControl request with shutdown operation code to alert IOC that
++ * the host system is shutting down. So that IOC can issue NVMe shutdown to
++ * NVMe drives attached to it.
++ */
++static void
++_scsih_nvme_shutdown(struct MPT3SAS_ADAPTER *ioc)
++{
++	Mpi26IoUnitControlRequest_t *mpi_request;
++	Mpi26IoUnitControlReply_t *mpi_reply;
++	u16 smid;
++
++	/* are there any NVMe devices ? */
++	if (list_empty(&ioc->pcie_device_list))
++		return;
++
++	mutex_lock(&ioc->scsih_cmds.mutex);
++
++	if (ioc->scsih_cmds.status != MPT3_CMD_NOT_USED) {
++		ioc_err(ioc, "%s: scsih_cmd in use\n", __func__);
++		goto out;
++	}
++
++	ioc->scsih_cmds.status = MPT3_CMD_PENDING;
++
++	smid = mpt3sas_base_get_smid(ioc, ioc->scsih_cb_idx);
++	if (!smid) {
++		ioc_err(ioc,
++		    "%s: failed obtaining a smid\n", __func__);
++		ioc->scsih_cmds.status = MPT3_CMD_NOT_USED;
++		goto out;
++	}
++
++	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
++	ioc->scsih_cmds.smid = smid;
++	memset(mpi_request, 0, sizeof(Mpi26IoUnitControlRequest_t));
++	mpi_request->Function = MPI2_FUNCTION_IO_UNIT_CONTROL;
++	mpi_request->Operation = MPI26_CTRL_OP_SHUTDOWN;
++
++	init_completion(&ioc->scsih_cmds.done);
++	ioc->put_smid_default(ioc, smid);
++	/* Wait for max_shutdown_latency seconds */
++	ioc_info(ioc,
++		"Io Unit Control shutdown (sending), Shutdown latency %d sec\n",
++		ioc->max_shutdown_latency);
++	wait_for_completion_timeout(&ioc->scsih_cmds.done,
++			ioc->max_shutdown_latency*HZ);
++
++	if (!(ioc->scsih_cmds.status & MPT3_CMD_COMPLETE)) {
++		ioc_err(ioc, "%s: timeout\n", __func__);
++		goto out;
++	}
++
++	if (ioc->scsih_cmds.status & MPT3_CMD_REPLY_VALID) {
++		mpi_reply = ioc->scsih_cmds.reply;
++		ioc_info(ioc, "Io Unit Control shutdown (complete):"
++			"ioc_status(0x%04x), loginfo(0x%08x)\n",
++			le16_to_cpu(mpi_reply->IOCStatus),
++			le32_to_cpu(mpi_reply->IOCLogInfo));
++	}
++ out:
++	ioc->scsih_cmds.status = MPT3_CMD_NOT_USED;
++	mutex_unlock(&ioc->scsih_cmds.mutex);
++}
++
++
+ /**
+  * _scsih_ir_shutdown - IR shutdown notification
+  * @ioc: per adapter object
+@@ -9851,6 +9983,7 @@ scsih_shutdown(struct pci_dev *pdev)
+ 				&ioc->ioc_pg1_copy);
  
- /*
-  *Generic structure to use for product-specific manufacturing pages
-@@ -962,9 +966,10 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1 {
+ 	_scsih_ir_shutdown(ioc);
++	_scsih_nvme_shutdown(ioc);
+ 	mpt3sas_base_detach(ioc);
+ }
  
- /* IO Unit Page 1 Flags defines */
- #define MPI26_IOUNITPAGE1_NVME_WRCACHE_MASK             (0x00030000)
--#define MPI26_IOUNITPAGE1_NVME_WRCACHE_ENABLE           (0x00000000)
--#define MPI26_IOUNITPAGE1_NVME_WRCACHE_DISABLE          (0x00010000)
--#define MPI26_IOUNITPAGE1_NVME_WRCACHE_NO_CHANGE        (0x00020000)
-+#define MPI26_IOUNITPAGE1_NVME_WRCACHE_SHIFT            (16)
-+#define MPI26_IOUNITPAGE1_NVME_WRCACHE_NO_CHANGE        (0x00000000)
-+#define MPI26_IOUNITPAGE1_NVME_WRCACHE_ENABLE           (0x00010000)
-+#define MPI26_IOUNITPAGE1_NVME_WRCACHE_DISABLE          (0x00020000)
- #define MPI2_IOUNITPAGE1_ATA_SECURITY_FREEZE_LOCK       (0x00004000)
- #define MPI25_IOUNITPAGE1_NEW_DEVICE_FAST_PATH_DISABLE  (0x00002000)
- #define MPI25_IOUNITPAGE1_DISABLE_FAST_PATH             (0x00001000)
-@@ -3931,7 +3936,13 @@ typedef struct _MPI26_CONFIG_PAGE_PCIEDEV_2 {
- 	U32	MaximumDataTransferSize;	/*0x0C */
- 	U32	Capabilities;		/*0x10 */
- 	U16	NOIOB;		/* 0x14 */
--	U16	Reserved2;		/* 0x16 */
-+	U16     ShutdownLatency;        /* 0x16 */
-+	U16     VendorID;               /* 0x18 */
-+	U16     DeviceID;               /* 0x1A */
-+	U16     SubsystemVendorID;      /* 0x1C */
-+	U16     SubsystemID;            /* 0x1E */
-+	U8      RevisionID;             /* 0x20 */
-+	U8      Reserved21[3];          /* 0x21 */
- } MPI26_CONFIG_PAGE_PCIEDEV_2, *PTR_MPI26_CONFIG_PAGE_PCIEDEV_2,
- 	Mpi26PCIeDevicePage2_t, *pMpi26PCIeDevicePage2_t;
- 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_image.h b/drivers/scsi/mpt3sas/mpi/mpi2_image.h
-index a3f6778..33b9c3a 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_image.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_image.h
-@@ -19,6 +19,10 @@
-  * 09-07-18  02.06.03  Added MPI26_EVENT_PCIE_TOPO_PI_16_LANES
-  * 12-17-18  02.06.04  Addd MPI2_EXT_IMAGE_TYPE_PBLP
-  *			Shorten some defines to be compatible with DOS
-+ * 06-24-19  02.06.05  Whitespace adjustments to help with identifier
-+ *			checking tool.
-+ * 10-02-19  02.06.06  Added MPI26_IMAGE_HEADER_SIG1_COREDUMP
-+ *                     Added MPI2_FLASH_REGION_COREDUMP
-  */
- #ifndef MPI2_IMAGE_H
- #define MPI2_IMAGE_H
-@@ -213,6 +217,8 @@ typedef struct _MPI26_COMPONENT_IMAGE_HEADER {
- #define MPI26_IMAGE_HEADER_SIG1_NVDATA                   (0x5444564E)
- #define MPI26_IMAGE_HEADER_SIG1_GAS_GAUGE                (0x20534147)
- #define MPI26_IMAGE_HEADER_SIG1_PBLP                     (0x504C4250)
-+/* little-endian "DUMP" */
-+#define MPI26_IMAGE_HEADER_SIG1_COREDUMP                 (0x504D5544)
- 
- /**** Definitions for Signature2 field ****/
- #define MPI26_IMAGE_HEADER_SIGNATURE2_VALUE                    (0x50584546)
-@@ -359,6 +365,7 @@ typedef struct _MPI2_FLASH_LAYOUT_DATA {
- #define MPI2_FLASH_REGION_MR_NVDATA             (0x14)
- #define MPI2_FLASH_REGION_CPLD                  (0x15)
- #define MPI2_FLASH_REGION_PSOC                  (0x16)
-+#define MPI2_FLASH_REGION_COREDUMP              (0x17)
- 
- /*ImageRevision */
- #define MPI2_FLASH_LAYOUT_IMAGE_REVISION        (0x00)
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-index 68ea408..e83c7c5 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-@@ -175,6 +175,10 @@
-  *                     Moved FW image definitions ionto new mpi2_image,h
-  * 08-14-18   02.00.36 Fixed definition of MPI2_FW_DOWNLOAD_ITYPE_PSOC (0x16)
-  * 09-07-18   02.00.37 Added MPI26_EVENT_PCIE_TOPO_PI_16_LANES
-+ * 10-02-19   02.00.38 Added MPI26_IOCINIT_CFGFLAGS_COREDUMP_ENABLE
-+ *                     Added MPI26_IOCFACTS_CAPABILITY_COREDUMP_ENABLED
-+ *                     Added MPI2_FW_DOWNLOAD_ITYPE_COREDUMP
-+ *                     Added MPI2_FW_UPLOAD_ITYPE_COREDUMP
-  * --------------------------------------------------------------------------
-  */
- 
-@@ -248,6 +252,7 @@ typedef struct _MPI2_IOC_INIT_REQUEST {
- 
- /*ConfigurationFlags */
- #define MPI26_IOCINIT_CFGFLAGS_NVME_SGL_FORMAT  (0x0001)
-+#define MPI26_IOCINIT_CFGFLAGS_COREDUMP_ENABLE  (0x0002)
- 
- /*minimum depth for a Reply Descriptor Post Queue */
- #define MPI2_RDPQ_DEPTH_MIN                     (16)
-@@ -377,6 +382,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY {
- /*ProductID field uses MPI2_FW_HEADER_PID_ */
- 
- /*IOCCapabilities */
-+#define MPI26_IOCFACTS_CAPABILITY_COREDUMP_ENABLED      (0x00200000)
- #define MPI26_IOCFACTS_CAPABILITY_PCIE_SRIOV            (0x00100000)
- #define MPI26_IOCFACTS_CAPABILITY_ATOMIC_REQ            (0x00080000)
- #define MPI2_IOCFACTS_CAPABILITY_RDPQ_ARRAY_CAPABLE     (0x00040000)
-@@ -1458,8 +1464,8 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST {
- /*MPI v2.6 and newer */
- #define MPI2_FW_DOWNLOAD_ITYPE_CPLD                 (0x15)
- #define MPI2_FW_DOWNLOAD_ITYPE_PSOC                 (0x16)
-+#define MPI2_FW_DOWNLOAD_ITYPE_COREDUMP             (0x17)
- #define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
--#define MPI2_FW_DOWNLOAD_ITYPE_TERMINATE            (0xFF)
- 
- /*MPI v2.0 FWDownload TransactionContext Element */
- typedef struct _MPI2_FW_DOWNLOAD_TCSGE {
+@@ -10533,6 +10666,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->tm_sas_control_cb_idx = tm_sas_control_cb_idx;
+ 	ioc->logging_level = logging_level;
+ 	ioc->schedule_dead_ioc_flush_running_cmds = &_scsih_flush_running_cmds;
++	/* Host waits for minimum of six seconds */
++	ioc->max_shutdown_latency = IO_UNIT_CONTROL_SHUTDOWN_TIMEOUT;
+ 	/*
+ 	 * Enable MEMORY MOVE support flag.
+ 	 */
+@@ -10681,6 +10816,7 @@ scsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	mpt3sas_base_stop_watchdog(ioc);
+ 	flush_scheduled_work();
+ 	scsi_block_requests(shost);
++	_scsih_nvme_shutdown(ioc);
+ 	device_state = pci_choose_state(pdev, state);
+ 	ioc_info(ioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+ 		 pdev, pci_name(pdev), device_state);
 -- 
 2.18.1
 
