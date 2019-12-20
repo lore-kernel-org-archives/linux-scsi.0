@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C84C2D0D2
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E86EBC43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A07921D7E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE60F206CB
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576852583;
-	bh=poCgc+XuigasFh8jiFvh/hpav7KlF6IhwdhTZXEK/00=;
+	s=default; t=1576852586;
+	bh=QffAXIO8wTj9TESbd4JgFXRKt1Sp4VQVkqLq8G2C0y8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=z37InJplGPWJ9kzID4yYQYzdw5OVXjMUfEbO2ti7PpYeZobLiQj8fen52+0Qh3meP
-	 hZxg0QU9Y9nIu3bog+yXO1wvSnhXbkQ3udUcpM6tznfeEbKDCphdfcTI8vyTqw5FkF
-	 pMqIbyZKCYWyRGdFpaWQalnkyTxo5Fbc9HU1UW+4=
+	b=ho9gvlondortqlPWR5HoyYZdMbPvSl+35qKhU9rvEEuV2UJW6maPIr+R3Ieh+dph/
+	 WmVB0tjZhtWH7Tf6Kbc6EkOV+hKKIPorup80sL0l9dxvqShVkyLeC9SLg4h7+pmcDz
+	 PDmTPUCtGknMlCrLlyZoZRi3StEDWQ34rVznuf6w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728335AbfLTOfB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 09:35:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39328 "EHLO mail.kernel.org"
+        id S1728320AbfLTOe6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 09:34:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39246 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728329AbfLTOfB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Dec 2019 09:35:01 -0500
+        id S1728293AbfLTOe5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Dec 2019 09:34:57 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9AE9224680;
-        Fri, 20 Dec 2019 14:34:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 842F324688;
+        Fri, 20 Dec 2019 14:34:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576852500;
-        bh=poCgc+XuigasFh8jiFvh/hpav7KlF6IhwdhTZXEK/00=;
+        s=default; t=1576852496;
+        bh=QffAXIO8wTj9TESbd4JgFXRKt1Sp4VQVkqLq8G2C0y8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qxTtwdmRBaHjzTwfbVfQf//aNHk/ZFVRomjqc0nLECU7JJd0wcJJDH+X2PpYsTYMe
-         a0SP1j6Nafo+rwplxhJKiJdBJfRQPL8EwS+T80RtdT1zDUzm3gFBonzN+ThZ5bATPz
-         XQPf/FcSsS84uU3tuQNX7DFygyeSGnc34cvgak8s=
+        b=W5PEbGh1cYktLyxpr6EQCKa2Viv4bSFSIj1iq/PQ9a6O/vKBptgASHrmCBke/K1rt
+         4+TAXD3bLADpQ4rilvltZK/r3D81h7vQq0GNc7Iuqe1431j/yi77FAO4Fh8yVxviHd
+         l900RvZ5x+Lj1QaC3ABk266J29kSevwBKb08CYgA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
@@ -46,9 +46,9 @@ Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
         Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 20/34] scsi: qla2xxx: Ignore PORT UPDATE after N2N PLOGI
-Date:   Fri, 20 Dec 2019 09:34:19 -0500
-Message-Id: <20191220143433.9922-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 17/34] scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
+Date:   Fri, 20 Dec 2019 09:34:16 -0500
+Message-Id: <20191220143433.9922-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191220143433.9922-1-sashal@kernel.org>
 References: <20191220143433.9922-1-sashal@kernel.org>
@@ -63,17 +63,14 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Roman Bolshakov <r.bolshakov@yadro.com>
 
-[ Upstream commit af22f0c7b052c5c203207f1e5ebd6aa65f87c538 ]
+[ Upstream commit 0334cdea1fba36fad8bdf9516f267ce01de625f7 ]
 
-PORT UPDATE asynchronous event is generated on the host that issues PLOGI
-ELS (in the case of higher WWPN). In that case, the event shouldn't be
-handled as it sets unwanted DPC flags (i.e. LOOP_RESYNC_NEEDED) that
-trigger link flap.
-
-Ignore the event if the host has higher WWPN, but handle otherwise.
+The size of the buffer is hardcoded as 0x70 or 112 bytes, while the size of
+ELS IOCB is 0x40 and the size of PLOGI payload returned by Get Parameters
+command is 0x74.
 
 Cc: Quinn Tran <qutran@marvell.com>
-Link: https://lore.kernel.org/r/20191125165702.1013-13-r.bolshakov@yadro.com
+Link: https://lore.kernel.org/r/20191125165702.1013-9-r.bolshakov@yadro.com
 Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Hannes Reinecke <hare@suse.de>
@@ -81,37 +78,33 @@ Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index b01f69dd4b283..abef3b29fa101 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3871,6 +3871,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 					vha->d_id.b24 = 0;
- 					vha->d_id.b.al_pa = 1;
- 					ha->flags.n2n_bigger = 1;
-+					ha->flags.n2n_ae = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c699bbb8485bb..7e47321e003c8 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2537,7 +2537,8 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 		ql_dbg(ql_dbg_io + ql_dbg_buffer, vha, 0x3073,
+ 		    "PLOGI ELS IOCB:\n");
+ 		ql_dump_buffer(ql_log_info, vha, 0x0109,
+-		    (uint8_t *)els_iocb, 0x70);
++		    (uint8_t *)els_iocb,
++		    sizeof(*els_iocb));
+ 	} else {
+ 		els_iocb->tx_byte_count = sizeof(struct els_logo_payload);
+ 		els_iocb->tx_address[0] =
+@@ -2703,7 +2704,8 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
  
- 					id.b.al_pa = 2;
- 					ql_dbg(ql_dbg_async, vha, 0x5075,
-@@ -3881,6 +3882,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 					    "Format 1: Remote login - Waiting for WWPN %8phC.\n",
- 					    rptid_entry->u.f1.port_name);
- 					ha->flags.n2n_bigger = 0;
-+					ha->flags.n2n_ae = 1;
- 				}
- 				qla24xx_post_newsess_work(vha, &id,
- 				    rptid_entry->u.f1.port_name,
-@@ -3892,7 +3894,6 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
- 			/* if our portname is higher then initiate N2N login */
+ 	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0x3073, "PLOGI buffer:\n");
+ 	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x0109,
+-	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld, 0x70);
++	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
++	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
  
- 			set_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags);
--			ha->flags.n2n_ae = 1;
- 			return;
- 			break;
- 		case TOPO_FL:
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
 -- 
 2.20.1
 
