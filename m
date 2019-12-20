@@ -7,49 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA82BC2D0D4
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A9BC43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7835824686
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 043362467F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576852592;
-	bh=hLKkAJA0MADLi+XZUqwXidurJB29yAl5JBZNs/tjID0=;
+	s=default; t=1576852600;
+	bh=hg/MGBX1/oCvnA6QS1rp73A+mtf+nq5bJmNcbcqKbpE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Rn/9rnV+S+xyX76O0RMQ4r56XNorQ6L5tRbhg9c3MFb0/f/KYaNddBTbihNwQOTk4
-	 QElI3GoLC6yd3u6E/fQxNrNytVyov3lW/EQB4KoKqrHfdLiPD+Pc+pCxk6zQyyv5WA
-	 Hz1LPIGIZhzoJPrt+4BnFD6c8OhTsfC85e7+9JvM=
+	b=g09G+wW7zhaadkXfEi/lsAp5S9JIMPO8iMUzQe331EXB+d6P9tc5VbCWr5W2Yqje8
+	 1lBfTYl/NcniUqiQ8OM/wnGRTG7b3T6aMKsFsUXehWleMKBkax68ehBOOSYZX1yy8P
+	 CVKx3jDvACOEa1Yywzz/MwRjoSBsUlgO3t1hXhV4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728147AbfLTOe4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 09:34:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39140 "EHLO mail.kernel.org"
+        id S1727801AbfLTOgf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 09:36:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39110 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727921AbfLTOey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Dec 2019 09:34:54 -0500
+        id S1727960AbfLTOew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Dec 2019 09:34:52 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 89D5924687;
-        Fri, 20 Dec 2019 14:34:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3508F24689;
+        Fri, 20 Dec 2019 14:34:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576852493;
-        bh=hLKkAJA0MADLi+XZUqwXidurJB29yAl5JBZNs/tjID0=;
+        s=default; t=1576852492;
+        bh=hg/MGBX1/oCvnA6QS1rp73A+mtf+nq5bJmNcbcqKbpE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dS2XVn58lirWK/RqvKWDaj96vujlVySWcVOs7U31OEUiblJa6UTrSUK1XL/2tEvs9
-         vVvsHdg6soB28sgC95dAnPI9/klS+uj2LYfrYSlUOpX9iv0/Go5QeTe8ZqF52ms3cD
-         x6cdeWZxeqlivzIy6yM2fk1mHSZRz2YoRQT6hWas=
+        b=CaVrCUfGK76tLqn2H05yoT/k1RcXHLaCWNyNJrhWHb2tk1uKj1lpZh8tA9MRAwLhE
+         oxNgAfruMnPoW6U0kSV/krysPj1TAMK44XdyGbgwf2r9yKD4bv67kluarevsHDb4ea
+         /aBkcErMNxxsqWi7JRQVFFDPZvfPHve1FO7/l7Xw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Bo Wu <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        James Smart <james.smart@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 15/34] scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
-Date:   Fri, 20 Dec 2019 09:34:14 -0500
-Message-Id: <20191220143433.9922-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 14/34] scsi: lpfc: Fix memory leak on lpfc_bsg_write_ebuf_set func
+Date:   Fri, 20 Dec 2019 09:34:13 -0500
+Message-Id: <20191220143433.9922-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191220143433.9922-1-sashal@kernel.org>
 References: <20191220143433.9922-1-sashal@kernel.org>
@@ -62,39 +59,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Roman Bolshakov <r.bolshakov@yadro.com>
+From: Bo Wu <wubo40@huawei.com>
 
-[ Upstream commit 600954e6f2df695434887dfc6a99a098859990cf ]
+[ Upstream commit 9a1b0b9a6dab452fb0e39fe96880c4faf3878369 ]
 
-del_work is already initialized inside qla2x00_alloc_fcport, there's no
-need to overwrite it. Indeed, it might prevent complete traversal of
-workqueue list.
+When phba->mbox_ext_buf_ctx.seqNum != phba->mbox_ext_buf_ctx.numBuf,
+dd_data should be freed before return SLI_CONFIG_HANDLED.
 
-Fixes: a01c77d2cbc45 ("scsi: qla2xxx: Move session delete to driver work queue")
-Cc: Quinn Tran <qutran@marvell.com>
-Link: https://lore.kernel.org/r/20191125165702.1013-5-r.bolshakov@yadro.com
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+When lpfc_sli_issue_mbox func return fails, pmboxq should be also freed in
+job_error tag.
+
+Link: https://lore.kernel.org/r/EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E7A966@DGGEML525-MBS.china.huawei.com
+Signed-off-by: Bo Wu <wubo40@huawei.com>
+Reviewed-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
+Reviewed-by: James Smart <james.smart@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 210ce294038df..8eda55e917e04 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1261,7 +1261,6 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess)
- 	    "Scheduling sess %p for deletion %8phC\n",
- 	    sess, sess->port_name);
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 99aea52e584b0..21f104c5eab62 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -4419,12 +4419,6 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 	phba->mbox_ext_buf_ctx.seqNum++;
+ 	nemb_tp = phba->mbox_ext_buf_ctx.nembType;
  
--	INIT_WORK(&sess->del_work, qla24xx_delete_sess_fn);
- 	WARN_ON(!queue_work(sess->vha->hw->wq, &sess->del_work));
- }
+-	dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
+-	if (!dd_data) {
+-		rc = -ENOMEM;
+-		goto job_error;
+-	}
+-
+ 	pbuf = (uint8_t *)dmabuf->virt;
+ 	size = job->request_payload.payload_len;
+ 	sg_copy_to_buffer(job->request_payload.sg_list,
+@@ -4461,6 +4455,13 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 				"2968 SLI_CONFIG ext-buffer wr all %d "
+ 				"ebuffers received\n",
+ 				phba->mbox_ext_buf_ctx.numBuf);
++
++		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
++		if (!dd_data) {
++			rc = -ENOMEM;
++			goto job_error;
++		}
++
+ 		/* mailbox command structure for base driver */
+ 		pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 		if (!pmboxq) {
+@@ -4509,6 +4510,8 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
+ 	return SLI_CONFIG_HANDLED;
+ 
+ job_error:
++	if (pmboxq)
++		mempool_free(pmboxq, phba->mbox_mem_pool);
+ 	lpfc_bsg_dma_page_free(phba, dmabuf);
+ 	kfree(dd_data);
  
 -- 
 2.20.1
