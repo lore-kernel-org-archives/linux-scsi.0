@@ -8,60 +8,60 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFCFBC43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C90C2D0D2
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0BD92082E
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 594152082E
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 22:38:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KIFjIpau"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qs4Zjyr8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727536AbfLTWiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 17:38:02 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:52114 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbfLTWiB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 17:38:01 -0500
-Received: by mail-pj1-f68.google.com with SMTP id j11so4730713pjs.1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2019 14:38:01 -0800 (PST)
+        id S1727549AbfLTWiD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 17:38:03 -0500
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:37014 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727541AbfLTWiC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 17:38:02 -0500
+Received: by mail-pj1-f67.google.com with SMTP id m13so4761186pjb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2019 14:38:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=9HeiSzPYQXdnkV9D9xxC0rzV/ZSEtRCH6HPJzVirJps=;
-        b=KIFjIpauH1Hc1mHk6Ofb4hG8RVuSd1Adi1Q2r+mAoTSyXYurfOpFjKrQExCIvRQu9E
-         5x+DwiBCCpliJ/rW3Si8vPoIWhk8RiT1Ppr34UejOQZ8mxFFXfogPLW3rsF+4ZysK5Nf
-         T7A1tQJxKvlFPaL1afmGqE0P9/wHRXezcPMDgtT3zkRScjASuQcvEZOYvc05xXNQjdkW
-         0SCxBgWtPLZ2lKyT76cL5pFaTbrMwhhuPbTXNsfydiXleQKtfhDXaLq4q83mJOJvMcb+
-         BDjjjGAEDaMHsTUMxz2SgCWw8SFaCsNRYTrTvgN/bToFpFZMGpDr+VPG8ysNBlyiuc80
-         E4UQ==
+        bh=/1KMg8A3RtP7VRz+65D80OswnaC28GWu1UnLtDJHT/Q=;
+        b=Qs4Zjyr8AScVvpd4Rmi6Cy+Ri+71JRtIwiCzJsjZ2p+aRrLlSv+DOM19v4pUJcfvwP
+         N/5LdXx/ize/gbmVrvcpHkgfDnoYjn3WC4v57T+lYI9QVl8k1uva2MjCli5Vtq3+YrVk
+         x7P8R17OcTvRONNhGhJsTA0lCxAM7EfwUwdhwBTy2i6lcUSPlx7ZxJ474AL02/p+gNW4
+         2juAJt1/zzWvKyKOazZUYalzcgTCaSHR6kAacSIPSBQXb7pFmRilOWfPx1WEusSgLF00
+         S1iuF2zvGKhn06cyWQMHs8tndqmZHEwofpwoAk2a1TvPsn7TU0fy08Nq+WbclnDGfKC7
+         sHLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=9HeiSzPYQXdnkV9D9xxC0rzV/ZSEtRCH6HPJzVirJps=;
-        b=b5+epCIukMFwahxwrW5uskNDl01hreSr3DTMcVn1tlCLFez/5OnNMofTx/CLdaanP1
-         jaeEfQliqXRUgPEASuwXk9rahHK0cSt7vyrMmCxiM3Md3S3XZKmiXRzYD0kLw0mztybR
-         QPz040HOToEZYe/lBhzW25N1wDbq7TfITRceA2c+JewZxxg/2ICcYnz3E2r1sIq7QJ8j
-         dI8Ohiz8FHHOXKr/YTUeqHgFSkUpvI67UOVZoYKZxGva8eCaOSmzApfZxiSDCGpyPNmb
-         Nxwn5vRH4B0XcF9Fdh/BjxcP49t/i9PXiiqa2Sh1j9zJCxKP+8jdiATYmc0/N/WEf2um
-         tiKA==
-X-Gm-Message-State: APjAAAWty5V9JIa9rPsheaMJEf46Vw1YGfsHIFtNF3zdtniGva1HPsoS
-        NFAa3iQgfH9Hp0xp4ofGYCC03ecm
-X-Google-Smtp-Source: APXvYqzRWRC9jIqa/vU4RHySm/i5kgpLDFBtIgMHn5jAKQv3vYhFmP0VtSiptHr0EDqdKkOHImBtVA==
-X-Received: by 2002:a17:90a:b318:: with SMTP id d24mr19598251pjr.142.1576881480319;
-        Fri, 20 Dec 2019 14:38:00 -0800 (PST)
+        bh=/1KMg8A3RtP7VRz+65D80OswnaC28GWu1UnLtDJHT/Q=;
+        b=PXz9Bid7DsjoGvVcQypFwUnUC8j6WAfnrjcxmABOAhNI17Zr9nAcrfLNjHYI9SwXIJ
+         cCXw/O/j3l7SSa5NF6GV/YXcOuOx2SXWm8aj7y9j8zVHtHEo+yDVocALA40zSU3LHOX1
+         8mVo4a/4gp9o11oWD7SzHhkP5a+b0eUcgK3TX2qNrMdlkMDGaWd/9ZllQh8LXlI6t4sE
+         dEtf8gYYn+ScBHC0exCeXi4JX+CxKtId6KiWUUYDJcOlbnhIr9n+6KEYRuTF9pmc36Mz
+         8wN2GCcKzQq8D75OTxaGkjRaAe6wzgwXSsszWDOmYThAepFXuRCS/qOYavn8XJPJBxy3
+         0H8w==
+X-Gm-Message-State: APjAAAWI7cdJCfWRfHM83eGUBBRUsHEo7hrNsNJ6TGMf+h6Z1zXNBQ4s
+        uWEGdQijcxReUl2DxpiIO9Zmf83j
+X-Google-Smtp-Source: APXvYqwQVRoEL0LsFw+urbXacS9Ij1o8Sw2yXIWxAPzuC0ypW9Y8COahb+07mcLw8P7xgAqQsYrHgw==
+X-Received: by 2002:a17:90a:c385:: with SMTP id h5mr18630748pjt.122.1576881481623;
+        Fri, 20 Dec 2019 14:38:01 -0800 (PST)
 Received: from os42.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id j28sm12219877pgb.36.2019.12.20.14.37.59
+        by smtp.gmail.com with ESMTPSA id j28sm12219877pgb.36.2019.12.20.14.38.00
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 20 Dec 2019 14:37:59 -0800 (PST)
+        Fri, 20 Dec 2019 14:38:00 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: [PATCH v2 25/32] elx: efct: Hardware IO submission routines
-Date:   Fri, 20 Dec 2019 14:37:16 -0800
-Message-Id: <20191220223723.26563-26-jsmart2021@gmail.com>
+Subject: [PATCH v2 26/32] elx: efct: link statistics and SFP data
+Date:   Fri, 20 Dec 2019 14:37:17 -0800
+Message-Id: <20191220223723.26563-27-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20191220223723.26563-1-jsmart2021@gmail.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
@@ -73,682 +73,546 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 This patch continues the efct driver population.
 
 This patch adds driver definitions for:
-Routines that write IO to Work queue, send SRRs and raw frames.
+Routines to retrieve link stats and SFP transceiver data.
 
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/elx/efct/efct_hw.c | 625 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/elx/efct/efct_hw.h |  19 ++
- 2 files changed, 644 insertions(+)
+ drivers/scsi/elx/efct/efct_hw.c | 468 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/elx/efct/efct_hw.h |  39 ++++
+ 2 files changed, 507 insertions(+)
 
 diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index 43f1ff526694..440c4fa196bf 100644
+index 440c4fa196bf..33eefda7ba51 100644
 --- a/drivers/scsi/elx/efct/efct_hw.c
 +++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -3192,6 +3192,68 @@ efct_hw_eq_process(struct efct_hw *hw, struct hw_eq *eq,
- 	return 0;
- }
+@@ -14,6 +14,40 @@
  
+ #define EFCT_HW_REQUE_XRI_REGTAG	65534
+ 
++struct efct_hw_sfp_cb_arg {
++	void (*cb)(int status, u32 bytes_written,
++		   u8 *data, void *arg);
++	void *arg;
++	struct efc_dma payload;
++};
++
++struct efct_hw_temp_cb_arg {
++	void (*cb)(int status, u32 curr_temp,
++		   u32 crit_temp_thrshld,
++		   u32 warn_temp_thrshld,
++		   u32 norm_temp_thrshld,
++		   u32 fan_off_thrshld,
++		   u32 fan_on_thrshld,
++		   void *arg);
++	void *arg;
++};
++
++struct efct_hw_link_stat_cb_arg {
++	void (*cb)(int status,
++		   u32 num_counters,
++		struct efct_hw_link_stat_counts *counters,
++		void *arg);
++	void *arg;
++};
++
++struct efct_hw_host_stat_cb_arg {
++	void (*cb)(int status,
++		   u32 num_counters,
++		struct efct_hw_host_stat_counts *counters,
++		void *arg);
++	void *arg;
++};
++
+ /* HW global data */
+ struct efct_hw_global hw_global;
+ 
+@@ -4015,3 +4049,437 @@ efct_hw_io_get_count(struct efct_hw *hw,
+ 
+ 	return count;
+ }
++
 +static int
-+_efct_hw_wq_write(struct hw_wq *wq, struct efct_hw_wqe *wqe)
++efct_hw_cb_sfp(struct efct_hw *hw, int status, u8 *mqe, void  *arg)
 +{
-+	int rc;
-+	int queue_rc;
++	struct efct_hw_sfp_cb_arg *cb_arg = arg;
++	struct efc_dma *payload = &cb_arg->payload;
++	struct sli4_rsp_cmn_read_transceiver_data *mbox_rsp;
++	struct efct *efct = hw->os;
++	u32 bytes_written;
 +
-+	/* Every so often, set the wqec bit to generate comsummed completions */
-+	if (wq->wqec_count)
-+		wq->wqec_count--;
++	mbox_rsp =
++	(struct sli4_rsp_cmn_read_transceiver_data *)payload->virt;
++	bytes_written = le32_to_cpu(mbox_rsp->hdr.response_length);
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (!status && mbox_rsp->hdr.status)
++				status = mbox_rsp->hdr.status;
++			cb_arg->cb(status, bytes_written, mbox_rsp->page_data,
++				   cb_arg->arg);
++		}
 +
-+	if (wq->wqec_count == 0) {
-+		struct sli4_generic_wqe *genwqe = (void *)wqe->wqebuf;
-+
-+		genwqe->cmdtype_wqec_byte |= SLI4_GEN_WQE_WQEC;
-+		wq->wqec_count = wq->wqec_set_count;
++		dma_free_coherent(&efct->pcidev->dev,
++				  cb_arg->payload.size, cb_arg->payload.virt,
++				  cb_arg->payload.phys);
++		memset(&cb_arg->payload, 0, sizeof(struct efc_dma));
++		kfree(cb_arg);
 +	}
 +
-+	/* Decrement WQ free count */
-+	wq->free_count--;
-+
-+	queue_rc = sli_wq_write(&wq->hw->sli, wq->queue, wqe->wqebuf);
-+
-+	if (queue_rc < 0)
-+		rc = -1;
-+	else
-+		rc = 0;
-+
-+	return rc;
++	kfree(mqe);
++	return 0;
 +}
 +
-+static void
-+hw_wq_submit_pending(struct hw_wq *wq, u32 update_free_count)
-+{
-+	struct efct_hw_wqe *wqe;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&wq->queue->lock, flags);
-+
-+	/* Update free count with value passed in */
-+	wq->free_count += update_free_count;
-+
-+	while ((wq->free_count > 0) && (!list_empty(&wq->pending_list))) {
-+		wqe = list_first_entry(&wq->pending_list,
-+				       struct efct_hw_wqe, list_entry);
-+		list_del(&wqe->list_entry);
-+		_efct_hw_wq_write(wq, wqe);
-+
-+		if (wqe->abort_wqe_submit_needed) {
-+			wqe->abort_wqe_submit_needed = false;
-+			sli_abort_wqe(&wq->hw->sli, wqe->wqebuf,
-+				      wq->hw->sli.wqe_size,
-+				      SLI_ABORT_XRI, wqe->send_abts, wqe->id,
-+				      0, wqe->abort_reqtag, SLI4_CQ_DEFAULT);
-+					  INIT_LIST_HEAD(&wqe->list_entry);
-+			list_add_tail(&wqe->list_entry, &wq->pending_list);
-+			wq->wq_pending_count++;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&wq->queue->lock, flags);
-+}
-+
- void
- efct_hw_cq_process(struct efct_hw *hw, struct hw_cq *cq)
- {
-@@ -3390,3 +3452,566 @@ efct_hw_flush(struct efct_hw *hw)
- 
- 	return 0;
- }
-+
-+int
-+efct_hw_wq_write(struct hw_wq *wq, struct efct_hw_wqe *wqe)
-+{
-+	int rc = 0;
-+	unsigned long flags = 0;
-+
-+	spin_lock_irqsave(&wq->queue->lock, flags);
-+	if (!list_empty(&wq->pending_list)) {
-+		INIT_LIST_HEAD(&wqe->list_entry);
-+		list_add_tail(&wqe->list_entry, &wq->pending_list);
-+		wq->wq_pending_count++;
-+		while ((wq->free_count > 0) &&
-+		       ((wqe = list_first_entry(&wq->pending_list,
-+					struct efct_hw_wqe, list_entry))
-+			 != NULL)) {
-+			list_del(&wqe->list_entry);
-+			rc = _efct_hw_wq_write(wq, wqe);
-+			if (rc < 0)
-+				break;
-+			if (wqe->abort_wqe_submit_needed) {
-+				wqe->abort_wqe_submit_needed = false;
-+				sli_abort_wqe(&wq->hw->sli,
-+					      wqe->wqebuf,
-+					      wq->hw->sli.wqe_size,
-+					      SLI_ABORT_XRI,
-+					      wqe->send_abts, wqe->id,
-+					      0, wqe->abort_reqtag,
-+					      SLI4_CQ_DEFAULT);
-+
-+				INIT_LIST_HEAD(&wqe->list_entry);
-+				list_add_tail(&wqe->list_entry,
-+					      &wq->pending_list);
-+				wq->wq_pending_count++;
-+			}
-+		}
-+	} else {
-+		if (wq->free_count > 0) {
-+			rc = _efct_hw_wq_write(wq, wqe);
-+		} else {
-+			INIT_LIST_HEAD(&wqe->list_entry);
-+			list_add_tail(&wqe->list_entry, &wq->pending_list);
-+			wq->wq_pending_count++;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&wq->queue->lock, flags);
-+
-+	return rc;
-+}
-+
-+/**
-+ * This routine supports communication sequences consisting of a single
-+ * request and single response between two endpoints. Examples include:
-+ *  - Sending an ELS request.
-+ *  - Sending an ELS response - To send an ELS response, the caller must provide
-+ * the OX_ID from the received request.
-+ *  - Sending a FC Common Transport (FC-CT) request - To send a FC-CT request,
-+ * the caller must provide the R_CTL, TYPE, and DF_CTL
-+ * values to place in the FC frame header.
-+ */
++/* Function to retrieve the SFP information */
 +enum efct_hw_rtn
-+efct_hw_srrs_send(struct efct_hw *hw, enum efct_hw_io_type type,
-+		  struct efct_hw_io *io,
-+		  struct efc_dma *send, u32 len,
-+		  struct efc_dma *receive, struct efc_remote_node *rnode,
-+		  union efct_hw_io_param_u *iparam,
-+		  efct_hw_srrs_cb_t cb, void *arg)
++efct_hw_get_sfp(struct efct_hw *hw, u16 page,
++		void (*cb)(int, u32, u8 *, void *), void *arg)
 +{
-+	struct sli4_sge	*sge = NULL;
-+	enum efct_hw_rtn	rc = EFCT_HW_RTN_SUCCESS;
-+	u16	local_flags = 0;
-+	u32 sge0_flags;
-+	u32 sge1_flags;
++	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_sfp_cb_arg *cb_arg;
++	u8 *mbxdata;
++	struct efct *efct = hw->os;
++	struct efc_dma *dma;
 +
-+	if (!io || !rnode || !iparam) {
-+		pr_err("bad parm hw=%p io=%p s=%p r=%p rn=%p iparm=%p\n",
-+			hw, io, send, receive, rnode, iparam);
-+		return EFCT_HW_RTN_ERROR;
++	/* mbxdata holds the header of the command */
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++	/*
++	 * cb_arg holds the data that will be passed to the callback on
++	 * completion
++	 */
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++	memset(cb_arg, 0, sizeof(struct efct_hw_sfp_cb_arg));
++
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
++
++	/* payload holds the non-embedded portion */
++	dma = &cb_arg->payload;
++	dma->size = sizeof(struct sli4_rsp_cmn_read_transceiver_data);
++	dma->virt = dma_alloc_coherent(&efct->pcidev->dev,
++				       dma->size, &dma->phys, GFP_DMA);
++	if (!dma->virt) {
++		kfree(cb_arg);
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
 +	}
 +
-+	if (hw->state != EFCT_HW_STATE_ACTIVE) {
++	/* Send the HW command */
++	if (!sli_cmd_common_read_transceiver_data(&hw->sli, mbxdata,
++						 SLI4_BMBX_SIZE, page,
++						 &cb_arg->payload))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_sfp, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
 +		efc_log_test(hw->os,
-+			      "cannot send SRRS, HW state=%d\n", hw->state);
-+		return EFCT_HW_RTN_ERROR;
-+	}
-+
-+	io->rnode = rnode;
-+	io->type  = type;
-+	io->done = cb;
-+	io->arg  = arg;
-+
-+	sge = io->sgl->virt;
-+
-+	/* clear both SGE */
-+	memset(io->sgl->virt, 0, 2 * sizeof(struct sli4_sge));
-+
-+	sge0_flags = le32_to_cpu(sge[0].dw2_flags);
-+	sge1_flags = le32_to_cpu(sge[1].dw2_flags);
-+	if (send) {
-+		sge[0].buffer_address_high =
-+			cpu_to_le32(upper_32_bits(send->phys));
-+		sge[0].buffer_address_low  =
-+			cpu_to_le32(lower_32_bits(send->phys));
-+
-+		sge0_flags |= (SLI4_SGE_TYPE_DATA << SLI4_SGE_TYPE_SHIFT);
-+
-+		sge[0].buffer_length = cpu_to_le32(len);
-+	}
-+
-+	if (type == EFCT_HW_ELS_REQ || type == EFCT_HW_FC_CT) {
-+		sge[1].buffer_address_high =
-+			cpu_to_le32(upper_32_bits(receive->phys));
-+		sge[1].buffer_address_low  =
-+			cpu_to_le32(lower_32_bits(receive->phys));
-+
-+		sge1_flags |= (SLI4_SGE_TYPE_DATA << SLI4_SGE_TYPE_SHIFT);
-+		sge1_flags |= SLI4_SGE_LAST;
-+
-+		sge[1].buffer_length = cpu_to_le32(receive->size);
-+	} else {
-+		sge0_flags |= SLI4_SGE_LAST;
-+	}
-+
-+	sge[0].dw2_flags = cpu_to_le32(sge0_flags);
-+	sge[1].dw2_flags = cpu_to_le32(sge1_flags);
-+
-+	switch (type) {
-+	case EFCT_HW_ELS_REQ:
-+		if (!send ||
-+		    sli_els_request64_wqe(&hw->sli, io->wqe.wqebuf,
-+					  hw->sli.wqe_size, io->sgl,
-+					*((u8 *)send->virt),
-+					len, receive->size,
-+					iparam->els.timeout,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT, rnode->indicator,
-+					rnode->sport->indicator,
-+					rnode->node_group, rnode->attached,
-+					rnode->fc_id, rnode->sport->fc_id)) {
-+			efc_log_err(hw->os, "REQ WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	case EFCT_HW_ELS_RSP:
-+		if (!send ||
-+		    sli_xmit_els_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
-+					   hw->sli.wqe_size, send, len,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT, iparam->els.ox_id,
-+					rnode->indicator,
-+					rnode->sport->indicator,
-+					rnode->node_group, rnode->attached,
-+					rnode->fc_id,
-+					local_flags, U32_MAX)) {
-+			efc_log_err(hw->os, "RSP WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	case EFCT_HW_ELS_RSP_SID:
-+		if (!send ||
-+		    sli_xmit_els_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
-+					   hw->sli.wqe_size, send, len,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT,
-+					iparam->els_sid.ox_id,
-+					rnode->indicator,
-+					rnode->sport->indicator,
-+					rnode->node_group, rnode->attached,
-+					rnode->fc_id,
-+					local_flags, iparam->els_sid.s_id)) {
-+			efc_log_err(hw->os, "RSP (SID) WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	case EFCT_HW_FC_CT:
-+		if (!send ||
-+		    sli_gen_request64_wqe(&hw->sli, io->wqe.wqebuf,
-+					  hw->sli.wqe_size, io->sgl,
-+					len, receive->size,
-+					iparam->fc_ct.timeout, io->indicator,
-+					io->reqtag, SLI4_CQ_DEFAULT,
-+					rnode->node_group, rnode->fc_id,
-+					rnode->indicator,
-+					iparam->fc_ct.r_ctl,
-+					iparam->fc_ct.type,
-+					iparam->fc_ct.df_ctl)) {
-+			efc_log_err(hw->os, "GEN WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	case EFCT_HW_FC_CT_RSP:
-+		if (!send ||
-+		    sli_xmit_sequence64_wqe(&hw->sli, io->wqe.wqebuf,
-+					    hw->sli.wqe_size, io->sgl,
-+					len, iparam->fc_ct_rsp.timeout,
-+					iparam->fc_ct_rsp.ox_id,
-+					io->indicator, io->reqtag,
-+					rnode->node_group, rnode->fc_id,
-+					rnode->indicator,
-+					iparam->fc_ct_rsp.r_ctl,
-+					iparam->fc_ct_rsp.type,
-+					iparam->fc_ct_rsp.df_ctl)) {
-+			efc_log_err(hw->os, "XMIT SEQ WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	case EFCT_HW_BLS_ACC:
-+	case EFCT_HW_BLS_RJT:
-+	{
-+		struct sli_bls_payload	bls;
-+
-+		if (type == EFCT_HW_BLS_ACC) {
-+			bls.type = SLI4_SLI_BLS_ACC;
-+			memcpy(&bls.u.acc, iparam->bls.payload,
-+			       sizeof(bls.u.acc));
-+		} else {
-+			bls.type = SLI4_SLI_BLS_RJT;
-+			memcpy(&bls.u.rjt, iparam->bls.payload,
-+			       sizeof(bls.u.rjt));
-+		}
-+
-+		bls.ox_id = cpu_to_le16(iparam->bls.ox_id);
-+		bls.rx_id = cpu_to_le16(iparam->bls.rx_id);
-+
-+		if (sli_xmit_bls_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
-+					   hw->sli.wqe_size, &bls,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT,
-+					rnode->attached, rnode->node_group,
-+					rnode->indicator,
-+					rnode->sport->indicator,
-+					rnode->fc_id, rnode->sport->fc_id,
-+					U32_MAX)) {
-+			efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	}
-+	case EFCT_HW_BLS_ACC_SID:
-+	{
-+		struct sli_bls_payload	bls;
-+
-+		bls.type = SLI4_SLI_BLS_ACC;
-+		memcpy(&bls.u.acc, iparam->bls_sid.payload,
-+		       sizeof(bls.u.acc));
-+
-+		bls.ox_id = cpu_to_le16(iparam->bls_sid.ox_id);
-+		bls.rx_id = cpu_to_le16(iparam->bls_sid.rx_id);
-+
-+		if (sli_xmit_bls_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
-+					   hw->sli.wqe_size, &bls,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT,
-+					rnode->attached, rnode->node_group,
-+					rnode->indicator,
-+					rnode->sport->indicator,
-+					rnode->fc_id, rnode->sport->fc_id,
-+					iparam->bls_sid.s_id)) {
-+			efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE SID error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	}
-+	default:
-+		efc_log_err(hw->os, "bad SRRS type %#x\n", type);
-+		rc = EFCT_HW_RTN_ERROR;
-+	}
-+
-+	if (rc == EFCT_HW_RTN_SUCCESS) {
-+		if (!io->wq)
-+			io->wq = efct_hw_queue_next_wq(hw, io);
-+
-+		io->xbusy = true;
-+
-+		/*
-+		 * Add IO to active io wqe list before submitting, in case the
-+		 * wcqe processing preempts this thread.
-+		 */
-+		io->wq->use_count++;
-+		efct_hw_add_io_timed_wqe(hw, io);
-+		rc = efct_hw_wq_write(io->wq, &io->wqe);
-+		if (rc >= 0) {
-+			/* non-negative return is success */
-+			rc = 0;
-+		} else {
-+			/* failed to write wqe, remove from active wqe list */
-+			efc_log_err(hw->os,
-+				     "sli_queue_write failed: %d\n", rc);
-+			io->xbusy = false;
-+			efct_hw_remove_io_timed_wqe(hw, io);
-+		}
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ * Send a read, write, or response IO.
-+ *
-+ * This routine supports sending a higher-level IO (for example, FCP) between
-+ * two endpoints as a target or initiator. Examples include:
-+ *  - Sending read data and good response (target).
-+ *  - Sending a response (target with no data or after receiving write data).
-+ *  .
-+ * This routine assumes all IOs use the SGL associated with the HW IO. Prior to
-+ * calling this routine, the data should be loaded using efct_hw_io_add_sge().
-+ */
-+enum efct_hw_rtn
-+efct_hw_io_send(struct efct_hw *hw, enum efct_hw_io_type type,
-+		struct efct_hw_io *io,
-+		u32 len, union efct_hw_io_param_u *iparam,
-+		struct efc_remote_node *rnode, void *cb, void *arg)
-+{
-+	enum efct_hw_rtn	rc = EFCT_HW_RTN_SUCCESS;
-+	u32	rpi;
-+	bool send_wqe = true;
-+
-+	if (!io || !rnode || !iparam) {
-+		pr_err("bad parm hw=%p io=%p iparam=%p rnode=%p\n",
-+			hw, io, iparam, rnode);
-+		return EFCT_HW_RTN_ERROR;
-+	}
-+
-+	if (hw->state != EFCT_HW_STATE_ACTIVE) {
-+		efc_log_err(hw->os, "cannot send IO, HW state=%d\n",
-+			     hw->state);
-+		return EFCT_HW_RTN_ERROR;
-+	}
-+
-+	rpi = rnode->indicator;
-+
-+	/*
-+	 * Save state needed during later stages
-+	 */
-+	io->rnode = rnode;
-+	io->type  = type;
-+	io->done  = cb;
-+	io->arg   = arg;
-+
-+	/*
-+	 * Format the work queue entry used to send the IO
-+	 */
-+	switch (type) {
-+	case EFCT_HW_IO_TARGET_WRITE: {
-+		u16 flags = iparam->fcp_tgt.flags;
-+		struct fcp_txrdy *xfer = io->xfer_rdy.virt;
-+
-+		/*
-+		 * Fill in the XFER_RDY for IF_TYPE 0 devices
-+		 */
-+		xfer->ft_data_ro = cpu_to_be32(iparam->fcp_tgt.offset);
-+		xfer->ft_burst_len = cpu_to_be32(len);
-+
-+		if (io->xbusy)
-+			flags |= SLI4_IO_CONTINUATION;
-+		else
-+			flags &= ~SLI4_IO_CONTINUATION;
-+
-+		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
-+
-+		if (sli_fcp_treceive64_wqe(&hw->sli,
-+					   io->wqe.wqebuf,
-+					   hw->sli.wqe_size,
-+					   &io->def_sgl,
-+					   io->first_data_sge,
-+					   iparam->fcp_tgt.offset, len,
-+					   io->indicator, io->reqtag,
-+					   SLI4_CQ_DEFAULT,
-+					   iparam->fcp_tgt.ox_id, rpi,
-+					   rnode->node_group,
-+					   rnode->fc_id, flags,
-+					   iparam->fcp_tgt.dif_oper,
-+					   iparam->fcp_tgt.blk_size,
-+					   iparam->fcp_tgt.cs_ctl,
-+					   iparam->fcp_tgt.app_id)) {
-+			efc_log_err(hw->os, "TRECEIVE WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	}
-+	case EFCT_HW_IO_TARGET_READ: {
-+		u16 flags = iparam->fcp_tgt.flags;
-+
-+		if (io->xbusy)
-+			flags |= SLI4_IO_CONTINUATION;
-+		else
-+			flags &= ~SLI4_IO_CONTINUATION;
-+
-+		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
-+		if (sli_fcp_tsend64_wqe(&hw->sli, io->wqe.wqebuf,
-+					hw->sli.wqe_size, &io->def_sgl,
-+					io->first_data_sge,
-+					iparam->fcp_tgt.offset, len,
-+					io->indicator, io->reqtag,
-+					SLI4_CQ_DEFAULT, iparam->fcp_tgt.ox_id,
-+					rpi, rnode->node_group,
-+					rnode->fc_id, flags,
-+					iparam->fcp_tgt.dif_oper,
-+					iparam->fcp_tgt.blk_size,
-+					iparam->fcp_tgt.cs_ctl,
-+					iparam->fcp_tgt.app_id)) {
-+			efc_log_err(hw->os, "TSEND WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+		break;
-+	}
-+	case EFCT_HW_IO_TARGET_RSP: {
-+		u16 flags = iparam->fcp_tgt.flags;
-+
-+		if (io->xbusy)
-+			flags |= SLI4_IO_CONTINUATION;
-+		else
-+			flags &= ~SLI4_IO_CONTINUATION;
-+
-+		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
-+		if (sli_fcp_trsp64_wqe(&hw->sli, io->wqe.wqebuf,
-+				       hw->sli.wqe_size, &io->def_sgl,
-+				       len, io->indicator, io->reqtag,
-+				       SLI4_CQ_DEFAULT, iparam->fcp_tgt.ox_id,
-+					rpi, rnode->node_group, rnode->fc_id,
-+					flags, iparam->fcp_tgt.cs_ctl,
-+				       0, iparam->fcp_tgt.app_id)) {
-+			efc_log_err(hw->os, "TRSP WQE error\n");
-+			rc = EFCT_HW_RTN_ERROR;
-+		}
-+
-+		break;
-+	}
-+	default:
-+		efc_log_err(hw->os, "unsupported IO type %#x\n", type);
-+		rc = EFCT_HW_RTN_ERROR;
-+	}
-+
-+	if (send_wqe && rc == EFCT_HW_RTN_SUCCESS) {
-+		if (!io->wq)
-+			io->wq = efct_hw_queue_next_wq(hw, io);
-+
-+		io->xbusy = true;
-+
-+		/*
-+		 * Add IO to active io wqe list before submitting, in case the
-+		 * wcqe processing preempts this thread.
-+		 */
-+		hw->tcmd_wq_submit[io->wq->instance]++;
-+		io->wq->use_count++;
-+		efct_hw_add_io_timed_wqe(hw, io);
-+		rc = efct_hw_wq_write(io->wq, &io->wqe);
-+		if (rc >= 0) {
-+			/* non-negative return is success */
-+			rc = 0;
-+		} else {
-+			/* failed to write wqe, remove from active wqe list */
-+			efc_log_err(hw->os,
-+				     "sli_queue_write failed: %d\n", rc);
-+			io->xbusy = false;
-+			efct_hw_remove_io_timed_wqe(hw, io);
-+		}
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ * Send a raw frame
-+ *
-+ * Using the SEND_FRAME_WQE, a frame consisting of header and payload is sent.
-+ */
-+enum efct_hw_rtn
-+efct_hw_send_frame(struct efct_hw *hw, struct fc_frame_header *hdr,
-+		   u8 sof, u8 eof, struct efc_dma *payload,
-+		   struct efct_hw_send_frame_context *ctx,
-+		   void (*callback)(void *arg, u8 *cqe, int status),
-+		   void *arg)
-+{
-+	int rc;
-+	struct efct_hw_wqe *wqe;
-+	u32 xri;
-+	struct hw_wq *wq;
-+
-+	wqe = &ctx->wqe;
-+
-+	/* populate the callback object */
-+	ctx->hw = hw;
-+
-+	/* Fetch and populate request tag */
-+	ctx->wqcb = efct_hw_reqtag_alloc(hw, callback, arg);
-+	if (!ctx->wqcb) {
-+		efc_log_err(hw->os, "can't allocate request tag\n");
-+		return EFCT_HW_RTN_NO_RESOURCES;
-+	}
-+
-+	/* Choose a work queue, first look for a class[1] wq, otherwise just
-+	 * use wq[0]
-+	 */
-+	wq = efct_varray_iter_next(hw->wq_class_array[1]);
-+	if (!wq)
-+		wq = hw->hw_wq[0];
-+
-+	/* Set XRI and RX_ID in the header based on which WQ, and which
-+	 * send_frame_io we are using
-+	 */
-+	xri = wq->send_frame_io->indicator;
-+
-+	/* Build the send frame WQE */
-+	rc = sli_send_frame_wqe(&hw->sli, wqe->wqebuf,
-+				hw->sli.wqe_size, sof, eof,
-+				(u32 *)hdr, payload, payload->len,
-+				EFCT_HW_SEND_FRAME_TIMEOUT, xri,
-+				ctx->wqcb->instance_index);
-+	if (rc) {
-+		efc_log_err(hw->os, "sli_send_frame_wqe failed: %d\n",
++			      "READ_TRANSCEIVER_DATA failed with status %d\n",
 +			     rc);
-+		return EFCT_HW_RTN_ERROR;
++		dma_free_coherent(&efct->pcidev->dev,
++				  cb_arg->payload.size, cb_arg->payload.virt,
++				  cb_arg->payload.phys);
++		memset(&cb_arg->payload, 0, sizeof(struct efc_dma));
++		kfree(cb_arg);
++		kfree(mbxdata);
 +	}
 +
-+	/* Write to WQ */
-+	rc = efct_hw_wq_write(wq, wqe);
-+	if (rc) {
-+		efc_log_err(hw->os, "efct_hw_wq_write failed: %d\n", rc);
-+		return EFCT_HW_RTN_ERROR;
-+	}
-+
-+	wq->use_count++;
-+
-+	return EFCT_HW_RTN_SUCCESS;
++	return rc;
 +}
 +
-+u32
-+efct_hw_io_get_count(struct efct_hw *hw,
-+		     enum efct_hw_io_count_type io_count_type)
++static int
++efct_hw_cb_temp(struct efct_hw *hw, int status, u8 *mqe, void  *arg)
 +{
-+	struct efct_hw_io *io = NULL;
-+	u32 count = 0;
-+	unsigned long flags = 0;
++	struct sli4_cmd_dump4 *mbox_rsp = (struct sli4_cmd_dump4 *)mqe;
++	struct efct_hw_temp_cb_arg *cb_arg = arg;
++	u32 curr_temp = le32_to_cpu(mbox_rsp->resp_data[0]); /* word 5 */
++	u32 crit_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[1]); /* word 6 */
++	u32 warn_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[2]); /* word 7 */
++	u32 norm_temp_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[3]); /* word 8 */
++	u32 fan_off_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[4]);   /* word 9 */
++	u32 fan_on_thrshld =
++			le32_to_cpu(mbox_rsp->resp_data[5]);    /* word 10 */
 +
-+	spin_lock_irqsave(&hw->io_lock, flags);
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status,
++				   curr_temp,
++				   crit_temp_thrshld,
++				   warn_temp_thrshld,
++				   norm_temp_thrshld,
++				   fan_off_thrshld,
++				   fan_on_thrshld,
++				   cb_arg->arg);
++		}
 +
-+	switch (io_count_type) {
-+	case EFCT_HW_IO_INUSE_COUNT:
-+		list_for_each_entry(io, &hw->io_inuse, list_entry) {
-+			count = count + 1;
-+		}
-+		break;
-+	case EFCT_HW_IO_FREE_COUNT:
-+		list_for_each_entry(io, &hw->io_free, list_entry) {
-+			count = count + 1;
-+		}
-+		break;
-+	case EFCT_HW_IO_WAIT_FREE_COUNT:
-+		list_for_each_entry(io, &hw->io_wait_free, list_entry) {
-+			count = count + 1;
-+		}
-+		break;
-+	case EFCT_HW_IO_N_TOTAL_IO_COUNT:
-+		count = hw->config.n_io;
-+		break;
++		kfree(cb_arg);
++	}
++	kfree(mqe);
++
++	return 0;
++}
++
++/* Function to retrieve the temperature information */
++enum efct_hw_rtn
++efct_hw_get_temperature(struct efct_hw *hw,
++			void (*cb)(int status,
++				   u32 curr_temp,
++				u32 crit_temp_thrshld,
++				u32 warn_temp_thrshld,
++				u32 norm_temp_thrshld,
++				u32 fan_off_thrshld,
++				u32 fan_on_thrshld,
++				void *arg),
++			void *arg)
++{
++	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_temp_cb_arg *cb_arg;
++	u8 *mbxdata;
++
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
 +	}
 +
-+	spin_unlock_irqrestore(&hw->io_lock, flags);
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
 +
-+	return count;
++	/* Send the HW command */
++	if (!sli_cmd_dump_type4(&hw->sli, mbxdata, SLI4_BMBX_SIZE,
++			       SLI4_WKI_TAG_SAT_TEM))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_temp, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		efc_log_test(hw->os, "DUMP_TYPE4 failed\n");
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
++}
++
++static int
++efct_hw_cb_link_stat(struct efct_hw *hw, int status,
++		     u8 *mqe, void  *arg)
++{
++	struct sli4_cmd_read_link_stats *mbox_rsp;
++	struct efct_hw_link_stat_cb_arg *cb_arg = arg;
++	struct efct_hw_link_stat_counts counts[EFCT_HW_LINK_STAT_MAX];
++	u32 num_counters;
++	u32 mbox_rsp_flags = 0;
++
++	mbox_rsp = (struct sli4_cmd_read_link_stats *)mqe;
++	mbox_rsp_flags = le32_to_cpu(mbox_rsp->dw1_flags);
++	num_counters = (mbox_rsp_flags & SLI4_READ_LNKSTAT_GEC) ? 20 : 13;
++	memset(counts, 0, sizeof(struct efct_hw_link_stat_counts) *
++				 EFCT_HW_LINK_STAT_MAX);
++
++	counts[EFCT_HW_LINK_STAT_LINK_FAILURE_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W02OF);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SYNC_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W03OF);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SIGNAL_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W04OF);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W05OF);
++	counts[EFCT_HW_LINK_STAT_INVALID_XMIT_WORD_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W06OF);
++	counts[EFCT_HW_LINK_STAT_CRC_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W07OF);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_TIMEOUT_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W08OF);
++	counts[EFCT_HW_LINK_STAT_ELASTIC_BUFFER_OVERRUN_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W09OF);
++	counts[EFCT_HW_LINK_STAT_ARB_TIMEOUT_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W10OF);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_RCV_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W11OF);
++	counts[EFCT_HW_LINK_STAT_CURR_RCV_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W12OF);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_XMIT_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W13OF);
++	counts[EFCT_HW_LINK_STAT_CURR_XMIT_B2B_CREDIT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W14OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFA_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W15OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFDTI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W16OF);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFNI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W17OF);
++	counts[EFCT_HW_LINK_STAT_RCV_SOFF_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W18OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_AER_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W19OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_RPI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W20OF);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_XRI_COUNT].overflow =
++		(mbox_rsp_flags & SLI4_READ_LNKSTAT_W21OF);
++	counts[EFCT_HW_LINK_STAT_LINK_FAILURE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->linkfail_errcnt);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SYNC_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->losssync_errcnt);
++	counts[EFCT_HW_LINK_STAT_LOSS_OF_SIGNAL_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->losssignal_errcnt);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->primseq_errcnt);
++	counts[EFCT_HW_LINK_STAT_INVALID_XMIT_WORD_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->inval_txword_errcnt);
++	counts[EFCT_HW_LINK_STAT_CRC_COUNT].counter =
++		le32_to_cpu(mbox_rsp->crc_errcnt);
++	counts[EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_TIMEOUT_COUNT].counter =
++		le32_to_cpu(mbox_rsp->primseq_eventtimeout_cnt);
++	counts[EFCT_HW_LINK_STAT_ELASTIC_BUFFER_OVERRUN_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->elastic_bufoverrun_errcnt);
++	counts[EFCT_HW_LINK_STAT_ARB_TIMEOUT_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->arbit_fc_al_timeout_cnt);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_RCV_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->adv_rx_buftor_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_CURR_RCV_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->curr_rx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_ADVERTISED_XMIT_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->adv_tx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_CURR_XMIT_B2B_CREDIT].counter =
++		 le32_to_cpu(mbox_rsp->curr_tx_buf_to_buf_credit);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFA_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofa_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFDTI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofdti_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_EOFNI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_eofni_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_SOFF_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_soff_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_AER_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_aer_cnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_RPI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_avail_rpi_rescnt);
++	counts[EFCT_HW_LINK_STAT_RCV_DROPPED_NO_XRI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->rx_dropped_no_avail_xri_rescnt);
++
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status, num_counters, counts, cb_arg->arg);
++		}
++
++		kfree(cb_arg);
++	}
++	kfree(mqe);
++
++	return 0;
++}
++
++enum efct_hw_rtn
++efct_hw_get_link_stats(struct efct_hw *hw,
++		       u8 req_ext_counters,
++		       u8 clear_overflow_flags,
++		       u8 clear_all_counters,
++		       void (*cb)(int status,
++				  u32 num_counters,
++			struct efct_hw_link_stat_counts *counters,
++			void *arg),
++		       void *arg)
++{
++	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_link_stat_cb_arg *cb_arg;
++	u8 *mbxdata;
++
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	cb_arg->cb = cb;
++	cb_arg->arg = arg;
++
++	/* Send the HW command */
++	if (!sli_cmd_read_link_stats(&hw->sli, mbxdata, SLI4_BMBX_SIZE,
++				    req_ext_counters,
++				    clear_overflow_flags,
++				    clear_all_counters))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_link_stat, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
++}
++
++static int
++efct_hw_cb_host_stat(struct efct_hw *hw, int status,
++		     u8 *mqe, void  *arg)
++{
++	struct sli4_cmd_read_status *mbox_rsp =
++					(struct sli4_cmd_read_status *)mqe;
++	struct efct_hw_host_stat_cb_arg *cb_arg = arg;
++	struct efct_hw_host_stat_counts counts[EFCT_HW_HOST_STAT_MAX];
++	u32 num_counters = EFCT_HW_HOST_STAT_MAX;
++
++	memset(counts, 0, sizeof(struct efct_hw_host_stat_counts) *
++		   EFCT_HW_HOST_STAT_MAX);
++
++	counts[EFCT_HW_HOST_STAT_TX_KBYTE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_kbyte_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_KBYTE_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_kbyte_cnt);
++	counts[EFCT_HW_HOST_STAT_TX_FRAME_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_frame_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_FRAME_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_frame_cnt);
++	counts[EFCT_HW_HOST_STAT_TX_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->trans_seq_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_SEQ_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_seq_cnt);
++	counts[EFCT_HW_HOST_STAT_TOTAL_EXCH_ORIG].counter =
++		 le32_to_cpu(mbox_rsp->tot_exchanges_orig);
++	counts[EFCT_HW_HOST_STAT_TOTAL_EXCH_RESP].counter =
++		 le32_to_cpu(mbox_rsp->tot_exchanges_resp);
++	counts[EFCT_HW_HOSY_STAT_RX_P_BSY_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_p_bsy_cnt);
++	counts[EFCT_HW_HOST_STAT_RX_F_BSY_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->recv_f_bsy_cnt);
++	counts[EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_RQ_BUF_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->no_rq_buf_dropped_frames_cnt);
++	counts[EFCT_HW_HOST_STAT_EMPTY_RQ_TIMEOUT_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->empty_rq_timeout_cnt);
++	counts[EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_XRI_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->no_xri_dropped_frames_cnt);
++	counts[EFCT_HW_HOST_STAT_EMPTY_XRI_POOL_COUNT].counter =
++		 le32_to_cpu(mbox_rsp->empty_xri_pool_cnt);
++
++	if (cb_arg) {
++		if (cb_arg->cb) {
++			if (status == 0 && le16_to_cpu(mbox_rsp->hdr.status))
++				status = le16_to_cpu(mbox_rsp->hdr.status);
++			cb_arg->cb(status, num_counters, counts, cb_arg->arg);
++		}
++
++		kfree(cb_arg);
++	}
++	kfree(mqe);
++
++	return 0;
++}
++
++enum efct_hw_rtn
++efct_hw_get_host_stats(struct efct_hw *hw, u8 cc,
++		       void (*cb)(int status,
++				  u32 num_counters,
++				  struct efct_hw_host_stat_counts *counters,
++				  void *arg),
++		       void *arg)
++{
++	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
++	struct efct_hw_host_stat_cb_arg *cb_arg;
++	u8 *mbxdata;
++
++	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	if (!mbxdata)
++		return EFCT_HW_RTN_NO_MEMORY;
++
++	memset(mbxdata, 0, SLI4_BMBX_SIZE);
++
++	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		kfree(mbxdata);
++		return EFCT_HW_RTN_NO_MEMORY;
++	}
++
++	 cb_arg->cb = cb;
++	 cb_arg->arg = arg;
++
++	 /* Send the HW command to get the host stats */
++	if (!sli_cmd_read_status(&hw->sli, mbxdata, SLI4_BMBX_SIZE, cc))
++		rc = efct_hw_command(hw, mbxdata, EFCT_CMD_NOWAIT,
++				     efct_hw_cb_host_stat, cb_arg);
++
++	if (rc != EFCT_HW_RTN_SUCCESS) {
++		efc_log_test(hw->os, "READ_HOST_STATS failed\n");
++		kfree(mbxdata);
++		kfree(cb_arg);
++	}
++
++	return rc;
 +}
 diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
-index 55679e40cc49..1a019594c471 100644
+index 1a019594c471..278f241e8705 100644
 --- a/drivers/scsi/elx/efct/efct_hw.h
 +++ b/drivers/scsi/elx/efct/efct_hw.h
-@@ -952,4 +952,23 @@ efct_hw_process(struct efct_hw *hw, u32 vector, u32 max_isr_time_msec);
- extern int
- efct_hw_queue_hash_find(struct efct_queue_hash *hash, u16 id);
- 
-+int efct_hw_wq_write(struct hw_wq *wq, struct efct_hw_wqe *wqe);
-+enum efct_hw_rtn
-+efct_hw_send_frame(struct efct_hw *hw, struct fc_frame_header *hdr,
-+		   u8 sof, u8 eof, struct efc_dma *payload,
-+		struct efct_hw_send_frame_context *ctx,
-+		void (*callback)(void *arg, u8 *cqe, int status),
-+		void *arg);
-+typedef int(*efct_hw_srrs_cb_t)(struct efct_hw_io *io,
-+				struct efc_remote_node *rnode, u32 length,
-+				int status, u32 ext_status, void *arg);
+@@ -970,5 +970,44 @@ efct_hw_srrs_send(struct efct_hw *hw, enum efct_hw_io_type type,
+ 		  union efct_hw_io_param_u *iparam,
+ 		  efct_hw_srrs_cb_t cb,
+ 		  void *arg);
++/* Function for retrieving SFP data */
 +extern enum efct_hw_rtn
-+efct_hw_srrs_send(struct efct_hw *hw, enum efct_hw_io_type type,
-+		  struct efct_hw_io *io,
-+		  struct efc_dma *send, u32 len,
-+		  struct efc_dma *receive, struct efc_remote_node *rnode,
-+		  union efct_hw_io_param_u *iparam,
-+		  efct_hw_srrs_cb_t cb,
-+		  void *arg);
++efct_hw_get_sfp(struct efct_hw *hw, u16 page,
++		void (*cb)(int, u32, u8 *, void *), void *arg);
 +
++/* Function for retrieving temperature data */
++extern enum efct_hw_rtn
++efct_hw_get_temperature(struct efct_hw *hw,
++			void (*efct_hw_temp_cb_t)(int status,
++						  u32 curr_temp,
++				u32 crit_temp_thrshld,
++				u32 warn_temp_thrshld,
++				u32 norm_temp_thrshld,
++				u32 fan_off_thrshld,
++				u32 fan_on_thrshld,
++				void *arg),
++			void *arg);
++
++/* Function for retrieving link statistics */
++extern enum efct_hw_rtn
++efct_hw_get_link_stats(struct efct_hw *hw,
++		       u8 req_ext_counters,
++		u8 clear_overflow_flags,
++		u8 clear_all_counters,
++		void (*efct_hw_link_stat_cb_t)(int status,
++					       u32 num_counters,
++			struct efct_hw_link_stat_counts *counters,
++			void *arg),
++		void *arg);
++/* Function for retrieving host statistics */
++extern enum efct_hw_rtn
++efct_hw_get_host_stats(struct efct_hw *hw,
++		       u8 cc,
++		void (*efct_hw_host_stat_cb_t)(int status,
++					       u32 num_counters,
++			struct efct_hw_host_stat_counts *counters,
++			void *arg),
++		void *arg);
++
+ 
  #endif /* __EFCT_H__ */
 -- 
 2.13.7
