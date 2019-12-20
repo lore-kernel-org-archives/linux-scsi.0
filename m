@@ -2,94 +2,94 @@ Return-Path: <SRS0=ZPSI=2K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20A7AC43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 597C9C43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:15:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2D2924679
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 10:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A0C621D7D
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:15:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Q+ILiBik"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="j7U5znNe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbfLTKc4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 05:32:56 -0500
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:35793 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727315AbfLTKcz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Dec 2019 05:32:55 -0500
-Received: by mail-pg1-f180.google.com with SMTP id l24so4741963pgk.2
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Dec 2019 02:32:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Cz6MvoAT/LDo49I+DalZZygU5MP/dM2eUpmG6RUcDsw=;
-        b=Q+ILiBikz70XwroxoO7KK6igjqdY0MWTT07Nb37bpT03YWHX5S3xNveesmLg3pGQ8G
-         XOZVBdBx6o3ptAZVt130Xh6xRC+Pf4Llizp9sdpAPUiTYsScvdjPRQyd1CVJZnLPaekO
-         X7G38LT5ADTSmCljm9mmihLJ+V7L/3GQJeKkQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Cz6MvoAT/LDo49I+DalZZygU5MP/dM2eUpmG6RUcDsw=;
-        b=bD+pAESJ7dVJwgyJsn0fGOAoeM103crkXwD7wBUm+5k5BOcfTs/n1d2OXNNXEvbaq0
-         c5x1uLCEZcqpU3zsuc3Pls+oetKWpIRlK1XaPOfxeLvZxFEfJ3ZXgBJ8cK+/Z0NfU5Ks
-         cQtwSx9z1QxscUvQBS17Lld6xnf81B+un9mS8Cc1mxhYa9ynVSSH1tC9F+UhnJTXOyaY
-         5pY9l3ZOqoQfj//B/QGv4hmnbJCoDJU7BXhpJwvk+Jp9bivp3KWbiHDx+Kx/TjYih0id
-         kaIvbG8w9Y3PLVyBPvqxbOEPRDclaw29+txb67RsWWFs0Gv9aWH/ib04jWOM1Tjn8y1z
-         BZhw==
-X-Gm-Message-State: APjAAAU5M06JzSFmFPSm9mcsxBx8oc/6dTWfrkgeKuK4zG9yOMnDSKA3
-        hqzINDnQ/ouz2r38jdqhIBaLxwZiG6AmtUK1ndPbMxkEdpMZ3Mn3l1h4XDuelcxlAjj7DGQot6A
-        5THPIPbfNVLWq9C5q0R3lJteG4A10kjjoY55YekBsbbGqg2+j5TnY5/oG6JexLeNJhiihil8EDo
-        yhkkIMDQ0doZG9kOddMA==
-X-Google-Smtp-Source: APXvYqxxYOI0LN8PzmAS5oj+JKPDpm9ieKl+SFw4lYwSbHfNoYue5vkxTlFdcpj3G/wq8MhVHuRshA==
-X-Received: by 2002:a63:6b07:: with SMTP id g7mr13849710pgc.243.1576837974276;
-        Fri, 20 Dec 2019 02:32:54 -0800 (PST)
-Received: from dhcp-10-123-20-125.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 200sm12185364pfz.121.2019.12.20.02.32.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Dec 2019 02:32:53 -0800 (PST)
-From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com,
-        kashyap.desai@broadcom.com,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 10/10] mpt3sas: Update drive version to 33.100.00.00
-Date:   Fri, 20 Dec 2019 05:32:10 -0500
-Message-Id: <20191220103210.43631-11-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 2.18.2
-In-Reply-To: <20191220103210.43631-1-suganath-prabu.subramani@broadcom.com>
-References: <20191220103210.43631-1-suganath-prabu.subramani@broadcom.com>
+        id S1727381AbfLTOP4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 09:15:56 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:60942 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727359AbfLTOP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Dec 2019 09:15:56 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 4486543E4A;
+        Fri, 20 Dec 2019 14:15:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1576851354;
+         x=1578665755; bh=4SD7fPvSFMmmxRvjlaxu40bhd35Fr/7UsEvVsP68Hkc=; b=
+        j7U5znNelISzkvJdU+KzSbav0LD5TVPddrki4yA+efd+et6D6uYGLwtoghYzCglN
+        HcfQJJcwe2u4X7l4d+vB2h1VHNlLiUMGzrgaL8K6mmptwpIynjyOKmPseJ4Rjd6m
+        frD3VpEDv9bHdrrbYWCvBuYH+//ARk7ykmxn9DyHhI8=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 4xCaqT_iNPl9; Fri, 20 Dec 2019 17:15:54 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 6FB9342F14;
+        Fri, 20 Dec 2019 17:15:52 +0300 (MSK)
+Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 20
+ Dec 2019 17:15:52 +0300
+Date:   Fri, 20 Dec 2019 17:15:51 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
+Subject: Re: [PATCH] qla2xxx: Use get_unaligned_*() instead of open-coding
+ these functions
+Message-ID: <20191220141551.j2yyewaea6sxey2h@SPB-NB-133.local>
+References: <20191219005050.40193-1-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20191219005050.40193-1-bvanassche@acm.org>
+X-Originating-IP: [172.17.128.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update mpt3sas driver version from 32.100.00.00 to 33.100.00.00
+On Wed, Dec 18, 2019 at 04:50:50PM -0800, Bart Van Assche wrote:
+> This patch improves readability and does not change any functionality.
+> 
+> Cc: Himanshu Madhani <hmadhani@marvell.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/qla2xxx/qla_bsg.c    |  2 +-
+>  drivers/scsi/qla2xxx/qla_isr.c    | 12 ++++++------
+>  drivers/scsi/qla2xxx/qla_nx.c     |  6 +++---
+>  drivers/scsi/qla2xxx/qla_target.c | 12 ++++++------
+>  drivers/scsi/qla2xxx/qla_target.h |  3 +--
+>  5 files changed, 17 insertions(+), 18 deletions(-)
+> 
 
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi Bart,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 6ab726b..1cde3fc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -76,8 +76,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"32.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		32
-+#define MPT3SAS_DRIVER_VERSION		"33.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		33
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
--- 
-2.18.1
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 
+Thank you,
+Roman
