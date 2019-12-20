@@ -1,100 +1,167 @@
-Return-Path: <SRS0=QEZ7=2J=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=ZPSI=2K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E25C43603
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 23:55:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAC32C3F68F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 00:31:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EABFE21927
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Dec 2019 23:55:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A178C24688
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 00:31:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dfENbuvw"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="HiOEloIv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726967AbfLSXzT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Dec 2019 18:55:19 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:39280 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726952AbfLSXzT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Dec 2019 18:55:19 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJNnFSv092007;
-        Thu, 19 Dec 2019 23:55:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=ISrz3Ns54NGAApGTxnvEkXxKTrQzrhTfUvDT4V2/UgU=;
- b=dfENbuvwlfKsjx7dQWvG2o9gnpORhr++hxIfUs8NPTXM6L0W8pAQlExhyyDoHLsE8B5+
- FrjV+znk68PpK0verV+R/ANrvwfXL527QiN3TGvkiMS1X8OwWHn97Qesh1Mrig81Bu6F
- M9h/d5uKMJPMWzWXMmpksXxXXmS+Hsr+mXXKZ/UTgnWKWIDlvitOq/4lD13oEVPFxNrC
- YKlll+e+ZNm4F4cIJkfylKVCaBgzaWuswSmjKPnO6VQcr6LyK6IklcO4vzv+Lwst2JfJ
- vQtQ2hwKH22o+PSOzqLZsgWS12cTpSCnAECOSMLokPqSAEIKViapbZqBJkWxdU+F3i0r lw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2x01knnw6q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Dec 2019 23:55:07 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBJNnZHm099889;
-        Thu, 19 Dec 2019 23:55:06 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2x0bgmmmyn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Dec 2019 23:55:06 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBJNt4d8014949;
-        Thu, 19 Dec 2019 23:55:04 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 19 Dec 2019 15:55:04 -0800
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH] qla2xxx: Fix sparse warnings triggered by the PCI state checking code
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191219004412.37639-1-bvanassche@acm.org>
-Date:   Thu, 19 Dec 2019 18:55:01 -0500
-In-Reply-To: <20191219004412.37639-1-bvanassche@acm.org> (Bart Van Assche's
-        message of "Wed, 18 Dec 2019 16:44:12 -0800")
-Message-ID: <yq1eewzan1m.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727135AbfLTAbA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Dec 2019 19:31:00 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:37784 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726998AbfLTAbA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Dec 2019 19:31:00 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576801859; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=NYkaSg/yIOVM8Zt4nI2tIa2sDjh7Ya1C7IesYRlw4WY=;
+ b=HiOEloIv88y1z5burFoKHlWm5PLyyoH3wlUHHcoSescuNc0yA9J8bmCOoTQBcac5io7fN4pL
+ S3HpFdst88sRdVf1bXFyzcJzh/Ybt7MgpvGwnMSOxpOHdRQ01vW5o0p8u+gS3dp2+aHtmMj+
+ HgVRCG7rjFjQ+J6BlIqPIH7+afk=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5dfc1642.7f782f9a17a0-smtp-out-n02;
+ Fri, 20 Dec 2019 00:30:58 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8463CC447A6; Fri, 20 Dec 2019 00:30:58 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 68F59C4479F;
+        Fri, 20 Dec 2019 00:30:57 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9476 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912190174
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9476 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912190174
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 20 Dec 2019 08:30:57 +0800
+From:   cang@codeaurora.org
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, Rajendra Nayak <rnayak@codeaurora.org>,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, Mark Salyzyn <salyzyn@google.com>,
+        Andy Gross <agross@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 2/7] scsi: ufs-qcom: Add reset control support for host
+ controller
+In-Reply-To: <20191219145206.GW2536@vkoul-mobl>
+References: <763d7b30593b31646f3c198c2be99671@codeaurora.org>
+ <20191217092433.GN2536@vkoul-mobl>
+ <fc8952a0eee5c010fe14e5f107d89e64@codeaurora.org>
+ <20191217150852.GO2536@vkoul-mobl>
+ <CAOCk7Np691Hau1FdJqWs1UY6jvEvYfzA6NnG9U--ZcRsuV5=Zw@mail.gmail.com>
+ <75f7065d08f450c6cbb2b2662658ecaa@codeaurora.org>
+ <20191218041200.GP2536@vkoul-mobl>
+ <983c21bb5ad2d38e11c074528d8898b9@codeaurora.org>
+ <20191219142145.GV2536@vkoul-mobl>
+ <CAOCk7NrKRXsTffNyQFt_tQmdNq7+SaH+kAJVk8AAPJWJjPxYYw@mail.gmail.com>
+ <20191219145206.GW2536@vkoul-mobl>
+Message-ID: <3dcdc4f7f090e1f1dd45d499bef0a4d1@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2019-12-19 22:52, Vinod Koul wrote:
+> On 19-12-19, 07:25, Jeffrey Hugo wrote:
+>> On Thu, Dec 19, 2019 at 7:21 AM Vinod Koul <vkoul@kernel.org> wrote:
+>> >
+>> > On 19-12-19, 15:12, cang@codeaurora.org wrote:
+>> > > On 2019-12-18 12:12, Vinod Koul wrote:
+>> > > > On 18-12-19, 02:44, cang@codeaurora.org wrote:
+>> >
+>> > >
+>> > > Aside of the phy settings, your DT needs some modifications too,
+>> > > seems you copied most of them from sdm845.
+>> > > https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=3834a2e92229ef26d30de28acb698b2b23d3e397
+>> > >
+>> > > <--snip-->
+>> > > > +           ufs_mem_phy: phy@1d87000 {
+>> > > > +                   compatible = "qcom,sm8150-qmp-ufs-phy";
+>> > > > +                   reg = <0 0x01d87000 0 0x18c>;
+>> > >
+>> > > The size 0x18c is wrong, in the code you are even accessing registers
+>> > > whose offsets are beyond 0x18c, see
+>> > >
+>> > > #define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE1_MODE0     0x1ac
+>> > > #define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE2_MODE0     0x1b0
+>> > > #define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE1_MODE1     0x1b4
+>> > > #define QSERDES_V4_COM_BIN_VCOCAL_HSCLK_SEL           0x1bc
+>> > > #define QSERDES_V4_COM_BIN_VCOCAL_CMP_CODE2_MODE1     0x1b8
+>> > >
+>> > > FYI, the total size of serdes registers is 0x1c0.
+>> >
+>> > Yeah I will update it to 0x1c0
+>> >
+>> > >
+>> > > <--snip-->
+>> > > > +                   ufs_mem_phy_lanes: lanes@1d87400 {
+>> > > > +                           reg = <0 0x01d87400 0 0x108>,
+>> > > > +                                 <0 0x01d87600 0 0x1e0>,
+>> > > > +                                 <0 0x01d87c00 0 0x1dc>,
+>> > >
+>> > > Same as above, see
+>> > >
+>> > > #define QPHY_V4_MULTI_LANE_CTRL1                      0x1e0
+>> > >
+>> > > FYI, the total size of PCS registers is 0x200
+>> > >
+>> > > > +                                 <0 0x01d87800 0 0x108>,
+>> > > > +                                 <0 0x01d87a00 0 0x1e0>;
+>> > > > +                           #phy-cells = <0>;
+>> > > > +                   };
+>> > > <--snip-->
+>> >
+>> > So I managed to fix it by configuring QPHY_SW_RESET in
+>> > qcom_qmp_phy_com_init() before invoking the configuration. That makes it
+>> > work for me. Will send patches shortly
+>> 
+>> So, you are going to send some fixes to make sm8150 work.  We also
+>> need the extended timeout for all platforms, yes?  Who is going to
+>> send up the patch for the timeout?  All of this should be -rc material
+>> since Can's change caused these issues to appear, and thus impact
+>> users, no?
+> 
+> yeah I have tested a timeout of 10ms and seems to look good for me on
+> sm8150 and sdm845. I will be sending the patches in few minutes :) and
+> yes the timeout should be marked to 5.5 fixes
+> 
+> Thanks
 
-Bart,
+Hi Vinod,
 
-> This patch fixes the following sparse warnings:
->
-> drivers/scsi/qla2xxx/qla_mbx.c:120:21: warning: restricted pci_channel_state_t degrades to integer
-> drivers/scsi/qla2xxx/qla_mbx.c:120:37: warning: restricted pci_channel_state_t degrades to integer
+Good to know it works for you. Vivek Gautam, who is the author QCOM UFS 
+PHY
+driver, has left QCOM. Please add Asutosh Das(asutoshd@codeaurora.org),
+Bao D. Nguyen(nguyenb@codeaurora.org) and me for QCOM UFS PHY changes.
 
-Applied to 5.6/scsi-queue, thanks!
+Actually, without this change, your PHY is not even re-initialized at 
+all
+during kernel bootup, it just retains whatever it was configured in 
+UEFI,
+yet you are still saying this is a regression. The extended timeout is 
+what
+UFS PHY has to take for a full initialization.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Regards,
+Can Guo.
