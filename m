@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A9BC43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B769C2D0C0
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:37:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 043362467F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:36:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 225DF2465E
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:37:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576852600;
-	bh=hg/MGBX1/oCvnA6QS1rp73A+mtf+nq5bJmNcbcqKbpE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=g09G+wW7zhaadkXfEi/lsAp5S9JIMPO8iMUzQe331EXB+d6P9tc5VbCWr5W2Yqje8
-	 1lBfTYl/NcniUqiQ8OM/wnGRTG7b3T6aMKsFsUXehWleMKBkax68ehBOOSYZX1yy8P
-	 CVKx3jDvACOEa1Yywzz/MwRjoSBsUlgO3t1hXhV4=
+	s=default; t=1576852632;
+	bh=E3M3Rk+EtBVG5nA2dJqBGAMJi8GXyVnnEdorwCIOzTI=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=1efE1qEpo5tCwr+PXRPY1wje8qcJlYiU/67qNmeJeNSzKhcz/ZJmYz+dGxBUaHgd6
+	 2cm+qiQFfY4sY7paw+cWXKlfsf4F0MqWGTGqM+Agzo908MS9BozRPvAnUNYeXJo1Yc
+	 25Set3oJUr8aJRS2L4llBB2YBRMZznbUBmVDXvL8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727801AbfLTOgf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 09:36:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39110 "EHLO mail.kernel.org"
+        id S1728116AbfLTOei (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 09:34:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38642 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727960AbfLTOew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Dec 2019 09:34:52 -0500
+        id S1727580AbfLTOeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Dec 2019 09:34:37 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3508F24689;
-        Fri, 20 Dec 2019 14:34:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 70D2421D7D;
+        Fri, 20 Dec 2019 14:34:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576852492;
-        bh=hg/MGBX1/oCvnA6QS1rp73A+mtf+nq5bJmNcbcqKbpE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CaVrCUfGK76tLqn2H05yoT/k1RcXHLaCWNyNJrhWHb2tk1uKj1lpZh8tA9MRAwLhE
-         oxNgAfruMnPoW6U0kSV/krysPj1TAMK44XdyGbgwf2r9yKD4bv67kluarevsHDb4ea
-         /aBkcErMNxxsqWi7JRQVFFDPZvfPHve1FO7/l7Xw=
+        s=default; t=1576852475;
+        bh=E3M3Rk+EtBVG5nA2dJqBGAMJi8GXyVnnEdorwCIOzTI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=EOogzwtg/6H9jSoJ7BmQI1EXt7baaBmVqzt3ajOCOlT/10tvDNhlV8uMVwuZ5Xl/U
+         PQ2wZkbzIvxyR7BafhZZCeBTTpDTAts2zpB3c7Fi86cx8PEyqykKgzUhdq+Ll7nTRK
+         7x0l9HowfbvsywIR3vyMMPVMqcDFnCY8CcLGzPlA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bo Wu <wubo40@huawei.com>, Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        James Smart <james.smart@broadcom.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 14/34] scsi: lpfc: Fix memory leak on lpfc_bsg_write_ebuf_set func
-Date:   Fri, 20 Dec 2019 09:34:13 -0500
-Message-Id: <20191220143433.9922-14-sashal@kernel.org>
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 01/34] nvme_fc: add module to ops template to allow module references
+Date:   Fri, 20 Dec 2019 09:34:00 -0500
+Message-Id: <20191220143433.9922-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191220143433.9922-1-sashal@kernel.org>
-References: <20191220143433.9922-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,66 +59,152 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bo Wu <wubo40@huawei.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 9a1b0b9a6dab452fb0e39fe96880c4faf3878369 ]
+[ Upstream commit 863fbae929c7a5b64e96b8a3ffb34a29eefb9f8f ]
 
-When phba->mbox_ext_buf_ctx.seqNum != phba->mbox_ext_buf_ctx.numBuf,
-dd_data should be freed before return SLI_CONFIG_HANDLED.
+In nvme-fc: it's possible to have connected active controllers
+and as no references are taken on the LLDD, the LLDD can be
+unloaded.  The controller would enter a reconnect state and as
+long as the LLDD resumed within the reconnect timeout, the
+controller would resume.  But if a namespace on the controller
+is the root device, allowing the driver to unload can be problematic.
+To reload the driver, it may require new io to the boot device,
+and as it's no longer connected we get into a catch-22 that
+eventually fails, and the system locks up.
 
-When lpfc_sli_issue_mbox func return fails, pmboxq should be also freed in
-job_error tag.
+Fix this issue by taking a module reference for every connected
+controller (which is what the core layer did to the transport
+module). Reference is cleared when the controller is removed.
 
-Link: https://lore.kernel.org/r/EDBAAA0BBBA2AC4E9C8B6B81DEEE1D6915E7A966@DGGEML525-MBS.china.huawei.com
-Signed-off-by: Bo Wu <wubo40@huawei.com>
-Reviewed-by: Zhiqiang Liu <liuzhiqiang26@huawei.com>
-Reviewed-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/nvme/host/fc.c          | 14 ++++++++++++--
+ drivers/nvme/target/fcloop.c    |  1 +
+ drivers/scsi/lpfc/lpfc_nvme.c   |  2 ++
+ drivers/scsi/qla2xxx/qla_nvme.c |  1 +
+ include/linux/nvme-fc-driver.h  |  4 ++++
+ 5 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 99aea52e584b0..21f104c5eab62 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -4419,12 +4419,6 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 	phba->mbox_ext_buf_ctx.seqNum++;
- 	nemb_tp = phba->mbox_ext_buf_ctx.nembType;
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index 565bddcfd130d..d567035571bf2 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -342,7 +342,8 @@ nvme_fc_register_localport(struct nvme_fc_port_info *pinfo,
+ 	    !template->ls_req || !template->fcp_io ||
+ 	    !template->ls_abort || !template->fcp_abort ||
+ 	    !template->max_hw_queues || !template->max_sgl_segments ||
+-	    !template->max_dif_sgl_segments || !template->dma_boundary) {
++	    !template->max_dif_sgl_segments || !template->dma_boundary ||
++	    !template->module) {
+ 		ret = -EINVAL;
+ 		goto out_reghost_failed;
+ 	}
+@@ -1986,6 +1987,7 @@ nvme_fc_ctrl_free(struct kref *ref)
+ {
+ 	struct nvme_fc_ctrl *ctrl =
+ 		container_of(ref, struct nvme_fc_ctrl, ref);
++	struct nvme_fc_lport *lport = ctrl->lport;
+ 	unsigned long flags;
  
--	dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
--	if (!dd_data) {
--		rc = -ENOMEM;
--		goto job_error;
--	}
--
- 	pbuf = (uint8_t *)dmabuf->virt;
- 	size = job->request_payload.payload_len;
- 	sg_copy_to_buffer(job->request_payload.sg_list,
-@@ -4461,6 +4455,13 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 				"2968 SLI_CONFIG ext-buffer wr all %d "
- 				"ebuffers received\n",
- 				phba->mbox_ext_buf_ctx.numBuf);
+ 	if (ctrl->ctrl.tagset) {
+@@ -2011,6 +2013,7 @@ nvme_fc_ctrl_free(struct kref *ref)
+ 	if (ctrl->ctrl.opts)
+ 		nvmf_free_options(ctrl->ctrl.opts);
+ 	kfree(ctrl);
++	module_put(lport->ops->module);
+ }
+ 
+ static void
+@@ -3040,10 +3043,15 @@ nvme_fc_init_ctrl(struct device *dev, struct nvmf_ctrl_options *opts,
+ 		goto out_fail;
+ 	}
+ 
++	if (!try_module_get(lport->ops->module)) {
++		ret = -EUNATCH;
++		goto out_free_ctrl;
++	}
 +
-+		dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
-+		if (!dd_data) {
-+			rc = -ENOMEM;
-+			goto job_error;
-+		}
+ 	idx = ida_simple_get(&nvme_fc_ctrl_cnt, 0, 0, GFP_KERNEL);
+ 	if (idx < 0) {
+ 		ret = -ENOSPC;
+-		goto out_free_ctrl;
++		goto out_mod_put;
+ 	}
+ 
+ 	ctrl->ctrl.opts = opts;
+@@ -3185,6 +3193,8 @@ nvme_fc_init_ctrl(struct device *dev, struct nvmf_ctrl_options *opts,
+ out_free_ida:
+ 	put_device(ctrl->dev);
+ 	ida_simple_remove(&nvme_fc_ctrl_cnt, ctrl->cnum);
++out_mod_put:
++	module_put(lport->ops->module);
+ out_free_ctrl:
+ 	kfree(ctrl);
+ out_fail:
+diff --git a/drivers/nvme/target/fcloop.c b/drivers/nvme/target/fcloop.c
+index 291f4121f516a..f0536d341f2f2 100644
+--- a/drivers/nvme/target/fcloop.c
++++ b/drivers/nvme/target/fcloop.c
+@@ -825,6 +825,7 @@ fcloop_targetport_delete(struct nvmet_fc_target_port *targetport)
+ #define FCLOOP_DMABOUND_4G		0xFFFFFFFF
+ 
+ static struct nvme_fc_port_template fctemplate = {
++	.module			= THIS_MODULE,
+ 	.localport_delete	= fcloop_localport_delete,
+ 	.remoteport_delete	= fcloop_remoteport_delete,
+ 	.create_queue		= fcloop_create_queue,
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index f73726e55e44d..6c355d87c709d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1903,6 +1903,8 @@ lpfc_nvme_fcp_abort(struct nvme_fc_local_port *pnvme_lport,
+ 
+ /* Declare and initialization an instance of the FC NVME template. */
+ static struct nvme_fc_port_template lpfc_nvme_template = {
++	.module	= THIS_MODULE,
 +
- 		/* mailbox command structure for base driver */
- 		pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 		if (!pmboxq) {
-@@ -4509,6 +4510,8 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba *phba, struct bsg_job *job,
- 	return SLI_CONFIG_HANDLED;
+ 	/* initiator-based functions */
+ 	.localport_delete  = lpfc_nvme_localport_delete,
+ 	.remoteport_delete = lpfc_nvme_remoteport_delete,
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 5590d6e8b5762..db367e428095d 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -560,6 +560,7 @@ static void qla_nvme_remoteport_delete(struct nvme_fc_remote_port *rport)
+ }
  
- job_error:
-+	if (pmboxq)
-+		mempool_free(pmboxq, phba->mbox_mem_pool);
- 	lpfc_bsg_dma_page_free(phba, dmabuf);
- 	kfree(dd_data);
- 
+ static struct nvme_fc_port_template qla_nvme_fc_transport = {
++	.module	= THIS_MODULE,
+ 	.localport_delete = qla_nvme_localport_delete,
+ 	.remoteport_delete = qla_nvme_remoteport_delete,
+ 	.create_queue   = qla_nvme_alloc_queue,
+diff --git a/include/linux/nvme-fc-driver.h b/include/linux/nvme-fc-driver.h
+index 496ff759f84c6..2f3ae41c212dc 100644
+--- a/include/linux/nvme-fc-driver.h
++++ b/include/linux/nvme-fc-driver.h
+@@ -282,6 +282,8 @@ struct nvme_fc_remote_port {
+  *
+  * Host/Initiator Transport Entrypoints/Parameters:
+  *
++ * @module:  The LLDD module using the interface
++ *
+  * @localport_delete:  The LLDD initiates deletion of a localport via
+  *       nvme_fc_deregister_localport(). However, the teardown is
+  *       asynchronous. This routine is called upon the completion of the
+@@ -395,6 +397,8 @@ struct nvme_fc_remote_port {
+  *       Value is Mandatory. Allowed to be zero.
+  */
+ struct nvme_fc_port_template {
++	struct module	*module;
++
+ 	/* initiator-based functions */
+ 	void	(*localport_delete)(struct nvme_fc_local_port *);
+ 	void	(*remoteport_delete)(struct nvme_fc_remote_port *);
 -- 
 2.20.1
 
