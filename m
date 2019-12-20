@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D274C43603
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C09C43603
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:34:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 641E121D7D
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:34:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 988C321D7D
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Dec 2019 14:34:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576852459;
-	bh=jLRbyEh3v+4dIORUjQ5y/dUimDiqgJ1vGemZ8HWNewg=;
+	s=default; t=1576852464;
+	bh=OZq9zwjALkysBXsGgnmhzbMZmWXvnDpsT/MSyMe/mn0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DJ/mljuyUdrrvg71F+lOI07i1Ryus4DiSq2NINw8aHsS4qF5WV/f1JnmFmkTEzGrx
-	 lJYB2KbvxcMAyGjwWoYSzd7Pc6c8opI7pNLluMFW12i9Dxpo6uV9F/PP6tPgLnh63q
-	 JknFNkWYODQdUyjzYX7SE1i3obasigMq+Z+YgVeY=
+	b=x7W0lX1GCacmqSrgVPGkshovsQvO3LJyb3A5wiZTXMNrVjS5ECv50RiH3vHEJLlJt
+	 MITwnVHMvWvXtBAdkGwWxPue0rx8TXArPI9DkuPl/Kd1LkBofDjtstiIRFDVNrBwHN
+	 CZuMk41LryhK8JzI8a6LSX9QYmfHbDl/LoihXdJA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727928AbfLTOeO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Dec 2019 09:34:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34204 "EHLO mail.kernel.org"
+        id S1727709AbfLTOaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Dec 2019 09:30:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727731AbfLTOac (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Dec 2019 09:30:32 -0500
+        id S1727700AbfLTOa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Dec 2019 09:30:29 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D10A42469A;
-        Fri, 20 Dec 2019 14:30:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B29E324698;
+        Fri, 20 Dec 2019 14:30:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576852232;
-        bh=jLRbyEh3v+4dIORUjQ5y/dUimDiqgJ1vGemZ8HWNewg=;
+        s=default; t=1576852228;
+        bh=OZq9zwjALkysBXsGgnmhzbMZmWXvnDpsT/MSyMe/mn0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZRx6It6s3WZkQZEhaBwUZkdonslYA/z/5WgiIi3arGlHTyWDl36wZwuEyNWcLl9OK
-         Q2YaTqHTP944KQFWN+gwP/bfLkk1bbRFvpuPc6XSYAjMjl73SvTyaKkEL6wyd4XUCf
-         M2VD27tdu0SJOnKBSW7trWbomg9I6+0wH3Zj1nWs=
+        b=f/IOrsbANQz6sKN/dxYtIbUnzeYAIowevoj3ruTDGkMO4SWrhkz0O4lChYP6MLPsL
+         6BQU7oZcghgDP8o1LURDYFTW85aWFNPber150B74zXhKUDz8P73N/d7UAJetoGUCsw
+         9uujukBErlnrnW8uU2UQ4VEorzGGE3AJIz1AE3aE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
         Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <hmadhani@marvell.com>,
         Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 27/52] scsi: qla2xxx: Fix PLOGI payload and ELS IOCB dump length
-Date:   Fri, 20 Dec 2019 09:29:29 -0500
-Message-Id: <20191220142954.9500-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 25/52] scsi: qla2xxx: Drop superfluous INIT_WORK of del_work
+Date:   Fri, 20 Dec 2019 09:29:27 -0500
+Message-Id: <20191220142954.9500-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191220142954.9500-1-sashal@kernel.org>
 References: <20191220142954.9500-1-sashal@kernel.org>
@@ -63,48 +64,38 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Roman Bolshakov <r.bolshakov@yadro.com>
 
-[ Upstream commit 0334cdea1fba36fad8bdf9516f267ce01de625f7 ]
+[ Upstream commit 600954e6f2df695434887dfc6a99a098859990cf ]
 
-The size of the buffer is hardcoded as 0x70 or 112 bytes, while the size of
-ELS IOCB is 0x40 and the size of PLOGI payload returned by Get Parameters
-command is 0x74.
+del_work is already initialized inside qla2x00_alloc_fcport, there's no
+need to overwrite it. Indeed, it might prevent complete traversal of
+workqueue list.
 
+Fixes: a01c77d2cbc45 ("scsi: qla2xxx: Move session delete to driver work queue")
 Cc: Quinn Tran <qutran@marvell.com>
-Link: https://lore.kernel.org/r/20191125165702.1013-9-r.bolshakov@yadro.com
+Link: https://lore.kernel.org/r/20191125165702.1013-5-r.bolshakov@yadro.com
 Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Tested-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 44dc97cebb06b..bdf1994251b9b 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2684,7 +2684,8 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 		ql_dbg(ql_dbg_io + ql_dbg_buffer, vha, 0x3073,
- 		    "PLOGI ELS IOCB:\n");
- 		ql_dump_buffer(ql_log_info, vha, 0x0109,
--		    (uint8_t *)els_iocb, 0x70);
-+		    (uint8_t *)els_iocb,
-+		    sizeof(*els_iocb));
- 	} else {
- 		els_iocb->control_flags = 1 << 13;
- 		els_iocb->tx_byte_count =
-@@ -2850,7 +2851,8 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 29729efac51f2..5bb5249bb822c 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1266,7 +1266,6 @@ void qlt_schedule_sess_for_deletion(struct fc_port *sess)
+ 	    "Scheduling sess %p for deletion %8phC\n",
+ 	    sess, sess->port_name);
  
- 	ql_dbg(ql_dbg_disc + ql_dbg_buffer, vha, 0x3073, "PLOGI buffer:\n");
- 	ql_dump_buffer(ql_dbg_disc + ql_dbg_buffer, vha, 0x0109,
--	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld, 0x70);
-+	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
-+	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
+-	INIT_WORK(&sess->del_work, qla24xx_delete_sess_fn);
+ 	WARN_ON(!queue_work(sess->vha->hw->wq, &sess->del_work));
+ }
  
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS) {
 -- 
 2.20.1
 
