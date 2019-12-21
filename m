@@ -2,41 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE067C19F28
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 16:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E63D1C19F28
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Aug 2022 16:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238249AbiHCQ3X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Aug 2022 12:29:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50540 "EHLO
+        id S238273AbiHCQ30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Aug 2022 12:29:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235210AbiHCQ3S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 12:29:18 -0400
+        with ESMTP id S236336AbiHCQ3T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2022 12:29:19 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0648167D4;
-        Wed,  3 Aug 2022 09:29:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B76FB7F1;
+        Wed,  3 Aug 2022 09:29:18 -0700 (PDT)
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 9DFC6412D1;
-        Wed,  3 Aug 2022 16:29:15 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 0D171412CC;
+        Wed,  3 Aug 2022 16:29:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received:received; s=
-        mta-01; t=1659544154; x=1661358555; bh=BKueMVILuHGTa7Cku0CCwxAzc
-        UvksIUmExMUkgy0exQ=; b=St6b8nTek8BsBYwqKBwq7l9dd0DfmB71YahYeR1uj
-        1zswPr6dYqKwJMiK7+Jju/HAFzruiqh1n4xjpoTt8CNFnUZJNpoqq/IY1nz8MI8E
-        f3LeUcqhwB7wJKc23pPD865L+t5/1PvNeF8ZL/LxbL01sow7q6YRbMGtU33mvEA3
-        Ys=
+        mta-01; t=1659544154; x=1661358555; bh=bTn0+8wdAkk+C7HrrnZK+MAoT
+        gpu4GHz8yPpg+OGVZ8=; b=Rkei+HlEHT4cH4zJ3aSoEPmxZO6DX3mElG2ZNTHDu
+        soC/Is42wMve+qXKlUFs45rNcCiVN0Xn/qZZjNKNM9lM9TK+rifvQcLZ9rT1j5N8
+        OYU04NqVAkD6ZA02Xpjp3Yoxm6EtLWqYs/8BpgdfRCa8478oelPHZdFq0D49HXs6
+        Nw=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ODHGVaPRVC8s; Wed,  3 Aug 2022 19:29:14 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        with ESMTP id 6a6ew5FqCpt7; Wed,  3 Aug 2022 19:29:14 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 1799541287;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 5A6F041291;
         Wed,  3 Aug 2022 19:29:12 +0300 (MSK)
 Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
- T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ T-EXCH-01.corp.yadro.com (172.17.10.101) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
  15.1.669.32; Wed, 3 Aug 2022 19:29:12 +0300
 Received: from NB-591.corp.yadro.com (10.199.18.20) by
@@ -49,9 +49,9 @@ To:     Martin Petersen <martin.petersen@oracle.com>,
 CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>,
         Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [RFC PATCH 04/48] scsi: target/core: Add RTPI field to target port
-Date:   Mon, 20 Apr 2020 20:57:55 +0300
-Message-ID: <20220803162857.27770-5-d.bogdanov@yadro.com>
+Subject: [RFC PATCH 05/48] scsi: target/core: Use RTPI from target port
+Date:   Sun, 22 Dec 2019 02:45:33 +0300
+Message-ID: <20220803162857.27770-6-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220803162857.27770-1-d.bogdanov@yadro.com>
 References: <20220803162857.27770-1-d.bogdanov@yadro.com>
@@ -67,174 +67,139 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Roman Bolshakov <r.bolshakov@yadro.com>
 
-SAM-5 4.6.5.2 (Relative Port Identifier attribute) defines the attribute
-as unique across SCSI target ports.
-
-The change introduces RTPI attribute to se_portal group. The value is
-auto-incremented and unique across all SCSI target ports. It also limits
-number of SCSI target ports to 65535.
+Replace all references to RTPI from LUN field to se_portal_group field.
+It introduces consitent reporting of RTPI for all LUNs and all target
+ports.
 
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/target_core_tpg.c  | 78 +++++++++++++++++++++++++++++--
- include/target/target_core_base.h |  4 ++
- 2 files changed, 77 insertions(+), 5 deletions(-)
+ drivers/target/target_core_alua.c   | 4 ++--
+ drivers/target/target_core_device.c | 2 +-
+ drivers/target/target_core_pr.c     | 8 ++++----
+ drivers/target/target_core_spc.c    | 2 +-
+ drivers/target/target_core_stat.c   | 6 +++---
+ 5 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index f0d38d77edcc..1b7ab98bbd04 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -31,6 +31,10 @@
- #include "target_core_ua.h"
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 9d1a8238a4c6..774750715ba8 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -224,7 +224,7 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 			/*
+ 			 * Set RELATIVE TARGET PORT IDENTIFIER
+ 			 */
+-			put_unaligned_be16(lun->lun_rtpi, &buf[off]);
++			put_unaligned_be16(lun->lun_tpg->tpg_rtpi, &buf[off]);
+ 			off += 2;
+ 			rd_len += 4;
+ 		}
+@@ -404,7 +404,7 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ 			spin_lock(&dev->se_port_lock);
+ 			list_for_each_entry(lun, &dev->dev_sep_list,
+ 							lun_dev_link) {
+-				if (lun->lun_rtpi != rtpi)
++				if (lun->lun_tpg->tpg_rtpi != rtpi)
+ 					continue;
  
- extern struct se_device *g_lun0_dev;
-+static u16 g_tpg_count;
-+static u16 g_tpg_rtpi_counter = 1;
-+static LIST_HEAD(g_tpg_list);
-+static DEFINE_SPINLOCK(g_tpg_lock);
+ 				// XXX: racy unlock
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 086ac9c9343c..bbef6b869ee9 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -223,7 +223,7 @@ struct se_dev_entry *core_get_se_deve_from_rtpi(
+ 				tpg->se_tpg_tfo->fabric_name);
+ 			continue;
+ 		}
+-		if (lun->lun_rtpi != rtpi)
++		if (lun->lun_tpg->tpg_rtpi != rtpi)
+ 			continue;
  
- /*	__core_tpg_get_initiator_node_acl():
-  *
-@@ -439,6 +443,57 @@ static void core_tpg_lun_ref_release(struct percpu_ref *ref)
- 	complete(&lun->lun_shutdown_comp);
- }
- 
-+static int core_tpg_register_rtpi(struct se_portal_group *se_tpg)
-+{
-+	struct se_portal_group *tpg;
-+
-+	/*
-+	 * Allocate the next RELATIVE TARGET PORT IDENTIFIER.
-+	 * Here is the table from SPC-4 4.3.4:
-+	 *
-+	 *    Table 34 -- Relative target port identifier values
-+	 *
-+	 * Value		Description
-+	 * 0h			Reserved
-+	 * 1h			Relative port 1, historically known as port A
-+	 * 2h			Relative port 2, historically known as port B
-+	 * 3h to FFFFh		Relative port 3 through 65 535
-+	 */
-+	spin_lock(&g_tpg_lock);
-+
-+	if (g_tpg_count == 0xffff) {
-+		spin_unlock(&g_tpg_lock);
-+		pr_warn("Reached g_tpg_count == 0xffff\n");
-+		return -ENOSPC;
-+	}
-+again:
-+	se_tpg->tpg_rtpi = g_tpg_rtpi_counter++;
-+	if (!se_tpg->tpg_rtpi)
-+		goto again;
-+
-+	list_for_each_entry(tpg, &g_tpg_list, tpg_list) {
-+		/*
-+		 * Make sure RELATIVE TARGET PORT IDENTIFIER is unique
-+		 * for 16-bit wrap..
-+		 */
-+		if (se_tpg->tpg_rtpi == tpg->tpg_rtpi)
-+			goto again;
-+	}
-+	list_add(&se_tpg->tpg_list, &g_tpg_list);
-+	g_tpg_count++;
-+	spin_unlock(&g_tpg_lock);
-+
-+	return 0;
-+}
-+
-+static void core_tpg_deregister_rtpi(struct se_portal_group *se_tpg)
-+{
-+	spin_lock(&g_tpg_lock);
-+	list_del(&se_tpg->tpg_list);
-+	g_tpg_count--;
-+	spin_unlock(&g_tpg_lock);
-+}
-+
- /* Does not change se_wwn->priv. */
- int core_tpg_register(
- 	struct se_wwn *se_wwn,
-@@ -471,6 +526,7 @@ int core_tpg_register(
- 	se_tpg->proto_id = proto_id;
- 	se_tpg->se_tpg_wwn = se_wwn;
- 	atomic_set(&se_tpg->tpg_pr_ref_count, 0);
-+	INIT_LIST_HEAD(&se_tpg->tpg_list);
- 	INIT_LIST_HEAD(&se_tpg->acl_node_list);
- 	INIT_LIST_HEAD(&se_tpg->tpg_sess_list);
- 	spin_lock_init(&se_tpg->session_lock);
-@@ -478,9 +534,15 @@ int core_tpg_register(
- 	mutex_init(&se_tpg->acl_node_mutex);
- 
- 	if (se_tpg->proto_id >= 0) {
-+		ret = core_tpg_register_rtpi(se_tpg);
-+		if (ret < 0)
-+			return ret;
-+
- 		se_tpg->tpg_virt_lun0 = core_tpg_alloc_lun(se_tpg, 0);
--		if (IS_ERR(se_tpg->tpg_virt_lun0))
--			return PTR_ERR(se_tpg->tpg_virt_lun0);
-+		if (IS_ERR(se_tpg->tpg_virt_lun0)) {
-+			ret = PTR_ERR(se_tpg->tpg_virt_lun0);
-+			goto out_deregister_rtpi;
-+		}
- 
- 		ret = core_tpg_add_lun(se_tpg, se_tpg->tpg_virt_lun0,
- 				true, g_lun0_dev);
-@@ -488,16 +550,20 @@ int core_tpg_register(
- 			goto out_free_lun0;
+ 		kref_get(&deve->pr_kref);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 3829b61b56c1..668670b1414a 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -663,7 +663,7 @@ static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
  	}
+ 	pr_reg->pr_res_mapped_lun = mapped_lun;
+ 	pr_reg->pr_aptpl_target_lun = lun->unpacked_lun;
+-	pr_reg->tg_pt_sep_rtpi = lun->lun_rtpi;
++	pr_reg->tg_pt_sep_rtpi = lun->lun_tpg->tpg_rtpi;
+ 	pr_reg->pr_res_key = sa_res_key;
+ 	pr_reg->pr_reg_all_tg_pt = all_tg_pt;
+ 	pr_reg->pr_reg_aptpl = aptpl;
+@@ -969,7 +969,7 @@ static int __core_scsi3_check_aptpl_registration(
+ 			rcu_read_unlock();
  
--	pr_debug("TARGET_CORE[%s]: Allocated portal_group for endpoint: %s, "
--		 "Proto: %d, Portal Tag: %u\n", se_tpg->se_tpg_tfo->fabric_name,
-+	pr_debug("TARGET_CORE[%s]: Allocated portal_group for endpoint: %s, Proto: %d, Portal Tag: %u, RTPI: %#2x\n",
-+		se_tpg->se_tpg_tfo->fabric_name,
- 		se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg) ?
- 		se_tpg->se_tpg_tfo->tpg_get_wwn(se_tpg) : NULL,
--		se_tpg->proto_id, se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg));
-+		se_tpg->proto_id,
-+		se_tpg->se_tpg_tfo->tpg_get_tag(se_tpg),
-+		se_tpg->tpg_rtpi);
+ 			pr_reg->pr_reg_nacl = nacl;
+-			pr_reg->tg_pt_sep_rtpi = lun->lun_rtpi;
++			pr_reg->tg_pt_sep_rtpi = lun->lun_tpg->tpg_rtpi;
+ 			list_del(&pr_reg->pr_reg_aptpl_list);
+ 			spin_unlock(&pr_tmpl->aptpl_reg_lock);
+ 			/*
+@@ -1577,7 +1577,7 @@ core_scsi3_decode_spec_i_port(
+ 			 */
+ 			if (tmp_tpg->proto_id != proto_ident)
+ 				continue;
+-			dest_rtpi = tmp_lun->lun_rtpi;
++			dest_rtpi = tmp_lun->lun_tpg->tpg_rtpi;
  
- 	return 0;
+ 			iport_ptr = NULL;
+ 			i_str = target_parse_pr_out_transport_id(tmp_tpg,
+@@ -3221,7 +3221,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
  
- out_free_lun0:
- 	kfree(se_tpg->tpg_virt_lun0);
-+out_deregister_rtpi:
-+	core_tpg_deregister_rtpi(se_tpg);
+ 	spin_lock(&dev->se_port_lock);
+ 	list_for_each_entry(tmp_lun, &dev->dev_sep_list, lun_dev_link) {
+-		if (tmp_lun->lun_rtpi != rtpi)
++		if (tmp_lun->lun_tpg->tpg_rtpi != rtpi)
+ 			continue;
+ 		dest_se_tpg = tmp_lun->lun_tpg;
+ 		dest_tf_ops = dest_se_tpg->se_tpg_tfo;
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 252d704264ed..be18a72d9f8a 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -332,7 +332,7 @@ spc_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 		/* Skip over Obsolete field in RTPI payload
+ 		 * in Table 472 */
+ 		off += 2;
+-		put_unaligned_be16(lun->lun_rtpi, &buf[off]);
++		put_unaligned_be16(lun->lun_tpg->tpg_rtpi, &buf[off]);
+ 		off += 2;
+ 		len += 8; /* Header size + Designation descriptor */
+ 		/*
+diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+index 62d15bcc3d93..8fd6efa2b978 100644
+--- a/drivers/target/target_core_stat.c
++++ b/drivers/target/target_core_stat.c
+@@ -455,7 +455,7 @@ static ssize_t target_stat_port_indx_show(struct config_item *item, char *page)
+ 	rcu_read_lock();
+ 	dev = rcu_dereference(lun->lun_se_dev);
+ 	if (dev)
+-		ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_rtpi);
++		ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_tpg->tpg_rtpi);
+ 	rcu_read_unlock();
  	return ret;
  }
- EXPORT_SYMBOL(core_tpg_register);
-@@ -537,6 +603,8 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
- 		kfree_rcu(se_tpg->tpg_virt_lun0, rcu_head);
- 	}
- 
-+	core_tpg_deregister_rtpi(se_tpg);
-+
- 	return 0;
+@@ -561,7 +561,7 @@ static ssize_t target_stat_tgt_port_indx_show(struct config_item *item,
+ 	rcu_read_lock();
+ 	dev = rcu_dereference(lun->lun_se_dev);
+ 	if (dev)
+-		ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_rtpi);
++		ret = snprintf(page, PAGE_SIZE, "%u\n", lun->lun_tpg->tpg_rtpi);
+ 	rcu_read_unlock();
+ 	return ret;
  }
- EXPORT_SYMBOL(core_tpg_deregister);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index f607ff74c368..72fe94afc7a5 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -904,6 +904,8 @@ struct se_portal_group {
- 	 */
- 	int			proto_id;
- 	bool			enabled;
-+	/* RELATIVE TARGET PORT IDENTIFIER */
-+	u16			tpg_rtpi;
- 	/* Used for PR SPEC_I_PT=1 and REGISTER_AND_MOVE */
- 	atomic_t		tpg_pr_ref_count;
- 	/* Spinlock for adding/removing ACLed Nodes */
-@@ -911,6 +913,8 @@ struct se_portal_group {
- 	/* Spinlock for adding/removing sessions */
- 	spinlock_t		session_lock;
- 	struct mutex		tpg_lun_mutex;
-+	/* List of all SCSI target ports */
-+	struct list_head	tpg_list;
- 	/* linked list for initiator ACL list */
- 	struct list_head	acl_node_list;
- 	struct hlist_head	tpg_lun_hlist;
+@@ -579,7 +579,7 @@ static ssize_t target_stat_tgt_port_name_show(struct config_item *item,
+ 	if (dev)
+ 		ret = snprintf(page, PAGE_SIZE, "%sPort#%u\n",
+ 			tpg->se_tpg_tfo->fabric_name,
+-			lun->lun_rtpi);
++			lun->lun_tpg->tpg_rtpi);
+ 	rcu_read_unlock();
+ 	return ret;
+ }
 -- 
 2.25.1
 
