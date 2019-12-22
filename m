@@ -1,86 +1,96 @@
-Return-Path: <SRS0=9hKQ=2L=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=BSUp=2M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0974DC2D0D2
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Dec 2019 11:54:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57846C2D0D3
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Dec 2019 00:16:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE4892070C
-	for <linux-scsi@archiver.kernel.org>; Sat, 21 Dec 2019 11:54:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E84A20725
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Dec 2019 00:16:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576973773;
+	bh=zi2nezPZMF4U5iDzHEZMniOW0jiKQ3XbzvQhTGVXih0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=uu/BWNClX7ybkRm14yG/94DGWKq1smDRkzDAMdsTDm3VaP6parviepGay/86rFmH1
+	 3KPuBCSS61eKXgGz0vUlGGafwiF2MNxOQv9lsx4XMON21ReQUlQcmG6ov/XUCJJmKC
+	 7etzTL+eymZMEFrbtopGix+YcYGC3E48XmORIC+Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726593AbfLULyW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 21 Dec 2019 06:54:22 -0500
-Received: from mx2.suse.de ([195.135.220.15]:33248 "EHLO mx2.suse.de"
+        id S1726139AbfLVAQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 21 Dec 2019 19:16:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726291AbfLULyW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 21 Dec 2019 06:54:22 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D3DCEAAC3;
-        Sat, 21 Dec 2019 11:54:20 +0000 (UTC)
-Date:   Sat, 21 Dec 2019 12:54:19 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] scsi: blacklist: add VMware ESXi cdrom - broken tray
- emulation
-Message-ID: <20191221115419.GN4113@kitsune.suse.cz>
-References: <20191217180840.9414-1-msuchanek@suse.de>
- <yq1bls6h9ir.fsf@oracle.com>
- <20191219143422.GJ4113@kitsune.suse.cz>
- <yq1pngjc2pr.fsf@oracle.com>
+        id S1726024AbfLVAQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 21 Dec 2019 19:16:12 -0500
+Received: from zzz.localdomain (h75-100-12-111.burkwi.broadband.dynamic.tds.net [75.100.12.111])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B0C0A206B7;
+        Sun, 22 Dec 2019 00:16:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576973771;
+        bh=zi2nezPZMF4U5iDzHEZMniOW0jiKQ3XbzvQhTGVXih0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PmEfdcFEm4iZEYixgfnC/uRgDEvX64zJcJZxYGNrmnC0RXjmgUCwRq2bvJHzcfEd7
+         cD8IWH5mszK2iHiQeuHCMd4zK8J0IDMhr8Utv4MZmvn41dMIQwyBIhGe4pZDLiqNMR
+         HajyfoOLGjhfi6UBWGo831W+/NFlYI1SyH8S+KUA=
+Date:   Sat, 21 Dec 2019 18:16:08 -0600
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 9/9] ext4: add inline encryption support
+Message-ID: <20191222001608.GB551@zzz.localdomain>
+References: <20191218145136.172774-1-satyat@google.com>
+ <20191218145136.172774-10-satyat@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <yq1pngjc2pr.fsf@oracle.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191218145136.172774-10-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 19, 2019 at 06:31:12PM -0500, Martin K. Petersen wrote:
-> 
-> Michal,
-> 
-> >> Please don't introduce a blist flag to work around deficiencies in the
-> >> matching interface. I suggest you tweak the matching functions so they
-> >> handle a NULL vendor string correctly.
-> >
-> > I don't think that will work with the interface for dynamically adding
-> > entries through sysfs.
-> 
-> Please make it work :)
-> 
-> There's nothing conceptually wrong with being able to do:
-> 
->         echo ":Model:Flags" > /proc/scsi/device_info
-> 
-> We keep running into issues where the same device needs to be listed
-> many times because it gets branded by different vendors.
+On Wed, Dec 18, 2019 at 06:51:36AM -0800, Satya Tangirala wrote:
+> @@ -1460,6 +1466,7 @@ enum {
+>  	Opt_journal_path, Opt_journal_checksum, Opt_journal_async_commit,
+>  	Opt_abort, Opt_data_journal, Opt_data_ordered, Opt_data_writeback,
+>  	Opt_data_err_abort, Opt_data_err_ignore, Opt_test_dummy_encryption,
+> +	Opt_inlinecrypt,
+>  	Opt_usrjquota, Opt_grpjquota, Opt_offusrjquota, Opt_offgrpjquota,
+>  	Opt_jqfmt_vfsold, Opt_jqfmt_vfsv0, Opt_jqfmt_vfsv1, Opt_quota,
+>  	Opt_noquota, Opt_barrier, Opt_nobarrier, Opt_err,
+> @@ -1556,6 +1563,7 @@ static const match_table_t tokens = {
+>  	{Opt_noinit_itable, "noinit_itable"},
+>  	{Opt_max_dir_size_kb, "max_dir_size_kb=%u"},
+>  	{Opt_test_dummy_encryption, "test_dummy_encryption"},
+> +	{Opt_inlinecrypt, "inlinecrypt"},
+>  	{Opt_nombcache, "nombcache"},
+>  	{Opt_nombcache, "no_mbcache"},	/* for backward compatibility */
+>  	{Opt_removed, "check=none"},	/* mount option from ext2/3 */
+> @@ -1767,6 +1775,11 @@ static const struct mount_opts {
+>  	{Opt_jqfmt_vfsv1, QFMT_VFS_V1, MOPT_QFMT},
+>  	{Opt_max_dir_size_kb, 0, MOPT_GTE0},
+>  	{Opt_test_dummy_encryption, 0, MOPT_GTE0},
+> +#ifdef CONFIG_FS_ENCRYPTION_INLINE_CRYPT
+> +	{Opt_inlinecrypt, EXT4_MOUNT_INLINECRYPT, MOPT_SET},
+> +#else
+> +	{Opt_inlinecrypt, EXT4_MOUNT_INLINECRYPT, MOPT_NOSUPPORT},
+> +#endif
+>  	{Opt_nombcache, EXT4_MOUNT_NO_MBCACHE, MOPT_SET},
+>  	{Opt_err, 0, 0}
+>  };
 
-Actually the flag is really needed. The vendor string is a field of
-specific length, not a pointer. This makes sense because the vendor
-string is fixed length. The code adding the blacklist entries  cannot
-handle NULL, and the matching code works with char array already.
+This mount option will need to be documented in
+Documentation/admin-guide/ext4.rst for ext4 and
+Documentation/filesystems/f2fs.txt for f2fs.
 
-What can be done differently is stop space-padding the values and
-instead match the length of the string as provided. This will however
-cause API break. Currently short entries are space-padded to match
-exactly the provided vendor string. If we change the match to only the
-provided string length it will potentially match and blacklist
-additional devices.
-
-If a flag is required to trigger the prefix matching it can be used
-instead of the flag that disables vendor matching with empty vendor
-string.
-
-Thanks
-
-Michal
+- Eric
