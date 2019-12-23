@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A32C2D0D5
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49B4C2D0D5
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C51B20715
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88E182053B
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TKfhoDpt"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AxipSpEW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbfLWW4Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Dec 2019 17:56:16 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:60792 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727012AbfLWW4I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 17:56:08 -0500
+        id S1727121AbfLWW4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Dec 2019 17:56:19 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39660 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727083AbfLWW4M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Dec 2019 17:56:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577141768;
+        s=mimecast20190719; t=1577141771;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=0qGtQMo2+Ggjf6Vv8mYhur7z1U69z+rZqXUk93Xvkto=;
-        b=TKfhoDptR0vMJIyDPJLlVpxCddeTmR8dS4hOBQgX2MpczfrmM9x7OTu1aXZOukoLzODmoK
-        rVLc+Waj5Gn6jd070F2WVYpR2NoKIRWn1UQs5r1i0mfAH9tKEg3uo1x65fUPIvquine8mj
-        nxYNIUMCtfQbTjDMSaC621zanCyqXwI=
+        bh=UXBplLcKGcpkDyS8yQgGXGNohbofkhElCmjtU2legM0=;
+        b=AxipSpEWjGsg4Co0daYo62g8wTNVUa1+BrZB11S4KpD2MtpGbEOSvSbIbxcqIqBzfOXpyO
+        LWVFNkCKyDoX97Oqggs9XTt6gV84jWIWCsjtq6fScLFqXqH1qRDyLeNcmDfjFLs1IWqdEp
+        +jY40lRd5uJuYkPTmtAJHkqo7VHPMv0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-174-pffGjjZTM4-uEkKFB64OVQ-1; Mon, 23 Dec 2019 17:56:06 -0500
-X-MC-Unique: pffGjjZTM4-uEkKFB64OVQ-1
+ us-mta-101-cH2QAAxSOymhWEqg6-2E2A-1; Mon, 23 Dec 2019 17:56:10 -0500
+X-MC-Unique: cH2QAAxSOymhWEqg6-2E2A-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DAF5D184B44F;
-        Mon, 23 Dec 2019 22:56:05 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8678E10054E3;
+        Mon, 23 Dec 2019 22:56:09 +0000 (UTC)
 Received: from sulaco.redhat.com (ovpn-112-13.rdu2.redhat.com [10.10.112.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F2FDB60BE2;
-        Mon, 23 Dec 2019 22:56:04 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A373960BE2;
+        Mon, 23 Dec 2019 22:56:08 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC 4/9] struct device_type: Add function callback durable_name
-Date:   Mon, 23 Dec 2019 16:55:53 -0600
-Message-Id: <20191223225558.19242-5-tasleson@redhat.com>
+Subject: [RFC 7/9] print_req_error: Add persistent durable name
+Date:   Mon, 23 Dec 2019 16:55:56 -0600
+Message-Id: <20191223225558.19242-8-tasleson@redhat.com>
 In-Reply-To: <20191223225558.19242-1-tasleson@redhat.com>
 References: <20191223225558.19242-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -59,28 +60,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Function callback to be used in logging functions to write a persistent
-durable name to the supplied character buffer.  This will be used to add
-structured key-value data to log messages.
+Add persistent durable name to errors that occur in block mid layer.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- include/linux/device.h | 2 ++
- 1 file changed, 2 insertions(+)
+ block/blk-core.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 297239a08bb7..dd4ac8db5f57 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -799,6 +799,8 @@ struct device_type {
- 	void (*release)(struct device *dev);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index d5e668ec751b..a0171a7c6535 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -211,11 +211,20 @@ static void print_req_error(struct request *req, bl=
+k_status_t status,
+ 		const char *caller)
+ {
+ 	int idx =3D (__force int)status;
++	char dict[128];
++	int dict_len =3D 0;
 =20
- 	const struct dev_pm_ops *pm;
+ 	if (WARN_ON_ONCE(idx >=3D ARRAY_SIZE(blk_errors)))
+ 		return;
+=20
+-	printk_ratelimited(KERN_ERR
++	if (req->rq_disk) {
++		dict_len =3D dev_durable_name(
++				disk_to_dev(req->rq_disk)->parent,
++				dict,
++				sizeof(dict));
++	}
 +
-+	int (*durable_name)(const struct device *dev, char *buff, size_t len);
- };
-=20
- /* interface for exporting device attributes */
++	printk_emit_ratelimited(0, LOGLEVEL_ERR, dict, dict_len,
+ 		"%s: %s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
+ 		"phys_seg %u prio class %u\n",
+ 		caller, blk_errors[idx].name,
 --=20
 2.21.0
 
