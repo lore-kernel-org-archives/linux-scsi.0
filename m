@@ -2,120 +2,131 @@ Return-Path: <SRS0=rNN+=2N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF883C2D0D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 19:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A3C4C3F68F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E738206B7
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 19:53:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F0EF20828
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W55TwLRV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbfLWTx2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Dec 2019 14:53:28 -0500
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:59299 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726766AbfLWTx2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 14:53:28 -0500
-Received: from callcc.thunk.org (guestnat-104-133-0-111.corp.google.com [104.133.0.111] (may be forged))
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id xBNJr19e001916
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 23 Dec 2019 14:53:02 -0500
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id 1C82A420822; Mon, 23 Dec 2019 14:53:01 -0500 (EST)
-Date:   Mon, 23 Dec 2019 14:53:01 -0500
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Andrea Vai <andrea.vai@unipv.it>
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: AW: Slow I/O on USB media after commit
- f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
-Message-ID: <20191223195301.GC3282@mit.edu>
-References: <20191211160745.GA129186@mit.edu>
- <20191211213316.GA14983@ming.t460p>
- <f38db337cf26390f7c7488a0bc2076633737775b.camel@unipv.it>
- <20191218094830.GB30602@ming.t460p>
- <b1b6a0e9d690ecd9432025acd2db4ac09f834040.camel@unipv.it>
- <20191223130828.GA25948@ming.t460p>
- <20191223162619.GA3282@mit.edu>
- <4c85fd3f2ec58694cc1ff7ab5c88d6e11ab6efec.camel@unipv.it>
- <20191223172257.GB3282@mit.edu>
- <bb5d395fe47f033be0b8ed96cbebf8867d2416c4.camel@unipv.it>
+        id S1727031AbfLWW4G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Dec 2019 17:56:06 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:32254 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726885AbfLWW4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 17:56:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1577141764;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ti74zgLwc9xdwukIMd+N9Ca9W+CO/0vNVJxfQlPd5OY=;
+        b=W55TwLRVxXdSlIuqNsjAL4iDpU1YYUXLLAJtb2gWMsA5lOMrFSDuechr0dIzYWrZ8DMrBo
+        bzVt2fYtrndu8286F11XzHaR+YcbJ0r/1qyKrb+pEQpINZLDKaCRl4k0PvwNFPBbaoRDWf
+        xP4Xbdmh48x43VIpyQLJ/IycrwnansY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-116--SyhMrKbN4Kn6hs4rcI6dA-1; Mon, 23 Dec 2019 17:56:03 -0500
+X-MC-Unique: -SyhMrKbN4Kn6hs4rcI6dA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2BBF510054E3;
+        Mon, 23 Dec 2019 22:56:02 +0000 (UTC)
+Received: from sulaco.redhat.com (ovpn-112-13.rdu2.redhat.com [10.10.112.13])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3E50160BE2;
+        Mon, 23 Dec 2019 22:56:01 +0000 (UTC)
+From:   Tony Asleson <tasleson@redhat.com>
+To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [RFC 1/9] lib/string: Add function to trim duplicate WS
+Date:   Mon, 23 Dec 2019 16:55:50 -0600
+Message-Id: <20191223225558.19242-2-tasleson@redhat.com>
+In-Reply-To: <20191223225558.19242-1-tasleson@redhat.com>
+References: <20191223225558.19242-1-tasleson@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bb5d395fe47f033be0b8ed96cbebf8867d2416c4.camel@unipv.it>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Dec 23, 2019 at 07:45:57PM +0100, Andrea Vai wrote:
-> basically, it's:
-> 
->   mount UUID=$uuid /mnt/pendrive
->   SECONDS=0
->   cp $testfile /mnt/pendrive
->   umount /mnt/pendrive
->   tempo=$SECONDS
-> 
-> and it copies one file only. Anyway, you can find the whole script
-> attached.
+Adds function strim_dupe which trims leading & trailing whitespace and
+duplicate adjacent.  Initial use case is to shorten T10 storage IDs.
 
-OK, so whether we are doing the writeback at the end of cp, or when
-you do the umount, it's probably not going to make any difference.  We
-can get rid of the stack trace in question by changing the script to
-be basically:
+Signed-off-by: Tony Asleson <tasleson@redhat.com>
+---
+ include/linux/string.h |  2 ++
+ lib/string.c           | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
-mount UUID=$uuid /mnt/pendrive
-SECONDS=0
-rm -f /mnt/pendrive/$testfile
-cp $testfile /mnt/pendrive
-umount /mnt/pendrive
-tempo=$SECONDS
+diff --git a/include/linux/string.h b/include/linux/string.h
+index b6ccdc2c7f02..bcca6bfab6ab 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -72,6 +72,8 @@ extern char * __must_check skip_spaces(const char *);
+=20
+ extern char *strim(char *);
+=20
++extern size_t strim_dupe(char *s);
++
+ static inline __must_check char *strstrip(char *str)
+ {
+ 	return strim(str);
+diff --git a/lib/string.c b/lib/string.c
+index 08ec58cc673b..1186cce1f66b 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -515,6 +515,41 @@ char *strim(char *s)
+ }
+ EXPORT_SYMBOL(strim);
+=20
++/**
++ * Removes leading and trailing whitespace and removes duplicate
++ * adjacent whitespace in a string, modifies string in place.
++ * @s The %NUL-terminated string to have spaces removed
++ * Returns the new length
++ */
++size_t strim_dupe(char *s)
++{
++	size_t ret =3D 0;
++	char *w =3D s;
++	char *p;
++
++	/*
++	 * This will remove all leading and duplicate adjacent, but leave
++	 * 1 space at the end if one or more are present.
++	 */
++	for (p =3D s; *p !=3D '\0'; ++p) {
++		if (!isspace(*p) || (p !=3D s && !isspace(*(p - 1)))) {
++			*w =3D *p;
++			++w;
++			ret +=3D 1;
++		}
++	}
++
++	*w =3D '\0';
++
++	/* Take off the last character if it's a space too */
++	if (ret && isspace(*(w - 1))) {
++		ret--;
++		*(w - 1) =3D '\0';
++	}
++	return ret;
++}
++EXPORT_SYMBOL(strim_dupe);
++
+ #ifndef __HAVE_ARCH_STRLEN
+ /**
+  * strlen - Find the length of a string
+--=20
+2.21.0
 
-I predict if you do that, you'll see that all of the time is spent in
-the umount, when we are trying to write back the file.
-
-I really don't think then this is a file system problem at all.  It's
-just that USB I/O is slow, for whatever reason.  We'll see a stack
-trace in the writeback code waiting for the I/O to be completed, but
-that doesn't mean that the root cause is in the writeback code or in
-the file system which is triggering the writeback.
-
-I suspect the next step is use a blktrace, to see what kind of I/O is
-being sent to the USB drive, and how long it takes for the I/O to
-complete.  You might also try to capture the output of "iostat -x 1"
-while the script is running, and see what the difference might be
-between a kernel version that has the problem and one that doesn't,
-and see if that gives us a clue.
-
-> > And then send me
-> btw, please tell me if "me" means only you or I cc: all the
-> recipients, as usual
-
-Well, I don't think we know what the root cause is.  Ming is focusing
-on that stack trace, but I think it's a red herring.....  And if it's
-not a file system problem, then other people will be best suited to
-debug the issue.
-
-   	      	     	   	      	    - Ted
