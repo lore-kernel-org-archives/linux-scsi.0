@@ -2,116 +2,114 @@ Return-Path: <SRS0=rNN+=2N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0954DC2D0D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5567CC3F68F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 23:28:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C87EB2053B
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C92720828
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 23:28:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jPiGQ5oJ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SwxABb2s"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727034AbfLWW4W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Dec 2019 17:56:22 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29074 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727031AbfLWW4S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 17:56:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577141777;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=s2/47G9XeaWMpZM1zDOYKyC4Wpdu3yTfLbrqo+TK1DM=;
-        b=jPiGQ5oJSREDmvWHYdKSIY//btorumGEhSfY2clFEdRNTC2NH7RYHc0h/mLR/O/etVzPrc
-        eiHf7/SDoSz4J0eLe+yiTBSDjPq/QuyE/8HhoWy/cxSh0/3PnXAoIK9auIQV70HOJfotjC
-        SsAG82XFP9tYmwVTDsUuX0IvJf94gxE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-332-pFJS9mGJPZ-zNFs_M12gbA-1; Mon, 23 Dec 2019 17:56:11 -0500
-X-MC-Unique: pFJS9mGJPZ-zNFs_M12gbA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CAE26184B456;
-        Mon, 23 Dec 2019 22:56:10 +0000 (UTC)
-Received: from sulaco.redhat.com (ovpn-112-13.rdu2.redhat.com [10.10.112.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DEC8560BE2;
-        Mon, 23 Dec 2019 22:56:09 +0000 (UTC)
-From:   Tony Asleson <tasleson@redhat.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        id S1726946AbfLWX20 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Dec 2019 18:28:26 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:43910 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726512AbfLWX20 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 18:28:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=7mb7xON26qhtQf0NX74LRhG+XskmkDIeOVwCuzcqTuU=; b=SwxABb2svDsI5O720oYxWMvkK
+        Jv6NVmb5v9pHuwkquwbxRgz17ov3pqNofkr6IO12fnnAgwG1KpuRdcebUZuA1BhCkylulrOSOBBWj
+        q6C+Qx0DooZnBpkR4skSwGQN0qxNlNEL+erqFJ4tQrtkJqmduvrbMdgZLrYC7OlvT5LBnn6Bt6yah
+        VwlwAa/roitIuHhRdwunmqf0EUchCmqt9bOPy2u3ea7xLKHO38Lt8QLOJhEj0/PaC/KSx/GH5nPJ9
+        C3NirCLS/+B1UY6cAJzPSAEeBCnWL3mmi53Ipc773U4RggQuX53Bn9x/w1AwFlcxN6togTqSqK+4J
+        7LX6dwZlg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1ijX7g-0007yc-Vu; Mon, 23 Dec 2019 23:28:24 +0000
+Date:   Mon, 23 Dec 2019 15:28:24 -0800
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC 8/9] ata_dev_printk: Add durable name to output
-Date:   Mon, 23 Dec 2019 16:55:57 -0600
-Message-Id: <20191223225558.19242-9-tasleson@redhat.com>
-In-Reply-To: <20191223225558.19242-1-tasleson@redhat.com>
+Subject: Re: [RFC 1/9] lib/string: Add function to trim duplicate WS
+Message-ID: <20191223232824.GB31820@bombadil.infradead.org>
 References: <20191223225558.19242-1-tasleson@redhat.com>
+ <20191223225558.19242-2-tasleson@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191223225558.19242-2-tasleson@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If we have a durable name we will add to output, else
-we will default to existing message output format.
+On Mon, Dec 23, 2019 at 04:55:50PM -0600, Tony Asleson wrote:
+> +/**
+> + * Removes leading and trailing whitespace and removes duplicate
+> + * adjacent whitespace in a string, modifies string in place.
+> + * @s The %NUL-terminated string to have spaces removed
+> + * Returns the new length
+> + */
 
-Signed-off-by: Tony Asleson <tasleson@redhat.com>
----
- drivers/ata/libata-core.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+This isn't good kernel-doc.  See Documentation/doc-guide/kernel-doc.rst
+Compile with W=1 to get the format checked.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28c492be0a57..b57a74cfb529 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -7249,6 +7249,9 @@ EXPORT_SYMBOL(ata_link_printk);
- void ata_dev_printk(const struct ata_device *dev, const char *level,
- 		    const char *fmt, ...)
- {
-+	char dict[128];
-+	int dict_len =3D 0;
-+
- 	struct va_format vaf;
- 	va_list args;
-=20
-@@ -7257,9 +7260,26 @@ void ata_dev_printk(const struct ata_device *dev, =
-const char *level,
- 	vaf.fmt =3D fmt;
- 	vaf.va =3D &args;
-=20
--	printk("%sata%u.%02u: %pV",
--	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
--	       &vaf);
-+	if (dev->sdev) {
-+		dict_len =3D dev_durable_name(
-+			&dev->sdev->sdev_gendev,
-+			dict,
-+			sizeof(dict));
-+	}
-+
-+	if (dict_len > 0) {
-+		printk_emit(0, level[1] - '0', dict, dict_len,
-+				"sata%u.%02u: %pV",
-+				dev->link->ap->print_id,
-+				dev->link->pmp + dev->devno,
-+				&vaf);
-+	} else {
-+		printk("%sata%u.%02u: %pV",
-+			level,
-+			dev->link->ap->print_id,
-+			dev->link->pmp + dev->devno,
-+			&vaf);
-+	}
-=20
- 	va_end(args);
- }
---=20
-2.21.0
+> +size_t strim_dupe(char *s)
+> +{
+> +	size_t ret = 0;
+> +	char *w = s;
+> +	char *p;
+> +
+> +	/*
+> +	 * This will remove all leading and duplicate adjacent, but leave
+> +	 * 1 space at the end if one or more are present.
+> +	 */
+> +	for (p = s; *p != '\0'; ++p) {
+> +		if (!isspace(*p) || (p != s && !isspace(*(p - 1)))) {
+> +			*w = *p;
+> +			++w;
+> +			ret += 1;
+> +		}
+> +	}
 
+I'd be tempted to do ...
+
+	size_t ret = 0;
+	char *w = s;
+	bool last_space = false;
+
+	do {
+		bool this_space = isspace(*s);
+
+		if (!this_space || !last_space) {
+			*w++ = *s;
+			ret++;
+		}
+		s++;
+		last_space = this_space;
+	} while (s[-1] != '\0');
+
+> +	/* Take off the last character if it's a space too */
+> +	if (ret && isspace(*(w - 1))) {
+> +		ret--;
+> +		*(w - 1) = '\0';
+> +	}
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(strim_dupe);
+> +
+>  #ifndef __HAVE_ARCH_STRLEN
+>  /**
+>   * strlen - Find the length of a string
+> -- 
+> 2.21.0
+> 
