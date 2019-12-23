@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83973C2D0D2
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B88DC2D0D6
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EAB42053B
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5067E2053B
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Dec 2019 22:56:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FH0O6pEP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CPI3uT0U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727030AbfLWW4J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Dec 2019 17:56:09 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:28302 "EHLO
+        id S1726948AbfLWW4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Dec 2019 17:56:11 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:52739 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbfLWW4I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 17:56:08 -0500
+        with ESMTP id S1727071AbfLWW4K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 17:56:10 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577141768;
+        s=mimecast20190719; t=1577141769;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jYMogOorzB+CGid5/i1zzD3nNlcrIJfVcdr7IEB6sKc=;
-        b=FH0O6pEP7CwBg7x4Kj1lLzoiwrTSp44Zi+xhSPtwi8m4SqdKEPz6N8Jc4OnxnY9vOPZisL
-        QtYicxbl4lbvIDL+pQMGXGOqxuRD7n0Yd26AUEMIbrCFotm6nl4Mm7X18/BDmXLtvF/PQ+
-        0Yw/ON7aa0l5qVaP8dcyRQdrtmQshsI=
+        bh=Jqpmf7hQ+PQiGEtZK47/PMHEWUmQlrFIk294J3iPG3M=;
+        b=CPI3uT0U9f/yLJ8Gtst+kFcjYOAP7xaF4n178JtRgZQRqnbysO4FBW0XDwNsKmpWG8Tsgq
+        u30oTay5PoxfmOx5icBCiK6vtVnBjmC8DqOpP4v/SEu/PBDgzeJG6GjlT3mKycS7MPc2zA
+        qIp9k3lka3fx19+6fakgjrny39vwtyM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-3-vGrG4TV6PNC4y9lmWKyn5Q-1; Mon, 23 Dec 2019 17:56:05 -0500
-X-MC-Unique: vGrG4TV6PNC4y9lmWKyn5Q-1
+ us-mta-6-7wSF-REIMnyRq5dNXy_yRg-1; Mon, 23 Dec 2019 17:56:08 -0500
+X-MC-Unique: 7wSF-REIMnyRq5dNXy_yRg-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 981E0800053;
-        Mon, 23 Dec 2019 22:56:04 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1EC64801E74;
+        Mon, 23 Dec 2019 22:56:07 +0000 (UTC)
 Received: from sulaco.redhat.com (ovpn-112-13.rdu2.redhat.com [10.10.112.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B784C60BE2;
-        Mon, 23 Dec 2019 22:56:03 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3B16C60BE2;
+        Mon, 23 Dec 2019 22:56:06 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [RFC 3/9] printk: Add printk_emit_ratelimited macro
-Date:   Mon, 23 Dec 2019 16:55:52 -0600
-Message-Id: <20191223225558.19242-4-tasleson@redhat.com>
+Subject: [RFC 5/9] block: Add support functions for persistent durable name
+Date:   Mon, 23 Dec 2019 16:55:54 -0600
+Message-Id: <20191223225558.19242-6-tasleson@redhat.com>
 In-Reply-To: <20191223225558.19242-1-tasleson@redhat.com>
 References: <20191223225558.19242-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -59,37 +59,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Needed so we can add structured data to the block layer
-logging.
+Add functions to retrieve and build durable name string into supplied
+buffer for functions that log using struct device and struct scsi_device.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- include/linux/printk.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/base/core.c        | 24 ++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c    | 20 ++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  |  1 +
+ include/linux/device.h     |  2 ++
+ include/scsi/scsi_device.h |  3 +++
+ 5 files changed, 50 insertions(+)
 
-diff --git a/include/linux/printk.h b/include/linux/printk.h
-index 06c3ba5b695e..dd41b79e6f06 100644
---- a/include/linux/printk.h
-+++ b/include/linux/printk.h
-@@ -172,6 +172,18 @@ int printk_emit(int facility, int level,
- 		const char *dict, size_t dictlen,
- 		const char *fmt, ...);
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 7bd9cd366d41..93cc1c45e9d3 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2009,6 +2009,30 @@ int dev_set_name(struct device *dev, const char *f=
+mt, ...)
+ }
+ EXPORT_SYMBOL_GPL(dev_set_name);
 =20
-+#define printk_emit_ratelimited(facility, level,			\
-+		dict, dict_len, fmt, ...)				\
-+({									\
-+	static DEFINE_RATELIMIT_STATE(_ers,				\
-+				      DEFAULT_RATELIMIT_INTERVAL,	\
-+				      DEFAULT_RATELIMIT_BURST);		\
-+									\
-+	if (__ratelimit(&_ers))						\
-+		printk_emit(facility, level,				\
-+				dict, dict_len, fmt, ##__VA_ARGS__);	\
-+})
++/**
++ * dev_durable_name - Write "DURABLE_NAME"=3D<durable name> in buffer
++ * @dev: device
++ * @buffer: character buffer to write results
++ * @len: length of buffer
++ * @return Number of bytes written to buffer
++ */
++int dev_durable_name(const struct device *dev, char *buffer, size_t len)
++{
++	int tmp, dlen;
 +
- asmlinkage __printf(1, 2) __cold
- int printk(const char *fmt, ...);
++	if (dev->type && dev->type->durable_name) {
++		tmp =3D snprintf(buffer, len, "DURABLE_NAME=3D");
++		if (tmp < len) {
++			dlen =3D dev->type->durable_name(dev, buffer + tmp,
++							len - tmp);
++			if (dlen > 0 && ((dlen + tmp) < len))
++				return dlen + tmp;
++		}
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(dev_durable_name);
++
+ /**
+  * device_to_dev_kobj - select a /sys/dev/ directory for the device
+  * @dev: device
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 91c007d26c1e..f22e59253d9d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3120,3 +3120,23 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int =
+*rel_id)
+ 	return group_id;
+ }
+ EXPORT_SYMBOL(scsi_vpd_tpg_id);
++
++int dev_to_scsi_durable_name(const struct device *dev, char *buf, size_t=
+ len)
++{
++	return scsi_durable_name(to_scsi_device(dev), buf, len);
++}
++EXPORT_SYMBOL(dev_to_scsi_durable_name);
++
++int scsi_durable_name(struct scsi_device *sdev, char *buf, size_t len)
++{
++	int vpd_len =3D 0;
++
++	vpd_len =3D scsi_vpd_lun_id(sdev, buf, len);
++	if (vpd_len > 0 && vpd_len < len)
++		vpd_len =3D strim_dupe(buf) + 1;
++	else
++		vpd_len =3D 0;
++
++	return vpd_len;
++}
++EXPORT_SYMBOL(scsi_durable_name);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 6d7362e7367e..ee5b8197916f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1560,6 +1560,7 @@ static struct device_type scsi_dev_type =3D {
+ 	.name =3D		"scsi_device",
+ 	.release =3D	scsi_device_dev_release,
+ 	.groups =3D	scsi_sdev_attr_groups,
++	.durable_name =3D dev_to_scsi_durable_name,
+ };
 =20
+ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index dd4ac8db5f57..566f6be6ee0d 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -1350,6 +1350,8 @@ static inline const char *dev_name(const struct dev=
+ice *dev)
+ extern __printf(2, 3)
+ int dev_set_name(struct device *dev, const char *name, ...);
+=20
++int dev_durable_name(const struct device *d, char *buffer, size_t len);
++
+ #ifdef CONFIG_NUMA
+ static inline int dev_to_node(struct device *dev)
+ {
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a4342..1cb35e10f54a 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -455,6 +455,9 @@ extern void sdev_disable_disk_events(struct scsi_devi=
+ce *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
++extern int dev_to_scsi_durable_name(const struct device *dev, char *buf,
++					size_t len);
++extern int scsi_durable_name(struct scsi_device *sdev, char *buf, size_t=
+ len);
+=20
+ #ifdef CONFIG_PM
+ extern int scsi_autopm_get_device(struct scsi_device *);
 --=20
 2.21.0
 
