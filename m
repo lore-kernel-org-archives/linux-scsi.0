@@ -2,289 +2,182 @@ Return-Path: <SRS0=FF7y=2O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4AEC2D0D2
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Dec 2019 04:41:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB41C2D0CF
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Dec 2019 05:43:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7216D206CB
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Dec 2019 04:41:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11AFC20706
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Dec 2019 05:43:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xk8/entG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727036AbfLXEl1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Dec 2019 23:41:27 -0500
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:31043 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726890AbfLXEl0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Dec 2019 23:41:26 -0500
-Received-SPF: Pass (esa6.microchip.iphmx.com: domain of
-  viswas.g@microsemi.com designates 208.19.100.23 as permitted
-  sender) identity=mailfrom; client-ip=208.19.100.23;
-  receiver=esa6.microchip.iphmx.com;
-  envelope-from="viswas.g@microsemi.com";
-  x-sender="viswas.g@microsemi.com"; x-conformance=spf_only;
-  x-record-type="v=spf1"; x-record-text="v=spf1
-  ip4:208.19.100.20 ip4:208.19.100.21 ip4:208.19.100.22
-  ip4:208.19.100.23 ip4:208.19.99.221 ip4:208.19.99.222
-  ip4:208.19.99.223 ip4:208.19.99.225 -all"
-Received-SPF: None (esa6.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@smtp.microsemi.com) identity=helo;
-  client-ip=208.19.100.23; receiver=esa6.microchip.iphmx.com;
-  envelope-from="viswas.g@microsemi.com";
-  x-sender="postmaster@smtp.microsemi.com";
-  x-conformance=spf_only
-Authentication-Results: esa6.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=viswas.g@microsemi.com; spf=None smtp.helo=postmaster@smtp.microsemi.com; dmarc=fail (p=none dis=none) d=microchip.com
-IronPort-SDR: Fb6DHEzexgFTpUvXXbs7nOAnZ2kk/m49TDcE6fvRXxnyjOFGBbT99jZjUjXgQkpm8PWCKOVa8h
- 9RkXgjBcdpm5gUboYAEEOq9sX1NLehkY9NjEzp70YxKuHwYAocDS+/aqmooR78eYFhSLCi6QgC
- 22aaAI7odBUeiXMA7u2lO3kYqf1e5UClTkpI847ZssP/iWBs7XZV05sBP/8YoMNjht2B20X26P
- VreSYf5byqaZIR583V7ysV9KaweyISPzsuuLYiMRnVPgieqT7wBlLu8pFzJG++8vCzbM3HT9yj
- hR4=
-X-IronPort-AV: E=Sophos;i="5.69,350,1571727600"; 
-   d="scan'208";a="58809228"
-Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Dec 2019 21:41:20 -0700
-Received: from AVMBX2.microsemi.net (10.100.34.32) by AVMBX3.microsemi.net
- (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Mon, 23 Dec
- 2019 20:41:19 -0800
-Received: from localhost (10.41.130.49) by avmbx2.microsemi.net (10.100.34.32)
- with Microsoft SMTP Server id 15.1.1847.3 via Frontend Transport; Mon, 23 Dec
- 2019 20:41:18 -0800
-From:   Deepak Ukey <deepak.ukey@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <deepak.ukey@microchip.com>,
-        <jinpu.wang@profitbricks.com>, <martin.petersen@oracle.com>,
-        <dpf@google.com>, <yuuzheng@google.com>, <auradkar@google.com>,
-        <vishakhavc@google.com>, <bjashnani@google.com>,
-        <radha@google.com>, <akshatzen@google.com>
-Subject: [PATCH 11/12] pm80xx : Introduce read and write length for IOCTL payload structure.
-Date:   Tue, 24 Dec 2019 10:11:42 +0530
-Message-ID: <20191224044143.8178-12-deepak.ukey@microchip.com>
-X-Mailer: git-send-email 2.19.0-rc1
-In-Reply-To: <20191224044143.8178-1-deepak.ukey@microchip.com>
-References: <20191224044143.8178-1-deepak.ukey@microchip.com>
+        id S1726009AbfLXFno (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Dec 2019 00:43:44 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:43230 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbfLXFno (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Dec 2019 00:43:44 -0500
+Received: by mail-ot1-f65.google.com with SMTP id p8so24978477oth.10
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Dec 2019 21:43:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=X9kKOIlHeT2ihB72YT665o/9Gpkm00ecVAFub60YPaE=;
+        b=Xk8/entGiJZtCworz6U2oa897hWUtXXvOGZgok8ZsIIuBBpTl08N+HE+sODHDrQElg
+         PjSo75r2QBW0+jtf8SF1munEOogD/2P9rYiOwsik4fCD/KNfGtYbYNZK1S42zRauMyLc
+         6jHLwY0DJOH8GohjS2ORH8uDxEBKeg+moElMDk3+C5ytlHXJ8WVkZBqU2EQB6Z4ZhvNa
+         xa5T4m6klIQYIhRAYRm/u0ZdwCy/mGazyJ+qjcacVg+NXQERDHtO/wwrzTadnFKH78tx
+         02uy865wckrPz2XIF46jhRnjRjls67lGlAy8l2nR/sSVNA0+u/2xC7f7MktuSVfzELEl
+         IfBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=X9kKOIlHeT2ihB72YT665o/9Gpkm00ecVAFub60YPaE=;
+        b=eOHlGSMsXXmtsb9Bhxr5/yD6cm+I9c81Gv+a61EUx0MTyfTdvku+IvFdsFjfLN/Jnb
+         yM/2SA77KRDZ0JqC+ePYceGv/50pcfyw34gXsjq8CkEi9ZZd9otBd7EP7Heo5GlgnUVU
+         7Zb+s+toIIdOZHBTcSdCGf96dPsQuNtAtILoku0ldTWD4QaPZG2AOhFCG/EBvAIimaWl
+         3SS3I8Qgwj41yVEN3jj7jMo1FTT1G6Tez/yGo8NkBU7Q8rmmedDfP7lS7KH8l6XeOUC6
+         PrOFjTnnZR07weIMb777M/Xqeid48/fB2a9gK4E03LAgjYR0s5WbNExjUAKxwSksr7u/
+         Y7eA==
+X-Gm-Message-State: APjAAAUjWHisRbvFc37zQcvES5YlJVudn7SsyF2Up5WRrAu79LU2db6f
+        YgwGlmWf1qsqgRVF5G9iSdKLrlIK
+X-Google-Smtp-Source: APXvYqz4d38L1Q8eFctmn0TSttTVcF5ekPhNt2SXmCjsnoX7KpE35HLNGR1w0++G4zq+5C22aTrEgA==
+X-Received: by 2002:a9d:1d02:: with SMTP id m2mr34329276otm.45.1577166223191;
+        Mon, 23 Dec 2019 21:43:43 -0800 (PST)
+Received: from ubuntu-m2-xlarge-x86 ([2604:1380:4111:8b00::1])
+        by smtp.gmail.com with ESMTPSA id q18sm7416914otk.38.2019.12.23.21.43.42
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 23 Dec 2019 21:43:42 -0800 (PST)
+Date:   Mon, 23 Dec 2019 22:43:40 -0700
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com,
+        kashyap.desai@broadcom.com, clang-built-linux@googlegroups.com
+Subject: Re: [PATCH 02/10] mpt3sas: Add support for NVMe shutdown.
+Message-ID: <20191224054340.GA55348@ubuntu-m2-xlarge-x86>
+References: <20191220103210.43631-1-suganath-prabu.subramani@broadcom.com>
+ <20191220103210.43631-3-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191220103210.43631-3-suganath-prabu.subramani@broadcom.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viswas G <Viswas.G@microchip.com>
+On Fri, Dec 20, 2019 at 05:32:02AM -0500, Suganath Prabu S wrote:
+<snip>
 
-Removed the common length and introduce read and write length for
-IOCTL payload structure.
+Hi Suganath,
 
-Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
-Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
-Signed-off-by: Radha Ramachandran <radha@google.com>
-Signed-off-by: Akshat Jain <akshatzen@google.com>
-Signed-off-by: Yu Zheng <yuuzheng@google.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c  |  6 +++---
- drivers/scsi/pm8001/pm8001_hwi.c  | 22 +++++++++++-----------
- drivers/scsi/pm8001/pm8001_init.c | 12 ++++++------
- drivers/scsi/pm8001/pm8001_sas.h  |  3 ++-
- 4 files changed, 22 insertions(+), 21 deletions(-)
+We received an email from the 0day bot about this patch (see below)
+about this patch. Would you look into addressing it?
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 669c60a8d123..63bd2a384d2e 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -486,7 +486,7 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
- 	pm8001_ha->nvmd_completion = &completion;
- 	payload.minor_function = 7;
- 	payload.offset = 0;
--	payload.length = 4096;
-+	payload.rd_length = 4096;
- 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
- 	if (!payload.func_specific)
- 		return -ENOMEM;
-@@ -697,7 +697,7 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
- 	payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
- 	memcpy((u8 *)&payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
- 				pm8001_ha->fw_image->size);
--	payload->length = pm8001_ha->fw_image->size;
-+	payload->wr_length = pm8001_ha->fw_image->size;
- 	payload->id = 0;
- 	payload->minor_function = 0x1;
- 	pm8001_ha->nvmd_completion = &completion;
-@@ -743,7 +743,7 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 					IOCTL_BUF_SIZE);
- 		for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
- 			payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
--			payload->length = 1024*16;
-+			payload->wr_length = 1024*16;
- 			payload->id = 0;
- 			fwControl =
- 			      (struct fw_control_info *)&payload->func_specific;
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index f9395d9fd530..16dc7a92ad68 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4841,7 +4841,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	if (!fw_control_context)
- 		return -ENOMEM;
- 	fw_control_context->usrAddr = (u8 *)ioctl_payload->func_specific;
--	fw_control_context->len = ioctl_payload->length;
-+	fw_control_context->len = ioctl_payload->rd_length;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	memset(&nvmd_req, 0, sizeof(nvmd_req));
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
-@@ -4862,7 +4862,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
- 			twi_page_size << 8 | TWI_DEVICE);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4871,7 +4871,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case C_SEEPROM: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4880,7 +4880,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case VPD_FLASH: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4889,7 +4889,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case EXPAN_ROM: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4898,7 +4898,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case IOP_RDUMP: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | IOP_RDUMP);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.vpd_offset = cpu_to_le32(ioctl_payload->offset);
- 		nvmd_req.resp_addr_hi =
- 		cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4938,7 +4938,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
- 		&ioctl_payload->func_specific,
--		ioctl_payload->length);
-+		ioctl_payload->wr_length);
- 	memset(&nvmd_req, 0, sizeof(nvmd_req));
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
- 	if (rc) {
-@@ -4957,7 +4957,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
- 			twi_page_size << 8 | TWI_DEVICE);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4966,7 +4966,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case C_SEEPROM:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4975,7 +4975,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		break;
- 	case VPD_FLASH:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4984,7 +4984,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		break;
- 	case EXPAN_ROM:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index b74282bc1ed0..6e037638656d 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -643,22 +643,22 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- 	if (pm8001_ha->chip_id == chip_8001) {
- 		if (deviceid == 0x8081 || deviceid == 0x0042) {
- 			payload.minor_function = 4;
--			payload.length = 4096;
-+			payload.rd_length = 4096;
- 		} else {
- 			payload.minor_function = 0;
--			payload.length = 128;
-+			payload.rd_length = 128;
- 		}
- 	} else if ((pm8001_ha->chip_id == chip_8070 ||
- 			pm8001_ha->chip_id == chip_8072) &&
- 			pm8001_ha->pdev->subsystem_vendor == PCI_VENDOR_ID_ATTO) {
- 		payload.minor_function = 4;
--		payload.length = 4096;
-+		payload.rd_length = 4096;
- 	} else {
- 		payload.minor_function = 1;
--		payload.length = 4096;
-+		payload.rd_length = 4096;
- 	}
- 	payload.offset = 0;
--	payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
-+	payload.func_specific = kzalloc(payload.rd_length, GFP_KERNEL);
- 	if (!payload.func_specific) {
- 		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
- 		return;
-@@ -728,7 +728,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
- 	/* SAS ADDRESS read from flash / EEPROM */
- 	payload.minor_function = 6;
- 	payload.offset = 0;
--	payload.length = 4096;
-+	payload.rd_length = 4096;
- 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
- 	if (!payload.func_specific)
- 		return -ENOMEM;
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 47607a25f819..917a17f4d595 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -164,10 +164,11 @@ struct pm8001_ioctl_payload {
- 	u32	signature;
- 	u16	major_function;
- 	u16	minor_function;
--	u16	length;
- 	u16	status;
- 	u16	offset;
- 	u16	id;
-+	u32	wr_length;
-+	u32	rd_length;
- 	u8	*func_specific;
- };
- 
--- 
-2.16.3
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index a038be8..c451e57 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -1049,6 +1049,34 @@ mpt3sas_get_pdev_by_handle(struct MPT3SAS_ADAPTER *ioc, u16 handle)
+>  	return pcie_device;
+>  }
+>  
+> +/**
+> + * _scsih_set_nvme_max_shutdown_latency - Update max_shutdown_latency.
+> + * @ioc: per adapter object
+> + * Context: This function will acquire ioc->pcie_device_lock
+> + *
+> + * Update ioc->max_shutdown_latency to that NVMe drives RTD3 Entry Latency
+> + * which has reported maximum among all available NVMe drives.
+> + * Minimum max_shutdown_latency will be six seconds.
+> + */
+> +static void
+> +_scsih_set_nvme_max_shutdown_latency(struct MPT3SAS_ADAPTER *ioc)
+> +{
+> +	struct _pcie_device *pcie_device;
+> +	unsigned long flags;
+> +	u16 shutdown_latency = IO_UNIT_CONTROL_SHUTDOWN_TIMEOUT;
+> +
+> +	spin_lock_irqsave(&ioc->pcie_device_lock, flags);
+> +	list_for_each_entry(pcie_device, &ioc->pcie_device_list, list) {
+> +		if (pcie_device->shutdown_latency) {
+> +			if (shutdown_latency < pcie_device->shutdown_latency)
+> +				shutdown_latency =
+> +					pcie_device->shutdown_latency;
+> +		}
+> +	}
+> +	ioc->max_shutdown_latency = shutdown_latency;
+> +	spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+> +}
+> +
+>  /**
+>   * _scsih_pcie_device_remove - remove pcie_device from list.
+>   * @ioc: per adapter object
+> @@ -1063,6 +1091,7 @@ _scsih_pcie_device_remove(struct MPT3SAS_ADAPTER *ioc,
+>  {
+>  	unsigned long flags;
+>  	int was_on_pcie_device_list = 0;
+> +	u8 update_latency;
 
+This should be initialized to 0 like the remove_by_handle function
+below.
+
+Cheers,
+Nathan
+
+On Tue, Dec 24, 2019 at 05:13:52AM +0800, kbuild test robot wrote:
+> CC: kbuild-all@lists.01.org
+> In-Reply-To: <20191220103210.43631-3-suganath-prabu.subramani@broadcom.com>
+> References: <20191220103210.43631-3-suganath-prabu.subramani@broadcom.com>
+> TO: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+> CC: linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+> CC: sreekanth.reddy@broadcom.com, sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+> 
+> Hi Suganath,
+> 
+> I love your patch! Perhaps something to improve:
+> 
+> [auto build test WARNING on scsi/for-next]
+> [also build test WARNING on mkp-scsi/for-next v5.5-rc3 next-20191220]
+> [if your patch is applied to the wrong git tree, please drop us a note to help
+> improve the system. BTW, we also suggest to use '--base' option to specify the
+> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Suganath-Prabu-S/mpt3sas-Enhancements-of-phase14/20191223-182859
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+> config: arm64-defconfig (attached as .config)
+> compiler: clang version 10.0.0 (git://gitmirror/llvm_project 891e25b02d760d0de18c7d46947913b3166047e7)
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=arm64 
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> All warnings (new ones prefixed by >>):
+> 
+> >> drivers/scsi/mpt3sas/mpt3sas_scsih.c:1114:6: warning: variable 'update_latency' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+>            if (pcie_device->shutdown_latency == ioc->max_shutdown_latency)
+>                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    drivers/scsi/mpt3sas/mpt3sas_scsih.c:1128:6: note: uninitialized use occurs here
+>            if (update_latency)
+>                ^~~~~~~~~~~~~~
+>    drivers/scsi/mpt3sas/mpt3sas_scsih.c:1114:2: note: remove the 'if' if its condition is always true
+>            if (pcie_device->shutdown_latency == ioc->max_shutdown_latency)
+>            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    drivers/scsi/mpt3sas/mpt3sas_scsih.c:1094:19: note: initialize the variable 'update_latency' to silence this warning
+>            u8 update_latency;
+>                             ^
+>                              = '\0'
+>    1 warning generated.
