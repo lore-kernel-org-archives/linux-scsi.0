@@ -6,2043 +6,1247 @@ X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0019C2D0DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 13:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB87DC2D0DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 15:58:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 443FE2075B
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 13:30:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E5612075B
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 15:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726307AbfLYNaW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Dec 2019 08:30:22 -0500
-Received: from mga14.intel.com ([192.55.52.115]:39851 "EHLO mga14.intel.com"
+        id S1726414AbfLYP6p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Dec 2019 10:58:45 -0500
+Received: from mga01.intel.com ([192.55.52.88]:48049 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726185AbfLYNaV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Dec 2019 08:30:21 -0500
-X-Amp-Result: UNSCANNABLE
+        id S1726399AbfLYP6p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Dec 2019 10:58:45 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Dec 2019 05:30:15 -0800
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Dec 2019 07:58:42 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.69,355,1571727600"; 
-   d="scan'208";a="223418130"
+   d="gz'50?scan'50,208,50";a="367587002"
 Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 25 Dec 2019 05:30:12 -0800
+  by orsmga004.jf.intel.com with ESMTP; 25 Dec 2019 07:58:38 -0800
 Received: from kbuild by lkp-server01 with local (Exim 4.89)
         (envelope-from <lkp@intel.com>)
-        id 1ik6js-000Ef4-0S; Wed, 25 Dec 2019 21:30:12 +0800
-Date:   Wed, 25 Dec 2019 21:29:17 +0800
+        id 1ik93W-000BDN-Fm; Wed, 25 Dec 2019 23:58:38 +0800
+Date:   Wed, 25 Dec 2019 23:57:52 +0800
 From:   kbuild test robot <lkp@intel.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     kbuild-all@lists.01.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH] qla2xxx: Fix the code that reads from mailbox registers
-Message-ID: <201912252157.xVgr2QmT%lkp@intel.com>
-References: <20191220183357.16655-1-bvanassche@acm.org>
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
+        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
+        deepak.ukey@microchip.com, jinpu.wang@profitbricks.com,
+        martin.petersen@oracle.com, dpf@google.com, yuuzheng@google.com,
+        auradkar@google.com, vishakhavc@google.com, bjashnani@google.com,
+        radha@google.com, akshatzen@google.com
+Subject: Re: [PATCH 01/12] pm80xx : Increase request sg length.
+Message-ID: <201912252340.lP6Q1qf6%lkp@intel.com>
+References: <20191224044143.8178-2-deepak.ukey@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="prvo5xbs7ftc3z3b"
 Content-Disposition: inline
-In-Reply-To: <20191220183357.16655-1-bvanassche@acm.org>
+In-Reply-To: <20191224044143.8178-2-deepak.ukey@microchip.com>
 User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
 
-I love your patch! Perhaps something to improve:
+--prvo5xbs7ftc3z3b
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-[auto build test WARNING on scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next v5.5-rc3 next-20191220]
-[cannot apply to target/for-next]
+Hi Deepak,
+
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on mkp-scsi/for-next]
+[cannot apply to scsi/for-next v5.5-rc3 next-20191219]
 [if your patch is applied to the wrong git tree, please drop us a note to help
 improve the system. BTW, we also suggest to use '--base' option to specify the
 base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
 
-url:    https://github.com/0day-ci/linux/commits/Bart-Van-Assche/qla2xxx-Fix-the-code-that-reads-from-mailbox-registers/20191224-021100
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+url:    https://github.com/0day-ci/linux/commits/Deepak-Ukey/pm80xx-Updates-for-the-driver-version-0-1-39/20191225-181036
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+config: xtensa-allyesconfig (attached as .config)
+compiler: xtensa-linux-gcc (GCC) 7.5.0
 reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.1-129-g341daf20-dirty
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        GCC_VERSION=7.5.0 make.cross ARCH=xtensa 
 
 If you fix the issue, kindly add following tag
 Reported-by: kbuild test robot <lkp@intel.com>
 
+All warnings (new ones prefixed by >>):
 
-sparse warnings: (new ones prefixed by >>)
+   In file included from drivers/scsi/pm8001/pm8001_sas.h:58:0,
+                    from drivers/scsi/pm8001/pm8001_init.c:42:
+>> drivers/scsi/pm8001/pm8001_defs.h:102:0: warning: "CONFIG_SCSI_PM8001_MAX_DMA_SG" redefined
+    #define CONFIG_SCSI_PM8001_MAX_DMA_SG 528
+    
+   In file included from include/linux/kconfig.h:5:0,
+                    from <command-line>:0:
+   ./include/generated/autoconf.h:9320:0: note: this is the location of the previous definition
+    #define CONFIG_SCSI_PM8001_MAX_DMA_SG 128
+    
 
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1203:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1205:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1886:23: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1886:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_os.c:1886:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1887:22: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1887:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1887:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1901:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1901:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1901:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1902:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1902:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1902:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1914:24: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_os.c:1914:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1914:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1915:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1915:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1915:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1929:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1929:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1929:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:1930:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:1930:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:1930:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:4474:45: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:4474:45: sparse:    expected unsigned short [usertype] exchange_count
-   drivers/scsi/qla2xxx/qla_os.c:4474:45: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_os.c:4485:45: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:4485:45: sparse:    expected unsigned short [usertype] exchange_count
-   drivers/scsi/qla2xxx/qla_os.c:4485:45: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_os.c:4585:45: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:4585:45: sparse:    expected unsigned short [usertype] exchange_count
-   drivers/scsi/qla2xxx/qla_os.c:4585:45: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_os.c:5137:41: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_os.c:5141:37: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_os.c:6986:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:6986:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:6986:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:6990:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:6990:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:6990:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_os.c:6994:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_os.c:6994:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_os.c:6994:38: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_inline.h:308:26: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_inline.h:308:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_inline.h:308:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   arch/x86/include/asm/bitops.h:77:37: sparse: sparse: cast truncates bits from constant value (ffffff7f becomes 7f)
---
->> drivers/scsi/qla2xxx/qla_init.c:3599:31: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_init.c:3599:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_init.c:3599:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:3600:30: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_init.c:3600:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:3600:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:3694:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:3694:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:3694:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:3697:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:3697:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:3697:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:3698:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:3698:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:3698:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:5052:45: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:5052:45: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_init.c:5052:45: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_init.c:5133:35: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_init.c:130:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:130:32: sparse:    expected restricted __le16 [usertype] comp_status
-   drivers/scsi/qla2xxx/qla_init.c:130:32: sparse:    got int
-   drivers/scsi/qla2xxx/qla_init.c:980:39: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_init.c:982:47: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_init.c:984:28: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:984:28: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_init.c:984:28: sparse:    got restricted __le16
-   drivers/scsi/qla2xxx/qla_init.c:1100:12: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:1100:12: sparse:    expected unsigned short [usertype] *mb
-   drivers/scsi/qla2xxx/qla_init.c:1100:12: sparse:    got restricted __le16 *
-   drivers/scsi/qla2xxx/qla_init.c:1147:19: sparse: sparse: incorrect type in initializer (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:1147:19: sparse:    expected unsigned short [usertype] *mb
-   drivers/scsi/qla2xxx/qla_init.c:1147:19: sparse:    got restricted __le16 *
-   drivers/scsi/qla2xxx/qla_init.c:1321:12: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:1321:12: sparse:    expected unsigned short [usertype] *mb
-   drivers/scsi/qla2xxx/qla_init.c:1321:12: sparse:    got restricted __le16 *
-   drivers/scsi/qla2xxx/qla_init.c:1762:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:1762:32: sparse:    expected restricted __le16 [usertype] comp_status
-   drivers/scsi/qla2xxx/qla_init.c:1762:32: sparse:    got int
-   drivers/scsi/qla2xxx/qla_init.c:2197:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2197:34: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2197:34: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2329:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2329:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2329:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2371:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2371:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2371:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2373:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2373:43: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2373:43: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2380:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2380:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2380:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2381:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2381:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2381:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2384:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2384:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2384:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2390:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2390:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2390:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2391:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2391:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2391:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2394:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2394:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2394:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2396:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2396:43: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2396:43: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2411:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2411:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2411:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2455:38: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_init.c:2455:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_init.c:2455:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2559:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2559:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2559:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2562:51: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2562:51: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2562:51: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2568:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2568:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2568:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2573:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2573:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2573:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2574:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2574:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2574:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2577:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2577:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2577:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2578:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2578:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2578:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2582:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2582:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2582:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2583:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2583:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2583:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2587:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2587:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2587:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2588:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2588:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2588:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2592:25: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2592:25: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2592:25: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2593:25: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2593:25: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2593:25: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2595:25: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2595:25: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2595:25: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2599:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2599:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2599:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2606:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2606:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2606:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2607:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2607:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2607:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2610:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2610:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2610:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2611:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2611:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2611:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2614:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2614:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2614:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2615:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2615:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2615:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2618:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2618:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2618:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2619:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2619:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2619:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2622:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2622:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2622:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2633:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2633:43: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2633:43: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2642:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2642:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2642:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2644:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2644:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2644:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2647:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2647:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2647:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2648:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2648:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2648:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2652:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2652:29: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2652:29: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2666:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2666:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2666:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2667:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2667:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2667:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2832:24: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_init.c:2832:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2832:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2833:50: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2833:50: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2833:50: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2842:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2842:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2842:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2843:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2843:43: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2843:43: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2859:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2859:31: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2859:31: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2712:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2712:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2712:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2714:36: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2714:36: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2714:36: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2720:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2720:29: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2720:29: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2725:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2725:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2725:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2726:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2726:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2726:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2727:28: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2727:28: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2727:28: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2729:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2729:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2729:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2736:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2736:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2736:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2737:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2737:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2737:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2751:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2751:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2751:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2752:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2752:26: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2752:26: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2755:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2755:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2755:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2758:36: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2758:36: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2758:36: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2764:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2764:29: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2764:29: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2769:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2769:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2769:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2770:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2770:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2770:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2789:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2789:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2789:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2790:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2790:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2790:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2792:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2792:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2792:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2793:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2793:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2793:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2795:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2795:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2795:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2796:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2796:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2796:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2798:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2798:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2798:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2799:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2799:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2799:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2812:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2812:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2812:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2813:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2813:27: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2813:27: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2961:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2961:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2961:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2968:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2968:43: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2968:43: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_init.c:2971:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_init.c:2971:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_init.c:2971:37: sparse:    got unsigned short [noderef] <asn:2> *
---
-   drivers/scsi/qla2xxx/qla_mbx.c:120:21: sparse: sparse: restricted pci_channel_state_t degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:120:37: sparse: sparse: restricted pci_channel_state_t degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:212:22: sparse: sparse: incorrect type in assignment (different base types)
->> drivers/scsi/qla2xxx/qla_mbx.c:212:22: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *optr
->> drivers/scsi/qla2xxx/qla_mbx.c:212:22: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:214:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:214:22: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *optr
-   drivers/scsi/qla2xxx/qla_mbx.c:214:22: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:216:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:216:22: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *optr
-   drivers/scsi/qla2xxx/qla_mbx.c:216:22: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:226:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:226:30: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *optr
-   drivers/scsi/qla2xxx/qla_mbx.c:226:30: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
->> drivers/scsi/qla2xxx/qla_mbx.c:257:40: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mbx.c:257:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:257:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:259:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:259:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:259:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:261:39: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mbx.c:261:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:261:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:304:43: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mbx.c:304:43: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:304:43: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:315:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:315:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:315:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:317:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:317:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:317:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:319:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:319:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:319:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:417:46: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mbx.c:417:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:417:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:418:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:418:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:418:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:419:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:419:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:419:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:420:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:420:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:420:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:421:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:421:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:421:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:422:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:422:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:422:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:423:53: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:423:53: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:423:53: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:424:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:424:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:424:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:433:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:433:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:433:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:434:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:434:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:434:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:577:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:577:43: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:577:43: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:578:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:578:43: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:578:43: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:579:43: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:579:43: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:579:43: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:583:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:583:42: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:583:42: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:584:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:584:42: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:584:42: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:585:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:585:42: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:585:42: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:2388:26: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:2388:26: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_mbx.c:2388:26: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:2389:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:2389:27: sparse:    expected unsigned short [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_mbx.c:2389:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:2391:35: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_mbx.c:2391:35: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:2391:35: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:2393:35: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_mbx.c:2393:35: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:2393:35: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:2408:39: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:2409:26: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:2410:26: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:2414:41: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:2446:26: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:2462:43: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:2658:26: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:2658:26: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_mbx.c:2658:26: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:2659:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:2659:27: sparse:    expected unsigned short [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_mbx.c:2659:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:2676:39: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:2679:41: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:2680:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:2681:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:3075:18: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3075:18: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:3075:18: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3076:19: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3076:19: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:3076:19: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3149:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3149:27: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_mbx.c:3149:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3156:25: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3156:25: sparse:    expected unsigned short [usertype] req_que_no
-   drivers/scsi/qla2xxx/qla_mbx.c:3156:25: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3167:41: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:3170:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:3228:33: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3228:33: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_mbx.c:3228:33: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3229:28: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3229:28: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_mbx.c:3229:28: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3230:34: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:3230:34: sparse:    expected unsigned int [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_mbx.c:3230:34: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:3251:40: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:3254:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:3256:20: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:3258:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:3262:29: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:4117:42: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_mbx.c:4120:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:4272:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4272:35: sparse:    expected unsigned short [usertype] options
-   drivers/scsi/qla2xxx/qla_mbx.c:4272:35: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:4291:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:4293:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:4310:29: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:4315:29: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:4390:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4390:34: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:4390:34: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   drivers/scsi/qla2xxx/qla_mbx.c:4392:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4392:42: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:4392:42: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_mbx.c:4461:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4461:34: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:4461:34: sparse:    got unsigned int [noderef] [usertype] <asn:2> *rsp_q_out
-   drivers/scsi/qla2xxx/qla_mbx.c:4463:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4463:42: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mbx.c:4463:42: sparse:    got unsigned int [noderef] [usertype] <asn:2> *rsp_q_in
-   drivers/scsi/qla2xxx/qla_mbx.c:4706:28: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:4706:28: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:4706:28: sparse:    got restricted __le16
-   drivers/scsi/qla2xxx/qla_mbx.c:4824:31: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_mbx.c:5278:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5278:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5278:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5279:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5279:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5279:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5280:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5280:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5280:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5281:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5281:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5281:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5282:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5282:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5282:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5284:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5284:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5284:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5289:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5289:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5289:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5297:52: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5297:52: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5297:52: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5298:48: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5298:48: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5298:48: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:5300:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:5300:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mbx.c:5300:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mbx.c:6329:18: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6329:18: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6329:18: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6334:18: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6334:18: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6334:18: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6335:19: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6335:19: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6335:19: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6446:18: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6446:18: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6446:18: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6472:20: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6472:20: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6472:20: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6473:20: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6473:20: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6473:20: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_mbx.c:6498:20: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_mbx.c:6498:20: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_mbx.c:6498:20: sparse:    got restricted __le16 [usertype]
---
-   drivers/scsi/qla2xxx/qla_iocb.c:208:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:208:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:208:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:213:32: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_iocb.c:213:32: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_iocb.c:213:32: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_iocb.c:264:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:264:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:264:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:269:32: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_iocb.c:269:32: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_iocb.c:269:32: sparse:    right side has type restricted __le16
->> drivers/scsi/qla2xxx/qla_iocb.c:379:43: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_iocb.c:379:43: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_iocb.c:379:43: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:402:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:402:29: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_iocb.c:402:29: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:405:9: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:405:9: sparse:    expected unsigned short [usertype] extended
-   drivers/scsi/qla2xxx/qla_iocb.c:405:9: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:406:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:406:22: sparse:    expected unsigned short [usertype] lun
-   drivers/scsi/qla2xxx/qla_iocb.c:406:22: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:407:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:407:32: sparse:    expected unsigned short [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:407:32: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:411:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:411:29: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:411:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:431:22: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_iocb.c:431:22: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:431:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:432:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:432:29: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:432:29: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:475:42: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_iocb.c:475:42: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_iocb.c:475:42: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   drivers/scsi/qla2xxx/qla_iocb.c:477:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:477:42: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:477:42: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   drivers/scsi/qla2xxx/qla_iocb.c:478:49: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_iocb.c:478:49: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_iocb.c:478:49: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:480:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:480:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:480:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:481:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:481:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:481:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:484:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:484:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:484:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:485:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:485:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:485:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:487:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:487:38: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:487:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:489:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:489:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:489:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_iocb.c:529:45: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:529:45: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_iocb.c:529:45: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:535:25: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:535:25: sparse:    expected unsigned short [usertype] extended
-   drivers/scsi/qla2xxx/qla_iocb.c:535:25: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:536:34: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:536:34: sparse:    expected unsigned short [usertype] lun
-   drivers/scsi/qla2xxx/qla_iocb.c:536:34: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1640:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1640:45: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_iocb.c:1640:45: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_iocb.c:1664:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1664:29: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1664:29: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1667:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1667:31: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_iocb.c:1667:31: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1682:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1682:29: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1682:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse:    expected unsigned short [usertype] task_mgmt_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse:    expected unsigned short [usertype] task_mgmt_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1701:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1701:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:1701:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   drivers/scsi/qla2xxx/qla_iocb.c:1825:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1825:45: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:1825:45: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_iocb.c:1852:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1852:31: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_iocb.c:1852:31: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1861:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1861:29: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1861:29: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1418:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1418:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1418:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1426:40: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1426:40: sparse:    expected unsigned short [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:1426:40: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1429:40: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1429:40: sparse:    expected unsigned short [usertype] control_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:1429:40: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:780:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:780:30: sparse:    expected unsigned int [usertype] ref_tag
-   drivers/scsi/qla2xxx/qla_iocb.c:780:30: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:797:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:797:30: sparse:    expected unsigned short [usertype] app_tag
-   drivers/scsi/qla2xxx/qla_iocb.c:797:30: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:801:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:801:30: sparse:    expected unsigned int [usertype] ref_tag
-   drivers/scsi/qla2xxx/qla_iocb.c:801:30: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:826:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:826:30: sparse:    expected unsigned int [usertype] ref_tag
-   drivers/scsi/qla2xxx/qla_iocb.c:826:30: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:828:30: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:828:30: sparse:    expected unsigned short [usertype] app_tag
-   drivers/scsi/qla2xxx/qla_iocb.c:828:30: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1484:36: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1484:36: sparse:    expected unsigned short [usertype] fcp_cmnd_dseg_len
-   drivers/scsi/qla2xxx/qla_iocb.c:1484:36: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1547:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1547:29: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1547:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1550:17: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1550:17: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1550:17: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1553:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1553:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1553:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1558:32: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_iocb.c:1558:32: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_iocb.c:1558:32: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_iocb.c:1570:40: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_iocb.c:1570:40: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_iocb.c:1570:40: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_iocb.c:1872:26: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1872:26: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_iocb.c:1872:26: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1884:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1884:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:1884:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   drivers/scsi/qla2xxx/qla_iocb.c:1960:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1960:45: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_iocb.c:1960:45: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_iocb.c:1984:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1984:29: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_iocb.c:1984:29: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:1987:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:1987:31: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_iocb.c:1987:31: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:2002:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:2002:29: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:2002:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_iocb.c:715:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse:    expected unsigned short [usertype] task_mgmt_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:723:42: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse:    expected unsigned short [usertype] task_mgmt_flags
-   drivers/scsi/qla2xxx/qla_iocb.c:727:42: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_iocb.c:2021:26: sparse: sparse: incorrect type in argument 1 (different base types)
---
->> drivers/scsi/qla2xxx/qla_isr.c:300:74: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_isr.c:300:74: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_isr.c:300:74: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] wptr
-   drivers/scsi/qla2xxx/qla_isr.c:302:60: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_isr.c:302:60: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:302:60: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] wptr
-   drivers/scsi/qla2xxx/qla_isr.c:2442:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2443:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2444:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2446:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2447:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2543:37: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2545:40: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2547:37: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2549:40: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2553:25: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2564:37: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2566:40: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2567:29: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2735:35: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2155:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2156:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2157:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2158:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2159:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:2160:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:2177:27: sparse: sparse: restricted __be16 degrades to integer
-   drivers/scsi/qla2xxx/qla_isr.c:2179:28: sparse: sparse: restricted __be32 degrades to integer
-   drivers/scsi/qla2xxx/qla_isr.c:70:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:70:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_isr.c:70:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:82:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:82:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:82:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:83:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:83:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:83:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:88:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:88:42: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:88:42: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:91:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:91:34: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:91:34: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:92:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:92:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:92:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:93:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:93:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:93:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:96:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:96:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:96:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:101:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:101:41: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:101:41: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:102:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:102:41: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:102:41: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:103:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:103:41: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:103:41: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:112:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:112:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:112:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:113:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:113:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:113:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:117:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:117:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:117:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:118:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:118:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:118:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:190:38: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_isr.c:190:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_isr.c:190:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:197:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:197:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:197:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:213:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:213:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:213:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:214:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:214:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:214:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:231:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:231:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:231:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:235:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:235:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:235:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:236:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:236:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:236:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:237:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:237:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:237:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:251:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:251:33: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:251:33: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:259:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:259:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:259:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:260:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:260:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:260:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:322:22: sparse: sparse: incorrect type in assignment (different base types)
->> drivers/scsi/qla2xxx/qla_isr.c:322:22: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *wptr
->> drivers/scsi/qla2xxx/qla_isr.c:322:22: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:324:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:324:22: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *wptr
-   drivers/scsi/qla2xxx/qla_isr.c:324:22: sparse:    got unsigned short [noderef] [usertype] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:651:30: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:676:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:676:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:676:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:684:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:684:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:684:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:685:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:685:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:685:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:690:30: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:691:30: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_isr.c:721:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:721:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:721:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:727:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:727:34: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:727:34: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:831:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:831:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:831:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:832:74: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:832:74: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:832:74: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1200:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1200:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:1200:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1242:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1242:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:1242:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1243:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1243:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:1243:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1244:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1244:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:1244:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1245:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1245:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_isr.c:1245:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_isr.c:1398:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1398:47: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1399:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1407:18: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1409:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1411:24: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1416:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1421:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1423:34: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1429:19: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1432:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1445:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1445:44: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1446:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1446:36: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1447:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1471:38: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1471:36: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1471:36: sparse:    expected restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1471:36: sparse:    got unsigned short [usertype]
-   drivers/scsi/qla2xxx/qla_isr.c:1473:31: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_isr.c:1490:36: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_isr.c:1519:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1532:33: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1620:38: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1621:24: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1622:24: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1629:46: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1629:46: sparse:    expected restricted __le16 [usertype] comp_status
-   drivers/scsi/qla2xxx/qla_isr.c:1629:46: sparse:    got unsigned int
-   drivers/scsi/qla2xxx/qla_isr.c:1636:33: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1635:54: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_isr.c:1635:54: sparse:    expected restricted __le16 [usertype] len
-   drivers/scsi/qla2xxx/qla_isr.c:1635:54: sparse:    got unsigned short [usertype]
-   drivers/scsi/qla2xxx/qla_isr.c:1646:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1663:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_isr.c:1669:29: sparse: sparse: too many warnings
---
->> drivers/scsi/qla2xxx/qla_dbg.c:127:31: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_dbg.c:127:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:127:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:128:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:128:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:128:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:129:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:129:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:129:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:131:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:131:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:131:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:132:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:132:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:132:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:133:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:133:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:133:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:134:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:134:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:134:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:136:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:136:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:136:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:137:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:137:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:137:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:139:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:139:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:139:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:140:32: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_dbg.c:140:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:140:32: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:146:46: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_dbg.c:146:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:146:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:156:48: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:156:48: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:156:48: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:157:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:157:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:157:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:162:45: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_dbg.c:162:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:162:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:163:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:163:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:163:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:164:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:164:39: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:164:39: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:207:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:207:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:207:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:208:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:208:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:208:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:209:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:209:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:209:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:211:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:211:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:211:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:212:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:212:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:212:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:213:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:213:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:213:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:214:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:214:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:214:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:216:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:216:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:216:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:217:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:217:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:217:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:218:32: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:218:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:218:32: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:223:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:223:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:223:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:232:48: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:232:48: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:232:48: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:233:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:233:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:233:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:238:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:238:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:238:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:239:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:239:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:239:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:240:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:240:39: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:240:39: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:293:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:293:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:293:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:296:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:296:24: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:296:24: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:296:24: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:304:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:304:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:304:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:308:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:308:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:308:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:325:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:325:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:325:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:327:36: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:327:36: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:327:36: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:332:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:332:29: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:332:29: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:335:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:335:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:335:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:343:36: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:343:36: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:343:36: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:349:29: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:349:29: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:349:29: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:352:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:352:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:352:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:353:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:353:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:353:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:355:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:355:40: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:355:40: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:382:9: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:382:9: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:382:9: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:391:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:391:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:391:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:392:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:392:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:392:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:394:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:394:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:394:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:395:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:395:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:395:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:396:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:396:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:396:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:397:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:397:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:397:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:399:17: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:399:17: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:399:17: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:400:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:400:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:400:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:404:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:404:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:404:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:412:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:412:47: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:412:47: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:415:55: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:415:55: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:415:55: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:416:55: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:416:55: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:416:55: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:418:54: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:418:54: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:418:54: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:424:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:424:47: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:424:47: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:426:55: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:426:55: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:426:55: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:428:54: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:428:54: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:428:54: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:433:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:433:47: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:433:47: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:434:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:434:46: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:434:46: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:82:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:82:35: sparse:    expected unsigned int [usertype] fw_major_version
-   drivers/scsi/qla2xxx/qla_dbg.c:82:35: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:83:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:83:35: sparse:    expected unsigned int [usertype] fw_minor_version
-   drivers/scsi/qla2xxx/qla_dbg.c:83:35: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:84:38: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:84:38: sparse:    expected unsigned int [usertype] fw_subminor_version
-   drivers/scsi/qla2xxx/qla_dbg.c:84:38: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:85:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:85:32: sparse:    expected unsigned int [usertype] fw_attributes
-   drivers/scsi/qla2xxx/qla_dbg.c:85:32: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:87:25: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:87:25: sparse:    expected unsigned int [usertype] vendor
-   drivers/scsi/qla2xxx/qla_dbg.c:87:25: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:88:25: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:88:25: sparse:    expected unsigned int [usertype] device
-   drivers/scsi/qla2xxx/qla_dbg.c:88:25: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:89:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:89:35: sparse:    expected unsigned int [usertype] subsystem_vendor
-   drivers/scsi/qla2xxx/qla_dbg.c:89:35: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:90:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:90:35: sparse:    expected unsigned int [usertype] subsystem_device
-   drivers/scsi/qla2xxx/qla_dbg.c:90:35: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:759:20: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:759:18: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:759:18: sparse:    expected unsigned short [usertype] hccr
-   drivers/scsi/qla2xxx/qla_dbg.c:759:18: sparse:    got restricted __be16 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:762:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:762:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:762:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:765:35: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:765:35: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:765:35: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:773:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:773:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:773:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_dbg.c:780:45: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:780:43: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:780:43: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_dbg.c:780:43: sparse:    got restricted __be16 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:785:50: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:785:48: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:785:48: sparse:    expected unsigned short
-   drivers/scsi/qla2xxx/qla_dbg.c:785:48: sparse:    got restricted __be16 [usertype]
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse:    got unsigned short [noderef] [usertype] <asn:2> *[assigned] dmp_reg
-   drivers/scsi/qla2xxx/qla_dbg.c:790:48: sparse: sparse: too many warnings
---
-   drivers/scsi/qla2xxx/qla_sup.c:29:37: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_sup.c:29:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_sup.c:29:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:32:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:32:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:32:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:36:31: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_sup.c:36:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:36:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:37:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:37:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:37:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:39:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:39:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:39:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:43:39: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:43:39: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:43:39: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:44:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:44:38: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:44:38: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:46:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:46:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:46:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:61:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:61:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:61:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:62:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:62:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:62:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:76:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:76:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:76:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:77:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:77:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:77:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:79:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:79:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:79:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:81:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:81:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:81:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:83:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:83:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:83:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:84:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:84:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:84:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:123:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:123:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:123:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:124:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:124:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:124:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:127:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:127:41: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:127:41: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:130:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:130:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:130:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:131:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:131:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:131:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:136:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:136:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:136:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:137:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:137:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:137:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:174:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:174:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:174:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:175:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:175:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:175:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:219:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:219:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:219:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:220:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:220:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:220:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:229:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:229:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:229:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:278:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:278:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:278:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:279:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:279:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:279:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:282:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:282:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:282:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:317:19: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:317:19: sparse:    expected unsigned short [usertype] wprot_old
-   drivers/scsi/qla2xxx/qla_sup.c:317:19: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:319:45: sparse: sparse: incorrect type in argument 3 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:319:45: sparse:    expected unsigned short [usertype] data
-   drivers/scsi/qla2xxx/qla_sup.c:319:45: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:320:15: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:320:15: sparse:    expected unsigned short [usertype] wprot
-   drivers/scsi/qla2xxx/qla_sup.c:320:15: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:350:31: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:350:31: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:350:31: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:351:30: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:351:30: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:351:30: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:360:45: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:360:45: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:360:45: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:410:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:410:23: sparse:    expected restricted __le16 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:410:23: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:411:22: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:411:22: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:411:22: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:420:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:420:37: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:420:37: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:459:24: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_sup.c:459:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_sup.c:459:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:462:35: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_sup.c:462:35: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:462:35: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:463:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:463:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:463:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:502:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:502:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:502:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:503:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:503:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:503:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:506:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:506:37: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:506:37: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:616:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:627:19: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:628:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:688:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:690:29: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_sup.c:693:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:693:48: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:694:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:698:31: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:700:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:704:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:704:48: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:705:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:709:15: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:712:25: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:715:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:716:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:717:21: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:722:25: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:959:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:965:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:970:34: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:977:15: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:978:15: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:987:30: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:1055:22: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_sup.c:1059:45: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:1061:42: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_sup.c:1117:28: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_sup.c:1119:28: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_sup.c:1123:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1123:47: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1124:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1138:30: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1140:27: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1145:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1145:47: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1146:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1151:15: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1159:25: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1175:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_sup.c:1200:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1200:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1200:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1201:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1201:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1201:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1202:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1202:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1202:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1243:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1243:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1243:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1244:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1244:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1244:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1355:49: sparse: sparse: incorrect type in argument 3 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1355:49: sparse:    expected unsigned int [usertype] data
-   drivers/scsi/qla2xxx/qla_sup.c:1355:49: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:1389:25: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1389:25: sparse:    expected unsigned short [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:1389:25: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:1440:21: sparse: sparse: incorrect type in argument 3 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1440:21: sparse:    expected unsigned short [usertype] data
-   drivers/scsi/qla2xxx/qla_sup.c:1440:21: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:1469:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1469:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1469:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1470:27: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1470:27: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1470:27: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1471:23: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1471:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_sup.c:1471:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_sup.c:1481:58: sparse: sparse: incorrect type in argument 3 (different base types)
-   drivers/scsi/qla2xxx/qla_sup.c:1481:58: sparse:    expected unsigned int [usertype] data
-   drivers/scsi/qla2xxx/qla_sup.c:1481:58: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_sup.c:1493:24: sparse: sparse: too many warnings
---
-   drivers/scsi/qla2xxx/qla_nx.c:1568:25: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1570:26: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1569:26: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1569:24: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1569:24: sparse:    expected restricted __le32 [usertype] offset
-   drivers/scsi/qla2xxx/qla_nx.c:1569:24: sparse:    got unsigned int
-   drivers/scsi/qla2xxx/qla_nx.c:1571:28: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1573:21: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1574:73: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1585:19: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1585:19: sparse: sparse: incorrect type in initializer (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1585:19: sparse:    expected int idx
-   drivers/scsi/qla2xxx/qla_nx.c:1585:19: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1594:14: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1593:18: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1593:16: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1593:16: sparse:    expected restricted __le32 [usertype] offset
-   drivers/scsi/qla2xxx/qla_nx.c:1593:16: sparse:    got unsigned int
-   drivers/scsi/qla2xxx/qla_nx.c:1596:56: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1609:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1609:32: sparse:    expected unsigned int [usertype] offset
-   drivers/scsi/qla2xxx/qla_nx.c:1609:32: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1640:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1640:32: sparse:    expected unsigned int [usertype] offset
-   drivers/scsi/qla2xxx/qla_nx.c:1640:32: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1787:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1787:35: sparse:    expected unsigned short [usertype] request_q_outpointer
-   drivers/scsi/qla2xxx/qla_nx.c:1787:35: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1788:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1788:35: sparse:    expected unsigned short [usertype] response_q_inpointer
-   drivers/scsi/qla2xxx/qla_nx.c:1788:35: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1789:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1789:31: sparse:    expected unsigned short [usertype] request_q_length
-   drivers/scsi/qla2xxx/qla_nx.c:1789:31: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1790:32: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1790:32: sparse:    expected unsigned short [usertype] response_q_length
-   drivers/scsi/qla2xxx/qla_nx.c:1790:32: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:1794:38: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx.c:1794:38: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_nx.c:1794:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:1795:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1795:37: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:1795:37: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:1796:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1796:38: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:1796:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:1865:25: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1867:30: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1866:26: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1866:24: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:1866:24: sparse:    expected restricted __le32 [usertype] offset
-   drivers/scsi/qla2xxx/qla_nx.c:1866:24: sparse:    got unsigned int
-   drivers/scsi/qla2xxx/qla_nx.c:1868:25: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1870:32: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1875:33: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:1875:71: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_nx.c:2004:14: sparse: sparse: incorrect type in assignment (different base types)
->> drivers/scsi/qla2xxx/qla_nx.c:2004:14: sparse:    expected restricted __le16 [noderef] [usertype] <asn:2> *wptr
->> drivers/scsi/qla2xxx/qla_nx.c:2004:14: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2073:35: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx.c:2073:35: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2073:35: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2074:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2074:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2074:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2086:70: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx.c:2086:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2086:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2087:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2087:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2087:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2088:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2088:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2088:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2101:32: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2101:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2101:32: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2139:42: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2139:42: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2139:42: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2143:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2143:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2143:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2155:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2155:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2155:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2156:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2156:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2156:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2157:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2157:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2157:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2170:32: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2170:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2170:32: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2200:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2200:34: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2200:34: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2204:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2204:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2204:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2235:34: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2235:34: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2235:34: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2239:38: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2239:38: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2239:38: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2250:62: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2250:62: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2250:62: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2251:62: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2251:62: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2251:62: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2252:62: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2252:62: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2252:62: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2264:32: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2264:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx.c:2264:32: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx.c:2568:26: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2568:26: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:2568:26: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:2762:21: sparse: sparse: incorrect type in argument 3 (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:2762:21: sparse:    expected unsigned int [usertype] data
-   drivers/scsi/qla2xxx/qla_nx.c:2762:21: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3859:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3859:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3859:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3884:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3884:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3884:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3885:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3885:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3885:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3907:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3907:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3907:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3908:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3908:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3908:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3964:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:3964:37: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:3964:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4000:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:4000:37: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4000:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4030:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:4030:37: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4030:37: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4058:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:4058:29: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4058:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4124:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nx.c:4124:37: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_nx.c:4124:37: sparse:    got restricted __le32 [usertype]
---
-   drivers/scsi/qla2xxx/qla_mr.c:56:21: sparse: sparse: restricted pci_channel_state_t degrades to integer
-   drivers/scsi/qla2xxx/qla_mr.c:56:37: sparse: sparse: restricted pci_channel_state_t degrades to integer
-   drivers/scsi/qla2xxx/qla_mr.c:113:14: sparse: sparse: incorrect type in assignment (different base types)
->> drivers/scsi/qla2xxx/qla_mr.c:113:14: sparse:    expected restricted __le32 [noderef] [usertype] <asn:2> *optr
->> drivers/scsi/qla2xxx/qla_mr.c:113:14: sparse:    got unsigned int [noderef] <asn:2> *
->> drivers/scsi/qla2xxx/qla_mr.c:680:24: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mr.c:680:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:680:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:681:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:681:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:681:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:683:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:683:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:683:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:684:24: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:684:24: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:684:24: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:687:23: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_mr.c:687:23: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:687:23: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:916:36: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:916:36: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:916:36: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:918:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:918:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:918:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:929:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:929:40: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:929:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:948:49: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:948:49: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:948:49: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:951:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:951:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:951:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:952:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:952:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:952:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:953:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:953:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:953:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:954:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:954:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:954:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:955:40: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:955:40: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:955:40: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:956:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:956:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:956:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:986:49: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:986:49: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:986:49: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:989:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:989:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:989:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:990:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:990:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:990:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:991:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:991:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:991:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:992:57: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:992:57: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:992:57: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1038:51: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1038:51: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1038:51: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1448:33: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1448:33: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1448:33: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1451:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1451:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1451:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1452:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1452:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1452:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1453:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1453:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1453:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1454:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1454:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1454:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1499:55: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1499:55: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1499:55: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:1519:41: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:1519:41: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:1519:41: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2725:37: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2725:37: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mr.c:2725:37: sparse:    got unsigned int [noderef] [usertype] <asn:2> *rsp_q_in
-   drivers/scsi/qla2xxx/qla_mr.c:2787:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2787:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mr.c:2787:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *rsp_q_out
-   drivers/scsi/qla2xxx/qla_mr.c:2818:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2818:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2818:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2819:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2819:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2819:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2820:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2820:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2820:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2850:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2850:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2850:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2851:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2851:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2851:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2852:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2852:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2852:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2853:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2853:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2853:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2854:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2854:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2854:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2855:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2855:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2855:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2856:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2856:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2856:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2886:14: sparse: sparse: incorrect type in assignment (different base types)
->> drivers/scsi/qla2xxx/qla_mr.c:2886:14: sparse:    expected restricted __le32 [noderef] [usertype] <asn:2> *wptr
-   drivers/scsi/qla2xxx/qla_mr.c:2886:14: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2943:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2943:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2943:47: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:2949:54: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:2949:54: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_mr.c:2949:54: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_mr.c:3117:47: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:3117:47: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mr.c:3117:47: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_mr.c:3182:26: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_mr.c:3182:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_mr.c:3182:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
-   arch/x86/include/asm/bitops.h:77:37: sparse: sparse: cast truncates bits from constant value (ffffff7f becomes 7f)
---
->> drivers/scsi/qla2xxx/qla_nx2.c:3949:35: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx2.c:3949:35: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_nx2.c:3949:35: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx2.c:3950:46: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx2.c:3950:46: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx2.c:3950:46: sparse:    got unsigned int [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx2.c:3964:70: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx2.c:3964:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_nx2.c:3964:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx2.c:3965:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx2.c:3965:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx2.c:3965:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx2.c:3966:70: sparse: sparse: incorrect type in argument 1 (different base types)
-   drivers/scsi/qla2xxx/qla_nx2.c:3966:70: sparse:    expected restricted __le16 const volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx2.c:3966:70: sparse:    got unsigned short [noderef] <asn:2> *
-   drivers/scsi/qla2xxx/qla_nx2.c:3979:32: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nx2.c:3979:32: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
-   drivers/scsi/qla2xxx/qla_nx2.c:3979:32: sparse:    got unsigned int [noderef] <asn:2> *
---
-   drivers/scsi/qla2xxx/qla_target.c:5768:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5779:21: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_target.c:5783:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5828:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5838:21: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5854:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5855:29: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:5858:29: sparse: sparse: restricted __le16 degrades to integer
-   drivers/scsi/qla2xxx/qla_target.c:5862:37: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:1689:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:1691:25: sparse: sparse: restricted __le32 degrades to integer
-   drivers/scsi/qla2xxx/qla_target.c:1700:33: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:1700:33: sparse:    expected unsigned short [usertype] srr_flags
-   drivers/scsi/qla2xxx/qla_target.c:1700:33: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2132:13: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_target.c:2154:13: sparse: sparse: cast to restricted __le32
-   drivers/scsi/qla2xxx/qla_target.c:2478:45: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_target.c:2478:45: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_target.c:2478:45: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_target.c:837:13: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:845:19: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:1177:19: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:1318:36: sparse: sparse: cast to restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:1760:15: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:1760:15: sparse:    expected unsigned int [usertype] f_ctl
-   drivers/scsi/qla2xxx/qla_target.c:1760:15: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:1832:15: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:1832:15: sparse:    expected unsigned int [usertype] f_ctl
-   drivers/scsi/qla2xxx/qla_target.c:1832:15: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:1905:23: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:1905:23: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_target.c:1905:23: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:1924:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:1924:31: sparse:    expected restricted __le16 [usertype] ox_id
-   drivers/scsi/qla2xxx/qla_target.c:1924:31: sparse:    got unsigned short [usertype] ox_id
-   drivers/scsi/qla2xxx/qla_target.c:2218:23: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2218:23: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_target.c:2218:23: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2227:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2227:37: sparse:    expected unsigned short [usertype] scsi_status
-   drivers/scsi/qla2xxx/qla_target.c:2227:37: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2229:38: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2229:38: sparse:    expected unsigned short [usertype] response_len
-   drivers/scsi/qla2xxx/qla_target.c:2229:38: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2275:23: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2275:23: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_target.c:2275:23: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2284:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2284:37: sparse:    expected unsigned short [usertype] scsi_status
-   drivers/scsi/qla2xxx/qla_target.c:2284:37: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2286:38: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2286:38: sparse:    expected unsigned short [usertype] response_len
-   drivers/scsi/qla2xxx/qla_target.c:2286:38: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.h:382:17: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.c:2287:34: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2287:34: sparse:    expected unsigned int [usertype] residual
-   drivers/scsi/qla2xxx/qla_target.c:2287:34: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2290:45: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_target.c:2290:45: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_target.c:2290:45: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:2576:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2576:27: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_target.c:2576:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2577:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2577:22: sparse:    expected unsigned short [usertype] timeout
-   drivers/scsi/qla2xxx/qla_target.c:2577:22: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2584:40: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2584:40: sparse:    expected unsigned int [usertype] relative_offset
-   drivers/scsi/qla2xxx/qla_target.c:2584:40: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2639:42: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2639:42: sparse:    expected unsigned int [usertype] transfer_length
-   drivers/scsi/qla2xxx/qla_target.c:2639:42: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2646:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2646:35: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_target.c:2646:35: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2808:34: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2808:34: sparse:    expected unsigned int [usertype] residual
-   drivers/scsi/qla2xxx/qla_target.c:2808:34: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2809:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2809:37: sparse:    expected unsigned short [usertype] scsi_status
-   drivers/scsi/qla2xxx/qla_target.c:2809:37: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2830:45: sparse: sparse: invalid assignment: |=
-   drivers/scsi/qla2xxx/qla_target.c:2830:45: sparse:    left side has type unsigned short
-   drivers/scsi/qla2xxx/qla_target.c:2830:45: sparse:    right side has type restricted __le16
-   drivers/scsi/qla2xxx/qla_target.c:2832:46: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2832:46: sparse:    expected unsigned short [usertype] sense_length
-   drivers/scsi/qla2xxx/qla_target.c:2832:46: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2835:69: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:2835:69: sparse:    expected unsigned int [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:2835:69: sparse:    got restricted __be32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:3271:60: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:3271:60: sparse:    expected unsigned short [usertype] scsi_status
-   drivers/scsi/qla2xxx/qla_target.c:3271:60: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:3273:57: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:3273:57: sparse:    expected unsigned int [usertype] residual
-   drivers/scsi/qla2xxx/qla_target.c:3273:57: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_target.c:3089:27: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_target.c:3449:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3449:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3449:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3449:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3450:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3450:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3450:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3450:26: sparse: sparse: cast to restricted __be16
-   drivers/scsi/qla2xxx/qla_target.c:3451:26: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.c:3451:26: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.c:3451:26: sparse: sparse: cast to restricted __be32
-   drivers/scsi/qla2xxx/qla_target.c:3451:26: sparse: sparse: cast to restricted __be32
---
->> drivers/scsi/qla2xxx/qla_nvme.c:387:45: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nvme.c:387:45: sparse:    expected restricted __le32 const volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_nvme.c:387:45: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_out
-   drivers/scsi/qla2xxx/qla_nvme.c:450:31: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nvme.c:450:31: sparse:    expected unsigned short [usertype] nport_handle
-   drivers/scsi/qla2xxx/qla_nvme.c:450:31: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nvme.c:457:35: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nvme.c:457:35: sparse:    expected unsigned short [usertype] nvme_rsp_dsd_len
-   drivers/scsi/qla2xxx/qla_nvme.c:457:35: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nvme.c:461:37: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nvme.c:461:37: sparse:    expected unsigned short [usertype] nvme_cmnd_dseg_len
-   drivers/scsi/qla2xxx/qla_nvme.c:461:37: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nvme.c:464:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nvme.c:464:29: sparse:    expected unsigned short [usertype] dseg_count
-   drivers/scsi/qla2xxx/qla_nvme.c:464:29: sparse:    got restricted __le16 [usertype]
-   drivers/scsi/qla2xxx/qla_nvme.c:465:29: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/scsi/qla2xxx/qla_nvme.c:465:29: sparse:    expected unsigned int [usertype] byte_count
-   drivers/scsi/qla2xxx/qla_nvme.c:465:29: sparse:    got restricted __le32 [usertype]
-   drivers/scsi/qla2xxx/qla_nvme.c:517:26: sparse: sparse: incorrect type in argument 1 (different base types)
->> drivers/scsi/qla2xxx/qla_nvme.c:517:26: sparse:    expected restricted __le32 volatile [noderef] [usertype] <asn:2> *addr
->> drivers/scsi/qla2xxx/qla_nvme.c:517:26: sparse:    got unsigned int [noderef] [usertype] <asn:2> *req_q_in
+vim +/CONFIG_SCSI_PM8001_MAX_DMA_SG +102 drivers/scsi/pm8001/pm8001_defs.h
 
-vim +1203 drivers/scsi/qla2xxx/qla_os.c
-
-2533cf671da060 Lalit Chandivade 2009-03-24  1179  
-a465537ad1a442 Sawan Chandak    2016-07-06  1180  #define ISP_REG_DISCONNECT 0xffffffffU
-a465537ad1a442 Sawan Chandak    2016-07-06  1181  /**************************************************************************
-a465537ad1a442 Sawan Chandak    2016-07-06  1182  * qla2x00_isp_reg_stat
-a465537ad1a442 Sawan Chandak    2016-07-06  1183  *
-a465537ad1a442 Sawan Chandak    2016-07-06  1184  * Description:
-a465537ad1a442 Sawan Chandak    2016-07-06  1185  *	Read the host status register of ISP before aborting the command.
-a465537ad1a442 Sawan Chandak    2016-07-06  1186  *
-a465537ad1a442 Sawan Chandak    2016-07-06  1187  * Input:
-a465537ad1a442 Sawan Chandak    2016-07-06  1188  *	ha = pointer to host adapter structure.
-a465537ad1a442 Sawan Chandak    2016-07-06  1189  *
-a465537ad1a442 Sawan Chandak    2016-07-06  1190  *
-a465537ad1a442 Sawan Chandak    2016-07-06  1191  * Returns:
-a465537ad1a442 Sawan Chandak    2016-07-06  1192  *	Either true or false.
-a465537ad1a442 Sawan Chandak    2016-07-06  1193  *
-a465537ad1a442 Sawan Chandak    2016-07-06  1194  * Note:	Return true if there is register disconnect.
-a465537ad1a442 Sawan Chandak    2016-07-06  1195  **************************************************************************/
-a465537ad1a442 Sawan Chandak    2016-07-06  1196  static inline
-a465537ad1a442 Sawan Chandak    2016-07-06  1197  uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
-a465537ad1a442 Sawan Chandak    2016-07-06  1198  {
-a465537ad1a442 Sawan Chandak    2016-07-06  1199  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
-bf6061b17a8d47 Sawan Chandak    2017-03-31  1200  	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
-a465537ad1a442 Sawan Chandak    2016-07-06  1201  
-bf6061b17a8d47 Sawan Chandak    2017-03-31  1202  	if (IS_P3P_TYPE(ha))
-bf6061b17a8d47 Sawan Chandak    2017-03-31 @1203  		return ((RD_REG_DWORD(&reg82->host_int)) == ISP_REG_DISCONNECT);
-bf6061b17a8d47 Sawan Chandak    2017-03-31  1204  	else
-bf6061b17a8d47 Sawan Chandak    2017-03-31 @1205  		return ((RD_REG_DWORD(&reg->host_status)) ==
-bf6061b17a8d47 Sawan Chandak    2017-03-31  1206  			ISP_REG_DISCONNECT);
-a465537ad1a442 Sawan Chandak    2016-07-06  1207  }
-a465537ad1a442 Sawan Chandak    2016-07-06  1208  
-
-:::::: The code at line 1203 was first introduced by commit
-:::::: bf6061b17a8d47ef0d9344d3ef576a4ff0edf793 scsi: qla2xxx: Add fix to read correct register value for ISP82xx.
-
-:::::: TO: Sawan Chandak <sawan.chandak@cavium.com>
-:::::: CC: Martin K. Petersen <martin.petersen@oracle.com>
+    95	
+    96	#define USI_MAX_MEMCNT_BASE	5
+    97	#define IB			(USI_MAX_MEMCNT_BASE + 1)
+    98	#define CI			(IB + PM8001_MAX_SPCV_INB_NUM)
+    99	#define OB			(CI + PM8001_MAX_SPCV_INB_NUM)
+   100	#define PI			(OB + PM8001_MAX_SPCV_OUTB_NUM)
+   101	#define USI_MAX_MEMCNT		(PI + PM8001_MAX_SPCV_OUTB_NUM)
+ > 102	#define	CONFIG_SCSI_PM8001_MAX_DMA_SG	528
+   103	#define PM8001_MAX_DMA_SG	CONFIG_SCSI_PM8001_MAX_DMA_SG
+   104	enum memory_region_num {
+   105		AAP1 = 0x0, /* application acceleration processor */
+   106		IOP,	    /* IO processor */
+   107		NVMD,	    /* NVM device */
+   108		DEV_MEM,    /* memory for devices */
+   109		CCB_MEM,    /* memory for command control block */
+   110		FW_FLASH,    /* memory for fw flash update */
+   111		FORENSIC_MEM  /* memory for fw forensic data */
+   112	};
+   113	#define	PM8001_EVENT_LOG_SIZE	 (128 * 1024)
+   114	
 
 ---
 0-DAY kernel test infrastructure                 Open Source Technology Center
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
+
+--prvo5xbs7ftc3z3b
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+
+--prvo5xbs7ftc3z3b--
