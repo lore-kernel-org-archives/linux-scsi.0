@@ -6,61 +6,59 @@ X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B515C2D0DA
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 08:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C545C2D0DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 10:32:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B2742071E
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 08:21:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2D392077B
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 10:32:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="KzZ1lYnZ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="SG0/GQLf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726307AbfLYIVf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Dec 2019 03:21:35 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:38074 "EHLO
+        id S1726289AbfLYKcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Dec 2019 05:32:03 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:56358 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726196AbfLYIVe (ORCPT
+        by vger.kernel.org with ESMTP id S1726025AbfLYKcD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Dec 2019 03:21:34 -0500
+        Wed, 25 Dec 2019 05:32:03 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577262094; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1577269922; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=K83HIkx3t93SDXJyO1FB5pObJwAm8xvbYEkqpHJP7VU=;
- b=KzZ1lYnZXABHLGW+LfuREx5Q16m+AVFcQym3kHGtrFukm2NIyIdHDvsTkgvHwq+umDbjUtJt
- YKTCwk9IY2q6MCa7wIh35785HevKtGTKbZb0094ahaSaiwfiXABY2ZaznlaChc0btMzpJ8pg
- z33Xn1WiJ388lALCQ9Wu+cln1hg=
+ MIME-Version: Sender; bh=o2fbME7+PLAiiGCRk1M6/Q3MMwT9xHj72vOThOAvxmU=;
+ b=SG0/GQLfiBlyChJoHIa038h1GhEaY+aKQH5weVzMPIsvhrhaOSRAKY1THXXTkudgzWRwYfWH
+ BAYWVKwsdwn6RnyeNgwfhaqzdsWbjj70mrzsCt9zc/MwdGdZmlUb9/QeDYck5NOTlM9gICry
+ WRl5erYnwElJDL9XAFurlzkFPhU=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e031c07.7f0166a369d0-smtp-out-n02;
- Wed, 25 Dec 2019 08:21:27 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e033aa1.7f9520f9ef80-smtp-out-n03;
+ Wed, 25 Dec 2019 10:32:01 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E6CBEC447A5; Wed, 25 Dec 2019 08:21:25 +0000 (UTC)
+        id D5314C447A2; Wed, 25 Dec 2019 10:32:00 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 09744C433CB;
-        Wed, 25 Dec 2019 08:21:25 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA83DC43383;
+        Wed, 25 Dec 2019 10:31:59 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Wed, 25 Dec 2019 16:21:25 +0800
+Date:   Wed, 25 Dec 2019 18:31:59 +0800
 From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, beanhuo@micron.com,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-Subject: Re: [PATCH v1 1/2] scsi: ufs: unify scsi_block_requests usage
-In-Reply-To: <1577192466-20762-2-git-send-email-stanley.chu@mediatek.com>
-References: <1577192466-20762-1-git-send-email-stanley.chu@mediatek.com>
- <1577192466-20762-2-git-send-email-stanley.chu@mediatek.com>
-Message-ID: <d97b91ae4547e5b6e433891446a68545@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 5/6] ufs: Remove superfluous memory barriers
+In-Reply-To: <20191224220248.30138-6-bvanassche@acm.org>
+References: <20191224220248.30138-1-bvanassche@acm.org>
+ <20191224220248.30138-6-bvanassche@acm.org>
+Message-ID: <aba850f956421c187e0b88343f6d5070@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
@@ -68,40 +66,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-24 21:01, Stanley Chu wrote:
-> Currently UFS driver has ufshcd_scsi_block_requests() with
-> reference counter mechanism to avoid possible racing of blocking and
-> unblocking requests flow. Unify all users in UFS driver to use the
-> same function.
+On 2019-12-25 06:02, Bart Van Assche wrote:
+> Calling wmb() after having written to a doorbell slows down code and 
+> does
+> not help to commit the doorbell write faster. Hence remove such wmb()
+> calls. Note: detailed information about the semantics of writel() is
+> available in Documentation/driver-api/device-io.rst.
 > 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 4 ----
+>  1 file changed, 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ed02a70..b6b9665 100644
+> index 4d9bb1932b39..edcc137c436b 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5177,7 +5177,7 @@ static void
-> ufshcd_exception_event_handler(struct work_struct *work)
->  	hba = container_of(work, struct ufs_hba, eeh_work);
-> 
->  	pm_runtime_get_sync(hba->dev);
-> -	scsi_block_requests(hba->host);
-> +	ufshcd_scsi_block_requests(hba);
->  	err = ufshcd_get_ee_status(hba, &status);
->  	if (err) {
->  		dev_err(hba->dev, "%s: failed to get exception status %d\n",
-> @@ -5191,7 +5191,7 @@ static void
-> ufshcd_exception_event_handler(struct work_struct *work)
->  		ufshcd_bkops_exception_event_handler(hba);
-> 
->  out:
-> -	scsi_unblock_requests(hba->host);
-> +	ufshcd_scsi_unblock_requests(hba);
->  	pm_runtime_put_sync(hba->dev);
->  	return;
+> @@ -1879,8 +1879,6 @@ void ufshcd_send_command(struct ufs_hba *hba,
+> unsigned int task_tag)
+>  	ufshcd_clk_scaling_start_busy(hba);
+>  	__set_bit(task_tag, &hba->outstanding_reqs);
+>  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> -	/* Make sure that doorbell is committed immediately */
+> -	wmb();
 >  }
+> 
+>  /**
+> @@ -5766,8 +5764,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba 
+> *hba,
+>  	wmb();
+> 
+>  	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
+> -	/* Make sure that doorbell is committed immediately */
+> -	wmb();
+> 
+>  	spin_unlock_irqrestore(host->host_lock, flags);
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Hi Bart,
+
+Three wmb()s were added in commit ad1a1b9cd because we did see instances 
+on
+which OCS=3(MISMATCH_DATA_BUFFER_SIZE) error were observed in large 
+scale
+test. Commit ad1a1b9cd fixed the error and we had confirmed it through
+large amount of tests. I am not sure removing the 2 wmb()s here would 
+cause
+regression or not.
+
+Thanks,
+
+Can Guo.
