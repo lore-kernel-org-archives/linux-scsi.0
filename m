@@ -2,96 +2,172 @@ Return-Path: <SRS0=On0Q=2P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14388C2D0D2
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 04:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A9AC2D0D5
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 05:17:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD602206CB
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 04:07:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="KJdu55EY"
+	by mail.kernel.org (Postfix) with ESMTP id 327252072A
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Dec 2019 05:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726353AbfLYEHz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Dec 2019 23:07:55 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:17481 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726332AbfLYEHz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Dec 2019 23:07:55 -0500
-X-UUID: 22bf739267da4681adf5ee9a8f301ecf-20191225
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=NIJENyJKlWoqwgHXAL2hevvVed09oj9yO9raXuRmiUo=;
-        b=KJdu55EYy+80qNsVPMOL7NDDG08LDp+O6eYTpnlPC/V+GNUmBvd1jF8+epGwtUDgMsDwmKIWFO1q1vB4vpCNTFlgpuYQHpVWBl0Qkqf4NMqnQJdoROo7h+I/tIMexNOQSwixTQYo9VcC6b6XAWN9zXKUoZTkCDGpsPixO5zHb+g=;
-X-UUID: 22bf739267da4681adf5ee9a8f301ecf-20191225
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1122320882; Wed, 25 Dec 2019 12:07:46 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Wed, 25 Dec 2019 12:07:14 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Wed, 25 Dec 2019 12:07:21 +0800
-Message-ID: <1577246863.13056.48.camel@mtkswgap22>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: unify scsi_block_requests usage
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
-        <matthias.bgg@gmail.com>, <beanhuo@micron.com>,
-        <cang@codeaurora.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>
-Date:   Wed, 25 Dec 2019 12:07:43 +0800
-In-Reply-To: <e9a8fbc0-5f08-75f5-b23b-2bbaa28a6222@acm.org>
-References: <1577192466-20762-1-git-send-email-stanley.chu@mediatek.com>
-         <1577192466-20762-2-git-send-email-stanley.chu@mediatek.com>
-         <e9a8fbc0-5f08-75f5-b23b-2bbaa28a6222@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1725992AbfLYFRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Dec 2019 00:17:55 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:35676 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725784AbfLYFRz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Dec 2019 00:17:55 -0500
+Received: from callcc.thunk.org (pool-72-93-95-157.bstnma.fios.verizon.net [72.93.95.157])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id xBP5HMP6016470
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 25 Dec 2019 00:17:23 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 9471C420485; Wed, 25 Dec 2019 00:17:22 -0500 (EST)
+Date:   Wed, 25 Dec 2019 00:17:22 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Andrea Vai <andrea.vai@unipv.it>,
+        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: AW: Slow I/O on USB media after commit
+ f664a3cc17b7d0a2bc3b3ab96181e1029b0ec0e6
+Message-ID: <20191225051722.GA119634@mit.edu>
+References: <f38db337cf26390f7c7488a0bc2076633737775b.camel@unipv.it>
+ <20191218094830.GB30602@ming.t460p>
+ <b1b6a0e9d690ecd9432025acd2db4ac09f834040.camel@unipv.it>
+ <20191223130828.GA25948@ming.t460p>
+ <20191223162619.GA3282@mit.edu>
+ <4c85fd3f2ec58694cc1ff7ab5c88d6e11ab6efec.camel@unipv.it>
+ <20191223172257.GB3282@mit.edu>
+ <bb5d395fe47f033be0b8ed96cbebf8867d2416c4.camel@unipv.it>
+ <20191223195301.GC3282@mit.edu>
+ <20191224012707.GA13083@ming.t460p>
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 9E8AC75994A9931C91CCCF1ABA221DC9F8391A441FA39B78CDE8538966CF3BFE2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191224012707.GA13083@ming.t460p>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQmFydCwNCg0KDQo+IEhpIFN0YW5sZXksDQo+IA0KPiBGcm9tIHRoZSBTQ1NJIGNvcmU6DQo+
-IA0KPiB2b2lkIHNjc2lfYmxvY2tfcmVxdWVzdHMoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpDQo+
-IHsNCj4gCXNob3N0LT5ob3N0X3NlbGZfYmxvY2tlZCA9IDE7DQo+IH0NCj4gDQo+IEluIG90aGVy
-IHdvcmRzLCBuZWl0aGVyIHNjc2lfYmxvY2tfcmVxdWVzdHMoKSBub3INCj4gdWZzaGNkX3Njc2lf
-YmxvY2tfcmVxdWVzdHMoKSB3YWl0IGZvciBvbmdvaW5nIHVmc2hjZF9xdWV1ZWNvbW1hbmQoKQ0K
-PiBjYWxscyB0byBmaW5pc2guIElzIGl0IHJlcXVpcmVkIHRvIHdhaXQgZm9yIHRoZXNlIGNhbGxz
-IHRvIGZpbmlzaCBiZWZvcmUNCj4gZXhjZXB0aW9ucyBhcmUgaGFuZGxlZD8gSWYgbm90LCBjYW4g
-dGhlIHNjc2lfYmxvY2tfcmVxdWVzdHMoKSBhbmQNCj4gc2NzaV91bmJsb2NrX3JlcXVlc3RzKCkg
-Y2FsbHMgYmUgbGVmdCBvdXQ/IElmIGl0IGlzIHJlcXVpcmVkIHRvIHdhaXQgZm9yDQo+IG9uZ29p
-bmcgdWZzaGNkX3F1ZXVlY29tbWFuZCgpIGNhbGxzIHRvIGZpbmlzaCB0aGVuIEkgdGhpbmsgdGhl
-DQo+IHNjc2lfYmxvY2tfcmVxdWVzdHMoKSBhbmQgc2NzaV91bmJsb2NrX3JlcXVlc3RzKCkgd2ls
-bCBoYXZlIHRvIGJlDQo+IGNoYW5nZWQgaW50byBzb21ldGhpbmcgZWxzZS4NCg0KQVNGQUlLLCB1
-ZnNoY2RfZXhjZXB0aW9uX2V2ZW50X2hhbmRsZXIoKSBpcyBub3QgcmVxdWlyZWQgdG8gd2FpdCBm
-b3INCm9uZ29pbmcgdWZzaGNkX3F1ZXVlY29tbWFuZCgpIGNhbGxzIHRvIGZpbmlzaC4NCg0KVGhl
-IHNjc2lfYmxvY2tfcmVxdWVzdHMoKSBjYWxsIGhlcmUgaXMgdHJ5aW5nIHRvIGluY3JlYXNlIHN1
-Y2Nlc3NmdWwNCnJhdGUgb2YgcmVxdWVzdHMgc2VudCBieSB1ZnNoY2RfZXhjZXB0aW9uX2V2ZW50
-X2hhbmRsZXIoKSBiZWNhdXNlDQp0aW1lb3V0IG1heSBoYXBwZW4gaWYgZGV2aWNlIGlzIHRvbyBi
-dXN5IHRvIGhhbmRsZSB0aG9zZSByZXF1ZXN0cy4NCkJsb2NraW5nIGFueSBmdXR1cmUgaW5jb21p
-bmcgcmVxdWVzdHMgY2FuIGhlbHAuDQoNCkFzIHRpbWUgZ29lcyBieSwgYWN0dWFsbHkgY3VycmVu
-dCBVRlMgZHJpdmVyIGFsbG93cyBtb3JlIHdhaXRpbmcgdGltZSBieQ0KYmVsb3cgY2hhbmdlcyBm
-b3IgdWZzaGNkX2V4Y2VwdGlvbl9ldmVudF9oYW5kbGVyKCksIGFuZCB0aHVzIHRoZQ0Kc3VjY2Vz
-c2Z1bCByYXRlIHNoYWxsIGJlIHJhaXNlZCBtdWNoIG5vd2FkYXlzLg0KDQotIEVubGFyZ2UgUVVF
-UllfUkVRX1RJTUVPVVQgdGltZSBmcm9tIDEwMCBtcyB0byAxLjUgc2Vjb25kcw0KLSBBbGxvdyBy
-ZXRyeSBpZiBxdWVyeSByZXF1ZXN0cyBhcmUgdGltZWQgb3V0DQoNClRoZXJlZm9yZSwgdGhlIHNj
-c2lfYmxvY2tfcmVxdWVzdHMoKSBjYWxsIGlzIGFjdHVhbGx5IGEgImhlbHBlciIgdG8gaGVscA0K
-dWZzaGNkX2V4Y2VwdGlvbl9ldmVudF9oYW5kbGVyKCkgc3VjY2Vzc2Z1bC4gSSB0aGluayBpdCBj
-b3VsZCBiZSBiZXR0ZXINCmtlcHQgdG8gbWFrZSBVRlMgZGV2aWNlIHJlY292ZXIgaXRzIHBlcmZv
-cm1hbmNlIGFzIHNvb24gYXMgcG9zc2libGUuDQoNCj4gDQo+IFRoYW5rcywNCj4gDQo+IEJhcnQu
-DQoNClRoYW5rcywNClN0YW5sZXkNCg0K
+On Tue, Dec 24, 2019 at 09:27:07AM +0800, Ming Lei wrote:
+> The ext4_release_file() should be run from read() or write() syscall if
+> Fedora 30's 'cp' is implemented correctly. IMO, it isn't expected behavior
+> for ext4_release_file() to be run thousands of times when just
+> running 'cp' once, see comment of ext4_release_file():
 
+What's your evidence of that?  As opposed to the writeback taking a
+long time, leading to the *one* call of ext4_release_file taking a
+long time?  If it's a big file, we might very well be calliing
+ext4_writepages multiple times, from a single call to
+__filemap_fdatawrite_range().
+
+You confused mightily from that assertion, and that caused me to make
+assumptions that cp was doing something crazy.  But I'm quite conviced
+now that this is almost certainly not what is happening.
+
+> > I suspect the next step is use a blktrace, to see what kind of I/O is
+> > being sent to the USB drive, and how long it takes for the I/O to
+> > complete.  You might also try to capture the output of "iostat -x 1"
+> > while the script is running, and see what the difference might be
+> > between a kernel version that has the problem and one that doesn't,
+> > and see if that gives us a clue.
+> 
+> That isn't necessary, given we have concluded that the bad write
+> performance is caused by broken write order.
+
+I didn't see any evidence of that from what I had in my inbox, so I
+went back to the mailing list archives to figure out what you were
+talking about.  Part of the problem is this has been a very
+long-spanning thread, and I had deleted from my inbox all of the parts
+relating to the MQ scheduler since that was clearly Not My Problem.  :-)
+
+So, summarizing the most of the thread.  The problem started when we
+removed the legacy I/O scheduler, since we are now only using the MQ
+scheduler.  What the kernel is sending is long writes (240 sectors),
+but it is being sent as an interleaved stream of two sequential
+writes.  This particular pendrive can't handle this workload, because
+it has a very simplistic Flash Translation Layer.  Now, this is not
+*broken*, from a storage perspective; it's just that it's more than
+the simple little brain of this particular pen drive can handle.
+
+Previously, with a single queue, and specially since the queue depth
+supported by this pen drive is 1, the elevator algorithm would sort
+the I/O requests so that it would be mostly sequential, and this
+wouldn't be much of a problem.  However, once the legacy I/O stack was
+removed, the MQ stack is designed so that we don't have to take a
+global lock in order to submit an I/O request.  That also means that
+we can't do a full elevator sort since that would require locking all
+of the queues.
+
+This is not a problem, since HDD's generally have a 16 deep queue, and
+SSD's have a super-deep queue depth since they get their speed via
+parallel writes to different flash chips.  Unfortunately, it *is* a
+problem for super primitive USB sticks.
+
+> So far, the reason points to the extra writeback path from exit_to_usermode_loop().
+> If it is not from close() syscall, the issue should be related with file reference
+> count. If it is from close() syscall, the issue might be in 'cp''s
+> implementation.
+
+Oh, it's probably from the close system call; and it's *only* from a
+single close system call.  Because there is the auto delayed
+allocation resolution to protect against buggy userspace, under
+certain circumstances, as I explained earlier, we force a full
+writeout on a close for a file decsriptor which was opened with an
+O_TRUNC.  This is by *design*, since we are trying to protect against
+buggy userspace (application programmers vastly outnumber file system
+programmers, and far too many of them want O_PONY).  This is Working
+As Intended.
+
+You can disable it by deleting the test file before the cp:
+
+    rm -f /mnt/pendrive/$testfile
+
+Or you can disable the protection against stupid userspace by using
+the noauto_da_alloc mount option.  (But then if you have a buggy game
+program which writes the top-ten score file by using open(2) w/
+O_TRUNC, and then said program closes the OpenGL library, and the
+proprietary 3rd party binary-only video driver wedges the X server
+requiring a hard reset to recover, and the top-ten score file becomes
+a zero-length file, don't come crying to me...  Or if a graphical text
+editor forgets to use fsync(2) before saving a source file you spent
+hours working on, and then the system crashes at exactly the wrong
+moment and your source file becomes zero-length, against, don't come
+crying to me.  Blame the stupid application programmer which wrote
+your text editor who decided to skip the fsync(2), or who decided that
+copying the ACL's and xattrs was Too Hard(tm), and so opening the file
+with O_TRUNC and rewriting the file in place was easier for the
+application programmer.)
+
+In any case, I think this is all working all as intended.  The MQ I/O
+stack is optimized for modern HDD and SSD's, and especially SSD's.
+And the file system assumes that parallel sequential writes,
+especially if they are large, is really not a big deal, since that's
+what NCQ or massive parallelism of pretty much all SSD's want.
+(Again, ignoring the legacy of crappy flash drives.
+
+You can argue with storage stack folks about whether we need to have
+super-dumb mode for slow, crappy flash which uses a global lock and a
+global elevator scheduler for super-crappy flash if you want.  I'm
+going to stay out of that argument.
+
+					- Ted
