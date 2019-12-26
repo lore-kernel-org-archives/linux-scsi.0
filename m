@@ -2,173 +2,173 @@ Return-Path: <SRS0=VYtg=2Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8010AC2D0DA
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 17:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A932AC2D0C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:31:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55DDF206CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 17:51:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F5ZuHLCp"
+	by mail.kernel.org (Postfix) with ESMTP id 7B1F92080D
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726653AbfLZRu7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Dec 2019 12:50:59 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:36315 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726475AbfLZRu7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Dec 2019 12:50:59 -0500
-Received: by mail-pf1-f196.google.com with SMTP id x184so13488564pfb.3;
-        Thu, 26 Dec 2019 09:50:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=Zpv7gMiVz+kvwZJc9LFUFQAnyOM81lFf+K9yvofQkYo=;
-        b=F5ZuHLCp8nQcvsVAZguYSn+hKpqHCAH3uuekPnVyP4tqwXydkByKGGtKKJYMP+LoBi
-         4a7qgdCAYnBgsWui85L2TfFMJ+iUG7yuglafVwwylH1HDaFV7LawwysiDDGslUIALg+E
-         ow8pPkI6SYVfUqcVdvJEea7oQsJGwqOFF5nVhqzRUYJ4y02WuxD7cZxFO8WgOI6Qhwc0
-         cnXu5UwippgMn1GSsc5P4qi9BT94LwCFhxbdV8qz90fiPtpX7up0vl8it44bAvoLiAYe
-         QsKz9izLslZAXrayeJASemWfezXObqjG+Yrcu536fCNEnRSJOELpd1FbOqRAnW5DQEME
-         bOdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id;
-        bh=Zpv7gMiVz+kvwZJc9LFUFQAnyOM81lFf+K9yvofQkYo=;
-        b=Uag/io5RH6A+PrUokVZ7obJzAzgy2ATcFAfM9zrP9FAb8JUPfmkjQf0BTABywr1W8f
-         zHGWRx/6qXZo0uLg0SZnnyXproXAFHZgUP1q36W/vLhrJRxECRvZh9fMRXLII35HLWZA
-         L/hGIoWJpPbf2isMYZcxylZVPgFD6hPTpE0RYm3zc9SrBbpVTbo4aQiceo0NEf4aOY2i
-         RVOC7YiGOx0rRHCrTtEEfjsiu0GkwW0GaoFFR4VL32aa6lB1saUBFPPI1mL4ZfdMNl3Q
-         Ol+KTuqQscBuGR/RHZ3Dwj9tLRmyCnFC894JMOZIkslBbgE/3QFRLLIqTN2OeoxePBgW
-         D52Q==
-X-Gm-Message-State: APjAAAU60zzG8RX1fh3cZQUnnINiZS8akIxSw7UVLNG6tGjOOwtTsujD
-        09qQrvgIcWnm81NWA9HjfEdMVU60
-X-Google-Smtp-Source: APXvYqwUsLBbciwsv7n6kUuYxxN1BeLJx7s78VVQnWHuOTVoV0KWR1d1UgGRJDZb7Gk7nQDKuUUWyg==
-X-Received: by 2002:aa7:8699:: with SMTP id d25mr49735799pfo.139.1577382658330;
-        Thu, 26 Dec 2019 09:50:58 -0800 (PST)
-Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id o7sm39389043pfg.138.2019.12.26.09.50.57
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 26 Dec 2019 09:50:57 -0800 (PST)
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     linux-hwmon@vger.kernel.org
-Cc:     Jean Delvare <jdelvare@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [RFT PATCH v3 0/1] Summary: hwmon driver disk and solid state drives with temperature sensors
-Date:   Thu, 26 Dec 2019 09:50:50 -0800
-Message-Id: <20191226175051.31664-1-linux@roeck-us.net>
-X-Mailer: git-send-email 2.17.1
+        id S1726831AbfLZUbz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Dec 2019 15:31:55 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:37184 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726653AbfLZUbz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Dec 2019 15:31:55 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: krisman)
+        with ESMTPSA id 6BF1A27FDC0
+From:   Gabriel Krisman Bertazi <krisman@collabora.com>
+To:     lduncan@suse.com
+Cc:     cleech@redhat.com, martin.petersen@oracle.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        kernel@collabora.com
+Subject: [PATCH RESEND] iscsi: Don't destroy session if there are outstanding connections
+Date:   Thu, 26 Dec 2019 15:31:48 -0500
+Message-Id: <20191226203148.2172200-1-krisman@collabora.com>
+X-Mailer: git-send-email 2.24.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the past, several attempts have been made to add support for reporting
-SCSI/[S]ATA drive temperatures to the Linux kernel. This is desirable to
-have a means to report drive temperatures to userspace without root
-privileges and in a standard format, but also to be able to tie reported
-temperatures with the thermal subsystem.
+From: Nick Black <nlb@google.com>
 
-The most recent attempt was [1] by Linus Walleij. It went through a total
-of seven iterations. At the end, it was rejected for a number of reasons;
-see the provided link for details. This implementation resides in the
-SCSI core. It originally resided in libata but was moved to SCSI per
-maintainer request, where it was ultimately rejected.
+Hi,
 
-An earlier submission of a driver to report SCSI/SATA drive temperatures
-was made back in 2009 by Constantin Baranov [2]. This submission resides
-in the hardware monitoring subsystem. It does not rely on changes in the
-SCSI subsystem or in libata-scsi. Instead, it registers itself with the
-SCSI subsystem using scsi_register_interface(). It was rejected primarily
-because it executes ATA passthrough commands without verification that it
-is actually connected to an ATA drive.
+I thought this was already committed for some reason, until it bit me
+again today.  Any opposition to this one?
 
-Both submissions use SMART attributes to read drive temperature information.
-[1] also tries to identify temperature limits from those attributes.
-Unfortunately, SMART attributes are not well defined, resulting in relative
-complex code trying to identify the exact format of the reported data.
+>8
 
-With the available information and feedback, we can make a number of
-observations and conclusions.
-a) Using available (S)ATA drive temperature information and convert it to
-   a SCSI log page is an interesting idea. On the downside, it would add a
-   substantial amount of complexity to libata-scsi. The code would either
-   have to be optional, or it would have to be built into the kernel even
-   if it is never used on a given system. Without access to SCSI drives
-   supporting this feature, it would be all but impossible to test the code
-   against such a drive. It would neither be possible to test correctness
-   of the code in libata-scsi nor in the driver using that information.
-   Overall it would be much easier and much less risky to implement such
-   code on the receiving side (ie in a driver reporting the temperatures)
-   instead of trying to convert the information from one format to another
-   first. In summary, it is neither practical nor feasible. On top of that,
-   there is no guarantee that code implementing this functionality would
-   ever be accepted into the kernel for this very reason.
-b) The code needed to read and analyze SCSI temperature log pages is quite
-   complex (see smartmontools [5]). There is no existing support code
-   in the Linux kernel; such code would have to be written. This makes
-   the approach discussed in a) even more risky and less practical.
-c) Overall, any attempt to report temperature information for anything
-   but SATA drives in the kernel is not practical due to the complexity
-   involved, and due to the inability to test the resulting code with
-   non-SATA drives.
-d) Using SMART data for anything but basic temperature reporting is not
-   really feasible due to the lack of standardization. Any attempt to do
-   this would add a substantial amount of code, ambiguity, and risk.
+A faulty userspace that calls destroy_session() before destroying the
+connections can trigger the failure.  This patch prevents the
+issue by refusing to destroy the session if there are outstanding
+connections.
 
-This submission implements a driver to report the temperature of SATA
-drives through the hardware monitoring subsystem. It is implemented as
-stand-alone driver in the hardware monitoring subsystem. The driver uses
-the mechanism from submission [1] to register with the SCSI subsystem.
-By using this mechanism, changes in the SCSI or ATA subsystems are not
-required.  To reduce risk and complexity, it only instantiates after
-reliably validating that it is connected to a SATA drive. It does not
-attempt to report the temperature of non-SATA drives.
+------------[ cut here ]------------
+kernel BUG at mm/slub.c:306!
+invalid opcode: 0000 [#1] SMP PTI
+CPU: 1 PID: 1224 Comm: iscsid Not tainted 5.4.0-rc2.iscsi+ #7
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
+RIP: 0010:__slab_free+0x181/0x350
+[...]
+[ 1209.686056] RSP: 0018:ffffa93d4074fae0 EFLAGS: 00010246
+[ 1209.686694] RAX: ffff934efa5ad800 RBX: 000000008010000a RCX: ffff934efa5ad800
+[ 1209.687651] RDX: ffff934efa5ad800 RSI: ffffeb4041e96b00 RDI: ffff934efd402c40
+[ 1209.688582] RBP: ffffa93d4074fb80 R08: 0000000000000001 R09: ffffffffbb5dfa26
+[ 1209.689425] R10: ffff934efa5ad800 R11: 0000000000000001 R12: ffffeb4041e96b00
+[ 1209.690285] R13: ffff934efa5ad800 R14: ffff934efd402c40 R15: 0000000000000000
+[ 1209.691213] FS:  00007f7945dfb540(0000) GS:ffff934efda80000(0000) knlGS:0000000000000000
+[ 1209.692316] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 1209.693013] CR2: 000055877fd3da80 CR3: 0000000077384000 CR4: 00000000000006e0
+[ 1209.693897] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 1209.694773] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 1209.695631] Call Trace:
+[ 1209.695957]  ? __wake_up_common_lock+0x8a/0xc0
+[ 1209.696712]  iscsi_pool_free+0x26/0x40
+[ 1209.697263]  iscsi_session_teardown+0x2f/0xf0
+[ 1209.698117]  iscsi_sw_tcp_session_destroy+0x45/0x60
+[ 1209.698831]  iscsi_if_rx+0xd88/0x14e0
+[ 1209.699370]  netlink_unicast+0x16f/0x200
+[ 1209.699932]  netlink_sendmsg+0x21a/0x3e0
+[ 1209.700446]  sock_sendmsg+0x4f/0x60
+[ 1209.700902]  ___sys_sendmsg+0x2ae/0x320
+[ 1209.701451]  ? cp_new_stat+0x150/0x180
+[ 1209.701922]  __sys_sendmsg+0x59/0xa0
+[ 1209.702357]  do_syscall_64+0x52/0x160
+[ 1209.702812]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 1209.703419] RIP: 0033:0x7f7946433914
+[...]
+[ 1209.706084] RSP: 002b:00007fffb99f2378 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+[ 1209.706994] RAX: ffffffffffffffda RBX: 000055bc869eac20 RCX: 00007f7946433914
+[ 1209.708082] RDX: 0000000000000000 RSI: 00007fffb99f2390 RDI: 0000000000000005
+[ 1209.709120] RBP: 00007fffb99f2390 R08: 000055bc84fe9320 R09: 00007fffb99f1f07
+[ 1209.710110] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000038
+[ 1209.711085] R13: 000055bc8502306e R14: 0000000000000000 R15: 0000000000000000
+ Modules linked in:
+ ---[ end trace a2d933ede7f730d8 ]---
 
-The driver uses the SCT Command Transport feature set as specified in
-ATA8-ACS [4] to read and report the temperature as well as temperature
-limits and lowest/highest temperature information (if available) for
-SATA drives. If a drive does not support SCT Command Transport, the driver
-attempts to access a limited set of well known SMART attributes to read
-the drive temperature. In that case, only the current drive temperature
-is reported.
-
-The driver does not currently report temperatures for SCSI drives. This
-will be added with a subsequent patch.
-
+Co-developed-by: Salman Qazi <sqazi@google.com>
+Signed-off-by: Salman Qazi <sqazi@google.com>
+Co-developed-by: Junho Ryu <jayr@google.com>
+Signed-off-by: Junho Ryu <jayr@google.com>
+Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Nick Black <nlb@google.com>
+Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
 ---
-v3: Rename satatemp -> drivetemp
-    Use cached VPD page 89 data (available with v5.5 and later kernels)
-    Relax ATA drive detection; still check if inquiry data is
-    present, but don't use it for access detection.
-    Modify VPD data analysis following guidance from Martin K. Petersen
-    Separate SATA drive detection into separate function
-    Marked as RFT. Martin K. Petersen reports:
-    "I get a crash in the driver core during probe if the drivetemp module
-     is loaded prior to loading ahci or a SCSI HBA driver. This crash is
-     unrelated to my changes. Haven't had time to debug."
-    This will require further testing before the patch is applied.
+ drivers/scsi/iscsi_tcp.c            |  4 ++++
+ drivers/scsi/scsi_transport_iscsi.c | 26 +++++++++++++++++++++++---
+ 2 files changed, 27 insertions(+), 3 deletions(-)
 
-v2: scsi_cmd variable is no longer static
-    Fixed drive name in Kconfig 
-    Describe heuristics used to select SCT or SMART in commit message
-    Added Reviewed-by: from Linus Walleij
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 0bc63a7ab41c..b5dd1caae5e9 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -887,6 +887,10 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+ {
+ 	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
++	struct iscsi_session *session = cls_session->dd_data;
++
++	if (WARN_ON_ONCE(session->leadconn))
++		return;
+ 
+ 	iscsi_tcp_r2tpool_free(cls_session->dd_data);
+ 	iscsi_session_teardown(cls_session);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index ed8d9709b9b9..271afea654e2 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2947,6 +2947,24 @@ iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ 	return err;
+ }
+ 
++static int iscsi_session_has_conns(int sid)
++{
++	struct iscsi_cls_conn *conn;
++	unsigned long flags;
++	int found = 0;
++
++	spin_lock_irqsave(&connlock, flags);
++	list_for_each_entry(conn, &connlist, conn_list) {
++		if (iscsi_conn_get_sid(conn) == sid) {
++			found = 1;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&connlock, flags);
++
++	return found;
++}
++
+ static int
+ iscsi_set_iface_params(struct iscsi_transport *transport,
+ 		       struct iscsi_uevent *ev, uint32_t len)
+@@ -3524,10 +3542,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		break;
+ 	case ISCSI_UEVENT_DESTROY_SESSION:
+ 		session = iscsi_session_lookup(ev->u.d_session.sid);
+-		if (session)
+-			transport->destroy_session(session);
+-		else
++		if (!session)
+ 			err = -EINVAL;
++		else if (iscsi_session_has_conns(ev->u.d_session.sid))
++			err = -EBUSY;
++		else
++			transport->destroy_session(session);
+ 		break;
+ 	case ISCSI_UEVENT_UNBIND_SESSION:
+ 		session = iscsi_session_lookup(ev->u.d_session.sid);
+-- 
+2.24.1
 
----
-References:
-[1] https://patchwork.kernel.org/patch/10688021/
-[2] https://lore.kernel.org/lkml/20090913040104.ab1d0b69.const@mimas.ru/
-[3] http://www.t10.org/cgi-bin/ac.pl?t=f&f=sat5r02.pdf
-    Information technology - SCSI / ATA Translation - 5 (SAT-5),
-    section 10.3.8 (Temperature log page).
-[4] http://www.t13.org/documents/uploadeddocuments/docs2008/d1699r6a-ata8-acs.pdf
-    ANS T13/1699-D "Information technology - AT Attachment 8 - ATA/ATAPI Command
-    Set (ATA8-ACS)"
-[5] https://github.com/mirror/smartmontools.git
