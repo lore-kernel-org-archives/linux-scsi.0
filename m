@@ -7,29 +7,40 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A932AC2D0C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C00C2D0C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B1F92080D
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AB7020828
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Dec 2019 20:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726831AbfLZUbz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Dec 2019 15:31:55 -0500
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:37184 "EHLO
+        id S1726442AbfLZUsC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Dec 2019 15:48:02 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:37320 "EHLO
         bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726653AbfLZUbz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Dec 2019 15:31:55 -0500
+        with ESMTP id S1726105AbfLZUsC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Dec 2019 15:48:02 -0500
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (Authenticated sender: krisman)
-        with ESMTPSA id 6BF1A27FDC0
+        with ESMTPSA id 828DA294076
 From:   Gabriel Krisman Bertazi <krisman@collabora.com>
 To:     lduncan@suse.com
-Cc:     cleech@redhat.com, martin.petersen@oracle.com,
+Cc:     cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
         open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        kernel@collabora.com
-Subject: [PATCH RESEND] iscsi: Don't destroy session if there are outstanding connections
-Date:   Thu, 26 Dec 2019 15:31:48 -0500
-Message-Id: <20191226203148.2172200-1-krisman@collabora.com>
+        Bharath Ravi <rbharath@google.com>, kernel@collabora.com,
+        Mike Christie <mchristi@redhat.com>,
+        Lee Duncan <LDuncan@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Dave Clausen <dclausen@google.com>,
+        Nick Black <nlb@google.com>,
+        Vaibhav Nagarnaik <vnagarnaik@google.com>,
+        Anatol Pomazau <anatol@google.com>,
+        Tahsin Erdogan <tahsin@google.com>,
+        Frank Mayhar <fmayhar@google.com>, Junho Ryu <jayr@google.com>,
+        Khazhismel Kumykov <khazhy@google.com>,
+        Gabriel Krisman Bertazi <krisman@collabora.com>
+Subject: [PATCH v3] iscsi: Perform connection failure entirely in kernel space
+Date:   Thu, 26 Dec 2019 15:47:46 -0500
+Message-Id: <20191226204746.2197233-1-krisman@collabora.com>
 X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -38,137 +49,184 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nick Black <nlb@google.com>
+From: Bharath Ravi <rbharath@google.com>
 
-Hi,
+Connection failure processing depends on a daemon being present to (at
+least) stop the connection and start recovery.  This is a problem on a
+multipath scenario, where if the daemon failed for whatever reason, the
+SCSI path is never marked as down, multipath won't perform the
+failover and IO to the device will be forever waiting for that
+connection to come back.
 
-I thought this was already committed for some reason, until it bit me
-again today.  Any opposition to this one?
+This patch performs the connection failure entirely inside the kernel.
+This way, the failover can happen and pending IO can continue even if
+the daemon is dead. Once the daemon comes alive again, it can execute
+recovery procedures if applicable.
 
->8
+Changes since v2:
+  - Don't hold rx_mutex for too long at once
 
-A faulty userspace that calls destroy_session() before destroying the
-connections can trigger the failure.  This patch prevents the
-issue by refusing to destroy the session if there are outstanding
-connections.
+Changes since v1:
+  - Remove module parameter.
+  - Always do kernel-side stop work.
+  - Block recovery timeout handler if system is dying.
+  - send a CONN_TERM stop if the system is dying.
 
-------------[ cut here ]------------
-kernel BUG at mm/slub.c:306!
-invalid opcode: 0000 [#1] SMP PTI
-CPU: 1 PID: 1224 Comm: iscsid Not tainted 5.4.0-rc2.iscsi+ #7
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
-RIP: 0010:__slab_free+0x181/0x350
-[...]
-[ 1209.686056] RSP: 0018:ffffa93d4074fae0 EFLAGS: 00010246
-[ 1209.686694] RAX: ffff934efa5ad800 RBX: 000000008010000a RCX: ffff934efa5ad800
-[ 1209.687651] RDX: ffff934efa5ad800 RSI: ffffeb4041e96b00 RDI: ffff934efd402c40
-[ 1209.688582] RBP: ffffa93d4074fb80 R08: 0000000000000001 R09: ffffffffbb5dfa26
-[ 1209.689425] R10: ffff934efa5ad800 R11: 0000000000000001 R12: ffffeb4041e96b00
-[ 1209.690285] R13: ffff934efa5ad800 R14: ffff934efd402c40 R15: 0000000000000000
-[ 1209.691213] FS:  00007f7945dfb540(0000) GS:ffff934efda80000(0000) knlGS:0000000000000000
-[ 1209.692316] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1209.693013] CR2: 000055877fd3da80 CR3: 0000000077384000 CR4: 00000000000006e0
-[ 1209.693897] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 1209.694773] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 1209.695631] Call Trace:
-[ 1209.695957]  ? __wake_up_common_lock+0x8a/0xc0
-[ 1209.696712]  iscsi_pool_free+0x26/0x40
-[ 1209.697263]  iscsi_session_teardown+0x2f/0xf0
-[ 1209.698117]  iscsi_sw_tcp_session_destroy+0x45/0x60
-[ 1209.698831]  iscsi_if_rx+0xd88/0x14e0
-[ 1209.699370]  netlink_unicast+0x16f/0x200
-[ 1209.699932]  netlink_sendmsg+0x21a/0x3e0
-[ 1209.700446]  sock_sendmsg+0x4f/0x60
-[ 1209.700902]  ___sys_sendmsg+0x2ae/0x320
-[ 1209.701451]  ? cp_new_stat+0x150/0x180
-[ 1209.701922]  __sys_sendmsg+0x59/0xa0
-[ 1209.702357]  do_syscall_64+0x52/0x160
-[ 1209.702812]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[ 1209.703419] RIP: 0033:0x7f7946433914
-[...]
-[ 1209.706084] RSP: 002b:00007fffb99f2378 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-[ 1209.706994] RAX: ffffffffffffffda RBX: 000055bc869eac20 RCX: 00007f7946433914
-[ 1209.708082] RDX: 0000000000000000 RSI: 00007fffb99f2390 RDI: 0000000000000005
-[ 1209.709120] RBP: 00007fffb99f2390 R08: 000055bc84fe9320 R09: 00007fffb99f1f07
-[ 1209.710110] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000038
-[ 1209.711085] R13: 000055bc8502306e R14: 0000000000000000 R15: 0000000000000000
- Modules linked in:
- ---[ end trace a2d933ede7f730d8 ]---
-
-Co-developed-by: Salman Qazi <sqazi@google.com>
-Signed-off-by: Salman Qazi <sqazi@google.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Lee Duncan <LDuncan@suse.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Co-developed-by: Dave Clausen <dclausen@google.com>
+Signed-off-by: Dave Clausen <dclausen@google.com>
+Co-developed-by: Nick Black <nlb@google.com>
+Signed-off-by: Nick Black <nlb@google.com>
+Co-developed-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Signed-off-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Co-developed-by: Anatol Pomazau <anatol@google.com>
+Signed-off-by: Anatol Pomazau <anatol@google.com>
+Co-developed-by: Tahsin Erdogan <tahsin@google.com>
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+Co-developed-by: Frank Mayhar <fmayhar@google.com>
+Signed-off-by: Frank Mayhar <fmayhar@google.com>
 Co-developed-by: Junho Ryu <jayr@google.com>
 Signed-off-by: Junho Ryu <jayr@google.com>
 Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
 Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
-Signed-off-by: Nick Black <nlb@google.com>
+Signed-off-by: Bharath Ravi <rbharath@google.com>
 Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
 Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
 ---
- drivers/scsi/iscsi_tcp.c            |  4 ++++
- drivers/scsi/scsi_transport_iscsi.c | 26 +++++++++++++++++++++++---
- 2 files changed, 27 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 63 +++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 2 files changed, 64 insertions(+)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 0bc63a7ab41c..b5dd1caae5e9 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -887,6 +887,10 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
- static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
- {
- 	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	struct iscsi_session *session = cls_session->dd_data;
-+
-+	if (WARN_ON_ONCE(session->leadconn))
-+		return;
- 
- 	iscsi_tcp_r2tpool_free(cls_session->dd_data);
- 	iscsi_session_teardown(cls_session);
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ed8d9709b9b9..271afea654e2 100644
+index 271afea654e2..c6db6ded60a1 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2947,6 +2947,24 @@ iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
- 	return err;
- }
+@@ -86,6 +86,12 @@ struct iscsi_internal {
+ 	struct transport_container session_cont;
+ };
  
-+static int iscsi_session_has_conns(int sid)
++/* Worker to perform connection failure on unresponsive connections
++ * completely in kernel space.
++ */
++static void stop_conn_work_fn(struct work_struct *work);
++static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
++
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+ static struct workqueue_struct *iscsi_eh_timer_workq;
+ 
+@@ -1611,6 +1617,7 @@ static DEFINE_MUTEX(rx_queue_mutex);
+ static LIST_HEAD(sesslist);
+ static DEFINE_SPINLOCK(sesslock);
+ static LIST_HEAD(connlist);
++static LIST_HEAD(connlist_err);
+ static DEFINE_SPINLOCK(connlock);
+ 
+ static uint32_t iscsi_conn_get_sid(struct iscsi_cls_conn *conn)
+@@ -2247,6 +2254,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
+ 
+ 	mutex_init(&conn->ep_mutex);
+ 	INIT_LIST_HEAD(&conn->conn_list);
++	INIT_LIST_HEAD(&conn->conn_list_err);
+ 	conn->transport = transport;
+ 	conn->cid = cid;
+ 
+@@ -2293,6 +2301,7 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ 
+ 	spin_lock_irqsave(&connlock, flags);
+ 	list_del(&conn->conn_list);
++	list_del(&conn->conn_list_err);
+ 	spin_unlock_irqrestore(&connlock, flags);
+ 
+ 	transport_unregister_device(&conn->dev);
+@@ -2407,6 +2416,51 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
+ 
++static void stop_conn_work_fn(struct work_struct *work)
 +{
-+	struct iscsi_cls_conn *conn;
++	struct iscsi_cls_conn *conn, *tmp;
 +	unsigned long flags;
-+	int found = 0;
++	LIST_HEAD(recovery_list);
 +
 +	spin_lock_irqsave(&connlock, flags);
-+	list_for_each_entry(conn, &connlist, conn_list) {
-+		if (iscsi_conn_get_sid(conn) == sid) {
-+			found = 1;
-+			break;
-+		}
++	if (list_empty(&connlist_err)) {
++		spin_unlock_irqrestore(&connlock, flags);
++		return;
 +	}
++	list_splice_init(&connlist_err, &recovery_list);
 +	spin_unlock_irqrestore(&connlock, flags);
 +
-+	return found;
++	list_for_each_entry_safe(conn, tmp, &recovery_list, conn_list_err) {
++		uint32_t sid = iscsi_conn_get_sid(conn);
++		struct iscsi_cls_session *session;
++
++		mutex_lock(&rx_queue_mutex);
++
++		session = iscsi_session_lookup(sid);
++		if (session) {
++			if (system_state != SYSTEM_RUNNING) {
++				session->recovery_tmo = 0;
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_TERM);
++			} else {
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_RECOVER);
++			}
++		}
++
++		list_del_init(&conn->conn_list_err);
++
++		mutex_unlock(&rx_queue_mutex);
++
++		/* we don't want to hold rx_queue_mutex for too long,
++		 * for instance if many conns failed at the same time,
++		 * since this stall other iscsi maintenance operations.
++		 * Give other users a chance to proceed.
++		 */
++		cond_resched();
++	}
 +}
 +
- static int
- iscsi_set_iface_params(struct iscsi_transport *transport,
- 		       struct iscsi_uevent *ev, uint32_t len)
-@@ -3524,10 +3542,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		break;
- 	case ISCSI_UEVENT_DESTROY_SESSION:
- 		session = iscsi_session_lookup(ev->u.d_session.sid);
--		if (session)
--			transport->destroy_session(session);
--		else
-+		if (!session)
- 			err = -EINVAL;
-+		else if (iscsi_session_has_conns(ev->u.d_session.sid))
-+			err = -EBUSY;
-+		else
-+			transport->destroy_session(session);
- 		break;
- 	case ISCSI_UEVENT_UNBIND_SESSION:
- 		session = iscsi_session_lookup(ev->u.d_session.sid);
+ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ {
+ 	struct nlmsghdr	*nlh;
+@@ -2414,6 +2468,12 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+ 	int len = nlmsg_total_size(sizeof(*ev));
++	unsigned long flags;
++
++	spin_lock_irqsave(&connlock, flags);
++	list_add(&conn->conn_list_err, &connlist_err);
++	spin_unlock_irqrestore(&connlock, flags);
++	queue_work(system_unbound_wq, &stop_conn_work);
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -2748,6 +2808,9 @@ iscsi_if_destroy_conn(struct iscsi_transport *transport, struct iscsi_uevent *ev
+ 	if (!conn)
+ 		return -EINVAL;
+ 
++	if (!list_empty(&conn->conn_list_err))
++		return -EAGAIN;
++
+ 	ISCSI_DBG_TRANS_CONN(conn, "Destroying transport conn\n");
+ 	if (transport->destroy_conn)
+ 		transport->destroy_conn(conn);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 325ae731d9ad..2129dc9e2dec 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -190,6 +190,7 @@ extern void iscsi_ping_comp_event(uint32_t host_no,
+ 
+ struct iscsi_cls_conn {
+ 	struct list_head conn_list;	/* item in connlist */
++	struct list_head conn_list_err;	/* item in connlist_err */
+ 	void *dd_data;			/* LLD private data */
+ 	struct iscsi_transport *transport;
+ 	uint32_t cid;			/* connection id */
 -- 
 2.24.1
 
