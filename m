@@ -2,146 +2,226 @@ Return-Path: <SRS0=4AUr=2R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F6DAC2D0C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Dec 2019 05:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86DA8C2D0CE
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Dec 2019 22:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13EB9208C4
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Dec 2019 05:51:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E099222C4
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Dec 2019 22:57:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="OQjD3ZKe"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="ccim0X8M";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="ADWlHYhP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726335AbfL0Fu7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Dec 2019 00:50:59 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:54441 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725854AbfL0Fu7 (ORCPT
+        id S1725957AbfL0W5K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Dec 2019 17:57:10 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36010 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725306AbfL0W5K (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Dec 2019 00:50:59 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577425858; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=L4g9JDgVQ7pa2YXxfZuRLv37uHydhuYzTYFuEaQJFPg=;
- b=OQjD3ZKeWsnnNv9Ev19RIo5P4U/M8aakCaZDkIWB/DcIax34Rgh9skvkSv0jqHKWQAOVwvRQ
- DPoW7Igygp4/4YNchEBG7qluikTQZPz6XxGoktVd2Vxpsq8lu+oUO6dCcQfzhyYkwN2YzvAB
- 7rB2emdAyLh6DrQU/rJn0noiTvI=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e059bc1.7f92461eb618-smtp-out-n02;
- Fri, 27 Dec 2019 05:50:57 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 55C67C447A6; Fri, 27 Dec 2019 05:50:56 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        Fri, 27 Dec 2019 17:57:10 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 38B718EE10C;
+        Fri, 27 Dec 2019 14:57:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1577487430;
+        bh=K+tf+8cWkcZ4RMhGp2HRRSr87o8eRXh1u1OgW1IKsdM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=ccim0X8MD/TuGqEwu5dhTt2HJ8RKOLNBI766A6L+eSa/aRxY3MV4ltdzzlfMl9lZA
+         K0aYPp7F1i+grf6gu7eHzpl2TjnPrEwpvEj3P3CbsGCgSNc+IBoymCHZFHEjnKkkEL
+         AUZcTXMCZo9Dzj0HNut34IJ2eexOF14AVQII4294=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 49W62Kp4joOS; Fri, 27 Dec 2019 14:57:10 -0800 (PST)
+Received: from jarvis.lan (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 911EAC433CB;
-        Fri, 27 Dec 2019 05:50:54 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Fri, 27 Dec 2019 13:50:54 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 4/6] ufs: Fix a race condition in the tracing code
-In-Reply-To: <27fdf41d-9ec1-380b-e481-7d76a2906c3d@acm.org>
-References: <20191224220248.30138-1-bvanassche@acm.org>
- <20191224220248.30138-5-bvanassche@acm.org>
- <39b63e90a34a294957c89bd30d0e4912@codeaurora.org>
- <27fdf41d-9ec1-380b-e481-7d76a2906c3d@acm.org>
-Message-ID: <b3fdbe9779af3eab89c05da6ff4ea0fb@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B31A58EE0E9;
+        Fri, 27 Dec 2019 14:57:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1577487429;
+        bh=K+tf+8cWkcZ4RMhGp2HRRSr87o8eRXh1u1OgW1IKsdM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=ADWlHYhPbI2UtW58EuEceEALpxnFX2bzDH6jYLZm2Xtgyymv4vRuFETfdiLAxb10O
+         Mla/Aa/AJlWyEMWnW2HwbXjvljzL+7NSJVMvIBrGbma/p3iA4dki/fu7QxFOcmQbgx
+         MyeQ5hpfCSXCBgNNflWRn1ykzJ8vdRLuqvDwigkg=
+Message-ID: <1577487428.3225.6.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.5-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 27 Dec 2019 14:57:08 -0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-27 01:35, Bart Van Assche wrote:
-> On 12/25/19 2:59 AM, Can Guo wrote:
->> On 2019-12-25 06:02, Bart Van Assche wrote:
->>> Starting execution of a command before tracing a command may cause 
->>> the
->>> completion handler to free data while it is being traced. Fix this 
->>> race
->>> by tracing a command before it is submitted.
->>> 
->>> Cc: Bean Huo <beanhuo@micron.com>
->>> Cc: Can Guo <cang@codeaurora.org>
->>> Cc: Avri Altman <avri.altman@wdc.com>
->>> Cc: Stanley Chu <stanley.chu@mediatek.com>
->>> Cc: Tomas Winkler <tomas.winkler@intel.com>
->>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>> ---
->>>  drivers/scsi/ufs/ufshcd.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>> 
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 80b028ba39e9..4d9bb1932b39 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -1875,12 +1875,12 @@ void ufshcd_send_command(struct ufs_hba *hba,
->>> unsigned int task_tag)
->>>  {
->>>      hba->lrb[task_tag].issue_time_stamp = ktime_get();
->>>      hba->lrb[task_tag].compl_time_stamp = ktime_set(0, 0);
->>> +    ufshcd_add_command_trace(hba, task_tag, "send");
->> 
->> How about moving it after __set_bit(task_tag, 
->> &hba->outstanding_reqs);?
->> 
->> Thanks,
->> 
->> Can Guo.
->> 
->>>      ufshcd_clk_scaling_start_busy(hba);
->>>      __set_bit(task_tag, &hba->outstanding_reqs);
->>>      ufshcd_writel(hba, 1 << task_tag, 
->>> REG_UTP_TRANSFER_REQ_DOOR_BELL);
->>>      /* Make sure that doorbell is committed immediately */
->>>      wmb();
->>> -    ufshcd_add_command_trace(hba, task_tag, "send");
->>>  }
-> 
-> Hi Can,
-> 
-> As far as I can see ufshcd_add_command_trace() does not read
-> hba->outstanding_reqs so calling ufshcd_add_command_trace() before
-> changing outstanding_reqs should be fine.
-> 
-> The order chosen in the posted patch should minimize energy usage of
-> the UFS controller, namely by calling the tracing function before
-> starting clock scaling.
-> 
-> Thanks,
-> 
-> Bart.
+Four fixes and one spelling update, all in drivers: 2 in lpfc and the
+rest in mp3sas, cxgbi and target.
 
-True.
+The patch is available here:
 
-One concern regards this change is that since we move the 
-ufshcd_add_command_trace() before ringing doorbell, in tracing log,
-we will lose the info/status of this specific tag in doorbell register.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Usually, with the old code, after we collect the tracing log, we can
-tell whether the doorbell bit was set/rung correctly in doorbell
-register or not for an specific tag/task, because it is an important
-sign of whether HW had actually accepted the task on that tag. It
-is really helpful sometime if things go wrong.
+The short changelog is:
 
-Any good ways to keep the doorbell info as before?
+Arnd Bergmann (1):
+      scsi: lpfc: fix build failure with DEBUGFS disabled
 
-Thanks,
+Colin Ian King (1):
+      scsi: lpfc: fix spelling mistakes of asynchronous
 
-Can Guo.
+Dan Carpenter (1):
+      scsi: mpt3sas: Fix double free in attach error handling
+
+Israel Rukshin (1):
+      scsi: target/iblock: Fix protection error with blocks greater than 512B
+
+Varun Prakash (1):
+      scsi: libcxgbi: fix NULL pointer dereference in cxgbi_device_destroy()
+
+And the diffstat:
+
+ drivers/scsi/cxgbi/libcxgbi.c       |  3 ++-
+ drivers/scsi/lpfc/lpfc_debugfs.c    |  3 +--
+ drivers/scsi/lpfc/lpfc_init.c       |  2 +-
+ drivers/scsi/lpfc/lpfc_sli.c        | 10 +++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.c |  1 -
+ drivers/target/target_core_iblock.c |  4 +++-
+ 6 files changed, 12 insertions(+), 11 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 0d044c165960..dc9320f37ebf 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -121,7 +121,8 @@ static inline void cxgbi_device_destroy(struct cxgbi_device *cdev)
+ 		"cdev 0x%p, p# %u.\n", cdev, cdev->nports);
+ 	cxgbi_hbas_remove(cdev);
+ 	cxgbi_device_portmap_cleanup(cdev);
+-	cxgbi_ppm_release(cdev->cdev2ppm(cdev));
++	if (cdev->cdev2ppm)
++		cxgbi_ppm_release(cdev->cdev2ppm(cdev));
+ 	if (cdev->pmap.max_connect)
+ 		cxgbi_free_big_mem(cdev->pmap.port_csk);
+ 	kfree(cdev);
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 2e6a68d9ea4f..a5ecbce4eda2 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -5385,7 +5385,6 @@ static const struct file_operations lpfc_debugfs_ras_log = {
+ 	.read =         lpfc_debugfs_read,
+ 	.release =      lpfc_debugfs_ras_log_release,
+ };
+-#endif
+ 
+ #undef lpfc_debugfs_op_dumpHBASlim
+ static const struct file_operations lpfc_debugfs_op_dumpHBASlim = {
+@@ -5557,7 +5556,7 @@ static const struct file_operations lpfc_idiag_op_extAcc = {
+ 	.write =        lpfc_idiag_extacc_write,
+ 	.release =      lpfc_idiag_cmd_release,
+ };
+-
++#endif
+ 
+ /* lpfc_idiag_mbxacc_dump_bsg_mbox - idiag debugfs dump bsg mailbox command
+  * @phba: Pointer to HBA context object.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 6298b1729098..6a04fdb3fbf2 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5883,7 +5883,7 @@ void lpfc_sli4_async_event_proc(struct lpfc_hba *phba)
+ 			break;
+ 		default:
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-					"1804 Invalid asynchrous event code: "
++					"1804 Invalid asynchronous event code: "
+ 					"x%x\n", bf_get(lpfc_trailer_code,
+ 					&cq_event->cqe.mcqe_cmpl));
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c82b5792da98..625c046ac4ef 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8555,7 +8555,7 @@ lpfc_sli4_async_mbox_unblock(struct lpfc_hba *phba)
+ 	psli->sli_flag &= ~LPFC_SLI_ASYNC_MBX_BLK;
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+-	/* wake up worker thread to post asynchronlous mailbox command */
++	/* wake up worker thread to post asynchronous mailbox command */
+ 	lpfc_worker_wake_up(phba);
+ }
+ 
+@@ -8823,7 +8823,7 @@ lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
+ 		return rc;
+ 	}
+ 
+-	/* Now, interrupt mode asynchrous mailbox command */
++	/* Now, interrupt mode asynchronous mailbox command */
+ 	rc = lpfc_mbox_cmd_check(phba, mboxq);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_SLI,
+@@ -13112,11 +13112,11 @@ lpfc_cq_event_setup(struct lpfc_hba *phba, void *entry, int size)
+ }
+ 
+ /**
+- * lpfc_sli4_sp_handle_async_event - Handle an asynchroous event
++ * lpfc_sli4_sp_handle_async_event - Handle an asynchronous event
+  * @phba: Pointer to HBA context object.
+  * @cqe: Pointer to mailbox completion queue entry.
+  *
+- * This routine process a mailbox completion queue entry with asynchrous
++ * This routine process a mailbox completion queue entry with asynchronous
+  * event.
+  *
+  * Return: true if work posted to worker thread, otherwise false.
+@@ -13270,7 +13270,7 @@ lpfc_sli4_sp_handle_mbox_event(struct lpfc_hba *phba, struct lpfc_mcqe *mcqe)
+  * @cqe: Pointer to mailbox completion queue entry.
+  *
+  * This routine process a mailbox completion queue entry, it invokes the
+- * proper mailbox complete handling or asynchrous event handling routine
++ * proper mailbox complete handling or asynchronous event handling routine
+  * according to the MCQE's async bit.
+  *
+  * Return: true if work posted to worker thread, otherwise false.
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 848fbec7bda6..45fd8dfb7c40 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5248,7 +5248,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 					&ct->chain_buffer_dma);
+ 			if (!ct->chain_buffer) {
+ 				ioc_err(ioc, "chain_lookup: pci_pool_alloc failed\n");
+-				_base_release_memory_pools(ioc);
+ 				goto out;
+ 			}
+ 		}
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 6949ea8bc387..51ffd5c002de 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -646,7 +646,9 @@ iblock_alloc_bip(struct se_cmd *cmd, struct bio *bio,
+ 	}
+ 
+ 	bip->bip_iter.bi_size = bio_integrity_bytes(bi, bio_sectors(bio));
+-	bip_set_seed(bip, bio->bi_iter.bi_sector);
++	/* virtual start sector must be in integrity interval units */
++	bip_set_seed(bip, bio->bi_iter.bi_sector >>
++				  (bi->interval_exp - SECTOR_SHIFT));
+ 
+ 	pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_iter.bi_size,
+ 		 (unsigned long long)bip->bip_iter.bi_sector);
