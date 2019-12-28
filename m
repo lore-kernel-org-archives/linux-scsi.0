@@ -2,68 +2,97 @@ Return-Path: <SRS0=EFIP=2S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22849C2D0C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 01:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8ABBC2D0C8
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 05:54:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7DF520CC7
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 01:50:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577497812;
-	bh=gX2uSCF/FJcgkN9bHzL3GcCgh2erjkE5svBOCnK2A7U=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=IRRSlrgshyyDleO/areU64PlKz7rpQHYhz75NUh5IiTDStIx2ik1z1WBJiZtCFH/h
-	 FiCeijJVK6n1sIYZ/V/89TImekd/IVLGVsljSsbsNcZfJhVXkl20rwHjO/K86a8Dak
-	 ukwhbfmbR3D5QcXCYJXKJ7pBlc9n1VIURjn2sZ8w=
+	by mail.kernel.org (Postfix) with ESMTP id 7F2C72168B
+	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 05:54:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W9LjOA2F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726080AbfL1BuI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Dec 2019 20:50:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53568 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725820AbfL1BuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Dec 2019 20:50:07 -0500
-Subject: Re: [GIT PULL] SCSI fixes for 5.5-rc3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577497807;
-        bh=gX2uSCF/FJcgkN9bHzL3GcCgh2erjkE5svBOCnK2A7U=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=PvFuaL46XiPgAGpO/eyWmvr/q2odrPd5cnsI0KAfEOzI0dcATQ1ULOiO4Fxck1Ejm
-         F6ADry4EBfPe8o0wREjNUydKpQQp8eXvkQk/H7WJL58nLAGHH3Q/EBeI1tqw1TFqlK
-         iUJxPT1S/0M6PtmE3RL0h7jHBiTFNPFAlQQlvFHE=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1577487428.3225.6.camel@HansenPartnership.com>
-References: <1577487428.3225.6.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1577487428.3225.6.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: e4dc9a4c31fe10d1751c542702afc85be8a5c56a
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: bf8d1cd4386535004c4afe7f03d37f9864c9940e
-Message-Id: <157749780714.14322.9215059600125703568.pr-tracker-bot@kernel.org>
-Date:   Sat, 28 Dec 2019 01:50:07 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1726359AbfL1Fy3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Dec 2019 00:54:29 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42525 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726100AbfL1Fy2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Dec 2019 00:54:28 -0500
+Received: by mail-pf1-f194.google.com with SMTP id 4so15706642pfz.9;
+        Fri, 27 Dec 2019 21:54:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=WWR7SGf2+LO4akfQvAbba7ngIx/rb/3/oUv3fCaDixM=;
+        b=W9LjOA2FOyJIjXOqaZmQe1JAD8L4ggppYN4k/s5+8rAkewUTa2YlXOZolYsMLrQv8A
+         krD6H9D/JGqT1BoXZbvYxQDv6N8tOc7qt5gDy/0JT0BmvDLnpHiZs1Vv2R5jNYEWbPx8
+         ybdb5yTVCj65Kq35IxYohP9U7CDeT/DmN2eh+gr2RK7G/oAwxdW9V7MzUYOyvtcU0qgu
+         JolJz3Pr7pTv4GSgcVviXgMOffJocKlllUon2BL6xEjUZtb7gEsRlLUeo7IkBpkkwA5v
+         DXSsd4MsJqqSqmYAh5fKGbBwMLFGuIRDgIxwvk6mJA981y8VOMiMbaZgT5/wn1uUSS2H
+         PXvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=WWR7SGf2+LO4akfQvAbba7ngIx/rb/3/oUv3fCaDixM=;
+        b=QFejRKmSPreZhe7Qz1ogCqY1VrURHO8EQYkp/aE52YY97l60QSXKN7kPJDxR3xByjV
+         rxsTDQyDnbE3WtOk+3HqVp/XZMD1GDshHlXwhMw4+qZ8DI89XBol6P7w11yxfQ6AH8Pb
+         +qlWwOpEhMCgVBrDPXih+V4KDf39fFdURwY2X24qW5LBl/o1U3HDLudrgcXtjmaI53FJ
+         7WR40sDhWRmloBYe4MVGZvWBMzajU8UBplCHkpgXqteWi7VsVRH+GLf5xYosGub2GXw/
+         dxlgiODWP2kaNFW+Z2gTcm4OgDPv+ddtJf32xHVmnOfVGWl6fUDub3iFpJNCwoaGR8ru
+         6jug==
+X-Gm-Message-State: APjAAAXYWkXOmGUtHcmNSVyNAWcgTW2U5f1K92AYTYVKPlzT2MtXvsZV
+        V8kpzkatHxZxxifvJgnw6sk=
+X-Google-Smtp-Source: APXvYqxS5J+kysqajIskQ2YaVc355yfr5j3suKWQajNd/pGZVpqT2sTNsqpRfvOsKm6+TmVlDfzoZw==
+X-Received: by 2002:a65:4d46:: with SMTP id j6mr60042098pgt.63.1577512467995;
+        Fri, 27 Dec 2019 21:54:27 -0800 (PST)
+Received: from nishad ([106.51.232.103])
+        by smtp.gmail.com with ESMTPSA id e25sm39144415pge.64.2019.12.27.21.54.23
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 27 Dec 2019 21:54:27 -0800 (PST)
+Date:   Sat, 28 Dec 2019 11:24:20 +0530
+From:   Nishad Kamdar <nishadkamdar@gmail.com>
+To:     Hannes Reinecke <hare@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joe Perches <joe@perches.com>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/2] scsi: Use the correct style for SPDX License Identifier
+Message-ID: <cover.1577511720.git.nishadkamdar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 27 Dec 2019 14:57:08 -0800:
+This patch corrects the SPDX License Identifier style
+in the scsi driver related files.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Changes made by using a script provided by Joe Perches here:
+https://lkml.org/lkml/2019/2/7/46
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/bf8d1cd4386535004c4afe7f03d37f9864c9940e
+Nishad Kamdar (2):
+  scsi: mylex: Use the correct style for SPDX License Identifier
+  scsi: ufs: sysfs: Use the correct style for SPDX License Identifier
 
-Thank you!
+ drivers/scsi/myrb.h          | 4 ++--
+ drivers/scsi/myrs.h          | 4 ++--
+ drivers/scsi/ufs/ufs-sysfs.h | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.17.1
+
