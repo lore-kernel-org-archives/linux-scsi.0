@@ -1,95 +1,105 @@
-Return-Path: <SRS0=EFIP=2S=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=ggzA=2T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82617C2D0C6
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 19:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D64C2D0C6
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Dec 2019 11:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46A38206A4
-	for <linux-scsi@archiver.kernel.org>; Sat, 28 Dec 2019 19:13:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72D5F20722
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Dec 2019 11:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726388AbfL1TNx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Dec 2019 14:13:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58448 "EHLO mail.kernel.org"
+        id S1726278AbfL2LwN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Dec 2019 06:52:13 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50568 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726362AbfL1TNw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 28 Dec 2019 14:13:52 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 205999] New: Navicat Premium crack
-Date:   Sat, 28 Dec 2019 19:13:51 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: drtoolism@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression
-Message-ID: <bug-205999-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1726151AbfL2LwN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Dec 2019 06:52:13 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 6424DAD22;
+        Sun, 29 Dec 2019 11:52:11 +0000 (UTC)
+Subject: Re: [PATCH 1/2] scsi: mylex: Use the correct style for SPDX License
+ Identifier
+To:     Nishad Kamdar <nishadkamdar@gmail.com>,
+        Hannes Reinecke <hare@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Joe Perches <joe@perches.com>,
+        =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <cover.1577511720.git.nishadkamdar@gmail.com>
+ <88332ad390f985bdebb9f2adaf2d499b0a639753.1577511720.git.nishadkamdar@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <9f811041-263d-269a-39f9-6ea3be10eff0@suse.de>
+Date:   Sun, 29 Dec 2019 12:52:06 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
+In-Reply-To: <88332ad390f985bdebb9f2adaf2d499b0a639753.1577511720.git.nishadkamdar@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=205999
+On 12/28/19 6:55 AM, Nishad Kamdar wrote:
+> This patch corrects the SPDX License Identifier style in
+> header files related to Mylex DAC960/DAC1100 PCI RAID
+> Controllers. It assigns explicit block comment to the
+> SPDX License Identifier.
+> 
+> Changes made by using a script provided by Joe Perches here:
+> https://lkml.org/lkml/2019/2/7/46.
+> 
+> Suggested-by: Joe Perches <joe@perches.com>
+> Signed-off-by: Nishad Kamdar <nishadkamdar@gmail.com>
+> ---
+>   drivers/scsi/myrb.h | 4 ++--
+>   drivers/scsi/myrs.h | 4 ++--
+>   2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/myrb.h b/drivers/scsi/myrb.h
+> index 9289c19fcb2f..fb8eacfceee8 100644
+> --- a/drivers/scsi/myrb.h
+> +++ b/drivers/scsi/myrb.h
+> @@ -1,5 +1,5 @@
+> -/* SPDX-License-Identifier: GPL-2.0
+> - *
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+>    * Linux Driver for Mylex DAC960/AcceleRAID/eXtremeRAID PCI RAID Controllers
+>    *
+>    * Copyright 2017 Hannes Reinecke, SUSE Linux GmbH <hare@suse.com>
+> diff --git a/drivers/scsi/myrs.h b/drivers/scsi/myrs.h
+> index e6702ee85e9f..9f6696d0ddd5 100644
+> --- a/drivers/scsi/myrs.h
+> +++ b/drivers/scsi/myrs.h
+> @@ -1,5 +1,5 @@
+> -/* SPDX-License-Identifier: GPL-2.0
+> - *
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+>    * Linux Driver for Mylex DAC960/AcceleRAID/eXtremeRAID PCI RAID Controllers
+>    *
+>    * This driver supports the newer, SCSI-based firmware interface only.
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-            Bug ID: 205999
-           Summary: Navicat Premium crack
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 5.2.3
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: drtoolism@gmail.com
-        Regression: No
+Cheers,
 
-Navicat Premium v15.0.3 Crack is a powerful and efficient software for managing
-different databases with the advanced graphical user interface. Moreover, it
-supports many different databases for complete optimization of resources. This
-application can support and manage databases such as Oracle, SQLite,
-PostgreSQL, SQL Server and many more. This software has the interface like file
-explorer which enables users to view and open files from different database
-simultaneously. There is no difference between local databases or remote
-databases in this interface.
-
-The user only has to select the directory associated to a specific database for
-viewing data. Moreover, it lets user transfer data from one database to other
-by simply dragging or copying data from one directory and dropping or pasting
-data in other.  With these features, you can easily connect to different
-databases without deep knowledge of database. It contains all the views,
-structures, methods and operations for managing various types of databases.
-Furthermore, it improves the efficiency of all of user or database admins.
-Navicat Premium Keygen application is currently being used by many database
-professionals as well as many naïve users such as programmers or students to
-check database operations.
-Navicat Premium crack
-https://crackmines.com/navicat-premium-crack-registration-key/
-
+Hannes
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
