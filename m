@@ -1,227 +1,334 @@
-Return-Path: <SRS0=ggzA=2T=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=iDBg=2U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5680AC2D0CE
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Dec 2019 18:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33646C2D0C0
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 02:47:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A24B20748
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Dec 2019 18:27:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E160B207FD
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 02:47:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="MZY8/N0M"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fRyzWv9M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726538AbfL2S16 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 29 Dec 2019 13:27:58 -0500
-Received: from mout.gmx.net ([212.227.15.15]:41783 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726490AbfL2S16 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Dec 2019 13:27:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1577644069;
-        bh=TY9/Wi6dOzTDMgSZrRR7kn9ZDfKoBgg0pOom0IaStwU=;
-        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
-        b=MZY8/N0MJUjVhispRPTGQ8m+oqUwQkYD8yhjMPNsW0+zNIlf2sgXqa/yOwwsNLR8c
-         RUs5da1Gg8e5Clu1sm0r7mI0qOJiX/sAT/egWQqj7K0j4WRWIjX09vU8js9xHqGXbG
-         MIk0yITdaMNzMqLWT0zfIzH9UzMPrFv3uPXZt4IY=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from localhost ([89.14.126.163]) by mail.gmx.com (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MKKZ3-1j2u7v48Hn-00LlzI; Sun, 29
- Dec 2019 19:27:49 +0100
-Date:   Sun, 29 Dec 2019 19:27:37 +0100
-From:   Sebastian Herbszt <herbszt@gmx.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com, dwagner@suse.de,
-        bvanassche@acm.org, Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH v2 00/32] [NEW] efct: Broadcom (Emulex) FC Target driver
-Message-ID: <20191229192737.0000343a@gmx.de>
-In-Reply-To: <20191220223723.26563-1-jsmart2021@gmail.com>
-References: <20191220223723.26563-1-jsmart2021@gmail.com>
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.28; i686-w64-mingw32)
+        id S1727050AbfL3Crb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 29 Dec 2019 21:47:31 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:43039 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727048AbfL3Crb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Dec 2019 21:47:31 -0500
+Received: by mail-ot1-f65.google.com with SMTP id p8so8099920oth.10
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Dec 2019 18:47:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=hlAqkKaPuMXzEnEwRu5OwzHOowkg5d+/FHpGz4KcDlM=;
+        b=fRyzWv9MRqyoTn0zyGpZcRkjJl+pmLq31pwJOeVLgE294wTcRPGJvS/+z+x0JTBD0S
+         i7vgO80i3sRf3+di9DMZLaaIC2PPqvqybe76V0rTbnXmx1KDGKnCIFo3PbTTTwTljXp1
+         RBsDi1w/CKTDKP5bKbp7ufkPEiA2h5PtZTg4l/o8VeMJwWmKkgS48PveJeSFBNAM8xLW
+         p+69/EqCpiUZlXwMDPfBOTXsW/twjlTxwMrmHaD+BDBJRI/xnxIzkkqiC7PNAyN9/YcI
+         kJpI5R8dV3F3tBuheHW62jlsWESNsTWm0u6h7ewVDFzat74g54iPgwKS4a9InHtMhNwz
+         m1bQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=hlAqkKaPuMXzEnEwRu5OwzHOowkg5d+/FHpGz4KcDlM=;
+        b=UiKgN/towp3lV49+/orqeokq7npYqonNUbP7mKkl4+Jc9i9vy9FeXJLx6Uubp94liT
+         VCFL6mybxsXbp9txruil7IRpSWV05BEiyGGaGQKSodRpYPA0IELRs2omnLxr5L1P9lO9
+         D3Bd89QSJjMYMMRAWP2fSsaqx8qGF2+9nXYiIO5isD3fK3xNRTli58QKo4nuxxL4OtFT
+         UtcQPfiZbIpR4jLSZyuhX+uJQYdXRHlmkxrZaEHN1KPNlXksbQBLnt8HFu5xOV4GRYF6
+         xv/x4AZ+DZLZvhmnSaX9epyJA+AujOBSg+84dnUbCcIz+/zDm8Th9DsjfudkA40zynm5
+         t4ig==
+X-Gm-Message-State: APjAAAVny2WPtp/M8/lVIJTHe/KimhgnGm2LORFlYB+bAgfXREF8ldKB
+        v9zlszLsh0sj1S3yrMuSIX0=
+X-Google-Smtp-Source: APXvYqxU7YEIDFHNubZYEMdjcezXnDNAsqD8y1mZFEUbxEoU2NDi/9xl0e8/1RTRDe4deYl60VUSGw==
+X-Received: by 2002:a05:6830:18e9:: with SMTP id d9mr62524329otf.332.1577674050090;
+        Sun, 29 Dec 2019 18:47:30 -0800 (PST)
+Received: from ubuntu-m2-xlarge-x86 ([2604:1380:4111:8b00::1])
+        by smtp.gmail.com with ESMTPSA id e17sm15250028otq.58.2019.12.29.18.47.29
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 29 Dec 2019 18:47:29 -0800 (PST)
+Date:   Sun, 29 Dec 2019 19:47:28 -0700
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com,
+        jinpu.wang@profitbricks.com, martin.petersen@oracle.com,
+        dpf@google.com, yuuzheng@google.com, auradkar@google.com,
+        vishakhavc@google.com, bjashnani@google.com, radha@google.com,
+        akshatzen@google.com, clang-built-linux@google.com
+Subject: Re: [PATCH 09/12] pm80xx : IOCTL functionality for SGPIO.
+Message-ID: <20191230024728.GA693@ubuntu-m2-xlarge-x86>
+References: <20191224044143.8178-1-deepak.ukey@microchip.com>
+ <20191224044143.8178-10-deepak.ukey@microchip.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:hZOhOG21RtWUCgKqPAMb7pvucubw0RzjiJtGKUjpG3fARGdyTZu
- rpUo2VuvyhW0uHY20BGhwERaitLWG5vZawEW0Ej50SF2UATtpCeQD5OuMaYhFEMFUsMcOHu
- WPLMsTubRdWc3EHyI3nJoAdLlfiftiEeBatWHhfDDvdlBJsuxM95exUDSttMsrYnzkP8f/1
- DrXOjiYdOrQMyz26pN7oA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:qRgigZeuAvo=:2MhTUAsz4ae8Kvns4/eeG2
- mN7vhP1NFaRSLv1Dpd9aX4itoi23UPU/OF1h/WNeZ3gnIa/0HbKpno+8fUsOsZmM4sxZ6vxrf
- rjPejJNO4yIQG0UDQnjF4ZQQiBKocRSFHvAo4pa1/Y7Nlnt69iDPI10D9yRo6J1D+6YGBKrsW
- ap3E0hbbYtgmmas5/IOlfZndjyaHHFBsiNWJCECqB/CN7kpG52qBBOV/qc1mNP8sZUS71y/qW
- o9ECBxIsitIqYJkz8EU8cwFYErPZFj0Q8gCVgBmi+yhje1B1CZm14aGd/u2sB6kNwwwjiaDlc
- bV6iwruzw9J+ijGZzEoThJKrw4bt9FI1gPgUOdmxhBKfv4C8w+kEBfxH+d1Spa+tfPIEG1zOY
- dTBoJpJpNQvAx+J+zJLm/Q529WYPvx9wUtY5c7kj9KWYdMCAK1y5NHwDMFP1xd8iG1D97peja
- dIqBC3DnFDAWGFisIV0/p9ONAzzS+GwcmUVnxjp/+DyvpPZNJIOuC0OP5+zZgu11Oeo8iwuN0
- fhxXr5I9uObYvW4yh281ysHv9qEafJJpFqZo+mQvNPBSPRX7qnvyM/GbgIFHDTYnD8uzbwB+n
- YxMpXminv2KRPRf1wWugeS+rmp9yaXRInoL3PqwC3hLddTrp4m4TneEEwIBNwxRVwDn4+9Rb7
- qmm4IWwz6j26Ot8UM6tA+GYivRwNFVbLanm3j0xnIQH2eV0CT+mDtCzL49eStN8oc8ommz+qh
- NW4a1gPrUZRBJuR+kHr1c3m8iI2KORDCNPukfCq9Zi1DzRMpHXf6BTyssqRvWihnNsX3lfyWs
- s8v+kC+b1SvwCXcUaiLHUMqOtsaWCXUQuvpsMVEZ48aG5wNt3XplfPOnDU8eWmHpAg25QcgR9
- HfIcJH9n1daYJs8rU97m4tZjOEZHVN0QBGJR39iZ1HA+UjQ/r4BAcFuSjM5LkNLyFveSIDbcm
- cM3k5RBr8/8hVgxBZ55s/VdIuDHNIQ9fY7UR/gzUz2qOJi7RLAjn5azNRxRyXjCfVnmmESCdn
- cwkQlbOia74RdmlFYorDBDmtpFacl6nbakJMaizKK9rMQDT1HWo7zU9Y7KnHvPmVx95PQ9oeo
- Vtfh7UfHAjqyoMDeh5SFDu+5QSd0NW82DE/llLm0syDhWoIcX58xURMKHKg+e+m48lXaum3PV
- eZLTzPQ4svUbouPdvJqguuMwQEgaZ244RVSkAQWMgPTC6IL4FRwCBQ1dCJ8gWZPoLRaQxdP2e
- C1PAdp7AVOj9lwfQOIqQEEIslHEQEClXlNJ0h/A==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191224044143.8178-10-deepak.ukey@microchip.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-James Smart wrote:
-> This patch set is a request to incorporate the new Broadcom
-> (Emulex) FC target driver, efct, into the kernel source tree.
->
-> The driver source has been Announced a couple of times, the last
-> version on 12/18/2018. The driver has been hosted on gitlab for
-> review has had contributions from the community.
->   gitlab (git@gitlab.com:jsmart/efct-Emulex_FC_Target.git)
->
-> The driver integrates into the source tree at the (new)
-> drivers/scsi/elx subdirectory.
->
-> The driver consists of the following components:
-> - A libefc_sli subdirectory: This subdirectory contains a library that
->   encapsulates common definitions and routines for an Emulex SLI-4
->   adapter.
-> - A libefc subdirectory: This subdirectory contains a library of
->   common routines. Of major import is a number of routines that
->   implement a FC Discovery engine for target mode.
-> - An efct subdirectory: This subdirectory contains the efct target
->   mode device driver. The driver utilizes the above librarys and
->   plugs into the SCSI LIO interfaces. The driver is SCSI only at
->   this time.
->
-> The patches populate the libraries and device driver and can only
-> be compiled as a complete set.
->
-> This driver is completely independent from the lpfc device driver
-> and there is no overlap on PCI ID's.
->
-> The patches have been cut against the 5.6/scsi-queue branch.
->
-> Thank you to those that have contributed to the driver in the past.
->
-> Review comments welcome!
->
-> -- james
->
->
-> V2 modifications:
->
-> Contains the following modifications based on prior review comments:
->   Indentation/Alignment/Spacing changes
->   Comments: format cleanup; removed obvious or unnecessary comments;
->     Added comments for clarity.
->   Headers use #ifndef comparing for prior inclusion
->   Cleanup structure names (remove _s suffix)
->   Encapsulate use of macro arguments
->   Refactor to remove static function declarations for static local
-> routines Removed unused variables
->   Fix SLI4_INTF_VALID_MASK for 32bits
->   Ensure no BIT() use
->   Use __ffs() in page count macro
->   Reorg to move field defines out of structure definition
->   Commonize command building routines to reduce duplication
->   LIO interface:
->     Removed scsi initiator includes
->     Cleaned up interface defines
->     Removed lio WWN version attribute.
->     Expanded macros within logging macros
->     Cleaned up lio state setting macro
->     Remove __force use
->     Modularized session debugfs code so can be easily replaced.
->     Cleaned up abort task handling. Return after initiating.
->     Modularized where possible to reduce duplication
->     Convert from kthread to workqueue use
->     Remove unused macros
->   Add missing TARGET_CORE build attribute
->   Fix kbuild test robot warnings
->
-> Comments not addressed:
->   Use of __packed: not believed necessary
->   Session debugfs code remains. There is not yet a common lio
->     mechanism to replace with.
+Hi Deepak,
 
-There seems to be an issue with this version and also the code from
-October on my setup. I am running 5.5.0-rc3 but it also happens
-on earlier kernel versions.
+The 0day bot reported an issue with this patch with Clang, would you
+mind taking a look at it? The full report is attached at the bottom,
+I've added a comment inline before it though.
 
-While shutting down the target after some testing I execute
+On Tue, Dec 24, 2019 at 10:11:40AM +0530, Deepak Ukey wrote:
+> From: Deepak Ukey <Deepak.Ukey@microchip.com>
+> 
+> Added the IOCTL functionality for SGPIO.
+> 
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
+> Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Signed-off-by: Akshat Jain <akshatzen@google.com>
+> Signed-off-by: Yu Zheng <yuuzheng@google.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.c  |  73 ++++++++++++++++
+>  drivers/scsi/pm8001/pm8001_ctl.h  |  72 ++++++++++++++++
+>  drivers/scsi/pm8001/pm8001_hwi.c  | 172 +++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/pm8001/pm8001_hwi.h  |  17 ++++
+>  drivers/scsi/pm8001/pm8001_init.c |   3 +
+>  drivers/scsi/pm8001/pm8001_sas.c  |  37 ++++++++
+>  drivers/scsi/pm8001/pm8001_sas.h  |  20 +++++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  |   6 ++
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |   3 +
+>  9 files changed, 402 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 8292074c1e6f..3e59b2a7185a 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -1009,6 +1009,76 @@ static long pm8001_gpio_ioctl(struct pm8001_hba_info *pm8001_ha,
+>  	return ret;
+>  }
+>  
+> +static long pm8001_sgpio_ioctl(struct pm8001_hba_info *pm8001_ha,
+> +		unsigned long arg)
+> +{
+> +	struct sgpio_buffer buffer;
+> +	struct read_write_req_resp *req = &buffer.sgpio_req;
+> +	struct sgpio_req payload;
+> +	struct sgpio_ioctl_resp *sgpio_resp;
+> +	DECLARE_COMPLETION_ONSTACK(completion);
+> +	unsigned long timeout;
+> +	u32 ret = 0, i;
+> +
+> +	if (copy_from_user(&buffer, (struct sgpio_buffer *)arg,
+> +		sizeof(struct sgpio_buffer))) {
+> +		return ADPT_IOCTL_CALL_FAILED;
+> +	}
+> +	mutex_lock(&pm8001_ha->ioctl_mutex);
+> +	pm8001_ha->ioctl_completion = &completion;
+> +
+> +	payload.func_reg_index = cpu_to_le32((req->register_index << 24) |
+> +			(req->register_type << 16) | (req->function << 8) |
+> +			SMP_FRAME_REQ);
+> +	payload.count = req->register_count;
+> +
+> +	if (req->function == WRITE_SGPIO_REGISTER) {
+> +		if (req->register_count > MAX_SGPIO_REQ_PAYLOAD) {
+> +			ret = ADPT_IOCTL_CALL_FAILED;
+> +			goto exit;
+> +		}
+> +		for (i = 0; i < req->register_count; i++)
+> +			payload.value[i] = req->read_write_data[i];
+> +	}
+> +
+> +	ret = PM8001_CHIP_DISP->sgpio_req(pm8001_ha, &payload);
+> +	if (ret != 0) {
+> +		ret = ADPT_IOCTL_CALL_FAILED;
+> +		goto exit;
+> +	}
 
-rmdir /sys/kernel/config/target/efct/10:00:00:90:fa:f0:89:ba/tpgt_0/acls/1=
-0:00:00:90:fa:f0:89:bb
+timeout is uninitialized here; could this if statement be removed and
+have the msecs_to_jiffies just hardcode the 2000?
 
-but this command never returns and the shutdown script hangs.
+> +	if (timeout < 2000)
+> +		timeout = 2000;
+> +
+> +	timeout = wait_for_completion_timeout(&completion,
+> +			msecs_to_jiffies(timeout));
+> +	if (timeout == 0) {
+> +		ret = ADPT_IOCTL_CALL_TIMEOUT;
+> +		goto exit;
+> +	}
+> +
+> +	sgpio_resp = &pm8001_ha->sgpio_resp;
+> +	req->frame_type		= sgpio_resp->func_result & 0xff;
+> +	req->function		= (sgpio_resp->func_result >> 8) & 0xff;
+> +	req->function_result	= (sgpio_resp->func_result >> 16) & 0xff;
+> +	if (req->function == READ_SGPIO_REGISTER) {
+> +		for (i = 0; i < req->register_count; i++)
+> +			req->read_write_data[i] = sgpio_resp->value[i];
+> +	}
+> +	ret = ADPT_IOCTL_CALL_SUCCESS;
+> +exit:
+> +	spin_lock_irq(&pm8001_ha->ioctl_lock);
+> +	pm8001_ha->ioctl_completion = NULL;
+> +	spin_unlock_irq(&pm8001_ha->ioctl_lock);
+> +	buffer.header.return_code = ret;
+> +	if (copy_to_user((void *)arg, (void *)&buffer,
+> +			sizeof(struct sgpio_buffer))) {
+> +		ret = ADPT_IOCTL_CALL_FAILED;
+> +	}
+> +	mutex_unlock(&pm8001_ha->ioctl_mutex);
+> +
+> +	return ret;
+> +}
+> +
+>  static int pm8001_ioctl_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
+>  		unsigned long arg)
+>  {
+> @@ -1172,6 +1242,9 @@ static long pm8001_ioctl(struct file *file,
+>  	case ADPT_IOCTL_GPIO:
+>  		ret = pm8001_gpio_ioctl(pm8001_ha, arg);
+>  		break;
+> +	case ADPT_IOCTL_SGPIO:
+> +		ret = pm8001_sgpio_ioctl(pm8001_ha, arg);
+> +		break;
+>  	case ADPT_IOCTL_GET_PHY_PROFILE:
+>  		ret = pm8001_ioctl_get_phy_profile(pm8001_ha, arg);
+>  		return ret;
 
-The code from August [1] and a refactored version [2] do not exhibit
-this problem.
+On Thu, Dec 26, 2019 at 06:16:43AM +0800, kbuild test robot wrote:
+> CC: kbuild-all@lists.01.org
+> In-Reply-To: <20191224044143.8178-10-deepak.ukey@microchip.com>
+> References: <20191224044143.8178-10-deepak.ukey@microchip.com>
+> TO: Deepak Ukey <deepak.ukey@microchip.com>
+> CC: linux-scsi@vger.kernel.org
+> CC: Vasanthalakshmi.Tharmarajan@microchip.com, Viswas.G@microchip.com, deepak.ukey@microchip.com, jinpu.wang@profitbricks.com, martin.petersen@oracle.com, dpf@google.com, yuuzheng@google.com, auradkar@google.com, vishakhavc@google.com, bjashnani@google.com, radha@google.com, akshatzen@google.com
+> 
+> Hi Deepak,
+> 
+> Thank you for the patch! Perhaps something to improve:
+> 
+> [auto build test WARNING on mkp-scsi/for-next]
+> [cannot apply to scsi/for-next v5.5-rc3 next-20191220]
+> [if your patch is applied to the wrong git tree, please drop us a note to help
+> improve the system. BTW, we also suggest to use '--base' option to specify the
+> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Deepak-Ukey/pm80xx-Updates-for-the-driver-version-0-1-39/20191225-181036
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+> config: x86_64-allyesconfig (attached as .config)
+> compiler: clang version 10.0.0 (git://gitmirror/llvm_project 9a77c2095439ba41bd8f6f35931b94075b2fd45b)
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64 
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> All warnings (new ones prefixed by >>):
+> 
+>    In file included from drivers/scsi/pm8001/pm8001_ctl.c:43:
+>    In file included from drivers/scsi/pm8001/pm8001_sas.h:58:
+>    drivers/scsi/pm8001/pm8001_defs.h:102:9: warning: 'CONFIG_SCSI_PM8001_MAX_DMA_SG' macro redefined [-Wmacro-redefined]
+>    #define CONFIG_SCSI_PM8001_MAX_DMA_SG   528
+>            ^
+>    ./include/generated/autoconf.h:10861:9: note: previous definition is here
+>    #define CONFIG_SCSI_PM8001_MAX_DMA_SG 128
+>            ^
+> >> drivers/scsi/pm8001/pm8001_ctl.c:1049:6: warning: variable 'timeout' is uninitialized when used here [-Wuninitialized]
+>            if (timeout < 2000)
+>                ^~~~~~~
+>    drivers/scsi/pm8001/pm8001_ctl.c:1020:23: note: initialize the variable 'timeout' to silence this warning
+>            unsigned long timeout;
+>                                 ^
+>                                  = 0
+>    2 warnings generated.
+> 
+> vim +/timeout +1049 drivers/scsi/pm8001/pm8001_ctl.c
+> 
+>   1011	
+>   1012	static long pm8001_sgpio_ioctl(struct pm8001_hba_info *pm8001_ha,
+>   1013			unsigned long arg)
+>   1014	{
+>   1015		struct sgpio_buffer buffer;
+>   1016		struct read_write_req_resp *req = &buffer.sgpio_req;
+>   1017		struct sgpio_req payload;
+>   1018		struct sgpio_ioctl_resp *sgpio_resp;
+>   1019		DECLARE_COMPLETION_ONSTACK(completion);
+>   1020		unsigned long timeout;
+>   1021		u32 ret = 0, i;
+>   1022	
+>   1023		if (copy_from_user(&buffer, (struct sgpio_buffer *)arg,
+>   1024			sizeof(struct sgpio_buffer))) {
+>   1025			return ADPT_IOCTL_CALL_FAILED;
+>   1026		}
+>   1027		mutex_lock(&pm8001_ha->ioctl_mutex);
+>   1028		pm8001_ha->ioctl_completion = &completion;
+>   1029	
+>   1030		payload.func_reg_index = cpu_to_le32((req->register_index << 24) |
+>   1031				(req->register_type << 16) | (req->function << 8) |
+>   1032				SMP_FRAME_REQ);
+>   1033		payload.count = req->register_count;
+>   1034	
+>   1035		if (req->function == WRITE_SGPIO_REGISTER) {
+>   1036			if (req->register_count > MAX_SGPIO_REQ_PAYLOAD) {
+>   1037				ret = ADPT_IOCTL_CALL_FAILED;
+>   1038				goto exit;
+>   1039			}
+>   1040			for (i = 0; i < req->register_count; i++)
+>   1041				payload.value[i] = req->read_write_data[i];
+>   1042		}
+>   1043	
+>   1044		ret = PM8001_CHIP_DISP->sgpio_req(pm8001_ha, &payload);
+>   1045		if (ret != 0) {
+>   1046			ret = ADPT_IOCTL_CALL_FAILED;
+>   1047			goto exit;
+>   1048		}
+> > 1049		if (timeout < 2000)
+>   1050			timeout = 2000;
+>   1051	
+>   1052		timeout = wait_for_completion_timeout(&completion,
+>   1053				msecs_to_jiffies(timeout));
+>   1054		if (timeout == 0) {
+>   1055			ret = ADPT_IOCTL_CALL_TIMEOUT;
+>   1056			goto exit;
+>   1057		}
+>   1058	
+>   1059		sgpio_resp = &pm8001_ha->sgpio_resp;
+>   1060		req->frame_type		= sgpio_resp->func_result & 0xff;
+>   1061		req->function		= (sgpio_resp->func_result >> 8) & 0xff;
+>   1062		req->function_result	= (sgpio_resp->func_result >> 16) & 0xff;
+>   1063		if (req->function == READ_SGPIO_REGISTER) {
+>   1064			for (i = 0; i < req->register_count; i++)
+>   1065				req->read_write_data[i] = sgpio_resp->value[i];
+>   1066		}
+>   1067		ret = ADPT_IOCTL_CALL_SUCCESS;
+>   1068	exit:
+>   1069		spin_lock_irq(&pm8001_ha->ioctl_lock);
+>   1070		pm8001_ha->ioctl_completion = NULL;
+>   1071		spin_unlock_irq(&pm8001_ha->ioctl_lock);
+>   1072		buffer.header.return_code = ret;
+>   1073		if (copy_to_user((void *)arg, (void *)&buffer,
+>   1074				sizeof(struct sgpio_buffer))) {
+>   1075			ret = ADPT_IOCTL_CALL_FAILED;
+>   1076		}
+>   1077		mutex_unlock(&pm8001_ha->ioctl_mutex);
+>   1078	
+>   1079		return ret;
+>   1080	}
+>   1081	
+> 
+> ---
+> 0-DAY kernel test infrastructure                 Open Source Technology Center
+> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
 
-[  245.485090] efct_TPG[0]_LUN[0] - Removed ACL for InitiatorNode: 10:00:0=
-0:90:fa:f0:89:bb Mapped LUN: 0
-[  245.497691] efct_TPG[0] - Freeing ACL for efct InitiatorNode: 10:00:00:=
-90:fa:f0:89:bb Mapped LUN: 0
-
-[  385.687531] sysrq: Show Blocked State
-[  385.687547]   task                PC stack   pid father
-[  385.687610] efct:0:0        D    0  3241      2 0x80004000
-[  385.687615] Call Trace:
-[  385.687628]  __schedule+0x28e/0x7a0
-[  385.687635]  ? try_to_del_timer_sync+0x45/0x70
-[  385.687639]  ? _raw_spin_lock_irqsave+0x14/0x40
-[  385.687643]  schedule+0x46/0xb0
-[  385.687646]  schedule_timeout+0x118/0x2d0
-[  385.687650]  ? __next_timer_interrupt+0xb0/0xb0
-[  385.687653]  wait_for_completion_timeout+0x87/0xf0
-[  385.687657]  ? wake_up_q+0x90/0x90
-[  385.687682]  efct_intr_thread+0x5a/0xa0 [efct]
-[  385.687695]  ? efct_device_detach+0x110/0x110 [efct]
-[  385.687700]  kthread+0xdc/0x110
-[  385.687713]  ? efct_device_detach+0x110/0x110 [efct]
-[  385.687716]  ? kthread_park+0xa0/0xa0
-[  385.687720]  ret_from_fork+0x2e/0x40
-[  385.687726] rmdir           D    0  3368   3365 0x00000000
-[  385.687730] Call Trace:
-[  385.687735]  __schedule+0x28e/0x7a0
-[  385.687739]  schedule+0x46/0xb0
-[  385.687742]  schedule_timeout+0x1bd/0x2d0
-[  385.687762]  ? efct_lio_close_session+0x3e/0xd0 [efct]
-[  385.687780]  ? efct_lio_close_session+0x3e/0xd0 [efct]
-[  385.687783]  ? wait_for_completion+0x2a/0xe0
-[  385.687786]  wait_for_completion+0x8f/0xe0
-[  385.687789]  ? wake_up_q+0x90/0x90
-[  385.687820]  core_tpg_del_initiator_node_acl+0x73/0x100 [target_core_mo=
-d]
-[  385.687827]  ? config_item_put.part.0+0x57/0xe0 [configfs]
-[  385.687845]  target_fabric_nacl_base_release+0x20/0x30 [target_core_mod=
-]
-[  385.687851]  config_item_put.part.0+0x78/0xe0 [configfs]
-[  385.687856]  config_item_put+0x11/0x20 [configfs]
-[  385.687861]  configfs_rmdir+0x299/0x300 [configfs]
-[  385.687866]  vfs_rmdir+0x6a/0x150
-[  385.687869]  do_rmdir+0x16d/0x1a0
-[  385.687873]  sys_rmdir+0x15/0x20
-[  385.687876]  do_fast_syscall_32+0x87/0x280
-[  385.687880]  entry_SYSENTER_32+0xaa/0x102
-[  385.687884] EIP: 0xb7eebb89
-[  385.687888] Code: ff 00 06 fc ff 30 06 fc ff 60 06 fc ff 90 06 fc ff d0=
- 06 fc ff 00 07 fc ff 30 07 fc ff 70 07 fc ff 15 06 fc ff 35 06 fc ff 55 <=
-06> fc ff 75 06 fc ff 12 06 fc ff 32 06 fc ff 52 06 fc ff 72 06 fc
-[  385.687891] EAX: ffffffda EBX: bf9ea909 ECX: 00000000 EDX: bf9ea909
-[  385.687893] ESI: bf9e9114 EDI: 00000002 EBP: bf9e9078 ESP: bf9e901c
-[  385.687895] DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 007b EFLAGS: 000002=
-92
-
-[1]
-https://repo.or.cz/efct-Emulex_FC_Target/sherbszt.git/shortlog/refs/heads/=
-v2-20190804
-[2]
-https://repo.or.cz/efct-Emulex_FC_Target/sherbszt.git/shortlog/refs/heads/=
-v2-20191125
-
-Sebastian
+Cheers,
+Nathan
