@@ -2,276 +2,213 @@ Return-Path: <SRS0=iDBg=2U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E2DC2D0C3
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 06:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF106C2D0C3
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 07:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3782D2071E
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 06:04:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 914A92071E
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 07:21:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chelsious.onmicrosoft.com header.i=@chelsious.onmicrosoft.com header.b="OhDgDr3d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727144AbfL3GEh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Dec 2019 01:04:37 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:60015 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727115AbfL3GEh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Dec 2019 01:04:37 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 8988B204247;
-        Mon, 30 Dec 2019 07:04:34 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id o26GB0aCZ063; Mon, 30 Dec 2019 07:04:27 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 37C232040E4;
-        Mon, 30 Dec 2019 07:04:26 +0100 (CET)
-Subject: Re: [RFC 3/6] scsi_debug: implement verify(10), add verify(16)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-References: <20191222035948.30447-1-dgilbert@interlog.com>
- <20191222035948.30447-4-dgilbert@interlog.com>
-Message-ID: <0bd043b8-5cda-35a3-17f5-e8fa878b494a@interlog.com>
-Date:   Mon, 30 Dec 2019 01:04:24 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1727170AbfL3HVk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Dec 2019 02:21:40 -0500
+Received: from mail-dm6nam12on2127.outbound.protection.outlook.com ([40.107.243.127]:43201
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727159AbfL3HVk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Dec 2019 02:21:40 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CcryAhjWBNzGrYsFGzjDhIU611X2jBqhGXux+8KpjM1Blr+WEW7VK8d0yXE+pLpK31qDTkeDwCOZW6cOhiU25+s84LN2Zo48hrseH5KabBEGezfLm2I1c0OHLJzFegLilkpGFtbqu6TENnGiZUskIvXdk0PrU45Mx9PQT94FhoEtBxwCLhNpM1dTEpJCZrApB9p+Lekbe3ZF8FKEVXb1Tg2qc8pi/1z2rVJCrjzBg4rHW7RbPexsgbm3/N1vw+WR7BVpQw5wMono5KbbbNrGBZYjZzNiEEb8NcU3KmCofQxE+7HD7j7A7e33JldI8ZNdKWKZecWavWm26aWRBr0w4g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ns/2Ye7WeRkI6rrVorvOdHLdMBHQRTYcldXd0YilvQc=;
+ b=BEHTEZjnRCYrUP98RbRyP9QWeRWnFbq42H6yu6WFmjjlP1jyRrBfnQpTwCsFw2a4UQUTVQ+xmvczHMmHZtRmUOQI7Xq2+/USelItEtVFR87g1b2sntFXzYm6K+fMdtt7zCu+6Va+0IXlhzV9d9Hda3Pxlxm26wD7+cPlHZL5km6GZ5zuSVbusFn0nUZPPQPQismeAEEC9nU3Vvy3MxskE+3AGQoI9rsjQSfsz97pfrjYey7PLzUNn3JzSGBtjfgBGZ9J4bgg+ojxdUKp2w6p6P2QxdwUZyrf4w8yvC1LuxbRen+dFnR9Xcf9C89rAE8VFqX1d3BOLhRpAseSDVir1w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=chelsio.com; dmarc=pass action=none header.from=chelsio.com;
+ dkim=pass header.d=chelsio.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=chelsious.onmicrosoft.com; s=selector2-chelsious-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ns/2Ye7WeRkI6rrVorvOdHLdMBHQRTYcldXd0YilvQc=;
+ b=OhDgDr3dAY/eN5q0cVDM3C0NZFpa51mwCVIZh7aKTHqESvX1QQiwCe2ZMb5rcPp4JMUTugEZe3AXhWvK2ASEHsKidNdHjGxNTLEKa3fhVQxP3xwXzokv/BSzDordrl74HgLNe4zdOQoAzXiulaITVgB1mhHfXNwZnv36+5qot34=
+Received: from BYAPR12MB3080.namprd12.prod.outlook.com (20.178.55.15) by
+ BYAPR12MB3494.namprd12.prod.outlook.com (20.178.196.220) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2581.12; Mon, 30 Dec 2019 07:21:34 +0000
+Received: from BYAPR12MB3080.namprd12.prod.outlook.com
+ ([fe80::4881:cf01:2a7e:9da8]) by BYAPR12MB3080.namprd12.prod.outlook.com
+ ([fe80::4881:cf01:2a7e:9da8%3]) with mapi id 15.20.2581.007; Mon, 30 Dec 2019
+ 07:21:34 +0000
+From:   Rahul Kundu <rahul.kundu@chelsio.com>
+To:     "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+CC:     Potnuri Bharat Teja <bharat@chelsio.com>,
+        Nirranjan Kirubaharan <nirranjan@chelsio.com>
+Subject: Trace seen on target during iSER login
+Thread-Topic: Trace seen on target during iSER login
+Thread-Index: AdW+4Nv2D5BTjdawTFWO8/mBqdBBDw==
+Date:   Mon, 30 Dec 2019 07:21:34 +0000
+Message-ID: <BYAPR12MB3080466CC0D6B968D3525F5BEF270@BYAPR12MB3080.namprd12.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=rahul.kundu@chelsio.com; 
+x-originating-ip: [182.74.59.157]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0c305a99-9bfc-4016-c856-08d78cf8e6c6
+x-ms-traffictypediagnostic: BYAPR12MB3494:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR12MB3494342F69E4AF6DA1AF6739EF270@BYAPR12MB3494.namprd12.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:2331;
+x-forefront-prvs: 0267E514F9
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39850400004)(396003)(376002)(346002)(136003)(366004)(199004)(189003)(26005)(186003)(64756008)(66556008)(66476007)(76116006)(44832011)(2906002)(107886003)(71200400001)(66946007)(4326008)(33656002)(66446008)(110136005)(45080400002)(508600001)(86362001)(54906003)(5660300002)(9686003)(8936002)(55016002)(52536014)(8676002)(6506007)(81156014)(7696005)(316002)(81166006);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR12MB3494;H:BYAPR12MB3080.namprd12.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: chelsio.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: DOitit4YsuA4Cdx3IBohEWwtJ6OF1v/M/KtyZ7R5HO0RUPC4K03gHCqES9v7y5l2st9bZp6IESHBsQUWuWwJjDi5dIdIe5b2ncEOb6ojd2Nwa2NGkH2JzbYS1j19oeklTQ3OITpM85yJTmasdMmforgyTNOTp1/s4ivshdyM3pB4WB2cNXmQlU8isvBSlWrWpIPZBwGBep14aoz8EZFaFp0S9y+cU7YZPW/3BXSgnvA6oFvLhQfiTygifgC26QAYGky/Fal3LX8hPWuNeystjJnngNfFOJDIFexUfn69lwN59t45HaFErqcPp+SMb0rci7qVsJbT+Uu0SaKB0L4HZR7hHu1jFHAc9S1bYqz03wHTo7qssAVj+kdryziqeI3iexbTcp4Kd08B+PRoky0UmkxKYaL6sHHaUCWfO6iT4tlNnfZQcPXNKkeyv1Rj5esH
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <20191222035948.30447-4-dgilbert@interlog.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: chelsio.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0c305a99-9bfc-4016-c856-08d78cf8e6c6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Dec 2019 07:21:34.5900
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 065db76d-a7ae-4c60-b78a-501e8fc17095
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: FpIWH06QeiLahNEQpAJ56pvsD9yIyT3aJYvXJNS+SqBPLltLV7FiJUPPpXELlj04slUE0AbwJ5kWk6r2MM69Bfn1aONX3y7756ou0aIh47Y=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3494
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-See below, near the end of the patch.
+Hi,
 
-On 2019-12-21 10:59 p.m., Douglas Gilbert wrote:
-> With the addition of the doublestore option, the ability to check
-> whether the two different ramdisk images are the same or not
-> becomes useful. Prior to this patch VERIFY(10) always returned
-> true (i.e. the SCSI GOOD status) without checking. This option
-> adds support for BYTCHK equal to 1 and 3 . If the comparison
-> fails then a sense key of MISCOMPARE is returned as per the
-> T10 standards. Add support for the VERIFY(16).
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-> ---
->   drivers/scsi/scsi_debug.c | 118 ++++++++++++++++++++++++++++++++++----
->   1 file changed, 107 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 45934dae8617..5d9dc9bdd1a7 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -342,7 +342,7 @@ enum sdeb_opcode_index {
->   	SDEB_I_SERV_ACT_OUT_16 = 13,	/* add ...SERV_ACT_OUT_12 if needed */
->   	SDEB_I_MAINT_IN = 14,
->   	SDEB_I_MAINT_OUT = 15,
-> -	SDEB_I_VERIFY = 16,		/* 10 only */
-> +	SDEB_I_VERIFY = 16,		/* VERIFY(10), VERIFY(16) */
->   	SDEB_I_VARIABLE_LEN = 17,	/* READ(32), WRITE(32), WR_SCAT(32) */
->   	SDEB_I_RESERVE = 18,		/* 6, 10 */
->   	SDEB_I_RELEASE = 19,		/* 6, 10 */
-> @@ -385,7 +385,8 @@ static const unsigned char opcode_ind_arr[256] = {
->   	0, SDEB_I_VARIABLE_LEN,
->   /* 0x80; 0x80->0x9f: 16 byte cdbs */
->   	0, 0, 0, 0, 0, SDEB_I_ATA_PT, 0, 0,
-> -	SDEB_I_READ, SDEB_I_COMP_WRITE, SDEB_I_WRITE, 0, 0, 0, 0, 0,
-> +	SDEB_I_READ, SDEB_I_COMP_WRITE, SDEB_I_WRITE, 0,
-> +	0, 0, 0, SDEB_I_VERIFY,
->   	0, SDEB_I_SYNC_CACHE, 0, SDEB_I_WRITE_SAME, 0, 0, 0, 0,
->   	0, 0, 0, 0, 0, 0, SDEB_I_SERV_ACT_IN_16, SDEB_I_SERV_ACT_OUT_16,
->   /* 0xa0; 0xa0->0xbf: 12 byte cdbs */
-> @@ -427,6 +428,7 @@ static int resp_report_tgtpgs(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_unmap(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_rsup_opcodes(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_rsup_tmfs(struct scsi_cmnd *, struct sdebug_dev_info *);
-> +static int resp_verify(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_write_same_10(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_write_same_16(struct scsi_cmnd *, struct sdebug_dev_info *);
->   static int resp_comp_write(struct scsi_cmnd *, struct sdebug_dev_info *);
-> @@ -471,6 +473,12 @@ static const struct opcode_info_t write_iarr[] = {
->   		   0xbf, 0xc7, 0, 0, 0, 0} },
->   };
->   
-> +static const struct opcode_info_t verify_iarr[] = {
-> +	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_MEDIA_IO, resp_verify,/* VERIFY(10) */
-> +	    NULL, {10,  0xf7, 0xff, 0xff, 0xff, 0xff, 0xbf, 0xff, 0xff, 0xc7,
-> +		   0, 0, 0, 0, 0, 0} },
-> +};
-> +
->   static const struct opcode_info_t sa_in_16_iarr[] = {
->   	{0, 0x9e, 0x12, F_SA_LOW | F_D_IN, resp_get_lba_status, NULL,
->   	    {16,  0x12, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-> @@ -571,9 +579,10 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
->   /* 15 */
->   	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* MAINT OUT */
->   	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-> -	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_MEDIA_IO, NULL, NULL, /* VERIFY(10) */
-> -	    {10,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc7,
-> -	     0, 0, 0, 0, 0, 0} },
-> +	{ARRAY_SIZE(verify_iarr), 0x8f, 0,
-> +	    F_D_OUT_MAYBE | FF_MEDIA_IO, resp_verify,	/* VERIFY(16) */
-> +	    verify_iarr, {16,  0xf6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-> +			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} },
->   	{ARRAY_SIZE(vl_iarr), 0x7f, 0x9, F_SA_HIGH | F_D_IN | FF_MEDIA_IO,
->   	    resp_read_dt0, vl_iarr,	/* VARIABLE LENGTH, READ(32) */
->   	    {32,  0xc7, 0, 0, 0, 0, 0x3f, 0x18, 0x0, 0x9, 0xfe, 0, 0xff, 0xff,
-> @@ -2543,7 +2552,8 @@ static int do_device_access(struct scsi_cmnd *scmd, u32 sg_skip, u64 lba,
->   /* If lba2fake_store(lba,num) compares equal to arr(num), then copy top half of
->    * arr into lba2fake_store(lba,num) and return true. If comparison fails then
->    * return false. */
-> -static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num)
-> +static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num,
-> +			      bool compare_only)
->   {
->   	bool res;
->   	u64 block, rest = 0;
-> @@ -2565,6 +2575,8 @@ static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num)
->   			     rest * lb_size);
->   	if (!res)
->   		return res;
-> +	if (compare_only)
-> +		return true;
->   	arr += num * lb_size;
->   	memcpy(fsp + (block * lb_size), arr, (num - rest) * lb_size);
->   	if (rest)
-> @@ -3472,9 +3484,11 @@ static int resp_comp_write(struct scsi_cmnd *scp,
->   
->   	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
->   
-> -	/* trick do_device_access() to fetch both compare and write buffers
-> -	 * from data-in into arr. Safe (atomic) since write_lock held. */
-> -	fspp = &fake_store_a[scp2acc_num(scp) % 2];
-> +	/*
-> +	 * Trick do_device_access() to fetch both compare and write buffers
-> +	 * from data-out into arr. Safe (atomic) since write_lock held.
-> +	 */
-> +	fspp = &fake_store_a[acc_num % 2];
->   	fsp_hold = *fspp;
->   	*fspp = arr;
->   	ret = do_device_access(scp, 0, 0, dnum, true);
-> @@ -3486,7 +3500,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
->   		sdev_printk(KERN_INFO, scp->device, "%s: compare_write: cdb "
->   			    "indicated=%u, IO sent=%d bytes\n", my_name,
->   			    dnum * lb_size, ret);
-> -	if (!comp_write_worker(lba, num, arr, scp2acc_num(scp))) {
-> +	if (!comp_write_worker(lba, num, arr, acc_num, false)) {
->   		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
->   		retval = check_condition_result;
->   		goto cleanup;
-> @@ -3550,7 +3564,7 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   		if (ret)
->   			goto out;
->   
-> -		unmap_region(lba, num, scp2acc_num(scp));
-> +		unmap_region(lba, num, acc_num);
->   	}
->   
->   	ret = 0;
-> @@ -3731,6 +3745,88 @@ static int resp_report_luns(struct scsi_cmnd *scp,
->   	return res;
->   }
->   
-> +static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
-> +{
-> +	bool is_bytchk3 = false;
-> +	u8 bytchk;
-> +	int ret, j;
-> +	int acc_num = scp2acc_num(scp);
-> +	u32 vnum, a_num, off;
-> +	const u32 lb_size = sdebug_sector_size;
-> +	unsigned long iflags;
-> +	u64 lba;
-> +	u8 *arr;
-> +	u8 **fspp;
-> +	u8 *fsp_hold;
-> +	u8 *cmd = scp->cmnd;
-> +
-> +	bytchk = (cmd[1] >> 1) & 0x3;
-> +	if (bytchk == 0) {
-> +		return 0;	/* always claim internal verify okay */
-> +	} else if (bytchk == 2) {
-> +		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 2);
-> +		return check_condition_result;
-> +	} else if (bytchk == 3) {
-> +		is_bytchk3 = true;	/* 1 block sent, compared repeatedly */
-> +	}
-> +	switch (cmd[0]) {
-> +	case VERIFY_16:
-> +		lba = get_unaligned_be64(cmd + 2);
-> +		vnum = get_unaligned_be32(cmd + 10);
-> +		break;
-> +	case VERIFY:		/* is VERIFY(10) */
-> +		lba = get_unaligned_be32(cmd + 2);
-> +		vnum = get_unaligned_be16(cmd + 7);
-> +		break;
-> +	default:
-> +		mk_sense_invalid_opcode(scp);
-> +		return check_condition_result;
-> +	}
-> +	a_num = is_bytchk3 ? 1 : vnum;
-> +	/* Treat following check like one for read (i.e. no write) access */
-> +	ret = check_device_access_params(scp, lba, a_num, false);
-> +	if (ret)
-> +		return ret;
-> +
-> +	arr = kcalloc(lb_size, vnum, GFP_ATOMIC);
-> +	if (!arr) {
-> +		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
-> +				INSUFF_RES_ASCQ);
-> +		return check_condition_result;
-> +	}
-> +	/* Not changing store, so only need read access */
-> +	read_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
-> +
-> +	/* trick do_device_access() to fetch data-out into arr. */
-> +	fspp = &fake_store_a[acc_num % 2];
-> +	fsp_hold = *fspp;
-> +	*fspp = arr;
-> +	ret = do_device_access(scp, 0, 0, a_num, true);
-> +	*fspp = fsp_hold;
+I am trying to setup and run iSER with tot linux kernel installed(5.5.0-rc3=
+) on both target and initiator.
+Followed below steps:
+        1. Created 1 targets having ramdisk LUN of 1GB size.
+        2. Did discovery and login from the Initiator
 
-The above hack is copied from the compare_and_write response code where it
-is safe (just) due to the write_lock. That is weakened to a read_lock here
-and that leads to very ugly crashes when multiple threads are visiting
-this code.
+Observed that everything worked fine at initiator and successfully logins.
+But, after login, below warning was seen at Target:
 
-In version 2 of this code, introduce a do_dout_fetch() function in both
-compare_and_write and verify responses. That way the hack disappears and so
-does the ugly crash. Testing ongoing.
+target dmesg
+-------------------
+[  237.850090] Rounding down aligned max_sectors from 4294967295 to 4294967=
+288=20
+[  244.517357] iwpm_register_pid_cb: Down level iwpmd/pid 3060.  Continuing=
+...
+[  324.876992] ------------[ cut here ]------------=20
+[  324.877024] percpu_ref_kill_and_confirm called more than once on target_=
+release_sess_cmd_refcnt [target_core_mod]!
+[  324.877047] WARNING: CPU: 0 PID: 3167 at lib/percpu-refcount.c:346 percp=
+u_ref_kill_and_confirm+0x7e/0xa0
+[  324.877048] Modules linked in: target_core_user uio target_core_pscsi ta=
+rget_core_file target_core_iblock rpcrdma ib_isert iscsi_target_mod ib_iser=
+ libiscsi scsi_transport_iscsi ib_srpt target_core_mod ib_srp scsi_transpor=
+t_srp ib_ipoib rdma_ucm dm_mirror dm_region_hash ib_umad dm_log iw_cxgb4 ib=
+_uverbs snd_hda_codec_realtek snd_hda_codec_generic ledtrig_audio intel_pow=
+erclamp snd_hda_intel rdma_cm coretemp snd_intel_dspcfg iw_cm snd_hda_codec=
+ ib_cm ib_core snd_hda_core kvm snd_hwdep snd_seq libcxgb snd_seq_device sn=
+d_pcm irqbypass ipmi_si iTCO_wdt snd_timer iTCO_vendor_support gpio_ich ipm=
+i_devintf pcspkr snd ipmi_msghandler sg ioatdma soundcore i2c_i801 lpc_ich =
+i7core_edac acpi_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrpc dm_mul=
+tipath dm_mod ip_tables ext4 mbcache jbd2 sr_mod cdrom sd_mod mgag200 drm_k=
+ms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm_vram_helper drm=
+_ttm_helper ttm drm ata_generic pata_acpi cxgb4 igb ata_piix pata_jmicron f=
+irewire_ohci libata=20
+[  324.877096]  firewire_core dca crc32c_intel serio_raw i2c_algo_bit i2c_c=
+ore ptp crc_itu_t pps_core=20
+[  324.877104] CPU: 0 PID: 3167 Comm: iscsi_ttx Kdump: loaded Not tainted 5=
+.5.0-rc3+ #45
+[  324.877106] Hardware name: Supermicro X8DAH/X8DAH, BIOS 2.1        12/30=
+/2011
+[  324.877109] RIP: 0010:percpu_ref_kill_and_confirm+0x7e/0xa0
+[  324.877114] Code: 00 80 3d bc 04 1e 01 00 75 c4 48 8b 53 10 48 c7 c6 80 =
+fb 0a a4 48 c7 c7 78 ae 33 a4 31 c0 c6 05 9f 04 1e 01 01 e8 72 47 ca ff <0f=
+> 0b 48 8b 53 08 eb 9c f0 48 83 2b 01 74 02 eb b3 48 89 df ff 53=20
+[  324.877115] RSP: 0018:ffffa1780d14bdf0 EFLAGS: 00010086=20
+[  324.877116] RAX: 0000000000000000 RBX: ffff947e1eb17430 RCX: 00000000000=
+00000=20
+[  324.877116] RDX: 0000000000000006 RSI: ffffffffa4e49c06 RDI: 00000000000=
+00046=20
+[  324.877117] RBP: 0000000000000246 R08: ffffffffa4e49ba0 R09: ffffffeb3fc=
+d255c=20
+[  324.877117] R10: 0000000000000c5f R11: 0000000000000373 R12: 00000000000=
+00000=20
+[  324.877118] R13: ffff947e10d12100 R14: ffffa1780d14be38 R15: ffffa1780d1=
+4bc58=20
+[  324.877119] FS:  0000000000000000(0000) GS:ffff94661fa00000(0000) knlGS:=
+0000000000000000=20
+[  324.877119] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=20
+[  324.877120] CR2: 00007fe88152e140 CR3: 0000002e8b00a003 CR4: 00000000000=
+206f0=20
+[  324.877121] Call Trace:
+[  324.877137]  iscsit_close_connection+0x272/0x8d0 [iscsi_target_mod]
+[  324.877141]  ? __schedule+0x2d2/0x6c0
+[  324.877146]  iscsit_take_action_for_connection_exit+0x7e/0x100 [iscsi_ta=
+rget_mod]
+[  324.877151]  iscsi_target_tx_thread+0x153/0x1f0 [iscsi_target_mod]
+[  324.877155]  ? remove_wait_queue+0x60/0x60
+[  324.877159]  kthread+0xf5/0x130
+[  324.877164]  ? iscsit_thread_get_cpumask+0xa0/0xa0 [iscsi_target_mod]
+[  324.877165]  ? kthread_bind+0x10/0x10
+[  324.877168]  ret_from_fork+0x1f/0x30
+[  324.877170] ---[ end trace bcc25f7aa321d702 ]---
 
-> +	if (ret == -1) {
-> +		ret = DID_ERROR << 16;
-> +		goto cleanup;
-> +	} else if (sdebug_verbose && (ret < (a_num * lb_size))) {
-> +		sdev_printk(KERN_INFO, scp->device,
-> +			    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
-> +			    my_name, __func__, a_num * lb_size, ret);
-> +	}
-> +	if (is_bytchk3) {
-> +		for (j = 1, off = lb_size; j < vnum; ++j, off += lb_size)
-> +			memcpy(arr + off, arr, lb_size);
-> +	}
-> +	ret = 0;
-> +	if (!comp_write_worker(lba, vnum, arr, acc_num, true)) {
-> +		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
-> +		ret = check_condition_result;
-> +		goto cleanup;
-> +	}
-> +cleanup:
-> +	read_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
-> +	kfree(arr);
-> +	return ret;
-> +}
-> +
->   static struct sdebug_queue *get_queue(struct scsi_cmnd *cmnd)
->   {
->   	u32 tag = blk_mq_unique_tag(cmnd->request);
-> 
+The above error is seen from kernel 5.4.0-rc1 onwards.
+Bisect points to the following commit:
+---------------------------------------------------------------------------=
+-------------------------------------------------
+e9d3009cb936bd0faf0719f68d98ad8afb1e613b is the first bad commit commit e9d=
+3009cb936bd0faf0719f68d98ad8afb1e613b
+Author: Bart Van Assche <bvanassche@acm.org>
+Date:   Wed Nov 13 14:05:08 2019 -0800
+    scsi: target: iscsi: Wait for all commands to finish before freeing a s=
+ession
+---------------------------------------------------------------------------=
+-------------------------------------------------
 
+iscsit_close_connection() already calls target_sess_cmd_list_set_waiting() =
+and
+target_wait_for_sess_cmds() functions through iscsit_wait_conn() function.
+
+Below is the patch diff which removes redundant function calls added by the=
+ above commit, but I am not sure whether this is the ideal fix:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/isc=
+si_target.c
+index 7251a87bb576..503a76e9cc62 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4234,8 +4234,6 @@ int iscsit_close_connection(
+         * must wait until they have completed.
+         */
+        iscsit_check_conn_usage_count(conn);
+-       target_sess_cmd_list_set_waiting(sess->se_sess);
+-       target_wait_for_sess_cmds(sess->se_sess);
+
+        ahash_request_free(conn->conn_tx_hash);
+        if (conn->conn_rx_hash) {
+
+---
+Please kindly let me know your thoughts on this subject. Any help appreciat=
+ed.
+
+Thanks,
+Rahul Kundu=
