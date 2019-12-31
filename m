@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 408E7C2D0CE
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:06:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EAA0C2D0C2
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11086206D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:06:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ADB7206DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:35:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Nutiq/GW"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="MvjRnkx4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726208AbfLaIGG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Dec 2019 03:06:06 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:36613 "EHLO
+        id S1725989AbfLaIfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Dec 2019 03:35:12 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:60742 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725793AbfLaIGF (ORCPT
+        by vger.kernel.org with ESMTP id S1725770AbfLaIfM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Dec 2019 03:06:05 -0500
+        Tue, 31 Dec 2019 03:35:12 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577779565; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1577781311; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=BbUFBKLuGvpwFWTaBaOIbSVqQ9CkH2lY2UR83lDpcCo=;
- b=Nutiq/GWxnQlarQxxSsy3Rc4cLtx2QlVRNstNfAXXP6nimm80/e+SZ8FRtmb+tis4U90jXos
- rm34vKnVgzDQIDLJn0hVXGtY6zP5jHkaQDZZQIl5CoywnTSUerq2Fj1V7BmY07aEYjke4y02
- ZJoTQSQBQA15YKy7HMIfuOeABig=
+ MIME-Version: Sender; bh=/MyzgTAoW84poPoGQNDvx4+/Q3RCJgT0vSrB6UE39Ec=;
+ b=MvjRnkx4mZ2s4XM/HiOS216alSYhjBnd3l88Uldz1RHXP/tZg1EBg1lGx99LGIHH4NDO3tL1
+ mpQhQ5mHggJ1VfsF8/q70ARs5WmaM29Hj826ntsGWA6SAByKm7gOfNwnr2dtMulWg8Q7rmKs
+ 3K2xEDG/6Z5I+BeSy+FL2viL+YA=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e0b0168.7f6e35fae068-smtp-out-n01;
- Tue, 31 Dec 2019 08:06:00 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e0b083d.7fe0130850a0-smtp-out-n03;
+ Tue, 31 Dec 2019 08:35:09 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 44B27C447A3; Tue, 31 Dec 2019 08:06:00 +0000 (UTC)
+        id ADB6CC447A4; Tue, 31 Dec 2019 08:35:07 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 25D52C43383;
-        Tue, 31 Dec 2019 08:05:59 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A3C10C433CB;
+        Tue, 31 Dec 2019 08:35:06 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 31 Dec 2019 16:05:59 +0800
+Date:   Tue, 31 Dec 2019 16:35:06 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     linux-scsi-owner@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -60,14 +60,15 @@ Cc:     linux-scsi-owner@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, asutoshd@codeaurora.org
 Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power mode
  during initialization only
-In-Reply-To: <1577766179.13164.24.camel@mtkswgap22>
+In-Reply-To: <1577778290.13164.45.camel@mtkswgap22>
 References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
  <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
  <fd129b859c013852bd80f60a36425757@codeaurora.org>
  <1577754469.13164.5.camel@mtkswgap22>
  <836772092daffd8283a97d633e59fc34@codeaurora.org>
  <1577766179.13164.24.camel@mtkswgap22>
-Message-ID: <cf94a0e8f8e0746ae5f8434631207ea4@codeaurora.org>
+ <1577778290.13164.45.camel@mtkswgap22>
+Message-ID: <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
@@ -75,75 +76,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-31 12:22, Stanley Chu wrote:
+On 2019-12-31 15:44, Stanley Chu wrote:
 > Hi Can,
 > 
-> 
->> Hi Stanley,
+> On Tue, 2019-12-31 at 12:22 +0800, Stanley Chu wrote:
+>> Hi Can,
 >> 
->> I see skipping ufshcd_set_ufs_dev_active() in ufshcd_probe_hba()
->> if it is called from ufshcd_resume() path is the purpose here.
 >> 
->> If so, then ufshcd_set_dev_pwr_mode() would be called, meaning
->> SSU command will be sent. Why is this SSU command needed to be
->> sent after a full host reset and restore? Is ufshcd_probe_hba()
->> not enough to make UFS device fully functional?
+>> > Hi Stanley,
+>> >
+>> > I see skipping ufshcd_set_ufs_dev_active() in ufshcd_probe_hba()
+>> > if it is called from ufshcd_resume() path is the purpose here.
+>> >
+>> > If so, then ufshcd_set_dev_pwr_mode() would be called, meaning
+>> > SSU command will be sent. Why is this SSU command needed to be
+>> > sent after a full host reset and restore? Is ufshcd_probe_hba()
+>> > not enough to make UFS device fully functional?
+>> 
+>> After resume (for both runtime resume and system resume), device power
+>> mode shall be back to "Active" to service incoming requests.
+>> 
+>> I see two cases need device power mode transition during resume flow
+>> 1. Device Power Mode = Sleep
+>> 2. Device Power Mode = PowerDown
+>> 
+>> For 1, ufshcd_probe_hba() is not invoked during resume flow,
+>> hba->curr_dev_pwr_mode = SLEEP, thus ufshcd_resume() can invoke
+>> ufshcd_set_dev_pwr_mode() to change device power mode.
+>> 
+>> For 2, ufshcd_probe_hba() is invoked during resume flow, before this
+>> fix, hba->curr_dev_pwr_mode will be set to ACTIVE (note that only this
+>> flag is set as ACTIVE, but device may be still in PowerDown state if
+>> device power is not fully shutdown or device HW reset is not executed
+>> before resume), in the end, ufshcd_resume() will not invoke
+>> ufshcd_set_dev_pwr_mode() to send SSU command to make device change 
+>> back
+>> to Active power mode.
+>> 
+>> But if device is fully reset before resume (not by current mainstream
+>> driver), device can be already in "Active" power mode after power on
+>> again during resume flow. In this case, it is OK to set
+>> hba->curr_dev_pwr_mode as ACTIVE in ufshcd_probe_hba() and SSU command
+>> is not necessary.
+>> 
+>> Thanks,
+>> Stanley
 > 
-> After resume (for both runtime resume and system resume), device power
-> mode shall be back to "Active" to service incoming requests.
+> I think currently the assumption in ufshcd_probe_hba() that "device
+> shall be already in Active power mode" makes sense because many device
+> commands will be sent to device in ufshcd_probe_hba() but device is not
+> promised to handle those commands in PowerDown power mode according to
+> UFS spec.
 > 
-> I see two cases need device power mode transition during resume flow
-> 1. Device Power Mode = Sleep
-> 2. Device Power Mode = PowerDown
+> So, maybe always ensuring device being Active power mode before leaving
+> ufshcd_probe_hba() is more reasonable. If so, I will drop this patch
+> first.
 > 
-> For 1, ufshcd_probe_hba() is not invoked during resume flow,
-> hba->curr_dev_pwr_mode = SLEEP, thus ufshcd_resume() can invoke
-> ufshcd_set_dev_pwr_mode() to change device power mode.
+> Thanks so much for your reviews.
 > 
-> For 2, ufshcd_probe_hba() is invoked during resume flow, before this
-> fix, hba->curr_dev_pwr_mode will be set to ACTIVE (note that only this
-> flag is set as ACTIVE, but device may be still in PowerDown state if
-> device power is not fully shutdown or device HW reset is not executed
-> before resume), in the end, ufshcd_resume() will not invoke
-> ufshcd_set_dev_pwr_mode() to send SSU command to make device change 
-> back
-> to Active power mode.
+> Happy new year!
+> 
+> Thanks,
+> Stanley
 
 Hi Stanley,
 
-Isn't below change fixing the problem you are saying above?
-With it, after ufshcd_link_startup(), UFS device's power mode will
-become Active anyways. Do you mean below change is not working properly
-and you are removing it?
+I missed this mail before I hit send. In current code, as per my 
+understanding,
+UFS device's power state should be Active after ufshcd_link_startup() 
+returns.
+If I am wrong, please feel free to correct me.
 
-commit 7caf489b99a42a9017ef3d733912aea8794677e7
-Author: subhashj@codeaurora.org <subhashj@codeaurora.org>
-Date:   Wed Nov 23 16:32:20 2016 -0800
+Due to you are almost trying to revert commit 7caf489b99a42a, I am just 
+wondering
+if you encounter failure/error caused by it.
 
-     scsi: ufs: issue link starup 2 times if device isn't active
-
-     If we issue the link startup to the device while its UniPro state is
-     LinkDown (and device state is sleep/power-down) then link startup
-     will not move the device state to Active. Device will only move to
-     active state if the link starup is issued when its UniPro state is
-     LinkUp. So in this case, we would have to issue the link startup 2
-     times to make sure that device moves to active state.
+Happy new year to you too!
 
 Thanks,
 
 Can Guo
-
-> 
-> But if device is fully reset before resume (not by current mainstream
-> driver), device can be already in "Active" power mode after power on
-> again during resume flow. In this case, it is OK to set
-> hba->curr_dev_pwr_mode as ACTIVE in ufshcd_probe_hba() and SSU command
-> is not necessary.
-> 
-> Thanks,
-> Stanley
-> 
->> _______________________________________________
->> Linux-mediatek mailing list
->> Linux-mediatek@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-mediatek
