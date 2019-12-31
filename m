@@ -1,123 +1,86 @@
-Return-Path: <SRS0=iDBg=2U=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=BNky=2V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC542C2D0D3
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 23:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22FCFC2D0C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 01:08:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFD8520722
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Dec 2019 23:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEE5220748
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 01:08:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XJVRG1RP"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ZEFc5YVk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727769AbfL3XY5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Dec 2019 18:24:57 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:31606 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727741AbfL3XY5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Dec 2019 18:24:57 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577748296; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=vBXvyWu/WmFpK3s/9QyjuCrueKEXWqV2Lek88cSNWSQ=;
- b=XJVRG1RP8sgVrjsc2QsktrXIcGjcOvfUocUyELzHMVcxmPMrNfQVy6n0gF0qGxMj+pFeVSmU
- MenizJUrahHDBoezBal91yfP6Kk4xmYbKbNWieXoXIg7bNzu1NVAvtEx1nDoSGnAbysEXW9X
- tRIzITIjJ8+Y35b7XdPucAdsREs=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e0a8748.7fe87b388298-smtp-out-n02;
- Mon, 30 Dec 2019 23:24:56 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0007AC447A4; Mon, 30 Dec 2019 23:24:55 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9A397C43383;
-        Mon, 30 Dec 2019 23:24:54 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 30 Dec 2019 15:24:54 -0800
-From:   asutoshd@codeaurora.org
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com,
-        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        subhashj@codeaurora.org, beanhuo@micron.com, cang@codeaurora.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        stable@vger.kernel.org, linux-scsi-owner@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power mode
- during initialization only
-In-Reply-To: <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
+        id S1727838AbfLaBH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Dec 2019 20:07:57 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:59174 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727804AbfLaBH4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Dec 2019 20:07:56 -0500
+X-UUID: dbcaebf665d74cc38c01b5a7a40fb24b-20191231
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=1DALIjMAa3VPAHp/FXzxCF3UEMNVielZSGUhpi/fyng=;
+        b=ZEFc5YVkfvPBqZykwQQzGG+GCahQGaCHadcVU9sJzVjusN32npqTX3MgSbLcKHO7lmsx6ri3uXnOSC/qZctadWZB8UzF3+iMmqkOkw1Zc4crBPQW/RJu6DtdqSU1ZGZg5CLWdyeFiz8TniwSEdjhQZNe5mR5590Ue08DLtsFWWE=;
+X-UUID: dbcaebf665d74cc38c01b5a7a40fb24b-20191231
+Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1846196873; Tue, 31 Dec 2019 09:07:51 +0800
+Received: from mtkcas09.mediatek.inc (172.21.101.178) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 31 Dec 2019 09:07:03 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas09.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 31 Dec 2019 09:08:13 +0800
+Message-ID: <1577754469.13164.5.camel@mtkswgap22>
+Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power
+ mode during initialization only
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <asutoshd@codeaurora.org>
+CC:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <pedrom.sousa@synopsys.com>, <jejb@linux.ibm.com>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <subhashj@codeaurora.org>, <beanhuo@micron.com>,
+        <cang@codeaurora.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <stable@vger.kernel.org>,
+        <linux-scsi-owner@vger.kernel.org>
+Date:   Tue, 31 Dec 2019 09:07:49 +0800
+In-Reply-To: <fd129b859c013852bd80f60a36425757@codeaurora.org>
 References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
- <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
-Message-ID: <fd129b859c013852bd80f60a36425757@codeaurora.org>
-X-Sender: asutoshd@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+         <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
+         <fd129b859c013852bd80f60a36425757@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+SGkgQXN1dG9zaCwNCg0KDQo+IEkgc2VlIHRoYXQgdGhlcmUncyBhIGdldF9zeW5jIGRvbmUgYmVm
+b3JlLg0KPiBTbywgaG93IHdvdWxkIHRoZSBzdXNwZW5kIGJlIHRyaWdnZXJlZCBpbiB0aGF0IGNh
+c2U/DQo+IA0KDQpXb3VsZCB5b3UgbWVhbiBwbV9ydW50aW1lX2dldF9zeW5jKCkgaW4gdWZzaGNk
+X2luaXQoKT8NCklmIHllcywgaXQgd2lsbCBvbmx5IGhhcHBlbiBkdXJpbmcgaW5pdGlhbGl6YXRp
+b24uDQoNClRoZSBydW50aW1lIHJlc3VtZSBwYXRoIG1heSBnbyB0aHJvdWdoIHVmc2hjZF9wcm9i
+ZV9oYmEoKSB3aXRob3V0DQp1ZnNoY2RfaW5pdCgpIGludm9rZWQgYmVmb3JlLCBmb3IgZXhhbXBs
+ZSwNCg0KdWZzaGNkX3Byb2JlX2hiYSsweGUxMC8weDE4NzQNCnVmc2hjZF9ob3N0X3Jlc2V0X2Fu
+ZF9yZXN0b3JlKzB4MTE0LzB4MWE0DQp1ZnNoY2RfcmVzdW1lKzB4MWQwLzB4NDgwDQp1ZnNoY2Rf
+cnVudGltZV9yZXN1bWUrMHg0MC8weDE4OA0KdWZzaGNkX3BsdGZybV9ydW50aW1lX3Jlc3VtZSsw
+eDEwLzB4MTgNCnBtX2dlbmVyaWNfcnVudGltZV9yZXN1bWUrMHgyNC8weDQ0DQpfX3JwbV9jYWxs
+YmFjaysweDEwMC8weDI1MA0KcnBtX3Jlc3VtZSsweDU0OC8weDdjOA0KcnBtX3Jlc3VtZSsweDJi
+NC8weDdjOA0KcnBtX3Jlc3VtZSsweDJiNC8weDdjOA0KcnBtX3Jlc3VtZSsweDJiNC8weDdjOA0K
+cG1fcnVudGltZV93b3JrKzB4OWMvMHhhMA0KcHJvY2Vzc19vbmVfd29yaysweDIxMC8weDRlMA0K
+d29ya2VyX3RocmVhZCsweDM5MC8weDUyMA0Ka3RocmVhZCsweDE1NC8weDE4Yw0KcmV0X2Zyb21f
+Zm9yaysweDEwLzB4MTgNCg0KVGhpcyBjYXNlIGhhcHBlbnMgaWYgbGluayBpcyBpbiAib2ZmIiBz
+dGF0ZSB3aGlsZSByZXN1bWUuDQoNClRoYW5rcywNClN0YW5sZXkNCg==
 
-On 2019-12-30 00:12, Stanley Chu wrote:
-> Currently ufshcd_probe_hba() always sets device status as "active".
-> This shall be by an assumption that device is already in active state
-> during the boot stage before kernel.
-> 
-> However, if link is configured as "off" state and device is requested
-> to enter "sleep" or "powerdown" power mode during suspend flow, device
-> will NOT be waken up to "active" power mode during resume flow because
-> device is already set as "active" power mode in ufhcd_probe_hba().
-> 
-> Fix it by setting device as default active power mode during
-> initialization only, and skipping changing mode during PM flow
-> in ufshcd_probe_hba().
-> 
-> Fixes: 7caf489b99a4 (scsi: ufs: issue link starup 2 times if device
-> isn't active)
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Bean Huo <beanhuo@micron.com>
-> Cc: Can Guo <cang@codeaurora.org>
-> Cc: Matthias Brugger <matthias.bgg@gmail.com>
-> Cc: Subhash Jadavani <subhashj@codeaurora.org>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ed02a704c1c2..9abb7085a5d0 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6986,7 +6986,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  	ufshcd_tune_unipro_params(hba);
-> 
->  	/* UFS device is also active now */
-> -	ufshcd_set_ufs_dev_active(hba);
-> +	if (!hba->pm_op_in_progress)
-> +		ufshcd_set_ufs_dev_active(hba);
->  	ufshcd_force_reset_auto_bkops(hba);
->  	hba->wlun_dev_clr_ua = true;
-
-I see that there's a get_sync done before.
-So, how would the suspend be triggered in that case?
-
-Thanks,
-asd
