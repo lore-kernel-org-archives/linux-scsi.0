@@ -2,204 +2,159 @@ Return-Path: <SRS0=DSfB=2W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1F15C3F68F
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 13:53:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D96CC2D0DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B5052080A
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 13:53:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7DCC206E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iEEMJN4C"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HerjmcCR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726820AbgAANx5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jan 2020 08:53:57 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:32379 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725871AbgAANx5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jan 2020 08:53:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1577886835;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HwvLbKIvcaSue/UhCU7AMwSy+1EPkPc59XQUGBzzxDI=;
-        b=iEEMJN4CHDBXwuQ3xAdvZuk7GFDMaHDbpv/TeojaKLLSzg09gaqsyyr4qrgCOXBC4sSxPo
-        TuzGJ2bm4kWCTmKHOKkMHqqysnapw/B1rWdlT4GMoyVfOxGR5RwQgD9XTTg5Pyuw2IXwrV
-        duFhibTOnTfmgKYrP7fe4FcxQGSAnDk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-364-ZpcFGxb5NUiWVoSkctzOjg-1; Wed, 01 Jan 2020 08:53:52 -0500
-X-MC-Unique: ZpcFGxb5NUiWVoSkctzOjg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDCA8800D41;
-        Wed,  1 Jan 2020 13:53:48 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5917D5C3FD;
-        Wed,  1 Jan 2020 13:53:35 +0000 (UTC)
-Date:   Wed, 1 Jan 2020 21:53:31 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hillf Danton <hdanton@sina.com>
-Cc:     "Theodore Y. Ts'o" <tytso@mit.edu>,
-        Andrea Vai <andrea.vai@unipv.it>,
-        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        USB list <linux-usb@vger.kernel.org>,
-        SCSI development list <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Omar Sandoval <osandov@fb.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Hans Holmberg <Hans.Holmberg@wdc.com>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: slow IO on USB media
-Message-ID: <20200101135331.GA7688@ming.t460p>
-References: <20191223162619.GA3282@mit.edu>
- <4c85fd3f2ec58694cc1ff7ab5c88d6e11ab6efec.camel@unipv.it>
- <20191223172257.GB3282@mit.edu>
- <bb5d395fe47f033be0b8ed96cbebf8867d2416c4.camel@unipv.it>
- <20191223195301.GC3282@mit.edu>
- <20191224012707.GA13083@ming.t460p>
- <20191225051722.GA119634@mit.edu>
- <20191226022702.GA2901@ming.t460p>
- <20191226033057.GA10794@mit.edu>
- <20200101074310.10904-1-hdanton@sina.com>
+        id S1726823AbgAAOgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jan 2020 09:36:53 -0500
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:34255 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725890AbgAAOgx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jan 2020 09:36:53 -0500
+Received: by mail-lj1-f195.google.com with SMTP id z22so33648627ljg.1
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Jan 2020 06:36:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
+        b=HerjmcCR/AkztR7YuD0XP2NDZIC/Q5IMdllq8QBoARmG5gh1G0ca8btZLYCc7agV9p
+         07cxuV6+/WQV0D70gORpg+QS4E8AyBw6WNZGDp7bPUmIqv2YqIwVJTOCDE5hLwIdIGuW
+         d/51lVyK7p792csF4U7Zf+2Uo7u2oJyT8whIZ+R6EMYHaOdjmyBNck8Oxrz8pqR9cp+Q
+         +wBoSV89JZTt9ML7bRPss6JiPLYO2HqTfk2E/5Ygyn6eg/7UrXznON3nzjoEtsYpEG9/
+         B6WglfQ4NazSCPCSf5kNLo3LyBwmPechg61U5mXfUImi9h+fxlwKoSirJDN9JnahBZlj
+         63Iw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
+        b=TBIJoPr1S2CQJUgANUONwmOOSjbnAm77rvUR48DUnpmDqoQxSBMhfDyPGOsUvJNSN/
+         hLAOXXdnHQVR76v3KBTx8cWTypNcOF0NI6vd5qepSGOR5IrbrkyVu9nHHECCCj9IkbQ8
+         k0sbpl81P9gmEXVnv+ZQ8LHZi6JkwxvVzaq4/FZsvjP6a1oygg4n12EEm0DANhb/ISA4
+         P1CHeVDc7Sxu/hsnjKYr8JQ4RDwNyrrV4SadEi/nxEU9SaUTGheYTWs72iXu9tanYvnZ
+         +CBOzIjnt06PVqYw6JZ9D3IissQwuqNMp4K17f6qdNA5snYecOo70kmdme+mCRS5Cu+W
+         Qu8g==
+X-Gm-Message-State: APjAAAWB80fYx0bXblWtiJTAONAh3zsi5xmI5t+TABR5DFcI1xmz0sbb
+        6IwH6gyj/6VCO85n7pNFzySwar3u45iuFCVAmgaC4w==
+X-Google-Smtp-Source: APXvYqzt9vsXSeRCw3uCB3GWXCfo51EaaziA1khmXLcgZ0iBGlbzvQULCBw/u6Az40zhZlPPLgjyollLCWEkt22Nr2A=
+X-Received: by 2002:a2e:b4f6:: with SMTP id s22mr46532718ljm.218.1577889411528;
+ Wed, 01 Jan 2020 06:36:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200101074310.10904-1-hdanton@sina.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+References: <20191226175051.31664-1-linux@roeck-us.net> <20191226175051.31664-2-linux@roeck-us.net>
+In-Reply-To: <20191226175051.31664-2-linux@roeck-us.net>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Wed, 1 Jan 2020 15:36:40 +0100
+Message-ID: <CACRpkdb8rehAPKE2Zu-Jf4TSE2m6ks91vZdrVy+HitijabeVbg@mail.gmail.com>
+Subject: Re: [RFT PATCH v3 1/1] hwmon: Driver for disk and solid state drives
+ with temperature sensors
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 01, 2020 at 03:43:10PM +0800, Hillf Danton wrote:
-> 
-> On Thu, 26 Dec 2019 16:37:06 +0800 Ming Lei wrote:
-> > On Wed, Dec 25, 2019 at 10:30:57PM -0500, Theodore Y. Ts'o wrote:
-> > > On Thu, Dec 26, 2019 at 10:27:02AM +0800, Ming Lei wrote:
-> > > > Maybe we need to be careful for HDD., since the request count in scheduler
-> > > > queue is double of in-flight request count, and in theory NCQ should only
-> > > > cover all in-flight 32 requests. I will find a sata HDD., and see if
-> > > > performance drop can be observed in the similar 'cp' test.
-> > >
-> > > Please try to measure it, but I'd be really surprised if it's
-> > > significant with with modern HDD's.
-> > 
-> > Just find one machine with AHCI SATA, and run the following xfs
-> > overwrite test:
-> > 
-> > #!/bin/bash
-> > DIR=$1
-> > echo 3 > /proc/sys/vm/drop_caches
-> > fio --readwrite=write --filesize=5g --overwrite=1 --filename=$DIR/fiofile \
-> >         --runtime=60s --time_based --ioengine=psync --direct=0 --bs=4k
-> > 		--iodepth=128 --numjobs=2 --group_reporting=1 --name=overwrite
-> > 
-> > FS is xfs, and disk is LVM over AHCI SATA with NCQ(depth 32), because the
-> > machine is picked up from RH beaker, and it is the only disk in the box.
-> > 
-> > #lsblk
-> > NAME                            MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-> > sda                               8:0    0 931.5G  0 disk
-> > =E2=94=9C=E2=94=80sda1                            8:1    0     1G  0 part /boot
-> > =E2=94=94=E2=94=80sda2                            8:2    0 930.5G  0 part
-> >   =E2=94=9C=E2=94=80rhel_hpe--ml10gen9--01-root 253:0    0    50G  0 lvm  /
-> >   =E2=94=9C=E2=94=80rhel_hpe--ml10gen9--01-swap 253:1    0   3.9G  0 lvm  [SWAP]
-> >   =E2=94=94=E2=94=80rhel_hpe--ml10gen9--01-home 253:2    0 876.6G  0 lvm  /home
-> > 
-> > 
-> > kernel: 3a7ea2c483a53fc("scsi: provide mq_ops->busy() hook") which is
-> > the previous commit of f664a3cc17b7 ("scsi: kill off the legacy IO path").
-> > 
-> >             |scsi_mod.use_blk_mq=N |scsi_mod.use_blk_mq=Y |
-> > -----------------------------------------------------------
-> > throughput: |244MB/s               |169MB/s               |
-> > -----------------------------------------------------------
-> > 
-> > Similar result can be observed on v5.4 kernel(184MB/s) with same test
-> > steps.
-> 
-> 
-> The simple diff makes direct issue of requests take pending requests
-> also into account and goes the nornal enqueue-and-dequeue path if any
-> pending requests exist.
-> 
-> Then it sorts requests regardless of the number of hard queues in a
-> bid to make requests as sequencial as they are. Let's see if the
-> added sorting cost can make any sense.
-> 
-> --->8---
-> 
-> --- a/block/blk-mq-sched.c
-> +++ b/block/blk-mq-sched.c
-> @@ -410,6 +410,11 @@ run:
->  		blk_mq_run_hw_queue(hctx, async);
->  }
->  
-> +static inline bool blk_mq_sched_hctx_has_pending_rq(struct blk_mq_hw_ctx *hctx)
-> +{
-> +	return sbitmap_any_bit_set(&hctx->ctx_map);
-> +}
-> +
->  void blk_mq_sched_insert_requests(struct blk_mq_hw_ctx *hctx,
->  				  struct blk_mq_ctx *ctx,
->  				  struct list_head *list, bool run_queue_async)
-> @@ -433,7 +438,8 @@ void blk_mq_sched_insert_requests(struct
->  		 * busy in case of 'none' scheduler, and this way may save
->  		 * us one extra enqueue & dequeue to sw queue.
->  		 */
-> -		if (!hctx->dispatch_busy && !e && !run_queue_async) {
-> +		if (!hctx->dispatch_busy && !e && !run_queue_async &&
-> +		    !blk_mq_sched_hctx_has_pending_rq(hctx)) {
->  			blk_mq_try_issue_list_directly(hctx, list);
->  			if (list_empty(list))
->  				goto out;
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -1692,7 +1692,7 @@ void blk_mq_flush_plug_list(struct blk_p
->  
->  	list_splice_init(&plug->mq_list, &list);
->  
-> -	if (plug->rq_count > 2 && plug->multiple_queues)
-> +	if (plug->rq_count > 1)
->  		list_sort(NULL, &list, plug_rq_cmp);
->  
->  	plug->rq_count = 0;
+On Thu, Dec 26, 2019 at 6:51 PM Guenter Roeck <linux@roeck-us.net> wrote:
 
-I guess you may not understand the reason, and the issue is related
-with neither MQ nor plug.
+> Reading the temperature of ATA drives has been supported for years
+> by userspace tools such as smarttools or hddtemp. The downside of
+> such tools is that they need to run with super-user privilege, that
+> the temperatures are not reported by standard tools such as 'sensors'
+> or 'libsensors', and that drive temperatures are not available for use
+> in the kernel's thermal subsystem.
+(...)
+> Cc: Chris Healy <cphealy@gmail.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 
-AHCI/SATA is single queue drive, and for HDD. IO throughput is very
-sensitive with IO order in case of sequential IO.
+I took the v3 patch for a test run on the D-Link DIR-695 NAS/router
+and it works like a charm.
 
-Legacy IO path supports ioc batching and BDI queue congestion. When
-there are more than one writeback IO paths, there may be only one
-active IO submission path, meantime others are blocked attributed to
-ioc batching, so writeback IO is still dispatched to disk in strict
-IO order.
+With a few additional patches (that I am
+starting to upstream) the temperature zone in the drive can be used
+to control the GPIO-based fan in the NAS to keep the enclosure/chassis
+temperature down.
 
-But ioc batching and BDI queue congestion is killed when converting to
-blk-mq.
+I define a thermal zone in device tree like this:
 
-Please see the following IO trace with legacy IO request path:
++       thermal-zones {
++               chassis-thermal {
++                       /* Poll every 20 seconds */
++                       polling-delay = <20000>;
++                       /* Poll every 2nd second when cooling */
++                       polling-delay-passive = <2000>;
++                       /*  Use the thermal sensor in the hard drive */
++                       thermal-sensors = <&sata_drive>;
++
++                       /* Tripping points from the fan.script in the rootfs */
++                       trips {
++                               alert: chassis-alert {
++                                       /* At 43 degrees turn on the fan */
++                                       temperature = <43000>;
++                                       hysteresis = <3000>;
++                                       type = "active";
++                               };
++                               crit: chassis-crit {
++                                       /* Just shut down at 60 degrees */
++                                       temperature = <60000>;
++                                       hysteresis = <2000>;
++                                       type = "critical";
++                               };
++                       };
++
++                       cooling-maps {
++                               map0 {
++                                       trip = <&alert>;
++                                       cooling-device = <&fan0 1 1>;
++                               };
++                       };
++               };
++       };
+(...)
+                pata-controller@63000000 {
+                        status = "okay";
++
++                       /*
++                        * This drive may have a temperature sensor with a
++                        * thermal zone we can use for thermal control of the
++                        * chassis temperature using the fan.
++                        */
++                       sata_drive: drive@0 {
++                               reg = <0>;
++                               #thermal-sensor-cells = <0>;
++                       };
+                };
 
-https://lore.kernel.org/linux-scsi/f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it/2-log_ming_20191128_182751.zip
+The temperature started out at household temperature 26 degrees
+this morning, leaving the device running it gradually reached
+the trip point at 43 degrees and runs the fan. It then switches
+the fan off/on with some hysteresis keeping the temperature
+around 43 degreed.
 
+The PID-controller in the thermal framework handles it all
+in-kernel as expected.
 
-Thanks,
-Ming
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
 
+Yours,
+Linus Walleij
