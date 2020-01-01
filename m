@@ -1,158 +1,205 @@
-Return-Path: <SRS0=BNky=2V=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=DSfB=2W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EAA0C2D0C2
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1F15C3F68F
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 13:53:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ADB7206DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Dec 2019 08:35:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B5052080A
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 13:53:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="MvjRnkx4"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iEEMJN4C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725989AbfLaIfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Dec 2019 03:35:12 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:60742 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725770AbfLaIfM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Dec 2019 03:35:12 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577781311; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=/MyzgTAoW84poPoGQNDvx4+/Q3RCJgT0vSrB6UE39Ec=;
- b=MvjRnkx4mZ2s4XM/HiOS216alSYhjBnd3l88Uldz1RHXP/tZg1EBg1lGx99LGIHH4NDO3tL1
- mpQhQ5mHggJ1VfsF8/q70ARs5WmaM29Hj826ntsGWA6SAByKm7gOfNwnr2dtMulWg8Q7rmKs
- 3K2xEDG/6Z5I+BeSy+FL2viL+YA=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e0b083d.7fe0130850a0-smtp-out-n03;
- Tue, 31 Dec 2019 08:35:09 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id ADB6CC447A4; Tue, 31 Dec 2019 08:35:07 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S1726820AbgAANx5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jan 2020 08:53:57 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:32379 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725871AbgAANx5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jan 2020 08:53:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1577886835;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HwvLbKIvcaSue/UhCU7AMwSy+1EPkPc59XQUGBzzxDI=;
+        b=iEEMJN4CHDBXwuQ3xAdvZuk7GFDMaHDbpv/TeojaKLLSzg09gaqsyyr4qrgCOXBC4sSxPo
+        TuzGJ2bm4kWCTmKHOKkMHqqysnapw/B1rWdlT4GMoyVfOxGR5RwQgD9XTTg5Pyuw2IXwrV
+        duFhibTOnTfmgKYrP7fe4FcxQGSAnDk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-364-ZpcFGxb5NUiWVoSkctzOjg-1; Wed, 01 Jan 2020 08:53:52 -0500
+X-MC-Unique: ZpcFGxb5NUiWVoSkctzOjg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A3C10C433CB;
-        Tue, 31 Dec 2019 08:35:06 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DDCA8800D41;
+        Wed,  1 Jan 2020 13:53:48 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5917D5C3FD;
+        Wed,  1 Jan 2020 13:53:35 +0000 (UTC)
+Date:   Wed, 1 Jan 2020 21:53:31 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Andrea Vai <andrea.vai@unipv.it>,
+        "Schmid, Carsten" <Carsten_Schmid@mentor.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jens Axboe <axboe@kernel.dk>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        USB list <linux-usb@vger.kernel.org>,
+        SCSI development list <linux-scsi@vger.kernel.org>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Hans Holmberg <Hans.Holmberg@wdc.com>,
+        Kernel development list <linux-kernel@vger.kernel.org>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: slow IO on USB media
+Message-ID: <20200101135331.GA7688@ming.t460p>
+References: <20191223162619.GA3282@mit.edu>
+ <4c85fd3f2ec58694cc1ff7ab5c88d6e11ab6efec.camel@unipv.it>
+ <20191223172257.GB3282@mit.edu>
+ <bb5d395fe47f033be0b8ed96cbebf8867d2416c4.camel@unipv.it>
+ <20191223195301.GC3282@mit.edu>
+ <20191224012707.GA13083@ming.t460p>
+ <20191225051722.GA119634@mit.edu>
+ <20191226022702.GA2901@ming.t460p>
+ <20191226033057.GA10794@mit.edu>
+ <20200101074310.10904-1-hdanton@sina.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 31 Dec 2019 16:35:06 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi-owner@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, subhashj@codeaurora.org,
-        jejb@linux.ibm.com, chun-hung.wu@mediatek.com,
-        kuohong.wang@mediatek.com, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, avri.altman@wdc.com,
-        linux-mediatek@lists.infradead.org, peter.wang@mediatek.com,
-        alim.akhtar@samsung.com, andy.teng@mediatek.com,
-        matthias.bgg@gmail.com, beanhuo@micron.com,
-        pedrom.sousa@synopsys.com, bvanassche@acm.org,
-        linux-arm-kernel@lists.infradead.org, asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power mode
- during initialization only
-In-Reply-To: <1577778290.13164.45.camel@mtkswgap22>
-References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
- <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
- <fd129b859c013852bd80f60a36425757@codeaurora.org>
- <1577754469.13164.5.camel@mtkswgap22>
- <836772092daffd8283a97d633e59fc34@codeaurora.org>
- <1577766179.13164.24.camel@mtkswgap22>
- <1577778290.13164.45.camel@mtkswgap22>
-Message-ID: <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200101074310.10904-1-hdanton@sina.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-31 15:44, Stanley Chu wrote:
-> Hi Can,
+On Wed, Jan 01, 2020 at 03:43:10PM +0800, Hillf Danton wrote:
 > 
-> On Tue, 2019-12-31 at 12:22 +0800, Stanley Chu wrote:
->> Hi Can,
->> 
->> 
->> > Hi Stanley,
->> >
->> > I see skipping ufshcd_set_ufs_dev_active() in ufshcd_probe_hba()
->> > if it is called from ufshcd_resume() path is the purpose here.
->> >
->> > If so, then ufshcd_set_dev_pwr_mode() would be called, meaning
->> > SSU command will be sent. Why is this SSU command needed to be
->> > sent after a full host reset and restore? Is ufshcd_probe_hba()
->> > not enough to make UFS device fully functional?
->> 
->> After resume (for both runtime resume and system resume), device power
->> mode shall be back to "Active" to service incoming requests.
->> 
->> I see two cases need device power mode transition during resume flow
->> 1. Device Power Mode = Sleep
->> 2. Device Power Mode = PowerDown
->> 
->> For 1, ufshcd_probe_hba() is not invoked during resume flow,
->> hba->curr_dev_pwr_mode = SLEEP, thus ufshcd_resume() can invoke
->> ufshcd_set_dev_pwr_mode() to change device power mode.
->> 
->> For 2, ufshcd_probe_hba() is invoked during resume flow, before this
->> fix, hba->curr_dev_pwr_mode will be set to ACTIVE (note that only this
->> flag is set as ACTIVE, but device may be still in PowerDown state if
->> device power is not fully shutdown or device HW reset is not executed
->> before resume), in the end, ufshcd_resume() will not invoke
->> ufshcd_set_dev_pwr_mode() to send SSU command to make device change 
->> back
->> to Active power mode.
->> 
->> But if device is fully reset before resume (not by current mainstream
->> driver), device can be already in "Active" power mode after power on
->> again during resume flow. In this case, it is OK to set
->> hba->curr_dev_pwr_mode as ACTIVE in ufshcd_probe_hba() and SSU command
->> is not necessary.
->> 
->> Thanks,
->> Stanley
+> On Thu, 26 Dec 2019 16:37:06 +0800 Ming Lei wrote:
+> > On Wed, Dec 25, 2019 at 10:30:57PM -0500, Theodore Y. Ts'o wrote:
+> > > On Thu, Dec 26, 2019 at 10:27:02AM +0800, Ming Lei wrote:
+> > > > Maybe we need to be careful for HDD., since the request count in scheduler
+> > > > queue is double of in-flight request count, and in theory NCQ should only
+> > > > cover all in-flight 32 requests. I will find a sata HDD., and see if
+> > > > performance drop can be observed in the similar 'cp' test.
+> > >
+> > > Please try to measure it, but I'd be really surprised if it's
+> > > significant with with modern HDD's.
+> > 
+> > Just find one machine with AHCI SATA, and run the following xfs
+> > overwrite test:
+> > 
+> > #!/bin/bash
+> > DIR=$1
+> > echo 3 > /proc/sys/vm/drop_caches
+> > fio --readwrite=write --filesize=5g --overwrite=1 --filename=$DIR/fiofile \
+> >         --runtime=60s --time_based --ioengine=psync --direct=0 --bs=4k
+> > 		--iodepth=128 --numjobs=2 --group_reporting=1 --name=overwrite
+> > 
+> > FS is xfs, and disk is LVM over AHCI SATA with NCQ(depth 32), because the
+> > machine is picked up from RH beaker, and it is the only disk in the box.
+> > 
+> > #lsblk
+> > NAME                            MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+> > sda                               8:0    0 931.5G  0 disk
+> > =E2=94=9C=E2=94=80sda1                            8:1    0     1G  0 part /boot
+> > =E2=94=94=E2=94=80sda2                            8:2    0 930.5G  0 part
+> >   =E2=94=9C=E2=94=80rhel_hpe--ml10gen9--01-root 253:0    0    50G  0 lvm  /
+> >   =E2=94=9C=E2=94=80rhel_hpe--ml10gen9--01-swap 253:1    0   3.9G  0 lvm  [SWAP]
+> >   =E2=94=94=E2=94=80rhel_hpe--ml10gen9--01-home 253:2    0 876.6G  0 lvm  /home
+> > 
+> > 
+> > kernel: 3a7ea2c483a53fc("scsi: provide mq_ops->busy() hook") which is
+> > the previous commit of f664a3cc17b7 ("scsi: kill off the legacy IO path").
+> > 
+> >             |scsi_mod.use_blk_mq=N |scsi_mod.use_blk_mq=Y |
+> > -----------------------------------------------------------
+> > throughput: |244MB/s               |169MB/s               |
+> > -----------------------------------------------------------
+> > 
+> > Similar result can be observed on v5.4 kernel(184MB/s) with same test
+> > steps.
 > 
-> I think currently the assumption in ufshcd_probe_hba() that "device
-> shall be already in Active power mode" makes sense because many device
-> commands will be sent to device in ufshcd_probe_hba() but device is not
-> promised to handle those commands in PowerDown power mode according to
-> UFS spec.
 > 
-> So, maybe always ensuring device being Active power mode before leaving
-> ufshcd_probe_hba() is more reasonable. If so, I will drop this patch
-> first.
+> The simple diff makes direct issue of requests take pending requests
+> also into account and goes the nornal enqueue-and-dequeue path if any
+> pending requests exist.
 > 
-> Thanks so much for your reviews.
+> Then it sorts requests regardless of the number of hard queues in a
+> bid to make requests as sequencial as they are. Let's see if the
+> added sorting cost can make any sense.
 > 
-> Happy new year!
+> --->8---
 > 
-> Thanks,
-> Stanley
+> --- a/block/blk-mq-sched.c
+> +++ b/block/blk-mq-sched.c
+> @@ -410,6 +410,11 @@ run:
+>  		blk_mq_run_hw_queue(hctx, async);
+>  }
+>  
+> +static inline bool blk_mq_sched_hctx_has_pending_rq(struct blk_mq_hw_ctx *hctx)
+> +{
+> +	return sbitmap_any_bit_set(&hctx->ctx_map);
+> +}
+> +
+>  void blk_mq_sched_insert_requests(struct blk_mq_hw_ctx *hctx,
+>  				  struct blk_mq_ctx *ctx,
+>  				  struct list_head *list, bool run_queue_async)
+> @@ -433,7 +438,8 @@ void blk_mq_sched_insert_requests(struct
+>  		 * busy in case of 'none' scheduler, and this way may save
+>  		 * us one extra enqueue & dequeue to sw queue.
+>  		 */
+> -		if (!hctx->dispatch_busy && !e && !run_queue_async) {
+> +		if (!hctx->dispatch_busy && !e && !run_queue_async &&
+> +		    !blk_mq_sched_hctx_has_pending_rq(hctx)) {
+>  			blk_mq_try_issue_list_directly(hctx, list);
+>  			if (list_empty(list))
+>  				goto out;
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1692,7 +1692,7 @@ void blk_mq_flush_plug_list(struct blk_p
+>  
+>  	list_splice_init(&plug->mq_list, &list);
+>  
+> -	if (plug->rq_count > 2 && plug->multiple_queues)
+> +	if (plug->rq_count > 1)
+>  		list_sort(NULL, &list, plug_rq_cmp);
+>  
+>  	plug->rq_count = 0;
 
-Hi Stanley,
+I guess you may not understand the reason, and the issue is related
+with neither MQ nor plug.
 
-I missed this mail before I hit send. In current code, as per my 
-understanding,
-UFS device's power state should be Active after ufshcd_link_startup() 
-returns.
-If I am wrong, please feel free to correct me.
+AHCI/SATA is single queue drive, and for HDD. IO throughput is very
+sensitive with IO order in case of sequential IO.
 
-Due to you are almost trying to revert commit 7caf489b99a42a, I am just 
-wondering
-if you encounter failure/error caused by it.
+Legacy IO path supports ioc batching and BDI queue congestion. When
+there are more than one writeback IO paths, there may be only one
+active IO submission path, meantime others are blocked attributed to
+ioc batching, so writeback IO is still dispatched to disk in strict
+IO order.
 
-Happy new year to you too!
+But ioc batching and BDI queue congestion is killed when converting to
+blk-mq.
+
+Please see the following IO trace with legacy IO request path:
+
+https://lore.kernel.org/linux-scsi/f82fd5129e3dcacae703a689be60b20a7fedadf6.camel@unipv.it/2-log_ming_20191128_182751.zip
+
 
 Thanks,
+Ming
 
-Can Guo
