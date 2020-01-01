@@ -2,159 +2,129 @@ Return-Path: <SRS0=DSfB=2W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D96CC2D0DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF8AC2D0DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 17:46:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7DCC206E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DC4B2073D
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jan 2020 17:46:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HerjmcCR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UNRFGzzS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726823AbgAAOgx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jan 2020 09:36:53 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:34255 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725890AbgAAOgx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jan 2020 09:36:53 -0500
-Received: by mail-lj1-f195.google.com with SMTP id z22so33648627ljg.1
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Jan 2020 06:36:52 -0800 (PST)
+        id S1727257AbgAARq0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jan 2020 12:46:26 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:45891 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727234AbgAARqZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jan 2020 12:46:25 -0500
+Received: by mail-pl1-f196.google.com with SMTP id b22so16949359pls.12;
+        Wed, 01 Jan 2020 09:46:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
-        b=HerjmcCR/AkztR7YuD0XP2NDZIC/Q5IMdllq8QBoARmG5gh1G0ca8btZLYCc7agV9p
-         07cxuV6+/WQV0D70gORpg+QS4E8AyBw6WNZGDp7bPUmIqv2YqIwVJTOCDE5hLwIdIGuW
-         d/51lVyK7p792csF4U7Zf+2Uo7u2oJyT8whIZ+R6EMYHaOdjmyBNck8Oxrz8pqR9cp+Q
-         +wBoSV89JZTt9ML7bRPss6JiPLYO2HqTfk2E/5Ygyn6eg/7UrXznON3nzjoEtsYpEG9/
-         B6WglfQ4NazSCPCSf5kNLo3LyBwmPechg61U5mXfUImi9h+fxlwKoSirJDN9JnahBZlj
-         63Iw==
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jgFQTqseU0AOmtbn0bXATUNb8DmaYbEHD/mrJGCMGbQ=;
+        b=UNRFGzzS1y/I5c1sv6nxOMRtNrS0HCd6gOFGIT8F4wnx2BxLzNpbEgKDfjeczU2Sq8
+         tBK+RKZT+k30Ckh6kPObJXTldb8lu4hb2yUEtJbIRPsNBSwyGNgazVBLlB6Udpwst5bL
+         MosjSgK9f8FwGbSNCvAUaS8irkq86BjjJO2SuVZ8EPFSq5+sS8WMcsH067BjfOPNZH3z
+         9Ch9WnaIqp60Sn/ACxxtR8Jvcbde7APYD9mxuZ4RsFOx8KqwbwALWcifnPzolYPHPY+U
+         sJg/9giUIn+YCHloFsDxmIsxhUJ/Por0Yl6zJrlgyI9XqIUNJnnSIu/TKgeoK69ADiZp
+         Za5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
-        b=TBIJoPr1S2CQJUgANUONwmOOSjbnAm77rvUR48DUnpmDqoQxSBMhfDyPGOsUvJNSN/
-         hLAOXXdnHQVR76v3KBTx8cWTypNcOF0NI6vd5qepSGOR5IrbrkyVu9nHHECCCj9IkbQ8
-         k0sbpl81P9gmEXVnv+ZQ8LHZi6JkwxvVzaq4/FZsvjP6a1oygg4n12EEm0DANhb/ISA4
-         P1CHeVDc7Sxu/hsnjKYr8JQ4RDwNyrrV4SadEi/nxEU9SaUTGheYTWs72iXu9tanYvnZ
-         +CBOzIjnt06PVqYw6JZ9D3IissQwuqNMp4K17f6qdNA5snYecOo70kmdme+mCRS5Cu+W
-         Qu8g==
-X-Gm-Message-State: APjAAAWB80fYx0bXblWtiJTAONAh3zsi5xmI5t+TABR5DFcI1xmz0sbb
-        6IwH6gyj/6VCO85n7pNFzySwar3u45iuFCVAmgaC4w==
-X-Google-Smtp-Source: APXvYqzt9vsXSeRCw3uCB3GWXCfo51EaaziA1khmXLcgZ0iBGlbzvQULCBw/u6Az40zhZlPPLgjyollLCWEkt22Nr2A=
-X-Received: by 2002:a2e:b4f6:: with SMTP id s22mr46532718ljm.218.1577889411528;
- Wed, 01 Jan 2020 06:36:51 -0800 (PST)
-MIME-Version: 1.0
-References: <20191226175051.31664-1-linux@roeck-us.net> <20191226175051.31664-2-linux@roeck-us.net>
-In-Reply-To: <20191226175051.31664-2-linux@roeck-us.net>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Wed, 1 Jan 2020 15:36:40 +0100
-Message-ID: <CACRpkdb8rehAPKE2Zu-Jf4TSE2m6ks91vZdrVy+HitijabeVbg@mail.gmail.com>
-Subject: Re: [RFT PATCH v3 1/1] hwmon: Driver for disk and solid state drives
- with temperature sensors
-To:     Guenter Roeck <linux@roeck-us.net>
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jgFQTqseU0AOmtbn0bXATUNb8DmaYbEHD/mrJGCMGbQ=;
+        b=soaN8MKUX07aLYKG8ul8Axt2/wW6gFAzzOKxigALHlZX5/aSRqEvzHHg3wPgTQ57Pr
+         +hycxPr74KiasUnnRQfvCv+5ST8fJEsp5o6uXj40G6HsaE69MGF5j/QmCNLM8/ErWLtG
+         UCoyiqrNsuACbbPAtGnoRN3f+pT9bR/V386698ygSidytAtUCEazK5WMtN6M/aVWWoKv
+         XcY9aCI9GfykHWxqdnZFoJaA8RNX+/GbynBGw5XIrXRQV5pGIeRk9Lo4xtymtQ1Odcb+
+         oTZuM4r1a5u6qDAgNynrYwMjcigOhatPqMs0h6u2uoNATiK+PyPcwFMXhVyjD+bzwNJV
+         aI1Q==
+X-Gm-Message-State: APjAAAWEcbg/JYGL+G4QWjqdCdc9SB9JAXOT7+GEwfQ2O16KxNPkLPNQ
+        3UcEBNWocvW3ttkL+Ia04Qk=
+X-Google-Smtp-Source: APXvYqy1a++YnyCNOnWLIYqvsCOFO/RVcKBMCIhyX+zWGvbzERkJB9E/9pn3Z5EQ8i/HKKGvIQigzQ==
+X-Received: by 2002:a17:902:d694:: with SMTP id v20mr41272054ply.127.1577900784990;
+        Wed, 01 Jan 2020 09:46:24 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id b128sm56470997pga.43.2020.01.01.09.46.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Jan 2020 09:46:24 -0800 (PST)
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         Chris Healy <cphealy@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <20191215174509.1847-1-linux@roeck-us.net>
+ <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+Date:   Wed, 1 Jan 2020 09:46:23 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
+MIME-Version: 1.0
+In-Reply-To: <yq1r211dvck.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Dec 26, 2019 at 6:51 PM Guenter Roeck <linux@roeck-us.net> wrote:
+Hi Martin,
 
-> Reading the temperature of ATA drives has been supported for years
-> by userspace tools such as smarttools or hddtemp. The downside of
-> such tools is that they need to run with super-user privilege, that
-> the temperatures are not reported by standard tools such as 'sensors'
-> or 'libsensors', and that drive temperatures are not available for use
-> in the kernel's thermal subsystem.
-(...)
-> Cc: Chris Healy <cphealy@gmail.com>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+On 12/18/19 4:15 PM, Martin K. Petersen wrote:
+> 
+> Guenter,
+> 
+>> This driver solves this problem by adding support for reading the
+>> temperature of SATA drives from the kernel using the hwmon API and
+>> by adding a temperature zone for each drive.
+> 
+> My working tree is available here:
+> 
+>    https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=5.6/drivetemp
+> 
+> A few notes:
+> 
+>   - Before applying your patch I did s/satatemp/drivetemp/
+> 
+>   - I get a crash in the driver core during probe if the drivetemp module
+>     is loaded prior to loading ahci or a SCSI HBA driver. This crash is
+>     unrelated to my changes. Haven't had time to debug.
+> 
 
-I took the v3 patch for a test run on the D-Link DIR-695 NAS/router
-and it works like a charm.
+Any idea how I might be able to reproduce this ? So far I have been
+unsuccessful.
 
-With a few additional patches (that I am
-starting to upstream) the temperature zone in the drive can be used
-to control the GPIO-based fan in the NAS to keep the enclosure/chassis
-temperature down.
+Building drivetemp into the kernel, with ahci and everything SCSI
+built as module, doesn't trigger the crash for me. This is with the
+drivetemp patch (v3) as well as commit d188b0675b ("scsi: core: Add
+sysfs attributes for VPD pages 0h and 89h") applied on top of v5.4.7.
 
-I define a thermal zone in device tree like this:
+Thanks,
+Guenter
 
-+       thermal-zones {
-+               chassis-thermal {
-+                       /* Poll every 20 seconds */
-+                       polling-delay = <20000>;
-+                       /* Poll every 2nd second when cooling */
-+                       polling-delay-passive = <2000>;
-+                       /*  Use the thermal sensor in the hard drive */
-+                       thermal-sensors = <&sata_drive>;
-+
-+                       /* Tripping points from the fan.script in the rootfs */
-+                       trips {
-+                               alert: chassis-alert {
-+                                       /* At 43 degrees turn on the fan */
-+                                       temperature = <43000>;
-+                                       hysteresis = <3000>;
-+                                       type = "active";
-+                               };
-+                               crit: chassis-crit {
-+                                       /* Just shut down at 60 degrees */
-+                                       temperature = <60000>;
-+                                       hysteresis = <2000>;
-+                                       type = "critical";
-+                               };
-+                       };
-+
-+                       cooling-maps {
-+                               map0 {
-+                                       trip = <&alert>;
-+                                       cooling-device = <&fan0 1 1>;
-+                               };
-+                       };
-+               };
-+       };
-(...)
-                pata-controller@63000000 {
-                        status = "okay";
-+
-+                       /*
-+                        * This drive may have a temperature sensor with a
-+                        * thermal zone we can use for thermal control of the
-+                        * chassis temperature using the fan.
-+                        */
-+                       sata_drive: drive@0 {
-+                               reg = <0>;
-+                               #thermal-sensor-cells = <0>;
-+                       };
-                };
+>   - I tweaked your ATA detection heuristics and now use the cached VPD
+>     page 0x89 instead of fetching one from the device.
+> 
+>   - I also added support for reading the temperature log page on SCSI
+>     drives.
+> 
+>   - Tested with a mixed bag of about 40 SCSI and SATA drives attached.
+> 
+>   - I still think sensor naming needs work. How and where are the
+>     "drivetemp-scsi-8-140" names generated?
+> 
+> I'll tinker some more but thought I'd share what I have for now.
+> 
 
-The temperature started out at household temperature 26 degrees
-this morning, leaving the device running it gradually reached
-the trip point at 43 degrees and runs the fan. It then switches
-the fan off/on with some hysteresis keeping the temperature
-around 43 degreed.
-
-The PID-controller in the thermal framework handles it all
-in-kernel as expected.
-
-Tested-by: Linus Walleij <linus.walleij@linaro.org>
-
-Yours,
-Linus Walleij
