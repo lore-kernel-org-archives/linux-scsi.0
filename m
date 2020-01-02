@@ -2,112 +2,248 @@ Return-Path: <SRS0=pZIS=2X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AD0BC2D0DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 06:38:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F56C2D0DC
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 11:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50B8F21835
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 06:38:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDCFC21734
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 11:52:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pJXkWvF3"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="gTRTfxAP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgABGiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 01:38:52 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:56751 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725788AbgABGiw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 01:38:52 -0500
-X-UUID: d0ef305adcd9465cb3f179a9a6b233e0-20200102
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=EY8CHJ1MOwpTVq0/F8e5ITYSow6Z2y2qYGrDALgu+g0=;
-        b=pJXkWvF37dqw5HMuhYArqf40LDfY6vEeWuJv+6ij/MSLg4rCvjnOYACql3gZWmbFBPpxGhzMQ05Xs8LfANxbX8hIGahW42esE5XHwspiatuUM/0vyxW/2ox/jcKFz2WOPy4798wqBx/YPXUyq/gfzeljK/wB41Qx8+X+dD0ZYSM=;
-X-UUID: d0ef305adcd9465cb3f179a9a6b233e0-20200102
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1107668345; Thu, 02 Jan 2020 14:38:46 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 2 Jan 2020 14:37:59 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 2 Jan 2020 14:38:03 +0800
-Message-ID: <1577947124.13164.75.camel@mtkswgap22>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power
- mode during initialization only
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <andy.teng@mediatek.com>, <jejb@linux.ibm.com>,
-        <chun-hung.wu@mediatek.com>, <kuohong.wang@mediatek.com>,
-        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>,
-        <asutoshd@codeaurora.org>, <avri.altman@wdc.com>,
-        <linux-mediatek@lists.infradead.org>, <peter.wang@mediatek.com>,
-        <linux-scsi-owner@vger.kernel.org>, <subhashj@codeaurora.org>,
-        <alim.akhtar@samsung.com>, <beanhuo@micron.com>,
-        <pedrom.sousa@synopsys.com>, <bvanassche@acm.org>,
-        <linux-arm-kernel@lists.infradead.org>, <matthias.bgg@gmail.com>,
-        <ron.hsu@mediatek.com>, <cc.chou@mediatek.com>
-Date:   Thu, 2 Jan 2020 14:38:44 +0800
-In-Reply-To: <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
-References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
-         <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
-         <fd129b859c013852bd80f60a36425757@codeaurora.org>
-         <1577754469.13164.5.camel@mtkswgap22>
-         <836772092daffd8283a97d633e59fc34@codeaurora.org>
-         <1577766179.13164.24.camel@mtkswgap22>
-         <1577778290.13164.45.camel@mtkswgap22>
-         <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1728223AbgABLwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 06:52:17 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:44532 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728205AbgABLwR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 06:52:17 -0500
+Received: by mail-il1-f196.google.com with SMTP id z12so33859218iln.11
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Jan 2020 03:52:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ChT5QRhB+HU0xnOUq9zaJHL2udftBPqSh9wSSSkUm/8=;
+        b=gTRTfxAP1ViZQ2bay90TDe/VhU/Wk6e9FWJ4LDPiMy+OyyPgTgWNDRB8pioKwTfeVB
+         Spzhy2Rf2m9DS1aARxeqT5jK3iZ90KJvmIFZNXExbgX/W1EOERLgSKThPbZ1MDWlbw1Y
+         IhS1tWVbgKEwnDtN3MKmacjkCNFVScWdZSpgynPSO8LCabzF4RHEa0fhvMt8SltX0owl
+         Kyu3tzqM9Or8sq3RnVgzxMF7//dMEPRxfnlgGzsbvnPEZtQhGxp62clUZBGQPwk2JTO1
+         iEsGGXVARNAIrqqHkJ3sG7zimqYXiFbzbjJt3HY1rcZ2HGGUwqBilExuCDnZQq89kPdl
+         LZ6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ChT5QRhB+HU0xnOUq9zaJHL2udftBPqSh9wSSSkUm/8=;
+        b=QR+csh2HX6ka5CG47BGjjs1i+gMcWslwYLQPq1IljzVZBrN9nIc8L+wdY6oCfePhwX
+         tbaykEFOvrzUv2R5prO5E+W9D9JzuRYt+MSDLsHmxCkn7KADgn3s+zOEWMtV9+cZVR2e
+         BYTnRth+4A1+2uviiMq5AKIL0dsK3lKbupRm61mfCcUdsbjubGRS9dkkoxsS9hAHBoNP
+         QBTHYsmQfqGfXzB0TeJusxiN+jiFJ7I7Mzjpan/dx07B4oiMkN3PJGxvEQbrLLRvDaSU
+         PO5o8mURbhJ1LeT8zdnIkRoAXU1PX56LJeoC2Glp2dGGn8J++6/eXXiG37UP6q23WyDQ
+         MEwQ==
+X-Gm-Message-State: APjAAAX2v0KfM3rb0NKAyRiVgCp7hHlfAFysmv3m4QqR6QsMFEgSMnFB
+        HHlGZS2U5WCh3Zw1YRgt8UbbPo7cHtwQnIB1ZK54Bg==
+X-Google-Smtp-Source: APXvYqzc3p4Lgkxbpv9xOVUd5RJ9N58sLJ0kyhmL+yvvmWPliELJbVNFDhasdfl4ZudGJhlsenmpdvMq6MCJxC39yAo=
+X-Received: by 2002:a92:8d88:: with SMTP id w8mr71560257ill.71.1577965936122;
+ Thu, 02 Jan 2020 03:52:16 -0800 (PST)
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 6DF2DA8F51F0E1171061F223F8110C3970D122A74F33AAB3D5F7588FEE5DB6412000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+References: <20191224044143.8178-1-deepak.ukey@microchip.com> <20191224044143.8178-3-deepak.ukey@microchip.com>
+In-Reply-To: <20191224044143.8178-3-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Thu, 2 Jan 2020 12:52:05 +0100
+Message-ID: <CAMGffEkyNY4BkbZwSMYX6z0gP21LULiV-qkTsJ7h_Mx_OXc5kw@mail.gmail.com>
+Subject: Re: [PATCH 02/12] pm80xx : Deal with kexec reboots.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Jack Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>, dpf@google.com,
+        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
+        vishakhavc@google.com, bjashnani@google.com, radha@google.com,
+        akshatzen@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBUdWUsIDIwMTktMTItMzEgYXQgMTY6MzUgKzA4MDAsIENhbiBHdW8gd3Jv
-dGU6DQoNCj4gSGkgU3RhbmxleSwNCj4gDQo+IEkgbWlzc2VkIHRoaXMgbWFpbCBiZWZvcmUgSSBo
-aXQgc2VuZC4gSW4gY3VycmVudCBjb2RlLCBhcyBwZXIgbXkgDQo+IHVuZGVyc3RhbmRpbmcsDQo+
-IFVGUyBkZXZpY2UncyBwb3dlciBzdGF0ZSBzaG91bGQgYmUgQWN0aXZlIGFmdGVyIHVmc2hjZF9s
-aW5rX3N0YXJ0dXAoKSANCj4gcmV0dXJucy4NCj4gSWYgSSBhbSB3cm9uZywgcGxlYXNlIGZlZWwg
-ZnJlZSB0byBjb3JyZWN0IG1lLg0KPiANCg0KWWVzLCB0aGlzIGFzc3VtcHRpb24gb2YgdWZzaGNk
-X3Byb2JlX2hiYSgpIGlzIHRydWUgc28gSSB3aWxsIGRyb3AgdGhpcw0KcGF0Y2guDQpUaGFua3Mg
-Zm9yIHJlbWluZC4NCg0KPiBEdWUgdG8geW91IGFyZSBhbG1vc3QgdHJ5aW5nIHRvIHJldmVydCBj
-b21taXQgN2NhZjQ4OWI5OWE0MmEsIEkgYW0ganVzdCANCj4gd29uZGVyaW5nDQo+IGlmIHlvdSBl
-bmNvdW50ZXIgZmFpbHVyZS9lcnJvciBjYXVzZWQgYnkgaXQuDQoNClllcywgd2UgYWN0dWFsbHkg
-aGF2ZSBzb21lIGRvdWJ0cyBmcm9tIHRoZSBjb21taXQgbWVzc2FnZSBvZiAic2NzaTogdWZzOg0K
-aXNzdWUgbGluayBzdGFydHVwIDIgdGltZXMgaWYgZGV2aWNlIGlzbid0IGFjdGl2ZSINCg0KSWYg
-d2UgY29uZmlndXJlZCBzeXN0ZW0gc3VzcGVuZCBhcyBkZXZpY2U9UG93ZXJEb3duL0xpbms9TGlu
-a0Rvd24gbW9kZSwNCmR1cmluZyByZXN1bWUsIHRoZSAxc3QgbGluayBzdGFydHVwIHdpbGwgYmUg
-c3VjY2Vzc2Z1bCwgYW5kIGFmdGVyIHRoYXQNCmRldmljZSBjb3VsZCBiZSBhY2Nlc3NlZCBub3Jt
-YWxseSBzbyBpdCBzaGFsbCBiZSBhbHJlYWR5IGluIEFjdGl2ZSBwb3dlcg0KbW9kZS4gV2UgZGlk
-IG5vdCBmaW5kIGRldmljZXMgd2hpY2ggbmVlZCB0d2ljZSBsaW5rdXAgZm9yIG5vcm1hbCB3b3Jr
-Lg0KDQpBbmQgYmVjYXVzZSB0aGUgMXN0IGxpbmt1cCBpcyBPSywgdGhlIGZvcmNlZCAybmQgbGlu
-a3VwIGJ5IGNvbW1pdCAic2NzaToNCnVmczogaXNzdWUgbGluayBzdGFydHVwIDIgdGltZXMgaWYg
-ZGV2aWNlIGlzbid0IGFjdGl2ZSIgbGVhZHMgdG8gbGluaw0KbG9zdCBhbmQgZmluYWxseSB0aGUg
-M3JkIGxpbmt1cCBpcyBtYWRlIGFnYWluIGJ5IHJldHJ5IG1lY2hhbmlzbSBpbg0KdWZzaGNkX2xp
-bmtfc3RhcnR1cCgpIGFuZCBiZSBzdWNjZXNzZnVsLiBTbyBhIGxpbmt1cCBwZXJmb3JtYW5jZSBp
-c3N1ZQ0KaXMgaW50cm9kdWNlZCBoZXJlOiBXZSBhY3R1YWxseSBuZWVkIG9uZS10aW1lIGxpbmt1
-cCBvbmx5IGJ1dCBmaW5hbGx5DQpnb3QgMyBsaW5rdXAgb3BlcmF0aW9ucy4NCg0KQWNjb3JkaW5n
-IHRvIHRoZSBVRlMgc3BlYywgYWxsIHJlc2V0IHR5cGVzIChpbmNsdWRpbmcgUE9SIGFuZCBIb3N0
-DQpVbmlQcm8gV2FybSBSZXNldCB3aGljaCBib3RoIG1heSBoYXBwZW4gaW4gYWJvdmUgY29uZmln
-dXJhdGlvbnMpIG90aGVyDQp0aGFuIExVIHJlc2V0LCBVRlMgZGV2aWNlIHBvd2VyIG1vZGUgc2hh
-bGwgcmV0dXJuIHRvIFNsZWVwIG1vZGUgb3INCkFjdGl2ZSBtb2RlIGRlcGVuZGluZyBvbiBiSW5p
-dFBvd2VyTW9kZSwgYnkgZGVmYXVsdCwgaXQncyBBY3RpdmUgbW9kZS4NCg0KU28gd2UgYXJlIGN1
-cmlvdXMgdGhhdCB3aHkgZW5mb3JjaW5nIHR3aWNlIGxpbmt1cCBpcyBuZWNlc3NhcnkgaGVyZT8N
-CkNvdWxkIHlvdSBraW5kbHkgaGVscCB1cyBjbGFyaWZ5IHRoaXM/DQoNCklmIGFueXRoaW5nIHdy
-b25nIGluIGFib3ZlIGRlc2NyaXB0aW9uLCBwbGVhc2UgZmVlbCBmcmVlIHRvIGNvcnJlY3QgbWUu
-DQoNCj4gDQo+IEhhcHB5IG5ldyB5ZWFyIHRvIHlvdSB0b28hDQo+IA0KPiBUaGFua3MsDQo+IA0K
-PiBDYW4gR3VvDQoNClRoYW5rcywNCg0KU3RhbmxleQ0KDQo+IA0KPiBfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXw0KPiBMaW51eC1tZWRpYXRlayBtYWlsaW5n
-IGxpc3QNCj4gTGludXgtbWVkaWF0ZWtAbGlzdHMuaW5mcmFkZWFkLm9yZw0KPiBodHRwOi8vbGlz
-dHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW1lZGlhdGVrDQoNCg==
+On Tue, Dec 24, 2019 at 5:40 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
+>
+> From: Vikram Auradkar <auradkar@google.com>
+>
+> A kexec reboot causes the controller fw to assert. This assertion
+> shows up in two ways, the controller doesn't show up as ready and
+> an interrupt is waiting as soon as the handler is registered. To
+> resolve this added below fix:
+> -split the interrupt handling setup into two parts, setup and
+>  request.
+> -If the controller ready register indicates not-ready, but that the
+>  not readiness is only on the IOC units we can still try a reset to
+>  bring the system back to the pre-reboot state.
+>
+> Signed-off-by: Vikram Auradkar <auradkar@google.com>
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Vishakha Channapattan <vishakhavc@google.com>
+> Signed-off-by: Bhavesh Jashnani <bjashnani@google.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Signed-off-by: Akshat Jain <akshatzen@google.com>
+> Signed-off-by: Yu Zheng <yuuzheng@google.com>
 
+The patch looks fine, Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+ps: the signed-off-by chain was surprisingly long for such simple
+patch, do they all contribute to the patch?
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c | 48 +++++++++++++++++++++++++++++++++++----
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 15 ++++++++----
+>  2 files changed, 54 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 3f1e755c52c6..a002eb5a3fe4 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -248,6 +248,9 @@ static irqreturn_t pm8001_interrupt_handler_intx(int irq, void *dev_id)
+>         return ret;
+>  }
+>
+> +static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha);
+> +static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha);
+> +
+>  /**
+>   * pm8001_alloc - initiate our hba structure and 6 DMAs area.
+>   * @pm8001_ha:our hba structure.
+> @@ -890,9 +893,7 @@ static int pm8001_configure_phy_settings(struct pm8001_hba_info *pm8001_ha)
+>   */
+>  static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>  {
+> -       u32 i = 0, j = 0;
+>         u32 number_of_intr;
+> -       int flag = 0;
+>         int rc;
+>
+>         /* SPCv controllers supports 64 msi-x */
+> @@ -900,11 +901,11 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>                 number_of_intr = 1;
+>         } else {
+>                 number_of_intr = PM8001_MAX_MSIX_VEC;
+> -               flag &= ~IRQF_SHARED;
+>         }
+>
+>         rc = pci_alloc_irq_vectors(pm8001_ha->pdev, number_of_intr,
+>                         number_of_intr, PCI_IRQ_MSIX);
+> +       number_of_intr = rc;
+>         if (rc < 0)
+>                 return rc;
+>         pm8001_ha->number_of_intr = number_of_intr;
+> @@ -912,8 +913,22 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>         PM8001_INIT_DBG(pm8001_ha, pm8001_printk(
+>                 "pci_alloc_irq_vectors request ret:%d no of intr %d\n",
+>                                 rc, pm8001_ha->number_of_intr));
+> +       return 0;
+> +}
+> +
+> +static u32 pm8001_request_msix(struct pm8001_hba_info *pm8001_ha)
+> +{
+> +       u32 i = 0, j = 0;
+> +       int flag = 0, rc = 0;
+>
+> -       for (i = 0; i < number_of_intr; i++) {
+> +       if (pm8001_ha->chip_id != chip_8001)
+> +               flag &= ~IRQF_SHARED;
+> +
+> +       PM8001_INIT_DBG(pm8001_ha,
+> +               pm8001_printk("pci_enable_msix request number of intr %d\n",
+> +               pm8001_ha->number_of_intr));
+> +
+> +       for (i = 0; i < pm8001_ha->number_of_intr; i++) {
+>                 snprintf(pm8001_ha->intr_drvname[i],
+>                         sizeof(pm8001_ha->intr_drvname[0]),
+>                         "%s-%d", pm8001_ha->name, i);
+> @@ -938,6 +953,21 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+>  }
+>  #endif
+>
+> +static u32 pm8001_setup_irq(struct pm8001_hba_info *pm8001_ha)
+> +{
+> +       struct pci_dev *pdev;
+> +
+> +       pdev = pm8001_ha->pdev;
+> +
+> +#ifdef PM8001_USE_MSIX
+> +       if (pci_find_capability(pdev, PCI_CAP_ID_MSIX))
+> +               return pm8001_setup_msix(pm8001_ha);
+> +       PM8001_INIT_DBG(pm8001_ha,
+> +               pm8001_printk("MSIX not supported!!!\n"));
+> +#endif
+> +       return 0;
+> +}
+> +
+>  /**
+>   * pm8001_request_irq - register interrupt
+>   * @chip_info: our ha struct.
+> @@ -951,7 +981,7 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
+>
+>  #ifdef PM8001_USE_MSIX
+>         if (pdev->msix_cap && pci_msi_enabled())
+> -               return pm8001_setup_msix(pm8001_ha);
+> +               return pm8001_request_msix(pm8001_ha);
+>         else {
+>                 PM8001_INIT_DBG(pm8001_ha,
+>                         pm8001_printk("MSIX not supported!!!\n"));
+> @@ -1033,6 +1063,13 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+>                 rc = -ENOMEM;
+>                 goto err_out_free;
+>         }
+> +       /* Setup Interrupt */
+> +       rc = pm8001_setup_irq(pm8001_ha);
+> +       if (rc) {
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> +                       "pm8001_setup_irq failed [ret: %d]\n", rc));
+> +               goto err_out_shost;
+> +       }
+>         list_add_tail(&pm8001_ha->list, &hba_list);
+>         PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha);
+>         rc = PM8001_CHIP_DISP->chip_init(pm8001_ha);
+> @@ -1045,6 +1082,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+>         rc = scsi_add_host(shost, &pdev->dev);
+>         if (rc)
+>                 goto err_out_ha_free;
+> +       /* Request Interrupt */
+>         rc = pm8001_request_irq(pm8001_ha);
+>         if (rc) {
+>                 PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 98dcdbd146d5..d805fd036ddf 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -1438,11 +1438,18 @@ pm80xx_chip_soft_rst(struct pm8001_hba_info *pm8001_ha)
+>         if (!pm8001_ha->controller_fatal_error) {
+>                 /* Check if MPI is in ready state to reset */
+>                 if (mpi_uninit_check(pm8001_ha) != 0) {
+> -                       regval = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+> +                       u32 r0 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_0);
+> +                       u32 r1 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_1);
+> +                       u32 r2 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_2);
+> +                       u32 r3 = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3);
+>                         PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> -                               "MPI state is not ready scratch1 :0x%x\n",
+> -                               regval));
+> -                       return -1;
+> +                               "MPI state is not ready scratch: %x:%x:%x:%x\n",
+> +                               r0, r1, r2, r3));
+> +                       /* if things aren't ready but the bootloader is ok then
+> +                        * try the reset anyway.
+> +                        */
+> +                       if (r1 & SCRATCH_PAD1_BOOTSTATE_MASK)
+> +                               return -1;
+>                 }
+>         }
+>         /* checked for reset register normal state; 0x0 */
+> --
+> 2.16.3
+>
