@@ -2,87 +2,123 @@ Return-Path: <SRS0=pZIS=2X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E236BC2D0DC
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 20:22:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F30C3276E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:25:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C28F020866
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 20:22:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 465292465A
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:25:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578003908;
+	bh=IzLlOBA3ceL7TCJih7TvB2sTBQGpZ9urE3afA7yjw3A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=IpsyHqbe+wN8pvZayc3doef/YN6kjK5zzLQaWT+kbBKh48fDBXCZMTLQBqop5cEHc
+	 qCbfu8hfvxXx8SfiOwsPTtzZcrfE9c+s8zpddmoFd/ds+f4VwsyP4bwSqNtm4HB/YZ
+	 sqqxX7u60c7qarLcJ/MENBY/jx5BMPyHYPSBHKok=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725871AbgABUWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 15:22:51 -0500
-Received: from mout.kundenserver.de ([217.72.192.73]:53641 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725783AbgABUWu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 15:22:50 -0500
-Received: from mail-qt1-f174.google.com ([209.85.160.174]) by
- mrelayeu.kundenserver.de (mreue106 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1MvJo7-1jeFg12wev-00rEBI; Thu, 02 Jan 2020 21:22:48 +0100
-Received: by mail-qt1-f174.google.com with SMTP id g1so28554104qtr.13;
-        Thu, 02 Jan 2020 12:22:48 -0800 (PST)
-X-Gm-Message-State: APjAAAXcuzat/FvU7gXdKMvGfoNPS9BFkBdJdfJ+1XfrxLMxCVoSsWA5
-        40Y8kvtdfphEOvPyWUUwJWHCpOZLdKZKTGuqkZo=
-X-Google-Smtp-Source: APXvYqw1WBWes+WH0CrFxHA8FylK6AQHYik3my7LV7FPF6NFz9oKafXjddaDiVHL3AvLnvKIAQdI30SksZ7m1AJhJMc=
-X-Received: by 2002:ac8:47d3:: with SMTP id d19mr60326581qtr.142.1577996567289;
- Thu, 02 Jan 2020 12:22:47 -0800 (PST)
+        id S1729465AbgABWZH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 17:25:07 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49808 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729448AbgABWZC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Jan 2020 17:25:02 -0500
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 18BB020863;
+        Thu,  2 Jan 2020 22:25:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578003901;
+        bh=IzLlOBA3ceL7TCJih7TvB2sTBQGpZ9urE3afA7yjw3A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=a5SWEdZfwkrmq+yTHIsfrTXn2aqlGw40i9UmQhCxfDh8TWIjyUgNA8QQZSe+kWMP8
+         OB38tMSEiOaBtiseR7k/y0Bi6ABLeQl6Wci6U4oh4N+izX9HuvEECJhkoiM5DQ4qzN
+         Ekst7NGZ2tJ90ptql/SS98WWPyi5++5Pz/Td6qNo=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, linux-scsi@vger.kernel.org,
+        =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 4.14 46/91] cdrom: respect device capabilities during opening action
+Date:   Thu,  2 Jan 2020 23:07:28 +0100
+Message-Id: <20200102220436.154889895@linuxfoundation.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200102220356.856162165@linuxfoundation.org>
+References: <20200102220356.856162165@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-References: <20200102145552.1853992-1-arnd@arndb.de>
-In-Reply-To: <20200102145552.1853992-1-arnd@arndb.de>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Thu, 2 Jan 2020 21:22:31 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a2y71R38AyOJBXWwukZ-odjSMSL4wBumdMBsNp=So0u7A@mail.gmail.com>
-Message-ID: <CAK8P3a2y71R38AyOJBXWwukZ-odjSMSL4wBumdMBsNp=So0u7A@mail.gmail.com>
-Subject: Re: [GIT PULL v3 00/27] block, scsi: final compat_ioctl cleanup
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Ben Hutchings <ben.hutchings@codethink.co.uk>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:Jod/qPEhvywko/uHVmu+k/2nrH/2auin298Lqla0cYwztJPxo5C
- tLWz1QNbBuqG4709wjHgQPhajRdhnyjJXXJrpiBrVl+Jk4ADzkngavtkCIMCjN6iHkraSBs
- ZV+IvhXdxvLukbpxY61cN66ZxnhA141x8ANnPQizAb6FtEJD4dry5W+qIk1QRB1Rpe5IN0X
- 37nsI95RQKc2/Vq+q3wtQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:IxD7BSXId+w=:WWN1G8LdJPkOr+99O/QmC5
- JcnNbFZfZzf/2ftaUZXmNHErTwB3LEorjS4FMM3IIEPFeYuWUdWR2ZoEFz1lpUpl45WkOzq+A
- iDsulEehz+MvJfKVoDE2vt7wchLJKFWAptGi4P7AKwAIFsxTt++fUEVCPURvwLREIvoLnWT8F
- uIubzCfzIz7bU17Pt0fbMkSO7jULmL2M2Aepw/S+m9Q3r+js6bEqO5OCphEVDNfU4mNlZ3DGM
- cXU8mH7JOccjHiub57p+0TrqpTk4aJEyBTwDKQOzAbcmtbWoLDTbTomznpf//L/4KsiMH3iG+
- mAX6UeC3+UAgVhNPoJN5/D0ty7cnKf5fr1wTHGvnuKYqwGUDsxx9P1+DzPrnF7FCuo0MSmH0V
- YFx2TeiyEMn6AoAR0TRKAeh32l2ESvsOFn1vZARvZlwzP+KtvgdrHTHryV/HStThTFmHxjz9v
- HGtn178fhQ0k+1UlPZ2hjwQeG0FV/4oFJxn+d/ipNTHhZXrRmX+BtT2BLAca66a6yYS6oFXub
- 8Au3Uy2YicXn5j+BRYROJ+BNllEmajO6Tgz7DIFxxbpQQ9lBFsZBUZ6JHGFFtloOwy35xqnM2
- bEyFljrf0eWNA/LiBOcn+FRdwT2P2EsAX01aqtab9PDKv68Y97ktFtcW4UPUAfa4sLlUsgbdz
- q+CIGru+2SC0WCtq4gKsP/cBCBtD0MxeT1Vrh+ntZwuEaKvPU5sSrPDBApeW1P9KiXjjeW45E
- cSq9JY/C8uzVyOezQM4LQSTcjsm6GoWUIwjLF3bLnrXCVTWFrbAc/3OhDuTDmNOnuKy/2Pf1k
- 6gpKe/RXiVJXj3jb2dOFku/0xbKjurbfVef5RcaweVnJP6x36AjJ/johGqTvODN1LcsAtZnlv
- jkVlaQ5tKcNFq0mm9D6g==
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 2, 2020 at 3:56 PM Arnd Bergmann <arnd@arndb.de> wrote:
->
-> Hi Martin, James,
->
-> If this version seems ok to everyone, please pull into
-> the scsi tree.
+From: Diego Elio Pettenò <flameeyes@flameeyes.com>
 
-It seems I slightly messed up the Cc list here, in case some of you are
-missing patches, the full series (22 patches, not 27) is mirrored at
-https://lore.kernel.org/lkml/20200102145552.1853992-1-arnd@arndb.de/T/
-as well.
+[ Upstream commit 366ba7c71ef77c08d06b18ad61b26e2df7352338 ]
 
-         Arnd
+Reading the TOC only works if the device can play audio, otherwise
+these commands fail (and possibly bring the device to an unhealthy
+state.)
+
+Similarly, cdrom_mmc3_profile() should only be called if the device
+supports generic packet commands.
+
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Diego Elio Pettenò <flameeyes@flameeyes.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/cdrom/cdrom.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 90dd8e7291da..1c90da4af94f 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -995,6 +995,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	tracks->xa = 0;
+ 	tracks->error = 0;
+ 	cd_dbg(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n");
++
++	if (!CDROM_CAN(CDC_PLAY_AUDIO)) {
++		tracks->error = CDS_NO_INFO;
++		return;
++	}
++
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header);
+ 	if (ret) {
+@@ -1161,7 +1167,8 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+ 		ret = open_for_data(cdi);
+ 		if (ret)
+ 			goto err;
+-		cdrom_mmc3_profile(cdi);
++		if (CDROM_CAN(CDC_GENERIC_PACKET))
++			cdrom_mmc3_profile(cdi);
+ 		if (mode & FMODE_WRITE) {
+ 			ret = -EROFS;
+ 			if (cdrom_open_write(cdi))
+@@ -2878,6 +2885,9 @@ int cdrom_get_last_written(struct cdrom_device_info *cdi, long *last_written)
+ 	   it doesn't give enough information or fails. then we return
+ 	   the toc contents. */
+ use_toc:
++	if (!CDROM_CAN(CDC_PLAY_AUDIO))
++		return -ENOSYS;
++
+ 	toc.cdte_format = CDROM_MSF;
+ 	toc.cdte_track = CDROM_LEADOUT;
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &toc)))
+-- 
+2.20.1
+
+
+
