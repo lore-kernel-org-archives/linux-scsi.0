@@ -2,110 +2,123 @@ Return-Path: <SRS0=pZIS=2X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8D33C3276C
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3064BC3276C
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:54:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A591621D7D
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:54:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IWiq66IK"
+	by mail.kernel.org (Postfix) with ESMTP id 019F520866
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:54:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578005650;
+	bh=IMSOtqcwaP6UlIqYmPsM13lnT/jot8oLkrsfRUmghbg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=l5GX/GdvO3FncI/AFa+FGUtqCun3bc5CL11J88Sh+B6fhyIvgtvrlSycpN+RUG67d
+	 n7c/Hn3wh0DINlVmbQwOWIhx/v68gM/eWiWi3LtI0iCtK/akeQE1K4IWOoJkmHsq1i
+	 Eo2xmBIcZvDmjjqrRGUt3+Awk7QgouRiGJPBDtJ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729455AbgABWyE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 17:54:04 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:57835 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729408AbgABWyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 17:54:03 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1578005642;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=15CQpc4ye1yHxOgZq+RNTAriJ+ZhSxpEpKwtlFpdSD0=;
-        b=IWiq66IKwWq+lVnRv7uZwI+2YlYdxYEZEH6cp/P5CHeQQqvoGFIQTa+dJ3GWxJxrR7bgV4
-        91P/bDwvM7ak6HJ9k3jTehoZ18CJccmnmVBUk/vZZwwU8tXoH88V2hlJ2RpArZ9I/tRZH/
-        5SgfxbJXfXv2bj2exeWflI4MndQGjVA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-142-J3F73UBSNGyHyGNyjjECEw-1; Thu, 02 Jan 2020 17:53:59 -0500
-X-MC-Unique: J3F73UBSNGyHyGNyjjECEw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728540AbgABWVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 17:21:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39582 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728931AbgABWVD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Jan 2020 17:21:03 -0500
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 63240800D48;
-        Thu,  2 Jan 2020 22:53:58 +0000 (UTC)
-Received: from [10.3.112.12] (ovpn-112-12.phx2.redhat.com [10.3.112.12])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id AB2D560BF7;
-        Thu,  2 Jan 2020 22:53:56 +0000 (UTC)
-From:   Tony Asleson <tasleson@redhat.com>
-Subject: Re: [RFC 6/9] create_syslog_header: Add durable name
-Reply-To: tasleson@redhat.com
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20191223225558.19242-1-tasleson@redhat.com>
- <20191223225558.19242-7-tasleson@redhat.com>
- <1577148851.29997.32.camel@HansenPartnership.com>
-Organization: Red Hat
-Message-ID: <fe598a6e-6d3c-162b-85ec-5aa1e631e441@redhat.com>
-Date:   Thu, 2 Jan 2020 16:53:55 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        by mail.kernel.org (Postfix) with ESMTPSA id E6FC021582;
+        Thu,  2 Jan 2020 22:21:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578003663;
+        bh=IMSOtqcwaP6UlIqYmPsM13lnT/jot8oLkrsfRUmghbg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=sPoP68wSNv3TPcxrz0YtV6+MFhpfCkgOgQ0P0pVX3MchcJ1eYhtbGWvzkZCEIGJc1
+         XdbTICVQ74SGTyaFy3MNSUG55x45bUYXtIjNinjvRpaeasK61T7PTJ6FTq0+lz2xvF
+         L9TqbxOO8jbhzg0Eu5TLLt8eifw18SBWnq1bIx+M=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, linux-scsi@vger.kernel.org,
+        =?UTF-8?q?Diego=20Elio=20Petten=C3=B2?= <flameeyes@flameeyes.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 4.19 063/114] cdrom: respect device capabilities during opening action
+Date:   Thu,  2 Jan 2020 23:07:15 +0100
+Message-Id: <20200102220035.429538902@linuxfoundation.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200102220029.183913184@linuxfoundation.org>
+References: <20200102220029.183913184@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-In-Reply-To: <1577148851.29997.32.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/23/19 6:54 PM, James Bottomley wrote:
-> On Mon, 2019-12-23 at 16:55 -0600, Tony Asleson wrote:
->> This gets us a persistent durable name for code that logs messages in
->> the
->> block layer that have the appropriate callbacks setup for durable
->> name.
->>
->> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->> ---
->>  drivers/base/core.c | 9 +++++++++
->>  1 file changed, 9 insertions(+)
->>
->> diff --git a/drivers/base/core.c b/drivers/base/core.c
->> index 93cc1c45e9d3..57b5f5cd29fc 100644
->> --- a/drivers/base/core.c
->> +++ b/drivers/base/core.c
->> @@ -3318,6 +3318,15 @@ create_syslog_header(const struct device *dev,
->> char *hdr, size_t hdrlen)
->>  				"DEVICE=+%s:%s", subsys,
->> dev_name(dev));
->>  	}
->>  
->> +	if (dev->type && dev->type->durable_name) {
->> +		int dlen;
->> +
->> +		dlen = dev_durable_name(dev, hdr + (pos + 1),
->> +					hdrlen - (pos + 1));
->> +		if (dlen)
->> +			pos += dlen + 1;
->> +	}
->> +
-> 
-> dev_durable_name already returns zero if either dev->type or dev->type-
->> durable_name are NULL, so the if() above is pointless.
+From: Diego Elio Pettenò <flameeyes@flameeyes.com>
 
-Indeed, will remove redundant checks in patch re-work.
+[ Upstream commit 366ba7c71ef77c08d06b18ad61b26e2df7352338 ]
 
-Thanks
--Tony
+Reading the TOC only works if the device can play audio, otherwise
+these commands fail (and possibly bring the device to an unhealthy
+state.)
+
+Similarly, cdrom_mmc3_profile() should only be called if the device
+supports generic packet commands.
+
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Diego Elio Pettenò <flameeyes@flameeyes.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/cdrom/cdrom.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 933268b8d6a5..d3947388a3ef 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -996,6 +996,12 @@ static void cdrom_count_tracks(struct cdrom_device_info *cdi, tracktype *tracks)
+ 	tracks->xa = 0;
+ 	tracks->error = 0;
+ 	cd_dbg(CD_COUNT_TRACKS, "entering cdrom_count_tracks\n");
++
++	if (!CDROM_CAN(CDC_PLAY_AUDIO)) {
++		tracks->error = CDS_NO_INFO;
++		return;
++	}
++
+ 	/* Grab the TOC header so we can see how many tracks there are */
+ 	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCHDR, &header);
+ 	if (ret) {
+@@ -1162,7 +1168,8 @@ int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
+ 		ret = open_for_data(cdi);
+ 		if (ret)
+ 			goto err;
+-		cdrom_mmc3_profile(cdi);
++		if (CDROM_CAN(CDC_GENERIC_PACKET))
++			cdrom_mmc3_profile(cdi);
+ 		if (mode & FMODE_WRITE) {
+ 			ret = -EROFS;
+ 			if (cdrom_open_write(cdi))
+@@ -2882,6 +2889,9 @@ int cdrom_get_last_written(struct cdrom_device_info *cdi, long *last_written)
+ 	   it doesn't give enough information or fails. then we return
+ 	   the toc contents. */
+ use_toc:
++	if (!CDROM_CAN(CDC_PLAY_AUDIO))
++		return -ENOSYS;
++
+ 	toc.cdte_format = CDROM_MSF;
+ 	toc.cdte_track = CDROM_LEADOUT;
+ 	if ((ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &toc)))
+-- 
+2.20.1
+
+
 
