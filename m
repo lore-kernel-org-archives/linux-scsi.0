@@ -2,285 +2,135 @@ Return-Path: <SRS0=pZIS=2X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3345C2D0DC
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 15:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A43DC3276C
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 16:33:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9F322072C
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 15:05:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10371215A4
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 16:33:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AV/Uk42A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728773AbgABPE6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 10:04:58 -0500
-Received: from mout.kundenserver.de ([212.227.126.131]:60419 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728728AbgABPE6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 10:04:58 -0500
-Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MfYgC-1jOap53wS0-00fykl; Thu, 02 Jan 2020 16:03:36 +0100
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
-        John Garry <john.garry@huawei.com>,
-        Brian King <brking@us.ibm.com>,
-        Intel SCU Linux support <intel-linux-scu@intel.com>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Jack Wang <jinpu.wang@cloud.ionos.com>,
-        Kees Cook <keescook@chromium.org>,
+        id S1728843AbgABQde (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 11:33:34 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:57058 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728795AbgABQdd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 11:33:33 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1577982812;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=TlchMaIvasLMm30BcrAzvO65BEfeYNv4RmHmgwKHDHM=;
+        b=AV/Uk42ASCaTxh4rK+oyrgmCjHXNj5r5vyKYmcFGQaE/LI7TkqXVpjNIFauWL7cLKtiVvt
+        jppTczM+bTWeaA3kX5RyJnAtw08xP7Tuh9HxgWKJMQbrr8Jnm6QNdP5WTBYqoySUjeCjRE
+        Xz1POlZV+IOeRW15jC8+pqm81xBjSVM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-326-f6RSfu66O-SgKyoHEVPNVg-1; Thu, 02 Jan 2020 11:33:31 -0500
+X-MC-Unique: f6RSfu66O-SgKyoHEVPNVg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 76E6F800D55;
+        Thu,  2 Jan 2020 16:33:27 +0000 (UTC)
+Received: from localhost (ovpn-117-73.ams2.redhat.com [10.36.117.73])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 654815D9C9;
+        Thu,  2 Jan 2020 16:33:23 +0000 (UTC)
+Date:   Thu, 2 Jan 2020 16:33:21 +0000
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dongli Zhang <dongli.zhang@oracle.com>,
         Thomas Gleixner <tglx@linutronix.de>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>,
-        zhengbin <zhengbin13@huawei.com>,
-        Xiaofei Tan <tanxiaofei@huawei.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Bradley Grove <bgrove@attotech.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        Richard Fontana <rfontana@redhat.com>,
-        Deepak Ukey <deepak.ukey@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        peter chang <dpf@google.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Saurav Girepunje <saurav.girepunje@gmail.com>,
-        Vikram Auradkar <auradkar@google.com>,
-        Denis Efremov <efremov@linux.com>, Jiri Slaby <jslaby@suse.cz>,
-        Jilayne Lovejoy <opensource@jilayne.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v3 17/22] compat_ioctl: scsi: handle HDIO commands from drivers
-Date:   Thu,  2 Jan 2020 15:55:35 +0100
-Message-Id: <20200102145552.1853992-18-arnd@arndb.de>
-X-Mailer: git-send-email 2.20.0
-In-Reply-To: <20200102145552.1853992-1-arnd@arndb.de>
+        Hannes Reinecke <hare@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Ira Weiny <ira.weiny@intel.com>, Iustin Pop <iustin@k1024.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        virtualization@lists.linux-foundation.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3 13/22] compat_ioctl: scsi: move ioctl handling into
+ drivers
+Message-ID: <20200102163321.GA129642@stefanha-x1.localdomain>
 References: <20200102145552.1853992-1-arnd@arndb.de>
+ <20200102145552.1853992-14-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:em1wWyRE/wRIZrTiJ9/rnuBjFpeAztfbhyJDPp+3XtIg+XgBc+3
- APBCDum0e0xHmDyO6SOJG8c/m8HxTWbZHz79sdQp9UtoN1QisJLvNXVD4KsNiZSbcU4y8ww
- NNZYlaPFj7atoo1KHIrT0yMRBv4OySaB3AddPM3m3nu6lXBIR2KlbZjEdUwN4buiMn35dow
- /+G7Cbrkeaj1wa2kZz2DA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:iY6OqM8KHtc=:qnZ0ggQTqr83IgrTxCpzQs
- lm+D91PC0Nv6VGxw1LN4N1iVTBKqBRTL0S7MRvNtXKDjdzbJvV9o01Uq7cySxK86N99p6BQrp
- 9PShqiD4iSub6MiJDRFLbpMMwJz5K2x+ReWM4O2dDe/nao1pG8IcYxmJt73uSo039PJ9EUtiA
- dJipMBc2x320mGDkdEFjc3pdIj79CkS5ULPCjvbyXumFoYau9G8MvpQHQzwem/COhHB5arWWz
- gKaHtQJGKePJphRNoqdUSITRutzSiqAacmOnRuytgwBaNwFwydNu0PFh8uP3QpTgt2JKWNJan
- nxmFMxCRe12PUm+FHKMgoBMM/Hu6R+dCIRKGO1SuC6rEBw5hw1YxWjgDrLqHqXvghyKKIqcNM
- chLW/0Qp+MCWmhsY1+KSiuEadORkGxUXcsgAbz2ttY15QEtJcvc06hu2EZKcL1vj855Lf5KaU
- XE3SPNlWocl8SV61BSe/yuMcqCzwFJuHCa8hMGYms9RKvqkGtzPhc6UIC1yZICDLWzHwXGr58
- ZV4mKZOza8RhO8iLIxGg4VO8dDitCCrgw+yB3dZmShSNVmXNx4RG+KboK7C1dMYppcitsFAOz
- pBqRalYDYXwUTVYdnLUiSKyxpUwYDV2CLh26b+IhoscimG/10pUqhMZFT+5Qeb0s7K/18VZ5m
- 1vvIYo61kUZdiFfmCpAORPSO348xJjEuSE7x6datFh1gUFIgYOUW/0jZk1/kuNmY36CbFqK54
- vZBFMHehcpuqaGILsyCzJ5PwLbuYrzz4UnIGFK0MufvfBjFx1GPM1qVZsUN6MWxI3QjJnOhjL
- u+B4dPaRCyvqmFMEQlPNtvC9iUGd1nS1SNRmxX21y6ApKBZteeBT7yKEFJrkF6Pi8hnopWSXR
- K/SA20cxfj0T+yNrUIBA==
+In-Reply-To: <20200102145552.1853992-14-arnd@arndb.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Mimecast-Spam-Score: 0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The ata_sas_scsi_ioctl() function implements a number of HDIO_* commands
-for SCSI devices, it is used by all libata drivers as well as a few
-drivers that support SAS attached SATA drives.
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The only command that is not safe for compat ioctls here is
-HDIO_GET_32BIT. Change the implementation to check for in_compat_syscall()
-in order to do both cases correctly, and change all callers to use it
-as both native and compat callback pointers, including the indirect
-callers through sas_ioctl and ata_scsi_ioctl.
+On Thu, Jan 02, 2020 at 03:55:31PM +0100, Arnd Bergmann wrote:
+> Each driver calling scsi_ioctl() gets an equivalent compat_ioctl()
+> handler that implements the same commands by calling scsi_compat_ioctl().
+>=20
+> The scsi_cmd_ioctl() and scsi_cmd_blk_ioctl() functions are compatible
+> at this point, so any driver that calls those can do so for both native
+> and compat mode, with the argument passed through compat_ptr().
+>=20
+> With this, we can remove the entries from fs/compat_ioctl.c.  The new
+> code is larger, but should be easier to maintain and keep updated with
+> newly added commands.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/block/virtio_blk.c |   3 +
+>  drivers/scsi/ch.c          |   9 ++-
+>  drivers/scsi/sd.c          |  50 ++++++--------
+>  drivers/scsi/sg.c          |  44 ++++++++-----
+>  drivers/scsi/sr.c          |  57 ++++++++++++++--
+>  drivers/scsi/st.c          |  51 ++++++++------
+>  fs/compat_ioctl.c          | 132 +------------------------------------
+>  7 files changed, 142 insertions(+), 204 deletions(-)
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ata/libata-scsi.c              | 9 +++++++++
- drivers/scsi/aic94xx/aic94xx_init.c    | 3 +++
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 3 +++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 +++
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 3 +++
- drivers/scsi/ipr.c                     | 3 +++
- drivers/scsi/isci/init.c               | 3 +++
- drivers/scsi/mvsas/mv_init.c           | 3 +++
- drivers/scsi/pm8001/pm8001_init.c      | 3 +++
- include/linux/libata.h                 | 6 ++++++
- 10 files changed, 39 insertions(+)
+virtio_blk.c changes:
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 58e09ffe8b9c..eb2eb599e602 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -17,6 +17,7 @@
-  *  - http://www.t13.org/
-  */
- 
-+#include <linux/compat.h>
- #include <linux/slab.h>
- #include <linux/kernel.h>
- #include <linux/blkdev.h>
-@@ -761,6 +762,10 @@ static int ata_ioc32(struct ata_port *ap)
- 	return 0;
- }
- 
-+/*
-+ * This handles both native and compat commands, so anything added
-+ * here must have a compatible argument, or check in_compat_syscall()
-+ */
- int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
- 		     unsigned int cmd, void __user *arg)
- {
-@@ -773,6 +778,10 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
- 		spin_lock_irqsave(ap->lock, flags);
- 		val = ata_ioc32(ap);
- 		spin_unlock_irqrestore(ap->lock, flags);
-+#ifdef CONFIG_COMPAT
-+		if (in_compat_syscall())
-+			return put_user(val, (compat_ulong_t __user *)arg);
-+#endif
- 		return put_user(val, (unsigned long __user *)arg);
- 
- 	case HDIO_SET_32BIT:
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index f5781e31f57c..d022407e5645 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -54,6 +54,9 @@ static struct scsi_host_template aic94xx_sht = {
- 	.eh_target_reset_handler	= sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.track_queue_depth	= 1,
- };
- 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 3af53cc42bd6..fa25766502a2 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1772,6 +1772,9 @@ static struct scsi_host_template sht_v1_hw = {
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.shost_attrs		= host_attrs_v1_hw,
- 	.host_reset             = hisi_sas_host_reset,
- };
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 61b1e2693b08..545eaff5f3ee 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3551,6 +3551,9 @@ static struct scsi_host_template sht_v2_hw = {
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.shost_attrs		= host_attrs_v2_hw,
- 	.host_reset		= hisi_sas_host_reset,
- };
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index bf5d5f138437..fa05e612d85a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3075,6 +3075,9 @@ static struct scsi_host_template sht_v3_hw = {
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.shost_attrs		= host_attrs_v3_hw,
- 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
- 	.host_reset             = hisi_sas_host_reset,
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 079c04bc448a..ae45cbe98ae2 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -6727,6 +6727,9 @@ static struct scsi_host_template driver_template = {
- 	.name = "IPR",
- 	.info = ipr_ioa_info,
- 	.ioctl = ipr_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl = ipr_ioctl,
-+#endif
- 	.queuecommand = ipr_queuecommand,
- 	.eh_abort_handler = ipr_eh_abort,
- 	.eh_device_reset_handler = ipr_eh_dev_reset,
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 1727d0c71b12..b48aac8dfcb8 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -168,6 +168,9 @@ static struct scsi_host_template isci_sht = {
- 	.eh_target_reset_handler        = sas_eh_target_reset_handler,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl			= sas_ioctl,
-+#endif
- 	.shost_attrs			= isci_host_attrs,
- 	.track_queue_depth		= 1,
- };
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index da719b0694dc..7af9173c4925 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -47,6 +47,9 @@ static struct scsi_host_template mvs_sht = {
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.shost_attrs		= mvst_host_attrs,
- 	.track_queue_depth	= 1,
- };
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ff618ad80ebd..3c6076e4c6d2 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -101,6 +101,9 @@ static struct scsi_host_template pm8001_sht = {
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl		= sas_ioctl,
-+#endif
- 	.shost_attrs		= pm8001_host_attrs,
- 	.track_queue_depth	= 1,
- };
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2dbde119721d..a36bdcb8d9e9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1109,6 +1109,11 @@ extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_op
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
- 			  void __user *arg);
-+#ifdef CONFIG_COMPAT
-+#define ATA_SCSI_COMPAT_IOCTL .compat_ioctl = ata_scsi_ioctl,
-+#else
-+#define ATA_SCSI_COMPAT_IOCTL /* empty */
-+#endif
- extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
- extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
- 			    unsigned int cmd, void __user *arg);
-@@ -1341,6 +1346,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
- 	.module			= THIS_MODULE,			\
- 	.name			= drv_name,			\
- 	.ioctl			= ata_scsi_ioctl,		\
-+	ATA_SCSI_COMPAT_IOCTL					\
- 	.queuecommand		= ata_scsi_queuecmd,		\
- 	.can_queue		= ATA_DEF_QUEUE,		\
- 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
--- 
-2.20.0
+Acked-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--d6Gm4EdcadzBjdND
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl4OG1AACgkQnKSrs4Gr
+c8gMMQf/cVfSKOJIWw9oQSb1Jtb5IIqXpqhGWNQXQPYbbsemSZJf8GuCcr81Y/O8
+thKinuXXPDyxp2YiInq3zMfIn72igNBLu6R7+vlLftbmMGpcrz6NNeZHGqCrYYpH
+tAbiYVKixufdkX3Z7zYKF17i1dNJNpfUojqhkjgV6v0/T/p6kaf1B7wzJa1Jxwol
+Et0imw7jvfyzjcKb285/9aX+zWpzupOPtjuBwZdqxW/UU6RtNq4zw0aqT3HtxKRH
+pU/1PuaHsZPWdag7TssEimmaRlgOkAlGr5zxjQXEeVV+Cx9rVJEr+Alnl/NB2qrY
+AOe6O0GvhUnX+3rYXUwaVHnsPPkEPw==
+=C/4U
+-----END PGP SIGNATURE-----
+
+--d6Gm4EdcadzBjdND--
 
