@@ -2,164 +2,271 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D768EC47409
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 14:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F8FC2D0C2
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 19:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF44D206DA
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 14:30:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HYBTazvZ"
+	by mail.kernel.org (Postfix) with ESMTP id 98DA9215A4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 19:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727862AbgACOaW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 09:30:22 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:20955 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727631AbgACOaV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 09:30:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1578061820;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NhK5nDqlvB+sIRSPKXBkymesRttMWOxw8giPyZmb1PQ=;
-        b=HYBTazvZ7ahCjYuQbrTz0t45JwLsIbnTyiTWHSuUIKxnt+0Xf4Jeu3qfKNo9Ta2KoVRpw4
-        8xASgbvP5Gh0npzOGg5TQKDHKy30W4bqG8J67r6cxjMMNYcmZzeMlN1UvhEh2ZBysEVM/G
-        7TfCNOAtHWeTB64Q8aMFYBhUQrwWC6I=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-298-FMDEIzQdMBiFS42WJCZe4A-1; Fri, 03 Jan 2020 09:30:17 -0500
-X-MC-Unique: FMDEIzQdMBiFS42WJCZe4A-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EF32B8024DD;
-        Fri,  3 Jan 2020 14:30:15 +0000 (UTC)
-Received: from [10.3.112.12] (ovpn-112-12.phx2.redhat.com [10.3.112.12])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id CD74A843DA;
-        Fri,  3 Jan 2020 14:30:14 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [RFC 1/9] lib/string: Add function to trim duplicate WS
-From:   Tony Asleson <tasleson@redhat.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20191223225558.19242-1-tasleson@redhat.com>
- <20191223225558.19242-2-tasleson@redhat.com>
- <20191223232824.GB31820@bombadil.infradead.org>
- <8392b726-fa55-baa4-6913-5ca0e4fa46a7@redhat.com>
-Organization: Red Hat
-Message-ID: <1e22cee9-3fda-a548-57e3-910c5a79d6ba@redhat.com>
-Date:   Fri, 3 Jan 2020 08:30:13 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1728537AbgACT0S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 14:26:18 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:43182 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728513AbgACT0S (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 14:26:18 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: krisman)
+        with ESMTPSA id CBFC828F6C5
+From:   Gabriel Krisman Bertazi <krisman@collabora.com>
+To:     Khazhismel Kumykov <khazhy@google.com>
+Cc:     lduncan@suse.com, Chris Leech <cleech@redhat.com>,
+        jejb@linux.ibm.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "'Khazhismel Kumykov' via open-iscsi" <open-iscsi@googlegroups.com>,
+        linux-scsi@vger.kernel.org, Bharath Ravi <rbharath@google.com>,
+        kernel@collabora.com, Mike Christie <mchristi@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Dave Clausen <dclausen@google.com>,
+        Nick Black <nlb@google.com>,
+        Vaibhav Nagarnaik <vnagarnaik@google.com>,
+        Anatol Pomazau <anatol@google.com>,
+        Tahsin Erdogan <tahsin@google.com>,
+        Frank Mayhar <fmayhar@google.com>, Junho Ryu <jayr@google.com>
+Subject: [PATCH v4] iscsi: Perform connection failure entirely in kernel space
+Organization: Collabora
+References: <20191226204746.2197233-1-krisman@collabora.com>
+        <CACGdZYJ3hasgRV4MKpizX3rSQ1Tq4R+wDREcYXFUgx720ac5sg@mail.gmail.com>
+        <85ftgx7mlr.fsf@collabora.com>
+        <CACGdZYJKF85SgOt0-yHiROsqhP0K+x+XAg7CRJv_0oKt60VtvA@mail.gmail.com>
+Date:   Fri, 03 Jan 2020 14:26:11 -0500
+In-Reply-To: <CACGdZYJKF85SgOt0-yHiROsqhP0K+x+XAg7CRJv_0oKt60VtvA@mail.gmail.com>
+        (Khazhismel Kumykov's message of "Thu, 2 Jan 2020 13:24:39 -0500")
+Message-ID: <85r20g2vfw.fsf_-_@collabora.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <8392b726-fa55-baa4-6913-5ca0e4fa46a7@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/2/20 4:52 PM, Tony Asleson wrote:
-> On 12/23/19 5:28 PM, Matthew Wilcox wrote:
->> On Mon, Dec 23, 2019 at 04:55:50PM -0600, Tony Asleson wrote:
->>> +/**
->>> + * Removes leading and trailing whitespace and removes duplicate
->>> + * adjacent whitespace in a string, modifies string in place.
->>> + * @s The %NUL-terminated string to have spaces removed
->>> + * Returns the new length
->>> + */
->>
->> This isn't good kernel-doc.  See Documentation/doc-guide/kernel-doc.rst
->> Compile with W=1 to get the format checked.
-> 
-> Indeed, I'll correct it.
-> 
->>> +size_t strim_dupe(char *s)
->>> +{
->>> +	size_t ret = 0;
->>> +	char *w = s;
->>> +	char *p;
->>> +
->>> +	/*
->>> +	 * This will remove all leading and duplicate adjacent, but leave
->>> +	 * 1 space at the end if one or more are present.
->>> +	 */
->>> +	for (p = s; *p != '\0'; ++p) {
->>> +		if (!isspace(*p) || (p != s && !isspace(*(p - 1)))) {
->>> +			*w = *p;
->>> +			++w;
->>> +			ret += 1;
->>> +		}
->>> +	}
->>
->> I'd be tempted to do ...
->>
->> 	size_t ret = 0;
->> 	char *w = s;
->> 	bool last_space = false;
->>
->> 	do {
->> 		bool this_space = isspace(*s);
->>
->> 		if (!this_space || !last_space) {
->> 			*w++ = *s;
->> 			ret++;
->> 		}
->> 		s++;
->> 		last_space = this_space;
->> 	} while (s[-1] != '\0');
-> 
-> That leaves a starting and trailing WS, how about something like this?
-> 
-> size_t strim_dupe(char *s)
-> {
-> 	size_t ret = 0;
-> 	char *w = s;
-> 	bool last_space = false;
-> 
-> 	do {
-> 		bool this_space = isspace(*s);
-> 		if (!this_space || (!last_space && ret)) {Mollie Fitzgerald
-> 			*w++ = *s;
-> 			ret++;
-> 		}
-> 		s++;
-> 		last_space = this_space;
-> 	} while (s[-1] != '\0');
-> 
-> 	if (ret > 1 && isspace(w[-2])) {
-> 		w[-2] = '\0';
-> 		ret--;
-> 	}
-> 
-> 	ret--;
-> 	return ret;
-> }
+Khazhismel Kumykov <khazhy@google.com> writes:
 
-This function was added so I could strip out extra spaces in the vpd
-0x83 string representation, to shorten them before they get added to the
-structured syslog message.  I'm starting to think this is a bad idea as
-anyone that might want to write some code to use the kernel sysfs entry
-for a device and search for it in the syslog would have to perturb the
-id string the same way.
+>> >> +       if (!list_empty(&conn->conn_list_err))
+>> > Does this check need to be under connlock?
+>>
+>> My understanding is that it is not necessary, since it is serialized
+>> against the conn removal itself, through the rx_mutex, it seemed safe to
+>> do the verification lockless.
+>>
+>> It can only race with the insertion, in which case, it will be safely
+>> removed from the dispatch list here, under rx_mutex, and the worker will
+>> detect and skipped it.
+>
+> My worry is the splice, which is under only connlock, not rx_mutex, which
+> might lead to UB if we're checking empty while modifying the list_head ?
 
-I think this change should just be removed from the patch series and
-leave the IDs as they are.
+Hi,
 
-If we really wanted a shorter ID, a better approach would be use a hash
-of the ID string, but that introduces another level of complexity that
-isn't helpful to end users.
+Please consider the v4 below with the lock added.
 
--Tony
+-- >8 --
+From: Bharath Ravi <rbharath@google.com>
+
+Connection failure processing depends on a daemon being present to (at
+least) stop the connection and start recovery.  This is a problem on a
+multipath scenario, where if the daemon failed for whatever reason, the
+SCSI path is never marked as down, multipath won't perform the
+failover and IO to the device will be forever waiting for that
+connection to come back.
+
+This patch performs the connection failure entirely inside the kernel.
+This way, the failover can happen and pending IO can continue even if
+the daemon is dead. Once the daemon comes alive again, it can execute
+recovery procedures if applicable.
+
+Changes since v3:
+  - Protect list_empty with connlock on session destroy
+
+Changes since v2:
+  - Don't hold rx_mutex for too long at once
+
+Changes since v1:
+  - Remove module parameter.
+  - Always do kernel-side stop work.
+  - Block recovery timeout handler if system is dying.
+  - send a CONN_TERM stop if the system is dying.
+
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Lee Duncan <LDuncan@suse.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Co-developed-by: Dave Clausen <dclausen@google.com>
+Signed-off-by: Dave Clausen <dclausen@google.com>
+Co-developed-by: Nick Black <nlb@google.com>
+Signed-off-by: Nick Black <nlb@google.com>
+Co-developed-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Signed-off-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Co-developed-by: Anatol Pomazau <anatol@google.com>
+Signed-off-by: Anatol Pomazau <anatol@google.com>
+Co-developed-by: Tahsin Erdogan <tahsin@google.com>
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+Co-developed-by: Frank Mayhar <fmayhar@google.com>
+Signed-off-by: Frank Mayhar <fmayhar@google.com>
+Co-developed-by: Junho Ryu <jayr@google.com>
+Signed-off-by: Junho Ryu <jayr@google.com>
+Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Bharath Ravi <rbharath@google.com>
+Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 68 +++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 2 files changed, 69 insertions(+)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 271afea654e2..ba6cfaf71aef 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -86,6 +86,12 @@ struct iscsi_internal {
+ 	struct transport_container session_cont;
+ };
+ 
++/* Worker to perform connection failure on unresponsive connections
++ * completely in kernel space.
++ */
++static void stop_conn_work_fn(struct work_struct *work);
++static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
++
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+ static struct workqueue_struct *iscsi_eh_timer_workq;
+ 
+@@ -1611,6 +1617,7 @@ static DEFINE_MUTEX(rx_queue_mutex);
+ static LIST_HEAD(sesslist);
+ static DEFINE_SPINLOCK(sesslock);
+ static LIST_HEAD(connlist);
++static LIST_HEAD(connlist_err);
+ static DEFINE_SPINLOCK(connlock);
+ 
+ static uint32_t iscsi_conn_get_sid(struct iscsi_cls_conn *conn)
+@@ -2247,6 +2254,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
+ 
+ 	mutex_init(&conn->ep_mutex);
+ 	INIT_LIST_HEAD(&conn->conn_list);
++	INIT_LIST_HEAD(&conn->conn_list_err);
+ 	conn->transport = transport;
+ 	conn->cid = cid;
+ 
+@@ -2293,6 +2301,7 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ 
+ 	spin_lock_irqsave(&connlock, flags);
+ 	list_del(&conn->conn_list);
++	list_del(&conn->conn_list_err);
+ 	spin_unlock_irqrestore(&connlock, flags);
+ 
+ 	transport_unregister_device(&conn->dev);
+@@ -2407,6 +2416,51 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
+ 
++static void stop_conn_work_fn(struct work_struct *work)
++{
++	struct iscsi_cls_conn *conn, *tmp;
++	unsigned long flags;
++	LIST_HEAD(recovery_list);
++
++	spin_lock_irqsave(&connlock, flags);
++	if (list_empty(&connlist_err)) {
++		spin_unlock_irqrestore(&connlock, flags);
++		return;
++	}
++	list_splice_init(&connlist_err, &recovery_list);
++	spin_unlock_irqrestore(&connlock, flags);
++
++	list_for_each_entry_safe(conn, tmp, &recovery_list, conn_list_err) {
++		uint32_t sid = iscsi_conn_get_sid(conn);
++		struct iscsi_cls_session *session;
++
++		mutex_lock(&rx_queue_mutex);
++
++		session = iscsi_session_lookup(sid);
++		if (session) {
++			if (system_state != SYSTEM_RUNNING) {
++				session->recovery_tmo = 0;
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_TERM);
++			} else {
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_RECOVER);
++			}
++		}
++
++		list_del_init(&conn->conn_list_err);
++
++		mutex_unlock(&rx_queue_mutex);
++
++		/* we don't want to hold rx_queue_mutex for too long,
++		 * for instance if many conns failed at the same time,
++		 * since this stall other iscsi maintenance operations.
++		 * Give other users a chance to proceed.
++		 */
++		cond_resched();
++	}
++}
++
+ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ {
+ 	struct nlmsghdr	*nlh;
+@@ -2414,6 +2468,12 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+ 	int len = nlmsg_total_size(sizeof(*ev));
++	unsigned long flags;
++
++	spin_lock_irqsave(&connlock, flags);
++	list_add(&conn->conn_list_err, &connlist_err);
++	spin_unlock_irqrestore(&connlock, flags);
++	queue_work(system_unbound_wq, &stop_conn_work);
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -2743,11 +2803,19 @@ static int
+ iscsi_if_destroy_conn(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ {
+ 	struct iscsi_cls_conn *conn;
++	unsigned long flags;
+ 
+ 	conn = iscsi_conn_lookup(ev->u.d_conn.sid, ev->u.d_conn.cid);
+ 	if (!conn)
+ 		return -EINVAL;
+ 
++	spin_lock_irqsave(&connlock, flags);
++	if (!list_empty(&conn->conn_list_err)) {
++		spin_unlock_irqrestore(&connlock, flags);
++		return -EAGAIN;
++	}
++	spin_unlock_irqrestore(&connlock, flags);
++
+ 	ISCSI_DBG_TRANS_CONN(conn, "Destroying transport conn\n");
+ 	if (transport->destroy_conn)
+ 		transport->destroy_conn(conn);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 325ae731d9ad..2129dc9e2dec 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -190,6 +190,7 @@ extern void iscsi_ping_comp_event(uint32_t host_no,
+ 
+ struct iscsi_cls_conn {
+ 	struct list_head conn_list;	/* item in connlist */
++	struct list_head conn_list_err;	/* item in connlist_err */
+ 	void *dd_data;			/* LLD private data */
+ 	struct iscsi_transport *transport;
+ 	uint32_t cid;			/* connection id */
+-- 
+2.24.1
 
