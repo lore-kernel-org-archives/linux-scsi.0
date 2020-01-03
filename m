@@ -2,92 +2,164 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3187FC2D0C2
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D768EC47409
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 14:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F06E321835
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:35:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF44D206DA
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 14:30:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Fox42ic3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HYBTazvZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727649AbgACLfd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 06:35:33 -0500
-Received: from mail-pj1-f53.google.com ([209.85.216.53]:37155 "EHLO
-        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727646AbgACLfd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 06:35:33 -0500
-Received: by mail-pj1-f53.google.com with SMTP id m13so4633870pjb.2
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 03:35:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DA8phdQw+aUTdgyo5OReorPC3i37Z5tgP6xQbQ3gT60=;
-        b=Fox42ic3dlEWjRTCsnyu5IrD/AHlXtd2WyridUz9mWFmt8HFCGSJU8rP0TC/h1869L
-         GfBy2JAH2d/G3I3lLuGZcuCvjFeXK0ltEND6HrUNzyGysa4NjvDYbT+IG1d4o3Q2n51E
-         H/X/4XCqTzs82mKjkVXmu6zJdZw5ir8tIZYCM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=DA8phdQw+aUTdgyo5OReorPC3i37Z5tgP6xQbQ3gT60=;
-        b=XZjj0mFc8/LtoTqg+6nOHgBMoyu3Ryn2AzSJzKTAJ+83DuJ94gKKe0psQ511Xr2CLN
-         O+Qpj0kqBW7OJsqgPdth3K3qGrPM1biXjvyZ9on4BWqNiEXwPxQOTb+uU8tNn+NeYoAv
-         1ThTe/UKDEXK/z6sPSAnpavKj4JsSG7oXaljEkdfIJT9pysUU9PHXNLnUQxsXGW5Yq9T
-         IpiFalM8B7zjGq4RP/JYLa/5Zp6ijmkhkN+sq95e8K5LsMZroSX6fX/dujTNRK3FLm5K
-         P7IgCyxOHJGAJA7BHysc8PfI/X0FsH8fm5r9qBTpiIqOqrxz9a8BOqPDF0ruW3Fc4Das
-         CBjA==
-X-Gm-Message-State: APjAAAVxx+wpfzxAyEyp0Z0F/LwHM3NF1tfNZEBIx7yfmOabg4hQGxXP
-        59R8xa5B6gHnBJHsxS/zD+pixaKLn1amBXYYw6TfvyrZaeC/ZMyQEKJB44ReTpYab7RvWeirydj
-        elj2pnRQPlEc6bwk+giG3tq4gwTPcO9PrbKcWLKOrIkcdowPr5Fqp+AQ9CMeVc+x2fEtg4g63SR
-        5YyBNH1Q==
-X-Google-Smtp-Source: APXvYqzCztgRibcRk/+/YhRM0+V2q6o+pZHdDqAJJiH2NPSzZ7UGyeoKu7yeYKQJtMIYFd/s85hYAw==
-X-Received: by 2002:a17:902:4a:: with SMTP id 68mr43682583pla.245.1578051332600;
-        Fri, 03 Jan 2020 03:35:32 -0800 (PST)
-Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id h128sm70302144pfe.172.2020.01.03.03.35.30
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 03 Jan 2020 03:35:32 -0800 (PST)
-From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        kiran-kumar.kasturi@broadcom.com,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>
-Subject: [PATCH 11/11] megaraid_sas: Update driver version to 07.713.01.00-rc1
-Date:   Fri,  3 Jan 2020 17:02:35 +0530
-Message-Id: <1578051155-14716-12-git-send-email-anand.lodnoor@broadcom.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
-References: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
+        id S1727862AbgACOaW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 09:30:22 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:20955 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727631AbgACOaV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 09:30:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1578061820;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NhK5nDqlvB+sIRSPKXBkymesRttMWOxw8giPyZmb1PQ=;
+        b=HYBTazvZ7ahCjYuQbrTz0t45JwLsIbnTyiTWHSuUIKxnt+0Xf4Jeu3qfKNo9Ta2KoVRpw4
+        8xASgbvP5Gh0npzOGg5TQKDHKy30W4bqG8J67r6cxjMMNYcmZzeMlN1UvhEh2ZBysEVM/G
+        7TfCNOAtHWeTB64Q8aMFYBhUQrwWC6I=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-298-FMDEIzQdMBiFS42WJCZe4A-1; Fri, 03 Jan 2020 09:30:17 -0500
+X-MC-Unique: FMDEIzQdMBiFS42WJCZe4A-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EF32B8024DD;
+        Fri,  3 Jan 2020 14:30:15 +0000 (UTC)
+Received: from [10.3.112.12] (ovpn-112-12.phx2.redhat.com [10.3.112.12])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CD74A843DA;
+        Fri,  3 Jan 2020 14:30:14 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [RFC 1/9] lib/string: Add function to trim duplicate WS
+From:   Tony Asleson <tasleson@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20191223225558.19242-1-tasleson@redhat.com>
+ <20191223225558.19242-2-tasleson@redhat.com>
+ <20191223232824.GB31820@bombadil.infradead.org>
+ <8392b726-fa55-baa4-6913-5ca0e4fa46a7@redhat.com>
+Organization: Red Hat
+Message-ID: <1e22cee9-3fda-a548-57e3-910c5a79d6ba@redhat.com>
+Date:   Fri, 3 Jan 2020 08:30:13 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
+MIME-Version: 1.0
+In-Reply-To: <8392b726-fa55-baa4-6913-5ca0e4fa46a7@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Anand Lodnoor <anand.lodnoor@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 1/2/20 4:52 PM, Tony Asleson wrote:
+> On 12/23/19 5:28 PM, Matthew Wilcox wrote:
+>> On Mon, Dec 23, 2019 at 04:55:50PM -0600, Tony Asleson wrote:
+>>> +/**
+>>> + * Removes leading and trailing whitespace and removes duplicate
+>>> + * adjacent whitespace in a string, modifies string in place.
+>>> + * @s The %NUL-terminated string to have spaces removed
+>>> + * Returns the new length
+>>> + */
+>>
+>> This isn't good kernel-doc.  See Documentation/doc-guide/kernel-doc.rst
+>> Compile with W=1 to get the format checked.
+> 
+> Indeed, I'll correct it.
+> 
+>>> +size_t strim_dupe(char *s)
+>>> +{
+>>> +	size_t ret = 0;
+>>> +	char *w = s;
+>>> +	char *p;
+>>> +
+>>> +	/*
+>>> +	 * This will remove all leading and duplicate adjacent, but leave
+>>> +	 * 1 space at the end if one or more are present.
+>>> +	 */
+>>> +	for (p = s; *p != '\0'; ++p) {
+>>> +		if (!isspace(*p) || (p != s && !isspace(*(p - 1)))) {
+>>> +			*w = *p;
+>>> +			++w;
+>>> +			ret += 1;
+>>> +		}
+>>> +	}
+>>
+>> I'd be tempted to do ...
+>>
+>> 	size_t ret = 0;
+>> 	char *w = s;
+>> 	bool last_space = false;
+>>
+>> 	do {
+>> 		bool this_space = isspace(*s);
+>>
+>> 		if (!this_space || !last_space) {
+>> 			*w++ = *s;
+>> 			ret++;
+>> 		}
+>> 		s++;
+>> 		last_space = this_space;
+>> 	} while (s[-1] != '\0');
+> 
+> That leaves a starting and trailing WS, how about something like this?
+> 
+> size_t strim_dupe(char *s)
+> {
+> 	size_t ret = 0;
+> 	char *w = s;
+> 	bool last_space = false;
+> 
+> 	do {
+> 		bool this_space = isspace(*s);
+> 		if (!this_space || (!last_space && ret)) {Mollie Fitzgerald
+> 			*w++ = *s;
+> 			ret++;
+> 		}
+> 		s++;
+> 		last_space = this_space;
+> 	} while (s[-1] != '\0');
+> 
+> 	if (ret > 1 && isspace(w[-2])) {
+> 		w[-2] = '\0';
+> 		ret--;
+> 	}
+> 
+> 	ret--;
+> 	return ret;
+> }
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 25afa81..83d8c4c 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -21,8 +21,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"07.710.50.00-rc1"
--#define MEGASAS_RELDATE				"June 28, 2019"
-+#define MEGASAS_VERSION				"07.713.01.00-rc1"
-+#define MEGASAS_RELDATE				"Dec 27, 2019"
- 
- #define MEGASAS_MSIX_NAME_LEN			32
- 
--- 
-1.8.3.1
+This function was added so I could strip out extra spaces in the vpd
+0x83 string representation, to shorten them before they get added to the
+structured syslog message.  I'm starting to think this is a bad idea as
+anyone that might want to write some code to use the kernel sysfs entry
+for a device and search for it in the syslog would have to perturb the
+id string the same way.
+
+I think this change should just be removed from the patch series and
+leave the IDs as they are.
+
+If we really wanted a shorter ID, a better approach would be use a hash
+of the ID string, but that introduces another level of complexity that
+isn't helpful to end users.
+
+-Tony
 
