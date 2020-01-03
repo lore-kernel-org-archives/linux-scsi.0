@@ -2,105 +2,98 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2621C00523
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 08:57:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF433C2D0C2
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:33:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DCB021734
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 08:57:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B35CD222C4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:33:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RdEtH2qs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727442AbgACI5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 03:57:18 -0500
-Received: from mout.kundenserver.de ([212.227.126.187]:43873 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726050AbgACI5R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 03:57:17 -0500
-Received: from mail-qv1-f49.google.com ([209.85.219.49]) by
- mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
- id 1MXXdn-1jE6oX3zhv-00Z0Or; Fri, 03 Jan 2020 09:57:15 +0100
-Received: by mail-qv1-f49.google.com with SMTP id n8so15948781qvg.11;
-        Fri, 03 Jan 2020 00:57:14 -0800 (PST)
-X-Gm-Message-State: APjAAAVzLmqwU93oflz90OayHaRkEtlgScMlOuLS/3OTCZ8ZWWg0eGOl
-        mflxRaKgKsis3TorOKBNsDywfOcYAuSaQxGCies=
-X-Google-Smtp-Source: APXvYqzTMjLfB/djZfKHN6GJc8U6SPp+bLcFseejCOHPAhzRIWhN2S9BjSwrezU2LR8WsFgGtj/vSg4385pE/8QPXy8=
-X-Received: by 2002:a0c:e7c7:: with SMTP id c7mr67496854qvo.222.1578041833501;
- Fri, 03 Jan 2020 00:57:13 -0800 (PST)
+        id S1727462AbgACLdM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 06:33:12 -0500
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:37044 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727453AbgACLdM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 06:33:12 -0500
+Received: by mail-pl1-f171.google.com with SMTP id c23so18972974plz.4
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 03:33:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=VPlqZmArpqno7ehvVSjGIJjaqWG0B+hNfoMd54wzi7w=;
+        b=RdEtH2qsXKTnaWX1+xCuzo81WSOri3Ovc2gYHAGqdl2iz68P4vc7Lvu3/TKInooXlU
+         u9/u0wp7Pjhaff6toHOU+g2sHLdVVEouHwYaS391Y6XSqwbBmFIunfJOM6WLFRW/L4lw
+         ufCes8hdxrekG9I/iKVhfoGUtHQ7AoTkYyLwM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=VPlqZmArpqno7ehvVSjGIJjaqWG0B+hNfoMd54wzi7w=;
+        b=fZTk6Wgh3hT8+I05LrhJyDHmBNpjTPeW3zgtud50RhToy0in5cDS3fmpgszlvNq1Eg
+         60gRHwCviiffnaM59OdcLJlHkRKblQlUFI7PPCSNUKXPi0PNZfPO7XgfRFg7UvpZqc8Z
+         jvnj5vnHpakVr6QexgoZHUO/H7ikpZA/ZfABkCQZ6gr+AxN803fo+nnJUgPgY/AO/85f
+         R84Kft2NqW0hNCYtG/PcNi8ccoudPZfJ+l91kUuggkAs0dPc6/W18q/BRLpdN2PovWbL
+         R7LXFmYLtZHAzg/CCAJQQ7duCfwpCp1AcX+lCnrSsIFyyQL6Oq9/h4RKvSwzAM6JyyF8
+         tPPA==
+X-Gm-Message-State: APjAAAXS97H6Wi2uF9BWDicm+Kf4b+tY9vR4RRB7Xc6BIovVLn4rjX6t
+        VXLxXhIBqPr6AR9SRgB7EZLYc9xrNS8ntCH+HH/uJFUtMycFsGN2EJYgMpamKLiZigDycpgHT2W
+        +q8vNwTMuSf4z/eA+XaH1dpbYiZ+ZmZteUaxH7Jv13ra+/WYIjXc3hyC7DnNnPI693oyaTkTgS0
+        pC4cwdIQ==
+X-Google-Smtp-Source: APXvYqxGR/lErgkcOWvuFC87ydD9Y1GzAzA61xvZAiRypSAqzj9wVXqJqX3IXEZCOpi29wViToAINQ==
+X-Received: by 2002:a17:90a:c389:: with SMTP id h9mr27661930pjt.128.1578051191202;
+        Fri, 03 Jan 2020 03:33:11 -0800 (PST)
+Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id h128sm70302144pfe.172.2020.01.03.03.33.08
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 03 Jan 2020 03:33:10 -0800 (PST)
+From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        kiran-kumar.kasturi@broadcom.com,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>
+Subject: [PATCH 00/11] megaraid_sas: driver updates to 07.713.01.00-rc1
+Date:   Fri,  3 Jan 2020 17:02:24 +0530
+Message-Id: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-References: <20200102145552.1853992-1-arnd@arndb.de> <dc17d939c813b004e0a50af2813a1eef1fbf9574.camel@codethink.co.uk>
-In-Reply-To: <dc17d939c813b004e0a50af2813a1eef1fbf9574.camel@codethink.co.uk>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 3 Jan 2020 09:56:57 +0100
-X-Gmail-Original-Message-ID: <CAK8P3a1tTCk_qYQ+iLp_L50biemmz+vh8kHYHL7hRPgirhxxLA@mail.gmail.com>
-Message-ID: <CAK8P3a1tTCk_qYQ+iLp_L50biemmz+vh8kHYHL7hRPgirhxxLA@mail.gmail.com>
-Subject: Re: [GIT PULL v3 00/27] block, scsi: final compat_ioctl cleanup
-To:     Ben Hutchings <ben.hutchings@codethink.co.uk>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:I1cvh4okryzhKcNilmC8/jvbYZfVuC7Gu3zL5E1dw1nhWS1IsPm
- G5Ds416TnXhCHX4N3OqQef6+9rsjiCiGuKfWmAtK/kFOnOyvcSN/CM27gw3dr311C5NSxAG
- ZK+7kxKBQVfr2hmw+eOxuNVU4n+uzNKY6ER9uc6wUCq/po24V2cfsgPkO6+Glgb5QjnctA4
- 71SZQChXFWIiX0RFKbYmg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:lmKs5T3XinI=:vpspqsdsexs7fkhPmpGBPe
- +oi0veEcyaz8JCYiR15ghmGkLyeZ6HJHk179W7e5mfPsKuxTRJXeQzjsCfg072D68yi9izXvO
- WsL1ZfDUZEtWNc0cq7jGaKe8rsGuFPzoT2kQ06jrb+pT4/i4CCNb1A7MK6VY/InoR/D7jGcag
- jp8ZCPVPU9vA0SryIbqhkPKjkGdJ0FZcDQCNJNf2cvEt065jp91OY5vYQ2fcZZ/otbszo31t6
- HCXDmRfd6/ZBQYpbQ0qpv5P9oL0TIGbj1pEQFPc9bku1ODtXZAaqKrhi/TkgXpi5DBv7km1Iu
- uvOQDQcbSm2CZNtJ7cPaybjnc0JADX/zTOU3JvsJvzke28q6A8bwYN1H0RcrEvaLS573+42uM
- 3GfIfenhzmZkbuxNUiqZbJ/UCe/9/+sCqXsZBZVu3tzP4KOOEz7AJLiRlhCgjVSPLYrcXbLt4
- bbp0QaNhxPMbX0fMM2UwBcsHbEXec9lf56bTcwVT9B+IhMOAndTZA7/wWYFBpPbUWJAY06ofO
- dIizah+LcSpUN3KoZVstllojgWETUEBuOkpq+zCR5JyTTxDjw/D197lBWdTCB5CvmAuvjkZKM
- 1EJ8zSPWzopPoQt4xncQLEm+dwXoK5Is8WMisZ2uXX3xAeYpHn7ORJPni9rGPQlUWq6wj+Wwe
- IjqE0m7ovG8fbl7sGAVbfy7KsiHjJHTHs/p5nrciWUGlITYfILc6dg5xH0psdXNS7jJH/j3hr
- nu/MleWWupSZPSFaS1USBZOKGgUa0uEt8rwzess6PcjplX8ebeRSK+Elfd9tGEtI4bfpSEbrJ
- +P+lnbheWzNL8jYl5oMMz7zZr7eKm9RV9eysM8hYhnU/kPr28qeHCTelYTPL3y1RD6vj7Q6F2
- bIu5/3/E/zoju4Tpu+3A==
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 3, 2020 at 1:22 AM Ben Hutchings
-<ben.hutchings@codethink.co.uk> wrote:
->
-> On Thu, 2020-01-02 at 15:55 +0100, Arnd Bergmann wrote:
-> [...]
-> > Changes since v2:
-> > - Rebase to v5.5-rc4, which contains the earlier bugfixes
-> > - Fix sr_block_compat_ioctl() error handling bug found by
-> >   Ben Hutchings
-> [...]
->
-> Unfortunately that fix was squashed into "compat_ioctl: move
-> sys_compat_ioctl() to ioctl.c" whereas it belongs in "compat_ioctl:
-> scsi: move ioctl handling into drivers".
+This patchset contains few enhancements and fixes in megaraid_sas driver.
 
-Fixed now.
+Anand Lodnoor (11):
+  megaraid_sas: Add transition_to_ready retry logic in resume path
+  megaraid_sas: Set no_write_same only for Virtual Disk
+  megaraid_sas: Update queue_depth of SAS and NVMe devices
+  megaraid_sas: Don’t kill already dead adapter
+  megaraid_sas: Do not kill HBA if JBOD Seqence map or RAID map is
+    disabled
+  megaraid_sas: Do not set HBA Operational if FW is not in operational
+    state
+  megaraid_sas: Re-Define enum DCMD_RETURN_STATUS
+  megaraid_sas: Do not initiate OCR if controller is not in ready state
+  megaraid_sas: Return pended IOCTLs after 3 retries
+  megaraid_sas: Use Block layer API to check SCSI device in-flight IO
+    requests
+  megaraid_sas: Update driver version to 07.713.01.00-rc1
 
-> If you decide to rebase again, you can add my Reviewed-by to all
-> patches.
+ drivers/scsi/megaraid/megaraid_sas.h        |  17 ++--
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  99 ++++++++++++++------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 134 +++++++++++++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  18 +++-
+ 4 files changed, 201 insertions(+), 67 deletions(-)
 
-Done, and pushed out to the same tag as before
+-- 
+1.8.3.1
 
-https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git/
-block-ioctl-cleanup-5.6
-
-Thank you again for the careful review!
-
-Martin, please pull the URL above to get the latest version, the top commit
-is 8ce156deca718 ("Documentation: document ioctl interfaces better").
-
-       Arnd
