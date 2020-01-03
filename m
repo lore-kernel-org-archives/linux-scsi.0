@@ -2,90 +2,183 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B983C3276F
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 03:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 187FAC32767
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 05:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D18C121D56
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 03:23:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8814222C3
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 05:29:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="G/1g3w0U"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oxebzTLg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726481AbgACDXv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 22:23:51 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:45340 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726136AbgACDXv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 22:23:51 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0033IrIq098927;
-        Fri, 3 Jan 2020 03:23:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=rKhj7FKgCQwsbYwebX++RNGlDbBj7B4ZPz04H287Xnw=;
- b=G/1g3w0UFjfwwy4P396bcrxuW0o/J1Q44poab6/YnfKdD9Yz2HjfZKNL21eskjqbqX82
- q5nCx9+9rpurvIEZf1puJnm6048gfOXkQL2tSGA+V1Oz+3b2oRImk41JuSz+O2Pjoa72
- ObVpLw3ngFkT2snsuEs6Rj3VSeK5/0SZh5SsYStkwLGfkx8vpd4Q1AKl+NIuAgbAEEH4
- XeGIr/XKqqtNntsaj9cOMawOGrM7fyotQTLqaHRGnS2dRHVfcczJk+mQHyI8nITpmJ3X
- +t5Lq5fgnaLHQ/DPVewlNjQfFBPiGpFRhlIMOUTihLes5Nmdoi/IeZhlNg524DaeSNTE uQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2x5ypqtbe2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Jan 2020 03:23:48 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0033NFgm041970;
-        Fri, 3 Jan 2020 03:23:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2x8gjbc1yn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Jan 2020 03:23:47 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0033NkCm000877;
-        Fri, 3 Jan 2020 03:23:47 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 02 Jan 2020 19:23:45 -0800
-To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        suganath-prabu.subramani@broadcom.com, sathya.prakash@broadcom.com
-Subject: Re: [PATCH v1 00/10] mpt3sas: Enhancements of phase14
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191226111333.26131-1-sreekanth.reddy@broadcom.com>
-Date:   Thu, 02 Jan 2020 22:23:43 -0500
-In-Reply-To: <20191226111333.26131-1-sreekanth.reddy@broadcom.com> (Sreekanth
-        Reddy's message of "Thu, 26 Dec 2019 06:13:23 -0500")
-Message-ID: <yq1o8vl4400.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1725928AbgACF3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 00:29:02 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:22126 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725972AbgACF3C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 00:29:02 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1578029341; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=QGQ3D1GyNhd0LAoBVLxbTbXL6/9pOn4Pwzlj2/BukcY=;
+ b=oxebzTLgZP9G6nl8Dx2hE0b3ch/Lh5ga69ChYyRMvNIPEl17ALMdC5cvWgFwqGhuO8F2sFTV
+ VrW23NQxQW2sc0lx64efwnXq8lhslIKN8C7IuM3sOCjVWkBk9Q7rlu9R1BOveozZllvqBE1P
+ 7/ZExnRqa5+lTZmYvV+0TAecRHY=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e0ed11b.7fbab6fd77a0-smtp-out-n01;
+ Fri, 03 Jan 2020 05:28:59 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id C551EC447A5; Fri,  3 Jan 2020 05:28:59 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7B4A2C433CB;
+        Fri,  3 Jan 2020 05:28:58 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=795
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001030031
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=855 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001030030
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 03 Jan 2020 13:28:58 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        andy.teng@mediatek.com, jejb@linux.ibm.com,
+        chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        asutoshd@codeaurora.org, avri.altman@wdc.com,
+        linux-mediatek@lists.infradead.org, peter.wang@mediatek.com,
+        linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org,
+        alim.akhtar@samsung.com, beanhuo@micron.com,
+        pedrom.sousa@synopsys.com, bvanassche@acm.org,
+        linux-arm-kernel@lists.infradead.org, matthias.bgg@gmail.com,
+        ron.hsu@mediatek.com, cc.chou@mediatek.com
+Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power mode
+ during initialization only
+In-Reply-To: <4888afd46a9065b7f298a5de039426c9@codeaurora.org>
+References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
+ <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
+ <fd129b859c013852bd80f60a36425757@codeaurora.org>
+ <1577754469.13164.5.camel@mtkswgap22>
+ <836772092daffd8283a97d633e59fc34@codeaurora.org>
+ <1577766179.13164.24.camel@mtkswgap22>
+ <1577778290.13164.45.camel@mtkswgap22>
+ <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
+ <1577947124.13164.75.camel@mtkswgap22>
+ <4888afd46a9065b7f298a5de039426c9@codeaurora.org>
+Message-ID: <e13011fd858cf3ec0258c4b7ac914973@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-01-03 09:51, Can Guo wrote:
+> On 2020-01-02 14:38, Stanley Chu wrote:
+>> Hi Can,
+>> 
+>> On Tue, 2019-12-31 at 16:35 +0800, Can Guo wrote:
+>> 
+>>> Hi Stanley,
+>>> 
+>>> I missed this mail before I hit send. In current code, as per my
+>>> understanding,
+>>> UFS device's power state should be Active after ufshcd_link_startup()
+>>> returns.
+>>> If I am wrong, please feel free to correct me.
+>>> 
+>> 
+>> Yes, this assumption of ufshcd_probe_hba() is true so I will drop this
+>> patch.
+>> Thanks for remind.
+>> 
+>>> Due to you are almost trying to revert commit 7caf489b99a42a, I am 
+>>> just
+>>> wondering
+>>> if you encounter failure/error caused by it.
+>> 
+>> Yes, we actually have some doubts from the commit message of "scsi: 
+>> ufs:
+>> issue link startup 2 times if device isn't active"
+>> 
+>> If we configured system suspend as device=PowerDown/Link=LinkDown 
+>> mode,
+>> during resume, the 1st link startup will be successful, and after that
+>> device could be accessed normally so it shall be already in Active 
+>> power
+>> mode. We did not find devices which need twice linkup for normal work.
+>> 
+>> And because the 1st linkup is OK, the forced 2nd linkup by commit 
+>> "scsi:
+>> ufs: issue link startup 2 times if device isn't active" leads to link
+>> lost and finally the 3rd linkup is made again by retry mechanism in
+>> ufshcd_link_startup() and be successful. So a linkup performance issue
+>> is introduced here: We actually need one-time linkup only but finally
+>> got 3 linkup operations.
+>> 
+>> According to the UFS spec, all reset types (including POR and Host
+>> UniPro Warm Reset which both may happen in above configurations) other
+>> than LU reset, UFS device power mode shall return to Sleep mode or
+>> Active mode depending on bInitPowerMode, by default, it's Active mode.
+>> 
+>> So we are curious that why enforcing twice linkup is necessary here?
+>> Could you kindly help us clarify this?
+>> 
+>> If anything wrong in above description, please feel free to correct 
+>> me.
+>> 
+> 
+> Hi Stanley,
+> 
+> Above description is correct. The reason why the UFS device becomes
+> Active after the 1st link startup in your experiment is due to you
+> set spm_lvl to 5, during system suspend, UFS device is powered down.
+> When resume kicks start, the UFS device is power cycled once.
+> 
+> Moreover, if you set rpm_lvl to 5, during runtime suspend, if bkops is
+> enabled, the UFS device will not be powered off, meaning when runtime
+> resume kicks start, the UFS device is not power cycled, in this case,
+> we need 3 times of link startup.
+> 
+> Does above explain?
+> 
+> Thanks,
+> 
+> Can Guo.
+> 
 
-Sreekanth,
+Hi Stanley,
 
-> Below are the main features are added in this patch set.
+Sorry, typo before. I meant if set rpm_lvl/spm_lvl to 5, during suspend,
+if is_lu_power_on_wp is set, the UFS device will not be fully powered 
+off
+(only VCC is down), meaning when resume kicks start, the UFS device is 
+not
+power cycled, in this case, we need 3 times of link startup.
 
-Applied to 5.6/scsi-queue, thanks!
+Regards,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Can Guo.
+
+>>> 
+>>> Happy new year to you too!
+>>> 
+>>> Thanks,
+>>> 
+>>> Can Guo
+>> 
+>> Thanks,
+>> 
+>> Stanley
+>> 
+>>> 
+>>> _______________________________________________
+>>> Linux-mediatek mailing list
+>>> Linux-mediatek@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/linux-mediatek
