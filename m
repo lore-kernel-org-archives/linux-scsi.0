@@ -2,183 +2,446 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AA2C2D0C2
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 19:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA753C2D0C2
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 20:19:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E79320866
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 19:40:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="X3h6rK+I"
+	by mail.kernel.org (Postfix) with ESMTP id 73644222C4
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 20:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728552AbgACTkd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 14:40:33 -0500
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:46537 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728488AbgACTkd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 14:40:33 -0500
-Received: by mail-qt1-f195.google.com with SMTP id g1so30714734qtr.13
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 11:40:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0Yfmc6I5+DaJfxfE0FM/QURDX4CGbvm62ojryzQty4o=;
-        b=X3h6rK+ID/Moy6dmqAuZ6UZ2DsDDDxxeR9T0kVYwMH5SJLsuavC66VPRbvUO7gtRT+
-         bATJmRV23P+CsJOFB6EvtNpV/Kh2fQMBxmBlskJXMkSKYBzJWJ97+aFJfGQ5eRuqTPvF
-         4ZAwuTmWHTO0M86BaTfqJnxxp1BhmRvzbIRSWcYMGYEhcttOu4yCZqeCXISIxfyAzhb+
-         r6xU9cF1obSvDDnk0ZEpVKk3Tp9AWXS43T3YwkBVh44N5ALBKPJJxDCZTo4XzRSvZKgg
-         Uv9T3qKw/lwefTOF/8zHEMSMGdSUwnkeE4ZIOidm214P5IQcqZwiVTYFmNrLsin5wZ/C
-         VAzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=0Yfmc6I5+DaJfxfE0FM/QURDX4CGbvm62ojryzQty4o=;
-        b=YnBA0FrrexWlFjbyDhiLv2q1tzzvdy9fkVFAK+N99nGQTBXT+CjBXp18lVrfmR1gH4
-         1oBq8CQql10gfT+ilAZE48Ei0MJrgUZNltz3xa8MtiipPr5DFiZy8/Ct4LtQi+iyCZ4r
-         Yt2zJZsZjskv7QkOiloDfkhdtvTI0Rqjzka/YwodvcaZhFtODPHtQ9aMsoiPpNx25X/+
-         jq9DNdXWABEdMznh+e5Wq3+QEgNUVxe1vClW6mfbs1//Oqek8B4uEmizEtEA5EHvDXev
-         Pk0gwu4K6F7ag9zvyDbeSY3F65LURsIMb+o9CQqdh4Cs/96b4Qzj3LXUkcmg61O997GW
-         YYVQ==
-X-Gm-Message-State: APjAAAW5i8+rRfsDToSdWJP88R6gLrnq8ODpkzc4TevvauqwdXc2gua7
-        1nFIOEl9cTt3nn2XKgbijoUkzbR0eVPswW+r+y3r4Q==
-X-Google-Smtp-Source: APXvYqzojUNCruR57vi4e7lWAxkMJG3rcTWTmgc4BBpReZ7PKlPMpVdHLsNZsUb3yBF3T05TTI5jp4EGRPz+8jWpPEw=
-X-Received: by 2002:ac8:47d3:: with SMTP id d19mr64381426qtr.142.1578080431540;
- Fri, 03 Jan 2020 11:40:31 -0800 (PST)
-MIME-Version: 1.0
-References: <20191226204746.2197233-1-krisman@collabora.com>
- <CACGdZYJ3hasgRV4MKpizX3rSQ1Tq4R+wDREcYXFUgx720ac5sg@mail.gmail.com>
- <85ftgx7mlr.fsf@collabora.com> <CACGdZYJKF85SgOt0-yHiROsqhP0K+x+XAg7CRJv_0oKt60VtvA@mail.gmail.com>
- <85r20g2vfw.fsf_-_@collabora.com>
-In-Reply-To: <85r20g2vfw.fsf_-_@collabora.com>
-From:   Khazhismel Kumykov <khazhy@google.com>
-Date:   Fri, 3 Jan 2020 14:40:19 -0500
-Message-ID: <CACGdZYKsGk-kD7aO=bCSUzsFkX12xPkB3D2XDYGgDE4gD+1cmA@mail.gmail.com>
-Subject: Re: [PATCH v4] iscsi: Perform connection failure entirely in kernel space
-To:     Gabriel Krisman Bertazi <krisman@collabora.com>
-Cc:     lduncan@suse.com, Chris Leech <cleech@redhat.com>,
-        jejb@linux.ibm.com,
+        id S1727868AbgACUTK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 15:19:10 -0500
+Received: from mga02.intel.com ([134.134.136.20]:7400 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726050AbgACUTJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Jan 2020 15:19:09 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Jan 2020 12:19:08 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,391,1571727600"; 
+   d="scan'208";a="369691980"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 03 Jan 2020 12:19:06 -0800
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1inTPV-000Dza-Qr; Sat, 04 Jan 2020 04:19:05 +0800
+Date:   Sat, 4 Jan 2020 04:18:53 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "'Khazhismel Kumykov' via open-iscsi" <open-iscsi@googlegroups.com>,
-        linux-scsi@vger.kernel.org, Bharath Ravi <rbharath@google.com>,
-        kernel@collabora.com, Mike Christie <mchristi@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Dave Clausen <dclausen@google.com>,
-        Nick Black <nlb@google.com>,
-        Vaibhav Nagarnaik <vnagarnaik@google.com>,
-        Anatol Pomazau <anatol@google.com>,
-        Tahsin Erdogan <tahsin@google.com>,
-        Frank Mayhar <fmayhar@google.com>, Junho Ryu <jayr@google.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000095c855059b417be1"
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [scsi:misc 58/85] drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse:
+ sparse: cast from restricted __be16
+Message-ID: <202001040422.6EbHYDMc%lkp@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000095c855059b417be1
-Content-Type: text/plain; charset="UTF-8"
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
+head:   c53cf10ef6d9faeee9baa1fab824139c6f10a134
+commit: a9c4ae108610716140bdec56ae0bebbe1c5cbe49 [58/85] scsi: qla2xxx: Use get_unaligned_*() instead of open-coding these functions
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.1-129-g341daf20-dirty
+        git checkout a9c4ae108610716140bdec56ae0bebbe1c5cbe49
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
 
-On Fri, Jan 3, 2020 at 2:26 PM Gabriel Krisman Bertazi
-<krisman@collabora.com> wrote:
-> Please consider the v4 below with the lock added.
->
-Reviewed-by: Khazhismel Kumykov <khazhy@google.com>
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
 
---00000000000095c855059b417be1
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
 
-MIIS5wYJKoZIhvcNAQcCoIIS2DCCEtQCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
-ghBNMIIEXDCCA0SgAwIBAgIOSBtqDm4P/739RPqw/wcwDQYJKoZIhvcNAQELBQAwZDELMAkGA1UE
-BhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExOjA4BgNVBAMTMUdsb2JhbFNpZ24gUGVy
-c29uYWxTaWduIFBhcnRuZXJzIENBIC0gU0hBMjU2IC0gRzIwHhcNMTYwNjE1MDAwMDAwWhcNMjEw
-NjE1MDAwMDAwWjBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEiMCAG
-A1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
-AQoCggEBALR23lKtjlZW/17kthzYcMHHKFgywfc4vLIjfq42NmMWbXkNUabIgS8KX4PnIFsTlD6F
-GO2fqnsTygvYPFBSMX4OCFtJXoikP2CQlEvO7WooyE94tqmqD+w0YtyP2IB5j4KvOIeNv1Gbnnes
-BIUWLFxs1ERvYDhmk+OrvW7Vd8ZfpRJj71Rb+QQsUpkyTySaqALXnyztTDp1L5d1bABJN/bJbEU3
-Hf5FLrANmognIu+Npty6GrA6p3yKELzTsilOFmYNWg7L838NS2JbFOndl+ce89gM36CW7vyhszi6
-6LqqzJL8MsmkP53GGhf11YMP9EkmawYouMDP/PwQYhIiUO0CAwEAAaOCASIwggEeMA4GA1UdDwEB
-/wQEAwIBBjAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEgYDVR0TAQH/BAgwBgEB/wIB
-ADAdBgNVHQ4EFgQUyzgSsMeZwHiSjLMhleb0JmLA4D8wHwYDVR0jBBgwFoAUJiSSix/TRK+xsBtt
-r+500ox4AAMwSwYDVR0fBEQwQjBAoD6gPIY6aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9ncy9n
-c3BlcnNvbmFsc2lnbnB0bnJzc2hhMmcyLmNybDBMBgNVHSAERTBDMEEGCSsGAQQBoDIBKDA0MDIG
-CCsGAQUFBwIBFiZodHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzANBgkqhkiG
-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
-BQUHMAKGNGh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzaHZzbWltZWNhMS5j
-cnQwHQYDVR0OBBYEFJ2Vb0jiXUWlD5ibz23a558NzWOgMB8GA1UdIwQYMBaAFMs4ErDHmcB4koyz
-IZXm9CZiwOA/MEwGA1UdIARFMEMwQQYJKwYBBAGgMgEoMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8v
-d3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMDsGA1UdHwQ0MDIwMKAuoCyGKmh0dHA6Ly9j
-cmwuZ2xvYmFsc2lnbi5jb20vZ3NodnNtaW1lY2ExLmNybDAOBgNVHQ8BAf8EBAMCBaAwHQYDVR0l
-BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMA0GCSqGSIb3DQEBCwUAA4IBAQCk2Fht/QkHdD9YQlQ/
-/BoVlZzl+wg2oB8mPQEGNN49NfSL/ERAGoituF3/Zv+xv6owWk2Xp+sTA69OuAt2wZ4O0pXm2NNb
-yE0QS1h/jH61IgJY4dU65qPcUYmkEdBDRX3XzR1wmnDc3yelHxlYerMuJFmSM5g4dIjbdpOlHTGh
-jnWrjPPoGaT9nEbPfTxkahJTybnCIMuQbt8nl2QdV64GhBMCQWbIW1xY6Uv0FZcadQhF1vzhd/OH
-qGkK98y1Dz/54GBO4A8jOSeDFuh+l2iygTcH16xKfB0XvhoUGdrru24FTEY7p4VTKkw+eJbUvdod
-PlESVftk7+JISQWxBEYKMYICXjCCAloCAQEwXDBMMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xv
-YmFsU2lnbiBudi1zYTEiMCAGA1UEAxMZR2xvYmFsU2lnbiBIViBTL01JTUUgQ0EgMQIMROfpbOE2
-LmBNcT9PMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCCzW16PagtP/M86wH5eKTlB
-ylOhxm/zo3u5uC/UWbcAljAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEP
-Fw0yMDAxMDMxOTQwMzJaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQB
-FjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzALBglg
-hkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAHU/dnGvnEVngQwMPSIneiuQKi3zMo6v18FoUjzcH
-XOjJ4hSah8+C7CUj4hQzRrycafRmAvVDtlMkGsmlRk++gskfxe0HYax1sVdZXnk3zV9paG4zWCi0
-FmLiClsHMFfFrPqqlzoGSm7yqSHLYVMiRoEQ0V1rwa2ofnwAI3asgD8u+RyGWWPNJbymWPh7TV0x
-yPFGwiUzWYmLMpGfq8kU+0pGhNrWikyPLuxgOP0vh1PF7pe1nVrihMujMB+uDcTPKcyZ5wqY0RBB
-uhiBo2NYZX5d29ULHGg4Anyvpv4eAt6ypYadAqYYds9y56iVzeddbIBzWRYptlbluXj+bSoNlQ==
---00000000000095c855059b417be1--
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/scsi/qla2xxx/qla_target.c:1843:15: sparse:    expected unsigned int [usertype] f_ctl
+   drivers/scsi/qla2xxx/qla_target.c:1843:15: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:1916:23: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:1916:23: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:1916:23: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:1935:31: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:1935:31: sparse:    expected restricted __le16 [usertype] ox_id
+   drivers/scsi/qla2xxx/qla_target.c:1935:31: sparse:    got unsigned short [usertype] ox_id
+   drivers/scsi/qla2xxx/qla_target.c:2229:23: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2229:23: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:2229:23: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2238:37: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2238:37: sparse:    expected unsigned short [usertype] scsi_status
+   drivers/scsi/qla2xxx/qla_target.c:2238:37: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2240:38: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2240:38: sparse:    expected unsigned short [usertype] response_len
+   drivers/scsi/qla2xxx/qla_target.c:2240:38: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2286:23: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2286:23: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:2286:23: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2295:37: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2295:37: sparse:    expected unsigned short [usertype] scsi_status
+   drivers/scsi/qla2xxx/qla_target.c:2295:37: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2297:38: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2297:38: sparse:    expected unsigned short [usertype] response_len
+   drivers/scsi/qla2xxx/qla_target.c:2297:38: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2298:34: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2298:34: sparse:    expected unsigned int [usertype] residual
+   drivers/scsi/qla2xxx/qla_target.c:2298:34: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2301:45: sparse: sparse: invalid assignment: |=
+   drivers/scsi/qla2xxx/qla_target.c:2301:45: sparse:    left side has type unsigned short
+   drivers/scsi/qla2xxx/qla_target.c:2301:45: sparse:    right side has type restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:2587:27: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2587:27: sparse:    expected unsigned short [usertype] nport_handle
+   drivers/scsi/qla2xxx/qla_target.c:2587:27: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2588:22: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2588:22: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:2588:22: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2595:40: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2595:40: sparse:    expected unsigned int [usertype] relative_offset
+   drivers/scsi/qla2xxx/qla_target.c:2595:40: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2650:42: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2650:42: sparse:    expected unsigned int [usertype] transfer_length
+   drivers/scsi/qla2xxx/qla_target.c:2650:42: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2657:35: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2657:35: sparse:    expected unsigned short [usertype] dseg_count
+   drivers/scsi/qla2xxx/qla_target.c:2657:35: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2819:34: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2819:34: sparse:    expected unsigned int [usertype] residual
+   drivers/scsi/qla2xxx/qla_target.c:2819:34: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2820:37: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2820:37: sparse:    expected unsigned short [usertype] scsi_status
+   drivers/scsi/qla2xxx/qla_target.c:2820:37: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2841:45: sparse: sparse: invalid assignment: |=
+   drivers/scsi/qla2xxx/qla_target.c:2841:45: sparse:    left side has type unsigned short
+   drivers/scsi/qla2xxx/qla_target.c:2841:45: sparse:    right side has type restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:2843:46: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2843:46: sparse:    expected unsigned short [usertype] sense_length
+   drivers/scsi/qla2xxx/qla_target.c:2843:46: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2846:69: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:2846:69: sparse:    expected unsigned int [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:2846:69: sparse:    got restricted __be32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse:    expected unsigned short [usertype] nport_handle
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3282:60: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:3282:60: sparse:    expected unsigned short [usertype] scsi_status
+   drivers/scsi/qla2xxx/qla_target.c:3282:60: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3284:57: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:3284:57: sparse:    expected unsigned int [usertype] residual
+   drivers/scsi/qla2xxx/qla_target.c:3284:57: sparse:    got restricted __le32 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse:    expected unsigned short [usertype] nport_handle
+   drivers/scsi/qla2xxx/qla_target.c:3100:27: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3576:13: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:3578:25: sparse: sparse: restricted __le32 degrades to integer
+   drivers/scsi/qla2xxx/qla_target.c:3582:29: sparse: sparse: invalid assignment: |=
+   drivers/scsi/qla2xxx/qla_target.c:3582:29: sparse:    left side has type unsigned short
+   drivers/scsi/qla2xxx/qla_target.c:3582:29: sparse:    right side has type restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:3653:25: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:3653:25: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:3653:25: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:3846:21: sparse: sparse: restricted __le16 degrades to integer
+   drivers/scsi/qla2xxx/qla_target.c:4508:13: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:4529:19: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:4702:19: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:4797:26: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:4880:19: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:4920:26: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5056:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5151:18: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5157:34: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5172:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5192:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5237:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5238:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5239:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5314:25: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:5314:25: sparse:    expected unsigned short [usertype] timeout
+   drivers/scsi/qla2xxx/qla_target.c:5314:25: sparse:    got restricted __le16 [usertype]
+>> drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse: sparse: cast from restricted __be16
+   drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse: sparse: incorrect type in argument 1 (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse:    expected unsigned short [usertype] val
+   drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse:    got restricted __be16 [usertype] ox_id
+>> drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse: sparse: cast from restricted __be16
+>> drivers/scsi/qla2xxx/qla_target.c:5326:35: sparse: sparse: cast from restricted __be16
+   drivers/scsi/qla2xxx/qla_target.c:5326:33: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:5326:33: sparse:    expected restricted __le16 [usertype] ox_id
+   drivers/scsi/qla2xxx/qla_target.c:5326:33: sparse:    got int
+   drivers/scsi/qla2xxx/qla_target.c:5327:39: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:5327:39: sparse:    expected unsigned short [usertype] scsi_status
+   drivers/scsi/qla2xxx/qla_target.c:5327:39: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:5731:13: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5947:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5947:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5948:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5948:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5965:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5965:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5966:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5966:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5973:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5973:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5974:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5974:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:5976:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6000:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6000:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6001:21: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6001:46: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6003:30: sparse: sparse: cast to restricted __le16
+   drivers/scsi/qla2xxx/qla_target.c:6783:29: sparse: sparse: cast to restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6832:48: sparse: sparse: incorrect type in assignment (different base types)
+>> drivers/scsi/qla2xxx/qla_target.c:6832:48: sparse:    expected unsigned short [usertype] msix_atio
+   drivers/scsi/qla2xxx/qla_target.c:6832:48: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:6873:44: sparse: sparse: incorrect type in assignment (different base types)
+>> drivers/scsi/qla2xxx/qla_target.c:6873:44: sparse:    expected unsigned short [usertype] exchange_count
+   drivers/scsi/qla2xxx/qla_target.c:6873:44: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:6875:44: sparse: sparse: incorrect type in assignment (different base types)
+   drivers/scsi/qla2xxx/qla_target.c:6875:44: sparse:    expected unsigned short [usertype] exchange_count
+   drivers/scsi/qla2xxx/qla_target.c:6875:44: sparse:    got restricted __le16 [usertype]
+   drivers/scsi/qla2xxx/qla_target.c:6878:40: sparse: sparse: invalid assignment: |=
+>> drivers/scsi/qla2xxx/qla_target.c:6878:40: sparse:    left side has type unsigned int
+>> drivers/scsi/qla2xxx/qla_target.c:6878:40: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6882:48: sparse: sparse: invalid assignment: |=
+   drivers/scsi/qla2xxx/qla_target.c:6882:48: sparse:    left side has type unsigned int
+   drivers/scsi/qla2xxx/qla_target.c:6882:48: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6885:40: sparse: sparse: invalid assignment: &=
+   drivers/scsi/qla2xxx/qla_target.c:6885:40: sparse:    left side has type unsigned int
+   drivers/scsi/qla2xxx/qla_target.c:6885:40: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6887:40: sparse: sparse: invalid assignment: &=
+   drivers/scsi/qla2xxx/qla_target.c:6887:40: sparse:    left side has type unsigned int
+   drivers/scsi/qla2xxx/qla_target.c:6887:40: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6890:48: sparse: sparse: invalid assignment: |=
+   drivers/scsi/qla2xxx/qla_target.c:6890:48: sparse:    left side has type unsigned int
+   drivers/scsi/qla2xxx/qla_target.c:6890:48: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6893:48: sparse: sparse: invalid assignment: &=
+   drivers/scsi/qla2xxx/qla_target.c:6893:48: sparse:    left side has type unsigned int
+   drivers/scsi/qla2xxx/qla_target.c:6893:48: sparse:    right side has type restricted __le32
+   drivers/scsi/qla2xxx/qla_target.c:6896:28: sparse: sparse: too many warnings
+
+vim +5326 drivers/scsi/qla2xxx/qla_target.c
+
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5137  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5138  /*
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5139   * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5140   */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5141  static void qlt_handle_imm_notify(struct scsi_qla_host *vha,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5142  	struct imm_ntfy_from_isp *iocb)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5143  {
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5144  	struct qla_hw_data *ha = vha->hw;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5145  	uint32_t add_flags = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5146  	int send_notify_ack = 1;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5147  	uint16_t status;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5148  
+57bf595a6f2437 Bart Van Assche    2019-08-08  5149  	lockdep_assert_held(&ha->hardware_lock);
+57bf595a6f2437 Bart Van Assche    2019-08-08  5150  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5151  	status = le16_to_cpu(iocb->u.isp2x.status);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5152  	switch (status) {
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5153  	case IMM_NTFY_LIP_RESET:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5154  	{
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5155  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf032,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5156  		    "qla_target(%d): LIP reset (loop %#x), subcode %x\n",
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15 @5157  		    vha->vp_idx, le16_to_cpu(iocb->u.isp24.nport_handle),
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5158  		    iocb->u.isp24.status_subcode);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5159  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5160  		if (qlt_reset(vha, iocb, QLA_TGT_ABORT_ALL) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5161  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5162  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5163  	}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5164  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5165  	case IMM_NTFY_LIP_LINK_REINIT:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5166  	{
+0e8cd71ceca4c1 Saurav Kashyap     2014-01-14  5167  		struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
+bd432bb53cffea Bart Van Assche    2019-04-11  5168  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5169  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf033,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5170  		    "qla_target(%d): LINK REINIT (loop %#x, "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5171  		    "subcode %x)\n", vha->vp_idx,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5172  		    le16_to_cpu(iocb->u.isp24.nport_handle),
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5173  		    iocb->u.isp24.status_subcode);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5174  		if (tgt->link_reinit_iocb_pending) {
+82de802ad46e23 Quinn Tran         2017-06-13  5175  			qlt_send_notify_ack(ha->base_qpair,
+82de802ad46e23 Quinn Tran         2017-06-13  5176  			    &tgt->link_reinit_iocb, 0, 0, 0, 0, 0, 0);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5177  		}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5178  		memcpy(&tgt->link_reinit_iocb, iocb, sizeof(*iocb));
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5179  		tgt->link_reinit_iocb_pending = 1;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5180  		/*
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5181  		 * QLogic requires to wait after LINK REINIT for possible
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5182  		 * PDISC or ADISC ELS commands
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5183  		 */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5184  		send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5185  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5186  	}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5187  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5188  	case IMM_NTFY_PORT_LOGOUT:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5189  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf034,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5190  		    "qla_target(%d): Port logout (loop "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5191  		    "%#x, subcode %x)\n", vha->vp_idx,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5192  		    le16_to_cpu(iocb->u.isp24.nport_handle),
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5193  		    iocb->u.isp24.status_subcode);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5194  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5195  		if (qlt_reset(vha, iocb, QLA_TGT_NEXUS_LOSS_SESS) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5196  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5197  		/* The sessions will be cleared in the callback, if needed */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5198  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5199  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5200  	case IMM_NTFY_GLBL_TPRLO:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5201  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf035,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5202  		    "qla_target(%d): Global TPRLO (%x)\n", vha->vp_idx, status);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5203  		if (qlt_reset(vha, iocb, QLA_TGT_NEXUS_LOSS) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5204  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5205  		/* The sessions will be cleared in the callback, if needed */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5206  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5207  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5208  	case IMM_NTFY_PORT_CONFIG:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5209  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf036,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5210  		    "qla_target(%d): Port config changed (%x)\n", vha->vp_idx,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5211  		    status);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5212  		if (qlt_reset(vha, iocb, QLA_TGT_ABORT_ALL) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5213  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5214  		/* The sessions will be cleared in the callback, if needed */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5215  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5216  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5217  	case IMM_NTFY_GLBL_LOGO:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5218  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06a,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5219  		    "qla_target(%d): Link failure detected\n",
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5220  		    vha->vp_idx);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5221  		/* I_T nexus loss */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5222  		if (qlt_reset(vha, iocb, QLA_TGT_NEXUS_LOSS) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5223  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5224  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5225  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5226  	case IMM_NTFY_IOCB_OVERFLOW:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5227  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06b,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5228  		    "qla_target(%d): Cannot provide requested "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5229  		    "capability (IOCB overflowed the immediate notify "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5230  		    "resource count)\n", vha->vp_idx);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5231  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5232  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5233  	case IMM_NTFY_ABORT_TASK:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5234  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf037,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5235  		    "qla_target(%d): Abort Task (S %08x I %#x -> "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5236  		    "L %#x)\n", vha->vp_idx,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5237  		    le16_to_cpu(iocb->u.isp2x.seq_id),
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5238  		    GET_TARGET_ID(ha, (struct atio_from_isp *)iocb),
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5239  		    le16_to_cpu(iocb->u.isp2x.lun));
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5240  		if (qlt_abort_task(vha, iocb) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5241  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5242  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5243  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5244  	case IMM_NTFY_RESOURCE:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5245  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06c,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5246  		    "qla_target(%d): Out of resources, host %ld\n",
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5247  		    vha->vp_idx, vha->host_no);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5248  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5249  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5250  	case IMM_NTFY_MSG_RX:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5251  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf038,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5252  		    "qla_target(%d): Immediate notify task %x\n",
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5253  		    vha->vp_idx, iocb->u.isp2x.task_flags);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5254  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5255  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5256  	case IMM_NTFY_ELS:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5257  		if (qlt_24xx_handle_els(vha, iocb) == 0)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5258  			send_notify_ack = 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5259  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5260  	default:
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5261  		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06d,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5262  		    "qla_target(%d): Received unknown immediate "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5263  		    "notify status %x\n", vha->vp_idx, status);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5264  		break;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5265  	}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5266  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5267  	if (send_notify_ack)
+82de802ad46e23 Quinn Tran         2017-06-13  5268  		qlt_send_notify_ack(ha->base_qpair, iocb, add_flags, 0, 0, 0,
+82de802ad46e23 Quinn Tran         2017-06-13  5269  		    0, 0);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5270  }
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5271  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5272  /*
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5273   * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5274   * This function sends busy to ISP 2xxx or 24xx.
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5275   */
+82de802ad46e23 Quinn Tran         2017-06-13  5276  static int __qlt_send_busy(struct qla_qpair *qpair,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5277  	struct atio_from_isp *atio, uint16_t status)
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5278  {
+82de802ad46e23 Quinn Tran         2017-06-13  5279  	struct scsi_qla_host *vha = qpair->vha;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5280  	struct ctio7_to_24xx *ctio24;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5281  	struct qla_hw_data *ha = vha->hw;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5282  	request_t *pkt;
+5d964837c6a743 Quinn Tran         2017-01-19  5283  	struct fc_port *sess = NULL;
+7560151b6b3c1f Quinn Tran         2015-12-17  5284  	unsigned long flags;
+f7e761f56c7119 Quinn Tran         2017-06-02  5285  	u16 temp;
+8ea4faf829eb2e Quinn Tran         2018-05-01  5286  	port_id_t id;
+8ea4faf829eb2e Quinn Tran         2018-05-01  5287  
+df95f39ae76474 Bart Van Assche    2019-08-08  5288  	id = be_to_port_id(atio->u.isp24.fcp_hdr.s_id);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5289  
+7560151b6b3c1f Quinn Tran         2015-12-17  5290  	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+8ea4faf829eb2e Quinn Tran         2018-05-01  5291  	sess = qla2x00_find_fcport_by_nportid(vha, &id, 1);
+7560151b6b3c1f Quinn Tran         2015-12-17  5292  	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5293  	if (!sess) {
+82de802ad46e23 Quinn Tran         2017-06-13  5294  		qlt_send_term_exchange(qpair, NULL, atio, 1, 0);
+33e7997755936b Quinn Tran         2014-09-25  5295  		return 0;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5296  	}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5297  	/* Sending marker isn't necessary, since we called from ISR */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5298  
+82de802ad46e23 Quinn Tran         2017-06-13  5299  	pkt = (request_t *)__qla2x00_alloc_iocbs(qpair, NULL);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5300  	if (!pkt) {
+667024a3654918 Arun Easi          2014-09-25  5301  		ql_dbg(ql_dbg_io, vha, 0x3063,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5302  		    "qla_target(%d): %s failed: unable to allocate "
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5303  		    "request packet", vha->vp_idx, __func__);
+33e7997755936b Quinn Tran         2014-09-25  5304  		return -ENOMEM;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5305  	}
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5306  
+60a9eadb19f33a Quinn Tran         2017-06-13  5307  	qpair->tgt_counters.num_q_full_sent++;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5308  	pkt->entry_count = 1;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5309  	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5310  
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5311  	ctio24 = (struct ctio7_to_24xx *)pkt;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5312  	ctio24->entry_type = CTIO_TYPE7;
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5313  	ctio24->nport_handle = sess->loop_id;
+ad950360eebb5f Bart Van Assche    2015-07-09  5314  	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5315  	ctio24->vp_index = vha->vp_idx;
+df95f39ae76474 Bart Van Assche    2019-08-08  5316  	ctio24->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5317  	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
+f7e761f56c7119 Quinn Tran         2017-06-02  5318  	temp = (atio->u.isp24.attr << 9) |
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5319  		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS |
+f7e761f56c7119 Quinn Tran         2017-06-02  5320  		CTIO7_FLAGS_DONT_RET_CTIO;
+f7e761f56c7119 Quinn Tran         2017-06-02  5321  	ctio24->u.status1.flags = cpu_to_le16(temp);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5322  	/*
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5323  	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5324  	 * if the explicit conformation is used.
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5325  	 */
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15 @5326  	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
+2d70c103fd2a06 Nicholas Bellinger 2012-05-15  5327  	ctio24->u.status1.scsi_status = cpu_to_le16(status);
+e25f76549bd779 Quinn Tran         2018-05-01  5328  
+e25f76549bd779 Quinn Tran         2018-05-01  5329  	ctio24->u.status1.residual = get_datalen_for_atio(atio);
+e25f76549bd779 Quinn Tran         2018-05-01  5330  
+e25f76549bd779 Quinn Tran         2018-05-01  5331  	if (ctio24->u.status1.residual != 0)
+e25f76549bd779 Quinn Tran         2018-05-01  5332  		ctio24->u.status1.scsi_status |= SS_RESIDUAL_UNDER;
+e25f76549bd779 Quinn Tran         2018-05-01  5333  
+63163e06012787 Himanshu Madhani   2014-09-25  5334  	/* Memory Barrier */
+63163e06012787 Himanshu Madhani   2014-09-25  5335  	wmb();
+8abfa9e2268337 Quinn Tran         2017-06-13  5336  	if (qpair->reqq_start_iocbs)
+8abfa9e2268337 Quinn Tran         2017-06-13  5337  		qpair->reqq_start_iocbs(qpair);
+8abfa9e2268337 Quinn Tran         2017-06-13  5338  	else
+82de802ad46e23 Quinn Tran         2017-06-13  5339  		qla2x00_start_iocbs(vha, qpair->req);
+33e7997755936b Quinn Tran         2014-09-25  5340  	return 0;
+33e7997755936b Quinn Tran         2014-09-25  5341  }
+33e7997755936b Quinn Tran         2014-09-25  5342  
+
+:::::: The code at line 5326 was first introduced by commit
+:::::: 2d70c103fd2a066f904712b14239a5ce141f8236 [SCSI] qla2xxx: Add LLD target-mode infrastructure for >= 24xx series
+
+:::::: TO: Nicholas Bellinger <nab@linux-iscsi.org>
+:::::: CC: James Bottomley <JBottomley@Parallels.com>
+
+---
+0-DAY kernel test infrastructure                 Open Source Technology Center
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
