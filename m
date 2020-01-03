@@ -7,89 +7,87 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6618DC3276F
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 02:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10473C3276F
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 02:59:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 392652085B
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 02:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4F8E222C3
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 02:59:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jWyNIFBW"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PZ+Q70l1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727295AbgACC41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 21:56:27 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:56042 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726148AbgACC40 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 21:56:26 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0032sG83083534;
-        Fri, 3 Jan 2020 02:56:25 GMT
+        id S1727331AbgACC7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 21:59:25 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:53428 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726148AbgACC7Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 21:59:25 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0032xBiQ104379;
+        Fri, 3 Jan 2020 02:59:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=poaKakPjj0QvH5CnliZjROxUqZFUku7+pk8lkxPV0UI=;
- b=jWyNIFBWXIL2aI2LBFv7xxoKveoi+P37FZJxjNk4xmDxWU3ZgUl5xreWhJeMblxxiqHq
- /JXRBVk994ArtmT7o4KtoVntAKPkXqyDv/kvny2a6KvlTrNRfWBpKTY1JnNxqr7lBhuA
- kuXMDZBiYHkhYUlzQIxNAg8uB9MMbpiGgZle3l9u1Kk4EOOVfLtXolpqWiWH4DnAe/QJ
- 3gqdtGq6Bd3FED5ognbaG17U7HQEWbWXUQl22YEOQxamoqLUspxX3uJPjmJ33pCNDsVk
- Hiq4DJeaLMBAI9f9zGNNAKltC2ML0Y63Cj1c/8wxTC/j5sFUlx7WbREh1X1XsRna34dy YA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2x5ypqt9e3-1
+ bh=KryXyCDC2N9hlSS0qEQaJIvNv1qD0Rcq7XckKDNpaLA=;
+ b=PZ+Q70l1eJfyoI06WkaID0qQsmdYsgM5LA40BvuAlcOCRhOFtsupvj6naVGZJpXxG/u9
+ sXwSptXY+K9KHVhDedFUO+kmRINaU4sxXCpCVMxuIpTKk+IgWodAS40eWuTGYJ6a16nt
+ CNSyfxmEWBdOyXGwl28NCK6rcw6E1ESYC6F59J3ZOXbnb0DfD6EY1qRvAeRqRoeK4r6A
+ AdjAJC98nEs2FLFWBvACvqkPvQ++ZlIvRQC/4Nj2I0//gzEvqKNWu1dQAS2QypfyJ50/
+ 3OcgUtnbIiktA7CJNCGg1IlOTRyrJBRxH/Y3ymr9WCi+ndNvITdHSxWD+jm0UtNBotf6 Yg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2x5xfttekp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Jan 2020 02:56:25 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0032mKs6084960;
-        Fri, 3 Jan 2020 02:56:25 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2x9jm6vqxg-1
+        Fri, 03 Jan 2020 02:59:21 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0032xHBw183000;
+        Fri, 3 Jan 2020 02:59:21 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2x8bsttd80-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Jan 2020 02:56:24 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0032uNGB020833;
-        Fri, 3 Jan 2020 02:56:23 GMT
+        Fri, 03 Jan 2020 02:59:20 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0032wpVQ031276;
+        Fri, 3 Jan 2020 02:58:51 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 02 Jan 2020 18:56:23 -0800
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] Cleanup sd_zbc zone checks.
+        with ESMTP ; Thu, 02 Jan 2020 18:58:51 -0800
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/6] Six UFS patches
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20191220075823.400072-1-damien.lemoal@wdc.com>
-Date:   Thu, 02 Jan 2020 21:56:20 -0500
-In-Reply-To: <20191220075823.400072-1-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Fri, 20 Dec 2019 16:58:21 +0900")
-Message-ID: <yq1imlt5ju3.fsf@oracle.com>
+References: <20191224220248.30138-1-bvanassche@acm.org>
+Date:   Thu, 02 Jan 2020 21:58:49 -0500
+In-Reply-To: <20191224220248.30138-1-bvanassche@acm.org> (Bart Van Assche's
+        message of "Tue, 24 Dec 2019 14:02:42 -0800")
+Message-ID: <yq1a7755jpy.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=749
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=948
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001030025
+ engine=8.0.1-1911140001 definitions=main-2001030026
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=828 adultscore=0
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001030026
+ definitions=main-2001030027
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Damien,
+Bart,
 
-> A couple of small patches to cleanup sd_zbc zone checks formerly
-> implemented in sd_zbc_check_zones() and now moved to the block layer as
-> generic code. The first patch removes a superfluous check present in the
-> block layer. The second patch renames sd_zbc_check_zones() to be clear
-> about the function role.
+> This patch series includes patches that clean up the UFS driver code
+> somewhat.  Please consider these patches for kernel v5.6.
 
-Applied to 5.6/scsi-queue, thanks!
+Applied 1-4,6 to 5.6/scsi-queue. Thank you!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
