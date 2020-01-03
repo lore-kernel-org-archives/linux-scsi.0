@@ -1,120 +1,69 @@
-Return-Path: <SRS0=pZIS=2X=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1131FC3276C
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6DEFC3276D
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 00:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E203220866
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jan 2020 22:59:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6B072085B
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 00:22:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727557AbgABW7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jan 2020 17:59:40 -0500
-Received: from authsmtp03.register.it ([81.88.48.53]:39121 "EHLO
-        authsmtp.register.it" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727409AbgABWN5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 17:13:57 -0500
-X-Greylist: delayed 339 seconds by postgrey-1.27 at vger.kernel.org; Thu, 02 Jan 2020 17:13:55 EST
-Received: from [192.168.1.1] ([93.41.32.9])
-        by cmsmtp with ESMTPSA
-        id n8b9ir9UONsF7n8b9iIhju; Thu, 02 Jan 2020 23:05:43 +0100
-X-Rid:  guido@trentalancia.com@93.41.32.9
-Message-ID: <1578002742.5239.0.camel@trentalancia.com>
-Subject: [PATCH RESEND v2] scsi: ignore Synchronize Cache command failures
- to keep using drives not supporting it
-From:   Guido Trentalancia <guido@trentalancia.com>
-To:     linux-scsi@vger.kernel.org
-Date:   Thu, 02 Jan 2020 23:05:42 +0100
-X-Priority: 1
+        id S1726282AbgACAWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jan 2020 19:22:44 -0500
+Received: from imap2.colo.codethink.co.uk ([78.40.148.184]:55542 "EHLO
+        imap2.colo.codethink.co.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725900AbgACAWo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jan 2020 19:22:44 -0500
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126] helo=xylophone)
+        by imap2.colo.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1inAjd-0006T5-0m; Fri, 03 Jan 2020 00:22:37 +0000
+Message-ID: <dc17d939c813b004e0a50af2813a1eef1fbf9574.camel@codethink.co.uk>
+Subject: Re: [GIT PULL v3 00/27] block, scsi: final compat_ioctl cleanup
+From:   Ben Hutchings <ben.hutchings@codethink.co.uk>
+To:     Arnd Bergmann <arnd@arndb.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, linux-doc@vger.kernel.org,
+        corbet@lwn.net, viro@zeniv.linux.org.uk,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Date:   Fri, 03 Jan 2020 00:22:36 +0000
+In-Reply-To: <20200102145552.1853992-1-arnd@arndb.de>
+References: <20200102145552.1853992-1-arnd@arndb.de>
+Organization: Codethink Ltd.
 Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.2 
-Mime-Version: 1.0
+User-Agent: Evolution 3.30.5-1.1 
+MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4wfPgX4JmffzOxSPLNZSjriTpfYy85Mj9vtPFI/FL/a90X78EhvTYpbE+O5cCCA7AcF3UKvsZ/uA9nvCIhGsIhQo3ArL6KH4rYsCPAkfogEtwuK3DPk3rM
- EyJW3QxLATAMTpj+GPaFw6ALQE5reIQtpRGraLnuIXip0IUbQmz+jvWC75xdS5fbIz869MXtanGcSg==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Many obsolete hard drives do not support the Synchronize Cache SCSI
-command. Such command is generally issued during fsync() calls which
-at the moment therefore fail with the ILLEGAL_REQUEST sense key.
+On Thu, 2020-01-02 at 15:55 +0100, Arnd Bergmann wrote:
+[...]
+> Changes since v2:
+> - Rebase to v5.5-rc4, which contains the earlier bugfixes
+> - Fix sr_block_compat_ioctl() error handling bug found by
+>   Ben Hutchings
+[...]
 
-Since this failure is currently treated as critical in the kernel SCSI
-disk driver, such obsolete hard drives cannot be used anymore: they
-cannot be formatted, mounted and/or checked using tools such as e2fsprogs.
+Unfortunately that fix was squashed into "compat_ioctl: move
+sys_compat_ioctl() to ioctl.c" whereas it belongs in "compat_ioctl:
+scsi: move ioctl handling into drivers".
 
-Because there is nothing which can be done if the drive does not support
-such command, such ILLEGAL_REQUEST should be treated as non-critical so
-that the underlying operation does not fail and the obsolete hard drive
-can be used normally.
+If you decide to rebase again, you can add my Reviewed-by to all
+patches.
 
-This patch disables the Write Cache feature as a precaution on hard
-drives which do not support the Synchronize Cache command and therefore
-the cache flushing functionality.
+Ben.
 
-Fixes bug: https://bugzilla.kernel.org/show_bug.cgi?id=203635
+-- 
+Ben Hutchings, Software Developer                         Codethink Ltd
+https://www.codethink.co.uk/                 Dale House, 35 Dale Street
+                                     Manchester, M1 2HF, United Kingdom
 
-Signed-off-by: Guido Trentalancia <guido@trentalancia.com>
----
- drivers/scsi/sd.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff -pru a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c	2019-03-17 18:22:04.822720851 +0100
-+++ b/drivers/scsi/sd.c	2019-03-20 17:41:44.526957307 +0100
-@@ -22,6 +22,10 @@
-  *	 - Badari Pulavarty <pbadari@us.ibm.com>, Matthew Wilcox 
-  *	   <willy@debian.org>, Kurt Garloff <garloff@suse.de>: 
-  *	   Support 32k/1M disks.
-+ *	 - Guido Trentalancia <guido@trentalancia.com> ignore Synchronize
-+ *	   Cache command failures on hard-drives that do not support it
-+ *	   and disable the Write Cache functionality on such devices as a
-+ *	   precaution: this allows to keep using several obsolete drives.
-  *
-  *	Logging policy (needs CONFIG_SCSI_LOGGING defined):
-  *	 - setting up transfer: SCSI_LOG_HLQUEUE levels 1 and 2
-@@ -1633,6 +1637,20 @@ static int sd_sync_cache(struct scsi_dis
- 	}
- 
- 	if (res) {
-+		/*
-+		 * sshdr.sense_key == ILLEGAL_REQUEST means this drive
-+		 * doesn't support sync. There's not much to do and
-+		 * sync shouldn't fail.
-+		 */
-+		if (sshdr->sense_key == ILLEGAL_REQUEST && sshdr->asc == 0x20) {
-+			if (sdkp->WCE) {
-+				sdkp->WCE = 0;
-+				sd_printk(KERN_NOTICE, sdkp, "Drive does not support Synchronize Cache(10) command: disabling write cache.\n");
-+				sd_set_flush_flag(sdkp);
-+			}
-+			return 0;
-+		}
-+
- 		sd_print_result(sdkp, "Synchronize Cache(10) failed", res);
- 
- 		if (driver_byte(res) == DRIVER_SENSE)
-@@ -2022,6 +2040,17 @@ static int sd_done(struct scsi_cmnd *SCp
- 					req->rq_flags |= RQF_QUIET;
- 				}
- 				break;
-+			case SYNCHRONIZE_CACHE:
-+				if (sshdr.asc == 0x20) {
-+					if (sdkp->WCE) {
-+						sdkp->WCE = 0;
-+						sd_printk(KERN_NOTICE, sdkp, "Drive does not support Synchronize Cache(10) command: disabling write cache.\n");
-+						sd_set_flush_flag(sdkp);
-+					}
-+					SCpnt->result = 0;
-+					good_bytes = scsi_bufflen(SCpnt);
-+				}
-+				break;
- 			}
- 		}
- 		break;
