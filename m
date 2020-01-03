@@ -2,95 +2,102 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=CHARSET_FARAWAY_HEADER,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D9CC2D0C2
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B30FDC2D0C2
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1BD821835
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:34:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 856E522314
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 11:34:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QuFMX0Li"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JMLp3T3W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727507AbgACLem (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 06:34:42 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:44701 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727462AbgACLem (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 06:34:42 -0500
-Received: by mail-pf1-f196.google.com with SMTP id 195so22581366pfw.11
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 03:34:42 -0800 (PST)
+        id S1727611AbgACLey (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 06:34:54 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42221 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727462AbgACLey (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 06:34:54 -0500
+Received: by mail-pg1-f195.google.com with SMTP id s64so23314989pgb.9
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 03:34:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KJ+8YAGRRQLMSwwyfPFUQzGdxL4BTECFGtCSTZEfxI0=;
-        b=QuFMX0LixoWMrCAJWgcOg1nDYc3wzzO3cZf2pB+6GeU5o8gfNUg41E1CqMx1xpOD3a
-         JYWjpLzyWg8RNzcuV/czjZ/XO1W/+wlyjAi/S8MI0nIrd4I1r7lXB9mEvF+iFek6b+Dm
-         lJhGGgYG9dzXSFSdjMCiioDshQ423Mc8lV4wo=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=dFOhApBaCRZRV98te3Eh+4XUKsX8h5mh84l+JQNhe9Y=;
+        b=JMLp3T3WFnhOYZxpXb6S072z91uFVbyjGZTYABcwygjFTOM4YSbO1HUcCGSH0shH+j
+         c4bPFjtaO2avqhe+b2nqCAlT4rXU3Ry2TrCqmLaLDpVyc33zh1gvnMosE/jPbvEyaxUI
+         puNDPBj33mDG1DMxn6tH7/so9n9ImMzANbxLI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=KJ+8YAGRRQLMSwwyfPFUQzGdxL4BTECFGtCSTZEfxI0=;
-        b=QdzB+3SHmjWjvbpybqLwXoJKvD+GEDUT+pRKvyHjc63pfPPbpmVv5JXK+WGnUW0Qaw
-         0YI5oTXArL3966ODmJsEZp3Zhdr0FbGCjq3D+bBSU7m3f4/RZyrZLiwjE5iTHMU2ikGR
-         C8iIOCtxPdsFFXaeY1r/MnRWMNgKJQ1jYAi0Qz2b1B15WXHIiU7XW7Z3saK7KRM/1+co
-         QfgSrQe01EeZH52lK7cUwOFEMdeWN0ahDi2LxjL39HtrsLso/mSIdmC27/1UOUFTo+bL
-         yXORFJhDzvyjKDYs7DOXJ7Qol6N0wlNjvRE8FKzg+oGVtOLaAlmndtXRItxgzANo1iv7
-         tmqA==
-X-Gm-Message-State: APjAAAXq4/UkWHU7tTbZU6OJ6ozJZeO4c53zMJdf5+eAX9FV15EHTIdh
-        HgK0iOWsJhV2e+h6cA4ytQKAAvPdmWmufrjAOcVBCd3SGARludh9TPHmJHSbTa5ZVXnhfmcvv7B
-        j1BJc88infg92DNdKvO2kBFIqE9bChsp7v44lHllk4PBBD2M2iraoYc75fkgAdTDp5TdW/dy2AH
-        NpkRe+Hg==
-X-Google-Smtp-Source: APXvYqx6ihDJuVbpzVx3SNXACtB1RC7++MnXGvDIe1flLep8ARE3NGFkBWF2loZ/JT6rdCeozsaEvg==
-X-Received: by 2002:aa7:820d:: with SMTP id k13mr97088531pfi.10.1578051281568;
-        Fri, 03 Jan 2020 03:34:41 -0800 (PST)
+         :references:mime-version:content-transfer-encoding;
+        bh=dFOhApBaCRZRV98te3Eh+4XUKsX8h5mh84l+JQNhe9Y=;
+        b=pwOOGbAoPZus27iaG1Ur+QixZ3N6k85r/tTKLiyGE/TmRKvcsMiuCtiu7b7ukrGdIC
+         eR4Nydby011qOAr1t97WaiVYx1eqzBQ7L0iRQo2utS/kd5uqwymjXTFSnr5m1z922Zmq
+         d/FhY4fJ6mdzljlcckclWTIIgtpG0X/QSuMvlZuy7pybOET9GtmLzoPu71+ccl5qD6WS
+         EA0560CIBCB+bVs+eDj70z5z6fD2qvPvHT38PuWbiKzj4WWc9tCLJo3nTfVX4nfTPlJU
+         gxaSWHPdhfCznPb8G9PcZ8T302q9UtxFA7HMkS/56n8Czhcdtq2SDIhJL14JNSrU4eiG
+         ELhA==
+X-Gm-Message-State: APjAAAUUEE97+UyRP9evte9Tu49757HW1coGJoIF1LvilMRZcHMfxSgK
+        MvxMG7Xnggj9wLo+2S/OkN5Cq/2e30huEUBlkv/pb1aKGK18AOMgul3WzE7edtM1woeJHpdfREQ
+        oK11WDtraOe7bYimeJUXjbLuFoq0kgXtVN7Gg7WzqSlYzq9h7T7Ic1LsipDbGj+Kaf0Or/jiOAi
+        6VRfWkcA==
+X-Google-Smtp-Source: APXvYqzS1bzsF/j3DDvW+WRETX9lUuDRrDE5fuXquQ/cotx4yAE5fJo7uS2fCiSRccWDvGSsHKa4aA==
+X-Received: by 2002:aa7:9f94:: with SMTP id z20mr90607136pfr.66.1578051293102;
+        Fri, 03 Jan 2020 03:34:53 -0800 (PST)
 Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id h128sm70302144pfe.172.2020.01.03.03.34.39
+        by smtp.gmail.com with ESMTPSA id h128sm70302144pfe.172.2020.01.03.03.34.50
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 03 Jan 2020 03:34:41 -0800 (PST)
+        Fri, 03 Jan 2020 03:34:52 -0800 (PST)
 From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         kiran-kumar.kasturi@broadcom.com,
         Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 03/11] megaraid_sas: Update queue_depth of SAS and NVMe devices
-Date:   Fri,  3 Jan 2020 17:02:27 +0530
-Message-Id: <1578051155-14716-4-git-send-email-anand.lodnoor@broadcom.com>
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: =?y?q?=5BPATCH=2004/11=5D=20megaraid=5Fsas=3A=20Don=E2=80=99t=20kill=20already=20dead=20adapter?=
+Date:   Fri,  3 Jan 2020 17:02:28 +0530
+Message-Id: <1578051155-14716-5-git-send-email-anand.lodnoor@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
 References: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Anand Lodnoor <anand.lodnoor@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index bd81840..ddfbe6f 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2233,9 +2233,9 @@ enum MR_PD_TYPE {
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3cd269f..87bdcd6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -2154,6 +2154,13 @@ static void megasas_complete_outstanding_ioctls(struct megasas_instance *instanc
  
- /* JBOD Queue depth definitions */
- #define MEGASAS_SATA_QD	32
--#define MEGASAS_SAS_QD	64
-+#define MEGASAS_SAS_QD 256
- #define MEGASAS_DEFAULT_PD_QD	64
--#define MEGASAS_NVME_QD		32
-+#define MEGASAS_NVME_QD        64
- 
- #define MR_DEFAULT_NVME_PAGE_SIZE	4096
- #define MR_DEFAULT_NVME_PAGE_SHIFT	12
+ void megaraid_sas_kill_hba(struct megasas_instance *instance)
+ {
++	/* If adapter is already declared dead, do not issue kill HBA again */
++	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
++		dev_warn(&instance->pdev->dev,
++			 "Adapter already dead, skipping kill HBA\n");
++		return;
++	}
++
+ 	/* Set critical error to block I/O & ioctls in case caller didn't */
+ 	atomic_set(&instance->adprecovery, MEGASAS_HW_CRITICAL_ERROR);
+ 	/* Wait 1 second to ensure IO or ioctls in build have posted */
 -- 
 1.8.3.1
 
