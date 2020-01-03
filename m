@@ -2,183 +2,105 @@ Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 187FAC32767
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 05:29:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2621C00523
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 08:57:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8814222C3
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 05:29:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oxebzTLg"
+	by mail.kernel.org (Postfix) with ESMTP id 8DCB021734
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 08:57:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725928AbgACF3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 00:29:02 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:22126 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725972AbgACF3C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 00:29:02 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1578029341; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=QGQ3D1GyNhd0LAoBVLxbTbXL6/9pOn4Pwzlj2/BukcY=;
- b=oxebzTLgZP9G6nl8Dx2hE0b3ch/Lh5ga69ChYyRMvNIPEl17ALMdC5cvWgFwqGhuO8F2sFTV
- VrW23NQxQW2sc0lx64efwnXq8lhslIKN8C7IuM3sOCjVWkBk9Q7rlu9R1BOveozZllvqBE1P
- 7/ZExnRqa5+lTZmYvV+0TAecRHY=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e0ed11b.7fbab6fd77a0-smtp-out-n01;
- Fri, 03 Jan 2020 05:28:59 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C551EC447A5; Fri,  3 Jan 2020 05:28:59 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7B4A2C433CB;
-        Fri,  3 Jan 2020 05:28:58 +0000 (UTC)
+        id S1727442AbgACI5S (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 03:57:18 -0500
+Received: from mout.kundenserver.de ([212.227.126.187]:43873 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726050AbgACI5R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 03:57:17 -0500
+Received: from mail-qv1-f49.google.com ([209.85.219.49]) by
+ mrelayeu.kundenserver.de (mreue011 [212.227.15.129]) with ESMTPSA (Nemesis)
+ id 1MXXdn-1jE6oX3zhv-00Z0Or; Fri, 03 Jan 2020 09:57:15 +0100
+Received: by mail-qv1-f49.google.com with SMTP id n8so15948781qvg.11;
+        Fri, 03 Jan 2020 00:57:14 -0800 (PST)
+X-Gm-Message-State: APjAAAVzLmqwU93oflz90OayHaRkEtlgScMlOuLS/3OTCZ8ZWWg0eGOl
+        mflxRaKgKsis3TorOKBNsDywfOcYAuSaQxGCies=
+X-Google-Smtp-Source: APXvYqzTMjLfB/djZfKHN6GJc8U6SPp+bLcFseejCOHPAhzRIWhN2S9BjSwrezU2LR8WsFgGtj/vSg4385pE/8QPXy8=
+X-Received: by 2002:a0c:e7c7:: with SMTP id c7mr67496854qvo.222.1578041833501;
+ Fri, 03 Jan 2020 00:57:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 03 Jan 2020 13:28:58 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        andy.teng@mediatek.com, jejb@linux.ibm.com,
-        chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        asutoshd@codeaurora.org, avri.altman@wdc.com,
-        linux-mediatek@lists.infradead.org, peter.wang@mediatek.com,
-        linux-scsi-owner@vger.kernel.org, subhashj@codeaurora.org,
-        alim.akhtar@samsung.com, beanhuo@micron.com,
-        pedrom.sousa@synopsys.com, bvanassche@acm.org,
-        linux-arm-kernel@lists.infradead.org, matthias.bgg@gmail.com,
-        ron.hsu@mediatek.com, cc.chou@mediatek.com
-Subject: Re: [PATCH v1 1/2] scsi: ufs: set device as default active power mode
- during initialization only
-In-Reply-To: <4888afd46a9065b7f298a5de039426c9@codeaurora.org>
-References: <1577693546-7598-1-git-send-email-stanley.chu@mediatek.com>
- <1577693546-7598-2-git-send-email-stanley.chu@mediatek.com>
- <fd129b859c013852bd80f60a36425757@codeaurora.org>
- <1577754469.13164.5.camel@mtkswgap22>
- <836772092daffd8283a97d633e59fc34@codeaurora.org>
- <1577766179.13164.24.camel@mtkswgap22>
- <1577778290.13164.45.camel@mtkswgap22>
- <44393ed9ff3ba9878bae838307e7eec0@codeaurora.org>
- <1577947124.13164.75.camel@mtkswgap22>
- <4888afd46a9065b7f298a5de039426c9@codeaurora.org>
-Message-ID: <e13011fd858cf3ec0258c4b7ac914973@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+References: <20200102145552.1853992-1-arnd@arndb.de> <dc17d939c813b004e0a50af2813a1eef1fbf9574.camel@codethink.co.uk>
+In-Reply-To: <dc17d939c813b004e0a50af2813a1eef1fbf9574.camel@codethink.co.uk>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 3 Jan 2020 09:56:57 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a1tTCk_qYQ+iLp_L50biemmz+vh8kHYHL7hRPgirhxxLA@mail.gmail.com>
+Message-ID: <CAK8P3a1tTCk_qYQ+iLp_L50biemmz+vh8kHYHL7hRPgirhxxLA@mail.gmail.com>
+Subject: Re: [GIT PULL v3 00/27] block, scsi: final compat_ioctl cleanup
+To:     Ben Hutchings <ben.hutchings@codethink.co.uk>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        y2038 Mailman List <y2038@lists.linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:I1cvh4okryzhKcNilmC8/jvbYZfVuC7Gu3zL5E1dw1nhWS1IsPm
+ G5Ds416TnXhCHX4N3OqQef6+9rsjiCiGuKfWmAtK/kFOnOyvcSN/CM27gw3dr311C5NSxAG
+ ZK+7kxKBQVfr2hmw+eOxuNVU4n+uzNKY6ER9uc6wUCq/po24V2cfsgPkO6+Glgb5QjnctA4
+ 71SZQChXFWIiX0RFKbYmg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:lmKs5T3XinI=:vpspqsdsexs7fkhPmpGBPe
+ +oi0veEcyaz8JCYiR15ghmGkLyeZ6HJHk179W7e5mfPsKuxTRJXeQzjsCfg072D68yi9izXvO
+ WsL1ZfDUZEtWNc0cq7jGaKe8rsGuFPzoT2kQ06jrb+pT4/i4CCNb1A7MK6VY/InoR/D7jGcag
+ jp8ZCPVPU9vA0SryIbqhkPKjkGdJ0FZcDQCNJNf2cvEt065jp91OY5vYQ2fcZZ/otbszo31t6
+ HCXDmRfd6/ZBQYpbQ0qpv5P9oL0TIGbj1pEQFPc9bku1ODtXZAaqKrhi/TkgXpi5DBv7km1Iu
+ uvOQDQcbSm2CZNtJ7cPaybjnc0JADX/zTOU3JvsJvzke28q6A8bwYN1H0RcrEvaLS573+42uM
+ 3GfIfenhzmZkbuxNUiqZbJ/UCe/9/+sCqXsZBZVu3tzP4KOOEz7AJLiRlhCgjVSPLYrcXbLt4
+ bbp0QaNhxPMbX0fMM2UwBcsHbEXec9lf56bTcwVT9B+IhMOAndTZA7/wWYFBpPbUWJAY06ofO
+ dIizah+LcSpUN3KoZVstllojgWETUEBuOkpq+zCR5JyTTxDjw/D197lBWdTCB5CvmAuvjkZKM
+ 1EJ8zSPWzopPoQt4xncQLEm+dwXoK5Is8WMisZ2uXX3xAeYpHn7ORJPni9rGPQlUWq6wj+Wwe
+ IjqE0m7ovG8fbl7sGAVbfy7KsiHjJHTHs/p5nrciWUGlITYfILc6dg5xH0psdXNS7jJH/j3hr
+ nu/MleWWupSZPSFaS1USBZOKGgUa0uEt8rwzess6PcjplX8ebeRSK+Elfd9tGEtI4bfpSEbrJ
+ +P+lnbheWzNL8jYl5oMMz7zZr7eKm9RV9eysM8hYhnU/kPr28qeHCTelYTPL3y1RD6vj7Q6F2
+ bIu5/3/E/zoju4Tpu+3A==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-03 09:51, Can Guo wrote:
-> On 2020-01-02 14:38, Stanley Chu wrote:
->> Hi Can,
->> 
->> On Tue, 2019-12-31 at 16:35 +0800, Can Guo wrote:
->> 
->>> Hi Stanley,
->>> 
->>> I missed this mail before I hit send. In current code, as per my
->>> understanding,
->>> UFS device's power state should be Active after ufshcd_link_startup()
->>> returns.
->>> If I am wrong, please feel free to correct me.
->>> 
->> 
->> Yes, this assumption of ufshcd_probe_hba() is true so I will drop this
->> patch.
->> Thanks for remind.
->> 
->>> Due to you are almost trying to revert commit 7caf489b99a42a, I am 
->>> just
->>> wondering
->>> if you encounter failure/error caused by it.
->> 
->> Yes, we actually have some doubts from the commit message of "scsi: 
->> ufs:
->> issue link startup 2 times if device isn't active"
->> 
->> If we configured system suspend as device=PowerDown/Link=LinkDown 
->> mode,
->> during resume, the 1st link startup will be successful, and after that
->> device could be accessed normally so it shall be already in Active 
->> power
->> mode. We did not find devices which need twice linkup for normal work.
->> 
->> And because the 1st linkup is OK, the forced 2nd linkup by commit 
->> "scsi:
->> ufs: issue link startup 2 times if device isn't active" leads to link
->> lost and finally the 3rd linkup is made again by retry mechanism in
->> ufshcd_link_startup() and be successful. So a linkup performance issue
->> is introduced here: We actually need one-time linkup only but finally
->> got 3 linkup operations.
->> 
->> According to the UFS spec, all reset types (including POR and Host
->> UniPro Warm Reset which both may happen in above configurations) other
->> than LU reset, UFS device power mode shall return to Sleep mode or
->> Active mode depending on bInitPowerMode, by default, it's Active mode.
->> 
->> So we are curious that why enforcing twice linkup is necessary here?
->> Could you kindly help us clarify this?
->> 
->> If anything wrong in above description, please feel free to correct 
->> me.
->> 
-> 
-> Hi Stanley,
-> 
-> Above description is correct. The reason why the UFS device becomes
-> Active after the 1st link startup in your experiment is due to you
-> set spm_lvl to 5, during system suspend, UFS device is powered down.
-> When resume kicks start, the UFS device is power cycled once.
-> 
-> Moreover, if you set rpm_lvl to 5, during runtime suspend, if bkops is
-> enabled, the UFS device will not be powered off, meaning when runtime
-> resume kicks start, the UFS device is not power cycled, in this case,
-> we need 3 times of link startup.
-> 
-> Does above explain?
-> 
-> Thanks,
-> 
-> Can Guo.
-> 
+On Fri, Jan 3, 2020 at 1:22 AM Ben Hutchings
+<ben.hutchings@codethink.co.uk> wrote:
+>
+> On Thu, 2020-01-02 at 15:55 +0100, Arnd Bergmann wrote:
+> [...]
+> > Changes since v2:
+> > - Rebase to v5.5-rc4, which contains the earlier bugfixes
+> > - Fix sr_block_compat_ioctl() error handling bug found by
+> >   Ben Hutchings
+> [...]
+>
+> Unfortunately that fix was squashed into "compat_ioctl: move
+> sys_compat_ioctl() to ioctl.c" whereas it belongs in "compat_ioctl:
+> scsi: move ioctl handling into drivers".
 
-Hi Stanley,
+Fixed now.
 
-Sorry, typo before. I meant if set rpm_lvl/spm_lvl to 5, during suspend,
-if is_lu_power_on_wp is set, the UFS device will not be fully powered 
-off
-(only VCC is down), meaning when resume kicks start, the UFS device is 
-not
-power cycled, in this case, we need 3 times of link startup.
+> If you decide to rebase again, you can add my Reviewed-by to all
+> patches.
 
-Regards,
+Done, and pushed out to the same tag as before
 
-Can Guo.
+https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git/
+block-ioctl-cleanup-5.6
 
->>> 
->>> Happy new year to you too!
->>> 
->>> Thanks,
->>> 
->>> Can Guo
->> 
->> Thanks,
->> 
->> Stanley
->> 
->>> 
->>> _______________________________________________
->>> Linux-mediatek mailing list
->>> Linux-mediatek@lists.infradead.org
->>> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+Thank you again for the careful review!
+
+Martin, please pull the URL above to get the latest version, the top commit
+is 8ce156deca718 ("Documentation: document ioctl interfaces better").
+
+       Arnd
