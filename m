@@ -1,88 +1,113 @@
-Return-Path: <SRS0=yTIb=2Y=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=nD9h=2Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9B7C2D0C2
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 20:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00327C32767
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 02:56:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDC0421835
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jan 2020 20:45:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C84AB21734
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 02:56:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728610AbgACUpd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 15:45:33 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:35975 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727848AbgACUpd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 15:45:33 -0500
-Received: by mail-pl1-f193.google.com with SMTP id a6so18700212plm.3
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Jan 2020 12:45:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=KswqLj9n+63iTTN+tAb52pHlE/Z5/lUqgi0JGdp7Ip8=;
-        b=EtmvDniOF89O1k7aSJL9YxiDqQQwT6RtZZa9FP1xwQalP7aRTIgbTlFm1lgarie0CE
-         Bn3DyCTAKF3k4sxGAMskRmOYTIzTtKIQvudeZ8SudeSPX9pxHot1gCdFbaa3u1vHA6E6
-         WI+Bq5pRF41crv9nPbFV6XcoDbwg1QaoE/XGYUmq//No4bt985kmv8MwhA1nwy2nf4tZ
-         H68j8zOV37YxgosGf0dIMJNp2R1XtWZaTB2thOBSDpoUeAqfqyWrSxPFZkRRH1hBFxSS
-         /a8dMNMlSOLr1/zWRG7n+A093YBltEk0SWWHtM1fHAhhzWa+2qD9ORtIy/xQRjCrZhgG
-         /oEQ==
-X-Gm-Message-State: APjAAAXH9AgW1E49QZWLfv2jywG79g47QihyR+susnG8+KJ0cCyDKfmW
-        ppYHJu2TRuvV1hcBfGmIcw4=
-X-Google-Smtp-Source: APXvYqyozGyxcxeMg+9oQ6zYKy8i0GWwGetaNvs17Ig32VPlhbrGgZ66eLWMt1hAUgOztl0oLW2snQ==
-X-Received: by 2002:a17:902:bd46:: with SMTP id b6mr93533429plx.239.1578084332754;
-        Fri, 03 Jan 2020 12:45:32 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id z30sm70349825pff.131.2020.01.03.12.45.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 03 Jan 2020 12:45:31 -0800 (PST)
-Subject: Re: [scsi:misc 58/85] drivers/scsi/qla2xxx/qla_target.c:5326:35:
- sparse: sparse: cast from restricted __be16
-To:     kbuild test robot <lkp@intel.com>
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-References: <202001040422.6EbHYDMc%lkp@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <351dc718-68cb-99e7-1056-778af8be5c9b@acm.org>
-Date:   Fri, 3 Jan 2020 12:45:30 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1727275AbgADC4Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 21:56:24 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53417 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727255AbgADC4Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jan 2020 21:56:24 -0500
+Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 33E4043ED89;
+        Sat,  4 Jan 2020 13:56:22 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1inZbw-00084l-N0; Sat, 04 Jan 2020 13:56:20 +1100
+Date:   Sat, 4 Jan 2020 13:56:20 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
+Message-ID: <20200104025620.GC23195@dread.disaster.area>
+References: <20191223225558.19242-1-tasleson@redhat.com>
+ <20191223225558.19242-10-tasleson@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <202001040422.6EbHYDMc%lkp@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191223225558.19242-10-tasleson@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=Y1q_LsDJlNF9FywMdSwA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/3/20 12:18 PM, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
-> head:   c53cf10ef6d9faeee9baa1fab824139c6f10a134
-> commit: a9c4ae108610716140bdec56ae0bebbe1c5cbe49 [58/85] scsi: qla2xxx: Use get_unaligned_*() instead of open-coding these functions
-> reproduce:
->          # apt-get install sparse
->          # sparse version: v0.6.1-129-g341daf20-dirty
->          git checkout a9c4ae108610716140bdec56ae0bebbe1c5cbe49
->          make ARCH=x86_64 allmodconfig
->          make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+On Mon, Dec 23, 2019 at 04:55:58PM -0600, Tony Asleson wrote:
+> Add persistent durable name to xfs messages so we can
+> correlate them with other messages for the same block
+> device.
 > 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Tony Asleson <tasleson@redhat.com>
+> ---
+>  fs/xfs/xfs_message.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
 > 
-> 
-> sparse warnings: (new ones prefixed by >>)
-> [ ... ]
-Because I think that I don't have introduced any new endianness issues 
-with the mentioned patch, please ignore this kernel test robot report. 
-I'm working on patches that make the qla2xxx driver endianness clean.
+> diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
+> index 9804efe525a9..8447cdd985b4 100644
+> --- a/fs/xfs/xfs_message.c
+> +++ b/fs/xfs/xfs_message.c
+> @@ -20,6 +20,23 @@ __xfs_printk(
+>  	const struct xfs_mount	*mp,
+>  	struct va_format	*vaf)
+>  {
+> +	char dict[128];
+> +	int dict_len = 0;
+> +
+> +	if (mp && mp->m_super && mp->m_super->s_bdev &&
+> +		mp->m_super->s_bdev->bd_disk) {
+> +		dict_len = dev_durable_name(
+> +			disk_to_dev(mp->m_super->s_bdev->bd_disk)->parent,
+> +			dict,
+> +			sizeof(dict));
+> +		if (dict_len) {
+> +			printk_emit(
+> +				0, level[1] - '0', dict, dict_len,
+> +				"XFS (%s): %pV\n",  mp->m_fsname, vaf);
+> +			return;
+> +		}
+> +	}
 
-Bart.
+NACK on the ground this is a gross hack.
+
+> +
+>  	if (mp && mp->m_fsname) {
+
+mp->m_fsname is the name of the device we use everywhere for log
+messages, it's set up at mount time so we don't have to do runtime
+evaulation of the device name every time we need to emit the device
+name in a log message.
+
+So, if you have some sooper speshial new device naming scheme, it
+needs to be stored into the struct xfs_mount to replace mp->m_fsname.
+
+And if you have some sooper spehsial new printk API that uses this
+new device name, everything XFS emits needs to use it
+unconditionally as we do with mp->m_fsname now.
+
+IOWs, this isn't conditional code - it either works for the entire
+life of the mount for every message we have to emit with a single
+setup call, or the API is broken and needs to be rethought.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
