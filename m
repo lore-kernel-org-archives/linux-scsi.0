@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B73FDC32767
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3A77C32767
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 841CD24676
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2C7B21D7D
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578109043;
-	bh=ZmS3ecpNKbKpZ80YMGwX6STvyWgGYbJUG1w6hAEWutk=;
+	s=default; t=1578109053;
+	bh=SZxaZFJ7NM5F+JBcsLK0Ldt06QMXpR+LSdlaT2v1Gc4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=oQTnNcVy1QDLJ7EAdmGhw5s72j23XYo+5PdkrIiFM1aBkHEdw+W8xXOizyp/g7lOO
-	 5fAeUK0Mux+840eLkak6VcbdeKJbjPzMY5/f+ipOEVmEaXzBjpBh2i185ghS3O6vYD
-	 HR1t+p6z/BDZtbQ1vcebYFb8olLox1zw0SXrsYwE=
+	b=f1FlJN+Z9XCIQOPYqa0MhliPKYNOmyVCruu6C617E2qH7R0ILYUzAdFkJykhVmArc
+	 jQE4uIqHmJJUodEla93ZXMqWoEJwY3ZX/D1wCmT3Tf9SFLxvhyhy5aeBESyJUYuq1N
+	 QgsyPHefss6GOnMBaeVHS/uZMfci7AFogwalU24I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbgADDhH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 22:37:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38624 "EHLO mail.kernel.org"
+        id S1727758AbgADDg7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 22:36:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38224 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727278AbgADDhH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Jan 2020 22:37:07 -0500
+        id S1727711AbgADDg6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Jan 2020 22:36:58 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E22B72464B;
-        Sat,  4 Jan 2020 03:37:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4074124670;
+        Sat,  4 Jan 2020 03:36:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578109026;
-        bh=ZmS3ecpNKbKpZ80YMGwX6STvyWgGYbJUG1w6hAEWutk=;
+        s=default; t=1578109018;
+        bh=SZxaZFJ7NM5F+JBcsLK0Ldt06QMXpR+LSdlaT2v1Gc4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yqD6bcmsAZi/9Mu0QxtgBJ0szrLJfUrATGRaOYFu3V4vtT1j0bx+E182zojWz9EzU
-         7ICaSGouiy1Fv6GWIXD4PMIHXECDEorRHVq2tM4ocFpc//PyX4o/Loa7veUV6Tye2T
-         TrX8trX5y0Zxdt8vHA2BdP0GCuEibRNDYb0Afe64=
+        b=RASIaYLKktTcnKfcIycY59CT3QSIestU4YshwLXixFwwDn9L5+d77huTmqXbVtOIl
+         Nr8k2xdp0wI9prdjY59aO0gfoEYqFqPrRX8LgNMLSbJU230fLlh1hs63e+Gr6seFto
+         JAVtUxo0FSpNYUx4X/fMrx16I/zNkdLJ8M7WqPxE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Varun Prakash <varun@chelsio.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 3/4] scsi: libcxgbi: fix NULL pointer dereference in cxgbi_device_destroy()
-Date:   Fri,  3 Jan 2020 22:37:01 -0500
-Message-Id: <20200104033702.11304-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 3/4] scsi: libcxgbi: fix NULL pointer dereference in cxgbi_device_destroy()
+Date:   Fri,  3 Jan 2020 22:36:52 -0500
+Message-Id: <20200104033653.11217-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200104033702.11304-1-sashal@kernel.org>
-References: <20200104033702.11304-1-sashal@kernel.org>
+In-Reply-To: <20200104033653.11217-1-sashal@kernel.org>
+References: <20200104033653.11217-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,7 +74,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index e974106f2bb5..3d6e653f5147 100644
+index 902f5e03ec94..0d45658f163a 100644
 --- a/drivers/scsi/cxgbi/libcxgbi.c
 +++ b/drivers/scsi/cxgbi/libcxgbi.c
 @@ -121,7 +121,8 @@ static inline void cxgbi_device_destroy(struct cxgbi_device *cdev)
