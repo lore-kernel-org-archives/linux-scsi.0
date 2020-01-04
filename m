@@ -7,45 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 242B5C2D0CE
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE27DC00523
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEE86217F4
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0378217F4
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Jan 2020 03:37:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578109078;
-	bh=GIBu8aN+NLGZjEDEJVl+vrMoHlDNqN/VUeTvSJEg2Ec=;
+	s=default; t=1578109079;
+	bh=pVmR2uthoKLDfspvx7wxCvETNXMl8k1lcP38v1hsNyA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RFC0TYU3KgXFQWVIV+GFNnTSz5/8gV1WzqG2HBeYihgKDUy1pUTa9n7o6ctp6kyIF
-	 /aWsjYIoo3J3NnzST+kSfv/ZSAJWErWl0F4vz/ffW1dbfMYhAcD/2WZr32Rg86IHyS
-	 CWCxVvsgHgf9OKaoZIqUwcX0LW0V/j1C2Xc/gjf0=
+	b=m2FiZPaR/Li9V+SRM33fkezAYNxRtBVzXkDCMvV1OKFs/OMWZb4c2rNqEGFzEKDbt
+	 IIjMb2yB0fy4JcWYjpTeMrddkUZioo8F1L4nnxF/9AFP34rNheBfms7jOCn/o+GFrd
+	 KYH7lhUZ/I9aTUbikcAQkMw4p4YWQ1SiCjEW8AMQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbgADDg0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jan 2020 22:36:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37042 "EHLO mail.kernel.org"
+        id S1727389AbgADDgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jan 2020 22:36:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37018 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727374AbgADDg0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Jan 2020 22:36:26 -0500
+        id S1727374AbgADDgZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Jan 2020 22:36:25 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E95A824650;
-        Sat,  4 Jan 2020 03:36:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A4A822464B;
+        Sat,  4 Jan 2020 03:36:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578108985;
-        bh=GIBu8aN+NLGZjEDEJVl+vrMoHlDNqN/VUeTvSJEg2Ec=;
+        s=default; t=1578108984;
+        bh=pVmR2uthoKLDfspvx7wxCvETNXMl8k1lcP38v1hsNyA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Mxo3I02np7KGT4IGXeTv8sgogrUObaUxWhZ3Lvpprs2mdflWcbOUq+d/p8FiCrO7m
-         YKNoE4oVy93VHxfwWT2rxNcFn/U0qNYoCy4dNbwyFsHTRdrVgSV00CUru81r0pCgrf
-         5SAnh12sOXGIFnBP4KkZKv40u5DxHtcy3eRIbmXU=
+        b=Ugaewn/ga/wy0JgMKCiFq9mbZdoaLqBA0tEMC4pOPAUzPTXRNBxGcoHWtkRiegSju
+         iwQSFORGonr6o6G6HaRPkBSupUbOfP3OND+zA5SDBK2uq8IdanFVK5KqBwYx+FqUHi
+         rsK/O2cerswzoAyWI5AURB+gBytAxxk81ahGdjTM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Varun Prakash <varun@chelsio.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 04/10] scsi: libcxgbi: fix NULL pointer dereference in cxgbi_device_destroy()
-Date:   Fri,  3 Jan 2020 22:36:13 -0500
-Message-Id: <20200104033620.10977-4-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 03/10] scsi: mpt3sas: Fix double free in attach error handling
+Date:   Fri,  3 Jan 2020 22:36:12 -0500
+Message-Id: <20200104033620.10977-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200104033620.10977-1-sashal@kernel.org>
 References: <20200104033620.10977-1-sashal@kernel.org>
@@ -58,35 +60,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Varun Prakash <varun@chelsio.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 71482fde704efdd8c3abe0faf34d922c61e8d76b ]
+[ Upstream commit ee560e7bbab0c10cf3f0e71997fbc354ab2ee5cb ]
 
-If cxgb4i_ddp_init() fails then cdev->cdev2ppm will be NULL, so add a check
-for NULL pointer before dereferencing it.
+The caller also calls _base_release_memory_pools() on error so it leads to
+a number of double frees:
 
-Link: https://lore.kernel.org/r/1576676731-3068-1-git-send-email-varun@chelsio.com
-Signed-off-by: Varun Prakash <varun@chelsio.com>
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->chain_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->hpr_lookup' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->internal_lookup' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->pcie_sgl_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_free_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_post_free_array_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->reply_post_free_dma_pool' double freed
+drivers/scsi/mpt3sas/mpt3sas_base.c:7207 mpt3sas_base_attach() warn: 'ioc->sense_dma_pool' double freed
+
+Fixes: 74522a92bbf0 ("scsi: mpt3sas: Optimize I/O memory consumption in driver.")
+Link: https://lore.kernel.org/r/20191203093652.gyntgvnkw2udatyc@kili.mountain
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/cxgbi/libcxgbi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 3e17af8aedeb..2cd2761bd249 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -121,7 +121,8 @@ static inline void cxgbi_device_destroy(struct cxgbi_device *cdev)
- 		"cdev 0x%p, p# %u.\n", cdev, cdev->nports);
- 	cxgbi_hbas_remove(cdev);
- 	cxgbi_device_portmap_cleanup(cdev);
--	cxgbi_ppm_release(cdev->cdev2ppm(cdev));
-+	if (cdev->cdev2ppm)
-+		cxgbi_ppm_release(cdev->cdev2ppm(cdev));
- 	if (cdev->pmap.max_connect)
- 		cxgbi_free_big_mem(cdev->pmap.port_csk);
- 	kfree(cdev);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index fea3cb6a090b..752b71cfbe12 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5234,7 +5234,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 					&ct->chain_buffer_dma);
+ 			if (!ct->chain_buffer) {
+ 				ioc_err(ioc, "chain_lookup: pci_pool_alloc failed\n");
+-				_base_release_memory_pools(ioc);
+ 				goto out;
+ 			}
+ 		}
 -- 
 2.20.1
 
