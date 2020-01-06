@@ -4,26 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6A96C33C8C
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 18:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F530C33C8C
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 18:58:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E326208C4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 18:58:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1587208C4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 18:58:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726937AbgAFS6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jan 2020 13:58:37 -0500
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:35948 "EHLO
+        id S1726893AbgAFS6g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jan 2020 13:58:36 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:35924 "EHLO
         bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726769AbgAFS6h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2020 13:58:37 -0500
+        with ESMTP id S1726657AbgAFS6e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2020 13:58:34 -0500
 Received: from localhost (unknown [IPv6:2610:98:8005::147])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: krisman)
-        by bhuna.collabora.co.uk (Postfix) with ESMTPSA id 5375929196F;
-        Mon,  6 Jan 2020 18:58:35 +0000 (GMT)
+        by bhuna.collabora.co.uk (Postfix) with ESMTPSA id 6AD4429166F;
+        Mon,  6 Jan 2020 18:58:32 +0000 (GMT)
 From:   Gabriel Krisman Bertazi <krisman@collabora.com>
 To:     gregkh@linuxfoundation.org
 Cc:     rafael@kernel.org, lduncan@suse.com, cleech@redhat.com,
@@ -32,9 +32,9 @@ Cc:     rafael@kernel.org, lduncan@suse.com, cleech@redhat.com,
         linux-scsi@vger.kernel.org,
         Gabriel Krisman Bertazi <krisman@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH 3/3] iscsi: Fail session and connection on transport registration failure
-Date:   Mon,  6 Jan 2020 13:58:17 -0500
-Message-Id: <20200106185817.640331-4-krisman@collabora.com>
+Subject: [PATCH 2/3] drivers: base: Propagate errors through the transport component
+Date:   Mon,  6 Jan 2020 13:58:16 -0500
+Message-Id: <20200106185817.640331-3-krisman@collabora.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200106185817.640331-1-krisman@collabora.com>
 References: <20200106185817.640331-1-krisman@collabora.com>
@@ -45,79 +45,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the transport cannot be registered, the session/connection creation
-needs to be failed early to let the initiator know.  Otherwise, the
-system will have an outstanding connection that cannot be used nor
-removed by open-iscsi. The result is similar to the error below,
-triggered by injecting a failure in the transport's registration path.
-
-openiscsi reports success:
-
-root@debian-vm:~#  iscsiadm -m node -T iqn:lun1 -p 127.0.0.1 -l
-Logging in to [iface: default, target: iqn:lun1, portal: 127.0.0.1,3260]
-Login to [iface: default, target: iqn:lun1, portal:127.0.0.1,3260] successful.
-
-But cannot remove the session afterwards, since the kernel is in an
-inconsistent state.
-
-root@debian-vm:~#  iscsiadm -m node -T iqn:lun1 -p 127.0.0.1 -u
-iscsiadm: No matching sessions found
+The transport registration may fail.  Make sure the errors are
+propagated to the callers.
 
 Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ drivers/base/transport_class.c  | 11 ++++++++---
+ include/linux/transport_class.h |  6 +++---
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ed8d9709b9b9..2b732b7a9a5b 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2093,7 +2093,12 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- 					 "could not register session's dev\n");
- 		goto release_ida;
- 	}
--	transport_register_device(&session->dev);
-+	err = transport_register_device(&session->dev);
-+	if (err) {
-+		iscsi_cls_session_printk(KERN_ERR, session,
-+					 "could not register transport's dev\n");
-+		goto release_dev;
-+	}
+diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
+index 5ed86ded6e6b..ccc86206e508 100644
+--- a/drivers/base/transport_class.c
++++ b/drivers/base/transport_class.c
+@@ -30,6 +30,10 @@
+ #include <linux/attribute_container.h>
+ #include <linux/transport_class.h>
  
- 	spin_lock_irqsave(&sesslock, flags);
- 	list_add(&session->sess_list, &sesslist);
-@@ -2103,6 +2108,8 @@ int iscsi_add_session(struct iscsi_cls_session *session, unsigned int target_id)
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed session adding\n");
- 	return 0;
++static int transport_remove_classdev(struct attribute_container *cont,
++				     struct device *dev,
++				     struct device *classdev);
++
+ /**
+  * transport_class_register - register an initial transport class
+  *
+@@ -172,10 +176,11 @@ static int transport_add_class_device(struct attribute_container *cont,
+  * routine is simply a trigger point used to add the device to the
+  * system and register attributes for it.
+  */
+-
+-void transport_add_device(struct device *dev)
++int transport_add_device(struct device *dev)
+ {
+-	attribute_container_device_trigger(dev, transport_add_class_device);
++	return attribute_container_device_trigger_safe(dev,
++					transport_add_class_device,
++					transport_remove_classdev);
+ }
+ EXPORT_SYMBOL_GPL(transport_add_device);
  
-+release_dev:
-+	device_del(&session->dev);
- release_ida:
- 	if (session->ida_used)
- 		ida_simple_remove(&iscsi_sess_ida, session->target_id);
-@@ -2263,7 +2270,12 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
- 					 "register connection's dev\n");
- 		goto release_parent_ref;
- 	}
--	transport_register_device(&conn->dev);
-+	err = transport_register_device(&conn->dev);
-+	if (err) {
-+		iscsi_cls_session_printk(KERN_ERR, session, "could not "
-+					 "register transport's dev\n");
-+		goto release_conn_ref;
-+	}
+diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
+index a9c59761927b..63076fb835e3 100644
+--- a/include/linux/transport_class.h
++++ b/include/linux/transport_class.h
+@@ -62,16 +62,16 @@ struct transport_container {
+ 	container_of(x, struct transport_container, ac)
  
- 	spin_lock_irqsave(&connlock, flags);
- 	list_add(&conn->conn_list, &connlist);
-@@ -2272,6 +2284,8 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
- 	ISCSI_DBG_TRANS_CONN(conn, "Completed conn creation\n");
- 	return conn;
+ void transport_remove_device(struct device *);
+-void transport_add_device(struct device *);
++int transport_add_device(struct device *);
+ void transport_setup_device(struct device *);
+ void transport_configure_device(struct device *);
+ void transport_destroy_device(struct device *);
  
-+release_conn_ref:
-+	put_device(&conn->dev);
- release_parent_ref:
- 	put_device(&session->dev);
- free_conn:
+-static inline void
++static inline int
+ transport_register_device(struct device *dev)
+ {
+ 	transport_setup_device(dev);
+-	transport_add_device(dev);
++	return transport_add_device(dev);
+ }
+ 
+ static inline void
 -- 
 2.24.1
 
