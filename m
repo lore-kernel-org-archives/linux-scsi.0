@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C7AC33C8C
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 16:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0500EC33C8C
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 16:35:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 477AD208C4
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 16:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6FD6208C4
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jan 2020 16:35:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="eJ6ATWCb"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="CR9720X+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726526AbgAFQeo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jan 2020 11:34:44 -0500
-Received: from mail-io1-f68.google.com ([209.85.166.68]:42855 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbgAFQen (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2020 11:34:43 -0500
-Received: by mail-io1-f68.google.com with SMTP id n11so42478976iom.9
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Jan 2020 08:34:43 -0800 (PST)
+        id S1726536AbgAFQfh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jan 2020 11:35:37 -0500
+Received: from mail-il1-f193.google.com ([209.85.166.193]:34799 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbgAFQfg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2020 11:35:36 -0500
+Received: by mail-il1-f193.google.com with SMTP id s15so43128696iln.1
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Jan 2020 08:35:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=5a3XxGaLvUm+8YfhpgpIQPdZZ4+CVir1jLuHzxR8ak4=;
-        b=eJ6ATWCbp4M3J6VYHgshpZ0KEFT2RBHcC5fODW0wjVAcz6Q7Top7xkacjjDrr5Gfsv
-         ooMsgatpZFLVaeBixVJod4WcANlUVc7JakIrWtAO0RnQZNngLTdkXWGO4HVmv5hArxuE
-         +P12Xjk8TD9YIirnAMu7N1KZa20uA9Z+CoLCECF5W+AQh4vvrw/OOO9vLJI9y7F04IAa
-         /69pe+ruiDVW8FwScrWPlJolcvUoSg75nDaLfhQuDJ9ANwoNpUhhjUu7exwmwBvmL7wW
-         lbFgpqa1ERAKKojklKaHtGTpawN/tcSVs8gZlSg+M4GgeG/ivSwdwfS8dOCThpFexp8S
-         sC4A==
+        bh=23L59uPjIob12yoE9aXa3Hb7YdifyI3v50m7E1OIDKg=;
+        b=CR9720X+DNScoccl6xxCmi3TCLGs9XN3yxyGcq/oRzLnZhm1Rac+n3xebCYdvFxIDs
+         if80HpzRe4ZN3LKelAlEoFiYDzeQ4Mu3KJIYOR77uVkswfiZUGi432vFH+RWQryFMYzu
+         IkiFGyxf5v0ek0+C/HmWc77rD0A/o6MGyVbJd99j1A4cpCn2xqL2aJUFVLOyu6JJ+02z
+         Bx4ognDerv9rUqBCHG3ap33bro0e+q1isXmr0T3s4pi0QcGbjJppp1G68MiRiMdCL1o0
+         p7RDiUgwGmT1B3+Y3nIh7Z0ZIifH/YzFoTTsGNAHOmm/LU3xaC6B2bFf6b5B/qQANKUT
+         PnbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=5a3XxGaLvUm+8YfhpgpIQPdZZ4+CVir1jLuHzxR8ak4=;
-        b=A7Qfr+wEZDGGFjKyRB+CCMY9cL26LEbQX46J3Xm8taE+Gh8p+0almBGH9DghueM+5p
-         oEIQAdd+VlHGPCuWILGj5AJNK2v6raEizQGoiRi3lRwE6DVjWtpJ4OCqXJWWFFikXKBV
-         fiG/NNjJPMbVoaMqftQ1+Fe52qT/t0u5+TWSphiBEZ0E4C9g8n+zbRDx2bitWJPw1dzW
-         Qt8ZRqQ/CHW/OdpCwYMZO9AEFjHSqQyxi+V7tgxFmAyCzN+BVL7bjgGikD3wINfFLf5h
-         xZe3yJnsApw+AQoLvaDakNL0oidUTHWjV5OH417UcuSQvMUo8IZbIQV6RoKY5utAWz5f
-         gEUw==
-X-Gm-Message-State: APjAAAVx/t6c4sBCrdb08Ld69hUYeCqsVRn4g24IfyQm6NTysBC1GkxR
-        tbBDYGu+9dx/C3m5xUVNpvCI4Bp5AKydcjdAXNzzeA==
-X-Google-Smtp-Source: APXvYqxkOBBlDbQimKA4EWQp7khTWeUPcH/75W4ZSzx4Cpu1JnpECkj4VYJpDHKyxaSCuI14uXJOGf77mn1dJN41Evc=
-X-Received: by 2002:a05:6602:25d3:: with SMTP id d19mr57875397iop.217.1578328482838;
- Mon, 06 Jan 2020 08:34:42 -0800 (PST)
+        bh=23L59uPjIob12yoE9aXa3Hb7YdifyI3v50m7E1OIDKg=;
+        b=A9XQjdbBu2tgivmMqdRRe4wHOK+Y5K8Es0mHI05DIyzRkMS9G97ZndEh/oUVJsrUvl
+         pshi3FPB/0YX4K15RP5UtT7a+oXyBY/Wvfj6o07Vrfb9I8hbWKxom3a6q8RWp7aUBXs8
+         lnkN9LIuNr0j8M0zBnb51LSVCugfadCvXCNs0lHU0a5TnjgSFOBhUu6tjqca20Y4F4aS
+         JN51VT6Cbcl2Y2wGFRheuXboRnmchuPVgiMWyM76jYaEJbrkNxBx0zrUj1kdidZGdAP9
+         NG82v/TxC9g1ewyiZ/RDiVwg8PIb3r5qEVKq9+rBdjV5mJCroW6x8gF+Ito022a+ikol
+         a8aA==
+X-Gm-Message-State: APjAAAV+IMnm5Qtzr2OTkJkNbjYR1xh+MWdiEgXXR17D628Jhmsqu2RA
+        cz5zFYg48UBLWOkXAsm3Y5hOzw1Bv37+20QtLxmWxQ==
+X-Google-Smtp-Source: APXvYqzmgeHgwt3YEylFJY36I7WpA4i4vuTm1NrnyytpMz5T1I3f2RYH9Vff0Eat+08NjNR/5B6eaT5gUkDS7pYOeWk=
+X-Received: by 2002:a92:8d88:: with SMTP id w8mr88455777ill.71.1578328535959;
+ Mon, 06 Jan 2020 08:35:35 -0800 (PST)
 MIME-Version: 1.0
-References: <20191224044143.8178-1-deepak.ukey@microchip.com> <20191224044143.8178-11-deepak.ukey@microchip.com>
-In-Reply-To: <20191224044143.8178-11-deepak.ukey@microchip.com>
+References: <20191224044143.8178-1-deepak.ukey@microchip.com> <20191224044143.8178-12-deepak.ukey@microchip.com>
+In-Reply-To: <20191224044143.8178-12-deepak.ukey@microchip.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Mon, 6 Jan 2020 17:34:32 +0100
-Message-ID: <CAMGffEkGk5woB0VWu1QFu7eS2NvV+ZDRXgzx=_A-7uKCrhbmiA@mail.gmail.com>
-Subject: Re: [PATCH 10/12] pm80xx : sysfs attribute for non fatal dump.
+Date:   Mon, 6 Jan 2020 17:35:25 +0100
+Message-ID: <CAMGffE=VgZ1RfnZcGJjgYRNJmhRWoifavo-jJZF=BMOyWP5CCw@mail.gmail.com>
+Subject: Re: [PATCH 11/12] pm80xx : Introduce read and write length for IOCTL
+ payload structure.
 To:     Deepak Ukey <deepak.ukey@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -74,10 +75,10 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Tue, Dec 24, 2019 at 5:41 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
-> From: Deepak Ukey <Deepak.Ukey@microchip.com>
+> From: Viswas G <Viswas.G@microchip.com>
 >
-> Added the functionality to collect non fatal dump.
-Please extend the commit message, what the use case, how to use it.
+> Removed the common length and introduce read and write length for
+> IOCTL payload structure.
 >
 > Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
@@ -86,255 +87,207 @@ Please extend the commit message, what the use case, how to use it.
 > Signed-off-by: Radha Ramachandran <radha@google.com>
 > Signed-off-by: Akshat Jain <akshatzen@google.com>
 > Signed-off-by: Yu Zheng <yuuzheng@google.com>
+Looks fine to me.
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c  |  45 +++++++++++++
->  drivers/scsi/pm8001/pm8001_init.c |   1 +
->  drivers/scsi/pm8001/pm8001_sas.h  |   4 ++
->  drivers/scsi/pm8001/pm80xx_hwi.c  | 130 ++++++++++++++++++++++++++++++++++++++
->  4 files changed, 180 insertions(+)
+>  drivers/scsi/pm8001/pm8001_ctl.c  |  6 +++---
+>  drivers/scsi/pm8001/pm8001_hwi.c  | 22 +++++++++++-----------
+>  drivers/scsi/pm8001/pm8001_init.c | 12 ++++++------
+>  drivers/scsi/pm8001/pm8001_sas.h  |  3 ++-
+>  4 files changed, 22 insertions(+), 21 deletions(-)
 >
 > diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 3e59b2a7185a..669c60a8d123 100644
+> index 669c60a8d123..63bd2a384d2e 100644
 > --- a/drivers/scsi/pm8001/pm8001_ctl.c
 > +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -577,6 +577,49 @@ static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
+> @@ -486,7 +486,7 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
+>         pm8001_ha->nvmd_completion = &completion;
+>         payload.minor_function = 7;
+>         payload.offset = 0;
+> -       payload.length = 4096;
+> +       payload.rd_length = 4096;
+>         payload.func_specific = kzalloc(4096, GFP_KERNEL);
+>         if (!payload.func_specific)
+>                 return -ENOMEM;
+> @@ -697,7 +697,7 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
+>         payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
+>         memcpy((u8 *)&payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
+>                                 pm8001_ha->fw_image->size);
+> -       payload->length = pm8001_ha->fw_image->size;
+> +       payload->wr_length = pm8001_ha->fw_image->size;
+>         payload->id = 0;
+>         payload->minor_function = 0x1;
+>         pm8001_ha->nvmd_completion = &completion;
+> @@ -743,7 +743,7 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
+>                                         IOCTL_BUF_SIZE);
+>                 for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
+>                         payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
+> -                       payload->length = 1024*16;
+> +                       payload->wr_length = 1024*16;
+>                         payload->id = 0;
+>                         fwControl =
+>                               (struct fw_control_info *)&payload->func_specific;
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index f9395d9fd530..16dc7a92ad68 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -4841,7 +4841,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         if (!fw_control_context)
+>                 return -ENOMEM;
+>         fw_control_context->usrAddr = (u8 *)ioctl_payload->func_specific;
+> -       fw_control_context->len = ioctl_payload->length;
+> +       fw_control_context->len = ioctl_payload->rd_length;
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         memset(&nvmd_req, 0, sizeof(nvmd_req));
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> @@ -4862,7 +4862,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
 >
->  static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
->
-> +/**
-> + ** non_fatal_log_show - non fatal error logging
-> + ** @cdev:pointer to embedded class device
-> + ** @buf: the buffer returned
-> + **
-> + ** A sysfs 'read-only' shost attribute.
-> + **/
-> +static ssize_t non_fatal_log_show(struct device *cdev,
-> +       struct device_attribute *attr, char *buf)
-> +{
-> +       u32 count;
-> +
-> +       count = pm80xx_get_non_fatal_dump(cdev, attr, buf);
-> +       return count;
-> +}
-> +static DEVICE_ATTR_RO(non_fatal_log);
-I would suggest to use pm8001_ctl_non_fatal_log_show as function name,
-or convert remove
-the prefix for other functions, it's annoying to have different naming
-convention.
-> +
-> +static ssize_t non_fatal_count_show(struct device *cdev,
-> +               struct device_attribute *attr, char *buf)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +
-> +       return snprintf(buf, PAGE_SIZE, "%08x",
-> +                       pm8001_ha->non_fatal_count);
-> +}
-> +
-> +static ssize_t non_fatal_count_store(struct device *cdev,
-> +               struct device_attribute *attr, const char *buf, size_t count)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +       int val = 0;
-> +
-> +       if (kstrtoint(buf, 16, &val) != 0)
-> +               return -EINVAL;
-> +
-> +       pm8001_ha->non_fatal_count = val;
-> +       return strlen(buf);
-> +}
-> +static DEVICE_ATTR_RW(non_fatal_count);
->
->  /**
->   ** pm8001_ctl_gsm_log_show - gsm dump collection
-> @@ -853,6 +896,8 @@ struct device_attribute *pm8001_host_attrs[] = {
->         &dev_attr_aap_log,
->         &dev_attr_iop_log,
->         &dev_attr_fatal_log,
-> +       &dev_attr_non_fatal_log,
-> +       &dev_attr_non_fatal_count,
->         &dev_attr_gsm_log,
->         &dev_attr_max_out_io,
->         &dev_attr_max_devices,
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
+>                         twi_page_size << 8 | TWI_DEVICE);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+>                 nvmd_req.resp_addr_lo =
+> @@ -4871,7 +4871,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         }
+>         case C_SEEPROM: {
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+>                 nvmd_req.resp_addr_lo =
+> @@ -4880,7 +4880,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         }
+>         case VPD_FLASH: {
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+>                 nvmd_req.resp_addr_lo =
+> @@ -4889,7 +4889,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         }
+>         case EXPAN_ROM: {
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+>                 nvmd_req.resp_addr_lo =
+> @@ -4898,7 +4898,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         }
+>         case IOP_RDUMP: {
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | IOP_RDUMP);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+>                 nvmd_req.vpd_offset = cpu_to_le32(ioctl_payload->offset);
+>                 nvmd_req.resp_addr_hi =
+>                 cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+> @@ -4938,7 +4938,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>         memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+>                 &ioctl_payload->func_specific,
+> -               ioctl_payload->length);
+> +               ioctl_payload->wr_length);
+>         memset(&nvmd_req, 0, sizeof(nvmd_req));
+>         rc = pm8001_tag_alloc(pm8001_ha, &tag);
+>         if (rc) {
+> @@ -4957,7 +4957,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>                 nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
+>                         twi_page_size << 8 | TWI_DEVICE);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+>                 nvmd_req.resp_addr_lo =
+> @@ -4966,7 +4966,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>         }
+>         case C_SEEPROM:
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
+>                 nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+> @@ -4975,7 +4975,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>                 break;
+>         case VPD_FLASH:
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
+>                 nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+> @@ -4984,7 +4984,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+>                 break;
+>         case EXPAN_ROM:
+>                 nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
+> -               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
+> +               nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
+>                 nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
+>                 nvmd_req.resp_addr_hi =
+>                     cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
 > diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index c8414f1b9652..b74282bc1ed0 100644
+> index b74282bc1ed0..6e037638656d 100644
 > --- a/drivers/scsi/pm8001/pm8001_init.c
 > +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -484,6 +484,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
->         pm8001_ha->shost = shost;
->         pm8001_ha->id = pm8001_id++;
->         pm8001_ha->logging_level = logging_level;
-> +       pm8001_ha->non_fatal_count = 0;
->         if (link_rate >= 1 && link_rate <= 15)
->                 pm8001_ha->link_rate = (link_rate << 8);
->         else {
+> @@ -643,22 +643,22 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
+>         if (pm8001_ha->chip_id == chip_8001) {
+>                 if (deviceid == 0x8081 || deviceid == 0x0042) {
+>                         payload.minor_function = 4;
+> -                       payload.length = 4096;
+> +                       payload.rd_length = 4096;
+>                 } else {
+>                         payload.minor_function = 0;
+> -                       payload.length = 128;
+> +                       payload.rd_length = 128;
+>                 }
+>         } else if ((pm8001_ha->chip_id == chip_8070 ||
+>                         pm8001_ha->chip_id == chip_8072) &&
+>                         pm8001_ha->pdev->subsystem_vendor == PCI_VENDOR_ID_ATTO) {
+>                 payload.minor_function = 4;
+> -               payload.length = 4096;
+> +               payload.rd_length = 4096;
+>         } else {
+>                 payload.minor_function = 1;
+> -               payload.length = 4096;
+> +               payload.rd_length = 4096;
+>         }
+>         payload.offset = 0;
+> -       payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
+> +       payload.func_specific = kzalloc(payload.rd_length, GFP_KERNEL);
+>         if (!payload.func_specific) {
+>                 PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
+>                 return;
+> @@ -728,7 +728,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
+>         /* SAS ADDRESS read from flash / EEPROM */
+>         payload.minor_function = 6;
+>         payload.offset = 0;
+> -       payload.length = 4096;
+> +       payload.rd_length = 4096;
+>         payload.func_specific = kzalloc(4096, GFP_KERNEL);
+>         if (!payload.func_specific)
+>                 return -ENOMEM;
 > diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index f95f4d714983..47607a25f819 100644
+> index 47607a25f819..917a17f4d595 100644
 > --- a/drivers/scsi/pm8001/pm8001_sas.h
 > +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -601,6 +601,8 @@ struct pm8001_hba_info {
->         struct                  sgpio_ioctl_resp sgpio_resp;
->         struct  phy_prof_resp   phy_profile_resp;
->         u32                     reset_in_progress;
-> +       u32                     non_fatal_count;
-> +       u32                     non_fatal_read_length;
+> @@ -164,10 +164,11 @@ struct pm8001_ioctl_payload {
+>         u32     signature;
+>         u16     major_function;
+>         u16     minor_function;
+> -       u16     length;
+>         u16     status;
+>         u16     offset;
+>         u16     id;
+> +       u32     wr_length;
+> +       u32     rd_length;
+>         u8      *func_specific;
 >  };
 >
->  struct pm8001_work {
-> @@ -790,6 +792,8 @@ void pm8001_set_phy_profile_single(struct pm8001_hba_info *pm8001_ha,
->  int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
->  ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                 struct device_attribute *attr, char *buf);
-> +ssize_t pm80xx_get_non_fatal_dump(struct device *cdev,
-> +               struct device_attribute *attr, char *buf);
->  ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
->  /* ctl shared API */
->  extern struct device_attribute *pm8001_host_attrs[];
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index bbcdcff5d25b..4923660304aa 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -393,6 +393,136 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
->                 (char *)buf;
->  }
->
-> +/* pm80xx_get_non_fatal_dump - dump the nonfatal data from the dma
-> + * location by the firmware.
-> + */
-> +ssize_t pm80xx_get_non_fatal_dump(struct device *cdev,
-> +       struct device_attribute *attr, char *buf)
-> +{
-> +       struct Scsi_Host *shost = class_to_shost(cdev);
-> +       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +       void __iomem *nonfatal_table_address = pm8001_ha->fatal_tbl_addr;
-> +       u32 accum_len = 0;
-> +       u32 total_len = 0;
-> +       u32 reg_val = 0;
-> +       u32 *temp = NULL;
-> +       u32 index = 0;
-> +       u32 output_length;
-> +       unsigned long start = 0;
-> +       char *buf_copy = buf;
-> +
-> +       temp = (u32 *)pm8001_ha->memoryMap.region[FORENSIC_MEM].virt_ptr;
-> +       if (++pm8001_ha->non_fatal_count == 1) {
-> +               if (pm8001_ha->chip_id == chip_8001) {
-> +                       snprintf(pm8001_ha->forensic_info.data_buf.direct_data,
-> +                               PAGE_SIZE, "Not supported for SPC controller");
-> +                       return 0;
-> +               }
-> +               PM8001_IO_DBG(pm8001_ha,
-> +                       pm8001_printk("forensic_info TYPE_NON_FATAL...\n"));
-> +               /*
-> +                * Step 1: Write the host buffer parameters in the MPI Fatal and
-> +                * Non-Fatal Error Dump Capture Table.This is the buffer
-> +                * where debug data will be DMAed to.
-> +                */
-> +               pm8001_mw32(nonfatal_table_address,
-> +               MPI_FATAL_EDUMP_TABLE_LO_OFFSET,
-> +               pm8001_ha->memoryMap.region[FORENSIC_MEM].phys_addr_lo);
-> +
-> +               pm8001_mw32(nonfatal_table_address,
-> +               MPI_FATAL_EDUMP_TABLE_HI_OFFSET,
-> +               pm8001_ha->memoryMap.region[FORENSIC_MEM].phys_addr_hi);
-> +
-> +               pm8001_mw32(nonfatal_table_address,
-> +               MPI_FATAL_EDUMP_TABLE_LENGTH, SYSFS_OFFSET);
-> +
-> +               /* Optionally, set the DUMPCTRL bit to 1 if the host
-> +                * keeps sending active I/Os while capturing the non-fatal
-> +                * debug data. Otherwise, leave this bit set to zero
-> +                */
-> +               pm8001_mw32(nonfatal_table_address,
-> +               MPI_FATAL_EDUMP_TABLE_HANDSHAKE, MPI_FATAL_EDUMP_HANDSHAKE_RDY);
-> +
-> +               /*
-> +                * Step 2: Clear Accumulative Length of Debug Data Transferred
-> +                * [ACCDDLEN] field in the MPI Fatal and Non-Fatal Error Dump
-> +                * Capture Table to zero.
-> +                */
-> +               pm8001_mw32(nonfatal_table_address,
-> +                               MPI_FATAL_EDUMP_TABLE_ACCUM_LEN, 0);
-> +
-> +               /* initiallize previous accumulated length to 0 */
-> +               pm8001_ha->forensic_preserved_accumulated_transfer = 0;
-> +               pm8001_ha->non_fatal_read_length = 0;
-> +       }
-> +
-> +       total_len = pm8001_mr32(nonfatal_table_address,
-> +                       MPI_FATAL_EDUMP_TABLE_TOTAL_LEN);
-> +       /*
-> +        * Step 3:Clear Fatal/Non-Fatal Debug Data Transfer Status [FDDTSTAT]
-> +        * field and then request that the SPCv controller transfer the debug
-> +        * data by setting bit 7 of the Inbound Doorbell Set Register.
-> +        */
-> +       pm8001_mw32(nonfatal_table_address, MPI_FATAL_EDUMP_TABLE_STATUS, 0);
-> +       pm8001_cw32(pm8001_ha, 0, MSGU_IBDB_SET,
-> +                       SPCv_MSGU_CFG_TABLE_NONFATAL_DUMP);
-> +
-> +       /*
-> +        * Step 4.1: Read back the Inbound Doorbell Set Register (by polling for
-> +        * 2 seconds) until register bit 7 is cleared.
-> +        * This step only indicates the request is accepted by the controller.
-> +        */
-> +       start = jiffies + (2 * HZ); /* 2 sec */
-> +       do {
-> +               reg_val = pm8001_cr32(pm8001_ha, 0, MSGU_IBDB_SET) &
-> +                       SPCv_MSGU_CFG_TABLE_NONFATAL_DUMP;
-> +       } while ((reg_val != 0) && time_before(jiffies, start));
-> +
-> +       /* Step 4.2: To check the completion of the transfer, poll the Fatal/Non
-> +        * Fatal Debug Data Transfer Status [FDDTSTAT] field for 2 seconds in
-> +        * the MPI Fatal and Non-Fatal Error Dump Capture Table.
-> +        */
-> +       start = jiffies + (2 * HZ); /* 2 sec */
-> +       do {
-> +               reg_val = pm8001_mr32(nonfatal_table_address,
-> +                               MPI_FATAL_EDUMP_TABLE_STATUS);
-> +       } while ((!reg_val) && time_before(jiffies, start));
-> +
-> +       if ((reg_val == 0x00) ||
-> +               (reg_val == MPI_FATAL_EDUMP_TABLE_STAT_DMA_FAILED) ||
-> +               (reg_val > MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE)) {
-> +               pm8001_ha->non_fatal_read_length = 0;
-> +               buf_copy += snprintf(buf_copy, PAGE_SIZE, "%08x ", 0xFFFFFFFF);
-> +               pm8001_ha->non_fatal_count = 0;
-> +               return (buf_copy - buf);
-> +       } else if (reg_val ==
-> +                       MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_MORE_DATA) {
-> +               buf_copy += snprintf(buf_copy, PAGE_SIZE, "%08x ", 2);
-> +       } else if ((reg_val == MPI_FATAL_EDUMP_TABLE_STAT_NF_SUCCESS_DONE) ||
-> +               (pm8001_ha->non_fatal_read_length >= total_len)) {
-> +               pm8001_ha->non_fatal_read_length = 0;
-> +               buf_copy += snprintf(buf_copy, PAGE_SIZE, "%08x ", 4);
-> +               pm8001_ha->non_fatal_count = 0;
-> +       }
-> +       accum_len = pm8001_mr32(nonfatal_table_address,
-> +                       MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
-> +       output_length = accum_len -
-> +               pm8001_ha->forensic_preserved_accumulated_transfer;
-> +
-> +       for (index = 0; index < output_length/4; index++)
-> +               buf_copy += snprintf(buf_copy, PAGE_SIZE,
-> +                               "%08x ", *(temp+index));
-> +
-> +       pm8001_ha->non_fatal_read_length += output_length;
-> +
-> +       /* store current accumulated length to use in next iteration as
-> +        * the previous accumulated length
-> +        */
-> +       pm8001_ha->forensic_preserved_accumulated_transfer = accum_len;
-> +       return (buf_copy - buf);
-> +}
-> +
->  /**
->   * read_main_config_table - read the configure table and save it.
->   * @pm8001_ha: our hba card information
 > --
 > 2.16.3
 >
