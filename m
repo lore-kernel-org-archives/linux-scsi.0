@@ -2,122 +2,71 @@ Return-Path: <SRS0=hsTv=24=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE9CC33C9E
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 01:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55BE1C32771
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 01:50:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F332207FF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 01:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 351702072E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 01:50:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727397AbgAGBYA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jan 2020 20:24:00 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51162 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727295AbgAGBYA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jan 2020 20:24:00 -0500
-Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 24B547E9F69;
-        Tue,  7 Jan 2020 12:23:55 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iodb7-000741-70; Tue, 07 Jan 2020 12:23:53 +1100
-Date:   Tue, 7 Jan 2020 12:23:53 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Sweet Tea Dorminy <sweettea@redhat.com>
-Cc:     Tony Asleson <tasleson@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
-Message-ID: <20200107012353.GO23195@dread.disaster.area>
-References: <20191223225558.19242-1-tasleson@redhat.com>
- <20191223225558.19242-10-tasleson@redhat.com>
- <20200104025620.GC23195@dread.disaster.area>
- <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com>
- <20200106220233.GK23195@dread.disaster.area>
- <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
+        id S1727426AbgAGBuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jan 2020 20:50:13 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:9116 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727326AbgAGBuN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Jan 2020 20:50:13 -0500
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 93F2980698AF33B79D63;
+        Tue,  7 Jan 2020 09:50:09 +0800 (CST)
+Received: from localhost (10.133.213.239) by DGGEMS403-HUB.china.huawei.com
+ (10.3.19.203) with Microsoft SMTP Server id 14.3.439.0; Tue, 7 Jan 2020
+ 09:50:03 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     <james.smart@broadcom.com>, <dick.kennedy@broadcom.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH -next] scsi: lpfc: Make lpfc_defer_acc_rsp static
+Date:   Tue, 7 Jan 2020 09:49:56 +0800
+Message-ID: <20200107014956.41748-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
-        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=7-415B0cAAAA:8 a=W5MWU5QX0NKCcusCbkgA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain
+X-Originating-IP: [10.133.213.239]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jan 06, 2020 at 07:19:07PM -0500, Sweet Tea Dorminy wrote:
-> > > >> +
-> > > >>    if (mp && mp->m_fsname) {
-> > > >
-> > > > mp->m_fsname is the name of the device we use everywhere for log
-> > > > messages, it's set up at mount time so we don't have to do runtime
-> > > > evaulation of the device name every time we need to emit the device
-> > > > name in a log message.
-> > > >
-> > > > So, if you have some sooper speshial new device naming scheme, it
-> > > > needs to be stored into the struct xfs_mount to replace mp->m_fsname.
-> > >
-> > > I don't think we want to replace mp->m_fsname with the vpd 0x83 device
-> > > identifier.  This proposed change is adding a key/value structured data
-> > > to the log message for non-ambiguous device identification over time,
-> > > not to place the ID in the human readable portion of the message.  The
-> > > existing name is useful too, especially when it involves a partition.
-> >
-> > Oh, if that's all you want to do, then why is this identifier needed
-> > in every log message? It does not change over the life of the
-> > filesystem, so it the persistent identifier only needs to be emitted
-> > to the log once at filesystem mount time. i.e.  instead of:
-> >
-> > [    2.716841] XFS (dm-0): Mounting V5 Filesystem
-> >
-> > It just needs to be:
-> >
-> > [    2.716841] XFS (dm-0): Mounting V5 Filesystem on device <persistent dev id>
-> >
-> > If you need to do any sort of special "is this the right device"
-> > checking, it needs to be done immediately at mount time so action
-> > can be taken to shutdown the filesystem and unmount the device
-> > immediately before further damage is done....
-> >
-> > i.e. once the filesystem is mounted, you've already got a unique and
-> > persistent identifier in the log for the life of the filesystem (the
-> > m_fsname string), so I'm struggling to understand exactly what
-> > problem you are trying to solve by adding redundant information
-> > to every log message.....
-> 
-> Log rotation loses that identifier though; there are plenty of setups
-> where a mount-time message has been rotated out of all logs by the
-> time something goes wrong after a month or two.
+Fix sparse warning:
 
-At what point months after you've mounted the filesystem do you care
-about whether the correct device was mounted or not?
+drivers/scsi/lpfc/lpfc_nportdisc.c:344:1: warning:
+ symbol 'lpfc_defer_acc_rsp' was not declared. Should it be static?
 
-And, for the log rotation case, the filesystem log output already
-has a unique, persistent identifier for the life of the mount - the
-fsname ("dm-0" in the above example). We don't need to add a new
-device identifier to the XFS log messages to solve that problem
-because *we've already got a device identifier in the log messages*.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Again - the "is this the right device" information only makes sense
-to be checked at mount time. If it was the right device at mount
-time, then after months of uptime how would it suddenly become "the
-wrong device"? And if it's the wrong device at mount time, then you
-need to take action *immediately*, not after using the filesysetms
-on the device for months...
-
-Cheers,
-
-Dave.
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 1c46e3a..a024e5a 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -340,7 +340,7 @@ lpfc_defer_pt2pt_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *link_mbox)
+  * This routine is only called if we are SLI4, acting in target
+  * mode and the remote NPort issues the PLOGI after link up.
+  **/
+-void
++static void
+ lpfc_defer_acc_rsp(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ {
+ 	struct lpfc_vport *vport = pmb->vport;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
+
