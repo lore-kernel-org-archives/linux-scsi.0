@@ -6,55 +6,54 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD246C33C9B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 19:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 141B3C33C9E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 19:25:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAEA520656
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 19:25:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB5EA2087F
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 19:25:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728652AbgAGTZm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jan 2020 14:25:42 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:39793 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728307AbgAGTZm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 14:25:42 -0500
-Received: by mail-pj1-f68.google.com with SMTP id t101so208814pjb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2020 11:25:41 -0800 (PST)
+        id S1728685AbgAGTZn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jan 2020 14:25:43 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44206 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728307AbgAGTZn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 14:25:43 -0500
+Received: by mail-pg1-f194.google.com with SMTP id x7so318235pgl.11
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jan 2020 11:25:43 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ciKn95KNQqdf1ABU2Qcefo6cuXq8TcXvGcUbEueCHnE=;
-        b=tnGTD1TSIp1Dbk1RGqMotsF+fYAj38zxIn7ustkyAY5DDwuk5wVZA/Nc5KQt0vgYXY
-         oj1EAOApNHexF8bS+bLprplCqFUynxMVQui+dlVAorKUrpdEqHnwPcdGcN3Cvdf/RJU3
-         T3Cv9Dd1RXrax+Db+b3Gu212wkGjc1BV2hKCqpAE8BinRBaYDPUZ/SRT8+09mfIfPhsM
-         ardlfvCkjmBh8e+bQR5m/5Cthc1D9hdMqbiFNGljlgUrSxapcJtTpXJmM/l665l1fmUN
-         TWLuX9xhMTnaRDgLwqgfGQLi7paTspdIYnd9LopQPReex3dXJBFwa3cawM4aHzXUyuNP
-         6DXg==
-X-Gm-Message-State: APjAAAWUk1d7p5Yg2DTtejHt1+z/I7ZyNMiiuwdbWdgTuNJIT5tuCeih
-        oY1jNWfmXhZJhZ+B5JrySiU=
-X-Google-Smtp-Source: APXvYqxMAwo5MWXIqulm7EvO01hAcPdGpvueTmHV9IklQpOw5s2fWMGunHzR8YN6nqZ3GEXFxzBujg==
-X-Received: by 2002:a17:90a:b008:: with SMTP id x8mr1504265pjq.106.1578425141228;
-        Tue, 07 Jan 2020 11:25:41 -0800 (PST)
+        bh=gW3m5tTdQj9zJwgo4vo7pUuxKViLM0UkWa2sIurIyBY=;
+        b=U0Cefcki62ItT1aSn9zC9LoR3+XlV1YRBhNZIbYbuLhzivs76Po5MQcIE/vBqfzkj7
+         jPqAma9TR1Ojb2Xh5RW1BpNQOxTa2rA4f1w3MmUzdHiAiNh5eWoe7hOgR1sjRYuv+qUl
+         fbCeKt+l1k4NNCNPttbBkNFQuDxBO61j7GHiGUCg3NK7ZC/01mrnDhat9JqwZbxke4Iq
+         hFFTm5a32NM7how3ruk8hqY974he+xwkzNrTZzRF6gA02tDoFYGMzh49y8tI9aMye4ED
+         WhpNjp/xLwQDn4n/Y/qPI26mRPE6/6QNjk/E9142YnEbDPBb+2ShI+0Jn+Ct3G1d8V46
+         rDDw==
+X-Gm-Message-State: APjAAAVqQawtNTOw9uvvQgxEzV779428LvXZg6Qh3mIzfXHiCkHoU/dQ
+        YXyPWYBPAGVyIhW3UZT1sXo=
+X-Google-Smtp-Source: APXvYqxlyGVgdG54RlTxdIXUI3xmUQCQzuVVZPa24+/K39DrZ6egRjdvSZJCYKeDdwtIQ4yGdVonzA==
+X-Received: by 2002:a63:5809:: with SMTP id m9mr1102704pgb.26.1578425142571;
+        Tue, 07 Jan 2020 11:25:42 -0800 (PST)
 Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id c2sm329051pjq.27.2020.01.07.11.25.39
+        by smtp.gmail.com with ESMTPSA id c2sm329051pjq.27.2020.01.07.11.25.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jan 2020 11:25:40 -0800 (PST)
+        Tue, 07 Jan 2020 11:25:41 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Ming Lei <ming.lei@redhat.com>, Can Guo <cang@codeaurora.org>,
+        Can Guo <cang@codeaurora.org>,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/4] Introduce {init,exit}_cmd_priv()
-Date:   Tue,  7 Jan 2020 11:25:28 -0800
-Message-Id: <20200107192531.73802-2-bvanassche@acm.org>
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH 2/4] ufs: Introduce ufshcd_init_lrb()
+Date:   Tue,  7 Jan 2020 11:25:29 -0800
+Message-Id: <20200107192531.73802-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.24.1.735.g03f4e72817-goog
 In-Reply-To: <20200107192531.73802-1-bvanassche@acm.org>
 References: <20200107192531.73802-1-bvanassche@acm.org>
@@ -65,114 +64,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current behavior of the SCSI core is to clear driver-private data
-before preparing a request for submission to the SCSI LLD. Make it possible
-for SCSI LLDs to disable clearing of driver-private data.
+This patch does not change any functionality but makes the next patch in
+this series easier to read.
 
-These hooks will be used by a later patch, namely "ufs: Let the SCSI core
-allocate per-command UFS data".
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Johannes Thumshirn <jth@kernel.org>
-Cc: Ming Lei <ming.lei@redhat.com>
 Cc: Can Guo <cang@codeaurora.org>
 Cc: Avri Altman <avri.altman@wdc.com>
 Cc: Bean Huo <beanhuo@micron.com>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c  | 29 +++++++++++++++++++++++------
- include/scsi/scsi_host.h |  3 +++
- 2 files changed, 26 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 97af9bf54b22..f0ea614ee49b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1127,7 +1127,7 @@ void scsi_del_cmd_from_list(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1b97f2dc0b63..6f55d72e7fdd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2364,6 +2364,27 @@ static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
+ 	return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
+ }
+ 
++static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
++{
++	struct utp_transfer_cmd_desc *cmd_descp = hba->ucdl_base_addr;
++	struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
++	dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
++		i * sizeof(struct utp_transfer_cmd_desc);
++	u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
++				       response_upiu);
++	u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
++
++	lrb->utr_descriptor_ptr = utrdlp + i;
++	lrb->utrd_dma_addr = hba->utrdl_dma_addr +
++		i * sizeof(struct utp_transfer_req_desc);
++	lrb->ucd_req_ptr = (struct utp_upiu_req *)(cmd_descp + i);
++	lrb->ucd_req_dma_addr = cmd_desc_element_addr;
++	lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
++	lrb->ucd_rsp_dma_addr = cmd_desc_element_addr + response_offset;
++	lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
++	lrb->ucd_prdt_dma_addr = cmd_desc_element_addr + prdt_offset;
++}
++
+ /**
+  * ufshcd_queuecommand - main entry point for SCSI requests
+  * @host: SCSI host pointer
+@@ -3385,7 +3406,6 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+  */
+ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ {
+-	struct utp_transfer_cmd_desc *cmd_descp;
+ 	struct utp_transfer_req_desc *utrdlp;
+ 	dma_addr_t cmd_desc_dma_addr;
+ 	dma_addr_t cmd_desc_element_addr;
+@@ -3395,7 +3415,6 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 	int i;
+ 
+ 	utrdlp = hba->utrdl_base_addr;
+-	cmd_descp = hba->ucdl_base_addr;
+ 
+ 	response_offset =
+ 		offsetof(struct utp_transfer_cmd_desc, response_upiu);
+@@ -3431,20 +3450,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
+ 		}
+ 
+-		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+-		hba->lrb[i].utrd_dma_addr = hba->utrdl_dma_addr +
+-				(i * sizeof(struct utp_transfer_req_desc));
+-		hba->lrb[i].ucd_req_ptr =
+-			(struct utp_upiu_req *)(cmd_descp + i);
+-		hba->lrb[i].ucd_req_dma_addr = cmd_desc_element_addr;
+-		hba->lrb[i].ucd_rsp_ptr =
+-			(struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
+-		hba->lrb[i].ucd_rsp_dma_addr = cmd_desc_element_addr +
+-				response_offset;
+-		hba->lrb[i].ucd_prdt_ptr =
+-			(struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
+-		hba->lrb[i].ucd_prdt_dma_addr = cmd_desc_element_addr +
+-				prdt_offset;
++		ufshcd_init_lrb(hba, &hba->lrb[i], i);
  	}
  }
  
--/* Called after a request has been started. */
-+/* Called before a request is prepared. See also scsi_mq_prep_fn(). */
- void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- {
- 	void *buf = cmd->sense_buffer;
-@@ -1135,7 +1135,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	struct request *rq = blk_mq_rq_from_pdu(cmd);
- 	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
- 	unsigned long jiffies_at_alloc;
--	int retries;
-+	int retries, to_clear;
- 	bool in_flight;
- 
- 	if (!blk_rq_is_scsi(rq) && !(flags & SCMD_INITIALIZED)) {
-@@ -1146,9 +1146,15 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	jiffies_at_alloc = cmd->jiffies_at_alloc;
- 	retries = cmd->retries;
- 	in_flight = test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
--	/* zero out the cmd, except for the embedded scsi_request */
--	memset((char *)cmd + sizeof(cmd->req), 0,
--		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
-+	/*
-+	 * Zero out the cmd, except for the embedded scsi_request. Only clear
-+	 * the driver-private command data if the LLD does not supply a
-+	 * function to initialize that data.
-+	 */
-+	to_clear = sizeof(*cmd) - sizeof(cmd->req);
-+	if (!dev->host->hostt->init_cmd_priv)
-+		to_clear += dev->host->hostt->cmd_size;
-+	memset((char *)cmd + sizeof(cmd->req), 0, to_clear);
- 
- 	cmd->device = dev;
- 	cmd->sense_buffer = buf;
-@@ -1742,6 +1748,7 @@ static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
- 	const bool unchecked_isa_dma = shost->unchecked_isa_dma;
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 	struct scatterlist *sg;
-+	int ret = 0;
- 
- 	if (unchecked_isa_dma)
- 		cmd->flags |= SCMD_UNCHECKED_ISA_DMA;
-@@ -1757,14 +1764,24 @@ static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
- 		cmd->prot_sdb = (void *)sg + scsi_mq_inline_sgl_size(shost);
- 	}
- 
--	return 0;
-+	if (shost->hostt->init_cmd_priv) {
-+		ret = shost->hostt->init_cmd_priv(shost, cmd);
-+		if (ret < 0)
-+			scsi_free_sense_buffer(unchecked_isa_dma,
-+					       cmd->sense_buffer);
-+	}
-+
-+	return ret;
- }
- 
- static void scsi_mq_exit_request(struct blk_mq_tag_set *set, struct request *rq,
- 				 unsigned int hctx_idx)
- {
-+	struct Scsi_Host *shost = set->driver_data;
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
- 
-+	if (shost->hostt->exit_cmd_priv)
-+		shost->hostt->exit_cmd_priv(shost, cmd);
- 	scsi_free_sense_buffer(cmd->flags & SCMD_UNCHECKED_ISA_DMA,
- 			       cmd->sense_buffer);
- }
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f577647bf5f2..1fa81f9b063f 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -62,6 +62,9 @@ struct scsi_host_template {
- 			    void __user *arg);
- #endif
- 
-+	int (*init_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
-+	int (*exit_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
-+
- 	/*
- 	 * The queuecommand function is used to queue up a scsi
- 	 * command block to the LLDD.  When the driver finished
