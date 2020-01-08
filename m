@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7EA8C00523
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:32:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60E60C00523
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:45:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6442206DA
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:32:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A0E32053B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:45:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726319AbgAHHce (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 02:32:34 -0500
-Received: from mx2.suse.de ([195.135.220.15]:37084 "EHLO mx2.suse.de"
+        id S1726346AbgAHHp3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 02:45:29 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39542 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725944AbgAHHce (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 02:32:34 -0500
+        id S1726087AbgAHHp3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Jan 2020 02:45:29 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id DD9EAB162;
-        Wed,  8 Jan 2020 07:32:30 +0000 (UTC)
-Subject: Re: [PATCH v2 03/32] elx: libefc_sli: Data structures and defines for
- mbox commands
+        by mx2.suse.de (Postfix) with ESMTP id 1CB07AD2C;
+        Wed,  8 Jan 2020 07:45:27 +0000 (UTC)
+Subject: Re: [PATCH v2 04/32] elx: libefc_sli: queue create/destroy/parse
+ routines
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-4-jsmart2021@gmail.com>
+ <20191220223723.26563-5-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -74,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <479ac7f4-80ac-babe-7aa6-aa91e257ec8f@suse.de>
-Date:   Wed, 8 Jan 2020 08:32:30 +0100
+Message-ID: <07c171f7-3d2c-a3ce-37ed-2b02f00fa6b2@suse.de>
+Date:   Wed, 8 Jan 2020 08:45:26 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-4-jsmart2021@gmail.com>
+In-Reply-To: <20191220223723.26563-5-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -91,181 +91,486 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 12/20/19 11:36 PM, James Smart wrote:
 > This patch continues the libefc_sli SLI-4 library population.
 > 
-> This patch adds definitions for SLI-4 mailbox commands
-> and responses.
+> This patch adds service routines to create mailbox commands
+> and adds APIs to create/destroy/parse SLI-4 EQ, CQ, RQ and MQ queues.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->  drivers/scsi/elx/libefc_sli/sli4.h | 1728 +++++++++++++++++++++++++++++++++++-
->  1 file changed, 1727 insertions(+), 1 deletion(-)
+>  drivers/scsi/elx/include/efc_common.h |   27 +
+>  drivers/scsi/elx/libefc_sli/sli4.c    | 1556 +++++++++++++++++++++++++++++++++
+>  drivers/scsi/elx/libefc_sli/sli4.h    |    9 +
+>  3 files changed, 1592 insertions(+)
 > 
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.h b/drivers/scsi/elx/libefc_sli/sli4.h
-> index f86a9e72ed43..c9bd3f71b27b 100644
-> --- a/drivers/scsi/elx/libefc_sli/sli4.h
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.h
-> @@ -1995,7 +1995,7 @@ struct sli4_fc_xri_aborted_cqe {
->  #define SLI4_ELS_REQUEST64_DIR_READ		0x1
+> diff --git a/drivers/scsi/elx/include/efc_common.h b/drivers/scsi/elx/include/efc_common.h
+> index 3fc48876c531..c339b22c35b5 100644
+> --- a/drivers/scsi/elx/include/efc_common.h
+> +++ b/drivers/scsi/elx/include/efc_common.h
+> @@ -22,4 +22,31 @@ struct efc_dma {
+>  	struct pci_dev	*pdev;
+>  };
 >  
->  #define SLI4_ELS_REQUEST64_OTHER		0x0
-> -#define SLI4_ELS_REQUEST64_LOGO		0x1
-> +#define SLI4_ELS_REQUEST64_LOGO			0x1
->  #define SLI4_ELS_REQUEST64_FDISC		0x2
->  #define SLI4_ELS_REQUEST64_FLOGIN		0x3
->  #define SLI4_ELS_REQUEST64_PLOGI		0x4
-Shouldn't this rather be merged with the previous patch?
-
-> @@ -2004,4 +2004,1730 @@ struct sli4_fc_xri_aborted_cqe {
->  #define SLI4_ELS_REQUEST64_CMD_NON_FABRIC	0x0c
->  #define SLI4_ELS_REQUEST64_CMD_FABRIC		0x0d
->  
-> +#define SLI_PAGE_SIZE				(1 << 12)	/* 4096 */
-> +#define SLI_SUB_PAGE_MASK			(SLI_PAGE_SIZE - 1)
-> +#define SLI_ROUND_PAGE(b)	(((b) + SLI_SUB_PAGE_MASK) & ~SLI_SUB_PAGE_MASK)
+> +#define efc_log_crit(efc, fmt, args...) \
+> +		dev_crit(&((efc)->pcidev)->dev, fmt, ##args)
 > +
-> +#define SLI4_BMBX_TIMEOUT_MSEC			30000
-> +#define SLI4_FW_READY_TIMEOUT_MSEC		30000
+> +#define efc_log_err(efc, fmt, args...) \
+> +		dev_err(&((efc)->pcidev)->dev, fmt, ##args)
 > +
-> +#define SLI4_BMBX_DELAY_US			1000	/* 1 ms */
-> +#define SLI4_INIT_PORT_DELAY_US			10000	/* 10 ms */
+> +#define efc_log_warn(efc, fmt, args...) \
+> +		dev_warn(&((efc)->pcidev)->dev, fmt, ##args)
 > +
-> +static inline u32
-> +sli_page_count(size_t bytes, u32 page_size)
+> +#define efc_log_info(efc, fmt, args...) \
+> +		dev_info(&((efc)->pcidev)->dev, fmt, ##args)
+> +
+> +#define efc_log_test(efc, fmt, args...) \
+> +		dev_dbg(&((efc)->pcidev)->dev, fmt, ##args)
+> +
+> +#define efc_log_debug(efc, fmt, args...) \
+> +		dev_dbg(&((efc)->pcidev)->dev, fmt, ##args)
+> +
+> +#define efc_assert(cond, ...) \
+> +	do { \
+> +		if (!(cond)) { \
+> +			pr_err("%s(%d) assertion (%s) failed\n", \
+> +				__FILE__, __LINE__, #cond); \
+> +			dump_stack(); \
+> +		} \
+> +	} while (0)
+> +
+>  #endif /* __EFC_COMMON_H__ */
+> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+> index 29d33becd334..7061f7980fad 100644
+> --- a/drivers/scsi/elx/libefc_sli/sli4.c
+> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
+> @@ -24,3 +24,1559 @@ static struct sli4_asic_entry_t sli4_asic_table[] = {
+>  	{ SLI4_ASIC_REV_A3, SLI4_ASIC_GEN_6},
+>  	{ SLI4_ASIC_REV_A1, SLI4_ASIC_GEN_7},
+>  };
+> +
+> +/* Convert queue type enum (SLI_QTYPE_*) into a string */
+> +static char *SLI_QNAME[] = {
+> +	"Event Queue",
+> +	"Completion Queue",
+> +	"Mailbox Queue",
+> +	"Work Queue",
+> +	"Receive Queue",
+> +	"Undefined"
+> +};
+> +
+> +/*
+> + * Write a SLI_CONFIG command to the provided buffer.
+> + *
+> + * @sli4 SLI context pointer.
+> + * @buf Destination buffer for the command.
+> + * @size size of the destination buffer(buf).
+> + * @length Length in bytes of attached command.
+> + * @dma DMA buffer for non-embedded commands.
+> + *
+> + */
+> +static void *
+> +sli_config_cmd_init(struct sli4 *sli4, void *buf,
+> +		    size_t size, u32 length,
+> +		    struct efc_dma *dma)
 > +{
-> +	if (!page_size)
-> +		return 0;
+> +	struct sli4_cmd_sli_config *config = NULL;
+> +	u32 flags = 0;
 > +
-> +	return (bytes + (page_size - 1)) >> __ffs(page_size);
+> +	if (length > sizeof(config->payload.embed) && !dma) {
+> +		efc_log_err(sli4, "Too big for an embedded cmd with len(%d)\n",
+> +			    length);
+> +		return NULL;
+> +	}
+> +
+> +	config = buf;
+> +
+> +	memset(buf, 0, size);
+> +
+> +	config->hdr.command = MBX_CMD_SLI_CONFIG;
+> +	if (!dma) {
+> +		flags |= SLI4_SLICONF_EMB;
+> +		config->dw1_flags = cpu_to_le32(flags);
+> +		config->payload_len = cpu_to_le32(length);
+> +		buf += offsetof(struct sli4_cmd_sli_config, payload.embed);
+> +		return buf;
+> +	}
+> +
+> +	flags = SLI4_SLICONF_PMDCMD_VAL_1;
+> +	flags &= ~SLI4_SLICONF_EMB;
+> +	config->dw1_flags = cpu_to_le32(flags);
+> +
+> +	config->payload.mem.addr.low = cpu_to_le32(lower_32_bits(dma->phys));
+> +	config->payload.mem.addr.high =	cpu_to_le32(upper_32_bits(dma->phys));
+> +	config->payload.mem.length =
+> +			cpu_to_le32(dma->size & SLI4_SLICONFIG_PMD_LEN);
+> +	config->payload_len = cpu_to_le32(dma->size);
+> +	/* save pointer to DMA for BMBX dumping purposes */
+> +	sli4->bmbx_non_emb_pmd = dma;
+> +	return dma->virt;
 > +}
 > +
-> +/*************************************************************************
-> + * SLI-4 mailbox command formats and definitions
+> +/*
+> + * Write a COMMON_CREATE_CQ command.
+> + *
+> + * This creates a Version 2 message.
+> + *
+> + * Returns 0 on success, or non-zero otherwise.
 > + */
+> +static int
+> +sli_cmd_common_create_cq(struct sli4 *sli4, void *buf, size_t size,
+> +			 struct efc_dma *qmem,
+> +			 u16 eq_id)
+> +{
+> +	struct sli4_rqst_cmn_create_cq_v2 *cqv2 = NULL;
+> +	u32 p;
+> +	uintptr_t addr;
+> +	u32 page_bytes = 0;
+> +	u32 num_pages = 0;
+> +	size_t cmd_size = 0;
+> +	u32 page_size = 0;
+> +	u32 n_cqe = 0;
+> +	u32 dw5_flags = 0;
+> +	u16 dw6w1_arm = 0;
+> +	__le32 len;
 > +
-> +struct sli4_mbox_command_header {
-> +	u8	resvd0;
-> +	u8	command;
-> +	__le16	status;	/* Port writes to indicate success/fail */
-> +};
+> +	/* First calculate number of pages and the mailbox cmd length */
+> +	n_cqe = qmem->size / SLI4_CQE_BYTES;
+> +	switch (n_cqe) {
+> +	case 256:
+> +	case 512:
+> +	case 1024:
+> +	case 2048:
+> +		page_size = 1;
+> +		break;
+> +	case 4096:
+> +		page_size = 2;
+> +		break;
+> +	default:
+> +		return EFC_FAIL;
+> +	}
+> +	page_bytes = page_size * SLI_PAGE_SIZE;
+> +	num_pages = sli_page_count(qmem->size, page_bytes);
 > +
-> +enum {
-> +	MBX_CMD_CONFIG_LINK	= 0x07,
-> +	MBX_CMD_DUMP		= 0x17,
-> +	MBX_CMD_DOWN_LINK	= 0x06,
-> +	MBX_CMD_INIT_LINK	= 0x05,
-> +	MBX_CMD_INIT_VFI	= 0xa3,
-> +	MBX_CMD_INIT_VPI	= 0xa4,
-> +	MBX_CMD_POST_XRI	= 0xa7,
-> +	MBX_CMD_RELEASE_XRI	= 0xac,
-> +	MBX_CMD_READ_CONFIG	= 0x0b,
-> +	MBX_CMD_READ_STATUS	= 0x0e,
-> +	MBX_CMD_READ_NVPARMS	= 0x02,
-> +	MBX_CMD_READ_REV	= 0x11,
-> +	MBX_CMD_READ_LNK_STAT	= 0x12,
-> +	MBX_CMD_READ_SPARM64	= 0x8d,
-> +	MBX_CMD_READ_TOPOLOGY	= 0x95,
-> +	MBX_CMD_REG_FCFI	= 0xa0,
-> +	MBX_CMD_REG_FCFI_MRQ	= 0xaf,
-> +	MBX_CMD_REG_RPI		= 0x93,
-> +	MBX_CMD_REG_RX_RQ	= 0xa6,
-> +	MBX_CMD_REG_VFI		= 0x9f,
-> +	MBX_CMD_REG_VPI		= 0x96,
-> +	MBX_CMD_RQST_FEATURES	= 0x9d,
-> +	MBX_CMD_SLI_CONFIG	= 0x9b,
-> +	MBX_CMD_UNREG_FCFI	= 0xa2,
-> +	MBX_CMD_UNREG_RPI	= 0x14,
-> +	MBX_CMD_UNREG_VFI	= 0xa1,
-> +	MBX_CMD_UNREG_VPI	= 0x97,
-> +	MBX_CMD_WRITE_NVPARMS	= 0x03,
-> +	MBX_CMD_CFG_AUTO_XFER_RDY = 0xAD,
+> +	cmd_size = CFG_RQST_CMDSZ(cmn_create_cq_v2) + SZ_DMAADDR * num_pages;
 > +
-> +	MBX_STATUS_SUCCESS	= 0x0000,
-> +	MBX_STATUS_FAILURE	= 0x0001,
-> +	MBX_STATUS_RPI_NOT_REG	= 0x1400,
-> +};
+> +	cqv2 = sli_config_cmd_init(sli4, buf, size, cmd_size, NULL);
+> +	if (!cqv2)
+> +		return EFC_FAIL;
 > +
-Make this two enums, one 'enum sli4_mbx_cmd' and one 'enum sli4_mbx_status'.
+> +	len = CFG_RQST_PYLD_LEN_VAR(cmn_create_cq_v2,
+> +					 SZ_DMAADDR * num_pages);
+> +	sli_cmd_fill_hdr(&cqv2->hdr, CMN_CREATE_CQ, SLI4_SUBSYSTEM_COMMON,
+> +			 CMD_V2, len);
+> +	cqv2->page_size = page_size;
+> +
+> +	/* valid values for number of pages: 1, 2, 4, 8 (sec 4.4.3) */
+> +	cqv2->num_pages = cpu_to_le16(num_pages);
+> +	if (!num_pages || num_pages > SLI4_CMN_CREATE_CQ_V2_MAX_PAGES)
+> +		return EFC_FAIL;
+> +
+> +	switch (num_pages) {
+> +	case 1:
+> +		dw5_flags |= CQ_CNT_VAL(256);
+> +		break;
+> +	case 2:
+> +		dw5_flags |= CQ_CNT_VAL(512);
+> +		break;
+> +	case 4:
+> +		dw5_flags |= CQ_CNT_VAL(1024);
+> +		break;
+> +	case 8:
+> +		dw5_flags |= CQ_CNT_VAL(LARGE);
+> +		cqv2->cqe_count = cpu_to_le16(n_cqe);
+> +		break;
+> +	default:
+> +		efc_log_info(sli4, "num_pages %d not valid\n", num_pages);
+> +		return -EFC_FAIL;
+> +	}
+> +
+Hmm. Why do you return -EFC_FAIL here, and EFC_FAIL in the two cases above?
+Do you differentiate between EFC_FAIL and -EFC_FAIL?
+If so you should probably use different #defines ...
 
-> +/* CONFIG_LINK */
-> +enum {
-> +	SLI4_CFG_LINK_BBSCN = 0xf00,
-> +	SLI4_CFG_LINK_CSCN  = 0x1000,
-> +};
+> +	if (sli4->if_type == SLI4_INTF_IF_TYPE_6)
+> +		dw5_flags |= CREATE_CQV2_AUTOVALID;
 > +
-> +struct sli4_cmd_config_link {
-> +	struct sli4_mbox_command_header	hdr;
-> +	u8		maxbbc;
-> +	u8		rsvd5;
-> +	u8		rsvd6;
-> +	u8		rsvd7;
-> +	u8		alpa;
-> +	__le16		n_port_id;
-> +	u8		rsvd11;
-> +	__le32		rsvd12;
-> +	__le32		e_d_tov;
-> +	__le32		lp_tov;
-> +	__le32		r_a_tov;
-> +	__le32		r_t_tov;
-> +	__le32		al_tov;
-> +	__le32		rsvd36;
-> +	__le32		bbscn_dword;
-> +};
+> +	dw5_flags |= CREATE_CQV2_EVT;
+> +	dw5_flags |= CREATE_CQV2_VALID;
 > +
-> +enum {
-> +	SLI4_DUMP4_TYPE = 0xf,
-> +};
+> +	cqv2->dw5_flags = cpu_to_le32(dw5_flags);
+> +	cqv2->dw6w1_arm = cpu_to_le16(dw6w1_arm);
+> +	cqv2->eq_id = cpu_to_le16(eq_id);
+> +
+> +	for (p = 0, addr = qmem->phys; p < num_pages; p++, addr += page_bytes) {
+> +		cqv2->page_phys_addr[p].low = cpu_to_le32(lower_32_bits(addr));
+> +		cqv2->page_phys_addr[p].high = cpu_to_le32(upper_32_bits(addr));
+> +	}
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +/* Write a COMMON_CREATE_EQ command */
+> +static int
+> +sli_cmd_common_create_eq(struct sli4 *sli4, void *buf, size_t size,
+> +			 struct efc_dma *qmem)
+> +{
+> +	struct sli4_rqst_cmn_create_eq *eq;
+> +	u32 p;
+> +	uintptr_t addr;
+> +	u16 num_pages;
+> +	u32 dw5_flags = 0;
+> +	u32 dw6_flags = 0, ver;
+> +
+> +	eq = sli_config_cmd_init(sli4, buf, size,
+> +				 SLI_CONFIG_PYLD_LENGTH(cmn_create_eq), NULL);
+> +	if (!eq)
+> +		return EFC_FAIL;
+> +
+> +	if (sli4->if_type == SLI4_INTF_IF_TYPE_6)
+> +		ver = CMD_V2;
+> +
+> +	sli_cmd_fill_hdr(&eq->hdr, CMN_CREATE_EQ, SLI4_SUBSYSTEM_COMMON,
+> +			 ver, CFG_RQST_PYLD_LEN(cmn_create_eq));
+> +
+> +	/* valid values for number of pages: 1, 2, 4 (sec 4.4.3) */
+> +	num_pages = qmem->size / SLI_PAGE_SIZE;
+> +	eq->num_pages = cpu_to_le16(num_pages);
+> +
+> +	switch (num_pages) {
+> +	case 1:
+> +		dw5_flags |= SLI4_EQE_SIZE_4;
+> +		dw6_flags |= EQ_CNT_VAL(1024);
+> +		break;
+> +	case 2:
+> +		dw5_flags |= SLI4_EQE_SIZE_4;
+> +		dw6_flags |= EQ_CNT_VAL(2048);
+> +		break;
+> +	case 4:
+> +		dw5_flags |= SLI4_EQE_SIZE_4;
+> +		dw6_flags |= EQ_CNT_VAL(4096);
+> +		break;
+> +	default:
+> +		efc_log_err(sli4, "num_pages %d not valid\n", num_pages);
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	if (sli4->if_type == SLI4_INTF_IF_TYPE_6)
+> +		dw5_flags |= CREATE_EQ_AUTOVALID;
+> +
+> +	dw5_flags |= CREATE_EQ_VALID;
+> +	dw6_flags &= (~CREATE_EQ_ARM);
+> +	eq->dw5_flags = cpu_to_le32(dw5_flags);
+> +	eq->dw6_flags = cpu_to_le32(dw6_flags);
+> +	eq->dw7_delaymulti = cpu_to_le32(CREATE_EQ_DELAYMULTI);
+> +
+> +	for (p = 0, addr = qmem->phys; p < num_pages;
+> +	     p++, addr += SLI_PAGE_SIZE) {
+> +		eq->page_address[p].low = cpu_to_le32(lower_32_bits(addr));
+> +		eq->page_address[p].high = cpu_to_le32(upper_32_bits(addr));
+> +	}
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +static int
+> +sli_cmd_common_create_mq_ext(struct sli4 *sli4, void *buf, size_t size,
+> +			     struct efc_dma *qmem,
+> +			     u16 cq_id)
+> +{
+> +	struct sli4_rqst_cmn_create_mq_ext *mq;
+> +	u32 p;
+> +	uintptr_t addr;
+> +	u32 num_pages;
+> +	u16 dw6w1_flags = 0;
+> +
+> +	mq = sli_config_cmd_init(sli4, buf, size,
+> +				 SLI_CONFIG_PYLD_LENGTH(cmn_create_mq_ext),
+> +				 NULL);
+> +	if (!mq)
+> +		return EFC_FAIL;
+> +
+> +	sli_cmd_fill_hdr(&mq->hdr, CMN_CREATE_MQ_EXT, SLI4_SUBSYSTEM_COMMON,
+> +			 CMD_V0, CFG_RQST_PYLD_LEN(cmn_create_mq_ext));
+> +
+> +	/* valid values for number of pages: 1, 2, 4, 8 (sec 4.4.12) */
+> +	num_pages = qmem->size / SLI_PAGE_SIZE;
+> +	mq->num_pages = cpu_to_le16(num_pages);
+> +	switch (num_pages) {
+> +	case 1:
+> +		dw6w1_flags |= SLI4_MQE_SIZE_16;
+> +		break;
+> +	case 2:
+> +		dw6w1_flags |= SLI4_MQE_SIZE_32;
+> +		break;
+> +	case 4:
+> +		dw6w1_flags |= SLI4_MQE_SIZE_64;
+> +		break;
+> +	case 8:
+> +		dw6w1_flags |= SLI4_MQE_SIZE_128;
+> +		break;
+> +	default:
+> +		efc_log_info(sli4, "num_pages %d not valid\n", num_pages);
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	mq->async_event_bitmap = cpu_to_le32(SLI4_ASYNC_EVT_FC_ALL);
+> +
+> +	if (sli4->mq_create_version) {
+> +		mq->cq_id_v1 = cpu_to_le16(cq_id);
+> +		mq->hdr.dw3_version = cpu_to_le32(CMD_V1);
+> +	} else {
+> +		dw6w1_flags |= (cq_id << CREATE_MQEXT_CQID_SHIFT);
+> +	}
+> +	mq->dw7_val = cpu_to_le32(CREATE_MQEXT_VAL);
+> +
+> +	mq->dw6w1_flags = cpu_to_le16(dw6w1_flags);
+> +	for (p = 0, addr = qmem->phys; p < num_pages;
+> +	     p++, addr += SLI_PAGE_SIZE) {
+> +		mq->page_phys_addr[p].low = cpu_to_le32(lower_32_bits(addr));
+> +		mq->page_phys_addr[p].high = cpu_to_le32(upper_32_bits(addr));
+> +	}
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +int
+> +sli_cmd_wq_create(struct sli4 *sli4, void *buf, size_t size,
+> +		     struct efc_dma *qmem, u16 cq_id)
+> +{
+> +	struct sli4_rqst_wq_create *wq;
+> +	u32 p;
+> +	uintptr_t addr;
+> +	u32 page_size = 0;
+> +	u32 page_bytes = 0;
+> +	u32 n_wqe = 0;
+> +	u16 num_pages;
+> +
+> +	wq = sli_config_cmd_init(sli4, buf, size,
+> +				 SLI_CONFIG_PYLD_LENGTH(wq_create), NULL);
+> +	if (!wq)
+> +		return EFC_FAIL;
+> +
+> +	sli_cmd_fill_hdr(&wq->hdr, SLI4_OPC_WQ_CREATE, SLI4_SUBSYSTEM_FC,
+> +			 CMD_V1, CFG_RQST_PYLD_LEN(wq_create));
+> +	n_wqe = qmem->size / sli4->wqe_size;
+> +
+> +	switch (qmem->size) {
+> +	case 4096:
+> +	case 8192:
+> +	case 16384:
+> +	case 32768:
+> +		page_size = 1;
+> +		break;
+> +	case 65536:
+> +		page_size = 2;
+> +		break;
+> +	case 131072:
+> +		page_size = 4;
+> +		break;
+> +	case 262144:
+> +		page_size = 8;
+> +		break;
+> +	case 524288:
+> +		page_size = 10;
+> +		break;
+> +	default:
+> +		return EFC_FAIL;
+> +	}
+> +	page_bytes = page_size * SLI_PAGE_SIZE;
+> +
+> +	/* valid values for number of pages(num_pages): 1-8 */
+> +	num_pages = sli_page_count(qmem->size, page_bytes);
+> +	wq->num_pages = cpu_to_le16(num_pages);
+> +	if (!num_pages || num_pages > SLI4_WQ_CREATE_MAX_PAGES)
+> +		return EFC_FAIL;
+> +
+> +	wq->cq_id = cpu_to_le16(cq_id);
+> +
+> +	wq->page_size = page_size;
+> +
+> +	if (sli4->wqe_size == SLI4_WQE_EXT_BYTES)
+> +		wq->wqe_size_byte |= SLI4_WQE_EXT_SIZE;
+> +	else
+> +		wq->wqe_size_byte |= SLI4_WQE_SIZE;
+> +
+> +	wq->wqe_count = cpu_to_le16(n_wqe);
+> +
+> +	for (p = 0, addr = qmem->phys; p < num_pages; p++, addr += page_bytes) {
+> +		wq->page_phys_addr[p].low  = cpu_to_le32(lower_32_bits(addr));
+> +		wq->page_phys_addr[p].high = cpu_to_le32(upper_32_bits(addr));
+> +	}
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +int
+> +sli_cmd_rq_create(struct sli4 *sli4, void *buf, size_t size,
+> +		  struct efc_dma *qmem,
+> +		  u16 cq_id, u16 buffer_size)
+> +{
+> +	struct sli4_rqst_rq_create *rq;
+> +	u32 p;
+> +	uintptr_t addr;
+> +	u16 num_pages;
+> +
+> +	rq = sli_config_cmd_init(sli4, buf, size,
+> +				 SLI_CONFIG_PYLD_LENGTH(rq_create), NULL);
+> +	if (!rq)
+> +		return EFC_FAIL;
+> +
+> +	sli_cmd_fill_hdr(&rq->hdr, SLI4_OPC_RQ_CREATE, SLI4_SUBSYSTEM_FC,
+> +			 CMD_V0, CFG_RQST_PYLD_LEN(rq_create));
+> +	/* valid values for number of pages: 1-8 (sec 4.5.6) */
+> +	num_pages = sli_page_count(qmem->size, SLI_PAGE_SIZE);
+> +	rq->num_pages = cpu_to_le16(num_pages);
+> +	if (!num_pages ||
+> +	    num_pages > SLI4_RQ_CREATE_V0_MAX_PAGES) {
+> +		efc_log_info(sli4, "num_pages %d not valid\n", num_pages);
+> +		return 0;
+> +	}
+> +
 
-Single enum should rather be converted into a #define ..
+'0'? Why not EFC_FAIL/EFC_SUCCESS?
 
+> +	/*
+> +	 * RQE count is the log base 2 of the total number of entries
+> +	 */
+> +	rq->rqe_count_byte |= 31 - __builtin_clz(qmem->size / SLI4_RQE_SIZE);
 > +
-> +#define SLI4_WKI_TAG_SAT_TEM 0x1040
-> +
-> +struct sli4_cmd_dump4 {
-> +	struct sli4_mbox_command_header	hdr;
-> +	__le32		type_dword;
-> +	__le16		wki_selection;
-> +	__le16		rsvd10;
-> +	__le32		rsvd12;
-> +	__le32		returned_byte_cnt;
-> +	__le32		resp_data[59];
-> +};
-> +
-> +/* INIT_LINK - initialize the link for a FC port */
-> +#define FC_TOPOLOGY_FCAL	0
-> +#define FC_TOPOLOGY_P2P		1
-> +
-> +#define SLI4_INIT_LINK_F_LOOP_BACK	(1 << 0)
-> +#define SLI4_INIT_LINK_F_UNFAIR		(1 << 6)
-> +#define SLI4_INIT_LINK_F_NO_LIRP	(1 << 7)
-> +#define SLI4_INIT_LINK_F_LOOP_VALID_CHK	(1 << 8)
-> +#define SLI4_INIT_LINK_F_NO_LISA	(1 << 9)
-> +#define SLI4_INIT_LINK_F_FAIL_OVER	(1 << 10)
-> +#define SLI4_INIT_LINK_F_NO_AUTOSPEED	(1 << 11)
-> +#define SLI4_INIT_LINK_F_PICK_HI_ALPA	(1 << 15)
-> +
-> +#define SLI4_INIT_LINK_F_P2P_ONLY	1
-> +#define SLI4_INIT_LINK_F_FCAL_ONLY	2
-> +
-> +#define SLI4_INIT_LINK_F_FCAL_FAIL_OVER	0
-> +#define SLI4_INIT_LINK_F_P2P_FAIL_OVER	1
-> +
-> +enum {
-> +	SLI4_INIT_LINK_SEL_RESET_AL_PA		= 0xff,
-> +	SLI4_INIT_LINK_FLAG_LOOPBACK		= 0x1,
-> +	SLI4_INIT_LINK_FLAG_TOPOLOGY		= 0x6,
-> +	SLI4_INIT_LINK_FLAG_UNFAIR		= 0x40,
-> +	SLI4_INIT_LINK_FLAG_SKIP_LIRP_LILP	= 0x80,
-> +	SLI4_INIT_LINK_FLAG_LOOP_VALIDITY	= 0x100,
-> +	SLI4_INIT_LINK_FLAG_SKIP_LISA		= 0x200,
-> +	SLI4_INIT_LINK_FLAG_EN_TOPO_FAILOVER	= 0x400,
-> +	SLI4_INIT_LINK_FLAG_FIXED_SPEED		= 0x800,
-> +	SLI4_INIT_LINK_FLAG_SEL_HIGHTEST_AL_PA	= 0x8000,
-> +};
-> +
-Why is this an enum, and the above SLI4_INIT_LINK_F_XXX value are defines?
-Please be consistent.
+> +	if (buffer_size < SLI4_RQ_CREATE_V0_MIN_BUF_SIZE ||
+> +	    buffer_size > SLI4_RQ_CREATE_V0_MAX_BUF_SIZE) {
+> +		efc_log_err(sli4, "buffer_size %d out of range (%d-%d)\n",
+> +		       buffer_size,
+> +		       SLI4_RQ_CREATE_V0_MIN_BUF_SIZE,
+> +		       SLI4_RQ_CREATE_V0_MAX_BUF_SIZE);
+> +		return -1;
+> +	}
 
-And this applies throughout the remainder of the patch.
+'-1'? Not EFC_FAIL?
+
+[ .. ]
+> +int
+> +__sli_queue_init(struct sli4 *sli4, struct sli4_queue *q,
+> +		 u32 qtype, size_t size, u32 n_entries,
+> +		      u32 align)
+> +{
+> +	if (!q->dma.virt || size != q->size ||
+> +	    n_entries != q->length) {
+> +		if (q->dma.size)
+> +			__sli_queue_destroy(sli4, q);
+> +
+> +		memset(q, 0, sizeof(struct sli4_queue));
+> +
+> +		q->dma.size = size * n_entries;
+> +		q->dma.virt = dma_alloc_coherent(&sli4->pcidev->dev,
+> +						 q->dma.size, &q->dma.phys,
+> +						 GFP_DMA);> +		if (!q->dma.virt) {
+> +			memset(&q->dma, 0, sizeof(struct efc_dma));
+> +			efc_log_err(sli4, "%s allocation failed\n",
+> +			       SLI_QNAME[qtype]);
+> +			return -1;
+> +		}
+
+EFC_FAIL?
 
 Cheers,
 
