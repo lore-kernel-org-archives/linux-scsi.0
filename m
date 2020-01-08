@@ -2,183 +2,205 @@ Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45CC2C33C9E
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 01:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B9BC3F68F
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 02:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 187D520848
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 01:30:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AylLWoXP"
+	by mail.kernel.org (Postfix) with ESMTP id 9DA5520692
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 02:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726439AbgAHBaX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jan 2020 20:30:23 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:56968 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725996AbgAHBaW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 20:30:22 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0081TKXe134517;
-        Wed, 8 Jan 2020 01:29:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=8789pjZRMhEt10VXzIey5jziJkLcr1FXiO0MyGZcbHU=;
- b=AylLWoXPy4Oj5QevoFSTbo05w+Poh/wgJTwQOPO8UU38vgufdiTZyue/bgC2IDH+tA+Y
- ffHDZSg4DppIOA1ohdF7+JSl96h41jqdCpeHVIoBprXSiWI8ET2gJQIZh8s6i8BTGOBl
- vzRe6gLiTqLAUVl7IR9dN95ZeV0jp2lYOwx9cwQJW90CcURAeUnRK+nK3Nsk3sQt4R1C
- vSeWR5XjDd+SM4To1KslVnWV1X9mN6J6yu964GNuG78qgsQ97Dm69xBjPMC1q43Qdx31
- mPFpRpLhBrd/V8urAKuJUYo5Ik5wTpNZgsbL5iytcG1I4Sg4pjZkLp4mUDwruFYFz9i0 fw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xaj4u14h0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 01:29:56 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0081SNlr151251;
-        Wed, 8 Jan 2020 01:29:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2xcqbj178y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 08 Jan 2020 01:29:55 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0081TqNx008054;
-        Wed, 8 Jan 2020 01:29:52 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 07 Jan 2020 17:29:43 -0800
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191215174509.1847-1-linux@roeck-us.net>
-        <20191215174509.1847-2-linux@roeck-us.net>
-        <yq1r211dvck.fsf@oracle.com> <20191219003256.GA28144@roeck-us.net>
-        <yq17e233o0o.fsf@oracle.com>
-        <d42990af-78e4-e6c4-37ae-8043d27e565a@roeck-us.net>
-Date:   Tue, 07 Jan 2020 20:29:40 -0500
-In-Reply-To: <d42990af-78e4-e6c4-37ae-8043d27e565a@roeck-us.net> (Guenter
-        Roeck's message of "Tue, 7 Jan 2020 05:00:39 -0800")
-Message-ID: <yq1o8ve20sb.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726145AbgAHCKI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jan 2020 21:10:08 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44317 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725601AbgAHCKI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 21:10:08 -0500
+Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1154C3A0F36;
+        Wed,  8 Jan 2020 13:10:04 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ip0nL-0007TV-0W; Wed, 08 Jan 2020 13:10:03 +1100
+Date:   Wed, 8 Jan 2020 13:10:02 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     Sweet Tea Dorminy <sweettea@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
+Message-ID: <20200108021002.GR23195@dread.disaster.area>
+References: <20191223225558.19242-1-tasleson@redhat.com>
+ <20191223225558.19242-10-tasleson@redhat.com>
+ <20200104025620.GC23195@dread.disaster.area>
+ <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com>
+ <20200106220233.GK23195@dread.disaster.area>
+ <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
+ <20200107012353.GO23195@dread.disaster.area>
+ <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9493 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001080012
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9493 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001080012
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=7-415B0cAAAA:8 a=akbcZbo06iP5b_x4eJUA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, Jan 07, 2020 at 11:01:47AM -0600, Tony Asleson wrote:
+> On 1/6/20 7:23 PM, Dave Chinner wrote:
+> > On Mon, Jan 06, 2020 at 07:19:07PM -0500, Sweet Tea Dorminy wrote:
+> >>>>>> +
+> >>>>>>    if (mp && mp->m_fsname) {
+> >>>>>
+> >>>>> mp->m_fsname is the name of the device we use everywhere for log
+> >>>>> messages, it's set up at mount time so we don't have to do runtime
+> >>>>> evaulation of the device name every time we need to emit the device
+> >>>>> name in a log message.
+> >>>>>
+> >>>>> So, if you have some sooper speshial new device naming scheme, it
+> >>>>> needs to be stored into the struct xfs_mount to replace mp->m_fsname.
+> >>>>
+> >>>> I don't think we want to replace mp->m_fsname with the vpd 0x83 device
+> >>>> identifier.  This proposed change is adding a key/value structured data
+> >>>> to the log message for non-ambiguous device identification over time,
+> >>>> not to place the ID in the human readable portion of the message.  The
+> >>>> existing name is useful too, especially when it involves a partition.
+> >>>
+> >>> Oh, if that's all you want to do, then why is this identifier needed
+> >>> in every log message? 
+> 
+> The value is we can filter all the messages by the id as they are all
+> individually identifiable.
 
-Guenter,
+Then what you want is the *filesystem label* or *filesystem UUID*
+in the *filesystem log output* to uniquely identify the *filesystem
+log output* regardless of the block device identifier the kernel
+assigned it's underlying disk.
 
-> "scsi-8-140" is created by libsensors, so any change in that would
-> have to be made there, not in the kernel driver.
+By trying to use the block device as the source of a persistent
+filesytem identifier, you are creating more new problems about
+uniqueness than you are solving.  E.g.
 
-Yes. Something like the patch below which will produce actual SCSI
-device instance names:
+- there can be more than one filesystem per block device, so the
+  identifier needs to be, at minimum, a {dev_id, partition} tuple.
+  The existing bdev name (e.g. sda2) that filesystems emit contain
+  this information. The underlying vpd device indentifier does not.
 
-	drivetemp-scsi-7:0:29:0
-	drivetemp-scsi-8:0:30:0
-	drivetemp-scsi-8:0:15:0
-	drivetemp-scsi-7:0:24:0
+- the filesystem on a device can change (e.g. mkfs), so an unchanged
+  vpd identifier does not mean we mounted the same filesystem
 
-Instead of the current:
+- raid devices are made up of multiple physical devices, so using
+  device information for persistent identification is problematic,
+  especially when devices fail and are replaced with different
+  hardware.
 
-	drivetemp-scsi-7-1d0
-	drivetemp-scsi-8-1e0
-	drivetemp-scsi-8-f0
-	drivetemp-scsi-7-180
+- clone a filesystem to a new device to replace a failing disk,
+  block device identifier changes but the filesystem doesn't.
 
-Other question: Does hwmon have any notion of sensor topology? As I
-mentioned earlier, SCSI installations typically rely on SAF-TE or SES
-instead of the physical drive sensors. SES also includes monitoring of
-fans, power supplies, etc. And more importantly, it provides a
-representation of the location of a given component. E.g.: Tray number
-#4, disk drive bay #5.
+Basically, if you need a *persistent filesystem identifier* for
+your log messages, then you cannot rely on the underlying device to
+provide that. Filesystems already have unique identifiers in them
+that can be used for this purpose, and we have mechanisms to allow
+users to configure them as well.
 
-So it would be helpful if libsensors had a way to represent sensors in a
-way that mimics the physical device layout reported by SES.
+IOWs, you're trying to tackle this "filesystem identifier" at the
+wrong layer - use the persistent filesystem identifiers to
+persitently identify the filesystem across mounts, not some random
+block device identifier.
 
+> The structured data id that the patch series adds is not outputted by
+> default by journalctl.  Please look at cover letter in patch series for
+> example filter use.  You can see all the data in the journal entries by
+> using journalctl -o json-pretty.
+
+Yes, I understand that. But my comments about adding redundant
+information to the log text output were directed at your suggestiong to
+use dev_printk() instead of printk to achieve what you want. That
+changes the log text output by prepending device specific strings to
+the filesystem output.
+
+> One can argue that we are adding a lot of data to each log message
+> as the VPD data isn't trivial.  This could be mitigated by hashing
+> the VPD and storing the hash as the ID, but that makes it less
+> user friendly.  However, maybe it should be considered.
+
+See above, I don't think the VPD information actually solves the
+problem you are seeking to solve.
+
+> >>> It does not change over the life of the filesystem, so it the
+> >>> persistent identifier only needs to >>> be
+> emitted to the log once at filesystem mount time. i.e.  >>>
+> instead of:
+> >>>
+> >>> [    2.716841] XFS (dm-0): Mounting V5 Filesystem
+> >>>
+> >>> It just needs to be:
+> >>>
+> >>> [    2.716841] XFS (dm-0): Mounting V5 Filesystem on device
+> >>> <persistent dev id>
+> >>>
+> >>> If you need to do any sort of special "is this the right
+> >>> device" checking, it needs to be done immediately at mount
+> >>> time so action can be taken to shutdown the filesystem and
+> >>> unmount the device immediately before further damage is
+> >>> done....
+> >>>
+> >>> i.e. once the filesystem is mounted, you've already got a
+> >>> unique and persistent identifier in the log for the life of
+> >>> the filesystem (the m_fsname string), so I'm struggling to
+> >>> understand exactly what problem you are trying to solve by
+> >>> adding redundant information to every log message.....
+> 
+> m_fsname is only valid for the life of the mount, not the life of
+> the FS.  Each and every time we reboot, remove/reattach a device
+> the attachment point may change and thus the m_fsname changes too.
+
+Well, yes, that's because m_fsname is currently aimed at identifying
+the block device that the filesytem is currently mounted on. That's
+the block device we *actually care about* when trying to diagnose
+problems reported in the log.  From that perspective, I don't want
+the log output to change - it contains exactly what we need to
+diagnose problems when things go wrong.
+
+But for structured logging, using block device identifiers for the
+filesystem identifier is just wrong. If you need new information,
+append the UUID from the filesystem to the log message and use that
+instead. i.e your original printk_emit() function should pass
+mp->m_sb.sb_uuid as the post-message binary filesystem identifier,
+not the block device VPD information.
+
+If you need to convert the filesystem uuid to a block device, then
+you can just go look up /dev/disk/by-uuid/ and follow the link the
+filesystem uuid points to....
+
+> > And, for the log rotation case, the filesystem log output
+> > already has a unique, persistent identifier for the life of the
+> > mount - the fsname ("dm-0" in the above example). We don't need
+> > to add a new device identifier to the XFS log messages to solve
+> > that problem because *we've already got a device identifier in
+> > the log messages*.
+> 
+> It's very useful to have an ID that persists and identifies across
+> mounts.  The existing id logging scheme tells you where something
+> is attached, not what is attached.
+
+Yup, that's what the filesystem labels and UUIDs provide. We've been
+using them for this purpose for a long, long time.
+
+Cheers,
+
+Dave.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
-
-
-diff --git a/lib/data.c b/lib/data.c
-index c5aea42967a6..06cfa86f353b 100644
---- a/lib/data.c
-+++ b/lib/data.c
-@@ -202,8 +202,9 @@ int sensors_snprintf_chip_name(char *str, size_t size,
- 		return snprintf(str, size, "%s-mdio-%x", chip->prefix,
- 				chip->addr);
- 	case SENSORS_BUS_TYPE_SCSI:
--		return snprintf(str, size, "%s-scsi-%hd-%x", chip->prefix,
--				chip->bus.nr, chip->addr);
-+		return snprintf(str, size, "%s-scsi-%u:%u:%u:%lu", chip->prefix,
-+				chip->bus.nr, chip->addr, chip->sub_addr,
-+				chip->sub_sub_addr);
- 	}
- 
- 	return -SENSORS_ERR_CHIP_NAME;
-diff --git a/lib/sensors.h b/lib/sensors.h
-index 94f6f23051d2..f468cccabc72 100644
---- a/lib/sensors.h
-+++ b/lib/sensors.h
-@@ -65,6 +65,8 @@ typedef struct sensors_chip_name {
- 	char *prefix;
- 	sensors_bus_id bus;
- 	int addr;
-+	unsigned int sub_addr;
-+	unsigned long sub_sub_addr;
- 	char *path;
- } sensors_chip_name;
- 
-diff --git a/lib/sysfs.c b/lib/sysfs.c
-index e63688b72aba..f76b4a99aa7d 100644
---- a/lib/sysfs.c
-+++ b/lib/sysfs.c
-@@ -620,6 +620,7 @@ static int classify_device(const char *dev_name,
-                            sensors_chip_features *entry)
- {
- 	int domain, bus, slot, fn, vendor, product, id;
-+	unsigned long lun;
- 	char bus_path[NAME_MAX];
- 	char *bus_attr;
- 	int ret = 1;
-@@ -687,11 +688,13 @@ static int classify_device(const char *dev_name,
- 		entry->chip.bus.nr = 0;
- 	} else
- 	if (subsys && !strcmp(subsys, "scsi") &&
--	    sscanf(dev_name, "%d:%d:%d:%x", &domain, &bus, &slot, &fn) == 4) {
-+	    sscanf(dev_name, "%u:%u:%u:%lu", &domain, &bus, &id, &lun) == 4) {
- 		/* adapter(host), channel(bus), id(target), lun */
--		entry->chip.addr = (bus << 8) + (slot << 4) + fn;
--		entry->chip.bus.type = SENSORS_BUS_TYPE_SCSI;
- 		entry->chip.bus.nr = domain;
-+		entry->chip.addr = bus;
-+		entry->chip.sub_addr = id;
-+		entry->chip.sub_sub_addr = lun;
-+		entry->chip.bus.type = SENSORS_BUS_TYPE_SCSI;
- 	} else {
- 		/* Unknown device */
- 		ret = 0;
+Dave Chinner
+david@fromorbit.com
