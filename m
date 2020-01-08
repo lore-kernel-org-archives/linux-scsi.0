@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C4E4C00523
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:11:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 862B7C00523
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:24:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C04C92075D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:11:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DB6320705
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 07:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726179AbgAHHLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 02:11:51 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58684 "EHLO mx2.suse.de"
+        id S1726466AbgAHHY1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 02:24:27 -0500
+Received: from mx2.suse.de ([195.135.220.15]:35016 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725944AbgAHHLu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 02:11:50 -0500
+        id S1726079AbgAHHY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Jan 2020 02:24:26 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id CC001B15F;
-        Wed,  8 Jan 2020 07:11:47 +0000 (UTC)
-Subject: Re: [PATCH v2 01/32] elx: libefc_sli: SLI-4 register offsets and
- field definitions
+        by mx2.suse.de (Postfix) with ESMTP id C4B34AD20;
+        Wed,  8 Jan 2020 07:24:23 +0000 (UTC)
+Subject: Re: [PATCH v2 02/32] elx: libefc_sli: SLI Descriptors and Queue
+ entries
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-2-jsmart2021@gmail.com>
+ <20191220223723.26563-3-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -74,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3d984e91-49f6-dd8f-ed00-82fcfdc9b95e@suse.de>
-Date:   Wed, 8 Jan 2020 08:11:47 +0100
+Message-ID: <af4ccd39-dab9-b2bf-f77c-954b1fe3725d@suse.de>
+Date:   Wed, 8 Jan 2020 08:24:22 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-2-jsmart2021@gmail.com>
+In-Reply-To: <20191220223723.26563-3-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,204 +89,208 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 12/20/19 11:36 PM, James Smart wrote:
-> This is the initial patch for the new Emulex target mode SCSI
-> driver sources.
+> This patch continues the libefc_sli SLI-4 library population.
 > 
-> This patch:
-> - Creates the new Emulex source level directory drivers/scsi/elx
->   and adds the directory to the MAINTAINERS file.
-> - Creates the first library subdirectory drivers/scsi/elx/libefc_sli.
->   This library is a SLI-4 interface library.
-> - Starts the population of the libefc_sli library with definitions
->   of SLI-4 hardware register offsets and definitions.
+> This patch add SLI-4 Data structures and defines for:
+> - Buffer Descriptors (BDEs)
+> - Scatter/Gather List elements (SGEs)
+> - Queues and their Entry Descriptions for:
+>    Event Queues (EQs), Completion Queues (CQs),
+>    Receive Queues (RQs), and the Mailbox Queue (MQ).
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->  MAINTAINERS                        |   8 ++
->  drivers/scsi/elx/libefc_sli/sli4.c |  26 ++++
->  drivers/scsi/elx/libefc_sli/sli4.h | 239 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 273 insertions(+)
->  create mode 100644 drivers/scsi/elx/libefc_sli/sli4.c
->  create mode 100644 drivers/scsi/elx/libefc_sli/sli4.h
+>  drivers/scsi/elx/include/efc_common.h |   25 +
+>  drivers/scsi/elx/libefc_sli/sli4.h    | 1768 +++++++++++++++++++++++++++++++++
+>  2 files changed, 1793 insertions(+)
+>  create mode 100644 drivers/scsi/elx/include/efc_common.h
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index cc0a4a8ae06a..dd8e5f340991 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6139,6 +6139,14 @@ W:	http://www.broadcom.com
->  S:	Supported
->  F:	drivers/scsi/lpfc/
->  
-> +EMULEX/BROADCOM EFCT FC/FCOE SCSI TARGET DRIVER
-> +M:	James Smart <james.smart@broadcom.com>
-> +M:	Ram Vegesna <ram.vegesna@broadcom.com>
-> +L:	linux-scsi@vger.kernel.org
-> +W:	http://www.broadcom.com
-> +S:	Supported
-> +F:	drivers/scsi/elx/
-> +
->  ENE CB710 FLASH CARD READER DRIVER
->  M:	Michał Mirosław <mirq-linux@rere.qmqm.pl>
->  S:	Maintained
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+> diff --git a/drivers/scsi/elx/include/efc_common.h b/drivers/scsi/elx/include/efc_common.h
 > new file mode 100644
-> index 000000000000..29d33becd334
+> index 000000000000..3fc48876c531
 > --- /dev/null
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
-> @@ -0,0 +1,26 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
-> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-> + */
-> +
-> +/**
-> + * All common (i.e. transport-independent) SLI-4 functions are implemented
-> + * in this file.
-> + */
-> +#include "sli4.h"
-> +
-> +struct sli4_asic_entry_t {
-> +	u32 rev_id;
-> +	u32 family;
-> +};
-> +
-> +static struct sli4_asic_entry_t sli4_asic_table[] = {
-> +	{ SLI4_ASIC_REV_B0, SLI4_ASIC_GEN_5},
-> +	{ SLI4_ASIC_REV_D0, SLI4_ASIC_GEN_5},
-> +	{ SLI4_ASIC_REV_A3, SLI4_ASIC_GEN_6},
-> +	{ SLI4_ASIC_REV_A0, SLI4_ASIC_GEN_6},
-> +	{ SLI4_ASIC_REV_A1, SLI4_ASIC_GEN_6},
-> +	{ SLI4_ASIC_REV_A3, SLI4_ASIC_GEN_6},
-> +	{ SLI4_ASIC_REV_A1, SLI4_ASIC_GEN_7},
-> +};
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.h b/drivers/scsi/elx/libefc_sli/sli4.h
-> new file mode 100644
-> index 000000000000..02c671cf57ef
-> --- /dev/null
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.h
-> @@ -0,0 +1,239 @@
+> +++ b/drivers/scsi/elx/include/efc_common.h
+> @@ -0,0 +1,25 @@
 > +/* SPDX-License-Identifier: GPL-2.0 */
 > +/*
 > + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
 > + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-> + *
 > + */
 > +
-> +/*
-> + * All common SLI-4 structures and function prototypes.
-> + */
+> +#ifndef __EFC_COMMON_H__
+> +#define __EFC_COMMON_H__
 > +
-> +#ifndef _SLI4_H
-> +#define _SLI4_H
+> +#include <linux/pci.h>
 > +
-> +/*************************************************************************
-> + * Common SLI-4 register offsets and field definitions
-> + */
+> +#define EFC_SUCCESS 0
+> +#define EFC_FAIL 1
 > +
-> +/* SLI_INTF - SLI Interface Definition Register */
-> +#define SLI4_INTF_REG			0x0058
-> +enum {
-> +	SLI4_INTF_REV_SHIFT		= 4,
-> +	SLI4_INTF_REV_MASK		= 0x0F << SLI4_INTF_REV_SHIFT,
+> +struct efc_dma {
+> +	void		*virt;
+> +	void            *alloc;
+> +	dma_addr_t	phys;
 > +
-> +	SLI4_INTF_REV_S3		= 3 << SLI4_INTF_REV_SHIFT,
-> +	SLI4_INTF_REV_S4		= 4 << SLI4_INTF_REV_SHIFT,
-> +
-> +	SLI4_INTF_FAMILY_SHIFT		= 8,
-> +	SLI4_INTF_FAMILY_MASK		= 0x0F << SLI4_INTF_FAMILY_SHIFT,
-> +
-> +	SLI4_FAMILY_CHECK_ASIC_TYPE	= 0xf << SLI4_INTF_FAMILY_SHIFT,
-> +
-> +	SLI4_INTF_IF_TYPE_SHIFT		= 12,
-> +	SLI4_INTF_IF_TYPE_MASK		= 0x0F << SLI4_INTF_IF_TYPE_SHIFT,
-> +
-> +	SLI4_INTF_IF_TYPE_2		= 2 << SLI4_INTF_IF_TYPE_SHIFT,
-> +	SLI4_INTF_IF_TYPE_6		= 6 << SLI4_INTF_IF_TYPE_SHIFT,
-> +
-> +	SLI4_INTF_VALID_SHIFT		= 29,
-> +	SLI4_INTF_VALID_MASK		= 7 << SLI4_INTF_VALID_SHIFT,
-> +
-> +	SLI4_INTF_VALID_VALUE		= 6 << SLI4_INTF_VALID_SHIFT,
+> +	size_t		size;
+> +	size_t          len;
+> +	struct pci_dev	*pdev;
 > +};
 > +
-> +/* ASIC_ID - SLI ASIC Type and Revision Register */
-> +#define SLI4_ASIC_ID_REG	0x009c
-> +enum {
-> +	SLI4_ASIC_GEN_SHIFT	= 8,
-> +	SLI4_ASIC_GEN_MASK	= 0xFF << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_5		= 0x0b << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_6		= 0x0c << SLI4_ASIC_GEN_SHIFT,
-> +	SLI4_ASIC_GEN_7		= 0x0d << SLI4_ASIC_GEN_SHIFT,
+> +#endif /* __EFC_COMMON_H__ */
+> diff --git a/drivers/scsi/elx/libefc_sli/sli4.h b/drivers/scsi/elx/libefc_sli/sli4.h
+> index 02c671cf57ef..f86a9e72ed43 100644
+> --- a/drivers/scsi/elx/libefc_sli/sli4.h
+> +++ b/drivers/scsi/elx/libefc_sli/sli4.h
+> @@ -12,6 +12,8 @@
+>  #ifndef _SLI4_H
+>  #define _SLI4_H
+>  
+> +#include "../include/efc_common.h"
+> +
+>  /*************************************************************************
+>   * Common SLI-4 register offsets and field definitions
+>   */
+> @@ -236,4 +238,1770 @@ struct sli4_reg {
+>  	u32	off;
+>  };
+>  
+> +struct sli4_dmaaddr {
+> +	__le32 low;
+> +	__le32 high;
 > +};
 > +
-> +enum {
-> +	SLI4_ASIC_REV_A0 = 0x00,
-> +	SLI4_ASIC_REV_A1 = 0x01,
-> +	SLI4_ASIC_REV_A2 = 0x02,
-> +	SLI4_ASIC_REV_A3 = 0x03,
-> +	SLI4_ASIC_REV_B0 = 0x10,
-> +	SLI4_ASIC_REV_B1 = 0x11,
-> +	SLI4_ASIC_REV_B2 = 0x12,
-> +	SLI4_ASIC_REV_C0 = 0x20,
-> +	SLI4_ASIC_REV_C1 = 0x21,
-> +	SLI4_ASIC_REV_C2 = 0x22,
-> +	SLI4_ASIC_REV_D0 = 0x30,
+> +/* a 3-word BDE with address 1st 2 words, length last word */
+> +struct sli4_bufptr {
+> +	struct sli4_dmaaddr addr;
+> +	__le32 length;
 > +};
 > +
-> +/* BMBX - Bootstrap Mailbox Register */
-> +#define SLI4_BMBX_REG		0x0160
-> +#define SLI4_BMBX_MASK_HI	0x3
-> +#define SLI4_BMBX_MASK_LO	0xf
-> +#define SLI4_BMBX_RDY		(1 << 0)
-> +#define SLI4_BMBX_HI		(1 << 1)
-> +#define SLI4_BMBX_WRITE_HI(r) \
-> +	((upper_32_bits(r) & ~SLI4_BMBX_MASK_HI) | SLI4_BMBX_HI)
-> +#define SLI4_BMBX_WRITE_LO(r) \
-> +	(((upper_32_bits(r) & SLI4_BMBX_MASK_HI) << 30) | \
-> +	 (((r) & ~SLI4_BMBX_MASK_LO) >> 2))
-> +#define SLI4_BMBX_SIZE				256
-> +
-> +/* SLIPORT_CONTROL - SLI Port Control Register */
-> +#define SLI4_PORT_CTRL_REG	0x0408
-> +#define SLI4_PORT_CTRL_IP	(1 << 27)
-> +#define SLI4_PORT_CTRL_IDIS	(1 << 22)
-> +#define SLI4_PORT_CTRL_FDD	(1 << 31)
-> +
-> +/* SLI4_SLIPORT_ERROR - SLI Port Error Register */
-> +#define SLI4_PORT_ERROR1	0x040c
-> +#define SLI4_PORT_ERROR2	0x0410
-> +
-> +/* EQCQ_DOORBELL - EQ and CQ Doorbell Register */
-> +#define SLI4_EQCQ_DB_REG	0x120
-> +enum {
-> +	SLI4_EQ_ID_LO_MASK	= 0x01FF,
-> +
-> +	SLI4_CQ_ID_LO_MASK	= 0x03FF,
-> +
-> +	SLI4_EQCQ_CI_EQ		= 0x0200,
-> +
-> +	SLI4_EQCQ_QT_EQ		= 0x00000400,
-> +	SLI4_EQCQ_QT_CQ		= 0x00000000,
-> +
-> +	SLI4_EQCQ_ID_HI_SHIFT	= 11,
-> +	SLI4_EQCQ_ID_HI_MASK	= 0xF800,
-> +
-> +	SLI4_EQCQ_NUM_SHIFT	= 16,
-> +	SLI4_EQCQ_NUM_MASK	= 0x1FFF0000,
-> +
-> +	SLI4_EQCQ_ARM		= 0x20000000,
-> +	SLI4_EQCQ_UNARM		= 0x00000000,
+> +/* a 3-word BDE with length as first word, address last 2 words */
+> +struct sli4_bufptr_len1st {
+> +	__le32 length0;
+> +	struct sli4_dmaaddr addr;
 > +};
 > +
-Please be consistent here wrt _SHIFT and _MASK statements.
-Either have them spelled out (as you do in this case), but then please
-change the first hunk to avoid an explicit shift.
-Or keep the style in the first hunk, and change the _MASK values here
-to use the _SHIFT values
-(ie SLI4_EQCQ_ID_HI_MASK = 0x1F << SLI4_EQCQ_ID_HI_SHIFT).
-I don't mind either way, but keep it consistent.
+> +/* Buffer Descriptor Entry (BDE) */
+> +enum {
+> +	SLI4_BDE_MASK_BUFFER_LEN	= 0x00ffffff,
+> +	SLI4_BDE_MASK_BDE_TYPE		= 0xff000000,
+> +};
+> +
+> +struct sli4_bde {
+> +	__le32		bde_type_buflen;
+> +	union {
+> +		struct sli4_dmaaddr data;
+> +		struct {
+> +			__le32	offset;
+> +			__le32	rsvd2;
+> +		} imm;
+> +		struct sli4_dmaaddr blp;
+> +	} u;
+> +};
+> +
+> +/* Buffer Descriptors */
+> +enum {
+> +	BDE_TYPE_SHIFT		= 24,
+> +	BDE_TYPE_BDE_64		= 0x00,	/* Generic 64-bit data */
+> +	BDE_TYPE_BDE_IMM	= 0x01,	/* Immediate data */
+> +	BDE_TYPE_BLP		= 0x40,	/* Buffer List Pointer */
+> +};
+> +
+> +/* Scatter-Gather Entry (SGE) */
+> +#define SLI4_SGE_MAX_RESERVED			3
+> +
+> +enum {
+> +	/* DW2 */
+> +	SLI4_SGE_DATA_OFFSET_MASK	= 0x07FFFFFF,
+> +	/*DW2W1*/
+> +	SLI4_SGE_TYPE_SHIFT		= 27,
+> +	SLI4_SGE_TYPE_MASK		= 0xf << SLI4_SGE_TYPE_SHIFT,
+> +	/*SGE Types*/
+> +	SLI4_SGE_TYPE_DATA		= 0x00,
+> +	SLI4_SGE_TYPE_DIF		= 0x04,	/* Data Integrity Field */
+> +	SLI4_SGE_TYPE_LSP		= 0x05,	/* List Segment Pointer */
+> +	SLI4_SGE_TYPE_PEDIF		= 0x06,	/* Post Encryption Engine DIF */
+> +	SLI4_SGE_TYPE_PESEED		= 0x07,	/* Post Encryption DIF Seed */
+> +	SLI4_SGE_TYPE_DISEED		= 0x08,	/* DIF Seed */
+> +	SLI4_SGE_TYPE_ENC		= 0x09,	/* Encryption */
+> +	SLI4_SGE_TYPE_ATM		= 0x0a,	/* DIF Application Tag Mask */
+> +	SLI4_SGE_TYPE_SKIP		= 0x0c,	/* SKIP */
+> +
+> +	SLI4_SGE_LAST			= (1 << 31),
+> +};
+> +
+> +struct sli4_sge {
+> +	__le32		buffer_address_high;
+> +	__le32		buffer_address_low;
+> +	__le32		dw2_flags;
+> +	__le32		buffer_length;
+> +};
+> +
+I am really not a big fan of anonymous enums, especially not if they are
+scoped for specific structures.
+Can you please avoid the use of anonymous enums, and name them according
+to the structure where they are indended to be used?
+Ideally the structure should reference named enums directly, but I do
+agree that this it not always possible or desired.
+But we should at least name them accordingly to give the developer a
+hint where these values are expected to occur.
+
+Eg in the above case
+
+enum sli4_sge_flags {
+
+or similar would make the intended usage clearer.
+
+> +/* T10 DIF Scatter-Gather Entry (SGE) */
+> +struct sli4_dif_sge {
+> +	__le32		buffer_address_high;
+> +	__le32		buffer_address_low;
+> +	__le32		dw2_flags;
+> +	__le32		rsvd12;
+> +};
+> +
+> +/* Data Integrity Seed (DISEED) SGE */
+> +enum {
+> +	/* DW2W1 */
+> +	DISEED_SGE_HS			= (1 << 2),
+> +	DISEED_SGE_WS			= (1 << 3),
+> +	DISEED_SGE_IC			= (1 << 4),
+> +	DISEED_SGE_ICS			= (1 << 5),
+> +	DISEED_SGE_ATRT			= (1 << 6),
+> +	DISEED_SGE_AT			= (1 << 7),
+> +	DISEED_SGE_FAT			= (1 << 8),
+> +	DISEED_SGE_NA			= (1 << 9),
+> +	DISEED_SGE_HI			= (1 << 10),
+> +
+> +	/* DW3W1 */
+> +	DISEED_SGE_BS_MASK		= 0x0007,
+> +	DISEED_SGE_AI			= (1 << 3),
+> +	DISEED_SGE_ME			= (1 << 4),
+> +	DISEED_SGE_RE			= (1 << 5),
+> +	DISEED_SGE_CE			= (1 << 6),
+> +	DISEED_SGE_NR			= (1 << 7),
+> +
+> +	DISEED_SGE_OP_RX_SHIFT		= 8,
+> +	DISEED_SGE_OP_RX_MASK		= (0xf << DISEED_SGE_OP_RX_SHIFT),
+> +	DISEED_SGE_OP_TX_SHIFT		= 12,
+> +	DISEED_SGE_OP_TX_MASK		= (0xf << DISEED_SGE_OP_TX_SHIFT),
+> +
+> +	/* Opcode values */
+> +	DISEED_SGE_OP_IN_NODIF_OUT_CRC	= 0x00,
+> +	DISEED_SGE_OP_IN_CRC_OUT_NODIF	= 0x01,
+> +	DISEED_SGE_OP_IN_NODIF_OUT_CSUM	= 0x02,
+> +	DISEED_SGE_OP_IN_CSUM_OUT_NODIF	= 0x03,
+> +	DISEED_SGE_OP_IN_CRC_OUT_CRC	= 0x04,
+> +	DISEED_SGE_OP_IN_CSUM_OUT_CSUM	= 0x05,
+> +	DISEED_SGE_OP_IN_CRC_OUT_CSUM	= 0x06,
+> +	DISEED_SGE_OP_IN_CSUM_OUT_CRC	= 0x07,
+> +	DISEED_SGE_OP_IN_RAW_OUT_RAW	= 0x08,
+> +
+> +};
+> +
+Similar here: please use individual named enums, not one giant anonymous
+enum containing different value for different use-cases.
 
 Cheers,
 
