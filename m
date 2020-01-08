@@ -1,182 +1,110 @@
-Return-Path: <SRS0=hsTv=24=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CD9C33C9B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 20:16:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA75C33C9B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 01:12:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1153121744
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jan 2020 20:16:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64BB52080A
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 01:12:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y7pVuVho"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728585AbgAGUQZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jan 2020 15:16:25 -0500
-Received: from mout.kundenserver.de ([217.72.192.73]:55413 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728379AbgAGUQZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 15:16:25 -0500
-Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
- (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1MrQR7-1jS5Fh1b8x-00oVdi; Tue, 07 Jan 2020 21:16:06 +0100
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Oleksandr Natalenko <oleksandr@redhat.com>,
-        Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org,
-        Joe Eykholt <jeykholt@cisco.com>,
-        Mike Christie <michaelc@cs.wisc.edu>,
-        Abhijeet Joglekar <abjoglek@cisco.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] fnic: fix invalid stack access
-Date:   Tue,  7 Jan 2020 21:15:49 +0100
-Message-Id: <20200107201602.4096790-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.20.0
+        id S1726530AbgAHBMk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jan 2020 20:12:40 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44054 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725601AbgAHBMj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 20:12:39 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00819CZL120969;
+        Wed, 8 Jan 2020 01:12:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=3ydrE+T/CSID+gARHjnF6wd1bt90Yw9xO2VGOIXAOBQ=;
+ b=Y7pVuVhowbYc0FayjzkOX8nnmUIQLHS0mEO1OMmW+zr81/HQMzywLj2upnP+DBa18nAZ
+ NPIK41ZHR0JMgYbycFkryGBv3GapPJfdiYs66lr1PMWSoj/srJzyKnifU1W3g02aB40X
+ 42YnLMl72IxH5/tk5vlwI9WRVJsuNF4f8BGsrCIu2gvkqDlJoA3LDCpKwxF1l0WhZCgz
+ m3wl2ITtxNihtCAKExT1qq7ud8Oaen3TnNNdyzzyiixqvst5pIfxZQ2b8vSC6OnzNPhp
+ l/BQ4fMTbuChkjMDgeTLmJQ6LbN2Qxlg2sCCCoOoSplsllh/JXYEeLAQB2vPTVZn0ViI jA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2xaj4u12w2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Jan 2020 01:12:11 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 008199Z9128871;
+        Wed, 8 Jan 2020 01:12:11 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2xcpcrg2p0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 08 Jan 2020 01:12:10 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0081C9j3002068;
+        Wed, 8 Jan 2020 01:12:09 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 07 Jan 2020 17:12:09 -0800
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191215174509.1847-1-linux@roeck-us.net>
+        <20191215174509.1847-2-linux@roeck-us.net>
+        <yq1r211dvck.fsf@oracle.com>
+        <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+Date:   Tue, 07 Jan 2020 20:12:06 -0500
+In-Reply-To: <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net> (Guenter
+        Roeck's message of "Wed, 1 Jan 2020 09:46:23 -0800")
+Message-ID: <yq1sgkq21ll.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:K1KYSV0cJGtVg+TJWCYsRWWJJ9TvxGO00fSnDNoLEwCbAThvW6P
- 0dOMljJLPjjYc+Ef3QERcKvOdSQPtNIYqOzoz0ePAIvHo3LyPF2z9aEDIblaaNo9Q039lxT
- nL84AyTp+yP8K4G7074F7xDIhxZkvKxqWidkBRzl59oZXq4hMKzTx3RiEEc0gTOVCXSnk9Y
- omOZEVzHuiAcso91Xthwg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Tp6NYtjwL5I=:k5WIeqKeseUq8u9a+e4+A5
- /g1BxYrgwFO6nUsqbTvLYi2uU5w7Gp23F3cSVNxW69ikv6dICD103Q5aDnGXDbHpoOcqJu8yS
- BgGSHmtSdwM99j1grgcJ+XN6UjAo4w8B2BL6it/ulAfdGiD2JBbh3ZjDzc+NL54UITYNMTpSV
- ick6WeAYF15S6FavgY917Z/Z2RREK2QX8cYghH7rLlstxkBZhUsOnurhoRCNXWw8ncPpS9qf1
- hnBIo1o/dxsEOQ6vW4fSoMyYYylRWzYz0jKTMDsdL+1Q/q5JEgBYN66xHQvAz+23utjUB4Uyo
- w0vhX/s307hp5K7SSAniDvWdN0HusAmsQLXMVprpvrzpo+OWzt2DGgH/8y+KTC9HHB8chzxr8
- FOCt8brzZ1tjuvNgz/EXJSRHTBq4dO05u+Ol/a4USuAXUPMVzGB93Rx2sAwIB3Qav06Q/MibK
- 3yxtCltDR34V6M0ekOQualyvnUaxmYqelYT2bpun7z4PA+MbkytweRLIZ+r2lt9os1JBnjS5L
- zM4YeJxSTp40irXhiPmDdEWm/sjmXhz9O9G1eEK32GnRf2h2eK0wQY1lwNlpGXkszzh6IZY2r
- sznsAkG4woV8FqaAe40CIR20zNMUU+7L6HUnbBvrCuLZWUHw1IuYHYLVMaykK7qEenijKoUpA
- klDdpw8t92Psp0Uz+HUphk114qYODoW9UI47ifTkEMf+oK9qDHLg5NbxGb72+rb3rIYDAd6cU
- HHQcRT6zZAu+hXUrjhczbxBTHXZ44VSbP9VdgTeIbNs3CxBpU4JC1Nak1yL3RlghMMEmTXXjV
- /ViHmUngA2ox8gOkCm6BuhTNI3UZXlKlKKmUB7BE8lKD+s3bHxLXJvldXc1hk83tHiUweWdBN
- kAFKkl2SuAkeDoiS/G5Q==
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9493 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=894
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001080009
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9493 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=955 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001080009
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-gcc -O3 warns that some local variables are not properly initialized:
 
-drivers/scsi/fnic/vnic_dev.c: In function 'fnic_dev_hang_notify':
-drivers/scsi/fnic/vnic_dev.c:511:16: error: 'a0' is used uninitialized in this function [-Werror=uninitialized]
-  vdev->args[0] = *a0;
-  ~~~~~~~~~~~~~~^~~~~
-drivers/scsi/fnic/vnic_dev.c:691:6: note: 'a0' was declared here
-  u64 a0, a1;
-      ^~
-drivers/scsi/fnic/vnic_dev.c:512:16: error: 'a1' is used uninitialized in this function [-Werror=uninitialized]
-  vdev->args[1] = *a1;
-  ~~~~~~~~~~~~~~^~~~~
-drivers/scsi/fnic/vnic_dev.c:691:10: note: 'a1' was declared here
-  u64 a0, a1;
-          ^~
-drivers/scsi/fnic/vnic_dev.c: In function 'fnic_dev_mac_addr':
-drivers/scsi/fnic/vnic_dev.c:512:16: error: 'a1' is used uninitialized in this function [-Werror=uninitialized]
-  vdev->args[1] = *a1;
-  ~~~~~~~~~~~~~~^~~~~
-drivers/scsi/fnic/vnic_dev.c:698:10: note: 'a1' was declared here
-  u64 a0, a1;
-          ^~
+Guenter,
 
-Apparently the code relies on the local variables occupying
-adjacent memory locations in the same order, but this is of
-course not guaranteed.
+> Any idea how I might be able to reproduce this ? So far I have been
+> unsuccessful.
+>
+> Building drivetemp into the kernel, with ahci and everything SCSI
+> built as module, doesn't trigger the crash for me. This is with the
+> drivetemp patch (v3) as well as commit d188b0675b ("scsi: core: Add
+> sysfs attributes for VPD pages 0h and 89h") applied on top of v5.4.7.
 
-Use an array of two u64 variables where needed to make it work
-correctly.
+This is with 5.5-rc1. I'll try another kernel.
 
-I suspect there is also an endianess bug here, but have not
-digged in deep enough to be sure.
+My repro is:
 
-Cc: stable@vger.kernel.org
-Fixes: 5df6d737dd4b ("[SCSI] fnic: Add new Cisco PCI-Express FCoE HBA")
-Fixes: mmtom ("init/Kconfig: enable -O3 for all arches")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/fnic/vnic_dev.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+# modprobe drivetemp
+# modprobe <any SCSI driver, including ahci>
 
-diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
-index 1f55b9e4e74a..1b88a3b53eee 100644
---- a/drivers/scsi/fnic/vnic_dev.c
-+++ b/drivers/scsi/fnic/vnic_dev.c
-@@ -688,26 +688,26 @@ int vnic_dev_soft_reset_done(struct vnic_dev *vdev, int *done)
- 
- int vnic_dev_hang_notify(struct vnic_dev *vdev)
- {
--	u64 a0, a1;
-+	u64 a0 = 0, a1 = 0;
- 	int wait = 1000;
- 	return vnic_dev_cmd(vdev, CMD_HANG_NOTIFY, &a0, &a1, wait);
- }
- 
- int vnic_dev_mac_addr(struct vnic_dev *vdev, u8 *mac_addr)
- {
--	u64 a0, a1;
-+	u64 a[2] = {};
- 	int wait = 1000;
- 	int err, i;
- 
- 	for (i = 0; i < ETH_ALEN; i++)
- 		mac_addr[i] = 0;
- 
--	err = vnic_dev_cmd(vdev, CMD_MAC_ADDR, &a0, &a1, wait);
-+	err = vnic_dev_cmd(vdev, CMD_MAC_ADDR, &a[0], &a[1], wait);
- 	if (err)
- 		return err;
- 
- 	for (i = 0; i < ETH_ALEN; i++)
--		mac_addr[i] = ((u8 *)&a0)[i];
-+		mac_addr[i] = ((u8 *)&a)[i];
- 
- 	return 0;
- }
-@@ -732,30 +732,30 @@ void vnic_dev_packet_filter(struct vnic_dev *vdev, int directed, int multicast,
- 
- void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr)
- {
--	u64 a0 = 0, a1 = 0;
-+	u64 a[2] = {};
- 	int wait = 1000;
- 	int err;
- 	int i;
- 
- 	for (i = 0; i < ETH_ALEN; i++)
--		((u8 *)&a0)[i] = addr[i];
-+		((u8 *)&a)[i] = addr[i];
- 
--	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
-+	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a[0], &a[1], wait);
- 	if (err)
- 		pr_err("Can't add addr [%pM], %d\n", addr, err);
- }
- 
- void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
- {
--	u64 a0 = 0, a1 = 0;
-+	u64 a[2] = {};
- 	int wait = 1000;
- 	int err;
- 	int i;
- 
- 	for (i = 0; i < ETH_ALEN; i++)
--		((u8 *)&a0)[i] = addr[i];
-+		((u8 *)&a)[i] = addr[i];
- 
--	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
-+	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a[0], &a[1], wait);
- 	if (err)
- 		pr_err("Can't del addr [%pM], %d\n", addr, err);
- }
 -- 
-2.20.0
-
+Martin K. Petersen	Oracle Linux Engineering
