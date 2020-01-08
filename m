@@ -2,123 +2,151 @@ Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB7CC33C9E
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 11:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCDCEC282DD
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 13:14:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 586F7206DA
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 11:53:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8105A205F4
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 13:14:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="j1Ys4mSt";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="NRdll2z7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727380AbgAHLxt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 06:53:49 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2235 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726290AbgAHLxs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 06:53:48 -0500
-Received: from lhreml708-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 3E7AA4C5978AABF20FD3;
-        Wed,  8 Jan 2020 11:53:47 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml708-cah.china.huawei.com (10.201.108.49) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 8 Jan 2020 11:53:46 +0000
-Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 8 Jan 2020
- 11:53:46 +0000
-Subject: Re: [PATCH v1] driver core: Use list_del_init to replace list_del at
- device_links_purge()
-To:     Luo Jiaxing <luojiaxing@huawei.com>, <gregkh@linuxfoundation.org>,
-        <saravanak@google.com>, <jejb@linux.ibm.com>,
-        <James.Bottomley@suse.de>, <James.Bottomley@HansenPartnership.com>
-CC:     <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <1578483244-50723-1-git-send-email-luojiaxing@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <875eb2dc-a0d3-72e5-a27b-48fa38687c8c@huawei.com>
-Date:   Wed, 8 Jan 2020 11:53:45 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <1578483244-50723-1-git-send-email-luojiaxing@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+        id S1726199AbgAHNOh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 08:14:37 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:65075 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbgAHNOh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 08:14:37 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1578489277; x=1610025277;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=pRkDpXfj9o5SoCddxZMJehuV1/SIB503nZaNGnAk1JA=;
+  b=j1Ys4mStbIlBCip9YsRx6GqfX/waZJUCb1qIGRmGTufYHCwcxaCgcQPn
+   diD/dZGSlg5Oe+nHpO5weVghfVlynlX8ikqb0b3oeaPYm3xvYmJPOF67A
+   Gmv9qicG5udas7SBjRVof33Xna9UeAawUO+KAe5QgH+HU/lRqiG8bSGmb
+   uy8uPaSvsg4EcXH9VhH2drSXGd/uyrFYOA3k09e3Uyn/wZt8MVIf5abWB
+   zfeXiCcT3er4G04ox7wBZOUiSkbT9SuPN2vJpQfnO+Wtg+acD6EFgLRhS
+   5ndXl3MooiJAC60tWVBL1glEVUKO0M34w1PSV3L7RtgPP4i5DmPuFhqd/
+   g==;
+IronPort-SDR: OL6J+y0Mq2ZJFIYZBkvqqH8/qKxIB5E5pBEihLHiDsBtbaacn/z4otkok4CGmhQK5epTuJZQYT
+ JSTr0R1+19Rj0Buf92XoMaqCL+gEraoGxn01kKrg6qOEU8Sp7DEeV89tA/4VP656yTgYU07rUN
+ pApFTDiZNW0lcUmObuYQJt83TrGIKsWWLz7/dWXOa0Or5P60IqpbfvIoel5DRBiGDrIkOcrqlq
+ BG23ZRzrxsRu+Hj6RLWjgk7u3WiP5oJuwjoKR4+s817IL+eBq7YmwLYa9rzfGDEnHHACr/HVlJ
+ Fv4=
+X-IronPort-AV: E=Sophos;i="5.69,410,1571673600"; 
+   d="scan'208";a="127690637"
+Received: from mail-mw2nam10lp2104.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.104])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Jan 2020 21:14:35 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WrTpn+4wSJ4Gnp1orjbH7AIWUAq28lhJ5CJMh3uWY1N4rWGuS0MSbu4IzYgbMtSAoa6x8ePzB7d8V6p/BeUrDwHvfpJ49FldUgi6NUYdnfHnkv7SSMSW2qdMnybE6+/FOTImGHpBwv8prBG5pFilxxcLFdfFe4B7ukN6hM6wL/CMZSKyeHXx6rb4zPzvd9VmSjRfiIqVdMgW2mbcEHeeKycxqvuOPHx/1OVHHlnH6vGt4N4hCQwamzzU3MDerOiKIY8wyELU87QBBgtvedDkhBwxVVuL//j3S5utENUE/Y2xQmwoUB64LKFQzT039vitP44M0JUo4wIFL/RZ0Wnd3A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TGZGzc7uZ+Rc5+iRLZMDvoyPusO2UPOu9Z6mxhqWLjY=;
+ b=GaSSz/svrTLGOadXO4C/0KyxI6PF15k92KB0fuPpXh84wBkdiuBuW3gNnl07Van+20YLUtJV6W9ZLViwWy2aoCZf9ZABj6xqGG++kQPzDOxd6ctXEH4J3HKV0M4zdgzuikR7YRw5XZXgJgi0+5Bi1SpZFl/Xaul/qpxhgXkvZxjmRFzdCXmyN6D9Kf5320xCzRJJI8+WqWRobslkRM7xr2CTDgSz6XhUn06M+wzko8/SjNW1KcnNT5Z5miW/xFkVldszyTfsUnf7EaJo0UzgPOnZGVrNJd4ztl+VF8lhPjKjzyR+3kOEjy/294kNKZLqsSoHekw9cqnIprBzu4nSYw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TGZGzc7uZ+Rc5+iRLZMDvoyPusO2UPOu9Z6mxhqWLjY=;
+ b=NRdll2z70QAfLYUxUPQ2k/Vd29hzFcNYFJ2Xz8SbcvHElQ6QqISqnWTlqIKSsg0x+4Nw72iu8qFECMHuh9tNzS+aE4QGU8KLNsNuXbUBcm1DC1Icj5sNpLHBdggMlOB34Cf3mC+QQcCJzOmUj6BCCw3oCjqcvVqeRLvZZ/r+IEI=
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
+ MN2PR04MB5568.namprd04.prod.outlook.com (20.178.249.85) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2602.12; Wed, 8 Jan 2020 13:14:34 +0000
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::460:1c02:5953:6b45]) by MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::460:1c02:5953:6b45%4]) with mapi id 15.20.2602.016; Wed, 8 Jan 2020
+ 13:14:33 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: RE: [PATCH 0/4] ufs: Let the SCSI core allocate per-command UFS data
+Thread-Topic: [PATCH 0/4] ufs: Let the SCSI core allocate per-command UFS data
+Thread-Index: AQHVxZBLg09XUYsj10S/3JBd/ZaHJ6fgvANg
+Date:   Wed, 8 Jan 2020 13:14:33 +0000
+Message-ID: <MN2PR04MB699136BA44E4A11A606460E4FC3E0@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <20200107192531.73802-1-bvanassche@acm.org>
+In-Reply-To: <20200107192531.73802-1-bvanassche@acm.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.43]
-X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 6d36a722-a8c6-45b8-8c2f-08d7943cb449
+x-ms-traffictypediagnostic: MN2PR04MB5568:
+x-microsoft-antispam-prvs: <MN2PR04MB5568F18DF79DC96CBE8D28CEFC3E0@MN2PR04MB5568.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
+x-forefront-prvs: 02760F0D1C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(376002)(346002)(136003)(366004)(396003)(189003)(199004)(110136005)(71200400001)(52536014)(33656002)(316002)(478600001)(186003)(54906003)(2906002)(64756008)(66556008)(81166006)(81156014)(66476007)(9686003)(7696005)(66446008)(6506007)(86362001)(8676002)(8936002)(5660300002)(66946007)(55016002)(26005)(76116006)(4326008)(4744005);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB5568;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: c7pFJqale6L/zXC8YYT7BhE0yIT1ilX51UfcsZ+CZcE0e+El9WRp4xoipqPbkou5G5gSgORrpTsmxsJuV7fp7NL8ElmoNH6LbMK+3oUc7g1sUxWIzWzKLbQ6ROsVb4c4NNJcgthDO+DX3ZiUuRVJqZ72mP4nMC2NBMiFP0H0vDta0uiSSV8hdr0D6yXHVni0zi5UCgqI+pioT/J8eHEKEmq+jIb69HHgiX4eVqs4+VEDYmn0FiKSeF6VzcZKaHIBuWA2IFX50Hxcco5gmVvdDC1ljKSS/DwPVr8vnVtv5XGatfbqJGozoa+7JRjJDJTQXdG2V1OrsbeCG2LwiP18FOz8sO2u7T7VbF9NJQfY3VfKWBJ8wwBpP+PX2VyJOU8w4Aqoxec73gQGgYwARJNJJLkmjMIKRtj0YqUWtlk8WBEcqJCkbcs1QlYeNNsGIPZk
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6d36a722-a8c6-45b8-8c2f-08d7943cb449
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jan 2020 13:14:33.8438
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 9KPMyGaA/z+6P/1Yr4mvlLqnli7nlMvWjVCEih3CFGQLlRfNAF4Uyh8cjpp2YYunoUqXuPzxEkJaI+UazkvteA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB5568
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/01/2020 11:34, Luo Jiaxing wrote:
+Bart hi,
 
-+ linux-scsi, Martin
+>=20
+>=20
+> Hi Martin,
+>=20
+> This patch series lets the SCSI core allocate per-command UFS data and he=
+nce
+> simplifies the UFS driver. Please consider this patch series for the v5.6=
+ kernel.
+Aside of a mere simplification - is this change has other objectives?
+I am asking because at the end of the day not sure if using scsi privet dat=
+a for the lrb is obtaining that goal.
 
-> We found that enabling kernel compilation options CONFIG_SCSI_ENCLOSURE and
-> CONFIG_ENCLOSURE_SERVICES, repeated initialization and deletion of the same
-> SCSI device will cause system panic, as follows:
-> [72.425705] Unable to handle kernel paging request at virtual address
-> dead000000000108
-> ...
-> [72.595093] Call trace:
-> [72.597532] device_del + 0x194 / 0x3a0
-> [72.601012] enclosure_remove_device + 0xbc / 0xf8
-> [72.605445] ses_intf_remove + 0x9c / 0xd8
-> [72.609185] device_del + 0xf8 / 0x3a0
-> [72.612576] device_unregister + 0x14 / 0x30
-> [72.616489] __scsi_remove_device + 0xf4 / 0x140
-> [72.620747] scsi_remove_device + 0x28 / 0x40
-> [72.624745] scsi_remove_target + 0x1c8 / 0x220
+Thanks,
+Avri
 
-please share the full crash stack frame and the commands used to trigger 
-it. Some people prefer the timestamp removed also.
-
-> 
-> After analysis, we see that in the error scenario, the ses module has the
-> following calling sequence:
-> device_register() -> device_del() -> device_add() -> device_del().
-> The first call to device_del() is fine, but the second call to device_del()
-> will cause a system panic.
-> 
-> Through disassembly, we locate that panic happen when device_links_purge()
-> call list_del() to remove device_links.needs_suppliers from list, and
-> list_del() will set this list entry's prev and next pointers to poison.
-> So if INIT_LIST_HEAD() is not re-executed before the next list_del(), It
-> will cause the system to access a memory address which is posioned.
-> 
-> Therefore, replace list_del() with list_del_init() can avoid such issue.
-> 
-> Fixes: e2ae9bcc4aaa ("driver core: Add support for linking devices during device addition")
-> Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-> Reviewed-by: John Garry <john.garry@huawei.com>
-
-This tag was only implicitly granted, but I thought that the fix looked 
-ok, so:
-
-Reviewed-by: John Garry <john.garry@huawei.com>
-
-> ---
->   drivers/base/core.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 42a6724..7b9b0d6 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -1103,7 +1103,7 @@ static void device_links_purge(struct device *dev)
->   	struct device_link *link, *ln;
->   
->   	mutex_lock(&wfs_lock);
-> -	list_del(&dev->links.needs_suppliers);
-> +	list_del_init(&dev->links.needs_suppliers);
->   	mutex_unlock(&wfs_lock);
->   
->   	/*
-> 
+>=20
+> Thanks,
+>=20
+> Bart.
+>=20
+> Bart Van Assche (4):
+>   Introduce {init,exit}_cmd_priv()
+>   ufs: Introduce ufshcd_init_lrb()
+>   ufs: Simplify two tests
+>   ufs: Let the SCSI core allocate per-command UFS data
+>=20
+>  drivers/scsi/scsi_lib.c   |  29 ++++-
+>  drivers/scsi/ufs/ufshcd.c | 247 ++++++++++++++++++++++++--------------
+>  drivers/scsi/ufs/ufshcd.h |   5 -
+>  include/scsi/scsi_host.h  |   3 +
+>  4 files changed, 183 insertions(+), 101 deletions(-)
 
