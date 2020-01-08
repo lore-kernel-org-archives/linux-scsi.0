@@ -2,205 +2,292 @@ Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B9BC3F68F
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 02:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A72EC00523
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 06:00:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DA5520692
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 02:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15FA82075B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 06:00:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726145AbgAHCKI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jan 2020 21:10:08 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44317 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725601AbgAHCKI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jan 2020 21:10:08 -0500
-Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1154C3A0F36;
-        Wed,  8 Jan 2020 13:10:04 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ip0nL-0007TV-0W; Wed, 08 Jan 2020 13:10:03 +1100
-Date:   Wed, 8 Jan 2020 13:10:02 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Tony Asleson <tasleson@redhat.com>
-Cc:     Sweet Tea Dorminy <sweettea@redhat.com>,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
-Message-ID: <20200108021002.GR23195@dread.disaster.area>
-References: <20191223225558.19242-1-tasleson@redhat.com>
- <20191223225558.19242-10-tasleson@redhat.com>
- <20200104025620.GC23195@dread.disaster.area>
- <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com>
- <20200106220233.GK23195@dread.disaster.area>
- <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
- <20200107012353.GO23195@dread.disaster.area>
- <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
+        id S1726087AbgAHGAA convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 01:00:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43128 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725773AbgAHGAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Jan 2020 01:00:00 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 206123] New: aacraid ( PM8068) and iommu=nobypass Frozen PHB
+ error  on ppc64
+Date:   Wed, 08 Jan 2020 05:59:58 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: gyakovlev@gentoo.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-206123-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=7-415B0cAAAA:8 a=akbcZbo06iP5b_x4eJUA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jan 07, 2020 at 11:01:47AM -0600, Tony Asleson wrote:
-> On 1/6/20 7:23 PM, Dave Chinner wrote:
-> > On Mon, Jan 06, 2020 at 07:19:07PM -0500, Sweet Tea Dorminy wrote:
-> >>>>>> +
-> >>>>>>    if (mp && mp->m_fsname) {
-> >>>>>
-> >>>>> mp->m_fsname is the name of the device we use everywhere for log
-> >>>>> messages, it's set up at mount time so we don't have to do runtime
-> >>>>> evaulation of the device name every time we need to emit the device
-> >>>>> name in a log message.
-> >>>>>
-> >>>>> So, if you have some sooper speshial new device naming scheme, it
-> >>>>> needs to be stored into the struct xfs_mount to replace mp->m_fsname.
-> >>>>
-> >>>> I don't think we want to replace mp->m_fsname with the vpd 0x83 device
-> >>>> identifier.  This proposed change is adding a key/value structured data
-> >>>> to the log message for non-ambiguous device identification over time,
-> >>>> not to place the ID in the human readable portion of the message.  The
-> >>>> existing name is useful too, especially when it involves a partition.
-> >>>
-> >>> Oh, if that's all you want to do, then why is this identifier needed
-> >>> in every log message? 
-> 
-> The value is we can filter all the messages by the id as they are all
-> individually identifiable.
+https://bugzilla.kernel.org/show_bug.cgi?id=206123
 
-Then what you want is the *filesystem label* or *filesystem UUID*
-in the *filesystem log output* to uniquely identify the *filesystem
-log output* regardless of the block device identifier the kernel
-assigned it's underlying disk.
+            Bug ID: 206123
+           Summary: aacraid ( PM8068) and iommu=nobypass Frozen PHB error
+                    on ppc64
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 5.4.8
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: AACRAID
+          Assignee: scsi_drivers-aacraid@kernel-bugs.osdl.org
+          Reporter: gyakovlev@gentoo.org
+        Regression: No
 
-By trying to use the block device as the source of a persistent
-filesytem identifier, you are creating more new problems about
-uniqueness than you are solving.  E.g.
+Device Talos Raptor T2P9D01 REV 1.01 SAS
+System chassis: SC747TQ-R1620B
+All disks are attached via SAS backplane on the chassis.
 
-- there can be more than one filesystem per block device, so the
-  identifier needs to be, at minimum, a {dev_id, partition} tuple.
-  The existing bdev name (e.g. sda2) that filesystems emit contain
-  this information. The underlying vpd device indentifier does not.
+Problem description: I'm running linux 5.4.8 (LE, 64k pages) and using
+iommu=nobypass kernel option to catch and prevent illegal DMA access.
 
-- the filesystem on a device can change (e.g. mkfs), so an unchanged
-  vpd identifier does not mean we mounted the same filesystem
+Since installing SAS dives (4x HUH721008AL4200 drives) I'm seeing
+errors in dmesg and all IO to the controller stops.
+controller tries to reset itself and reports successful reset but after
+that any IO to ANY disk on the controller hangs.
+detailed errors in attached file.
 
-- raid devices are made up of multiple physical devices, so using
-  device information for persistent identification is problematic,
-  especially when devices fail and are replaced with different
-  hardware.
+I've been using SATA (both SSD and HDD) devices just fine before,
+accessing those SAS drives seems not to trigger the error.
 
-- clone a filesystem to a new device to replace a failing disk,
-  block device identifier changes but the filesystem doesn't.
+I've tried patching kernel with latest patches from 5.5
+https://github.com/torvalds/linux/commits/master/drivers/scsi/aacraid
+^ all commits from oct15, but errors still here.
 
-Basically, if you need a *persistent filesystem identifier* for
-your log messages, then you cannot rely on the underlying device to
-provide that. Filesystems already have unique identifiers in them
-that can be used for this purpose, and we have mechanisms to allow
-users to configure them as well.
+Steps to reproduce
+I have 4 disks, I create 4 filesystems (ext4 but it's irrelevant)
+then I copy a 5gb file to tmpfs
+then I copy that 5gb file to each disk in parallel couple of times.
+after 1-4 attempts error happens, all IO to the controller hangs
+the only way to recover is to hard-reboot
 
-IOWs, you're trying to tackle this "filesystem identifier" at the
-wrong layer - use the persistent filesystem identifiers to
-persitently identify the filesystem across mounts, not some random
-block device identifier.
+if I boot WITHOUT iommu=nobypass, everything works just fine
+some key messages from attached dmesg
 
-> The structured data id that the patch series adds is not outputted by
-> default by journalctl.  Please look at cover letter in patch series for
-> example filter use.  You can see all the data in the journal entries by
-> using journalctl -o json-pretty.
+[    0.000000] PowerNV: IOMMU bypass window disabled.
+^ here system shows that bypass disabled
 
-Yes, I understand that. But my comments about adding redundant
-information to the log text output were directed at your suggestiong to
-use dev_printk() instead of printk to achieve what you want. That
-changes the log text output by prepending device specific strings to
-the filesystem output.
+[13860.157868] EEH: Frozen PHB#2-PE#fd detected
+[13860.157876] EEH: PE location: UOPWR.A100034-Node0-Builtin SAS
+^ hang triggered
 
-> One can argue that we are adding a lot of data to each log message
-> as the VPD data isn't trivial.  This could be mitigated by hashing
-> the VPD and storing the hash as the ID, but that makes it less
-> user friendly.  However, maybe it should be considered.
+after that EEH asks driver to reset and block/filesystem layer
+starts to report errors
 
-See above, I don't think the VPD information actually solves the
-problem you are seeking to solve.
 
-> >>> It does not change over the life of the filesystem, so it the
-> >>> persistent identifier only needs to >>> be
-> emitted to the log once at filesystem mount time. i.e.  >>>
-> instead of:
-> >>>
-> >>> [    2.716841] XFS (dm-0): Mounting V5 Filesystem
-> >>>
-> >>> It just needs to be:
-> >>>
-> >>> [    2.716841] XFS (dm-0): Mounting V5 Filesystem on device
-> >>> <persistent dev id>
-> >>>
-> >>> If you need to do any sort of special "is this the right
-> >>> device" checking, it needs to be done immediately at mount
-> >>> time so action can be taken to shutdown the filesystem and
-> >>> unmount the device immediately before further damage is
-> >>> done....
-> >>>
-> >>> i.e. once the filesystem is mounted, you've already got a
-> >>> unique and persistent identifier in the log for the life of
-> >>> the filesystem (the m_fsname string), so I'm struggling to
-> >>> understand exactly what problem you are trying to solve by
-> >>> adding redundant information to every log message.....
-> 
-> m_fsname is only valid for the life of the mount, not the life of
-> the FS.  Each and every time we reboot, remove/reattach a device
-> the attachment point may change and thus the m_fsname changes too.
+after that controller reports that it's been reset, but it's not
+functional. any IO to any disks on controller will hang forever.
 
-Well, yes, that's because m_fsname is currently aimed at identifying
-the block device that the filesytem is currently mounted on. That's
-the block device we *actually care about* when trying to diagnose
-problems reported in the log.  From that perspective, I don't want
-the log output to change - it contains exactly what we need to
-diagnose problems when things go wrong.
+In attached dmesg I have ZFS filesystem, but it's reproduce-able with
+simple single partition with ext4 on top of that. with single partition
+IO also never recovers, so please don't focus on ZFS.
 
-But for structured logging, using block device identifiers for the
-filesystem identifier is just wrong. If you need new information,
-append the UUID from the filesystem to the log message and use that
-instead. i.e your original printk_emit() function should pass
-mp->m_sb.sb_uuid as the post-message binary filesystem identifier,
-not the block device VPD information.
 
-If you need to convert the filesystem uuid to a block device, then
-you can just go look up /dev/disk/by-uuid/ and follow the link the
-filesystem uuid points to....
 
-> > And, for the log rotation case, the filesystem log output
-> > already has a unique, persistent identifier for the life of the
-> > mount - the fsname ("dm-0" in the above example). We don't need
-> > to add a new device identifier to the XFS log messages to solve
-> > that problem because *we've already got a device identifier in
-> > the log messages*.
-> 
-> It's very useful to have an ID that persists and identifies across
-> mounts.  The existing id logging scheme tells you where something
-> is attached, not what is attached.
+Any help appreciated.
+I hope it's a driver bug and not a HW bug in PM8068 itself.
 
-Yup, that's what the filesystem labels and UUIDs provide. We've been
-using them for this purpose for a long, long time.
 
-Cheers,
+full dmesg below
 
-Dave.
+[    0.000000] PowerNV: IOMMU bypass window disabled.
+...
+[13428.236656] logitech-hidpp-device 0003:046D:4069.0006: multiplier = 8
+[13860.157868] EEH: Frozen PHB#2-PE#fd detected
+[13860.157876] EEH: PE location: UOPWR.A100034-Node0-Builtin SAS, PHB location:
+N/A
+[13860.157877] EEH: Frozen PHB#2-PE#fd detected
+[13860.157878] EEH: Call Trace:
+[13860.157885] EEH: [000000009c57f2e8] __eeh_send_failure_event+0x60/0x110
+[13860.157888] EEH: [0000000006b53b28] eeh_dev_check_failure+0x360/0x5f0
+[13860.157890] EEH: [000000001947df59] eeh_check_failure+0x98/0x100
+[13860.157894] EEH: [0000000066f23435] aac_src_check_health+0x8c/0xc0
+[13860.157898] EEH: [00000000361f4dbd] aac_command_thread+0x718/0x930
+[13860.157902] EEH: [00000000b5fb52e2] kthread+0x180/0x190
+[13860.157906] EEH: [000000005791e370] ret_from_kernel_thread+0x5c/0x74
+[13860.157908] EEH: This PCI device has failed 1 times in the last hour and
+will be permanently disabled after 5 failures.
+[13860.157908] EEH: Notify device drivers to shutdown
+[13860.157910] EEH: Beginning: 'error_detected(IO frozen)'
+[13860.157914] PCI 0002:01:00.0#00fd: EEH: Invoking aacraid->error_detected(IO
+frozen)
+[13860.157918] aacraid 0002:01:00.0: aacraid: PCI error detected 2
+[13860.158142] sd 0:2:5:0: [sde] tag#788 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158150] sd 0:2:5:0: [sde] tag#788 CDB: opcode=0x2a 2a 00 08 4c a9 05 00
+00 40 00
+[13860.158154] blk_update_request: I/O error, dev sde, sector 1113933864 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158168] sd 0:2:5:0: [sde] tag#789 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158171] sd 0:2:5:0: [sde] tag#789 CDB: opcode=0x2a 2a 00 08 4c a9 45 00
+00 40 00
+[13860.158174] blk_update_request: I/O error, dev sde, sector 1113934376 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158179] sd 0:2:5:0: [sde] tag#790 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158182] sd 0:2:5:0: [sde] tag#790 CDB: opcode=0x2a 2a 00 08 4c a9 85 00
+00 40 00
+[13860.158185] blk_update_request: I/O error, dev sde, sector 1113934888 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158190] sd 0:2:5:0: [sde] tag#791 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158193] sd 0:2:5:0: [sde] tag#791 CDB: opcode=0x2a 2a 00 08 4c a9 c5 00
+00 20 00
+[13860.158196] blk_update_request: I/O error, dev sde, sector 1113935400 op
+0x1:(WRITE) flags 0x700 phys_seg 1 prio class 0
+[13860.158200] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2565ab744-part1
+error=5 type=2 offset=570325749760 size=917504 flags=40080c80
+[13860.158416] blk_update_request: I/O error, dev sdf, sector 1448660344 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158419] sd 0:2:6:0: [sdf] tag#1 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158424] blk_update_request: I/O error, dev sdf, sector 1448660088 op
+0x1:(WRITE) flags 0x700 phys_seg 1 prio class 0
+[13860.158426] sd 0:2:4:0: [sdd] tag#35 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158429] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca266d5c270-part1
+error=5 type=2 offset=741705707520 size=1048576 flags=40080c80
+[13860.158431] sd 0:2:6:0: [sdf] tag#1 CDB: opcode=0x2a 2a 00 0a cb bf cf 00 00
+40 00
+[13860.158433] sd 0:2:4:0: [sdd] tag#35 CDB: opcode=0x2a 2a 00 08 4c a4 c5 00
+00 40 00
+[13860.158436] blk_update_request: I/O error, dev sdf, sector 1449000568 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158440] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca266d5c270-part1
+error=5 type=2 offset=741705576448 size=131072 flags=180880
+[13860.158445] blk_update_request: I/O error, dev sdd, sector 1113925160 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158449] blk_update_request: I/O error, dev sdd, sector 1113927208 op
+0x1:(WRITE) flags 0x700 phys_seg 1 prio class 0
+[13860.158451] sd 0:2:6:0: [sdf] tag#2 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158455] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2666c6d98-part1
+error=5 type=2 offset=570322341888 size=262144 flags=40080c80
+[13860.158456] sd 0:2:6:0: [sdf] tag#2 CDB: opcode=0x2a 2a 00 0a cb c0 0f 00 00
+40 00
+[13860.158458] sd 0:2:7:0: [sdg] tag#32 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158462] blk_update_request: I/O error, dev sdf, sector 1449001080 op
+0x1:(WRITE) flags 0x4700 phys_seg 1 prio class 0
+[13860.158464] sd 0:2:4:0: [sdd] tag#36 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158466] sd 0:2:7:0: [sdg] tag#32 CDB: opcode=0x2a 2a 00 0a cb e4 4f 00
+00 20 00
+[13860.158470] sd 0:2:4:0: [sdd] tag#36 CDB: opcode=0x2a 2a 00 08 4c a5 05 00
+00 40 00
+[13860.158473] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca26b5708c8-part1
+error=5 type=2 offset=741918175232 size=131072 flags=180880
+[13860.158480] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca266d5c270-part1
+error=5 type=2 offset=741879902208 size=1048576 flags=40080c80
+[13860.158483] sd 0:2:4:0: [sdd] tag#38 UNKNOWN(0x2003) Result: hostbyte=0x01
+driverbyte=0x00
+[13860.158486] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2565ab744-part1
+error=5 type=2 offset=570325094400 size=131072 flags=180880
+[13860.158488] sd 0:2:4:0: [sdd] tag#38 CDB: opcode=0x2a 2a 00 08 4c a5 45 00
+00 40 00
+[13860.158497] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2666c6d98-part1
+error=5 type=2 offset=570321293312 size=1048576 flags=40080c80
+[13860.158500] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca266d5c270-part1
+error=5 type=2 offset=741918437376 size=1048576 flags=40080c80
+[13860.158542] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2565ab744-part1
+error=5 type=2 offset=570324701184 size=131072 flags=180880
+[13860.158545] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2565ab744-part1
+error=5 type=2 offset=570323783680 size=131072 flags=180880
+[13860.158575] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2666c6d98-part1
+error=5 type=2 offset=570320244736 size=1048576 flags=40080c80
+[13860.158583] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca266d5c270-part1
+error=5 type=2 offset=741740703744 size=655360 flags=40080c80
+[13860.158586] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca2565ab744-part1
+error=5 type=2 offset=570325225472 size=524288 flags=40080c80
+[13860.158606] zio pool=zdata vdev=/dev/disk/by-id/wwn-0x5000cca26b5708c8-part1
+error=5 type=2 offset=741921583104 size=1048576
+...
+[13860.158939] PCI 0002:01:00.0#00fd: EEH: aacraid driver reports: 'need reset'
+[13860.158941] EEH: Finished:'error_detected(IO frozen)' with aggregate
+recovery state:'need reset'
+[13860.158945] EEH: Collect temporary log
+[13860.158970] EEH: of node=0002:01:00.0
+[13860.158972] EEH: PCI device/vendor: 028d9005
+[13860.158975] EEH: PCI cmd/status register: 00100146
+[13860.158976] EEH: PCI-E capabilities and status follow:
+[13860.158987] EEH: PCI-E 00: 00020010 000081a2 00002950 00437083 
+[13860.158996] EEH: PCI-E 10: 10820000 00000000 00000000 00000000 
+[13860.158997] EEH: PCI-E 20: 00000000 
+[13860.158998] EEH: PCI-E AER capability register set follows:
+[13860.159009] EEH: PCI-E AER 00: 30020001 00000000 00400000 00462030 
+[13860.159017] EEH: PCI-E AER 10: 00000000 0000e000 000001e0 00000000 
+[13860.159026] EEH: PCI-E AER 20: 00000000 00000000 00000000 00000000 
+[13860.159029] EEH: PCI-E AER 30: 00000000 00000000 
+[13860.159031] PHB4 PHB#2 Diag-data (Version: 1)
+[13860.159032] brdgCtl:    00000002
+[13860.159033] RootSts:    00060040 00402000 e0820008 00100107 00000800
+[13860.159035] PhbSts:     0000001c00000000 0000001c00000000
+[13860.159036] Lem:        0000000100000080 0000000000000000 0000000000000080
+[13860.159038] PhbErr:     0000028000000000 0000020000000000 2148000098000240
+a008400000000000
+[13860.159039] RxeTceErr:  6000000000000000 2000000000000000 c0000000000000fd
+0000000000000000
+[13860.159041] PblErr:     0000000000020000 0000000000020000 0000000000000000
+0000000000000000
+[13860.159042] RegbErr:    0000004000000000 0000004000000000 8800000400000000
+0000000000000000
+[13860.159044] PE[0fd] A/B: 8300b03800000000 8000000000000000
+[13860.159046] EEH: Reset without hotplug activity
+flags=40080c80
+[13865.217467] aacraid 0002:01:00.0: enabling device (0140 -> 0142)
+[13865.224325] EEH: Beginning: 'slot_reset'
+[13865.224334] PCI 0002:01:00.0#00fd: EEH: Invoking aacraid->slot_reset()
+[13865.224337] aacraid 0002:01:00.0: aacraid: PCI error - slot reset
+[13865.224401] PCI 0002:01:00.0#00fd: EEH: aacraid driver reports: 'recovered'
+[13865.224402] EEH: Finished:'slot_reset' with aggregate recovery
+state:'recovered'
+[13865.224403] EEH: Notify device driver to resume
+[13865.224404] EEH: Beginning: 'resume'
+[13865.224406] PCI 0002:01:00.0#00fd: EEH: Invoking aacraid->resume()
+
+
+
+
+^ at this poing all IO to any of the disks on the controller hangs forever.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
