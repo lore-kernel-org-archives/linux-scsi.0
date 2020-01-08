@@ -2,71 +2,99 @@ Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BE9C33CA1
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 15:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA20EC33CA1
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 15:51:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5327D2072A
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 15:44:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578498272;
-	bh=530iF1c0oruLqAX+rQmI8FeaZuwQ+nNyXMj2gbOdY/E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Wt9EnJo5ZXpO7eRdpCdZww76EAA7UtTFlXpWB1wGjpJHXIlDEVKt09Wy1mKx2SSql
-	 BAwfLsuKZgPJjXcAWrUpwFPTYA6q8SwjoCXv46ePaPVdBdoYr99CwXuTS+tNY5JIu0
-	 GnvexR8fr6PqjcDwtNmRh+oeYXUBFxpmWz943qzk=
+	by mail.kernel.org (Postfix) with ESMTP id 9F30420720
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 15:51:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbgAHPo3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 10:44:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38564 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727158AbgAHPo2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 10:44:28 -0500
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E0A7D20720;
-        Wed,  8 Jan 2020 15:44:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578498267;
-        bh=530iF1c0oruLqAX+rQmI8FeaZuwQ+nNyXMj2gbOdY/E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Q/9tVd+BKbR2vRQ0XF+bHkB9BaxblQ2Ntoi4fT4+yfZxU+BQ5PDO3ffPneayUaNe7
-         ORdrIWgn58OPXrUSop210CZTD8IZlKtycPMbkt3eNzhoAy6LjyTwuq908thFDys1C4
-         XxVOyKjD5J80QHb5ukZXOVaBbLsq6k0FPToxMjWI=
-Date:   Wed, 8 Jan 2020 16:44:25 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Luo Jiaxing <luojiaxing@huawei.com>, saravanak@google.com,
-        jejb@linux.ibm.com, James.Bottomley@hansenpartnership.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        id S1727788AbgAHPvv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 10:51:51 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:29552 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727229AbgAHPvv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 10:51:51 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 008FZl4E146806;
+        Wed, 8 Jan 2020 10:51:40 -0500
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2xdeb00uke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jan 2020 10:51:40 -0500
+Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 008Fa1Al147874;
+        Wed, 8 Jan 2020 10:51:40 -0500
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2xdeb00ujx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jan 2020 10:51:40 -0500
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 008FoIPj029315;
+        Wed, 8 Jan 2020 15:51:45 GMT
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+        by ppma01wdc.us.ibm.com with ESMTP id 2xajb6nmmd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Jan 2020 15:51:45 +0000
+Received: from b03ledav005.gho.boulder.ibm.com (b03ledav005.gho.boulder.ibm.com [9.17.130.236])
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 008Fpc6M44761376
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 8 Jan 2020 15:51:38 GMT
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 820CFBE04F;
+        Wed,  8 Jan 2020 15:51:38 +0000 (GMT)
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 71003BE051;
+        Wed,  8 Jan 2020 15:51:36 +0000 (GMT)
+Received: from jarvis.ext.hansenpartnership.com (unknown [9.85.182.239])
+        by b03ledav005.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Wed,  8 Jan 2020 15:51:36 +0000 (GMT)
+Message-ID: <1578498695.3260.5.camel@linux.ibm.com>
+Subject: Re: [PATCH v1] driver core: Use list_del_init to replace list_del
+ at device_links_purge()
+From:   James Bottomley <jejb@linux.ibm.com>
+To:     John Garry <john.garry@huawei.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Luo Jiaxing <luojiaxing@huawei.com>
+Cc:     saravanak@google.com, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] driver core: Use list_del_init to replace list_del at
- device_links_purge()
-Message-ID: <20200108154425.GA2448856@kroah.com>
-References: <1578483244-50723-1-git-send-email-luojiaxing@huawei.com>
- <20200108122658.GA2365903@kroah.com>
- <73252c08-ac46-5d0d-23ec-16c209bd9b9a@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date:   Wed, 08 Jan 2020 07:51:35 -0800
 In-Reply-To: <73252c08-ac46-5d0d-23ec-16c209bd9b9a@huawei.com>
+References: <1578483244-50723-1-git-send-email-luojiaxing@huawei.com>
+         <20200108122658.GA2365903@kroah.com>
+         <73252c08-ac46-5d0d-23ec-16c209bd9b9a@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-08_04:2020-01-08,2020-01-08 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 mlxscore=0 adultscore=0 clxscore=1011
+ lowpriorityscore=0 impostorscore=0 phishscore=0 mlxlogscore=719
+ spamscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-1910280000 definitions=main-2001080129
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jan 08, 2020 at 02:50:54PM +0000, John Garry wrote:
+On Wed, 2020-01-08 at 14:50 +0000, John Garry wrote:
 > On 08/01/2020 12:26, Greg KH wrote:
 > > On Wed, Jan 08, 2020 at 07:34:04PM +0800, Luo Jiaxing wrote:
-> > > We found that enabling kernel compilation options CONFIG_SCSI_ENCLOSURE and
-> > > CONFIG_ENCLOSURE_SERVICES, repeated initialization and deletion of the same
+> > > We found that enabling kernel compilation options
+> > > CONFIG_SCSI_ENCLOSURE and
+> > > CONFIG_ENCLOSURE_SERVICES, repeated initialization and deletion
+> > > of the same
 > > > SCSI device will cause system panic, as follows:
-> > > [72.425705] Unable to handle kernel paging request at virtual address
+> > > [72.425705] Unable to handle kernel paging request at virtual
+> > > address
 > > > dead000000000108
 > > > ...
 > > > [72.595093] Call trace:
@@ -79,53 +107,66 @@ On Wed, Jan 08, 2020 at 02:50:54PM +0000, John Garry wrote:
 > > > [72.620747] scsi_remove_device + 0x28 / 0x40
 > > > [72.624745] scsi_remove_target + 0x1c8 / 0x220
 > > > 
-> > > After analysis, we see that in the error scenario, the ses module has the
+> > > After analysis, we see that in the error scenario, the ses module
+> > > has the
 > > > following calling sequence:
-> > > device_register() -> device_del() -> device_add() -> device_del().
-> > > The first call to device_del() is fine, but the second call to device_del()
+> > > device_register() -> device_del() -> device_add() ->
+> > > device_del().
+> > > The first call to device_del() is fine, but the second call to
+> > > device_del()
 > > > will cause a system panic.
 > > 
-> > Is this all on the same device structure?  If so, that's not ok, you
-> > can't do that, once device_del() is called on the memory location, you
+> > Is this all on the same device structure?  If so, that's not ok,
+> > you
+> > can't do that, once device_del() is called on the memory location,
+> > you
 > > can not call device_add() on it again.
 > > 
 > > How are you triggering this from userspace?
 > 
-> This can be triggered by causing the SCSI device to be lost, found, and lost
-> again:
+> This can be triggered by causing the SCSI device to be lost, found,
+> and 
+> lost again:
 > 
 > root@(none)$ pwd
 > /sys/class/sas_phy/phy-0:0:2
 > root@(none)$ echo 0 > enable
-> [   48.828139] sas: smp_execute_task_sg: task to dev 500e004aaaaaaa1f
+> [   48.828139] sas: smp_execute_task_sg: task to dev
+> 500e004aaaaaaa1f 
 > response: 0x0 status 0x2
 > root@(none)$
-> [   48.837040] sas: ex 500e004aaaaaaa1f phy02 change count has changed
+> [   48.837040] sas: ex 500e004aaaaaaa1f phy02 change count has
+> changed
 > [   48.846961] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [   48.852120] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result:
+> [   48.852120] sd 0:0:0:0: [sda] Synchronize Cache(10) failed:
+> Result: 
 > hostbyte=0x04 driverbyte=0x00
 > [   48.898111] hisi_sas_v3_hw 0000:74:02.0: dev[2:1] is gone
 > 
 > root@(none)$ echo 1 > enable
 > root@(none)$
-> [   51.967416] sas: ex 500e004aaaaaaa1f phy02 change count has changed
+> [   51.967416] sas: ex 500e004aaaaaaa1f phy02 change count has
+> changed
 > [   51.974022] hisi_sas_v3_hw 0000:74:02.0: dev[7:1] found
-> [   51.991305] scsi 0:0:5:0: Direct-Access     SEAGATE  ST2000NM0045 N004
-> PQ: 0 ANSI: 6
-> [   52.003609] sd 0:0:5:0: [sda] 3907029168 512-byte logical blocks: (2.00
-> TB/1.82 TiB)
+> [   51.991305] scsi 0:0:5:0: Direct-Access     SEAGATE  ST2000NM0045 
+> N004 PQ: 0 ANSI: 6
+> [   52.003609] sd 0:0:5:0: [sda] 3907029168 512-byte logical blocks: 
+> (2.00 TB/1.82 TiB)
 > [   52.012010] sd 0:0:5:0: [sda] Write Protect is off
-> [   52.022643] sd 0:0:5:0: [sda] Write cache: enabled, read cache: enabled,
-> supports DPO and FUA
+> [   52.022643] sd 0:0:5:0: [sda] Write cache: enabled, read cache: 
+> enabled, supports DPO and FUA
 > [   52.052429]  sda: sda1
 > [   52.064439] sd 0:0:5:0: [sda] Attached SCSI disk
 > 
 > root@(none)$ echo 0 > enable
-> [   54.112100] sas: smp_execute_task_sg: task to dev 500e004aaaaaaa1f
+> [   54.112100] sas: smp_execute_task_sg: task to dev
+> 500e004aaaaaaa1f 
 > response: 0x0 status 0x2
-> root@(none)$ [   54.120909] sas: ex 500e004aaaaaaa1f phy02 change count has
-> changed
-> [   54.130202] Unable to handle kernel paging request at virtual address
+> root@(none)$ [   54.120909] sas: ex 500e004aaaaaaa1f phy02 change
+> count 
+> has changed
+> [   54.130202] Unable to handle kernel paging request at virtual
+> address 
 > dead000000000108
 > [   54.138110] Mem abort info:
 > [   54.140892]   ESR = 0x96000044
@@ -135,14 +176,15 @@ On Wed, Jan 08, 2020 at 02:50:54PM +0000, John Garry wrote:
 > [   54.155408] Data abort info:
 > [   54.158275]   ISV = 0, ISS = 0x00000044
 > [   54.162098]   CM = 0, WnR = 1
-> [   54.165055] [dead000000000108] address between user and kernel address
-> ranges
+> [   54.165055] [dead000000000108] address between user and kernel 
+> address ranges
 > [   54.172179] Internal error: Oops: 96000044 [#1] PREEMPT SMP
 > [   54.177737] Modules linked in:
-> [   54.180780] CPU: 5 PID: 741 Comm: kworker/u192:2 Not tainted
+> [   54.180780] CPU: 5 PID: 741 Comm: kworker/u192:2 Not tainted 
 > 5.5.0-rc5-dirty #1535
-> [   54.188334] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 -
-> V1.16.01 03/15/2019
+> [   54.188334] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06
+> UEFI 
+> RC0 - V1.16.01 03/15/2019
 > [   54.196847] Workqueue: 0000:74:02.0_disco_q sas_revalidate_domain
 > [   54.202927] pstate: 60c00009 (nZCv daif +PAN +UAO)
 > [   54.207705] pc : device_del+0x194/0x398
@@ -183,12 +225,14 @@ On Wed, Jan 08, 2020 at 02:50:54PM +0000, John Garry wrote:
 > [   54.362410] Code: 91028278 aa1903e0 9415f01f a94c0662 (f9000441)
 > [   54.368489] ---[ end trace 38c672fcf89c95f7 ]---
 > 
-> I tested on v5.4 and no such issue, but maybe the driver core changes have
-> exposed a ses/enclosure issue.
+> I tested on v5.4 and no such issue, but maybe the driver core
+> changes 
+> have exposed a ses/enclosure issue.
 > 
 > Checking:
 > 
-> int enclosure_remove_device(struct enclosure_device *edev, struct device
+> int enclosure_remove_device(struct enclosure_device *edev, struct
+> device 
 > *dev)
 > {
 > 	struct enclosure_component *cdev;
@@ -209,22 +253,13 @@ On Wed, Jan 08, 2020 at 02:50:54PM +0000, John Garry wrote:
 > 	}
 > 	return -ENODEV;
 > }
-> 
-> This has device_del(&cdev->cdev) followed by device_add(&cdev->cdev).
 
-Ugh, that's ripe for problems, as you found.
+The design of the code is simply to remove the link to the inserted
+device which has been removed.
 
-Yes, your patch will fix this pattern, but the larger problem is that
-this sequence might not really work as something else could have had a
-reference to the structure (rare, but could happen.)
+I *think* this means the calls to device_del and device_add are
+unnecessary and should go.  enclosure_remove_links and the put of the
+enclosed device should be sufficient.
 
-> This cdev.dev memory looks to be dynamically allocated for the lifetime of
-> the enclosure_device.
+James
 
-ick.
-
-SCSI people, what do you think?  This "enclosure" code was yours...
-
-thanks,
-
-greg k-h
