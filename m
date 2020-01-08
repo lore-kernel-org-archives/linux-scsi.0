@@ -2,130 +2,117 @@ Return-Path: <SRS0=fkLW=25=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D29DEC282DD
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 17:10:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 566BFC282DD
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 17:26:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B547F2067D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 17:10:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FF09206F0
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jan 2020 17:26:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578504395;
+	bh=ij94aMQ07BTirE2iQNs+dEg6zAm/wuo0VueM7DAIze4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=mlQJVSm/1bW4coNTh6Wj6k8y03kR+3dJ/IlxeY67GuPmDQgBRcfupd/iDoiC9oaIB
+	 qHNNuFeysPAnqzpRopFZWFEJS+EhWna1TsfWiE2FnXUfmYgFfWeYhv9+oMs8+RE3Il
+	 8wYW1T7AhtcgwYJNzCTOyBxeGzpe2AkSf1uxyoC0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729575AbgAHRKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 12:10:31 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2239 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729516AbgAHRKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 12:10:30 -0500
-Received: from LHREML710-CAH.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 6CC01DF89CB9F314160A;
-        Wed,  8 Jan 2020 17:10:28 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML710-CAH.china.huawei.com (10.201.108.33) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 8 Jan 2020 17:10:27 +0000
-Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 8 Jan 2020
- 17:10:27 +0000
-Subject: Re: [PATCH v1] driver core: Use list_del_init to replace list_del at
- device_links_purge()
-From:   John Garry <john.garry@huawei.com>
-To:     James Bottomley <jejb@linux.ibm.com>,
-        Greg KH <gregkh@linuxfoundation.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "saravanak@google.com" <saravanak@google.com>,
-        Arnd Bergmann <arnd@arndb.de>
-References: <1578483244-50723-1-git-send-email-luojiaxing@huawei.com>
- <20200108122658.GA2365903@kroah.com>
- <73252c08-ac46-5d0d-23ec-16c209bd9b9a@huawei.com>
- <1578498695.3260.5.camel@linux.ibm.com> <20200108155700.GA2459586@kroah.com>
- <1578499287.3260.7.camel@linux.ibm.com>
- <4b185c9f-7fa2-349d-9f72-3c787ac30377@huawei.com>
-Message-ID: <3826a83d-a220-2f7d-59f6-efe8a4b995d7@huawei.com>
-Date:   Wed, 8 Jan 2020 17:10:26 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1729745AbgAHR0e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 12:26:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48734 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729544AbgAHR0c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Jan 2020 12:26:32 -0500
+Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 12EE220705;
+        Wed,  8 Jan 2020 17:26:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578504391;
+        bh=ij94aMQ07BTirE2iQNs+dEg6zAm/wuo0VueM7DAIze4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=oHEjZcS3fZyHeprMzzff0S4Qy7ZcDSwpql0QpUi80QfppmiZQy/P4oJ803uYuwA5v
+         x1z5xr+45sSoD3DV04KiQ0p1hjw++k6Xwnn+gSKBhtW5tfWhW2/9kVKkkQ88eIbzQA
+         xNgFPef3+sqSoWBVJZJ9OaQn9qe8KNklyQnyAd9c=
+Date:   Wed, 8 Jan 2020 09:26:29 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
+Message-ID: <20200108172629.GA232722@sol.localdomain>
+References: <20191218145136.172774-1-satyat@google.com>
+ <20191218145136.172774-3-satyat@google.com>
+ <20191218212116.GA7476@magnolia>
+ <yq1y2v9e37b.fsf@oracle.com>
+ <20191218222726.GC47399@gmail.com>
+ <yq1fthhdttv.fsf@oracle.com>
+ <20200108140730.GC2896@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <4b185c9f-7fa2-349d-9f72-3c787ac30377@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.202.226.43]
-X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200108140730.GC2896@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/01/2020 16:08, John Garry wrote:
-> On 08/01/2020 16:01, James Bottomley wrote:
->>>>>     cdev->dev = NULL;
->>>>>             return device_add(&cdev->cdev);
->>>>>         }
->>>>>     }
->>>>>     return -ENODEV;
->>>>> }
->>>> The design of the code is simply to remove the link to the inserted
->>>> device which has been removed.
->>>>
->>>> I*think*  this means the calls to device_del and device_add are
->>>> unnecessary and should go.  enclosure_remove_links and the put of
->>>> the
->>>> enclosed device should be sufficient.
->>> That would make more sense than trying to "reuse" the device
->>> structure
->>> here by tearing it down and adding it back.
->> OK, let's try that.  This should be the patch if someone can try it
->> (I've compile tested it, but the enclosure system is under a heap of
->> stuff in the garage).
+On Wed, Jan 08, 2020 at 06:07:30AM -0800, Christoph Hellwig wrote:
+> On Wed, Dec 18, 2019 at 07:47:56PM -0500, Martin K. Petersen wrote:
+> > Absolutely. That's why it's a union. Putting your stuff there is a
+> > prerequisite as far as I'm concerned. No need to grow the bio when the
+> > two features are unlikely to coexist. We can revisit that later should
+> > the need arise.
 > 
-> I can test it now.
-> 
+> With NVMe key per I/O support some form of inline encryption and PI are
+> very likely to be used together in the not too far future.
 
-Yeah, that looks to have worked ok. SES disk locate was also fine after 
-losing and rediscovering the disk.
+The NVMe "key per I/O" draft is heavily flawed, and I don't think it will be
+useful at all in the Linux kernel context.  The problem is that, as far as I can
+tell, it doesn't allow the encryption algorithm and IVs to be selected, or even
+standardized or made discoverable in any way.  It does say that AES-256 must be
+supported, but it doesn't say which mode of operation (i.e. it could be
+something inappropriate for disk encryption, like ECB), nor does it say whether
+AES-256 has to be the default or not, and if it's not the default how to
+discover that and select AES-256.  IV generation is also unspecified, so it
+could be something insecure like always using the same IV.
 
-Thanks,
-John
+So effectively the NVMe encryption will be unspecified, untestable, and
+unverifiable.  That means that vendors are likely to implement it insecurely,
+similar to how they're implementing self-encrypting drives insecurely [1].
+(Granted, there are some reasons to think that vendors are less likely to screw
+up key per I/O.  But inevitably some will still get it wrong.)
 
-> But it is a bit suspicious that we had the device_del() and device_add() 
-> at all, especially since the code change makes it look a bit more like 
-> pre-43d8eb9cfd0 ("ses: add support for enclosure component hot removal")
-> 
-> John
-> 
->>
->> James
->>
->> ---
->>
->> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
->> index 6d27ccfe0680..3c2d405bc79b 100644
->> --- a/drivers/misc/enclosure.c
->> +++ b/drivers/misc/enclosure.c
->> @@ -406,10 +406,9 @@ int enclosure_remove_device(struct 
->> enclosure_device *edev, struct device *dev)
->>           cdev = &edev->component[i];
->>           if (cdev->dev == dev) {
->>               enclosure_remove_links(cdev);
->> -            device_del(&cdev->cdev);
->>               put_device(dev);
->>               cdev->dev = NULL;
->> -            return device_add(&cdev->cdev);
->> +            return 0;
->>           }
->>       }
->>       return -ENODEV;
-> 
-> _______________________________________________
-> Linuxarm mailing list
-> Linuxarm@huawei.com
-> http://hulk.huawei.com/mailman/listinfo/linuxarm
-> .
+[1] https://www.ieee-security.org/TC/SP2019/papers/310.pdf
 
+Also, since "key per I/O" won't allow selecting IVs, all the encrypted data will
+be tied to its physical location on-disk.  That will make "key per I/O" unusable
+in any case where encrypted blocks are moved without the key, e.g.
+filesystem-level encryption on many filesystems.
+
+And since the way that dm-crypt and fscrypt work is that you select which
+algorithm and IV generator you want to use, to even use NVMe "key per I/O" with
+them we'd have to add magic settings that say to use some unspecified
+hardware-specific encryption format, which could be completely insecure.  As one
+of the fscrypt maintainers I'd be really hesistant to accept any such patch, and
+I think the dm-crypt people would feel the same way.
+
+I've already raised these concerns in the NVMe and TCG Storage working groups,
+and the people working on it refused to make any changes, as they consider "key
+per I/O" to be more akin to the TCG Opal self-encrypting drive specification,
+and not actually intended to be "inline encryption".
+
+So let's not over-engineer this kernel patchset to support some broken
+vaporware, please.
+
+- Eric
