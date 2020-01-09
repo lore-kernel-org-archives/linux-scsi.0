@@ -2,38 +2,39 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39509C33CA1
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 08:30:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DFD0C33CA2
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 08:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1538120673
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 08:30:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 698062067D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 08:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728474AbgAIIan (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 03:30:43 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:33877 "EHLO smtp.infotech.no"
+        id S1728478AbgAIIao (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 03:30:44 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:33896 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728405AbgAIIan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728444AbgAIIan (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 9 Jan 2020 03:30:43 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 81CBB204148;
+        by smtp.infotech.no (Postfix) with ESMTP id CF10B204193;
         Thu,  9 Jan 2020 09:30:40 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id QnZ7ohr7oY7b; Thu,  9 Jan 2020 09:30:40 +0100 (CET)
+        with ESMTP id 1KkrYIROSjlo; Thu,  9 Jan 2020 09:30:40 +0100 (CET)
 Received: from xtwo70.infotech.no (unknown [82.134.31.177])
-        by smtp.infotech.no (Postfix) with ESMTPA id 542DD204191;
+        by smtp.infotech.no (Postfix) with ESMTPA id 887CA204195;
         Thu,  9 Jan 2020 09:30:40 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [RFC v2 1/6] scsi_debug: randomize command completion time
-Date:   Thu,  9 Jan 2020 09:30:34 +0100
-Message-Id: <20200109083039.16582-2-dgilbert@interlog.com>
+Subject: [RFC v2 4/6] scsi_debug: weaken rwlock around ramdisk access
+Date:   Thu,  9 Jan 2020 09:30:37 +0100
+Message-Id: <20200109083039.16582-5-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200109083039.16582-1-dgilbert@interlog.com>
 References: <20200109083039.16582-1-dgilbert@interlog.com>
@@ -44,133 +45,284 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a new command line option (e.g. random=1) and sysfs attribute
-that causes subsequent command completion times to be between the
-current command delay setting and 0. A unformily distributed 32
-bit, kernel provided integer is used for this purpose.
-
-Since the existing 'delay' whose units are jiffies (typically
-milliseconds) and 'ndelay' (units: nanoseconds) options (and sysfs
-attributes) span a range greater than 32 bits, some scaling is
-required.
-
-The purpose of this patch is to widen the range of testing cases
-that are visited in long running tests. Put simply: rarely struct
-race conditions are more likely to be found when this facility is
-used.
-
-The default is the previous case in which all command completions
-were roughly equal to (if not, slightly longer) than the value
-given by the 'delay' or 'ndelay' settings (or their defaults).
-This option's default is equivalent to setting 'random=0' .
+The design of this driver is to do any ramdisk access on the
+same thread that invoked the queuecommand() call. That is
+assumed to be user space context. The command
+duration is implemented by setting the delay with a high
+resolution timer. The hr timer's callback may well be in
+interrupt context, but it doesn't touch the ramdisk. So try
+removing the _irqsave()/_irqrestore() portion on the read-
+write lock that protects ramdisk access.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 42 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 39 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_debug.c | 59 +++++++++++++++------------------------
+ 1 file changed, 22 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 44cb054d5e66..18c07e9ace15 100644
+index b94a453ea0f7..7cafbf4aefe8 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -38,6 +38,7 @@
- #include <linux/hrtimer.h>
- #include <linux/uuid.h>
- #include <linux/t10-pi.h>
-+#include <linux/random.h>
+@@ -2716,7 +2716,6 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u32 num;
+ 	u32 ei_lba;
+ 	int acc_num = scp2acc_num(scp);
+-	unsigned long iflags;
+ 	u64 lba;
+ 	int ret;
+ 	bool check_prot;
+@@ -2801,22 +2800,21 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		return check_condition_result;
+ 	}
  
- #include <net/checksum.h>
+-	read_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	read_lock(ramdisk_lck_a[acc_num % 2]);
  
-@@ -125,6 +126,7 @@ static const char *sdebug_version_date = "20190125";
- #define DEF_PHYSBLK_EXP 0
- #define DEF_OPT_XFERLEN_EXP 0
- #define DEF_PTYPE   TYPE_DISK
-+#define DEF_RANDOM false
- #define DEF_REMOVABLE false
- #define DEF_SCSI_LEVEL   7    /* INQUIRY, byte2 [6->SPC-4; 7->SPC-5] */
- #define DEF_SECTOR_SIZE 512
-@@ -655,6 +657,7 @@ static unsigned int sdebug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
- static unsigned int sdebug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
- static unsigned int sdebug_write_same_length = DEF_WRITESAME_LENGTH;
- static int sdebug_uuid_ctl = DEF_UUID_CTL;
-+static bool sdebug_random = DEF_RANDOM;
- static bool sdebug_removable = DEF_REMOVABLE;
- static bool sdebug_clustering;
- static bool sdebug_host_lock = DEF_HOST_LOCK;
-@@ -4354,9 +4357,21 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 		ktime_t kt;
+ 	/* DIX + T10 DIF */
+ 	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
+ 		int prot_ret = prot_verify_read(scp, lba, num, ei_lba);
  
- 		if (delta_jiff > 0) {
--			kt = ns_to_ktime((u64)delta_jiff * (NSEC_PER_SEC / HZ));
--		} else
--			kt = ndelay;
-+			u64 ns = jiffies_to_nsecs(delta_jiff);
-+
-+			if (sdebug_random && ns < U32_MAX) {
-+				ns = prandom_u32_max((u32)ns);
-+			} else if (sdebug_random) {
-+				ns >>= 12;	/* scale to 4 usec precision */
-+				if (ns < U32_MAX)	/* over 4 hours max */
-+					ns = prandom_u32_max((u32)ns);
-+				ns <<= 12;
-+			}
-+			kt = ns_to_ktime(ns);
-+		} else {	/* ndelay has a 4.2 second max */
-+			kt = sdebug_random ? prandom_u32_max((u32)ndelay) :
-+					     (u32)ndelay;
-+		}
- 		if (!sd_dp->init_hrt) {
- 			sd_dp->init_hrt = true;
- 			sqcp->sd_dp = sd_dp;
-@@ -4451,6 +4466,7 @@ module_param_named(opts, sdebug_opts, int, S_IRUGO | S_IWUSR);
- module_param_named(physblk_exp, sdebug_physblk_exp, int, S_IRUGO);
- module_param_named(opt_xferlen_exp, sdebug_opt_xferlen_exp, int, S_IRUGO);
- module_param_named(ptype, sdebug_ptype, int, S_IRUGO | S_IWUSR);
-+module_param_named(random, sdebug_random, bool, S_IRUGO | S_IWUSR);
- module_param_named(removable, sdebug_removable, bool, S_IRUGO | S_IWUSR);
- module_param_named(scsi_level, sdebug_scsi_level, int, S_IRUGO);
- module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
-@@ -4511,6 +4527,7 @@ MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err...
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent (def=physblk_exp)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
-+MODULE_PARM_DESC(random, "If set, uniformly randomize command duration between 0 and delay_in_ns");
- MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
- MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=7[SPC-5])");
- MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
-@@ -5101,6 +5118,24 @@ static ssize_t map_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(map);
+ 		if (prot_ret) {
+-			read_unlock_irqrestore(ramdisk_lck_a[acc_num % 2],
+-					       iflags);
++			read_unlock(ramdisk_lck_a[acc_num % 2]);
+ 			mk_sense_buffer(scp, ABORTED_COMMAND, 0x10, prot_ret);
+ 			return illegal_condition_result;
+ 		}
+ 	}
  
-+static ssize_t random_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", (int)sdebug_random);
-+}
-+
-+static ssize_t random_store(struct device_driver *ddp, const char *buf,
-+			    size_t count)
-+{
-+	int n;
-+
-+	if (count > 0 && kstrtoint(buf, 10, &n) == 0 && n >= 0) {
-+		sdebug_random = (n > 0);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+static DRIVER_ATTR_RW(random);
-+
- static ssize_t removable_show(struct device_driver *ddp, char *buf)
+ 	ret = do_device_access(scp, 0, lba, num, false);
+-	read_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	read_unlock(ramdisk_lck_a[acc_num % 2]);
+ 	if (unlikely(ret == -1))
+ 		return DID_ERROR << 16;
+ 
+@@ -3023,7 +3021,6 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u32 ei_lba;
+ 	int acc_num = scp2acc_num(scp);
+ 	int ret;
+-	unsigned long iflags;
+ 	u64 lba;
+ 	u8 *cmd = scp->cmnd;
+ 
+@@ -3081,15 +3078,14 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	ret = check_device_access_params(scp, lba, num, true);
+ 	if (ret)
+ 		return ret;
+-	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	write_lock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	/* DIX + T10 DIF */
+ 	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
+ 		int prot_ret = prot_verify_write(scp, lba, num, ei_lba);
+ 
+ 		if (prot_ret) {
+-			write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2],
+-						iflags);
++			write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 			mk_sense_buffer(scp, ILLEGAL_REQUEST, 0x10, prot_ret);
+ 			return illegal_condition_result;
+ 		}
+@@ -3098,7 +3094,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	ret = do_device_access(scp, 0, lba, num, true);
+ 	if (unlikely(scsi_debug_lbp()))
+ 		map_region(lba, num);
+-	write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 	if (unlikely(-1 == ret))
+ 		return DID_ERROR << 16;
+ 	else if (unlikely(sdebug_verbose &&
+@@ -3146,7 +3142,6 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 	u32 ei_lba;
+ 	int acc_num = scp2acc_num(scp);
+ 	u64 lba;
+-	unsigned long iflags;
+ 	int ret, res;
+ 	bool is_16;
+ 	static const u32 lrd_size = 32; /* + parameter list header size */
+@@ -3208,7 +3203,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 		goto err_out;
+ 	}
+ 
+-	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	write_lock(ramdisk_lck_a[acc_num % 2]);
+ 	sg_off = lbdof_blen;
+ 	/* Spec says Buffer xfer Length field in number of LBs in dout */
+ 	cum_lb = 0;
+@@ -3291,7 +3286,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 	}
+ 	ret = 0;
+ err_out_unlock:
+-	write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	write_unlock(ramdisk_lck_a[acc_num % 2]);
+ err_out:
+ 	kfree(lrdp);
+ 	return ret;
+@@ -3300,7 +3295,6 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 			   u32 ei_lba, bool unmap, bool ndob)
  {
- 	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_removable ? 1 : 0);
-@@ -5211,6 +5246,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_guard.attr,
- 	&driver_attr_ato.attr,
- 	&driver_attr_map.attr,
-+	&driver_attr_random.attr,
- 	&driver_attr_removable.attr,
- 	&driver_attr_host_lock.attr,
- 	&driver_attr_ndelay.attr,
+-	unsigned long iflags;
+ 	unsigned long long i;
+ 	u64 block, lbaa;
+ 	u32 lb_size = sdebug_sector_size;
+@@ -3313,7 +3307,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 	if (ret)
+ 		return ret;
+ 
+-	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	write_lock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	if (unmap && scsi_debug_lbp()) {
+ 		unmap_region(lba, num, acc_num);
+@@ -3331,7 +3325,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 		ret = fetch_to_dev_buffer(scp, fs1p, lb_size);
+ 
+ 	if (-1 == ret) {
+-		write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++		write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 		return DID_ERROR << 16;
+ 	} else if (sdebug_verbose && !ndob && (ret < lb_size))
+ 		sdev_printk(KERN_INFO, scp->device,
+@@ -3347,7 +3341,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 	if (scsi_debug_lbp())
+ 		map_region(lba, num);
+ out:
+-	write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	return 0;
+ }
+@@ -3463,7 +3457,6 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 	u32 dnum;
+ 	u32 lb_size = sdebug_sector_size;
+ 	u8 num;
+-	unsigned long iflags;
+ 	int ret;
+ 	int retval = 0;
+ 	int acc_num = scp2acc_num(scp);
+@@ -3493,7 +3486,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 		return check_condition_result;
+ 	}
+ 
+-	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	write_lock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	ret = do_dout_fetch(scp, dnum, arr);
+ 	if (ret == -1) {
+@@ -3511,7 +3504,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 	if (scsi_debug_lbp())
+ 		map_region(lba, num);
+ cleanup:
+-	write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 	kfree(arr);
+ 	return retval;
+ }
+@@ -3529,8 +3522,6 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	unsigned int i, payload_len, descriptors;
+ 	int ret;
+ 	int acc_num = scp2acc_num(scp);
+-	unsigned long iflags;
+-
+ 
+ 	if (!scsi_debug_lbp())
+ 		return 0;	/* fib and say its done */
+@@ -3557,7 +3548,7 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 
+ 	desc = (void *)&buf[8];
+ 
+-	write_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	write_lock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	for (i = 0 ; i < descriptors ; i++) {
+ 		unsigned long long lba = get_unaligned_be64(&desc[i].lba);
+@@ -3573,7 +3564,7 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	ret = 0;
+ 
+ out:
+-	write_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	write_unlock(ramdisk_lck_a[acc_num % 2]);
+ 	kfree(buf);
+ 
+ 	return ret;
+@@ -3756,7 +3747,6 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	int acc_num = scp2acc_num(scp);
+ 	u32 vnum, a_num, off;
+ 	const u32 lb_size = sdebug_sector_size;
+-	unsigned long iflags;
+ 	u64 lba;
+ 	u8 *arr;
+ 	u8 *cmd = scp->cmnd;
+@@ -3796,7 +3786,7 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		return check_condition_result;
+ 	}
+ 	/* Not changing store, so only need read access */
+-	read_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++	read_lock(ramdisk_lck_a[acc_num % 2]);
+ 
+ 	ret = do_dout_fetch(scp, a_num, arr);
+ 	if (ret == -1) {
+@@ -3818,7 +3808,7 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		goto cleanup;
+ 	}
+ cleanup:
+-	read_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	read_unlock(ramdisk_lck_a[acc_num % 2]);
+ 	kfree(arr);
+ 	return ret;
+ }
+@@ -4467,9 +4457,6 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 
+ 	cmnd->result = pfp != NULL ? pfp(cmnd, devip) : 0;
+ 	if (cmnd->result & SDEG_RES_IMMED_MASK) {
+-		/*
+-		 * This is the F_DELAY_OVERR case. No delay.
+-		 */
+ 		cmnd->result &= ~SDEG_RES_IMMED_MASK;
+ 		delta_jiff = ndelay = 0;
+ 	}
+@@ -4994,16 +4981,14 @@ static ssize_t doublestore_store(struct device_driver *ddp, const char *buf,
+ 	int n;
+ 
+ 	if (count > 0 && kstrtoint(buf, 10, &n) == 0 && n >= 0) {
+-		unsigned long iflags;
+-
+ 		if (sdebug_doublestore == (n > 0))
+ 			return count;	/* no state change */
+ 		if (n <= 0) {
+-			write_lock_irqsave(ramdisk_lck_a[1], iflags);
++			write_lock(ramdisk_lck_a[1]);
+ 			sdebug_doublestore = false;
+ 			vfree(fake_store_a[1]);
+ 			fake_store_a[1] = NULL;
+-			write_unlock_irqrestore(ramdisk_lck_a[1], iflags);
++			write_unlock(ramdisk_lck_a[1]);
+ 		} else {
+ 			unsigned long sz = (unsigned long)sdebug_dev_size_mb *
+ 					   1048576;
+@@ -5013,10 +4998,10 @@ static ssize_t doublestore_store(struct device_driver *ddp, const char *buf,
+ 				return -ENOMEM;
+ 			if (sdebug_num_parts > 0)
+ 				sdebug_build_parts(fsp, sz);
+-			write_lock_irqsave(ramdisk_lck_a[1], iflags);
++			write_lock(ramdisk_lck_a[1]);
+ 			fake_store_a[1] = fsp;
+ 			sdebug_doublestore = true;
+-			write_unlock_irqrestore(ramdisk_lck_a[1], iflags);
++			write_unlock(ramdisk_lck_a[1]);
+ 		}
+ 		return count;
+ 	}
+@@ -5949,7 +5934,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		pfp = r_pfp;    /* if leaf function ptr NULL, try the root's */
+ 
+ fini:
+-	if (F_DELAY_OVERR & flags)
++	if (F_DELAY_OVERR & flags)	/* cmds like INQUIRY respond asap */
+ 		return schedule_resp(scp, devip, errsts, pfp, 0, 0);
+ 	else if ((flags & F_LONG_DELAY) && (sdebug_jdelay > 0 ||
+ 					    sdebug_ndelay > 10000)) {
 -- 
 2.24.1
 
