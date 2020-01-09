@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FDCC33C9E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49951C33CA2
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:04:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B99072067D
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C4942067D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:04:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ybpc/mCM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K4rKxVe3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727133AbgAIBDD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 20:03:03 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:46906 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726654AbgAIBDD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:03:03 -0500
-Received: by mail-pg1-f194.google.com with SMTP id z124so2350645pgb.13
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 17:03:02 -0800 (PST)
+        id S1727237AbgAIBES (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 20:04:18 -0500
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:53775 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727082AbgAIBES (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:04:18 -0500
+Received: by mail-pj1-f44.google.com with SMTP id n96so371404pjc.3
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 17:04:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=EDU3Hjv77pqz0Fsbdl+b5/i0t6Ajk/hwTMoXvH+DRrE=;
-        b=Ybpc/mCMp/A6RQMWuYSzttAVntKAOUsFqF/sHxme3YoInwCYqicXgpCR/Syp9mfIqF
-         6TtQqmkufV4r42QAWefjLDHxkK/Mr6Y0kfcre/EfY2M0BeqR0MX3hvtlLFW906+VM+H5
-         TZHRImNmEZyBwAV4UzL7CKvjP4rrCu+f6O3QE/z/ptmjXhDhD0hNW537X+hZMxdKAZ6e
-         bUT2/dCoF6IukyDGBtYm4952BqNM1keZQ+OvVP8eM1aJSwFGti66TRNwDu/0FLddPOJH
-         TfGhLWUo0JrXOSB1QbEZeUk5UyMKJlthy9vP5cJ6Mr9mto6MFs+wifuPrM3fFPrcIFE1
-         HIgg==
+        bh=RoBZPYJ2ZGHXkJ0X6/lMhjhbUJnpmZcpJUN34I/umOI=;
+        b=K4rKxVe3osyi0eNTB5IYkJGNjYxWHflUhmDo7nlYU56emydmO4SF6qSh9uJW6+0PZC
+         FujcJPiDWCoT5OuZstg2rYg0+IwKe8yxHswxxaaVKrg0p8CNeD201TzdAr4hD8ALGdSE
+         vWyHi4D3VYrEQBnjnx5qFqUuvsV+CPTgwSOo472MLD5rygjbxnxi4zuGZqv7jrggcis2
+         e5Y8aMzDNIu00CeYOhDkqohcOULPoMS8qDhOPDTzrHA93TeJbDiAVWyKwIsP1oXb5GgQ
+         IhPcL19HH2NeRj4NBfapGDz4G17fmsUCZoPdc7rwtson9Fu7HoVMjYVAcPJkNBVmneZc
+         kaAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=EDU3Hjv77pqz0Fsbdl+b5/i0t6Ajk/hwTMoXvH+DRrE=;
-        b=F7zYUFSgcsiLbVG6no6jJ/F8QhiPX91+3ExlbJ2Qj/rbOC3JrBY7CRBvYfNhhGJbRa
-         W43NUyUYlqU7EOOHEQicPnHKzkRY6CizVH04ClUFs/8Xp57+sk/jwEMkHa4MCUSSyiwd
-         5W6/ARs4nPoKk/OVB4HavrS+lTolV9jijBAx344grKOhYY64EMz2BnWu3lLa46AvnEa1
-         iSsFJp64Z9iT58cAPuApxK9NNVID/mIKBeM0YWNvHun7uqVywuX+vO++DilqfHlXi0s0
-         bRxI+/H9/wKK+mFeH3jErkRvDLV4I9fMzD2gVLCOHRJM+aSJURh43tXk27GW5mJei86U
-         /utw==
-X-Gm-Message-State: APjAAAXzgrbtNH+UkSLpYKWkhG1TxG2JqH4GLXSHpDoNK0ZAcbLJ0Ozw
-        HIXiHWnKFNG7OvFWYI4zd0A=
-X-Google-Smtp-Source: APXvYqyGK/MwPBZuHMmB8SmXWaP8169Eb+byIfjESkPlI4ZoO7kim+VaxhKMmyTxt78Zp45OC4sy6Q==
-X-Received: by 2002:a63:2ac2:: with SMTP id q185mr8378249pgq.417.1578531782402;
-        Wed, 08 Jan 2020 17:03:02 -0800 (PST)
+        bh=RoBZPYJ2ZGHXkJ0X6/lMhjhbUJnpmZcpJUN34I/umOI=;
+        b=uCHd7tAZMACFTNuhCdwU8ztVruz4p+dDzfYTm5q1HaW/V9S4wjTCug2sNyfpfS6oM0
+         jyYfI3LGxaABeTNyhEPTOQ1JBqw7kfoDxB/KkIPjckLX0ui9hJ4GgKJ7v2otlb975Skd
+         yebubg8Za/DaPN2EBh8WIhObGxiD0EQ10LqzPBJwJOPd8qD53C3onsUZVkqFibRvgqnv
+         s6riWHEoymB4W2cVFZca66Ukmq911/vmfv24+2AWlalT5//AffDbxB1jeLyqxHJ9MV2V
+         nQn/6fcvSIa7sfECKzDzx+aNyREOZCr5rbiF7mazexqDtH+TaELjO/ItARTwXZmWO+N/
+         2e6w==
+X-Gm-Message-State: APjAAAXD2IEg0/1aKb791T6Sg2gcenSOVrfdaNwdOchnd5mM3vAtjIv9
+        7EfZ484/EDR3l6oDbLsqmm0=
+X-Google-Smtp-Source: APXvYqzmu3vaigCwppjYS4muPDUAldM5iKbaElApIsRBx6TPqEU1z95pn4psgHoLDBtlj4BQNT+F/Q==
+X-Received: by 2002:a17:90a:36af:: with SMTP id t44mr1894983pjb.25.1578531857724;
+        Wed, 08 Jan 2020 17:04:17 -0800 (PST)
 Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id k5sm485905pju.5.2020.01.08.17.03.01
+        by smtp.gmail.com with ESMTPSA id 12sm5219127pfn.177.2020.01.08.17.04.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Jan 2020 17:03:01 -0800 (PST)
-Subject: Re: [PATCH v2 03/32] elx: libefc_sli: Data structures and defines for
- mbox commands
+        Wed, 08 Jan 2020 17:04:17 -0800 (PST)
+Subject: Re: [PATCH v2 04/32] elx: libefc_sli: queue create/destroy/parse
+ routines
 To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-4-jsmart2021@gmail.com>
- <479ac7f4-80ac-babe-7aa6-aa91e257ec8f@suse.de>
+ <20191220223723.26563-5-jsmart2021@gmail.com>
+ <07c171f7-3d2c-a3ce-37ed-2b02f00fa6b2@suse.de>
 From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <bc042904-3a4c-ce96-3d14-cace98b1fa13@gmail.com>
-Date:   Wed, 8 Jan 2020 17:03:00 -0800
+Message-ID: <1b9bf0ea-3667-6109-152b-65af80459d43@gmail.com>
+Date:   Wed, 8 Jan 2020 17:04:15 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <479ac7f4-80ac-babe-7aa6-aa91e257ec8f@suse.de>
+In-Reply-To: <07c171f7-3d2c-a3ce-37ed-2b02f00fa6b2@suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,40 +78,24 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/7/2020 11:32 PM, Hannes Reinecke wrote:
-> On 12/20/19 11:36 PM, James Smart wrote:
->> @@ -1995,7 +1995,7 @@ struct sli4_fc_xri_aborted_cqe {
->>   #define SLI4_ELS_REQUEST64_DIR_READ		0x1
->>   
->>   #define SLI4_ELS_REQUEST64_OTHER		0x0
->> -#define SLI4_ELS_REQUEST64_LOGO		0x1
->> +#define SLI4_ELS_REQUEST64_LOGO			0x1
->>   #define SLI4_ELS_REQUEST64_FDISC		0x2
->>   #define SLI4_ELS_REQUEST64_FLOGIN		0x3
->>   #define SLI4_ELS_REQUEST64_PLOGI		0x4
-> Shouldn't this rather be merged with the previous patch?
-
-yes - will do so
-
-
-> Make this two enums, one 'enum sli4_mbx_cmd' and one 'enum sli4_mbx_status'.
+On 1/7/2020 11:45 PM, Hannes Reinecke wrote:
+> Hmm. Why do you return -EFC_FAIL here, and EFC_FAIL in the two cases above?
+> Do you differentiate between EFC_FAIL and -EFC_FAIL?
+> If so you should probably use different #defines ...
 > 
 ...
 > 
-> Single enum should rather be converted into a #define ..
+> '0'? Why not EFC_FAIL/EFC_SUCCESS?
 > 
 ...
-> Why is this an enum, and the above SLI4_INIT_LINK_F_XXX value are defines?
-> Please be consistent.
-> 
-> And this applies throughout the remainder of the patch.
+> EFC_FAIL?
 > 
 > Cheers,
 > 
 > Hannes
 > 
 
-We will convert to multiple enums.
+We will remove all -1, -EFC_FAIL and return only EFC_SUCCESS/EFC_FAIL.
 
 Thanks
 
