@@ -2,161 +2,167 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D87C33C9E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5DA9C33CA1
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:41:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C3BA206F0
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:29:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACB7A20721
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:41:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h1l6KuGr"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zgzf4vzO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727168AbgAIB3y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 20:29:54 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:44422 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726654AbgAIB3y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:29:54 -0500
-Received: by mail-pg1-f196.google.com with SMTP id x7so2382928pgl.11
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 17:29:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=BEbypwH2JLufMgg+dDYmXUbF982ojEWsl2Xlfq55ey8=;
-        b=h1l6KuGrYme02lMFaxKQWnBeIGIW/nt012OjscRevfIkhQCzYvrhKM7b1Z/ny/8Wac
-         43qXBsfcLv77iFiVvUMlg5snWTkHJeCJo2+1fDeRKrX/3E9iLYuJShIJoLjmgkqQLurz
-         WpetouourZEDQH9p43LOjQPuio+nJv6lCz7yW7SlIzsMA4Vx7uzjgQ6ABI5CW8lS+0kJ
-         OOuBjYX/UjSpkNMr5fwZUSeLluMh2z8wz9d6LpQNivE7UGsGdwoeAqtbgc+dqQjGqXel
-         Sp0S0zdBWfFphNxj9mOeZG7H1RmnsvHvx74SXWZ2vKu6GxEQhk6NRlEHOpYC8PnTHQrH
-         EEgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=BEbypwH2JLufMgg+dDYmXUbF982ojEWsl2Xlfq55ey8=;
-        b=iiuoxQcgMhRGacsg9tIxFzmW/bz3lV5StST1V/xHvNEBYhRMD+McPoRmi8wh95MynU
-         sdHS/AoNuXdF+3c8jkAU04DyPu7LbdK8J985b86StwwaoONbM27lM7Ek7REFlSMu6Ci0
-         uwC2dcU7dGGTHp7B/56rs3FJm//SWQOt2dx0zJn5pHkn3MLpzfg44flCenk+MSvM/IbO
-         k+8fwV2NMfkiq848W2Ru110eFqTIIOwKTAC172/gO11WVzRD259kTx66ffIbM+7sICOn
-         zx7qw/t09aqu7kUUViblh1SwCilFuZ9DuRZnhWJWqUPQtG28LPldTKGmh9E0Mq7hBllO
-         ykiQ==
-X-Gm-Message-State: APjAAAVEo8TPq6fd9uiM0wc/ZRfN/IPJ82pedu4llKS6QIIFTgMVwJNp
-        zeHE8yflB0SFuuzYQJiJpE2Vi7j5
-X-Google-Smtp-Source: APXvYqyneh8ayhpwa0wihMYCcPgNl9a4Q4lgRpbeXr7FK2Rg/ee1JC6MIUdP0aLdZxPb6qaUky9k1w==
-X-Received: by 2002:aa7:8193:: with SMTP id g19mr8501529pfi.172.1578533393495;
-        Wed, 08 Jan 2020 17:29:53 -0800 (PST)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t1sm5188937pgq.23.2020.01.08.17.29.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Jan 2020 17:29:53 -0800 (PST)
-Subject: Re: [PATCH v2 07/32] elx: libefc_sli: APIs to setup SLI library
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        James Smart <jsmart2021@gmail.com>
-References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-8-jsmart2021@gmail.com>
- <8fa86591-9c1f-9b64-3641-b8eddb2a5c62@suse.de>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <5e5c9113-efdc-ef77-2518-05f338a4df36@gmail.com>
-Date:   Wed, 8 Jan 2020 17:29:51 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        id S1727571AbgAIBlZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 20:41:25 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:32866 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726913AbgAIBlY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:41:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1578534082;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=++BJMDhJnEZzwpRB8uVTSWyKTo0GbD3+bxramlo68KI=;
+        b=Zgzf4vzOF7jnrl96EeCYD2gHwlTbCDAIUcDDRjSBTM6bpVNx7z+5U33y+cNvZUhSNTea6v
+        mFJCjmT9md2pRiD8NAgWo/PKj5Qdt/AznnfC/qb/O4aI1X7U6J7iocJNzYQimBH/pyCpoC
+        5KbeW20xnKHVSbSY6+FT2pGWEJZDv+8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-192-EMsxYRcuNoyVE7fDxYJUNQ-1; Wed, 08 Jan 2020 20:41:20 -0500
+X-MC-Unique: EMsxYRcuNoyVE7fDxYJUNQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9E0A71800D71;
+        Thu,  9 Jan 2020 01:41:19 +0000 (UTC)
+Received: from agk-dp.fab.redhat.com (agk-dp.fab.redhat.com [10.33.15.10])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 44C4B60E1C;
+        Thu,  9 Jan 2020 01:41:19 +0000 (UTC)
+Received: from agk by agk-dp.fab.redhat.com with local (Exim 4.69)
+        (envelope-from <agk@redhat.com>)
+        id 1ipMp3-0001FU-IR; Thu, 09 Jan 2020 01:41:17 +0000
+Date:   Thu, 9 Jan 2020 01:41:17 +0000
+From:   Alasdair G Kergon <agk@redhat.com>
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Sweet Tea Dorminy <sweettea@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
+Message-ID: <20200109014117.GB3809@agk-dp.fab.redhat.com>
+Mail-Followup-To: Tony Asleson <tasleson@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Sweet Tea Dorminy <sweettea@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20191223225558.19242-1-tasleson@redhat.com> <20191223225558.19242-10-tasleson@redhat.com> <20200104025620.GC23195@dread.disaster.area> <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com> <20200106220233.GK23195@dread.disaster.area> <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com> <20200107012353.GO23195@dread.disaster.area> <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com> <20200108021002.GR23195@dread.disaster.area> <9e449c65-193c-d69c-1454-b1059221e5dc@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <8fa86591-9c1f-9b64-3641-b8eddb2a5c62@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9e449c65-193c-d69c-1454-b1059221e5dc@redhat.com>
+Organization: Red Hat UK Ltd. Registered in England and Wales, number
+        03798903. Registered Office: Peninsular House, 30-36 Monument
+        Street, 4th Floor, London, England, EC3R 8NB.
+User-Agent: Mutt/1.5.18 (2008-05-17)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/8/2020 12:22 AM, Hannes Reinecke wrote:
+On Wed, Jan 08, 2020 at 10:53:13AM -0600, Tony Asleson wrote:
+> We are not removing any existing information, we are adding.
 
-> 
-> boolean?
-> 
-...
-> 
-> Same here?
-> 
-...
-> See? It doesn't even hurt ...
+A difficulty with this approach is:  Where do you stop when your storage
+configuration is complicated and changing?  Do you add the complete
+relevant part of the storage stack configuration to every storage
+message in the kernel so that it is easy to search later?
 
-:)
+Or do you catch the messages in userspace and add some of this
+information there before sending them on to your favourite log message
+database?  (ref. peripety, various rsyslog extensions)
 
-...
-> 
-> boolean?
-> 
+> I think all the file systems should include their FS UUID in the FS log
+> messages too, but that is not part of the problem we are trying to solve.
 
-yep - we'll convert them to boolean's
+Each layer (subsystem) should already be tagging its messages in an
+easy-to-parse way so that all those relating to the same object (e.g.
+filesystem instance, disk) at its level of the stack can easily be
+matched together later.  Where this doesn't already happen, we should
+certainly be fixing that as it's a pre-requisite for any sensible
+post-processing: As long as the right information got recorded, it can
+all be joined together on demand later by some userspace software.
+ 
+> The user has to systematically and methodically go through the logs
+> trying to deduce what the identifier was referring to at the time of the
+> error.  This isn't trivial and virtually impossible at times depending
+> on circumstances.
 
+So how about logging what these identifiers reference at different times
+in a way that is easy to query later?
 
-> Ho-hum.
-> Maybe 'extend allocation not implemented' ?
+Come to think of it, we already get uevents when the references change,
+and udev rules even already now create neat "by-*" links for us.  Maybe
+we just need to log better what udev is actually already doing?
 
-ok
+Then we could reproduce what the storage configuration looked like at
+any particular time in the past to provide the missing context for
+the identifiers in the log messages.
 
+                    ---------------------
+ 
+Which seems like an appropriate time to introduce storage-logger.
 
-> 
-> Didn't you mention extent allocation is not implemented?
-> So is this a different type of extent?
+    https://github.com/lvmteam/storage-logger
 
-kinda - there was a comment header that tried to clarify this:
+    Fedora rawhide packages:
+      https://copr.fedorainfracloud.org/coprs/agk/storage-logger/ 
 
-/*      * Tracks the port resources using extents metaphor. For
-          * devices that don't implement extents (i.e.
-          * has_extents == FALSE), the code models each resource as
-          * a single large extent.
-          */
+The goal of this particular project is to maintain a record of the
+storage configuration as it changes over time.  It should provide a
+quick way to check the state of a system at a specified time in the
+past.
 
-regardless - we'll clarify what's going on.
+The initial logging implementation is triggered by storage uevents and
+consists of two components:
 
+1. A new udev rule file, 99-zzz-storage-logger.rules, which runs after
+all the other rules have run and invokes:
 
->> +#define FDD 2
-> 
-> Oh, come on.
-> You have defines for everything but the kitchen sink.
-> So why do you have to define this one inline?
+2. A script, udev_storage_logger.sh, that captures relevant
+information about devices that changed and stores it in the system
+journal.
 
-yeah - there are a lot.
+The effect is to log the data from relevant uevents plus some
+supplementary information (including device-mapper tables, for example).
+It does not yet handle filesystem-related events.
 
-Agree - the define will be moved to a header. It's a dump-type selection 
-(function scope or adapter scope; only newer things do function only).
+Two methods to query the data are offered:
 
+1. journalctl
+Data is tagged with the identifier UDEVLOG and retrievable as
+key-value pairs.
+  journalctl -t UDEVLOG --output verbose
+  journalctl -t UDEVLOG --output json
+    --since 'YYYY-MM-DD HH:MM:SS' 
+    --until 'YYYY-MM-DD HH:MM:SS'
+  journalctl -t UDEVLOG --output verbose
+    --output-fields=PERSISTENT_STORAGE_ID,MAJOR,MINOR
+     PERSISTENT_STORAGE_ID=dm-name-vg1-lvol0
 
-> 
-> Please use defines for the return values here.
-> One has no idea why '1' or '2' is returned here.
-> At the very least some documentation.
-> 
+2. lsblkj  [appended j for journal]
+This lsblk wrapper reprocesses the logged uevents to reconstruct a
+dummy system environment that "looks like" the system did at a
+specified earlier time and then runs lsblk against it.
 
-yep - will do.
+Yes, I'm looking for feedback to help to decide whether or not it's
+worth developing this any further.
 
-> EFC_SUCCESS is back!
-> I've already missed them; none of the previous functions in this patch
-> use them.
-> Please fix.
+Alasdair
 
-yep.
-
-
-> I guess you can reformat those; the linux line length is 80 characters,
-> and one really should use them ...
-> 
-> Cheers,
-> 
-> Hannes
-> 
-
-We'll fix the line lengths.
-
--- james
