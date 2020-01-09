@@ -2,311 +2,379 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2011EC33CA2
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 05:56:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8C9C32771
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5A5A2073A
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 05:56:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QdtEvRbW";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="NXA76IVN"
+	by mail.kernel.org (Postfix) with ESMTP id 5E24B2072A
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:05:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727952AbgAIF4N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 00:56:13 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:44854 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725893AbgAIF4M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2020 00:56:12 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1578549372; x=1610085372;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=ZHEVuzmb4UEKQwjVVJUA3uvW+u0sNLM/oT4nxostcow=;
-  b=QdtEvRbW5J0UiQHY2FA8snwa+xu6N3l34JBuFDCr5TDDTHmzdu1yaNnB
-   8LkZxwebYvIGGfiwj1oSX0XTbTJSsUVuhqOChgSrJZFrzjUvxzbcOTwNG
-   teBTX1UVilDbbZALYqvkpqCaMpPv6FL8M8Si8WpUPcCQjzZBpG4pAVZfL
-   py67Jj/Jgs+UH56w2/E2QaNY2VT8g5C/JvltsRb8rwqIoYURYCNbzQTf+
-   PAln3jqPtgx21PpfR5cdk6t57+k63Rd6zHqInEeEsAlk/neEgvRotFMNs
-   6JxrMq/bEhoIVJ2CtAN1VwxtnHaJDRHND9tXPXbwr/QPfiXEq8O1s6zhZ
-   g==;
-IronPort-SDR: urxJVJLCyDd+mDzSGckJeoLkOuwP6O5lINwU6xqk4bUtlIYsAdByprxJV2ucVoFngoUO1DuDvj
- ImPQrM80AgLGnNmcd0vzZbQ5g4v3PAmW5+rX46GK8kSkUettoSt6jj6OKdIj2DU2To8ttVZUC/
- x1wXq78gX35lkqnsiBNunbiScWxIlO92jcJF2s1zdTMnA6aaFDY9C7liuesiIgygymKSGAT+/f
- e8y5A53f/VFzfTlcvizhzGi9Cx82l09GE3Xh38ydTDH+R8momFComWtt7SYzgSwgdz7KQhbG5I
- emU=
-X-IronPort-AV: E=Sophos;i="5.69,412,1571673600"; 
-   d="scan'208";a="128589171"
-Received: from mail-bl2nam02lp2054.outbound.protection.outlook.com (HELO NAM02-BL2-obe.outbound.protection.outlook.com) ([104.47.38.54])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Jan 2020 13:56:09 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a14rCi9/ieKdpjGWaxIGjBKSYakqKmM3WF2g5xbW61k/nhhyHZUSj6PqyHw3ILVrmDaXtSRBz8AMpEqz5heHHzKYKAdiMbq37PdwxxdK07+cfccSUvNz9GhomLLBtckMRaJOLxEcT5mMcEc5FqTYYhanRMNaHSGtL3gztyWGlfe7zetJ6IBLqVx0I7VhhesAL6GOFBEgTUSKFpIw8K2SsTrdnFla7Kgg4LXDFlK2dmnOlyLLSUfWo4h9gSGBLBTiy2VqPkZPsHIgHU/Z3U8qIDx1q1zY1kd9ablNPKNM+/je6RhS6HSCxQ8I6ZDFtcrlGLCCzmjVCGDoiBO3guJyLA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=koKtRxADV1R/sFPrSbfoc5b/Ra0klyuwVaKAmAjcrVg=;
- b=AOtW0mejbgVBKFvTOCkB6jUscpfyVnA9cRvzBqIQDrr29AUW+WxPrlLPtjZStUUxJiMXPWLXOjI4jBeOR8u1b2qE6+4jpg2Pr03xJeUwA+MAWXTGQlbrS521Bn17PxSmxnVuqzWfSqWw5z+cZ4Yi6dSpNdPwJHQppNjzlH0OGirdbn0b6i9x3zP0LEK0lNLRuYM+M1dG3RM4cAcYSM1TWewQjMVYGFp8alTCT8MluAXkgH16RByWWnDXdL32q8TaDg3xKXY3mJ2KyEhm25UbtkyUQfqD26bUK5SXNQO8giO+r/cqO70tlKb00dK/q+Tzz2pcJyzR4NM2Vh3WsdL2BQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=koKtRxADV1R/sFPrSbfoc5b/Ra0klyuwVaKAmAjcrVg=;
- b=NXA76IVNpbd10F3/3ogFw298B78g4y1QBMp6HyUWQDoCUfFIzgPPptUcLD9sy/yJwVnx9T+nvxWxsl4N9BtmGdkhqTysd+N6FNC+RNxjI61To3WV4tU8kkbK8RqpR5QKnyQnIf6oSAJOLnkTbZOCrLrkrJq7TVse3kum2UZwubM=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB4104.namprd04.prod.outlook.com (52.135.216.11) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2623.9; Thu, 9 Jan 2020 05:56:07 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::cd8e:d1de:e661:a61%5]) with mapi id 15.20.2602.018; Thu, 9 Jan 2020
- 05:56:07 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>, "hare@suse.de" <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Stephen Bates <sbates@raithlin.com>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "frederick.knight@netapp.com" <frederick.knight@netapp.com>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Thread-Index: AQHVxYZFlOEpmvYia0KWnm3aEM0giQ==
-Date:   Thu, 9 Jan 2020 05:56:07 +0000
-Message-ID: <BYAPR04MB581697B0367321CBAD04F9C4E7390@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <BYAPR04MB5749820C322B40C7DBBBCA02863F0@BYAPR04MB5749.namprd04.prod.outlook.com>
- <fda88fd3-2d75-085e-ca15-a29f89c1e781@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.5]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 30013d1d-c0d6-4932-3369-08d794c89eca
-x-ms-traffictypediagnostic: BYAPR04MB4104:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB4104C06BB1FB727ECDBD2DD4E7390@BYAPR04MB4104.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 02778BF158
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(366004)(346002)(39860400002)(396003)(376002)(199004)(189003)(53546011)(110136005)(26005)(33656002)(5660300002)(7696005)(7416002)(81156014)(316002)(9686003)(91956017)(186003)(6506007)(66446008)(54906003)(86362001)(55016002)(66556008)(66946007)(66476007)(81166006)(52536014)(966005)(64756008)(76116006)(8936002)(45080400002)(2906002)(4326008)(8676002)(71200400001)(478600001);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4104;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: VbVaehMrledWPt6yMkpUavA4DRfF9v7kg8nwoeYLBvRzhHJQwjy0xq3obGRFeWS/l9yjYZbsiLc2nJ4M0JVu3fzd0bGWjCbhyHyWNZ2xtrK/V3+oAsJZABh93B3H7wUIFk5YpqgmtAmf51/albk1WyP/G64SO6inCPXB7CEmOXq7JwMlnDKIyCaKNzhuT4Gdm4KjRJ5cKxFFBHyVTz0WedvPihsFFNP+NQ7PUQVYnGGUdApOYOsV6Ig1G8yEXkC4Y0lZ+c0mdu5oML02g2e7b9nFBeipLI386BnR6WHr4f/JzPTx9BD6bkos8iNHmQ82Wfip5Krca5v+CxzJ3UDV8iHzf2o3RbiUcsH6P071vf7LUK8jFwRpTEgrIfZnB4AaoA4q1cceNl+SGh8vgMudJFI6qmc3IFGa5U7KCHWB+KhWy299Fv+x6smk9nl354IKWyCAJqKjI/UJcPfW7RICTFhfZ6dnG2LAEubY+QHxhD2MvYl4lSBkFHAYhRPIfFiezXm9WWugz0iFVPbuS1YD+g==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728190AbgAIHF7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 02:05:59 -0500
+Received: from mx2.suse.de ([195.135.220.15]:57488 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726541AbgAIHF6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Jan 2020 02:05:58 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 282CBAC1C;
+        Thu,  9 Jan 2020 07:05:56 +0000 (UTC)
+Subject: Re: [PATCH v2 08/32] elx: libefc: Generic state machine framework
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20191220223723.26563-1-jsmart2021@gmail.com>
+ <20191220223723.26563-9-jsmart2021@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <238ab98f-eb1b-7f24-b4eb-7d8f002520da@suse.de>
+Date:   Thu, 9 Jan 2020 08:05:55 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 30013d1d-c0d6-4932-3369-08d794c89eca
-X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2020 05:56:07.3216
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rGijyZy3owj+ys5nDb+xMAafJee9QabF9eFAn1SghlwLoSOilMql7s4jL+lDmEiKIneg/szVFeQl/2Wrjsn9FQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4104
+In-Reply-To: <20191220223723.26563-9-jsmart2021@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/01/09 12:19, Bart Van Assche wrote:=0A=
-> On 2020-01-07 10:14, Chaitanya Kulkarni wrote:=0A=
->> * Current state of the work :-=0A=
->> -----------------------------------------------------------------------=
-=0A=
->>=0A=
->> With [3] being hard to handle arbitrary DM/MD stacking without=0A=
->> splitting the command in two, one for copying IN and one for copying=0A=
->> OUT. Which is then demonstrated by the [4] why [3] it is not a suitable=
-=0A=
->> candidate. Also, with [4] there is an unresolved problem with the=0A=
->> two-command approach about how to handle changes to the DM layout=0A=
->> between an IN and OUT operations.=0A=
-> =0A=
-> Was this last discussed during the 2018 edition of LSF/MM (see also=0A=
-> https://www.spinics.net/lists/linux-block/msg24986.html)? Has anyone=0A=
-> taken notes during that session? I haven't found a report of that=0A=
-> session in the official proceedings (https://lwn.net/Articles/752509/).=
-=0A=
-=0A=
-Yes, I think it was discussed but I do not think much progress has been=0A=
-made. With NVMe simple copy added to the potential targets, I think it=0A=
-is worthwhile to have this discussion again and come up with a clear plan.=
-=0A=
-=0A=
-> =0A=
-> Thanks,=0A=
-> =0A=
-> Bart.=0A=
-> =0A=
-> =0A=
-> This is my own collection with two year old notes about copy offloading=
-=0A=
-> for the Linux Kernel:=0A=
-> =0A=
-> Potential Users=0A=
-> * All dm-kcopyd users, e.g. dm-cache-target, dm-raid1, dm-snap, dm-thin,=
-=0A=
->   dm-writecache and dm-zoned.=0A=
-> * Local filesystems like BTRFS, f2fs and bcachefs: garbage collection=0A=
->   and RAID, at least if RAID is supported by the filesystem. Note: the=0A=
->   BTRFS_IOC_CLONE_RANGE ioctl is no longer supported. Applications=0A=
->   should use FICLONERANGE instead.=0A=
-> * Network filesystems, e.g. NFS. Copying at the server side can reduce=0A=
->   network traffic significantly.=0A=
-> * Linux SCSI initiator systems connected to SAN systems such that=0A=
->   copying can happen locally on the storage array. XCOPY is widely used=
-=0A=
->   for provisioning virtual machine images.=0A=
-> * Copy offloading in NVMe fabrics using PCIe peer-to-peer communication.=
-=0A=
-> =0A=
-> Requirements=0A=
-> * The block layer must gain support for XCOPY. The new XCOPY API must=0A=
->   support asynchronous operation such that users of this API are not=0A=
->   blocked while the XCOPY operation is in progress.=0A=
-> * Copying must be supported not only within a single storage device but=
-=0A=
->   also between storage devices.=0A=
-> * The SCSI sd driver must gain support for XCOPY.=0A=
-> * A user space API must be added and that API must support asynchronous=
-=0A=
->   (non-blocking) operation.=0A=
-> * The block layer XCOPY primitive must be support by the device mapper.=
-=0A=
-> =0A=
-> SCSI Extended Copy (ANSI T10 SPC)=0A=
-> The SCSI commands that support extended copy operations are:=0A=
-> * POPULATE TOKEN + WRITE USING TOKEN.=0A=
-> * EXTENDED COPY(LID1/4) + RECEIVE COPY STATUS(LID1/4). LID1 stands for a=
-=0A=
->   List Identifier length of 1 byte and LID4 stands for a List Identifier=
-=0A=
->   length of 4 bytes.=0A=
-> * SPC-3 and before define EXTENDED COPY(LID1) (83h/00h). SPC-4 added=0A=
->   EXTENDED COPY(LID4) (83h/01h).=0A=
-> =0A=
-> Existing Users and Implementations of SCSI XCOPY=0A=
-> * VMware, which uses XCOPY (with a one-byte length ID, aka LID1).=0A=
-> * Microsoft, which uses ODX (aka LID4 because it has a four-byte length=
-=0A=
->   ID).=0A=
-> * Storage vendors all support XCOPY, but ODX support is growing.=0A=
-> =0A=
-> Block Layer Notes=0A=
-> The block layer supports the following types of block drivers:=0A=
-> * blk-mq request-based drivers.=0A=
-> * make_request drivers.=0A=
-> =0A=
-> Notes:=0A=
-> With each request a list of bio's is associated.=0A=
-> Since submit_bio() only accepts a single bio and not a bio list this=0A=
-> means that all make_request block drivers process one bio at a time.=0A=
-> =0A=
-> Device Mapper=0A=
-> The device mapper core supports bio processing and blk-mq requests. The=
-=0A=
-> function in the device mapper that creates a request queue is called=0A=
-> alloc_dev(). That function not only allocates a request queue but also=0A=
-> associates a struct gendisk with the request queue. The=0A=
-> DM_DEV_CREATE_CMD ioctl triggers a call of alloc_dev(). The=0A=
-> DM_TABLE_LOAD ioctl loads a table definition. Loading a table definition=
-=0A=
-> causes the type of a dm device to be set to one of the following:=0A=
-> DM_TYPE_NONE;=0A=
-> DM_TYPE_BIO_BASED;=0A=
-> DM_TYPE_REQUEST_BASED;=0A=
-> DM_TYPE_MQ_REQUEST_BASED;=0A=
-> DM_TYPE_DAX_BIO_BASED;=0A=
-> DM_TYPE_NVME_BIO_BASED.=0A=
-> =0A=
-> Device mapper drivers must implement target_type.map(),=0A=
-> target_type.clone_and_map_rq() or both. .map() maps a bio list.=0A=
-> .clone_and_map_rq() maps a single request. The multipath and error=0A=
-> device mapper drivers implement both methods. All other dm drivers only=
-=0A=
-> implement the .map() method.=0A=
-> =0A=
-> Device mapper bio processing=0A=
-> submit_bio()=0A=
-> -> generic_make_request()=0A=
->   -> dm_make_request()=0A=
->     -> __dm_make_request()=0A=
->       -> __split_and_process_bio()=0A=
->         -> __split_and_process_non_flush()=0A=
->           -> __clone_and_map_data_bio()=0A=
->           -> alloc_tio()=0A=
->           -> clone_bio()=0A=
->             -> bio_advance()=0A=
->           -> __map_bio()=0A=
-> =0A=
-> Existing Linux Copy Offload APIs=0A=
-> * The FICLONERANGE ioctl. From <include/linux/fs.h>:=0A=
->   #define FICLONERANGE _IOW(0x94, 13, struct file_clone_range)=0A=
-> =0A=
-> struct file_clone_range {=0A=
-> 	__s64 src_fd;=0A=
-> 	__u64 src_offset;=0A=
-> 	__u64 src_length;=0A=
-> 	__u64 dest_offset;=0A=
-> };=0A=
-> =0A=
-> * The sendfile() system call. sendfile() copies a given number of bytes=
-=0A=
->   from one file to another. The output offset is the offset of the=0A=
->   output file descriptor. The input offset is either the input file=0A=
->   descriptor offset or can be specified explicitly. The sendfile()=0A=
->   prototype is as follows:=0A=
->   ssize_t sendfile(int out_fd, int in_fd, off_t *ppos, size_t count);=0A=
->   ssize_t sendfile64(int out_fd, int in_fd, loff_t *ppos, size_t count);=
-=0A=
-> * The copy_file_range() system call. See also vfs_copy_file_range(). Its=
-=0A=
->   prototype is as follows:=0A=
->   ssize_t copy_file_range(int fd_in, loff_t *off_in, int fd_out,=0A=
->      loff_t *off_out, size_t len, unsigned int flags);=0A=
-> * The splice() system call is not appropriate for adding extended copy=0A=
->   functionality since it copies data from or to a pipe. Its prototype is=
-=0A=
->   as follows:=0A=
->   long splice(struct file *in, loff_t *off_in, struct file *out,=0A=
->     loff_t *off_out, size_t len, unsigned int flags);=0A=
-> =0A=
-> Existing Linux Block Layer Copy Offload Implementations=0A=
-> * Martin Petersen's REQ_COPY bio, where source and destination block=0A=
->   device are both specified in the same bio. Only works for block=0A=
->   devices. Does not work for files. Adds a new blocking ioctl() for=0A=
->   XCOPY from user space.=0A=
-> * Mikulas Patocka's approach: separate REQ_OP_COPY_WRITE and=0A=
->   REQ_OP_COPY_READ operations. These are sent individually down stacked=
-=0A=
->   drivers and are paired by the driver at the bottom of the stack.=0A=
-> =0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On 12/20/19 11:36 PM, James Smart wrote:
+> This patch starts the population of the libefc library.
+> The library will contain common tasks usable by a target or initiator
+> driver. The library will also contain a FC discovery state machine
+> interface.
+> 
+> This patch creates the library directory and adds definitions
+> for the discovery state machine interface.
+> 
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> ---
+>  drivers/scsi/elx/libefc/efc_sm.c | 213 +++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/elx/libefc/efc_sm.h | 140 +++++++++++++++++++++++++
+>  2 files changed, 353 insertions(+)
+>  create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
+>  create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
+> 
+> diff --git a/drivers/scsi/elx/libefc/efc_sm.c b/drivers/scsi/elx/libefc/efc_sm.c
+> new file mode 100644
+> index 000000000000..90e60c0e6638
+> --- /dev/null
+> +++ b/drivers/scsi/elx/libefc/efc_sm.c
+> @@ -0,0 +1,213 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +/*
+> + * Generic state machine framework.
+> + */
+> +#include "efc.h"
+> +#include "efc_sm.h"
+> +
+> +const char *efc_sm_id[] = {
+> +	"common",
+> +	"domain",
+> +	"login"
+> +};
+> +
+> +/**
+> + * efc_sm_post_event() - Post an event to a context.
+> + *
+> + * @ctx: State machine context
+> + * @evt: Event to post
+> + * @data: Event-specific data (if any)
+> + */
+> +int
+> +efc_sm_post_event(struct efc_sm_ctx *ctx,
+> +		  enum efc_sm_event evt, void *data)
+> +{
+> +	if (ctx->current_state) {
+> +		ctx->current_state(ctx, evt, data);
+> +		return 0;
+> +	} else {
+> +		return -1;
+> +	}
+> +}
+> +
+> +void
+> +efc_sm_transition(struct efc_sm_ctx *ctx,
+> +		  void *(*state)(struct efc_sm_ctx *,
+> +				 enum efc_sm_event, void *), void *data)
+> +
+> +{
+> +	if (ctx->current_state == state) {
+> +		efc_sm_post_event(ctx, EFC_EVT_REENTER, data);
+> +	} else {
+> +		efc_sm_post_event(ctx, EFC_EVT_EXIT, data);
+> +		ctx->current_state = state;
+> +		efc_sm_post_event(ctx, EFC_EVT_ENTER, data);
+> +	}
+> +}
+> +
+> +void
+> +efc_sm_disable(struct efc_sm_ctx *ctx)
+> +{
+> +	ctx->current_state = NULL;
+> +}
+> +
+> +const char *efc_sm_event_name(enum efc_sm_event evt)
+> +{
+> +	switch (evt) {
+> +	case EFC_EVT_ENTER:
+> +		return "EFC_EVT_ENTER";
+> +	case EFC_EVT_REENTER:
+> +		return "EFC_EVT_REENTER";
+> +	case EFC_EVT_EXIT:
+> +		return "EFC_EVT_EXIT";
+> +	case EFC_EVT_SHUTDOWN:
+> +		return "EFC_EVT_SHUTDOWN";
+> +	case EFC_EVT_RESPONSE:
+> +		return "EFC_EVT_RESPONSE";
+> +	case EFC_EVT_RESUME:
+> +		return "EFC_EVT_RESUME";
+> +	case EFC_EVT_TIMER_EXPIRED:
+> +		return "EFC_EVT_TIMER_EXPIRED";
+> +	case EFC_EVT_ERROR:
+> +		return "EFC_EVT_ERROR";
+> +	case EFC_EVT_SRRS_ELS_REQ_OK:
+> +		return "EFC_EVT_SRRS_ELS_REQ_OK";
+> +	case EFC_EVT_SRRS_ELS_CMPL_OK:
+> +		return "EFC_EVT_SRRS_ELS_CMPL_OK";
+> +	case EFC_EVT_SRRS_ELS_REQ_FAIL:
+> +		return "EFC_EVT_SRRS_ELS_REQ_FAIL";
+> +	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
+> +		return "EFC_EVT_SRRS_ELS_CMPL_FAIL";
+> +	case EFC_EVT_SRRS_ELS_REQ_RJT:
+> +		return "EFC_EVT_SRRS_ELS_REQ_RJT";
+> +	case EFC_EVT_NODE_ATTACH_OK:
+> +		return "EFC_EVT_NODE_ATTACH_OK";
+> +	case EFC_EVT_NODE_ATTACH_FAIL:
+> +		return "EFC_EVT_NODE_ATTACH_FAIL";
+> +	case EFC_EVT_NODE_FREE_OK:
+> +		return "EFC_EVT_NODE_FREE_OK";
+> +	case EFC_EVT_ELS_REQ_TIMEOUT:
+> +		return "EFC_EVT_ELS_REQ_TIMEOUT";
+> +	case EFC_EVT_ELS_REQ_ABORTED:
+> +		return "EFC_EVT_ELS_REQ_ABORTED";
+> +	case EFC_EVT_ABORT_ELS:
+> +		return "EFC_EVT_ABORT_ELS";
+> +	case EFC_EVT_ELS_ABORT_CMPL:
+> +		return "EFC_EVT_ELS_ABORT_CMPL";
+> +
+> +	case EFC_EVT_DOMAIN_FOUND:
+> +		return "EFC_EVT_DOMAIN_FOUND";
+> +	case EFC_EVT_DOMAIN_ALLOC_OK:
+> +		return "EFC_EVT_DOMAIN_ALLOC_OK";
+> +	case EFC_EVT_DOMAIN_ALLOC_FAIL:
+> +		return "EFC_EVT_DOMAIN_ALLOC_FAIL";
+> +	case EFC_EVT_DOMAIN_REQ_ATTACH:
+> +		return "EFC_EVT_DOMAIN_REQ_ATTACH";
+> +	case EFC_EVT_DOMAIN_ATTACH_OK:
+> +		return "EFC_EVT_DOMAIN_ATTACH_OK";
+> +	case EFC_EVT_DOMAIN_ATTACH_FAIL:
+> +		return "EFC_EVT_DOMAIN_ATTACH_FAIL";
+> +	case EFC_EVT_DOMAIN_LOST:
+> +		return "EFC_EVT_DOMAIN_LOST";
+> +	case EFC_EVT_DOMAIN_FREE_OK:
+> +		return "EFC_EVT_DOMAIN_FREE_OK";
+> +	case EFC_EVT_DOMAIN_FREE_FAIL:
+> +		return "EFC_EVT_DOMAIN_FREE_FAIL";
+> +	case EFC_EVT_HW_DOMAIN_REQ_ATTACH:
+> +		return "EFC_EVT_HW_DOMAIN_REQ_ATTACH";
+> +	case EFC_EVT_HW_DOMAIN_REQ_FREE:
+> +		return "EFC_EVT_HW_DOMAIN_REQ_FREE";
+> +	case EFC_EVT_ALL_CHILD_NODES_FREE:
+> +		return "EFC_EVT_ALL_CHILD_NODES_FREE";
+> +
+> +	case EFC_EVT_SPORT_ALLOC_OK:
+> +		return "EFC_EVT_SPORT_ALLOC_OK";
+> +	case EFC_EVT_SPORT_ALLOC_FAIL:
+> +		return "EFC_EVT_SPORT_ALLOC_FAIL";
+> +	case EFC_EVT_SPORT_ATTACH_OK:
+> +		return "EFC_EVT_SPORT_ATTACH_OK";
+> +	case EFC_EVT_SPORT_ATTACH_FAIL:
+> +		return "EFC_EVT_SPORT_ATTACH_FAIL";
+> +	case EFC_EVT_SPORT_FREE_OK:
+> +		return "EFC_EVT_SPORT_FREE_OK";
+> +	case EFC_EVT_SPORT_FREE_FAIL:
+> +		return "EFC_EVT_SPORT_FREE_FAIL";
+> +	case EFC_EVT_SPORT_TOPOLOGY_NOTIFY:
+> +		return "EFC_EVT_SPORT_TOPOLOGY_NOTIFY";
+> +	case EFC_EVT_HW_PORT_ALLOC_OK:
+> +		return "EFC_EVT_HW_PORT_ALLOC_OK";
+> +	case EFC_EVT_HW_PORT_ALLOC_FAIL:
+> +		return "EFC_EVT_HW_PORT_ALLOC_FAIL";
+> +	case EFC_EVT_HW_PORT_ATTACH_OK:
+> +		return "EFC_EVT_HW_PORT_ATTACH_OK";
+> +	case EFC_EVT_HW_PORT_REQ_ATTACH:
+> +		return "EFC_EVT_HW_PORT_REQ_ATTACH";
+> +	case EFC_EVT_HW_PORT_REQ_FREE:
+> +		return "EFC_EVT_HW_PORT_REQ_FREE";
+> +	case EFC_EVT_HW_PORT_FREE_OK:
+> +		return "EFC_EVT_HW_PORT_FREE_OK";
+> +
+> +	case EFC_EVT_NODE_FREE_FAIL:
+> +		return "EFC_EVT_NODE_FREE_FAIL";
+> +
+> +	case EFC_EVT_ABTS_RCVD:
+> +		return "EFC_EVT_ABTS_RCVD";
+> +
+> +	case EFC_EVT_NODE_MISSING:
+> +		return "EFC_EVT_NODE_MISSING";
+> +	case EFC_EVT_NODE_REFOUND:
+> +		return "EFC_EVT_NODE_REFOUND";
+> +	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
+> +		return "EFC_EVT_SHUTDOWN_IMPLICIT_LOGO";
+> +	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
+> +		return "EFC_EVT_SHUTDOWN_EXPLICIT_LOGO";
+> +
+> +	case EFC_EVT_ELS_FRAME:
+> +		return "EFC_EVT_ELS_FRAME";
+> +	case EFC_EVT_PLOGI_RCVD:
+> +		return "EFC_EVT_PLOGI_RCVD";
+> +	case EFC_EVT_FLOGI_RCVD:
+> +		return "EFC_EVT_FLOGI_RCVD";
+> +	case EFC_EVT_LOGO_RCVD:
+> +		return "EFC_EVT_LOGO_RCVD";
+> +	case EFC_EVT_PRLI_RCVD:
+> +		return "EFC_EVT_PRLI_RCVD";
+> +	case EFC_EVT_PRLO_RCVD:
+> +		return "EFC_EVT_PRLO_RCVD";
+> +	case EFC_EVT_PDISC_RCVD:
+> +		return "EFC_EVT_PDISC_RCVD";
+> +	case EFC_EVT_FDISC_RCVD:
+> +		return "EFC_EVT_FDISC_RCVD";
+> +	case EFC_EVT_ADISC_RCVD:
+> +		return "EFC_EVT_ADISC_RCVD";
+> +	case EFC_EVT_RSCN_RCVD:
+> +		return "EFC_EVT_RSCN_RCVD";
+> +	case EFC_EVT_SCR_RCVD:
+> +		return "EFC_EVT_SCR_RCVD";
+> +	case EFC_EVT_ELS_RCVD:
+> +		return "EFC_EVT_ELS_RCVD";
+> +	case EFC_EVT_LAST:
+> +		return "EFC_EVT_LAST";
+> +	case EFC_EVT_FCP_CMD_RCVD:
+> +		return "EFC_EVT_FCP_CMD_RCVD";
+> +
+> +	case EFC_EVT_GIDPT_DELAY_EXPIRED:
+> +		return "EFC_EVT_GIDPT_DELAY_EXPIRED";
+> +
+> +	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
+> +		return "EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY";
+> +	case EFC_EVT_NODE_DEL_INI_COMPLETE:
+> +		return "EFC_EVT_NODE_DEL_INI_COMPLETE";
+> +	case EFC_EVT_NODE_DEL_TGT_COMPLETE:
+> +		return "EFC_EVT_NODE_DEL_TGT_COMPLETE";
+> +
+> +	default:
+> +		break;
+> +	}
+> +	return "unknown";
+> +}
+Please convert into a lookup array.
+
+> diff --git a/drivers/scsi/elx/libefc/efc_sm.h b/drivers/scsi/elx/libefc/efc_sm.h
+> new file mode 100644
+> index 000000000000..c76352d1d527
+> --- /dev/null
+> +++ b/drivers/scsi/elx/libefc/efc_sm.h
+> @@ -0,0 +1,140 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + *
+> + */
+> +
+> +/**
+> + * Generic state machine framework declarations.
+> + */
+> +
+> +#ifndef _EFC_SM_H
+> +#define _EFC_SM_H
+> +
+> +/**
+> + * State Machine (SM) IDs.
+> + */
+> +enum {
+> +	EFC_SM_COMMON = 0,
+> +	EFC_SM_DOMAIN,
+> +	EFC_SM_PORT,
+> +	EFC_SM_LOGIN,
+> +	EFC_SM_LAST
+> +};
+> +
+> +#define EFC_SM_EVENT_SHIFT		24
+> +#define EFC_SM_EVENT_START(id)		((id) << EFC_SM_EVENT_SHIFT)
+> +
+> +extern const char *efc_sm_id[];
+> +
+Curious.
+You define 4 state machine IDs, yet declare names for only 3 of them.
+Omission?
+
+And I would probably use a lookup function for the state machines; this
+'const char *efc_sm_id[]' looks a bit lonely. Plus I'm always wary of
+variable sized global const ...
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
