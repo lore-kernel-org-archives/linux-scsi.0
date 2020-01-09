@@ -7,69 +7,70 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B92C33CA2
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 00:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC34DC33C9E
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0BBB2067D
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 00:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 825B42067D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:00:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QEeSrtfq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nq8prrDk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727737AbgAIA70 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 19:59:26 -0500
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:50358 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726913AbgAIA70 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 19:59:26 -0500
-Received: by mail-pj1-f52.google.com with SMTP id r67so373076pjb.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 16:59:26 -0800 (PST)
+        id S1727721AbgAIBAq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 20:00:46 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:45237 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727417AbgAIBAq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:00:46 -0500
+Received: by mail-pg1-f196.google.com with SMTP id b9so2352429pgk.12
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 17:00:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jTWfbYrEYGVlon/9KpjQwSnZYuWAbbzZ8xybmNY1fkA=;
-        b=QEeSrtfqZUtKlV3rfkfmwyma3CMewuiw3XmBI+tUp6oSmR+5by/CIwgDaydUBoySp9
-         W7NN6iiIbJ0lBeJcJ6sOS6j+EspYxyzxSDuLyab6AuWa1JG4tDDX7ugz/xPiNLOQ80w1
-         OfhSYT1B5f7CAK3+u02BBhpBsh28rs2gwafTT6WWAFhb3qwQFUGKbr/5Wuzrh4g4A03v
-         Wndvm2i+MJMP+hrknPHRDgkEyE/qDefhi4U6/eTsaYHEbBAkiRRVbepZBIFEByVDayTT
-         6GimCnCr4K1VZNgbgZfoGMCSOShaC5lme9nY6TzN+pqQ8ipWF2dPyVtnFzz+gtQDxwIY
-         MYFQ==
+        bh=QY2NYmXUFId5SsRG9cb6th6bxlBJQRphgvwk8nVeBM8=;
+        b=nq8prrDkbn5m+zt8QXqGy1QQ2XVfMu6EoWwOsSNRJVd1HnmmqWk941nPvMsKRn8K/2
+         0P7dsO79URKm7BXIj2krudNVfdnF0Tm/2I/Rw3CxWEjM8u0nlVOez4gQsS9Nc8bfkcsd
+         qJNmXHQgcI+XS2i8+PA1jN3NL9hOA+Cm4+p84S/6DyjRdBk5HwRMjSwHm/j8vPRfSCqP
+         7inFyiRHG2wLrKII2HeLgtlZWyzP5IlOUP5ryArdrERn3HQE8+5c1CSPvnaJ6BxH9CRP
+         jcXxNTRDqFUyd9evH1Nw8JJNnD/gSL2VXxZRF0Bx+ceya8K/7u0888cCdQWyGQMoocdR
+         QhJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=jTWfbYrEYGVlon/9KpjQwSnZYuWAbbzZ8xybmNY1fkA=;
-        b=UA0CjRqIhpP7iFG1nnfIMrgCCI6JR1LiD/chAVW0xpmweTSmC9M3tvDEJQYmDWnvIS
-         Bgy9AKvDpH40kjEIrXUVJl3GENjod/1xZIMvmM7hoOQESYT+0Ex6peK3utZ4b424APSB
-         M5lUMmDs2mNg8n1SIM83g8glY9wIocrxrDQNS1L29/tiTJTK93eNshUPW7YgigbmyJhn
-         xF7xrHZEOTpELSiSQw0qhS56Plr8koTnEz2HIJxmuBUCTntyc6sIb3Le5gm+5ahqfjcy
-         bQnbDQIHmhgDJoBl57GE2dfZnF3fn9GPMJSay8m8YWazJxL/WrvMaBYpOkZOTYtiruxq
-         07mg==
-X-Gm-Message-State: APjAAAUvosS/GJgVAtu12lqC9huAEmX2j2G2aJIHPhN9qXNX8k4tJ2Xf
-        byffbUeOXLbox+cHzuhWhP8=
-X-Google-Smtp-Source: APXvYqyJWyHsEiltE4t88o1FxYE74Y67pffBaEDHOXejM0cjKCXAB7wHIkwFbjZ717GS+sB1+Hk42Q==
-X-Received: by 2002:a17:902:6b8c:: with SMTP id p12mr8471637plk.290.1578531565734;
-        Wed, 08 Jan 2020 16:59:25 -0800 (PST)
+        bh=QY2NYmXUFId5SsRG9cb6th6bxlBJQRphgvwk8nVeBM8=;
+        b=ArE4vBJyMTQxbI7LzxNM8YQwgKZDN3jHx81HBsMeWvBWa/ewrZcJn3LxKs5txLXvdD
+         +VW3bci6g6tphRe092Vku/5knkPXnTEur4oG13RG0G+KX16ADBE8ApUblv6fRSyVtyD9
+         9q/ZzcZ+9Q19KtmXvXkI89H+mfqAEP1I2RK3Zoi6bnZbJOkClJuClFC2G+YzChg8hykk
+         S3BIMbPCA9xu+stF1HffZRVhKq35vzb9c3nbhhGlH1PHKhu4DFA67bmeo3TGwlXnB3S+
+         ARMlQ4O2N6JjMhJeLwHErxcB7ok+Vp0T23NkIsNH2fsop1y5IeQLSA2Umd/ryxdyP3qZ
+         yE3A==
+X-Gm-Message-State: APjAAAV61ZPquBVXEcqhiyQhnLrCXQbGkvK/mib+/d+JTAJXWxOuVCp7
+        Cdlcoaj2pAGzr3hDhKDNpsg=
+X-Google-Smtp-Source: APXvYqyyKiTE5Kcf31JBLChf9SiHCwJNFidm5OhW78pFeSv+LK+lz57ZMxL/ZNMyWswcs6KMmYlCwQ==
+X-Received: by 2002:a65:6088:: with SMTP id t8mr8338302pgu.329.1578531645491;
+        Wed, 08 Jan 2020 17:00:45 -0800 (PST)
 Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id o14sm4464730pgm.67.2020.01.08.16.59.24
+        by smtp.gmail.com with ESMTPSA id a19sm486832pju.11.2020.01.08.17.00.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Jan 2020 16:59:25 -0800 (PST)
-Subject: Re: [PATCH v2 01/32] elx: libefc_sli: SLI-4 register offsets and
- field definitions
+        Wed, 08 Jan 2020 17:00:45 -0800 (PST)
+Subject: Re: [PATCH v2 02/32] elx: libefc_sli: SLI Descriptors and Queue
+ entries
 To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
-        Ram Vegesna <ram.vegesna@broadcom.com>
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        James Smart <jsmart2021@gmail.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-2-jsmart2021@gmail.com>
- <3d984e91-49f6-dd8f-ed00-82fcfdc9b95e@suse.de>
+ <20191220223723.26563-3-jsmart2021@gmail.com>
+ <af4ccd39-dab9-b2bf-f77c-954b1fe3725d@suse.de>
 From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <07ff4a51-8a58-d3f4-fe67-0ff8a7e74b04@gmail.com>
-Date:   Wed, 8 Jan 2020 16:59:23 -0800
+Message-ID: <52021d23-a65d-0c6a-8ea2-bb95c005ac45@gmail.com>
+Date:   Wed, 8 Jan 2020 17:00:43 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <3d984e91-49f6-dd8f-ed00-82fcfdc9b95e@suse.de>
+In-Reply-To: <af4ccd39-dab9-b2bf-f77c-954b1fe3725d@suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,22 +79,27 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/7/2020 11:11 PM, Hannes Reinecke wrote:
-> Please be consistent here wrt _SHIFT and _MASK statements.
-> Either have them spelled out (as you do in this case), but then please
-> change the first hunk to avoid an explicit shift.
-> Or keep the style in the first hunk, and change the _MASK values here
-> to use the _SHIFT values
-> (ie SLI4_EQCQ_ID_HI_MASK = 0x1F << SLI4_EQCQ_ID_HI_SHIFT).
-> I don't mind either way, but keep it consistent.
+On 1/7/2020 11:24 PM, Hannes Reinecke wrote:
+> I am really not a big fan of anonymous enums, especially not if they are
+> scoped for specific structures.
+> Can you please avoid the use of anonymous enums, and name them according
+> to the structure where they are indended to be used?
+> Ideally the structure should reference named enums directly, but I do
+> agree that this it not always possible or desired.
+> But we should at least name them accordingly to give the developer a
+> hint where these values are expected to occur.
 > 
-> Cheers,
+> Eg in the above case
 > 
-> Hannes
+> enum sli4_sge_flags {
+> 
+> or similar would make the intended usage clearer.
 > 
 
-We will do the change to spell out the _MASK directly.
+We will add names to the enums as suggested.
 
 Thanks
 
 -- james
+
+
