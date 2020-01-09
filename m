@@ -2,95 +2,99 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35131C33C9E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 386F4C33C9E
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:21:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 003B1206ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:16:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE72B206F0
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 01:21:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="IJpiYTLn";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="IOJqlnNA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbgAIBQO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 20:16:14 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40678 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726654AbgAIBQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Jan 2020 20:16:14 -0500
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 1A07780C708DD0E74F7B;
-        Thu,  9 Jan 2020 09:16:13 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
- 14.3.439.0; Thu, 9 Jan 2020 09:16:07 +0800
-From:   chenxiang <chenxiang66@hisilicon.com>
-To:     <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH] scsi: sd: Clear sdkp->protection_type when the disk isn't DIF in sd_read_protection_type()
-Date:   Thu, 9 Jan 2020 09:12:24 +0800
-Message-ID: <1578532344-101668-1-git-send-email-chenxiang66@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+        id S1727739AbgAIBVf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 20:21:35 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51138 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726654AbgAIBVf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 20:21:35 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 1D8B88EE0CE;
+        Wed,  8 Jan 2020 17:21:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1578532895;
+        bh=m3X8rjKDjjbks1Z8gsCeZue8Yi/hRu8t70pTwI6/tZE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=IJpiYTLn9QWx/5Bgv3p6CzxTZF2jiQ89kxHQQ2VxMwgt/y0rXbCwt5jVwDluge0bX
+         PmnSNkF31hO7rgluxCcCQrbctwWeUKh4vjcEl6yrJvYjFBd1fZi2BHflgx7hotdUZ1
+         ZnGw6NPSezaRaPxMTciDczRb3ezkox8JaflbBsrc=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 2YICj8MWdSMO; Wed,  8 Jan 2020 17:21:34 -0800 (PST)
+Received: from jarvis.lan (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 5BCA68EE079;
+        Wed,  8 Jan 2020 17:21:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1578532894;
+        bh=m3X8rjKDjjbks1Z8gsCeZue8Yi/hRu8t70pTwI6/tZE=;
+        h=Subject:From:To:Cc:Date:From;
+        b=IOJqlnNAQ4AaXV4J8EY2n8meg8CfYcHYbSmFPXHlFVpqM+mFyzv9gDCdDkgLPbpSe
+         31NdjkSSRzqp3fln1/9r7eRpWlWwbzUWyLMqOGOXyosdHnw9llYs2V2/Zbal7CG1TY
+         gVuxok5W9N4TEHbil9k23s2pZTjN7+d423Bb2R5Y=
+Message-ID: <1578532892.3852.10.camel@HansenPartnership.com>
+Subject: [PATCH] enclosure: Fix stale device oops with hot replug
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Luo Jiaxing <luojiaxing@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Date:   Wed, 08 Jan 2020 17:21:32 -0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Doing an add/remove/add on a SCSI device in an enclosure leads to an
+oops caused by poisoned values in the enclosure device list pointers.
+The reason is because we are keeping the enclosure device across the
+enclosed device add/remove/add but the current code is doing a
+device_add/device_del/device_add on it.  This is the wrong thing to do
+in sysfs, so fix it by not doing a device_del on the enclosure device
+simply because of a hot remove of the drive in the slot.
 
-For a SAS disk, format it as a SAS DIF disk, then if re-format SAS DIF disk to normal
-SAS disk,it will report errors as follows:
-...
-[root@localhost ~]# [77380.678276] sd 4:0:0:0: [sda] tag#67 UNKNOWN(0x2003) Result:
-hostbyte=0x07 driverbyte=0x00
-[77380.686511] sd 4:0:0:0: [sda] tag#67 CDB: opcode=0x28 28 20 00 00 00 00 00 00 08 00
-[77380.694139] blk_update_request: I/O error, dev sda, sector 0 op 0x0:(READ) flags 0x0
-phys_seg 1 prio class 0
-[77380.703929] Buffer I/O error on dev sda, logical block 0, async page read
-[77380.790267] sd 4:0:0:0: [sda] tag#72 UNKNOWN(0x2003) Result: hostbyte=0x07
-driverbyte=0x00
-[77380.798496] sd 4:0:0:0: [sda] tag#72 CDB: opcode=0x28 28 20 00 00 00 00 00 00 08 00
-[77380.806123] blk_update_request: I/O error, dev sda, sector 0 op 0x0:(READ) flags 0x0
-phys_seg 1 prio class 0
-[77380.815907] Buffer I/O error on dev sda, logical block 0, async page read
-[77380.822676]  sda: unable to read partition table
-...
-
-When re-format SAS disk to normal SAS disk, it will send command READ_CAPACITY to get
-protection info. In function sd_read_protection_type(), it checks whether the disk is
-DIF from protection info, if not directly return. But if the disk was DIF disk, so
-sdkp->protection_type of the disk is still be set. So the system will mistake the normal
-disk as DIF disk(from CDB log 0x20 indicates there is DIF info with data).)
-To avoid the issue, clear sdkp->protection_type when the disk is not DIF disk in
-function sd_read_protection_type().
-
-Fixes: fe542396da73 ("[SCSI] sd: Ensure we correctly disable devices with unknown protection type")
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Fixes: 43d8eb9cfd0a ("[SCSI] ses: add support for enclosure component hot removal")
+Reported-by: Luo Jiaxing 
+Tested-by: John Garry 
+Signed-off-by: James Bottomley 
 ---
- drivers/scsi/sd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/misc/enclosure.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index cea6259..65ce10c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2211,8 +2211,10 @@ static int sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer
- 	u8 type;
- 	int ret = 0;
- 
--	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0)
-+	if (scsi_device_protection(sdp) == 0 || (buffer[12] & 1) == 0) {
-+		sdkp->protection_type = 0;
- 		return ret;
-+	}
- 
- 	type = ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 = Type 1 */
- 
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 6d27ccfe0680..3c2d405bc79b 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -406,10 +406,9 @@ int enclosure_remove_device(struct enclosure_device *edev, struct device *dev)
+ 		cdev = &edev->component[i];
+ 		if (cdev->dev == dev) {
+ 			enclosure_remove_links(cdev);
+-			device_del(&cdev->cdev);
+ 			put_device(dev);
+ 			cdev->dev = NULL;
+-			return device_add(&cdev->cdev);
++			return 0;
+ 		}
+ 	}
+ 	return -ENODEV;
 -- 
-2.8.1
+2.16.4
 
