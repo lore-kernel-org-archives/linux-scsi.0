@@ -2,33 +2,33 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9317C33CA1
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 09:12:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91BA9C3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 09:13:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84A9E206ED
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 09:12:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 729B2206ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 09:13:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729102AbgAIJMw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 04:12:52 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46376 "EHLO mx2.suse.de"
+        id S1729167AbgAIJNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 04:13:23 -0500
+Received: from mx2.suse.de ([195.135.220.15]:47864 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728902AbgAIJMv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Jan 2020 04:12:51 -0500
+        id S1728793AbgAIJNX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Jan 2020 04:13:23 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D7318BD46;
-        Thu,  9 Jan 2020 09:12:49 +0000 (UTC)
-Subject: Re: [PATCH v2 13/32] elx: libefc: Fabric node state machine
- interfaces
+        by mx2.suse.de (Postfix) with ESMTP id D3608AD14;
+        Thu,  9 Jan 2020 09:13:21 +0000 (UTC)
+Subject: Re: [PATCH v2 18/32] elx: efct: RQ buffer, memory pool allocation and
+ deallocation APIs
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-14-jsmart2021@gmail.com>
+ <20191220223723.26563-19-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -74,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <80396088-47d2-37f9-239d-87f5b0d86026@suse.de>
-Date:   Thu, 9 Jan 2020 09:34:39 +0100
+Message-ID: <8ab15459-d0e7-f484-23c0-79ba4e77280a@suse.de>
+Date:   Thu, 9 Jan 2020 10:13:21 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-14-jsmart2021@gmail.com>
+In-Reply-To: <20191220223723.26563-19-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,26 +89,62 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 12/20/19 11:37 PM, James Smart wrote:
-> This patch continues the libefc library population.
+> This patch continues the efct driver population.
 > 
-> This patch adds library interface definitions for:
-> - Fabric node initialization and logins.
-> - Name/Directory Services node.
-> - Fabric Controller node to process rscn events.
-> 
-> These are all interactions with remote ports that correspond
-> to well-known fabric entities
+> This patch adds driver definitions for:
+> RQ data buffer allocation and deallocate.
+> Memory pool allocation and deallocation APIs.
+> Mailbox command submission and completion routines.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->  drivers/scsi/elx/libefc/efc_fabric.c | 1762 ++++++++++++++++++++++++++++++++++
->  drivers/scsi/elx/libefc/efc_fabric.h |  116 +++
->  2 files changed, 1878 insertions(+)
->  create mode 100644 drivers/scsi/elx/libefc/efc_fabric.c
->  create mode 100644 drivers/scsi/elx/libefc/efc_fabric.h
+>  drivers/scsi/elx/efct/efct_hw.c    | 355 +++++++++++++++++++++++++++++
+>  drivers/scsi/elx/efct/efct_hw.h    |   7 +
+>  drivers/scsi/elx/efct/efct_utils.c | 446 +++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/elx/efct/efct_utils.h |  83 +++++++
+>  4 files changed, 891 insertions(+)
+>  create mode 100644 drivers/scsi/elx/efct/efct_utils.c
+>  create mode 100644 drivers/scsi/elx/efct/efct_utils.h
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+[ .. ]
+> diff --git a/drivers/scsi/elx/efct/efct_utils.c b/drivers/scsi/elx/efct/efct_utils.c
+> new file mode 100644
+> index 000000000000..1d28be633a41
+> --- /dev/null
+> +++ b/drivers/scsi/elx/efct/efct_utils.c
+> @@ -0,0 +1,446 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +#include "efct_driver.h"
+> +#include "efct_utils.h"
+> +
+> +#define DEFAULT_SLAB_LEN		(64 * 1024)
+> +
+> +struct pool_hdr {
+> +	struct list_head list_entry;
+> +};
+> +
+> +struct efct_array {
+> +	void *os;
+> +
+> +	u32 size;
+> +	u32 count;
+> +
+> +	u32 n_rows;
+> +	u32 elems_per_row;
+> +	u32 bytes_per_row;
+> +
+> +	void **array_rows;
+> +	u32 array_rows_len;
+> +};
+> +
+I really wonder if xarray wouldn't be better suited here.
+Have you checked?
 
 Cheers,
 
