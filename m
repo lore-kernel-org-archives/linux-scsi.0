@@ -6,132 +6,332 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB32CC32771
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DE00C33CA2
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:55:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7FAB2072A
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77FB02075D
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:55:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728003AbgAILrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 06:47:52 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51148 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727701AbgAILrw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Jan 2020 06:47:52 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 02463B1D78;
-        Thu,  9 Jan 2020 11:47:50 +0000 (UTC)
-Subject: Re: [PATCH v2 32/32] elx: efct: Tie into kernel Kconfig and build
- process
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
-        Ram Vegesna <ram.vegesna@broadcom.com>
-References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-33-jsmart2021@gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <376756c5-2961-5c59-06c6-0f5b9aa18e57@suse.de>
-Date:   Thu, 9 Jan 2020 12:47:46 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1729833AbgAILzQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 06:55:16 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2240 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729130AbgAILzQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Jan 2020 06:55:16 -0500
+Received: from lhreml709-cah.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 271D8110F57AB2ABB4E0;
+        Thu,  9 Jan 2020 11:55:14 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml709-cah.china.huawei.com (10.201.108.32) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 9 Jan 2020 11:55:13 +0000
+Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Thu, 9 Jan 2020
+ 11:55:13 +0000
+Subject: Re: [PATCH 09/11] megaraid_sas: switch fusion adapters to MQ
+To:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        <linux-block@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
+References: <20191202153914.84722-1-hare@suse.de>
+ <20191202153914.84722-10-hare@suse.de>
+ <CAL2rwxqjiRTuZ0ntfaHHzG7z-VmxRQCXYyxZeX9eDMrmX+dbGg@mail.gmail.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <339f089f-26aa-1cbe-416b-67809ea6791f@huawei.com>
+Date:   Thu, 9 Jan 2020 11:55:12 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-33-jsmart2021@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAL2rwxqjiRTuZ0ntfaHHzG7z-VmxRQCXYyxZeX9eDMrmX+dbGg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.43]
+X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/20/19 11:37 PM, James Smart wrote:
-> This final patch ties the efct driver into the kernel Kconfig
-> and build linkages in the drivers/scsi directory.
+On 09/12/2019 10:10, Sumit Saxena wrote:
+> On Mon, Dec 2, 2019 at 9:09 PM Hannes Reinecke <hare@suse.de> wrote:
+>>
+>> Fusion adapters can steer completions to individual queues, and
+>> we now have support for shared host-wide tags.
+>> So we can enable multiqueue support for fusion adapters and
+>> drop the hand-crafted interrupt affinity settings.
 > 
-> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> ---
->  drivers/scsi/Kconfig  | 2 ++
->  drivers/scsi/Makefile | 1 +
->  2 files changed, 3 insertions(+)
+> Hi Hannes,
 > 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 90cf4691b8c3..78822ae45457 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1176,6 +1176,8 @@ config SCSI_LPFC_DEBUG_FS
->  	  This makes debugging information from the lpfc driver
->  	  available via the debugfs filesystem.
->  
-> +source "drivers/scsi/elx/Kconfig"
-> +
->  config SCSI_SIM710
->  	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
->  	depends on EISA && SCSI
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index c00e3dd57990..844db573283c 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -86,6 +86,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o
->  obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
->  obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
->  obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
-> +obj-$(CONFIG_SCSI_EFCT)		+= elx/
->  obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
->  obj-$(CONFIG_SCSI_CHELSIO_FCOE)	+= csiostor/
->  obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
+> Ming Lei also proposed similar changes in megaraid_sas driver some
+> time back and it had resulted in performance drop-
+> https://patchwork.kernel.org/patch/10969511/
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> So, we will do some performance tests with this patch and update you.
+> 
 
-Cheers,
+Hi Sumit,
 
-Hannes
--- 
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+I was wondering if you had a chance to do this test yet?
+
+It would be good to know, so we can try to progress this work.
+
+@Hannes, This shared sbitmap work now seems to conflict with Jens work 
+on tag caching 
+https://lore.kernel.org/linux-block/20200107163037.31745-1-axboe@kernel.dk/T/#t, 
+but should be resolvable AFAICS (v1, anyway, which I checked). Anway, we 
+seem to have stalled, which I feared...
+
+Thanks,
+John
+
+> Thanks,
+> Sumit
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>   drivers/scsi/megaraid/megaraid_sas.h        |  1 -
+>>   drivers/scsi/megaraid/megaraid_sas_base.c   | 65 +++++++++--------------------
+>>   drivers/scsi/megaraid/megaraid_sas_fusion.c | 14 ++++---
+>>   3 files changed, 28 insertions(+), 52 deletions(-)
+>>
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+>> index bd8184072bed..844ea2d6dbb8 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas.h
+>> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+>> @@ -2261,7 +2261,6 @@ enum MR_PERF_MODE {
+>>
+>>   struct megasas_instance {
+>>
+>> -       unsigned int *reply_map;
+>>          __le32 *producer;
+>>          dma_addr_t producer_h;
+>>          __le32 *consumer;
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+>> index a4bc81479284..9d0d74e3d491 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>> @@ -37,6 +37,7 @@
+>>   #include <linux/poll.h>
+>>   #include <linux/vmalloc.h>
+>>   #include <linux/irq_poll.h>
+>> +#include <linux/blk-mq-pci.h>
+>>
+>>   #include <scsi/scsi.h>
+>>   #include <scsi/scsi_cmnd.h>
+>> @@ -3106,6 +3107,19 @@ megasas_bios_param(struct scsi_device *sdev, struct block_device *bdev,
+>>          return 0;
+>>   }
+>>
+>> +static int megasas_map_queues(struct Scsi_Host *shost)
+>> +{
+>> +       struct megasas_instance *instance;
+>> +
+>> +       instance = (struct megasas_instance *)shost->hostdata;
+>> +
+>> +       if (!instance->smp_affinity_enable)
+>> +               return 0;
+>> +
+>> +       return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+>> +                       instance->pdev, instance->low_latency_index_start);
+>> +}
+>> +
+>>   static void megasas_aen_polling(struct work_struct *work);
+>>
+>>   /**
+>> @@ -3414,9 +3428,11 @@ static struct scsi_host_template megasas_template = {
+>>          .eh_timed_out = megasas_reset_timer,
+>>          .shost_attrs = megaraid_host_attrs,
+>>          .bios_param = megasas_bios_param,
+>> +       .map_queues = megasas_map_queues,
+>>          .change_queue_depth = scsi_change_queue_depth,
+>>          .max_segment_size = 0xffffffff,
+>>          .no_write_same = 1,
+>> +       .host_tagset = 1,
+>>   };
+>>
+>>   /**
+>> @@ -5695,34 +5711,6 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
+>>                  instance->use_seqnum_jbod_fp = false;
+>>   }
+>>
+>> -static void megasas_setup_reply_map(struct megasas_instance *instance)
+>> -{
+>> -       const struct cpumask *mask;
+>> -       unsigned int queue, cpu, low_latency_index_start;
+>> -
+>> -       low_latency_index_start = instance->low_latency_index_start;
+>> -
+>> -       for (queue = low_latency_index_start; queue < instance->msix_vectors; queue++) {
+>> -               mask = pci_irq_get_affinity(instance->pdev, queue);
+>> -               if (!mask)
+>> -                       goto fallback;
+>> -
+>> -               for_each_cpu(cpu, mask)
+>> -                       instance->reply_map[cpu] = queue;
+>> -       }
+>> -       return;
+>> -
+>> -fallback:
+>> -       queue = low_latency_index_start;
+>> -       for_each_possible_cpu(cpu) {
+>> -               instance->reply_map[cpu] = queue;
+>> -               if (queue == (instance->msix_vectors - 1))
+>> -                       queue = low_latency_index_start;
+>> -               else
+>> -                       queue++;
+>> -       }
+>> -}
+>> -
+>>   /**
+>>    * megasas_get_device_list -   Get the PD and LD device list from FW.
+>>    * @instance:                  Adapter soft state
+>> @@ -6021,12 +6009,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+>>                                          instance->is_rdpq = (scratch_pad_1 & MR_RDPQ_MODE_OFFSET) ?
+>>                                                                  1 : 0;
+>>
+>> -                               if (instance->adapter_type >= INVADER_SERIES &&
+>> -                                   !instance->msix_combined) {
+>> -                                       instance->msix_load_balance = true;
+>> -                                       instance->smp_affinity_enable = false;
+>> -                               }
+>> -
+>>                                  /* Save 1-15 reply post index address to local memory
+>>                                   * Index 0 is already saved from reg offset
+>>                                   * MPI2_REPLY_POST_HOST_INDEX_OFFSET
+>> @@ -6145,8 +6127,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
+>>                          goto fail_init_adapter;
+>>          }
+>>
+>> -       megasas_setup_reply_map(instance);
+>> -
+>>          dev_info(&instance->pdev->dev,
+>>                  "current msix/online cpus\t: (%d/%d)\n",
+>>                  instance->msix_vectors, (unsigned int)num_online_cpus());
+>> @@ -6780,6 +6760,9 @@ static int megasas_io_attach(struct megasas_instance *instance)
+>>          host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
+>>          host->max_lun = MEGASAS_MAX_LUN;
+>>          host->max_cmd_len = 16;
+>> +       if (instance->adapter_type != MFI_SERIES && instance->msix_vectors > 0)
+>> +               host->nr_hw_queues = instance->msix_vectors -
+>> +                       instance->low_latency_index_start;
+>>
+>>          /*
+>>           * Notify the mid-layer about the new controller
+>> @@ -6947,11 +6930,6 @@ static inline int megasas_alloc_mfi_ctrl_mem(struct megasas_instance *instance)
+>>    */
+>>   static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
+>>   {
+>> -       instance->reply_map = kcalloc(nr_cpu_ids, sizeof(unsigned int),
+>> -                                     GFP_KERNEL);
+>> -       if (!instance->reply_map)
+>> -               return -ENOMEM;
+>> -
+>>          switch (instance->adapter_type) {
+>>          case MFI_SERIES:
+>>                  if (megasas_alloc_mfi_ctrl_mem(instance))
+>> @@ -6968,8 +6946,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
+>>
+>>          return 0;
+>>    fail:
+>> -       kfree(instance->reply_map);
+>> -       instance->reply_map = NULL;
+>>          return -ENOMEM;
+>>   }
+>>
+>> @@ -6982,7 +6958,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
+>>    */
+>>   static inline void megasas_free_ctrl_mem(struct megasas_instance *instance)
+>>   {
+>> -       kfree(instance->reply_map);
+>>          if (instance->adapter_type == MFI_SERIES) {
+>>                  if (instance->producer)
+>>                          dma_free_coherent(&instance->pdev->dev, sizeof(u32),
+>> @@ -7645,8 +7620,6 @@ megasas_resume(struct pci_dev *pdev)
+>>          if (rval < 0)
+>>                  goto fail_reenable_msix;
+>>
+>> -       megasas_setup_reply_map(instance);
+>> -
+>>          if (instance->adapter_type != MFI_SERIES) {
+>>                  megasas_reset_reply_desc(instance);
+>>                  if (megasas_ioc_init_fusion(instance)) {
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> index e301458bcbae..bae96b82bb10 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>> @@ -2731,6 +2731,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+>>          struct MR_PRIV_DEVICE *mrdev_priv;
+>>          struct RAID_CONTEXT *rctx;
+>>          struct RAID_CONTEXT_G35 *rctx_g35;
+>> +       u32 tag = blk_mq_unique_tag(scp->request);
+>>
+>>          device_id = MEGASAS_DEV_INDEX(scp);
+>>
+>> @@ -2837,7 +2838,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+>>                                      instance->msix_vectors));
+>>          else
+>>                  cmd->request_desc->SCSIIO.MSIxIndex =
+>> -                       instance->reply_map[raw_smp_processor_id()];
+>> +                       blk_mq_unique_tag_to_hwq(tag);
+>>
+>>          if (instance->adapter_type >= VENTURA_SERIES) {
+>>                  /* FP for Optimal raid level 1.
+>> @@ -3080,6 +3081,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+>>          u16 pd_index = 0;
+>>          u16 os_timeout_value;
+>>          u16 timeout_limit;
+>> +       u32 tag = blk_mq_unique_tag(scmd->request);
+>>          struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+>>          struct RAID_CONTEXT     *pRAID_Context;
+>>          struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+>> @@ -3169,7 +3171,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+>>                                      instance->msix_vectors));
+>>          else
+>>                  cmd->request_desc->SCSIIO.MSIxIndex =
+>> -                       instance->reply_map[raw_smp_processor_id()];
+>> +                       blk_mq_unique_tag_to_hwq(tag);
+>>
+>>          if (!fp_possible) {
+>>                  /* system pd firmware path */
+>> @@ -3373,7 +3375,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+>>   {
+>>          struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
+>>          union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+>> -       u32 index;
+>> +       u32 index, blk_tag, unique_tag;
+>>
+>>          if ((megasas_cmd_type(scmd) == READ_WRITE_LDIO) &&
+>>                  instance->ldio_threshold &&
+>> @@ -3389,7 +3391,9 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+>>                  return SCSI_MLQUEUE_HOST_BUSY;
+>>          }
+>>
+>> -       cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
+>> +       unique_tag = blk_mq_unique_tag(scmd->request);
+>> +       blk_tag = blk_mq_unique_tag_to_tag(unique_tag);
+>> +       cmd = megasas_get_cmd_fusion(instance, blk_tag);
+>>
+>>          if (!cmd) {
+>>                  atomic_dec(&instance->fw_outstanding);
+>> @@ -3430,7 +3434,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+>>           */
+>>          if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
+>>                  r1_cmd = megasas_get_cmd_fusion(instance,
+>> -                               (scmd->request->tag + instance->max_fw_cmds));
+>> +                               (blk_tag + instance->max_fw_cmds));
+>>                  megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
+>>          }
+>>
+>> --
+>> 2.16.4
+>>
+> .
+> 
+
