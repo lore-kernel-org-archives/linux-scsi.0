@@ -2,425 +2,147 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E597C32771
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 03:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D2AC33CA2
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 04:01:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5970B20656
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 03:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A9E22077B
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 04:01:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="m5VZti1w";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="g/Uxjdoh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727593AbgAID4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jan 2020 22:56:11 -0500
-Received: from mail-pj1-f53.google.com ([209.85.216.53]:56283 "EHLO
-        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726913AbgAID4L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 22:56:11 -0500
-Received: by mail-pj1-f53.google.com with SMTP id d5so528722pjz.5
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jan 2020 19:56:10 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=GdK3lxzd0opzdFX0LTXN5uwz5VzIFJvCkrvjuvwIPf8=;
-        b=l4DdDvtgcQ8tBebdiGtsJ+GkBGJ9NQaG452O3veGi2JzRGV/rb/c/rx0TnDQM5ws8x
-         p4AClh+1EM7WEqHPmyLWvVGkiwHqKohqloqhNhY03h2Gn7iMPRUaYUOlmr0R3p3h1tez
-         LA8GkbdhAZDiW/eeqvn0pHORtuBx+9oqTzwx0xZd6veE/qUpRb69uAeqpBAumZ9vXQvl
-         HXssmYu94rM5D6dmf0Xg+sT/gAkS4WEEMPp3FC8kCGD68aFO2dbOT5CaKieOv1RCARq/
-         ivjEvqBPQxhgTBcHchRMrwrOniFmQ19jhiSFs0s3V3ZDqU/tCKuvKDYRZ+Ry+jo1igXf
-         /foQ==
-X-Gm-Message-State: APjAAAXsF/Kj6XLnUQJMnYM0/QncLwMldp1acGsyq88eOm9OtylnF2aR
-        FGWWemlf3GbfW4ijeBKcRYU=
-X-Google-Smtp-Source: APXvYqzHLyU78oqg8yY9l4QfsXiEXJnH7Rt5GwiArrn1QR8w4pgNjSUTWDDoeO9wvDieMH0f5RpqJw==
-X-Received: by 2002:a17:902:700b:: with SMTP id y11mr9515070plk.304.1578542170290;
-        Wed, 08 Jan 2020 19:56:10 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:13e0:f4e4:e61b:5262:7ebf? ([2601:647:4000:13e0:f4e4:e61b:5262:7ebf])
-        by smtp.gmail.com with ESMTPSA id s18sm5321514pfh.179.2020.01.08.19.56.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Jan 2020 19:56:09 -0800 (PST)
-Subject: Re: [PATCH v2 24/32] elx: efct: LIO backend interface routines
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     maier@linux.ibm.com, dwagner@suse.de,
-        Ram Vegesna <ram.vegesna@broadcom.com>
-References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-25-jsmart2021@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <a1c547a3-f5b8-54bc-b9e9-5b0ad0786ed3@acm.org>
-Date:   Wed, 8 Jan 2020 19:56:08 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
-MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-25-jsmart2021@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        id S1727882AbgAIEBi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jan 2020 23:01:38 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:57242 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726913AbgAIEBi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jan 2020 23:01:38 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1578542497; x=1610078497;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=q2X9jmwQbWMU27KKRclVafUin1D2CBYuV/1rMw3XHRs=;
+  b=m5VZti1wtqZ6fsRAv2+WW9Q7bX/QJ51ASPKU4FZSXRRiMq/E85CV134p
+   s4leYWjtH2gl+mkcHeatlV86KFpbNcpn3woUjfkB0fZyeQLAl7piWKwcq
+   0UuKFtb535NGdi4DE58l5IIv2rdZ3NjHWoxg3oqi0HG32rRj0dbNL9P0r
+   ZZAS80MH6Q3gG2qvnI+6YWS9NBbI2BtZiSuVOY21rlhl0IUCr59Zzp80+
+   EPwep/OGM06vJ4CIxu42QPbFRQqJUFMM2MqhMM/kIGNWSYH/q6Kz3dQFK
+   bZkMQaQgyu0L+CD6TLbWAuOpGfLBsPgit+407+YsPGf3pNL9Ax0A2wIGd
+   g==;
+IronPort-SDR: iMr6RgvTl9G/66pnBlS7mvHFD+O+vf2JfDLxxn+8xRAF17aPhWChYe+vuvJfCa6BDjn7g5jP8c
+ uO0/s9FXp9oKtUocpYx+/WI62gxpb6u6uAJmU5gEf276m4OQcqPvzdoRfzWJWHyCdnVNrZPXoM
+ eyJEUDid8CbfxaW3mJ5cpYQ1NzZZeo6SMFQpsDl/RN18VGpq8MvcY+QNiWdjQVO3vfXJVHM9lf
+ KQ64PHrui6z6Zlv6Y5aSd0flAdjPDMqbzSJTeApBJtl7abY/5bEXCJsEQqXfxivETw9TXMEqkU
+ 6wc=
+X-IronPort-AV: E=Sophos;i="5.69,412,1571673600"; 
+   d="scan'208";a="127742675"
+Received: from mail-bn8nam11lp2174.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.174])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Jan 2020 12:01:32 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=LZrGsGti18ug3RhCyIX9vfGPasOWIqY66h5PZfs7I3GB06E4Vg6DBv4fAM396IHFm64mnOuLjC8vqB/xKdoNnmjvZBqJTpEzOBJFqd4lNEP6DDdIXyV8Y0tmrdt/3Kc790eSZBbJCu01LSE/We31UsxTCZO9OuW21A8Q1C0wljlduujW6F5K+EycQop4pINTrByF7ieDaNkJjcyBDLNa0UCuuCJPObXLdRZKk9dP2lu4jTzVFZ+kAovao/rMGQSSdN8phDXIsENxCUPkAj9q2ieZ/QpdI21aEUaSVk19x4+nFMPR2/4/U5XkKo+7R/nrKULgLwdDhjqVLeGajNHKDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q2X9jmwQbWMU27KKRclVafUin1D2CBYuV/1rMw3XHRs=;
+ b=bdDb6KWBpPhstectjcvVh1XRoa4o7BB3VlsxkXmGBSlwPJOjUR0zotQOBU06h6ytmIjED/kW+xv8cIKn/+Tg7r1LqnWnAass8ebtb+tztX2A8d2BFff9h2HuWy13SlOzvOBhdTW5U005/x0VJTIZnzToPKjUzB445teTPr0QndOYsEo6EKpT7JZY3W7enUDlfz362Z+tBRGCcm22rh9amcZLY0iM0RZ9vGOIeB0bhd0GoRPHG0nxjH7hbbz+d9DZByF2a/ZtyWuGehmHEJ0pCH9rySpBF9nRYM923d6RbJ9s/QF55nfKsFVmxImdGTcaRu8mIqFeXH5BZVLiPUM+0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q2X9jmwQbWMU27KKRclVafUin1D2CBYuV/1rMw3XHRs=;
+ b=g/Uxjdoh/ISEHUc+pQC+TOFvpTZAWbsEa7rhYZWLfwy5SmvSEaGuoY1vbSPEn6gFq1gJvBPf8lZQ5qmRdA9/zQNJXD497QU0ICmB9lpo1XbaPQUR/aw3NSXdJpHJ6qWLSmBGe7WzrWTH/vms33JBr++h6bKaWmIgMNtC64cpvUo=
+Received: from BYAPR04MB5749.namprd04.prod.outlook.com (20.179.57.21) by
+ BYAPR04MB4919.namprd04.prod.outlook.com (52.135.235.139) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2602.12; Thu, 9 Jan 2020 04:01:31 +0000
+Received: from BYAPR04MB5749.namprd04.prod.outlook.com
+ ([fe80::a8ea:4ba9:cb57:e90f]) by BYAPR04MB5749.namprd04.prod.outlook.com
+ ([fe80::a8ea:4ba9:cb57:e90f%5]) with mapi id 15.20.2602.016; Thu, 9 Jan 2020
+ 04:01:31 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>, "hare@suse.de" <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Stephen Bates <sbates@raithlin.com>,
+        "msnitzer@redhat.com" <msnitzer@redhat.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        "rwheeler@redhat.com" <rwheeler@redhat.com>,
+        "frederick.knight@netapp.com" <frederick.knight@netapp.com>,
+        Matias Bjorling <Matias.Bjorling@wdc.com>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Thread-Topic: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Thread-Index: AQHVxYZFlOEpmvYia0KWnm3aEM0giQ==
+Date:   Thu, 9 Jan 2020 04:01:30 +0000
+Message-ID: <BYAPR04MB5749B973CBE3F29822B289C086390@BYAPR04MB5749.namprd04.prod.outlook.com>
+References: <BYAPR04MB5749820C322B40C7DBBBCA02863F0@BYAPR04MB5749.namprd04.prod.outlook.com>
+ <fda88fd3-2d75-085e-ca15-a29f89c1e781@acm.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chaitanya.Kulkarni@wdc.com; 
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: cb329f34-5929-4495-18d2-08d794b89c35
+x-ms-traffictypediagnostic: BYAPR04MB4919:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB49193C14D9E5E4B5AB28151586390@BYAPR04MB4919.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-forefront-prvs: 02778BF158
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(366004)(39860400002)(136003)(346002)(376002)(189003)(199004)(66476007)(76116006)(4326008)(66946007)(52536014)(7416002)(2906002)(8936002)(316002)(55016002)(5660300002)(64756008)(9686003)(66446008)(66556008)(478600001)(86362001)(6506007)(4744005)(110136005)(33656002)(186003)(81156014)(81166006)(966005)(26005)(7696005)(71200400001)(54906003)(8676002);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4919;H:BYAPR04MB5749.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 3ZXksYqzQpQ1M0oemZhFHjRcK6FLR8ejWUuQtqv57mk1/Qp8f3Dr9s7sIcfB8T/WtIxpvRiuE026gPCJcn0xRArqi55k3AwjbnCwhsUO3ojs39OjMd/2pnf2q8Mv7gcKbaadh8QitM0si+yviRXW+D2Fw4CYFr57n+9K+rYb2qSFcbcjSqVIO9uEhYdrMNG4jFRTuXF4ZD7yVtFYIjhM924kEeB8jXN4Xa/N7hcuwDuXWL6FqtrXG6EodbvMjj3HSAmTdiFW2CTcw0O+G0X4OeCj/v4mGn9mn9mZM5gQUCg8EgmO6MVms2RtMROmDEl/TaBCeDaLHttyNncPACDD3y89LNWZQPfc9GVzIKV5/x5AvBwHC0AaMEmJffC3b4fjTM5ZdqC2AD31Wl5015rMOF2D/Jb6P39iEjM2W50CpWf6oH3K/CR1jvqJw65pDHvgtKpJb3sKvUCB9871/DeqP34FA9F/Se8LtHpdOGdLYh8+56GHMauYGJSukX4parpyqeXZeomqFrYdr9HfRhou1w==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cb329f34-5929-4495-18d2-08d794b89c35
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2020 04:01:30.9854
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CNqH9GbHs5JjMO7IGspscsFSpoEE1xgP1NC5X2wX7TXnLsLQ1MFh8LDd5Ei6BkQT3IQhDPBTbLvxOLvtPsRb2Xt4DgoMDDx5ixOGCCP3w7I=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4919
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2019-12-20 14:37, James Smart wrote:
-> +#include <scsi/scsi_tcq.h>
-
-Including the scsi_tcq.h header file is only useful in source files that
-implement initiator functionality. This source file implements SCSI
-target functionality. Is this include really necessary?
-
-> +static struct workqueue_struct *lio_wq;
-> +
-> +static int
-> +efct_format_wwn(char *str, size_t len, char *pre, u64 wwn)
-> +{
-> +	u8 a[8];
-> +
-> +	put_unaligned_be64(wwn, a);
-> +	return snprintf(str, len,
-> +			"%s%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-> +			pre, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
-> +}
-
-Can the type of 'pre' be changed from 'char *' into 'const char *'?
-
-Can %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x be changed into %8phC?
-
-> +static int
-> +efct_lio_parse_wwn(const char *name, u64 *wwp, u8 npiv)
-> +{
-> +	int a[8], num;
-> +	u8 b[8];
-> +
-> +	if (npiv) {
-> +		num = sscanf(name, "%02x%02x%02x%02x%02x%02x%02x%02x",
-> +			     &a[0], &a[1], &a[2], &a[3], &a[4],
-> +				 &a[5], &a[6], &a[7]);
-> +	} else {
-> +		num = sscanf(name,
-> +			     "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-> +			     &a[0], &a[1], &a[2], &a[3], &a[4],
-> +			     &a[5], &a[6], &a[7]);
-> +	}
-> +
-> +	if (num != 8)
-> +		return -EINVAL;
-> +
-> +	for (num = 0; num < 8; ++num)
-> +		b[num] = (u8) a[num];
-> +
-> +	*wwp = get_unaligned_be64(b);
-> +	return 0;
-> +}
-
-If the %02x sscanf specifiers are changed into %02hhx, can the int a[8]
-array be left out?
-
-> +static ssize_t
-> +efct_lio_npiv_tpg_enable_store(struct config_item *item, const char *page,
-> +			       size_t count)
-> +{
-> +	struct se_portal_group *se_tpg = to_tpg(item);
-> +	struct efct_lio_tpg *tpg = container_of(se_tpg,
-> +						struct efct_lio_tpg, tpg);
-> +	struct efct_lio_vport *lio_vport = tpg->vport;
-> +	struct efct_lio_vport_data_t *vport_data;
-> +	struct efct *efct;
-> +	struct efc *efc;
-> +	int ret = -1;
-> +	unsigned long op, flags = 0;
-> +
-> +	if (kstrtoul(page, 0, &op) < 0)
-> +		return -EINVAL;
-> +
-> +	if (!lio_vport) {
-> +		pr_err("Unable to find vport\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	efct = lio_vport->efct;
-> +	efc = efct->efcport;
-> +
-> +	if (op == 1) {
-> +		atomic_set(&tpg->enabled, 1);
-> +		efc_log_debug(efct, "enable portal group %d\n", tpg->tpgt);
-> +
-> +		if (efc->domain) {
-> +			ret = efc_sport_vport_new(efc->domain,
-> +						  lio_vport->npiv_wwpn,
-> +						  lio_vport->npiv_wwnn,
-> +						  U32_MAX, false, true,
-> +						  NULL, NULL, true);
-> +			if (ret != 0) {
-> +				efc_log_err(efct, "Failed to create Vport\n");
-> +				return ret;
-> +			}
-> +			return count;
-> +		}
-> +
-> +		vport_data = kmalloc(sizeof(*vport_data), GFP_KERNEL);
-> +		if (!vport_data)
-> +			return ret;
-> +
-> +		memset(vport_data, 0, sizeof(struct efct_lio_vport_data_t));
-> +		vport_data->phy_wwpn            = lio_vport->wwpn;
-> +		vport_data->vport_wwpn          = lio_vport->npiv_wwpn;
-> +		vport_data->vport_wwnn          = lio_vport->npiv_wwnn;
-> +		vport_data->target_mode         = 1;
-> +		vport_data->initiator_mode      = 0;
-> +		vport_data->lio_vport           = lio_vport;
-> +
-> +		/* There is no domain.  Add to pending list. When the
-> +		 * domain is created, the driver will create the vport.
-> +		 */
-> +		efc_log_debug(efct, "link down, move to pending\n");
-> +		spin_lock_irqsave(&efct->tgt_efct.efct_lio_lock, flags);
-> +		INIT_LIST_HEAD(&vport_data->list_entry);
-> +		list_add_tail(&vport_data->list_entry,
-> +			      &efct->tgt_efct.vport_pend_list);
-> +		spin_unlock_irqrestore(&efct->tgt_efct.efct_lio_lock, flags);
-> +
-> +	} else if (op == 0) {
-> +		struct efct_lio_vport_data_t *virt_target_data, *next;
-> +
-> +		efc_log_debug(efct, "disable portal group %d\n", tpg->tpgt);
-> +
-> +		atomic_set(&tpg->enabled, 0);
-> +		/* only physical sport should exist, free lio_sport
-> +		 * allocated in efct_lio_make_sport
-> +		 */
-> +		if (efc->domain) {
-> +			efc_sport_vport_del(efct->efcport, efc->domain,
-> +					    lio_vport->npiv_wwpn,
-> +					    lio_vport->npiv_wwnn);
-> +			return count;
-> +		}
-> +		spin_lock_irqsave(&efct->tgt_efct.efct_lio_lock, flags);
-> +		list_for_each_entry_safe(virt_target_data, next,
-> +					 &efct->tgt_efct.vport_pend_list,
-> +					 list_entry) {
-> +			if (virt_target_data->lio_vport == lio_vport) {
-> +				list_del(&virt_target_data->list_entry);
-> +				kfree(virt_target_data);
-> +				break;
-> +			}
-> +		}
-> +		spin_unlock_irqrestore(&efct->tgt_efct.efct_lio_lock, flags);
-> +	} else {
-> +		return -EINVAL;
-> +	}
-> +	return count;
-> +}
-
-I think the above function can return -1. Please make sure that this
-function returns an appropriate error code if something fails.
-
-> +static bool efct_lio_node_is_initiator(struct efc_node *node)
-> +{
-> +	if (!node)
-> +		return 0;
-> +
-> +	if (node->rnode.fc_id && node->rnode.fc_id != FC_FID_FLOGI &&
-> +	    node->rnode.fc_id != FC_FID_DIR_SERV &&
-> +	    node->rnode.fc_id != FC_FID_FCTRL) {
-> +		return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-
-Should return 0 / return 1 perhaps be changed into return false / return
-true?
-
-> +static int  efct_lio_tgt_session_data(struct efct *efct, u64 wwpn,
-> +				      char *buf, int size)
-> +{
-> +	struct efc_sli_port *sport = NULL;
-> +	struct efc_node *node = NULL;
-> +	struct efc *efc = efct->efcport;
-> +	u16 loop_id = 0;
-> +	int off = 0, rc = 0;
-> +
-> +	if (!efc->domain) {
-> +		efc_log_err(efct, "failed to find efct/domain\n");
-> +		return -1;
-> +	}
-> +
-> +	list_for_each_entry(sport, &efc->domain->sport_list, list_entry) {
-> +		if (sport->wwpn != wwpn)
-> +			continue;
-> +		list_for_each_entry(node, &sport->node_list,
-> +				    list_entry) {
-> +			/* Dump only remote NPORT sessions */
-> +			if (!efct_lio_node_is_initiator(node))
-> +				continue;
-> +
-> +			rc = snprintf(buf + off, size - off,
-> +				"0x%016llx,0x%08x,0x%04x\n",
-> +				get_unaligned_be64(node->wwpn),
-> +				node->rnode.fc_id, loop_id);
-> +			if (rc < 0)
-> +				break;
-> +			off += rc;
-> +		}
-> +	}
-> +
-> +	buf[size - 1] = '\0';
-> +	return 0;
-> +}
-
-Does the caller of this function initialize buf[]? If not, should this
-function initialize buf[] before calling snprintf()?
-
-Since snprintf() guarantees '\0' termination I think that the buf[size -
-1] = '\0' at the end of this function can be left out.
-
-> +static int
-> +efct_lio_datamove_done(struct efct_io *io, enum efct_scsi_io_status scsi_status,
-> +		       u32 flags, void *arg);
-
-Can this forward declaration be avoided by reordering the function
-definitions?
-
-> +static struct se_wwn *
-> +efct_lio_npiv_make_sport(struct target_fabric_configfs *tf,
-> +			 struct config_group *group, const char *name)
-> +{
-> +	struct efct_lio_vport *lio_vport;
-> +	struct efct *efct;
-> +	int ret = -1;
-> +	u64 p_wwpn, npiv_wwpn, npiv_wwnn;
-> +	char *p, tmp[128];
-> +	struct efct_lio_vport_list_t *vport_list;
-> +	struct fc_vport *new_fc_vport;
-> +	struct fc_vport_identifiers vport_id;
-> +	unsigned long flags = 0;
-> +
-> +	snprintf(tmp, 128, "%s", name);
-
-How about using sizeof(tmp) instead of hardcoding the array size?
-
-> +	p = strchr(tmp, '@');
-> +
-> +	if (!p) {
-> +		pr_err("Unable to find separator operator(@)\n");
-> +		return ERR_PTR(ret);
-> +	}
-> +	*p++ = '\0';
-
-Can this be changed into a strsep() call?
-
-> +int efct_scsi_tgt_del_device(struct efct *efct)
-> +{
-> +	int rc = 0;
-> +
-> +	flush_workqueue(lio_wq);
-> +
-> +	return rc;
-> +}
-
-Is the 'rc' variable necessary in the above function? Can it be removed?
-
-> +/* Called by the libefc when an initiator goes away. */
-> +int efct_scsi_del_initiator(struct efc *efc, struct efc_node *node,
-> +			int reason)
-> +{
-> +	struct efct *efct = node->efc->base;
-> +	struct efct_lio_wq_data *wq_data;
-> +	int watermark;
-> +	int initiator_count;
-> +
-> +	if (reason == EFCT_SCSI_INITIATOR_MISSING)
-> +		return EFCT_SCSI_CALL_COMPLETE;
-> +
-> +	wq_data = kmalloc(sizeof(*wq_data), GFP_ATOMIC);
-> +	if (!wq_data)
-> +		return EFCT_SCSI_CALL_COMPLETE;
-> +
-> +	memset(wq_data, 0, sizeof(*wq_data));
-> +	wq_data->ptr = node;
-> +	wq_data->efct = efct;
-> +	INIT_WORK(&wq_data->work, efct_lio_remove_session);
-> +	queue_work(lio_wq, &wq_data->work);
-> +
-> +	/*
-> +	 * update IO watermark: decrement initiator count
-> +	 */
-> +	initiator_count =
-> +		atomic_sub_return(1, &efct->tgt_efct.initiator_count);
-> +	watermark = (efct->tgt_efct.watermark_max -
-> +			initiator_count * EFCT_IO_WATERMARK_PER_INITIATOR);
-> +	watermark = (efct->tgt_efct.watermark_min > watermark) ?
-> +			efct->tgt_efct.watermark_min : watermark;
-> +	atomic_set(&efct->tgt_efct.io_high_watermark, watermark);
-> +
-> +	return EFCT_SCSI_CALL_ASYNC;
-> +}
-
-Is the lio_wq work queue really necessary? Could one of the system
-workqueues have been used instead?
-
-> +	ret = kstrtoul(page, 0, &val);					  \
-> +	if (ret < 0) {							  \
-> +		pr_err("kstrtoul() failed with ret: %d\n", ret);	  \
-> +		return -EINVAL;						  \
-> +	}								  \
-
-Has it been considered to return 'ret' (the kstrtoul() return value)
-instead of -EINVAL?
-
-> +	ret = kstrtoul(page, 0, &val);					   \
-> +	if (ret < 0) {							   \
-> +		pr_err("kstrtoul() failed with ret: %d\n", ret);	   \
-> +		return -EINVAL;						   \
-> +	}								   \
-
-Same comment here.
-
-> +#define efct_set_lio_io_state(io, value) (io->tgt_io.state |= value)
-
-Is this macro really useful? Can it be removed?
-
-> +struct efct_scsi_tgt_io {
-> +	struct se_cmd		cmd;
-> +	unsigned char		sense_buffer[TRANSPORT_SENSE_BUFFER];
-> +	int			ddir;
-
-Should 'int' perhaps be changed into 'enum dma_data_direction'?
-
-> +	u8			cdb_opcode;
-
-Does this duplicate cmd.t_task_cdb[0]? If so, is it useful to duplicate
-that value?
-
-> +	u32			cdb_len;
-
-Is this value identical to scsi_command_size(cmd.t_task_cdb)? Is it
-essential to have this member in this data structure?
-
-Thanks,
-
-Bart.
+> Was this last discussed during the 2018 edition of LSF/MM (see also=0A=
+> https://www.spinics.net/lists/linux-block/msg24986.html)? Has anyone=0A=
+> taken notes during that session? I haven't found a report of that=0A=
+> session in the official proceedings (https://lwn.net/Articles/752509/).=
+=0A=
+>=0A=
+> Thanks,=0A=
+>=0A=
+> Bart.=0A=
+>=0A=
+=0A=
+Thanks for sharing this Bart, this is very helpful.=0A=
+=0A=
+I've not found any notes on lwn for the session which was held in 2018.=0A=
+=0A=
+=0A=
