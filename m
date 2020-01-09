@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8C9C32771
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A9ABC3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:16:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E24B2072A
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 179C2206ED
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 07:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728190AbgAIHF7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 02:05:59 -0500
-Received: from mx2.suse.de ([195.135.220.15]:57488 "EHLO mx2.suse.de"
+        id S1728193AbgAIHQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 02:16:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60432 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726541AbgAIHF6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Jan 2020 02:05:58 -0500
+        id S1728152AbgAIHQt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Jan 2020 02:16:49 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 282CBAC1C;
-        Thu,  9 Jan 2020 07:05:56 +0000 (UTC)
-Subject: Re: [PATCH v2 08/32] elx: libefc: Generic state machine framework
+        by mx2.suse.de (Postfix) with ESMTP id AE552ACE3;
+        Thu,  9 Jan 2020 07:16:46 +0000 (UTC)
+Subject: Re: [PATCH v2 09/32] elx: libefc: Emulex FC discovery library APIs
+ and definitions
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-9-jsmart2021@gmail.com>
+ <20191220223723.26563-10-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -73,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <238ab98f-eb1b-7f24-b4eb-7d8f002520da@suse.de>
-Date:   Thu, 9 Jan 2020 08:05:55 +0100
+Message-ID: <6e83124d-a328-fa9f-a615-3f13b6bd34bd@suse.de>
+Date:   Thu, 9 Jan 2020 08:16:46 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-9-jsmart2021@gmail.com>
+In-Reply-To: <20191220223723.26563-10-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,288 +88,283 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/20/19 11:36 PM, James Smart wrote:
-> This patch starts the population of the libefc library.
-> The library will contain common tasks usable by a target or initiator
-> driver. The library will also contain a FC discovery state machine
-> interface.
+On 12/20/19 11:37 PM, James Smart wrote:
+> This patch continues the libefc library population.
 > 
-> This patch creates the library directory and adds definitions
-> for the discovery state machine interface.
+> This patch adds library interface definitions for:
+> - SLI/Local FC port objects
+> - efc_domain_s: FC domain (aka fabric) objects
+> - efc_node_s: FC node (aka remote ports) objects
+> - A sparse vector interface that manages lookup tables
+>   for the objects.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->  drivers/scsi/elx/libefc/efc_sm.c | 213 +++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/elx/libefc/efc_sm.h | 140 +++++++++++++++++++++++++
->  2 files changed, 353 insertions(+)
->  create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
->  create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
+>  drivers/scsi/elx/libefc/efc.h     |  99 ++++++
+>  drivers/scsi/elx/libefc/efc_lib.c | 131 ++++++++
+>  drivers/scsi/elx/libefc/efclib.h  | 637 ++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 867 insertions(+)
+>  create mode 100644 drivers/scsi/elx/libefc/efc.h
+>  create mode 100644 drivers/scsi/elx/libefc/efc_lib.c
+>  create mode 100644 drivers/scsi/elx/libefc/efclib.h
 > 
-> diff --git a/drivers/scsi/elx/libefc/efc_sm.c b/drivers/scsi/elx/libefc/efc_sm.c
+> diff --git a/drivers/scsi/elx/libefc/efc.h b/drivers/scsi/elx/libefc/efc.h
 > new file mode 100644
-> index 000000000000..90e60c0e6638
+> index 000000000000..ef7c83e44167
 > --- /dev/null
-> +++ b/drivers/scsi/elx/libefc/efc_sm.c
-> @@ -0,0 +1,213 @@
+> +++ b/drivers/scsi/elx/libefc/efc.h
+> @@ -0,0 +1,99 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +#ifndef __EFC_H__
+> +#define __EFC_H__
+> +
+> +#include "../include/efc_common.h"
+> +#include "efclib.h"
+> +#include "efc_sm.h"
+> +#include "efc_domain.h"
+> +#include "efc_sport.h"
+> +#include "efc_node.h"
+> +#include "efc_fabric.h"
+> +#include "efc_device.h"
+> +
+> +#define EFC_MAX_REMOTE_NODES			2048
+> +
+> +enum efc_hw_rtn {
+> +	EFC_HW_RTN_SUCCESS = 0,
+> +	EFC_HW_RTN_SUCCESS_SYNC = 1,
+> +	EFC_HW_RTN_ERROR = -1,
+> +	EFC_HW_RTN_NO_RESOURCES = -2,
+> +	EFC_HW_RTN_NO_MEMORY = -3,
+> +	EFC_HW_RTN_IO_NOT_ACTIVE = -4,
+> +	EFC_HW_RTN_IO_ABORT_IN_PROGRESS = -5,
+> +	EFC_HW_RTN_IO_PORT_OWNED_ALREADY_ABORTED = -6,
+> +	EFC_HW_RTN_INVALID_ARG = -7,
+> +};
+> +
+
+(Silent applause for the named enum :-)
+
+> +#define EFC_HW_RTN_IS_ERROR(e) ((e) < 0)
+> +
+> +enum efc_scsi_del_initiator_reason {
+> +	EFC_SCSI_INITIATOR_DELETED,
+> +	EFC_SCSI_INITIATOR_MISSING,
+> +};
+> +
+> +enum efc_scsi_del_target_reason {
+> +	EFC_SCSI_TARGET_DELETED,
+> +	EFC_SCSI_TARGET_MISSING,
+> +};
+> +
+> +#define EFC_SCSI_CALL_COMPLETE			0
+> +#define EFC_SCSI_CALL_ASYNC			1
+> +
+> +#define EFC_FC_ELS_DEFAULT_RETRIES		3
+> +
+> +/* Timeouts */
+> +#define EFC_FC_ELS_SEND_DEFAULT_TIMEOUT		0
+> +#define EFC_FC_FLOGI_TIMEOUT_SEC		5
+> +#define EFC_FC_DOMAIN_SHUTDOWN_TIMEOUT_USEC	30000000
+> +
+> +#define domain_sm_trace(domain) \
+> +	efc_log_debug(domain->efc, "[domain:%s] %-20s %-20s\n", \
+> +		      domain->display_name, __func__, efc_sm_event_name(evt)) \
+> +
+> +#define domain_trace(domain, fmt, ...) \
+> +	efc_log_debug(domain->efc, \
+> +		      "[%s]" fmt, domain->display_name, ##__VA_ARGS__) \
+> +
+> +#define node_sm_trace() \
+> +	efc_log_debug(node->efc, \
+> +		"[%s] %-20s\n", node->display_name, efc_sm_event_name(evt)) \
+> +
+> +#define sport_sm_trace(sport) \
+> +	efc_log_debug(sport->efc, \
+> +		"[%s] %-20s\n", sport->display_name, efc_sm_event_name(evt)) \
+> +
+> +/**
+> + * Sparse Vector API
+> + *
+> + * This is a trimmed down sparse vector implementation tuned to the problem of
+> + * 24-bit FC_IDs. In this case, the 24-bit index value is broken down in three
+> + * 8-bit values. These values are used to index up to three 256 element arrays.
+> + * Arrays are allocated, only when needed. @n @n
+
+@n @n ?
+
+> + * The lookup can complete in constant time (3 indexed array references). @n @n
+> + * A typical use case would be that the fabric/directory FC_IDs would cause two
+> + * rows to be allocated, and the fabric assigned remote nodes would cause two
+> + * rows to be allocated, with the root row always allocated. This gives five
+> + * rows of 256 x sizeof(void*), resulting in 10k.
+> + */
+> +
+> +struct sparse_vector {
+> +	struct efc *efc;
+> +	u32 max_idx;
+> +	void **array;
+> +};
+> +
+> +#define SPV_ROWLEN	256
+> +#define SPV_DIM		3
+> +
+Hmm. One wonders if xarrays wouldn't work better (and simpler to implement).
+
+Have you looked at that?
+
+> +void efc_spv_del(struct sparse_vector *spv);
+> +struct sparse_vector *efc_spv_new(struct efc *efc);
+> +void efc_spv_set(struct sparse_vector *sv, u32 idx, void *value);
+> +void *efc_spv_get(struct sparse_vector *sv, u32 idx);
+> +
+> +#endif /* __EFC_H__ */
+> diff --git a/drivers/scsi/elx/libefc/efc_lib.c b/drivers/scsi/elx/libefc/efc_lib.c
+> new file mode 100644
+> index 000000000000..9ab8538d6e1f
+> --- /dev/null
+> +++ b/drivers/scsi/elx/libefc/efc_lib.c
+> @@ -0,0 +1,131 @@
 > +// SPDX-License-Identifier: GPL-2.0
 > +/*
 > + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
 > + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 > + */
 > +
-> +/*
-> + * Generic state machine framework.
-> + */
+> +#include <linux/module.h>
+> +#include <linux/kernel.h>
 > +#include "efc.h"
-> +#include "efc_sm.h"
 > +
-> +const char *efc_sm_id[] = {
-> +	"common",
-> +	"domain",
-> +	"login"
-> +};
-> +
-> +/**
-> + * efc_sm_post_event() - Post an event to a context.
-> + *
-> + * @ctx: State machine context
-> + * @evt: Event to post
-> + * @data: Event-specific data (if any)
-> + */
-> +int
-> +efc_sm_post_event(struct efc_sm_ctx *ctx,
-> +		  enum efc_sm_event evt, void *data)
+> +int efcport_init(struct efc *efc)
 > +{
-> +	if (ctx->current_state) {
-> +		ctx->current_state(ctx, evt, data);
-> +		return 0;
-> +	} else {
-> +		return -1;
+> +	u32 rc = 0;
+> +
+> +	spin_lock_init(&efc->lock);
+> +	INIT_LIST_HEAD(&efc->vport_list);
+> +
+> +	/* Create Node pool */
+> +	rc = efc_node_create_pool(efc, EFC_MAX_REMOTE_NODES);
+> +	if (rc)
+> +		efc_log_err(efc, "Can't allocate node pool\n");
+> +
+> +	return rc;
+> +}
+> +
+> +void efcport_destroy(struct efc *efc)
+> +{
+> +	efc_node_free_pool(efc);
+> +}
+> +
+> +static void **efc_spv_new_row(u32 rowcount)
+> +{
+> +	return kzalloc(sizeof(void *) * rowcount, GFP_ATOMIC);
+> +}
+> +
+> +/* Recursively delete the rows in this sparse vector */
+> +static void
+> +_efc_spv_del(struct efc *efc, void **a, u32 n, u32 depth)
+> +{
+> +	if (a) {
+> +		if (depth) {
+> +			u32 i;
+> +
+> +			for (i = 0; i < n; i++)
+> +				_efc_spv_del(efc, a[i], n, depth - 1);
+> +
+> +			kfree(a);
+> +		}
 > +	}
 > +}
 > +
 > +void
-> +efc_sm_transition(struct efc_sm_ctx *ctx,
-> +		  void *(*state)(struct efc_sm_ctx *,
-> +				 enum efc_sm_event, void *), void *data)
-> +
+> +efc_spv_del(struct sparse_vector *spv)
 > +{
-> +	if (ctx->current_state == state) {
-> +		efc_sm_post_event(ctx, EFC_EVT_REENTER, data);
-> +	} else {
-> +		efc_sm_post_event(ctx, EFC_EVT_EXIT, data);
-> +		ctx->current_state = state;
-> +		efc_sm_post_event(ctx, EFC_EVT_ENTER, data);
+> +	if (spv) {
+> +		_efc_spv_del(spv->efc, spv->array, SPV_ROWLEN, SPV_DIM);
+> +		kfree(spv);
 > +	}
+> +}
+> +
+> +struct sparse_vector
+> +*efc_spv_new(struct efc *efc)
+> +{
+> +	struct sparse_vector *spv;
+> +	u32 i;
+> +
+> +	spv = kzalloc(sizeof(*spv), GFP_ATOMIC);
+> +	if (!spv)
+> +		return NULL;
+> +
+> +	spv->efc = efc;
+> +	spv->max_idx = 1;
+> +	for (i = 0; i < SPV_DIM; i++)
+> +		spv->max_idx *= SPV_ROWLEN;
+> +
+> +	return spv;
+> +}
+> +
+> +static void
+> +*efc_spv_new_cell(struct sparse_vector *sv, u32 idx, bool alloc_new_rows)
+> +{
+> +	void **p;
+> +	u32 a = (idx >> 16) & 0xff;
+> +	u32 b = (idx >>  8) & 0xff;
+> +	u32 c = (idx >>  0) & 0xff;
+> +
+> +	if (idx >= sv->max_idx)
+> +		return NULL;
+> +
+> +	if (!sv->array) {
+> +		sv->array = (alloc_new_rows ?
+> +			     efc_spv_new_row(SPV_ROWLEN) : NULL);
+> +		if (!sv->array)
+> +			return NULL;
+> +	}
+> +	p = sv->array;
+> +	if (!p[a]) {
+> +		p[a] = (alloc_new_rows ? efc_spv_new_row(SPV_ROWLEN) : NULL);
+> +		if (!p[a])
+> +			return NULL;
+> +	}
+> +	p = p[a];
+> +	if (!p[b]) {
+> +		p[b] = (alloc_new_rows ? efc_spv_new_row(SPV_ROWLEN) : NULL);
+> +		if (!p[b])
+> +			return NULL;
+> +	}
+> +	p = p[b];
+> +
+> +	return &p[c];
 > +}
 > +
 > +void
-> +efc_sm_disable(struct efc_sm_ctx *ctx)
+> +efc_spv_set(struct sparse_vector *sv, u32 idx, void *value)
 > +{
-> +	ctx->current_state = NULL;
+> +	void **ref = efc_spv_new_cell(sv, idx, true);
+> +
+> +	if (ref)
+> +		*ref = value;
 > +}
 > +
-> +const char *efc_sm_event_name(enum efc_sm_event evt)
+> +void
+> +*efc_spv_get(struct sparse_vector *sv, u32 idx)
 > +{
-> +	switch (evt) {
-> +	case EFC_EVT_ENTER:
-> +		return "EFC_EVT_ENTER";
-> +	case EFC_EVT_REENTER:
-> +		return "EFC_EVT_REENTER";
-> +	case EFC_EVT_EXIT:
-> +		return "EFC_EVT_EXIT";
-> +	case EFC_EVT_SHUTDOWN:
-> +		return "EFC_EVT_SHUTDOWN";
-> +	case EFC_EVT_RESPONSE:
-> +		return "EFC_EVT_RESPONSE";
-> +	case EFC_EVT_RESUME:
-> +		return "EFC_EVT_RESUME";
-> +	case EFC_EVT_TIMER_EXPIRED:
-> +		return "EFC_EVT_TIMER_EXPIRED";
-> +	case EFC_EVT_ERROR:
-> +		return "EFC_EVT_ERROR";
-> +	case EFC_EVT_SRRS_ELS_REQ_OK:
-> +		return "EFC_EVT_SRRS_ELS_REQ_OK";
-> +	case EFC_EVT_SRRS_ELS_CMPL_OK:
-> +		return "EFC_EVT_SRRS_ELS_CMPL_OK";
-> +	case EFC_EVT_SRRS_ELS_REQ_FAIL:
-> +		return "EFC_EVT_SRRS_ELS_REQ_FAIL";
-> +	case EFC_EVT_SRRS_ELS_CMPL_FAIL:
-> +		return "EFC_EVT_SRRS_ELS_CMPL_FAIL";
-> +	case EFC_EVT_SRRS_ELS_REQ_RJT:
-> +		return "EFC_EVT_SRRS_ELS_REQ_RJT";
-> +	case EFC_EVT_NODE_ATTACH_OK:
-> +		return "EFC_EVT_NODE_ATTACH_OK";
-> +	case EFC_EVT_NODE_ATTACH_FAIL:
-> +		return "EFC_EVT_NODE_ATTACH_FAIL";
-> +	case EFC_EVT_NODE_FREE_OK:
-> +		return "EFC_EVT_NODE_FREE_OK";
-> +	case EFC_EVT_ELS_REQ_TIMEOUT:
-> +		return "EFC_EVT_ELS_REQ_TIMEOUT";
-> +	case EFC_EVT_ELS_REQ_ABORTED:
-> +		return "EFC_EVT_ELS_REQ_ABORTED";
-> +	case EFC_EVT_ABORT_ELS:
-> +		return "EFC_EVT_ABORT_ELS";
-> +	case EFC_EVT_ELS_ABORT_CMPL:
-> +		return "EFC_EVT_ELS_ABORT_CMPL";
+> +	void **ref = efc_spv_new_cell(sv, idx, false);
 > +
-> +	case EFC_EVT_DOMAIN_FOUND:
-> +		return "EFC_EVT_DOMAIN_FOUND";
-> +	case EFC_EVT_DOMAIN_ALLOC_OK:
-> +		return "EFC_EVT_DOMAIN_ALLOC_OK";
-> +	case EFC_EVT_DOMAIN_ALLOC_FAIL:
-> +		return "EFC_EVT_DOMAIN_ALLOC_FAIL";
-> +	case EFC_EVT_DOMAIN_REQ_ATTACH:
-> +		return "EFC_EVT_DOMAIN_REQ_ATTACH";
-> +	case EFC_EVT_DOMAIN_ATTACH_OK:
-> +		return "EFC_EVT_DOMAIN_ATTACH_OK";
-> +	case EFC_EVT_DOMAIN_ATTACH_FAIL:
-> +		return "EFC_EVT_DOMAIN_ATTACH_FAIL";
-> +	case EFC_EVT_DOMAIN_LOST:
-> +		return "EFC_EVT_DOMAIN_LOST";
-> +	case EFC_EVT_DOMAIN_FREE_OK:
-> +		return "EFC_EVT_DOMAIN_FREE_OK";
-> +	case EFC_EVT_DOMAIN_FREE_FAIL:
-> +		return "EFC_EVT_DOMAIN_FREE_FAIL";
-> +	case EFC_EVT_HW_DOMAIN_REQ_ATTACH:
-> +		return "EFC_EVT_HW_DOMAIN_REQ_ATTACH";
-> +	case EFC_EVT_HW_DOMAIN_REQ_FREE:
-> +		return "EFC_EVT_HW_DOMAIN_REQ_FREE";
-> +	case EFC_EVT_ALL_CHILD_NODES_FREE:
-> +		return "EFC_EVT_ALL_CHILD_NODES_FREE";
+> +	if (ref)
+> +		return *ref;
 > +
-> +	case EFC_EVT_SPORT_ALLOC_OK:
-> +		return "EFC_EVT_SPORT_ALLOC_OK";
-> +	case EFC_EVT_SPORT_ALLOC_FAIL:
-> +		return "EFC_EVT_SPORT_ALLOC_FAIL";
-> +	case EFC_EVT_SPORT_ATTACH_OK:
-> +		return "EFC_EVT_SPORT_ATTACH_OK";
-> +	case EFC_EVT_SPORT_ATTACH_FAIL:
-> +		return "EFC_EVT_SPORT_ATTACH_FAIL";
-> +	case EFC_EVT_SPORT_FREE_OK:
-> +		return "EFC_EVT_SPORT_FREE_OK";
-> +	case EFC_EVT_SPORT_FREE_FAIL:
-> +		return "EFC_EVT_SPORT_FREE_FAIL";
-> +	case EFC_EVT_SPORT_TOPOLOGY_NOTIFY:
-> +		return "EFC_EVT_SPORT_TOPOLOGY_NOTIFY";
-> +	case EFC_EVT_HW_PORT_ALLOC_OK:
-> +		return "EFC_EVT_HW_PORT_ALLOC_OK";
-> +	case EFC_EVT_HW_PORT_ALLOC_FAIL:
-> +		return "EFC_EVT_HW_PORT_ALLOC_FAIL";
-> +	case EFC_EVT_HW_PORT_ATTACH_OK:
-> +		return "EFC_EVT_HW_PORT_ATTACH_OK";
-> +	case EFC_EVT_HW_PORT_REQ_ATTACH:
-> +		return "EFC_EVT_HW_PORT_REQ_ATTACH";
-> +	case EFC_EVT_HW_PORT_REQ_FREE:
-> +		return "EFC_EVT_HW_PORT_REQ_FREE";
-> +	case EFC_EVT_HW_PORT_FREE_OK:
-> +		return "EFC_EVT_HW_PORT_FREE_OK";
-> +
-> +	case EFC_EVT_NODE_FREE_FAIL:
-> +		return "EFC_EVT_NODE_FREE_FAIL";
-> +
-> +	case EFC_EVT_ABTS_RCVD:
-> +		return "EFC_EVT_ABTS_RCVD";
-> +
-> +	case EFC_EVT_NODE_MISSING:
-> +		return "EFC_EVT_NODE_MISSING";
-> +	case EFC_EVT_NODE_REFOUND:
-> +		return "EFC_EVT_NODE_REFOUND";
-> +	case EFC_EVT_SHUTDOWN_IMPLICIT_LOGO:
-> +		return "EFC_EVT_SHUTDOWN_IMPLICIT_LOGO";
-> +	case EFC_EVT_SHUTDOWN_EXPLICIT_LOGO:
-> +		return "EFC_EVT_SHUTDOWN_EXPLICIT_LOGO";
-> +
-> +	case EFC_EVT_ELS_FRAME:
-> +		return "EFC_EVT_ELS_FRAME";
-> +	case EFC_EVT_PLOGI_RCVD:
-> +		return "EFC_EVT_PLOGI_RCVD";
-> +	case EFC_EVT_FLOGI_RCVD:
-> +		return "EFC_EVT_FLOGI_RCVD";
-> +	case EFC_EVT_LOGO_RCVD:
-> +		return "EFC_EVT_LOGO_RCVD";
-> +	case EFC_EVT_PRLI_RCVD:
-> +		return "EFC_EVT_PRLI_RCVD";
-> +	case EFC_EVT_PRLO_RCVD:
-> +		return "EFC_EVT_PRLO_RCVD";
-> +	case EFC_EVT_PDISC_RCVD:
-> +		return "EFC_EVT_PDISC_RCVD";
-> +	case EFC_EVT_FDISC_RCVD:
-> +		return "EFC_EVT_FDISC_RCVD";
-> +	case EFC_EVT_ADISC_RCVD:
-> +		return "EFC_EVT_ADISC_RCVD";
-> +	case EFC_EVT_RSCN_RCVD:
-> +		return "EFC_EVT_RSCN_RCVD";
-> +	case EFC_EVT_SCR_RCVD:
-> +		return "EFC_EVT_SCR_RCVD";
-> +	case EFC_EVT_ELS_RCVD:
-> +		return "EFC_EVT_ELS_RCVD";
-> +	case EFC_EVT_LAST:
-> +		return "EFC_EVT_LAST";
-> +	case EFC_EVT_FCP_CMD_RCVD:
-> +		return "EFC_EVT_FCP_CMD_RCVD";
-> +
-> +	case EFC_EVT_GIDPT_DELAY_EXPIRED:
-> +		return "EFC_EVT_GIDPT_DELAY_EXPIRED";
-> +
-> +	case EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY:
-> +		return "EFC_EVT_NODE_ACTIVE_IO_LIST_EMPTY";
-> +	case EFC_EVT_NODE_DEL_INI_COMPLETE:
-> +		return "EFC_EVT_NODE_DEL_INI_COMPLETE";
-> +	case EFC_EVT_NODE_DEL_TGT_COMPLETE:
-> +		return "EFC_EVT_NODE_DEL_TGT_COMPLETE";
-> +
-> +	default:
-> +		break;
-> +	}
-> +	return "unknown";
+> +	return NULL;
 > +}
-Please convert into a lookup array.
+What about locking?
 
-> diff --git a/drivers/scsi/elx/libefc/efc_sm.h b/drivers/scsi/elx/libefc/efc_sm.h
-> new file mode 100644
-> index 000000000000..c76352d1d527
-> --- /dev/null
-> +++ b/drivers/scsi/elx/libefc/efc_sm.h
-> @@ -0,0 +1,140 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
-> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
-> + *
-> + */
-> +
-> +/**
-> + * Generic state machine framework declarations.
-> + */
-> +
-> +#ifndef _EFC_SM_H
-> +#define _EFC_SM_H
-> +
-> +/**
-> + * State Machine (SM) IDs.
-> + */
-> +enum {
-> +	EFC_SM_COMMON = 0,
-> +	EFC_SM_DOMAIN,
-> +	EFC_SM_PORT,
-> +	EFC_SM_LOGIN,
-> +	EFC_SM_LAST
-> +};
-> +
-> +#define EFC_SM_EVENT_SHIFT		24
-> +#define EFC_SM_EVENT_START(id)		((id) << EFC_SM_EVENT_SHIFT)
-> +
-> +extern const char *efc_sm_id[];
-> +
-Curious.
-You define 4 state machine IDs, yet declare names for only 3 of them.
-Omission?
-
-And I would probably use a lookup function for the state machines; this
-'const char *efc_sm_id[]' looks a bit lonely. Plus I'm always wary of
-variable sized global const ...
+But maybe it'll clarify itself with the next patches.
+Let's see.
 
 Cheers,
 
