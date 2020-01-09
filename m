@@ -2,123 +2,179 @@ Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5237C282DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 22:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D629BC33CA2
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 23:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C7E22082E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 22:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4DC9205F4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 23:22:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728157AbgAIW2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 17:28:07 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:46053 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725807AbgAIW2G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2020 17:28:06 -0500
-Received: by mail-pf1-f196.google.com with SMTP id 2so79153pfg.12
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jan 2020 14:28:06 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Go2xwyrEU7iaQotZttlbl4moxnyE8y5ltV1FI5MZzXQ=;
-        b=ROVKaFxqhyIVQt96LRgm8bm81BTEieeOeim3vZR2tNt/PFotkDM1mNqAfrjEJx7sp9
-         fnhDzJrYJ3VFfwANs5nPYdgjpLfn5fb4figiBrFYqgwt5tV7BUWkicyPrHwctJQnfOE6
-         GpzNr5BlGZ+GJz4VwzAq7GWOIyDAfjovQLpKPK2wUnExfhfRZLkWx95attAYxEyjegwj
-         byK4VN/x/lfmp/aT6RhtTnzWfTh0RtUxW9JjcWc6G0t1XV23b92Uwm7nK1JeHssblGC3
-         YO/xMN6fnW38z49uCumvQY6NupwhEJqcDgnlTu7VzEzCCBCVdN+v0TKw7WFYIbxVpIrQ
-         qLow==
-X-Gm-Message-State: APjAAAUVXRIqPJxWh+6DLJTmpQMhX5x/TI7l0KqjVPp7Ym8XefEmiyT4
-        kXRK/GJG4pj8htHFZuOQ6yhkUdc/
-X-Google-Smtp-Source: APXvYqzv/SBdsfmAQg3hjT8l2A7xXZdzwirR+GbkWrAZGcEn67C0hwT8v3EU02KRySen8gd/CkxfbQ==
-X-Received: by 2002:a63:1c13:: with SMTP id c19mr296673pgc.450.1578608886163;
-        Thu, 09 Jan 2020 14:28:06 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id l66sm8119013pga.30.2020.01.09.14.28.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Jan 2020 14:28:05 -0800 (PST)
-Subject: Re: [PATCH 4/4] ufs: Let the SCSI core allocate per-command UFS data
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Can Guo <cang@codeaurora.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-References: <20200107192531.73802-1-bvanassche@acm.org>
- <20200107192531.73802-5-bvanassche@acm.org>
- <MN2PR04MB69913704982A01708C36374FFC390@MN2PR04MB6991.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <45cb376d-42b8-5bc9-70e1-a93935d02287@acm.org>
-Date:   Thu, 9 Jan 2020 14:28:04 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1728569AbgAIXWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 18:22:51 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58458 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725840AbgAIXWu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2020 18:22:50 -0500
+Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 868EE820917;
+        Fri, 10 Jan 2020 10:22:45 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iph8W-0006Qu-Dy; Fri, 10 Jan 2020 10:22:44 +1100
+Date:   Fri, 10 Jan 2020 10:22:44 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Tony Asleson <tasleson@redhat.com>,
+        Sweet Tea Dorminy <sweettea@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
+Message-ID: <20200109232244.GT23195@dread.disaster.area>
+References: <20191223225558.19242-10-tasleson@redhat.com>
+ <20200104025620.GC23195@dread.disaster.area>
+ <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com>
+ <20200106220233.GK23195@dread.disaster.area>
+ <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
+ <20200107012353.GO23195@dread.disaster.area>
+ <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
+ <20200108021002.GR23195@dread.disaster.area>
+ <9e449c65-193c-d69c-1454-b1059221e5dc@redhat.com>
+ <20200109014117.GB3809@agk-dp.fab.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <MN2PR04MB69913704982A01708C36374FFC390@MN2PR04MB6991.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200109014117.GB3809@agk-dp.fab.redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=hoDmsdNMAAAA:20 a=GFaoHKnqAAAA:8 a=7-415B0cAAAA:8
+        a=VQnnGOFCwwFJJO5165wA:9 a=CjuIK1q_8ugA:10 a=Vh1PrrggmBitVpCIy7ZX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22 a=pHzHmUro8NiASowvMSCR:22
+        a=nt3jZW36AmriUCFCBwmW:22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 1/9/20 1:48 AM, Avri Altman wrote:
-> Bart Van Assche wrote:
->> +       /* See also ufshcd_is_scsi() */
->> +       switch (req_op(cmd->request)) {
->> +       case REQ_OP_DRV_IN:
->> +       case REQ_OP_DRV_OUT:
->> +               WARN_ON_ONCE(true);
- >
-> Maybe just WARN_ON_ONCE(!ufshcd_is_scsi(cmd->request))
+On Thu, Jan 09, 2020 at 01:41:17AM +0000, Alasdair G Kergon wrote:
+> On Wed, Jan 08, 2020 at 10:53:13AM -0600, Tony Asleson wrote:
+> > We are not removing any existing information, we are adding.
+> 
+> A difficulty with this approach is:  Where do you stop when your storage
+> configuration is complicated and changing?  Do you add the complete
+> relevant part of the storage stack configuration to every storage
+> message in the kernel so that it is easy to search later?
+> 
+> Or do you catch the messages in userspace and add some of this
+> information there before sending them on to your favourite log message
+> database?  (ref. peripety, various rsyslog extensions)
+> 
+> > I think all the file systems should include their FS UUID in the FS log
+> > messages too, but that is not part of the problem we are trying to solve.
+> 
+> Each layer (subsystem) should already be tagging its messages in an
+> easy-to-parse way so that all those relating to the same object (e.g.
+> filesystem instance, disk) at its level of the stack can easily be
+> matched together later.  Where this doesn't already happen, we should
+> certainly be fixing that as it's a pre-requisite for any sensible
+> post-processing: As long as the right information got recorded, it can
+> all be joined together on demand later by some userspace software.
 
-Good idea. Will do.
+*nod*
 
->> +static int ufshcd_init_cmd_priv(struct Scsi_Host *shost, struct
->> +scsi_cmnd *cmd) {
->> +       struct ufs_hba *hba = shost_priv(shost);
->> +
->> +       ufshcd_init_lrb(hba, scsi_cmd_priv(cmd), cmd->tag);
- >
-> So ufshcd_init_lrb() is called now for every new request?
+That was the essence of my suggestion that the filesystem mount log
+notification emits it's persistent identifier. If you need it to be
+logged, that's where the verbose identifier output should be....
 
-ufshcd_init_lrb() is only called from inside scsi_add_host(), namely as 
-follows:
+> > The user has to systematically and methodically go through the logs
+> > trying to deduce what the identifier was referring to at the time of the
+> > error.  This isn't trivial and virtually impossible at times depending
+> > on circumstances.
+> 
+> So how about logging what these identifiers reference at different times
+> in a way that is easy to query later?
+> 
+> Come to think of it, we already get uevents when the references change,
+> and udev rules even already now create neat "by-*" links for us.  Maybe
+> we just need to log better what udev is actually already doing?
 
-scsi_add_host()
--> scsi_add_host_with_dma()
-   -> scsi_mq_setup_tags()
-     -> blk_mq_alloc_tag_set()
-       -> blk_mq_alloc_rq_maps()
-         -> __blk_mq_alloc_rq_maps()
-           -> __blk_mq_alloc_rq_map()
-             -> blk_mq_alloc_rqs()
-               -> blk_mq_init_request()
-                 -> scsi_mq_init_request()
-                   -> ufshcd_init_cmd_priv()
+Right, this is essentially what I've been trying to point out - I
+even used the by-uuid links as an example of how the filesystem is
+persistently identified by existing system boot infrastructure. :)
 
->> @@ -6074,7 +6132,8 @@ static int ufshcd_eh_device_reset_handler(struct
->> scsi_cmnd *cmd)
->>
->>          /* clear the commands that were pending for corresponding LUN */
->>          for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs) {
->> -               if (hba->lrb[pos].lun == lrbp->lun) {
->> +               lrbp2 = ufshcd_tag_to_lrb(hba, pos);
- >
-> Can lrpb2 be null here?
+> Then we could reproduce what the storage configuration looked like at
+> any particular time in the past to provide the missing context for
+> the identifiers in the log messages.
+> 
+>                     ---------------------
+>  
+> Which seems like an appropriate time to introduce storage-logger.
+> 
+>     https://github.com/lvmteam/storage-logger
+> 
+>     Fedora rawhide packages:
+>       https://copr.fedorainfracloud.org/coprs/agk/storage-logger/ 
+> 
+> The goal of this particular project is to maintain a record of the
+> storage configuration as it changes over time.  It should provide a
+> quick way to check the state of a system at a specified time in the
+> past.
+> 
+> The initial logging implementation is triggered by storage uevents and
+> consists of two components:
+> 
+> 1. A new udev rule file, 99-zzz-storage-logger.rules, which runs after
+> all the other rules have run and invokes:
+> 
+> 2. A script, udev_storage_logger.sh, that captures relevant
+> information about devices that changed and stores it in the system
+> journal.
+> 
+> The effect is to log the data from relevant uevents plus some
+> supplementary information (including device-mapper tables, for example).
+> It does not yet handle filesystem-related events.
 
-lrpb2 can only be NULL if the 'pos' argument passed to 
-ufshcd_tag_to_lrb() is not a valid tag. for_each_set_bit() however 
-guarantees that 0 <= pos < hba->nutrs and hence guarantees that 'pos' is 
-a valid tag.
+There are very few filesystem uevents issued that you could log,
+anyway. Certainly nothing standardised across filesystems....
 
-Thanks,
+> Two methods to query the data are offered:
+> 
+> 1. journalctl
+> Data is tagged with the identifier UDEVLOG and retrievable as
+> key-value pairs.
+>   journalctl -t UDEVLOG --output verbose
+>   journalctl -t UDEVLOG --output json
+>     --since 'YYYY-MM-DD HH:MM:SS' 
+>     --until 'YYYY-MM-DD HH:MM:SS'
+>   journalctl -t UDEVLOG --output verbose
+>     --output-fields=PERSISTENT_STORAGE_ID,MAJOR,MINOR
+>      PERSISTENT_STORAGE_ID=dm-name-vg1-lvol0
+> 
+> 2. lsblkj  [appended j for journal]
+> This lsblk wrapper reprocesses the logged uevents to reconstruct a
+> dummy system environment that "looks like" the system did at a
+> specified earlier time and then runs lsblk against it.
 
-Bart.
+Yeah, and if you add the equivalent of 'lsblk -f' then you also get
+the fs UUID to identify the filesystem on the block device at a
+given time....
+
+> Yes, I'm looking for feedback to help to decide whether or not it's
+> worth developing this any further.
+
+This seems like a more flexible approach to me - it allows for
+text-based system loggers a hook to capture this device
+information, too, and hence implement their own post-processing
+scripts to provide the same lifetime information.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
