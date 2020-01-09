@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06341C32771
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB32CC32771
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBA1F2077B
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7FAB2072A
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 11:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728913AbgAILrP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 06:47:15 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51064 "EHLO mx2.suse.de"
+        id S1728003AbgAILrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 06:47:52 -0500
+Received: from mx2.suse.de ([195.135.220.15]:51148 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728656AbgAILrP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Jan 2020 06:47:15 -0500
+        id S1727701AbgAILrw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Jan 2020 06:47:52 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 78E55B1D76;
-        Thu,  9 Jan 2020 11:47:12 +0000 (UTC)
-Subject: Re: [PATCH v2 31/32] elx: efct: Add Makefile and Kconfig for efct
- driver
+        by mx2.suse.de (Postfix) with ESMTP id 02463B1D78;
+        Thu,  9 Jan 2020 11:47:50 +0000 (UTC)
+Subject: Re: [PATCH v2 32/32] elx: efct: Tie into kernel Kconfig and build
+ process
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     maier@linux.ibm.com, dwagner@suse.de, bvanassche@acm.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20191220223723.26563-1-jsmart2021@gmail.com>
- <20191220223723.26563-32-jsmart2021@gmail.com>
+ <20191220223723.26563-33-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -74,12 +74,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <bc57009a-4f5a-3595-8c57-0289a2e1dc03@suse.de>
-Date:   Thu, 9 Jan 2020 12:47:12 +0100
+Message-ID: <376756c5-2961-5c59-06c6-0f5b9aa18e57@suse.de>
+Date:   Thu, 9 Jan 2020 12:47:46 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20191220223723.26563-32-jsmart2021@gmail.com>
+In-Reply-To: <20191220223723.26563-33-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,75 +89,44 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 12/20/19 11:37 PM, James Smart wrote:
-> This patch completes the efct driver population.
-> 
-> This patch adds driver definitions for:
-> Adds the efct driver Kconfig and Makefiles
+> This final patch ties the efct driver into the kernel Kconfig
+> and build linkages in the drivers/scsi directory.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->  drivers/scsi/elx/Kconfig  |  9 +++++++++
->  drivers/scsi/elx/Makefile | 30 ++++++++++++++++++++++++++++++
->  2 files changed, 39 insertions(+)
->  create mode 100644 drivers/scsi/elx/Kconfig
->  create mode 100644 drivers/scsi/elx/Makefile
+>  drivers/scsi/Kconfig  | 2 ++
+>  drivers/scsi/Makefile | 1 +
+>  2 files changed, 3 insertions(+)
 > 
-> diff --git a/drivers/scsi/elx/Kconfig b/drivers/scsi/elx/Kconfig
-> new file mode 100644
-> index 000000000000..ec710ade44f3
-> --- /dev/null
-> +++ b/drivers/scsi/elx/Kconfig
-> @@ -0,0 +1,9 @@
-> +config SCSI_EFCT
-> +	tristate "Emulex Fibre Channel Target"
-> +	depends on PCI && SCSI
-> +	depends on TARGET_CORE
-> +	depends on SCSI_FC_ATTRS
-> +	select CRC_T10DIF
-> +	help
-> +          The efct driver provides enhanced SCSI Target Mode
-> +	  support for specific SLI-4 adapters.
-> diff --git a/drivers/scsi/elx/Makefile b/drivers/scsi/elx/Makefile
-> new file mode 100644
-> index 000000000000..79cc4e57676e
-> --- /dev/null
-> +++ b/drivers/scsi/elx/Makefile
-> @@ -0,0 +1,30 @@
-> +#/*******************************************************************
-> +# * This file is part of the Emulex Linux Device Driver for         *
-> +# * Fibre Channel Host Bus Adapters.                                *
-> +# * Copyright (C) 2018 Broadcom. All Rights Reserved. The term	   *
-> +# * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-> +# *                                                                 *
-> +# * This program is free software; you can redistribute it and/or   *
-> +# * modify it under the terms of version 2 of the GNU General       *
-> +# * Public License as published by the Free Software Foundation.    *
-> +# * This program is distributed in the hope that it will be useful. *
-> +# * ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND          *
-> +# * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,  *
-> +# * FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT, ARE      *
-> +# * DISCLAIMED, EXCEPT TO THE EXTENT THAT SUCH DISCLAIMERS ARE HELD *
-> +# * TO BE LEGALLY INVALID.  See the GNU General Public License for  *
-> +# * more details, a copy of which can be found in the file COPYING  *
-> +# * included with this package.                                     *
-> +# ********************************************************************/
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 90cf4691b8c3..78822ae45457 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -1176,6 +1176,8 @@ config SCSI_LPFC_DEBUG_FS
+>  	  This makes debugging information from the lpfc driver
+>  	  available via the debugfs filesystem.
+>  
+> +source "drivers/scsi/elx/Kconfig"
 > +
-
-Use SPDX identifier here.
-
-> +obj-$(CONFIG_SCSI_EFCT) := efct.o
-> +
-> +efct-objs := efct/efct_driver.o efct/efct_io.o efct/efct_scsi.o efct/efct_els.o \
-> +	     efct/efct_xport.o efct/efct_hw.o efct/efct_hw_queues.o \
-> +	     efct/efct_utils.o efct/efct_lio.o efct/efct_unsol.o
-> +
-> +efct-objs += libefc/efc_domain.o libefc/efc_fabric.o libefc/efc_node.o \
-> +	     libefc/efc_sport.o libefc/efc_device.o \
-> +	     libefc/efc_lib.o libefc/efc_sm.o
-> +
-> +efct-objs += libefc_sli/sli4.o
+>  config SCSI_SIM710
+>  	tristate "Simple 53c710 SCSI support (Compaq, NCR machines)"
+>  	depends on EISA && SCSI
+> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+> index c00e3dd57990..844db573283c 100644
+> --- a/drivers/scsi/Makefile
+> +++ b/drivers/scsi/Makefile
+> @@ -86,6 +86,7 @@ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o
+>  obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
+>  obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
+>  obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
+> +obj-$(CONFIG_SCSI_EFCT)		+= elx/
+>  obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
+>  obj-$(CONFIG_SCSI_CHELSIO_FCOE)	+= csiostor/
+>  obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
 > 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+
 Cheers,
 
 Hannes
