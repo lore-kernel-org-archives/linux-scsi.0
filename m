@@ -2,180 +2,102 @@ Return-Path: <SRS0=9eMh=27=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2E2C33CB0
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 966F5C33C99
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E3202077B
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578637112;
-	bh=CXnjOYm1iTDjojjdsIRWTNlwicfcXj4LVXbnFJeFR2o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=eT5dvEMn+7e1T3p/vT06+dsMEUSGY0UORMpbDwzyFeMi1xDesZc7tIB/MWuV1dAgX
-	 RuCWeod3gelIGTo5sDPX4Nm3sUGj/b3nNygXCswMxkAE8vROLGHhuGyMfojzf5EiZ3
-	 Khhh3s5X8TyQJVvgffdJNa/wyYejHO6QESR2KvAk=
+	by mail.kernel.org (Postfix) with ESMTP id 5494F2072E
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:25:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pYopxm+d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731483AbgAJGSa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jan 2020 01:18:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52848 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731465AbgAJGS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Jan 2020 01:18:28 -0500
-Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B88D920838;
-        Fri, 10 Jan 2020 06:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578637107;
-        bh=CXnjOYm1iTDjojjdsIRWTNlwicfcXj4LVXbnFJeFR2o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kmb0Iyc9tu/rxA/ezfektn4+xbD8O/KI0wSPSI6WPESopr4jFdCCoLqlj1ssipQ5D
-         +iQVFzbMgld/0e+uZf4U7ONdoaINq/8u9n4qsttx1wep3Uh8KjmwhNTZjkGT7vDQnu
-         A0jG1DmClF5SdOEZwAkqU5xwfK8UYIRoFfhHwLmw=
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        John Stultz <john.stultz@linaro.org>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Can Guo <cang@codeaurora.org>,
-        Satya Tangirala <satyat@google.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        "Theodore Y . Ts'o" <tytso@mit.edu>
-Subject: [RFC PATCH 4/5] scsi: ufs: add program_key() variant op
-Date:   Thu,  9 Jan 2020 22:16:33 -0800
-Message-Id: <20200110061634.46742-5-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200110061634.46742-1-ebiggers@kernel.org>
-References: <20200110061634.46742-1-ebiggers@kernel.org>
+        id S1731516AbgAJGZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jan 2020 01:25:45 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:37710 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731492AbgAJGZo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2020 01:25:44 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00A6NNub074168;
+        Fri, 10 Jan 2020 06:25:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=veoc8SAh5raYubqVF2DcuEKl3hDl1XkW9HHOfqTTJEk=;
+ b=pYopxm+dSg8/FOaCPFQiyESvQ2St+k9FEDnnfvOUWS2cc5lzd5MpqcZRq67Q1Xaxny21
+ fVKsT6HUQfdhDn3OEvP6TBjUZeHetCKqTKhn6aSQBjbFpejAMkUfXH+TdejRnAfoQ7a6
+ RQc+RkeYL4cfqsa+/z7Z6sZA5BTiXfL0I3JJfAsPPdOYGqTUA0Hi16wVUxPkfvCx6ssc
+ hCo+0W09HlgBQVNlEssMUBdacd768jT59KxNqdf6dv657Q2NtHV0W5zSIh4131WgFfbm
+ NHrxLVCcSOp7UC7lyQxw7viHTrgKetJQ1Onk6VbM3hN7qICyfPGPOAXigtFK5x+1NNKw GQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2xajnqfxk8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Jan 2020 06:25:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00A6Ntpi161701;
+        Fri, 10 Jan 2020 06:25:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2xekku9auh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Jan 2020 06:25:25 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00A6PN9o002659;
+        Fri, 10 Jan 2020 06:25:23 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 09 Jan 2020 22:25:23 -0800
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <beanhuo@micron.com>,
+        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: pass device information to apply_dev_quirks
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <1578270431-9873-1-git-send-email-stanley.chu@mediatek.com>
+        <1578270431-9873-2-git-send-email-stanley.chu@mediatek.com>
+Date:   Fri, 10 Jan 2020 01:25:19 -0500
+In-Reply-To: <1578270431-9873-2-git-send-email-stanley.chu@mediatek.com>
+        (Stanley Chu's message of "Mon, 6 Jan 2020 08:27:10 +0800")
+Message-ID: <yq136cnx1yo.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001100053
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001100053
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
 
-On Snapdragon SoCs, the Linux kernel isn't permitted to directly access
-the standard UFS crypto configuration registers.  Instead, programming
-and evicting keys must be done through vendor-specific SMC calls.
+Stanley,
 
-To support this hardware, add a ->program_key() method to
-'struct ufs_hba_variant_ops'.  This allows overriding the UFS standard
-key programming procedure.
+> Pass UFS device information to vendor-specific variant callback
+> "apply_dev_quirks" because some platform vendors need to know such
+> information to apply special handlings or quirks in specific devices.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- drivers/scsi/ufs/ufshcd-crypto.c | 24 ++++++++++++++++++------
- drivers/scsi/ufs/ufshcd.h        |  5 +++++
- 2 files changed, 23 insertions(+), 6 deletions(-)
+This doesn't compile. You missed adding the additional argument to one
+caller of ufshcd_tune_unipro_params().
 
-diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
-index 2c34beb47f8e0..4b9e4d5770643 100644
---- a/drivers/scsi/ufs/ufshcd-crypto.c
-+++ b/drivers/scsi/ufs/ufshcd-crypto.c
-@@ -117,15 +117,21 @@ static int ufshcd_crypto_cfg_entry_write_key(union ufs_crypto_cfg_entry *cfg,
- 	return -EINVAL;
- }
- 
--static void ufshcd_program_key(struct ufs_hba *hba,
--			       const union ufs_crypto_cfg_entry *cfg,
--			       int slot)
-+static int ufshcd_program_key(struct ufs_hba *hba,
-+			      const union ufs_crypto_cfg_entry *cfg, int slot)
- {
- 	int i;
- 	u32 slot_offset = hba->crypto_cfg_register + slot * sizeof(*cfg);
-+	int err;
- 
- 	pm_runtime_get_sync(hba->dev);
- 	ufshcd_hold(hba, false);
-+
-+	if (hba->vops->program_key) {
-+		err = hba->vops->program_key(hba, cfg, slot);
-+		goto out;
-+	}
-+
- 	/* Clear the dword 16 */
- 	ufshcd_writel(hba, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
- 	/* Ensure that CFGE is cleared before programming the key */
-@@ -145,15 +151,20 @@ static void ufshcd_program_key(struct ufs_hba *hba,
- 	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[16]),
- 		      slot_offset + 16 * sizeof(cfg->reg_val[0]));
- 	wmb();
-+	err = 0;
-+out:
- 	ufshcd_release(hba);
- 	pm_runtime_put_sync(hba->dev);
-+	return err;
- }
- 
- static void ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
- {
- 	union ufs_crypto_cfg_entry cfg = { 0 };
-+	int err;
- 
--	ufshcd_program_key(hba, &cfg, slot);
-+	err = ufshcd_program_key(hba, &cfg, slot);
-+	WARN_ON_ONCE(err);
- }
- 
- /* Clear all keyslots at driver init time */
-@@ -198,10 +209,11 @@ static int ufshcd_crypto_keyslot_program(struct keyslot_manager *ksm,
- 	if (err)
- 		return err;
- 
--	ufshcd_program_key(hba, &cfg, slot);
-+	err = ufshcd_program_key(hba, &cfg, slot);
- 
- 	memzero_explicit(&cfg, sizeof(cfg));
--	return 0;
-+
-+	return err;
- }
- 
- static int ufshcd_crypto_keyslot_evict(struct keyslot_manager *ksm,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b6f0d08a98a8b..cd0969b93d070 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -280,6 +280,8 @@ struct ufs_pwr_mode_info {
- 	struct ufs_pa_layer_attr info;
- };
- 
-+union ufs_crypto_cfg_entry;
-+
- /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-@@ -307,6 +309,7 @@ struct ufs_pwr_mode_info {
-  * @dbg_register_dump: used to dump controller debug information
-  * @phy_initialization: used to initialize phys
-  * @device_reset: called to issue a reset pulse on the UFS device
-+ * @program_key: program an inline encryption key into a keyslot
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -336,6 +339,8 @@ struct ufs_hba_variant_ops {
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
- 	void	(*device_reset)(struct ufs_hba *hba);
-+	int	(*program_key)(struct ufs_hba *hba,
-+			       const union ufs_crypto_cfg_entry *cfg, int slot);
- };
- 
- /* clock gating state  */
 -- 
-2.24.1
-
+Martin K. Petersen	Oracle Linux Engineering
