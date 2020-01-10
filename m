@@ -2,42 +2,42 @@ Return-Path: <SRS0=9eMh=27=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F76AC33CA3
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 636D7C33CAE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56A252084D
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28A7420673
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578637107;
-	bh=E83v9s/velUj5ZMKMl2BVwEb+LgFHUZZtzb8Bqy9gU4=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=OpH7kmYiLmePzpaUjmRseBjFEzjMYio4zISQOQAgisz/AWMmXR/QmVE8s63AIRYk4
-	 mojW8iUPU802rd53YvxOXNbjS2tHQhDEE34+vtFPg6kHNqkdPUeQXEZSkRjEfuLSKy
-	 i7DDzz92eTkktKgo8TX4R9YBx/ND33CkuBS9f3D4=
+	s=default; t=1578637111;
+	bh=Ee2p9izgcxGtpWv84PgFIJfcISSTM0ZUb+bggD+7SqU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=2UpVthgrv8rm5M32zp3Ern6Bf5i0m8dqgIAFFnyOYuWD3kzfdP2ppIzil+5L44Wwg
+	 WLz4kuD4/cRbFKlQ8ESVEP4G0ig1XKm2Ty/PVusK0KWgIk34c+m5K0G3PATxr1QecA
+	 IibG00nDbfZy1wddQFTBDkrNOfatqK+74YlfK8es=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731451AbgAJGS0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jan 2020 01:18:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52690 "EHLO mail.kernel.org"
+        id S1731499AbgAJGSa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jan 2020 01:18:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52792 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725797AbgAJGS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Jan 2020 01:18:26 -0500
+        id S1725797AbgAJGS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Jan 2020 01:18:27 -0500
 Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67DDD20673;
-        Fri, 10 Jan 2020 06:18:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2B2802073A;
+        Fri, 10 Jan 2020 06:18:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578637104;
-        bh=E83v9s/velUj5ZMKMl2BVwEb+LgFHUZZtzb8Bqy9gU4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=xyN7PM3sGWyQc+Q3C57MHsA5e3wjktENkcTqPjjN48EhTVMfLAOcEH7WXcehyQGC6
-         CqtX3KktH3VHkouuRDRBfqb+OHlpZenFzzhBLqVYkQH/7WfrzKZ0q/vtCiat2KM09/
-         /73s9E3NXSaD1yHiJUh5GvaXRcpQoPXGGxrOfGV8=
+        s=default; t=1578637106;
+        bh=Ee2p9izgcxGtpWv84PgFIJfcISSTM0ZUb+bggD+7SqU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=0jb3rvM4QzmHKz8wEik8cbtCyaw0honO94cDYMxfjLOj93/mwClJt7nBAC8Bf7iZ4
+         P+HbfAP2Nah1u6A2PpbHYry0LdUX5b3VaBr036+FDpKfD+PF/oFm1VtIyl/IAMBv8q
+         QLcDULli5LMtgf9veFv3Lv3kC/PwCrgCdQfjMyzY=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
@@ -52,10 +52,12 @@ Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
         Satya Tangirala <satyat@google.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         "Theodore Y . Ts'o" <tytso@mit.edu>
-Subject: [RFC PATCH 0/5] Inline crypto support on DragonBoard 845c
-Date:   Thu,  9 Jan 2020 22:16:29 -0800
-Message-Id: <20200110061634.46742-1-ebiggers@kernel.org>
+Subject: [RFC PATCH 3/5] scsi: ufs: add quirk to disable inline crypto support
+Date:   Thu,  9 Jan 2020 22:16:32 -0800
+Message-Id: <20200110061634.46742-4-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200110061634.46742-1-ebiggers@kernel.org>
+References: <20200110061634.46742-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -63,63 +65,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Eric Biggers <ebiggers@google.com>
 
-This patchset implements UFS inline crypto support on the DragonBoard
-845c, using the Qualcomm Inline Crypto Engine (ICE) that's present on
-the Snapdragon 845 SoC.
+Add a quirk flag which allows UFS drivers to tell the UFS core that
+their crypto support is not working properly, so should not be used
+despite the host controller declaring the standard crypto support bit.
 
-This is based on top of the patchset "[PATCH v6 0/9] Inline Encryption
-Support" by Satya Tangirala, which adds support for the UFS standard
-inline crypto, the block layer changes needed to use inline crypto, and
-support for inline crypto in fscrypt (ext4 and f2fs encryption).  Link:
-https://lkml.kernel.org/r/20191218145136.172774-1-satyat@google.com
+There are various situations in which this can be needed:
 
-This new patchset is mostly a RFC showing hardware inline crypto working
-on a publicly available development board that runs the mainline Linux
-kernel.  While patches 1-2 could be applied now, patches 3-5 depend on
-the main "Inline Encryption Support" patchset being merged first.
+- When the crypto support requires vendor-specific logic that hasn't
+  been implemented yet.  For example, the standard keyslot programming
+  procedure doesn't work with ufs-hisi and ufs-qcom.
 
-Most of the logic needed to use ICE is already handled by ufshcd-crypto
-and the blk-crypto framework, which are introduced by the "Inline
-Encryption Support" patchset.  Therefore, this new patchset just adds
-the vendor-specific parts.  I also only implemented support for version
-3 of the ICE hardware, which seems to be easier to use than older
-versions; and for now I only implemented UFS support, not eMMC.
+- When necessary vendor-specific crypto registers haven't been declared
+  in the device tree for the SoC yet.
 
-Due to these factors, I was able to greatly simplify the driver from the
-vendor's original.  It seems to work fine in some preliminary testing
-with fscrypt, and with a blk-crypto self-test I'm also working on.  But
-I'd appreciate feedback from anyone who may be more familiar with this
-hardware as to whether I might have missed anything important.
+- When the crypto hardware declares an unsupported vendor-specific
+  version number, has vendor-specific fuses blown which make it unusable
+  in the normal way, or a vendor-specific self-test fails.
 
-This patchset is also available in git at
-https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git/tag/?h=db845c-crypto-v1
+- The crypto produces the wrong results.
 
-Eric Biggers (5):
-  firmware: qcom_scm: Add support for programming inline crypto keys
-  arm64: dts: sdm845: add Inline Crypto Engine registers and clock
-  scsi: ufs: add quirk to disable inline crypto support
-  scsi: ufs: add program_key() variant op
-  scsi: ufs-qcom: add Inline Crypto Engine support
+Originally-from: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ drivers/scsi/ufs/ufshcd-crypto.c | 3 ++-
+ drivers/scsi/ufs/ufshcd.h        | 7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
- MAINTAINERS                          |   2 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi |  13 +-
- drivers/firmware/qcom_scm-32.c       |  14 ++
- drivers/firmware/qcom_scm-64.c       |  31 ++++
- drivers/firmware/qcom_scm.c          |  78 +++++++++
- drivers/firmware/qcom_scm.h          |   9 +
- drivers/scsi/ufs/Kconfig             |   1 +
- drivers/scsi/ufs/Makefile            |   4 +-
- drivers/scsi/ufs/ufs-qcom-ice.c      | 247 +++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-qcom.c          |  14 +-
- drivers/scsi/ufs/ufs-qcom.h          |  35 ++++
- drivers/scsi/ufs/ufshcd-crypto.c     |  27 ++-
- drivers/scsi/ufs/ufshcd.h            |  12 ++
- include/linux/qcom_scm.h             |  17 ++
- 14 files changed, 490 insertions(+), 14 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
-
+diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
+index 749c325686a7d..2c34beb47f8e0 100644
+--- a/drivers/scsi/ufs/ufshcd-crypto.c
++++ b/drivers/scsi/ufs/ufshcd-crypto.c
+@@ -278,7 +278,8 @@ int ufshcd_hba_init_crypto(struct ufs_hba *hba)
+ 	hba->caps &= ~UFSHCD_CAP_CRYPTO;
+ 
+ 	/* Return 0 if crypto support isn't present */
+-	if (!(hba->capabilities & MASK_CRYPTO_SUPPORT))
++	if (!(hba->capabilities & MASK_CRYPTO_SUPPORT) ||
++	    (hba->quirks & UFSHCD_QUIRK_BROKEN_CRYPTO))
+ 		goto out;
+ 
+ 	/*
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 5f5440059dd8a..b6f0d08a98a8b 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -650,6 +650,13 @@ struct ufs_hba {
+ 	 * enabled via HCE register.
+ 	 */
+ 	#define UFSHCI_QUIRK_BROKEN_HCE				0x400
++
++	/*
++	 * This quirk needs to be enabled if the host controller advertises
++	 * inline encryption support but it doesn't work correctly.
++	 */
++	#define UFSHCD_QUIRK_BROKEN_CRYPTO			0x800
++
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
+ 	/* Device deviations from standard UFS device spec. */
 -- 
 2.24.1
 
