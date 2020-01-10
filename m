@@ -1,180 +1,102 @@
-Return-Path: <SRS0=Z6Af=26=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=9eMh=27=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D629BC33CA2
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 23:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C76CC33CA2
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 01:28:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4DC9205F4
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jan 2020 23:22:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7266A2072E
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 01:28:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L/UoUV4U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728569AbgAIXWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jan 2020 18:22:51 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58458 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725840AbgAIXWu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2020 18:22:50 -0500
-Received: from dread.disaster.area (pa49-180-68-255.pa.nsw.optusnet.com.au [49.180.68.255])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 868EE820917;
-        Fri, 10 Jan 2020 10:22:45 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iph8W-0006Qu-Dy; Fri, 10 Jan 2020 10:22:44 +1100
-Date:   Fri, 10 Jan 2020 10:22:44 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Tony Asleson <tasleson@redhat.com>,
+        id S1730624AbgAJB2z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jan 2020 20:28:55 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:50951 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730609AbgAJB2y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jan 2020 20:28:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1578619733;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oQXk4NikYqJ8ojs8oxiLGwzKHjP5osvxSkqPpWYYobo=;
+        b=L/UoUV4Ul2Y4bwIfz4IFF4Y6W+Oi/8N+r7Bw7WeGg1iujYNkwnmOSvT+35By8n0QVL3u1j
+        wCP1vx5GB9EUx60T/xYN9jmKYu5Oh74CuhaWrbFb7l+Mb9lnte7sY2zMDR6+CAe9RfdlIg
+        QjQTvCcwIj5oMLV+mGWYr73Q773Jz84=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-207-totL9jj0PJW14MGQKoTLig-1; Thu, 09 Jan 2020 20:28:52 -0500
+X-MC-Unique: totL9jj0PJW14MGQKoTLig-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 33A081005502;
+        Fri, 10 Jan 2020 01:28:51 +0000 (UTC)
+Received: from agk-dp.fab.redhat.com (agk-dp.fab.redhat.com [10.33.15.10])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id ED64660E3E;
+        Fri, 10 Jan 2020 01:28:50 +0000 (UTC)
+Received: from agk by agk-dp.fab.redhat.com with local (Exim 4.69)
+        (envelope-from <agk@redhat.com>)
+        id 1ipj6X-0001wF-2m; Fri, 10 Jan 2020 01:28:49 +0000
+Date:   Fri, 10 Jan 2020 01:28:48 +0000
+From:   Alasdair G Kergon <agk@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Tony Asleson <tasleson@redhat.com>,
         Sweet Tea Dorminy <sweettea@redhat.com>,
         James Bottomley <James.Bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
 Subject: Re: [RFC 9/9] __xfs_printk: Add durable name to output
-Message-ID: <20200109232244.GT23195@dread.disaster.area>
-References: <20191223225558.19242-10-tasleson@redhat.com>
- <20200104025620.GC23195@dread.disaster.area>
- <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com>
- <20200106220233.GK23195@dread.disaster.area>
- <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com>
- <20200107012353.GO23195@dread.disaster.area>
- <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com>
- <20200108021002.GR23195@dread.disaster.area>
- <9e449c65-193c-d69c-1454-b1059221e5dc@redhat.com>
- <20200109014117.GB3809@agk-dp.fab.redhat.com>
+Message-ID: <20200110012848.GB7297@agk-dp.fab.redhat.com>
+Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
+        Tony Asleson <tasleson@redhat.com>,
+        Sweet Tea Dorminy <sweettea@redhat.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20200104025620.GC23195@dread.disaster.area> <5ad7cf7b-e261-102c-afdc-fa34bed98921@redhat.com> <20200106220233.GK23195@dread.disaster.area> <CAMeeMh-zr309TzbC3ayKUKRniat+rzurgzmeM5LJYMFVDj7bLA@mail.gmail.com> <20200107012353.GO23195@dread.disaster.area> <4ce83a0e-13e1-6245-33a3-5c109aec4bf1@redhat.com> <20200108021002.GR23195@dread.disaster.area> <9e449c65-193c-d69c-1454-b1059221e5dc@redhat.com> <20200109014117.GB3809@agk-dp.fab.redhat.com> <20200109232244.GT23195@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200109014117.GB3809@agk-dp.fab.redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=sbdTpStuSq8iNQE8viVliQ==:117 a=sbdTpStuSq8iNQE8viVliQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
-        a=hoDmsdNMAAAA:20 a=GFaoHKnqAAAA:8 a=7-415B0cAAAA:8
-        a=VQnnGOFCwwFJJO5165wA:9 a=CjuIK1q_8ugA:10 a=Vh1PrrggmBitVpCIy7ZX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22 a=pHzHmUro8NiASowvMSCR:22
-        a=nt3jZW36AmriUCFCBwmW:22
+In-Reply-To: <20200109232244.GT23195@dread.disaster.area>
+Organization: Red Hat UK Ltd. Registered in England and Wales, number
+        03798903. Registered Office: Peninsular House, 30-36 Monument
+        Street, 4th Floor, London, England, EC3R 8NB.
+User-Agent: Mutt/1.5.18 (2008-05-17)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jan 09, 2020 at 01:41:17AM +0000, Alasdair G Kergon wrote:
-> On Wed, Jan 08, 2020 at 10:53:13AM -0600, Tony Asleson wrote:
-> > We are not removing any existing information, we are adding.
-> 
-> A difficulty with this approach is:  Where do you stop when your storage
-> configuration is complicated and changing?  Do you add the complete
-> relevant part of the storage stack configuration to every storage
-> message in the kernel so that it is easy to search later?
-> 
-> Or do you catch the messages in userspace and add some of this
-> information there before sending them on to your favourite log message
-> database?  (ref. peripety, various rsyslog extensions)
-> 
-> > I think all the file systems should include their FS UUID in the FS log
-> > messages too, but that is not part of the problem we are trying to solve.
-> 
-> Each layer (subsystem) should already be tagging its messages in an
-> easy-to-parse way so that all those relating to the same object (e.g.
-> filesystem instance, disk) at its level of the stack can easily be
-> matched together later.  Where this doesn't already happen, we should
-> certainly be fixing that as it's a pre-requisite for any sensible
-> post-processing: As long as the right information got recorded, it can
-> all be joined together on demand later by some userspace software.
+On Fri, Jan 10, 2020 at 10:22:44AM +1100, Dave Chinner wrote:
+> Yeah, and if you add the equivalent of 'lsblk -f' then you also get
+> the fs UUID to identify the filesystem on the block device at a
+> given time....
 
-*nod*
+The UUID usually already gets recorded and displayed:
 
-That was the essence of my suggestion that the filesystem mount log
-notification emits it's persistent identifier. If you need it to be
-logged, that's where the verbose identifier output should be....
+# lsblkj -f --until "2020-01-09 22:00:00"
+NAME                             FSTYPE      FSVER LABEL UUID            =
+                       FSAVAIL FSUSE% MOUNTPOINT
+sda                                                                      =
+                                     =20
+=E2=94=9C=E2=94=80sda1                           xfs                     =
+78524ad6-6445-4bb6-840b-194871231274  =20
+...
 
-> > The user has to systematically and methodically go through the logs
-> > trying to deduce what the identifier was referring to at the time of the
-> > error.  This isn't trivial and virtually impossible at times depending
-> > on circumstances.
-> 
-> So how about logging what these identifiers reference at different times
-> in a way that is easy to query later?
-> 
-> Come to think of it, we already get uevents when the references change,
-> and udev rules even already now create neat "by-*" links for us.  Maybe
-> we just need to log better what udev is actually already doing?
+(It's also capturing something simple for mountpoint when it can, but so =
+far that's
+only visible with journalctl.)
+=20
+Alasdair
 
-Right, this is essentially what I've been trying to point out - I
-even used the by-uuid links as an example of how the filesystem is
-persistently identified by existing system boot infrastructure. :)
-
-> Then we could reproduce what the storage configuration looked like at
-> any particular time in the past to provide the missing context for
-> the identifiers in the log messages.
-> 
->                     ---------------------
->  
-> Which seems like an appropriate time to introduce storage-logger.
-> 
->     https://github.com/lvmteam/storage-logger
-> 
->     Fedora rawhide packages:
->       https://copr.fedorainfracloud.org/coprs/agk/storage-logger/ 
-> 
-> The goal of this particular project is to maintain a record of the
-> storage configuration as it changes over time.  It should provide a
-> quick way to check the state of a system at a specified time in the
-> past.
-> 
-> The initial logging implementation is triggered by storage uevents and
-> consists of two components:
-> 
-> 1. A new udev rule file, 99-zzz-storage-logger.rules, which runs after
-> all the other rules have run and invokes:
-> 
-> 2. A script, udev_storage_logger.sh, that captures relevant
-> information about devices that changed and stores it in the system
-> journal.
-> 
-> The effect is to log the data from relevant uevents plus some
-> supplementary information (including device-mapper tables, for example).
-> It does not yet handle filesystem-related events.
-
-There are very few filesystem uevents issued that you could log,
-anyway. Certainly nothing standardised across filesystems....
-
-> Two methods to query the data are offered:
-> 
-> 1. journalctl
-> Data is tagged with the identifier UDEVLOG and retrievable as
-> key-value pairs.
->   journalctl -t UDEVLOG --output verbose
->   journalctl -t UDEVLOG --output json
->     --since 'YYYY-MM-DD HH:MM:SS' 
->     --until 'YYYY-MM-DD HH:MM:SS'
->   journalctl -t UDEVLOG --output verbose
->     --output-fields=PERSISTENT_STORAGE_ID,MAJOR,MINOR
->      PERSISTENT_STORAGE_ID=dm-name-vg1-lvol0
-> 
-> 2. lsblkj  [appended j for journal]
-> This lsblk wrapper reprocesses the logged uevents to reconstruct a
-> dummy system environment that "looks like" the system did at a
-> specified earlier time and then runs lsblk against it.
-
-Yeah, and if you add the equivalent of 'lsblk -f' then you also get
-the fs UUID to identify the filesystem on the block device at a
-given time....
-
-> Yes, I'm looking for feedback to help to decide whether or not it's
-> worth developing this any further.
-
-This seems like a more flexible approach to me - it allows for
-text-based system loggers a hook to capture this device
-information, too, and hence implement their own post-processing
-scripts to provide the same lifetime information.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
