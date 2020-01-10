@@ -2,101 +2,131 @@ Return-Path: <SRS0=9eMh=27=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A8DC33C99
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E5FBC33CA4
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C58B2077C
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:04:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aFkngOfj"
+	by mail.kernel.org (Postfix) with ESMTP id 04F3F2077B
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 06:18:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578637108;
+	bh=PSpS8uYTU84sHXAsvl8HtD5TiRFl4Kwd6+AyfcXUQTk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=2XBJ2JdIus8LfPqzlZajN4fytiWhp04VrWQnRTVEBg8Xck/5AcGG0bA17VN21HKTm
+	 82PscP2tEL+7T9ms8pC1Q8Ktb1q6nx/KnuVLZT1OA64IR7k3Nb1Bz7ygkpWuTVUHBN
+	 DR+AHdRSUtnm6eRkVmkGaegqFMQOVUs2bn4kjEDU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731331AbgAJGEE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jan 2020 01:04:04 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:42810 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727086AbgAJGED (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2020 01:04:03 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00A63RCJ087414;
-        Fri, 10 Jan 2020 06:04:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=q3VxyJTOy9ZHQGP5KSRVM4PO0ylUd4m6r2Z4mGx30b8=;
- b=aFkngOfjKzacVvzLFynXdsQA1KbgvHKsvEoYG4Jr5+c7cR0YgtLFl6S1a+PlN+7ZM5sC
- UdLtaBmtgzeD/g0H55gwbMxSsuwUk6ZHZ4O6xhru2/VopruhQLGYMFErKqLQ4bOtVGyy
- Gsg6UZaPiOdJPYSGCRf4hrcRwEq6VYJfO0eB1N8jpt3flaIbJHJ4w58SiPT6C6djOSoJ
- oaxUSmxgUwdEOTLeiOAogAqNe/MA9SCBLhKsNYomMFDB+YNFr2gCvySbwQWA7TGCeZks
- zYxj2Q375GLir0AAI03XIK1gwcFwsvOTSJjvjcGsEJb9ZLTnp6iHHfLI61O9OdC3QFTg GA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xaj4ug0t5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Jan 2020 06:04:00 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00A63s1n002902;
-        Fri, 10 Jan 2020 06:03:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2xdrxf89pe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Jan 2020 06:03:56 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00A63gXY017273;
-        Fri, 10 Jan 2020 06:03:42 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 09 Jan 2020 22:03:41 -0800
-To:     Anand Lodnoor <anand.lodnoor@broadcom.com>
-Cc:     linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, kiran-kumar.kasturi@broadcom.com,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: Re: [PATCH 03/11] megaraid_sas: Update queue_depth of SAS and NVMe devices
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1578051155-14716-1-git-send-email-anand.lodnoor@broadcom.com>
-        <1578051155-14716-4-git-send-email-anand.lodnoor@broadcom.com>
-Date:   Fri, 10 Jan 2020 01:03:39 -0500
-In-Reply-To: <1578051155-14716-4-git-send-email-anand.lodnoor@broadcom.com>
-        (Anand Lodnoor's message of "Fri, 3 Jan 2020 17:02:27 +0530")
-Message-ID: <yq17e1zx2ys.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1731469AbgAJGS1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jan 2020 01:18:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52766 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731435AbgAJGS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Jan 2020 01:18:26 -0500
+Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 932C22080D;
+        Fri, 10 Jan 2020 06:18:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578637106;
+        bh=PSpS8uYTU84sHXAsvl8HtD5TiRFl4Kwd6+AyfcXUQTk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hBdqEQ4H3Yzhbq882wdCgkTvQxJOGsJ26LOVmSsU7TtQLDmUlqwTtbnYgyii6UgxC
+         lpagS6yzkdb1juq5s8NpDP1Z+el4LjQv5acBC9QgE9UaHvwsHKpNIV6+IcIXhNBySH
+         +zxe5kseoC/5kwox8DExGCBS7/rQGTh1gf2ywDzk=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        John Stultz <john.stultz@linaro.org>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Satya Tangirala <satyat@google.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "Theodore Y . Ts'o" <tytso@mit.edu>
+Subject: [RFC PATCH 2/5] arm64: dts: sdm845: add Inline Crypto Engine registers and clock
+Date:   Thu,  9 Jan 2020 22:16:31 -0800
+Message-Id: <20200110061634.46742-3-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200110061634.46742-1-ebiggers@kernel.org>
+References: <20200110061634.46742-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=882
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001100051
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9495 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=948 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001100051
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Eric Biggers <ebiggers@google.com>
 
-Anand,
+Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+Crypto Engine) to the device tree node for the UFS host controller on
+sdm845, so that the ufs-qcom driver will be able to use inline crypto.
 
->  /* JBOD Queue depth definitions */
->  #define MEGASAS_SATA_QD	32
-> -#define MEGASAS_SAS_QD	64
-> +#define MEGASAS_SAS_QD 256
->  #define MEGASAS_DEFAULT_PD_QD	64
-> -#define MEGASAS_NVME_QD		32
-> +#define MEGASAS_NVME_QD        64
->  
->  #define MR_DEFAULT_NVME_PAGE_SIZE	4096
->  #define MR_DEFAULT_NVME_PAGE_SHIFT	12
+Use a separate register range rather than extending the main UFS range
+because there's a gap between the two, and the ICE registers are
+vendor-specific.  (Actually, the hardware claims that the ICE range also
+includes the array of standard crypto configuration registers; however,
+on this SoC the Linux kernel isn't permitted to access them directly.)
 
-Please justify this change.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ arch/arm64/boot/dts/qcom/sdm845.dtsi | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index ddb1f23c936fe..0fecc0791959e 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -1367,7 +1367,9 @@ cache-controller@1100000 {
+ 		ufs_mem_hc: ufshc@1d84000 {
+ 			compatible = "qcom,sdm845-ufshc", "qcom,ufshc",
+ 				     "jedec,ufs-2.0";
+-			reg = <0 0x01d84000 0 0x2500>;
++			reg = <0 0x01d84000 0 0x2500>,
++			      <0 0 0 0>,
++			      <0 0x01d90000 0 0x8000>;
+ 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+ 			phys = <&ufs_mem_phy_lanes>;
+ 			phy-names = "ufsphy";
+@@ -1385,7 +1387,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				"ref_clk",
+ 				"tx_lane0_sync_clk",
+ 				"rx_lane0_sync_clk",
+-				"rx_lane1_sync_clk";
++				"rx_lane1_sync_clk",
++				"ice_core_clk";
+ 			clocks =
+ 				<&gcc GCC_UFS_PHY_AXI_CLK>,
+ 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+@@ -1394,7 +1397,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<&rpmhcc RPMH_CXO_CLK>,
+ 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+ 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+-				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
++				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
++				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+ 			freq-table-hz =
+ 				<50000000 200000000>,
+ 				<0 0>,
+@@ -1403,7 +1407,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<0 0>,
+ 				<0 0>,
+ 				<0 0>,
+-				<0 0>;
++				<0 0>,
++				<0 300000000>;
+ 
+ 			status = "disabled";
+ 		};
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.24.1
+
