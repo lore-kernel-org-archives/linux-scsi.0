@@ -2,99 +2,100 @@ Return-Path: <SRS0=9eMh=27=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437D2C282DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B9C1C282DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 18:36:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 145D42084D
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:17:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 034D520842
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 18:36:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="GTMe4FPl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fhEaXCE9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727574AbgAJRRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jan 2020 12:17:32 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:51069 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726751AbgAJRRc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Jan 2020 12:17:32 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1578676651; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=xBPYgJDEwJiK3m8b7fV9s9qyj5id/MbB23qfyHS3psY=;
- b=GTMe4FPl0OVcIoJpwCwMZXWZUTjgeTI3wfw9Dx7gZRXq3I3xlo13Q5uO8dlap5QQ85pGUcyK
- LorubXs/V380lj9TSlB8pvkftUmsAbNXBO3e3DPUbQR36c9noUMFwR3g+cJjjuOeLmswOYrd
- +L35gJex2o3AMAE+YAmLnJhQE2U=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e18b1aa.7f207cabbf10-smtp-out-n03;
- Fri, 10 Jan 2020 17:17:30 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E41C5C4479F; Fri, 10 Jan 2020 17:17:29 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 90A9DC4479C;
-        Fri, 10 Jan 2020 17:17:28 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 10 Jan 2020 09:17:28 -0800
-From:   asutoshd@codeaurora.org
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-scsi-owner@vger.kernel.org
-Subject: Re: [PATCH 3/4] ufs: Simplify two tests
-In-Reply-To: <20200107192531.73802-4-bvanassche@acm.org>
-References: <20200107192531.73802-1-bvanassche@acm.org>
- <20200107192531.73802-4-bvanassche@acm.org>
-Message-ID: <3d2d62d9e3bf8524fdf14fbd820bdbf3@codeaurora.org>
-X-Sender: asutoshd@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        id S1728648AbgAJSgn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jan 2020 13:36:43 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:34440 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728496AbgAJSgl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2020 13:36:41 -0500
+Received: by mail-wr1-f68.google.com with SMTP id t2so2777865wrr.1;
+        Fri, 10 Jan 2020 10:36:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=pdOwgb77hw5W7/fMrT3rXjdCdL0Strxze8eiojAXtTg=;
+        b=fhEaXCE9ZImAaW0znUttr7EmxkKXyMJ8aAa6ctKxbgzIrBIi+Y/o8N8+RbXam6/HXZ
+         Cw0KxpCHBgvU49O8HPlteulKyy6AXoibYu+wXLtuJEIncQmX7622CLdZtAw0UCl/3iHS
+         9nilkbMvefeUlkb7ZhZLIgIKBhzhDnG+7SqFYrEMxDbtg5csU7XuV2mofg2JHyT+0cFI
+         X/d4kDaExpQEst2ZdmG0kxpEYJ/x7AS5ZLGxnsoE1uK4jNIlEDqZBAVh443uZCisRIEG
+         TLqw0M07L5rQ6T6XGO4JRpjJ8ZwTwtIBEVm6ag8ENdg2A7HaY7nO/h16JLSjmaLyESjw
+         ffHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=pdOwgb77hw5W7/fMrT3rXjdCdL0Strxze8eiojAXtTg=;
+        b=bNaKr+T74I5fYzaXIDS7GuyGkUqM3CVHA1I1C/Gd9GtlLVUrAX4gV2yolvwiAREEkp
+         cuvm5PUxSHFNVGR7j1+55c1nIMCAl1fHuEny4yxYprkkS//K19zdl88duePR7vOhD94q
+         +Kmu+i4TVbcW6me0rwjY2U5m6iZ+M+9sJK6R+g8xgE3wt3b9URUjzM2Cq8pTZ4YnEqhM
+         BIoNj3KuMe/lZMniTmiVxZnWJpjxv92hkJle/ckaK9U0rIyobKXuc0FaTWb5Z5/fmbDz
+         Gu2ecsGgU/vEc08BOkpzt7eZSBu8ggPqXcA6LN9wMikVajmgnjfVawx/Q97W+HifoSLb
+         TVOw==
+X-Gm-Message-State: APjAAAUJlXgfHFvlwZiSpo8j+fa9F/SiurNA2O5SQ5mhodZ3kacD6s3V
+        b6WlgIEzTeWaR34mckwMcIY=
+X-Google-Smtp-Source: APXvYqxWzBzeoDTdUcPLmULJgQcWtmntniN4ym0sK8nVJke7SzAcOlGgtPAr86X0MnLklB4d4Bu7fA==
+X-Received: by 2002:a5d:494f:: with SMTP id r15mr5038525wrs.143.1578681399816;
+        Fri, 10 Jan 2020 10:36:39 -0800 (PST)
+Received: from localhost.localdomain (ip5f5bee3c.dynamic.kabel-deutschland.de. [95.91.238.60])
+        by smtp.gmail.com with ESMTPSA id x11sm3182825wre.68.2020.01.10.10.36.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Jan 2020 10:36:39 -0800 (PST)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] scsi: ufs: add max_lu_supported in struct ufs_dev_info
+Date:   Fri, 10 Jan 2020 19:36:04 +0100
+Message-Id: <20200110183606.10102-2-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200110183606.10102-1-huobean@gmail.com>
+References: <20200110183606.10102-1-huobean@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-07 11:25, Bart Van Assche wrote:
-> lrbp->cmd is set only for SCSI commands. Use this knowledge to simplify
-> two boolean expressions.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 6f55d72e7fdd..15e65248597d 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2474,7 +2474,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
-> 
->  	/* issue command to the controller */
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	ufshcd_vops_setup_xfer_req(hba, tag, (lrbp->cmd ? true : false));
-> +	ufshcd_vops_setup_xfer_req(hba, tag, true);
->  	ufshcd_send_command(hba, tag);
->  out_unlock:
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> @@ -2661,7 +2661,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
-> *hba,
->  	/* Make sure descriptors are ready before ringing the doorbell */
->  	wmb();
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	ufshcd_vops_setup_xfer_req(hba, tag, (lrbp->cmd ? true : false));
-> +	ufshcd_vops_setup_xfer_req(hba, tag, false);
->  	ufshcd_send_command(hba, tag);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+From: Bean Huo <beanhuo@micron.com>
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Add one new parameter max_lu_supported in struct ufs_dev_info,
+which will be used to express exactly how many general LUs being
+supported by UFS device.
+
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufs.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index c89f21698629..5ca7ea4f223e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -530,6 +530,8 @@ struct ufs_dev_info {
+ 	bool f_power_on_wp_en;
+ 	/* Keeps information if any of the LU is power on write protected */
+ 	bool is_lu_power_on_wp;
++	/* Maximum number of general LU supported by the UFS device */
++	u8 max_lu_supported;
+ };
+ 
+ #define MAX_MODEL_LEN 16
+-- 
+2.17.1
+
