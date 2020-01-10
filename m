@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C19C282DD
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B89C282DD
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:07:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1BCBA20661
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:06:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6160920661
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jan 2020 17:07:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PhVSeVrU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qq/eSddV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727541AbgAJRGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jan 2020 12:06:54 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:43599 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727450AbgAJRGy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2020 12:06:54 -0500
-Received: by mail-pf1-f196.google.com with SMTP id x6so1411478pfo.10;
-        Fri, 10 Jan 2020 09:06:53 -0800 (PST)
+        id S1727834AbgAJRG6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jan 2020 12:06:58 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37202 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726131AbgAJRG6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Jan 2020 12:06:58 -0500
+Received: by mail-pg1-f195.google.com with SMTP id q127so1280325pga.4;
+        Fri, 10 Jan 2020 09:06:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RLhr45RoJXGQnRV7JLJiMgVzO70txR/YEjrlTrJZ7UY=;
-        b=PhVSeVrUyIEGCIorTk8g5xUdqi3u78wH6knFhMtFpTNOa+M4lr0CexHagEdTL5gqf3
-         0DSO32la9P0eBJg1TXyyVISeZC05NauRTHdkIlPlDaymiS1VIz9VZ7sSbltdjLcuTpUf
-         c30cU8CFWJutf2Kx2Xr93irsNQX6ob8dZ/Y6nrmY8v7so71X2wluwCduV+Cter7skqas
-         kH4o3SCNxBX9ENxLpjpSRhI23oagm5BETD95hYV9q+CjVoDwzjtcw2KataUsE2gW1myk
-         h3L0GOAooqvtsqowNn+hoJhYA2DkFJvf8YHz3rJbZFH9Wd/W2vMw5eKMw7r1s6auOW1U
-         /uWA==
+        bh=kIXyMxyHb52Dqb3xzKBUlHwhFwf+AsnzOx4pqWqWlWY=;
+        b=Qq/eSddVaNrHi4aFsdIW47GKoMp5/AouAcANV8I9EI/aUy0FYixHPk3LViqJkSvjq3
+         MfYGuA+R3Nl7y4cxOBJ/grgL+QF0Otmarxdzx2nDg0/J6Az3VA3Vvwiq1jaJpXGaROLC
+         nxMK6xmFicvJ/4LYtB0+WZ7kd1EeNxydqiQoHB9fIwBMPWpzD1gQbgDQF2twLFHxiokD
+         wno1xRcPl8aeQQ9a7/OWDqfTw+jWp3AqGLIhWZnQzuh2pkgCQVuCUjjnWGzT39X9sc6m
+         G2VGSavSYYCXhNuW0gc1g4HGhlDCDmpnRvQ7BrHJzpC4/g8vCIUdNcgl830i3mr6Gjc/
+         SArg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RLhr45RoJXGQnRV7JLJiMgVzO70txR/YEjrlTrJZ7UY=;
-        b=crTzepiZGnKtzUeZh6mlSpzTywRcHRZMpFFl/3gx6aVjIhqSEpe1efvIgsdsUP/nr6
-         rx+a76MTrDBGRyeYn3Wg0qpzex9U5/iZnvZ2pZNBqe7dLpdgFmVYxZjUD3HjyA235wQg
-         uR2rI4238Dj5DcDltvlTUZy9yRxQXKbv0CGF3R2NvsRv5y+VN/ByXC8yCN8sG5dsidu/
-         ts0xSsl/TUlVCFNU3RAL7v8zlceOXReKNXfi7wR33HXf46tuzodCppznbC4JQBA3IGbm
-         WoTQHS+WgS5vWUqFdjXEb5syMpAnPqpqvf/+eVrzJ0DyRf6T7fx3B2v0kaX5SlkCfxlI
-         EPfg==
-X-Gm-Message-State: APjAAAVRzJ2WkWS8qvc4FSetHOvb7sqySYO+y7R4qr2aVjbM+E1pn4WK
-        bmwpon+7a83PD69vSwd3x2E=
-X-Google-Smtp-Source: APXvYqxuHWRKp9D0rnGlVT2CZw2phPRFzBx8WfA6+qaKzw02yVbJKcn0hKB09/wXvEzK3YOcEn8u9g==
-X-Received: by 2002:a63:214e:: with SMTP id s14mr5503825pgm.428.1578676012989;
-        Fri, 10 Jan 2020 09:06:52 -0800 (PST)
+        bh=kIXyMxyHb52Dqb3xzKBUlHwhFwf+AsnzOx4pqWqWlWY=;
+        b=uMaDF7o7vSzrFVPL3bVNMhWDb6kVRJ3s72dPiFi10+m5qUNxgOtAqMuzgvbNeJQ9oW
+         aqUVxI+svsKbxeIVZ+Rdxcm8xUrzA60jFft3qm6IFRbZy+TNbzL8QD+aoXS2vXKTeUxM
+         21WPmXEBvLB3ZO0BZmsrNWFs6k2Kcl8Pc1/CxXoJ+RcVgLU5VEVU4drOCfrnwt8JvnWE
+         3QON7PQgZt+h9ECTqBfgooDJfoUAl6gGW/NpvDvHv5jWcFwZwaaiCClV1YKnaSUO+PKO
+         YwUt/IvWDZ5V87rLRPps19NFd2Kd6+ExoMTEWCZS6rb8sNeMlO0nJ0m8pdDW293kRu+Q
+         u9fQ==
+X-Gm-Message-State: APjAAAVCkCSIRmXXVNVrmNOS6O+hSNO1zwUahbbRp86bo2XPtPqqnY3v
+        V2YL8B2DxXZWC+tEvuwwubg=
+X-Google-Smtp-Source: APXvYqx1bOJJ1EYx+JdDvHs8uo8AXTRyG4cSwLpVeu4x3iHlpshx7fU4qmCEoHVe+Y77WlnkQkEjOg==
+X-Received: by 2002:a65:52ca:: with SMTP id z10mr5668585pgp.47.1578676017609;
+        Fri, 10 Jan 2020 09:06:57 -0800 (PST)
 Received: from localhost.localdomain ([103.211.17.220])
-        by smtp.googlemail.com with ESMTPSA id x4sm3613268pff.143.2020.01.10.09.06.50
+        by smtp.googlemail.com with ESMTPSA id x4sm3613268pff.143.2020.01.10.09.06.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jan 2020 09:06:52 -0800 (PST)
+        Fri, 10 Jan 2020 09:06:57 -0800 (PST)
 From:   Amol Grover <frextrite@gmail.com>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
@@ -64,9 +64,9 @@ Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
         "Paul E . McKenney" <paulmck@kernel.org>,
         Amol Grover <frextrite@gmail.com>
-Subject: [PATCH v2 2/3] drivers: target: target_core_tpg: Pass lockdep expression to RCU lists
-Date:   Fri, 10 Jan 2020 22:35:58 +0530
-Message-Id: <20200110170558.23466-2-frextrite@gmail.com>
+Subject: [PATCH v2 3/3] drivers: target: tcm_fc: tfc_sess: Pass lockdep expression to RCU lists
+Date:   Fri, 10 Jan 2020 22:35:59 +0530
+Message-Id: <20200110170558.23466-3-frextrite@gmail.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200110170558.23466-1-frextrite@gmail.com>
 References: <20200110170558.23466-1-frextrite@gmail.com>
@@ -77,9 +77,9 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tpg->tpg_lun_hlist is traversed with hlist_for_each_entry_rcu
+head is traversed with hlist_for_each_entry_rcu
 outside an RCU read-side critical section but under the
-protection of tpg->tpg_lun_mutex.
+protection of ft_lport_lock.
 
 Hence, add the corresponding lockdep expression to the list traversal
 primitive to silence false-positive lockdep warnings, and
@@ -90,39 +90,77 @@ clean and concise.
 
 Signed-off-by: Amol Grover <frextrite@gmail.com>
 ---
- drivers/target/target_core_tpg.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/target/tcm_fc/tfc_sess.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index d24e0a3ba3ff..0d89b738ca6e 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -30,6 +30,9 @@
- #include "target_core_pr.h"
- #include "target_core_ua.h"
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 4fd6a1de947c..8e9598010fb9 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -32,6 +32,9 @@
+ 		 (lport)->host->host_no,	   \
+ 		 (lport)->port_id, ##args )
  
-+#define tpg_lun_mutex_held() \
-+	lockdep_is_held(&tpg->tpg_lun_mutex)
++#define ft_lport_lock_held() \
++	lockdep_is_held(&ft_lport_lock)
 +
- extern struct se_device *g_lun0_dev;
+ static void ft_sess_delete_all(struct ft_tport *);
  
- /*	__core_tpg_get_initiator_node_acl():
-@@ -110,12 +113,12 @@ void core_tpg_add_node_to_devs(
- 	struct se_device *dev;
+ /*
+@@ -45,7 +48,7 @@ static struct ft_tport *ft_tport_get(struct fc_lport *lport)
+ 	int i;
  
- 	mutex_lock(&tpg->tpg_lun_mutex);
--	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link) {
-+	hlist_for_each_entry_rcu(lun, &tpg->tpg_lun_hlist, link,
-+				 tpg_lun_mutex_held()) {
- 		if (lun_orig && lun != lun_orig)
- 			continue;
+ 	tport = rcu_dereference_protected(lport->prov[FC_TYPE_FCP],
+-					  lockdep_is_held(&ft_lport_lock));
++							ft_lport_lock_held());
+ 	if (tport && tport->tpg)
+ 		return tport;
  
--		dev = rcu_dereference_check(lun->lun_se_dev,
--					    lockdep_is_held(&tpg->tpg_lun_mutex));
-+		dev = rcu_dereference_check(lun->lun_se_dev, tpg_lun_mutex_held());
- 		/*
- 		 * By default in LIO-Target $FABRIC_MOD,
- 		 * demo_mode_write_protect is ON, or READ_ONLY;
+@@ -170,7 +173,7 @@ static struct ft_sess *ft_sess_get(struct fc_lport *lport, u32 port_id)
+ 	}
+ 
+ 	head = &tport->hash[ft_sess_hash(port_id)];
+-	hlist_for_each_entry_rcu(sess, head, hash) {
++	hlist_for_each_entry_rcu(sess, head, hash, ft_lport_lock_held()) {
+ 		if (sess->port_id == port_id) {
+ 			kref_get(&sess->kref);
+ 			rcu_read_unlock();
+@@ -215,7 +218,7 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	ft_format_wwn(&initiatorname[0], TRANSPORT_IQN_LEN, rdata->ids.port_name);
+ 
+ 	head = &tport->hash[ft_sess_hash(port_id)];
+-	hlist_for_each_entry_rcu(sess, head, hash)
++	hlist_for_each_entry_rcu(sess, head, hash, ft_lport_lock_held())
+ 		if (sess->port_id == port_id)
+ 			return sess;
+ 
+@@ -264,7 +267,7 @@ static struct ft_sess *ft_sess_delete(struct ft_tport *tport, u32 port_id)
+ 	struct ft_sess *sess;
+ 
+ 	head = &tport->hash[ft_sess_hash(port_id)];
+-	hlist_for_each_entry_rcu(sess, head, hash) {
++	hlist_for_each_entry_rcu(sess, head, hash, ft_lport_lock_held()) {
+ 		if (sess->port_id == port_id) {
+ 			ft_sess_unhash(sess);
+ 			return sess;
+@@ -291,7 +294,7 @@ static void ft_sess_delete_all(struct ft_tport *tport)
+ 
+ 	for (head = tport->hash;
+ 	     head < &tport->hash[FT_SESS_HASH_SIZE]; head++) {
+-		hlist_for_each_entry_rcu(sess, head, hash) {
++		hlist_for_each_entry_rcu(sess, head, hash, ft_lport_lock_held()) {
+ 			ft_sess_unhash(sess);
+ 			ft_close_sess(sess);	/* release from table */
+ 		}
+@@ -454,7 +457,7 @@ static void ft_prlo(struct fc_rport_priv *rdata)
+ 
+ 	mutex_lock(&ft_lport_lock);
+ 	tport = rcu_dereference_protected(rdata->local_port->prov[FC_TYPE_FCP],
+-					  lockdep_is_held(&ft_lport_lock));
++							ft_lport_lock_held());
+ 
+ 	if (!tport) {
+ 		mutex_unlock(&ft_lport_lock);
 -- 
 2.24.1
 
