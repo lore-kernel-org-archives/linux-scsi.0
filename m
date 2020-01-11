@@ -2,65 +2,87 @@ Return-Path: <SRS0=vbb9=3A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=ham
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDC7C33C9E
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 07:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 249C6C33CA3
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 08:17:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DDDE206DA
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 07:21:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E61922077C
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 08:17:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="YC9QHauc"
+	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="TrleX3El"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728510AbgAKHVZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Jan 2020 02:21:25 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:16752 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728506AbgAKHVZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2020 02:21:25 -0500
-X-UUID: fa7eec1aea814d15bc591475fc7bf00d-20200111
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=UIl2WHNGAdH8h4XL4fSauTcsgNMglNAkpBeSnsVSD2c=;
-        b=YC9QHaucfAv4FXkX/r8oZiSygvx61f2BPVnTyVQSy7nuo6xMz+7xFlXcO/a2hGTWS3z6O+Fm7dhaceI9sEnhhov6PCJMbspEIFcuhWGRzkaeJvJm0SmslXbMtPkcaD59OQg/QCE7im2BykyUuThaTxrCQ6rzSauhuxi9zseDoA8=;
-X-UUID: fa7eec1aea814d15bc591475fc7bf00d-20200111
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 484932982; Sat, 11 Jan 2020 15:21:21 +0800
-Received: from mtkcas09.mediatek.inc (172.21.101.178) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Sat, 11 Jan 2020 15:20:11 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas09.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Sat, 11 Jan 2020 15:22:00 +0800
-Message-ID: <1578727279.17435.9.camel@mtkswgap22>
-Subject: Re: [PATCH 3/4] ufs: Simplify two tests
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, "Christoph Hellwig" <hch@lst.de>
-Date:   Sat, 11 Jan 2020 15:21:19 +0800
-In-Reply-To: <20200107192531.73802-4-bvanassche@acm.org>
-References: <20200107192531.73802-1-bvanassche@acm.org>
-         <20200107192531.73802-4-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-TM-SNTS-SMTP: DC1383E3E1A717781C0B51E97AC2F9F3C342689D943FC14E431A96A89E7998042000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1728598AbgAKIRW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Jan 2020 03:17:22 -0500
+Received: from linux.microsoft.com ([13.77.154.182]:56172 "EHLO
+        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728592AbgAKIRV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2020 03:17:21 -0500
+Received: by linux.microsoft.com (Postfix, from userid 1004)
+        id 4940E20EB6F2; Sat, 11 Jan 2020 00:17:21 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4940E20EB6F2
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
+        s=default; t=1578730641;
+        bh=TSTs/3r+gMHYDAAehvTwpFDAhqXBqJ8U8rLLzJ9X6i0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=TrleX3ElqSd94in+vgHzU/qDAOW2zZI6QnjZPAxBmSp4kxPdUnvC9LnSHiTkIvXRo
+         xkrR8INSH1wx0SUhCttE70CtB7nfZBC5CA7XK1vpa7tgq7m1SWw+Ar1ILYYTri6XzK
+         Q2kwMF+sC/OE7mzp/+VFpqGFwvKxiPx6K7sKetNk=
+From:   longli@linuxonhyperv.com
+To:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Long Li <longli@microsoft.com>
+Subject: [PATCH] scsi: storvsc: Correctly set number of hardware queues for IDE disk
+Date:   Sat, 11 Jan 2020 00:17:14 -0800
+Message-Id: <1578730634-109961-1-git-send-email-longli@linuxonhyperv.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDIwLTAxLTA3IGF0IDExOjI1IC0wODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IGxyYnAtPmNtZCBpcyBzZXQgb25seSBmb3IgU0NTSSBjb21tYW5kcy4gVXNlIHRoaXMga25v
-d2xlZGdlIHRvIHNpbXBsaWZ5DQo+IHR3byBib29sZWFuIGV4cHJlc3Npb25zLg0KPiANCj4gU2ln
-bmVkLW9mZi1ieTogQmFydCBWYW4gQXNzY2hlIDxidmFuYXNzY2hlQGFjbS5vcmc+DQoNClJldmll
-d2VkLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KDQoNCg==
+From: Long Li <longli@microsoft.com>
+
+Commit 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware queue and CPU queue")
+introduced a regression for disks attached to IDE. For these disks the host VSP only offers
+one VMBUS channel. Setting multiple queues can overload the VMBUS channel and result in
+performance drop for high queue depth workload on system with large number of CPUs.
+
+Fix it by leaving the number of hardware queues to 1 (default value) for IDE
+disks.
+
+Fixes: 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware queue and CPU queue")
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index f8faf8b3d965..992b28e40374 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1842,9 +1842,11 @@ static int storvsc_probe(struct hv_device *device,
+ 	 */
+ 	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
+ 	/*
++	 * For non-IDE disks, the host supports multiple channels.
+ 	 * Set the number of HW queues we are supporting.
+ 	 */
+-	host->nr_hw_queues = num_present_cpus();
++	if (dev_id->driver_data != IDE_GUID)
++		host->nr_hw_queues = num_present_cpus();
+ 
+ 	/*
+ 	 * Set the error handler work queue.
+-- 
+2.20.1
 
