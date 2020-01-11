@@ -6,50 +6,49 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD75C33CA7
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 22:43:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCABC33CA7
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 22:51:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AA9620866
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 22:43:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 295EB2084D
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Jan 2020 22:51:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731577AbgAKWnr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Jan 2020 17:43:47 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:37967 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731528AbgAKWnr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2020 17:43:47 -0500
-Received: by mail-pj1-f68.google.com with SMTP id l35so2579027pje.3;
-        Sat, 11 Jan 2020 14:43:47 -0800 (PST)
+        id S1731620AbgAKWuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Jan 2020 17:50:21 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:45686 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731610AbgAKWuV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jan 2020 17:50:21 -0500
+Received: by mail-pl1-f195.google.com with SMTP id b22so2275768pls.12;
+        Sat, 11 Jan 2020 14:50:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=DRPhP39J8rz6ObtEibVJbNTifSTz87rTh6swXdcFd1I=;
-        b=aCn21myhAlG8RzOX3vfppVQzXJfSI5VjkTmVOWab34SI+HmKRmPvAOQtyjYz1ASHa4
-         LDQxngaaYrdS023oiuGP+4XP5c3OwAMgTxnfSeWR/freFBxLMC/9+o3eV6aK58wcRoSo
-         FMWpSPO7n9K6ZVRobJUuFh36km1NGg//IkA+2wr6+mGiIcoEQnIKAHO248EEgKYvBQ5A
-         VmG77TwLa4mnO/wR8xt7X0s3tFW9jVXzQ712s3svO7fq+fVD/EZeP9ZDW+LikVVpkvUh
-         81d7zLK5uZvFltzhGYNtU00+Jo7uXX/q+P2gOktPZbAt46jv0ZW4d3HkRWNCiMyZ5ylF
-         FJ+A==
-X-Gm-Message-State: APjAAAUsto5Uij1N3xBSddHQPh4LGqCUA/WxszcwOxsGN9ZZwCycRI1z
-        PqgwfQecMB9FCUuiRj+RlS0PKVBg
-X-Google-Smtp-Source: APXvYqzDW2b9HGDkfti5V/I9eoQd9sOG/gBhPO9reVrt/UryU++tHIsbqjkzO0Id//OkPY7VT7iebQ==
-X-Received: by 2002:a17:902:9f98:: with SMTP id g24mr7009457plq.325.1578782626282;
-        Sat, 11 Jan 2020 14:43:46 -0800 (PST)
+        bh=1Y+eakPpLPu3QpHBaVl40IWgpXF2l/AUF3kqpcxzchk=;
+        b=oMu7K7YZpxVwP/ckYBEDYqxAgT+8dS6kHsrpuW17ez1UBhJnf8rF6//ANjTDRrDwhY
+         r2U1tXNG88C+XodsDWICX3F1m1uSXOpbt2WvKxHr8Yin4d/CigLGCbbB9oSfGgJrYr+Q
+         pkyWmlNqKMwY36k9zPSZ8l9JAhB304xmgIojZsLAe3iqH8G4TduxLfDBDdTWx9KGkhUd
+         esz2pSLGz1ONJQW/Je7sdD7NonBw5yXeLZGdr0vvtsseFfml4F2IBPsyshcnwlOSBWor
+         XaPjkDL5TX4EtIKJMOq+D3brWmprhqeBc4q5HvrYrrBnxYVCE1fTFjOvrcP2I5OYXKrm
+         1iyw==
+X-Gm-Message-State: APjAAAWNu4CvfiQyVKdusfmM9+y7Y0VW2BPI+mnvsLpn3G5m+45kAyuE
+        UMkSSZ/jZHHUjUNqv81CK/bst6/R
+X-Google-Smtp-Source: APXvYqzEUV0kN51ktgkt703j8Uthv6pVQHOwe2ELZNieFA4afv9fNsA3xtF7FC7Ne19z3STzWvJRMg==
+X-Received: by 2002:a17:902:968b:: with SMTP id n11mr12109209plp.120.1578783019935;
+        Sat, 11 Jan 2020 14:50:19 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:7c72:26f5:20:bf58? ([2601:647:4000:d7:7c72:26f5:20:bf58])
-        by smtp.gmail.com with ESMTPSA id o184sm7486381pgo.62.2020.01.11.14.43.44
+        by smtp.gmail.com with ESMTPSA id d3sm7419410pjx.16.2020.01.11.14.50.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 11 Jan 2020 14:43:45 -0800 (PST)
-Subject: Re: [PATCH 1/3] scsi: ufs: add max_lu_supported in struct
- ufs_dev_info
+        Sat, 11 Jan 2020 14:50:19 -0800 (PST)
+Subject: Re: [PATCH 3/3] scsi: ufs: use UFS device indicated maximum LU number
 To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, pedrom.sousa@synopsys.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200110183606.10102-1-huobean@gmail.com>
- <20200110183606.10102-2-huobean@gmail.com>
+ <20200110183606.10102-4-huobean@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -74,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <42f2fedc-eab3-abed-5a10-f55aa0bb6a19@acm.org>
-Date:   Sat, 11 Jan 2020 14:43:44 -0800
+Message-ID: <9f26bde7-0c78-c56c-4f15-5bf2dba71506@acm.org>
+Date:   Sat, 11 Jan 2020 14:50:17 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <20200110183606.10102-2-huobean@gmail.com>
+In-Reply-To: <20200110183606.10102-4-huobean@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -89,10 +88,34 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-10 10:36, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> Add one new parameter max_lu_supported in struct ufs_dev_info,
-> which will be used to express exactly how many general LUs being
-> supported by UFS device.
+> @@ -548,12 +547,19 @@ struct ufs_dev_desc {
+>  
+>  /**
+>   * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descriptor
+> + * @dev_info: pointer of instance of struct ufs_dev_info
+>   * @lun: LU number to check
+>   * @return: true if the lun has a matching unit descriptor, false otherwise
+>   */
+> -static inline bool ufs_is_valid_unit_desc_lun(u8 lun)
+> +static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
+> +		u8 lun)
+>  {
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Can the dev_info be declared 'const' (const truct ufs_dev_info *dev_info)?
+
+> -	return lun == UFS_UPIU_RPMB_WLUN || (lun < UFS_UPIU_MAX_GENERAL_LUN);
+> +	if (!dev_info || !dev_info->max_lu_supported) {
+> +		pr_err("Max General LU supported by UFS isn't initilized\n");
+                                                              ^^^^^^^^^^
+                                                            initialized?
+> +		return false;
+> +	}
+> +
+> +	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
+>  }
+
+Are the parentheses in the above expression necessary?
+
+Thanks,
+
+Bart.
