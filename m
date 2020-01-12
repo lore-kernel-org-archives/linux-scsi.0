@@ -2,167 +2,237 @@ Return-Path: <SRS0=w4/B=3B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21673C33CA2
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jan 2020 16:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6DFC33CA7
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jan 2020 18:37:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0ADB21556
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jan 2020 16:28:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF44521744
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jan 2020 18:37:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="gZvQMwfG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wmcp0eZt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730145AbgALQ2i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Jan 2020 11:28:38 -0500
-Received: from mail-eopbgr750135.outbound.protection.outlook.com ([40.107.75.135]:57089
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729018AbgALQ2i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 12 Jan 2020 11:28:38 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IhojNpkRBe2612s5vsjYthDO/WmJNa7fNlohEGRMS5VB/C1BK/MmshfGySeYiqKbKcfPfxd6GElPyjyzX7qIcop+v4X5E1L+It8RYyS8Yau5ekj7y6qalWneu8Fzjd85fwVLkdUTA5sNfHPWWLUJufQW7SbtgpJGO/sUCoL3LSg/did2OGMhOw44TlpurfG7a5JCaXcsVlDqaZcKfSfw00lB6CNFef91jfIRc5dtGVtRi7wo5MYELctajATkCVZpkv/CyTPCWW/O2kR7hKhxu+L++yk/s2jOoAaWGtZkov4oXk5g2GmmUpfi5ip+zVemxCy7/iypnXgpLm+Vz2vx6A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0Jzi3TfnM6HT1uH2qcosWDL0B5gXLC17qX/qnoymLBk=;
- b=Hdizp79iUAg7Fys9H5VzK/pQ6q7iRKcEF1jap0g9QLRvVj9Kq1cQkDnpZ4q3AL81ZAtmKQC/4/GtgYft/J/2kBqre0w8TsCa1mGyVYuBbfkgnW3/7Z1SIDkW4YbQ/nWfGX6OzPDhtP9mszu0XJKMgef+GzVKZ4L1GvDFKAAur3v2Yl7zt2Y5L5njBM4KhY6q/GCuvIKso60TCrMnuJ+dhIDsV5oNkfpWC0MsOHizUFHGNdwql4msP5UUQVnirjRCObJHbbpCUu/JFk5KlPlKBx6vsmzH7X67cYghhJP8s/VOOGkb6CHibMVsp0kK+IXNwLITJmyiDG8iXbWkPP9Ifg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0Jzi3TfnM6HT1uH2qcosWDL0B5gXLC17qX/qnoymLBk=;
- b=gZvQMwfGf8zj6mwF6ySlgKN9k64De5imFLV2C+bYd9f91uFJJLiBMDD+QjyX/QdzVDpgjuY/b3cWbEM7BTnzu0/8HJSTor7btcUkc1AjcVNN7JofXZIMRj0RoFfEKfiJ88Eo0auEhKMSIOJ9+BYczKnRo7hjCI9IUYko8xJQ04U=
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (52.132.149.16) by
- MW2PR2101MB0892.namprd21.prod.outlook.com (52.132.152.24) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.6; Sun, 12 Jan 2020 16:27:55 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::f1bb:c094:cb30:ba1f]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::f1bb:c094:cb30:ba1f%6]) with mapi id 15.20.2644.011; Sun, 12 Jan 2020
- 16:27:55 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     "longli@linuxonhyperv.com" <longli@linuxonhyperv.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     Long Li <longli@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: Correctly set number of hardware queues
- for IDE disk
-Thread-Topic: [PATCH] scsi: storvsc: Correctly set number of hardware queues
- for IDE disk
-Thread-Index: AQHVyFePib13rsBp3ki2r0uiVO4ISafnOM/Q
-Date:   Sun, 12 Jan 2020 16:27:55 +0000
-Message-ID: <MW2PR2101MB105213EDB40D8974CF45A8B6D73A0@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <1578730634-109961-1-git-send-email-longli@linuxonhyperv.com>
-In-Reply-To: <1578730634-109961-1-git-send-email-longli@linuxonhyperv.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-01-12T16:27:52.7146620Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8f411da8-28a5-40b9-a091-23693cfcc31b;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=mikelley@microsoft.com; 
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: e404c3d8-bdd7-4fdc-0619-08d7977c60cc
-x-ms-traffictypediagnostic: MW2PR2101MB0892:|MW2PR2101MB0892:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MW2PR2101MB089210CB55B020C8C558C152D73A0@MW2PR2101MB0892.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5516;
-x-forefront-prvs: 02801ACE41
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(136003)(346002)(366004)(376002)(39860400002)(199004)(189003)(81156014)(5660300002)(81166006)(8936002)(52536014)(8676002)(107886003)(4326008)(86362001)(33656002)(10290500003)(478600001)(55016002)(9686003)(76116006)(64756008)(66446008)(66946007)(66556008)(66476007)(2906002)(316002)(8990500004)(110136005)(186003)(7696005)(26005)(6506007)(71200400001)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:MW2PR2101MB0892;H:MW2PR2101MB1052.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: aoYUPhyDFQCqXX9DNOSUJnQf41CEs3RQvYIMwolGR5sfYDU1jJ+TQmMJbE5GvjjiKFxPLASK/ArOuCAzTiKfwMYxsn2MUP+Hj/A/AHf8y5IMv2fAyralnphhSonydNmTpF2cSmWTpILQP3k8MAoS+YXscy/ThT9c9Zvx63woFO2qACmKl3Z6VqyaTfgytLq2wALyfQMta3NK2XfU/nSOHpfDxhqKv82Hdh9M2BG0CdqCIMumDhZbYxwVbFYf7ZtD6VgMUBlwI+1DQnMkPLjaET0O8RcN2AxvQM0JNTqme1yDNUC9OcANeppvANiCR/hjWEk07ozHgDoRWmcEC4Wn+2MDGQhvpX+TUGuGMfXLQXvf3LJHETXNEwCcz+Qhl66usMMS72/bAeM4TkLepxUBLKSfoxEr7+qpI8wQEkjryfzuVW9b596Ir8G3b7CAHhGOWslARt7rJxNpL0wk0G/lhqJRuW0ryZwKCAr8YuRiJpshkI/UtOHpHoRSFZ8vxEnG
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1733208AbgALShm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Jan 2020 13:37:42 -0500
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:39947 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732957AbgALShm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jan 2020 13:37:42 -0500
+Received: by mail-lj1-f195.google.com with SMTP id u1so7556227ljk.7;
+        Sun, 12 Jan 2020 10:37:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=aYUTdEdA88iAaU2WKQRc+plb3LzpboGY1owsm5PSTjo=;
+        b=Wmcp0eZtmOQpCID9WAKTL0LnbHZmQHXZc0oDKndV5oamwkMoWRZcvd459hgWSOs8E5
+         rOGHEhF0hOIWWrl5ek2j9hglZQk642Yb3pJA5yGScmhG+tM01CBdUFXi/UPfDICfwM7i
+         AyiLjkZs9bfoZ9+VBzdAJdVmHTuZ8cf+FKpW5/v/7cPKHCx+fFK+4oQqGSjUHBRFJGId
+         6lSfyNqFx5n+urYdbaQt8GdugZ3/WZHvBxguuZzvWDH1Rphzc4qPDB/B5zik5Y/Ephs8
+         eGipkRIjtrERimoNXIyrSZ9hMx64WCc+gS26+pHI+uPnUZK9EPepi0a1IBsuArp/7AJW
+         VoLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=aYUTdEdA88iAaU2WKQRc+plb3LzpboGY1owsm5PSTjo=;
+        b=aUKrhCwhajYBeQGJ2fZ6SAC5ESmQw4EA6UESVqiT6hv1q+vfL+OF2Qjfp51cypEkJg
+         J0fSlHTcyHXcu0xeGYb0HtPptD5t+ymf4HOKC5YkYs8WIQ+/xkOSCm/oX3+Ba9nE3Vyl
+         MkFikTeW6QfdpnDKlTvp3V3UE2XEEFW2kaZKMmAQ+pMvCVi/hGDPa3zULW5xBH8r9L0f
+         ZU+iNKvMGJepCE88ww8Av5a4khKOz93aEQaPq9DNWMG7+Hq7PlNmi9hSapVl097uwt4i
+         k9N3LyBuVnSuHwcE6OmHxsjg2LsTUrQS11uCzA9FlOSbowX3y5wRo720Fnk90PriBFE2
+         2Npw==
+X-Gm-Message-State: APjAAAUVbau2I6APeEO/kN2o0JAK7oBqt1v1tIzZ9ypYeaZVXQrCTCQw
+        NFR+/ADVl0rTW9budtCS7JEsec0SmDG3dleI7w==
+X-Google-Smtp-Source: APXvYqxCOAtf4JE/W1ENE4Iw8vF7fo5YIfCRuZ/lSOpqFtfxd+NgqpcgG4jUY05ud3+VeYUHP2x78cY8DcrFKFg7i9Q=
+X-Received: by 2002:a2e:97d9:: with SMTP id m25mr8449506ljj.146.1578854258587;
+ Sun, 12 Jan 2020 10:37:38 -0800 (PST)
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e404c3d8-bdd7-4fdc-0619-08d7977c60cc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jan 2020 16:27:55.0907
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 0PjnC1qqzqr0KEjn7iD/ocdjkpBl5AjEIwxIH2lMA/WRFIUD7RuyL4RSaj2DhIY+4gQAmjYne/7EXJZxCqlcHlgGjP8Js3sG27LAkaLswHk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB0892
+References: <20191215174509.1847-1-linux@roeck-us.net> <20191215174509.1847-2-linux@roeck-us.net>
+ <yq1r211dvck.fsf@oracle.com> <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+ <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
+ <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net> <CAEJqkgg_piiAWy4r3VD=KyQ7pi69bZNym2Ws=Tr8SY5wf+Sprg@mail.gmail.com>
+ <CACRpkdYU7ZDcKp+BbXRCnEFDw1xwDkU_vXsfo-AZNUWGEVknXQ@mail.gmail.com>
+ <CAEJqkggo3Mou1SykjisyYn+3SGGgNfnKagr=7ZPyw=Y=1MZ55w@mail.gmail.com>
+ <CACRpkdayHFmdz4nAMaXR07Hcy=dLLGnnU8PkFhwQKuDTLnvOSw@mail.gmail.com>
+ <e3caa946-b8f2-75c7-4bcb-69ad198de472@roeck-us.net> <CAEJqkggBvBus-G=TevSf0OUWLx_63qmZEThi-tNyPmAD2JXW-g@mail.gmail.com>
+ <25c57e9d-94db-3a8b-5f68-f8a49e500b45@roeck-us.net>
+In-Reply-To: <25c57e9d-94db-3a8b-5f68-f8a49e500b45@roeck-us.net>
+From:   Gabriel C <nix.or.die@gmail.com>
+Date:   Sun, 12 Jan 2020 19:37:12 +0100
+Message-ID: <CAEJqkggnQzPw1uyMUZ5F-nqSwKAu5Ur7C_VujhZxZrvv-iUt_g@mail.gmail.com>
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     Linus Walleij <linus.walleij@linaro.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, Chris Healy <cphealy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Long Li <longli@microsoft.com>  Sent: Saturday, January 11, 2020 12:1=
-7 AM
->=20
-> Commit 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware q=
-ueue and
-> CPU queue")
-> introduced a regression for disks attached to IDE. For these disks the ho=
-st VSP only offers
-> one VMBUS channel. Setting multiple queues can overload the VMBUS channel=
- and result
-> in
-> performance drop for high queue depth workload on system with large numbe=
-r of CPUs.
->=20
-> Fix it by leaving the number of hardware queues to 1 (default value) for =
-IDE
-> disks.
->=20
-> Fixes: 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware q=
-ueue and CPU
-> queue")
-> Signed-off-by: Long Li <longli@microsoft.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index f8faf8b3d965..992b28e40374 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1842,9 +1842,11 @@ static int storvsc_probe(struct hv_device *device,
->  	 */
->  	host->sg_tablesize =3D (stor_device->max_transfer_bytes >> PAGE_SHIFT);
->  	/*
-> +	 * For non-IDE disks, the host supports multiple channels.
->  	 * Set the number of HW queues we are supporting.
->  	 */
-> -	host->nr_hw_queues =3D num_present_cpus();
-> +	if (dev_id->driver_data !=3D IDE_GUID)
+Am So., 12. Jan. 2020 um 16:26 Uhr schrieb Guenter Roeck <linux@roeck-us.ne=
+t>:
+>
+> On 1/12/20 5:45 AM, Gabriel C wrote:
+> > Am So., 12. Jan. 2020 um 14:07 Uhr schrieb Guenter Roeck <linux@roeck-u=
+s.net>:
+> >>
+> >> On 1/12/20 4:07 AM, Linus Walleij wrote:
+> >>> On Sun, Jan 12, 2020 at 1:03 PM Gabriel C <nix.or.die@gmail.com> wrot=
+e:
+> >>>> Am So., 12. Jan. 2020 um 12:22 Uhr schrieb Linus Walleij
+> >>>> <linus.walleij@linaro.org>:
+> >>>>>
+> >>>>> On Sun, Jan 12, 2020 at 12:18 PM Gabriel C <nix.or.die@gmail.com> w=
+rote:
+> >>>>>
+> >>>>>> What I've noticed however is the nvme temperature low/high values =
+on
+> >>>>>> the Sensors X are strange here.
+> >>>>> (...)
+> >>>>>> Sensor 1:     +27.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +652=
+61.8=C2=B0C)
+> >>>>>> Sensor 2:     +29.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +652=
+61.8=C2=B0C)
+> >>>>> (...)
+> >>>>>> Sensor 1:     +23.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +652=
+61.8=C2=B0C)
+> >>>>>> Sensor 2:     +25.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +652=
+61.8=C2=B0C)
+> >>>>>
+> >>>>> That doesn't look strange to me. It seems like reasonable defaults
+> >>>>> from the firmware if either it doesn't really log the min/max tempe=
+ratures
+> >>>>> or hasn't been through a cycle of updating these yet. Just set both
+> >>>>> to absolute min/max temperatures possible.
+> >>>>
+> >>>> Ok I'll check that.
+> >>>>
+> >>>> Do you mean by setting the temperatures to use a lmsensors config?
+> >>>> Or is there a way to set these with a nvme command?
+> >>>
+> >>> Not that I know of.
+> >>>
+> >>> The min/max are the minumum and maximum temperatures the
+> >>> device has experienced during this power-on cycle.
+> >>>
+> >>
+> >> No, that would be lowest/highest. The above are (or should be) per-sen=
+sor
+> >> setpoints. The default for those is typically the absolute minimum /
+> >> maximum of the supported range.
+> >>
+> >> Some SATA drives report the lowest/highest temperatures experienced
+> >> since power cycle, like here.
+> >>
+> >> drivetemp-scsi-5-0
+> >> Adapter: SCSI adapter
+> >> temp1:        +23.0=C2=B0C  (low  =3D  +0.0=C2=B0C, high =3D +60.0=C2=
+=B0C)
+> >>                          (crit low =3D -41.0=C2=B0C, crit =3D +85.0=C2=
+=B0C)
+> >>                          (lowest =3D +20.0=C2=B0C, highest =3D +31.0=
+=C2=B0C)
+> >>
+> >
+> > The SATA temperatures are fine and reported like this here too, just
+> > the nvme ones are strange.
+> >
+> > drivetemp-scsi-4-0
+> > Adapter: SCSI adapter
+> > temp1:        +28.0=C2=B0C  (low  =3D  +1.0=C2=B0C, high =3D +61.0=C2=
+=B0C)
+> >                        (crit low =3D  +2.0=C2=B0C, crit =3D +60.0=C2=B0=
+C)
+> >                        (lowest =3D +16.0=C2=B0C, highest =3D +31.0=C2=
+=B0C)
+> >
+> > drivetemp-scsi-12-0
+> > Adapter: SCSI adapter
+> > temp1:        +29.0=C2=B0C  (low  =3D  +1.0=C2=B0C, high =3D +61.0=C2=
+=B0C)
+> >                        (crit low =3D  +2.0=C2=B0C, crit =3D +60.0=C2=B0=
+C)
+> >                        (lowest =3D +18.0=C2=B0C, highest =3D +32.0=C2=
+=B0C)
+> >
+> > and so on.
+> >
+> > Btw, where I can find the code does these calculations?
+> >
+>
+> Not sure if that is what you are looking for, but the nvme hardware
+> monitoring driver is at drivers/nvme/host/hwmon.c, the SATA hardware
+> monitoring driver is at drivers/hwmon/drivetemp.c.
+>
 
-This function already has a pre-computed value of this test in
-the local variable "dev_is_ide".   It would be more consistent
-to just use it.
+I have a look thanks.
 
-Michael
+I'm using your v2 patch for the nvme part since you posted it on 5.4 kernel=
+s.
+This is probably why I find the way the temperatures are now reported
+very strange.
 
-> +		host->nr_hw_queues =3D num_present_cpus();
->=20
->  	/*
->  	 * Set the error handler work queue.
-> --
-> 2.20.1
+The ADATA XPG SX8200 Pro in my laptop seems to work better:
 
+nvme-pci-0200
+Adapter: PCI adapter
+Composite:    +37.9=C2=B0C  (low  =3D  -0.1=C2=B0C, high =3D +74.8=C2=B0C)
+                      (crit =3D +79.8=C2=B0C)
+
+Low is 0=C2=B0 which is what the spec suggests.
+
+> The limits on nvme drives are configurable.
+
+Yes, I found this out already.
+
+> root@server:/sys/class/hwmon# sensors nvme-pci-0100
+> nvme-pci-0100
+> Adapter: PCI adapter
+> Composite:    +40.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +84.8=C2=B0=
+C)
+>                         (crit =3D +84.8=C2=B0C)
+> Sensor 1:     +40.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +65261.8=C2=
+=B0C)
+> Sensor 2:     +43.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +65261.8=C2=
+=B0C)
+>
+> root@server:/sys/class/hwmon# echo 0 > hwmon1/temp2_min
+> root@server:/sys/class/hwmon# echo 100000 > hwmon1/temp2_max
+
+An lm-sensors configuration will work too.
+
+> root@server:/sys/class/hwmon# sensors nvme-pci-0100
+> nvme-pci-0100
+> Adapter: PCI adapter
+> Composite:    +38.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +84.8=C2=B0=
+C)
+>                         (crit =3D +84.8=C2=B0C)
+> Sensor 1:     +38.9=C2=B0C  (low  =3D  -0.1=C2=B0C, high =3D +99.8=C2=B0C=
+)
+> Sensor 2:     +42.9=C2=B0C  (low  =3D -273.1=C2=B0C, high =3D +65261.8=C2=
+=B0C)
+>
+> If you dislike the defaults, just configure whatever you think is
+> appropriate for your system.
+
+It's not about disliking the values. I want to find out if these Samsung mo=
+dels
+don't support that, or it is a bug somewhere in writing/calculating the val=
+ues.
+
+In the case, Samsung and others don't support such a thing wouldn't be
+better to just ignore
+the bogus reading altogether?
