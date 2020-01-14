@@ -3,173 +3,247 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CB0CC33CAE
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 05:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB9EC33CAE
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 07:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 384D8222C3
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 05:48:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9CF2222C4
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 07:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725936AbgANFsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jan 2020 00:48:17 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54826 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725819AbgANFsR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jan 2020 00:48:17 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00E5lZP1125933;
-        Tue, 14 Jan 2020 00:48:01 -0500
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2xfvjfk7yk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Jan 2020 00:48:01 -0500
-Received: from m0098413.ppops.net (m0098413.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 00E5m16B127552;
-        Tue, 14 Jan 2020 00:48:01 -0500
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2xfvjfk7y9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Jan 2020 00:48:01 -0500
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 00E5kEwq006242;
-        Tue, 14 Jan 2020 05:48:00 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma05wdc.us.ibm.com with ESMTP id 2xf755gut9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Jan 2020 05:48:00 +0000
-Received: from b03ledav006.gho.boulder.ibm.com (b03ledav006.gho.boulder.ibm.com [9.17.130.237])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 00E5lxu124772898
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jan 2020 05:47:59 GMT
-Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 60D51C6057;
-        Tue, 14 Jan 2020 05:47:59 +0000 (GMT)
-Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 45600C6055;
-        Tue, 14 Jan 2020 05:47:56 +0000 (GMT)
-Received: from [9.85.73.158] (unknown [9.85.73.158])
-        by b03ledav006.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Jan 2020 05:47:55 +0000 (GMT)
-Message-ID: <1578980874.11996.3.camel@abdul.in.ibm.com>
-Subject: Re: [linux-next/mainline][bisected 3acac06][ppc] Oops when
- unloading mpt3sas driver
-From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        sachinp <sachinp@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>, jcmvbkbc@gmail.com,
-        linux-next <linux-next@vger.kernel.org>,
-        Oliver <oohall@gmail.com>,
-        "aneesh.kumar" <aneesh.kumar@linux.vnet.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        manvanth <manvanth@linux.vnet.ibm.com>
-Date:   Tue, 14 Jan 2020 11:17:54 +0530
-In-Reply-To: <20200109142218.GA16477@infradead.org>
-References: <1578489498.29952.11.camel@abdul>
-         <1578560245.30409.0.camel@abdul.in.ibm.com>
-         <20200109142218.GA16477@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.10.4-0ubuntu1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-14_01:2020-01-13,2020-01-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 suspectscore=2
- impostorscore=0 malwarescore=0 mlxlogscore=759 phishscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-2001140051
+        id S1728820AbgANHFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 02:05:39 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53700 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728794AbgANHFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jan 2020 02:05:38 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 00923AEB1;
+        Tue, 14 Jan 2020 07:05:34 +0000 (UTC)
+Subject: Re: [PATCH 09/11] megaraid_sas: switch fusion adapters to MQ
+To:     John Garry <john.garry@huawei.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+References: <20191202153914.84722-1-hare@suse.de>
+ <20191202153914.84722-10-hare@suse.de>
+ <CAL2rwxqjiRTuZ0ntfaHHzG7z-VmxRQCXYyxZeX9eDMrmX+dbGg@mail.gmail.com>
+ <efe9c1e7-fa10-3bae-eacd-58d43295d6da@suse.de>
+ <CAL2rwxotoWakFS4DPe85hZ4VAgd_zw8pL+B5ckHR9NwEf+-L=g@mail.gmail.com>
+ <11034edd-732a-3dd5-0bdc-891b9de05e56@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <661fd3db-0254-c209-8fb3-f3aa35bac431@suse.de>
+Date:   Tue, 14 Jan 2020 08:05:33 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
+MIME-Version: 1.0
+In-Reply-To: <11034edd-732a-3dd5-0bdc-891b9de05e56@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2020-01-09 at 06:22 -0800, Christoph Hellwig wrote:
-> On Thu, Jan 09, 2020 at 02:27:25PM +0530, Abdul Haleem wrote:
-> > + CC Christoph Hellwig
+On 1/13/20 6:42 PM, John Garry wrote:
+> On 10/01/2020 04:00, Sumit Saxena wrote:
+>> On Mon, Dec 9, 2019 at 4:32 PM Hannes Reinecke <hare@suse.de> wrote:
+>>>
+>>> On 12/9/19 11:10 AM, Sumit Saxena wrote:
+>>>> On Mon, Dec 2, 2019 at 9:09 PM Hannes Reinecke <hare@suse.de> wrote:
+>>>>>
+>>>>> Fusion adapters can steer completions to individual queues, and
+>>>>> we now have support for shared host-wide tags.
+>>>>> So we can enable multiqueue support for fusion adapters and
+>>>>> drop the hand-crafted interrupt affinity settings.
+>>>>
+>>>> Hi Hannes,
+>>>>
+>>>> Ming Lei also proposed similar changes in megaraid_sas driver some
+>>>> time back and it had resulted in performance drop-
+>>>> https://patchwork.kernel.org/patch/10969511/
+>>>>
+>>>> So, we will do some performance tests with this patch and update you.
+>>>> Thank you.
+>>>
+>>> I'm aware of the results of Ming Leis work, but I do hope this patchset
+>>> performs better.
+>>>
+>>> And when you do performance measurements, can you please run with both,
+>>> 'none' I/O scheduler and 'mq-deadline' I/O scheduler?
+>>> I've measured quite a performance improvements when using mq-deadline,
+>>> up to the point where I've gotten on-par performance with the original,
+>>> non-mq, implementation.
+>>> (As a data point, on my setup I've measured about 270k IOPS and 1092
+>>> MB/s througput, running on just 2 SSDs).
+>>> asas_build_ldio_fusion
+>>> But thanks for doing a performance test here.
+>>
+>> Hi Hannes,
+>>
+>> Sorry for the delay in replying, I observed a few issues with this
+>> patchset:
+>>
+>> 1. "blk_mq_unique_tag_to_hwq(tag)" does not return MSI-x vector to
+>> which IO submitter CPU is affined with. Due to this IO submission and
+>> completion CPUs are different which causes performance drop for low
+>> latency workloads.
 > 
-> The only thing this commit changed for the dma coherent case (which
-> ppc64 uses) is that we now look up the page to free by the DMA address
-> instead of the virtual address passed in.  Which suggests this call
-> stack passes in a broken dma address.  I suspect we somehow managed
-> to disable the ppc iommu bypass mode after allocating memory, which
-> would cause symptoms like this, and thus the commit is just exposing
-> a pre-existing problem.
+> Hi Sumit,
+> 
+> So the new code has:
+> 
+> megasas_build_ldio_fusion()
+> {
+> 
+> cmd->request_desc->SCSIIO.MSIxIndex =
+> blk_mq_unique_tag_to_hwq(tag);
+> 
+> }
+> 
+> So the value here is hw queue index from blk-mq point of view, and not
+> megaraid_sas msix index, as you alluded to.
+> 
+> So we get 80 msix, 8 are reserved for low_latency_index_start (that's
+> how it seems to me), and we report other 72 as #hw queues = 72 to SCSI
+> midlayer.
+> 
+> So I think that this should be:
+> 
+> cmd->request_desc->SCSIIO.MSIxIndex =
+> blk_mq_unique_tag_to_hwq(tag) + low_latency_index_start;
+> 
+> 
+Indeed, that sounds reasonable.
+(The whole queue mapping stuff isn't exactly well documented :-( )
 
-Trace with printk added for page->addr, will this help ?
+I'll be updating the patch.
 
-mpt3sas_cm0: removing handle(0x000f), sas_addr(0x500304801f080d3d)
-mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(12)
-mpt3sas_cm0: enclosure level(0x0000), connector name(     )
-mpt3sas_cm0: mpt3sas_transport_port_remove: removed:
-sas_addr(0x500304801f080d3f)
-mpt3sas_cm0: expander_remove: handle(0x0009),
-sas_addr(0x500304801f080d3f)
-mpt3sas_cm0: sending diag reset !!
-mpt3sas_cm0: diag reset: SUCCESS 
-page->vaddr = 0xc000003f2d200000
-page->vaddr = 0xc000003f2ef00000
-page->vaddr = 0xc000003f38430000
-page->vaddr = 0xc000003f3d7d0000
-page->vaddr = 0xc000003f75760000
-BUG: Unable to handle kernel data access on write at 0xc04a000000017c34
-Faulting instruction address: 0xc0000000002fb2b0
-Oops: Kernel access of bad area, sig: 11 [#1]
-LE PAGE_SIZE=64K MMU=Hash SMP NR_CPUS=2048 NUMA PowerNV
-Modules linked in: iptable_mangle xt_MASQUERADE iptable_nat nf_nat
-xt_conntrack nf_conntrack nf_defrag_ipv4 ipt_REJECT nf_reject_ipv4
-xt_tcpudp tun bridge stp llc btrfs blake2b_generic xor zstd_decompress
-zstd_compress lzo_compress iptable_filter raid6_pq mpt3sas(-) vmx_crypto
-gf128mul nfsd powernv_rng rng_core raid_class scsi_transport_sas kvm_hv
-kvm binfmt_misc ip_tables x_tables xfs libcrc32c qla2xxx ixgbe i40e
-nvme_fc nvme_fabrics mdio nvme_core autofs4
-CPU: 13 PID: 17267 Comm: rmmod Not tainted 5.5.0-rc5-next-20200108-autotest-00002-g36e1367-dirty #1
-NIP:  c0000000002fb2b0 LR: c0000000001aa5b4 CTR: c00000000004a010
-REGS: c000003fc3f9f5d0 TRAP: 0380   Not tainted  (5.5.0-rc5-next-20200108-autotest-00002-g36e1367-dirty)
-MSR:  9000000000009033 <SF,HV,EE,ME,IR,DR,RI,LE>  CR: 22002424  XER: 20000000  
-CFAR: c0000000001aa5b0 IRQMASK: 0 
-GPR00: c00000000004a0a8 c000003fc3f9f860 c000000001311300 c04a000000017c00 
-GPR04: 0000000000000000 c000003f75760000 003e000000017c00 0000000000000000 
-GPR08: 0000000000000000 c0000000013bd000 c04a000000017c34 00000000000005bf 
-GPR12: c00000000004a010 c000003fffff4a80 0000000000000000 0000000000000000 
-GPR16: 0000000000000000 0000000000000000 000001001b4e0180 0000000010020098 
-GPR20: 0000000010020050 0000000010020038 0000000010020078 0000000005f00000 
-GPR24: c000000000d4e8a8 c000000000d4e8c8 0000000005f00000 0000000000000000 
-GPR28: c000000001299398 c000003f75760000 0000000000010000 c000003fdde0d0a8 
-NIP [c0000000002fb2b0] __free_pages+0x10/0x50
-LR [c0000000001aa5b4] dma_direct_free_pages+0x54/0x90
-Call Trace:
-[c000003fc3f9f860] [c000000000d4e8a8] str_spec.72296+0x199114/0x2009cc (unreliable)
-[c000003fc3f9f880] [c00000000004a0a8] dma_iommu_free_coherent+0x98/0xd0
-[c000003fc3f9f8d0] [c0000000001a95e8] dma_free_attrs+0xf8/0x100
-[c000003fc3f9f920] [c00000000031205c] dma_pool_destroy+0x19c/0x230
-[c000003fc3f9f9d0] [c00800001c181e98] _base_release_memory_pools+0x1d8/0x4b0 [mpt3sas]
-[c000003fc3f9fa60] [c00800001c18b9f0] mpt3sas_base_detach+0x40/0x150 [mpt3sas]
-[c000003fc3f9fad0] [c00800001c19c92c] scsih_remove+0x24c/0x3e0 [mpt3sas]
-[c000003fc3f9fb90] [c0000000006126a4] pci_device_remove+0x64/0x110
-[c000003fc3f9fbd0] [c0000000006c7ea4] device_release_driver_internal+0x154/0x260
-[c000003fc3f9fc10] [c0000000006c807c] driver_detach+0x8c/0x140
-[c000003fc3f9fc50] [c0000000006c6188] bus_remove_driver+0x78/0x100
-[c000003fc3f9fc80] [c0000000006c8d90] driver_unregister+0x40/0x90
-[c000003fc3f9fcf0] [c000000000611dc8] pci_unregister_driver+0x38/0x110
-[c000003fc3f9fd40] [c00800001c1af108] _mpt3sas_exit+0x50/0x40c8 [mpt3sas]
-[c000003fc3f9fda0] [c0000000001d8ed8] sys_delete_module+0x1a8/0x2a0
-[c000003fc3f9fe20] [c00000000000b9d0] system_call+0x5c/0x68
-Instruction dump:
-88830051 2fa40000 41de0008 4bffe87c 7d234b78 4bfffe94 60000000 60420000 
-3c4c0101 38426060 39430034 7c0004ac <7d005028> 3108ffff 7d00512d 40c2fff4 
----[ end trace c5ab52378eb942ad ]---
-Segmentation fault
+>>
+>> lspcu:
+>>
+>> # lscpu
+>> Architecture:          x86_64
+>> CPU op-mode(s):        32-bit, 64-bit
+>> Byte Order:            Little Endian
+>> CPU(s):                72
+>> On-line CPU(s) list:   0-71
+>> Thread(s) per core:    2
+>> Core(s) per socket:    18
+>> Socket(s):             2
+>> NUMA node(s):          2
+>> Vendor ID:             GenuineIntel
+>> CPU family:            6
+>> Model:                 85
+>> Model name:            Intel(R) Xeon(R) Gold 6150 CPU @ 2.70GHz
+>> Stepping:              4
+>> CPU MHz:               3204.246
+>> CPU max MHz:           3700.0000
+>> CPU min MHz:           1200.0000
+>> BogoMIPS:              5400.00
+>> Virtualization:        VT-x
+>> L1d cache:             32K
+>> L1i cache:             32K
+>> L2 cache:              1024K
+>> L3 cache:              25344K
+>> NUMA node0 CPU(s):     0-17,36-53
+>> NUMA node1 CPU(s):     18-35,54-71
+>> Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep
+>> mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht
+>> tm pbe s
+>> yscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts
+>> rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq
+>> dtes64 monitor
+>> ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1
+>> sse4_2 x2apic movbe popcnt tsc_deadline_timer xsave avx f16c rdrand
+>> lahf_lm abm
+>> 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single intel_ppin
+>> mba tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust
+>> bmi1 hle
+>> avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed
+>> adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt
+>> xsavec
+>> xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_lo
+>>
+>>
+> 
+> [snip]
+> 
+>> 4. This patch removes below code from driver so what this piece of
+>> code does is broken-
+>>
+>>
+>> -                               if (instance->adapter_type >=
+>> INVADER_SERIES &&
+>> -                                   !instance->msix_combined) {
+>> -                                       instance->msix_load_balance =
+>> true;
+>> -                                       instance->smp_affinity_enable
+>> = false;
+>> -                               }
+> 
+> Does this code need to be re-added? Would this have affected your test?
+> Primarily this patch was required to enable interrupt affinity on my
+machine (Lenovo RAID 930-8i).
+Can you give me some information why the code is present in the first
+place? Some hardware limitation, maybe?
 
+Cheers,
+
+Hannes
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
-
-
-
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
