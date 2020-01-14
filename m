@@ -2,192 +2,101 @@ Return-Path: <SRS0=+W3W=3D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FC4C33CB1
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115F0C33CB1
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:21:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A531624670
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:21:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6A1D2467A
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:21:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="T5m4bG3T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729112AbgANKVj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jan 2020 05:21:39 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:58916 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727285AbgANKVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jan 2020 05:21:39 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id DE9CF2041C0;
-        Tue, 14 Jan 2020 11:21:36 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id t7YZbYgG2OxT; Tue, 14 Jan 2020 11:21:36 +0100 (CET)
-Received: from [82.134.31.177] (unknown [82.134.31.177])
-        by smtp.infotech.no (Postfix) with ESMTPA id BD49E204188;
-        Tue, 14 Jan 2020 11:21:36 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v6 27/37] sg: add sg v4 interface support
-To:     kbuild test robot <lkp@intel.com>
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-References: <20200112235755.14197-28-dgilbert@interlog.com>
- <202001131604.C85gbLUO%lkp@intel.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <6132474f-0f08-e3da-14b3-16bab23f2a5c@interlog.com>
-Date:   Tue, 14 Jan 2020 11:21:36 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
-MIME-Version: 1.0
-In-Reply-To: <202001131604.C85gbLUO%lkp@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+        id S1726169AbgANLVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 06:21:51 -0500
+Received: from mail-wm1-f45.google.com ([209.85.128.45]:54849 "EHLO
+        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725820AbgANLVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 06:21:51 -0500
+Received: by mail-wm1-f45.google.com with SMTP id b19so13282947wmj.4
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2020 03:21:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=zlyx5dbRhXJzxKr5Jgln+DlSgmGkzibsMSLWOj4eBbM=;
+        b=T5m4bG3T8kQN+cIK+wKJiFCJOmjSz7eMf0fl+Vaxi3p/85oPVBuCQwWc/bxI3mT0zv
+         fehOc2kv+eDiz30Ohepy9Kmqv6nsgnaRgjWYNfcBE6uLytdVIcSjlAIURfPKvV2InNK2
+         wSkVExA1EL5IXfsECPC34TRFc53qn5E7eIoOc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=zlyx5dbRhXJzxKr5Jgln+DlSgmGkzibsMSLWOj4eBbM=;
+        b=guyhVSYj4KQqPpHt4HAkS5ND8/h+MWkMGYd5IH8JiKUdbJ34wDZZvwLNle7yj3HPKA
+         0sIpNnkFBFLdtbUnTsdIqbj+b5JMAWxJHmAowbaNWilE02a2hryICLnA9kNfC/O6COw7
+         yIHsj4aZC7bhqOYqjPX9fUocXyUflKf2KUCYynFnt5RTRwAGsbH3DJS9sSiMG5XW38BA
+         TVf1raLSROHj5FdwTlY1f2U1O1JZAja9ubfDnAfR3wqTkaEUcMVw4fDl5FgTzjie4I2t
+         lMVjS3LjpCtsKdtcR76s+TXfQtL+6Pf3YBNj9Gy7V+X/Q3jxNUACZNcjS3CkcU6HhT5r
+         FH6w==
+X-Gm-Message-State: APjAAAWrwxPhcncM+F8rLWOebFXQ6Imzoaofb7q64wYdJKitkt0qo5Ih
+        eiH5XiKz9kRixQNejsjl0TKJs7XgQiG5Eg30Sxf8N+cjbmcoVtrIkOrXKGwJ4/JuMFkobKqWVyk
+        hQ8T9YRkfRW4Y49I1qmYSWLnwO1yHTuhvoJQb9lWpIToCtfxd6XIFCeZEHaELKRZw1FZ6qCo/G0
+        RNDpSsbpI7
+X-Google-Smtp-Source: APXvYqwgUupqNFhFmXv0bqEVrR7wmDCNVGipC9sncZegRIX17RSdyoD7vbJanEK7eF2UWLClCk5A+Q==
+X-Received: by 2002:a05:600c:220e:: with SMTP id z14mr26406419wml.114.1579000908965;
+        Tue, 14 Jan 2020 03:21:48 -0800 (PST)
+Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id z21sm17638160wml.5.2020.01.14.03.21.45
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 14 Jan 2020 03:21:48 -0800 (PST)
+From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        kiran-kumar.kasturi@broadcom.com, sankar.patra@broadcom.com,
+        sasikumar.pc@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        chandrakanth.patil@broadcom.com,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>
+Subject: [PATCH v2 00/11] megaraid_sas: driver updates to 07.713.01.00-rc1
+Date:   Tue, 14 Jan 2020 16:51:11 +0530
+Message-Id: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-13 9:28 a.m., kbuild test robot wrote:
-> Hi Douglas,
-> 
-> Thank you for the patch! Perhaps something to improve:
-> 
-> [auto build test WARNING on scsi/for-next]
-> [also build test WARNING on linus/master v5.5-rc6]
-> [cannot apply to mkp-scsi/for-next next-20200110]
-> [if your patch is applied to the wrong git tree, please drop us a note to help
-> improve the system. BTW, we also suggest to use '--base' option to specify the
-> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/sg-add-v4-interface/20200113-080059
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
-> 
-> New smatch warnings:
-> drivers/scsi/sg.c:504 sg_open() error: potential null dereference 'sfp'.  (sg_add_sfp returns null)
-> 
-> Old smatch warnings:
-> drivers/scsi/sg.c:3238 sg_find_srp_by_id() warn: statement has no effect 3
+This patchset contains few enhancements and fixes in megaraid_sas driver.
 
-__attribute__((nonnull(<n>))) only applies to function arguments, not its
-return value. So there seems no way to tell the compiler: this function,
-that returns a pointer, should/will never return the NULL pointer; feel
-free to check that.
+v2:
+    - Fixed couple of typos and indentation issues as pointed out by Martin K.
+    - Added proper commit descriptions where ever necessary.
 
-sg_add_sfp() is such a function, if it fails its retval is either a valid
-pointer _or_ IS_ERR(retval) is true. It follows that sfp->tid on line 504
-can never be a null dereference.
+Anand Lodnoor (11):
+  megaraid_sas: Reset adapter if FW is not in READY state after device
+    resume
+  megaraid_sas: Set no_write_same only for Virtual Disk
+  megaraid_sas: Update optimal queue depth for SAS and NVMe devices
+  megaraid_sas: Do not kill host bus adapter, if adapter is already dead
+  megaraid_sas: Do not kill HBA if JBOD Seqence map or RAID map is
+    disabled
+  megaraid_sas: Do not set HBA Operational if FW is not in operational
+    state
+  megaraid_sas: Re-Define enum DCMD_RETURN_STATUS
+  megaraid_sas: Do not initiate OCR if controller is not in ready state
+  megaraid_sas: Limit the number of retries for the IOCTLs causing
+    firmware fault
+  megaraid_sas: Use Block layer API to check SCSI device in-flight IO
+    requests
+  megaraid_sas: Update driver version to 07.713.01.00-rc1
 
-Doug Gilbert
+ drivers/scsi/megaraid/megaraid_sas.h        |  17 ++--
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  95 ++++++++++++++------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 134 +++++++++++++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  18 +++-
+ 4 files changed, 197 insertions(+), 67 deletions(-)
 
-> 
-> vim +/sfp +504 drivers/scsi/sg.c
-> 
->     433	
->     434	/*
->     435	 * Corresponds to the open() system call on sg devices. Implements O_EXCL on
->     436	 * a per device basis using 'open_cnt'. If O_EXCL and O_NONBLOCK and there is
->     437	 * already a sg handle open on this device then it fails with an errno of
->     438	 * EBUSY. Without the O_NONBLOCK flag then this thread enters an interruptible
->     439	 * wait until the other handle(s) are closed.
->     440	 */
->     441	static int
->     442	sg_open(struct inode *inode, struct file *filp)
->     443	{
->     444		bool o_excl, non_block;
->     445		int min_dev = iminor(inode);
->     446		int op_flags = filp->f_flags;
->     447		int res;
->     448		__maybe_unused int o_count;
->     449		struct sg_device *sdp;
->     450		struct sg_fd *sfp;
->     451	
->     452		nonseekable_open(inode, filp);
->     453		o_excl = !!(op_flags & O_EXCL);
->     454		non_block = !!(op_flags & O_NONBLOCK);
->     455		if (o_excl && ((op_flags & O_ACCMODE) == O_RDONLY))
->     456			return -EPERM;/* not permitted, need write access for O_EXCL */
->     457		sdp = sg_get_dev(min_dev);	/* increments sdp->d_ref */
->     458		if (IS_ERR(sdp))
->     459			return PTR_ERR(sdp);
->     460	
->     461		/* Prevent the device driver from vanishing while we sleep */
->     462		res = scsi_device_get(sdp->device);
->     463		if (res)
->     464			goto sg_put;
->     465		res = scsi_autopm_get_device(sdp->device);
->     466		if (res)
->     467			goto sdp_put;
->     468		res = sg_allow_if_err_recovery(sdp, non_block);
->     469		if (res)
->     470			goto error_out;
->     471	
->     472		mutex_lock(&sdp->open_rel_lock);
->     473		if (op_flags & O_NONBLOCK) {
->     474			if (o_excl) {
->     475				if (atomic_read(&sdp->open_cnt) > 0) {
->     476					res = -EBUSY;
->     477					goto error_mutex_locked;
->     478				}
->     479			} else {
->     480				if (SG_HAVE_EXCLUDE(sdp)) {
->     481					res = -EBUSY;
->     482					goto error_mutex_locked;
->     483				}
->     484			}
->     485		} else {
->     486			res = sg_wait_open_event(sdp, o_excl);
->     487			if (res) /* -ERESTARTSYS or -ENODEV */
->     488				goto error_mutex_locked;
->     489		}
->     490	
->     491		/* N.B. at this point we are holding the open_rel_lock */
->     492		if (o_excl)
->     493			set_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
->     494	
->     495		o_count = atomic_inc_return(&sdp->open_cnt);
->     496		sfp = sg_add_sfp(sdp);		/* increments sdp->d_ref */
->     497		if (IS_ERR(sfp)) {
->     498			atomic_dec(&sdp->open_cnt);
->     499			res = PTR_ERR(sfp);
->     500			goto out_undo;
->     501		}
->     502	
->     503		filp->private_data = sfp;
->   > 504		sfp->tid = (current ? current->pid : -1);
->     505		mutex_unlock(&sdp->open_rel_lock);
->     506		SG_LOG(3, sfp, "%s: minor=%d, op_flags=0x%x; %s count after=%d%s\n",
->     507		       __func__, min_dev, op_flags, "device open", o_count,
->     508		       ((op_flags & O_NONBLOCK) ? " O_NONBLOCK" : ""));
->     509	
->     510		res = 0;
->     511	sg_put:
->     512		kref_put(&sdp->d_ref, sg_device_destroy);
->     513		/* if success, sdp->d_ref is incremented twice, decremented once */
->     514		return res;
->     515	
->     516	out_undo:
->     517		if (o_excl) {		/* undo if error */
->     518			clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
->     519			wake_up_interruptible(&sdp->open_wait);
->     520		}
->     521	error_mutex_locked:
->     522		mutex_unlock(&sdp->open_rel_lock);
->     523	error_out:
->     524		scsi_autopm_put_device(sdp->device);
->     525	sdp_put:
->     526		scsi_device_put(sdp->device);
->     527		goto sg_put;
->     528	}
->     529	
-> 
-> ---
-> 0-DAY kernel test infrastructure                 Open Source Technology Center
-> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
-> 
+-- 
+1.8.3.1
 
