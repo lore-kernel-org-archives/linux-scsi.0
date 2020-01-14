@@ -2,55 +2,56 @@ Return-Path: <SRS0=+W3W=3D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 115F0C33CB1
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14B8DC33CB1
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6A1D2467A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:21:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8E0924676
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:22:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="T5m4bG3T"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wo5pdU02"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbgANLVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jan 2020 06:21:51 -0500
-Received: from mail-wm1-f45.google.com ([209.85.128.45]:54849 "EHLO
-        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbgANLVv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 06:21:51 -0500
-Received: by mail-wm1-f45.google.com with SMTP id b19so13282947wmj.4
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2020 03:21:49 -0800 (PST)
+        id S1728799AbgANLWP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 06:22:15 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:50843 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725820AbgANLWP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 06:22:15 -0500
+Received: by mail-wm1-f65.google.com with SMTP id a5so13317712wmb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2020 03:22:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=zlyx5dbRhXJzxKr5Jgln+DlSgmGkzibsMSLWOj4eBbM=;
-        b=T5m4bG3T8kQN+cIK+wKJiFCJOmjSz7eMf0fl+Vaxi3p/85oPVBuCQwWc/bxI3mT0zv
-         fehOc2kv+eDiz30Ohepy9Kmqv6nsgnaRgjWYNfcBE6uLytdVIcSjlAIURfPKvV2InNK2
-         wSkVExA1EL5IXfsECPC34TRFc53qn5E7eIoOc=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=K3KQItSsU/uSAtTpUNi8r57iE2Zbw+z7P6QwToqrP+w=;
+        b=Wo5pdU028gEHOaE8+VQ1CF5gmatxAGsoh5m+/75Mtk5a5qzgO0XFvewbfQj71mifRH
+         ifN6ef0P7H12/Zl66onGcVjKRkY8M61/Y1cIwg1EFnWnxDUqpUN3Ajp2Q0SA1hPc/PC5
+         rt4glY/YanQhr5yXkIGa/HMzrh1E+gBOEJu2w=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=zlyx5dbRhXJzxKr5Jgln+DlSgmGkzibsMSLWOj4eBbM=;
-        b=guyhVSYj4KQqPpHt4HAkS5ND8/h+MWkMGYd5IH8JiKUdbJ34wDZZvwLNle7yj3HPKA
-         0sIpNnkFBFLdtbUnTsdIqbj+b5JMAWxJHmAowbaNWilE02a2hryICLnA9kNfC/O6COw7
-         yIHsj4aZC7bhqOYqjPX9fUocXyUflKf2KUCYynFnt5RTRwAGsbH3DJS9sSiMG5XW38BA
-         TVf1raLSROHj5FdwTlY1f2U1O1JZAja9ubfDnAfR3wqTkaEUcMVw4fDl5FgTzjie4I2t
-         lMVjS3LjpCtsKdtcR76s+TXfQtL+6Pf3YBNj9Gy7V+X/Q3jxNUACZNcjS3CkcU6HhT5r
-         FH6w==
-X-Gm-Message-State: APjAAAWrwxPhcncM+F8rLWOebFXQ6Imzoaofb7q64wYdJKitkt0qo5Ih
-        eiH5XiKz9kRixQNejsjl0TKJs7XgQiG5Eg30Sxf8N+cjbmcoVtrIkOrXKGwJ4/JuMFkobKqWVyk
-        hQ8T9YRkfRW4Y49I1qmYSWLnwO1yHTuhvoJQb9lWpIToCtfxd6XIFCeZEHaELKRZw1FZ6qCo/G0
-        RNDpSsbpI7
-X-Google-Smtp-Source: APXvYqwgUupqNFhFmXv0bqEVrR7wmDCNVGipC9sncZegRIX17RSdyoD7vbJanEK7eF2UWLClCk5A+Q==
-X-Received: by 2002:a05:600c:220e:: with SMTP id z14mr26406419wml.114.1579000908965;
-        Tue, 14 Jan 2020 03:21:48 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=K3KQItSsU/uSAtTpUNi8r57iE2Zbw+z7P6QwToqrP+w=;
+        b=RnL7JykQ/4WIRuGVa896dVtdfRqOMQwGWd3los9ymsLBJojqNDJwGfzZUIIBaR4rEW
+         GB7YFMv+4CD5/3W4SodLouE1diB5apVQO0bxe5f8EFX25ONuN3QogwV3D1QLoZyJ4flF
+         nRTU3DZkLUgwmGvqhaByFg7cVgVYxe2oBcqs7okewPQy95WIfGr61DcXvEWkBuqZfvA9
+         U9fCqZ3EEGnGOBe+kvvJKVrfm76oB8TS9Ql4bE5i5pB6o43K/qzQr8KK154CIPZNBvpL
+         m8Jz3rkVw4UEdqozgauT6bDGcVrESC3NUBb+olDZqcGia/itrBJeygwUjwDR8FONWV7P
+         1TJg==
+X-Gm-Message-State: APjAAAVdLwItWEF8vTID4NS0zpf91H8WUELMksBF5B7WCVgWFlF5a/T7
+        YYb0j95XJh6/JmoJFiObdFhnJ9KpCFjSKVBRVcFkaONXbqWcIZYhIb/ZPQBAMVJST4wnC9a3pFh
+        BhrieAtpn1UPRuvp0PJqm7X6aQKe/cyYer7LVChu3fTL7b0oA0xlXk3l5CfD3q5LPRBLDzgXtpc
+        0N9RqW9Q==
+X-Google-Smtp-Source: APXvYqxLjte4LQ26UOSZLAXZs/VUErt+b3BqNkkhiBmTS4LaDqyCnGVx+7I8Ek5Ev77kvg6OOl8Hmw==
+X-Received: by 2002:a1c:4b0a:: with SMTP id y10mr27490348wma.78.1579000933343;
+        Tue, 14 Jan 2020 03:22:13 -0800 (PST)
 Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id z21sm17638160wml.5.2020.01.14.03.21.45
+        by smtp.gmail.com with ESMTPSA id z21sm17638160wml.5.2020.01.14.03.22.10
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 14 Jan 2020 03:21:48 -0800 (PST)
+        Tue, 14 Jan 2020 03:22:12 -0800 (PST)
 From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
@@ -58,45 +59,78 @@ Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         sasikumar.pc@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
         chandrakanth.patil@broadcom.com,
         Anand Lodnoor <anand.lodnoor@broadcom.com>
-Subject: [PATCH v2 00/11] megaraid_sas: driver updates to 07.713.01.00-rc1
-Date:   Tue, 14 Jan 2020 16:51:11 +0530
-Message-Id: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
+Subject: [PATCH v2 01/11] megaraid_sas: Reset adapter if FW is not in READY state after device resume
+Date:   Tue, 14 Jan 2020 16:51:12 +0530
+Message-Id: <1579000882-20246-2-git-send-email-anand.lodnoor@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
+References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patchset contains few enhancements and fixes in megaraid_sas driver.
+After device resume we expect the firmware to be in READY state.
+Transition to READY might fail due to unhandled exceptions,such
+as an internal error or a hardware failure.Retry initiating chip
+reset and wait for the controller to come to ready state.
 
-v2:
-    - Fixed couple of typos and indentation issues as pointed out by Martin K.
-    - Added proper commit descriptions where ever necessary.
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Anand Lodnoor <anand.lodnoor@broadcom.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-Anand Lodnoor (11):
-  megaraid_sas: Reset adapter if FW is not in READY state after device
-    resume
-  megaraid_sas: Set no_write_same only for Virtual Disk
-  megaraid_sas: Update optimal queue depth for SAS and NVMe devices
-  megaraid_sas: Do not kill host bus adapter, if adapter is already dead
-  megaraid_sas: Do not kill HBA if JBOD Seqence map or RAID map is
-    disabled
-  megaraid_sas: Do not set HBA Operational if FW is not in operational
-    state
-  megaraid_sas: Re-Define enum DCMD_RETURN_STATUS
-  megaraid_sas: Do not initiate OCR if controller is not in ready state
-  megaraid_sas: Limit the number of retries for the IOCTLs causing
-    firmware fault
-  megaraid_sas: Use Block layer API to check SCSI device in-flight IO
-    requests
-  megaraid_sas: Update driver version to 07.713.01.00-rc1
-
- drivers/scsi/megaraid/megaraid_sas.h        |  17 ++--
- drivers/scsi/megaraid/megaraid_sas_base.c   |  95 ++++++++++++++------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 134 +++++++++++++++++++++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  18 +++-
- 4 files changed, 197 insertions(+), 67 deletions(-)
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index a4bc814..96b893f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7593,6 +7593,7 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 	int irq_flags = PCI_IRQ_LEGACY;
++	u32 status_reg;
+ 
+ 	instance = pci_get_drvdata(pdev);
+ 
+@@ -7620,9 +7621,35 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	/*
+ 	 * We expect the FW state to be READY
+ 	 */
+-	if (megasas_transition_to_ready(instance, 0))
+-		goto fail_ready_state;
+ 
++	if (megasas_transition_to_ready(instance, 0)) {
++		dev_info(&instance->pdev->dev,
++			 "Failed to transition controller to ready from %s!\n",
++			 __func__);
++		if (instance->adapter_type != MFI_SERIES) {
++			status_reg =
++			instance->instancet->read_fw_status_reg(instance);
++			if (!(status_reg & MFI_RESET_ADAPTER) ||
++				((megasas_adp_reset_wait_for_ready
++				(instance, true, 0)) == FAILED))
++				goto fail_ready_state;
++		} else {
++			atomic_set(&instance->fw_reset_no_pci_access, 1);
++			instance->instancet->adp_reset
++				(instance, instance->reg_set);
++			atomic_set(&instance->fw_reset_no_pci_access, 0);
++
++			/* waiting for about 30 seconds before retry */
++			ssleep(30);
++
++			if (megasas_transition_to_ready(instance, 0))
++				goto fail_ready_state;
++		}
++
++		dev_info(&instance->pdev->dev,
++			 "FW restarted successfully from %s!\n",
++			 __func__);
++	}
+ 	if (megasas_set_dma_mask(instance))
+ 		goto fail_set_dma_mask;
+ 
 -- 
 1.8.3.1
 
