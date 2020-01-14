@@ -1,92 +1,93 @@
-Return-Path: <SRS0=nml+=3C=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=+W3W=3D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E726DC33CA9
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jan 2020 23:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D434CC33CAF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 00:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF767206E5
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jan 2020 23:57:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A724F21569
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 00:09:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IpvdQUd8"
+	dkim=pass (1024-bit key) header.d=linuxonhyperv.com header.i=@linuxonhyperv.com header.b="Vpf8C8xZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729074AbgAMX5T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jan 2020 18:57:19 -0500
-Received: from mail-qk1-f176.google.com ([209.85.222.176]:36732 "EHLO
-        mail-qk1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728802AbgAMX5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2020 18:57:19 -0500
-Received: by mail-qk1-f176.google.com with SMTP id a203so10522223qkc.3
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jan 2020 15:57:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=LN7qLh71H+QbcGbIetP9xZTs++TQtaYIEV0MJGB09to=;
-        b=IpvdQUd8yJNqRYFQrJU2jlw/Vl+QDTHO3VL2XQObKThzQoUqzRIp7TAKfucGBCSDP/
-         OSR8GyFBOJTbrNVmXHxI9+SoKVg3b24F9F3M9gMnGQQtuN5v+FiXciyjrmhJQ8Oh/Fyl
-         HjE8IocjZSO5sEinc9YTOYkS51OcViD+mHIenUXrx9GuDQzW4A+qMScrQGS2I6ztAoMw
-         9bhQun3ebuk6ngtLLgqvTJMiccPh/qPSN59I0uaGIkCWVO5k3YOzAOGsL3jG46S1hkLd
-         ZQRtBm7VoqY8NSOUqHxgsJR0k5OAjeGcOuzKukEJE1pYbPMkOz6fo/nkkCnFs7R5Tfxm
-         DsUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=LN7qLh71H+QbcGbIetP9xZTs++TQtaYIEV0MJGB09to=;
-        b=EvtPttxW3gA4nLpib56njV2d3tTiTiXFgGpj+x8xSIQGEDk0OXLxUavNw76nbLDfCz
-         Ezc7lJkUNaovtZdf2rtw1nBsWuppvmcjiLaexWnC1QyziLsECVANBqwP/mVvseyZ6FAh
-         mFBEbmLgRedMwgqfCXcwejgbiXjK6cHlnQLp/CSevxGXrv9x0xvvCsanUOc3HDz2DxW/
-         MSo692QZFK72bl5e9HZO6pSxb4QDhlgdRufZKHl+XkD7Wt5SqoTCkGtEXJHaTAW+Mw8j
-         oEftYKYFg2/B8Pm8Mql0PBSYUn+UIR3LbRYy6L3/V09R0k/gBa8bEDXquPkq32XqXeDc
-         /o5w==
-X-Gm-Message-State: APjAAAVFu1UiZNa6QjmqmRoHuF+BbQawEnIqNiG88tW5P748p3U+jotB
-        FPPUNoq5qWTsCqJCHRem1DXgJjnBfs4nk0cssWvOBRFODec=
-X-Google-Smtp-Source: APXvYqzdqV5f498o2136HrswJlrklKYByA31f9OizX1raYNchOUwzZQMH8neudMRG34vNfOMoYR1nl11s1KS/DCCwaA=
-X-Received: by 2002:a37:2e43:: with SMTP id u64mr13287493qkh.387.1578959838245;
- Mon, 13 Jan 2020 15:57:18 -0800 (PST)
-MIME-Version: 1.0
-References: <CAOE4rSyVSfRRc9vFK_EM9SJMPoZD6PAmiA+2LqyFx2C26ht-6A@mail.gmail.com>
- <60f0fed7-43c7-c979-c375-d2ab4c21e141@huawei.com>
-In-Reply-To: <60f0fed7-43c7-c979-c375-d2ab4c21e141@huawei.com>
-From:   =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
-Date:   Tue, 14 Jan 2020 01:57:06 +0200
-Message-ID: <CAOE4rSxb9q565HLScxxWJiJ+ei8U1Fgh4XQvJuL2+VVhvqVhKg@mail.gmail.com>
-Subject: Re: How to reset HBA when using libsas/mvsas
-To:     John Garry <john.garry@huawei.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        id S1729308AbgANAJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jan 2020 19:09:17 -0500
+Received: from linux.microsoft.com ([13.77.154.182]:53604 "EHLO
+        linux.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729281AbgANAJQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2020 19:09:16 -0500
+Received: by linux.microsoft.com (Postfix, from userid 1004)
+        id 2B18C20B4798; Mon, 13 Jan 2020 16:09:16 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2B18C20B4798
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxonhyperv.com;
+        s=default; t=1578960556;
+        bh=AwqeJ9xVNhhom3pJrQP2lEg+PqhVsBi8bDPTF8OGbu0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Vpf8C8xZTO/mDi21duo8mdXtLqTV3Rv0EHeaiOQ98IZ4hvD8JWqJJhaclCdPkLOaW
+         3OSlE4DZaQJ6JmCMccV9iFU3HnEHhKJSzBr04DCAhby0ZDveQ1HatW3JZqpiOZX0Vz
+         0zCJe6JDOVF7lv51hC1CpClgz5an3J4l+ksn0v2E=
+From:   longli@linuxonhyperv.com
+To:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Long Li <longli@microsoft.com>
+Subject: [Patch v2] scsi: storvsc: Correctly set number of hardware queues for IDE disk
+Date:   Mon, 13 Jan 2020 16:08:36 -0800
+Message-Id: <1578960516-108228-1-git-send-email-longli@linuxonhyperv.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-pirmd., 2020. g. 13. janv., plkst. 11:51 =E2=80=94 lietot=C4=81js John Garr=
-y
-(<john.garry@huawei.com>) rakst=C4=ABja:
-> If you just want to rest the disk, you can reset the PHY to which the
-> disk is attached through sysfs, which is essentially is same as ejecting
-> and reinserting the disk:
-> 2. Go to PHY sysfs folder and disable+enable the PHY:
+From: Long Li <longli@microsoft.com>
 
-Awesome, this works great for me.
-Thanks!
+Commit 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware queue and CPU queue")
+introduced a regression for disks attached to IDE. For these disks the host VSP only offers
+one VMBUS channel. Setting multiple queues can overload the VMBUS channel and result in
+performance drop for high queue depth workload on system with large number of CPUs.
 
+Fix it by leaving the number of hardware queues to 1 (default value) for IDE
+disks.
 
-> > I have tried:
-> > $ echo 1 > /sys/block/sdf/device/delete
-> > $ echo '- - -' > /sys/class/scsi_host/host0/scan
-> >
-> > but it doesn't work as it doesn't detect any new drives.
->
-> I'm not sure if this is the correct method.
+Fixes: 0ed881027690 ("scsi: storvsc: setup 1:1 mapping between hardware queue and CPU queue")
+Signed-off-by: Long Li <longli@microsoft.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
 
-Searching on internet it's most common suggestion and I didn't saw
-anything else.
-https://unix.stackexchange.com/a/404408/51019
+Changes:
+v2: Use pre-computed bool variable dev_is_ide
+
+ drivers/scsi/storvsc_drv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index f8faf8b3d965..fb41636519ee 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1842,9 +1842,11 @@ static int storvsc_probe(struct hv_device *device,
+ 	 */
+ 	host->sg_tablesize = (stor_device->max_transfer_bytes >> PAGE_SHIFT);
+ 	/*
++	 * For non-IDE disks, the host supports multiple channels.
+ 	 * Set the number of HW queues we are supporting.
+ 	 */
+-	host->nr_hw_queues = num_present_cpus();
++	if (!dev_is_ide)
++		host->nr_hw_queues = num_present_cpus();
+ 
+ 	/*
+ 	 * Set the error handler work queue.
+-- 
+2.20.1
+
