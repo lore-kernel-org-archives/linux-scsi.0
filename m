@@ -2,109 +2,111 @@ Return-Path: <SRS0=+W3W=3D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 640E0C33CAF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 03:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE202C33CA9
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 05:20:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B92524658
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 03:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94CFD2187F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 05:20:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KKp4Lez6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Eb1inmK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729629AbgANDEh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jan 2020 22:04:37 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:53130 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729224AbgANDEh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jan 2020 22:04:37 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00E33f0n181167;
-        Tue, 14 Jan 2020 03:04:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=keJibTsJRKKM7cxbY4WBKFccqeBdlACR5qxE4hPJX+4=;
- b=KKp4Lez6+ddRjoyGpUtf4VWNMY+B3LVFG52sUGwtjh/9v2zq9CcRmH5IV/3gDWj5mZtz
- vtHWtkVgOr9rmKfQxdB0jYdPL/to+TFrSl9ZTbeCy3U/1mpQr/MTZhX21WFF906elohQ
- 3uYqtdf8jy0Gx3EJK12rwmZQWLhRY4muOJxdMLAGLUdWTQBVg1nRqLQF24zQmFZrfxb5
- YsItUNOOvMmrWiiL8jxwVN/qEQ4u8NVwcagtESmfF0uwtd9oJSYxG3XSVn2wp8ouGWxW
- foe1SEaAWDhbVfQwjVifj0LHDkRKXT0R9o23x5DRMluQRi4sOtEwsYa28K2897yOJBA5 rw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2xf73tk4a4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jan 2020 03:04:00 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00E33E1L194107;
-        Tue, 14 Jan 2020 03:04:00 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2xfrgjss6w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jan 2020 03:03:59 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00E33vjH010007;
-        Tue, 14 Jan 2020 03:03:57 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Jan 2020 19:03:57 -0800
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        id S1726053AbgANFUz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 00:20:55 -0500
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:39174 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbgANFUz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 00:20:55 -0500
+Received: by mail-pj1-f68.google.com with SMTP id e11so3772343pjt.4;
+        Mon, 13 Jan 2020 21:20:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=hpg375SG4OcRJmsXIQB4JvlM7mK+PXk3tVmm8/Xog0I=;
+        b=Eb1inmK65871bjwXXURvt/KZT59pK0p9MojqskFZAmrJvcqKeyOsqgyh8nbp25X8II
+         sQ4K+nd1xfS2arR49DGCUEB/UsSvNDocoNEXDKg9XPulWvmZoWYn8JLsPHNRB1PZ/YFk
+         km3df9BKbMWALHC/3zZS84vGAdJHbvahhQBGxTNY6o4VYCQ0lmriUT5D9rRZJo+IiuyH
+         uXDpHm3U6xWgPFHk6eULScXecxmdKqK4eHouICv/DNXzflv2eTAXrqjtkwAXvV0DjNof
+         d0Z15lEPNJ9LJ2WbdX/GOqTyQDJvyBYVYGA+xKZTdqlkly3ErO2Ur1ooroKx5oDXh1Eq
+         uorg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=hpg375SG4OcRJmsXIQB4JvlM7mK+PXk3tVmm8/Xog0I=;
+        b=STweey4Wr7mpQ8uNl/YGMY5KUMGlmhPpoe+J7u1BMni9pSRtLoVIZ+Ktf1V4zLq588
+         cKqg482CufP2mySHeN9e8ULlIpgNBF1nWPfa0tdaDW2oVcGIj9LL0Vi2thBwUcLH7rsn
+         wlORsFuPC5v36jLJDfD3F6y00u8IST8xHO0suI2FRIx4Ba5B7VDbQhoKFoSn2UPFPtRp
+         XirEoPJvGoJF1VlLbVZGRE2cqKmBbyo23sWb8zjboyAwlrNyXv1kP+74mcS9/A1qWl0G
+         atzcGXZmuGm1XYABFxQSOSgh7iQb7sY/xx5IcW1jTcK4ncKv6XTx0h6xLhPJL+SvXKBI
+         c1tg==
+X-Gm-Message-State: APjAAAW9/3EWMEg33Yuucum9KVFL9tuxBiBT+zTGZz+TzLNsq+sIFhE6
+        uDMFr5meJRxXJLgA3KziwBY=
+X-Google-Smtp-Source: APXvYqz58gFiJcD5qAaaAUtMBc+NyktKYV30g2WYNX6ECk+RvLjF+XG0PbzQF/2zzl966J49rSN+9A==
+X-Received: by 2002:a17:902:724a:: with SMTP id c10mr18279878pll.307.1578979254311;
+        Mon, 13 Jan 2020 21:20:54 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id m3sm16042186pfh.116.2020.01.13.21.20.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Jan 2020 21:20:53 -0800 (PST)
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
         Linus Walleij <linus.walleij@linaro.org>,
         Bart Van Assche <bvanassche@acm.org>,
         linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         Chris Healy <cphealy@gmail.com>
-Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
 References: <20191215174509.1847-1-linux@roeck-us.net>
-        <20191215174509.1847-2-linux@roeck-us.net>
-        <yq1r211dvck.fsf@oracle.com>
-        <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
-        <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
-        <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
-Date:   Mon, 13 Jan 2020 22:03:54 -0500
-In-Reply-To: <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net> (Guenter
-        Roeck's message of "Sat, 11 Jan 2020 12:22:57 -0800")
-Message-ID: <yq1r202spr9.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+ <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
+ <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+ <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
+ <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
+ <yq1r202spr9.fsf@oracle.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <403cfbf8-79da-94f1-509f-e90d1a165722@roeck-us.net>
+Date:   Mon, 13 Jan 2020 21:20:51 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=643
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001140026
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9499 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=704 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001140026
+In-Reply-To: <yq1r202spr9.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Martin,
 
-Hi Guenter!
+On 1/13/20 7:03 PM, Martin K. Petersen wrote:
+> 
+> Hi Guenter!
+> 
+>> I tried again, this time with v5.5-rc5. Loading and unloading ahci and
+>> drivetemp in any order does not cause any problems for me.
+> 
+> I tried your hwmon-next branch and it still happens for me. Both in qemu
+> and on real hw. I'm really low on bandwidth the next couple of days.
+> Will try to look later this week unless you beat me to it. I get lots of
+> these warnings after modprobe drivetemp; modprobe ahci:
+> 
+> [ 1055.611922] WARNING: CPU: 3 PID: 3233 at drivers/base/dd.c:519 really_probe+0x436/0x4f0
+> 
+> A quick test forcing synchronous SCSI scanning made no difference.
+> 
 
-> I tried again, this time with v5.5-rc5. Loading and unloading ahci and
-> drivetemp in any order does not cause any problems for me.
+The hwmon-next branch is based on v5.5-rc1. It might be better to either
+merge hwmon-next into mainline, or to apply the drivetemp patch to mainline,
+and test the result. I have seen some (unrelated) weird tracebacks
+in the driver core with v5.5-rc1, so that may not be the best baseline
+for a test.
 
-I tried your hwmon-next branch and it still happens for me. Both in qemu
-and on real hw. I'm really low on bandwidth the next couple of days.
-Will try to look later this week unless you beat me to it. I get lots of
-these warnings after modprobe drivetemp; modprobe ahci:
-
-[ 1055.611922] WARNING: CPU: 3 PID: 3233 at drivers/base/dd.c:519 really_probe+0x436/0x4f0
-
-A quick test forcing synchronous SCSI scanning made no difference.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+Thanks,
+Guenter
