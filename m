@@ -5,63 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16AA0C33CB1
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 426E3C33CB2
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D496C24676
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:22:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1425D24676
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 11:23:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Sxm5oThw"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fvuk46Cj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729508AbgANLWy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jan 2020 06:22:54 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:42503 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728914AbgANLWy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 06:22:54 -0500
-Received: by mail-wr1-f66.google.com with SMTP id q6so11724030wro.9
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2020 03:22:52 -0800 (PST)
+        id S1729499AbgANLW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 06:22:59 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:39487 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729190AbgANLW7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jan 2020 06:22:59 -0500
+Received: by mail-wr1-f65.google.com with SMTP id y11so11774253wrt.6
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jan 2020 03:22:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=E7QEzXlO8OqNquW5r8p3d4KP/1uKqeHsoblUyOCtlfw=;
-        b=Sxm5oThw9RZbwlhWsF5fRHN1eE5MBUMscz2fDu82obSi1AciEIrUKX89ZKFSun2uYE
-         MCfWJAvc8C9XexTzgusXBEG0/Ez66O28TKrG+qExnHUhkBntMhgQtxzVIEY/+P+bOJT8
-         ZcYLehU2A3U4Yof7AXIYhHwtQOE/9cxw4Pjhc=
+        bh=3eHBomyW/Wwk0va6H9jkbvlKklYJQRPgDR1v4/SFIYo=;
+        b=fvuk46CjM/HAPcrEFNHc567oPALzsU8uvvLuOI7CmI5TOJRJCmBIEBh4lVAHUqAgDz
+         WMiNfWOWqwBC4kc9S3AoXh7CaFmYegwWUO94Nh5HHsAcEfgsJABZG2BNWfFxozJeUzaN
+         TBsEP0+ecPXOP+ezL+TpzjY/w/oGn592byV4M=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=E7QEzXlO8OqNquW5r8p3d4KP/1uKqeHsoblUyOCtlfw=;
-        b=V9WWL+aqwclQjQJD7fki4SV5mu7ZVtZzdFikna2mWbREiaA1J/Q4oxrFlEuEe0S5iP
-         RqLiWs/Rs+7HCJG1zNkSRJUHdOH6l+pE0vYyiV1nbjg5+wlIotpgy8HUSYxOwhQYrCSr
-         XrOdq/JdJxTQmLGXDfcPDVkex5K8DolfVvVG6TDya7CcICY4o1xPOdvUqTvzJED5/HlB
-         cXsIiIa54N/zMUWAX/jYnORUsF6/WIizTQabT9yOx2Uv0/l0AyNvvdwXFInA7ncj4S+F
-         dIkGT+6uwPbjs3nVxs+vGRiUpbX+uE3paZSiflhn9K3SO5Dw+1FjpPVjpWt56l9+XUCr
-         TeXg==
-X-Gm-Message-State: APjAAAXEmUK4nUZ7RUxY4WaBRHFEEjQI7+jJmtEysXz2zG6sbb3iOYxU
-        mZni2Bm5o+EdIXwOog0zJpl6HV1MFZaJYxGEaL9HVZMtwLGkuKGn6jNGzJLjhTRX1CrGKC443D9
-        t8xJcch1Y1QuiW5wsPzkm+jF6pyFyiYJowLmPy5sJ6kIuqu61Q7GwM0CsnvNXS/QxS19EFTFndY
-        /PLI/nmQ==
-X-Google-Smtp-Source: APXvYqzNiLVEjm1Xl9Vfv+imuR3lj8YNR2iQUB5ofwFT6fvFP9gsVqNB/Hyro4OLgDR9ocbx4cC5BQ==
-X-Received: by 2002:adf:e6cb:: with SMTP id y11mr25096647wrm.345.1579000971755;
-        Tue, 14 Jan 2020 03:22:51 -0800 (PST)
+        bh=3eHBomyW/Wwk0va6H9jkbvlKklYJQRPgDR1v4/SFIYo=;
+        b=OkYJ42C9SjsHoOQPDscU9paRQr0xSHCot4QkClAJsp5Ar6yfeRiLbJ2jzkJwjjeyLu
+         Rfhp4YvigD5fguhxGH/e4rx27TOg6mzl+INnbLu5R1LI9x/6b1A/Tm6th0l4Ab8eYDnl
+         f1ny07lE2rNSF4612qeUeAaVvCYTzeX3LECKxXkON+1o4Lny8ZEkO5a1IiAVMIghsYX2
+         WoG2Tw4Ui1ytTy5YTz0ZVO4U5wmJ7Ha9SpgD4B9YGgPak2BSTZ8VUoXPUjXbKIgJHAta
+         fn6f3dVf0IzX3mfkzUY4rv1hwvqw5eKYT0s+rc0mstNZLwj1BxQO33bwPJpjyQDHewrW
+         zyxQ==
+X-Gm-Message-State: APjAAAVOxrQiFFQzilgL2GJMRa03PovHuiMTT0SzNK5jkV/uXndl6CHI
+        s63Sc+K2i5oBrP5FTMdxvtla9zgHbUn2kwRavihdqd4AUxpzSEvJCTYdVVNUElo+UQpUVvCEhFU
+        zCbtUvUReZuCZOTzrkgDRUj5EOZaExEoSBJWE2D0kRsy8+YSbegc1nbuUXIstaBubf1fA/kvgDg
+        heaziBbw==
+X-Google-Smtp-Source: APXvYqw+oKm0YJPz50Z2HRWT84RSWXFytnemqoBQDWLO9LzXIE5PA5Apf83+asCtvvcVe3Iq9Hi/UQ==
+X-Received: by 2002:a05:6000:160d:: with SMTP id u13mr25130484wrb.22.1579000977209;
+        Tue, 14 Jan 2020 03:22:57 -0800 (PST)
 Received: from dhcp-10-123-20-32.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id z21sm17638160wml.5.2020.01.14.03.22.48
+        by smtp.gmail.com with ESMTPSA id z21sm17638160wml.5.2020.01.14.03.22.53
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 14 Jan 2020 03:22:51 -0800 (PST)
+        Tue, 14 Jan 2020 03:22:56 -0800 (PST)
 From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         kiran-kumar.kasturi@broadcom.com, sankar.patra@broadcom.com,
         sasikumar.pc@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
         chandrakanth.patil@broadcom.com,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>
-Subject: [PATCH v2 07/11] megaraid_sas: Re-Define enum DCMD_RETURN_STATUS
-Date:   Tue, 14 Jan 2020 16:51:18 +0530
-Message-Id: <1579000882-20246-8-git-send-email-anand.lodnoor@broadcom.com>
+        Anand Lodnoor <anand.lodnoor@broadcom.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v2 08/11] megaraid_sas: Do not initiate OCR if controller is not in ready state
+Date:   Tue, 14 Jan 2020 16:51:19 +0530
+Message-Id: <1579000882-20246-9-git-send-email-anand.lodnoor@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
 References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
@@ -70,196 +71,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DCMD_INIT is introduced to indicate the initial DCMD status,
-which was earlier set to MFI status.
-DCMD_BUSY indicates the resource is busy or locked.
+Driver initiates OCR if a DCMD command times out. But there is a
+deadlock if the driver attempts to invoke another OCR before the
+mutex lock (reset_mutex) is released from the previous session of OCR.
 
+This patch takes care of the above scenario using new flag
+MEGASAS_FUSION_OCR_NOT_POSSIBLE to indicate if OCR is possible.
+
+Cc: stable@vger.kernel.org
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Anand Lodnoor <anand.lodnoor@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |  9 +++---
- drivers/scsi/megaraid/megaraid_sas_base.c | 50 ++++++++++++++++++-------------
- 2 files changed, 34 insertions(+), 25 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 3 ++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 ++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 1 +
+ 3 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index ddfbe6f..25afa81 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2640,10 +2640,11 @@ enum MEGASAS_OCR_CAUSE {
- };
- 
- enum DCMD_RETURN_STATUS {
--	DCMD_SUCCESS		= 0,
--	DCMD_TIMEOUT		= 1,
--	DCMD_FAILED		= 2,
--	DCMD_NOT_FIRED		= 3,
-+	DCMD_SUCCESS    = 0x00,
-+	DCMD_TIMEOUT    = 0x01,
-+	DCMD_FAILED     = 0x02,
-+	DCMD_BUSY       = 0x03,
-+	DCMD_INIT       = 0xff,
- };
- 
- u8
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 26c5119..8bee5629 100644
+index 8bee5629..792db75 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1099,7 +1099,7 @@ struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
- 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 			__func__, __LINE__);
--		return DCMD_NOT_FIRED;
-+		return DCMD_INIT;
- 	}
- 
- 	instance->instancet->issue_dcmd(instance, cmd);
-@@ -1123,19 +1123,19 @@ struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- 			  struct megasas_cmd *cmd, int timeout)
- {
- 	int ret = 0;
--	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
-+	cmd->cmd_status_drv = DCMD_INIT;
- 
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
- 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 			__func__, __LINE__);
--		return DCMD_NOT_FIRED;
-+		return DCMD_INIT;
- 	}
- 
- 	instance->instancet->issue_dcmd(instance, cmd);
- 
- 	if (timeout) {
- 		ret = wait_event_timeout(instance->int_cmd_wait_q,
--				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS, timeout * HZ);
-+		cmd->cmd_status_drv != DCMD_INIT, timeout * HZ);
- 		if (!ret) {
- 			dev_err(&instance->pdev->dev,
- 				"DCMD(opcode: 0x%x) is timed out, func:%s\n",
-@@ -1144,10 +1144,9 @@ struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- 		}
- 	} else
- 		wait_event(instance->int_cmd_wait_q,
--				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS);
-+				cmd->cmd_status_drv != DCMD_INIT);
- 
--	return (cmd->cmd_status_drv == MFI_STAT_OK) ?
--		DCMD_SUCCESS : DCMD_FAILED;
-+	return cmd->cmd_status_drv;
+@@ -4403,7 +4403,8 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ 	if (instance->adapter_type == MFI_SERIES)
+ 		return KILL_ADAPTER;
+ 	else if (instance->unload ||
+-			test_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags))
++			test_bit(MEGASAS_FUSION_OCR_NOT_POSSIBLE,
++				 &instance->reset_flags))
+ 		return IGNORE_TIMEOUT;
+ 	else
+ 		return INITIATE_OCR;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 6860fd2..8b6cc1b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -4851,6 +4851,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
+ 		del_timer_sync(&instance->sriov_heartbeat_timer);
+ 	set_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
++	set_bit(MEGASAS_FUSION_OCR_NOT_POSSIBLE, &instance->reset_flags);
+ 	atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_POLLING);
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_sync_irqs((unsigned long)instance);
+@@ -5059,7 +5060,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	instance->skip_heartbeat_timer_del = 1;
+ 	retval = FAILED;
+ out:
+-	clear_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
++	clear_bit(MEGASAS_FUSION_OCR_NOT_POSSIBLE, &instance->reset_flags);
+ 	mutex_unlock(&instance->reset_mutex);
+ 	return retval;
  }
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 8358b68..d57ecc7 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -89,6 +89,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
  
- /**
-@@ -1190,19 +1189,19 @@ struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- 		cpu_to_le32(upper_32_bits(cmd_to_abort->frame_phys_addr));
- 
- 	cmd->sync_cmd = 1;
--	cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
-+	cmd->cmd_status_drv = DCMD_INIT;
- 
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
- 		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 			__func__, __LINE__);
--		return DCMD_NOT_FIRED;
-+		return DCMD_INIT;
- 	}
- 
- 	instance->instancet->issue_dcmd(instance, cmd);
- 
- 	if (timeout) {
- 		ret = wait_event_timeout(instance->abort_cmd_wait_q,
--				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS, timeout * HZ);
-+		cmd->cmd_status_drv != DCMD_INIT, timeout * HZ);
- 		if (!ret) {
- 			opcode = cmd_to_abort->frame->dcmd.opcode;
- 			dev_err(&instance->pdev->dev,
-@@ -1212,13 +1211,12 @@ struct megasas_cmd *megasas_get_cmd(struct megasas_instance
- 		}
- 	} else
- 		wait_event(instance->abort_cmd_wait_q,
--				cmd->cmd_status_drv != MFI_STAT_INVALID_STATUS);
-+		cmd->cmd_status_drv != DCMD_INIT);
- 
- 	cmd->sync_cmd = 0;
- 
- 	megasas_return_cmd(instance, cmd);
--	return (cmd->cmd_status_drv == MFI_STAT_OK) ?
--		DCMD_SUCCESS : DCMD_FAILED;
-+	return cmd->cmd_status_drv;
- }
- 
- /**
-@@ -2736,7 +2734,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
- 						"reset queue\n",
- 						reset_cmd);
- 
--				reset_cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
-+				reset_cmd->cmd_status_drv = DCMD_INIT;
- 				instance->instancet->fire_cmd(instance,
- 						reset_cmd->frame_phys_addr,
- 						0, instance->reg_set);
-@@ -3441,7 +3439,11 @@ static int megasas_reset_target(struct scsi_cmnd *scmd)
- megasas_complete_int_cmd(struct megasas_instance *instance,
- 			 struct megasas_cmd *cmd)
- {
--	cmd->cmd_status_drv = cmd->frame->io.cmd_status;
-+	if (cmd->cmd_status_drv == DCMD_INIT)
-+		cmd->cmd_status_drv =
-+		(cmd->frame->io.cmd_status == MFI_STAT_OK) ?
-+		DCMD_SUCCESS : DCMD_FAILED;
-+
- 	wake_up(&instance->int_cmd_wait_q);
- }
- 
-@@ -3460,7 +3462,7 @@ static int megasas_reset_target(struct scsi_cmnd *scmd)
- {
- 	if (cmd->sync_cmd) {
- 		cmd->sync_cmd = 0;
--		cmd->cmd_status_drv = 0;
-+		cmd->cmd_status_drv = DCMD_SUCCESS;
- 		wake_up(&instance->abort_cmd_wait_q);
- 	}
- }
-@@ -3736,7 +3738,7 @@ static int megasas_reset_target(struct scsi_cmnd *scmd)
- 			dev_notice(&instance->pdev->dev, "%p synchronous cmd"
- 						"on the internal reset queue,"
- 						"issue it again.\n", cmd);
--			cmd->cmd_status_drv = MFI_STAT_INVALID_STATUS;
-+			cmd->cmd_status_drv = DCMD_INIT;
- 			instance->instancet->fire_cmd(instance,
- 							cmd->frame_phys_addr,
- 							0, instance->reg_set);
-@@ -8072,6 +8074,7 @@ static int megasas_set_crash_dump_params_ioctl(struct megasas_cmd *cmd)
- 	dma_addr_t sense_handle;
- 	unsigned long *sense_ptr;
- 	u32 opcode = 0;
-+	int ret = DCMD_SUCCESS;
- 
- 	memset(kbuff_arr, 0, sizeof(kbuff_arr));
- 
-@@ -8212,13 +8215,18 @@ static int megasas_set_crash_dump_params_ioctl(struct megasas_cmd *cmd)
- 	 * cmd to the SCSI mid-layer
- 	 */
- 	cmd->sync_cmd = 1;
--	if (megasas_issue_blocked_cmd(instance, cmd, 0) == DCMD_NOT_FIRED) {
-+
-+	ret = megasas_issue_blocked_cmd(instance, cmd, 0);
-+	switch (ret) {
-+	case DCMD_INIT:
-+	case DCMD_BUSY:
- 		cmd->sync_cmd = 0;
- 		dev_err(&instance->pdev->dev,
- 			"return -EBUSY from %s %d cmd 0x%x opcode 0x%x cmd->cmd_status_drv 0x%x\n",
--			__func__, __LINE__, cmd->frame->hdr.cmd, opcode,
--			cmd->cmd_status_drv);
--		return -EBUSY;
-+			 __func__, __LINE__, cmd->frame->hdr.cmd, opcode,
-+			 cmd->cmd_status_drv);
-+			error = -EBUSY;
-+			goto out;
- 	}
- 
- 	cmd->sync_cmd = 0;
+ #define MEGASAS_FP_CMD_LEN	16
+ #define MEGASAS_FUSION_IN_RESET 0
++#define MEGASAS_FUSION_OCR_NOT_POSSIBLE 1
+ #define RAID_1_PEER_CMDS 2
+ #define JBOD_MAPS_COUNT	2
+ #define MEGASAS_REDUCE_QD_COUNT 64
 -- 
 1.8.3.1
 
