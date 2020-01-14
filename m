@@ -2,121 +2,192 @@ Return-Path: <SRS0=+W3W=3D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA36C33CB3
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:16:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FC4C33CB1
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D026207FF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:16:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="CIvEP5kq"
+	by mail.kernel.org (Postfix) with ESMTP id A531624670
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jan 2020 10:21:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731295AbgANKJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jan 2020 05:09:15 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:40146 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729040AbgANKJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jan 2020 05:09:13 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 5890543F93;
-        Tue, 14 Jan 2020 10:09:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1578996551;
-         x=1580810952; bh=VB+rgJ1BdMDBSaf1j+lbIMdpNwaBY7N28XPCN7g8oo0=; b=
-        CIvEP5kqZT4rk/DzR4x9L3Sz0fdyawC0i2sJah+EwHa1naVsXz5JXiVsoJBzG5zK
-        CXIIMaicFUQuKNGs824iTA7PiTBGWciDBnYqGezPI4lrT2DmQ3OHY32sKmpFhB5q
-        9g/wS3rXyHpf7THTGUvgow8OrQDw9qS4j1NYpHsxGzM=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ZPbrj2Ij0E-F; Tue, 14 Jan 2020 13:09:11 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id DAEFD42001;
-        Tue, 14 Jan 2020 13:09:09 +0300 (MSK)
-Received: from localhost (172.17.128.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 14
- Jan 2020 13:09:09 +0300
-Date:   Tue, 14 Jan 2020 13:09:08 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH] qla2xxx: Fix a NULL pointer dereference in an error path
-Message-ID: <20200114100908.d6ch4u7krhvixaqa@SPB-NB-133.local>
-References: <20200112210846.13421-1-bvanassche@acm.org>
+        id S1729112AbgANKVj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jan 2020 05:21:39 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:58916 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727285AbgANKVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jan 2020 05:21:39 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id DE9CF2041C0;
+        Tue, 14 Jan 2020 11:21:36 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id t7YZbYgG2OxT; Tue, 14 Jan 2020 11:21:36 +0100 (CET)
+Received: from [82.134.31.177] (unknown [82.134.31.177])
+        by smtp.infotech.no (Postfix) with ESMTPA id BD49E204188;
+        Tue, 14 Jan 2020 11:21:36 +0100 (CET)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v6 27/37] sg: add sg v4 interface support
+To:     kbuild test robot <lkp@intel.com>
+Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+References: <20200112235755.14197-28-dgilbert@interlog.com>
+ <202001131604.C85gbLUO%lkp@intel.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <6132474f-0f08-e3da-14b3-16bab23f2a5c@interlog.com>
+Date:   Tue, 14 Jan 2020 11:21:36 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20200112210846.13421-1-bvanassche@acm.org>
-X-Originating-IP: [172.17.128.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+In-Reply-To: <202001131604.C85gbLUO%lkp@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jan 12, 2020 at 01:08:46PM -0800, Bart Van Assche wrote:
-> This patch fixes the following Coverity complaint:
+On 2020-01-13 9:28 a.m., kbuild test robot wrote:
+> Hi Douglas,
 > 
-> FORWARD_NULL
+> Thank you for the patch! Perhaps something to improve:
 > 
-> qla_init.c: 5275 in qla2x00_configure_local_loop()
-> 5269
-> 5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
-> 5271     			qla24xx_fcport_handle_login(vha, fcport);
-> 5272     	}
-> 5273
-> 5274     cleanup_allocation:
-> >>>     CID 353340:    (FORWARD_NULL)
-> >>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
-> 5275     	qla2x00_free_fcport(new_fcport);
-> 5276
-> 5277     	if (rval != QLA_SUCCESS) {
-> 5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
-> 5279     		    "Configure local loop error exit: rval=%x.\n", rval);
-> 5280     	}
+> [auto build test WARNING on scsi/for-next]
+> [also build test WARNING on linus/master v5.5-rc6]
+> [cannot apply to mkp-scsi/for-next next-20200110]
+> [if your patch is applied to the wrong git tree, please drop us a note to help
+> improve the system. BTW, we also suggest to use '--base' option to specify the
+> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Douglas-Gilbert/sg-add-v4-interface/20200113-080059
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> New smatch warnings:
+> drivers/scsi/sg.c:504 sg_open() error: potential null dereference 'sfp'.  (sg_add_sfp returns null)
+> 
+> Old smatch warnings:
+> drivers/scsi/sg.c:3238 sg_find_srp_by_id() warn: statement has no effect 3
+
+__attribute__((nonnull(<n>))) only applies to function arguments, not its
+return value. So there seems no way to tell the compiler: this function,
+that returns a pointer, should/will never return the NULL pointer; feel
+free to check that.
+
+sg_add_sfp() is such a function, if it fails its retval is either a valid
+pointer _or_ IS_ERR(retval) is true. It follows that sfp->tid on line 504
+can never be a null dereference.
+
+Doug Gilbert
+
+> 
+> vim +/sfp +504 drivers/scsi/sg.c
+> 
+>     433	
+>     434	/*
+>     435	 * Corresponds to the open() system call on sg devices. Implements O_EXCL on
+>     436	 * a per device basis using 'open_cnt'. If O_EXCL and O_NONBLOCK and there is
+>     437	 * already a sg handle open on this device then it fails with an errno of
+>     438	 * EBUSY. Without the O_NONBLOCK flag then this thread enters an interruptible
+>     439	 * wait until the other handle(s) are closed.
+>     440	 */
+>     441	static int
+>     442	sg_open(struct inode *inode, struct file *filp)
+>     443	{
+>     444		bool o_excl, non_block;
+>     445		int min_dev = iminor(inode);
+>     446		int op_flags = filp->f_flags;
+>     447		int res;
+>     448		__maybe_unused int o_count;
+>     449		struct sg_device *sdp;
+>     450		struct sg_fd *sfp;
+>     451	
+>     452		nonseekable_open(inode, filp);
+>     453		o_excl = !!(op_flags & O_EXCL);
+>     454		non_block = !!(op_flags & O_NONBLOCK);
+>     455		if (o_excl && ((op_flags & O_ACCMODE) == O_RDONLY))
+>     456			return -EPERM;/* not permitted, need write access for O_EXCL */
+>     457		sdp = sg_get_dev(min_dev);	/* increments sdp->d_ref */
+>     458		if (IS_ERR(sdp))
+>     459			return PTR_ERR(sdp);
+>     460	
+>     461		/* Prevent the device driver from vanishing while we sleep */
+>     462		res = scsi_device_get(sdp->device);
+>     463		if (res)
+>     464			goto sg_put;
+>     465		res = scsi_autopm_get_device(sdp->device);
+>     466		if (res)
+>     467			goto sdp_put;
+>     468		res = sg_allow_if_err_recovery(sdp, non_block);
+>     469		if (res)
+>     470			goto error_out;
+>     471	
+>     472		mutex_lock(&sdp->open_rel_lock);
+>     473		if (op_flags & O_NONBLOCK) {
+>     474			if (o_excl) {
+>     475				if (atomic_read(&sdp->open_cnt) > 0) {
+>     476					res = -EBUSY;
+>     477					goto error_mutex_locked;
+>     478				}
+>     479			} else {
+>     480				if (SG_HAVE_EXCLUDE(sdp)) {
+>     481					res = -EBUSY;
+>     482					goto error_mutex_locked;
+>     483				}
+>     484			}
+>     485		} else {
+>     486			res = sg_wait_open_event(sdp, o_excl);
+>     487			if (res) /* -ERESTARTSYS or -ENODEV */
+>     488				goto error_mutex_locked;
+>     489		}
+>     490	
+>     491		/* N.B. at this point we are holding the open_rel_lock */
+>     492		if (o_excl)
+>     493			set_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
+>     494	
+>     495		o_count = atomic_inc_return(&sdp->open_cnt);
+>     496		sfp = sg_add_sfp(sdp);		/* increments sdp->d_ref */
+>     497		if (IS_ERR(sfp)) {
+>     498			atomic_dec(&sdp->open_cnt);
+>     499			res = PTR_ERR(sfp);
+>     500			goto out_undo;
+>     501		}
+>     502	
+>     503		filp->private_data = sfp;
+>   > 504		sfp->tid = (current ? current->pid : -1);
+>     505		mutex_unlock(&sdp->open_rel_lock);
+>     506		SG_LOG(3, sfp, "%s: minor=%d, op_flags=0x%x; %s count after=%d%s\n",
+>     507		       __func__, min_dev, op_flags, "device open", o_count,
+>     508		       ((op_flags & O_NONBLOCK) ? " O_NONBLOCK" : ""));
+>     509	
+>     510		res = 0;
+>     511	sg_put:
+>     512		kref_put(&sdp->d_ref, sg_device_destroy);
+>     513		/* if success, sdp->d_ref is incremented twice, decremented once */
+>     514		return res;
+>     515	
+>     516	out_undo:
+>     517		if (o_excl) {		/* undo if error */
+>     518			clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
+>     519			wake_up_interruptible(&sdp->open_wait);
+>     520		}
+>     521	error_mutex_locked:
+>     522		mutex_unlock(&sdp->open_rel_lock);
+>     523	error_out:
+>     524		scsi_autopm_put_device(sdp->device);
+>     525	sdp_put:
+>     526		scsi_device_put(sdp->device);
+>     527		goto sg_put;
+>     528	}
+>     529	
 > 
 > ---
->  drivers/scsi/qla2xxx/qla_init.c | 2 ++
->  1 file changed, 2 insertions(+)
+> 0-DAY kernel test infrastructure                 Open Source Technology Center
+> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index c4e087217484..6560908ed50e 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -4895,6 +4895,8 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
->  void
->  qla2x00_free_fcport(fc_port_t *fcport)
->  {
-> +	if (!fcport)
-> +		return;
->  	if (fcport->ct_desc.ct_sns) {
->  		dma_free_coherent(&fcport->vha->hw->pdev->dev,
->  			sizeof(struct ct_sns_pkt), fcport->ct_desc.ct_sns,
 
-Hi Bart,
-
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-
-There was another attempt to fix the issue a week ago:
-https://patchwork.kernel.org/patch/11319315/
-
-CC'ing Colin.
-
-Thanks,
-Roman
