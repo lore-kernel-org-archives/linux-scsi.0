@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94355C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EE6C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B07F24683
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B85824683
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195940;
-	bh=v6d3lsBHjk1X70vkdK+hURgWg1dn1U++UNDvwwBTu44=;
+	s=default; t=1579195948;
+	bh=+wPATWbbS19K0NGwhgRti4kUl6Tr0W8lcpD9n/xuZ/k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jgBEmbhLpRYOuG7P1Ux3gP/SRZshHgV9/IcIjryWJNcR3VZMCPaApNAfH1kbrRoBf
-	 ZwjH+3vfS9bnUiARb/lO/IWqCgMY8AAGoNanp//ZaLFNpn7gGkWdiV2QSOynbB7V/o
-	 VSnA5ef5gAh7l9vQIJWV0FekmG19LK13Pb6uYMcA=
+	b=at/5ClUcIzSglhrfavfH03CEXkb9o45qP5UxywwVThe4UcZpZA5iaiBEAVUfKIPjh
+	 uSo37aQLpmUu56PNdf5yiEdPu5iS6CBSt+rk26RCDIziiuqamDdCxQYjC55QnjbTlU
+	 mOddpGdkZWTLuhYMIAzVgZSkfLRX/1k8Wf4ax2yo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730709AbgAPRcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:32:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43954 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404661AbgAPRbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2404660AbgAPRbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 16 Jan 2020 12:31:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43926 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404652AbgAPRbA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:31:00 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 35FC5246A9;
-        Thu, 16 Jan 2020 17:31:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E46C246A8;
+        Thu, 16 Jan 2020 17:30:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195861;
-        bh=v6d3lsBHjk1X70vkdK+hURgWg1dn1U++UNDvwwBTu44=;
+        s=default; t=1579195859;
+        bh=+wPATWbbS19K0NGwhgRti4kUl6Tr0W8lcpD9n/xuZ/k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=comiNmynCA+dy6In64cR8AYEVweLGEs14quF6RW3mtapEeNh5XiYufq80rNgynUBS
-         EDkNp29kcHcqRRdF4iJIBBi0SZDsG061KzqDq1ZRBbeldqhcn/aWGdlX5lhLpYJoBP
-         dKSbSSpJbI1Ai9+ecnF8yxSKOvMZF3xa9tz+fBO0=
+        b=Dj6YeLrzqAMJv3i0oPv4t4ltsm6iEmdsXT2n4CRvziQmjHAncOAbXvIO+x4CKfnFD
+         OPaYhcyhYKmI6Gvvo97vGD9oJmpdlCg67LgMdiSaG8Mb2hrdXdMOIS+G4Zh48TdtYa
+         146ds20qkCAegcKXVlH9uELSydJezs1t2irDmr3Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Pan Bian <bianpan2016@163.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 359/371] scsi: target: core: Fix a pr_debug() argument
-Date:   Thu, 16 Jan 2020 12:23:51 -0500
-Message-Id: <20200116172403.18149-302-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 358/371] scsi: bnx2i: fix potential use after free
+Date:   Thu, 16 Jan 2020 12:23:50 -0500
+Message-Id: <20200116172403.18149-301-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -60,36 +58,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit c941e0d172605731de9b4628bd4146d35cf2e7d6 ]
+[ Upstream commit 29d28f2b8d3736ac61c28ef7e20fda63795b74d9 ]
 
-Print the string for which conversion failed instead of printing the
-function name twice.
+The member hba->pcidev may be used after its reference is dropped. Move the
+put function to where it is never used to avoid potential use after free
+issues.
 
-Fixes: 2650d71e244f ("target: move transport ID handling to the core")
-Cc: Christoph Hellwig <hch@lst.de>
-Link: https://lore.kernel.org/r/20191107215525.64415-1-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: a77171806515 ("[SCSI] bnx2i: Removed the reference to the netdev->base_addr")
+Link: https://lore.kernel.org/r/1573043541-19126-1-git-send-email-bianpan2016@163.com
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_fabric_lib.c | 2 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index 508da345b73f..95aa47ac4dcd 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -131,7 +131,7 @@ static int srp_get_pr_transport_id(
- 	memset(buf + 8, 0, leading_zero_bytes);
- 	rc = hex2bin(buf + 8 + leading_zero_bytes, p, count);
- 	if (rc < 0) {
--		pr_debug("hex2bin failed for %s: %d\n", __func__, rc);
-+		pr_debug("hex2bin failed for %s: %d\n", p, rc);
- 		return rc;
- 	}
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 03c104b47f31..b832bd0ce202 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -915,12 +915,12 @@ void bnx2i_free_hba(struct bnx2i_hba *hba)
+ 	INIT_LIST_HEAD(&hba->ep_ofld_list);
+ 	INIT_LIST_HEAD(&hba->ep_active_list);
+ 	INIT_LIST_HEAD(&hba->ep_destroy_list);
+-	pci_dev_put(hba->pcidev);
  
+ 	if (hba->regview) {
+ 		pci_iounmap(hba->pcidev, hba->regview);
+ 		hba->regview = NULL;
+ 	}
++	pci_dev_put(hba->pcidev);
+ 	bnx2i_free_mp_bdt(hba);
+ 	bnx2i_release_free_cid_que(hba);
+ 	iscsi_host_free(shost);
 -- 
 2.20.1
 
