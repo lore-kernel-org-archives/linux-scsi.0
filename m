@@ -4,51 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFBE5C33CB7
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:22:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95547C3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:25:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59B902467E
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:22:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69A8B2087E
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:25:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195338;
-	bh=W5GsXPgetj+H1lgqnH7m0kOe+yhVb2jMSSzjWLFHHfI=;
+	s=default; t=1579195543;
+	bh=FZy4B6ACB0AJRRp1NQg/HilcBklYKC3iMiP8P/aG7kU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UsgxA5UVKSvGfgN1mF9RRZvwJoCSk2mEC+fHL6AkYo0PmITJwi6VgGyIqZlyEViHd
-	 TJXGHj3LQ8BZxtkb+p9J3V+q/2VJgtSBxBqodSouxJReuaI8aLK8csnh3PjKSFm37D
-	 gmDc02aZVLdtTTDsPG9MlDfV4MjqRbepkNtjMDQo=
+	b=eKsWvYX5QPUGbc5/hk3CrVYoGKwsjvXKECfv/f9v3akn/WwsWzn+L5eMn1VhpAgCG
+	 v6Qaa85d3HJLUm8Jt0TM4PyUfWHFdqb2yMR6Na1hU9Q6TUTG4K5tSiD5rGPIfc3v6R
+	 7yyqEHjQwEvsz3X8j3zbL8/sTB48oaDw7+EBmLhw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390812AbgAPRNm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:13:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59356 "EHLO mail.kernel.org"
+        id S2392134AbgAPRZk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:25:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33550 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731590AbgAPRNm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:13:42 -0500
+        id S2392127AbgAPRZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:25:39 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D6135246AB;
-        Thu, 16 Jan 2020 17:13:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 10B16246A3;
+        Thu, 16 Jan 2020 17:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194821;
-        bh=W5GsXPgetj+H1lgqnH7m0kOe+yhVb2jMSSzjWLFHHfI=;
+        s=default; t=1579195538;
+        bh=FZy4B6ACB0AJRRp1NQg/HilcBklYKC3iMiP8P/aG7kU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PVUFku/KOXR4sLatBOHjc1F7PzV0YcPvAtPPPDBn5TGJwskvA0gOhATArAKyuh0gq
-         8j4x+HOg27d4viLHFUVOXN73I38w8Pf2bnYIVAUqAZFKWlaV6TSPTc2EoWVEdlH5wz
-         MT1hybPdYWY3tgCgv5IY62+P+wcSubsyH70QhKx8=
+        b=YegsDGBNJVbKwE/MoAJ3fEaWUcQg4+Air28evjf0GIhUtLWBB9zVQc+PboevJVE5c
+         6Z5dGGofJdLj/vDUZsDLdRdDXzW2X9x77btAgXXd7RWl1p2oTYm5wS4gnhX2cil9l1
+         HB1c6LPc21Jm+RNTQw+G7TIua/urQ7H0WpYnyJYg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     Steve Sistare <steven.sistare@oracle.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 626/671] scsi: esas2r: unlock on error in esas2r_nvram_read_direct()
-Date:   Thu, 16 Jan 2020 12:04:24 -0500
-Message-Id: <20200116170509.12787-363-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 132/371] scsi: megaraid_sas: reduce module load time
+Date:   Thu, 16 Jan 2020 12:20:04 -0500
+Message-Id: <20200116172403.18149-75-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
-References: <20200116170509.12787-1-sashal@kernel.org>
+In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
+References: <20200116172403.18149-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,33 +60,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Steve Sistare <steven.sistare@oracle.com>
 
-[ Upstream commit 906ca6353ac09696c1bf0892513c8edffff5e0a6 ]
+[ Upstream commit 31b6a05f86e690e1818116fd23c3be915cc9d9ed ]
 
-This error path is missing an unlock.
+megaraid_sas takes 1+ seconds to load while waiting for firmware:
 
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
-Link: https://lore.kernel.org/r/20191022102324.GA27540@mwanda
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+[2.822603] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
+[3.871003] megaraid_sas 0000:03:00.0: FW now in Ready state
+
+This is due to the following loop in megasas_transition_to_ready(), which
+waits a minimum of 1 second, even though the FW becomes ready in tens of
+millisecs:
+
+        /*
+         * The cur_state should not last for more than max_wait secs
+         */
+        for (i = 0; i < max_wait; i++) {
+                ...
+                msleep(1000);
+        ...
+        dev_info(&instance->pdev->dev, "FW now in Ready state\n");
+
+This is a regression, caused by a change of the msleep granularity from 1
+to 1000 due to concern about waiting too long on systems with coarse
+jiffies.
+
+To fix, increase iterations and use msleep(20), which results in:
+
+[2.670627] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
+[2.739386] megaraid_sas 0000:03:00.0: FW now in Ready state
+
+Fixes: fb2f3e96d80f ("scsi: megaraid_sas: Fix msleep granularity")
+Signed-off-by: Steve Sistare <steven.sistare@oracle.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/esas2r/esas2r_flash.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
-index 7bd376d95ed5..b02ac389e6c6 100644
---- a/drivers/scsi/esas2r/esas2r_flash.c
-+++ b/drivers/scsi/esas2r/esas2r_flash.c
-@@ -1197,6 +1197,7 @@ bool esas2r_nvram_read_direct(struct esas2r_adapter *a)
- 	if (!esas2r_read_flash_block(a, a->nvram, FLS_OFFSET_NVR,
- 				     sizeof(struct esas2r_sas_nvram))) {
- 		esas2r_hdebug("NVRAM read failed, using defaults");
-+		up(&a->nvram_semaphore);
- 		return false;
- 	}
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 577513649afb..6abad63b127a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3823,12 +3823,12 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
+ 		/*
+ 		 * The cur_state should not last for more than max_wait secs
+ 		 */
+-		for (i = 0; i < max_wait; i++) {
++		for (i = 0; i < max_wait * 50; i++) {
+ 			curr_abs_state = instance->instancet->
+ 				read_fw_status_reg(instance->reg_set);
  
+ 			if (abs_state == curr_abs_state) {
+-				msleep(1000);
++				msleep(20);
+ 			} else
+ 				break;
+ 		}
 -- 
 2.20.1
 
