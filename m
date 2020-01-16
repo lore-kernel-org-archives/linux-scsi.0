@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC8BC33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:11:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E62C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:16:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B1B52073A
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:11:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E713214AF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:16:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579198290;
-	bh=2bFgijao3BjFyOFfEF49GBzsZiQiiAZ9q+bM03fvtnQ=;
+	s=default; t=1579198609;
+	bh=osu43gUfm3EZl60KJo19B78H6kg+zt5SbEr1OSOYKg0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fEueJfKMVXEawMhA3I89LNtKFjmv7lJBLlZElso1uE+vgCAyPWt4pulPXDc7X00nD
-	 R/EdUYZ+w5imTw22Q+j64LpHVtgckt9vitYWDHYIyE/rgvIUAbTbdsP3Th4PKfOd8/
-	 YdN1m1OamTZCOb9NWZ0F+GeNi3mbGM5ngAWo8hdg=
+	b=SoIJs1MdUX8QBoEqKbbxTX3K4Hu/pVXqDhJGo+ksDFmdpmRtzpDuw1JrgeMKugXF8
+	 T+1utTUv4kg5ch4lnBri09qgRJs2CH9ZGBGF74W+gSQ/HfJB/T1k0hY8e9uYy2kmum
+	 al7umBLt7vWYeX3TqnehEHRNWpcpqPtUfxrMp/5U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2395100AbgAPSL2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 13:11:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53428 "EHLO mail.kernel.org"
+        id S2405439AbgAPSQl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 13:16:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41144 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405452AbgAPRhu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:37:50 -0500
+        id S2392687AbgAPR3V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:29:21 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 83892246DC;
-        Thu, 16 Jan 2020 17:37:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BB112470E;
+        Thu, 16 Jan 2020 17:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196270;
-        bh=2bFgijao3BjFyOFfEF49GBzsZiQiiAZ9q+bM03fvtnQ=;
+        s=default; t=1579195760;
+        bh=osu43gUfm3EZl60KJo19B78H6kg+zt5SbEr1OSOYKg0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mTYBnMo2frmmlV13F0Nv1XXG+84q2QBA+zNBRvk2n47yW0fw6qNBevhtqeGHtRWjr
-         nGxXel45sOoNfTieF9wF9GGz6HvPQ9D4SprnAZX+b+zMFqWf4bcru69IzxUKe3Z2Qh
-         38oCfcohBldkmNKFFj3OxPvLri/+cB/+U+intgSU=
+        b=uSo1EzGEPetx0BoLUc0rQ6HgUaiXthN/MCsMQ5guZTyniPOyFgvUhTliEGLRDEv54
+         2Jnp5FFHP6xV5QOwS525lr0+Z45cSoucwWiWua5OGdJXFhoZL/7e6HikjKSEvXncvk
+         oQCWMT178Ngj9k1SZLC7bwCokazcu7tJqoEftxkA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Steve Sistare <steven.sistare@oracle.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     Govindarajulu Varadarajan <gvaradar@cisco.com>,
+        Satish Kharat <satishkh@cisco.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 092/251] scsi: megaraid_sas: reduce module load time
-Date:   Thu, 16 Jan 2020 12:34:01 -0500
-Message-Id: <20200116173641.22137-52-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 290/371] scsi: fnic: fix msix interrupt allocation
+Date:   Thu, 16 Jan 2020 12:22:42 -0500
+Message-Id: <20200116172403.18149-233-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116173641.22137-1-sashal@kernel.org>
-References: <20200116173641.22137-1-sashal@kernel.org>
+In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
+References: <20200116172403.18149-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,65 +59,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Steve Sistare <steven.sistare@oracle.com>
+From: Govindarajulu Varadarajan <gvaradar@cisco.com>
 
-[ Upstream commit 31b6a05f86e690e1818116fd23c3be915cc9d9ed ]
+[ Upstream commit 3ec24fb4c035e9cbb2f02a48640a09aa913442a2 ]
 
-megaraid_sas takes 1+ seconds to load while waiting for firmware:
+pci_alloc_irq_vectors() returns number of vectors allocated.  Fix the check
+for error condition.
 
-[2.822603] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
-[3.871003] megaraid_sas 0000:03:00.0: FW now in Ready state
-
-This is due to the following loop in megasas_transition_to_ready(), which
-waits a minimum of 1 second, even though the FW becomes ready in tens of
-millisecs:
-
-        /*
-         * The cur_state should not last for more than max_wait secs
-         */
-        for (i = 0; i < max_wait; i++) {
-                ...
-                msleep(1000);
-        ...
-        dev_info(&instance->pdev->dev, "FW now in Ready state\n");
-
-This is a regression, caused by a change of the msleep granularity from 1
-to 1000 due to concern about waiting too long on systems with coarse
-jiffies.
-
-To fix, increase iterations and use msleep(20), which results in:
-
-[2.670627] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
-[2.739386] megaraid_sas 0000:03:00.0: FW now in Ready state
-
-Fixes: fb2f3e96d80f ("scsi: megaraid_sas: Fix msleep granularity")
-Signed-off-by: Steve Sistare <steven.sistare@oracle.com>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Fixes: cca678dfbad49 ("scsi: fnic: switch to pci_alloc_irq_vectors")
+Link: https://lore.kernel.org/r/20190827211340.1095-1-gvaradar@cisco.com
+Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Acked-by: Satish Kharat <satishkh@cisco.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
+ drivers/scsi/fnic/fnic_isr.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index c5cc002dfdd5..10ae624dd266 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3694,12 +3694,12 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
- 		/*
- 		 * The cur_state should not last for more than max_wait secs
- 		 */
--		for (i = 0; i < max_wait; i++) {
-+		for (i = 0; i < max_wait * 50; i++) {
- 			curr_abs_state = instance->instancet->
- 				read_fw_status_reg(instance->reg_set);
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 4e3a50202e8c..d28088218c36 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -254,7 +254,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 		int vecs = n + m + o + 1;
  
- 			if (abs_state == curr_abs_state) {
--				msleep(1000);
-+				msleep(20);
- 			} else
- 				break;
- 		}
+ 		if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
+-				PCI_IRQ_MSIX) < 0) {
++				PCI_IRQ_MSIX) == vecs) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
+@@ -280,7 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->wq_copy_count >= 1 &&
+ 	    fnic->cq_count >= 3 &&
+ 	    fnic->intr_count >= 1 &&
+-	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
++	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) == 1) {
+ 		fnic->rq_count = 1;
+ 		fnic->raw_wq_count = 1;
+ 		fnic->wq_copy_count = 1;
 -- 
 2.20.1
 
