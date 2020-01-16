@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 798A4C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08606C33CB7
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:30:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C435246C9
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9ECA24735
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:30:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195577;
-	bh=chxuGPSSD0ms+/h/e6pFkWAn+aAbUvWVhkD97Sy/NwE=;
+	s=default; t=1579195837;
+	bh=W5GsXPgetj+H1lgqnH7m0kOe+yhVb2jMSSzjWLFHHfI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=e+gdsAYsiiy2ij3JnE8j0aHUk8QFSN2+KgJPWGkbdcCrbno1vrjwFLZ01hqvQz56B
-	 QCMgA1AxZjzJNcgq8+IxY6fui2LKisKpvJS6BWevW8ACK/eFlD9+kTZZKRU3MkyuCC
-	 cg5qcohLqb6nCQ4TwpqozqzhawKSlbKBEGPUTBrA=
+	b=C/sRNNK7r5CuiogxBw13wLxAI/TZsGJhkxK71SeEaVvdwRZhteRS2hGllvO43xQ0L
+	 icMV+TshRljWpabTEzJi36QMF0ib65x1+pipJ3tx+pEtb0u7LoUeVg/sVmXsA6qhBE
+	 HTuvICk9M8quGszo5bl4j+LXOjaEPCGWpxG6c+oM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403900AbgAPR0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:26:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34842 "EHLO mail.kernel.org"
+        id S2404593AbgAPRag (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:30:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43180 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390251AbgAPR0Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:26:16 -0500
+        id S2404553AbgAPRaf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:30:35 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 84E83246BB;
-        Thu, 16 Jan 2020 17:26:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D23642471F;
+        Thu, 16 Jan 2020 17:30:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195575;
-        bh=chxuGPSSD0ms+/h/e6pFkWAn+aAbUvWVhkD97Sy/NwE=;
+        s=default; t=1579195834;
+        bh=W5GsXPgetj+H1lgqnH7m0kOe+yhVb2jMSSzjWLFHHfI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eLWKWvWMLS5BhVuPQkAZ+5N5fgVL0P8pYZjXJDrw44EQpRmycIOxRGdSIdw6J+Qw+
-         NWrBOO9TDonpg1X4voqLuC6Hfhzv0QnRSe/8cN4N0fG7HwfKVyybnY5wfLNY892UKu
-         4ZhyvoeM53meoDrPeqlHkxoZ+WEPuGKoG4DRG+ow=
+        b=CSw2iDg9C8biMbLoHS/PDFUBmbFy6rTmCeOdmalNUgnffdjHHLadrDQQkCg/gfvPh
+         MpE/QPcTZIRpB6c1s1rphhCqqpBsHLwatbRJnNucSR+a9OVehoPhq9LuUeTIYjed8g
+         ImgT4+tWoknflNlZNKoMTO0LI60LnucfcKofqYaI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Giridhar Malavali <giridhar.malavali@qlogic.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 158/371] scsi: qla2xxx: Unregister chrdev if module initialization fails
-Date:   Thu, 16 Jan 2020 12:20:30 -0500
-Message-Id: <20200116172403.18149-101-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 339/371] scsi: esas2r: unlock on error in esas2r_nvram_read_direct()
+Date:   Thu, 16 Jan 2020 12:23:31 -0500
+Message-Id: <20200116172403.18149-282-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -60,98 +58,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit c794d24ec9eb6658909955772e70f34bef5b5b91 ]
+[ Upstream commit 906ca6353ac09696c1bf0892513c8edffff5e0a6 ]
 
-If module initialization fails after the character device has been
-registered, unregister the character device. Additionally, avoid
-duplicating error path code.
+This error path is missing an unlock.
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Fixes: 6a03b4cd78f3 ("[SCSI] qla2xxx: Add char device to increase driver use count") # v2.6.35.
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
+Link: https://lore.kernel.org/r/20191022102324.GA27540@mwanda
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 34 +++++++++++++++++++++-------------
- 1 file changed, 21 insertions(+), 13 deletions(-)
+ drivers/scsi/esas2r/esas2r_flash.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5617bb18c233..5f9d4dbc4a98 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -6714,8 +6714,7 @@ qla2x00_module_init(void)
- 	/* Initialize target kmem_cache and mem_pools */
- 	ret = qlt_init();
- 	if (ret < 0) {
--		kmem_cache_destroy(srb_cachep);
--		return ret;
-+		goto destroy_cache;
- 	} else if (ret > 0) {
- 		/*
- 		 * If initiator mode is explictly disabled by qlt_init(),
-@@ -6736,11 +6735,10 @@ qla2x00_module_init(void)
- 	qla2xxx_transport_template =
- 	    fc_attach_transport(&qla2xxx_transport_functions);
- 	if (!qla2xxx_transport_template) {
--		kmem_cache_destroy(srb_cachep);
- 		ql_log(ql_log_fatal, NULL, 0x0002,
- 		    "fc_attach_transport failed...Failing load!.\n");
--		qlt_exit();
--		return -ENODEV;
-+		ret = -ENODEV;
-+		goto qlt_exit;
+diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
+index 7bd376d95ed5..b02ac389e6c6 100644
+--- a/drivers/scsi/esas2r/esas2r_flash.c
++++ b/drivers/scsi/esas2r/esas2r_flash.c
+@@ -1197,6 +1197,7 @@ bool esas2r_nvram_read_direct(struct esas2r_adapter *a)
+ 	if (!esas2r_read_flash_block(a, a->nvram, FLS_OFFSET_NVR,
+ 				     sizeof(struct esas2r_sas_nvram))) {
+ 		esas2r_hdebug("NVRAM read failed, using defaults");
++		up(&a->nvram_semaphore);
+ 		return false;
  	}
  
- 	apidev_major = register_chrdev(0, QLA2XXX_APIDEV, &apidev_fops);
-@@ -6752,27 +6750,37 @@ qla2x00_module_init(void)
- 	qla2xxx_transport_vport_template =
- 	    fc_attach_transport(&qla2xxx_transport_vport_functions);
- 	if (!qla2xxx_transport_vport_template) {
--		kmem_cache_destroy(srb_cachep);
--		qlt_exit();
--		fc_release_transport(qla2xxx_transport_template);
- 		ql_log(ql_log_fatal, NULL, 0x0004,
- 		    "fc_attach_transport vport failed...Failing load!.\n");
--		return -ENODEV;
-+		ret = -ENODEV;
-+		goto unreg_chrdev;
- 	}
- 	ql_log(ql_log_info, NULL, 0x0005,
- 	    "QLogic Fibre Channel HBA Driver: %s.\n",
- 	    qla2x00_version_str);
- 	ret = pci_register_driver(&qla2xxx_pci_driver);
- 	if (ret) {
--		kmem_cache_destroy(srb_cachep);
--		qlt_exit();
--		fc_release_transport(qla2xxx_transport_template);
--		fc_release_transport(qla2xxx_transport_vport_template);
- 		ql_log(ql_log_fatal, NULL, 0x0006,
- 		    "pci_register_driver failed...ret=%d Failing load!.\n",
- 		    ret);
-+		goto release_vport_transport;
- 	}
- 	return ret;
-+
-+release_vport_transport:
-+	fc_release_transport(qla2xxx_transport_vport_template);
-+
-+unreg_chrdev:
-+	if (apidev_major >= 0)
-+		unregister_chrdev(apidev_major, QLA2XXX_APIDEV);
-+	fc_release_transport(qla2xxx_transport_template);
-+
-+qlt_exit:
-+	qlt_exit();
-+
-+destroy_cache:
-+	kmem_cache_destroy(srb_cachep);
-+	return ret;
- }
- 
- /**
 -- 
 2.20.1
 
