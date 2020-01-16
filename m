@@ -2,133 +2,119 @@ Return-Path: <SRS0=K2E6=3F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CC76C33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 23:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4116DC33CB3
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 23:24:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F5E42072B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 23:03:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="efgYRKPk"
+	by mail.kernel.org (Postfix) with ESMTP id 10E172072B
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 23:24:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1579217095;
+	bh=ti9OQzTrR39hfLZ/0pUi+SVIH06RaO/hmG3omslXZAI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=NZc5uLv8O9brKGwoqkY4ev5vILvQDsV9CSzF3UK6QpuQr8X+VLyd5JlQWvafsmYUO
+	 AWARyabFM1CZqu4hYqWk+BUKUR+rb2fVp7sC0R1cIjpvX3Jw4MNrBZigPE/RMH+bLi
+	 uEfbTbBlcLiNKkHjYKPSpF2x0zfQkLxRxZRWToJ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390236AbgAPXDX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 18:03:23 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:17089 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2390224AbgAPXDW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 18:03:22 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1579215802; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=JFrlslqOPY+Or7IJG3FwTPI5aLmDB7PbhDVncuMzPps=; b=efgYRKPkyahxA9qeR6hQk+iKxiznMAVduNHgt0hGJ1naY6+fX8fB8cgJkEOXSErzeILrJDJF
- 86gRx/k8IGnGRDwpgtTTYN1Qvv1f2HgC/FFY4UPB04sO4brpnh72MGrGeVZi8k897Gn0uQQ7
- wv+g/RbUYnVVnyrLDxcFp/Ox/NU=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e20ebb7.7fa929ca3e30-smtp-out-n02;
- Thu, 16 Jan 2020 23:03:19 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4A7D4C447AB; Thu, 16 Jan 2020 23:03:18 +0000 (UTC)
-Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1733283AbgAPXYw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 18:24:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54040 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387716AbgAPXYt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 18:24:49 -0500
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9A8A6C433A2;
-        Thu, 16 Jan 2020 23:03:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9A8A6C433A2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Add command logging infrastructure
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>, cang@codeaurora.org
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        by mail.kernel.org (Postfix) with ESMTPSA id 6656D206D9;
+        Thu, 16 Jan 2020 23:24:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1579217088;
+        bh=ti9OQzTrR39hfLZ/0pUi+SVIH06RaO/hmG3omslXZAI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=bGDRdEvmIt8E5Z70OBVIF38a1dAXIu3oBNag2UZ/Fcwe99uVUQwxRW01PvRx/O55Z
+         ZVfoP0wPDCxvXeb+n8+5DfXQkDp58MHLwtrRf/8/hIAE/Udf9JtUc+qkg7zBbX09bR
+         4cNuKpiUMV1pq2XOSoOoHXTrRs5Ccly/xzlDhLMs=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Evan Green <evgreen@chromium.org>,
-        Janek Kotas <jank@cadence.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1571808560-3965-1-git-send-email-cang@codeaurora.org>
- <5B8DA87D05A7694D9FA63FD143655C1B9DCF0AFE@hasmsx108.ger.corp.intel.com>
- <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
- <01eb3c55e35738f2853fbc7175a12eaa@codeaurora.org>
- <20191029054620.GG1929@tuxbook-pro>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
-Date:   Thu, 16 Jan 2020 15:03:15 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 5.4 127/203] scsi: sd: enable compat ioctls for sed-opal
+Date:   Fri, 17 Jan 2020 00:17:24 +0100
+Message-Id: <20200116231756.312596106@linuxfoundation.org>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200116231745.218684830@linuxfoundation.org>
+References: <20200116231745.218684830@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
-In-Reply-To: <20191029054620.GG1929@tuxbook-pro>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/28/2019 10:46 PM, Bjorn Andersson wrote:
-> On Mon 28 Oct 19:37 PDT 2019, cang@codeaurora.org wrote:
-> 
->> On 2019-10-23 18:33, Avri Altman wrote:
->>>>
->>>>> Add the necessary infrastructure to keep timestamp history of
->>>>> commands, events and other useful info for debugging complex issues.
->>>>> This helps in diagnosing events leading upto failure.
->>>>
->>>> Why not use tracepoints, for that?
->>> Ack on Tomas's comment.
->>> Are there any pieces of information that you need not provided by the
->>> upiu tracer?
->>>
->>> Thanks,
->>> Avri
->>
->> In extreme cases, when the UFS runs into bad state, system may crash. There
->> may not be a chance to collect trace. If trace is not collected and failure
->> is hard to be reproduced, some command logs prints would be very helpful to
->> help understand what was going on before we run into failure.
->>
-> 
-> This is a common problem shared among many/all subsystems, so it's
-> better to rely on a generic solution for this; such as using tracepoints
-> dumped into pstore/ramoops.
-> 
-> Regards,
-> Bjorn
-> 
+From: Arnd Bergmann <arnd@arndb.de>
 
-Reviving this discussion.
+commit 142b2ac82e31c174936c5719fa12ae28f51a55b7 upstream.
 
-Another issue with using ftrace is that several subsystems use it.
-Consider a situation in which we store a history of 64 commands, 
-responses and some other required info in ftrace.
+The sed_ioctl() function is written to be compatible between
+32-bit and 64-bit processes, however compat mode is only
+wired up for nvme, not for sd.
 
-Say there's a command that's stuck for seconds until the software times 
-out. In this case, the other ftrace events are still enabled and keep 
-writing to ftrace buffer thus overwriting some/most of the ufs's command 
-history; thus the history is more or less lost. And there's a need to 
-reproduce the issue with other tracing disabled.
+Add the missing call to sed_ioctl() in sd_compat_ioctl().
 
-So what we need is a client specific logging mechanism, which is 
-lightweight as ftrace and can be parsed from ramdumps.
+Fixes: d80210f25ff0 ("sd: add support for TCG OPAL self encrypting disks")
+Cc: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-I'm open to ideas but ftrace in its current form may not be suitable for 
-this.
+---
+ drivers/scsi/sd.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1694,20 +1694,30 @@ static void sd_rescan(struct device *dev
+ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
+ 			   unsigned int cmd, unsigned long arg)
+ {
+-	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
++	struct gendisk *disk = bdev->bd_disk;
++	struct scsi_disk *sdkp = scsi_disk(disk);
++	struct scsi_device *sdev = sdkp->device;
++	void __user *p = compat_ptr(arg);
+ 	int error;
+ 
++	error = scsi_verify_blk_ioctl(bdev, cmd);
++	if (error < 0)
++		return error;
++
+ 	error = scsi_ioctl_block_when_processing_errors(sdev, cmd,
+ 			(mode & FMODE_NDELAY) != 0);
+ 	if (error)
+ 		return error;
++
++	if (is_sed_ioctl(cmd))
++		return sed_ioctl(sdkp->opal_dev, cmd, p);
+ 	       
+ 	/* 
+ 	 * Let the static ioctl translation table take care of it.
+ 	 */
+ 	if (!sdev->host->hostt->compat_ioctl)
+ 		return -ENOIOCTLCMD; 
+-	return sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
++	return sdev->host->hostt->compat_ioctl(sdev, cmd, p);
+ }
+ #endif
+ 
+
+
