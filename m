@@ -7,50 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9004C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F0EC33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:02:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8156B206E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2685A2073A
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:02:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201308;
-	bh=sDHeSNFZTFf/Qdc7mGgk87AI8Jz5FOfYbi9yfRQ7+BY=;
+	s=default; t=1579201351;
+	bh=/OH7utaEkzlC5VqUAttqW8fvQA9OIPT/0q2BoS1aV5k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ua5fx6rFS4Y+V35VtBZa1gDVBpzyZjGwTHVlji/OMzID1ybvUCIsoVUAvxXTJZG+K
-	 T+EdJ89jYScyP0Cwy/0UWFsrTLvmFZEqEJs4LDWHCf0JPan273uqYRTqyh1/nyclQ4
-	 XYnectNpSJg4nYoSeknWjrnjhJ/SY0NDig+cc6Ok=
+	b=O+Cm1YCFSR5sm3nYkhxXCFpv5pPZ8fxVZbT2tE4Y38SP+LZUmwajeQVdCbwW+RQAz
+	 s/s5T/QG8BYOOHdQqEbXiiCvo1RZ07W74D41A4QUBVcC0S1BYr8tCQzxg4yX6dNIcZ
+	 m7ZSlZuRC9abHsv58zu8NOeotHgWb1OWv5c7KIfc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388807AbgAPTBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 14:01:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35190 "EHLO mail.kernel.org"
+        id S2390260AbgAPTC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 14:02:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388740AbgAPRFt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:05:49 -0500
+        id S2388656AbgAPRFj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:05:39 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7CAEA2077B;
-        Thu, 16 Jan 2020 17:05:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 59D0521582;
+        Thu, 16 Jan 2020 17:05:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194348;
-        bh=sDHeSNFZTFf/Qdc7mGgk87AI8Jz5FOfYbi9yfRQ7+BY=;
+        s=default; t=1579194338;
+        bh=/OH7utaEkzlC5VqUAttqW8fvQA9OIPT/0q2BoS1aV5k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZMRRmtPIFv3FVd3yDU6e+moqLMh2HfJp/4wPkENpj5O0zV8RHBzSxXZjahVIPqDza
-         gXbYi1n7DvqsAj5AlNIYca+x6FJhBhDYmCzH00iO1rMZxOGMnKa1nyi/BUarJ9WvKA
-         Kurc9zcEQyJ4pYyJys/ElZuD13X/6MgvX5Wtptt4=
+        b=bvhKeel0fnwAsOyEpAWujU8kGIDxhSHp1jzoPpP83/nxGxWloTYRqUkw3Blq+cWdH
+         7IrPRae96vizg7E1ILkIS0urNauY93VtZS5vm2H/y1hTU/QrGN/feQeO6zmBgO8ScE
+         bR4fL5R0KtKotZBcwrp6PBbyv0kBWm9SJPbnoKs4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Mike Christie <mchristi@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Giridhar Malavali <giridhar.malavali@qlogic.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 289/671] scsi: target/core: Fix a race condition in the LUN lookup code
-Date:   Thu, 16 Jan 2020 11:58:47 -0500
-Message-Id: <20200116170509.12787-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 282/671] scsi: qla2xxx: Unregister chrdev if module initialization fails
+Date:   Thu, 16 Jan 2020 11:58:40 -0500
+Message-Id: <20200116170509.12787-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -65,48 +62,96 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 63f7479439c95bcd49b7dd4af809862c316c71a3 ]
+[ Upstream commit c794d24ec9eb6658909955772e70f34bef5b5b91 ]
 
-The rcu_dereference(deve->se_lun) expression occurs twice in the LUN lookup
-functions. Since these expressions are not serialized against deve->se_lun
-assignments each of these expressions may yield a different result. Avoid
-that the wrong LUN pointer is stored in se_cmd by reading deve->se_lun only
-once.
+If module initialization fails after the character device has been
+registered, unregister the character device. Additionally, avoid
+duplicating error path code.
 
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Fixes: 29a05deebf6c ("target: Convert se_node_acl->device_list[] to RCU hlist") # v4.10
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Fixes: 6a03b4cd78f3 ("[SCSI] qla2xxx: Add char device to increase driver use count") # v2.6.35.
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_device.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index e9ff2a7c0c0e..22e97a93728d 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -85,7 +85,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 			goto out_unlock;
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index bb20a4a228cf..fff20a370767 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6967,8 +6967,7 @@ qla2x00_module_init(void)
+ 	/* Initialize target kmem_cache and mem_pools */
+ 	ret = qlt_init();
+ 	if (ret < 0) {
+-		kmem_cache_destroy(srb_cachep);
+-		return ret;
++		goto destroy_cache;
+ 	} else if (ret > 0) {
+ 		/*
+ 		 * If initiator mode is explictly disabled by qlt_init(),
+@@ -6989,11 +6988,10 @@ qla2x00_module_init(void)
+ 	qla2xxx_transport_template =
+ 	    fc_attach_transport(&qla2xxx_transport_functions);
+ 	if (!qla2xxx_transport_template) {
+-		kmem_cache_destroy(srb_cachep);
+ 		ql_log(ql_log_fatal, NULL, 0x0002,
+ 		    "fc_attach_transport failed...Failing load!.\n");
+-		qlt_exit();
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto qlt_exit;
+ 	}
  
--		se_cmd->se_lun = rcu_dereference(deve->se_lun);
-+		se_cmd->se_lun = se_lun;
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
-@@ -176,7 +176,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 			goto out_unlock;
- 		}
+ 	apidev_major = register_chrdev(0, QLA2XXX_APIDEV, &apidev_fops);
+@@ -7005,27 +7003,37 @@ qla2x00_module_init(void)
+ 	qla2xxx_transport_vport_template =
+ 	    fc_attach_transport(&qla2xxx_transport_vport_functions);
+ 	if (!qla2xxx_transport_vport_template) {
+-		kmem_cache_destroy(srb_cachep);
+-		qlt_exit();
+-		fc_release_transport(qla2xxx_transport_template);
+ 		ql_log(ql_log_fatal, NULL, 0x0004,
+ 		    "fc_attach_transport vport failed...Failing load!.\n");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto unreg_chrdev;
+ 	}
+ 	ql_log(ql_log_info, NULL, 0x0005,
+ 	    "QLogic Fibre Channel HBA Driver: %s.\n",
+ 	    qla2x00_version_str);
+ 	ret = pci_register_driver(&qla2xxx_pci_driver);
+ 	if (ret) {
+-		kmem_cache_destroy(srb_cachep);
+-		qlt_exit();
+-		fc_release_transport(qla2xxx_transport_template);
+-		fc_release_transport(qla2xxx_transport_vport_template);
+ 		ql_log(ql_log_fatal, NULL, 0x0006,
+ 		    "pci_register_driver failed...ret=%d Failing load!.\n",
+ 		    ret);
++		goto release_vport_transport;
+ 	}
+ 	return ret;
++
++release_vport_transport:
++	fc_release_transport(qla2xxx_transport_vport_template);
++
++unreg_chrdev:
++	if (apidev_major >= 0)
++		unregister_chrdev(apidev_major, QLA2XXX_APIDEV);
++	fc_release_transport(qla2xxx_transport_template);
++
++qlt_exit:
++	qlt_exit();
++
++destroy_cache:
++	kmem_cache_destroy(srb_cachep);
++	return ret;
+ }
  
--		se_cmd->se_lun = rcu_dereference(deve->se_lun);
-+		se_cmd->se_lun = se_lun;
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
+ /**
 -- 
 2.20.1
 
