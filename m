@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AC0C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CE1C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C83CA20663
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16B7120663
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201183;
-	bh=oUxuQepRUEKu++HXwriPcKSaTS7OHkGAGIHwak+Ax6g=;
+	s=default; t=1579201192;
+	bh=Bp4pI+ad+N9IwNA/+aNu2276XV/+Ac7nGVNYGPFcSlM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IptJw4O+mmfMggAzimlDJ0A513g6T8c5NmSbOgf8j/h4M6VursjreZCHvPopK0OrK
-	 uVoUp0L4LP1v3nuGpYYWbGJky2btRuGfX7WqlQ9R3/UF+U+0qMN+zsXd9IXRbN2CwQ
-	 Emzw9CUS/EajQqSRXgVYOHGffZ0IOoFtNtfUit1Q=
+	b=TMH5NAolflgiwxROnOj3nhqd+K5LHQOViAzibJj2f7rN+7RWj3IVBx0lkjM45EOrt
+	 tj6TaIPOIgapcgWgwX6yJ+fbGizIXR9uXpuHBRGOUi2KOC6idVBPOodUdLGyqYp4ti
+	 gekcWxD1s9/7Cn3ZfRF8SsslKisNrIMAOnEki8xY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388942AbgAPRGc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:06:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36768 "EHLO mail.kernel.org"
+        id S2388933AbgAPRG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:06:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36640 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388940AbgAPRGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:06:31 -0500
+        id S2388129AbgAPRG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:06:28 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8BB8720730;
-        Thu, 16 Jan 2020 17:06:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 99C882081E;
+        Thu, 16 Jan 2020 17:06:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194390;
-        bh=oUxuQepRUEKu++HXwriPcKSaTS7OHkGAGIHwak+Ax6g=;
+        s=default; t=1579194387;
+        bh=Bp4pI+ad+N9IwNA/+aNu2276XV/+Ac7nGVNYGPFcSlM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0XCbY8I9s+R+h5p8ABvc63bdeSbDpGO66YFThwrvm1KjqL7oW0eOAeNQbWQe+EabW
-         8tcCLeGlNEWr1O6sUwXmb7qYuicwWqIdoL/017uP503orzmQXBDMbyiny+FZk7KaMb
-         d/hs2zpJLqKXLQXvj6JNARLioI8Sakl0zu2mNs8g=
+        b=gUpJctyhckpA+XT4ElbQHetOwh9KekGPSFv090SJNxzv0DhEulcJQjBoY5Gm9+sPU
+         d8MLwAWMtujnoQsF5MiGRVWN4PSLi9yajZhfs6XLsr+cwetjaRsypElrOKF1CVdJzD
+         K+oUJjKl+1K9YJTpQ5LYHcuysl/YPNyQo0045UII=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -45,9 +45,9 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Giridhar Malavali <gmalavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 318/671] scsi: qla2xxx: Avoid that qlt_send_resp_ctio() corrupts memory
-Date:   Thu, 16 Jan 2020 11:59:16 -0500
-Message-Id: <20200116170509.12787-55-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 316/671] scsi: qla2xxx: Fix a format specifier
+Date:   Thu, 16 Jan 2020 11:59:14 -0500
+Message-Id: <20200116170509.12787-53-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -62,51 +62,35 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit a861b49273578e255426a499842cf7f465456351 ]
+[ Upstream commit 19ce192cd718e02f880197c0983404ca48236807 ]
 
-The "(&ctio->u.status1.sense_data)[i]" where i >= 0 expressions in
-qlt_send_resp_ctio() are probably typos and should have been
-"(&ctio->u.status1.sense_data[4 * i])" instead. Instead of only fixing
-these typos, modify the code for storing sense data such that it becomes
-easy to read. This patch fixes a Coverity complaint about accessing an
-array outside its bounds.
+Since mcmd->sess->port_name is eight bytes long, use %8phC to format that
+port name instead of %phC.
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Cc: Giridhar Malavali <gmalavali@marvell.com>
-Fixes: be25152c0d9e ("qla2xxx: Improve T10-DIF/PI handling in driver.") # v4.11.
+Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery") # v4.11.
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index c925ca787537..95206e227730 100644
+index e9545411ec5a..bbbe1996620b 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2233,14 +2233,14 @@ void qlt_send_resp_ctio(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
- 		ctio->u.status1.scsi_status |=
- 		    cpu_to_le16(SS_RESIDUAL_UNDER);
- 
--	/* Response code and sense key */
--	put_unaligned_le32(((0x70 << 24) | (sense_key << 8)),
--	    (&ctio->u.status1.sense_data)[0]);
-+	/* Fixed format sense data. */
-+	ctio->u.status1.sense_data[0] = 0x70;
-+	ctio->u.status1.sense_data[2] = sense_key;
- 	/* Additional sense length */
--	put_unaligned_le32(0x0a, (&ctio->u.status1.sense_data)[1]);
-+	ctio->u.status1.sense_data[7] = 0xa;
- 	/* ASC and ASCQ */
--	put_unaligned_le32(((asc << 24) | (ascq << 16)),
--	    (&ctio->u.status1.sense_data)[3]);
-+	ctio->u.status1.sense_data[12] = asc;
-+	ctio->u.status1.sense_data[13] = ascq;
- 
- 	/* Memory Barrier */
- 	wmb();
+@@ -2290,7 +2290,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 		    mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode ==
+ 		    ELS_TPRLO) {
+ 			ql_dbg(ql_dbg_disc, vha, 0x2106,
+-			    "TM response logo %phC status %#x state %#x",
++			    "TM response logo %8phC status %#x state %#x",
+ 			    mcmd->sess->port_name, mcmd->fc_tm_rsp,
+ 			    mcmd->flags);
+ 			qlt_schedule_sess_for_deletion(mcmd->sess);
 -- 
 2.20.1
 
