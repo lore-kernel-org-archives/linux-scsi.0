@@ -7,53 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BAD5C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4172C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7632520684
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90F172077B
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:42:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579199275;
-	bh=8DDoQiOrvvIKFroA4z/RhkKhCGF4MSC6aNKkMx1JK84=;
+	s=default; t=1579200129;
+	bh=osu43gUfm3EZl60KJo19B78H6kg+zt5SbEr1OSOYKg0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mydDnOicpb92pePQrGvmyiAiP7GU7CMfp4A3UkOktl/vnU2DMMRjJ85DP4LE6fNI7
-	 2m8/NUbvG7efYlDxS5pRKzxKkPapetIkGMJOZj1lD8rlvCyN29+jXEjbrqxkGLWWYP
-	 GMTZAy7NRZbZgY1iSa14rGAskyZ8rmPoQt7gayzg=
+	b=wlyKVx1lddA3Vv/Cn4K2R3Rd0U5yzxddN/MLyjanr0RxX/8cuS1bzCXl2qRvRmkuM
+	 x+/MQ720aDS63st6lqKoI4/aNFFxbWgcfaeEt/V9Ag5TP6eHf6F14WYoY63vriUZKW
+	 Bx3x1k3zrkAUsphwqrR/3rm5NPEBinS+Ue/rcGwM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392281AbgAPR0R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:26:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34886 "EHLO mail.kernel.org"
+        id S2436938AbgAPSmB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 13:42:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392276AbgAPR0R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:26:17 -0500
+        id S2389988AbgAPRLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:11:38 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D84FF20730;
-        Thu, 16 Jan 2020 17:26:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D799D2468B;
+        Thu, 16 Jan 2020 17:11:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195577;
-        bh=8DDoQiOrvvIKFroA4z/RhkKhCGF4MSC6aNKkMx1JK84=;
+        s=default; t=1579194698;
+        bh=osu43gUfm3EZl60KJo19B78H6kg+zt5SbEr1OSOYKg0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NDI2iwCC5/XN0qPXzIpGOUx8EF4LLmm6Ndp98DMHaVf0fzdZ6V6Ew22wrKJ+CK6+9
-         RjeMe7meeK6iQ5cZJ6KGC0iJ7czoeuqf3a/aLd7uMAg8ZwyhLvINGQZqc9CPRzM9Vg
-         8uobCaLBt1JPWuKzgBeyEgHgau+q3aOnjRTatBP4=
+        b=S95ZgE/bQTqNmOURobylJaKJS9OWp1+YgWX2QdZ/nb5ZRvlv65shMCgDgR0KMMU5/
+         MGyekPGnM/UNhlX5GlMYxR+8Szxvfw0rBHVYWvnJXtnVUC62aWzNU+z+zgUx1HH0uy
+         nLXRw/fxLbVq6BBGEg7FZwKXibJ+ph/Yn/BIPfPk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Mike Christie <mchristi@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
+Cc:     Govindarajulu Varadarajan <gvaradar@cisco.com>,
+        Satish Kharat <satishkh@cisco.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 159/371] scsi: target/core: Fix a race condition in the LUN lookup code
-Date:   Thu, 16 Jan 2020 12:20:31 -0500
-Message-Id: <20200116172403.18149-102-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 538/671] scsi: fnic: fix msix interrupt allocation
+Date:   Thu, 16 Jan 2020 12:02:56 -0500
+Message-Id: <20200116170509.12787-275-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
-References: <20200116172403.18149-1-sashal@kernel.org>
+In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
+References: <20200116170509.12787-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,50 +59,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Govindarajulu Varadarajan <gvaradar@cisco.com>
 
-[ Upstream commit 63f7479439c95bcd49b7dd4af809862c316c71a3 ]
+[ Upstream commit 3ec24fb4c035e9cbb2f02a48640a09aa913442a2 ]
 
-The rcu_dereference(deve->se_lun) expression occurs twice in the LUN lookup
-functions. Since these expressions are not serialized against deve->se_lun
-assignments each of these expressions may yield a different result. Avoid
-that the wrong LUN pointer is stored in se_cmd by reading deve->se_lun only
-once.
+pci_alloc_irq_vectors() returns number of vectors allocated.  Fix the check
+for error condition.
 
-Cc: Mike Christie <mchristi@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-Fixes: 29a05deebf6c ("target: Convert se_node_acl->device_list[] to RCU hlist") # v4.10
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: cca678dfbad49 ("scsi: fnic: switch to pci_alloc_irq_vectors")
+Link: https://lore.kernel.org/r/20190827211340.1095-1-gvaradar@cisco.com
+Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Acked-by: Satish Kharat <satishkh@cisco.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_device.c | 4 ++--
+ drivers/scsi/fnic/fnic_isr.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 92b52d2314b5..cebef8e5a43d 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -85,7 +85,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 			goto out_unlock;
- 		}
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 4e3a50202e8c..d28088218c36 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -254,7 +254,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 		int vecs = n + m + o + 1;
  
--		se_cmd->se_lun = rcu_dereference(deve->se_lun);
-+		se_cmd->se_lun = se_lun;
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
-@@ -176,7 +176,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 			goto out_unlock;
- 		}
- 
--		se_cmd->se_lun = rcu_dereference(deve->se_lun);
-+		se_cmd->se_lun = se_lun;
- 		se_cmd->pr_res_key = deve->pr_res_key;
- 		se_cmd->orig_fe_lun = unpacked_lun;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
+ 		if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
+-				PCI_IRQ_MSIX) < 0) {
++				PCI_IRQ_MSIX) == vecs) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
+@@ -280,7 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->wq_copy_count >= 1 &&
+ 	    fnic->cq_count >= 3 &&
+ 	    fnic->intr_count >= 1 &&
+-	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
++	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) == 1) {
+ 		fnic->rq_count = 1;
+ 		fnic->raw_wq_count = 1;
+ 		fnic->wq_copy_count = 1;
 -- 
 2.20.1
 
