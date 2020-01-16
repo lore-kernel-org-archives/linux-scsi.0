@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE8FC33CB3
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2ADAC33CB3
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:53:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83C6A24673
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A820D24673
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:53:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579193582;
-	bh=DtVOZRyHl8PCArYtIWTWEE6k8DoNzsgbYZyWaqZdNhQ=;
+	s=default; t=1579193598;
+	bh=drBKSQal6Kqb4KQB0xgWPDgk84pgJ9f9Sw1WHZ+o6NY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JudBavWFJc3sC1Ipm6vZNa4KeGuUfDnDsC7UsCvmBEEP1ONJMVXi09y95crtGiRmp
-	 95K5r/bnwxU2H1krS488aI0efxgTCgxFOXpoiEz25835ic2LO7qTiRCCXnN3cDGGIu
-	 1pJjFnL6kEv5bOseY0yL0Tp4JR+2FJIyo+udQQEk=
+	b=SwhBq57riJpHz7C2jYgWhqz+CXBmxytaOtS5VUR2oHIRTv+mDWeu6oxKWwrel59lc
+	 jt9zUybaPivfLPv6QhVtWdDBMy1MmQQv1BPTN5DL+QbYKZSPUAonbZHEWfU4x6xWsN
+	 ZltC88bay3o3y1yStcmEidi+OAwzHHvOcP3ZtgYs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730623AbgAPQxB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:53:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36428 "EHLO mail.kernel.org"
+        id S1730735AbgAPQxS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 11:53:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37030 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730608AbgAPQxA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:53:00 -0500
+        id S1730724AbgAPQxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 11:53:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 18E4221D56;
-        Thu, 16 Jan 2020 16:52:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 69D8324679;
+        Thu, 16 Jan 2020 16:53:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193579;
-        bh=DtVOZRyHl8PCArYtIWTWEE6k8DoNzsgbYZyWaqZdNhQ=;
+        s=default; t=1579193597;
+        bh=drBKSQal6Kqb4KQB0xgWPDgk84pgJ9f9Sw1WHZ+o6NY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FvNZxcoY8Lg7fXl8i0kycFBx2j5ZqndZZZg1USInFAxOoRF7iro1efRKzZFVZQQBp
-         9vdjsq0v2LYQKEH1NWPSdXowYunVycXdfJTiwtF2dyLkSepAEJ0yM/04auM785AOJf
-         0Aj9hKT024os3ZgTPyiA1pSF1ctGwM/WHdnh0whI=
+        b=RNOfFfRdK0XtR/5z+Nhr6f42+JRa2Yy6dkZzrJQvJBNaQKXPmmXZ+VaLSkkmtY4J2
+         S0jim98y6SF2R1jxae4QN5/8vs11uPAfKgv6BoPZBu1I+fp2kE8u/I3B1e9Wb9mN0v
+         nlWpl8dZaALevsEX/xaRGA8MpB+IrWwHOd64r/0M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        James Smart <james.smart@broadcom.com>,
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 122/205] scsi: lpfc: Fix a kernel warning triggered by lpfc_get_sgl_per_hdwq()
-Date:   Thu, 16 Jan 2020 11:41:37 -0500
-Message-Id: <20200116164300.6705-122-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 136/205] scsi: hisi_sas: Return directly if init hardware failed
+Date:   Thu, 16 Jan 2020 11:41:51 -0500
+Message-Id: <20200116164300.6705-136-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
 References: <20200116164300.6705-1-sashal@kernel.org>
@@ -59,46 +59,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit 765ab6cdac3b681952da0e22184bf6cf1ae41cf8 ]
+[ Upstream commit 547fde8b5a1923050f388caae4f76613b5a620e0 ]
 
-Fix the following kernel bug report:
+Need to return directly if init hardware failed.
 
-BUG: using smp_processor_id() in preemptible [00000000] code: systemd-udevd/954
-
-Fixes: d79c9e9d4b3d ("scsi: lpfc: Support dynamic unbounded SGL lists on G7 hardware.")
-Link: https://lore.kernel.org/r/20191107052158.25788-2-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: James Smart <james.smart@broadcom.com>
+Fixes: 73a4925d154c ("scsi: hisi_sas: Update all the registers after suspend and resume")
+Link: https://lore.kernel.org/r/1573551059-107873-3-git-send-email-john.garry@huawei.com
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 9771638b64ba..2d75be07cd6e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20430,7 +20430,7 @@ lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 		/* allocate more */
- 		spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
--				   cpu_to_node(smp_processor_id()));
-+				   cpu_to_node(raw_smp_processor_id()));
- 		if (!tmp) {
- 			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 					"8353 error kmalloc memory for HDWQ "
-@@ -20573,7 +20573,7 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 		/* allocate more */
- 		spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
--				   cpu_to_node(smp_processor_id()));
-+				   cpu_to_node(raw_smp_processor_id()));
- 		if (!tmp) {
- 			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 					"8355 error kmalloc memory for HDWQ "
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index c4f76d7c29db..723f51c822af 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3423,6 +3423,7 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
+ 	if (rc) {
+ 		scsi_remove_host(shost);
+ 		pci_disable_device(pdev);
++		return rc;
+ 	}
+ 	hisi_hba->hw->phys_init(hisi_hba);
+ 	sas_resume_ha(sha);
 -- 
 2.20.1
 
