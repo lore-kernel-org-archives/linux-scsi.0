@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA99C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE07C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:14:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 878212467E
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:06:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43872246B8
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:14:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194394;
-	bh=4W8VS8IETV5SxqetcRr+1EcIZttD2EodDWDUmxYf8kM=;
+	s=default; t=1579194859;
+	bh=ClXA1MpHf/zfcZYYxVaGGymz8GFZcU/7v2NCprR9GjQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OOlTY1Ly+ChNkRO+EaA5BN9NLEh/o19G1+qMHQLuDiz2kNCFvcZ/MX4KUqf11WJL/
-	 1L8adxN2mQRLo9j3rWbx00yNBN1BJ2+VzskJWu9mY9bi99uYqPlBtHrRguVw+Be2EJ
-	 YKFAId6w/r+G9yBneKg3RZwBwzv6Iowds4uo4YrA=
+	b=M4JGv8+OVly+pveXSgVFz4U9N57jEYGTGFfQoj68Jkbgm+ANOgHoNL3VWSrUmNgN7
+	 uLnVau/9gc962mdI90pwQFXXqK+YfoxA5990URklsxwOklznULeVJRVblIP/mZ20nF
+	 rZzyGeWrmRtRJRJbhalrpCPoeOb78RtYthoz9fDo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388946AbgAPRGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:06:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36690 "EHLO mail.kernel.org"
+        id S2390529AbgAPROS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:14:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388936AbgAPRGa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:06:30 -0500
+        id S2390954AbgAPROR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:14:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3A96F21582;
-        Thu, 16 Jan 2020 17:06:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 56F3B2469E;
+        Thu, 16 Jan 2020 17:14:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194389;
-        bh=4W8VS8IETV5SxqetcRr+1EcIZttD2EodDWDUmxYf8kM=;
+        s=default; t=1579194857;
+        bh=ClXA1MpHf/zfcZYYxVaGGymz8GFZcU/7v2NCprR9GjQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1gnw4XYdIAmyeUpSg3M4VAi0D51WU2VD+oZKWLxAY7zUfwL34FfHxcp5KIlTJ86Ww
-         /RsMEEKPoxitVDkjaCJvm3t7TQvd1zlsDzCKWiIyB3HAoDgBgdzNcrdLyzL9DXSKBF
-         ce0bcUXOBP+71uwtD8jVccGtbAvLz3ExeImkXr90=
+        b=dPp5TUA7h40s0pZr+LeIrTO5ARAX/kgOGH8cCp1LBIKkN+rwjSpux3tTQcg25jtab
+         S6Fta9O/YdpxjKau7siH/CJeNdqWlYth3fV+o6we26fTgHbzzKSdLBznV1uQ40oMyA
+         I4IHiYWnAdNOttXsuRZV3nTmV1knVQfllj3tkIJo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Giridhar Malavali <gmalavali@marvell.com>,
+Cc:     Pan Bian <bianpan2016@163.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 317/671] scsi: qla2xxx: Fix error handling in qlt_alloc_qfull_cmd()
-Date:   Thu, 16 Jan 2020 11:59:15 -0500
-Message-Id: <20200116170509.12787-54-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 652/671] scsi: qla4xxx: fix double free bug
+Date:   Thu, 16 Jan 2020 12:04:50 -0500
+Message-Id: <20200116170509.12787-389-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -60,50 +59,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit c04466c17142d5eb566984372b9a5003d1900fe3 ]
+[ Upstream commit 3fe3d2428b62822b7b030577cd612790bdd8c941 ]
 
-The test "if (!cmd)" is not useful because it is guaranteed that cmd !=
-NULL.  Instead of testing the cmd pointer, rely on the tag to decide
-whether or not command allocation failed.
+The variable init_fw_cb is released twice, resulting in a double free
+bug. The call to the function dma_free_coherent() before goto is removed to
+get rid of potential double free.
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Giridhar Malavali <gmalavali@marvell.com>
-Fixes: 33e799775593 ("qla2xxx: Add support for QFull throttling and Term Exchange retry") # v3.18.
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Fixes: 2a49a78ed3c8 ("[SCSI] qla4xxx: added IPv6 support.")
+Link: https://lore.kernel.org/r/1572945927-27796-1-git-send-email-bianpan2016@163.com
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/qla4xxx/ql4_mbx.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index bbbe1996620b..c925ca787537 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5334,11 +5334,7 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
- 	se_sess = sess->se_sess;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 5d56904687b9..c81de7732359 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -640,9 +640,6 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
  
- 	tag = sbitmap_queue_get(&se_sess->sess_tag_pool, &cpu);
--	if (tag < 0)
--		return;
--
--	cmd = &((struct qla_tgt_cmd *)se_sess->sess_cmd_map)[tag];
--	if (!cmd) {
-+	if (tag < 0) {
- 		ql_dbg(ql_dbg_io, vha, 0x3009,
- 			"qla_target(%d): %s: Allocation of cmd failed\n",
- 			vha->vp_idx, __func__);
-@@ -5353,6 +5349,7 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
- 		return;
+ 	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma) !=
+ 	    QLA_SUCCESS) {
+-		dma_free_coherent(&ha->pdev->dev,
+-				  sizeof(struct addr_ctrl_blk),
+-				  init_fw_cb, init_fw_cb_dma);
+ 		goto exit_init_fw_cb;
  	}
  
-+	cmd = &((struct qla_tgt_cmd *)se_sess->sess_cmd_map)[tag];
- 	memset(cmd, 0, sizeof(struct qla_tgt_cmd));
- 
- 	qlt_incr_num_pend_cmds(vha);
 -- 
 2.20.1
 
