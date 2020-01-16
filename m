@@ -2,108 +2,151 @@ Return-Path: <SRS0=K2E6=3F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B0FC33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 05:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65721C33CB6
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 06:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 89B602077B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 05:09:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CD082087E
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 06:42:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ILVeTiAH"
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="rZHWYGd4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbgAPFJb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 00:09:31 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:35795 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725768AbgAPFJb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 00:09:31 -0500
-Received: by mail-pf1-f194.google.com with SMTP id i23so9627703pfo.2;
-        Wed, 15 Jan 2020 21:09:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=YENX8hiVU9VGaahzof39zWD+xiTd5KVBkuDLg5pimCk=;
-        b=ILVeTiAHzaiiBur5Z3L5U5lwL+6xoe6mE4zF2Gz6yoiUaAc3pEbLDECoNk20sanE9W
-         utwzTwrGspzWc4G9mz8fVBTyBFtPGeKlR1Tuc0wRKkaDrlJAiFSBpBwlAdPTQpWjpd8P
-         H9hOOG/RzsnGOpLN7C+PMeE4qr/Wd9K4PG4zsu3BjyB9fjqQd7ZB5Cp40w8Xm46Ld2Mj
-         2Ou/+4jDsqrXcr1N5FgeDzMsIikU61XqT+KkDCSM7RfdpeYNX7rA+M/WAPrZOH2f46jG
-         vxTwlHhE2Ovz3GSMT3FOo+o/jkszDGw3bEB6qU8asXntHydj599/IUSeGfwO09IUulCj
-         w5XA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=YENX8hiVU9VGaahzof39zWD+xiTd5KVBkuDLg5pimCk=;
-        b=U2RJqk1BOj4UT/jmAQSq4DUvBJxzFc8YFx4uLJhCq2cP5OyrIKKny9S+MBN2/Xx5KL
-         ksuhA5j1ZTA7fQ+xDbRa8NYaHJ3FTEOlGL05ra2DPKj6vy8bsK8lNxMCgudELb3ETIqI
-         n3mPpopKLlVziZHFNT1cdSOAOuRn4gSZKH9UqVbrgpKWO8K9sWp5BiLmClHcRw7HDWE+
-         24nrUH2QCfgX64FEHtNTNIT2g0IkjMsErz9tn3WSapDW6LT31lr38pXnDK0y1ldRYNhd
-         gcY7EgFTmgteoIJ/rNGPFyo2i5zwvGzPvrysfM3XJ7kKiVIHXbKXGxF7t6PjVUx1OQWd
-         kYUw==
-X-Gm-Message-State: APjAAAVybDeaWz5FE0MLtmzZBqM7DPbGX6wu0PX7m+OVtlRRGk+Xl1xk
-        vIZ5msW34ucQtAlpD1XUjRs=
-X-Google-Smtp-Source: APXvYqzmhidzHKldpgAevjXwhrc2Qa32pr1CDX8k/3+7Fx4vQRmHtCNUHnWVMdHewxzjsqh1rApo5g==
-X-Received: by 2002:a63:b4d:: with SMTP id a13mr36135928pgl.388.1579151370463;
-        Wed, 15 Jan 2020 21:09:30 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id z30sm22546622pff.131.2020.01.15.21.09.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jan 2020 21:09:29 -0800 (PST)
-Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-References: <20191215174509.1847-1-linux@roeck-us.net>
- <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
- <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
- <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
- <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
- <yq1r202spr9.fsf@oracle.com>
- <403cfbf8-79da-94f1-509f-e90d1a165722@roeck-us.net>
- <yq14kwwnioo.fsf@oracle.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <a825a71f-6129-4aac-3430-66c67e4d3985@roeck-us.net>
-Date:   Wed, 15 Jan 2020 21:09:27 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1726958AbgAPGm0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 01:42:26 -0500
+Received: from bilbo.ozlabs.org ([203.11.71.1]:44287 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726903AbgAPGm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 01:42:26 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 47yvkm21R7z9sNx;
+        Thu, 16 Jan 2020 17:42:24 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
+        s=201909; t=1579156944;
+        bh=jGM/CA3ogVM7Lr0fo9k6o/pd3NvxUAI1LpN455WTxNk=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=rZHWYGd4nrpfpszgxVZsNCaGEWFDD9uV3qxIILaTPl7qFDhMrN90ooJpqgdvysWBx
+         0MRpbCxzwA3sArn592vEaqokSQFqnfP4OaErqA3MPMimKlsZgt8kC2fKFJ9NkuBV7Q
+         dZloiNC19I6T1D8skkNtYLkIoHAYJStDuOpxsbd823Vo1rE9204ApXf5NLrEoRSZaC
+         gLMRGLTwbwPSZNN4X0pt9xuWOtRnvFy/QbWX6Q8YOeKL2A7Kl6DIeEPjdMmMHJBbEj
+         eKeE9Vbo4KD2/oxpqhF8kso9QW4ynL+3WjZGZmwpOhdesIP9riPWBMlKINAgFNoNJk
+         Uh2B2iA2cshlA==
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     sachinp <sachinp@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        manvanth <manvanth@linux.vnet.ibm.com>, jcmvbkbc@gmail.com,
+        linux-next <linux-next@vger.kernel.org>,
+        Oliver <oohall@gmail.com>,
+        "aneesh.kumar" <aneesh.kumar@linux.vnet.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [linux-next/mainline][bisected 3acac06][ppc] Oops when unloading mpt3sas driver
+In-Reply-To: <1578980874.11996.3.camel@abdul.in.ibm.com>
+References: <1578489498.29952.11.camel@abdul> <1578560245.30409.0.camel@abdul.in.ibm.com> <20200109142218.GA16477@infradead.org> <1578980874.11996.3.camel@abdul.in.ibm.com>
+Date:   Thu, 16 Jan 2020 16:42:30 +1000
+Message-ID: <87tv4v9a21.fsf@mpe.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <yq14kwwnioo.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+Abdul Haleem <abdhalee@linux.vnet.ibm.com> writes:
+> On Thu, 2020-01-09 at 06:22 -0800, Christoph Hellwig wrote:
+>> On Thu, Jan 09, 2020 at 02:27:25PM +0530, Abdul Haleem wrote:
+>> > + CC Christoph Hellwig
+>> 
+>> The only thing this commit changed for the dma coherent case (which
+>> ppc64 uses) is that we now look up the page to free by the DMA address
+>> instead of the virtual address passed in.  Which suggests this call
+>> stack passes in a broken dma address.  I suspect we somehow managed
+>> to disable the ppc iommu bypass mode after allocating memory, which
+>> would cause symptoms like this, and thus the commit is just exposing
+>> a pre-existing problem.
+>
+> Trace with printk added for page->addr, will this help ?
+>
+> mpt3sas_cm0: removing handle(0x000f), sas_addr(0x500304801f080d3d)
+> mpt3sas_cm0: enclosure logical id(0x500304801f080d3f), slot(12)
+> mpt3sas_cm0: enclosure level(0x0000), connector name(     )
+> mpt3sas_cm0: mpt3sas_transport_port_remove: removed:
+> sas_addr(0x500304801f080d3f)
+> mpt3sas_cm0: expander_remove: handle(0x0009),
+> sas_addr(0x500304801f080d3f)
+> mpt3sas_cm0: sending diag reset !!
+> mpt3sas_cm0: diag reset: SUCCESS 
+> page->vaddr = 0xc000003f2d200000
+> page->vaddr = 0xc000003f2ef00000
+> page->vaddr = 0xc000003f38430000
+> page->vaddr = 0xc000003f3d7d0000
+> page->vaddr = 0xc000003f75760000
+> BUG: Unable to handle kernel data access on write at 0xc04a000000017c34
 
-On 1/15/20 8:12 PM, Martin K. Petersen wrote:
-> 
-> Guenter,
-> 
->> The hwmon-next branch is based on v5.5-rc1. It might be better to
->> either merge hwmon-next into mainline, or to apply the drivetemp patch
->> to mainline, and test the result. I have seen some (unrelated) weird
->> tracebacks in the driver core with v5.5-rc1, so that may not be the
->> best baseline for a test.
-> 
-> I'm afraid the warnings still happen with hwmon-next on top of
-> linus/master.
-> 
+We also want the dma address, Abdul did another run resulting in:
 
-Can you possibly provide details, like the configuration you use for
-qemu, the qemu command line, and the exact command sequence you use
-in qemu to reproduce the problem ?
+  mpt3sas_cm0: mpt3sas_transport_port_remove: removed: sas_addr(0x500304801f080d3f)
+  mpt3sas_cm0: expander_remove: handle(0x0009), sas_addr(0x500304801f080d3f)
+  mpt3sas_cm0: sending diag reset !!
+  mpt3sas_cm0: diag reset: SUCCESS
+  page->vaddr = 0xc000003fc5880000
+  page->dma = 0x800003fc5880000
+  page->vaddr = 0xc000003fc5900000
+  page->dma = 0x800003fc5900000
+  page->vaddr = 0xc000003fc5980000
+  page->dma = 0x800003fc5980000
+  page->vaddr = 0xc000003fc5990000
+  page->dma = 0x800003fc5990000
+  page->vaddr = 0xc000003fc7c70000
+  page->dma = 0x5f00000
+  BUG: Unable to handle kernel data access on write at 0xc04a000000017c34
+  Faulting instruction address: 0xc000000000300780
+  Oops: Kernel access of bad area, sig: 11 [#1]
+  LE PAGE_SIZE=64K MMU=Hash SMP NR_CPUS=2048 DEBUG_PAGEALLOC NUMA PowerNV
+  Modules linked in: iptable_mangle xt_MASQUERADE iptable_nat nf_nat xt_conntrack nf_conntrack nf_defrag_ipv4 ipt_REJECT nf_reject_ipv4 xt_tcpudp tun bridge stp llc iptable_filter btrfs blake2b_generic xor zstd_decompress zstd_compress lzo_compress raid6_pq vmx_crypto gf128mul powernv_rng rng_core kvm_hv nfsd kvm binfmt_misc ip_tables x_tables xfs libcrc32c qla2xxx ixgbe nvme_fc nvme_fabrics mdio nvme_core i40e mpt3sas(-) raid_class scsi_transport_sas autofs4
+  CPU: 149 PID: 17518 Comm: rmmod Not tainted 5.5.0-rc5-next-20200108-autotest-00002-g36e1367-dirty #2
+  NIP:  c000000000300780 LR: c0000000001aabe4 CTR: c00000000004a030
+  REGS: c0000078ffab75d0 TRAP: 0380   Not tainted  (5.5.0-rc5-next-20200108-autotest-00002-g36e1367-dirty)
+  MSR:  9000000000009033 <SF,HV,EE,ME,IR,DR,RI,LE>  CR: 24002424  XER: 20000000
+  CFAR: c0000000001aabe0 IRQMASK: 0
+  GPR00: c00000000004a0c8 c0000078ffab7860 c000000001321a00 c04a000000017c00
+  GPR04: 0000000000000000 c000003fc7c70000 003e000000017c00 0000000000000000
+  GPR08: 0000000000000000 c0000000013cd000 c04a000000017c34 0000000000000230
+  GPR12: c00000000004a030 c000007ffef35000 0000000000000000 0000000000000000
+  GPR16: 0000000000000000 0000000000000000 00000100140c0180 0000000010020098
+  GPR20: 0000000010020050 0000000010020038 0000000005f00000 c000000000d60870
+  GPR24: c000000000d60890 c000000000d608a8 0000000000000000 c0000000012a9818
+  GPR28: 0000000005f00000 c000003fc7c70000 0000000000010000 c000003fdaa4c8a8
+  NIP [c000000000300780] __free_pages+0x10/0x50
+  LR [c0000000001aabe4] dma_direct_free_pages+0x54/0x90
+  Call Trace:
+  [c0000078ffab7880] [c00000000004a0c8] dma_iommu_free_coherent+0x98/0xd0
+  [c0000078ffab78d0] [c0000000001a9c10] dma_free_attrs+0x110/0x120
+  [c0000078ffab7920] [c000000000317750] dma_pool_destroy+0x1d0/0x270
+  [c0000078ffab79d0] [c00800000dc51e98] _base_release_memory_pools+0x1d8/0x4b0 [mpt3sas]
+  [c0000078ffab7a60] [c00800000dc5b9f0] mpt3sas_base_detach+0x40/0x150 [mpt3sas]
+  [c0000078ffab7ad0] [c00800000dc6c92c] scsih_remove+0x24c/0x3e0 [mpt3sas]
+  [c0000078ffab7b90] [c0000000006199a4] pci_device_remove+0x64/0x110
+  [c0000078ffab7bd0] [c0000000006cf1a4] device_release_driver_internal+0x154/0x260
+  [c0000078ffab7c10] [c0000000006cf37c] driver_detach+0x8c/0x140
+  [c0000078ffab7c50] [c0000000006cd488] bus_remove_driver+0x78/0x100
+  [c0000078ffab7c80] [c0000000006d0090] driver_unregister+0x40/0x90
+  [c0000078ffab7cf0] [c0000000006190c8] pci_unregister_driver+0x38/0x110
+  [c0000078ffab7d40] [c00800000dc7f188] _mpt3sas_exit+0x50/0x4118 [mpt3sas]
+  [c0000078ffab7da0] [c0000000001dda18] sys_delete_module+0x1a8/0x2a0
+  [c0000078ffab7e20] [c00000000000b9d0] system_call+0x5c/0x68
+  Instruction dump:
+  88830051 2fa40000 41de0008 4bffe7fc 7d234b78 4bfffe94 60000000 60420000
+  3c4c0102 38421290 39430034 7c0004ac <7d005028> 3108ffff 7d00512d 40c2fff4
+  ---[ end trace b8cbc679eff3dfcc ]---
+  Segmentation fault
 
-Thanks,
-Guenter
+
+cheers
