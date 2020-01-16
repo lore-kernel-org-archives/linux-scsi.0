@@ -7,49 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CE5C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC52C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:31:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30B7E24713
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:30:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F589246A8
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:31:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195842;
-	bh=zkHvV0MRPkUJW9/zrbyMGc1h24+3X4sbBAq0HLgpzqI=;
+	s=default; t=1579195872;
+	bh=0++cJLb9/80RaLZW+1yZLHRT93Jn23hqDa/931c+WFA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=omrq2JbfoklHGAxOf6siP45GJXP3Ua4oK/6F+fUz4fVSdYWJg5AiZk4KCOvUhan6p
-	 7VJbK8n52EUHgoKS3HVlhyEH2TV7GP2uo8aRiF22rYb+QJNhXYU/NY10uKLR5HC9Xa
-	 7x1rO+n2GfuMZ6I400lDZ7kr2QqGwNM3hYDSwnXo=
+	b=oa0TBtw15GoPoZ8gOY11bDbxqRVu5qqXyanN1KdK9NrQhM3kuwl8KRAeab6FruIHI
+	 v5v5x31EJbxRAGSvTHgrJ7DptWVCLpBXd8nBF/8JYGshUzqzux4GgscbV16mqi4M78
+	 Yj3hzw/++7mjA9t4mihu+2Q3B7ondTpOLGmSDT44=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404616AbgAPRal (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:30:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43336 "EHLO mail.kernel.org"
+        id S2404722AbgAPRbL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:31:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44192 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404553AbgAPRak (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:30:40 -0500
+        id S2404713AbgAPRbK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:31:10 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5EE4C2472D;
-        Thu, 16 Jan 2020 17:30:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 99A7F246B2;
+        Thu, 16 Jan 2020 17:31:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195839;
-        bh=zkHvV0MRPkUJW9/zrbyMGc1h24+3X4sbBAq0HLgpzqI=;
+        s=default; t=1579195869;
+        bh=0++cJLb9/80RaLZW+1yZLHRT93Jn23hqDa/931c+WFA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GTVcVioCN0XWMiaehv3WBYu09yiDMyNJx5JuEU1U3jpnbCu+7XLg3jRH0RK2C7hCY
-         LQJZ9nk8F+T8ImSp4pkrMV5gTmqx3Sg3OWVjuIyf1tU0LMeWlQSPXE4UZlSyruVKUS
-         RjzF1X6r403VXqrh+IIrVmpSBY1T6y2NFy6A6MNU=
+        b=iT2//tQ7bGyIJpasxBtxUunv+Tdc6nPltHfT+E/nDq378emhO/gxclgnjc9gOdNML
+         9Xji8CBS6x9kls2Vw5acHw23B2nYuNsf+R/uxftQIytV46lK7bpu8snRajscDfAqg/
+         hhrvcd0T9YwqBeUBj+/rVKuZukxUZSSHoANBif1Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Douglas Gilbert <dgilbert@interlog.com>,
-        Colin Ian King <colin.king@canonical.com>,
+Cc:     Martin Wilck <mwilck@suse.com>, David Bond <dbond@suse.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 342/371] scsi: core: scsi_trace: Use get_unaligned_be*()
-Date:   Thu, 16 Jan 2020 12:23:34 -0500
-Message-Id: <20200116172403.18149-285-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 365/371] scsi: qla2xxx: fix rports not being mark as lost in sync fabric scan
+Date:   Thu, 16 Jan 2020 12:23:57 -0500
+Message-Id: <20200116172403.18149-308-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -62,213 +59,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Martin Wilck <mwilck@suse.com>
 
-[ Upstream commit b1335f5b0486f61fb66b123b40f8e7a98e49605d ]
+[ Upstream commit d341e9a8f2cffe4000c610225c629f62c7489c74 ]
 
-This patch fixes an unintended sign extension on left shifts. From Colin
-King: "Shifting a u8 left will cause the value to be promoted to an
-integer. If the top bit of the u8 is set then the following conversion to
-an u64 will sign extend the value causing the upper 32 bits to be set in
-the result."
+In qla2x00_find_all_fabric_devs(), fcport->flags & FCF_LOGIN_NEEDED is a
+necessary condition for logging into new rports, but not for dropping lost
+ones.
 
-Fix this by using get_unaligned_be*() instead.
-
-Fixes: bf8162354233 ("[SCSI] add scsi trace core functions and put trace points")
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Link: https://lore.kernel.org/r/20191101211447.187151-1-bvanassche@acm.org
-Reported-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
+Link: https://lore.kernel.org/r/20191122221912.20100-2-martin.wilck@suse.com
+Tested-by: David Bond <dbond@suse.com>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_trace.c | 113 +++++++++++---------------------------
- 1 file changed, 33 insertions(+), 80 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index 617a60737590..22472d140ef7 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -21,7 +21,7 @@
- #include <trace/events/scsi.h>
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index bd2421863510..a66f7cec797c 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5145,8 +5145,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
+ 		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
+ 			break;
  
- #define SERVICE_ACTION16(cdb) (cdb[1] & 0x1f)
--#define SERVICE_ACTION32(cdb) ((cdb[8] << 8) | cdb[9])
-+#define SERVICE_ACTION32(cdb) (get_unaligned_be16(&cdb[8]))
+-		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
+-		    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
++		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
+ 			continue;
  
- static const char *
- scsi_trace_misc(struct trace_seq *, unsigned char *, int);
-@@ -51,17 +51,12 @@ static const char *
- scsi_trace_rw10(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
-+	u32 lba, txlen;
+ 		if (fcport->scan_state == QLA_FCPORT_SCAN) {
+@@ -5171,7 +5170,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
+ 			}
+ 		}
  
--	lba |= (cdb[2] << 24);
--	lba |= (cdb[3] << 16);
--	lba |= (cdb[4] << 8);
--	lba |=  cdb[5];
--	txlen |= (cdb[7] << 8);
--	txlen |=  cdb[8];
-+	lba = get_unaligned_be32(&cdb[2]);
-+	txlen = get_unaligned_be16(&cdb[7]);
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
--			 (unsigned long long)lba, (unsigned long long)txlen,
-+	trace_seq_printf(p, "lba=%u txlen=%u protect=%u", lba, txlen,
- 			 cdb[1] >> 5);
- 
- 	if (cdb[0] == WRITE_SAME)
-@@ -76,19 +71,12 @@ static const char *
- scsi_trace_rw12(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
--
--	lba |= (cdb[2] << 24);
--	lba |= (cdb[3] << 16);
--	lba |= (cdb[4] << 8);
--	lba |=  cdb[5];
--	txlen |= (cdb[6] << 24);
--	txlen |= (cdb[7] << 16);
--	txlen |= (cdb[8] << 8);
--	txlen |=  cdb[9];
--
--	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
--			 (unsigned long long)lba, (unsigned long long)txlen,
-+	u32 lba, txlen;
-+
-+	lba = get_unaligned_be32(&cdb[2]);
-+	txlen = get_unaligned_be32(&cdb[6]);
-+
-+	trace_seq_printf(p, "lba=%u txlen=%u protect=%u", lba, txlen,
- 			 cdb[1] >> 5);
- 	trace_seq_putc(p, 0);
- 
-@@ -99,23 +87,13 @@ static const char *
- scsi_trace_rw16(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	sector_t lba = 0, txlen = 0;
--
--	lba |= ((u64)cdb[2] << 56);
--	lba |= ((u64)cdb[3] << 48);
--	lba |= ((u64)cdb[4] << 40);
--	lba |= ((u64)cdb[5] << 32);
--	lba |= (cdb[6] << 24);
--	lba |= (cdb[7] << 16);
--	lba |= (cdb[8] << 8);
--	lba |=  cdb[9];
--	txlen |= (cdb[10] << 24);
--	txlen |= (cdb[11] << 16);
--	txlen |= (cdb[12] << 8);
--	txlen |=  cdb[13];
--
--	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
--			 (unsigned long long)lba, (unsigned long long)txlen,
-+	u64 lba;
-+	u32 txlen;
-+
-+	lba = get_unaligned_be64(&cdb[2]);
-+	txlen = get_unaligned_be32(&cdb[10]);
-+
-+	trace_seq_printf(p, "lba=%llu txlen=%u protect=%u", lba, txlen,
- 			 cdb[1] >> 5);
- 
- 	if (cdb[0] == WRITE_SAME_16)
-@@ -130,8 +108,8 @@ static const char *
- scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p), *cmd;
--	sector_t lba = 0, txlen = 0;
--	u32 ei_lbrt = 0;
-+	u64 lba;
-+	u32 ei_lbrt, txlen;
- 
- 	switch (SERVICE_ACTION32(cdb)) {
- 	case READ_32:
-@@ -151,26 +129,12 @@ scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
- 		goto out;
+-		if (fcport->scan_state == QLA_FCPORT_FOUND)
++		if (fcport->scan_state == QLA_FCPORT_FOUND &&
++		    (fcport->flags & FCF_LOGIN_NEEDED) != 0)
+ 			qla24xx_fcport_handle_login(vha, fcport);
  	}
- 
--	lba |= ((u64)cdb[12] << 56);
--	lba |= ((u64)cdb[13] << 48);
--	lba |= ((u64)cdb[14] << 40);
--	lba |= ((u64)cdb[15] << 32);
--	lba |= (cdb[16] << 24);
--	lba |= (cdb[17] << 16);
--	lba |= (cdb[18] << 8);
--	lba |=  cdb[19];
--	ei_lbrt |= (cdb[20] << 24);
--	ei_lbrt |= (cdb[21] << 16);
--	ei_lbrt |= (cdb[22] << 8);
--	ei_lbrt |=  cdb[23];
--	txlen |= (cdb[28] << 24);
--	txlen |= (cdb[29] << 16);
--	txlen |= (cdb[30] << 8);
--	txlen |=  cdb[31];
--
--	trace_seq_printf(p, "%s_32 lba=%llu txlen=%llu protect=%u ei_lbrt=%u",
--			 cmd, (unsigned long long)lba,
--			 (unsigned long long)txlen, cdb[10] >> 5, ei_lbrt);
-+	lba = get_unaligned_be64(&cdb[12]);
-+	ei_lbrt = get_unaligned_be32(&cdb[20]);
-+	txlen = get_unaligned_be32(&cdb[28]);
-+
-+	trace_seq_printf(p, "%s_32 lba=%llu txlen=%u protect=%u ei_lbrt=%u",
-+			 cmd, lba, txlen, cdb[10] >> 5, ei_lbrt);
- 
- 	if (SERVICE_ACTION32(cdb) == WRITE_SAME_32)
- 		trace_seq_printf(p, " unmap=%u", cdb[10] >> 3 & 1);
-@@ -185,7 +149,7 @@ static const char *
- scsi_trace_unmap(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p);
--	unsigned int regions = cdb[7] << 8 | cdb[8];
-+	unsigned int regions = get_unaligned_be16(&cdb[7]);
- 
- 	trace_seq_printf(p, "regions=%u", (regions - 8) / 16);
- 	trace_seq_putc(p, 0);
-@@ -197,8 +161,8 @@ static const char *
- scsi_trace_service_action_in(struct trace_seq *p, unsigned char *cdb, int len)
- {
- 	const char *ret = trace_seq_buffer_ptr(p), *cmd;
--	sector_t lba = 0;
--	u32 alloc_len = 0;
-+	u64 lba;
-+	u32 alloc_len;
- 
- 	switch (SERVICE_ACTION16(cdb)) {
- 	case SAI_READ_CAPACITY_16:
-@@ -212,21 +176,10 @@ scsi_trace_service_action_in(struct trace_seq *p, unsigned char *cdb, int len)
- 		goto out;
- 	}
- 
--	lba |= ((u64)cdb[2] << 56);
--	lba |= ((u64)cdb[3] << 48);
--	lba |= ((u64)cdb[4] << 40);
--	lba |= ((u64)cdb[5] << 32);
--	lba |= (cdb[6] << 24);
--	lba |= (cdb[7] << 16);
--	lba |= (cdb[8] << 8);
--	lba |=  cdb[9];
--	alloc_len |= (cdb[10] << 24);
--	alloc_len |= (cdb[11] << 16);
--	alloc_len |= (cdb[12] << 8);
--	alloc_len |=  cdb[13];
--
--	trace_seq_printf(p, "%s lba=%llu alloc_len=%u", cmd,
--			 (unsigned long long)lba, alloc_len);
-+	lba = get_unaligned_be64(&cdb[2]);
-+	alloc_len = get_unaligned_be32(&cdb[10]);
-+
-+	trace_seq_printf(p, "%s lba=%llu alloc_len=%u", cmd, lba, alloc_len);
- 
- out:
- 	trace_seq_putc(p, 0);
+ 	return (rval);
 -- 
 2.20.1
 
