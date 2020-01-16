@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F89C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 21:59:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E76C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 721CF2077B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 21:59:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E93AB20748
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nsyhgY0L"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="esQkxX2u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388928AbgAPV7x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 16:59:53 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:33785 "EHLO
+        id S2389433AbgAPWAE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 17:00:04 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:39557 "EHLO
         mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733113AbgAPV7x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 16:59:53 -0500
-Received: by mail-wr1-f65.google.com with SMTP id b6so20754274wrq.0;
-        Thu, 16 Jan 2020 13:59:51 -0800 (PST)
+        with ESMTP id S2389429AbgAPWAE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 17:00:04 -0500
+Received: by mail-wr1-f65.google.com with SMTP id y11so20712918wrt.6;
+        Thu, 16 Jan 2020 14:00:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=GrVfE0XbnVtTL3mxNuVcV0b8AJTGYMsjcTQc4nb5aug=;
-        b=nsyhgY0LoqidZoWeSmMnz1yQdHRQfN/I1Cu/ZBIXa9OjK1ZfdqcY/GZqr5guxbGWO1
-         FPcF4WQajNKG7EAiAD0xeJloJwUrKxFzdQ8quyVvB9evnz2PFP7sFpWyQWid/eQxde6W
-         eR/DKBps5++NI0zDqv39ZtPpT/fjn0MUudvRSO9Cd4Na/CfPsHLxtlyOfGhjgB5Gghll
-         DTAKQ8S0vg58s+F3AE1vL8LySPu4R6mn3Mt+XZOKk2LumwwP95AUqNmJOLwG7LkMvRXo
-         vTgwcZbISZ4yHoR+i1zlmm8ptwGWcZ2MJ10qbkJr8DNC8Q1j9TO6W9jSL7fUXQqN2QPu
-         McwQ==
+        bh=bdYdBnjYnrA8fyK1qEXxMeFlHHmBcKjIvnrC1RRgB88=;
+        b=esQkxX2u2j7Vifqrwp9opy12YNQtjPoplsOofG5fkYLxmzQ7e4NKhOot/Z0IVt6R7D
+         tO3P0Jx4qi+iJjeOjUKjjBoUbtVAaSNRWl3XEFZRkMmicTNtxya5p6dP7BQpPxgw/GZw
+         pgKjCEBD54mI/H5DgUnCktdvahQDMQJa6wTfCRYkyAnOWVWkLWC65gEScSCeOBF9TPQ8
+         jDUvM5SHFjbPYuSTo0eCUgHl+Rs52S1Pt13B53f3Z6H3RVZMtV2AhodRLvwQPo+HDjKv
+         pFzUWoqZQPDkRS00AnAK14fcfnB7ZfZ1x/F2N7z7o2p9Mkjq1heOKAF5cajLC1Ibe5S0
+         QRGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=GrVfE0XbnVtTL3mxNuVcV0b8AJTGYMsjcTQc4nb5aug=;
-        b=cCWc4TTCp1alNG9qf8KmsnC+UuTIw2KDVfNOx8nMW8H1lcTpiwosFHUZqbp2eV+Kvc
-         YFh48eSmKmNeuG7Az+LtOIxWgp7iNkQ/mX5e1YZl1aifU2+KOCpFREvtIfUVHGkaIN/8
-         5xJAcxv+9At11qxBnoUtUAPUjwDmWG7WbmVSfKYrcx5CBUZY344UONz0wdr5kmNAf2rd
-         jcxblQ9tl6ptRDvcQv+j+d1Pk2hLVR4Oyc6TKjLFD8GBVhXnLUDsfiNUJL09mueooBCM
-         ncXHjv3c2HnIZqFN5NGOO5zjiLvUVKCoxBHRBztRmbguxW5BSNDXQCTwceiahck09VmX
-         msyA==
-X-Gm-Message-State: APjAAAVVWLR+HQzKtfdorZZDlWhyqan6BPkr7Fksua0NJUQcSSB7NF4p
-        nJOipccmFEV5N2Dd+JnJ5dU=
-X-Google-Smtp-Source: APXvYqy5ixLfQcuhBS8ZGzxpz9d52sfOeTK56Qvu622mss24elHYtFH863gE+WL65d0EXlYGnvG0lQ==
-X-Received: by 2002:a5d:65c5:: with SMTP id e5mr5406341wrw.311.1579211990434;
-        Thu, 16 Jan 2020 13:59:50 -0800 (PST)
+        bh=bdYdBnjYnrA8fyK1qEXxMeFlHHmBcKjIvnrC1RRgB88=;
+        b=PGsuVPgqzZYFzmgG7I/v0PfBKy7bDp2+itYPIb5ythU+A6XFmEhJky3OZUMCbulS0G
+         Gh0Y3qmNEH6HT/BPSR+zKBG15cZUaIu0q+7uvJHMTiSfjqz5WuoSglRN0fOPbW+1GBkB
+         NVCWofmSBckuEbGyi6zzh2s92+6mU0/jOv8I59gYzsx0h1Y0Rw0+DmeHW6B8Dk1WkUSF
+         E5fPB8uqafWtOvmfxZK8kROxQ/OeX5kJwDXCezxJn5uEUAq5U6trJpH+3skV10lNYeYu
+         AWaszOjF6TfPTZxHXLLZpx+xtxp5H2IvWfXFZ540rqJN7PdshWSosbPzBgXhWmVMUZW/
+         z+tQ==
+X-Gm-Message-State: APjAAAWqCCg+K3qh8uae+RZWdVEcfvHSIsWIuFXKUXlOwoDFpO/5/G8C
+        q4pllHVRfG+xr+bDtZ+3Jio=
+X-Google-Smtp-Source: APXvYqzAOex6lh8624N0zmJw+unZpOmIrKERzK3VY6tdo3wvSVl+TkNcslUp3Q8+qlPbXACKmX3ejA==
+X-Received: by 2002:a5d:68c5:: with SMTP id p5mr5512682wrw.193.1579212001060;
+        Thu, 16 Jan 2020 14:00:01 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bee3c.dynamic.kabel-deutschland.de. [95.91.238.60])
-        by smtp.gmail.com with ESMTPSA id a14sm32418131wrx.81.2020.01.16.13.59.49
+        by smtp.gmail.com with ESMTPSA id a14sm32418131wrx.81.2020.01.16.14.00.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jan 2020 13:59:49 -0800 (PST)
+        Thu, 16 Jan 2020 14:00:00 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -61,9 +61,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/9] scsi: ufs: Delete struct ufs_dev_desc
-Date:   Thu, 16 Jan 2020 22:59:07 +0100
-Message-Id: <20200116215914.16015-3-huobean@gmail.com>
+Subject: [PATCH v2 3/9] scsi: ufs: Split ufshcd_probe_hba() based on its called flow
+Date:   Thu, 16 Jan 2020 22:59:08 +0100
+Message-Id: <20200116215914.16015-4-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200116215914.16015-1-huobean@gmail.com>
 References: <20200116215914.16015-1-huobean@gmail.com>
@@ -74,264 +74,260 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-In consideration of Host driver uses some certain UFS device properties,
-move parameters of struct ufs_dev_desc to struct ufs_dev_info, and delete
-struct ufs_dev_desc.
+This patch has two major non-functionality changes:
+
+1. Take scanning host if-statement out from ufshcd_probe_hba(), and
+move them into a new added function ufs_lu_add().
+In this new function ufs_lu_add(), the main functionalitis include:
+ICC initialization, add well-known LUs, devfreq initialization, UFS
+bsg probe and scsi host scan. The reason for this change is that these
+functionalities only being called during booting stage flow
+ufshcd_init()->ufshcd_async_scan(). In the processes of error handling
+and power management ufshcd_suspend(), ufshcd_resume(), ufshcd_probe_hba()
+being called,  but these functionalitis above metioned are not hit.
+
+2. Move context of initialization of parameters associated with UFS
+device to a new added ufs_init_params().
+The reason for this change is that all of these parameters are used by
+the driver and only need to be initialized once when booting. Combine
+them into an integral function.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs-mediatek.c |  7 ++---
- drivers/scsi/ufs/ufs-qcom.c     |  6 ++---
- drivers/scsi/ufs/ufs.h          | 11 +-------
- drivers/scsi/ufs/ufs_quirks.h   |  9 ++++---
- drivers/scsi/ufs/ufshcd.c       | 47 +++++++++++++++------------------
- drivers/scsi/ufs/ufshcd.h       |  7 +++--
- 6 files changed, 38 insertions(+), 49 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 167 +++++++++++++++++++++++---------------
+ 1 file changed, 101 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 8d999c0e60fe..f8dd992b6f3a 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -406,10 +406,11 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	return 0;
- }
- 
--static int ufs_mtk_apply_dev_quirks(struct ufs_hba *hba,
--				    struct ufs_dev_desc *card)
-+static int ufs_mtk_apply_dev_quirks(struct ufs_hba *hba)
- {
--	if (card->wmanufacturerid == UFS_VENDOR_SAMSUNG)
-+	struct ufs_dev_info *dev_info = hba->dev_info;
-+
-+	if (dev_info->wmanufacturerid == UFS_VENDOR_SAMSUNG)
- 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 6);
- 
- 	return 0;
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ebb5c66e069f..9c6a182b3ed9 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -949,12 +949,12 @@ static int ufs_qcom_quirk_host_pa_saveconfigtime(struct ufs_hba *hba)
- 	return err;
- }
- 
--static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba,
--				     struct ufs_dev_desc *card)
-+static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
- {
- 	int err = 0;
-+	struct ufs_dev_info *dev_info = hba->dev_info;
- 
--	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME)
-+	if (dev_info->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME)
- 		err = ufs_qcom_quirk_host_pa_saveconfigtime(hba);
- 
- 	return err;
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index c89f21698629..fcc9b4d4e56f 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -530,17 +530,8 @@ struct ufs_dev_info {
- 	bool f_power_on_wp_en;
- 	/* Keeps information if any of the LU is power on write protected */
- 	bool is_lu_power_on_wp;
--};
--
--#define MAX_MODEL_LEN 16
--/**
-- * ufs_dev_desc - ufs device details from the device descriptor
-- *
-- * @wmanufacturerid: card details
-- * @model: card model
-- */
--struct ufs_dev_desc {
- 	u16 wmanufacturerid;
-+	/*UFS device Product Name */
- 	u8 *model;
- };
- 
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index fe6cad9b2a0d..16c324c61b6e 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -22,16 +22,17 @@
-  * @quirk: device quirk
-  */
- struct ufs_dev_fix {
--	struct ufs_dev_desc card;
-+	u16 wmanufacturerid;
-+	u8 *model;
- 	unsigned int quirk;
- };
- 
--#define END_FIX { { 0 }, 0 }
-+#define END_FIX { 0 }
- 
- /* add specific device quirk */
- #define UFS_FIX(_vendor, _model, _quirk) { \
--	.card.wmanufacturerid = (_vendor),\
--	.card.model = (_model),		   \
-+	.wmanufacturerid = (_vendor),\
-+	.model = (_model),		   \
- 	.quirk = (_quirk),		   \
- }
- 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9a9085a7bcc5..58ef45b80cb0 100644
+index 58ef45b80cb0..2cec0816632c 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6583,16 +6583,13 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	return ret;
- }
+@@ -246,7 +246,7 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
+ static void ufshcd_hba_exit(struct ufs_hba *hba);
+-static int ufshcd_probe_hba(struct ufs_hba *hba);
++static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
+ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 bool skip_ref_clk);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+@@ -6307,7 +6307,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 		goto out;
  
--static int ufs_get_device_desc(struct ufs_hba *hba,
--			       struct ufs_dev_desc *dev_desc)
-+static int ufs_get_device_desc(struct ufs_hba *hba)
- {
- 	int err;
- 	size_t buff_len;
- 	u8 model_index;
- 	u8 *desc_buf;
--
--	if (!dev_desc)
--		return -EINVAL;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
+ 	/* Establish the link again and restore the device */
+-	err = ufshcd_probe_hba(hba);
++	err = ufshcd_probe_hba(hba, false);
  
- 	buff_len = max_t(size_t, hba->desc_size.dev_desc,
- 			 QUERY_DESC_MAX_SIZE + 1);
-@@ -6613,12 +6610,12 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
- 	 * getting vendor (manufacturerID) and Bank Index in big endian
- 	 * format
- 	 */
--	dev_desc->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
-+	dev_info->wmanufacturerid = desc_buf[DEVICE_DESC_PARAM_MANF_ID] << 8 |
- 				     desc_buf[DEVICE_DESC_PARAM_MANF_ID + 1];
- 
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
- 	err = ufshcd_read_string_desc(hba, model_index,
--				      &dev_desc->model, SD_ASCII_STD);
-+				      &dev_info->model, SD_ASCII_STD);
- 	if (err < 0) {
- 		dev_err(hba->dev, "%s: Failed reading Product Name. err = %d\n",
- 			__func__, err);
-@@ -6636,23 +6633,25 @@ static int ufs_get_device_desc(struct ufs_hba *hba,
+ 	if (!err && (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL))
+ 		err = -EIO;
+@@ -6935,13 +6935,83 @@ static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
  	return err;
  }
  
--static void ufs_put_device_desc(struct ufs_dev_desc *dev_desc)
-+static void ufs_put_device_desc(struct ufs_hba *hba)
- {
--	kfree(dev_desc->model);
--	dev_desc->model = NULL;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
++static int ufs_init_params(struct ufs_hba *hba)
++{
++	bool flag;
++	int ret;
 +
-+	kfree(dev_info->model);
-+	dev_info->model = NULL;
- }
- 
--static void ufs_fixup_device_setup(struct ufs_hba *hba,
--				   struct ufs_dev_desc *dev_desc)
-+static void ufs_fixup_device_setup(struct ufs_hba *hba)
- {
- 	struct ufs_dev_fix *f;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
- 
- 	for (f = ufs_fixups; f->quirk; f++) {
--		if ((f->card.wmanufacturerid == dev_desc->wmanufacturerid ||
--		     f->card.wmanufacturerid == UFS_ANY_VENDOR) &&
--		     ((dev_desc->model &&
--		       STR_PRFX_EQUAL(f->card.model, dev_desc->model)) ||
--		      !strcmp(f->card.model, UFS_ANY_MODEL)))
-+		if ((f->wmanufacturerid == dev_info->wmanufacturerid ||
-+		     f->wmanufacturerid == UFS_ANY_VENDOR) &&
-+		     ((dev_info->model &&
-+		       STR_PRFX_EQUAL(f->model, dev_info->model)) ||
-+		      !strcmp(f->model, UFS_ANY_MODEL)))
- 			hba->dev_quirks |= f->quirk;
- 	}
- }
-@@ -6804,8 +6803,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_tune_unipro_params(struct ufs_hba *hba,
--				      struct ufs_dev_desc *card)
-+static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- {
- 	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
- 		ufshcd_tune_pa_tactivate(hba);
-@@ -6819,7 +6817,7 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba,
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE)
- 		ufshcd_quirk_tune_host_pa_tactivate(hba);
- 
--	ufshcd_vops_apply_dev_quirks(hba, card);
-+	ufshcd_vops_apply_dev_quirks(hba);
- }
- 
- static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
-@@ -6945,7 +6943,6 @@ static int ufshcd_set_dev_ref_clk(struct ufs_hba *hba)
++	/* Init check for device descriptor sizes */
++	ufshcd_init_desc_sizes(hba);
++
++	/* Check and apply UFS device quirks */
++	ret = ufs_get_device_desc(hba);
++	if (ret) {
++		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
++			__func__, ret);
++		goto out;
++	}
++
++	ufs_fixup_device_setup(hba);
++
++	/* Clear any previous UFS device information */
++	memset(&hba->dev_info, 0, sizeof(hba->dev_info));
++	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++			QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
++		hba->dev_info.f_power_on_wp_en = flag;
++
++out:
++	return ret;
++}
++
++/**
++ * ufs_lu_add - probe and add UFS logical units
++ * @hba: per-adapter instance
++ */
++static int ufs_lu_add(struct ufs_hba *hba)
++{
++	int ret;
++
++	if (!hba->is_init_prefetch)
++		ufshcd_init_icc_levels(hba);
++
++	/* Add required well known logical units to scsi mid layer */
++	ret = ufshcd_scsi_add_wlus(hba);
++	if (ret)
++		goto out;
++
++	/* Initialize devfreq after UFS device is detected */
++	if (ufshcd_is_clkscaling_supported(hba)) {
++		memcpy(&hba->clk_scaling.saved_pwr_info.info,
++			&hba->pwr_info,
++			sizeof(struct ufs_pa_layer_attr));
++		hba->clk_scaling.saved_pwr_info.is_valid = true;
++		if (!hba->devfreq) {
++			ret = ufshcd_devfreq_init(hba);
++			if (ret)
++				goto out;
++		}
++
++		hba->clk_scaling.is_allowed = true;
++	}
++
++	ufs_bsg_probe(hba);
++	scsi_scan_host(hba->host);
++	pm_runtime_put_sync(hba->dev);
++
++	if (!hba->is_init_prefetch)
++		hba->is_init_prefetch = true;
++out:
++	return ret;
++}
++
+ /**
+  * ufshcd_probe_hba - probe hba to detect device and initialize
+  * @hba: per-adapter instance
++ * @async: asynchronous execution or not
+  *
+  * Execute link-startup and verify device initialization
   */
- static int ufshcd_probe_hba(struct ufs_hba *hba)
+-static int ufshcd_probe_hba(struct ufs_hba *hba)
++static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
  {
--	struct ufs_dev_desc card = {0};
  	int ret;
  	ktime_t start = ktime_get();
+@@ -6960,25 +7030,26 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* UniPro link is active now */
+ 	ufshcd_set_link_active(hba);
  
-@@ -6974,16 +6971,15 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 	/* Init check for device descriptor sizes */
- 	ufshcd_init_desc_sizes(hba);
- 
--	ret = ufs_get_device_desc(hba, &card);
-+	ret = ufs_get_device_desc(hba);
- 	if (ret) {
- 		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
- 			__func__, ret);
++	/* Verify device initialization by sending NOP OUT UPIU */
+ 	ret = ufshcd_verify_dev_init(hba);
+ 	if (ret)
  		goto out;
+ 
++	/* Initiate UFS initialization, and waiting until completion */
+ 	ret = ufshcd_complete_dev_init(hba);
+ 	if (ret)
+ 		goto out;
+ 
+-	/* Init check for device descriptor sizes */
+-	ufshcd_init_desc_sizes(hba);
+-
+-	ret = ufs_get_device_desc(hba);
+-	if (ret) {
+-		dev_err(hba->dev, "%s: Failed getting device info. err = %d\n",
+-			__func__, ret);
+-		goto out;
++	/*
++	 * Initialize UFS device parameters used by driver, these
++	 * parameters are associated with UFS descriptors.
++	 */
++	if (async) {
++		ret = ufs_init_params(hba);
++		if (ret)
++			goto out;
  	}
  
--	ufs_fixup_device_setup(hba, &card);
--	ufshcd_tune_unipro_params(hba, &card);
--	ufs_put_device_desc(&card);
-+	ufs_fixup_device_setup(hba);
-+	ufshcd_tune_unipro_params(hba);
+-	ufs_fixup_device_setup(hba);
+ 	ufshcd_tune_unipro_params(hba);
  
  	/* UFS device is also active now */
- 	ufshcd_set_ufs_dev_active(hba);
-@@ -7544,6 +7540,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 		ufshcd_setup_clocks(hba, false);
- 		ufshcd_setup_hba_vreg(hba, false);
- 		hba->is_powered = false;
-+		ufs_put_device_desc(hba);
- 	}
- }
+@@ -7011,60 +7082,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	/* Enable Auto-Hibernate if configured */
+ 	ufshcd_auto_hibern8_enable(hba);
  
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index b1a1c65be8b1..32b6714f25a5 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -320,7 +320,7 @@ struct ufs_hba_variant_ops {
- 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
- 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
- 					enum ufs_notify_change_status);
--	int	(*apply_dev_quirks)(struct ufs_hba *, struct ufs_dev_desc *);
-+	int	(*apply_dev_quirks)(struct ufs_hba *hba);
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
-@@ -1054,11 +1054,10 @@ static inline void ufshcd_vops_hibern8_notify(struct ufs_hba *hba,
- 		return hba->vops->hibern8_notify(hba, cmd, status);
- }
+-	/*
+-	 * If we are in error handling context or in power management callbacks
+-	 * context, no need to scan the host
+-	 */
+-	if (!ufshcd_eh_in_progress(hba) && !hba->pm_op_in_progress) {
+-		bool flag;
+-
+-		/* clear any previous UFS device information */
+-		memset(&hba->dev_info, 0, sizeof(hba->dev_info));
+-		if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+-				QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+-			hba->dev_info.f_power_on_wp_en = flag;
+-
+-		if (!hba->is_init_prefetch)
+-			ufshcd_init_icc_levels(hba);
+-
+-		/* Add required well known logical units to scsi mid layer */
+-		ret = ufshcd_scsi_add_wlus(hba);
+-		if (ret)
+-			goto out;
+-
+-		/* Initialize devfreq after UFS device is detected */
+-		if (ufshcd_is_clkscaling_supported(hba)) {
+-			memcpy(&hba->clk_scaling.saved_pwr_info.info,
+-				&hba->pwr_info,
+-				sizeof(struct ufs_pa_layer_attr));
+-			hba->clk_scaling.saved_pwr_info.is_valid = true;
+-			if (!hba->devfreq) {
+-				ret = ufshcd_devfreq_init(hba);
+-				if (ret)
+-					goto out;
+-			}
+-			hba->clk_scaling.is_allowed = true;
+-		}
+-
+-		ufs_bsg_probe(hba);
+-
+-		scsi_scan_host(hba->host);
+-		pm_runtime_put_sync(hba->dev);
+-	}
+-
+-	if (!hba->is_init_prefetch)
+-		hba->is_init_prefetch = true;
+-
+ out:
+-	/*
+-	 * If we failed to initialize the device or the device is not
+-	 * present, turn off the power/clocks etc.
+-	 */
+-	if (ret && !ufshcd_eh_in_progress(hba) && !hba->pm_op_in_progress) {
+-		pm_runtime_put_sync(hba->dev);
+-		ufshcd_exit_clk_scaling(hba);
+-		ufshcd_hba_exit(hba);
+-	}
  
--static inline int ufshcd_vops_apply_dev_quirks(struct ufs_hba *hba,
--					       struct ufs_dev_desc *card)
-+static inline int ufshcd_vops_apply_dev_quirks(struct ufs_hba *hba)
+ 	trace_ufshcd_init(dev_name(hba->dev), ret,
+ 		ktime_to_us(ktime_sub(ktime_get(), start)),
+@@ -7080,8 +7098,25 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
  {
- 	if (hba->vops && hba->vops->apply_dev_quirks)
--		return hba->vops->apply_dev_quirks(hba, card);
-+		return hba->vops->apply_dev_quirks(hba);
- 	return 0;
+ 	struct ufs_hba *hba = (struct ufs_hba *)data;
++	int ret;
+ 
+-	ufshcd_probe_hba(hba);
++	/* Initialize hba, detect and initialize UFS device */
++	ret = ufshcd_probe_hba(hba, true);
++	if (ret)
++		goto out;
++
++	/* Probe and add UFS logical units  */
++	ret = ufs_lu_add(hba);
++out:
++	/*
++	 * If we failed to initialize the device or the device is not
++	 * present, turn off the power/clocks etc.
++	 */
++	if (ret) {
++		pm_runtime_put_sync(hba->dev);
++		ufshcd_exit_clk_scaling(hba);
++		ufshcd_hba_exit(hba);
++	}
  }
  
+ static const struct attribute_group *ufshcd_driver_groups[] = {
 -- 
 2.17.1
 
