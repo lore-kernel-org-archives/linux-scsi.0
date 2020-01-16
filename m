@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63B18C33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D26C33CB1
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30FA5214AF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD2B92081E
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:51:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579193414;
-	bh=3jsVj/McEaAvS2LkEimj1NvVy+s2I+eLlxgU0gAOrLc=;
+	s=default; t=1579193491;
+	bh=tMM4vuW8BwZlY/dsuLuN6VvJxbKVaz39QDVpoI8TcFU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jl0+O6g+3kWBBZH3Q6vgwQz9fSUVBhEaU5fnSUi0VPHWcICUkZiiG0ZhJj7A1hFpv
-	 RDzv3y3G+WBhcC73yJJYyIbB1nRM+J4crfkzaf29gaSH8JOUZIVuVhaR7lggItBZG3
-	 6BzUFnL+HuMMQ4k9abGyCHwlr0gupF6ImLLz2bKo=
+	b=pTxGUtPzZuQyRkWutyPIMU6/m/qMXCLdNd3nPhqw97rxgP/dyaMI7eO3aKkyuvVm3
+	 n1aToTplvubpABKvjC0rf4/y8p9GXSz5m832vi6+pnE3mQHT5sn2m8EmyGO7A/+GBp
+	 jgrgmainVL+sqGVdaVr35nSzukrf5oxehcwmLGTI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729765AbgAPQrz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:47:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57952 "EHLO mail.kernel.org"
+        id S1729117AbgAPQv2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 11:51:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34188 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729406AbgAPQrx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:47:53 -0500
+        id S1728949AbgAPQv2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 11:51:28 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A7382073A;
-        Thu, 16 Jan 2020 16:47:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1FD9720663;
+        Thu, 16 Jan 2020 16:51:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193273;
-        bh=3jsVj/McEaAvS2LkEimj1NvVy+s2I+eLlxgU0gAOrLc=;
+        s=default; t=1579193487;
+        bh=tMM4vuW8BwZlY/dsuLuN6VvJxbKVaz39QDVpoI8TcFU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q2BIQR026hRGjHkfnNRVVMbVm58nLqeUxTHvyBW+mV8worC92PfOzdm+UPW/pVrvi
-         QxcR9JmCUbgyaeLuSL9dDnFjuwzOMdeBmjSXfIcsS879miwHtlDPPLEBRvvJT1EAPo
-         5mzJBAwCpWXBclhBU42n7IzaZzfcUlBQqg7Yebqw=
+        b=LSo42jKNlBvoOMSDQG5LXy9gDN+H4VVIOORnO1Alkvqhl5LjFPBqhVVfHtQXN8Cff
+         gwTkYtLnxenPMSCEGLghHyuMWwyT+c23phiAFtuLc0OgSfDfTwVFGq2I5hqYps4ryr
+         kaSovxIdG4lc6dIwsI+5NQeRSiP1yCQg37I6AtDs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Bean Huo <beanhuo@micron.com>, avri.altman@wdc.com,
+        Can Guo <cang@codeaurora.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 062/205] scsi: hisi_sas: Don't create debugfs dump folder twice
-Date:   Thu, 16 Jan 2020 11:40:37 -0500
-Message-Id: <20200116164300.6705-62-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 089/205] scsi: ufs: delete redundant function ufshcd_def_desc_sizes()
+Date:   Thu, 16 Jan 2020 11:41:04 -0500
+Message-Id: <20200116164300.6705-89-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
 References: <20200116164300.6705-1-sashal@kernel.org>
@@ -59,43 +59,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+From: Bean Huo <beanhuo@micron.com>
 
-[ Upstream commit 35160421b63d4753a72e9f72ebcdd9d6f88f84b9 ]
+[ Upstream commit 059efd847a4097c67817782d8ff65397e369e69b ]
 
-Due to a merge error, we attempt to create 2x debugfs dump folders, which
-fails:
-[  861.101914] debugfs: Directory 'dump' with parent '0000:74:02.0'
-already present!
+There is no need to call ufshcd_def_desc_sizes() in ufshcd_init(), since
+descriptor lengths will be checked and initialized later in
+ufshcd_init_desc_sizes().
 
-This breaks the dump function.
-
-To fix, remove the superfluous attempt to create the folder.
-
-Fixes: 7ec7082c57ec ("scsi: hisi_sas: Add hisi_sas_debugfs_alloc() to centralise allocation")
-Link: https://lore.kernel.org/r/1571926105-74636-2-git-send-email-john.garry@huawei.com
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Fixes: a4b0e8a4e92b1b(scsi: ufs: Factor out ufshcd_read_desc_param)
+Link: https://lore.kernel.org/r/BN7PR08MB5684A3ACE214C3D4792CE729DB610@BN7PR08MB5684.namprd08.prod.outlook.com
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+Acked-by: Avri Altman <avri.altman.wdc.com>
+Reviewed-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 633effb09c9c..849335d76cf6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -3719,9 +3719,6 @@ static int hisi_sas_debugfs_alloc(struct hisi_hba *hisi_hba)
- 	int p, c, d;
- 	size_t sz;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 25a6a25b17a2..1e38bb967871 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6779,23 +6779,13 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+ 		&hba->desc_size.geom_desc);
+ 	if (err)
+ 		hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
++
+ 	err = ufshcd_read_desc_length(hba, QUERY_DESC_IDN_HEALTH, 0,
+ 		&hba->desc_size.hlth_desc);
+ 	if (err)
+ 		hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+ }
  
--	hisi_hba->debugfs_dump_dentry =
--			debugfs_create_dir("dump", hisi_hba->debugfs_dir);
+-static void ufshcd_def_desc_sizes(struct ufs_hba *hba)
+-{
+-	hba->desc_size.dev_desc = QUERY_DESC_DEVICE_DEF_SIZE;
+-	hba->desc_size.pwr_desc = QUERY_DESC_POWER_DEF_SIZE;
+-	hba->desc_size.interc_desc = QUERY_DESC_INTERCONNECT_DEF_SIZE;
+-	hba->desc_size.conf_desc = QUERY_DESC_CONFIGURATION_DEF_SIZE;
+-	hba->desc_size.unit_desc = QUERY_DESC_UNIT_DEF_SIZE;
+-	hba->desc_size.geom_desc = QUERY_DESC_GEOMETRY_DEF_SIZE;
+-	hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
+-}
 -
- 	sz = hw->debugfs_reg_array[DEBUGFS_GLOBAL]->count * 4;
- 	hisi_hba->debugfs_regs[DEBUGFS_GLOBAL] =
- 				devm_kmalloc(dev, sz, GFP_KERNEL);
+ static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+ 	{19200000, REF_CLK_FREQ_19_2_MHZ},
+ 	{26000000, REF_CLK_FREQ_26_MHZ},
+@@ -8283,9 +8273,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	hba->mmio_base = mmio_base;
+ 	hba->irq = irq;
+ 
+-	/* Set descriptor lengths to specification defaults */
+-	ufshcd_def_desc_sizes(hba);
+-
+ 	err = ufshcd_hba_init(hba);
+ 	if (err)
+ 		goto out_error;
 -- 
 2.20.1
 
