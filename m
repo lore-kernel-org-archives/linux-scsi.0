@@ -7,47 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CE1C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9004C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16B7120663
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8156B206E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201192;
-	bh=Bp4pI+ad+N9IwNA/+aNu2276XV/+Ac7nGVNYGPFcSlM=;
+	s=default; t=1579201308;
+	bh=sDHeSNFZTFf/Qdc7mGgk87AI8Jz5FOfYbi9yfRQ7+BY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TMH5NAolflgiwxROnOj3nhqd+K5LHQOViAzibJj2f7rN+7RWj3IVBx0lkjM45EOrt
-	 tj6TaIPOIgapcgWgwX6yJ+fbGizIXR9uXpuHBRGOUi2KOC6idVBPOodUdLGyqYp4ti
-	 gekcWxD1s9/7Cn3ZfRF8SsslKisNrIMAOnEki8xY=
+	b=Ua5fx6rFS4Y+V35VtBZa1gDVBpzyZjGwTHVlji/OMzID1ybvUCIsoVUAvxXTJZG+K
+	 T+EdJ89jYScyP0Cwy/0UWFsrTLvmFZEqEJs4LDWHCf0JPan273uqYRTqyh1/nyclQ4
+	 XYnectNpSJg4nYoSeknWjrnjhJ/SY0NDig+cc6Ok=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388933AbgAPRG2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:06:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36640 "EHLO mail.kernel.org"
+        id S2388807AbgAPTBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 14:01:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388129AbgAPRG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:06:28 -0500
+        id S2388740AbgAPRFt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:05:49 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 99C882081E;
-        Thu, 16 Jan 2020 17:06:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7CAEA2077B;
+        Thu, 16 Jan 2020 17:05:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194387;
-        bh=Bp4pI+ad+N9IwNA/+aNu2276XV/+Ac7nGVNYGPFcSlM=;
+        s=default; t=1579194348;
+        bh=sDHeSNFZTFf/Qdc7mGgk87AI8Jz5FOfYbi9yfRQ7+BY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gUpJctyhckpA+XT4ElbQHetOwh9KekGPSFv090SJNxzv0DhEulcJQjBoY5Gm9+sPU
-         d8MLwAWMtujnoQsF5MiGRVWN4PSLi9yajZhfs6XLsr+cwetjaRsypElrOKF1CVdJzD
-         K+oUJjKl+1K9YJTpQ5LYHcuysl/YPNyQo0045UII=
+        b=ZMRRmtPIFv3FVd3yDU6e+moqLMh2HfJp/4wPkENpj5O0zV8RHBzSxXZjahVIPqDza
+         gXbYi1n7DvqsAj5AlNIYca+x6FJhBhDYmCzH00iO1rMZxOGMnKa1nyi/BUarJ9WvKA
+         Kurc9zcEQyJ4pYyJys/ElZuD13X/6MgvX5Wtptt4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Giridhar Malavali <gmalavali@marvell.com>,
+        Mike Christie <mchristi@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 316/671] scsi: qla2xxx: Fix a format specifier
-Date:   Thu, 16 Jan 2020 11:59:14 -0500
-Message-Id: <20200116170509.12787-53-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 289/671] scsi: target/core: Fix a race condition in the LUN lookup code
+Date:   Thu, 16 Jan 2020 11:58:47 -0500
+Message-Id: <20200116170509.12787-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -62,35 +65,48 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 19ce192cd718e02f880197c0983404ca48236807 ]
+[ Upstream commit 63f7479439c95bcd49b7dd4af809862c316c71a3 ]
 
-Since mcmd->sess->port_name is eight bytes long, use %8phC to format that
-port name instead of %phC.
+The rcu_dereference(deve->se_lun) expression occurs twice in the LUN lookup
+functions. Since these expressions are not serialized against deve->se_lun
+assignments each of these expressions may yield a different result. Avoid
+that the wrong LUN pointer is stored in se_cmd by reading deve->se_lun only
+once.
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Giridhar Malavali <gmalavali@marvell.com>
-Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery") # v4.11.
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Fixes: 29a05deebf6c ("target: Convert se_node_acl->device_list[] to RCU hlist") # v4.10
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_device.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index e9545411ec5a..bbbe1996620b 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2290,7 +2290,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 		    mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode ==
- 		    ELS_TPRLO) {
- 			ql_dbg(ql_dbg_disc, vha, 0x2106,
--			    "TM response logo %phC status %#x state %#x",
-+			    "TM response logo %8phC status %#x state %#x",
- 			    mcmd->sess->port_name, mcmd->fc_tm_rsp,
- 			    mcmd->flags);
- 			qlt_schedule_sess_for_deletion(mcmd->sess);
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index e9ff2a7c0c0e..22e97a93728d 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -85,7 +85,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 			goto out_unlock;
+ 		}
+ 
+-		se_cmd->se_lun = rcu_dereference(deve->se_lun);
++		se_cmd->se_lun = se_lun;
+ 		se_cmd->pr_res_key = deve->pr_res_key;
+ 		se_cmd->orig_fe_lun = unpacked_lun;
+ 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
+@@ -176,7 +176,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+ 			goto out_unlock;
+ 		}
+ 
+-		se_cmd->se_lun = rcu_dereference(deve->se_lun);
++		se_cmd->se_lun = se_lun;
+ 		se_cmd->pr_res_key = deve->pr_res_key;
+ 		se_cmd->orig_fe_lun = unpacked_lun;
+ 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
 -- 
 2.20.1
 
