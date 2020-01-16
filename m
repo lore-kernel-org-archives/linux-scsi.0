@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11468C33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:15:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EA2C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDE0A20728
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:15:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D856E20728
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:16:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194950;
-	bh=E86M/yB9LlwscpjTS9a3Gyhc0HS7U3WsZg2MvJo/zMY=;
+	s=default; t=1579194976;
+	bh=EV2H9FdmuIxKETp3UbXatXCxMSaenovgJpwx9IU23EA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rc2gDnqIOoZu7X/xgp+KEvINbh1b/G2mCbxt2aQoFsyGQ2LBopBK6lmaaRtjSqtlA
-	 BD5eZ2u/C3AuUq7dleM/L2n+eUFgMwWG7dm1vP9lGCd1bsnb1UnkJO18czyiLTvdus
-	 RkFCPRHlIfmtbVpgl5LrY5sHSNTLuk3ZHCci0Mjk=
+	b=ElFo4NNjPNqACstYJuYYtz/CDY6MLXj0tC/BaDheUdnWh+bTbUquvkU0mVLh/stXQ
+	 qwycMzPM3H0mNW70iKK0PnmOzJchalBrtukg6lYtU37JKxlY2iTTi5Z32uXdr7dhWX
+	 qxwR/jKndXYxSFx0gKdE+H4dJIW7Lo54fCMzWlcM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390003AbgAPRPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:15:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33718 "EHLO mail.kernel.org"
+        id S2390922AbgAPRQL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:16:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33076 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390994AbgAPRO3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:14:29 -0500
+        id S2390959AbgAPROS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:14:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5ADB72469C;
-        Thu, 16 Jan 2020 17:14:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 818FF246B7;
+        Thu, 16 Jan 2020 17:14:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194868;
-        bh=E86M/yB9LlwscpjTS9a3Gyhc0HS7U3WsZg2MvJo/zMY=;
+        s=default; t=1579194858;
+        bh=EV2H9FdmuIxKETp3UbXatXCxMSaenovgJpwx9IU23EA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sHle893fGGQJH7RG/0BC5VGqUhHMAyoOAaI/uBF2kbjF83X4/cAOywVjYYvddoaue
-         N5TvKKpGmV7bkDzipPU9NlO9qftYk7z5dg2nVKr4YzPLQCEG2ENhknkTlL1PeyxBK6
-         9JfnGVljXMN0RusewRSabOGSu23KOY28z4X5a3nw=
+        b=0kqK3AmmWIc7/fgWSdnIOXa35iJTGFCyCUPv3ylRLUZHK0GWmQXLxWuYEivQL8/Qw
+         ByZGQKRpYwDUjQE0IdIon6vhuQmtWHv0XVRJhboCQ1UD2S84PiNM1v5o0Sh0ioZeYT
+         kasR+aeKPGePA7bg5UzfUcaWnZAFIyLp8/U2NuMg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Martin Wilck <mwilck@suse.com>, David Bond <dbond@suse.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Pan Bian <bianpan2016@163.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 661/671] scsi: qla2xxx: fix rports not being mark as lost in sync fabric scan
-Date:   Thu, 16 Jan 2020 12:04:59 -0500
-Message-Id: <20200116170509.12787-398-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 653/671] scsi: bnx2i: fix potential use after free
+Date:   Thu, 16 Jan 2020 12:04:51 -0500
+Message-Id: <20200116170509.12787-390-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -59,49 +58,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit d341e9a8f2cffe4000c610225c629f62c7489c74 ]
+[ Upstream commit 29d28f2b8d3736ac61c28ef7e20fda63795b74d9 ]
 
-In qla2x00_find_all_fabric_devs(), fcport->flags & FCF_LOGIN_NEEDED is a
-necessary condition for logging into new rports, but not for dropping lost
-ones.
+The member hba->pcidev may be used after its reference is dropped. Move the
+put function to where it is never used to avoid potential use after free
+issues.
 
-Fixes: 726b85487067 ("qla2xxx: Add framework for async fabric discovery")
-Link: https://lore.kernel.org/r/20191122221912.20100-2-martin.wilck@suse.com
-Tested-by: David Bond <dbond@suse.com>
-Signed-off-by: Martin Wilck <mwilck@suse.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Fixes: a77171806515 ("[SCSI] bnx2i: Removed the reference to the netdev->base_addr")
+Link: https://lore.kernel.org/r/1573043541-19126-1-git-send-email-bianpan2016@163.com
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 851f75b12216..f45759b353be 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5710,8 +5710,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
- 		if (test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
- 			break;
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index de0a507577ef..718a0335cfbb 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -915,12 +915,12 @@ void bnx2i_free_hba(struct bnx2i_hba *hba)
+ 	INIT_LIST_HEAD(&hba->ep_ofld_list);
+ 	INIT_LIST_HEAD(&hba->ep_active_list);
+ 	INIT_LIST_HEAD(&hba->ep_destroy_list);
+-	pci_dev_put(hba->pcidev);
  
--		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
--		    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
-+		if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
- 			continue;
- 
- 		if (fcport->scan_state == QLA_FCPORT_SCAN) {
-@@ -5734,7 +5733,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
- 			}
- 		}
- 
--		if (fcport->scan_state == QLA_FCPORT_FOUND)
-+		if (fcport->scan_state == QLA_FCPORT_FOUND &&
-+		    (fcport->flags & FCF_LOGIN_NEEDED) != 0)
- 			qla24xx_fcport_handle_login(vha, fcport);
+ 	if (hba->regview) {
+ 		pci_iounmap(hba->pcidev, hba->regview);
+ 		hba->regview = NULL;
  	}
- 	return (rval);
++	pci_dev_put(hba->pcidev);
+ 	bnx2i_free_mp_bdt(hba);
+ 	bnx2i_release_free_cid_que(hba);
+ 	iscsi_host_free(shost);
 -- 
 2.20.1
 
