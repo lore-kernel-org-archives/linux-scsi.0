@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF8DC33CB3
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AC0C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DC4A2064C
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:48:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C83CA20663
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 18:59:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579200483;
-	bh=joScUPhdfCP23b6S5EFY5hYk38+64+HbNEWlfegz5v4=;
+	s=default; t=1579201183;
+	bh=oUxuQepRUEKu++HXwriPcKSaTS7OHkGAGIHwak+Ax6g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yM4jqkSPCZWOc4li//muwGeSWTcTWXnlRcLPM1wJ2Gf/P+2oBO0ghV2c46bXzh3Hu
-	 Pfvb+0ZP2YyT1L8AoZDoDkngEDH2Vocw2Z0RWLzi6CXxO2QMZCkcKc0b+nEhswAxdn
-	 O+ldzMHFimXvnUk0tqrFzz2AnEaspFC/M6xWKtbU=
+	b=IptJw4O+mmfMggAzimlDJ0A513g6T8c5NmSbOgf8j/h4M6VursjreZCHvPopK0OrK
+	 uVoUp0L4LP1v3nuGpYYWbGJky2btRuGfX7WqlQ9R3/UF+U+0qMN+zsXd9IXRbN2CwQ
+	 Emzw9CUS/EajQqSRXgVYOHGffZ0IOoFtNtfUit1Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389781AbgAPRJy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:09:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46748 "EHLO mail.kernel.org"
+        id S2388942AbgAPRGc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:06:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36768 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389773AbgAPRJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:09:53 -0500
+        id S2388940AbgAPRGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:06:31 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2E544217F4;
-        Thu, 16 Jan 2020 17:09:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8BB8720730;
+        Thu, 16 Jan 2020 17:06:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194593;
-        bh=joScUPhdfCP23b6S5EFY5hYk38+64+HbNEWlfegz5v4=;
+        s=default; t=1579194390;
+        bh=oUxuQepRUEKu++HXwriPcKSaTS7OHkGAGIHwak+Ax6g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VNIyg25loR56C6gni90jzFRznZjXzECZI64LY3HHPZ8NzN2AJLhYquA5rPtKf5Iy+
-         d0hQ6a+D5juvUU63l8kjNaxSxd/Ldz3kc/ImHbMwjV2SmVwAofCy/XbOMPsaN7mmXw
-         5tcvG+LMwm1vsz7kWOZySWRJ49iR/g/z4hr2iztQ=
+        b=0XCbY8I9s+R+h5p8ABvc63bdeSbDpGO66YFThwrvm1KjqL7oW0eOAeNQbWQe+EabW
+         8tcCLeGlNEWr1O6sUwXmb7qYuicwWqIdoL/017uP503orzmQXBDMbyiny+FZk7KaMb
+         d/hs2zpJLqKXLQXvj6JNARLioI8Sakl0zu2mNs8g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        Hannes Reinecke <hare@suse.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Giridhar Malavali <gmalavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 463/671] scsi: libfc: fix null pointer dereference on a null lport
-Date:   Thu, 16 Jan 2020 12:01:41 -0500
-Message-Id: <20200116170509.12787-200-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 318/671] scsi: qla2xxx: Avoid that qlt_send_resp_ctio() corrupts memory
+Date:   Thu, 16 Jan 2020 11:59:16 -0500
+Message-Id: <20200116170509.12787-55-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
 References: <20200116170509.12787-1-sashal@kernel.org>
@@ -59,37 +60,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 41a6bf6529edd10a6def42e3b2c34a7474bcc2f5 ]
+[ Upstream commit a861b49273578e255426a499842cf7f465456351 ]
 
-Currently if lport is null then the null lport pointer is dereference when
-printing out debug via the FC_LPORT_DB macro. Fix this by using the more
-generic FC_LIBFC_DBG debug macro instead that does not use lport.
+The "(&ctio->u.status1.sense_data)[i]" where i >= 0 expressions in
+qlt_send_resp_ctio() are probably typos and should have been
+"(&ctio->u.status1.sense_data[4 * i])" instead. Instead of only fixing
+these typos, modify the code for storing sense data such that it becomes
+easy to read. This patch fixes a Coverity complaint about accessing an
+array outside its bounds.
 
-Addresses-Coverity: ("Dereference after null check")
-Fixes: 7414705ea4ae ("libfc: Add runtime debugging with debug_logging module parameter")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <gmalavali@marvell.com>
+Fixes: be25152c0d9e ("qla2xxx: Improve T10-DIF/PI handling in driver.") # v4.11.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Acked-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_exch.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 42bcf7f3a0f9..6ba257cbc6d9 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2603,7 +2603,7 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index c925ca787537..95206e227730 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2233,14 +2233,14 @@ void qlt_send_resp_ctio(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
+ 		ctio->u.status1.scsi_status |=
+ 		    cpu_to_le16(SS_RESIDUAL_UNDER);
  
- 	/* lport lock ? */
- 	if (!lport || lport->state == LPORT_ST_DISABLED) {
--		FC_LPORT_DBG(lport, "Receiving frames for an lport that "
-+		FC_LIBFC_DBG("Receiving frames for an lport that "
- 			     "has not been initialized correctly\n");
- 		fc_frame_free(fp);
- 		return;
+-	/* Response code and sense key */
+-	put_unaligned_le32(((0x70 << 24) | (sense_key << 8)),
+-	    (&ctio->u.status1.sense_data)[0]);
++	/* Fixed format sense data. */
++	ctio->u.status1.sense_data[0] = 0x70;
++	ctio->u.status1.sense_data[2] = sense_key;
+ 	/* Additional sense length */
+-	put_unaligned_le32(0x0a, (&ctio->u.status1.sense_data)[1]);
++	ctio->u.status1.sense_data[7] = 0xa;
+ 	/* ASC and ASCQ */
+-	put_unaligned_le32(((asc << 24) | (ascq << 16)),
+-	    (&ctio->u.status1.sense_data)[3]);
++	ctio->u.status1.sense_data[12] = asc;
++	ctio->u.status1.sense_data[13] = ascq;
+ 
+ 	/* Memory Barrier */
+ 	wmb();
 -- 
 2.20.1
 
