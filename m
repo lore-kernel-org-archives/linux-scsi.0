@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 876A9C33CB3
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C7CC33CB1
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5337E2081E
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:43:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 190CA21582
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579193015;
-	bh=P8qsVEMxWQCu9J9lzMLCvhnlCBTMTCvQWneoM8UlfbQ=;
+	s=default; t=1579193411;
+	bh=kUaCFWyhzUJmucYI60/CvzTz0wLDT+2Y6FB3J2Mcixc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Rk/XKCImlji7RfnHxy0WvzHTmPjooGi53Jbxh5yZ9Full6ftRiIGSky1EpNF3/aDK
-	 zwE+V4+2TSshzRooaLkHXLXCMWT4PAMjnM4aqQpDObjtaWIRtETTyT6bX1rN5T75PN
-	 cpAkwJUXUsFu89Bn5IogVYPziBtPK74sLHZhxKeA=
+	b=aria8Mah4d7RI95v5V6MZg/K+g67zV84tbeDo7j1NoRSYbrZcEZ4SMhTodwyUdMMt
+	 owwJmB9TOR3h1mesJTwMCkOclAQ3MI8fibUUGo8S9nLpi93hWiiISyHJmb4UaqIeIS
+	 mZqVbWIoE7nr0XBPVYueivgzoY8UgPcxExqMj9MA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729005AbgAPQn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:43:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50940 "EHLO mail.kernel.org"
+        id S1729406AbgAPQr4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 11:47:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58004 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726440AbgAPQn1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:43:27 -0500
+        id S1729325AbgAPQr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 11:47:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7E0222192A;
-        Thu, 16 Jan 2020 16:43:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD2602081E;
+        Thu, 16 Jan 2020 16:47:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193005;
-        bh=P8qsVEMxWQCu9J9lzMLCvhnlCBTMTCvQWneoM8UlfbQ=;
+        s=default; t=1579193275;
+        bh=kUaCFWyhzUJmucYI60/CvzTz0wLDT+2Y6FB3J2Mcixc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M9K9fOahKIrruQLSJROkzEhwJ0fi0y7gr88UsgHTNyH1oyMNLg4MGJEFuS6B5KvQC
-         +4LMd5icjy4wFgtGJPZuLQlPUb8NJy8Ge6pEO+WT55IBcJWwiMHbI8nI0FufUUfmlQ
-         Or/p0aQOiKW3/5S3UaHTvXmt09ouuCJfJShK/XkQ=
+        b=B2eFYHLiMk+1NoTC6CXbYeE8WNzWEecmdpHc2Yvg0L3vNVyEAcQgoYCmgZpUCT8TH
+         1go/WbxnFdpFO6HksyR7bWc9Cw9ZRGKWb1obM0QC51FTizVy2F193CCFR3qiC5UND3
+         +0I3HTTOCBrcQ0TcvjdHtGtrP+aehxNt+0sVBU5Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Xiang Chen <chenxiang66@hisilicon.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 005/205] scsi: lpfc: Fix hdwq sgl locks and irq handling
-Date:   Thu, 16 Jan 2020 11:39:40 -0500
-Message-Id: <20200116164300.6705-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 063/205] scsi: hisi_sas: Set the BIST init value before enabling BIST
+Date:   Thu, 16 Jan 2020 11:40:38 -0500
+Message-Id: <20200116164300.6705-63-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
 References: <20200116164300.6705-1-sashal@kernel.org>
@@ -59,184 +59,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-[ Upstream commit a4c21acca2be6729ecbe72eda9b08092725b0a77 ]
+[ Upstream commit 65a3b8bd56942dc988b8c05615bd3f510a10012b ]
 
-Many of the sgl-per-hdwq paths are locking with spin_lock_irq() and
-spin_unlock_irq() and may unwittingly raising irq when it shouldn't. Hard
-deadlocks were seen around lpfc_scsi_prep_cmnd().
+If set the BIST init value after enabling BIST, there may be still some few
+error bits. According to the process, need to set the BIST init value
+before enabling BIST.
 
-Fix by converting the locks to irqsave/irqrestore.
-
-Fixes: d79c9e9d4b3d ("scsi: lpfc: Support dynamic unbounded SGL lists on G7 hardware.")
-Link: https://lore.kernel.org/r/20190922035906.10977-16-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: 97b151e75861 ("scsi: hisi_sas: Add BIST support for phy loopback")
+Link: https://lore.kernel.org/r/1571926105-74636-3-git-send-email-john.garry@huawei.com
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 38 +++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 16 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8860f41af3ff..dd542bd161d2 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20414,8 +20414,9 @@ lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 	struct sli4_hybrid_sgl *allocated_sgl = NULL;
- 	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
- 	struct list_head *buf_list = &hdwq->sgl_list;
-+	unsigned long iflags;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index ef32ee12f606..c4f76d7c29db 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3022,11 +3022,6 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
+ 		hisi_sas_phy_write32(hisi_hba, phy_id,
+ 				     SAS_PHY_BIST_CTRL, reg_val);
  
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
+-		mdelay(100);
+-		reg_val |= (CFG_RX_BIST_EN_MSK | CFG_TX_BIST_EN_MSK);
+-		hisi_sas_phy_write32(hisi_hba, phy_id,
+-				     SAS_PHY_BIST_CTRL, reg_val);
+-
+ 		/* set the bist init value */
+ 		hisi_sas_phy_write32(hisi_hba, phy_id,
+ 				     SAS_PHY_BIST_CODE,
+@@ -3035,6 +3030,11 @@ static int debugfs_set_bist_v3_hw(struct hisi_hba *hisi_hba, bool enable)
+ 				     SAS_PHY_BIST_CODE1,
+ 				     SAS_PHY_BIST_CODE1_INIT);
  
- 	if (likely(!list_empty(buf_list))) {
- 		/* break off 1 chunk from the sgl_list */
-@@ -20427,7 +20428,7 @@ lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 		}
- 	} else {
- 		/* allocate more */
--		spin_unlock_irq(&hdwq->hdwq_lock);
-+		spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
- 				   cpu_to_node(smp_processor_id()));
- 		if (!tmp) {
-@@ -20449,7 +20450,7 @@ lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 			return NULL;
- 		}
- 
--		spin_lock_irq(&hdwq->hdwq_lock);
-+		spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 		list_add_tail(&tmp->list_node, &lpfc_buf->dma_sgl_xtra_list);
- 	}
- 
-@@ -20457,7 +20458,7 @@ lpfc_get_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 					struct sli4_hybrid_sgl,
- 					list_node);
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 
- 	return allocated_sgl;
- }
-@@ -20481,8 +20482,9 @@ lpfc_put_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 	struct sli4_hybrid_sgl *tmp = NULL;
- 	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
- 	struct list_head *buf_list = &hdwq->sgl_list;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 
- 	if (likely(!list_empty(&lpfc_buf->dma_sgl_xtra_list))) {
- 		list_for_each_entry_safe(list_entry, tmp,
-@@ -20495,7 +20497,7 @@ lpfc_put_sgl_per_hdwq(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_buf)
- 		rc = -EINVAL;
- 	}
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 	return rc;
- }
- 
-@@ -20516,8 +20518,9 @@ lpfc_free_sgl_per_hdwq(struct lpfc_hba *phba,
- 	struct list_head *buf_list = &hdwq->sgl_list;
- 	struct sli4_hybrid_sgl *list_entry = NULL;
- 	struct sli4_hybrid_sgl *tmp = NULL;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 
- 	/* Free sgl pool */
- 	list_for_each_entry_safe(list_entry, tmp,
-@@ -20529,7 +20532,7 @@ lpfc_free_sgl_per_hdwq(struct lpfc_hba *phba,
- 		kfree(list_entry);
- 	}
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- }
- 
- /**
-@@ -20553,8 +20556,9 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 	struct fcp_cmd_rsp_buf *allocated_buf = NULL;
- 	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
- 	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 
- 	if (likely(!list_empty(buf_list))) {
- 		/* break off 1 chunk from the list */
-@@ -20567,7 +20571,7 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 		}
- 	} else {
- 		/* allocate more */
--		spin_unlock_irq(&hdwq->hdwq_lock);
-+		spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 		tmp = kmalloc_node(sizeof(*tmp), GFP_ATOMIC,
- 				   cpu_to_node(smp_processor_id()));
- 		if (!tmp) {
-@@ -20594,7 +20598,7 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 		tmp->fcp_rsp = (struct fcp_rsp *)((uint8_t *)tmp->fcp_cmnd +
- 				sizeof(struct fcp_cmnd));
- 
--		spin_lock_irq(&hdwq->hdwq_lock);
-+		spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 		list_add_tail(&tmp->list_node, &lpfc_buf->dma_cmd_rsp_list);
- 	}
- 
-@@ -20602,7 +20606,7 @@ lpfc_get_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 					struct fcp_cmd_rsp_buf,
- 					list_node);
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 
- 	return allocated_buf;
- }
-@@ -20627,8 +20631,9 @@ lpfc_put_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 	struct fcp_cmd_rsp_buf *tmp = NULL;
- 	struct lpfc_sli4_hdw_queue *hdwq = lpfc_buf->hdwq;
- 	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 
- 	if (likely(!list_empty(&lpfc_buf->dma_cmd_rsp_list))) {
- 		list_for_each_entry_safe(list_entry, tmp,
-@@ -20641,7 +20646,7 @@ lpfc_put_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 		rc = -EINVAL;
- 	}
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- 	return rc;
- }
- 
-@@ -20662,8 +20667,9 @@ lpfc_free_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 	struct list_head *buf_list = &hdwq->cmd_rsp_buf_list;
- 	struct fcp_cmd_rsp_buf *list_entry = NULL;
- 	struct fcp_cmd_rsp_buf *tmp = NULL;
-+	unsigned long iflags;
- 
--	spin_lock_irq(&hdwq->hdwq_lock);
-+	spin_lock_irqsave(&hdwq->hdwq_lock, iflags);
- 
- 	/* Free cmd_rsp buf pool */
- 	list_for_each_entry_safe(list_entry, tmp,
-@@ -20676,5 +20682,5 @@ lpfc_free_cmd_rsp_buf_per_hdwq(struct lpfc_hba *phba,
- 		kfree(list_entry);
- 	}
- 
--	spin_unlock_irq(&hdwq->hdwq_lock);
-+	spin_unlock_irqrestore(&hdwq->hdwq_lock, iflags);
- }
++		mdelay(100);
++		reg_val |= (CFG_RX_BIST_EN_MSK | CFG_TX_BIST_EN_MSK);
++		hisi_sas_phy_write32(hisi_hba, phy_id,
++				     SAS_PHY_BIST_CTRL, reg_val);
++
+ 		/* clear error bit */
+ 		mdelay(100);
+ 		hisi_sas_phy_read32(hisi_hba, phy_id, SAS_BIST_ERR_CNT);
 -- 
 2.20.1
 
