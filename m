@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95547C3F68F
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798A4C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:26:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69A8B2087E
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:25:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C435246C9
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:26:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195543;
-	bh=FZy4B6ACB0AJRRp1NQg/HilcBklYKC3iMiP8P/aG7kU=;
+	s=default; t=1579195577;
+	bh=chxuGPSSD0ms+/h/e6pFkWAn+aAbUvWVhkD97Sy/NwE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=eKsWvYX5QPUGbc5/hk3CrVYoGKwsjvXKECfv/f9v3akn/WwsWzn+L5eMn1VhpAgCG
-	 v6Qaa85d3HJLUm8Jt0TM4PyUfWHFdqb2yMR6Na1hU9Q6TUTG4K5tSiD5rGPIfc3v6R
-	 7yyqEHjQwEvsz3X8j3zbL8/sTB48oaDw7+EBmLhw=
+	b=e+gdsAYsiiy2ij3JnE8j0aHUk8QFSN2+KgJPWGkbdcCrbno1vrjwFLZ01hqvQz56B
+	 QCMgA1AxZjzJNcgq8+IxY6fui2LKisKpvJS6BWevW8ACK/eFlD9+kTZZKRU3MkyuCC
+	 cg5qcohLqb6nCQ4TwpqozqzhawKSlbKBEGPUTBrA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392134AbgAPRZk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:25:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33550 "EHLO mail.kernel.org"
+        id S2403900AbgAPR0Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:26:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34842 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392127AbgAPRZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:25:39 -0500
+        id S2390251AbgAPR0Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:26:16 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 10B16246A3;
-        Thu, 16 Jan 2020 17:25:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84E83246BB;
+        Thu, 16 Jan 2020 17:26:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195538;
-        bh=FZy4B6ACB0AJRRp1NQg/HilcBklYKC3iMiP8P/aG7kU=;
+        s=default; t=1579195575;
+        bh=chxuGPSSD0ms+/h/e6pFkWAn+aAbUvWVhkD97Sy/NwE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YegsDGBNJVbKwE/MoAJ3fEaWUcQg4+Air28evjf0GIhUtLWBB9zVQc+PboevJVE5c
-         6Z5dGGofJdLj/vDUZsDLdRdDXzW2X9x77btAgXXd7RWl1p2oTYm5wS4gnhX2cil9l1
-         HB1c6LPc21Jm+RNTQw+G7TIua/urQ7H0WpYnyJYg=
+        b=eLWKWvWMLS5BhVuPQkAZ+5N5fgVL0P8pYZjXJDrw44EQpRmycIOxRGdSIdw6J+Qw+
+         NWrBOO9TDonpg1X4voqLuC6Hfhzv0QnRSe/8cN4N0fG7HwfKVyybnY5wfLNY892UKu
+         4ZhyvoeM53meoDrPeqlHkxoZ+WEPuGKoG4DRG+ow=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Steve Sistare <steven.sistare@oracle.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Giridhar Malavali <giridhar.malavali@qlogic.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 132/371] scsi: megaraid_sas: reduce module load time
-Date:   Thu, 16 Jan 2020 12:20:04 -0500
-Message-Id: <20200116172403.18149-75-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 158/371] scsi: qla2xxx: Unregister chrdev if module initialization fails
+Date:   Thu, 16 Jan 2020 12:20:30 -0500
+Message-Id: <20200116172403.18149-101-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -60,65 +60,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Steve Sistare <steven.sistare@oracle.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 31b6a05f86e690e1818116fd23c3be915cc9d9ed ]
+[ Upstream commit c794d24ec9eb6658909955772e70f34bef5b5b91 ]
 
-megaraid_sas takes 1+ seconds to load while waiting for firmware:
+If module initialization fails after the character device has been
+registered, unregister the character device. Additionally, avoid
+duplicating error path code.
 
-[2.822603] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
-[3.871003] megaraid_sas 0000:03:00.0: FW now in Ready state
-
-This is due to the following loop in megasas_transition_to_ready(), which
-waits a minimum of 1 second, even though the FW becomes ready in tens of
-millisecs:
-
-        /*
-         * The cur_state should not last for more than max_wait secs
-         */
-        for (i = 0; i < max_wait; i++) {
-                ...
-                msleep(1000);
-        ...
-        dev_info(&instance->pdev->dev, "FW now in Ready state\n");
-
-This is a regression, caused by a change of the msleep granularity from 1
-to 1000 due to concern about waiting too long on systems with coarse
-jiffies.
-
-To fix, increase iterations and use msleep(20), which results in:
-
-[2.670627] megaraid_sas 0000:03:00.0: Waiting for FW to come to ready state
-[2.739386] megaraid_sas 0000:03:00.0: FW now in Ready state
-
-Fixes: fb2f3e96d80f ("scsi: megaraid_sas: Fix msleep granularity")
-Signed-off-by: Steve Sistare <steven.sistare@oracle.com>
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Fixes: 6a03b4cd78f3 ("[SCSI] qla2xxx: Add char device to increase driver use count") # v2.6.35.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 577513649afb..6abad63b127a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3823,12 +3823,12 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 5617bb18c233..5f9d4dbc4a98 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6714,8 +6714,7 @@ qla2x00_module_init(void)
+ 	/* Initialize target kmem_cache and mem_pools */
+ 	ret = qlt_init();
+ 	if (ret < 0) {
+-		kmem_cache_destroy(srb_cachep);
+-		return ret;
++		goto destroy_cache;
+ 	} else if (ret > 0) {
  		/*
- 		 * The cur_state should not last for more than max_wait secs
- 		 */
--		for (i = 0; i < max_wait; i++) {
-+		for (i = 0; i < max_wait * 50; i++) {
- 			curr_abs_state = instance->instancet->
- 				read_fw_status_reg(instance->reg_set);
+ 		 * If initiator mode is explictly disabled by qlt_init(),
+@@ -6736,11 +6735,10 @@ qla2x00_module_init(void)
+ 	qla2xxx_transport_template =
+ 	    fc_attach_transport(&qla2xxx_transport_functions);
+ 	if (!qla2xxx_transport_template) {
+-		kmem_cache_destroy(srb_cachep);
+ 		ql_log(ql_log_fatal, NULL, 0x0002,
+ 		    "fc_attach_transport failed...Failing load!.\n");
+-		qlt_exit();
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto qlt_exit;
+ 	}
  
- 			if (abs_state == curr_abs_state) {
--				msleep(1000);
-+				msleep(20);
- 			} else
- 				break;
- 		}
+ 	apidev_major = register_chrdev(0, QLA2XXX_APIDEV, &apidev_fops);
+@@ -6752,27 +6750,37 @@ qla2x00_module_init(void)
+ 	qla2xxx_transport_vport_template =
+ 	    fc_attach_transport(&qla2xxx_transport_vport_functions);
+ 	if (!qla2xxx_transport_vport_template) {
+-		kmem_cache_destroy(srb_cachep);
+-		qlt_exit();
+-		fc_release_transport(qla2xxx_transport_template);
+ 		ql_log(ql_log_fatal, NULL, 0x0004,
+ 		    "fc_attach_transport vport failed...Failing load!.\n");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto unreg_chrdev;
+ 	}
+ 	ql_log(ql_log_info, NULL, 0x0005,
+ 	    "QLogic Fibre Channel HBA Driver: %s.\n",
+ 	    qla2x00_version_str);
+ 	ret = pci_register_driver(&qla2xxx_pci_driver);
+ 	if (ret) {
+-		kmem_cache_destroy(srb_cachep);
+-		qlt_exit();
+-		fc_release_transport(qla2xxx_transport_template);
+-		fc_release_transport(qla2xxx_transport_vport_template);
+ 		ql_log(ql_log_fatal, NULL, 0x0006,
+ 		    "pci_register_driver failed...ret=%d Failing load!.\n",
+ 		    ret);
++		goto release_vport_transport;
+ 	}
+ 	return ret;
++
++release_vport_transport:
++	fc_release_transport(qla2xxx_transport_vport_template);
++
++unreg_chrdev:
++	if (apidev_major >= 0)
++		unregister_chrdev(apidev_major, QLA2XXX_APIDEV);
++	fc_release_transport(qla2xxx_transport_template);
++
++qlt_exit:
++	qlt_exit();
++
++destroy_cache:
++	kmem_cache_destroy(srb_cachep);
++	return ret;
+ }
+ 
+ /**
 -- 
 2.20.1
 
