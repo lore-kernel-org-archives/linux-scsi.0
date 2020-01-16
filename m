@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF275C33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94355C33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87DE724728
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B07F24683
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:32:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579195920;
-	bh=NmqX4UOYaubT/o5+T9HSlYE/jJmIfKgZNXUkmIx8Rvo=;
+	s=default; t=1579195940;
+	bh=v6d3lsBHjk1X70vkdK+hURgWg1dn1U++UNDvwwBTu44=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Q1ceF+ZC38HM40voHo3ZX7901w4f46HB7/xP8HfiNb6BDFd34EJ2jx0xacQiWDT4P
-	 5hkww+pQ7G1CJqe+AXsGEXuDRIoF+Dp4IHzdDC8i8L5ADYPkTZv1zGUcYYC3vFmXgw
-	 SYy7pZBhisoySeI/uiSfJkAoL5+BD5fIYW1mpurI=
+	b=jgBEmbhLpRYOuG7P1Ux3gP/SRZshHgV9/IcIjryWJNcR3VZMCPaApNAfH1kbrRoBf
+	 ZwjH+3vfS9bnUiARb/lO/IWqCgMY8AAGoNanp//ZaLFNpn7gGkWdiV2QSOynbB7V/o
+	 VSnA5ef5gAh7l9vQIJWV0FekmG19LK13Pb6uYMcA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404518AbgAPRby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:31:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44260 "EHLO mail.kernel.org"
+        id S1730709AbgAPRcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:32:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404724AbgAPRbM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:31:12 -0500
+        id S2404661AbgAPRbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:31:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3B438246B3;
-        Thu, 16 Jan 2020 17:31:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 35FC5246A9;
+        Thu, 16 Jan 2020 17:31:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195871;
-        bh=NmqX4UOYaubT/o5+T9HSlYE/jJmIfKgZNXUkmIx8Rvo=;
+        s=default; t=1579195861;
+        bh=v6d3lsBHjk1X70vkdK+hURgWg1dn1U++UNDvwwBTu44=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ws1RTRIsSpJLwVxeFm+hg2d8OAJ9YHYTIgPHvO9F8E/zvVspKeGe3qkl/TJ1UCN5r
-         Gz2gu48o3eAo627Si7rnbPjnHMA9q/b5tkXqqXXPngCKVf6gUkttNQ3ew//0zvTCYp
-         T2t7XTHm/5YERDdU2czjLvVuN/oP+stcvBh0ugQQ=
+        b=comiNmynCA+dy6In64cR8AYEVweLGEs14quF6RW3mtapEeNh5XiYufq80rNgynUBS
+         EDkNp29kcHcqRRdF4iJIBBi0SZDsG061KzqDq1ZRBbeldqhcn/aWGdlX5lhLpYJoBP
+         dKSbSSpJbI1Ai9+ecnF8yxSKOvMZF3xa9tz+fBO0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Huacai Chen <chenhc@lemote.com>,
-        Michael Hernandez <michael.hernandez@cavium.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 366/371] scsi: qla2xxx: Fix qla2x00_request_irqs() for MSI
-Date:   Thu, 16 Jan 2020 12:23:58 -0500
-Message-Id: <20200116172403.18149-309-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 359/371] scsi: target: core: Fix a pr_debug() argument
+Date:   Thu, 16 Jan 2020 12:23:51 -0500
+Message-Id: <20200116172403.18149-302-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -60,58 +60,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Huacai Chen <chenhc@lemote.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit 45dc8f2d9c94ed74a5e31e63e9136a19a7e16081 ]
+[ Upstream commit c941e0d172605731de9b4628bd4146d35cf2e7d6 ]
 
-Commit 4fa183455988 ("scsi: qla2xxx: Utilize pci_alloc_irq_vectors/
-pci_free_irq_vectors calls.") use pci_alloc_irq_vectors() to replace
-pci_enable_msi() but it didn't handle the return value correctly. This bug
-make qla2x00 always fail to setup MSI if MSI-X fail, so fix it.
+Print the string for which conversion failed instead of printing the
+function name twice.
 
-BTW, improve the log message of return value in qla2x00_request_irqs() to
-avoid confusion.
-
-Fixes: 4fa183455988 ("scsi: qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.")
-Cc: Michael Hernandez <michael.hernandez@cavium.com>
-Link: https://lore.kernel.org/r/1574314847-14280-1-git-send-email-chenhc@lemote.com
-Signed-off-by: Huacai Chen <chenhc@lemote.com>
-Acked-by: Himanshu Madhani <hmadhani@marvell.com>
+Fixes: 2650d71e244f ("target: move transport ID handling to the core")
+Cc: Christoph Hellwig <hch@lst.de>
+Link: https://lore.kernel.org/r/20191107215525.64415-1-bvanassche@acm.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/target/target_core_fabric_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 7f2da56274bd..648916a9082c 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3519,7 +3519,7 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
- skip_msix:
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index 508da345b73f..95aa47ac4dcd 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -131,7 +131,7 @@ static int srp_get_pr_transport_id(
+ 	memset(buf + 8, 0, leading_zero_bytes);
+ 	rc = hex2bin(buf + 8 + leading_zero_bytes, p, count);
+ 	if (rc < 0) {
+-		pr_debug("hex2bin failed for %s: %d\n", __func__, rc);
++		pr_debug("hex2bin failed for %s: %d\n", p, rc);
+ 		return rc;
+ 	}
  
- 	ql_log(ql_log_info, vha, 0x0037,
--	    "Falling back-to MSI mode -%d.\n", ret);
-+	    "Falling back-to MSI mode -- ret=%d.\n", ret);
- 
- 	if (!IS_QLA24XX(ha) && !IS_QLA2532(ha) && !IS_QLA8432(ha) &&
- 	    !IS_QLA8001(ha) && !IS_P3P_TYPE(ha) && !IS_QLAFX00(ha) &&
-@@ -3527,13 +3527,13 @@ qla2x00_request_irqs(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		goto skip_msi;
- 
- 	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
--	if (!ret) {
-+	if (ret > 0) {
- 		ql_dbg(ql_dbg_init, vha, 0x0038,
- 		    "MSI: Enabled.\n");
- 		ha->flags.msi_enabled = 1;
- 	} else
- 		ql_log(ql_log_warn, vha, 0x0039,
--		    "Falling back-to INTa mode -- %d.\n", ret);
-+		    "Falling back-to INTa mode -- ret=%d.\n", ret);
- skip_msi:
- 
- 	/* Skip INTx on ISP82xx. */
 -- 
 2.20.1
 
