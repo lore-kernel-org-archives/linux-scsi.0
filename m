@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 364EDC33CAF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C231BC33CAF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A2EC2075B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95BAF2075B
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 22:00:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+/gJd1X"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GtABQGCf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389474AbgAPWAL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 17:00:11 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:36283 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730816AbgAPWAL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 17:00:11 -0500
-Received: by mail-wm1-f66.google.com with SMTP id p17so5456518wma.1;
-        Thu, 16 Jan 2020 14:00:09 -0800 (PST)
+        id S2389505AbgAPWAR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 17:00:17 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:33338 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730816AbgAPWAR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 17:00:17 -0500
+Received: by mail-wm1-f68.google.com with SMTP id d139so8116196wmd.0;
+        Thu, 16 Jan 2020 14:00:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hIsYYM1tsKneNrgd2yUE9+XrcEkD0MuzrhyvDBfE4NE=;
-        b=C+/gJd1XCusgb6Ajq2n1R3fBaeSyHr+kIXKR2Uo2dBn44BM8y4siOWP+/lNMY1WuKE
-         JXPxXIDnTTy73p9pMkI8NhODCU6RFoFTZ+1KFXjUgYqV82jgUEKvEqVOTcfrDL53cHka
-         mUaQhygHhRJtmdcGaPK413qpRJXmK2Vvt7f8m6h19cd/tiJytple49HTKZT6lQpWZm6d
-         ivoiQ09K1axWmiIaYNSh5Uiq8DWwslNfkl7rWzMWbe8yP+5ZXFyUwmFPIzwc/Ia2+r5K
-         G4A90OV8xY52whW0HDMlNlFqngkUp+BDQ1RJXNBggmTnj95o1oyWA6ZCHQ2mEkygPXxo
-         ijnQ==
+        bh=x6sXuUhwD78rNMwCezwf2SJFMuo48cD5mQHoToWvu1I=;
+        b=GtABQGCfpaKRoI5woC8t2sbkj2+IZczrtiwOMqw8JtdlNz9Dg8taQzlJcEcpW9AJv9
+         6s9jtxT1FMMyPqtMLlcNL8/ETc9x3+ab1TdT7l34kDOaMDR48QdTqzMG0dxL2PsU3zzK
+         xnvi7PYOoDg5gDVT1C60Tv5UcP9gg54Cg7eObhtYMDbnFUT8FYWnzL3A6Ec+xq6sF2C8
+         BqBj9suGjLSOy9ndfMA22l1CETNnu7f0SLMOc0JQH/T3Achtdi9Wc1ofatLGk0Ws+sgC
+         lx1t76aqqDt3uKy3tnmy8a2U5YSti3KLw/kiCDxyUEzf3f9iYms/ZbCV07Kwen2S0aI0
+         gtbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=hIsYYM1tsKneNrgd2yUE9+XrcEkD0MuzrhyvDBfE4NE=;
-        b=NB212BHwsHk7UysBrb5HskJHEw8zWvOLvaf5MRIJ28zEroUBfJ61eOHptAZ2eUa6K1
-         mw53NS+6gta550bqrQmgEia/kTTJ4utebiypmpRpNUvF0d6kIg4XsNUQvOckbG4CBEIp
-         +aTfApv1CdDdzKVqr06o9fPQKHhDb4N/1izb/I7kHuHjG9Ru2WQ05/FAa9ORxwvVAFAw
-         8SKtNGl7PTxUmC9VRQFqqGFpuF9zcpViXr7fk7Aj87yOi7/m03zNkFEys18oEO1UEe+W
-         BXM0QF6CA7YJsAoiE5JWAYdQqI+C0wQ9lNXs+7x6Kl6/2yGclq+BbA6sHe1rYN+alrBo
-         bBAA==
-X-Gm-Message-State: APjAAAWhNgP8/9l8HNE7nODNE72PheM7x2VEcJMtV21OWijMHkrK/RBI
-        AcwcRS+9pMJSBGRmKc0tWBM=
-X-Google-Smtp-Source: APXvYqyoaCb9cjni/ywIjpyAlL0Gwmq23XZtFG8fhEjpigcv6DWLUTehQJ4XAr3Un/JFZFTgoHMdNg==
-X-Received: by 2002:a1c:1f51:: with SMTP id f78mr1157306wmf.60.1579212009005;
-        Thu, 16 Jan 2020 14:00:09 -0800 (PST)
+        bh=x6sXuUhwD78rNMwCezwf2SJFMuo48cD5mQHoToWvu1I=;
+        b=p9wIxr6giRrkEoBeGsmFnI9ySMHSfIr8gWyjitWkMCY8hcNl2yhr6t93Bx9ljF+mfN
+         Qpr8R8QcqoGu++hQG0tGIS/McuJKtcuvnkCLQ7uYdMPzZUe47D7gnnqubrz/T7c2z4Of
+         q2RyQUwN1H8LCjRaJtL6If21G+LQhOeeTRdrvjdcGc5boVoRsF2y3k3EfnuR6ARHJuHo
+         j85qvOoQih0MU55Y0L9k1my9voURBrtRVBqtS+sSrBgaKHo0uFJowKqpr3oYMaAuGK7/
+         vHwKr2GDB9N5qU6JTJIO7uuif9sAEFF3XtJF8CZmiKwcMMzcqa4Y0Z6VB19WlaecJpqK
+         CkBA==
+X-Gm-Message-State: APjAAAXU/IL4ekXtsBDYDeIjkNWCuHozPwMmzDY0PaN1W3iebMSP64pg
+        EphBVgrGD9BmdPre5EPFOjc=
+X-Google-Smtp-Source: APXvYqzZyuE5HX2fSiGO4yJ1gQ+1GFaTzyM+VZpbZ1g0gMSFlt0w+MbeEFYNLiRA0fz04c1YY2fgLA==
+X-Received: by 2002:a1c:23d7:: with SMTP id j206mr1166731wmj.39.1579212016105;
+        Thu, 16 Jan 2020 14:00:16 -0800 (PST)
 Received: from localhost.localdomain (ip5f5bee3c.dynamic.kabel-deutschland.de. [95.91.238.60])
-        by smtp.gmail.com with ESMTPSA id a14sm32418131wrx.81.2020.01.16.14.00.07
+        by smtp.gmail.com with ESMTPSA id a14sm32418131wrx.81.2020.01.16.14.00.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Jan 2020 14:00:08 -0800 (PST)
+        Thu, 16 Jan 2020 14:00:15 -0800 (PST)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -61,9 +61,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/9] scsi: ufs: Move ufshcd_get_max_pwr_mode() to ufs_init_params()
-Date:   Thu, 16 Jan 2020 22:59:09 +0100
-Message-Id: <20200116215914.16015-5-huobean@gmail.com>
+Subject: [PATCH v2 5/9] scsi: ufs: Delete two unnecessary functions
+Date:   Thu, 16 Jan 2020 22:59:10 +0100
+Message-Id: <20200116215914.16015-6-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200116215914.16015-1-huobean@gmail.com>
 References: <20200116215914.16015-1-huobean@gmail.com>
@@ -74,44 +74,56 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Take ufshcd_get_max_pwr_mode() out from ufshcd_probe_hba() and inline into
-ufs_init_params().
+Delete ufshcd_read_power_desc() and ufshcd_read_device_desc(), directly
+inline ufshcd_read_desc() into its callers.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2cec0816632c..087fd894a01b 100644
+index 087fd894a01b..44b7c0a44b8d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6959,6 +6959,11 @@ static int ufs_init_params(struct ufs_hba *hba)
- 			QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
- 		hba->dev_info.f_power_on_wp_en = flag;
- 
-+	/* Probe maximum power mode co-supported by both UFS host and device */
-+	if (ufshcd_get_max_pwr_mode(hba))
-+		dev_err(hba->dev,
-+			"%s: Failed getting max supported power mode\n",
-+			__func__);
- out:
- 	return ret;
+@@ -3146,17 +3146,6 @@ static inline int ufshcd_read_desc(struct ufs_hba *hba,
+ 	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
  }
-@@ -7057,11 +7062,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
- 	ufshcd_force_reset_auto_bkops(hba);
- 	hba->wlun_dev_clr_ua = true;
  
--	if (ufshcd_get_max_pwr_mode(hba)) {
--		dev_err(hba->dev,
--			"%s: Failed getting max supported power mode\n",
--			__func__);
--	} else {
-+	/* Gear up to HS gear if supported */
-+	if (hba->max_pwr_info.is_valid) {
- 		/*
- 		 * Set the right value to bRefClkFreq before attempting to
- 		 * switch to HS gears.
+-static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
+-					 u8 *buf,
+-					 u32 size)
+-{
+-	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
+-}
+-
+-static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
+-{
+-	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
+-}
+ 
+ /**
+  * struct uc_string_id - unicode string
+@@ -6493,7 +6482,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
+ 	if (!desc_buf)
+ 		return;
+ 
+-	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
++	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0,
++			desc_buf, buff_len);
+ 	if (ret) {
+ 		dev_err(hba->dev,
+ 			"%s: Failed reading power descriptor.len = %d ret = %d",
+@@ -6599,7 +6589,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	err = ufshcd_read_device_desc(hba, desc_buf, hba->desc_size.dev_desc);
++	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, desc_buf,
++			hba->desc_size.dev_desc);
+ 	if (err) {
+ 		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
+ 			__func__, err);
 -- 
 2.17.1
 
