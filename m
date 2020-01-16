@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 800D4C33CB6
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC6DC3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BCFB246DD
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B422246B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jan 2020 17:47:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579196843;
-	bh=EAbDPNX6swMYVTN9IdARfGMkDFGM3kWg6yADy5rDtcg=;
+	s=default; t=1579196849;
+	bh=KANMXqY2ympshQ9I2mDY5g00urWBmk6k715DSTjsi58=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=W7rAELeWBrR9BdC1ZOWFviMNnzxrefqm4ioknlW+u15jY5ZX+15KIA2zHHy3MRXE1
-	 zayX7rEtHplze6zyrQDimFs569MVSkcCDxJXJ8DBABvXiyDL88AYBB5cKcvjt0ukNw
-	 P+/P5Yu1ELI6MFJE7Q+G1xJW2hWRbxmNm5DC2M4o=
+	b=zk0dw60y1P8aPMsqyvrK++OdxJ34bEfWm+9HLTJ4jbJrCHWDwMbZeakPV41EvXRcM
+	 h1qOGGzCNjwEB/BSTROdeoSVLjMqI9S6SpSi4Le+wWWSI/y6VLD7qHRMj2hIVAaqom
+	 GJiyeEhnnVdbUzmyuk2xaBlTikFo7HN9Rw7stnkE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406888AbgAPRrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:47:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40088 "EHLO mail.kernel.org"
+        id S2394183AbgAPRr2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:47:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40012 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406828AbgAPRqy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:46:54 -0500
+        id S2406178AbgAPRqv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:46:51 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C25FC246DD;
-        Thu, 16 Jan 2020 17:46:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 347B0246DE;
+        Thu, 16 Jan 2020 17:46:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196814;
-        bh=EAbDPNX6swMYVTN9IdARfGMkDFGM3kWg6yADy5rDtcg=;
+        s=default; t=1579196811;
+        bh=KANMXqY2ympshQ9I2mDY5g00urWBmk6k715DSTjsi58=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RkgDIPIz4/20XcvplTmujGgd2KF6C2I5SrRV1e3xmSm3E+dyGocM71e2xbzBRx2O+
-         fXar7TK4uoemrsvwvGNZM1Sy+2SfIy0W91abyXPeVppwmfQ3DvotNZdpbNsRY63bJ3
-         qa1hv2sjKOh3+tapO0U/YLMBsIwsMWObqx6TEfgY=
+        b=axfrGClkIcbB8RbFX2jVK5oQrfKRaQ+ql04AW+8iQyT21xYhRTxNZQP0iQ9r3B7eB
+         1Ul90iO63MzB3sdlMvnNNOOzogOqWxs1LCVoIi+myDTEZt7WIcSB94uSevKe+I8vmt
+         L359TE0S7RrNreT6niYYPvUGhQCbKrwmhDoT6sZo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Pan Bian <bianpan2016@163.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 170/174] scsi: target: core: Fix a pr_debug() argument
-Date:   Thu, 16 Jan 2020 12:42:47 -0500
-Message-Id: <20200116174251.24326-170-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 168/174] scsi: qla4xxx: fix double free bug
+Date:   Thu, 16 Jan 2020 12:42:45 -0500
+Message-Id: <20200116174251.24326-168-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116174251.24326-1-sashal@kernel.org>
 References: <20200116174251.24326-1-sashal@kernel.org>
@@ -60,34 +59,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit c941e0d172605731de9b4628bd4146d35cf2e7d6 ]
+[ Upstream commit 3fe3d2428b62822b7b030577cd612790bdd8c941 ]
 
-Print the string for which conversion failed instead of printing the
-function name twice.
+The variable init_fw_cb is released twice, resulting in a double free
+bug. The call to the function dma_free_coherent() before goto is removed to
+get rid of potential double free.
 
-Fixes: 2650d71e244f ("target: move transport ID handling to the core")
-Cc: Christoph Hellwig <hch@lst.de>
-Link: https://lore.kernel.org/r/20191107215525.64415-1-bvanassche@acm.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Fixes: 2a49a78ed3c8 ("[SCSI] qla4xxx: added IPv6 support.")
+Link: https://lore.kernel.org/r/1572945927-27796-1-git-send-email-bianpan2016@163.com
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_fabric_lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_mbx.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index cb6497ce4b61..6e75095af681 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -130,7 +130,7 @@ static int srp_get_pr_transport_id(
- 	memset(buf + 8, 0, leading_zero_bytes);
- 	rc = hex2bin(buf + 8 + leading_zero_bytes, p, count);
- 	if (rc < 0) {
--		pr_debug("hex2bin failed for %s: %d\n", __func__, rc);
-+		pr_debug("hex2bin failed for %s: %d\n", p, rc);
- 		return rc;
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index c291fdff1b33..ea3b77ba12a2 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -641,9 +641,6 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ 
+ 	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma) !=
+ 	    QLA_SUCCESS) {
+-		dma_free_coherent(&ha->pdev->dev,
+-				  sizeof(struct addr_ctrl_blk),
+-				  init_fw_cb, init_fw_cb_dma);
+ 		goto exit_init_fw_cb;
  	}
  
 -- 
