@@ -2,115 +2,135 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3036CC33CB1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2CDEC33CB7
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:40:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 083F0206B7
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99116214AF
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:40:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="QIG/EJ+M"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j15iXKGq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727022AbgAQNcp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 08:32:45 -0500
-Received: from mail-mw2nam10on2084.outbound.protection.outlook.com ([40.107.94.84]:6139
-        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726587AbgAQNco (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jan 2020 08:32:44 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CfNahnekJYr17HjP5VORP6qpNoN2xgLu6Z3TQaPAJEjuIt762HXuvHk11kZ/JiqXUQtP3468ZNgLRG0t5LcCQ+ZY7keBuNklmQpu7cPGeT1F3Lxtdrq2GEg94bERDD0Blze8Xeqmfv+oTjGUTGpxdvTkgVWjLhGk/cIy1G29GsZdkZ7/WYSi5YsQfTz4mi3A2u9nUZGVxlHBbgNgbPNZYh8lSVs7u9gFJOpca7mlWaY5DmcNDxK1XKw4gJ90lfAFZBaIEGkdRktxVoUultxGfy7qCotJCtAZ0+iLgm9fZ0JvXGtfxCSu9Vtq6Xvl235vVkvtNLQLJVyyPRNyiItM8w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6hy3Uud9n2KfRRQBPtasw4zmxXoff9OJ/awRbDuqPD4=;
- b=ONQuHk8shekku6UDEQ2Bq5kpiPzQob0ISAlxgHDKDiFXiH2RcbbPXLe/vOWEvXLK1/XAV1c6sl7RkPImJ7A3hMllgNlUiRu3GKPHEUunUlrC8ERan6IV1PU2G/vBPXYW8zzFn/fCsv2OXH4hyNVP54NSJJoR0IY7M5akUozGTip6RNfmEYPL9W8jLau+ZFy/HXAChX3z0nLqbEmtGfBhmiopXLVttm3s7zc90QwO2V8XFeBqlKIt+62mrYTdQyFa6Ekl0kOflUEU2+w3tLx3X2VDSblGR1U6bhU1ZreEiCI2p91m8ZoI8Bo9tfYSbpLXCzs1N3PJeX9cBOFdAmlNQg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6hy3Uud9n2KfRRQBPtasw4zmxXoff9OJ/awRbDuqPD4=;
- b=QIG/EJ+MlRn7rEeU7OLEXuiG5u0CO0mO0RrREZGdl6bo7UGJqiyVyXTt2W/i6UBIVcZlJyBs6GhSSn8T31nMTM+FmM6BQ0C4xqoFCKJuXGuIQQOoSpUn4DCdQrsfh0d5RPYc4llky1a6XLdNlgSszqWz7C+mQ02Q+zYwOHFuqt8=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
- BN7PR08MB5459.namprd08.prod.outlook.com (20.176.31.13) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2623.13; Fri, 17 Jan 2020 13:32:42 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::981f:90d7:d45f:fd11]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::981f:90d7:d45f:fd11%7]) with mapi id 15.20.2644.021; Fri, 17 Jan 2020
- 13:32:41 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Bart Van Assche <bvanassche@acm.org>, Bean Huo <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] Re: [PATCH v2 5/9] scsi: ufs: Delete two unnecessary
- functions
-Thread-Topic: [EXT] Re: [PATCH v2 5/9] scsi: ufs: Delete two unnecessary
- functions
-Thread-Index: AQHVzOpYbAB83sjWkEy6eA8UAyZP4Kfu2v/Q
-Date:   Fri, 17 Jan 2020 13:32:41 +0000
-Message-ID: <BN7PR08MB5684EBF75EF47DD5FF7F4638DB310@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <20200116215914.16015-1-huobean@gmail.com>
- <20200116215914.16015-6-huobean@gmail.com>
- <b315bf53-6b64-0e1f-ffd4-823dce99954e@acm.org>
-In-Reply-To: <b315bf53-6b64-0e1f-ffd4-823dce99954e@acm.org>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLWQ0MGEyMzdkLTM5MmQtMTFlYS04Yjg4LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFxkNDBhMjM3Zi0zOTJkLTExZWEtOGI4OC1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjUxMyIgdD0iMTMyMjM3NDE1NTkyMTk3NjEwIiBoPSJsaW9tdjhKcWs5emFZZFYzZmhma1RiZnR2M1U9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
-x-dg-rorf: true
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=beanhuo@micron.com; 
-x-originating-ip: [195.89.176.137]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a241584d-d54d-46dd-31ba-08d79b51ba76
-x-ms-traffictypediagnostic: BN7PR08MB5459:|BN7PR08MB5459:|BN7PR08MB5459:
-x-microsoft-antispam-prvs: <BN7PR08MB545986E279D74297C4164443DB310@BN7PR08MB5459.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-forefront-prvs: 0285201563
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(396003)(39860400002)(366004)(136003)(346002)(199004)(189003)(81156014)(9686003)(5660300002)(66476007)(64756008)(66556008)(66446008)(55016002)(81166006)(54906003)(8936002)(110136005)(7696005)(2906002)(66946007)(76116006)(71200400001)(7416002)(4744005)(316002)(26005)(8676002)(478600001)(4326008)(33656002)(86362001)(52536014)(6506007)(186003)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB5459;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: micron.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 7SseaJR7aNfKMcArK9Jbt/wbNAn0bya6b0UB62BWxSpZBOlecCNAli59/4H81gkM5zwDuXlZ5ghdO/IztW6l9Le+pK2C+3UAsPhyh+nvGMTYG3AdibR41d60CsR9l1rg9lH49QjG4N/H/cOe38pUgN/gAeBCmWNmiXs/3L/SV2dqtAM8lLxW5CI09Qb2FRRwZ+lVB343wfgFwyAKdHOzyS2Fr0Ir5o+H//WGJHsYlO447ayD91/S8jXzKD8/VUfzBHIg5Gr4Dnw3tCFfbAii6hHUOOKAwsGRUHcmsPdmT94ZRqqkS8yYNENULAWSQxVFFQwIWfilo/7rEH5f1F2pzK0MfNP+pXPF9pgiVGE5nhuSlx+QCeyxb1VlZYgFkQpIJCPBcDOi7R0DkNW0Jj/fFm+g5UC1IXVLetKW7oe2R87NqE9ZWf6lnAruKl2izrhakaAf4zSC0k0QewYg/bhyHPvCY2VeB3UJdDPWLLKgS5PS/lnoVkwV3WY2g1MFf3HZ
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1727040AbgAQNkR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 08:40:17 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:38248 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726861AbgAQNkQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:40:16 -0500
+Received: by mail-pl1-f194.google.com with SMTP id f20so9891272plj.5;
+        Fri, 17 Jan 2020 05:40:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RlKM/XYrBa3kEOwzCqWtgXvilXlmKMO+nK4gGJZhPfg=;
+        b=j15iXKGqjYlNBJ1O5MSIPLWXuL/l4gus32mS8VNjxmISFECRxV5UZEPyHvRH6yoQLO
+         uO4qX4SvAMVnuN+JxcDHCmJ6Gsp6dOhvkk929w+ntR8qY+Ztw8hObJ2GNudF+tkNALDA
+         l+RMK5xSjtCPuFAtz8/lE4mOWThFWTjgw8BmcUHvZbZctPRvyg4ef2fRfrCRwb3LjY1w
+         LMN1l7RF/4hgRpgYwrTI8doJZzjLMIc0u0EROorqpVdYkUaoj/Wj39EYG3zCIa07R2QV
+         5Eg2S48eXDdQYhiXyVafm2Cc3tx6lssLzMDuY9Xy3ylGnJLts8EvE+LxOtEmk9OFwL9l
+         8r0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RlKM/XYrBa3kEOwzCqWtgXvilXlmKMO+nK4gGJZhPfg=;
+        b=I2ZD380EUxxUM38G4u0IKcJKFOg/RrWFE90njIz3/LuejcyR0URddtVz/PW9OOCLB/
+         6VoUGl5vpfhAUtf98f18eu+X0b1diacw4aqZD9nugXqe/GvhSytUL6CaRwZ8FIyyr0Pl
+         206vYeUGFt9P5OZkecB2X5xn/QX83IKFg8kIY54cOgjYQPb4B6WG/DYK7mf1Hgx2PYp1
+         yt+b5QUCflvVqyzaPtLNvYSJQqxyjIcz7Pm8iTu1vcx6QbQ2mGeTAwWPGFVAoQji6Eet
+         wlknV3Onqyri/pysbI5z6vbtAV4X8QNwB8jfI4P4+gLOv+fF5MNBKfDZ8BAE8k3T8eyr
+         CxJA==
+X-Gm-Message-State: APjAAAXAwDwyVfXOTJhudCxzzxm47g63nDsJtQm25O3v1QgSkYluqSSP
+        G4UbC0P22P+MWxyoAO10WTc=
+X-Google-Smtp-Source: APXvYqzxmaDfnD4G85RlkpYrpXtxDrj9FaouwSSrEYObW8QCM4XIkoNSNpMzFf8n3qW5tBKyql+dKg==
+X-Received: by 2002:a17:902:8d8a:: with SMTP id v10mr28505346plo.90.1579268416120;
+        Fri, 17 Jan 2020 05:40:16 -0800 (PST)
+Received: from localhost.localdomain ([103.211.17.168])
+        by smtp.googlemail.com with ESMTPSA id s18sm29522422pfh.179.2020.01.17.05.40.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jan 2020 05:40:15 -0800 (PST)
+From:   Amol Grover <frextrite@gmail.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Amol Grover <frextrite@gmail.com>
+Subject: [PATCH v3 1/3] drivers: target: target_core_device: Pass lockdep expression to RCU lists
+Date:   Fri, 17 Jan 2020 19:08:53 +0530
+Message-Id: <20200117133854.32550-1-frextrite@gmail.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a241584d-d54d-46dd-31ba-08d79b51ba76
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2020 13:32:41.7819
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OYNgaI14m69pwzwsvJ9MTCF1c2Si8FA7t5V/m4U1K1KkS+mrpMS5qyqPZiawXUQY4U6FL+3pHpZgpzltRh/XGA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB5459
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksIEJhcnQNCg0KPiA+IEZyb206IEJlYW4gSHVvIDxiZWFuaHVvQG1pY3Jvbi5jb20+DQo+ID4N
-Cj4gPiBEZWxldGUgdWZzaGNkX3JlYWRfcG93ZXJfZGVzYygpIGFuZCB1ZnNoY2RfcmVhZF9kZXZp
-Y2VfZGVzYygpLA0KPiA+IGRpcmVjdGx5IGlubGluZSB1ZnNoY2RfcmVhZF9kZXNjKCkgaW50byBp
-dHMgY2FsbGVycy4NCj4gDQo+IEhvdyBhYm91dCBjaGFuZ2luZyB0aGUgc3ViamVjdCBpbnRvICJJ
-bmxpbmUgdHdvIGZ1bmN0aW9ucyBpbnRvIHRoZWlyIGNhbGxlcnMiPw0KPiBPdGhlcndpc2UgdGhp
-cyBwYXRjaCBsb29rcyBmaW5lIHRvIG1lLg0KPiANCkkgc2FpZCB5b3UgYXJlIGV4cGVydCBvbiBF
-bmdsaXNoLCAgaXQgd2lsbCBiZSBjaGFuZ2VkIGluIHRoZSBuZXh0IHZlcnNpb24uDQoNClRoYW5r
-cywNCi8vQmVhbg0K
+nacl->lun_entry_hlist is traversed with hlist_for_each_entry_rcu
+outside an RCU read-side critical section but under the
+protection of nacl->lun_entry_mutex.
+
+Hence, add the corresponding lockdep expression to the list traversal
+primitive to silence false-positive lockdep warnings, and
+harden RCU lists.
+
+Signed-off-by: Amol Grover <frextrite@gmail.com>
+---
+v3:
+- Remove rcu_read_lock_held() from lockdep expression since it is
+  implicitly checked for.
+- Remove unintended macro usage.
+
+v2:
+- Fix sparse error
+  CHECK: Alignment should match open parenthesis
+
+ drivers/target/target_core_device.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 2d19f0e332b0..306c626183d5 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -247,7 +247,8 @@ void core_free_device_list_for_node(
+ 	struct se_dev_entry *deve;
+ 
+ 	mutex_lock(&nacl->lun_entry_mutex);
+-	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
++	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link,
++				 lockdep_is_held(&nacl->lun_entry_mutex)) {
+ 		struct se_lun *lun = rcu_dereference_check(deve->se_lun,
+ 					lockdep_is_held(&nacl->lun_entry_mutex));
+ 		core_disable_device_list_for_node(lun, deve, nacl, tpg);
+@@ -276,7 +277,8 @@ struct se_dev_entry *target_nacl_find_deve(struct se_node_acl *nacl, u64 mapped_
+ {
+ 	struct se_dev_entry *deve;
+ 
+-	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link)
++	hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link,
++				 lockdep_is_held(&nacl->lun_entry_mutex))
+ 		if (deve->mapped_lun == mapped_lun)
+ 			return deve;
+ 
+@@ -460,7 +462,8 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+ 	list_for_each_entry(nacl, &tpg->acl_node_list, acl_list) {
+ 
+ 		mutex_lock(&nacl->lun_entry_mutex);
+-		hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
++		hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link,
++					 lockdep_is_held(&nacl->lun_entry_mutex)) {
+ 			struct se_lun *tmp_lun = rcu_dereference_check(deve->se_lun,
+ 					lockdep_is_held(&nacl->lun_entry_mutex));
+ 
+-- 
+2.24.1
+
