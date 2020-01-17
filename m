@@ -2,138 +2,194 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1256DC33CB1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB27C33CB1
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD93C20728
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:41:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A175020661
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:45:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QyKqaoH+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GyzRvij8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728688AbgAQNlH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 08:41:07 -0500
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:51660 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726861AbgAQNlH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:41:07 -0500
-Received: by mail-pj1-f66.google.com with SMTP id d15so3197767pjw.1;
-        Fri, 17 Jan 2020 05:41:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=vE1QPJ0SsgxgZYx5CvnPncdHxn/8vBh0HdyoKU9Gboc=;
-        b=QyKqaoH+S7cm0Jz+wqB3aUsuCAEVsyOkfTyoJu/lD2StQmcz4wXD9K4G6QCJGCqJyM
-         d2GaoGlBDsQTgTAbsBMghbdHZGNTkKoNN/DoCzG3LXNr01LjT/0frdFgMrklukbG6UkS
-         uMbn1hNP7RqshM6Im9nt0ybplspZwD9uvUKqaYpiTNAQv0cW1yC7kmj0cxSw1ZLl+bp4
-         bP/OAeQWtk2y8K2aPR2ZzcbNaI18TycgH+uPEzHEgYl1y3xUhvqQ+avg3+LJ51WLuDQ2
-         8mtSSe0hsaUh5/yfj9bYt9zDuU+3MKYHfDvD1cpMG1toB8N7sLZdjUGMuOCjICoh7QDC
-         Nxag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=vE1QPJ0SsgxgZYx5CvnPncdHxn/8vBh0HdyoKU9Gboc=;
-        b=tEvIZYXTclDCBdBYhpAjNhxzK0WnNBAxGb0uNMjLzaYiySi1vAKUxFb2YZpDgELNmn
-         iY5XFvw1ly7+RV7MJcqsb0OrheBTeQJ4IQTSfIp2YN3KTznrzsp/WyGYHcH7r2M3wsVM
-         aEpIg+16s0Ox3tnBfZgo+l/35Ca84XYGw3s/ZrYltTCufHwVKJNsmWB4Ssv819uf/XTl
-         ncGpYfEh3d4TMNzOkIbkoHq1utkjAhulhtaHcYUEIUinaffWd442oAZTvhSuJl3eCUyq
-         5koqS0mqRbiiN6Di8YjUch7C8Fy2gCZBdzaxo6w+yKSw6T5sVkBbYOcQ6JSL9HpOFyGl
-         UQpg==
-X-Gm-Message-State: APjAAAWHd7GCGuWj18jdYg17sE8394+rZ4f1TUnpXAYnGckjWNbwGYYO
-        AK6M/ocJaEd7XNELpFzij4A=
-X-Google-Smtp-Source: APXvYqyQiDEahs+oIzffeKILq7/OIWWVxIE6YttQb0yHyVlEqqUNkaiw4IM+bhlTOdmqc4t/23TRKA==
-X-Received: by 2002:a17:90a:fe8:: with SMTP id 95mr5663027pjz.98.1579268466421;
-        Fri, 17 Jan 2020 05:41:06 -0800 (PST)
-Received: from localhost.localdomain ([103.211.17.168])
-        by smtp.googlemail.com with ESMTPSA id s18sm29522422pfh.179.2020.01.17.05.41.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jan 2020 05:41:05 -0800 (PST)
-From:   Amol Grover <frextrite@gmail.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Amol Grover <frextrite@gmail.com>
-Subject: [PATCH v3 3/3] drivers: target: tcm_fc: tfc_sess: Pass lockdep expression to RCU lists
-Date:   Fri, 17 Jan 2020 19:08:57 +0530
-Message-Id: <20200117133854.32550-3-frextrite@gmail.com>
+        id S1727126AbgAQNpQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 08:45:16 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:49066 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726903AbgAQNpQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:45:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=AN2hr5dcia6+CzI/dY/K91UkGTWZziysWiorCAbapjw=; b=GyzRvij8w1ieCUCI314sUiunC
+        nwbW94DTiya1AbDARzchXcbX/Ah99Nb1aLH0wjwJFIYpyUj98xY3VnQIa22XyIEEjqmrl5hyZEYKR
+        yVM/6w4zEvDDhcvhnpmc+UWoODhqd0vPAZR2IHRVfzZEtTgFlZp5dyU5/yWCnp+P/FJzP9kXN0u5I
+        bRb/7e+aCq1Rrwcfxxp5OQdjnuIzfsvKvYRt+VrOK4Q+VkFCztpwrHaY9k9/3q6LlrLy6/VuZEBKi
+        eIh2G0F9GdAyGp4v+9eu49ve+lhP7vaxWV+f4z2gWR5qssiVq4BqRxx/rB28RYFetyZX3ofOFnkBR
+        9cr77dTIg==;
+Received: from [88.128.92.44] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1isRw2-0001R7-Bv; Fri, 17 Jan 2020 13:45:15 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, abdhalee@linux.vnet.ibm.com
+Subject: [PATCH] mpt3sas: don't change the dma coherent mask after allocations
+Date:   Fri, 17 Jan 2020 14:45:06 +0100
+Message-Id: <20200117134506.633586-1-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200117133854.32550-1-frextrite@gmail.com>
-References: <20200117133854.32550-1-frextrite@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-head is traversed with hlist_for_each_entry_rcu
-outside an RCU read-side critical section but under the
-protection of ft_lport_lock.
+The DMA layer does not allow changing the DMA coherent mask after
+there are outstanding allocations.  Stop doing that and always
+use a 32-bit coherent DMA mask in mpt3sas.
 
-Hence, add the corresponding lockdep expression to the list traversal
-primitive to silence false-positive lockdep warnings, and
-harden RCU lists.
-
-Signed-off-by: Amol Grover <frextrite@gmail.com>
+Reported-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
 ---
- drivers/target/tcm_fc/tfc_sess.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 67 ++++++++---------------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  2 -
+ 2 files changed, 19 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index 4fd6a1de947c..bb70f61237a6 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -170,7 +170,8 @@ static struct ft_sess *ft_sess_get(struct fc_lport *lport, u32 port_id)
- 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index fea3cb6a090b..3b51bed05008 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2706,58 +2706,38 @@ _base_build_sg_ieee(struct MPT3SAS_ADAPTER *ioc, void *psge,
+ static int
+ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ {
+-	u64 required_mask, coherent_mask;
+ 	struct sysinfo s;
+-	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
+-	int dma_mask = (ioc->hba_mpi_version_belonged > MPI2_VERSION) ? 63 : 64;
+-
+-	if (ioc->is_mcpu_endpoint)
+-		goto try_32bit;
++	int dma_mask;
  
- 	head = &tport->hash[ft_sess_hash(port_id)];
--	hlist_for_each_entry_rcu(sess, head, hash) {
-+	hlist_for_each_entry_rcu(sess, head, hash,
-+				 lockdep_is_held(&ft_lport_lock)) {
- 		if (sess->port_id == port_id) {
- 			kref_get(&sess->kref);
- 			rcu_read_unlock();
-@@ -215,7 +216,8 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 	ft_format_wwn(&initiatorname[0], TRANSPORT_IQN_LEN, rdata->ids.port_name);
+-	required_mask = dma_get_required_mask(&pdev->dev);
+-	if (sizeof(dma_addr_t) == 4 || required_mask == 32)
+-		goto try_32bit;
+-
+-	if (ioc->dma_mask)
+-		coherent_mask = DMA_BIT_MASK(dma_mask);
++	if (ioc->is_mcpu_endpoint ||
++	    sizeof(dma_addr_t) == 4 ||
++	    dma_get_required_mask(&pdev->dev) <= 32)
++		dma_mask = 32;
++	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
++	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
++		dma_mask = 63;
+ 	else
+-		coherent_mask = DMA_BIT_MASK(32);
++		dma_mask = 64;
  
- 	head = &tport->hash[ft_sess_hash(port_id)];
--	hlist_for_each_entry_rcu(sess, head, hash)
-+	hlist_for_each_entry_rcu(sess, head, hash,
-+				 lockdep_is_held(&ft_lport_lock))
- 		if (sess->port_id == port_id)
- 			return sess;
+ 	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)) ||
+-	    dma_set_coherent_mask(&pdev->dev, coherent_mask))
+-		goto try_32bit;
+-
+-	ioc->base_add_sg_single = &_base_add_sg_single_64;
+-	ioc->sge_size = sizeof(Mpi2SGESimple64_t);
+-	ioc->dma_mask = dma_mask;
+-	goto out;
+-
+- try_32bit:
+-	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
++	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32)))
+ 		return -ENODEV;
  
-@@ -264,7 +266,8 @@ static struct ft_sess *ft_sess_delete(struct ft_tport *tport, u32 port_id)
- 	struct ft_sess *sess;
+-	ioc->base_add_sg_single = &_base_add_sg_single_32;
+-	ioc->sge_size = sizeof(Mpi2SGESimple32_t);
+-	ioc->dma_mask = 32;
+- out:
++	if (dma_mask > 32) {
++		ioc->base_add_sg_single = &_base_add_sg_single_64;
++		ioc->sge_size = sizeof(Mpi2SGESimple64_t);
++	} else {
++		ioc->base_add_sg_single = &_base_add_sg_single_32;
++		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
++	}
++
+ 	si_meminfo(&s);
+ 	ioc_info(ioc, "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
+-		 ioc->dma_mask, convert_to_kb(s.totalram));
++		 dma_mask, convert_to_kb(s.totalram));
  
- 	head = &tport->hash[ft_sess_hash(port_id)];
--	hlist_for_each_entry_rcu(sess, head, hash) {
-+	hlist_for_each_entry_rcu(sess, head, hash,
-+				 lockdep_is_held(&ft_lport_lock)) {
- 		if (sess->port_id == port_id) {
- 			ft_sess_unhash(sess);
- 			return sess;
-@@ -291,7 +294,8 @@ static void ft_sess_delete_all(struct ft_tport *tport)
+ 	return 0;
+ }
  
- 	for (head = tport->hash;
- 	     head < &tport->hash[FT_SESS_HASH_SIZE]; head++) {
--		hlist_for_each_entry_rcu(sess, head, hash) {
-+		hlist_for_each_entry_rcu(sess, head, hash,
-+					 lockdep_is_held(&ft_lport_lock)) {
- 			ft_sess_unhash(sess);
- 			ft_close_sess(sess);	/* release from table */
- 		}
+-static int
+-_base_change_consistent_dma_mask(struct MPT3SAS_ADAPTER *ioc,
+-				      struct pci_dev *pdev)
+-{
+-	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(ioc->dma_mask))) {
+-		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
+-			return -ENODEV;
+-	}
+-	return 0;
+-}
+-
+ /**
+  * _base_check_enable_msix - checks MSIX capabable.
+  * @ioc: per adapter object
+@@ -5030,14 +5010,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		total_sz += sz;
+ 	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
+ 
+-	if (ioc->dma_mask > 32) {
+-		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
+-			ioc_warn(ioc, "no suitable consistent DMA mask for %s\n",
+-				 pci_name(ioc->pdev));
+-			goto out;
+-		}
+-	}
+-
+ 	ioc->scsiio_depth = ioc->hba_queue_depth -
+ 	    ioc->hi_priority_depth - ioc->internal_depth;
+ 
+@@ -6965,7 +6937,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->smp_affinity_enable = smp_affinity_enable;
+ 
+ 	ioc->rdpq_array_enable_assigned = 0;
+-	ioc->dma_mask = 0;
+ 	if (ioc->is_aero_ioc)
+ 		ioc->base_readl = &_base_readl_aero;
+ 	else
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index faca0a5e71f8..e57cade1155c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1011,7 +1011,6 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @ir_firmware: IR firmware present
+  * @bars: bitmask of BAR's that must be configured
+  * @mask_interrupts: ignore interrupt
+- * @dma_mask: used to set the consistent dma mask
+  * @pci_access_mutex: Mutex to synchronize ioctl, sysfs show path and
+  *			pci resource handling
+  * @fault_reset_work_q_name: fw fault work queue
+@@ -1185,7 +1184,6 @@ struct MPT3SAS_ADAPTER {
+ 	u8		ir_firmware;
+ 	int		bars;
+ 	u8		mask_interrupts;
+-	int		dma_mask;
+ 
+ 	/* fw fault handler */
+ 	char		fault_reset_work_q_name[20];
 -- 
 2.24.1
 
