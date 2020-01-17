@@ -2,125 +2,193 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA028C33C9E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 22:16:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89A52C33C9E
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 23:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B75E21D7D
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 22:16:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZR2baJZC"
+	by mail.kernel.org (Postfix) with ESMTP id 589962073A
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 23:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726954AbgAQWQt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 17:16:49 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29105 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726942AbgAQWQs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 17:16:48 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579299407;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=k6MfOyBBjUHItZQ8gyEUGTAVRn0FcZr0WwPV8jaPivI=;
-        b=ZR2baJZCiENbcWgL0cHQ2lR2Tb+vtHv9GHQ0r6B4nKqhOkv0/KOO/ZTDBA/J67LXrG71MZ
-        CRlJVk5zYljlUUmc8EgFU4DS98468nuB+fqScvi5LtvkkA0hPLSMRzIkdekCFNY+4Yj54d
-        WgmcVMFFynC5KS0mEBbQo3jl/FnI470=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-438-ugdCllB5P-aC68RJRndeDg-1; Fri, 17 Jan 2020 17:16:43 -0500
-X-MC-Unique: ugdCllB5P-aC68RJRndeDg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1730135AbgAQXdf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 18:33:35 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:44820 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729798AbgAQXdf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 18:33:35 -0500
+Received: from localhost (unknown [IPv6:2610:98:8005::787])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 38BD8107ACC5;
-        Fri, 17 Jan 2020 22:16:42 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 71FB4845B4;
-        Fri, 17 Jan 2020 22:16:41 +0000 (UTC)
-Message-ID: <82a754f713114341a95b19557b5645cd468b9a9a.camel@redhat.com>
-Subject: Re: [PATCH v3] qla2xxx: Fix unbound NVME response length
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Himanshu Madhani <hmadhani@marvell.com>,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org
-Date:   Fri, 17 Jan 2020 17:16:40 -0500
-In-Reply-To: <20200117203126.4738-1-hmadhani@marvell.com>
-References: <20200117203126.4738-1-hmadhani@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        (Authenticated sender: krisman)
+        by bhuna.collabora.co.uk (Postfix) with ESMTPSA id D8BC0293EDA;
+        Fri, 17 Jan 2020 23:33:32 +0000 (GMT)
+From:   Gabriel Krisman Bertazi <krisman@collabora.com>
+To:     lduncan@suse.com
+Cc:     cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        Frank Mayhar <fmayhar@google.com>, kernel@collabora.com,
+        Khazhismel Kumykov <khazhy@google.com>,
+        Gabriel Krisman Bertazi <krisman@collabora.com>
+Subject: [PATCH] iscsi: Add support for asynchronous iSCSI session destruction
+Date:   Fri, 17 Jan 2020 18:33:28 -0500
+Message-Id: <20200117233328.1052604-1-krisman@collabora.com>
+X-Mailer: git-send-email 2.25.0.rc2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-01-17 at 12:31 -0800, Himanshu Madhani wrote:
-> From: Arun Easi <aeasi@marvell.com>
-> 
-> On certain cases when response length is less than 32, NVME response data
-> is supplied inline in IOCB. This is indicated by some combination of state
-> flags. There was an instance when a high, and incorrect, response length was
-> indicated causing driver to overrun buffers. Fix this by checking and
-> limiting the response payload length.
-> 
-> Fixes: 7401bc18d1ee3 ("scsi: qla2xxx: Add FC-NVMe command handling")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Arun Easi <aeasi@marvell.com>
-> Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-> ---
-> Hi Martin,
-> 
-> We discovered issue with our newer Gen7 adapter when response length
-> happens to be larger than 32 bytes, could result into crash.
-> 
-> Please apply this to 5.5/scsi-fixes branch at your earliest convenience.
-> 
-> Changes from v2 -> v3
-> 
-> o Use "sizeof(struct nvme_fc_ersp_iu)" to indicate response payload size.
-> 
-> Changes from v1 -> v2
-> 
-> o Fixed the tag for stable.
-> o Removed logit which got spilled from other patch to prevent compile failure.
-> 
-> Thanks,
-> Himanshu
-> ---
->  drivers/scsi/qla2xxx/qla_isr.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index e7bad0bfffda..2f26f8910d0b 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -1939,6 +1939,15 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
->  		inbuf = (uint32_t *)&sts->nvme_ersp_data;
->  		outbuf = (uint32_t *)fd->rspaddr;
->  		iocb->u.nvme.rsp_pyld_len = le16_to_cpu(sts->nvme_rsp_pyld_len);
-> +		if (unlikely(iocb->u.nvme.rsp_pyld_len > 32)) {
+From: Frank Mayhar <fmayhar@google.com>
 
-I think this should have been "> sizeof(struct nvme_fc_ersp_iu)" as well.
+iSCSI session destruction can be arbitrarily slow, since it might
+require network operations and serialization inside the scsi layer.
+This patch adds a new user event to trigger the destruction work
+asynchronously, releasing the rx_queue_mutex as soon as the operation is
+queued and before it is performed.  This change allow other operations
+to run in other sessions in the meantime, removing one of the major
+iSCSI bottlenecks for us.
 
--Ewan
+To prevent the session from being used after the destruction request, we
+remove it immediately from the sesslist. This simplifies the locking
+required during the asynchronous removal.
 
-> +			WARN_ONCE(1, "Unexpected response payload length %u.\n",
-> +					iocb->u.nvme.rsp_pyld_len);
-> +			ql_log(ql_log_warn, fcport->vha, 0x5100,
-> +				"Unexpected response payload length %u.\n",
-> +				iocb->u.nvme.rsp_pyld_len);
-> +			iocb->u.nvme.rsp_pyld_len =
-> +			    sizeof(struct nvme_fc_ersp_iu);
-> +		}
->  		iter = iocb->u.nvme.rsp_pyld_len >> 2;
->  		for (; iter; iter--)
->  			*outbuf++ = swab32(*inbuf++);
+Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Frank Mayhar <fmayhar@google.com>
+Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+---
+
+This patch requires a patch that just went upstream to apply cleanly.
+it is ("iscsi: Don't destroy session if there are outstanding
+connections"), which was just merged by Martin into 5.6/scsi-queue.
+Please make sure you have it in your tree, otherwise this one won't
+apply.
+
+ drivers/scsi/scsi_transport_iscsi.c | 36 +++++++++++++++++++++++++++++
+ include/scsi/iscsi_if.h             |  1 +
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 3 files changed, 38 insertions(+)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index ba6cfaf71aef..e9a8e0317b0d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -95,6 +95,8 @@ static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+ static struct workqueue_struct *iscsi_eh_timer_workq;
+ 
++static struct workqueue_struct *iscsi_destroy_workq;
++
+ static DEFINE_IDA(iscsi_sess_ida);
+ /*
+  * list of registered transports and lock that must
+@@ -1615,6 +1617,7 @@ static struct sock *nls;
+ static DEFINE_MUTEX(rx_queue_mutex);
+ 
+ static LIST_HEAD(sesslist);
++static LIST_HEAD(sessdestroylist);
+ static DEFINE_SPINLOCK(sesslock);
+ static LIST_HEAD(connlist);
+ static LIST_HEAD(connlist_err);
+@@ -2035,6 +2038,14 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
+ }
+ 
++static void __iscsi_destroy_session(struct work_struct *work)
++{
++	struct iscsi_cls_session *session =
++		container_of(work, struct iscsi_cls_session, destroy_work);
++
++	session->transport->destroy_session(session);
++}
++
+ struct iscsi_cls_session *
+ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ 		    int dd_size)
+@@ -2057,6 +2068,7 @@ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
+ 	INIT_WORK(&session->block_work, __iscsi_block_session);
+ 	INIT_WORK(&session->unbind_work, __iscsi_unbind_session);
+ 	INIT_WORK(&session->scan_work, iscsi_scan_session);
++	INIT_WORK(&session->destroy_work, __iscsi_destroy_session);
+ 	spin_lock_init(&session->lock);
+ 
+ 	/* this is released in the dev's release function */
+@@ -3617,6 +3629,23 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		else
+ 			transport->destroy_session(session);
+ 		break;
++	case ISCSI_UEVENT_DESTROY_SESSION_ASYNC:
++		session = iscsi_session_lookup(ev->u.d_session.sid);
++		if (!session)
++			err = -EINVAL;
++		else if (iscsi_session_has_conns(ev->u.d_session.sid))
++			err = -EBUSY;
++		else {
++			unsigned long flags;
++
++			/* Prevent this session from being found again */
++			spin_lock_irqsave(&sesslock, flags);
++			list_move(&session->sess_list, &sessdestroylist);
++			spin_unlock_irqrestore(&sesslock, flags);
++
++			queue_work(iscsi_destroy_workq, &session->destroy_work);
++		}
++		break;
+ 	case ISCSI_UEVENT_UNBIND_SESSION:
+ 		session = iscsi_session_lookup(ev->u.d_session.sid);
+ 		if (session)
+@@ -4662,8 +4691,14 @@ static __init int iscsi_transport_init(void)
+ 		goto release_nls;
+ 	}
+ 
++	iscsi_destroy_workq = create_singlethread_workqueue("iscsi_destroy");
++	if (!iscsi_destroy_workq)
++		goto destroy_wq;
++
+ 	return 0;
+ 
++destroy_wq:
++	destroy_workqueue(iscsi_eh_timer_workq);
+ release_nls:
+ 	netlink_kernel_release(nls);
+ unregister_flashnode_bus:
+@@ -4685,6 +4720,7 @@ static __init int iscsi_transport_init(void)
+ 
+ static void __exit iscsi_transport_exit(void)
+ {
++	destroy_workqueue(iscsi_destroy_workq);
+ 	destroy_workqueue(iscsi_eh_timer_workq);
+ 	netlink_kernel_release(nls);
+ 	bus_unregister(&iscsi_flashnode_bus);
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index 92b11c7e0b4f..deacaee53e61 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -60,6 +60,7 @@ enum iscsi_uevent_e {
+ 	ISCSI_UEVENT_LOGOUT_FLASHNODE_SID	= UEVENT_BASE + 30,
+ 	ISCSI_UEVENT_SET_CHAP		= UEVENT_BASE + 31,
+ 	ISCSI_UEVENT_GET_HOST_STATS	= UEVENT_BASE + 32,
++	ISCSI_UEVENT_DESTROY_SESSION_ASYNC	= UEVENT_BASE + 33,
+ 
+ 	/* up events */
+ 	ISCSI_KEVENT_RECV_PDU		= KEVENT_BASE + 1,
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 2129dc9e2dec..fa8814245796 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -226,6 +226,7 @@ struct iscsi_cls_session {
+ 	struct work_struct unblock_work;
+ 	struct work_struct scan_work;
+ 	struct work_struct unbind_work;
++	struct work_struct destroy_work;
+ 
+ 	/* recovery fields */
+ 	int recovery_tmo;
+-- 
+2.25.0.rc2
 
