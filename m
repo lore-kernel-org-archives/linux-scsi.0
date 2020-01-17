@@ -2,115 +2,113 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 892B6C33CB6
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3298C33CB6
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:09:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 603622073A
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:58:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFAED2083E
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:09:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="I4YcAs1V"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="Ldgz/1Ey"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbgAQN6J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 08:58:09 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:54138 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726587AbgAQN6I (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:58:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=sA5uuJQ04YeT72bao/JNQ4IKdK/ivCsVISnYxzEFHZQ=; b=I4YcAs1VzPP57kXD99FyxS6XW
-        udZnW6lIH/c0erbsKZyO4mlV41IrhFb0FtbmGZjE2j3wvNCVBn83nZbwMpC7xMM8PkhHl4JaX38gS
-        ch2fXnVCh2yaaVKgMcJV+nxYiYZHTDK2aSJqkjmlvmBrbYOh2cqYX+D3/GTMVdNWLJWYS/BKo2G7s
-        AMDimyFz4NjLSsw6RsTS3KUNnVoyud1DUgZYXJX0BzlfMadoWs/+Z0TveQvoM1Rm2HxvaQ1TaPDty
-        X+OSfDf0IQoL1PY6RZFwLhVmmXariSS08QBAO7KCdLRXGUOUTFSPvXq0c0Udie99E6perf4pv1X8u
-        Wcg9y6Y2w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1isS8W-0006WI-9s; Fri, 17 Jan 2020 13:58:08 +0000
-Date:   Fri, 17 Jan 2020 05:58:08 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 6/9] scsi: ufs: Add inline encryption support to UFS
-Message-ID: <20200117135808.GB5670@infradead.org>
-References: <20191218145136.172774-1-satyat@google.com>
- <20191218145136.172774-7-satyat@google.com>
+        id S1726885AbgAQOJK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 09:09:10 -0500
+Received: from mail-il1-f193.google.com ([209.85.166.193]:41573 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbgAQOJI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 09:09:08 -0500
+Received: by mail-il1-f193.google.com with SMTP id f10so21350094ils.8
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 06:09:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZQTKiWhb+mlUFEsYNRPuhDSO62Bf/P9OysX1lBNLHbg=;
+        b=Ldgz/1Ey4ervR8uUqE1fpwEJykRSg9th87806nhOV+njUTuV7kYWLj2WWbrWbyMpt6
+         /8vdwyFksfHZhK6Ms8OZINd8oJoHNJKgw87y9gIouJKkzx66dX2giDMxhhTKOtfmamv3
+         VYuORK8sP+5RbA/Ech3ClUx2VQuBsSIhWXEoTCdhiKE2a+vXVcC0RzzzKbzSMMvXf7si
+         8btqNg9QZTojFqrQ8yhFQdlY8Wsjnm3VB0Egb2OcfhOkPuECMZXT/cBiZsYUrAhvdEZ0
+         uDlO4SOx+JEa3byugeRWe++GpVUdbL7/RES1dig5ZeYmmJxQvipSY3SpVXvzD0A9Sn0m
+         8qdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZQTKiWhb+mlUFEsYNRPuhDSO62Bf/P9OysX1lBNLHbg=;
+        b=BwmkczAAchVYMQEPcMUp8q6ap+Jq+OlOMt4FMvednbMbo8KW1qDxwWREKb9KqnW1s3
+         YQ/0DWad4PhfSwTc0oD238S1v5kQLN/2cijWieKj9pqaSIgjlQhXs64KX29STi4zppiE
+         zJ3TFVwRFLjcdRMJ1p8gQxNey01+2sxt4pE/eBB1B8qLGEyTGiDmxzxGuKSjmieVJqds
+         XHNx0fR/zWxIUBJ3yoBLt2vift77NWejlishW2LzzhSXG6TZlBsnBAtnLaWuJbqdYbbI
+         Qw3Oo3sbHJJJ0YbgUtBPqFEYDxiiyoF5EPnqHYuxh1B/3CoTAo5tJygaZTjlwTHgIHw4
+         mRDg==
+X-Gm-Message-State: APjAAAW+mr61B7LfSWQ21qIDIZyb50lqdB7Z3K07atnCZr52HkLvotr+
+        Cz7S8gK5Vv9NxIfSaEPRHckcLXALbm5GPN57/eMEDw==
+X-Google-Smtp-Source: APXvYqyqgjBDs+N9EIS3cHUrP9UQAJNS26at0U66wuQdqUXAKAnt6IOH7LIPJlibMJCP7fds4dYsCk0HMVPcsemkwag=
+X-Received: by 2002:a92:d2:: with SMTP id 201mr3242371ila.22.1579270148136;
+ Fri, 17 Jan 2020 06:09:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191218145136.172774-7-satyat@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20200117071923.7445-1-deepak.ukey@microchip.com> <20200117071923.7445-2-deepak.ukey@microchip.com>
+In-Reply-To: <20200117071923.7445-2-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Fri, 17 Jan 2020 15:08:57 +0100
+Message-ID: <CAMGffEmP+UfQS+9dUEjQvnJ0HZLRD-X_xJufRK_iQ8JTPQzb5A@mail.gmail.com>
+Subject: Re: [PATCH V2 01/13] pm80xx : Increase request sg length.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Jack Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
+        vishakhavc@google.com, bjashnani@google.com,
+        Radha Ramachandran <radha@google.com>, akshatzen@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 06:51:33AM -0800, Satya Tangirala wrote:
-> Wire up ufshcd.c with the UFS Crypto API, the block layer inline
-> encryption additions and the keyslot manager.
+On Fri, Jan 17, 2020 at 8:10 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
+>
+> From: Peter Chang <dpf@google.com>
+>
+> Increasing the per-request size maximum (max_sectors_kb) runs into
+> the per-device dma scatter gather list limit (max_segments) for
+> users of the io vector system calls (eg, readv and writev). This is
+> because the kernel combines io vectors into dma segments when
+> possible, but it doesn't work for our user because the vectors in the
+> buffer cache get scrambled.
+> This change bumps the advertised max scatter gather length to 528 to
+> cover 2M w/ x86's 4k pages and some extra for the user checksum.
+> It trims the size of some of the tables we don't care about and
+> exposes all of the command slots upstream to the scsi layer
+>
+> Signed-off-by: Peter Chang <dpf@google.com>
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Reported-by: kbuild test robot <lkp@intel.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_defs.h | 5 +++--
+>  drivers/scsi/pm8001/pm8001_init.c | 2 +-
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_defs.h b/drivers/scsi/pm8001/pm8001_defs.h
+> index 48e0624ecc68..1c7f15fd69ce 100644
+> --- a/drivers/scsi/pm8001/pm8001_defs.h
+> +++ b/drivers/scsi/pm8001/pm8001_defs.h
+> @@ -75,7 +75,7 @@ enum port_type {
+>  };
+>
+>  /* driver compile-time configuration */
+> -#define        PM8001_MAX_CCB           512    /* max ccbs supported */
+> +#define        PM8001_MAX_CCB           256    /* max ccbs supported */
+Hi Deepack,
 
-I think this patch should be merged into the previous patch, as the
-previous one isn't useful without wiring it up.
+Why do you reduce PM8001_MAX_CCB?
 
-> +int ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
-> +			       struct scsi_cmnd *cmd,
-> +			       struct ufshcd_lrb *lrbp)
-> +{
-> +	struct bio_crypt_ctx *bc;
-> +
-> +	if (!bio_crypt_should_process(cmd->request)) {
-> +		lrbp->crypto_enable = false;
-> +		return 0;
-> +	}
-
-I think this check belongs into the caller so that there is no function
-call overhead for the !inline crypto case.  If you extend the
-conditional
-to
-
-	if (!IS_ENABLED(CONFIG_SCSI_UFS_CRYPTO) ||
-	    !bio_crypt_should_process(cmd->request))
-
-you also don't need the stub for ufshcd_prepare_lrbp_crypto.
-
-> +EXPORT_SYMBOL_GPL(ufshcd_prepare_lrbp_crypto);
-
-No need to export this function.
-
-> +	if (ufshcd_lrbp_crypto_enabled(lrbp)) {
-> +#if IS_ENABLED(CONFIG_SCSI_UFS_CRYPTO)
-> +		dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
-> +		dword_0 |= lrbp->crypto_key_slot;
-> +		req_desc->header.dword_1 =
-> +			cpu_to_le32(lower_32_bits(lrbp->data_unit_num));
-> +		req_desc->header.dword_3 =
-> +			cpu_to_le32(upper_32_bits(lrbp->data_unit_num));
-> +#endif /* CONFIG_SCSI_UFS_CRYPTO */
-
-This can be a plain old ifdef without the IS_ENABLED obsfucation.
-
-> +#if IS_ENABLED(CONFIG_SCSI_UFS_CRYPTO)
-> +	lrbp->crypto_enable = false; /* No crypto operations */
-> +#endif
-
-Same here.
-
-> +#if IS_ENABLED(CONFIG_SCSI_UFS_CRYPTO)
-> +	bool crypto_enable;
-> +	u8 crypto_key_slot;
-> +	u64 data_unit_num;
-> +#endif /* CONFIG_SCSI_UFS_CRYPTO */
-
-.. and here.
+The patch itself looks fine.
