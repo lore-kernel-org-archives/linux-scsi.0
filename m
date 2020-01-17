@@ -2,171 +2,102 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53AC9C33CB3
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52719C33CB7
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:51:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36D57206D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:44:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B48B20842
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:51:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="rvplpR1J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726899AbgAQDoB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 22:44:01 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:46812 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726688AbgAQDoB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 22:44:01 -0500
-Received: by mail-pg1-f193.google.com with SMTP id z124so10952919pgb.13;
-        Thu, 16 Jan 2020 19:44:00 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=qjTEZbkvZijH4Q89/0bwix+Zc3hP19cN20BTOTVd7ng=;
-        b=USjaUajzaBwGhFtukQxPiT+886qWEyeCz5lpJ0xteL+2JwjFLeGOdlNP5Jh20qiU2n
-         +AA7BNHss0g+hekJICM/C1Ofb51mBV18DqbO4rM+UQ2GCRSGmuPMZTflhAwBaEBxg7J2
-         nPiJeLzUr7E/5kWNx35VYdfOhwL/kW1/mXLoVqWPE/QS4BZKdaImbk9l6hDWb2WBOA/m
-         jjGYATRHT2Ed9yeZA7F8ALw5VCqQJJ2o5I9Z4PDbg6kfaPEWglKjhdEWRvTOhBrPgcxX
-         Hx5wGdTh/Hen8I7I59fNO1Ykw+DkBO0qwDUKLod6y8b01R+HOmYzUEUOMMT2YyCVAvGy
-         kP9A==
-X-Gm-Message-State: APjAAAV8Aa8dvKR6Dxr7H34Qg7RgNYUY83jaLsEG7R1CEQulkZBtCOXr
-        WN+GTyGuafoDAAW76aiJwEge0fj6Wu0=
-X-Google-Smtp-Source: APXvYqx/V246VdMxBbBw6pKES2lQAgrm1BArd8h4eU99sD0DLcnzC23G7dv2zleCjsyJJHEo8NIsRQ==
-X-Received: by 2002:aa7:914b:: with SMTP id 11mr931294pfi.69.1579232640078;
-        Thu, 16 Jan 2020 19:44:00 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:8dfb:7edd:e01b:b201? ([2601:647:4000:d7:8dfb:7edd:e01b:b201])
-        by smtp.gmail.com with ESMTPSA id b65sm27119652pgc.18.2020.01.16.19.43.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jan 2020 19:43:58 -0800 (PST)
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Add command logging infrastructure
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        cang@codeaurora.org
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        "Winkler, Tomas" <tomas.winkler@intel.com>, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Evan Green <evgreen@chromium.org>,
-        Janek Kotas <jank@cadence.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1571808560-3965-1-git-send-email-cang@codeaurora.org>
- <5B8DA87D05A7694D9FA63FD143655C1B9DCF0AFE@hasmsx108.ger.corp.intel.com>
- <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
- <01eb3c55e35738f2853fbc7175a12eaa@codeaurora.org>
- <20191029054620.GG1929@tuxbook-pro>
- <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <a07f3244-6536-0667-cf61-3ef8b8bc6c7e@acm.org>
-Date:   Thu, 16 Jan 2020 19:43:56 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        id S1731002AbgAQDvS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 22:51:18 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:8127 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730763AbgAQDvQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 22:51:16 -0500
+X-UUID: 517c197138a943f4a27b717780e332dd-20200117
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=/Tv3CvUdL0cbJHISgpyLZ+7IuIGSsxLCnYDqwGEOaBs=;
+        b=rvplpR1JfivdffFglUShM2drhBOlb/0qrtb1WPkHzAHaILdSqR2BG7uzmw13U2bYu//SibXNAmaFrJO8NjYNlnC+1ElWDe9iCLCzUu8MOCVSYvp1tbu0epOrTArY76bgCPjxxSN/ppTTKRSMfH0axSa9snBrlmTz7fOjdIGgzi4=;
+X-UUID: 517c197138a943f4a27b717780e332dd-20200117
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1863625729; Fri, 17 Jan 2020 11:51:11 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Fri, 17 Jan 2020 11:51:15 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 17 Jan 2020 11:51:09 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 1/3] scsi: ufs-mediatek: add dbg_register_dump implementation
+Date:   Fri, 17 Jan 2020 11:51:06 +0800
+Message-ID: <20200117035108.19699-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200117035108.19699-1-stanley.chu@mediatek.com>
+References: <20200117035108.19699-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-16 15:03, Asutosh Das (asd) wrote:
-> On 10/28/2019 10:46 PM, Bjorn Andersson wrote:
->> On Mon 28 Oct 19:37 PDT 2019, cang@codeaurora.org wrote:
->>
->>> On 2019-10-23 18:33, Avri Altman wrote:
->>>>>
->>>>>> Add the necessary infrastructure to keep timestamp history of
->>>>>> commands, events and other useful info for debugging complex issues.
->>>>>> This helps in diagnosing events leading upto failure.
->>>>>
->>>>> Why not use tracepoints, for that?
->>>> Ack on Tomas's comment.
->>>> Are there any pieces of information that you need not provided by the
->>>> upiu tracer?
->>>>
->>>> Thanks,
->>>> Avri
->>>
->>> In extreme cases, when the UFS runs into bad state, system may crash.
->>> There
->>> may not be a chance to collect trace. If trace is not collected and
->>> failure
->>> is hard to be reproduced, some command logs prints would be very
->>> helpful to
->>> help understand what was going on before we run into failure.
->>>
->>
->> This is a common problem shared among many/all subsystems, so it's
->> better to rely on a generic solution for this; such as using tracepoints
->> dumped into pstore/ramoops.
->>
->> Regards,
->> Bjorn
->>
-> 
-> Reviving this discussion.
-> 
-> Another issue with using ftrace is that several subsystems use it.
-> Consider a situation in which we store a history of 64 commands,
-> responses and some other required info in ftrace.
-> 
-> Say there's a command that's stuck for seconds until the software times
-> out. In this case, the other ftrace events are still enabled and keep
-> writing to ftrace buffer thus overwriting some/most of the ufs's command
-> history; thus the history is more or less lost. And there's a need to
-> reproduce the issue with other tracing disabled.
-> 
-> So what we need is a client specific logging mechanism, which is
-> lightweight as ftrace and can be parsed from ramdumps.
-> 
-> I'm open to ideas but ftrace in its current form may not be suitable for
-> this.
-
-Hi Asutosh,
-
-Are you aware that it is already possible today to figure out which SCSI
-commands are pending? Are you familiar with the files under
-/sys/kernel/debug/block/? An example:
-
-$ (cd /sys/kernel/debug/block && grep -aH . */*/busy)
-nvme0n1/hctx7/busy:0000000006f07009 {.op=READ, .cmd_flags=META|PRIO,
-.rq_flags=DONTPREP|IO_STAT, .state=in_flight, .tag=275, .internal_tag=-1}
-
-Bart.
-
+QWRkIGRiZ19yZWdpc3Rlcl9kdW1wIHZhcmlhbnQgdmVuZG9yIGltcGxlbWVudGF0aW9uIGluIE1l
+ZGlhVGVrDQpVRlMgZHJpdmVyLg0KDQpTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3Rhbmxl
+eS5jaHVAbWVkaWF0ZWsuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsu
+YyB8IDE2ICsrKysrKysrKysrKysrKysNCiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5o
+IHwgIDUgKysrKysNCiAyIGZpbGVzIGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKykNCg0KZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMgYi9kcml2ZXJzL3Njc2kvdWZz
+L3Vmcy1tZWRpYXRlay5jDQppbmRleCA4ZDk5OWMwZTYwZmUuLmQ1MTk0ZDBjNGVmNSAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCisrKyBiL2RyaXZlcnMvc2Nz
+aS91ZnMvdWZzLW1lZGlhdGVrLmMNCkBAIC00MDYsNiArNDA2LDIxIEBAIHN0YXRpYyBpbnQgdWZz
+X210a19yZXN1bWUoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQog
+CXJldHVybiAwOw0KIH0NCiANCitzdGF0aWMgdm9pZCB1ZnNfbXRrX2RiZ19yZWdpc3Rlcl9kdW1w
+KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQorew0KKwl1ZnNoY2RfZHVtcF9yZWdzKGhiYSwgUkVHX1VG
+U19SRUZDTEtfQ1RSTCwgMHg0LCAiUmVmLUNsayBDdHJsICIpOw0KKw0KKwl1ZnNoY2RfZHVtcF9y
+ZWdzKGhiYSwgUkVHX1VGU19FWFRSRUcsIDB4NCwgIkV4dCBSZWcgIik7DQorDQorCXVmc2hjZF9k
+dW1wX3JlZ3MoaGJhLCBSRUdfVUZTX01QSFlDVFJMLA0KKwkJCSBSRUdfVUZTX1JFSkVDVF9NT04g
+LSBSRUdfVUZTX01QSFlDVFJMICsgNCwNCisJCQkgIk1QSFkgQ3RybCAiKTsNCisNCisJLyogRGly
+ZWN0IGRlYnVnZ2luZyBpbmZvcm1hdGlvbiB0byBSRUdfTVRLX1BST0JFICovDQorCXVmc2hjZF93
+cml0ZWwoaGJhLCAweDIwLCBSRUdfVUZTX0RFQlVHX1NFTCk7DQorCXVmc2hjZF9kdW1wX3JlZ3Mo
+aGJhLCBSRUdfVUZTX1BST0JFLCAweDQsICJEZWJ1ZyBQcm9iZSAiKTsNCit9DQorDQogc3RhdGlj
+IGludCB1ZnNfbXRrX2FwcGx5X2Rldl9xdWlya3Moc3RydWN0IHVmc19oYmEgKmhiYSwNCiAJCQkJ
+ICAgIHN0cnVjdCB1ZnNfZGV2X2Rlc2MgKmNhcmQpDQogew0KQEAgLTQzMCw2ICs0NDUsNyBAQCBz
+dGF0aWMgc3RydWN0IHVmc19oYmFfdmFyaWFudF9vcHMgdWZzX2hiYV9tdGtfdm9wcyA9IHsNCiAJ
+LmFwcGx5X2Rldl9xdWlya3MgICAgPSB1ZnNfbXRrX2FwcGx5X2Rldl9xdWlya3MsDQogCS5zdXNw
+ZW5kICAgICAgICAgICAgID0gdWZzX210a19zdXNwZW5kLA0KIAkucmVzdW1lICAgICAgICAgICAg
+ICA9IHVmc19tdGtfcmVzdW1lLA0KKwkuZGJnX3JlZ2lzdGVyX2R1bXAgICA9IHVmc19tdGtfZGJn
+X3JlZ2lzdGVyX2R1bXAsDQogCS5kZXZpY2VfcmVzZXQgICAgICAgID0gdWZzX210a19kZXZpY2Vf
+cmVzZXQsDQogfTsNCiANCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRl
+ay5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KaW5kZXggMzFiN2ZlYWQxOWVi
+Li5mY2NkZDk3OWQ2ZmIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRl
+ay5oDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5oDQpAQCAtMTMsNiArMTMs
+MTEgQEANCiAgKiBWZW5kb3Igc3BlY2lmaWMgVUZTSENJIFJlZ2lzdGVycw0KICAqLw0KICNkZWZp
+bmUgUkVHX1VGU19SRUZDTEtfQ1RSTCAgICAgICAgIDB4MTQ0DQorI2RlZmluZSBSRUdfVUZTX0VY
+VFJFRyAgICAgICAgICAgICAgMHgyMTAwDQorI2RlZmluZSBSRUdfVUZTX01QSFlDVFJMICAgICAg
+ICAgICAgMHgyMjAwDQorI2RlZmluZSBSRUdfVUZTX1JFSkVDVF9NT04gICAgICAgICAgMHgyMkFD
+DQorI2RlZmluZSBSRUdfVUZTX0RFQlVHX1NFTCAgICAgICAgICAgMHgyMkMwDQorI2RlZmluZSBS
+RUdfVUZTX1BST0JFICAgICAgICAgICAgICAgMHgyMkM4DQogDQogLyoNCiAgKiBSZWYtY2xrIGNv
+bnRyb2wNCi0tIA0KMi4xOC4wDQo=
 
