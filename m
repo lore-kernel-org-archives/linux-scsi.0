@@ -6,56 +6,56 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A85BCC33CB1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B1DC33CB1
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 700D32083E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BFB82072B
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 14:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="IJp706F+"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="VLP9bNgG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726942AbgAQOVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 09:21:24 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:33324 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726574AbgAQOVY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 09:21:24 -0500
-Received: by mail-io1-f66.google.com with SMTP id z8so26160664ioh.0
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 06:21:23 -0800 (PST)
+        id S1726908AbgAQO0W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 09:26:22 -0500
+Received: from mail-il1-f193.google.com ([209.85.166.193]:37565 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726827AbgAQO0W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 09:26:22 -0500
+Received: by mail-il1-f193.google.com with SMTP id t8so21436374iln.4
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 06:26:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cloud.ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/xbuo5nFh7G3AbBhiHz/zNZv1v5d4Ywk1Eq9kgmaO2o=;
-        b=IJp706F+PEkdyGlY4StN2Kx2mbOYxeherG3umJyO93EqCoK1iLw9odbAn9edfLPAPl
-         pkLIE5z6xFAYoNhkdKWUb4Rt8UzX+R6HxJEPLorBURov45UQ0yCzXlaCMvf0ilXC4SxC
-         tuFp7ge/UDTKQwlmVJZdxcv1VRRmYCNpKE2mIyofSWXjlRkDngiupjYC5tXLvzBAp7A/
-         /KmbDbr+yOz0OfZMN9SOmoXl0mP3iixGpSIIHg0lT+JriQzMg/306qUVLxyQ54NVsEfv
-         BbzAZX5dILGor2tlCBRLZ/oItVDJ4sU6Uc7FC5ojzwJKCSteudogebpncbN6fUFxa05s
-         wcFw==
+        bh=CzsXK9jvJtwMqtiFKxaFDZohCZV2xLKfK0nNS/b0wx8=;
+        b=VLP9bNgGUAjRPiPrv/coifJUFgfspSVk5G7WvvJQ65IMDvkCo/XDrcq9af4fCkInAd
+         SSOaZf4C3LL1NxlpoA5IQ9N6GPYseo5VZfVxB6Y7XtuvMZC4qJ411FFXRYNsEQUkkQ+J
+         6CIuIERFL6Etf5yYpYbxU9Z804IY3F5wPtsB/+2iK6XLE54xDKldVkljLxQh4wAYnndm
+         pBto51KaaNMdKoDL4jFB7kv8Qbajp6hP9w+XYvs5toWJMtO5z/q7OJv+dqyZvNqg6hZI
+         RdUIEmDgRFkuxbHFRqEthGZK2C09utzPc3XJoEgw06fzVrLzF8E24I7eKMWQJeZ96Vm9
+         BwuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=/xbuo5nFh7G3AbBhiHz/zNZv1v5d4Ywk1Eq9kgmaO2o=;
-        b=fYfPHKqq9cwH1qrTHj00gZvWo9Urc6uWJF2QpnxrqVq+eui0/UmTGSPdTYTPMAmxoI
-         a8can6+pU1F+QdUuACkVdCrqvtfqSRKHQdw+xvvfaQ4d52CKJz/BWptnpjMSHBFFWscv
-         hFizSyTkhs9n2dDH80CaCCBajCsJ+Zp7ay899XoC7c4HgOmTIi1dvbdzpJfQVKa0UOUG
-         mAFGA4zy9h5s/ySK2u0DFvamXFuLUCIBErd/g/L1fBiliPE/cjw3IxeoA2Gf/Mwv/ksI
-         c13Kz2Kp93qyGqVXBu+oWn4WXDpaVqCertZjrpscoCEcwNVgtTxMSqUyU1icumuhqPB0
-         sXzg==
-X-Gm-Message-State: APjAAAWw8LJBc5KWGLbaKWA0ojVPbZty3tNSj6rMpfWg3uCsv/OyGgpl
-        Cw6f0qZYjDf+BegLHNanJD7Y5j2CePu74S2VHW9zbw==
-X-Google-Smtp-Source: APXvYqwa4DMoP1PSkPScpDEnCCSwcTy8iDZaOYOzONd8MCCer9o9i++K24cPrPZfZ2A3+n/JUuWqmu3/JcPDjX58hoU=
-X-Received: by 2002:a6b:6e02:: with SMTP id d2mr32371272ioh.22.1579270883266;
- Fri, 17 Jan 2020 06:21:23 -0800 (PST)
+        bh=CzsXK9jvJtwMqtiFKxaFDZohCZV2xLKfK0nNS/b0wx8=;
+        b=WqPG7Pxvx+ZsYxT1qegy83FDVxnuQZKPwm9ct5blGt7FgqSJdpf4I9WrEAp/sGMirw
+         lXFZ2u6ormf/f9iFdBqu5kq2QKOdMl5dTDLXPbJqSz24CvYeoyxoIzhJiIVCnaHanWuw
+         7d+qCDXFk25FUoftfPdkqwc8U/q0DwfBQ4TvTaeRNAIRxYdlyCyS62sAsmqLaYvZMYUo
+         TY3HxOsSgCHJYadUAJP6ZSjiksbDKqawHfjpl9g9RebeB0qQe7htCotyeu4O9Ka/nPD6
+         Vg+bnosBJz0K8db7HR40+YNNDluP+QESToLLWGV/EfZmgqNeOKCLTD2MpYtWmzQjDgjh
+         RuYQ==
+X-Gm-Message-State: APjAAAVglz3Lvdx32AHwsxdtu6wXkphcsqdOtLcpk6HOpjVP+ncCBheI
+        jTF4r6Mkvc8YWwRMZFCkRWUl1DBaq2xoX3lQw7+fNk/RGZg=
+X-Google-Smtp-Source: APXvYqy8EQ2SdJSWI+0eAhSYjqpDqGAUCRep8XPr0fMPV5W/hMfjDl5d67lE6/3yOFkMHLVR0R+D/1vlO/HnHNP+ReQ=
+X-Received: by 2002:a92:8d88:: with SMTP id w8mr3179896ill.71.1579271181334;
+ Fri, 17 Jan 2020 06:26:21 -0800 (PST)
 MIME-Version: 1.0
-References: <20200117071923.7445-1-deepak.ukey@microchip.com> <20200117071923.7445-7-deepak.ukey@microchip.com>
-In-Reply-To: <20200117071923.7445-7-deepak.ukey@microchip.com>
+References: <20200117071923.7445-1-deepak.ukey@microchip.com> <20200117071923.7445-12-deepak.ukey@microchip.com>
+In-Reply-To: <20200117071923.7445-12-deepak.ukey@microchip.com>
 From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Fri, 17 Jan 2020 15:21:12 +0100
-Message-ID: <CAMGffEmBVJcDxZ1mkwzHwhsocvwHUxbZ-Xvvs4U+BGk7duxR7A@mail.gmail.com>
-Subject: Re: [PATCH V2 06/13] pm80xx : sysfs attribute for number of phys.
+Date:   Fri, 17 Jan 2020 15:26:10 +0100
+Message-ID: <CAMGffEmB-enhTZRVAcDOFdjjt8q4v3jifKqjgufVLpdtM+n18Q@mail.gmail.com>
+Subject: Re: [PATCH V2 11/13] pm80xx : sysfs attribute for non fatal dump.
 To:     Deepak Ukey <deepak.ukey@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -73,16 +73,21 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Fri, Jan 17, 2020 at 8:10 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
-> From: Viswas G <Viswas.G@microchip.com>
+> From: Deepak Ukey <Deepak.Ukey@microchip.com>
 >
-> Added sysfs attribute to show number of phys.
+> Added the sysfs attribute for non fatal log so that management utility
+> can get the non fatal dump from driver. The non-fatal error is an error
+> condition or abnormal behavior detected by the host, or detected and
+> reported by the controller to the host.The non-fatal error does not stop
+> the controller firmware and enables it to still respond to host requests.
+> A typical example of a non-fatal error is an I/O timeout or an unusual
+> error notification from the controller. Since the firmware is operational,
+> the error dump information is pushed to host memory (by firmware) upon
+> request from the host.
 >
 > Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 > Signed-off-by: Viswas G <Viswas.G@microchip.com>
 > Signed-off-by: Radha Ramachandran <radha@google.com>
-I agree with John Gary, the mgmt tool can get the info from
-/sys/class/sas_phy, no need to add an extra sysfs.
+Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 
-I suggest dropping the patch.
-
-Thanks!
+Thanks
