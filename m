@@ -2,194 +2,140 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB27C33CB1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE3E2C33CB6
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:51:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A175020661
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A59322083E
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 13:51:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GyzRvij8"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ildL1Flh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727126AbgAQNpQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 08:45:16 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:49066 "EHLO
+        id S1727007AbgAQNvl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 08:51:41 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:49394 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726903AbgAQNpQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:45:16 -0500
+        with ESMTP id S1726587AbgAQNvk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 08:51:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=AN2hr5dcia6+CzI/dY/K91UkGTWZziysWiorCAbapjw=; b=GyzRvij8w1ieCUCI314sUiunC
-        nwbW94DTiya1AbDARzchXcbX/Ah99Nb1aLH0wjwJFIYpyUj98xY3VnQIa22XyIEEjqmrl5hyZEYKR
-        yVM/6w4zEvDDhcvhnpmc+UWoODhqd0vPAZR2IHRVfzZEtTgFlZp5dyU5/yWCnp+P/FJzP9kXN0u5I
-        bRb/7e+aCq1Rrwcfxxp5OQdjnuIzfsvKvYRt+VrOK4Q+VkFCztpwrHaY9k9/3q6LlrLy6/VuZEBKi
-        eIh2G0F9GdAyGp4v+9eu49ve+lhP7vaxWV+f4z2gWR5qssiVq4BqRxx/rB28RYFetyZX3ofOFnkBR
-        9cr77dTIg==;
-Received: from [88.128.92.44] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1isRw2-0001R7-Bv; Fri, 17 Jan 2020 13:45:15 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com,
-        suganath-prabu.subramani@broadcom.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, abdhalee@linux.vnet.ibm.com
-Subject: [PATCH] mpt3sas: don't change the dma coherent mask after allocations
-Date:   Fri, 17 Jan 2020 14:45:06 +0100
-Message-Id: <20200117134506.633586-1-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
+         bh=Ip2cTR5qN3djsZNZYzyPJtYHK3z2QBxzZGbtdMsXahg=; b=ildL1FlhnQrx29DWrPlZHvUES
+        rK9crFCvsQXHCu89JBYkQAl5c42QY6uBiUQ7RRk1HTWdheIAjvLF+LzFTI/qAgyD0hGGKXurOvGzf
+        1o/noQirka0NWuzuznNHsVqACY3NtphuDs/pDxSr70PTUyZbqv35os+wNOUnNpl+JDSygiZXQHYmI
+        uzAODVnXhj4lw/cp6seRriDbLUYoRU4EzW56MVsrhgG1LV7k+hQl95cT8057Kan0KjpXbBktjYs+z
+        Q4IGHWV1XsESFa30ShIfXEM46wB9V7WeGbmDF95GinkWAfXG9fQC/hfq8TUnoe5D25Zy7kWxcKlB+
+        /iwcnCvdA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1isS2F-0003Cy-K0; Fri, 17 Jan 2020 13:51:39 +0000
+Date:   Fri, 17 Jan 2020 05:51:39 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 5/9] scsi: ufs: UFS crypto API
+Message-ID: <20200117135139.GA5670@infradead.org>
+References: <20191218145136.172774-1-satyat@google.com>
+ <20191218145136.172774-6-satyat@google.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191218145136.172774-6-satyat@google.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The DMA layer does not allow changing the DMA coherent mask after
-there are outstanding allocations.  Stop doing that and always
-use a 32-bit coherent DMA mask in mpt3sas.
+> index 94c6c5d7334b..e88cdcde83fd 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -12,3 +12,4 @@ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+>  obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
+>  obj-$(CONFIG_SCSI_UFS_MEDIATEK) += ufs-mediatek.o
+>  obj-$(CONFIG_SCSI_UFS_TI_J721E) += ti-j721e-ufs.o
+> +ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO) += ufshcd-crypto.o
 
-Reported-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 67 ++++++++---------------------
- drivers/scsi/mpt3sas/mpt3sas_base.h |  2 -
- 2 files changed, 19 insertions(+), 50 deletions(-)
+This line should be moved up to just below the previous statement adding
+and object to fshcd-core-.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index fea3cb6a090b..3b51bed05008 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2706,58 +2706,38 @@ _base_build_sg_ieee(struct MPT3SAS_ADAPTER *ioc, void *psge,
- static int
- _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
- {
--	u64 required_mask, coherent_mask;
- 	struct sysinfo s;
--	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
--	int dma_mask = (ioc->hba_mpi_version_belonged > MPI2_VERSION) ? 63 : 64;
--
--	if (ioc->is_mcpu_endpoint)
--		goto try_32bit;
-+	int dma_mask;
- 
--	required_mask = dma_get_required_mask(&pdev->dev);
--	if (sizeof(dma_addr_t) == 4 || required_mask == 32)
--		goto try_32bit;
--
--	if (ioc->dma_mask)
--		coherent_mask = DMA_BIT_MASK(dma_mask);
-+	if (ioc->is_mcpu_endpoint ||
-+	    sizeof(dma_addr_t) == 4 ||
-+	    dma_get_required_mask(&pdev->dev) <= 32)
-+		dma_mask = 32;
-+	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
-+	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
-+		dma_mask = 63;
- 	else
--		coherent_mask = DMA_BIT_MASK(32);
-+		dma_mask = 64;
- 
- 	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)) ||
--	    dma_set_coherent_mask(&pdev->dev, coherent_mask))
--		goto try_32bit;
--
--	ioc->base_add_sg_single = &_base_add_sg_single_64;
--	ioc->sge_size = sizeof(Mpi2SGESimple64_t);
--	ioc->dma_mask = dma_mask;
--	goto out;
--
-- try_32bit:
--	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
-+	    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32)))
- 		return -ENODEV;
- 
--	ioc->base_add_sg_single = &_base_add_sg_single_32;
--	ioc->sge_size = sizeof(Mpi2SGESimple32_t);
--	ioc->dma_mask = 32;
-- out:
-+	if (dma_mask > 32) {
-+		ioc->base_add_sg_single = &_base_add_sg_single_64;
-+		ioc->sge_size = sizeof(Mpi2SGESimple64_t);
-+	} else {
-+		ioc->base_add_sg_single = &_base_add_sg_single_32;
-+		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
-+	}
-+
- 	si_meminfo(&s);
- 	ioc_info(ioc, "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
--		 ioc->dma_mask, convert_to_kb(s.totalram));
-+		 dma_mask, convert_to_kb(s.totalram));
- 
- 	return 0;
- }
- 
--static int
--_base_change_consistent_dma_mask(struct MPT3SAS_ADAPTER *ioc,
--				      struct pci_dev *pdev)
--{
--	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(ioc->dma_mask))) {
--		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
--			return -ENODEV;
--	}
--	return 0;
--}
--
- /**
-  * _base_check_enable_msix - checks MSIX capabable.
-  * @ioc: per adapter object
-@@ -5030,14 +5010,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		total_sz += sz;
- 	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
- 
--	if (ioc->dma_mask > 32) {
--		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
--			ioc_warn(ioc, "no suitable consistent DMA mask for %s\n",
--				 pci_name(ioc->pdev));
--			goto out;
--		}
--	}
--
- 	ioc->scsiio_depth = ioc->hba_queue_depth -
- 	    ioc->hi_priority_depth - ioc->internal_depth;
- 
-@@ -6965,7 +6937,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->smp_affinity_enable = smp_affinity_enable;
- 
- 	ioc->rdpq_array_enable_assigned = 0;
--	ioc->dma_mask = 0;
- 	if (ioc->is_aero_ioc)
- 		ioc->base_readl = &_base_readl_aero;
- 	else
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index faca0a5e71f8..e57cade1155c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1011,7 +1011,6 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
-  * @ir_firmware: IR firmware present
-  * @bars: bitmask of BAR's that must be configured
-  * @mask_interrupts: ignore interrupt
-- * @dma_mask: used to set the consistent dma mask
-  * @pci_access_mutex: Mutex to synchronize ioctl, sysfs show path and
-  *			pci resource handling
-  * @fault_reset_work_q_name: fw fault work queue
-@@ -1185,7 +1184,6 @@ struct MPT3SAS_ADAPTER {
- 	u8		ir_firmware;
- 	int		bars;
- 	u8		mask_interrupts;
--	int		dma_mask;
- 
- 	/* fw fault handler */
- 	char		fault_reset_work_q_name[20];
--- 
-2.24.1
+> +static bool ufshcd_cap_idx_valid(struct ufs_hba *hba, unsigned int cap_idx)
+> +{
+> +	return cap_idx < hba->crypto_capabilities.num_crypto_cap;
+> +}
+> +
+> +static u8 get_data_unit_size_mask(unsigned int data_unit_size)
+> +{
+> +	if (data_unit_size < 512 || data_unit_size > 65536 ||
+> +	    !is_power_of_2(data_unit_size))
+> +		return 0;
+> +
+> +	return data_unit_size / 512;
+> +}
+> +
+> +static size_t get_keysize_bytes(enum ufs_crypto_key_size size)
 
+Please add ufshcd_ prefixes to all the helpers.
+
+> +	pm_runtime_get_sync(hba->dev);
+> +	ufshcd_hold(hba, false);
+> +	/* Clear the dword 16 */
+> +	ufshcd_writel(hba, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
+> +	/* Ensure that CFGE is cleared before programming the key */
+> +	wmb();
+> +	for (i = 0; i < 16; i++) {
+> +		ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[i]),
+> +			      slot_offset + i * sizeof(cfg->reg_val[0]));
+> +		/* Spec says each dword in key must be written sequentially */
+> +		wmb();
+> +	}
+> +	/* Write dword 17 */
+> +	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[17]),
+> +		      slot_offset + 17 * sizeof(cfg->reg_val[0]));
+> +	/* Dword 16 must be written last */
+> +	wmb();
+> +	/* Write dword 16 */
+> +	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[16]),
+> +		      slot_offset + 16 * sizeof(cfg->reg_val[0]));
+> +	wmb();
+
+All these wmb calls look bogus as writel itself orders mmio writes,
+while wmb is not guaranteed to have any effect on mmio space.
+
+> +EXPORT_SYMBOL_GPL(ufshcd_crypto_enable);
+
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_crypto_disable);
+
+None of the exported symbols in this file is used outside
+ufshcd-core.ko, so all the exports caan be dropped.
+
+> +	if (ufs_crypto_alg == UFS_CRYPTO_ALG_AES_XTS &&
+> +		key_size == UFS_CRYPTO_KEY_SIZE_256)
+> +		return BLK_ENCRYPTION_MODE_AES_256_XTS;
+
+Please don't indent continuation lines of conditional with a single tab.
+
+> +static inline int ufshcd_num_keyslots(struct ufs_hba *hba)
+
+> +static inline bool ufshcd_keyslot_valid(struct ufs_hba *hba, unsigned int slot)
+
+The two functions are only used in ufshcd-crypto.c and can be moved
+there.
+
+> +static inline bool ufshcd_is_crypto_enabled(struct ufs_hba *hba)
+> +{
+> +	return hba->caps & UFSHCD_CAP_CRYPTO;
+> +}
+
+I think this one would be clearer to just open code in the three callers.
