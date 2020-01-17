@@ -2,72 +2,69 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65A2CC33CB1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 11:19:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C8F8C3F68F
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 11:41:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39B9920730
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 11:19:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E707321582
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 11:41:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wxot29R3"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="J6ieimEA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726864AbgAQLTn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 06:19:43 -0500
-Received: from mail-il1-f195.google.com ([209.85.166.195]:46082 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726371AbgAQLTm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 06:19:42 -0500
-Received: by mail-il1-f195.google.com with SMTP id t17so20966831ilm.13
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 03:19:42 -0800 (PST)
+        id S1726973AbgAQLlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 06:41:22 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:41544 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726553AbgAQLlW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 06:41:22 -0500
+Received: by mail-oi1-f196.google.com with SMTP id i1so21887816oie.8
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 03:41:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=6le4NoZTvYDC0gaMP9YinfltqRZfgd5/Cmsz167yEns=;
-        b=Wxot29R3SVXp373o/M5HBKZ0yisNDtWqVQi/jBdvQI4iGu4BJPUKnzFwDmEZdanuVi
-         5Bv5FS2B4bT48xy/xuZSWLJYZGK9MbmWj4rAnwuMK9Nss7BxvoJipUxpO/wvy1iKpg9s
-         GYe0x8aVhRrdCFLXY/0DOfEZc5Y61XlPogh8Y=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=m9tAk/vstMKxuXcoj1wTHlsQe5jbJdQXyGqYu5AEc7E=;
+        b=J6ieimEAWcnG5Ov5KWJoyyAUccaKRv0FLXoO8ZH2wRpNFVDXgwhm5a8oUBkpQCv1Eb
+         M8RO4iqVkqnCOEQa+H/jGbAVXT0z+8htzmzzPku0KcewZD4TDd/hln0gce76dqXH7iHI
+         YkrDF8rifx+eVaygwXkuf+zEdeg85fRVtZxJA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=6le4NoZTvYDC0gaMP9YinfltqRZfgd5/Cmsz167yEns=;
-        b=YHParIV7/6dUlVrI52dYoVw5xGsWC4C87hk7OCDJ9F5EgONlGIXGW7Ft4Zt9PNQ783
-         fNhLGFq/IJRCwoqRINWijk7brJ4+zWPf/RuGMojzVnePTOZo556ps10VfPv5/5tpLVIC
-         CoqFWei+rSHd3I9a13zCaIRcfmAWuf92sygTPycwa9vL05b+hvH6+EzDpQ4F+zbUWNJO
-         V1zTswQdfsuNrWyH+7dATgGoIVSL6V+JDRW+zev1xD+dtHTwZK1U6Q4DpbcfHwyXLAZv
-         U3bK8PpHSRh0H3zd0BvtHonE+RvDdoULA6dlyguU3s9f33PG7/QpbHimETgO84QsYI4a
-         wIPg==
-X-Gm-Message-State: APjAAAX0nc0FPFLCQjcQykXshWLSfBj1SKkTUANqkK1YFBItzlU56GZS
-        CpX5NwiY+sKvX4wrV+5SxHlkRcbHns/UcwARKR1Gjg==
-X-Google-Smtp-Source: APXvYqwQ0rssftlQ46lc8QMKhCvowGpUnE1YWVG6aY5RAC5HBFni39eXUKibthyqk5FADWiIHdYNyG/5juAKwU/rGeg=
-X-Received: by 2002:a92:cacb:: with SMTP id m11mr2657915ilq.133.1579259982014;
- Fri, 17 Jan 2020 03:19:42 -0800 (PST)
-From:   Anand Lodnoor <anand.lodnoor@broadcom.com>
-References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
- <1579000882-20246-11-git-send-email-anand.lodnoor@broadcom.com> <7ca1562c-7a7a-17c5-2429-9725d465a4a8@suse.de>
-In-Reply-To: <7ca1562c-7a7a-17c5-2429-9725d465a4a8@suse.de>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=m9tAk/vstMKxuXcoj1wTHlsQe5jbJdQXyGqYu5AEc7E=;
+        b=sxEbVepuR87QqokHUPynuspWM6vsdcWADhTq4W7tv/GAyQz360BCSchfFvwXt8Z6oh
+         xNssCGXVR3vNkYFVspStVGK5IH/aLkaV4ZGBmwthAXrI44YSj5ELo6fFSeJsRcrq5bxP
+         M7w9AEqL/tC4o1GwOB76WUBcA6CbJymFcxbO16cDnD0Yluj6Cjqmbc5fO3ydr++iH5en
+         6P9bRauUX0M6f7flj+163nBP2mR3r/qoDmisCpU0n2UHAPaYOWOco9K1+TmXcbhR8EsD
+         V5mWrA7kgWP6QPTtfY3a8xxd+bRJMGYbUFTtJo6OtalCTJwe0UO6psKKgPbPwPLLBzzk
+         34tA==
+X-Gm-Message-State: APjAAAV3GWaXdOQHTR5LtJLtXX59SiktSljhGJ0Jcx+b3JqEypXV5IAn
+        3ylTpR3gzfunY1Ol+Ex0ukrevkahLXJfPK0rCpv3Ww==
+X-Google-Smtp-Source: APXvYqyp3W2/TTkGSBaOm7lrUVGCauAHu85T/opteccF5Rl6g4yrW9FqAcJdYPMR6O0nENi0PyNmT+OxLXXZaDYE/Os=
+X-Received: by 2002:aca:889:: with SMTP id 131mr2944535oii.3.1579261280643;
+ Fri, 17 Jan 2020 03:41:20 -0800 (PST)
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQKinn4w+yLGD2wxDyYdH/X80yxgmwIrFr9NAYD95LqmN7Fx4A==
-Date:   Fri, 17 Jan 2020 16:49:39 +0530
-Message-ID: <b5ab348d98b790578325140226f741c8@mail.gmail.com>
-Subject: RE: [PATCH v2 10/11] megaraid_sas: Use Block layer API to check SCSI
- device in-flight IO requests
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>,
-        Sankar Patra <sankar.patra@broadcom.com>,
-        Sasikumar PC <sasikumar.pc@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+References: <20191202153914.84722-1-hare@suse.de> <20191202153914.84722-10-hare@suse.de>
+ <CAL2rwxqjiRTuZ0ntfaHHzG7z-VmxRQCXYyxZeX9eDMrmX+dbGg@mail.gmail.com>
+ <efe9c1e7-fa10-3bae-eacd-58d43295d6da@suse.de> <CAL2rwxotoWakFS4DPe85hZ4VAgd_zw8pL+B5ckHR9NwEf+-L=g@mail.gmail.com>
+ <11034edd-732a-3dd5-0bdc-891b9de05e56@huawei.com> <661fd3db-0254-c209-8fb3-f3aa35bac431@suse.de>
+In-Reply-To: <661fd3db-0254-c209-8fb3-f3aa35bac431@suse.de>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Fri, 17 Jan 2020 17:10:53 +0530
+Message-ID: <CAL2rwxomOp-S0TAYhnwJXVs=hEyUv9mYJ1cO0=NdGMo0hTAYcQ@mail.gmail.com>
+Subject: Re: [PATCH 09/11] megaraid_sas: switch fusion adapters to MQ
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        linux-block@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
@@ -75,73 +72,199 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hannes,
-               Thank you for pointing it out. Will incorporate the suggeste=
-d
-changes in the upcoming patches.
-
-Thanks & Regards,
-Anand R.L
-
------Original Message-----
-From: Hannes Reinecke [mailto:hare@suse.de]
-Sent: Thursday, January 16, 2020 6:01 PM
-To: Anand Lodnoor <anand.lodnoor@broadcom.com>; linux-scsi@vger.kernel.org
-Cc: kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-kiran-kumar.kasturi@broadcom.com; sankar.patra@broadcom.com;
-sasikumar.pc@broadcom.com; shivasharan.srikanteshwara@broadcom.com;
-chandrakanth.patil@broadcom.com
-Subject: Re: [PATCH v2 10/11] megaraid_sas: Use Block layer API to check
-SCSI device in-flight IO requests
-
-On 1/14/20 12:21 PM, Anand Lodnoor wrote:
-> Remove usage of device_busy counter from driver. Instead of
-> device_busy counter now driver uses 'nr_active' counter of
-> request_queue to get the number of inflight request for a LUN.
+On Tue, Jan 14, 2020 at 12:35 PM Hannes Reinecke <hare@suse.de> wrote:
 >
-> Link : https://patchwork.kernel.org/patch/11249297/
-> Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-> Signed-off-by: Anand Lodnoor <anand.lodnoor@broadcom.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 56
-> ++++++++++++++++-------------
->  1 file changed, 31 insertions(+), 25 deletions(-)
+> On 1/13/20 6:42 PM, John Garry wrote:
+> > On 10/01/2020 04:00, Sumit Saxena wrote:
+> >> On Mon, Dec 9, 2019 at 4:32 PM Hannes Reinecke <hare@suse.de> wrote:
+> >>>
+> >>> On 12/9/19 11:10 AM, Sumit Saxena wrote:
+> >>>> On Mon, Dec 2, 2019 at 9:09 PM Hannes Reinecke <hare@suse.de> wrote:
+> >>>>>
+> >>>>> Fusion adapters can steer completions to individual queues, and
+> >>>>> we now have support for shared host-wide tags.
+> >>>>> So we can enable multiqueue support for fusion adapters and
+> >>>>> drop the hand-crafted interrupt affinity settings.
+> >>>>
+> >>>> Hi Hannes,
+> >>>>
+> >>>> Ming Lei also proposed similar changes in megaraid_sas driver some
+> >>>> time back and it had resulted in performance drop-
+> >>>> https://patchwork.kernel.org/patch/10969511/
+> >>>>
+> >>>> So, we will do some performance tests with this patch and update you=
+.
+> >>>> Thank you.
+> >>>
+> >>> I'm aware of the results of Ming Leis work, but I do hope this patchs=
+et
+> >>> performs better.
+> >>>
+> >>> And when you do performance measurements, can you please run with bot=
+h,
+> >>> 'none' I/O scheduler and 'mq-deadline' I/O scheduler?
+> >>> I've measured quite a performance improvements when using mq-deadline=
+,
+> >>> up to the point where I've gotten on-par performance with the origina=
+l,
+> >>> non-mq, implementation.
+> >>> (As a data point, on my setup I've measured about 270k IOPS and 1092
+> >>> MB/s througput, running on just 2 SSDs).
+> >>> asas_build_ldio_fusion
+> >>> But thanks for doing a performance test here.
+> >>
+> >> Hi Hannes,
+> >>
+> >> Sorry for the delay in replying, I observed a few issues with this
+> >> patchset:
+> >>
+> >> 1. "blk_mq_unique_tag_to_hwq(tag)" does not return MSI-x vector to
+> >> which IO submitter CPU is affined with. Due to this IO submission and
+> >> completion CPUs are different which causes performance drop for low
+> >> latency workloads.
+> >
+> > Hi Sumit,
+> >
+> > So the new code has:
+> >
+> > megasas_build_ldio_fusion()
+> > {
+> >
+> > cmd->request_desc->SCSIIO.MSIxIndex =3D
+> > blk_mq_unique_tag_to_hwq(tag);
+> >
+> > }
+> >
+> > So the value here is hw queue index from blk-mq point of view, and not
+> > megaraid_sas msix index, as you alluded to.
+> >
+> > So we get 80 msix, 8 are reserved for low_latency_index_start (that's
+> > how it seems to me), and we report other 72 as #hw queues =3D 72 to SCS=
+I
+> > midlayer.
+> >
+> > So I think that this should be:
+> >
+> > cmd->request_desc->SCSIIO.MSIxIndex =3D
+> > blk_mq_unique_tag_to_hwq(tag) + low_latency_index_start;
+> >
+> >
+> Indeed, that sounds reasonable.
+> (The whole queue mapping stuff isn't exactly well documented :-( )
 >
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 0bdd477..f3b36fd 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -364,6 +364,35 @@ inline void megasas_return_cmd_fusion(struct
-> megasas_instance *instance,
->  		instance->max_fw_cmds =3D instance->max_fw_cmds-1;
->  	}
->  }
-> +
-> +static inline void
-> +megasas_get_msix_index(struct megasas_instance *instance,
-> +		       struct scsi_cmnd *scmd,
-> +		       struct megasas_cmd_fusion *cmd,
-> +		       u8 data_arms)
-> +{
-> +	int sdev_busy;
-> +
-> +	/* nr_hw_queue =3D 1 for MegaRAID */
-> +	struct blk_mq_hw_ctx *hctx =3D
-> +		scmd->device->request_queue->queue_hw_ctx[0];
-> +
-While this might be true it would be better to use the hctx from the reques=
-t
-itself:
+> I'll be updating the patch.
+>
+> >>
+> >> lspcu:
+> >>
+> >> # lscpu
+> >> Architecture:          x86_64
+> >> CPU op-mode(s):        32-bit, 64-bit
+> >> Byte Order:            Little Endian
+> >> CPU(s):                72
+> >> On-line CPU(s) list:   0-71
+> >> Thread(s) per core:    2
+> >> Core(s) per socket:    18
+> >> Socket(s):             2
+> >> NUMA node(s):          2
+> >> Vendor ID:             GenuineIntel
+> >> CPU family:            6
+> >> Model:                 85
+> >> Model name:            Intel(R) Xeon(R) Gold 6150 CPU @ 2.70GHz
+> >> Stepping:              4
+> >> CPU MHz:               3204.246
+> >> CPU max MHz:           3700.0000
+> >> CPU min MHz:           1200.0000
+> >> BogoMIPS:              5400.00
+> >> Virtualization:        VT-x
+> >> L1d cache:             32K
+> >> L1i cache:             32K
+> >> L2 cache:              1024K
+> >> L3 cache:              25344K
+> >> NUMA node0 CPU(s):     0-17,36-53
+> >> NUMA node1 CPU(s):     18-35,54-71
+> >> Flags:                 fpu vme de pse tsc msr pae mce cx8 apic sep
+> >> mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht
+> >> tm pbe s
+> >> yscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts
+> >> rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq
+> >> dtes64 monitor
+> >> ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1
+> >> sse4_2 x2apic movbe popcnt tsc_deadline_timer xsave avx f16c rdrand
+> >> lahf_lm abm
+> >> 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 invpcid_single intel_ppin
+> >> mba tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust
+> >> bmi1 hle
+> >> avx2 smep bmi2 erms invpcid rtm cqm mpx rdt_a avx512f avx512dq rdseed
+> >> adx smap clflushopt clwb intel_pt avx512cd avx512bw avx512vl xsaveopt
+> >> xsavec
+> >> xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_lo
+> >>
+> >>
+> >
+> > [snip]
+> >
+> >> 4. This patch removes below code from driver so what this piece of
+> >> code does is broken-
+> >>
+> >>
+> >> -                               if (instance->adapter_type >=3D
+> >> INVADER_SERIES &&
+> >> -                                   !instance->msix_combined) {
+> >> -                                       instance->msix_load_balance =
+=3D
+> >> true;
+> >> -                                       instance->smp_affinity_enable
+> >> =3D false;
+> >> -                               }
+> >
+> > Does this code need to be re-added? Would this have affected your test?
+> > Primarily this patch was required to enable interrupt affinity on my
+> machine (Lenovo RAID 930-8i).
+> Can you give me some information why the code is present in the first
+> place? Some hardware limitation, maybe?
 
-struct blk_mq_hw_ctx *hctx =3D scmd->request->mq_hctx;
+Hi Hannes,
+This code is for specific family of megaraid_sas adapters and Lenovo
+RAID 930-8i belongs to them. For those adapters, we want to use
+available HW queues in round robin fashion instead of using interrupt
+affinity. It helps to improve performance and fixes soft lockups.
+For interrupt affinity test purpose on Lenovo RAID 930-8i, you can
+disable this code to use affinity. But in the final patch, this code
+has to be present. This code was added through below commit:
 
-Cheers,
+commit 1d15d9098ad12b0021ac5a6b851f26d1ab021e5a
+Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Date:   Tue May 7 10:05:36 2019 -0700
 
-Hannes
---=20
-Dr. Hannes Reinecke		      Teamlead Storage & Networking
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg HR=
-B
-36809 (AG N=C3=BCrnberg), GF: Felix Imend=C3=B6rffer
+    scsi: megaraid_sas: Load balance completions across all MSI-X
+
+    Driver will use "reply descriptor post queues" in round robin fashion w=
+hen
+    the combined MSI-X mode is not enabled. With this IO completions are
+    distributed and load balanced across all the available reply descriptor
+    post queues equally.
+
+    This is enabled only if combined MSI-X mode is not enabled in firmware.
+    This improves performance and also fixes soft lockups.
+
+    When load balancing is enabled, IRQ affinity from driver needs to be
+    disabled.
+
+    Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+    Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+
+Thanks,
+Sumit
+
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                   Teamlead Storage & Networking
+> hare@suse.de                                      +49 911 74053 688
+> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> HRB 36809 (AG N=C3=BCrnberg), GF: Felix Imend=C3=B6rffer
