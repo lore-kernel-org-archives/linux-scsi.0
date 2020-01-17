@@ -6,52 +6,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2576EC33CB3
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5C8C33CB1
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE5AA2073A
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25CE32073A
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729317AbgAQHKy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 02:10:54 -0500
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:16701 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729299AbgAQHKy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 02:10:54 -0500
-Received-SPF: Pass (esa5.microchip.iphmx.com: domain of
-  viswas.g@microsemi.com designates 208.19.100.22 as permitted
-  sender) identity=mailfrom; client-ip=208.19.100.22;
-  receiver=esa5.microchip.iphmx.com;
+        id S1729318AbgAQHK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 02:10:56 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:10603 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729260AbgAQHK4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 02:10:56 -0500
+Received-SPF: Pass (esa4.microchip.iphmx.com: domain of
+  viswas.g@microsemi.com designates 208.19.100.23 as permitted
+  sender) identity=mailfrom; client-ip=208.19.100.23;
+  receiver=esa4.microchip.iphmx.com;
   envelope-from="viswas.g@microsemi.com";
   x-sender="viswas.g@microsemi.com"; x-conformance=spf_only;
   x-record-type="v=spf1"; x-record-text="v=spf1
   ip4:208.19.100.20 ip4:208.19.100.21 ip4:208.19.100.22
   ip4:208.19.100.23 ip4:208.19.99.221 ip4:208.19.99.222
   ip4:208.19.99.223 ip4:208.19.99.225 -all"
-Received-SPF: None (esa5.microchip.iphmx.com: no sender
+Received-SPF: None (esa4.microchip.iphmx.com: no sender
   authenticity information available from domain of
   postmaster@smtp.microsemi.com) identity=helo;
-  client-ip=208.19.100.22; receiver=esa5.microchip.iphmx.com;
+  client-ip=208.19.100.23; receiver=esa4.microchip.iphmx.com;
   envelope-from="viswas.g@microsemi.com";
   x-sender="postmaster@smtp.microsemi.com";
   x-conformance=spf_only
-Authentication-Results: esa5.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=viswas.g@microsemi.com; spf=None smtp.helo=postmaster@smtp.microsemi.com; dmarc=fail (p=none dis=none) d=microchip.com
-IronPort-SDR: /2dUEN2r4nYyg/zxnaGwTuoXe1Q4QatsnY+f3Jhosh18OEgnx92Y/8eQQ0gxJaGhZ1JhmLgb4V
- 443hUFNb5KXDKrlYopNb3UkCOOR329w+kr1nHbL6PVZMD5j7i3p0v3U0k0Znnh/Bf2YnyM3wPe
- XEVGfN7oez0irah987E5fNZQa1f/UcVjsDKFyRlFP9FIwVqMGIP2PIOVNypVI0ZhhOSQXaevAg
- DfBZyalW4A0AMh+SRV22db9+WE/tQLyonV7PrmZGRdM6wpnxY5+Gj4y/t0dVdhIxwg6aAE/wUA
- ln8=
+Authentication-Results: esa4.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=viswas.g@microsemi.com; spf=None smtp.helo=postmaster@smtp.microsemi.com; dmarc=fail (p=none dis=none) d=microchip.com
+IronPort-SDR: /fdV4pGeLOfOVPd4c3oBKHOQIvKM9HroGmYG9iij9lbQYq/GkWK3Jh3WtVA8N6smbk85k6htUW
+ KxWSDwHLiL/bWjg/TRvX1JxvXIEFvgGkLmE3WytShYmGiW4EBpem7pdK3sgRnQGWKtgjzlrL2/
+ 8Rot6Jvg9I49vAlhJLb9N2B0hVENM2AcmZoIZHfSlhsl6QLAZGPcozAaWbrL3uwSkb/dKpeEOo
+ X/smJIukcZydmFVXfkwc060804jepJRDYOwl+P+PJjwg1ZHDRoG6yFEku97Sa1rWYvJfNBMCj4
+ GQA=
 X-IronPort-AV: E=Sophos;i="5.70,329,1574146800"; 
-   d="scan'208";a="62253236"
-Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.22])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 00:10:54 -0700
-Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX2.microsemi.net
- (10.100.34.32) with Microsoft SMTP Server (version=TLS1_2,
+   d="scan'208";a="61358158"
+Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 00:10:55 -0700
+Received: from AVMBX2.microsemi.net (10.100.34.32) by AVMBX3.microsemi.net
+ (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Thu, 16 Jan
- 2020 23:10:52 -0800
-Received: from localhost (10.41.130.51) by avmbx1.microsemi.net (10.100.34.31)
+ 2020 23:10:54 -0800
+Received: from localhost (10.41.130.51) by avmbx2.microsemi.net (10.100.34.32)
  with Microsoft SMTP Server id 15.1.1847.3 via Frontend Transport; Thu, 16 Jan
- 2020 23:10:51 -0800
+ 2020 23:10:54 -0800
 From:   Deepak Ukey <deepak.ukey@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
@@ -60,9 +60,9 @@ CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <yuuzheng@google.com>, <auradkar@google.com>,
         <vishakhavc@google.com>, <bjashnani@google.com>,
         <radha@google.com>, <akshatzen@google.com>
-Subject: [PATCH V2 12/13] pm80xx : Introduce read and write length for IOCTL payload structure.
-Date:   Fri, 17 Jan 2020 12:49:22 +0530
-Message-ID: <20200117071923.7445-13-deepak.ukey@microchip.com>
+Subject: [PATCH V2 13/13] pm80xx : IOCTL functionality for TWI device.
+Date:   Fri, 17 Jan 2020 12:49:23 +0530
+Message-ID: <20200117071923.7445-14-deepak.ukey@microchip.com>
 X-Mailer: git-send-email 2.19.0-rc1
 In-Reply-To: <20200117071923.7445-1-deepak.ukey@microchip.com>
 References: <20200117071923.7445-1-deepak.ukey@microchip.com>
@@ -74,214 +74,550 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viswas G <Viswas.G@microchip.com>
+From: Deepak Ukey <Deepak.Ukey@microchip.com>
 
-Removed the common length and introduce read and write length for
-IOCTL payload structure.
+Added the IOCTL functionality for TWI device so that management
+utility can manage the TWI device attached to the controller's
+TWI. The TWI device includes (but not limited to) the SEEPROM
+device. When NVME field set to 0000b (TWI devices), this command
+also allows the host to specify:
+a. TWI device address
+b. TWI Bus number
+c. TWI device page size (1, 8, 16 or 32 bytes)
+d. TWI device address size (1 or 2 bytes)
+Also added the module parameter for TWI device address and page
+size in order to add support for different TWI devices.
 
 Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 Signed-off-by: Radha Ramachandran <radha@google.com>
-Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c  |  6 +++---
- drivers/scsi/pm8001/pm8001_hwi.c  | 22 +++++++++++-----------
- drivers/scsi/pm8001/pm8001_init.c | 12 ++++++------
- drivers/scsi/pm8001/pm8001_sas.h  |  3 ++-
- 4 files changed, 22 insertions(+), 21 deletions(-)
+ drivers/scsi/pm8001/pm8001_ctl.c  | 133 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_ctl.h  |  23 +++++++
+ drivers/scsi/pm8001/pm8001_hwi.c  | 113 ++++++++++++++++++++++++++------
+ drivers/scsi/pm8001/pm8001_hwi.h  |   1 +
+ drivers/scsi/pm8001/pm8001_init.c |  10 +++
+ drivers/scsi/pm8001/pm8001_sas.h  |  13 ++++
+ drivers/scsi/pm8001/pm80xx_hwi.c  |  41 ++++++++++++
+ drivers/scsi/pm8001/pm80xx_hwi.h  |   1 +
+ 8 files changed, 314 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 9fce19024945..887a15ee69f6 100644
+index 887a15ee69f6..ce9d1ee5e995 100644
 --- a/drivers/scsi/pm8001/pm8001_ctl.c
 +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -486,7 +486,7 @@ static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
- 	pm8001_ha->nvmd_completion = &completion;
- 	payload.minor_function = 7;
- 	payload.offset = 0;
--	payload.length = 4096;
-+	payload.rd_length = 4096;
- 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
- 	if (!payload.func_specific)
- 		return -ENOMEM;
-@@ -697,7 +697,7 @@ static int pm8001_set_nvmd(struct pm8001_hba_info *pm8001_ha)
- 	payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
- 	memcpy((u8 *)&payload->func_specific, (u8 *)pm8001_ha->fw_image->data,
- 				pm8001_ha->fw_image->size);
--	payload->length = pm8001_ha->fw_image->size;
-+	payload->wr_length = pm8001_ha->fw_image->size;
- 	payload->id = 0;
- 	payload->minor_function = 0x1;
- 	pm8001_ha->nvmd_completion = &completion;
-@@ -743,7 +743,7 @@ static int pm8001_update_flash(struct pm8001_hba_info *pm8001_ha)
- 					IOCTL_BUF_SIZE);
- 		for (loopNumber = 0; loopNumber < loopcount; loopNumber++) {
- 			payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
--			payload->length = 1024*16;
-+			payload->wr_length = 1024*16;
- 			payload->id = 0;
- 			fwControl =
- 			      (struct fw_control_info *)&payload->func_specific;
+@@ -1122,6 +1122,126 @@ static long pm8001_sgpio_ioctl(struct pm8001_hba_info *pm8001_ha,
+ 	return ret;
+ }
+ 
++static int icotl_twi_wr_request(int twi_wr,
++			struct pm8001_hba_info *pm8001_ha, unsigned long arg)
++{
++	int ret = 0;
++	unsigned char *buf;
++	int bus;
++	int addr;
++	bool addr_mode_7bit = true;
++	int rd_size = 0;
++	int wr_size = 0;
++	int offset = 0;
++	bool direct_addr  = true;
++	struct twi_ioctl_payload *twi_ioctl;
++
++	twi_ioctl = kmalloc(sizeof(struct twi_ioctl_payload), GFP_KERNEL);
++	if (!twi_ioctl) {
++		PM8001_FAIL_DBG(pm8001_ha,
++				pm8001_printk("Failed to allocate ioctl\n"));
++		return -ENOMEM;
++	}
++	ret = copy_from_user(twi_ioctl, (u8 *)arg, sizeof(*twi_ioctl));
++	if (ret) {
++		PM8001_FAIL_DBG(pm8001_ha,
++			pm8001_printk("Failed to get ioctl args\n"));
++		return -EIO;
++	}
++
++	bus = twi_ioctl->bus;
++	addr = twi_ioctl->addr;
++
++	switch (twi_wr) {
++	case TW_WRITE:
++		wr_size = twi_ioctl->wr_size;
++		/* first 1K read/write is not possible,
++		 * from 2k we have customer specific seeprom
++		 */
++		offset = twi_ioctl->offset;
++		if (wr_size > 48)
++			direct_addr = false;
++		buf = kzalloc(wr_size, GFP_KERNEL);
++
++		if (buf == NULL) {
++			PM8001_FAIL_DBG(pm8001_ha,
++				pm8001_printk("No Memory for write\n"));
++			return -ENOMEM;
++		}
++		ret = copy_from_user(buf, (u8 *)twi_ioctl->buf, wr_size);
++		if (!ret) {
++			ret = pm80xx_twi_wr_request(pm8001_ha, bus, addr,
++				addr_mode_7bit, rd_size, wr_size, offset,
++				direct_addr, buf);
++		} else {
++			PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++				("Failed to get data from buffer\n"));
++			return -EIO;
++		}
++		kfree(buf);
++		break;
++	case TW_READ:
++		rd_size = twi_ioctl->rd_size;
++		offset = twi_ioctl->offset;
++		if (rd_size > 48)
++			direct_addr = false;
++		buf = kzalloc(rd_size, GFP_KERNEL);
++		if (buf == NULL) {
++			PM8001_FAIL_DBG(pm8001_ha,
++				pm8001_printk("No Memory for read\n"));
++			return -ENOMEM;
++		}
++		ret = pm80xx_twi_wr_request(pm8001_ha, bus, addr,
++			addr_mode_7bit, rd_size, wr_size, offset,
++			direct_addr, buf);
++		if (!ret) {
++			ret = copy_to_user((u8 *)twi_ioctl->buf, buf, rd_size);
++			kfree(buf);
++		} else {
++			PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++				("pm80xx_twi_wr_request failed !!!\n"));
++			return -EIO;
++		}
++		break;
++	case TW_WRITE_READ:
++		rd_size = twi_ioctl->rd_size;
++		wr_size = twi_ioctl->wr_size;
++		offset = twi_ioctl->offset;
++		if (wr_size > 48 || rd_size > 48)
++			direct_addr = false;
++		buf = kzalloc(max_t(int, wr_size, rd_size), GFP_KERNEL);
++		if (buf == NULL) {
++			PM8001_FAIL_DBG(pm8001_ha,
++				pm8001_printk("No Memory for read\n"));
++			return -ENOMEM;
++		}
++		ret = copy_from_user(buf, (u8 *)twi_ioctl->buf, wr_size);
++		if (!ret) {
++			ret = pm80xx_twi_wr_request(pm8001_ha, bus, addr,
++				addr_mode_7bit, rd_size, wr_size, offset,
++				direct_addr, buf);
++			if (!ret)
++				ret = copy_to_user((u8 *)twi_ioctl->buf,
++					buf, rd_size);
++			else {
++				PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++				("Failed to copy data to read buffer\n"));
++				ret = -EIO;
++			}
++		} else {
++			PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++				("Failed to get data from write buffer\n"));
++			return -ENOMEM;
++		}
++		break;
++	default:
++		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++			("Invalid twi operation\n"));
++		return -EINVAL;
++	}
++	return ret;
++}
++
+ static int pm8001_ioctl_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
+ 		unsigned long arg)
+ {
+@@ -1274,6 +1394,7 @@ static long pm8001_ioctl(struct file *file,
+ 	u32 ret = -EACCES;
+ 	struct pm8001_hba_info *pm8001_ha;
+ 	struct ioctl_header header;
++	u8 twi_wr = 0;
+ 
+ 	pm8001_ha = file->private_data;
+ 
+@@ -1293,6 +1414,18 @@ static long pm8001_ioctl(struct file *file,
+ 	case ADPT_IOCTL_GET_PHY_ERR_CNT:
+ 		ret = pm8001_ioctl_get_phy_err(pm8001_ha, arg);
+ 		break;
++	case ADPT_IOCTL_TWI_WRITE:
++		twi_wr = 0x01;
++		ret = icotl_twi_wr_request(twi_wr, pm8001_ha, arg);
++		return ret;
++	case ADPT_IOCTL_TWI_READ:
++		twi_wr = 0x02;
++		ret = icotl_twi_wr_request(twi_wr, pm8001_ha, arg);
++		return ret;
++	case ADPT_IOCTL_TWI_WRITE_READ:
++		twi_wr = 0x03;
++		ret = icotl_twi_wr_request(twi_wr, pm8001_ha, arg);
++		return ret;
+ 	default:
+ 		ret = ADPT_IOCTL_CALL_INVALID_CODE;
+ 	}
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
+index b1be0bc065d5..57bf597aa9c3 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.h
++++ b/drivers/scsi/pm8001/pm8001_ctl.h
+@@ -101,6 +101,26 @@
+ #define SGPIO_CMD_ERROR_WRONG_FRAME_REG_TYPE_REG_INDEX	0x1D
+ #define SGPIO_CMD_ERROR_WRONG_ALL_HEADER_PARAMS		0x9D
+ 
++#define TWI_SEEPROM_BUS_NUMBER	0
++#define TWI_SEEPROM_DEV_ADDR	0xa0
++#define TWI_SEEPROM_READ_SIZE	1024
++#define TWI_SEEPROM_WRITE_SIZE	1024
++
++#define TW_IOCTL_STATUS_SUCCESS		0
++#define TW_IOCTL_STATUS_FAILURE		1
++#define TW_IOCTL_STATUS_WRONG_ADDR	0xA
++
++struct twi_ioctl_payload {
++	u32	bus;
++	u32	addr;
++	u32	rd_size;
++	u32	wr_size;
++	u32	offset;
++	u8	addr_mode;
++	u8	*buf;
++	u32	status;
++};
++
+ struct ioctl_header {
+ 	u32 io_controller_num;
+ 	u32 length;
+@@ -219,6 +239,9 @@ struct phy_prof_resp {
+ 		struct phy_profile*)
+ #define ADPT_IOCTL_GET_PHY_ERR_CNT _IOWR(ADPT_MAGIC_NUMBER, 9, \
+ 		struct phy_err*)
++#define ADPT_IOCTL_TWI_READ _IOR('m', 10, char *)
++#define ADPT_IOCTL_TWI_WRITE _IOW('m', 11, char *)
++#define ADPT_IOCTL_TWI_WRITE_READ _IOWR('m', 12, char *)
+ #define ADPT_MAGIC_NUMBER	'm'
+ 
+ #endif /* PM8001_CTL_H_INCLUDED */
 diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index f9395d9fd530..16dc7a92ad68 100644
+index 16dc7a92ad68..0736c4b8cf7b 100644
 --- a/drivers/scsi/pm8001/pm8001_hwi.c
 +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -4841,7 +4841,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	if (!fw_control_context)
- 		return -ENOMEM;
- 	fw_control_context->usrAddr = (u8 *)ioctl_payload->func_specific;
--	fw_control_context->len = ioctl_payload->length;
-+	fw_control_context->len = ioctl_payload->rd_length;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	memset(&nvmd_req, 0, sizeof(nvmd_req));
- 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
-@@ -4862,7 +4862,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+@@ -3152,13 +3152,34 @@ void pm8001_mpi_set_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	u32 tag = le32_to_cpu(pPayload->tag);
+ 	struct pm8001_ccb_info *ccb = &pm8001_ha->ccb_info[tag];
+ 	u32 dlen_status = le32_to_cpu(pPayload->dlen_status);
+-	complete(pm8001_ha->nvmd_completion);
+-	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set nvm data complete!\n"));
++	u32 *nvmd_data_addr;
++	u32 ir_tds_bn_dps_das_nvm =
++		le32_to_cpu(pPayload->ir_tda_bn_dps_das_nvm);
++	int tw_wr = (ir_tds_bn_dps_das_nvm & TR_MASK) >> 29;
++	struct fw_control_ex	*fw_control_context;
++
++	fw_control_context = ccb->fw_control_context;
+ 	if ((dlen_status & NVMD_STAT) != 0) {
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("Set nvm data error!\n"));
++		complete(pm8001_ha->nvmd_completion);
+ 		return;
+ 	}
++
++	if ((ir_tds_bn_dps_das_nvm & NVMD_TYPE) == TWI_DEVICE) {
++		if (tw_wr == TW_READ || tw_wr == TW_WRITE_READ) {
++			if (ir_tds_bn_dps_das_nvm & IPMode) {
++				nvmd_data_addr =
++				pm8001_ha->memoryMap.region[NVMD].virt_ptr;
++			} else {
++				nvmd_data_addr = pPayload->nvm_data;
++			}
++			memcpy(fw_control_context->usrAddr, nvmd_data_addr,
++				fw_control_context->len);
++		}
++	}
++	complete(pm8001_ha->nvmd_completion);
++	PM8001_MSG_DBG(pm8001_ha, pm8001_printk("Set nvm data complete!\n"));
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	pm8001_tag_free(pm8001_ha, tag);
+@@ -3223,11 +3244,11 @@ pm8001_mpi_get_nvmd_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 	memcpy(fw_control_context->usrAddr,
+ 		pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+ 		fw_control_context->len);
++	complete(pm8001_ha->nvmd_completion);
+ 	kfree(ccb->fw_control_context);
+ 	ccb->task = NULL;
+ 	ccb->ccb_tag = 0xFFFFFFFF;
+ 	pm8001_tag_free(pm8001_ha, tag);
+-	complete(pm8001_ha->nvmd_completion);
+ }
+ 
+ int pm8001_mpi_local_phy_ctl(struct pm8001_hba_info *pm8001_ha, void *piomb)
+@@ -4856,12 +4877,17 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 
+ 	switch (nvmd_type) {
+ 	case TWI_DEVICE: {
+-		u32 twi_addr, twi_page_size;
+-		twi_addr = 0xa8;
+-		twi_page_size = 2;
++		u32 twi_addr, twi_page_size, twi_addr_size, twi_busno;
++
++		twi_addr = pm8001_ha->twi_address;
++		twi_page_size = pm8001_ha->twi_page_size;
++		twi_addr_size = 1;
++		twi_busno = 0;
  
  		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
- 			twi_page_size << 8 | TWI_DEVICE);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
+-			twi_page_size << 8 | TWI_DEVICE);
++				twi_busno << 12 | twi_page_size << 8 |
++				twi_addr_size << 4 | TWI_DEVICE);
++		nvmd_req.vpd_offset = cpu_to_le32(ioctl_payload->offset);
+ 		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
  		nvmd_req.resp_addr_hi =
  		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4871,7 +4871,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case C_SEEPROM: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4880,7 +4880,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case VPD_FLASH: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4889,7 +4889,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case EXPAN_ROM: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4898,7 +4898,7 @@ int pm8001_chip_get_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 	}
- 	case IOP_RDUMP: {
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | IOP_RDUMP);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->rd_length);
- 		nvmd_req.vpd_offset = cpu_to_le32(ioctl_payload->offset);
- 		nvmd_req.resp_addr_hi =
- 		cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4938,7 +4938,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+@@ -4936,32 +4962,77 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 	if (!fw_control_context)
+ 		return -ENOMEM;
  	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 	memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
- 		&ioctl_payload->func_specific,
--		ioctl_payload->length);
-+		ioctl_payload->wr_length);
+-	memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
+-		&ioctl_payload->func_specific,
+-		ioctl_payload->wr_length);
++	if (nvmd_type != TWI_DEVICE) {
++		memcpy(pm8001_ha->memoryMap.region[NVMD].virt_ptr,
++			&ioctl_payload->func_specific,
++			ioctl_payload->wr_length);
++	}
  	memset(&nvmd_req, 0, sizeof(nvmd_req));
  	rc = pm8001_tag_alloc(pm8001_ha, &tag);
  	if (rc) {
-@@ -4957,7 +4957,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+ 		kfree(fw_control_context);
+-		return -EBUSY;
++		return rc;
+ 	}
+ 	ccb = &pm8001_ha->ccb_info[tag];
+ 	ccb->fw_control_context = fw_control_context;
+ 	ccb->ccb_tag = tag;
+ 	nvmd_req.tag = cpu_to_le32(tag);
++
+ 	switch (nvmd_type) {
+ 	case TWI_DEVICE: {
+-		u32 twi_addr, twi_page_size;
+-		twi_addr = 0xa8;
+-		twi_page_size = 2;
++		u32 twi_addr, twi_page_size, twi_addr_size, twi_busno;
++		u32 addr_mode;
++		u8 *nvmd_data_addr;
++		u8 tr = 0, d_len = 0;
++		u32 ipdl = 0;//indirect data payload len
++		u32 tr_dl = 0; //twi read data len
++
++		addr_mode = (ioctl_payload->twi_direct_addr == true) ?
++			0 : IPMode;
++		if (ioctl_payload->rd_length) {
++			tr_dl = ioctl_payload->rd_length;
++			fw_control_context->usrAddr =
++				(u8 *)ioctl_payload->func_specific;
++			fw_control_context->len = ioctl_payload->rd_length;
++			tr = TW_READ;
++		}
++		if (ioctl_payload->wr_length) {
++			if (addr_mode  == 0) {
++				d_len = ioctl_payload->wr_length;
++				nvmd_data_addr =  (u8 *)&(nvmd_req.reserved[0]);
++			} else	{
++				ipdl = ioctl_payload->wr_length;
++				nvmd_data_addr =
++				pm8001_ha->memoryMap.region[NVMD].virt_ptr;
++			}
++			memcpy(nvmd_data_addr, ioctl_payload->func_specific,
++					ioctl_payload->wr_length);
++			tr = TW_WRITE;
++		}
++		if (ioctl_payload->wr_length && ioctl_payload->rd_length)
++			tr = TW_WRITE_READ;
++		twi_addr = ioctl_payload->twi_addr;
++		if (twi_addr == TWI_SEEPROM_DEV_ADDR)
++			tr = 0;//Reserved for SEEPROM access ,as by fw
++		twi_page_size = 0;
++		twi_addr_size = 1;
++		twi_busno = ioctl_payload->bus;
  		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
- 			twi_page_size << 8 | TWI_DEVICE);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
- 		nvmd_req.resp_addr_lo =
-@@ -4966,7 +4966,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
+-		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | twi_addr << 16 |
+-			twi_page_size << 8 | TWI_DEVICE);
+-		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
+-		nvmd_req.resp_addr_hi =
+-		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+-		nvmd_req.resp_addr_lo =
+-		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_lo);
++		nvmd_req.len_ir_vpdd = cpu_to_le32(addr_mode | (tr << 29) |
++				twi_addr << 16 | twi_busno << 12 |
++				twi_page_size << 8 | twi_addr_size << 4 |
++				TWI_DEVICE);
++		nvmd_req.vpd_offset = cpu_to_le32(d_len  << 24 |
++				ioctl_payload->offset);
++		nvmd_req.resp_len = cpu_to_le32(ipdl);
++
++		if (addr_mode == IPMode) {
++			nvmd_req.resp_addr_hi = cpu_to_le32
++			(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
++			nvmd_req.resp_addr_lo = cpu_to_le32
++			(pm8001_ha->memoryMap.region[NVMD].phys_addr_lo);
++		}
++		nvmd_req.tr_dl = cpu_to_le32(tr_dl);
+ 		break;
  	}
  	case C_SEEPROM:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | C_SEEPROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4975,7 +4975,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		break;
- 	case VPD_FLASH:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | VPD_FLASH);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
-@@ -4984,7 +4984,7 @@ int pm8001_chip_set_nvmd_req(struct pm8001_hba_info *pm8001_ha,
- 		break;
- 	case EXPAN_ROM:
- 		nvmd_req.len_ir_vpdd = cpu_to_le32(IPMode | EXPAN_ROM);
--		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->length);
-+		nvmd_req.resp_len = cpu_to_le32(ioctl_payload->wr_length);
- 		nvmd_req.reserved[0] = cpu_to_le32(0xFEDCBA98);
- 		nvmd_req.resp_addr_hi =
- 		    cpu_to_le32(pm8001_ha->memoryMap.region[NVMD].phys_addr_hi);
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
+index aad2322467d2..98e9ea6a4d6e 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.h
++++ b/drivers/scsi/pm8001/pm8001_hwi.h
+@@ -634,6 +634,7 @@ struct set_nvm_data_req {
+ 	__le32	resp_addr_hi;
+ 	__le32	resp_len;
+ 	u32	reserved1;
++	__le32	tr_dl;
+ } __attribute__((packed, aligned(4)));
+ 
+ 
 diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index b74282bc1ed0..6e037638656d 100644
+index 6e037638656d..61fb9f622a5d 100644
 --- a/drivers/scsi/pm8001/pm8001_init.c
 +++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -643,22 +643,22 @@ static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
- 	if (pm8001_ha->chip_id == chip_8001) {
- 		if (deviceid == 0x8081 || deviceid == 0x0042) {
- 			payload.minor_function = 4;
--			payload.length = 4096;
-+			payload.rd_length = 4096;
- 		} else {
- 			payload.minor_function = 0;
--			payload.length = 128;
-+			payload.rd_length = 128;
- 		}
- 	} else if ((pm8001_ha->chip_id == chip_8070 ||
- 			pm8001_ha->chip_id == chip_8072) &&
- 			pm8001_ha->pdev->subsystem_vendor == PCI_VENDOR_ID_ATTO) {
- 		payload.minor_function = 4;
--		payload.length = 4096;
-+		payload.rd_length = 4096;
- 	} else {
- 		payload.minor_function = 1;
--		payload.length = 4096;
-+		payload.rd_length = 4096;
- 	}
- 	payload.offset = 0;
--	payload.func_specific = kzalloc(payload.length, GFP_KERNEL);
-+	payload.func_specific = kzalloc(payload.rd_length, GFP_KERNEL);
- 	if (!payload.func_specific) {
- 		PM8001_INIT_DBG(pm8001_ha, pm8001_printk("mem alloc fail\n"));
- 		return;
-@@ -728,7 +728,7 @@ static int pm8001_get_phy_settings_info(struct pm8001_hba_info *pm8001_ha)
- 	/* SAS ADDRESS read from flash / EEPROM */
- 	payload.minor_function = 6;
- 	payload.offset = 0;
--	payload.length = 4096;
-+	payload.rd_length = 4096;
- 	payload.func_specific = kzalloc(4096, GFP_KERNEL);
- 	if (!payload.func_specific)
- 		return -ENOMEM;
+@@ -55,6 +55,14 @@ MODULE_PARM_DESC(link_rate, "Enable link rate.\n"
+ 		" 4: Link rate 6.0G\n"
+ 		" 8: Link rate 12.0G\n");
+ 
++static ulong twi_address = 0xa0;
++module_param(twi_address, ulong, 0644);
++MODULE_PARM_DESC(twi_address, "set the address of twi device.");
++
++static ulong twi_page_size;
++module_param(twi_page_size, ulong, 0644);
++MODULE_PARM_DESC(twi_page_size, "set the page size of twi device.");
++
+ static struct scsi_transport_template *pm8001_stt;
+ 
+ /**
+@@ -484,6 +492,8 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+ 	pm8001_ha->shost = shost;
+ 	pm8001_ha->id = pm8001_id++;
+ 	pm8001_ha->logging_level = logging_level;
++	pm8001_ha->twi_address = twi_address;
++	pm8001_ha->twi_page_size = twi_page_size;
+ 	pm8001_ha->non_fatal_count = 0;
+ 	if (link_rate >= 1 && link_rate <= 15)
+ 		pm8001_ha->link_rate = (link_rate << 8);
 diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index ae5f880dd9bb..13d7813b8d74 100644
+index 13d7813b8d74..9074c3a14120 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.h
 +++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -164,10 +164,11 @@ struct pm8001_ioctl_payload {
- 	u32	signature;
- 	u16	major_function;
- 	u16	minor_function;
--	u16	length;
- 	u16	status;
- 	u16	offset;
+@@ -169,6 +169,9 @@ struct pm8001_ioctl_payload {
  	u16	id;
-+	u32	wr_length;
-+	u32	rd_length;
+ 	u32	wr_length;
+ 	u32	rd_length;
++	bool	twi_direct_addr;
++	u8	bus;
++	u8	twi_addr;
  	u8	*func_specific;
  };
  
+@@ -586,6 +589,8 @@ struct pm8001_hba_info {
+ #endif
+ 	u32			logging_level;
+ 	u32			link_rate;
++	u32			twi_address;
++	u32			twi_page_size;
+ 	u32			fw_status;
+ 	u32			smp_exp_mode;
+ 	bool			controller_fatal_error;
+@@ -648,6 +653,11 @@ struct pm8001_fw_image_header {
+ #define DS_IN_ERROR				0x04
+ #define DS_NON_OPERATIONAL			0x07
+ 
++#define TR_MASK			0x60000000
++#define TW_WRITE		0x01
++#define TW_READ			0x02
++#define TW_WRITE_READ		0x03
++
+ /**
+  * brief param structure for firmware flash update.
+  */
+@@ -794,6 +804,9 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
+ ssize_t pm80xx_get_non_fatal_dump(struct device *cdev,
+ 		struct device_attribute *attr, char *buf);
+ ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
++int pm80xx_twi_wr_request(struct pm8001_hba_info *pm8001_ha, int bus, int addr,
++		bool addr_mode_7bit, int rd_size, int wr_size,
++		int offset, bool direct_addr, unsigned char *buf);
+ /* ctl shared API */
+ extern struct device_attribute *pm8001_host_attrs[];
+ 
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index a4e265292d17..767914688b8a 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -46,6 +46,47 @@
+ #define SMP_DIRECT 1
+ #define SMP_INDIRECT 2
+ 
++int pm80xx_twi_wr_request(struct pm8001_hba_info *pm8001_ha, int bus, int addr,
++			bool addr_mode_7bit, int rd_size, int wr_size,
++			int offset, bool direct_addr, unsigned char *buf)
++{
++	struct pm8001_ioctl_payload *payload;
++	u8 *ioctlbuffer = NULL;
++	int length, ret;
++	DECLARE_COMPLETION_ONSTACK(completion);
++
++	if ((wr_size > 48 || rd_size > 48) && direct_addr == true) {
++		PM8001_FAIL_DBG(pm8001_ha, pm8001_printk
++		("Direct addressing mode used if payload size < 48\n"));
++		return -EINVAL;
++	}
++
++	length = sizeof(*payload);
++	ioctlbuffer = kzalloc(length, GFP_KERNEL);
++	if (!ioctlbuffer)
++		return -ENOMEM;
++	payload = (struct pm8001_ioctl_payload *)ioctlbuffer;
++
++	pm8001_ha->nvmd_completion = &completion;
++	payload->minor_function = 0;
++
++	payload->rd_length = rd_size;
++	payload->wr_length = wr_size;
++	payload->bus = bus;
++	payload->twi_addr = addr;
++	payload->twi_direct_addr = direct_addr;
++	payload->offset = offset;
++
++	payload->func_specific = buf;
++
++	ret = PM8001_CHIP_DISP->set_nvmd_req(pm8001_ha, payload);
++
++	wait_for_completion(&completion);
++
++	kfree(ioctlbuffer);
++
++	return ret;
++}
+ 
+ int pm80xx_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shift_value)
+ {
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index 2d7f67b1cd93..ba49d0abd6f4 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -966,6 +966,7 @@ struct set_nvm_data_req {
+ 	__le32	resp_addr_hi;
+ 	__le32	resp_len;
+ 	u32	reserved1[17];
++	__le32	tr_dl;
+ } __attribute__((packed, aligned(4)));
+ 
+ /**
 -- 
 2.16.3
 
