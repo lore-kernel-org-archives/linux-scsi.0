@@ -2,128 +2,131 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C0DC33CB6
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:02:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE8F1C33CB1
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40F7620728
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:02:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87AC82073A
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 07:10:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729801AbgAQECW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 23:02:22 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:46727 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729130AbgAQECW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 23:02:22 -0500
-Received: by mail-pl1-f196.google.com with SMTP id y8so9282175pll.13;
-        Thu, 16 Jan 2020 20:02:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=iZLHewdiazY8g29gXR8XVb0QIOZ1/vZnvJEkR0A8Ghc=;
-        b=PMQXEGEESNybgAMU2DWPiTUvpw6T7hZBN7omG91ZZ37csw0dWJga++ezXmU9PQ2OIo
-         8LHKNhtxawXL4Nx5MABiILR04voy7E2fkQvStpWLnhT6P7XJpkJcUnZ19IKoycDRCRWL
-         0gqKD3yPPD1KwiGqEHn2GsHQV7MlLE4zqImtsXJ4n2dKD8DqMpbppV17huzqwdmhzBcF
-         G/AUtdYEPvYFeIyxQPnd0rlm/AR4bIp5VDjtF8oeHJQt93O4Wvx5RMb05rHxi/hKAi+a
-         WS2yHmWXW85vufdOU+pC37HA423DyJ3mkFIpAEwLC8k1KbacWMMjr3/UfK0n/2OIGbod
-         OuzA==
-X-Gm-Message-State: APjAAAWbtYJyOeVR9cZS9y0/yikfIVXKGh04wZQMqthWOytb4Qrayszd
-        tYGc9nShGaALlAYYGS4D75SYIxL7NX4=
-X-Google-Smtp-Source: APXvYqxayaXfvR3peMmx3z+a8M/X5c/6qvfRnpe/y5JQq/mAz1SSjB/0WlXgfP1jlqyC3SZuS0m42Q==
-X-Received: by 2002:a17:90a:22a5:: with SMTP id s34mr3383674pjc.8.1579233741640;
-        Thu, 16 Jan 2020 20:02:21 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:8dfb:7edd:e01b:b201? ([2601:647:4000:d7:8dfb:7edd:e01b:b201])
-        by smtp.gmail.com with ESMTPSA id r8sm2896564pjo.22.2020.01.16.20.02.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jan 2020 20:02:20 -0800 (PST)
-Subject: Re: [PATCH v2 7/9] scsi: ufs: Add max_lu_supported in struct
- ufs_dev_info
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200116215914.16015-1-huobean@gmail.com>
- <20200116215914.16015-8-huobean@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <3332e2a9-f720-4127-af57-afb6cccef9a2@acm.org>
-Date:   Thu, 16 Jan 2020 20:02:19 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.1
+        id S1729121AbgAQHKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 02:10:30 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:10557 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729011AbgAQHKa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 02:10:30 -0500
+Received-SPF: Pass (esa4.microchip.iphmx.com: domain of
+  viswas.g@microsemi.com designates 208.19.100.23 as permitted
+  sender) identity=mailfrom; client-ip=208.19.100.23;
+  receiver=esa4.microchip.iphmx.com;
+  envelope-from="viswas.g@microsemi.com";
+  x-sender="viswas.g@microsemi.com"; x-conformance=spf_only;
+  x-record-type="v=spf1"; x-record-text="v=spf1
+  ip4:208.19.100.20 ip4:208.19.100.21 ip4:208.19.100.22
+  ip4:208.19.100.23 ip4:208.19.99.221 ip4:208.19.99.222
+  ip4:208.19.99.223 ip4:208.19.99.225 -all"
+Received-SPF: None (esa4.microchip.iphmx.com: no sender
+  authenticity information available from domain of
+  postmaster@smtp.microsemi.com) identity=helo;
+  client-ip=208.19.100.23; receiver=esa4.microchip.iphmx.com;
+  envelope-from="viswas.g@microsemi.com";
+  x-sender="postmaster@smtp.microsemi.com";
+  x-conformance=spf_only
+Authentication-Results: esa4.microchip.iphmx.com; dkim=none (message not signed) header.i=none; spf=Pass smtp.mailfrom=viswas.g@microsemi.com; spf=None smtp.helo=postmaster@smtp.microsemi.com; dmarc=fail (p=none dis=none) d=microchip.com
+IronPort-SDR: 3LZJcimiA6zRJVJNpW9yqlNiUB+YUBkabTAefEYLji1jh2eT+cijGJ3N5n2gYTptpU7mqR5y3N
+ lEprXo5clca0myRf7kuym1H1K77KALGDP0YL1ce6PiKBUz7GavIz0TxT7rihUVTSxKGv7Wz3/O
+ NMm1wi8Br98rB2JYA9i5MjqFPQlidudSKClXAESzc7T2vZ2BBa0Z2wZzk9+Y2bev/if9QVwkJ1
+ 8nSQSETKgS/U0iDlZ6eVwrJjW0qegHretaZgOI8cb+pgLQ98nxwy/9nwzys2gVNt7UD7ij+xLx
+ gaY=
+X-IronPort-AV: E=Sophos;i="5.70,329,1574146800"; 
+   d="scan'208";a="61358142"
+Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.23])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 00:10:27 -0700
+Received: from AVMBX1.microsemi.net (10.100.34.31) by AVMBX3.microsemi.net
+ (10.100.34.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3; Thu, 16 Jan
+ 2020 23:10:26 -0800
+Received: from localhost (10.41.130.51) by avmbx1.microsemi.net (10.100.34.31)
+ with Microsoft SMTP Server id 15.1.1847.3 via Frontend Transport; Thu, 16 Jan
+ 2020 23:10:25 -0800
+From:   Deepak Ukey <deepak.ukey@microchip.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        <Viswas.G@microchip.com>, <deepak.ukey@microchip.com>,
+        <jinpu.wang@profitbricks.com>, <martin.petersen@oracle.com>,
+        <yuuzheng@google.com>, <auradkar@google.com>,
+        <vishakhavc@google.com>, <bjashnani@google.com>,
+        <radha@google.com>, <akshatzen@google.com>
+Subject: [PATCH V2 00/13] pm80xx : Updates for the driver version 0.1.39.
+Date:   Fri, 17 Jan 2020 12:49:10 +0530
+Message-ID: <20200117071923.7445-1-deepak.ukey@microchip.com>
+X-Mailer: git-send-email 2.19.0-rc1
 MIME-Version: 1.0
-In-Reply-To: <20200116215914.16015-8-huobean@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-16 13:59, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> Add one new parameter max_lu_supported in struct ufs_dev_info,
-> which will be used to express exactly how many general LUs being
-> supported by UFS device.
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/scsi/ufs/ufs.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index fcc9b4d4e56f..c982bcc94662 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -530,6 +530,8 @@ struct ufs_dev_info {
->  	bool f_power_on_wp_en;
->  	/* Keeps information if any of the LU is power on write protected */
->  	bool is_lu_power_on_wp;
-> +	/* Maximum number of general LU supported by the UFS device */
-> +	u8 max_lu_supported;
->  	u16 wmanufacturerid;
->  	/*UFS device Product Name */
->  	u8 *model;
+From: Deepak Ukey <Deepak.Ukey@microchip.com>
 
-There is a strong tradition in the Linux kernel community of introducing
-structure members in the same patch that introduces the first user of
-such a structure member. I think patch 8/9 is the first patch that uses
-this structure member. Please consider combining patches 7/9 and 8/9
-into a single patch.
+This patch set includes some bug fixes and features for pm80xx driver.
 
-Thanks,
+Changes from V1:
+	For "Increase request sg length" patch.
+		- Fix the compilation warning generated on xtensa architecture.
+	For "Support for char device" patch.
+		- Modified the description of patch.
+	For "IOCTL functionality to get phy profile." patch.
+		- Split the patch in two different patches.
+		  IOCTL functionality to get phy status and
+		  IOCTL functionality to get phy error.
+	For "IOCTL functionality for SGPIO" patch.
+		- Fixed the compilation warning generated on x86_64 architecture.
+	For "sysfs attribute for non fatal dump" patch.
+		- Modified the description of patch.
+	For "IOCTL functionality for TWI device" patch.
+		- Modified the description of patch.
 
-Bart.
+Deepak Ukey (5):
+  pm80xx : Support for char device.
+  pm80xx : IOCTL functionality for GPIO.
+  pm80xx : IOCTL functionality for SGPIO.
+  pm80xx : sysfs attribute for non fatal dump.
+  pm80xx : IOCTL functionality for TWI device.
 
+Peter Chang (2):
+  pm80xx : Increase request sg length.
+  pm80xx : Cleanup initialization loading fail path.
+
+Vikram Auradkar (1):
+  pm80xx : Deal with kexec reboots.
+
+Viswas G (4):
+  pm80xx : sysfs attribute for number of phys.
+  pm80xx : IOCTL functionality to get phy status.
+  pm80xx : IOCTL functionality to get phy error.
+  pm80xx : Introduce read and write length for IOCTL payload structure.
+
+yuuzheng (1):
+  pm80xx : Free the tag when mpi_set_phy_profile_resp is received.
+
+ drivers/scsi/pm8001/pm8001_ctl.c  | 662 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/pm8001/pm8001_ctl.h  | 185 +++++++++++
+ drivers/scsi/pm8001/pm8001_defs.h |   5 +-
+ drivers/scsi/pm8001/pm8001_hwi.c  | 303 +++++++++++++++--
+ drivers/scsi/pm8001/pm8001_hwi.h  |  18 ++
+ drivers/scsi/pm8001/pm8001_init.c | 104 ++++--
+ drivers/scsi/pm8001/pm8001_sas.c  |  37 +++
+ drivers/scsi/pm8001/pm8001_sas.h  |  70 +++-
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 390 +++++++++++++++++++++-
+ drivers/scsi/pm8001/pm80xx_hwi.h  |  55 ++++
+ 10 files changed, 1767 insertions(+), 62 deletions(-)
+
+-- 
+2.16.3
 
