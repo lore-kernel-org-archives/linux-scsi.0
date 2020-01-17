@@ -6,50 +6,50 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC47FC33C9E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C0DC33CB6
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:02:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DE12206D7
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:00:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40F7620728
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 04:02:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730035AbgAQEAO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 23:00:14 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:36387 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726853AbgAQEAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 23:00:13 -0500
-Received: by mail-pg1-f193.google.com with SMTP id k3so11000187pgc.3;
-        Thu, 16 Jan 2020 20:00:13 -0800 (PST)
+        id S1729801AbgAQECW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 23:02:22 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:46727 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729130AbgAQECW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 23:02:22 -0500
+Received: by mail-pl1-f196.google.com with SMTP id y8so9282175pll.13;
+        Thu, 16 Jan 2020 20:02:22 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=j/gmt+S+U5biY49eR+qUY302EUGG1032iY8t1Ue0P1s=;
-        b=SjDjmIptcOzs3J32TQ2+idVc5baQvUVKjWwx/vINIdyY+ETBRl9/yyElOuiPGzwMME
-         JLJ9QG0vQu0+4tgUAoBmlu+JZXKyB0taGZJuf2HWcjNUH8JAnvK1true3bwuRZsHBym7
-         OM3fxA9YleS0FoSQJdq6RCnUKTtlkEtns884vsZZ1lOeZQI5vGakkKjIo2Trv3av0oTg
-         qUiOicfmquxA1z7ITO27HYChrBppf6+BtisMKK0jFoYjX5cXs+cMDs6kPb3M3C2TH5XG
-         oKe1dRks/dVN9Kpz2wRTYXwKCpQjT8UwGXkKosHKum6b1ixm630tpYuuBTDncKiZ5tCg
-         09uw==
-X-Gm-Message-State: APjAAAVcFnnf8P6sld5eezfeJ2S15vR45ItdQwFOawDAznuO3Sf34z9e
-        nogBdJlzeKpGr0S2LrQqASLV4a6Wl50=
-X-Google-Smtp-Source: APXvYqzojzQMzN/4c4rIhB+N1ix9vQkiluNoIBRoleUyxoTu7MgidTGKioWDjBx1jvV8QJgO04VrqA==
-X-Received: by 2002:a63:ce4b:: with SMTP id r11mr44165950pgi.419.1579233612897;
-        Thu, 16 Jan 2020 20:00:12 -0800 (PST)
+        bh=iZLHewdiazY8g29gXR8XVb0QIOZ1/vZnvJEkR0A8Ghc=;
+        b=PMQXEGEESNybgAMU2DWPiTUvpw6T7hZBN7omG91ZZ37csw0dWJga++ezXmU9PQ2OIo
+         8LHKNhtxawXL4Nx5MABiILR04voy7E2fkQvStpWLnhT6P7XJpkJcUnZ19IKoycDRCRWL
+         0gqKD3yPPD1KwiGqEHn2GsHQV7MlLE4zqImtsXJ4n2dKD8DqMpbppV17huzqwdmhzBcF
+         G/AUtdYEPvYFeIyxQPnd0rlm/AR4bIp5VDjtF8oeHJQt93O4Wvx5RMb05rHxi/hKAi+a
+         WS2yHmWXW85vufdOU+pC37HA423DyJ3mkFIpAEwLC8k1KbacWMMjr3/UfK0n/2OIGbod
+         OuzA==
+X-Gm-Message-State: APjAAAWbtYJyOeVR9cZS9y0/yikfIVXKGh04wZQMqthWOytb4Qrayszd
+        tYGc9nShGaALlAYYGS4D75SYIxL7NX4=
+X-Google-Smtp-Source: APXvYqxayaXfvR3peMmx3z+a8M/X5c/6qvfRnpe/y5JQq/mAz1SSjB/0WlXgfP1jlqyC3SZuS0m42Q==
+X-Received: by 2002:a17:90a:22a5:: with SMTP id s34mr3383674pjc.8.1579233741640;
+        Thu, 16 Jan 2020 20:02:21 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:8dfb:7edd:e01b:b201? ([2601:647:4000:d7:8dfb:7edd:e01b:b201])
-        by smtp.gmail.com with ESMTPSA id u26sm26061663pfn.46.2020.01.16.20.00.11
+        by smtp.gmail.com with ESMTPSA id r8sm2896564pjo.22.2020.01.16.20.02.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jan 2020 20:00:12 -0800 (PST)
-Subject: Re: [PATCH v2 6/9] scsi: ufs: Delete is_init_prefetch from struct
- ufs_hba
+        Thu, 16 Jan 2020 20:02:20 -0800 (PST)
+Subject: Re: [PATCH v2 7/9] scsi: ufs: Add max_lu_supported in struct
+ ufs_dev_info
 To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200116215914.16015-1-huobean@gmail.com>
- <20200116215914.16015-7-huobean@gmail.com>
+ <20200116215914.16015-8-huobean@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -74,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <125ff67c-bcd5-69e7-2ec8-203b805c246b@acm.org>
-Date:   Thu, 16 Jan 2020 20:00:10 -0800
+Message-ID: <3332e2a9-f720-4127-af57-afb6cccef9a2@acm.org>
+Date:   Thu, 16 Jan 2020 20:02:19 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <20200116215914.16015-7-huobean@gmail.com>
+In-Reply-To: <20200116215914.16015-8-huobean@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -91,43 +91,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 2020-01-16 13:59, Bean Huo wrote:
 > From: Bean Huo <beanhuo@micron.com>
 > 
-> Without variable is_init_prefetch, the current logic can guarantee
-> ufshcd_init_icc_levels() will execute only once, delete it now.
+> Add one new parameter max_lu_supported in struct ufs_dev_info,
+> which will be used to express exactly how many general LUs being
+> supported by UFS device.
 > 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 > Signed-off-by: Bean Huo <beanhuo@micron.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 5 +----
->  drivers/scsi/ufs/ufshcd.h | 2 --
->  2 files changed, 1 insertion(+), 6 deletions(-)
+>  drivers/scsi/ufs/ufs.h | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 44b7c0a44b8d..31b6e2a7c166 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6967,8 +6967,7 @@ static int ufs_lu_add(struct ufs_hba *hba)
->  {
->  	int ret;
->  
-> -	if (!hba->is_init_prefetch)
-> -		ufshcd_init_icc_levels(hba);
-> +	ufshcd_init_icc_levels(hba);
->  
->  	/* Add required well known logical units to scsi mid layer */
->  	ret = ufshcd_scsi_add_wlus(hba);
-> @@ -6994,8 +6993,6 @@ static int ufs_lu_add(struct ufs_hba *hba)
->  	scsi_scan_host(hba->host);
->  	pm_runtime_put_sync(hba->dev);
->  
-> -	if (!hba->is_init_prefetch)
-> -		hba->is_init_prefetch = true;
->  out:
->  	return ret;
->  }
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index fcc9b4d4e56f..c982bcc94662 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -530,6 +530,8 @@ struct ufs_dev_info {
+>  	bool f_power_on_wp_en;
+>  	/* Keeps information if any of the LU is power on write protected */
+>  	bool is_lu_power_on_wp;
+> +	/* Maximum number of general LU supported by the UFS device */
+> +	u8 max_lu_supported;
+>  	u16 wmanufacturerid;
+>  	/*UFS device Product Name */
+>  	u8 *model;
 
-The current code calls ufshcd_init_icc_levels() once per HBA. This patch
-changes that into one call per LUN. It seems like the patch description
-contradicts the code I see above.
+There is a strong tradition in the Linux kernel community of introducing
+structure members in the same patch that introduces the first user of
+such a structure member. I think patch 8/9 is the first patch that uses
+this structure member. Please consider combining patches 7/9 and 8/9
+into a single patch.
 
 Thanks,
 
 Bart.
+
+
