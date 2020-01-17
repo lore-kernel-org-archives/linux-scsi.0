@@ -2,153 +2,171 @@ Return-Path: <SRS0=Mkh6=3G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6AC0C33CB3
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 01:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53AC9C33CB3
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:44:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B1A52077C
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 01:46:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="C2siFIFM"
+	by mail.kernel.org (Postfix) with ESMTP id 36D57206D7
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:44:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729813AbgAQBq0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 20:46:26 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:42384 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726741AbgAQBq0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 20:46:26 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H1i3rt009058;
-        Fri, 17 Jan 2020 01:44:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=T4SKvmpTep1+qbnJtmrMWMHMbVyk5YW9j4BNwvKbNOs=;
- b=C2siFIFMrI5zM63utFvQrfdD8GXN7s3fcFugXBiK45D8U8IKFwSkNwWVjs9INyrlMrq8
- olhQ/S7e6yMLzO027ViPBfIGCcJnDYxUmb3xm4SmECRFkEGimz0XHcNqiWzyIbnFa5b+
- gJvpf6ORrF0uR8hjHH2lOocBdT7Rqk4z3Vj9TcRG/yDpqxKRx7LDwTfeQHpfd+x+LxZs
- qzvVQ9v+uTGt/YaSH3EfdhjmPsEjjAMZlt10UiILsmncEzlsEJ18BOaQ0oy/A03eE4WY
- ZiiapUXGACxfqJYBAMUzhgkqGYAyCInjZrWMNvB6qbqj0Pjs12ErW3YOw7HS0Yp+yWEp VQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2xf74sp0g1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 01:44:47 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00H1iYx4131526;
-        Fri, 17 Jan 2020 01:44:47 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2xk22xy5b7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jan 2020 01:44:46 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00H1hI0f009269;
-        Fri, 17 Jan 2020 01:43:18 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 16 Jan 2020 17:43:17 -0800
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20191215174509.1847-1-linux@roeck-us.net>
-        <20191215174509.1847-2-linux@roeck-us.net>
-        <yq1r211dvck.fsf@oracle.com>
-        <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
-        <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
-        <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
-        <yq1r202spr9.fsf@oracle.com>
-        <403cfbf8-79da-94f1-509f-e90d1a165722@roeck-us.net>
-        <yq14kwwnioo.fsf@oracle.com> <20200116174703.GA7850@roeck-us.net>
-Date:   Thu, 16 Jan 2020 20:43:14 -0500
-In-Reply-To: <20200116174703.GA7850@roeck-us.net> (Guenter Roeck's message of
-        "Thu, 16 Jan 2020 09:47:03 -0800")
-Message-ID: <yq18sm6n9hp.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726899AbgAQDoB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 22:44:01 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:46812 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726688AbgAQDoB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 22:44:01 -0500
+Received: by mail-pg1-f193.google.com with SMTP id z124so10952919pgb.13;
+        Thu, 16 Jan 2020 19:44:00 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=qjTEZbkvZijH4Q89/0bwix+Zc3hP19cN20BTOTVd7ng=;
+        b=USjaUajzaBwGhFtukQxPiT+886qWEyeCz5lpJ0xteL+2JwjFLeGOdlNP5Jh20qiU2n
+         +AA7BNHss0g+hekJICM/C1Ofb51mBV18DqbO4rM+UQ2GCRSGmuPMZTflhAwBaEBxg7J2
+         nPiJeLzUr7E/5kWNx35VYdfOhwL/kW1/mXLoVqWPE/QS4BZKdaImbk9l6hDWb2WBOA/m
+         jjGYATRHT2Ed9yeZA7F8ALw5VCqQJJ2o5I9Z4PDbg6kfaPEWglKjhdEWRvTOhBrPgcxX
+         Hx5wGdTh/Hen8I7I59fNO1Ykw+DkBO0qwDUKLod6y8b01R+HOmYzUEUOMMT2YyCVAvGy
+         kP9A==
+X-Gm-Message-State: APjAAAV8Aa8dvKR6Dxr7H34Qg7RgNYUY83jaLsEG7R1CEQulkZBtCOXr
+        WN+GTyGuafoDAAW76aiJwEge0fj6Wu0=
+X-Google-Smtp-Source: APXvYqx/V246VdMxBbBw6pKES2lQAgrm1BArd8h4eU99sD0DLcnzC23G7dv2zleCjsyJJHEo8NIsRQ==
+X-Received: by 2002:aa7:914b:: with SMTP id 11mr931294pfi.69.1579232640078;
+        Thu, 16 Jan 2020 19:44:00 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:8dfb:7edd:e01b:b201? ([2601:647:4000:d7:8dfb:7edd:e01b:b201])
+        by smtp.gmail.com with ESMTPSA id b65sm27119652pgc.18.2020.01.16.19.43.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 16 Jan 2020 19:43:58 -0800 (PST)
+Subject: Re: [PATCH v1 1/1] scsi: ufs: Add command logging infrastructure
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        cang@codeaurora.org
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Janek Kotas <jank@cadence.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1571808560-3965-1-git-send-email-cang@codeaurora.org>
+ <5B8DA87D05A7694D9FA63FD143655C1B9DCF0AFE@hasmsx108.ger.corp.intel.com>
+ <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <01eb3c55e35738f2853fbc7175a12eaa@codeaurora.org>
+ <20191029054620.GG1929@tuxbook-pro>
+ <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <a07f3244-6536-0667-cf61-3ef8b8bc6c7e@acm.org>
+Date:   Thu, 16 Jan 2020 19:43:56 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001170009
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9502 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001170009
+In-Reply-To: <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-01-16 15:03, Asutosh Das (asd) wrote:
+> On 10/28/2019 10:46 PM, Bjorn Andersson wrote:
+>> On Mon 28 Oct 19:37 PDT 2019, cang@codeaurora.org wrote:
+>>
+>>> On 2019-10-23 18:33, Avri Altman wrote:
+>>>>>
+>>>>>> Add the necessary infrastructure to keep timestamp history of
+>>>>>> commands, events and other useful info for debugging complex issues.
+>>>>>> This helps in diagnosing events leading upto failure.
+>>>>>
+>>>>> Why not use tracepoints, for that?
+>>>> Ack on Tomas's comment.
+>>>> Are there any pieces of information that you need not provided by the
+>>>> upiu tracer?
+>>>>
+>>>> Thanks,
+>>>> Avri
+>>>
+>>> In extreme cases, when the UFS runs into bad state, system may crash.
+>>> There
+>>> may not be a chance to collect trace. If trace is not collected and
+>>> failure
+>>> is hard to be reproduced, some command logs prints would be very
+>>> helpful to
+>>> help understand what was going on before we run into failure.
+>>>
+>>
+>> This is a common problem shared among many/all subsystems, so it's
+>> better to rely on a generic solution for this; such as using tracepoints
+>> dumped into pstore/ramoops.
+>>
+>> Regards,
+>> Bjorn
+>>
+> 
+> Reviving this discussion.
+> 
+> Another issue with using ftrace is that several subsystems use it.
+> Consider a situation in which we store a history of 64 commands,
+> responses and some other required info in ftrace.
+> 
+> Say there's a command that's stuck for seconds until the software times
+> out. In this case, the other ftrace events are still enabled and keep
+> writing to ftrace buffer thus overwriting some/most of the ufs's command
+> history; thus the history is more or less lost. And there's a need to
+> reproduce the issue with other tracing disabled.
+> 
+> So what we need is a client specific logging mechanism, which is
+> lightweight as ftrace and can be parsed from ramdumps.
+> 
+> I'm open to ideas but ftrace in its current form may not be suitable for
+> this.
 
-Guenter,
+Hi Asutosh,
 
-> Can you by any chance provide a full traceback ?
+Are you aware that it is already possible today to figure out which SCSI
+commands are pending? Are you familiar with the files under
+/sys/kernel/debug/block/? An example:
 
-My test machines are tied up with something else right now. This is from
-a few days ago (pristine hwmon-next, I believe):
+$ (cd /sys/kernel/debug/block && grep -aH . */*/busy)
+nvme0n1/hctx7/busy:0000000006f07009 {.op=READ, .cmd_flags=META|PRIO,
+.rq_flags=DONTPREP|IO_STAT, .state=in_flight, .tag=275, .internal_tag=-1}
 
-[ 1055.611912] ------------[ cut here ]------------
-[ 1055.611922] WARNING: CPU: 3 PID: 3233 at drivers/base/dd.c:519 really_probe+0x436/0x4f0
-[ 1055.611925] Modules linked in: sd_mod sg ahci libahci libata drivetemp scsi_mod crc32c_intel igb i2c_algo_bit i2c_core dca hwmon ipv6 nf_defrag_ipv6 crc_ccitt
-[ 1055.611955] CPU: 3 PID: 3233 Comm: kworker/u17:1 Tainted: G        W         5.5.0-rc1+ #21
-[ 1055.611965] Workqueue: events_unbound async_run_entry_fn
-[ 1055.611973] RIP: 0010:really_probe+0x436/0x4f0
-[ 1055.611979] Code: c7 30 69 f8 82 e8 ba 94 e5 ff e9 60 ff ff ff 48 8d 7b 38 e8 cc d9 b4 ff 48 8b 43 38 48 85 c0 0f 85 41 fd ff ff e9 4f fd ff ff <0f> 0b e9 66 fc ff ff 48 8d 7d 50 e8 aa d9 b4 ff 4c 8b 6d 50 4d 85
-[ 1055.611983] RSP: 0018:ffff8881edb77c98 EFLAGS: 00010287
-[ 1055.611989] RAX: ffff8881e1f8fb80 RBX: ffffffffa033a000 RCX: ffffffff8182e583
-[ 1055.611993] RDX: dffffc0000000000 RSI: 0000000000000004 RDI: ffff8881dec506a8
-[ 1055.611997] RBP: ffff8881dec50238 R08: 0000000000000001 R09: fffffbfff09629ed
-[ 1055.612000] R10: fffffbfff09629ec R11: 0000000000000003 R12: 0000000000000000
-[ 1055.612004] R13: ffff8881dec506a8 R14: ffffffff8182eca0 R15: 000000000000000b
-[ 1055.612009] FS:  0000000000000000(0000) GS:ffff8881f8900000(0000) knlGS:0000000000000000
-[ 1055.612013] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1055.612017] CR2: 00007f957884a000 CR3: 00000001df5ec003 CR4: 00000000000606e0
-[ 1055.612020] Call Trace:
-[ 1055.612038]  ? driver_probe_device+0x170/0x170
-[ 1055.612045]  driver_probe_device+0x82/0x170
-[ 1055.612058]  ? driver_probe_device+0x170/0x170
-[ 1055.612064]  __driver_attach_async_helper+0xa3/0xe0
-[ 1055.612076]  async_run_entry_fn+0x68/0x2a0
-[ 1055.612094]  process_one_work+0x4df/0x990
-[ 1055.612121]  ? pwq_dec_nr_in_flight+0x110/0x110
-[ 1055.612127]  ? do_raw_spin_lock+0x113/0x1d0
-[ 1055.612161]  worker_thread+0x78/0x5c0
-[ 1055.612190]  ? process_one_work+0x990/0x990
-[ 1055.612195]  kthread+0x1be/0x1e0
-[ 1055.612202]  ? kthread_create_worker_on_cpu+0xd0/0xd0
-[ 1055.612215]  ret_from_fork+0x3a/0x50
-[ 1055.612251] irq event stamp: 3512
-[ 1055.612259] hardirqs last  enabled at (3511): [<ffffffff81d2b874>] _raw_spin_unlock_irq+0x24/0x30
-[ 1055.612265] hardirqs last disabled at (3512): [<ffffffff810029c9>] trace_hardirqs_off_thunk+0x1a/0x1c
-[ 1055.612272] softirqs last  enabled at (3500): [<ffffffff820003a5>] __do_softirq+0x3a5/0x5a8
-[ 1055.612281] softirqs last disabled at (3489): [<ffffffff810cec7b>] irq_exit+0xfb/0x100
-[ 1055.612284] ---[ end trace f0a8dd9a37bea031 ]---
+Bart.
 
-> Either case, I would like to track down how the warning happens, so any
-> information you can provide that lets me reproduce the problem would be
-> very helpful.
 
-The three systems that exhibit the problem are stock (2010/2012/2014
-vintage) x86_64 servers with onboard AHCI and a variety of 4-6 SATA
-drives each.
-
-For the qemu test I didn't have ahci configured but I had my SCSI temp
-patch on top of yours and ran modprobe drivetemp; modprobe scsi_debug to
-trigger the warnings.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
