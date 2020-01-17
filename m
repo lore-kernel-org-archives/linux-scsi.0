@@ -6,50 +6,49 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65157C33C9E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E27C33C9E
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:58:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 476E520728
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:56:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA5E42077B
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jan 2020 03:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729345AbgAQD4R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jan 2020 22:56:17 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:40304 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729058AbgAQD4R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 22:56:17 -0500
-Received: by mail-pg1-f193.google.com with SMTP id k25so10986935pgt.7;
-        Thu, 16 Jan 2020 19:56:17 -0800 (PST)
+        id S1726853AbgAQD6M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jan 2020 22:58:12 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:36259 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726706AbgAQD6M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jan 2020 22:58:12 -0500
+Received: by mail-pg1-f195.google.com with SMTP id k3so10998146pgc.3;
+        Thu, 16 Jan 2020 19:58:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=5YnsAEUMA/49O0Bg6SphIKdPVmLp307T2CBQO5Sm5JE=;
-        b=jCdwM3j1T6gggUPOPfQnXt/1sP9P/ICSz+zi3oEdLHN9eLrtg/B26tUMf3PfVsr3Cv
-         FpYKX2lVUI/2nhJb6zb4IyMGXWw5BbNihzBOcEegD9tmrPl0gBZ4WYJrx/zJ2/3h3tQs
-         1Bu9aI+MhIOmE2NSRsb/kbcRMqfLU6u3JiKcCztcMDFBngUd1n+6NAS4pPYqJCFwkext
-         ks/fo7qT8FL9JirH/IE3XA9gYj/3D3iyS9n9DalJDRvPgR6oSefAXlPs6g5Uaw/rQUv+
-         Vd29TgcfXKu9WrPiKoP2n02bCuVwXSirLmIykBcO/gbAREfWZJ3SMxQ/nwu8nQv2W6Og
-         3s7Q==
-X-Gm-Message-State: APjAAAUwYbtYHLDIhIYrCvqQ+oncJZXLLM4lD+gwlRzRnoxnf+kdQDbB
-        bgNAEU/WkxhzmrY9+jlDQm4YXvV3KRQ=
-X-Google-Smtp-Source: APXvYqz64PfPy8wg/l/PHHwUA7aAqcvBVpEV/X0GHpsN859cjZ/xal8eatb790fsjjGPAsyhP6EEdw==
-X-Received: by 2002:a63:ce4b:: with SMTP id r11mr44153716pgi.419.1579233376456;
-        Thu, 16 Jan 2020 19:56:16 -0800 (PST)
+        bh=IQYyvzvzRQkSaQNfvWEHNndX1z10qWwtcZRb9h5hrUc=;
+        b=CkN7ZELVNL0AwVHo08T/UaF3l/WGJQsQo4B8w+TJ9Fwom4eM6OBBIKERVYLvgB6qD9
+         LomLpc95jocBGThy0UIbTqZ3RO2vkUQB62mlb9yOK8LCBpDaQuRxrj+GIUDSfvNVsIzo
+         O78cozU3LZROmb8Y7B7WvrE7GY6NbtLt5O/A5Rr/pzM0GpED1uTLh2yG1vlHk29kgIy1
+         fxhc4NVHtviJNuFNoLv6/TDcptHGYIvFua/B10STR/T5AunzqQYdhx5esK8kdQODX7wL
+         nDUkTtfGGgz7TXWQCjINr4CQOOfpMrElFGsw9/FiDhvdmH3x1w/bE878/bgnrL0pv4wX
+         pWcg==
+X-Gm-Message-State: APjAAAWAjGFcqtvF/CwrefNMsP8t8BNcWYM8+PrlElNbFXJnGCTDFsnf
+        qqtRtqDvMD8wjxYwWJVxArad5coy/e8=
+X-Google-Smtp-Source: APXvYqzqczS8KRGkfKjpRgZi/bwjo0QJHfrV0jyD9U7wsF6fPeJLKUEI6StnitAdB7eUGpx8dK3WhQ==
+X-Received: by 2002:a63:5056:: with SMTP id q22mr42301342pgl.20.1579233490890;
+        Thu, 16 Jan 2020 19:58:10 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:8dfb:7edd:e01b:b201? ([2601:647:4000:d7:8dfb:7edd:e01b:b201])
-        by smtp.gmail.com with ESMTPSA id x197sm28238945pfc.1.2020.01.16.19.56.15
+        by smtp.gmail.com with ESMTPSA id j94sm13505pje.8.2020.01.16.19.58.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Jan 2020 19:56:15 -0800 (PST)
-Subject: Re: [PATCH v2 1/9] scsi: ufs: goto with returned value while failed
- to add WL
+        Thu, 16 Jan 2020 19:58:10 -0800 (PST)
+Subject: Re: [PATCH v2 5/9] scsi: ufs: Delete two unnecessary functions
 To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200116215914.16015-1-huobean@gmail.com>
- <20200116215914.16015-2-huobean@gmail.com>
+ <20200116215914.16015-6-huobean@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -74,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <36285cf0-7d04-f773-b266-2e3a1c9f6527@acm.org>
-Date:   Thu, 16 Jan 2020 19:56:14 -0800
+Message-ID: <b315bf53-6b64-0e1f-ffd4-823dce99954e@acm.org>
+Date:   Thu, 16 Jan 2020 19:58:08 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.3.1
 MIME-Version: 1.0
-In-Reply-To: <20200116215914.16015-2-huobean@gmail.com>
+In-Reply-To: <20200116215914.16015-6-huobean@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -91,13 +90,12 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 2020-01-16 13:59, Bean Huo wrote:
 > From: Bean Huo <beanhuo@micron.com>
 > 
-> This patch is to make goto statement with failure result in case of
-> failure of adding well known LUs.
+> Delete ufshcd_read_power_desc() and ufshcd_read_device_desc(), directly
+> inline ufshcd_read_desc() into its callers.
 
-Please make the subject more clear, e.g. "Fix ufshcd_probe_hba() return
-value in case ufshcd_scsi_add_wlus() fails"
+How about changing the subject into "Inline two functions into their
+callers"? Otherwise this patch looks fine to me.
 
 Thanks,
 
 Bart.
-
