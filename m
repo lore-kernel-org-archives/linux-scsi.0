@@ -2,161 +2,131 @@ Return-Path: <SRS0=DCIq=3H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3604FC32771
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 04:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF2F1C33CB7
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 05:11:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0894A2073A
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 04:21:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A76152467F
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 05:11:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1579324297;
+	bh=t1vZ8SC75mtY4AmwN7SBHRlYKSnagbFkoaCXwsRkvkA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=cfxKyd4PyWIHG6xJ+rF3bRx5qZfeyLqcQT80/JqH7QMWiscG0IxvVadd6qCGir458
+	 X/GZfZ8/ksVw7aZvnVfqSEkL6b8MaLujXsJlCI3eJ6VWVzMXk5XW1aK3+1Mk1W1TIr
+	 VmuukNVQJaKD4NmGNM6hArSP0+mifPWS8YXqk9bw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726885AbgAREVD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 23:21:03 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:55557 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726566AbgAREVD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 23:21:03 -0500
-Received: by mail-pj1-f65.google.com with SMTP id d5so4049536pjz.5
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 20:21:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=TufKNWh8BOlKfj+9XUNI+RjX/HICIgHEcFX/cd19uv4=;
-        b=VLIXERQFc3YXXN2utc5+epNMT/PWIjQ65YV13aPpH/1POAv1/3IPOneuTcd791xCGW
-         7YOtypnxNdTJINAOZr67rpWMFfQ1V3XrJ2fX4XEcvMxzc99Pl4vsx4yrkGyq7oidUVEP
-         pxVc68ROeRRzRESCiry5v9S4vkloIoc0gor7Y/MTWhKUAvEL1GID5QJ5LzNUXCH2roGI
-         MkKI/0vTvu79CGEElpPeT6kZ/SsSe5o3RCbMfXTwHURFSbejySM5Fc+sJCDfC9IqnQDS
-         rig/mD3SibmqkOf5mYOxW4FCJWq83yErMipr4NwixEaylpcucVcuhaVx0ogw6pNuwT4A
-         gUhw==
-X-Gm-Message-State: APjAAAWm83LgjCn312HnQq5brL0bNft7FzlaB3l1N2QujZAcGVxdlOUC
-        ixQfSdBpE3JplJRXxqpVanryDt2sDLE=
-X-Google-Smtp-Source: APXvYqz4fY/6EQUck0OzTOX5iPJ3qHBjJvhPO9YSZUjg6Vmzhe1rLZZFsoDQyarl7QYDm1grBP7KSQ==
-X-Received: by 2002:a17:902:8e8a:: with SMTP id bg10mr2814273plb.98.1579321262594;
-        Fri, 17 Jan 2020 20:21:02 -0800 (PST)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:748e:9135:9422:9c32])
-        by smtp.gmail.com with ESMTPSA id s185sm31820275pfc.35.2020.01.17.20.21.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jan 2020 20:21:01 -0800 (PST)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        "Ewan D . Milne" <emilne@redhat.com>
-Subject: [PATCH] qla2xxx: Fix a NULL pointer dereference in an error path
-Date:   Fri, 17 Jan 2020 20:20:56 -0800
-Message-Id: <20200118042056.32232-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.24.1
+        id S1725906AbgARFLf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jan 2020 00:11:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59570 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725385AbgARFLf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Jan 2020 00:11:35 -0500
+Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2A29920748;
+        Sat, 18 Jan 2020 05:11:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1579324294;
+        bh=t1vZ8SC75mtY4AmwN7SBHRlYKSnagbFkoaCXwsRkvkA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bfOP60cwtWBH/v8P6bKJMNpc8Gkl63UB2y/k5qFX75fnnZYBU3quTl4yD8apowsL/
+         7ByOM9cn0DYjc8FS39COLzmK1v0ugkAnRQwk5YG9zWgVJVbJpmspIMpmPonMkzfVw1
+         4AM/C7CY1Yz5ho+rFMdKDos1teJ3jUJntffPomMo=
+Date:   Fri, 17 Jan 2020 21:11:32 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
+Message-ID: <20200118051132.GC3290@sol.localdomain>
+References: <20191218145136.172774-1-satyat@google.com>
+ <20191218145136.172774-3-satyat@google.com>
+ <20191218212116.GA7476@magnolia>
+ <yq1y2v9e37b.fsf@oracle.com>
+ <20191218222726.GC47399@gmail.com>
+ <yq1fthhdttv.fsf@oracle.com>
+ <20200108140730.GC2896@infradead.org>
+ <20200108172629.GA232722@sol.localdomain>
+ <20200117083221.GA324@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200117083221.GA324@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch fixes the following Coverity complaint:
+On Fri, Jan 17, 2020 at 12:32:21AM -0800, Christoph Hellwig wrote:
+> 
+> File systems don't move data around all that often (saying that with my
+> fs developer hat on).  In traditional file systems only defragmentation
+> will move data around, with extent refcounting it can also happen for
+> dedup, and for file systems that write out of place data gets moved
+> when parts of a block are rewritten, but in that case a read modify
+> write cycle is perfomed in the Linux code anyway, so it will go through
+> the inline encryption engined on the way and the way out.
+> 
+> So in other words - specifying an IV would be useful for some use cases,
+> but I don't think it is a deal blocker. Even without that is is useful
+> for block device level encryption, and could have some usefulness for
+> file system encryption usage.
+> 
+> I think that adding an IV would eventually be useful, but fitting that
+> into NVMe won't be easy, as you'd need to find a way to specify the IV
+> for each submission queue entry, which requires growing it, or finding
+> some way to extend it out of band.
 
-FORWARD_NULL
+Sure, people have even done inline crypto on ext4 before (downstream), using the
+LBA for the IV.  But log-structured filesystems like f2fs move data blocks
+around *without the encryption key*; and at least for fscrypt, f2fs support is
+essential.  In any case it's also awkward having the physical on-disk location
+determine the ciphertext on-disk, as then the result isn't fully controlled by
+the encryption settings you set, but also based on where your filesystem is
+located on-disk (with extra fun occurring if there's any sort of remapping layer
+in between).  But sure, it's not *useless* to not be able to specify the IV,
+it's just annoying and less useful.
 
-qla_init.c: 5275 in qla2x00_configure_local_loop()
-5269
-5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
-5271     			qla24xx_fcport_handle_login(vha, fcport);
-5272     	}
-5273
-5274     cleanup_allocation:
->>>     CID 353340:    (FORWARD_NULL)
->>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
-5275     	qla2x00_free_fcport(new_fcport);
-5276
-5277     	if (rval != QLA_SUCCESS) {
-5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
-5279     		    "Configure local loop error exit: rval=%x.\n", rval);
-5280     	}
-qla_init.c: 5275 in qla2x00_configure_local_loop()
-5269
-5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
-5271     			qla24xx_fcport_handle_login(vha, fcport);
-5272     	}
-5273
-5274     cleanup_allocation:
->>>     CID 353340:    (FORWARD_NULL)
->>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
-5275     	qla2x00_free_fcport(new_fcport);
-5276
-5277     	if (rval != QLA_SUCCESS) {
-5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
-5279     		    "Configure local loop error exit: rval=%x.\n", rval);
-5280     	}
+[I was also a bit surprised to see that NVMe won't actually allow specify the
+IV, as I thought you had objected to the naming of the INLINE_CRYPT_OPTIMIZED
+fscrypt policy flag partly on the grounds that NVMe would support IVs longer
+than the 64 bits that UFS is limited to.  Perhaps I misunderstood though.]
 
-Cc: Himanshu Madhani <hmadhani@marvell.com>
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Martin Wilck <mwilck@suse.com>
-Cc: Daniel Wagner <dwagner@suse.de>
-Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-Fixes: 3dae220595ba ("scsi: qla2xxx: Use common routine to free fcport struct")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/qla2xxx/qla_init.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+> > So let's not over-engineer this kernel patchset to support some broken
+> > vaporware, please.
+> 
+> Not sharing bio fields for integrity and encryption actually keeps
+> the patchset simpler (although uses more memory if both options are
+> enabled).  So my main point here is to not over engineer it for broken
+> premise that won't be true soon.
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index c4e087217484..62df78258269 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5109,7 +5109,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 	rval = qla2x00_get_id_list(vha, ha->gid_list, ha->gid_list_dma,
- 	    &entries);
- 	if (rval != QLA_SUCCESS)
--		goto cleanup_allocation;
-+		goto err;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2011,
- 	    "Entries in ID list (%d).\n", entries);
-@@ -5139,7 +5139,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 		ql_log(ql_log_warn, vha, 0x2012,
- 		    "Memory allocation failed for fcport.\n");
- 		rval = QLA_MEMORY_ALLOC_FAILED;
--		goto cleanup_allocation;
-+		goto err;
- 	}
- 	new_fcport->flags &= ~FCF_FABRIC_DEVICE;
- 
-@@ -5229,7 +5229,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 				ql_log(ql_log_warn, vha, 0xd031,
- 				    "Failed to allocate memory for fcport.\n");
- 				rval = QLA_MEMORY_ALLOC_FAILED;
--				goto cleanup_allocation;
-+				goto err;
- 			}
- 			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 			new_fcport->flags &= ~FCF_FABRIC_DEVICE;
-@@ -5272,15 +5272,14 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 			qla24xx_fcport_handle_login(vha, fcport);
- 	}
- 
--cleanup_allocation:
- 	qla2x00_free_fcport(new_fcport);
- 
--	if (rval != QLA_SUCCESS) {
--		ql_dbg(ql_dbg_disc, vha, 0x2098,
--		    "Configure local loop error exit: rval=%x.\n", rval);
--	}
-+	return rval;
- 
--	return (rval);
-+err:
-+	ql_dbg(ql_dbg_disc, vha, 0x2098,
-+	       "Configure local loop error exit: rval=%x.\n", rval);
-+	return rval;
- }
- 
- static void
+Well there are 3 options:
+
+(a) Separate fields for bi_crypt_context and bi_integrity
+(b) bi_crypt_context and bi_integrity in union
+(c) One pointer that can support both features,
+    e.g. linked list of tagged structs.
+
+It sounds like you're advocating for (a), but I had misunderstood and thought
+you're advocating for (c).  We'd of course be fine with (a) as it's the
+simplest, but other people are saying they prefer (b).
+
+Satya, to resolve this I think you should check how hard (b) is to implement --
+i.e. is it easy, or is it really tricky to ensure the features are never used
+together?  (Considering that it's probably not just a matter of whether any
+hardware supports both features, as dm-integrity supports blk-integrity in
+software and blk-crypto-fallback supports blk-crypto in software.)
+
+- Eric
