@@ -2,96 +2,161 @@ Return-Path: <SRS0=DCIq=3H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0539C32771
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 03:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3604FC32771
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 04:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DD1724679
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 03:58:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579319888;
-	bh=fMspsEvLC7cRCvV8B4hOYJXyJHVbjKq9MkwOe9RNS4k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=EZSbW843IJB/z0Aw0FPNEl0PtD+iI2mrgq5IMUY2JFZxSlC+pSDTSSY26wos7Y3Cn
-	 c66PMPngxkoI6K0oQCMt/NYuF9SwkXuYJERHB6ZkynbFOXNqWvqBdZ7a4tQMG0OFpD
-	 KSIkYxrtz8XrJN8mryOdZYmmIhrjKW75LObw3AZE=
+	by mail.kernel.org (Postfix) with ESMTP id 0894A2073A
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jan 2020 04:21:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726925AbgARD6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jan 2020 22:58:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36886 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726566AbgARD6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jan 2020 22:58:07 -0500
-Received: from sol.localdomain (c-24-5-143-220.hsd1.ca.comcast.net [24.5.143.220])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9F7692072B;
-        Sat, 18 Jan 2020 03:58:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579319886;
-        bh=fMspsEvLC7cRCvV8B4hOYJXyJHVbjKq9MkwOe9RNS4k=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TnxD89jX+A4F+MemC8PvzvH8szJ6VL6+/uBi5T16UDReENGERBpSDN7a4kjx+E1eX
-         cNj7fjEnqTNslHlJaPEMJ4xo53Q/x5VT12ZdeiVe2d6n4pnlZqr4jt6YgE9iKY5WO1
-         i7dUiZ7v3ogjEopxskFYuSoBWzJxwZhI1s19PDng=
-Date:   Fri, 17 Jan 2020 19:58:05 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 6/9] scsi: ufs: Add inline encryption support to UFS
-Message-ID: <20200118035805.GA3290@sol.localdomain>
-References: <20191218145136.172774-1-satyat@google.com>
- <20191218145136.172774-7-satyat@google.com>
+        id S1726885AbgAREVD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jan 2020 23:21:03 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:55557 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726566AbgAREVD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jan 2020 23:21:03 -0500
+Received: by mail-pj1-f65.google.com with SMTP id d5so4049536pjz.5
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jan 2020 20:21:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=TufKNWh8BOlKfj+9XUNI+RjX/HICIgHEcFX/cd19uv4=;
+        b=VLIXERQFc3YXXN2utc5+epNMT/PWIjQ65YV13aPpH/1POAv1/3IPOneuTcd791xCGW
+         7YOtypnxNdTJINAOZr67rpWMFfQ1V3XrJ2fX4XEcvMxzc99Pl4vsx4yrkGyq7oidUVEP
+         pxVc68ROeRRzRESCiry5v9S4vkloIoc0gor7Y/MTWhKUAvEL1GID5QJ5LzNUXCH2roGI
+         MkKI/0vTvu79CGEElpPeT6kZ/SsSe5o3RCbMfXTwHURFSbejySM5Fc+sJCDfC9IqnQDS
+         rig/mD3SibmqkOf5mYOxW4FCJWq83yErMipr4NwixEaylpcucVcuhaVx0ogw6pNuwT4A
+         gUhw==
+X-Gm-Message-State: APjAAAWm83LgjCn312HnQq5brL0bNft7FzlaB3l1N2QujZAcGVxdlOUC
+        ixQfSdBpE3JplJRXxqpVanryDt2sDLE=
+X-Google-Smtp-Source: APXvYqz4fY/6EQUck0OzTOX5iPJ3qHBjJvhPO9YSZUjg6Vmzhe1rLZZFsoDQyarl7QYDm1grBP7KSQ==
+X-Received: by 2002:a17:902:8e8a:: with SMTP id bg10mr2814273plb.98.1579321262594;
+        Fri, 17 Jan 2020 20:21:02 -0800 (PST)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:748e:9135:9422:9c32])
+        by smtp.gmail.com with ESMTPSA id s185sm31820275pfc.35.2020.01.17.20.21.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jan 2020 20:21:01 -0800 (PST)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        "Ewan D . Milne" <emilne@redhat.com>
+Subject: [PATCH] qla2xxx: Fix a NULL pointer dereference in an error path
+Date:   Fri, 17 Jan 2020 20:20:56 -0800
+Message-Id: <20200118042056.32232-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191218145136.172774-7-satyat@google.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 06:51:33AM -0800, Satya Tangirala wrote:
-> @@ -4654,6 +4686,8 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
->  	if (ufshcd_is_rpm_autosuspend_allowed(hba))
->  		sdev->rpm_autosuspend = 1;
->  
-> +	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
-> +
->  	return 0;
->  }
->  
-> @@ -4664,6 +4698,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
->  static void ufshcd_slave_destroy(struct scsi_device *sdev)
->  {
->  	struct ufs_hba *hba;
-> +	struct request_queue *q = sdev->request_queue;
->  
->  	hba = shost_priv(sdev->host);
->  	/* Drop the reference as it won't be needed anymore */
-> @@ -4674,6 +4709,8 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
->  		hba->sdev_ufs_device = NULL;
->  		spin_unlock_irqrestore(hba->host->host_lock, flags);
->  	}
-> +
-> +	ufshcd_crypto_destroy_rq_keyslot_manager(hba, q);
->  }
+This patch fixes the following Coverity complaint:
 
-Just noticed this --- this is still destroying the keyslot manager when a SCSI
-device is destroyed.  The keyslot manager is associated with the host controller
-(which might control multiple devices), so it must not be destroyed until the
-ufs_hba is destroyed, i.e. in ufshcd_dealloc_host().
+FORWARD_NULL
 
-(I was also thinking about whether we could use devm so that the keyslot_manager
-doesn't need to be explicitly freed.  But that wouldn't actually help because we
-still need to ensure that all the crypto keys get zeroed.)
+qla_init.c: 5275 in qla2x00_configure_local_loop()
+5269
+5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
+5271     			qla24xx_fcport_handle_login(vha, fcport);
+5272     	}
+5273
+5274     cleanup_allocation:
+>>>     CID 353340:    (FORWARD_NULL)
+>>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
+5275     	qla2x00_free_fcport(new_fcport);
+5276
+5277     	if (rval != QLA_SUCCESS) {
+5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
+5279     		    "Configure local loop error exit: rval=%x.\n", rval);
+5280     	}
+qla_init.c: 5275 in qla2x00_configure_local_loop()
+5269
+5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
+5271     			qla24xx_fcport_handle_login(vha, fcport);
+5272     	}
+5273
+5274     cleanup_allocation:
+>>>     CID 353340:    (FORWARD_NULL)
+>>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
+5275     	qla2x00_free_fcport(new_fcport);
+5276
+5277     	if (rval != QLA_SUCCESS) {
+5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
+5279     		    "Configure local loop error exit: rval=%x.\n", rval);
+5280     	}
 
-- Eric
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Fixes: 3dae220595ba ("scsi: qla2xxx: Use common routine to free fcport struct")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c4e087217484..62df78258269 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5109,7 +5109,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 	rval = qla2x00_get_id_list(vha, ha->gid_list, ha->gid_list_dma,
+ 	    &entries);
+ 	if (rval != QLA_SUCCESS)
+-		goto cleanup_allocation;
++		goto err;
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0x2011,
+ 	    "Entries in ID list (%d).\n", entries);
+@@ -5139,7 +5139,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 		ql_log(ql_log_warn, vha, 0x2012,
+ 		    "Memory allocation failed for fcport.\n");
+ 		rval = QLA_MEMORY_ALLOC_FAILED;
+-		goto cleanup_allocation;
++		goto err;
+ 	}
+ 	new_fcport->flags &= ~FCF_FABRIC_DEVICE;
+ 
+@@ -5229,7 +5229,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 				ql_log(ql_log_warn, vha, 0xd031,
+ 				    "Failed to allocate memory for fcport.\n");
+ 				rval = QLA_MEMORY_ALLOC_FAILED;
+-				goto cleanup_allocation;
++				goto err;
+ 			}
+ 			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 			new_fcport->flags &= ~FCF_FABRIC_DEVICE;
+@@ -5272,15 +5272,14 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+ 			qla24xx_fcport_handle_login(vha, fcport);
+ 	}
+ 
+-cleanup_allocation:
+ 	qla2x00_free_fcport(new_fcport);
+ 
+-	if (rval != QLA_SUCCESS) {
+-		ql_dbg(ql_dbg_disc, vha, 0x2098,
+-		    "Configure local loop error exit: rval=%x.\n", rval);
+-	}
++	return rval;
+ 
+-	return (rval);
++err:
++	ql_dbg(ql_dbg_disc, vha, 0x2098,
++	       "Configure local loop error exit: rval=%x.\n", rval);
++	return rval;
+ }
+ 
+ static void
