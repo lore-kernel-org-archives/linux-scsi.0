@@ -2,126 +2,123 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D6FDC33CB7
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:58:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C06BC33CAF
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 22:00:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4ECC7206ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:58:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9908206B7
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 22:00:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="Dh9y9FlX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728792AbgASU61 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 15:58:27 -0500
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:51707 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727556AbgASU61 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:58:27 -0500
-Received: by mail-pj1-f66.google.com with SMTP id d15so5745565pjw.1;
-        Sun, 19 Jan 2020 12:58:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=sDRF0S+xxClm8hhrU117sfSXJq23LM47I4S3KoYDs2o=;
-        b=ZsbDSAY4h2ReHyrouj0anoEbSWXXGACuh6Ajuxq+5LbQyrmYCILMoeKkrn73iVKCxu
-         tnIdevfvGjWXKmFuLF0hOEBE2klVWx12qlNWpxXdr+sDbWVcdcNlfIxMSBf8zBje2+cy
-         rC+i6D6YOLWPUnbK1VoeEEqcQFISpIw3+G+MpXugq/ej4y29ncpEBB60wT+TwDb1+2Qx
-         VbHA/DnVejjHXiuvOPvw6Srk3SZbNyoaVjQBVLt1Tsa/MUqIVA57oIa/4VIrN/8HciH3
-         i1LDmC/VLyWX4YV7h5xzJFBXvX4+j60DtQHCV9Ix22oud3lfNhRSIemQSYv0ysWs85f6
-         yhsA==
-X-Gm-Message-State: APjAAAVEaJPoRZEntqLnl9r+uku9/JJ5zsESAc4x8zDnTmXbSH6o+v6R
-        HEoO788xp/Ee9q9pVtDweCtK2Zq3
-X-Google-Smtp-Source: APXvYqx2MQ2Kiu0RvlhV4RdMSj3W4nMMbUVec6HjWSvK+LhwrqLu9rWnBbLib9yCrZPzcu/UwqNovA==
-X-Received: by 2002:a17:902:7296:: with SMTP id d22mr11942628pll.55.1579467506627;
-        Sun, 19 Jan 2020 12:58:26 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:781f:ca33:6085:f83a? ([2601:647:4000:d7:781f:ca33:6085:f83a])
-        by smtp.gmail.com with ESMTPSA id b19sm35718450pfo.56.2020.01.19.12.58.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Jan 2020 12:58:25 -0800 (PST)
-Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD
- when HBA needs
-To:     Ming Lei <ming.lei@redhat.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-References: <20200119071432.18558-1-ming.lei@redhat.com>
- <20200119071432.18558-6-ming.lei@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <5a467267-e990-45d1-4b69-18d8c0cd17b3@acm.org>
-Date:   Sun, 19 Jan 2020 12:58:24 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-MIME-Version: 1.0
-In-Reply-To: <20200119071432.18558-6-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8
+        id S1728911AbgASV76 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 16:59:58 -0500
+Received: from mail-dm6nam12on2045.outbound.protection.outlook.com ([40.107.243.45]:6184
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727556AbgASV75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 19 Jan 2020 16:59:57 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=i3tW48rlgUk2V9rcOMhba4gmmiw5Mj4fp2HK1Vppu+CEI+firDbKuiXD3IWr96/I1qQR0BJ8xtlj7j1ee3uN6IvisDbSeGYYqzsk3Q7NgUv2Ij7z2FEodU0to8GhYlceqcBHeSmpJytGWgEJAmn8Jac+OweOFTdj03A0hdvzjuTDlTsZq7TMOjaNcatZtAX9rUSuMimi8EfHhuWb0QXFvu9RWPVPR9nmkf5bvbroZDAW7eUFpZq5zAO29C4KC94sIE81DpUslgb+1Ql7wXkpG9fyOgwVnL2kx4SjknwNKbDtr0iAdgbPfhfUiAY8FnZuhoGEYwmNTl+7Rsnu7/pSOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=98q5R0TRIPZD3CGPWW5PlixD2HsMQX9jR9+5KQFJ/yY=;
+ b=b9mQj089wH0BJPDR4Y8RC1q/QMFPV2MqPL4MqdnXMMnfosh3KQYEixCa9QrrWGKVdOvWt6d28g5VTho7IQJXKgwwdsgSkVG5Q91A8d9HkrYT55m3CRnvcqunZADYW52XOVvW04cYvGtFOIJfuA/AnaCo0VmKAR6LB4LM/VBxxKOQPI8M1diT4kBNmwKdiE6cnWoKYbAw3ne3H6w0rANctubmLJj5PN1iNZZhMPPOCL8yZpbCloTv9dVDk4IYYPxt846TOPoveQ4WSFANfoWIUANFieDJzZGDOCRRveSo3aZcF9uarQP9rI9gDB+hIYoBvG4Qvmd73XAq+aiJ7HaoRg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=98q5R0TRIPZD3CGPWW5PlixD2HsMQX9jR9+5KQFJ/yY=;
+ b=Dh9y9FlXNvj9OkWG/NHMtRPRfVF+KsrE3xGm5A4SX6NNn3fqVhyaYaVX5OqkQWaLTOEkcF1qzb3ZbjiVACaEd7S1Es5n809OStNG66eNH4LigmAbXFjv6PpCT92DmXpDv5X/EzdPpBK7IB9oe1yZswi2/h2H7WugtsohsWR5IDI=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (20.176.179.87) by
+ BN7PR08MB4148.namprd08.prod.outlook.com (52.132.218.145) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2644.20; Sun, 19 Jan 2020 21:59:55 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::981f:90d7:d45f:fd11]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::981f:90d7:d45f:fd11%7]) with mapi id 15.20.2644.024; Sun, 19 Jan 2020
+ 21:59:55 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     Alim Akhtar <alim.akhtar@gmail.com>, Bean Huo <huobean@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Can Guo <cang@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [EXT] Re: [PATCH v3 0/8] Use UFS device indicated maximum LU
+ number
+Thread-Topic: [EXT] Re: [PATCH v3 0/8] Use UFS device indicated maximum LU
+ number
+Thread-Index: AQHVzoKXx2RhVm9OD0+j9uX/WAzyH6fyg3mA
+Date:   Sun, 19 Jan 2020 21:59:55 +0000
+Message-ID: <BN7PR08MB568498ED5D86FAA8098EE1C9DB330@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <20200119001327.29155-1-huobean@gmail.com>
+ <CAGOxZ52xHFedU+1DUgL02xjXzG2CtXUk3MRaq=uSUZKX=7AeDw@mail.gmail.com>
+In-Reply-To: <CAGOxZ52xHFedU+1DUgL02xjXzG2CtXUk3MRaq=uSUZKX=7AeDw@mail.gmail.com>
+Accept-Language: en-150, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLTA0YzJlNjM1LTNiMDctMTFlYS04Yjg5LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFwwNGMyZTYzNi0zYjA3LTExZWEtOGI4OS1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjkwNSIgdD0iMTMyMjM5NDQ3OTI5NzE3Nzk5IiBoPSJUOStYVFo0OTJieTNtRTNTaU5TRS9VbW1mWmM9IiBpZD0iIiBibD0iMCIgYm89IjEiLz48L21ldGE+
+x-dg-rorf: true
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.86.100]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 2e4cb49a-7803-438e-16c0-08d79d2aeb13
+x-ms-traffictypediagnostic: BN7PR08MB4148:|BN7PR08MB4148:|BN7PR08MB4148:
+x-microsoft-antispam-prvs: <BN7PR08MB4148E278A375E02B3A94BF49DB330@BN7PR08MB4148.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:1417;
+x-forefront-prvs: 0287BBA78D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(376002)(396003)(346002)(39860400002)(366004)(189003)(199004)(55236004)(6506007)(7696005)(9686003)(54906003)(33656002)(110136005)(26005)(52536014)(186003)(5660300002)(66446008)(64756008)(76116006)(2906002)(4744005)(7416002)(81166006)(81156014)(8936002)(8676002)(478600001)(66476007)(86362001)(55016002)(4326008)(71200400001)(66946007)(66556008)(316002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN7PR08MB4148;H:BN7PR08MB5684.namprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: ZEQN7XznhRx64+tiBUtFfeSpZEmz/3in6dLv5B5iYqCFJ0nTUb7G7DPmM43BPVs/DCg57tDOBAhIkoRHT6fqt3Uyg9ZZ2DsK1co/twZdqzZLvs4NiJUTq9Ive6Zjf6+VXD9lXBWzfeQdBcw8HimtwvRN++0lAvz5UtRAkGydvZgGSwfUy3fw556oComv1nTmJu4J8KpdD58/cDCIeCE2bvzuznCcNdQA7mLMqPpsis8VhH5CJFaaqv+UIWfPxy6bK0P+jVTvrQIvecg1sel+MHX3YfMRczCm6IxNNonXWe4vroZX8CI5yStDbSxdDrxXPDaqdJcu5A/meB7s4S2e33CS85J4MVm56d6+mPtEyjLFZlrVMG4fvHF/yY2vIMwFH8q5LBPkwcey7jTkw9Ct94V4zB80I0jJ8OcIBlsAl3wROTa+Su9sRCZjh9lcV14q
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2e4cb49a-7803-438e-16c0-08d79d2aeb13
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Jan 2020 21:59:55.2329
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RvYGbuKfX7rkizNR29no83TgMEsIfki+Cc4tXQ4NUDH+eP1tH7u/UPxw0JhPe+HJgrFiZsQffKThY28Nd1jz6g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4148
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-18 23:14, Ming Lei wrote:
-> +static inline bool scsi_bypass_device_busy(struct scsi_device *sdev)
-> +{
-> +	struct Scsi_Host *shost = sdev->host;
-> +
-> +	if (!shost->hostt->no_device_queue_for_ssd)
-> +		return false;
-> +
-> +	return blk_queue_nonrot(sdev->request_queue);
-> +}
-
-In other words, sdev->device_busy is maintained for all SCSI devices
-except for those SSDs controlled by a SCSI LLD driver that has
-no_device_queue_for_ssd set in its host template. I'd like to see
-different behavior, namely that sdev->device_busy is not maintained for
-any SSD except if that SSD really needs the sdev->device_busy counter.
-The blacklist mechanism may be more appropriate to mark such SSDs than
-the SCSI host template.
-
-What I also noticed is that most scsi_bypass_device_busy() calls have an
-exclamation mark (!) in front of these calls. I think that inverting the
-return value and renaming this function into e.g.
-scsi_maintain_device_busy() would result in code that is easier to read.
-
-Thanks,
-
-Bart.
+SGksIEFsaW0NCg0KPiANCj4gSGkgQmVhbg0KPiANCj4gWW91ciBwYXRjaGVzIGJhc2VkIG9uIHdo
+aWNoIHRyZWU/IEF0IGxlYXN0IG9uIEphbWUncyBmb3ItbmV4dCwgaXQgZ2l2ZQ0KPiBjb21waWxh
+dGlvbiBlcnJvcnMuDQo+IChnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5l
+bC9naXQvamVqYi9zY3NpLmdpdCkNCj4gTG9va3MgbGlrZSBwYXRjaC0yIGludHJvZHVjZXMgYmVs
+b3cgZXJyb3I6DQoNCk15IHBhdGNoZXMgYXJlIGJhc2VkIG9uIHRoZSBNYXJ0aW4ncyB0cmVlIDUu
+Ni9zY3NpLXF1ZXVlLiBJIHRlc3RlZCBteSBwYXRjaGVzIG9uIEphbWVzJyB0cmVlLg0KRGlkbid0
+IGZpbmQgdGhlIGNvbXBpbGF0aW9uIGVycm9yIGFzIHlvdSBtZW50aW9uZWQuICBZb3UgY2FuIGNo
+ZWNrIHlvdXIgc291cmNlIGNvZGUgaWYgaXQgaXMgcHJldHR5IG5ldywNClRoZSBsYXN0IFVGUyBk
+cml2ZXIgdXBkYXRlZCBjb21taXQgaWQgc2hvdWxkIGJlIDoNCg0KDQpjb21taXQgZWE5MmMzMmJk
+MzM2ZWZiYTg5YzViMDljZjYwOWU2ZTI2ZTk2Mzc5Ng0KQXV0aG9yOiBTdGFubGV5IENodSA8c3Rh
+bmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KRGF0ZTogICBTYXQgSmFuIDExIDE1OjExOjQ3IDIwMjAg
+KzA4MDANCg0KIHNjc2k6IHVmcy1tZWRpYXRlazogYWRkIGFwcGx5X2Rldl9xdWlya3MgdmFyaWFu
+dCBvcGVyYXRpb24NCg0KIEFkZCB2ZW5kb3Itc3BlY2lmaWMgdmFyaWFudCBjYWxsYmFjayAiYXBw
+bHlfZGV2X3F1aXJrcyIgdG8gTWVkaWFUZWsgVUZTIGRyaXZlci4NCg0KDQpUaGFua3MsDQoNCi8v
+QmVhbg0K
