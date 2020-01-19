@@ -2,46 +2,47 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 022A1C3F68F
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:29:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 328C4C33CB7
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:36:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D25A82072B
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:29:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13070206ED
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728775AbgASU3R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 15:29:17 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:39319 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727138AbgASU3R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:29:17 -0500
-Received: by mail-pj1-f68.google.com with SMTP id e11so6045315pjt.4;
-        Sun, 19 Jan 2020 12:29:17 -0800 (PST)
+        id S1728797AbgASUg6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 15:36:58 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42699 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727138AbgASUg5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:36:57 -0500
+Received: by mail-pf1-f195.google.com with SMTP id 4so14724511pfz.9;
+        Sun, 19 Jan 2020 12:36:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=kUWI/FpcinuOXfUPlOd6SONH1nWg0MWwXCmTnQfQTZk=;
-        b=jkgtcF9VOXSOErZi1s/wVNeh6XJtLySrt9k/s29XaKFpK2B9Fnqyim097cS8weIEsQ
-         6hM8grn5JwgYbrXDHVDBR7//FRlh2ZH4i+mPy+HJFcyctXmrpb9teCYonLUCkCaLdTiw
-         ottGPFfOUkqGzNWyf43BYC4L7nU3ombFVdoiC6bxFwnuU6zSPd74ufjDKWMsJTuzZ7DC
-         VS/TX9DwaPbvejmyBAldK5Bu/6viGzYxSV7350Gss/Dhv4d9T44jXSZISzv5RoLLUJxC
-         KsBGt7A5eNC7SVzLo4HoUUdLXwQXMrvJp/NAQbXm16bMkmBTmcvaRjTXPo1F2NvG90Q3
-         Ottg==
-X-Gm-Message-State: APjAAAWo3u496oZRJykrgK3Gnf5fcS03GfvuKEx42C/jTY6p8gmyWwyq
-        OsIfQmktt8YRIa9wJA4jNYIhZmSC
-X-Google-Smtp-Source: APXvYqzA40uRmJFVRylaYIgc3n4gpZ8BW2yn5lG2s3CeVrzoj1zaBo1mS1vNH7hexLB4Bqgi3WPHJw==
-X-Received: by 2002:a17:90a:2ec5:: with SMTP id h5mr19740087pjs.79.1579465756727;
-        Sun, 19 Jan 2020 12:29:16 -0800 (PST)
+        bh=UUxyKSjpdjU67mcdsyf5zlXgCxjVRM8kRgDC+4ZzLQw=;
+        b=gkzyqskDFFRkWz8/q1hR/gmQUOukutEjFRLd+S7oFI5JB4Pdya3IkRC4EHMSpKqN9U
+         WZOj2371O7/0GzQk8LZXWFycBueC/lvH/nIquHzgdQmAAFMmwHpmX6oyzyvNRTUH94Rq
+         VdhH9YuGTKPUR8Q9labpzxSGR+G74SjEiOT2w9pGAPflBKmrpYDNCq6XtZNjUQwo0N7B
+         KiQIHXwB8saPdSFMsCqG/j/EDg4RGWzDOYujcbT1cgJmGqoZXReksWG2SHzf2/1UYSLd
+         7xETACvh7Th0AjKd7kJCq/HoquEqM+/7MMK19pONk6cxQkmn/nvwMxgt1/za8AIUSm62
+         x0DA==
+X-Gm-Message-State: APjAAAXlj0eEPwoH96QTgqif7cOpv+sbBsNCb3e0cLeuAft19rPvdRKa
+        fBwUDRp9PoJvWPDHO1MoOuc=
+X-Google-Smtp-Source: APXvYqw8W9Bu8BKQV1wIvuESLc9mwFTxMNwtJEPhgxImEJCWmuUmGxqcUZLXYGPoLullNZyjsFqDZA==
+X-Received: by 2002:a63:3084:: with SMTP id w126mr7744675pgw.169.1579466217262;
+        Sun, 19 Jan 2020 12:36:57 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:781f:ca33:6085:f83a? ([2601:647:4000:d7:781f:ca33:6085:f83a])
-        by smtp.gmail.com with ESMTPSA id i23sm35866659pfo.11.2020.01.19.12.29.15
+        by smtp.gmail.com with ESMTPSA id o2sm14871660pjo.26.2020.01.19.12.36.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Jan 2020 12:29:16 -0800 (PST)
-Subject: Re: [PATCH 2/6] scsi: remove .for_blk_mq
+        Sun, 19 Jan 2020 12:36:56 -0800 (PST)
+Subject: Re: [PATCH 3/6] scsi: sd: register request queue after
+ sd_revalidate_disk is done
 To:     Ming Lei <ming.lei@redhat.com>,
         James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
@@ -58,7 +59,7 @@ Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20200119071432.18558-1-ming.lei@redhat.com>
- <20200119071432.18558-3-ming.lei@redhat.com>
+ <20200119071432.18558-4-ming.lei@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -83,12 +84,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <03f680b5-d70a-ee59-9c78-813a245571b3@acm.org>
-Date:   Sun, 19 Jan 2020 12:29:14 -0800
+Message-ID: <e1d192d1-6518-95a5-b284-cdcaac589334@acm.org>
+Date:   Sun, 19 Jan 2020 12:36:55 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200119071432.18558-3-ming.lei@redhat.com>
+In-Reply-To: <20200119071432.18558-4-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -98,6 +99,33 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-18 23:14, Ming Lei wrote:
-> No one use it any more, so remove the flag.
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 5afb0046b12a..f401ba96dcfd 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3380,11 +3380,12 @@ static int sd_probe(struct device *dev)
+>  		pm_runtime_set_autosuspend_delay(dev,
+>  			sdp->host->hostt->rpm_autosuspend_delay);
+>  	}
+> -	device_add_disk(dev, gd, NULL);
+> +	device_add_disk_no_queue_reg(dev, gd);
+>  	if (sdkp->capacity)
+>  		sd_dif_config_host(sdkp);
+>  
+>  	sd_revalidate_disk(gd);
+> +	blk_register_queue(gd);
+>  
+>  	if (sdkp->security) {
+>  		sdkp->opal_dev = init_opal_dev(sdp, &sd_sec_submit);
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The effect of changing device_add_disk() into
+device_add_disk_no_queue_reg() is as follows:
+- __device_add_disk() skips the elevator_init_mq() call.
+- __device_add_disk() skips the blk_register_queue() call.
+
+The above patch introduces a blk_register_queue() call but no
+elevator_init_mq() call. Is that perhaps an oversight?
+
+Thanks,
+
+Bart.
