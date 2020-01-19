@@ -2,170 +2,145 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 332C5C33CB1
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E57BC33CAF
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 19:36:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03A802072B
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:39:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pmjnazB7"
+	by mail.kernel.org (Postfix) with ESMTP id 340B9206B7
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 19:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726956AbgASOjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 09:39:13 -0500
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:42283 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726778AbgASOjN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 09:39:13 -0500
-Received: by mail-ua1-f68.google.com with SMTP id u17so10614112uap.9
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2020 06:39:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=j8keUpOCp3VWJ4TU0kbq3GzP9kgMSYkjFPyvwNMsufM=;
-        b=pmjnazB7VaFTaGbsc65Tj7VBBA3qJfGyoAYN1qyO+z4xVzynINVD9D9E7lCWM6VYIV
-         MnQYgDPK3xo3BxWnkzcvv4+jCZ2bD5zciMRx6glyofHhwHVooRkojE+8fJ8ZB1kBCC2B
-         8bvCqBYQL8gMXpjQgVoLb+yRIfcRgoRdmyg4YwXwubfHliDEwYxTeytky6CYVlaj+Jor
-         wDCMkSu9zgxYJxgtLUROxsDldtbC63K6CrPZMVgn0LmsS1XmaX4lX5qnsZxELfZKiDRv
-         C2lTPLXtKGTkBraHI++I+uoag0YZbhg2kAjP8fZ13SUctTvFjj9fpoFlgX2B4dzkiHWb
-         xEZw==
+        id S1728516AbgASTgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 14:36:20 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:38744 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727138AbgASTgU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 14:36:20 -0500
+Received: by mail-pf1-f193.google.com with SMTP id x185so14678667pfc.5
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2020 11:36:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=j8keUpOCp3VWJ4TU0kbq3GzP9kgMSYkjFPyvwNMsufM=;
-        b=HycT7Fy/AwErbrhRvOVR3hBM+f0hH/bUV/ShHkrnu7hdReFWOM1UA/ZiQIhRySL3//
-         JSXaD6f79F6cYFGGtBY8G8J2EG8MtQ13FlmfL0taSN2JGjM3RuXrRrPkYMemvrrXHHcW
-         gFsoDc+g0rPYV5TJAMHLeNyquw7jZ/mcfaZgqyd7ej7XvWkcz/XVXRCxGvWVX9KcHo8c
-         2pfPlWHqf21o1t6wVnGcPenZ91Q3aNdUlv6xNxH+c58rqrr4n8VgdYKVIFKGN2GDQGke
-         AJT5GhvMFg/JWkgb5l+KXJPrF/JNODlJACoi/FDlNG5SPzI/Fvl0p9DwhB+iBSHo72Cr
-         BVIw==
-X-Gm-Message-State: APjAAAVvfqBkNiYQnrrwqIAqBnS5+bl885K+miMOsjCCrF162NCOKurp
-        3ifdvdcw8oVqOkgZCZRNJjBtupxVtpAcB1By7Tc=
-X-Google-Smtp-Source: APXvYqxvT7hLLTJztdehlDyNPdGu6Z5QZfCuwd7LzdY2QgezWsDYtyDMGxQeurPhaVW+hE7bTzvQTX6ogyddl8GUmkg=
-X-Received: by 2002:ab0:30c2:: with SMTP id c2mr29569059uam.8.1579444752075;
- Sun, 19 Jan 2020 06:39:12 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=SzNS8Sfc9xhwTWlvA1n3EuNN/8i20MFOYEn4FJAOPac=;
+        b=K3FYF0SAhWHicm/DsY8Cht2ybhS1Fqw7AdteFKu039IL5mj7H0LPO4zw59Q1mrLN+S
+         e6m5Xo+LPaj/kAEnVuiNMhVr8e8IP2gR35U2xJ3aKyZOytgmMJ0FKNjMxikVAn2v9lNy
+         BthlvQB1BGxaTniFD7j7E3zeIbKLwojicyRZsKhwJjzWgYD3opU429/lNkzYGTkO2K0l
+         EpYpKqmvu3X8End9lVphQ24bN4hER95+S22q+DqIZqY9BJXINq0aj5g9e04+BcZu0f2+
+         DzkIoXPTteAOaRegV2tidApKerRD9qZhCi1tgucPf91WS4EEIsRu44Qzy9s2QGqATX4X
+         BfHg==
+X-Gm-Message-State: APjAAAXUaDUtDLQ9v22x0njgxSkdeJ4u0Lug3H2QcAYByQi90dGvy1iJ
+        Ww+4KDgm2maUUGMbYd3838M=
+X-Google-Smtp-Source: APXvYqzCKW3uxMTqyr5n78HZoTYHIifqfAKuCl9db0ccmTJQ1YoqDI3jpK2WZ9Jvv1Gb2eSMfD1Hjg==
+X-Received: by 2002:a63:5807:: with SMTP id m7mr52589251pgb.83.1579462579986;
+        Sun, 19 Jan 2020 11:36:19 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:781f:ca33:6085:f83a? ([2601:647:4000:d7:781f:ca33:6085:f83a])
+        by smtp.gmail.com with ESMTPSA id y6sm35182249pgc.10.2020.01.19.11.36.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 19 Jan 2020 11:36:18 -0800 (PST)
+Subject: Re: [PATCH] scsi: sd: provide a new module parameter to set whether
+ SCSI disks support WRITE_SAME_16 by default
+To:     AlexChen <alex.chen@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, zhengchuan@huawei.com,
+        jiangyiwen@huawei.com, robin.yb@huawei.com
+References: <5E246413.8010408@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <c3c8c949-b557-1e34-5143-7a0b348a609e@acm.org>
+Date:   Sun, 19 Jan 2020 11:36:17 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-References: <20200107192531.73802-1-bvanassche@acm.org> <20200107192531.73802-3-bvanassche@acm.org>
-In-Reply-To: <20200107192531.73802-3-bvanassche@acm.org>
-From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 19 Jan 2020 20:08:35 +0530
-Message-ID: <CAGOxZ531tcv7aVzTWXH0k0=vKy9LbL=h7sSXnwXem+kr5_MbUw@mail.gmail.com>
-Subject: Re: [PATCH 2/4] ufs: Introduce ufshcd_init_lrb()
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <5E246413.8010408@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart
-
-On Wed, Jan 8, 2020 at 12:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> This patch does not change any functionality but makes the next patch in
-> this series easier to read.
->
-> Cc: Can Guo <cang@codeaurora.org>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Cc: Bean Huo <beanhuo@micron.com>
-> Cc: Stanley Chu <stanley.chu@mediatek.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 2020-01-19 06:13, AlexChen wrote:
+> When the SCSI device is initialized, check whether it supports
+> WRITE_SAME_16 or WRITE_SAME_10 in the sd_read_write_same(). If
+> the back-end storage device does not support queries, it will not set
+> sdkp->ws16 as 1.
+> 
+> When the WRITE_SAME io is issued through the blkdev_issue_write_same(),
+> the WRITE_SAME type is set to WRITE_SAME_10 by default in the
+> sd_setup_write_same_cmnd() since of "sdkp->ws16=0". If the storage device
+> does not support WRITE_SAME_10, then the SCSI device is set to not support
+> WRITE_SAME.
+> 
+> Currently, some storage devices do not provide queries for
+> WRITE_SAME_16/WRITE_SAME_10 support, but they do support WRITE_SAME_16 and
+> do not support WRITE_SAME_10. So in order for these devices to use
+> WRITE_SAME, we need a new module parameter to set whether SCSI disks
+> support WRITE_SAME_16 by default.
+> 
+> Signed-off-by: AlexChen <alex.chen@huawei.com>
 > ---
-
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-
->  drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++----------------
->  1 file changed, 22 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 1b97f2dc0b63..6f55d72e7fdd 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2364,6 +2364,27 @@ static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
->         return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
->  }
->
-> +static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
-> +{
-> +       struct utp_transfer_cmd_desc *cmd_descp = hba->ucdl_base_addr;
-> +       struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
-> +       dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
-> +               i * sizeof(struct utp_transfer_cmd_desc);
-> +       u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
-> +                                      response_upiu);
-> +       u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
+>  drivers/scsi/sd.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 4f7e7b607..ff368701d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -104,6 +104,9 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+>  #define SD_MINORS	0
+>  #endif
+> 
+> +static int sd_default_support_ws16;
+> +module_param(sd_default_support_ws16, int, 0644);
 > +
-> +       lrb->utr_descriptor_ptr = utrdlp + i;
-> +       lrb->utrd_dma_addr = hba->utrdl_dma_addr +
-> +               i * sizeof(struct utp_transfer_req_desc);
-> +       lrb->ucd_req_ptr = (struct utp_upiu_req *)(cmd_descp + i);
-> +       lrb->ucd_req_dma_addr = cmd_desc_element_addr;
-> +       lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
-> +       lrb->ucd_rsp_dma_addr = cmd_desc_element_addr + response_offset;
-> +       lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
-> +       lrb->ucd_prdt_dma_addr = cmd_desc_element_addr + prdt_offset;
-> +}
-> +
->  /**
->   * ufshcd_queuecommand - main entry point for SCSI requests
->   * @host: SCSI host pointer
-> @@ -3385,7 +3406,6 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
->   */
->  static void ufshcd_host_memory_configure(struct ufs_hba *hba)
->  {
-> -       struct utp_transfer_cmd_desc *cmd_descp;
->         struct utp_transfer_req_desc *utrdlp;
->         dma_addr_t cmd_desc_dma_addr;
->         dma_addr_t cmd_desc_element_addr;
-> @@ -3395,7 +3415,6 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
->         int i;
->
->         utrdlp = hba->utrdl_base_addr;
-> -       cmd_descp = hba->ucdl_base_addr;
->
->         response_offset =
->                 offsetof(struct utp_transfer_cmd_desc, response_upiu);
-> @@ -3431,20 +3450,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
->                                 cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
->                 }
->
-> -               hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
-> -               hba->lrb[i].utrd_dma_addr = hba->utrdl_dma_addr +
-> -                               (i * sizeof(struct utp_transfer_req_desc));
-> -               hba->lrb[i].ucd_req_ptr =
-> -                       (struct utp_upiu_req *)(cmd_descp + i);
-> -               hba->lrb[i].ucd_req_dma_addr = cmd_desc_element_addr;
-> -               hba->lrb[i].ucd_rsp_ptr =
-> -                       (struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
-> -               hba->lrb[i].ucd_rsp_dma_addr = cmd_desc_element_addr +
-> -                               response_offset;
-> -               hba->lrb[i].ucd_prdt_ptr =
-> -                       (struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
-> -               hba->lrb[i].ucd_prdt_dma_addr = cmd_desc_element_addr +
-> -                               prdt_offset;
-> +               ufshcd_init_lrb(hba, &hba->lrb[i], i);
->         }
->  }
->
+>  static void sd_config_discard(struct scsi_disk *, unsigned int);
+>  static void sd_config_write_same(struct scsi_disk *);
+>  static int  sd_revalidate_disk(struct gendisk *);
+> @@ -3014,7 +3017,8 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+>  			sdev->no_write_same = 1;
+>  	}
+> 
+> -	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, WRITE_SAME_16) == 1)
+> +	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, WRITE_SAME_16) == 1 ||
+> +			sd_default_support_ws16)
+>  		sdkp->ws16 = 1;
+> 
+>  	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE, WRITE_SAME) == 1)
 
+Should this be fixed using the quirk mechanism instead of introducing a
+new kernel module parameter? Kernel module parameters apply to all SCSI
+disk devices irrespective of their vendor and model. The quirk mechanism
+can be used to introduce special behavior for certain disk models and
+types. See also the output of the following grep command:
 
--- 
-Regards,
-Alim
+$ git grep -nH '& BLIST'
+
+Bart.
+
