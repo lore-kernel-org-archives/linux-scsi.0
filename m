@@ -2,47 +2,46 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 328C4C33CB7
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25673C33CAF
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13070206ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:36:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0AC7206ED
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:40:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728797AbgASUg6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 15:36:58 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:42699 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727138AbgASUg5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:36:57 -0500
-Received: by mail-pf1-f195.google.com with SMTP id 4so14724511pfz.9;
-        Sun, 19 Jan 2020 12:36:57 -0800 (PST)
+        id S1728712AbgASUkV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 15:40:21 -0500
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:36595 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728682AbgASUkV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:40:21 -0500
+Received: by mail-pj1-f67.google.com with SMTP id n59so6052663pjb.1;
+        Sun, 19 Jan 2020 12:40:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=UUxyKSjpdjU67mcdsyf5zlXgCxjVRM8kRgDC+4ZzLQw=;
-        b=gkzyqskDFFRkWz8/q1hR/gmQUOukutEjFRLd+S7oFI5JB4Pdya3IkRC4EHMSpKqN9U
-         WZOj2371O7/0GzQk8LZXWFycBueC/lvH/nIquHzgdQmAAFMmwHpmX6oyzyvNRTUH94Rq
-         VdhH9YuGTKPUR8Q9labpzxSGR+G74SjEiOT2w9pGAPflBKmrpYDNCq6XtZNjUQwo0N7B
-         KiQIHXwB8saPdSFMsCqG/j/EDg4RGWzDOYujcbT1cgJmGqoZXReksWG2SHzf2/1UYSLd
-         7xETACvh7Th0AjKd7kJCq/HoquEqM+/7MMK19pONk6cxQkmn/nvwMxgt1/za8AIUSm62
-         x0DA==
-X-Gm-Message-State: APjAAAXlj0eEPwoH96QTgqif7cOpv+sbBsNCb3e0cLeuAft19rPvdRKa
-        fBwUDRp9PoJvWPDHO1MoOuc=
-X-Google-Smtp-Source: APXvYqw8W9Bu8BKQV1wIvuESLc9mwFTxMNwtJEPhgxImEJCWmuUmGxqcUZLXYGPoLullNZyjsFqDZA==
-X-Received: by 2002:a63:3084:: with SMTP id w126mr7744675pgw.169.1579466217262;
-        Sun, 19 Jan 2020 12:36:57 -0800 (PST)
+        bh=xDGjbpMkljE0bvXrsbhUGFiOois6V5ZUiWgVlN1KnsE=;
+        b=XxQTBC3Cob8vFEApSz/chXGMjvF82OpTtzEc/ssyOjCHoT/0yhrBY81qyqzooDvVHB
+         /QW767T/eSK96EzGR7YPyhejn+2S9aTG41/kBiyn9I2clhbX5VNTa1U+yc0XITg173iw
+         06TkKfyBoX1kv0zmI9rIRDpBkVREHqhajQ7P8ZwyjF59O/3VtK/EKbeUMPPg0yjvLqqQ
+         oFvuGLPI8LsrFbz95k52yDn/4K9bkbQp36plKqllhBE8PU37Z6T5WMm3LWoIaJicswM4
+         cXfkViL0XXd1+j/W22PYyqWnYEoScTr4JmdmP36IZVQy1GTvrxNNOWOILd0iTC2lVnD9
+         WjqA==
+X-Gm-Message-State: APjAAAURvYMHWWknt+7oPpWP53iUKAI9mssxFxmvmE97bgUwmPNy8tyw
+        NjhkGikHybApSOFGVR3q3GE=
+X-Google-Smtp-Source: APXvYqxQPZ3Vg+vVtcQtiAVIEDIdZ0rVzr4pMrsH7GmOf8lVYu78a0qE5FW25Mz1sV89TpshXPfOvQ==
+X-Received: by 2002:a17:902:aa96:: with SMTP id d22mr11318440plr.204.1579466420530;
+        Sun, 19 Jan 2020 12:40:20 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:781f:ca33:6085:f83a? ([2601:647:4000:d7:781f:ca33:6085:f83a])
-        by smtp.gmail.com with ESMTPSA id o2sm14871660pjo.26.2020.01.19.12.36.55
+        by smtp.gmail.com with ESMTPSA id b1sm26540813pfp.44.2020.01.19.12.40.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Jan 2020 12:36:56 -0800 (PST)
-Subject: Re: [PATCH 3/6] scsi: sd: register request queue after
- sd_revalidate_disk is done
+        Sun, 19 Jan 2020 12:40:19 -0800 (PST)
+Subject: Re: [PATCH 4/6] block: freeze queue for updating QUEUE_FLAG_NONROT
 To:     Ming Lei <ming.lei@redhat.com>,
         James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
@@ -59,7 +58,7 @@ Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20200119071432.18558-1-ming.lei@redhat.com>
- <20200119071432.18558-4-ming.lei@redhat.com>
+ <20200119071432.18558-5-ming.lei@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -84,12 +83,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e1d192d1-6518-95a5-b284-cdcaac589334@acm.org>
-Date:   Sun, 19 Jan 2020 12:36:55 -0800
+Message-ID: <c5755585-c38d-0863-285c-ffb4558bdf23@acm.org>
+Date:   Sun, 19 Jan 2020 12:40:18 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200119071432.18558-4-ming.lei@redhat.com>
+In-Reply-To: <20200119071432.18558-5-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -99,32 +98,21 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-18 23:14, Ming Lei wrote:
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 5afb0046b12a..f401ba96dcfd 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3380,11 +3380,12 @@ static int sd_probe(struct device *dev)
->  		pm_runtime_set_autosuspend_delay(dev,
->  			sdp->host->hostt->rpm_autosuspend_delay);
->  	}
-> -	device_add_disk(dev, gd, NULL);
-> +	device_add_disk_no_queue_reg(dev, gd);
->  	if (sdkp->capacity)
->  		sd_dif_config_host(sdkp);
->  
->  	sd_revalidate_disk(gd);
-> +	blk_register_queue(gd);
->  
->  	if (sdkp->security) {
->  		sdkp->opal_dev = init_opal_dev(sdp, &sd_sec_submit);
+> +static ssize_t queue_store_nonrot_freeze(struct request_queue *q,
+> +		const char *page, size_t count)
+> +{
+> +	size_t ret;
+> +
+> +	blk_mq_freeze_queue(q);
+> +	ret = queue_store_nonrot(q, page, count);
+> +	blk_mq_unfreeze_queue(q);
+> +
+> +	return ret;
+> +}
 
-The effect of changing device_add_disk() into
-device_add_disk_no_queue_reg() is as follows:
-- __device_add_disk() skips the elevator_init_mq() call.
-- __device_add_disk() skips the blk_register_queue() call.
-
-The above patch introduces a blk_register_queue() call but no
-elevator_init_mq() call. Is that perhaps an oversight?
+Both queue_store_nonrot() and queue_store_nonrot_freeze() return a
+signed integer but 'ret' is an unsigned integer. Is that perhaps the
+result of an oversight?
 
 Thanks,
 
