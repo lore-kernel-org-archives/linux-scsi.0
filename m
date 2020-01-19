@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2D0C32771
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48120C32771
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 02:08:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B553024697
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:54:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E6CE246B5
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 02:08:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NWjlMtnN"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NuHOjd7j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgASBye (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jan 2020 20:54:34 -0500
-Received: from mail-ua1-f67.google.com ([209.85.222.67]:36218 "EHLO
-        mail-ua1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727083AbgASBye (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 20:54:34 -0500
-Received: by mail-ua1-f67.google.com with SMTP id y3so10326232uae.3;
-        Sat, 18 Jan 2020 17:54:33 -0800 (PST)
+        id S1728779AbgASCIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jan 2020 21:08:21 -0500
+Received: from mail-vs1-f67.google.com ([209.85.217.67]:37214 "EHLO
+        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728748AbgASCIU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 21:08:20 -0500
+Received: by mail-vs1-f67.google.com with SMTP id x18so17083944vsq.4;
+        Sat, 18 Jan 2020 18:08:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=TTozb2zePNKT8aZKd3kD9UXbrPwY+ZsZD84I1bqkZt0=;
-        b=NWjlMtnN0AvKVjD4KMk6naHTEcgvwwlzSmdo0s/PGVBqd/r3IAdCXCCzfyMEtE4TKm
-         xoqA7l86kOmxSrQeE1AGIXPdl3BIk7TwiFm2pg7ndj4A8I/8L0qUo1MIHlKorK2RCnOq
-         O5PEiXjJAvvyByPPSzd/zgBdzhrsR0wkvSemlwP/X3KCL/wXjRlgsBCSUaZ/qU8YSdE+
-         n3kirr6onWrpAk6PDiBAK2ElQtHG3RIl1YieE+DGVWsesubKuk6dhIesEDf3sBDP1d2P
-         1A3ftOjMAi/ehPlfVlxOSqBMO1yJ1NFeQ9nwtJogAiSy2KBnasNEtMgWjLlsr5NgrXDz
-         gwmw==
+        bh=zQ+1APHbFNKB143+sO59fLKK+w2945ZFYvD9Iav9Dtk=;
+        b=NuHOjd7jwhOszfbdWOMQ+xmm+OJ6YbgqxVXHC/0pXwCkUbXNTM5bytx6GQSRZeQwfN
+         itX95yjELoxZeTc9mNxxOJ9YhdwE6WfuXQZBH1hBFWht5QlTN4U3Y7bcbbDORrCg9hvf
+         Og407w9p+WbPUIAAb0PxIhhT6IbCaNXBGXvMel/JyYOAK1czZLQoNNnSmvjTGr/DaHMb
+         gcQJ9JKXnqXVMwS8ahjYzM5SFpx/BQsLVUhqMyfOmLZVvao5aYcYNudEwKl3sWgUrJTJ
+         zrrusySCB8KEGpnsoc1CiGSs71KCqzOXgKslM4dQZSbUcGevxLtrkRRJF/00tFH9bZHH
+         A/Vw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=TTozb2zePNKT8aZKd3kD9UXbrPwY+ZsZD84I1bqkZt0=;
-        b=F1J/xnjmsghuRLlEwg8ml0tJqre0V4fMidSf3OXHaUSmnEBV7tMZnruIBd5MJ8EQtk
-         9EIVvibJDzLLto+XOKbudx0BgE5Oq+4ikap3Sxd4epY0Ijg6F5q32udwnbjl6/RFJ8JX
-         gMSQ2F/Z4jHuCWEMGumpIU44GsEKNr+/8z0v7PZSUEtX/TCWHK4DPd6QWvVxHtjk1Rt8
-         MpBuNQJOifU4e1YpOKKE9vjbDJl9us9WvKRZWeHYkcgb7uLqSOaflega+aCGUIq58BKT
-         6ODfUMnNMfg4JXL6Axj5r7KzOLz1KOsD25MVXlgPFHm7hxrycgmAKEPPM07nAMdLKRTn
-         dWIg==
-X-Gm-Message-State: APjAAAU+eskva6JKCibJZ3TQuV6lvIqst9lTBRgypPVBpNhGWgrUJtei
-        KFXhQReuLrkuztBoi00kDh0/QVrxmQ9eM4wWyFU=
-X-Google-Smtp-Source: APXvYqxtngsGGKjZoEgoN8myyqs00BjmykkPdhJ09XS2xV/zyMg8qstOs90MhjIQu6IpDdFhxeRPqKR1muol95z3ShI=
-X-Received: by 2002:ab0:30c2:: with SMTP id c2mr28532356uam.8.1579398873157;
- Sat, 18 Jan 2020 17:54:33 -0800 (PST)
+        bh=zQ+1APHbFNKB143+sO59fLKK+w2945ZFYvD9Iav9Dtk=;
+        b=thlKkGZ6gO403xKUG7wG0Kly7jZNkYMVzkApL8Mnfqq30MLztZ+irWA78973iIo+ZM
+         lYdna6X/GL57WOv7vS4SNrOyfS+jaFbiYwJgnw/jgXoraUmUfZEvc/rBB+ATd/2liSYl
+         B7V7HpDohvXzbTrVzaxJYKraWe+nLh3XaV3N+EQddkZv4dRU/+7fLo06KpIoFVOHl26g
+         an+yO5en5hNTotwb2Y8zxSqm7boRMr3f/33NMOht65nLIO2rW16lW/54HM9MDQISinXd
+         fU/QGQoSa3ip8nNesOkbtceNsq4m7TKvifyMA+OQIzo7RfseHRL6pJFSGsCQYED0rIhb
+         mDSA==
+X-Gm-Message-State: APjAAAXkpuZNBDBKXPuVCjgbqY4+kR75EtBJ1RyUuGuJVHgQn/G4amLr
+        a4Pqc7EuxcSAeL5igZdFDgAUIIxIUmgEL16fAkt1IDRYb/w=
+X-Google-Smtp-Source: APXvYqymyBuxrOXAKX9NFQWTYDBqP/WQWLdZEsOztWSP9xkhb8gGyvcwg84YTQlsTwHj5AhMFFSzUXP/EXTHy8i7LX4=
+X-Received: by 2002:a67:e204:: with SMTP id g4mr9216274vsa.176.1579399699177;
+ Sat, 18 Jan 2020 18:08:19 -0800 (PST)
 MIME-Version: 1.0
-References: <20200119001327.29155-1-huobean@gmail.com> <20200119001327.29155-6-huobean@gmail.com>
-In-Reply-To: <20200119001327.29155-6-huobean@gmail.com>
+References: <20200119001327.29155-1-huobean@gmail.com> <20200119001327.29155-8-huobean@gmail.com>
+In-Reply-To: <20200119001327.29155-8-huobean@gmail.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 19 Jan 2020 07:23:57 +0530
-Message-ID: <CAGOxZ538XeHdsTU-TEroSWapoTsMYFt+4OCsW-ke=_fjsEih0w@mail.gmail.com>
-Subject: Re: [PATCH v3 5/8] scsi: ufs: Inline two functions into their callers
+Date:   Sun, 19 Jan 2020 07:37:43 +0530
+Message-ID: <CAGOxZ50VQs+oXmSDFAtsmJYACPszdnJOr2b0vQXmjBH2VWTtWQ@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] scsi: ufs: Add max_lu_supported in struct ufs_dev_info
 To:     Bean Huo <huobean@gmail.com>
 Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>, asutoshd@codeaurora.org,
@@ -78,63 +78,108 @@ On Sun, Jan 19, 2020 at 5:45 AM Bean Huo <huobean@gmail.com> wrote:
 >
 > From: Bean Huo <beanhuo@micron.com>
 >
-> Delete ufshcd_read_power_desc() and ufshcd_read_device_desc(), directly
-> inline ufshcd_read_desc() into its callers.
+> Add one new parameter max_lu_supported in struct ufs_dev_info,
+> which will be used to express exactly how many general LUs being
+> supported by UFS device, and initialize it during booting stage.
+> This patch also adds a new function ufshcd_init_device_geo_params()
+> for initialization of UFS device geometry descriptor related parameters.
 >
+> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 > Signed-off-by: Bean Huo <beanhuo@micron.com>
 > ---
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
->  drivers/scsi/ufs/ufshcd.c | 17 ++++-------------
->  1 file changed, 4 insertions(+), 13 deletions(-)
+>  drivers/scsi/ufs/ufs.h    |  2 ++
+>  drivers/scsi/ufs/ufshcd.c | 41 +++++++++++++++++++++++++++++++++++++--
+>  2 files changed, 41 insertions(+), 2 deletions(-)
 >
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index fcc9b4d4e56f..c982bcc94662 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -530,6 +530,8 @@ struct ufs_dev_info {
+>         bool f_power_on_wp_en;
+>         /* Keeps information if any of the LU is power on write protected */
+>         bool is_lu_power_on_wp;
+> +       /* Maximum number of general LU supported by the UFS device */
+> +       u8 max_lu_supported;
+>         u16 wmanufacturerid;
+>         /*UFS device Product Name */
+>         u8 *model;
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 925b31dc3110..5f3b0ad5135a 100644
+> index 4f8fcbb5f92e..dd10558f4d01 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3146,17 +3146,6 @@ static inline int ufshcd_read_desc(struct ufs_hba *hba,
->         return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
+> @@ -6858,6 +6858,37 @@ static void ufshcd_init_desc_sizes(struct ufs_hba *hba)
+>                 hba->desc_size.hlth_desc = QUERY_DESC_HEALTH_DEF_SIZE;
 >  }
 >
-> -static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
-> -                                        u8 *buf,
-> -                                        u32 size)
-> -{
-> -       return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
-> -}
-> -
-> -static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
-> -{
-> -       return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
-> -}
->
->  /**
->   * struct uc_string_id - unicode string
-> @@ -6493,7 +6482,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
->         if (!desc_buf)
->                 return;
->
-> -       ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
-> +       ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0,
+> +static int ufshcd_init_device_geo_params(struct ufs_hba *hba)
+> +{
+> +       int err;
+> +       size_t buff_len;
+> +       u8 *desc_buf;
+> +
+> +       buff_len = hba->desc_size.geom_desc;
+> +       desc_buf = kmalloc(buff_len, GFP_KERNEL);
+> +       if (!desc_buf) {
+> +               err = -ENOMEM;
+> +               goto out;
+> +       }
+> +
+> +       err = ufshcd_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0,
 > +                       desc_buf, buff_len);
->         if (ret) {
->                 dev_err(hba->dev,
->                         "%s: Failed reading power descriptor.len = %d ret = %d",
-> @@ -6599,7 +6589,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
->                 goto out;
->         }
+> +       if (err) {
+> +               dev_err(hba->dev, "%s: Failed reading Geometry Desc. err = %d\n",
+> +                               __func__, err);
+> +               goto out;
+> +       }
+> +
+> +       if (desc_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] == 1)
+> +               hba->dev_info.max_lu_supported = 32;
+> +       else if (desc_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] == 0)
+> +               hba->dev_info.max_lu_supported = 8;
+> +
+> +out:
+> +       kfree(desc_buf);
+> +       return err;
+> +}
+> +
+>  static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
+>         {19200000, REF_CLK_FREQ_19_2_MHZ},
+>         {26000000, REF_CLK_FREQ_26_MHZ},
+> @@ -6931,9 +6962,17 @@ static int ufshcd_init_params(struct ufs_hba *hba)
+>         bool flag;
+>         int ret;
 >
-> -       err = ufshcd_read_device_desc(hba, desc_buf, hba->desc_size.dev_desc);
-> +       err = ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, desc_buf,
-> +                       hba->desc_size.dev_desc);
->         if (err) {
->                 dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
->                         __func__, err);
+> +       /* Clear any previous UFS device information */
+> +       memset(&hba->dev_info, 0, sizeof(hba->dev_info));
+> +
+>         /* Init check for device descriptor sizes */
+>         ufshcd_init_desc_sizes(hba);
+>
+> +       /* Init UFS geometry descriptor related parameters */
+> +       ret = ufshcd_init_device_geo_params(hba);
+> +       if (ret)
+> +               goto out;
+> +
+>         /* Check and apply UFS device quirks */
+>         ret = ufs_get_device_desc(hba);
+>         if (ret) {
+> @@ -6944,8 +6983,6 @@ static int ufshcd_init_params(struct ufs_hba *hba)
+>
+>         ufs_fixup_device_setup(hba);
+>
+> -       /* Clear any previous UFS device information */
+> -       memset(&hba->dev_info, 0, sizeof(hba->dev_info));
+>         if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+>                         QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+>                 hba->dev_info.f_power_on_wp_en = flag;
 > --
 > 2.17.1
 >
 
 
--- 
+--
 Regards,
 Alim
