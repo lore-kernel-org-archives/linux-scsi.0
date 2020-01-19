@@ -6,43 +6,42 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE2F8C33CB7
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 022A1C3F68F
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:29:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8EA832072B
+	by mail.kernel.org (Postfix) with ESMTP id D25A82072B
 	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 20:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728709AbgASU2U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 15:28:20 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:56106 "EHLO
+        id S1728775AbgASU3R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 15:29:17 -0500
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:39319 "EHLO
         mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727138AbgASU2T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:28:19 -0500
-Received: by mail-pj1-f68.google.com with SMTP id d5so5711240pjz.5;
-        Sun, 19 Jan 2020 12:28:19 -0800 (PST)
+        with ESMTP id S1727138AbgASU3R (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 15:29:17 -0500
+Received: by mail-pj1-f68.google.com with SMTP id e11so6045315pjt.4;
+        Sun, 19 Jan 2020 12:29:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=ScV8TT0psX6XqKz+WSfUevTG8vITLJzq/ItAqBlsDcQ=;
-        b=r6zzeyq9Xj91on+T/JBzTCy32x7pLCB/YqNTjalCNI0hfo0ASmAdM6wQjhwww2qo+8
-         0oOe5Q3i4zRlhhhghpZyWoQ5ILT3lpbthLuMPEiNgTSx3Zhoh/P4AOPkHHKrnuKIj5Ag
-         74Nmfrx0LWLYbonSWX2fc+nkbyjoEdxi0VC4I3XijqHtNAaiiU201v8+FQw3qkny6rND
-         L57/T0xFQKcZLSSzL3eY5fymleOhHeM0tiZCEb3mB7uo5Y2GKHO08OGl0ezrxx/5Qcda
-         5Fn1Ylu0nuVeYSI2R3j65OZu4oC/u4ZNnIgMIXWAp6BDznzZj5Vo7BSbNfaJhKUKS3Uy
-         hirw==
-X-Gm-Message-State: APjAAAWUgvVvjST7R/V5ojEFDK2aqHqSwYQMHTucawr6FBT47qpxNmLj
-        lox/zpOy5/8e5w/U6SmkWbU=
-X-Google-Smtp-Source: APXvYqzgxdFgl/hLWIjdcBLn5skfTcha2TGtV+PJrjYoed5scybfpAx568yx2RcT1rToIuB49v7IhQ==
-X-Received: by 2002:a17:902:34d:: with SMTP id 71mr11229916pld.140.1579465699096;
-        Sun, 19 Jan 2020 12:28:19 -0800 (PST)
+        bh=kUWI/FpcinuOXfUPlOd6SONH1nWg0MWwXCmTnQfQTZk=;
+        b=jkgtcF9VOXSOErZi1s/wVNeh6XJtLySrt9k/s29XaKFpK2B9Fnqyim097cS8weIEsQ
+         6hM8grn5JwgYbrXDHVDBR7//FRlh2ZH4i+mPy+HJFcyctXmrpb9teCYonLUCkCaLdTiw
+         ottGPFfOUkqGzNWyf43BYC4L7nU3ombFVdoiC6bxFwnuU6zSPd74ufjDKWMsJTuzZ7DC
+         VS/TX9DwaPbvejmyBAldK5Bu/6viGzYxSV7350Gss/Dhv4d9T44jXSZISzv5RoLLUJxC
+         KsBGt7A5eNC7SVzLo4HoUUdLXwQXMrvJp/NAQbXm16bMkmBTmcvaRjTXPo1F2NvG90Q3
+         Ottg==
+X-Gm-Message-State: APjAAAWo3u496oZRJykrgK3Gnf5fcS03GfvuKEx42C/jTY6p8gmyWwyq
+        OsIfQmktt8YRIa9wJA4jNYIhZmSC
+X-Google-Smtp-Source: APXvYqzA40uRmJFVRylaYIgc3n4gpZ8BW2yn5lG2s3CeVrzoj1zaBo1mS1vNH7hexLB4Bqgi3WPHJw==
+X-Received: by 2002:a17:90a:2ec5:: with SMTP id h5mr19740087pjs.79.1579465756727;
+        Sun, 19 Jan 2020 12:29:16 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:781f:ca33:6085:f83a? ([2601:647:4000:d7:781f:ca33:6085:f83a])
-        by smtp.gmail.com with ESMTPSA id u11sm305557pjn.2.2020.01.19.12.28.17
+        by smtp.gmail.com with ESMTPSA id i23sm35866659pfo.11.2020.01.19.12.29.15
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Jan 2020 12:28:18 -0800 (PST)
-Subject: Re: [PATCH 1/6] scsi: mpt3sas: don't use .device_busy in device reset
- routine
+        Sun, 19 Jan 2020 12:29:16 -0800 (PST)
+Subject: Re: [PATCH 2/6] scsi: remove .for_blk_mq
 To:     Ming Lei <ming.lei@redhat.com>,
         James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
@@ -56,10 +55,10 @@ Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         Sumit Saxena <sumit.saxena@broadcom.com>,
         Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20200119071432.18558-1-ming.lei@redhat.com>
- <20200119071432.18558-2-ming.lei@redhat.com>
+ <20200119071432.18558-3-ming.lei@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -84,12 +83,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <05bf3d98-6c40-0bb2-4bf7-721d98f6c7dc@acm.org>
-Date:   Sun, 19 Jan 2020 12:28:16 -0800
+Message-ID: <03f680b5-d70a-ee59-9c78-813a245571b3@acm.org>
+Date:   Sun, 19 Jan 2020 12:29:14 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200119071432.18558-2-ming.lei@redhat.com>
+In-Reply-To: <20200119071432.18558-3-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -99,31 +98,6 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-18 23:14, Ming Lei wrote:
-> Cc: Bart Van Assche <bart.vanassche@wdc.com>
+> No one use it any more, so remove the flag.
 
-As one can see in the .mailmap file in the kernel tree I use my @acm.org
-email address for kernel contributions. The above email address is no
-longer valid since I left WDC more than a year ago. This is something I
-have mentioned before. See also
-https://lore.kernel.org/linux-scsi/55c68a97-4393-fa63-e2da-d41a48237f96@acm.org/
-
-> +static bool scsi_device_check_in_flight(struct request *rq, void *data,
-> +				      bool reserved)
-> +{
-> +	struct device_busy *busy = data;
-> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-> +
-> +	if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state) && cmd->device ==
-> +			busy->dev)
-> +		(busy->cnt)++;
-> +
-> +	return true;
-> +}
-
-scsi_host_check_in_flight() is almost identical to the above function.
-Has it been considered to merge these two functions into a single
-function? Same comment for scsi_host_busy() and scsih_dev_busy().
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
