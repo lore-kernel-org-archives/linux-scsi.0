@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D756C33CB6
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:30:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08EFDC32771
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:34:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54738206E6
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:30:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1B61246AF
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:34:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VoYQA00n"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BwS97FSA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727114AbgASBar (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jan 2020 20:30:47 -0500
-Received: from mail-vk1-f194.google.com ([209.85.221.194]:33696 "EHLO
-        mail-vk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727070AbgASBaq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 20:30:46 -0500
-Received: by mail-vk1-f194.google.com with SMTP id i78so7679139vke.0;
-        Sat, 18 Jan 2020 17:30:46 -0800 (PST)
+        id S1727465AbgASBeT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jan 2020 20:34:19 -0500
+Received: from mail-vk1-f193.google.com ([209.85.221.193]:39519 "EHLO
+        mail-vk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727070AbgASBeS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 20:34:18 -0500
+Received: by mail-vk1-f193.google.com with SMTP id t129so7683319vkg.6;
+        Sat, 18 Jan 2020 17:34:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=EKad1adTTU4LVcn/Blwx2NeGsTOd9VlC38Ni39+5y5g=;
-        b=VoYQA00nMU6iafBZElAvTk7u4kdsK3nkqBTFpeEWQA3G0CRzU/Fo50Z4s44+xQw/6Q
-         bY/vtKy/ThWinD+crPf2g8zipZ0I28j7P6189VxAFaRa5u73KaLT4tH0BHMpyUyemwXb
-         bEkt6Cg1U9pCEmKNlMBZnZBY8dbsOL3Zmy0FehfE95esgmk9D044ZZKDZkXUDqWaEWlo
-         qzS1AbEj2dr2QHxIT8h4Xqh39mN1FHjomVH0/FXGythuoaD779OpoF8xEVSJcI7rioe8
-         6t+nWL+PgJMyOYxH0crI51qUNQBgj/an3VQZBmnSQ3VdwTapy7bjc11L4gx15YXMU365
-         F4og==
+        bh=YOy40kYlSRJclesJG6H5aRLwvZhYiklMAWqruJZ0en4=;
+        b=BwS97FSAKRnaHtKWH9takdEk63YQtw6ltsEzbj6h5508/c28yy8HGu8FjnziuzHRq4
+         WoH6KurFyqzS88HsDAGvnf9W6Gy7j8heab/32yfXcZFtIEBMLb3FfC9VhmbVzbaJwctK
+         9aBrcHXXa1GDYKybKgAXknUGIiqFYKgAl/gz1GHwkD4pFHlMZ6CrTkxFknECsaXb8YbC
+         2sEXNY/7Kiw7V84AyW53qe+IleZbwaC2T7bOJeGNzv0IFxyIk8JHRyj4BUG/T8L0N+LD
+         vVVk42LJSQoXkqoE+8jBRYffNUEn+udihRwQ8ctZqAstBdWwgJV4HpdeGYTZQssUYPDQ
+         Lcog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=EKad1adTTU4LVcn/Blwx2NeGsTOd9VlC38Ni39+5y5g=;
-        b=EfcgHK4m2r1iX9pt34ekiA3BAsEe+lLxWpiX/5Kfmqq04GgXouRv2NqyxICA/cdxco
-         tMGaixQ+cHp5WfzmCSfjHW4Med15kRQXfAqkGYBF4lOITeDuzsVTqsq4QrPqZHDQ7eIr
-         eMsBpixGv5Rr0MErrsAXBHdELhJEDZwWsli+7oM5D8GMMTyc9N/ut/U9lkuEfD9Z2tPw
-         AqITqjj/v8Yphqg4CFotSXz+ULsCgRx5O6ZNSZ3S2pXhXdJKftuF+lcQ/UU3N8/iUrS0
-         T1DYjk6ZJeNTyIvOQf9MlIeGCDGmDq9mMg7+JW+J3RrD3L+SOelgA5rpNKiQEeMBz7hJ
-         KLYg==
-X-Gm-Message-State: APjAAAWJ8iSPaNvmWFNxyF6nsS/+JDZx6IatlFmgPzJ732K9nmv4LOA+
-        U277YzHdwiwhl7S94WAt+BeclWJlg2CXheLeKCM=
-X-Google-Smtp-Source: APXvYqwhEGUz+GdZpwKSakwZaVqcrDLa+iMqVqkgjm8E2FCXw/k/lY+872TsN+c6kIJGmQRH7Ex2ef3BVz0VsHLxUe4=
-X-Received: by 2002:a1f:4541:: with SMTP id s62mr13717538vka.59.1579397445597;
- Sat, 18 Jan 2020 17:30:45 -0800 (PST)
+        bh=YOy40kYlSRJclesJG6H5aRLwvZhYiklMAWqruJZ0en4=;
+        b=jrHKQrfpopLDFI31jIVZU0+yEp2bq6C5OJFTogKoUWhqCUA8D3c8YBYwfpr3aMFQNq
+         FOFQaz/SLJ5KVAefu2IxDliZtoM3qbR6n5INySboeYbMqKhwGNGyKr53LU8qsgYBC8Ft
+         BHLDmYnGchjmmimyt/0Gu8l4A51GNYKo6fXRAh+oGLeF/ysoRLxSr0mIlA2cxD08r6e1
+         pl8xCRdrS26iTzwl2kiJz2WNa1Y0LEZcK7Se2XmxH9+2CsVz+UXxwzx6My2b0Q4uMSLa
+         jsQ00q9W/3fgQBkXfR1p/hECxYVeZenPZeSxFLehPAIIkabLKplM8IX21JWw5QvguhJk
+         pNmA==
+X-Gm-Message-State: APjAAAXMYY7lfMMEEI0qYocD8S4TEIF6hOoDvFtLoLdTBgeVcqnDf222
+        TfM8A4F6sjypTktBBaJ7mp4gn33k4SWxTbfU1X9EGpO/
+X-Google-Smtp-Source: APXvYqx8jz5ODeunFRmwOOX/yO4hoqzktmLWHqLQaGh5VQrj05K0qMDVy6CwCw60283ItNvWag2cHDpBjFAEvZqE+cM=
+X-Received: by 2002:a1f:252:: with SMTP id 79mr28685604vkc.96.1579397657185;
+ Sat, 18 Jan 2020 17:34:17 -0800 (PST)
 MIME-Version: 1.0
 References: <20200119001327.29155-1-huobean@gmail.com> <20200119001327.29155-2-huobean@gmail.com>
-In-Reply-To: <20200119001327.29155-2-huobean@gmail.com>
+ <CAGOxZ52QU-W-MKd05cqXVRO82QMpG1Y9+AzPx4zHsZsioGS1Og@mail.gmail.com>
+In-Reply-To: <CAGOxZ52QU-W-MKd05cqXVRO82QMpG1Y9+AzPx4zHsZsioGS1Og@mail.gmail.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 19 Jan 2020 07:00:09 +0530
-Message-ID: <CAGOxZ52QU-W-MKd05cqXVRO82QMpG1Y9+AzPx4zHsZsioGS1Og@mail.gmail.com>
+Date:   Sun, 19 Jan 2020 07:03:41 +0530
+Message-ID: <CAGOxZ50RFhPRqHPxCMepawiVsTXOLGqWBw0d74oB=HryRUfxLw@mail.gmail.com>
 Subject: Re: [PATCH v3 1/8] scsi: ufs: Fix ufshcd_probe_hba() reture value in
  case ufshcd_scsi_add_wlus() fails
 To:     Bean Huo <huobean@gmail.com>
@@ -77,41 +78,55 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bean
 
-On Sun, Jan 19, 2020 at 5:44 AM Bean Huo <huobean@gmail.com> wrote:
+On Sun, Jan 19, 2020 at 7:00 AM Alim Akhtar <alim.akhtar@gmail.com> wrote:
 >
-> From: Bean Huo <beanhuo@micron.com>
+> Hi Bean
 >
-> A non-zero error value likely being returned by ufshcd_scsi_add_wlus()
-> in case of failure of adding the WLs, but ufshcd_probe_hba() doesn't
-> use this value, and doesn't report this failure to upper caller.
-> This patch is to fix this issue.
+> On Sun, Jan 19, 2020 at 5:44 AM Bean Huo <huobean@gmail.com> wrote:
+> >
+> > From: Bean Huo <beanhuo@micron.com>
+> >
+> > A non-zero error value likely being returned by ufshcd_scsi_add_wlus()
+> > in case of failure of adding the WLs, but ufshcd_probe_hba() doesn't
+> > use this value, and doesn't report this failure to upper caller.
+> > This patch is to fix this issue.
+> >
+> > Fixes: 2a8fa600445c ("ufs: manually add well known logical units")
+> > Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+> > Signed-off-by: Bean Huo <beanhuo@micron.com>
+> > ---
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 >
-> Fixes: 2a8fa600445c ("ufs: manually add well known logical units")
-> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+Sorry for noise, its not signed-off, please have my
 
->  drivers/scsi/ufs/ufshcd.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+
+> >  drivers/scsi/ufs/ufshcd.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index bea036ab189a..9a9085a7bcc5 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -7032,7 +7032,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+> >                         ufshcd_init_icc_levels(hba);
+> >
+> >                 /* Add required well known logical units to scsi mid layer */
+> > -               if (ufshcd_scsi_add_wlus(hba))
+> > +               ret = ufshcd_scsi_add_wlus(hba);
+> > +               if (ret)
+> >                         goto out;
+> >
+> >                 /* Initialize devfreq after UFS device is detected */
+> > --
+> > 2.17.1
+> >
 >
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index bea036ab189a..9a9085a7bcc5 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -7032,7 +7032,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->                         ufshcd_init_icc_levels(hba);
 >
->                 /* Add required well known logical units to scsi mid layer */
-> -               if (ufshcd_scsi_add_wlus(hba))
-> +               ret = ufshcd_scsi_add_wlus(hba);
-> +               if (ret)
->                         goto out;
->
->                 /* Initialize devfreq after UFS device is detected */
 > --
-> 2.17.1
->
+> Regards,
+> Alim
+
 
 
 -- 
