@@ -2,128 +2,127 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D64AC32771
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46892C32771
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:46:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6446A2467C
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:14:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uRX+7+jO"
+	by mail.kernel.org (Postfix) with ESMTP id 19B2F246AF
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728909AbgASAON (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jan 2020 19:14:13 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:52230 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727083AbgASAOM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 19:14:12 -0500
-Received: by mail-wm1-f65.google.com with SMTP id p9so10913973wmc.2;
-        Sat, 18 Jan 2020 16:14:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KQ+N4tgHIW2CTZZWICt6xNlWKRm3ezXQOgqUFuWPieE=;
-        b=uRX+7+jO4sXPlkwbL6xZSMH/7riWE2GcLPUQNsega5krOcmjImsTlWLmdfKgm/9rWy
-         BdXalv3nvsMsqM+xrH1il+d0v/l40kfUj5jHBd2L+slrW8avXfdN5n0qbWnLZYJv+6gz
-         cUcloJFvBcVws8HIpGbL/5Y8fQ6YGdki/2jNASvbBu4DKW77/p5EnPuYwQWMe7LxGTwt
-         PgOgJWa/tdbRiFMVOcVpxIqS91ZkOQWnlj6a1WzHBdgdGne+RPF8SFDBPbq4Rvrl7dRT
-         71COKy/Wrh/QfCBGU8FtOzofSYBkdADftIlb7wxP55CDSWkZ+lel3a3nZvWtVfmf/vtW
-         jhLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=KQ+N4tgHIW2CTZZWICt6xNlWKRm3ezXQOgqUFuWPieE=;
-        b=FZ/AEukMzxwvhXi2daFGROx1Cwl3s0VoIGg5hgcW/9gwlvz8Oz6Prgh3zhy2GzHMCA
-         4mLJKiMsgOw4gk98kR3BnpkCtahIp7ubf71acUyUEWId2TAKFYD+6CRl/ASFaPSdJyW0
-         iRHzmf0PDg+v5DoThNxw8vczJEazbElWaEs0p+77rpxrbaa3HWV05ClhbRYRRAWMmC+q
-         17lgVWAkb/aN3zIeaVRpVMqv6YvkbTNuq0DVSXwBr29XKGhK2lrx/buf7fH/mbjpX9Nk
-         9lokKp0H8qFc+tYFEEkVJ2GVb4ICe+uOkzQKG1zqXmyPltU5vX9xRr7usTXj5W9gPSca
-         CTxA==
-X-Gm-Message-State: APjAAAV7qXIdlbinPZXg9SuPqtG4skO5Nv4yyWvCm4Zx3BpXOOGKXGiB
-        XdbMVnj8ZILx8GZ1BNXPW+c=
-X-Google-Smtp-Source: APXvYqzfQDxYFCAa2L7hVt9VbCi+P6vVJ7ErpDnBuDrE+db9/o0pi3qQvwRXwRhaaoLffxMDQu72BA==
-X-Received: by 2002:a05:600c:2406:: with SMTP id 6mr11812175wmp.30.1579392850818;
-        Sat, 18 Jan 2020 16:14:10 -0800 (PST)
-Received: from localhost.localdomain (ip5f5bee3c.dynamic.kabel-deutschland.de. [95.91.238.60])
-        by smtp.gmail.com with ESMTPSA id i8sm42177432wro.47.2020.01.18.16.14.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Jan 2020 16:14:10 -0800 (PST)
-From:   Bean Huo <huobean@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 5/8] scsi: ufs: Inline two functions into their callers
-Date:   Sun, 19 Jan 2020 01:13:24 +0100
-Message-Id: <20200119001327.29155-6-huobean@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200119001327.29155-1-huobean@gmail.com>
-References: <20200119001327.29155-1-huobean@gmail.com>
+        id S1727111AbgASAqt convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jan 2020 19:46:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43870 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727028AbgASAqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Jan 2020 19:46:49 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 206253] New: mpt3sas driver crash under heavy load
+Date:   Sun, 19 Jan 2020 00:46:48 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: itoufiqu@uci.edu
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-206253-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=206253
 
-Delete ufshcd_read_power_desc() and ufshcd_read_device_desc(), directly
-inline ufshcd_read_desc() into its callers.
+            Bug ID: 206253
+           Summary: mpt3sas driver crash under heavy load
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.10.0-957.27.2.el7.x86_64
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: itoufiqu@uci.edu
+        Regression: No
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+Created attachment 286877
+  --> https://bugzilla.kernel.org/attachment.cgi?id=286877&action=edit
+console screenshot
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 925b31dc3110..5f3b0ad5135a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3146,17 +3146,6 @@ static inline int ufshcd_read_desc(struct ufs_hba *hba,
- 	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
- }
- 
--static inline int ufshcd_read_power_desc(struct ufs_hba *hba,
--					 u8 *buf,
--					 u32 size)
--{
--	return ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0, buf, size);
--}
--
--static int ufshcd_read_device_desc(struct ufs_hba *hba, u8 *buf, u32 size)
--{
--	return ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, buf, size);
--}
- 
- /**
-  * struct uc_string_id - unicode string
-@@ -6493,7 +6482,8 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- 	if (!desc_buf)
- 		return;
- 
--	ret = ufshcd_read_power_desc(hba, desc_buf, buff_len);
-+	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0,
-+			desc_buf, buff_len);
- 	if (ret) {
- 		dev_err(hba->dev,
- 			"%s: Failed reading power descriptor.len = %d ret = %d",
-@@ -6599,7 +6589,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	err = ufshcd_read_device_desc(hba, desc_buf, hba->desc_size.dev_desc);
-+	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, desc_buf,
-+			hba->desc_size.dev_desc);
- 	if (err) {
- 		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
- 			__func__, err);
+Hi guys, 
+
+I am new to this site, so if this problem is a repeat, my apology in advance.
+
+I have a Dell R7425 server with dual AMD EPYC-7301 CPUs, 256GB of RAM, with
+dual SAS 3008 cards. OS is centOS 7.6.  
+
+I have 60-bay JBOD connected to these 2 HBA cards, all bays are full with HGST
+SAS 10TB drives.  We run BeeGFS (with ZFS at the backend) in this system.  This
+is a brand new setup and we noticed that under heavy load after a while , the
+system completely freezes up.  It then needs a hard reboot.  I ran starce-ng
+for 2 days on the CPUs and RAM, the system was stable.  I torture tested the
+boot drives as well for 2 days, nothing came out.  Everything seems normal. 
+the problem seems come in when we start stressing the drives in the JBOD,
+connected with the HBA card. I have the system configured with dual connected
+multipath ( roound-robin ) between both of the HBA cards and primary and
+secondary SAS expanders of the of JBOD.
+
+Since this is a Dell server, I went to Dell's support website, and found a
+newer mpt3sas driver and installed it.  OS installed driver version was
+16.100.01.00 , and updated version now is 27.00.01.00 .
+
+This morning, the system hung again, and I was able to capture something from
+the console.  I have attached the screenshot.  
+
+The error was, mpt3sas_cm0 fault_state(0x5854!)
+
+Below is the current modinfo output ( in brief ) from the current mpt3sas
+driver:
+
+filename:      
+/lib/modules/3.10.0-957.27.2.el7.x86_64/kernel/drivers/scsi/mpt3sas/mpt3sas.ko.xz
+alias:          mpt2sas
+version:        27.00.01.00
+license:        GPL
+description:    LSI MPT Fusion SAS 3.0 & SAS 3.5 Device Driver
+author:         Broadcom Inc. <MPT-FusionLinux.pdl@broadcom.com>
+retpoline:      Y
+rhelversion:    7.6
+srcversion:     26E62E1FFC69FC8709F8CD7
+
+
+
+I have no idea what to do here.  What can I do to fix this issue? Do I need a
+special configuration?  A new driver? Our file servers are usually under
+moderate to high load.  We have a 1.6PB system here ( BeeGFS + ZFS at the
+backend ), with CentOS 6.9.  that system run pretty solid without much hiccup. 
+that system also has a HBA 3008 card.
+
+Thanks.
+
 -- 
-2.17.1
-
+You are receiving this mail because:
+You are the assignee for the bug.
