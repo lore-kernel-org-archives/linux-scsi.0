@@ -2,127 +2,118 @@ Return-Path: <SRS0=1Um0=3I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46892C32771
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D756C33CB6
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:30:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19B2F246AF
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 00:46:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54738206E6
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 01:30:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VoYQA00n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbgASAqt convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jan 2020 19:46:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43870 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727028AbgASAqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Jan 2020 19:46:49 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 206253] New: mpt3sas driver crash under heavy load
-Date:   Sun, 19 Jan 2020 00:46:48 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: itoufiqu@uci.edu
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-206253-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1727114AbgASBar (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jan 2020 20:30:47 -0500
+Received: from mail-vk1-f194.google.com ([209.85.221.194]:33696 "EHLO
+        mail-vk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727070AbgASBaq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jan 2020 20:30:46 -0500
+Received: by mail-vk1-f194.google.com with SMTP id i78so7679139vke.0;
+        Sat, 18 Jan 2020 17:30:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EKad1adTTU4LVcn/Blwx2NeGsTOd9VlC38Ni39+5y5g=;
+        b=VoYQA00nMU6iafBZElAvTk7u4kdsK3nkqBTFpeEWQA3G0CRzU/Fo50Z4s44+xQw/6Q
+         bY/vtKy/ThWinD+crPf2g8zipZ0I28j7P6189VxAFaRa5u73KaLT4tH0BHMpyUyemwXb
+         bEkt6Cg1U9pCEmKNlMBZnZBY8dbsOL3Zmy0FehfE95esgmk9D044ZZKDZkXUDqWaEWlo
+         qzS1AbEj2dr2QHxIT8h4Xqh39mN1FHjomVH0/FXGythuoaD779OpoF8xEVSJcI7rioe8
+         6t+nWL+PgJMyOYxH0crI51qUNQBgj/an3VQZBmnSQ3VdwTapy7bjc11L4gx15YXMU365
+         F4og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EKad1adTTU4LVcn/Blwx2NeGsTOd9VlC38Ni39+5y5g=;
+        b=EfcgHK4m2r1iX9pt34ekiA3BAsEe+lLxWpiX/5Kfmqq04GgXouRv2NqyxICA/cdxco
+         tMGaixQ+cHp5WfzmCSfjHW4Med15kRQXfAqkGYBF4lOITeDuzsVTqsq4QrPqZHDQ7eIr
+         eMsBpixGv5Rr0MErrsAXBHdELhJEDZwWsli+7oM5D8GMMTyc9N/ut/U9lkuEfD9Z2tPw
+         AqITqjj/v8Yphqg4CFotSXz+ULsCgRx5O6ZNSZ3S2pXhXdJKftuF+lcQ/UU3N8/iUrS0
+         T1DYjk6ZJeNTyIvOQf9MlIeGCDGmDq9mMg7+JW+J3RrD3L+SOelgA5rpNKiQEeMBz7hJ
+         KLYg==
+X-Gm-Message-State: APjAAAWJ8iSPaNvmWFNxyF6nsS/+JDZx6IatlFmgPzJ732K9nmv4LOA+
+        U277YzHdwiwhl7S94WAt+BeclWJlg2CXheLeKCM=
+X-Google-Smtp-Source: APXvYqwhEGUz+GdZpwKSakwZaVqcrDLa+iMqVqkgjm8E2FCXw/k/lY+872TsN+c6kIJGmQRH7Ex2ef3BVz0VsHLxUe4=
+X-Received: by 2002:a1f:4541:: with SMTP id s62mr13717538vka.59.1579397445597;
+ Sat, 18 Jan 2020 17:30:45 -0800 (PST)
 MIME-Version: 1.0
+References: <20200119001327.29155-1-huobean@gmail.com> <20200119001327.29155-2-huobean@gmail.com>
+In-Reply-To: <20200119001327.29155-2-huobean@gmail.com>
+From:   Alim Akhtar <alim.akhtar@gmail.com>
+Date:   Sun, 19 Jan 2020 07:00:09 +0530
+Message-ID: <CAGOxZ52QU-W-MKd05cqXVRO82QMpG1Y9+AzPx4zHsZsioGS1Og@mail.gmail.com>
+Subject: Re: [PATCH v3 1/8] scsi: ufs: Fix ufshcd_probe_hba() reture value in
+ case ufshcd_scsi_add_wlus() fails
+To:     Bean Huo <huobean@gmail.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, asutoshd@codeaurora.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=206253
+Hi Bean
 
-            Bug ID: 206253
-           Summary: mpt3sas driver crash under heavy load
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.10.0-957.27.2.el7.x86_64
-          Hardware: x86-64
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: itoufiqu@uci.edu
-        Regression: No
+On Sun, Jan 19, 2020 at 5:44 AM Bean Huo <huobean@gmail.com> wrote:
+>
+> From: Bean Huo <beanhuo@micron.com>
+>
+> A non-zero error value likely being returned by ufshcd_scsi_add_wlus()
+> in case of failure of adding the WLs, but ufshcd_probe_hba() doesn't
+> use this value, and doesn't report this failure to upper caller.
+> This patch is to fix this issue.
+>
+> Fixes: 2a8fa600445c ("ufs: manually add well known logical units")
+> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+> ---
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 
-Created attachment 286877
-  --> https://bugzilla.kernel.org/attachment.cgi?id=286877&action=edit
-console screenshot
+>  drivers/scsi/ufs/ufshcd.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index bea036ab189a..9a9085a7bcc5 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7032,7 +7032,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+>                         ufshcd_init_icc_levels(hba);
+>
+>                 /* Add required well known logical units to scsi mid layer */
+> -               if (ufshcd_scsi_add_wlus(hba))
+> +               ret = ufshcd_scsi_add_wlus(hba);
+> +               if (ret)
+>                         goto out;
+>
+>                 /* Initialize devfreq after UFS device is detected */
+> --
+> 2.17.1
+>
 
-Hi guys, 
-
-I am new to this site, so if this problem is a repeat, my apology in advance.
-
-I have a Dell R7425 server with dual AMD EPYC-7301 CPUs, 256GB of RAM, with
-dual SAS 3008 cards. OS is centOS 7.6.  
-
-I have 60-bay JBOD connected to these 2 HBA cards, all bays are full with HGST
-SAS 10TB drives.  We run BeeGFS (with ZFS at the backend) in this system.  This
-is a brand new setup and we noticed that under heavy load after a while , the
-system completely freezes up.  It then needs a hard reboot.  I ran starce-ng
-for 2 days on the CPUs and RAM, the system was stable.  I torture tested the
-boot drives as well for 2 days, nothing came out.  Everything seems normal. 
-the problem seems come in when we start stressing the drives in the JBOD,
-connected with the HBA card. I have the system configured with dual connected
-multipath ( roound-robin ) between both of the HBA cards and primary and
-secondary SAS expanders of the of JBOD.
-
-Since this is a Dell server, I went to Dell's support website, and found a
-newer mpt3sas driver and installed it.  OS installed driver version was
-16.100.01.00 , and updated version now is 27.00.01.00 .
-
-This morning, the system hung again, and I was able to capture something from
-the console.  I have attached the screenshot.  
-
-The error was, mpt3sas_cm0 fault_state(0x5854!)
-
-Below is the current modinfo output ( in brief ) from the current mpt3sas
-driver:
-
-filename:      
-/lib/modules/3.10.0-957.27.2.el7.x86_64/kernel/drivers/scsi/mpt3sas/mpt3sas.ko.xz
-alias:          mpt2sas
-version:        27.00.01.00
-license:        GPL
-description:    LSI MPT Fusion SAS 3.0 & SAS 3.5 Device Driver
-author:         Broadcom Inc. <MPT-FusionLinux.pdl@broadcom.com>
-retpoline:      Y
-rhelversion:    7.6
-srcversion:     26E62E1FFC69FC8709F8CD7
-
-
-
-I have no idea what to do here.  What can I do to fix this issue? Do I need a
-special configuration?  A new driver? Our file servers are usually under
-moderate to high load.  We have a 1.6PB system here ( BeeGFS + ZFS at the
-backend ), with CentOS 6.9.  that system run pretty solid without much hiccup. 
-that system also has a HBA 3008 card.
-
-Thanks.
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Regards,
+Alim
