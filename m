@@ -5,176 +5,165 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C40C33CB1
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 332C5C33CB1
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:39:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E465E2073A
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:28:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03A802072B
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jan 2020 14:39:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rYQjOwK7"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pmjnazB7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726956AbgASO2Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jan 2020 09:28:24 -0500
-Received: from mail-vs1-f67.google.com ([209.85.217.67]:33647 "EHLO
-        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726778AbgASO2Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 09:28:24 -0500
-Received: by mail-vs1-f67.google.com with SMTP id n27so17517896vsa.0;
-        Sun, 19 Jan 2020 06:28:23 -0800 (PST)
+        id S1726956AbgASOjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jan 2020 09:39:13 -0500
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:42283 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726778AbgASOjN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jan 2020 09:39:13 -0500
+Received: by mail-ua1-f68.google.com with SMTP id u17so10614112uap.9
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Jan 2020 06:39:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=hXWYeX6AjtCDD1kv6pJLbNztbwW499IxeNUMgb5p23o=;
-        b=rYQjOwK7eKiea9ZzsLJpVr/fXJw6Odp4y9oVfXjpZ5Ypqm1TDdcsTmyDgkF57qzaM3
-         53Fh+Opzf06Zj7t1IOM3DK3rTYv90QhGYbmx6pPAwUP040ziVECm/V3YfHOFFy4DOd/4
-         qE7Tbmq1b17DI1RiJ4bHccmrRBUIeGj9SxyczYA2s7+lAGcKi+CoS0iqHiwBbr6otv/w
-         YAm7LuJDbwNjDxqdx/zCp3cfc4QdE1vwREHwUhvdoS+56RYx07QOtlwEKrdKRYdQvgSi
-         8p1OGceTrELl9lJSaLNZzzPImLJu6d9xW2BoEAjSyh6yU1TivUsROh9Lz/Ck48TAEOox
-         CNEw==
+        bh=j8keUpOCp3VWJ4TU0kbq3GzP9kgMSYkjFPyvwNMsufM=;
+        b=pmjnazB7VaFTaGbsc65Tj7VBBA3qJfGyoAYN1qyO+z4xVzynINVD9D9E7lCWM6VYIV
+         MnQYgDPK3xo3BxWnkzcvv4+jCZ2bD5zciMRx6glyofHhwHVooRkojE+8fJ8ZB1kBCC2B
+         8bvCqBYQL8gMXpjQgVoLb+yRIfcRgoRdmyg4YwXwubfHliDEwYxTeytky6CYVlaj+Jor
+         wDCMkSu9zgxYJxgtLUROxsDldtbC63K6CrPZMVgn0LmsS1XmaX4lX5qnsZxELfZKiDRv
+         C2lTPLXtKGTkBraHI++I+uoag0YZbhg2kAjP8fZ13SUctTvFjj9fpoFlgX2B4dzkiHWb
+         xEZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=hXWYeX6AjtCDD1kv6pJLbNztbwW499IxeNUMgb5p23o=;
-        b=LxFKA01iMmwRBqTP+gx19Y/bOanDfJ0VBHRpFabFbeNok1eWELGpDw1lLeOCuNSfNT
-         UXa74HAPcp+q/egP06kTksg3Mg7y2Giu5pQfGh+UOPgwE1UjeVbdp2pbQuhtpH8fuKaW
-         OKXcSja5tB8tEIfPJ2rXdNbyVnuOcgCdm6jKcFn8UUWz9MLILeuSULktLg8hrhcPGIE3
-         ZJk+OufdfHSSJadsEYsRT0TXgyzPCrd2LdZPY7WCnCvqNVe5FmA47USlMF7OhxIz1Lnb
-         rNB2FsLosPbvA7OcMWry/TAXBeM+/1HoDfev85qy+8c8gDmWmwfEFP+DH2cgKu2NkQpl
-         /7eQ==
-X-Gm-Message-State: APjAAAVt0dZ8pbwgwaxl7XsvYovoxvYPwtfwYtz3CMVWCvQFaq+KpAWf
-        3B0eI4jADI9WQKsFaC4vp8SI/2RKlxy1k/LpxyM=
-X-Google-Smtp-Source: APXvYqzDPJ2ye9YaeF3DaCU8q4S+yDkAYV36sI64ueyCEDAUkMAT1qlcYKkyjVH8mMpwuJiwXy9m1uyuXVfhdKfKCds=
-X-Received: by 2002:a05:6102:3102:: with SMTP id e2mr10235569vsh.179.1579444103046;
- Sun, 19 Jan 2020 06:28:23 -0800 (PST)
+        bh=j8keUpOCp3VWJ4TU0kbq3GzP9kgMSYkjFPyvwNMsufM=;
+        b=HycT7Fy/AwErbrhRvOVR3hBM+f0hH/bUV/ShHkrnu7hdReFWOM1UA/ZiQIhRySL3//
+         JSXaD6f79F6cYFGGtBY8G8J2EG8MtQ13FlmfL0taSN2JGjM3RuXrRrPkYMemvrrXHHcW
+         gFsoDc+g0rPYV5TJAMHLeNyquw7jZ/mcfaZgqyd7ej7XvWkcz/XVXRCxGvWVX9KcHo8c
+         2pfPlWHqf21o1t6wVnGcPenZ91Q3aNdUlv6xNxH+c58rqrr4n8VgdYKVIFKGN2GDQGke
+         AJT5GhvMFg/JWkgb5l+KXJPrF/JNODlJACoi/FDlNG5SPzI/Fvl0p9DwhB+iBSHo72Cr
+         BVIw==
+X-Gm-Message-State: APjAAAVvfqBkNiYQnrrwqIAqBnS5+bl885K+miMOsjCCrF162NCOKurp
+        3ifdvdcw8oVqOkgZCZRNJjBtupxVtpAcB1By7Tc=
+X-Google-Smtp-Source: APXvYqxvT7hLLTJztdehlDyNPdGu6Z5QZfCuwd7LzdY2QgezWsDYtyDMGxQeurPhaVW+hE7bTzvQTX6ogyddl8GUmkg=
+X-Received: by 2002:ab0:30c2:: with SMTP id c2mr29569059uam.8.1579444752075;
+ Sun, 19 Jan 2020 06:39:12 -0800 (PST)
 MIME-Version: 1.0
-References: <20200117035108.19699-1-stanley.chu@mediatek.com> <20200117035108.19699-4-stanley.chu@mediatek.com>
-In-Reply-To: <20200117035108.19699-4-stanley.chu@mediatek.com>
+References: <20200107192531.73802-1-bvanassche@acm.org> <20200107192531.73802-3-bvanassche@acm.org>
+In-Reply-To: <20200107192531.73802-3-bvanassche@acm.org>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 19 Jan 2020 19:57:47 +0530
-Message-ID: <CAGOxZ51V6XmAuu4ki_X7kEkCoUHZguM1=peEHSktsuu1obyDFw@mail.gmail.com>
-Subject: Re: [PATCH v1 3/3] scsi: ufs-mediatek: enable low-power mode for
- hibern8 state
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>, asutoshd@codeaurora.org,
+Date:   Sun, 19 Jan 2020 20:08:35 +0530
+Message-ID: <CAGOxZ531tcv7aVzTWXH0k0=vKy9LbL=h7sSXnwXem+kr5_MbUw@mail.gmail.com>
+Subject: Re: [PATCH 2/4] ufs: Introduce ufshcd_init_lrb()
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Can Guo <cang@codeaurora.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        andy.teng@mediatek.com
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 17, 2020 at 9:44 AM Stanley Chu <stanley.chu@mediatek.com> wrote:
+Hi Bart
+
+On Wed, Jan 8, 2020 at 12:57 AM Bart Van Assche <bvanassche@acm.org> wrote:
 >
-> In MediaTek Chipsets, UniPro link and ufshci can enter proprietary
-> low-power mode while link is in hibern8 state.
+> This patch does not change any functionality but makes the next patch in
+> this series easier to read.
 >
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
+
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
->  drivers/scsi/ufs/ufs-mediatek.c | 53 +++++++++++++++++++++++++++++++++
->  1 file changed, 53 insertions(+)
+>  drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++----------------
+>  1 file changed, 22 insertions(+), 16 deletions(-)
 >
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index d5194d0c4ef5..f32f3f34f6d0 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.c
-> +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -382,11 +382,60 @@ static void ufs_mtk_device_reset(struct ufs_hba *hba)
->         dev_info(hba->dev, "device reset done\n");
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 1b97f2dc0b63..6f55d72e7fdd 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2364,6 +2364,27 @@ static inline u16 ufshcd_upiu_wlun_to_scsi_wlun(u8 upiu_wlun_id)
+>         return (upiu_wlun_id & ~UFS_UPIU_WLUN_ID) | SCSI_W_LUN_BASE;
 >  }
 >
-> +static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
+> +static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
 > +{
-> +       int err;
+> +       struct utp_transfer_cmd_desc *cmd_descp = hba->ucdl_base_addr;
+> +       struct utp_transfer_req_desc *utrdlp = hba->utrdl_base_addr;
+> +       dma_addr_t cmd_desc_element_addr = hba->ucdl_dma_addr +
+> +               i * sizeof(struct utp_transfer_cmd_desc);
+> +       u16 response_offset = offsetof(struct utp_transfer_cmd_desc,
+> +                                      response_upiu);
+> +       u16 prdt_offset = offsetof(struct utp_transfer_cmd_desc, prd_table);
 > +
-> +       err = ufshcd_hba_enable(hba);
-> +       if (err)
-> +               return err;
-> +
-> +       err = ufshcd_dme_set(hba,
-> +                            UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> +                            0);
-> +       if (err)
-> +               return err;
-> +
-> +       err = ufshcd_uic_hibern8_exit(hba);
-> +       if (!err)
-> +               ufshcd_set_link_active(hba);
-> +       else
-> +               return err;
-> +
-> +       err = ufshcd_make_hba_operational(hba);
-> +       if (err)
-> +               return err;
-> +
-> +       return 0;
+> +       lrb->utr_descriptor_ptr = utrdlp + i;
+> +       lrb->utrd_dma_addr = hba->utrdl_dma_addr +
+> +               i * sizeof(struct utp_transfer_req_desc);
+> +       lrb->ucd_req_ptr = (struct utp_upiu_req *)(cmd_descp + i);
+> +       lrb->ucd_req_dma_addr = cmd_desc_element_addr;
+> +       lrb->ucd_rsp_ptr = (struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
+> +       lrb->ucd_rsp_dma_addr = cmd_desc_element_addr + response_offset;
+> +       lrb->ucd_prdt_ptr = (struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
+> +       lrb->ucd_prdt_dma_addr = cmd_desc_element_addr + prdt_offset;
 > +}
 > +
-> +static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
-> +{
-> +       int err;
-> +
-> +       err = ufshcd_dme_set(hba,
-> +                            UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> +                            1);
-> +       if (err) {
-> +               /* Resume UniPro state for following error recovery */
-> +               ufshcd_dme_set(hba,
-> +                              UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> +                              0);
-> +               return err;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
->  static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  /**
+>   * ufshcd_queuecommand - main entry point for SCSI requests
+>   * @host: SCSI host pointer
+> @@ -3385,7 +3406,6 @@ static int ufshcd_memory_alloc(struct ufs_hba *hba)
+>   */
+>  static void ufshcd_host_memory_configure(struct ufs_hba *hba)
 >  {
-> +       int err;
->         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+> -       struct utp_transfer_cmd_desc *cmd_descp;
+>         struct utp_transfer_req_desc *utrdlp;
+>         dma_addr_t cmd_desc_dma_addr;
+>         dma_addr_t cmd_desc_element_addr;
+> @@ -3395,7 +3415,6 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+>         int i;
 >
->         if (ufshcd_is_link_hibern8(hba)) {
-> +               err = ufs_mtk_link_set_lpm(hba);
-> +               if (err)
-> +                       return -EAGAIN;
->                 phy_power_off(host->mphy);
->                 ufs_mtk_setup_ref_clk(hba, false);
+>         utrdlp = hba->utrdl_base_addr;
+> -       cmd_descp = hba->ucdl_base_addr;
+>
+>         response_offset =
+>                 offsetof(struct utp_transfer_cmd_desc, response_upiu);
+> @@ -3431,20 +3450,7 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+>                                 cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
+>                 }
+>
+> -               hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+> -               hba->lrb[i].utrd_dma_addr = hba->utrdl_dma_addr +
+> -                               (i * sizeof(struct utp_transfer_req_desc));
+> -               hba->lrb[i].ucd_req_ptr =
+> -                       (struct utp_upiu_req *)(cmd_descp + i);
+> -               hba->lrb[i].ucd_req_dma_addr = cmd_desc_element_addr;
+> -               hba->lrb[i].ucd_rsp_ptr =
+> -                       (struct utp_upiu_rsp *)cmd_descp[i].response_upiu;
+> -               hba->lrb[i].ucd_rsp_dma_addr = cmd_desc_element_addr +
+> -                               response_offset;
+> -               hba->lrb[i].ucd_prdt_ptr =
+> -                       (struct ufshcd_sg_entry *)cmd_descp[i].prd_table;
+> -               hba->lrb[i].ucd_prdt_dma_addr = cmd_desc_element_addr +
+> -                               prdt_offset;
+> +               ufshcd_init_lrb(hba, &hba->lrb[i], i);
 >         }
-> @@ -397,10 +446,14 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  {
->         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-> +       int err;
+>  }
 >
->         if (ufshcd_is_link_hibern8(hba)) {
->                 ufs_mtk_setup_ref_clk(hba, true);
->                 phy_power_on(host->mphy);
-> +               err = ufs_mtk_link_set_hpm(hba);
-> +               if (err)
-> +                       return err;
->         }
->
->         return 0;
-> --
-> 2.18.0
-
 
 
 -- 
