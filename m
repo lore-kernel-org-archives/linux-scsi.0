@@ -2,93 +2,122 @@ Return-Path: <SRS0=2tGB=3J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D87C33CB1
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 08:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF531C2D0DB
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 10:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44AD7207FD
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 08:58:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FA4D2073A
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 10:17:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726626AbgATI6q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jan 2020 03:58:46 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52778 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726465AbgATI6q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Jan 2020 03:58:46 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id EEFE8AE92;
-        Mon, 20 Jan 2020 08:58:44 +0000 (UTC)
-Date:   Mon, 20 Jan 2020 09:58:44 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        "Ewan D . Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] qla2xxx: Fix a NULL pointer dereference in an error path
-Message-ID: <20200120085844.icz5cvx5vx5erao3@beryllium.lan>
-References: <20200118042056.32232-1-bvanassche@acm.org>
+        id S1727144AbgATKRp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jan 2020 05:17:45 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2284 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726621AbgATKRp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Jan 2020 05:17:45 -0500
+Received: from lhreml705-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 430547EA414141BA4666;
+        Mon, 20 Jan 2020 10:17:43 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml705-cah.china.huawei.com (10.201.108.46) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 20 Jan 2020 10:17:42 +0000
+Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 20 Jan
+ 2020 10:17:42 +0000
+Subject: Re: [PATCH 2/6] scsi: remove .for_blk_mq
+To:     Ming Lei <ming.lei@redhat.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-block@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        "Sathya Prakash" <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>,
+        Jason Yan <yanaijie@huawei.com>
+References: <20200119071432.18558-1-ming.lei@redhat.com>
+ <20200119071432.18558-3-ming.lei@redhat.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <95a902c4-287a-eb23-dc5f-d3a66dff2289@huawei.com>
+Date:   Mon, 20 Jan 2020 10:17:41 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200118042056.32232-1-bvanassche@acm.org>
+In-Reply-To: <20200119071432.18558-3-ming.lei@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.43]
+X-ClientProxiedBy: lhreml718-chm.china.huawei.com (10.201.108.69) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 17, 2020 at 08:20:56PM -0800, Bart Van Assche wrote:
-> This patch fixes the following Coverity complaint:
+On 19/01/2020 07:14, Ming Lei wrote:
+> No one use it any more, so remove the flag.
 > 
-> FORWARD_NULL
-> 
-> qla_init.c: 5275 in qla2x00_configure_local_loop()
-> 5269
-> 5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
-> 5271     			qla24xx_fcport_handle_login(vha, fcport);
-> 5272     	}
-> 5273
-> 5274     cleanup_allocation:
-> >>>     CID 353340:    (FORWARD_NULL)
-> >>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
-> 5275     	qla2x00_free_fcport(new_fcport);
-> 5276
-> 5277     	if (rval != QLA_SUCCESS) {
-> 5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
-> 5279     		    "Configure local loop error exit: rval=%x.\n", rval);
-> 5280     	}
-> qla_init.c: 5275 in qla2x00_configure_local_loop()
-> 5269
-> 5270     		if (fcport->scan_state == QLA_FCPORT_FOUND)
-> 5271     			qla24xx_fcport_handle_login(vha, fcport);
-> 5272     	}
-> 5273
-> 5274     cleanup_allocation:
-> >>>     CID 353340:    (FORWARD_NULL)
-> >>>     Passing null pointer "new_fcport" to "qla2x00_free_fcport", which dereferences it.
-> 5275     	qla2x00_free_fcport(new_fcport);
-> 5276
-> 5277     	if (rval != QLA_SUCCESS) {
-> 5278     		ql_dbg(ql_dbg_disc, vha, 0x2098,
-> 5279     		    "Configure local loop error exit: rval=%x.\n", rval);
-> 5280     	}
-> 
-> Cc: Himanshu Madhani <hmadhani@marvell.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-> Fixes: 3dae220595ba ("scsi: qla2xxx: Use common routine to free fcport struct")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Cc: Ewan D. Milne <emilne@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>,
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Bart Van Assche <bart.vanassche@wdc.com>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
 
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
+I think that we can also delete drivers/scsi/scsi.c:scsi_use_blk_mq.
+
+IIRC, a patch was already sent for that but never picked up.
+
+Thanks,
+John
+
+> ---
+>   drivers/scsi/virtio_scsi.c | 1 -
+>   include/scsi/scsi_host.h   | 3 ---
+>   2 files changed, 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index bfec84aacd90..0e0910c5b942 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -742,7 +742,6 @@ static struct scsi_host_template virtscsi_host_template = {
+>   	.dma_boundary = UINT_MAX,
+>   	.map_queues = virtscsi_map_queues,
+>   	.track_queue_depth = 1,
+> -	.force_blk_mq = 1,
+>   };
+>   
+>   #define virtscsi_config_get(vdev, fld) \
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index f577647bf5f2..7a97fb8104cf 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -426,9 +426,6 @@ struct scsi_host_template {
+>   	/* True if the controller does not support WRITE SAME */
+>   	unsigned no_write_same:1;
+>   
+> -	/* True if the low-level driver supports blk-mq only */
+> -	unsigned force_blk_mq:1;
+> -
+>   	/*
+>   	 * Countdown for host blocking with no commands outstanding.
+>   	 */
+> 
 
