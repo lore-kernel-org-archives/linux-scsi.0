@@ -2,164 +2,251 @@ Return-Path: <SRS0=2tGB=3J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E090C2D0DB
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 16:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A9FC33CA1
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 18:46:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF0BB2087E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 16:24:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DD2D22314
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jan 2020 18:46:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="pZvBFxz7"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="rRSVyrRa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726988AbgATQYZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jan 2020 11:24:25 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:30569 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726876AbgATQYZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jan 2020 11:24:25 -0500
-Received-SPF: Pass (esa3.microchip.iphmx.com: domain of
-  Don.Brace@microchip.com designates 198.175.253.82 as
-  permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
-  envelope-from="Don.Brace@microchip.com";
-  x-sender="Don.Brace@microchip.com"; x-conformance=spf_only;
-  x-record-type="v=spf1"; x-record-text="v=spf1 mx
-  a:ushub1.microchip.com a:smtpout.microchip.com
-  -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
-  include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa3.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
-  envelope-from="Don.Brace@microchip.com";
-  x-sender="postmaster@email.microchip.com";
-  x-conformance=spf_only
-Authentication-Results: esa3.microchip.iphmx.com; spf=Pass smtp.mailfrom=Don.Brace@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: 4iDLFhaG2ispnJhPU6FSTVX35iAEXaZ7DG/SlDgIaSxNXEnINjNzrmBjUYScpP45e6IM+0/0CH
- eHeMQS7bKYRGHoR2o/EvCgi65V1gryM2PsfPgEdDQ79yhrqjgLVels48qnWOM/ayp+kSFjiNfv
- zlpwc5cZqxcgIEoEM/59msRXVI+Wv4Z7u5LyhvzKAFUBmK9roeAmQA1gHkfuPZmR9sCQSewgDI
- 4dVBqPyI7+jgUvLqFJa0mQczgmjf/+8rbQKR2Kac9B4DHu0SyDK/jpea81SnxUxeGH8LRTiY8D
- vYU=
-X-IronPort-AV: E=Sophos;i="5.70,342,1574146800"; 
-   d="scan'208";a="63899866"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 20 Jan 2020 09:24:24 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Mon, 20 Jan 2020 09:24:19 -0700
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
- Transport; Mon, 20 Jan 2020 09:24:20 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eJOs2/8d3BlvoJvFIYTXw662aTikbs2+UgQay6uGEMd7J0RQwqBfWhXVT/DFcNQ0PyzKeyCDvddux0Cywjx6pWDwF+K/K/XB0/7Pf/5CljDYMJPjXaJ7yWYEyQofF/Z5ap8oLxNfnd1i/C5VLb+72XF32zJ/2XbKEsb5tMRDLPH1bUtUEwPfiv+BHaIuquP9QOD07ACWhbsZ+TnI4ABfE2h4xksAaQrEAuJEENcYggtgD4zwSdENjXftEpxIP/rPaSRvI/oUXIscJCnOHH/D4/nx2Cl2sdn7HCKxhkBJ4MewVl/XYR2jGq246X0z9V5wod7nykINPy2orkc6ms8W7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LIXoMzSsNSY1kxjyFdNWueEu66r/MCRjhggS2jJVqzQ=;
- b=UsQ/QP5O3NZdlN/DleReDH5+qf5SYb8YykbdM78OrQAibCqQfOlCEvqyFf38F1SmrOKx5XRzxcRcnaunfpkeII0PW9/S+EvlkWugyzv4tB3lYbNAOZSMLF+k4f+jvDPjFwZHaOxyRu6Dza/YnP/yCzJZNbukEhhrg/gDrwViYQf4jehejHP7FbGrVCES4WZSTkVT1Lm9loL1JJYCUJVv99bp98qn4KA7LzeY/Vw5nprd2JXSpop/R+Nv+r/vMxIQv6gIpfzFmWlKhFFwKMCVLSHbRaOLvYZE9DHyJaGJVsltehkFE4watBrCWatW7u/s3vaGw57kM85ObtON5YcSAQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LIXoMzSsNSY1kxjyFdNWueEu66r/MCRjhggS2jJVqzQ=;
- b=pZvBFxz79kAVKD0UEHcLIdgYvQpodWjgXfE2mZb8hcPkZMmrtwu5qAR86VnvvRM6xU+QBsPWEouZw0ucQhiSSVqm+RZ54LOTM5sJnCp5p8ViLdldV2GB5yVfzBoFcHbNC+YV6LW0xJ5mpwR50JoPao1lxbCKfbjqbOdKKjNN04A=
-Received: from SN6PR11MB2767.namprd11.prod.outlook.com (52.135.92.154) by
- SN6PR11MB3183.namprd11.prod.outlook.com (52.135.112.75) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.24; Mon, 20 Jan 2020 16:24:17 +0000
-Received: from SN6PR11MB2767.namprd11.prod.outlook.com
- ([fe80::89b1:1764:88f7:bbd8]) by SN6PR11MB2767.namprd11.prod.outlook.com
- ([fe80::89b1:1764:88f7:bbd8%7]) with mapi id 15.20.2644.024; Mon, 20 Jan 2020
- 16:24:17 +0000
-From:   <Don.Brace@microchip.com>
-To:     <hslester96@gmail.com>
-CC:     <don.brace@microsemi.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <esc.storagedev@microsemi.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH resend] scsi: smartpqi: add missed free_irq in suspend
-Thread-Topic: [PATCH resend] scsi: smartpqi: add missed free_irq in suspend
-Thread-Index: AQHVqcrK3AMbNjW5nEeQNYbWML5+Dqf0B2CA
-Date:   Mon, 20 Jan 2020 16:24:17 +0000
-Message-ID: <SN6PR11MB276708CE42A1B7B8FF6BDB74E1320@SN6PR11MB2767.namprd11.prod.outlook.com>
-References: <20191203111337.13054-1-hslester96@gmail.com>
-In-Reply-To: <20191203111337.13054-1-hslester96@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [216.54.225.58]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 40ac5421-e420-4213-f29d-08d79dc53246
-x-ms-traffictypediagnostic: SN6PR11MB3183:
-x-microsoft-antispam-prvs: <SN6PR11MB3183D7C156B82E750D57CCB9E1320@SN6PR11MB3183.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-forefront-prvs: 0288CD37D9
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(136003)(366004)(39860400002)(396003)(199004)(189003)(52536014)(478600001)(76116006)(15650500001)(4744005)(9686003)(6916009)(8936002)(33656002)(81156014)(26005)(8676002)(54906003)(186003)(81166006)(66446008)(55016002)(64756008)(66946007)(86362001)(66556008)(316002)(66476007)(5660300002)(2906002)(71200400001)(7696005)(6506007)(4326008);DIR:OUT;SFP:1101;SCL:1;SRVR:SN6PR11MB3183;H:SN6PR11MB2767.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: WjepupZgfHt0AwmwYzPRY+tf6pud/JFQWA8b0ocPegRXnRU5S3D31hFERjtLGV2cRywh3msAuNjD8Cjx6aPZ4PyZedpMN6XqEyDRBAzoAb6CNHDhE+YrqbUsYL/tGipY0749sxntv8jMWTU/ul1QqVoVTznDYyBGC9eVTF0GQeKk+IY9BItPj4xRknzvMWt9+SBpA8rMVwv7mLNo+ybRRBBWGhhM2KhQduHsdYUYlFGi859kYrt8bwCUGWHqyr5sI0lmkHNxlIP3GOnDuiLFdODYu6QykYgvTiuZrvhiQDgV4jTZmtaHdIw8yqo8trLAUcwF10vDYkdkkGZEOtNTFbbnC+LrZn94KsKVHrLspP76n6DXMLKmyGhFqepN5DtW9e/RcRuLYXIueXQ+J/5o1wpyjJa4UODVsCHNNmmUcEux27CVL5TiouVW8Tn+Fj+r
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726816AbgATSqy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jan 2020 13:46:54 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:31012 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726282AbgATSqy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Jan 2020 13:46:54 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1579546013; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=CWUUOoFW1b3LdZHGARh2ZeruDO7qr6rXZB15xntFSmA=; b=rRSVyrRaD0rNU2ig4ChC5I9udPd7U2qWcSiVplHX2JIC1CGso49YdC8RwhNLgc957u+Pskic
+ ZP7sM/17Io85886OiXxcM1skbxZEfzgXU5H/DlSvV+mnSbFVfgf0HJI7FxieFXvqX7CVJk5l
+ S0A06u0YjEsYHnIoIZ0ltWO5KEw=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e25f599.7fc7e4b82fb8-smtp-out-n01;
+ Mon, 20 Jan 2020 18:46:49 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1A1F3C447AD; Mon, 20 Jan 2020 18:46:46 +0000 (UTC)
+Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0CC83C433CB;
+        Mon, 20 Jan 2020 18:46:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0CC83C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v1 1/1] scsi: ufs: Add command logging infrastructure
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        cang@codeaurora.org
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        "Winkler, Tomas" <tomas.winkler@intel.com>, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Evan Green <evgreen@chromium.org>,
+        Janek Kotas <jank@cadence.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1571808560-3965-1-git-send-email-cang@codeaurora.org>
+ <5B8DA87D05A7694D9FA63FD143655C1B9DCF0AFE@hasmsx108.ger.corp.intel.com>
+ <MN2PR04MB6991C2AF4DDEDD84C7887258FC6B0@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <01eb3c55e35738f2853fbc7175a12eaa@codeaurora.org>
+ <20191029054620.GG1929@tuxbook-pro>
+ <b7de9358-b8ba-3100-a3f2-ebed8aaab490@codeaurora.org>
+ <a07f3244-6536-0667-cf61-3ef8b8bc6c7e@acm.org>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <e3761f14-9a1b-3c83-693b-7262bf004a7e@codeaurora.org>
+Date:   Mon, 20 Jan 2020 10:46:43 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40ac5421-e420-4213-f29d-08d79dc53246
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jan 2020 16:24:17.2204
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: e61ZLJF4NS3YozWIbv1r4zBSM5XJqdF7fEW4uk4mZvEFam/1HgjDfNlz2/EpJ7WnfZW9XQm747J65tU9r6Iw9A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3183
+In-Reply-To: <a07f3244-6536-0667-cf61-3ef8b8bc6c7e@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
------Original Message-----
+On 1/16/2020 7:43 PM, Bart Van Assche wrote:
+> On 2020-01-16 15:03, Asutosh Das (asd) wrote:
+>> On 10/28/2019 10:46 PM, Bjorn Andersson wrote:
+>>> On Mon 28 Oct 19:37 PDT 2019, cang@codeaurora.org wrote:
+>>>
+>>>> On 2019-10-23 18:33, Avri Altman wrote:
+>>>>>>
+>>>>>>> Add the necessary infrastructure to keep timestamp history of
+>>>>>>> commands, events and other useful info for debugging complex issues.
+>>>>>>> This helps in diagnosing events leading upto failure.
+>>>>>>
+>>>>>> Why not use tracepoints, for that?
+>>>>> Ack on Tomas's comment.
+>>>>> Are there any pieces of information that you need not provided by the
+>>>>> upiu tracer?
+>>>>>
+>>>>> Thanks,
+>>>>> Avri
+>>>>
+>>>> In extreme cases, when the UFS runs into bad state, system may crash.
+>>>> There
+>>>> may not be a chance to collect trace. If trace is not collected and
+>>>> failure
+>>>> is hard to be reproduced, some command logs prints would be very
+>>>> helpful to
+>>>> help understand what was going on before we run into failure.
+>>>>
+>>>
+>>> This is a common problem shared among many/all subsystems, so it's
+>>> better to rely on a generic solution for this; such as using tracepoints
+>>> dumped into pstore/ramoops.
+>>>
+>>> Regards,
+>>> Bjorn
+>>>
+>>
+>> Reviving this discussion.
+>>
+>> Another issue with using ftrace is that several subsystems use it.
+>> Consider a situation in which we store a history of 64 commands,
+>> responses and some other required info in ftrace.
+>>
+>> Say there's a command that's stuck for seconds until the software times
+>> out. In this case, the other ftrace events are still enabled and keep
+>> writing to ftrace buffer thus overwriting some/most of the ufs's command
+>> history; thus the history is more or less lost. And there's a need to
+>> reproduce the issue with other tracing disabled.
+>>
+>> So what we need is a client specific logging mechanism, which is
+>> lightweight as ftrace and can be parsed from ramdumps.
+>>
+>> I'm open to ideas but ftrace in its current form may not be suitable for
+>> this.
+> 
+> Hi Asutosh,
+> 
+> Are you aware that it is already possible today to figure out which SCSI
+> commands are pending? Are you familiar with the files under
+> /sys/kernel/debug/block/? An example:
+> 
+> $ (cd /sys/kernel/debug/block && grep -aH . */*/busy)
+> nvme0n1/hctx7/busy:0000000006f07009 {.op=READ, .cmd_flags=META|PRIO,
+> .rq_flags=DONTPREP|IO_STAT, .state=in_flight, .tag=275, .internal_tag=-1}
+> 
+> Bart.
+> 
+> 
 
-The driver calls request_irq in resume but does not call free_irq in suspen=
-d.
-Add the missed call to fix it.
+Hi Bart,
 
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
+No I was not aware of this. Thanks for letting me know.
 
-NAK: free_irq is called in pqi_resume after checking for correct power stat=
-e change. (in pqi_free_interrupts())
+However, it doesn't look like this stores the _history_ of commands that 
+were already executed.
 
-Thanks for your review,
-Don
+To put it in perspective, below is the output of the current command 
+logging -:
+
+[     461.142124354s] dme: dme_send: seq_no=  738272 lun=0 cmd_id=0x018 
+lba=        0 txfer_len=       0 tag= 0 doorbell=0x0000 
+outstanding=0x0000 idn= 0
+[     461.142384823s] dme: dme_cmpl_2: seq_no=  738273 lun=0 
+cmd_id=0x018 lba=        0 txfer_len=       0 tag= 0 doorbell=0x0000 
+outstanding=0x0000 idn= 0
+[     461.142453052s] scsi: scsi_send: seq_no=  738274 lun=0 
+cmd_id=0x028 lba=  1360888 txfer_len=   77824 tag= 0 doorbell=0x0001 
+outstanding=0x0001 idn= 0
+[     461.142473000s] scsi: scsi_send: seq_no=  738275 lun=0 
+cmd_id=0x028 lba=  1361056 txfer_len=   12288 tag= 1 doorbell=0x0003 
+outstanding=0x0003 idn= 0
+[     461.142482270s] scsi: scsi_send: seq_no=  738276 lun=0 
+cmd_id=0x028 lba=  1361088 txfer_len=    4096 tag= 2 doorbell=0x0007 
+outstanding=0x0007 idn= 0
+[     461.142491020s] scsi: scsi_send: seq_no=  738277 lun=0 
+cmd_id=0x028 lba=  1361120 txfer_len=    4096 tag= 3 doorbell=0x000F 
+outstanding=0x000F idn= 0
+[     461.142538208s] scsi: scsi_send: seq_no=  738278 lun=0 
+cmd_id=0x028 lba=  1361144 txfer_len=    4096 tag= 4 doorbell=0x001F 
+outstanding=0x001F idn= 0
+[     461.142780083s] scsi: scsi_send: seq_no=  738279 lun=0 
+cmd_id=0x028 lba=  1361184 txfer_len=   20480 tag= 5 doorbell=0x003F 
+outstanding=0x003F idn= 0
+[     461.142922791s] scsi: scsi_cmpl: seq_no=  738280 lun=0 
+cmd_id=0x028 lba=  1360888 txfer_len=   77824 tag= 0 doorbell=0x003E 
+outstanding=0x003F idn= 0
+[     461.142982323s] scsi: scsi_cmpl: seq_no=  738281 lun=0 
+cmd_id=0x028 lba=  1361056 txfer_len=   12288 tag= 1 doorbell=0x003C 
+outstanding=0x003E idn= 0
+[     461.142996958s] scsi: scsi_cmpl: seq_no=  738282 lun=0 
+cmd_id=0x028 lba=  1361088 txfer_len=    4096 tag= 2 doorbell=0x0038 
+outstanding=0x003C idn= 0
+[     461.143059406s] scsi: scsi_cmpl: seq_no=  738283 lun=0 
+cmd_id=0x028 lba=  1361120 txfer_len=    4096 tag= 3 doorbell=0x0020 
+outstanding=0x0038 idn= 0
+[     461.143064666s] scsi: scsi_cmpl: seq_no=  738284 lun=0 
+cmd_id=0x028 lba=  1361144 txfer_len=    4096 tag= 4 doorbell=0x0020 
+outstanding=0x0038 idn= 0
+
+[...]
+
+This output was extracted from ramdumps after a crash.
+There're custom logs that come up as well, for e.g. scaling start and 
+end etc.
+
+In a nutshell, the high-level requirements of the logging would be -:
+1. Light-weight
+2. Extract from ram-dumps
+3. Eliminate the need to reproduce an issue as much as possible
+
+Ftrace ticks all the boxes except 3. There's a high chance of this data 
+being overwritten by other loggers. And when this happens, the issue 
+needs to be reproduced with ftrace logging enabled only for ufs.
+
+*Motivation for this logging*:
+
+There are several (read - all) UFS device vendors who need the sequence 
+of commands leading up to the specific failure. They've asked for it 
+every time. They still do.
+
+There were 2 ways of doing this - either in device or in host.
+
+1. In-Device-:
+	The device stores a ring buffer of commands that were received.
+	Upon error, host sends a command to device to read this ring 	buffer 
+and dumps it out or can be extracted from ramdumps. It'd not be a 
+universal solution anyway and would be very vendor-specific. Difficult 
+to maintain etc. May have to be added to JEDEC to standardize it.
+
+2. In-host-:
+	Ftrace was tried out and the previously highlighted issues popped up. 
+Hence the need for a UFS (client)-specific implementation.
+
+If there's a way to have a client-specific ftrace logging, it'd be the 
+ideal thing to do.
+
+How about modifying ftrace to make it client-specific?
+
+Any suggestions to modify the current design such that it can use ftrace 
+or any other better ideas or methods, please let me know.
+
+-asd
 
 
----
- drivers/scsi/smartpqi/smartpqi_init.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/=
-smartpqi_init.c
-index 7b7ef3acb504..2251c39afb1b 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -8078,6 +8078,8 @@ static __maybe_unused int pqi_suspend(struct pci_dev =
-*pci_dev, pm_message_t stat
-        pqi_ctrl_wait_for_pending_io(ctrl_info, NO_TIMEOUT);
-        pqi_stop_heartbeat_timer(ctrl_info);
-
-+       free_irq(pci_irq_vector(pci_dev, 0),=20
-+ &ctrl_info->queue_groups[0]);
-+
-        if (state.event =3D=3D PM_EVENT_FREEZE)
-                return 0;
-
---
-2.24.0
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
