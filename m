@@ -2,127 +2,122 @@ Return-Path: <SRS0=h99Q=3K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A03B2C2D0CE
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 12:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D0CC2D0CE
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 18:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ADC224654
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 12:39:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0938924656
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 18:43:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YXYL1i2Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728829AbgAUMjl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jan 2020 07:39:41 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2290 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727059AbgAUMjl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Jan 2020 07:39:41 -0500
-Received: from LHREML714-CAH.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 6B2EC5E283A5FBA13620;
-        Tue, 21 Jan 2020 12:39:39 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML714-CAH.china.huawei.com (10.201.108.37) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 21 Jan 2020 12:39:38 +0000
-Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Tue, 21 Jan
- 2020 12:39:38 +0000
-Subject: Re: [PATCH V2 05/13] pm80xx : Support for char device.
-To:     <Deepak.Ukey@microchip.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>
-CC:     <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <jinpu.wang@profitbricks.com>,
-        <yuuzheng@google.com>, <auradkar@google.com>,
-        <vishakhavc@google.com>, <bjashnani@google.com>,
-        <radha@google.com>, <akshatzen@google.com>
-References: <20200117071923.7445-1-deepak.ukey@microchip.com>
- <20200117071923.7445-6-deepak.ukey@microchip.com>
- <CAMGffEnc1sWgOB7PENtbBQUzJ6iRORHrJe4Y5FV1+WkgrhAwOg@mail.gmail.com>
- <yq17e1lk666.fsf@oracle.com>
- <MN2PR11MB3550E72F0521F873F52AF671EF0D0@MN2PR11MB3550.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <68e52d06-1fd2-770d-627a-7e8c79067282@huawei.com>
-Date:   Tue, 21 Jan 2020 12:39:38 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1729184AbgAUSnT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jan 2020 13:43:19 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:33906 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728901AbgAUSnT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2020 13:43:19 -0500
+Received: by mail-pl1-f196.google.com with SMTP id c9so1719305plo.1
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2020 10:43:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VyNyygHT0l+kavkO9RtMQ33c7cwt2wna2HwrRhI5FxM=;
+        b=YXYL1i2Zu+Kmd+DM6BsyfSf0A0TRgIpvmoa77QHgXaGEdkKOo2X8DmDZS6ccgM7zwV
+         VhzZ0RxnhAkdvD4TswbyBm+EKAXR2a9HN+9zLZsOJmhmlb4IeJXNU53+/3U/ywXAn7K/
+         JPy2t79RZ+AV69zBi8Sn5Z/cNfUoR6tisDgaEAewshgtsK0fcQBQlaMSiUSijpdJObPA
+         uTU1GUBinLJqD+PQyyJ3x+fMUaKnuSjDq40/jvzCNI0JQs5tGIEnBOzv8ld7KXjpmLl7
+         9psdC7GxXDBcBCyc++2VST6uzjliowiSEIfG07MrJ+bYhLUZWCgzos64iCWEfmRrd+Zy
+         PXOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=VyNyygHT0l+kavkO9RtMQ33c7cwt2wna2HwrRhI5FxM=;
+        b=stJlbtdisg7AOiwWydyhEixaMmKWBx7Z89PcLuxnq1pYx92jw2gHky3eDNDUD2gabp
+         RGxs9gFNvVdv9BmSychsZ4I8dHJ3S/piHSWvajLQ1ZoxPr7IfwLSx57BFq43BJOon6hE
+         Gpa0Y4VvLqc4Sp8rBm3HvkG6jToDLzyT51MAFscCU8t7LrQG2Hm3fiRTiPgiXbZpDkOh
+         tDuwTYxw4aPQ2VWis2Y4Q5OMyYfJmK0GqMYTQIjobE3xO1vZA2LPX1uGHFQPnpI021E3
+         sN+gjxl18x84YeKw9OD+TucArA9P11As1RFZUf7l39ZEBWxL4vhjwavzIKOQTlGtVqxJ
+         lSJQ==
+X-Gm-Message-State: APjAAAWw+8peNcXLzQRBGvuGJnlCdtx8+VH6S5pdVOUxkSaju+CPuyCp
+        PQ8WF38mtBBkpzRzBWCdIJEzRgEzc73Yt+VO1oo8ng==
+X-Google-Smtp-Source: APXvYqwiZkriIgCJLYOs6RDGkJ/is8QK3xA7WBM0igc/p+n+EzZmnn720fWnjNl9Sx+ncWxStz1rCejOnnVrvyu4CX0=
+X-Received: by 2002:a17:902:6948:: with SMTP id k8mr6664939plt.223.1579632198484;
+ Tue, 21 Jan 2020 10:43:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <MN2PR11MB3550E72F0521F873F52AF671EF0D0@MN2PR11MB3550.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.43]
-X-ClientProxiedBy: lhreml741-chm.china.huawei.com (10.201.108.191) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20200120190021.26460-1-natechancellor@gmail.com>
+In-Reply-To: <20200120190021.26460-1-natechancellor@gmail.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Tue, 21 Jan 2020 10:43:06 -0800
+Message-ID: <CAKwvOd=30bpBXqrT6LfwDb+YrTcGtTg5NL34dpc3Vkfe11KvFQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: qla1280: Fix a use of QLA_64BIT_PTR
+To:     Nathan Chancellor <natechancellor@gmail.com>,
+        Thomas Bogendoerfer <tbogendoerfer@suse.de>
+Cc:     Michael Reed <mdr@sgi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/01/2020 05:33, Deepak.Ukey@microchip.com wrote:
-> 
-> EXTERNAL EMAIL: Do not click links or open attachments unless you know the content is safe
-> 
-> Martin,
-> 
->> Thanks for the commit message, looks much better. In the past, people
->> are against IOCTL, suggesting netlink, have you considered that?
-> 
-> Not so keen on adding more ioctls. It's 2020 and all...
-> 
-> Given the nature of the exported information, what's wrong with putting it in sysfs?
-> -- We have some upcoming patches which uses this IOCTL interface and that cannot be supported through sysfs.
-> Below are the patches in this patchset which requires IOCTL interface.
-> 0007-pm80xx-IOCTL-functionality-to-get-phy-status
-> 0008-pm80xx-IOCTL-functionality-to-get-phy-error
+On Mon, Jan 20, 2020 at 11:00 AM Nathan Chancellor
+<natechancellor@gmail.com> wrote:
+>
+> Clang warns:
+>
+> ../drivers/scsi/qla1280.c:1702:5: warning: 'QLA_64BIT_PTR' is not
+> defined, evaluates to 0 [-Wundef]
+> if QLA_64BIT_PTR
+>     ^
+> 1 warning generated.
+>
+> The rest of this driver uses #ifdef QLA_64BIT_PTR, do the same thing at
+> this site to remove this warning.
+>
+> Fixes: ba304e5b4498 ("scsi: qla1280: Fix dma firmware download, if dma address is 64bit")
 
-Please note that there definitely seems to be replication of what sysfs 
-already provides in some of these patches:
+^ The above SHA is valid only in linux-next. Won't it change when
+merged into mainline?
 
-- 0007-pm80xx-IOCTL-functionality-to-get-phy-status gets things like
-Programmed Link Rate, Negotiated Link Rate, PHY Identifier
+> Link: https://github.com/ClangBuiltLinux/linux/issues/843
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-- 0008-pm80xx-IOCTL-functionality-to-get-phy-error provides other things 
-like Invalid Dword Error Count, Disparity Error Count
+Thanks for the patch.
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-See ***:
+> ---
+>  drivers/scsi/qla1280.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index 607cbddcdd14..3337cd341d21 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -1699,7 +1699,7 @@ qla1280_load_firmware_pio(struct scsi_qla_host *ha)
+>         return err;
+>  }
+>
+> -#if QLA_64BIT_PTR
+> +#ifdef QLA_64BIT_PTR
 
-root@ubuntu:/sys/class/sas_phy/phy-0:0# ls -l
-total 0
-lrwxrwxrwx 1 root root    0 Jan 21 12:05 device -> ../../../phy-0:0
--r--r--r-- 1 root root 4096 Jan 21 12:05 device_type
--rw-r--r-- 1 root root 4096 Jan 21 12:05 enable ***
---w------- 1 root root 4096 Jan 21 12:05 hard_reset
--r--r--r-- 1 root root 4096 Jan 21 12:05 initiator_port_protocols
--r--r--r-- 1 root root 4096 Jan 21 12:05 invalid_dword_count ***
---w------- 1 root root 4096 Jan 21 12:05 link_reset
--r--r--r-- 1 root root 4096 Jan 21 12:05 loss_of_dword_sync_count ***
--rw-r--r-- 1 root root 4096 Jan 21 12:05 maximum_linkrate ***
--r--r--r-- 1 root root 4096 Jan 21 12:05 maximum_linkrate_hw ***
--rw-r--r-- 1 root root 4096 Jan 21 12:05 minimum_linkrate ***
--r--r--r-- 1 root root 4096 Jan 21 12:05 minimum_linkrate_hw ***
--r--r--r-- 1 root root 4096 Jan 21 12:05 negotiated_linkrate ***
--r--r--r-- 1 root root 4096 Jan 21 11:58 phy_identifier ***
--r--r--r-- 1 root root 4096 Jan 21 12:05 phy_reset_problem_count ***
-drwxr-xr-x 2 root root    0 Jan 21 12:05 power
--r--r--r-- 1 root root 4096 Jan 21 12:05 running_disparity_error_count ***
--r--r--r-- 1 root root 4096 Jan 21 12:05 sas_address
-lrwxrwxrwx 1 root root    0 Jan 21 11:45 subsystem -> 
-../../../../../../../class/sas_phy
--r--r--r-- 1 root root 4096 Jan 21 12:05 target_port_protocols
--rw-r--r-- 1 root root 4096 Jan 21 11:45 uevent
+Thomas should test this, as it implies the previous patch was NEVER
+using the "true case" values, making it in effect a
+no-functional-change (NFC).
 
-Maybe the other stuff provided in the patches are useful, I don't know. 
-But debugfs seems better for that.
-
- > 0009-pm80xx-IOCTL-functionality-for-GPIO
- > 0010-pm80xx-IOCTL-functionality-for-SGPIO
-
-I don't know why an ioctl is required here.
-
- > 0013-pm80xx-IOCTL-functionality-for-TWI-device
-
+>  #define LOAD_CMD       MBC_LOAD_RAM_A64_ROM
+>  #define DUMP_CMD       MBC_DUMP_RAM_A64_ROM
+>  #define CMD_ARGS       (BIT_7 | BIT_6 | BIT_4 | BIT_3 | BIT_2 | BIT_1 | BIT_0)
+> --
+-- 
 Thanks,
-John
+~Nick Desaulniers
