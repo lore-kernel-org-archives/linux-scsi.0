@@ -2,214 +2,158 @@ Return-Path: <SRS0=h99Q=3K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
-	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3841CC33CAF
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 22:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A53C2D0CE
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 23:53:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0316A24653
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 22:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC16320665
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jan 2020 23:53:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="b+DkuJVK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oTnYwx/k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729049AbgAUWF3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jan 2020 17:05:29 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:38176 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729009AbgAUWF2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2020 17:05:28 -0500
-Received: by mail-pg1-f196.google.com with SMTP id a33so2262679pgm.5
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2020 14:05:28 -0800 (PST)
+        id S1728855AbgAUXxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jan 2020 18:53:14 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:32768 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbgAUXxL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jan 2020 18:53:11 -0500
+Received: by mail-pf1-f196.google.com with SMTP id z16so2345719pfk.0
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jan 2020 15:53:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MHL1t/EyEsW/kDCQVsvBnpYeqWiiNR3Qofvm72VP2xo=;
-        b=b+DkuJVKIKETrJ5dpTxidfDLzDLkavoiNLhArG3sMhvs1V6c3puRQUI9pG9KRYRWPd
-         8fRSkviBHz+tFzxp4t+VfIOdI/jgi3sJ8Vewc009gojBVO6V1BECgJK5222fsEzQXJQm
-         wbAnTgKeIHbOU4Tr5RKZqicWx20WuZ71yUO7sN1kR4zsn3mD7Zznv4+GsRhRluFNXZeS
-         DWYSw9vYZzXEm7IIrBEuVWdlXIRxeFhGVZcjpgT2fJKpY4FFj1SMuLJIJkxJTe5YPqoE
-         FIMd1Y6nmyaf6ERoXAdUmhkH+AVj9CIIhltvG0/65sNQMh+6F+GSHDHh8Fzlp3CXn/CF
-         WCHQ==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=5p0z5zmz0EYN4OPNUv7wljclAGx1P4SFjCAsxMT/WRM=;
+        b=oTnYwx/kbiRF5XNnD5Cfgd1SmxNBz0qckKIj78YO3Gy+1UD+Aax+cqTBWJiQfo/ebs
+         P/rf6BmKcJPVZagvJd2RxAwlYXH9MDzIzMmS2JxgG3oAwiVeswGWVO4SjON53oxxoE/P
+         HJdDaGhbnEw4Kf4TzZvmvWPQmIFTbLOdChAU7uO5SYlXBaORX7WyM03hc73DTdn/plti
+         a43RNkcfPQMFRFC0qKXCIyhGqslbE/6ueDQS12FbYnBHsrIVTLJQs3jNj9fYgRUNsZmv
+         UmI74PJTRmbcOyZP5KJNjlcxHwwqkE3Og4s5lvWztri97Whea6VkvtJn0OQbeN/tE2JU
+         QsKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=MHL1t/EyEsW/kDCQVsvBnpYeqWiiNR3Qofvm72VP2xo=;
-        b=CKIF25aGPrDVKa4Oek9op4C57ve18vz6y+LpqruOgYFzG3fMnmv7CM/Ea0trvXyUX1
-         JBIYMs375SQiwkmwW5c+l2PblEFe6DJI+Bf0yKm11WOitOZb3RKlGPGwqnAOG/KBWQm/
-         ALxRjx3t+o3ZV20az4Sg55UYVwFT5LB7KW6Gnapwt8Np7pO6Wh91JlSY0794GYaIc+UW
-         fiOLgr/sQKxtaapFJ2eIdwL8rmdfN6Ttp7vekWEwBlJhe+8yjSD4LpuECmBQRkOpCD5b
-         s8Xb4pyIT9qZCGuGcH1VRD3IySMwwpHMyCz1nycviZ0E8sPS2ODUDSiECvkET8AOrc34
-         Nv7g==
-X-Gm-Message-State: APjAAAXulhrKb/LTe6KLPg2v9pnjCWoLgr2biWKvprq00q+ycCsHISBv
-        AtEyBM+rjVhRrpGtEHVWMqn9EA==
-X-Google-Smtp-Source: APXvYqwh8OnW+eP9V0DrV7fz7N0b2aotldt8ipMvaida+/kr2JuRziMzbgGUGDkawpb/E1PWbTxPyg==
-X-Received: by 2002:a63:6d8d:: with SMTP id i135mr7771059pgc.90.1579644327592;
-        Tue, 21 Jan 2020 14:05:27 -0800 (PST)
-Received: from google.com ([2620:15c:201:0:7f8c:9d6e:20b8:e324])
-        by smtp.gmail.com with ESMTPSA id a16sm41620400pgb.5.2020.01.21.14.05.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jan 2020 14:05:27 -0800 (PST)
-Date:   Tue, 21 Jan 2020 14:05:22 -0800
-From:   Satya Tangirala <satyat@google.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 2/9] block: Add encryption context to struct bio
-Message-ID: <20200121220522.GA243816@google.com>
-References: <20191218145136.172774-1-satyat@google.com>
- <20191218145136.172774-3-satyat@google.com>
- <20191218212116.GA7476@magnolia>
- <yq1y2v9e37b.fsf@oracle.com>
- <20191218222726.GC47399@gmail.com>
- <yq1fthhdttv.fsf@oracle.com>
- <20200108140730.GC2896@infradead.org>
- <20200108172629.GA232722@sol.localdomain>
- <20200117083221.GA324@infradead.org>
- <20200118051132.GC3290@sol.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200118051132.GC3290@sol.localdomain>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=5p0z5zmz0EYN4OPNUv7wljclAGx1P4SFjCAsxMT/WRM=;
+        b=JOR76Z+CKantq4ozXRRsGqZgccJ4lcUbk450S4YYc1sGSKB5u7057OD5Hjv7RIxk8C
+         s9JqbseboLaGN8Lkzq1BURwkYEKv7MT/XavTsVN4/fvB43lzKCaODu0v87CT7xxLiBSy
+         CUTqk2acBr8dtwXsNIq3A9CEhaZAclYxHBAxCN1paZHxSHj4MRK+2FSrZy00WehPZKoM
+         zWyE40+KeK3+AMKcBVU3AbgBrnXYhWSWbu9TXbP1HmRs7fWtxsJOwG4x1ZVncfe/pXUq
+         XA9jGgtBtlZ9pzbgZL8bGsSTXp+EUD4d+4s9mKLdwO/AmX/nnRQl8EGIZdIuQ7R/y9d7
+         hZkw==
+X-Gm-Message-State: APjAAAWsf/zWE71wf75tFLrhdWWU3eqHWNuHeIpU1uMnrGb7Dej2vcIH
+        umDzkoD9uJUIOlBU8RtJ1ZrHe+26
+X-Google-Smtp-Source: APXvYqxn8d9SRGwHNJsyU1gLpSWsGoS6KJ+pDAtNC5XIfmCpwvDueoZMisIPskNqluC+HMavfLkbMg==
+X-Received: by 2002:a62:7711:: with SMTP id s17mr7740pfc.157.1579650789940;
+        Tue, 21 Jan 2020 15:53:09 -0800 (PST)
+Received: from os42.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id u18sm44056143pgn.9.2020.01.21.15.53.09
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 21 Jan 2020 15:53:09 -0800 (PST)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH] scsi: add attribute to set lun queue depth on all luns on shost
+Date:   Tue, 21 Jan 2020 15:53:02 -0800
+Message-Id: <20200121235302.9955-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.13.7
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 17, 2020 at 09:11:32PM -0800, Eric Biggers wrote:
-> On Fri, Jan 17, 2020 at 12:32:21AM -0800, Christoph Hellwig wrote:
-> > 
-> > File systems don't move data around all that often (saying that with my
-> > fs developer hat on).  In traditional file systems only defragmentation
-> > will move data around, with extent refcounting it can also happen for
-> > dedup, and for file systems that write out of place data gets moved
-> > when parts of a block are rewritten, but in that case a read modify
-> > write cycle is perfomed in the Linux code anyway, so it will go through
-> > the inline encryption engined on the way and the way out.
-> > 
-> > So in other words - specifying an IV would be useful for some use cases,
-> > but I don't think it is a deal blocker. Even without that is is useful
-> > for block device level encryption, and could have some usefulness for
-> > file system encryption usage.
-> > 
-> > I think that adding an IV would eventually be useful, but fitting that
-> > into NVMe won't be easy, as you'd need to find a way to specify the IV
-> > for each submission queue entry, which requires growing it, or finding
-> > some way to extend it out of band.
-> 
-> Sure, people have even done inline crypto on ext4 before (downstream), using the
-> LBA for the IV.  But log-structured filesystems like f2fs move data blocks
-> around *without the encryption key*; and at least for fscrypt, f2fs support is
-> essential.  In any case it's also awkward having the physical on-disk location
-> determine the ciphertext on-disk, as then the result isn't fully controlled by
-> the encryption settings you set, but also based on where your filesystem is
-> located on-disk (with extra fun occurring if there's any sort of remapping layer
-> in between).  But sure, it's not *useless* to not be able to specify the IV,
-> it's just annoying and less useful.
-> 
-> [I was also a bit surprised to see that NVMe won't actually allow specify the
-> IV, as I thought you had objected to the naming of the INLINE_CRYPT_OPTIMIZED
-> fscrypt policy flag partly on the grounds that NVMe would support IVs longer
-> than the 64 bits that UFS is limited to.  Perhaps I misunderstood though.]
-> 
-> > > So let's not over-engineer this kernel patchset to support some broken
-> > > vaporware, please.
-> > 
-> > Not sharing bio fields for integrity and encryption actually keeps
-> > the patchset simpler (although uses more memory if both options are
-> > enabled).  So my main point here is to not over engineer it for broken
-> > premise that won't be true soon.
-> 
-> Well there are 3 options:
-> 
-> (a) Separate fields for bi_crypt_context and bi_integrity
-> (b) bi_crypt_context and bi_integrity in union
-> (c) One pointer that can support both features,
->     e.g. linked list of tagged structs.
-> 
-> It sounds like you're advocating for (a), but I had misunderstood and thought
-> you're advocating for (c).  We'd of course be fine with (a) as it's the
-> simplest, but other people are saying they prefer (b).
-> 
-> Satya, to resolve this I think you should check how hard (b) is to implement --
-> i.e. is it easy, or is it really tricky to ensure the features are never used
-> together?  (Considering that it's probably not just a matter of whether any
-> hardware supports both features, as dm-integrity supports blk-integrity in
-> software and blk-crypto-fallback supports blk-crypto in software.)
-> 
-> - Eric
+There has been a desire to set the lun queue depth on all luns on
+an shost. Today that is done by an external script looping through
+discovered sdevs and set an sdev attribute.
 
-What I have right now for v7 of the patch series was my attempt at (b) (since
-some were saying they prefer it) - it may still be incomplete though because I
-missed something, but here's what I think it involved:
+This patch addes a shost attribute that will cycle through all
+sdevs and set the lun queue depth.
 
-1) bi_crypt_context is never set after bi_integrity, so I don't check if
-   bi_integrity is set or not when setting bi_crypt_context - this keeps the
-   code cleaner when setting the bi_crypt_context.
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/scsi_sysfs.c | 49 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 46 insertions(+), 3 deletions(-)
 
-2) I made it error whenever we try to set bi_integrity on a bio with
-   REQ_BLK_CRYPTO.
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 677b5c5403d2..debb79be66c0 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -368,6 +368,50 @@ store_shost_eh_deadline(struct device *dev, struct device_attribute *attr,
+ 
+ static DEVICE_ATTR(eh_deadline, S_IRUGO | S_IWUSR, show_shost_eh_deadline, store_shost_eh_deadline);
+ 
++static int
++sdev_set_queue_depth(struct scsi_device *sdev, int depth)
++{
++	struct scsi_host_template *sht = sdev->host->hostt;
++	int retval;
++
++	retval = sht->change_queue_depth(sdev, depth);
++	if (retval < 0)
++		return retval;
++
++	sdev->max_queue_depth = sdev->queue_depth;
++
++	return 0;
++}
++
++static ssize_t
++store_host_lun_queue_depth(struct device *dev, struct device_attribute *attr,
++		const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct scsi_host_template *sht = shost->hostt;
++	struct scsi_device *sdev;
++	int depth, retval;
++
++	if (!sht->change_queue_depth)
++		return -EINVAL;
++
++	depth = simple_strtoul(buf, NULL, 0);
++	if (depth < 1 || depth > shost->can_queue)
++		return -EINVAL;
++
++	shost_for_each_device(sdev, shost) {
++		retval = sdev_set_queue_depth(sdev, depth);
++		if (retval != 0)
++			sdev_printk(KERN_INFO, sdev,
++				"failed to set queue depth to %d (err %d)",
++				depth, retval);
++	}
++
++	return count;
++}
++
++static DEVICE_ATTR(lun_queue_depth, S_IWUSR, NULL, store_host_lun_queue_depth);
++
+ shost_rd_attr(unique_id, "%u\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
+ shost_rd_attr(can_queue, "%hd\n");
+@@ -411,6 +455,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+ 	&dev_attr_prot_guard_type.attr,
+ 	&dev_attr_host_reset.attr,
+ 	&dev_attr_eh_deadline.attr,
++	&dev_attr_lun_queue_depth.attr,
+ 	NULL
+ };
+ 
+@@ -992,12 +1037,10 @@ sdev_store_queue_depth(struct device *dev, struct device_attribute *attr,
+ 	if (depth < 1 || depth > sdev->host->can_queue)
+ 		return -EINVAL;
+ 
+-	retval = sht->change_queue_depth(sdev, depth);
++	retval = sdev_set_queue_depth(sdev, depth);
+ 	if (retval < 0)
+ 		return retval;
+ 
+-	sdev->max_queue_depth = sdev->queue_depth;
+-
+ 	return count;
+ }
+ sdev_show_function(queue_depth, "%d\n");
+-- 
+2.13.7
 
-3) There is an issue with the way the blk-crypto-fallback interacts with bio
-   integrity. One of the goals of the fallback is to make it inline encryption
-   transparent to the upper layers (i.e. as far as the upper layers are
-   concerned there should be no difference whether there is actual hardware
-   inline encryption support or whether the fallback is used instead).
-
-   The issue is, when the fallback encrypts a bio, it clones the bio and
-   encrypts the pages in the clone, but the clone won't have a bi_crypt_context
-   (since otherwise, when the clone is resubmitted, blk-crypto would incorrectly
-   assume that the clone needs to be encrypted once again). When bi_integrity is
-   set on the clone, there won't be any error detected since REQ_BLK_CRYPTO
-   won't be set on the clone. However, if hardware inline encryption support had
-   been present, and the blk-crypto had not used the fallback, the same bio
-   would have bi_crypt_context set when we try to set bi_integrity, which would
-   then fail.
-
-   To fix this issue, I introduced another flag REQ_NO_SPECIAL (subject to being
-   renamed when I think of/someone suggests a better name), which when set on
-   the bio, indicates that bi_integrity (and in future whatever other fields
-   share the same union, shouldn't be set on that bio. I can probably do away
-   with the new flag and just set REQ_BLK_CRYPTO and also set
-   bi_crypt_context = NULL to signify the same thing, but either way, it doesn't
-   seem like a very clean solution to me.
-
-4) I don't think there's actually an issue with dm-integrity as long as when we
-   add support for inline encryption to dm, we ensure that if any of the child
-   targets is dm-integrity, then the dm device says it doesn't support any
-   crypto mode. This way, encryption is always consistently done before
-   integrity calculation, which is always consistently done before decryption
-   (and when dm-integrity is not using the internal hash, then the bio will fail
-   because of (2), but this is still consistent whether or not hardware inline
-   encryption support is present.
-
-However, even if we decide to do (a), I'll still need to ensure that when bio
-integrity and blk-crypto are used together, the results are consistent
-regardless of whether hardware inline crypto support is present. So I either
-disallow bio integrity to be used with blk-crypto, in which case I'll need to
-do something similar to what I had to do in (3) like introduce REQ_NO_SPECIAL
-and we also lose the advantage of not having the two fields shared in a union,
-or I allow them to be used together while ensuring consistent results by
-maybe doing something like forcing blk-crypto to fallback to the crypto API
-whenever the target device for a bio has a bio integrity profile (and whatever
-checks are done in bio_integrity_prep).
-
-So I'm not sure if (a) is a lot easier or cleaner. But unlike (b), (a)
-does give us the option of using the two features together....if it seems
-likely that we'll want to use both these features together at some point,
-then maybe I should switch back to (a), and for now just disallow the two
-features from being used together since that's still easier than trying to get
-them both to work together, and once we know for sure that we want to use both
-together, we can make the necessary additions then?
