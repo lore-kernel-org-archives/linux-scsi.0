@@ -2,111 +2,147 @@ Return-Path: <SRS0=vnQa=3L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F36BC2D0DB
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 12:39:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91C62C33CAF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:26:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CD7F24688
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 12:39:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6868221835
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:26:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="zGzqrQvT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728992AbgAVMjC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jan 2020 07:39:02 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2294 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726204AbgAVMjB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Jan 2020 07:39:01 -0500
-Received: from lhreml705-cah.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 228F321DC0A0462B96CE;
-        Wed, 22 Jan 2020 12:39:00 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml705-cah.china.huawei.com (10.201.108.46) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 22 Jan 2020 12:38:59 +0000
-Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Wed, 22 Jan
- 2020 12:38:59 +0000
-Subject: Re: [PATCH V2 05/13] pm80xx : Support for char device.
-To:     <Deepak.Ukey@microchip.com>, <martin.petersen@oracle.com>,
-        <jinpu.wang@cloud.ionos.com>
-CC:     <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <jinpu.wang@profitbricks.com>,
-        <yuuzheng@google.com>, <auradkar@google.com>,
-        <vishakhavc@google.com>, <bjashnani@google.com>,
-        <radha@google.com>, <akshatzen@google.com>
-References: <20200117071923.7445-1-deepak.ukey@microchip.com>
- <20200117071923.7445-6-deepak.ukey@microchip.com>
- <CAMGffEnc1sWgOB7PENtbBQUzJ6iRORHrJe4Y5FV1+WkgrhAwOg@mail.gmail.com>
- <yq17e1lk666.fsf@oracle.com>
- <MN2PR11MB3550E72F0521F873F52AF671EF0D0@MN2PR11MB3550.namprd11.prod.outlook.com>
- <68e52d06-1fd2-770d-627a-7e8c79067282@huawei.com>
- <MN2PR11MB35509B0042BEE7BFBB707CA8EF0C0@MN2PR11MB3550.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <3e76b6e1-9c3d-2e5c-896e-f1af9a785fe5@huawei.com>
-Date:   Wed, 22 Jan 2020 12:38:58 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726004AbgAVP0d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jan 2020 10:26:33 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45246 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725836AbgAVP0c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Jan 2020 10:26:32 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00MFQVxa024768;
+        Wed, 22 Jan 2020 07:26:31 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=ad3dy6u/l4u5EygVtqHMxQloIH3Glg7r2CjX4Jb9CdI=;
+ b=zGzqrQvTL3WUC5mwfsxLV3RTlGzA0Xz5L8VZZ/LWQMyxOUtsJFMe1efJAY9Bc3PQ6mdq
+ dQ/aQsHsxC7W7Bf2kp4B5KsTieUH4NzsazbsOa2Ahw0pVl66Ef3sYyXlwkFdlk2bA/Gc
+ pa/A43JcnrLf5JH48E07DwsEqKxsECXkp5m2j5lKh3ckOmsZMf+Avxuesa4OV9FWKVOs
+ AN1MSHL/1MsyJsgXliTcyss7D1FZfIlB2eL4Ynh1u1CwfZXhax5mHaOtAkC2WR8SskjU
+ xOiqPIjju7iJNeV2mckNLGflElIGNOGyCLtfnHydoma47+w4LaQonKBg7dIr6xN9wEvs 5A== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2xpm9015qq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 22 Jan 2020 07:26:31 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 22 Jan
+ 2020 07:26:29 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 22 Jan 2020 07:26:29 -0800
+Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
+        by maili.marvell.com (Postfix) with ESMTP id 2FE3E3F703F;
+        Wed, 22 Jan 2020 07:26:27 -0800 (PST)
+From:   Michal Kalderon <michal.kalderon@marvell.com>
+To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
+        <davem@davemloft.net>
+CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+Subject: [PATCH net-next 00/14] qed*: Utilize FW 8.42.2.0
+Date:   Wed, 22 Jan 2020 17:26:13 +0200
+Message-ID: <20200122152627.14903-1-michal.kalderon@marvell.com>
+X-Mailer: git-send-email 2.14.5
 MIME-Version: 1.0
-In-Reply-To: <MN2PR11MB35509B0042BEE7BFBB707CA8EF0C0@MN2PR11MB3550.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.43]
-X-ClientProxiedBy: lhreml741-chm.china.huawei.com (10.201.108.191) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-17_05:2020-01-16,2020-01-17 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 22/01/2020 08:50, Deepak.Ukey@microchip.com wrote:
-> -r--r--r-- 1 root root 4096 Jan 21 12:05 running_disparity_error_count ***
-> -r--r--r-- 1 root root 4096 Jan 21 12:05 sas_address
-> lrwxrwxrwx 1 root root    0 Jan 21 11:45 subsystem ->
-> ../../../../../../../class/sas_phy
-> -r--r--r-- 1 root root 4096 Jan 21 12:05 target_port_protocols
-> -rw-r--r-- 1 root root 4096 Jan 21 11:45 uevent
-> 
-> Maybe the other stuff provided in the patches are useful, I don't know.
-> But debugfs seems better for that.
-> 
-> 	- 0006-pm80xx-sysfs-attribute-for-number-of-phys
-> 	- 0007-pm80xx-IOCTL-functionality-to-get-phy-status gets things like Programmed Link Rate, Negotiated Link Rate, PHY Identifier
-> 	- 0008-pm80xx-IOCTL-functionality-to-get-phy-error provides other things like Invalid Dword Error Count, Disparity Error Count
-> 	- Thanks for addressing it. We can get this info from /sys/class/sas_phy and /sys/class/sas_port so we will drop these above mentioned three patches from the next 		- patch series.
-> 
->   > 0009-pm80xx-IOCTL-functionality-for-GPIO
->   > 0010-pm80xx-IOCTL-functionality-for-SGPIO
-> 
-> I don't know why an ioctl is required here.
-> 
->   > 0013-pm80xx-IOCTL-functionality-for-TWI-device
-> 
-> 	- 0009-pm80xx-IOCTL-functionality-for-GPIO
-> 	- 0010-pm80xx-IOCTL-functionality-for-SGPIO
-> 	- 0013-pm80xx-IOCTL-functionality-for-TWI-device
-> 	- For the above patches management utility passes command specific information to driver through IOCTL structure, which used by driver to frame the command and 	- send to FW.  We are using the IOCTL interface for the same. Please let us know your thought.
+This FW contains several fixes and features, main ones listed below.
+We have taken into consideration past comments on previous FW versions
+that were uploaded and tried to separate this one to smaller patches to
+ease review.
 
-So I specifically questioned the SGPIO patch and why it would have an 
-IOCTL, as this function is supported in kernel libsas/SAS transport code 
-as an SMP function.
+- RoCE
+	- SRIOV support
+	- Fixes in following flows:
+		- latency optimization flow for inline WQEs
+		- iwarp OOO packed DDPs flow
+		- tx-dif workaround calculations flow
+		- XRC-SRQ exceed cache num
 
-For the GPIO IOCTL, could you use register a gpio driver to provide a 
-gpiolib sysfs?
+- iSCSI
+	- Fixes:
+		- iSCSI TCP out-of-order handling.
+		- iscsi retransmit flow
 
-As for TWI, it seems to be for serial EEPROM, so you could ask these 
-experts about how to handle it properly in the kernel for standard sysfs 
-interfaces:
+- Fcoe
+	- Fixes:
+		- upload + cleanup flows
 
-:~/linux$ ./scripts/get_maintainer.pl -f drivers/misc/eeprom/eeprom.c
-Jean Delvare <jdelvare@suse.com> (maintainer:LEGACY EEPROM DRIVER)
-Arnd Bergmann <arnd@arndb.de> (supporter:CHAR and MISC DRIVERS)
-Greg Kroah-Hartman <gregkh@linuxfoundation.org> (supporter:CHAR and MISC 
-DRIVERS)
+- Debug
+	- Better handling of extracting data during traffic
+	- ILT Dump -> dumping host memory used by chip
+	- MDUMP -> collect debug data on system crash and extract after
+	  reboot
 
-Thanks,
-John
+Patches prefixed with FW 8.42.2.0 are required to work with binary
+8.42.2.0 FW where as the rest are FW related but do not require the
+binary.
+
+Michal Kalderon (14):
+  qed: FW 8.42.2.0 Internal ram offsets modifications
+  qed: FW 8.42.2.0 Expose new registers and change windows
+  qed: FW 8.42.2.0 Queue Manager changes
+  qed: FW 8.42.2.0 Parser offsets modified
+  qed: Use dmae to write to widebus registers in fw_funcs
+  qed: FW 8.42.2.0 Additional ll2 type
+  qed: Add abstraction for different hsi values per chip
+  qed: FW 8.42.2.0 iscsi/fcoe changes
+  qed: FW 8.42.2.0 HSI changes
+  qed: FW 8.42.2.0 Add fw overlay feature
+  qed: Debug feature: ilt and mdump
+  qed: rt init valid initialization changed
+  qed: FW 8.42.2.0 debug features
+  qed: bump driver version
+
+ drivers/net/ethernet/qlogic/qed/qed.h              |   77 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c          |  358 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h          |  130 +
+ drivers/net/ethernet/qlogic/qed/qed_debug.c        | 4073 ++++++++++----------
+ drivers/net/ethernet/qlogic/qed/qed_debug.h        |    6 +
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  140 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h      |   24 -
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c         |    2 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 2565 ++++++------
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           |   67 +-
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    |  532 ++-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |   47 +-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.h     |    8 -
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c        |   36 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.c        |    8 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c          |  149 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h          |   14 +
+ drivers/net/ethernet/qlogic/qed/qed_main.c         |    7 +-
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c          |   10 +-
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h     |   38 +
+ drivers/net/ethernet/qlogic/qed/qed_roce.c         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_sp.h           |    2 -
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        |   19 +-
+ drivers/net/ethernet/qlogic/qede/qede_fp.c         |    8 +-
+ include/linux/qed/common_hsi.h                     |   44 +-
+ include/linux/qed/eth_common.h                     |   78 +-
+ include/linux/qed/iscsi_common.h                   |   64 +-
+ include/linux/qed/qed_if.h                         |   14 +-
+ include/linux/qed/qed_ll2_if.h                     |    7 +
+ include/linux/qed/storage_common.h                 |    3 +-
+ 30 files changed, 4380 insertions(+), 4152 deletions(-)
+
+-- 
+2.14.5
+
