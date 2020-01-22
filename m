@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE84BC33CB8
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39886C35243
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:26:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B736B2071E
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:27:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF72521835
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:26:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="a2DpPjO5"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="m47NrsmM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728998AbgAVP1C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jan 2020 10:27:02 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37838 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728797AbgAVP04 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
+        id S1728890AbgAVP04 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 22 Jan 2020 10:26:56 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22728 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726761AbgAVP0p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Jan 2020 10:26:45 -0500
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00MFQEIO015735;
-        Wed, 22 Jan 2020 07:26:54 -0800
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00MFQhOo016293;
+        Wed, 22 Jan 2020 07:26:43 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=hOBnMSVOTrofEzNMJlWAxTdqQlkPi9Rc6vaII6o+Waw=;
- b=a2DpPjO5OO9NC8z+wGsSssexYFA/7p5ueXmTiKYDAEGmxZt7bbNPve6MRbE35ZPAaEsO
- EtB3v8WmMNOVoUsj8uF/oHVvrU14cLx8FYp21jR3sKsYjFM5GPOMV5Hwl1Hkc5KGQIbh
- 6aSZOCLhxLZTj7AvFsvlRVf/q3Q2nGrXm7lwyM96CTVOyOnrn3tFsiwlaVNPwtbuabDH
- 4VqNg9ejle1sr69LZm9lYq3ccW+Kv6/o161HFhARpza3O7Sgaa156EqF8k+Yvtb0YIaJ
- pPuNd2YFuo9Q5H/ORKzlEVEYi34m3xS384k5hLk8whI4+q1z07qxSbUc+YB20knga7Kd uQ== 
+ content-type; s=pfpt0818; bh=gDu7KcqiGexp16hOS/xYf8HRsKMOOw7uxAxTckSmwtc=;
+ b=m47NrsmMkIJwhUTk0ipjMHfvF8cC4P+Elz1jninIAQSsgUCmi9scKWZTaFdx8edfkBkT
+ YB8kYhEDTCv9AvfUz4r1euNhKm/TI3XBTeGISkIRHaBm00SI+Q2G1YLjkCkuukm7g0CK
+ RoVb4AuXIF7I86GdNYtlCdQeiUkQYf9nI9RvmI+mwWZAPdi8hJyyYndlEE74GJPQN/XM
+ p2POz8qeaeK9QsgmjtEF5C/3ZHziClO1J+c54GPbc8w/VTFnQoyNZ7UzZopZASb2dgRE
+ jp1u7Z7vJhwybdgS9dAS6PhP4fLd4NeF37s5yDCdYcKfVSMxtLcobMT9enZ3shn3PYZr fA== 
 Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dt7h2x-3
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dt7h27-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 22 Jan 2020 07:26:54 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+        Wed, 22 Jan 2020 07:26:43 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
  (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 22 Jan
- 2020 07:26:52 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 22 Jan 2020 07:26:52 -0800
+ 2020 07:26:41 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 22 Jan 2020 07:26:41 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id 6CD143F703F;
-        Wed, 22 Jan 2020 07:26:50 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 8AF0F3F7041;
+        Wed, 22 Jan 2020 07:26:39 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH net-next 10/14] qed: FW 8.42.2.0 Add fw overlay feature
-Date:   Wed, 22 Jan 2020 17:26:23 +0200
-Message-ID: <20200122152627.14903-11-michal.kalderon@marvell.com>
+Subject: [PATCH net-next 05/14] qed: Use dmae to write to widebus registers in fw_funcs
+Date:   Wed, 22 Jan 2020 17:26:18 +0200
+Message-ID: <20200122152627.14903-6-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200122152627.14903-1-michal.kalderon@marvell.com>
 References: <20200122152627.14903-1-michal.kalderon@marvell.com>
@@ -66,337 +66,407 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This feature enables the FW to page out FW code when required
+There are several wide-bus registers written to by the fw_funcs
+that require using the dmae for atomicity. Therefore using the dmae
+channel functionality was added to the fw_funcs file, since the code
+is very similar to the previously used code, the structures used were
+moved to qed_hsi. Due to FW conventions, the names of the flags in the
+struct changed. Since this required slight modification in the places
+that set the flags the code was modified to use GET/SET FIELD macros.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed.h              |   3 +
- drivers/net/ethernet/qlogic/qed/qed_dev.c          |  18 ++-
- drivers/net/ethernet/qlogic/qed/qed_hsi.h          |  58 +++++++++
- .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    | 141 +++++++++++++++++++++
- drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |   5 +
- 5 files changed, 224 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h      | 24 ------
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 41 ++++++++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           | 67 ++++++++---------
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    | 86 ++++++++++++++++------
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        | 11 +--
+ 7 files changed, 142 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
-index cfbfe7441ecb..fedb1ab0b223 100644
---- a/drivers/net/ethernet/qlogic/qed/qed.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed.h
-@@ -462,6 +462,8 @@ struct qed_fw_data {
- 	const u8		*modes_tree_buf;
- 	union init_op		*init_ops;
- 	const u32		*arr_data;
-+	const u32		*fw_overlays;
-+	u32			fw_overlays_len;
- 	u32			init_ops_size;
- };
- 
-@@ -686,6 +688,7 @@ struct qed_hwfn {
- 	/* Nvm images number and attributes */
- 	struct qed_nvm_image_info nvm_info;
- 
-+	struct phys_mem_desc *fw_overlay_mem;
- 	struct qed_ptt *p_arfs_ptt;
- 
- 	struct qed_simd_fp_handler	simd_proto_handler[64];
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index e3e0376c13d6..df97810b09b9 100644
+index 249fcc3dc138..479d98e6187a 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -1412,6 +1412,7 @@ void qed_resc_free(struct qed_dev *cdev)
- 		qed_dmae_info_free(p_hwfn);
- 		qed_dcbx_info_free(p_hwfn);
- 		qed_dbg_user_data_free(p_hwfn);
-+		qed_fw_overlay_mem_free(p_hwfn, p_hwfn->fw_overlay_mem);
+@@ -907,7 +907,7 @@ qed_llh_access_filter(struct qed_hwfn *p_hwfn,
+ 	/* Filter value */
+ 	addr = NIG_REG_LLH_FUNC_FILTER_VALUE + 2 * filter_idx * 0x4;
  
- 		/* Destroy doorbell recovery mechanism */
- 		qed_db_recovery_teardown(p_hwfn);
-@@ -2893,6 +2894,8 @@ static int qed_hw_init_pf(struct qed_hwfn *p_hwfn,
- 	if (rc)
- 		return rc;
+-	params.flags = QED_DMAE_FLAG_PF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_PF_VALID, 0x1);
+ 	params.dst_pfid = pfid;
+ 	rc = qed_dmae_host2grc(p_hwfn,
+ 			       p_ptt,
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+index 47376d4d071f..eb4808b3bf67 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+@@ -230,30 +230,6 @@ enum qed_dmae_address_type_t {
+ 	QED_DMAE_ADDRESS_GRC
+ };
  
-+	qed_fw_overlay_init_ram(p_hwfn, p_ptt, p_hwfn->fw_overlay_mem);
-+
- 	/* Pure runtime initializations - directly to the HW  */
- 	qed_int_igu_init_pure_rt(p_hwfn, p_ptt, true, true);
- 
-@@ -3002,8 +3005,10 @@ int qed_hw_init(struct qed_dev *cdev, struct qed_hw_init_params *p_params)
- 	u32 load_code, resp, param, drv_mb_param;
- 	bool b_default_mtu = true;
- 	struct qed_hwfn *p_hwfn;
--	int rc = 0, i;
-+	const u32 *fw_overlays;
-+	u32 fw_overlays_len;
- 	u16 ether_type;
-+	int rc = 0, i;
- 
- 	if ((p_params->int_mode == QED_INT_MODE_MSI) && (cdev->num_hwfns > 1)) {
- 		DP_NOTICE(cdev, "MSI mode is not supported for CMT devices\n");
-@@ -3104,6 +3109,17 @@ int qed_hw_init(struct qed_dev *cdev, struct qed_hw_init_params *p_params)
- 		 */
- 		qed_pglueb_clear_err(p_hwfn, p_hwfn->p_main_ptt);
- 
-+		fw_overlays = cdev->fw_data->fw_overlays;
-+		fw_overlays_len = cdev->fw_data->fw_overlays_len;
-+		p_hwfn->fw_overlay_mem =
-+		    qed_fw_overlay_mem_alloc(p_hwfn, fw_overlays,
-+					     fw_overlays_len);
-+		if (!p_hwfn->fw_overlay_mem) {
-+			DP_NOTICE(p_hwfn,
-+				  "Failed to allocate fw overlay memory\n");
-+			goto load_err;
-+		}
-+
- 		switch (load_code) {
- 		case FW_MSG_CODE_DRV_LOAD_ENGINE:
- 			rc = qed_hw_init_common(p_hwfn, p_hwfn->p_main_ptt,
+-/* value of flags If QED_DMAE_FLAG_RW_REPL_SRC flag is set and the
+- * source is a block of length DMAE_MAX_RW_SIZE and the
+- * destination is larger, the source block will be duplicated as
+- * many times as required to fill the destination block. This is
+- * used mostly to write a zeroed buffer to destination address
+- * using DMA
+- */
+-#define QED_DMAE_FLAG_RW_REPL_SRC	0x00000001
+-#define QED_DMAE_FLAG_VF_SRC		0x00000002
+-#define QED_DMAE_FLAG_VF_DST		0x00000004
+-#define QED_DMAE_FLAG_COMPLETION_DST	0x00000008
+-#define QED_DMAE_FLAG_PORT		0x00000010
+-#define QED_DMAE_FLAG_PF_SRC		0x00000020
+-#define QED_DMAE_FLAG_PF_DST		0x00000040
+-
+-struct qed_dmae_params {
+-	u32 flags; /* consists of QED_DMAE_FLAG_* values */
+-	u8 src_vfid;
+-	u8 dst_vfid;
+-	u8 port_id;
+-	u8 src_pfid;
+-	u8 dst_pfid;
+-};
+-
+ /**
+  * @brief qed_dmae_host2grc - copy data from source addr to
+  * dmae registers using the given ptt
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index 2f269576d3b2..e9b88952a7ed 100644
+index fb4c0de44aaa..565ab12fa87c 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -1843,6 +1843,19 @@ struct sdm_op_gen {
- #define SDM_OP_GEN_RESERVED_SHIFT	20
+@@ -1435,7 +1435,11 @@ struct dmae_cmd {
+ 	__le16 crc16;
+ 	__le16 crc16_c;
+ 	__le16 crc10;
+-	__le16 reserved;
++	__le16 error_bit_reserved;
++#define DMAE_CMD_ERROR_BIT_MASK        0x1
++#define DMAE_CMD_ERROR_BIT_SHIFT       0
++#define DMAE_CMD_RESERVED_MASK	       0x7FFF
++#define DMAE_CMD_RESERVED_SHIFT        1
+ 	__le16 xsum16;
+ 	__le16 xsum8;
+ };
+@@ -1566,6 +1570,41 @@ struct e4_ystorm_core_conn_ag_ctx {
+ 	__le32 reg3;
  };
  
-+/* Physical memory descriptor */
-+struct phys_mem_desc {
-+	dma_addr_t phys_addr;
-+	void *virt_addr;
-+	u32 size;		/* In bytes */
++/* DMAE parameters */
++struct qed_dmae_params {
++	__le32 flags;
++/* If QED_DMAE_PARAMS_RW_REPL_SRC flag is set and the
++ * source is a block of length DMAE_MAX_RW_SIZE and the
++ * destination is larger, the source block will be duplicated as
++ * many times as required to fill the destination block. This is
++ * used mostly to write a zeroed buffer to destination address
++ * using DMA
++ */
++#define QED_DMAE_PARAMS_RW_REPL_SRC_MASK	0x1
++#define QED_DMAE_PARAMS_RW_REPL_SRC_SHIFT	0
++#define QED_DMAE_PARAMS_SRC_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_VF_VALID_SHIFT	1
++#define QED_DMAE_PARAMS_DST_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_VF_VALID_SHIFT	2
++#define QED_DMAE_PARAMS_COMPLETION_DST_MASK	0x1
++#define QED_DMAE_PARAMS_COMPLETION_DST_SHIFT	3
++#define QED_DMAE_PARAMS_PORT_VALID_MASK		0x1
++#define QED_DMAE_PARAMS_PORT_VALID_SHIFT	4
++#define QED_DMAE_PARAMS_SRC_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_PF_VALID_SHIFT	5
++#define QED_DMAE_PARAMS_DST_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_PF_VALID_SHIFT	6
++#define QED_DMAE_PARAMS_RESERVED_MASK		0x1FFFFFF
++#define QED_DMAE_PARAMS_RESERVED_SHIFT		7
++	u8 src_vfid;
++	u8 dst_vfid;
++	u8 port_id;
++	u8 src_pfid;
++	u8 dst_pfid;
++	u8 reserved1;
++	__le16 reserved2;
 +};
 +
-+/* Virtual memory descriptor */
-+struct virt_mem_desc {
-+	void *ptr;
-+	u32 size;		/* In bytes */
-+};
-+
- /****************************************/
- /* Debug Tools HSI constants and macros */
- /****************************************/
-@@ -2872,6 +2885,15 @@ enum bin_init_buffer_type {
- 	MAX_BIN_INIT_BUFFER_TYPE
- };
+ /* IGU cleanup command */
+ struct igu_cleanup {
+ 	__le32 sb_id_and_flags;
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_hw.c b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+index a4de9e3ef72c..4ab8cfaf63d1 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_hw.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+@@ -393,7 +393,7 @@ u32 qed_vfid_to_concrete(struct qed_hwfn *p_hwfn, u8 vfid)
  
-+/* FW overlay buffer header */
-+struct fw_overlay_buf_hdr {
-+	u32 data;
-+#define FW_OVERLAY_BUF_HDR_STORM_ID_MASK  0xFF
-+#define FW_OVERLAY_BUF_HDR_STORM_ID_SHIFT 0
-+#define FW_OVERLAY_BUF_HDR_BUF_SIZE_MASK  0xFFFFFF
-+#define FW_OVERLAY_BUF_HDR_BUF_SIZE_SHIFT 8
-+};
-+
- /* init array header: raw */
- struct init_array_raw_hdr {
- 	u32 data;
-@@ -4346,6 +4368,42 @@ void qed_memset_task_ctx(void *p_ctx_mem, u32 ctx_size, u8 ctx_type);
- void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
- 			      struct qed_ptt *p_ptt,
- 			      u8 assert_level[NUM_STORMS]);
-+/**
-+ * @brief qed_fw_overlay_mem_alloc - Allocates and fills the FW overlay memory.
-+ *
-+ * @param p_hwfn - HW device data
-+ * @param fw_overlay_in_buf - the input FW overlay buffer.
-+ * @param buf_size - the size of the input FW overlay buffer in bytes.
-+ *		     must be aligned to dwords.
-+ * @param fw_overlay_out_mem - OUT: a pointer to the allocated overlays memory.
-+ *
-+ * @return a pointer to the allocated overlays memory,
-+ * or NULL in case of failures.
-+ */
-+struct phys_mem_desc *
-+qed_fw_overlay_mem_alloc(struct qed_hwfn *p_hwfn,
-+			 const u32 * const fw_overlay_in_buf,
-+			 u32 buf_size_in_bytes);
-+
-+/**
-+ * @brief qed_fw_overlay_init_ram - Initializes the FW overlay RAM.
-+ *
-+ * @param p_hwfn - HW device data.
-+ * @param p_ptt - ptt window used for writing the registers.
-+ * @param fw_overlay_mem - the allocated FW overlay memory.
-+ */
-+void qed_fw_overlay_init_ram(struct qed_hwfn *p_hwfn,
-+			     struct qed_ptt *p_ptt,
-+			     struct phys_mem_desc *fw_overlay_mem);
-+
-+/**
-+ * @brief qed_fw_overlay_mem_free - Frees the FW overlay memory.
-+ *
-+ * @param p_hwfn - HW device data.
-+ * @param fw_overlay_mem - the allocated FW overlay memory to free.
-+ */
-+void qed_fw_overlay_mem_free(struct qed_hwfn *p_hwfn,
-+			     struct phys_mem_desc *fw_overlay_mem);
+ /* DMAE */
+ #define QED_DMAE_FLAGS_IS_SET(params, flag) \
+-	((params) != NULL && ((params)->flags & QED_DMAE_FLAG_##flag))
++	((params) != NULL && GET_FIELD((params)->flags, QED_DMAE_PARAMS_##flag))
  
- /* Ystorm flow control mode. Use enum fw_flow_ctrl_mode */
- #define YSTORM_FLOW_CONTROL_MODE_OFFSET			(IRO[0].base)
+ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 			    const u8 is_src_type_grc,
+@@ -408,62 +408,55 @@ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 	 * 0- The source is the PCIe
+ 	 * 1- The source is the GRC.
+ 	 */
+-	opcode |= (is_src_type_grc ? DMAE_CMD_SRC_MASK_GRC
+-				   : DMAE_CMD_SRC_MASK_PCIE) <<
+-		   DMAE_CMD_SRC_SHIFT;
+-	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_SRC) ?
+-		   p_params->src_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((src_pfid & DMAE_CMD_SRC_PF_ID_MASK) <<
+-		   DMAE_CMD_SRC_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC,
++		  (is_src_type_grc ? dmae_cmd_src_grc : dmae_cmd_src_pcie));
++	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, SRC_PF_VALID) ?
++	    p_params->src_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_SRC_PF_ID, src_pfid);
+ 
+ 	/* The destination of the DMA can be: 0-None 1-PCIe 2-GRC 3-None */
+-	opcode |= (is_dst_type_grc ? DMAE_CMD_DST_MASK_GRC
+-				   : DMAE_CMD_DST_MASK_PCIE) <<
+-		   DMAE_CMD_DST_SHIFT;
+-	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_DST) ?
+-		   p_params->dst_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((dst_pfid & DMAE_CMD_DST_PF_ID_MASK) <<
+-		   DMAE_CMD_DST_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST,
++		  (is_dst_type_grc ? dmae_cmd_dst_grc : dmae_cmd_dst_pcie));
++	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, DST_PF_VALID) ?
++	    p_params->dst_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_DST_PF_ID, dst_pfid);
++
+ 
+ 	/* Whether to write a completion word to the completion destination:
+ 	 * 0-Do not write a completion word
+ 	 * 1-Write the completion word
+ 	 */
+-	opcode |= (DMAE_CMD_COMP_WORD_EN_MASK << DMAE_CMD_COMP_WORD_EN_SHIFT);
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_COMP_WORD_EN, 1);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
+ 
+ 	if (QED_DMAE_FLAGS_IS_SET(p_params, COMPLETION_DST))
+-		opcode |= (1 << DMAE_CMD_COMP_FUNC_SHIFT);
++		SET_FIELD(opcode, DMAE_CMD_COMP_FUNC, 1);
+ 
+-	opcode |= (DMAE_CMD_ENDIANITY << DMAE_CMD_ENDIANITY_MODE_SHIFT);
++	/* swapping mode 3 - big endian */
++	SET_FIELD(opcode, DMAE_CMD_ENDIANITY_MODE, DMAE_CMD_ENDIANITY);
+ 
+-	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT)) ?
+-		   p_params->port_id : p_hwfn->port_id;
+-	opcode |= (port_id << DMAE_CMD_PORT_ID_SHIFT);
++	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT_VALID)) ?
++	    p_params->port_id : p_hwfn->port_id;
++	SET_FIELD(opcode, DMAE_CMD_PORT_ID, port_id);
+ 
+ 	/* reset source address in next go */
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
+ 
+ 	/* reset dest address in next go */
+-	opcode |= (DMAE_CMD_DST_ADDR_RESET_MASK <<
+-		   DMAE_CMD_DST_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST_ADDR_RESET, 1);
+ 
+ 	/* SRC/DST VFID: all 1's - pf, otherwise VF id */
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_SRC)) {
+-		opcode |= 1 << DMAE_CMD_SRC_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->src_vfid << DMAE_CMD_SRC_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, SRC_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_SRC_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, p_params->src_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_SRC_VF_ID_MASK <<
+-			    DMAE_CMD_SRC_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, 0xFF);
+ 	}
+-
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_DST)) {
+-		opcode |= 1 << DMAE_CMD_DST_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->dst_vfid << DMAE_CMD_DST_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, DST_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_DST_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, p_params->dst_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_DST_VF_ID_MASK << DMAE_CMD_DST_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, 0xFF);
+ 	}
+ 
+ 	p_hwfn->dmae_info.p_dmae_cmd->opcode = cpu_to_le32(opcode);
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
-index e09e6ce74705..9aacee539da1 100644
+index a816fb5411b7..e09e6ce74705 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
-@@ -1583,3 +1583,144 @@ void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
- 		qed_wr(p_hwfn, p_ptt, ram_addr, assert_level[storm_id]);
- 	}
+@@ -1022,6 +1022,56 @@ bool qed_send_qm_stop_cmd(struct qed_hwfn *p_hwfn,
+ #define PRS_ETH_TUNN_OUTPUT_FORMAT     0xF4DAB910
+ #define PRS_ETH_OUTPUT_FORMAT          0xFFFF4910
+ 
++#define ARR_REG_WR(dev, ptt, addr, arr,	arr_size) \
++	do { \
++		u32 i; \
++		\
++		for (i = 0; i < (arr_size); i++) \
++			qed_wr(dev, ptt, \
++			       ((addr) + (4 * i)), \
++			       ((u32 *)&(arr))[i]); \
++	} while (0)
++
++/**
++ * @brief qed_dmae_to_grc - is an internal function - writes from host to
++ * wide-bus registers (split registers are not supported yet)
++ *
++ * @param p_hwfn - HW device data
++ * @param p_ptt - ptt window used for writing the registers.
++ * @param p_data - pointer to source data.
++ * @param addr - Destination register address.
++ * @param len_in_dwords - data length in DWARDS (u32)
++ */
++static int qed_dmae_to_grc(struct qed_hwfn *p_hwfn,
++			   struct qed_ptt *p_ptt,
++			   u32 *p_data, u32 addr, u32 len_in_dwords)
++{
++	struct qed_dmae_params params = {};
++	int rc;
++
++	if (!p_data)
++		return -1;
++
++	/* Set DMAE params */
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 1);
++
++	/* Execute DMAE command */
++	rc = qed_dmae_host2grc(p_hwfn, p_ptt,
++			       (u64)(uintptr_t)(p_data),
++			       addr, len_in_dwords, &params);
++
++	/* If not read using DMAE, read using GRC */
++	if (rc) {
++		DP_VERBOSE(p_hwfn,
++			   QED_MSG_DEBUG,
++			   "Failed writing to chip using DMAE, using GRC instead\n");
++		/* write to registers using GRC */
++		ARR_REG_WR(p_hwfn, p_ptt, addr, p_data, len_in_dwords);
++	}
++
++	return len_in_dwords;
++}
++
+ void qed_set_vxlan_dest_port(struct qed_hwfn *p_hwfn,
+ 			     struct qed_ptt *p_ptt, u16 dest_port)
+ {
+@@ -1206,6 +1256,8 @@ void qed_set_vxlan_no_l2_enable(struct qed_hwfn *p_hwfn,
+ 
+ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
+ {
++	struct regpair ram_line = { };
++
+ 	/* Disable gft search for PF */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 0);
+ 
+@@ -1215,12 +1267,9 @@ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_GFT_CAM + CAM_LINE_SIZE * pf_id, 0);
+ 
+ 	/* Zero ramline */
+-	qed_wr(p_hwfn,
+-	       p_ptt, PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id, 0);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       0);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
  }
-+
-+#define PHYS_ADDR_DWORDS        DIV_ROUND_UP(sizeof(dma_addr_t), 4)
-+#define OVERLAY_HDR_SIZE_DWORDS (sizeof(struct fw_overlay_buf_hdr) / 4)
-+
-+static u32 qed_get_overlay_addr_ram_addr(struct qed_hwfn *p_hwfn, u8 storm_id)
-+{
-+	switch (storm_id) {
-+	case 0:
-+		return TSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    TSTORM_OVERLAY_BUF_ADDR_OFFSET;
-+	case 1:
-+		return MSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    MSTORM_OVERLAY_BUF_ADDR_OFFSET;
-+	case 2:
-+		return USEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    USTORM_OVERLAY_BUF_ADDR_OFFSET;
-+	case 3:
-+		return XSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    XSTORM_OVERLAY_BUF_ADDR_OFFSET;
-+	case 4:
-+		return YSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    YSTORM_OVERLAY_BUF_ADDR_OFFSET;
-+	case 5:
-+		return PSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
-+		    PSTORM_OVERLAY_BUF_ADDR_OFFSET;
-+
-+	default:
-+		return 0;
-+	}
-+}
-+
-+struct phys_mem_desc *qed_fw_overlay_mem_alloc(struct qed_hwfn *p_hwfn,
-+					       const u32 * const
-+					       fw_overlay_in_buf,
-+					       u32 buf_size_in_bytes)
-+{
-+	u32 buf_size = buf_size_in_bytes / sizeof(u32), buf_offset = 0;
-+	struct phys_mem_desc *allocated_mem;
-+
-+	if (!buf_size)
-+		return NULL;
-+
-+	allocated_mem = kcalloc(NUM_STORMS, sizeof(struct phys_mem_desc),
-+				GFP_KERNEL);
-+	if (!allocated_mem)
-+		return NULL;
-+
-+	memset(allocated_mem, 0, NUM_STORMS * sizeof(struct phys_mem_desc));
-+
-+	/* For each Storm, set physical address in RAM */
-+	while (buf_offset < buf_size) {
-+		struct phys_mem_desc *storm_mem_desc;
-+		struct fw_overlay_buf_hdr *hdr;
-+		u32 storm_buf_size;
-+		u8 storm_id;
-+
-+		hdr =
-+		    (struct fw_overlay_buf_hdr *)&fw_overlay_in_buf[buf_offset];
-+		storm_buf_size = GET_FIELD(hdr->data,
-+					   FW_OVERLAY_BUF_HDR_BUF_SIZE);
-+		storm_id = GET_FIELD(hdr->data, FW_OVERLAY_BUF_HDR_STORM_ID);
-+		storm_mem_desc = allocated_mem + storm_id;
-+		storm_mem_desc->size = storm_buf_size * sizeof(u32);
-+
-+		/* Allocate physical memory for Storm's overlays buffer */
-+		storm_mem_desc->virt_addr =
-+		    dma_alloc_coherent(&p_hwfn->cdev->pdev->dev,
-+				       storm_mem_desc->size,
-+				       &storm_mem_desc->phys_addr, GFP_KERNEL);
-+		if (!storm_mem_desc->virt_addr)
-+			break;
-+
-+		/* Skip overlays buffer header */
-+		buf_offset += OVERLAY_HDR_SIZE_DWORDS;
-+
-+		/* Copy Storm's overlays buffer to allocated memory */
-+		memcpy(storm_mem_desc->virt_addr,
-+		       &fw_overlay_in_buf[buf_offset], storm_mem_desc->size);
-+
-+		/* Advance to next Storm */
-+		buf_offset += storm_buf_size;
-+	}
-+
-+	/* If memory allocation has failed, free all allocated memory */
-+	if (buf_offset < buf_size) {
-+		qed_fw_overlay_mem_free(p_hwfn, allocated_mem);
-+		return NULL;
-+	}
-+
-+	return allocated_mem;
-+}
-+
-+void qed_fw_overlay_init_ram(struct qed_hwfn *p_hwfn,
-+			     struct qed_ptt *p_ptt,
-+			     struct phys_mem_desc *fw_overlay_mem)
-+{
-+	u8 storm_id;
-+
-+	for (storm_id = 0; storm_id < NUM_STORMS; storm_id++) {
-+		struct phys_mem_desc *storm_mem_desc =
-+		    (struct phys_mem_desc *)fw_overlay_mem + storm_id;
-+		u32 ram_addr, i;
-+
-+		/* Skip Storms with no FW overlays */
-+		if (!storm_mem_desc->virt_addr)
-+			continue;
-+
-+		/* Calculate overlay RAM GRC address of current PF */
-+		ram_addr = qed_get_overlay_addr_ram_addr(p_hwfn, storm_id) +
-+			   sizeof(dma_addr_t) * p_hwfn->rel_pf_id;
-+
-+		/* Write Storm's overlay physical address to RAM */
-+		for (i = 0; i < PHYS_ADDR_DWORDS; i++, ram_addr += sizeof(u32))
-+			qed_wr(p_hwfn, p_ptt, ram_addr,
-+			       ((u32 *)&storm_mem_desc->phys_addr)[i]);
-+	}
-+}
-+
-+void qed_fw_overlay_mem_free(struct qed_hwfn *p_hwfn,
-+			     struct phys_mem_desc *fw_overlay_mem)
-+{
-+	u8 storm_id;
-+
-+	if (!fw_overlay_mem)
-+		return;
-+
-+	for (storm_id = 0; storm_id < NUM_STORMS; storm_id++) {
-+		struct phys_mem_desc *storm_mem_desc =
-+		    (struct phys_mem_desc *)fw_overlay_mem + storm_id;
-+
-+		/* Free Storm's physical memory */
-+		if (storm_mem_desc->virt_addr)
-+			dma_free_coherent(&p_hwfn->cdev->pdev->dev,
-+					  storm_mem_desc->size,
-+					  storm_mem_desc->virt_addr,
-+					  storm_mem_desc->phys_addr);
-+	}
-+
-+	/* Free allocated virtual memory */
-+	kfree(fw_overlay_mem);
-+}
+ 
+ void qed_gft_config(struct qed_hwfn *p_hwfn,
+@@ -1331,24 +1380,17 @@ void qed_gft_config(struct qed_hwfn *p_hwfn,
+ 
+ 	qed_wr(p_hwfn,
+ 	       p_ptt, PRS_REG_SEARCH_NON_IP_AS_GFT, search_non_ip_as_gft);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
+-	       ram_line.lo);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       ram_line.hi);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
+ 
+ 	/* Set default profile so that no filter match will happen */
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH, 0xffffffff);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH + REG_SIZE, 0x3ff);
++	ram_line.lo = 0xffffffff;
++	ram_line.hi = 0x3ff;
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
++			PRS_GFT_CAM_LINES_NO_MATCH,
++			sizeof(ram_line) / REG_SIZE);
+ 
+ 	/* Enable gft search */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 1);
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-index 5ca117a8734a..36f998c89e74 100644
+index ef22a3596295..31222b3e3936 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-@@ -589,5 +589,10 @@ int qed_init_fw_data(struct qed_dev *cdev, const u8 *data)
- 	len = buf_hdr[BIN_BUF_INIT_CMD].length;
- 	fw->init_ops_size = len / sizeof(struct init_raw_op);
+@@ -215,7 +215,7 @@ static int qed_init_fill_dmae(struct qed_hwfn *p_hwfn,
+ 	 * 3. p_hwfb->temp_data,
+ 	 * 4. fill_count
+ 	 */
+-	params.flags = QED_DMAE_FLAG_RW_REPL_SRC;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_RW_REPL_SRC, 0x1);
+ 	return qed_dmae_host2grc(p_hwfn, p_ptt,
+ 				 (uintptr_t)(&zero_buffer[0]),
+ 				 addr, fill_count, &params);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_sriov.c b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+index fe4b740de14c..66876af814c4 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_sriov.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+@@ -352,7 +352,7 @@ static int qed_iov_post_vf_bulletin(struct qed_hwfn *p_hwfn,
  
-+	offset = buf_hdr[BIN_BUF_INIT_OVERLAYS].offset;
-+	fw->fw_overlays = (u32 *)(data + offset);
-+	len = buf_hdr[BIN_BUF_INIT_OVERLAYS].length;
-+	fw->fw_overlays_len = len;
-+
- 	return 0;
- }
+ 	/* propagate bulletin board via dmae to vm memory */
+ 	memset(&params, 0, sizeof(params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = p_vf->abs_vf_id;
+ 	return qed_dmae_host2host(p_hwfn, p_ptt, p_vf->bulletin.phys,
+ 				  p_vf->vf_bulletin, p_vf->bulletin.size / 4,
+@@ -1225,8 +1225,8 @@ static void qed_iov_send_response(struct qed_hwfn *p_hwfn,
+ 
+ 	eng_vf_id = p_vf->abs_vf_id;
+ 
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = eng_vf_id;
+ 
+ 	qed_dmae_host2host(p_hwfn, p_ptt, mbx->reply_phys + sizeof(u64),
+@@ -4103,8 +4103,9 @@ static int qed_iov_copy_vf_msg(struct qed_hwfn *p_hwfn, struct qed_ptt *ptt,
+ 	if (!vf_info)
+ 		return -EINVAL;
+ 
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_SRC | QED_DMAE_FLAG_COMPLETION_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_SRC_VF_VALID, 0x1);
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 0x1);
+ 	params.src_vfid = vf_info->abs_vf_id;
+ 
+ 	if (qed_dmae_host2host(p_hwfn, ptt,
 -- 
 2.14.5
 
