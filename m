@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47303C33CBA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE84BC33CB8
 	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D3892071E
+	by mail.kernel.org (Postfix) with ESMTP id B736B2071E
 	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 15:27:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="b+jTlJR/"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="a2DpPjO5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728939AbgAVP1C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728998AbgAVP1C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 22 Jan 2020 10:27:02 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56390 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728901AbgAVP07 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37838 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728797AbgAVP04 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Jan 2020 10:26:59 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00MFQJvq024744;
-        Wed, 22 Jan 2020 07:26:58 -0800
+        Wed, 22 Jan 2020 10:26:56 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00MFQEIO015735;
+        Wed, 22 Jan 2020 07:26:54 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=Q5u9rEPVyOP2CCWp2gnJwVwfJRYcSvNRxR3GTxUX1QE=;
- b=b+jTlJR/PJdrvPjN+HDDngGPZVJrp1l9Kpg6fDwabPB7rYH0HNUOA2ahoCwhKewahvgt
- 8qFTmHDMzIQKleU5dg8cm2b9FtY9nNdpuBP9gLPOca13J7PxwPuB9h6Nz2xjYGBj97MG
- Bertb0CF51EQ7FhSOO8fHJgmaKqYyOTbebpPvXNRSFOCZzex5zlqYt8FSO8FFEd1sWYx
- FWFuHCIzPjr8sXTLhYY7pkhNYt3Pfh7EED6AnYphTaFnoW+FBukzfF4TfhpK/EYZvSus
- tBJWh76CjijPcaO60Jrcg2JLwhoaFDyEOwkUquT2BniVqQBf+SMSEvnbYPY229I56/DO Qw== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2xpm9015tt-1
+ content-type; s=pfpt0818; bh=hOBnMSVOTrofEzNMJlWAxTdqQlkPi9Rc6vaII6o+Waw=;
+ b=a2DpPjO5OO9NC8z+wGsSssexYFA/7p5ueXmTiKYDAEGmxZt7bbNPve6MRbE35ZPAaEsO
+ EtB3v8WmMNOVoUsj8uF/oHVvrU14cLx8FYp21jR3sKsYjFM5GPOMV5Hwl1Hkc5KGQIbh
+ 6aSZOCLhxLZTj7AvFsvlRVf/q3Q2nGrXm7lwyM96CTVOyOnrn3tFsiwlaVNPwtbuabDH
+ 4VqNg9ejle1sr69LZm9lYq3ccW+Kv6/o161HFhARpza3O7Sgaa156EqF8k+Yvtb0YIaJ
+ pPuNd2YFuo9Q5H/ORKzlEVEYi34m3xS384k5hLk8whI4+q1z07qxSbUc+YB20knga7Kd uQ== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dt7h2x-3
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 22 Jan 2020 07:26:58 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 22 Jan
- 2020 07:26:56 -0800
+        Wed, 22 Jan 2020 07:26:54 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 22 Jan
+ 2020 07:26:52 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 22 Jan 2020 07:26:56 -0800
+ Transport; Wed, 22 Jan 2020 07:26:52 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id 07CC53F703F;
-        Wed, 22 Jan 2020 07:26:54 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 6CD143F703F;
+        Wed, 22 Jan 2020 07:26:50 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH net-next 12/14] qed: rt init valid initialization changed
-Date:   Wed, 22 Jan 2020 17:26:25 +0200
-Message-ID: <20200122152627.14903-13-michal.kalderon@marvell.com>
+Subject: [PATCH net-next 10/14] qed: FW 8.42.2.0 Add fw overlay feature
+Date:   Wed, 22 Jan 2020 17:26:23 +0200
+Message-ID: <20200122152627.14903-11-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200122152627.14903-1-michal.kalderon@marvell.com>
 References: <20200122152627.14903-1-michal.kalderon@marvell.com>
@@ -66,103 +66,337 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The QM phase init tool can be invoked multiple times during
-the driver lifetime. Part of the init comes from the runtime array.
-The logic for setting the values did not init all values, basically
-assuming the runtime array was all zeroes. But if it was invoked
-multiple times, nobody was zeroing it after the first time.
-
-In this change we zero the runtime array right after using it.
+This feature enables the FW to page out FW code when required
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed_dev.c      |  3 ---
- drivers/net/ethernet/qlogic/qed/qed_init_ops.c | 16 ++++++----------
- drivers/net/ethernet/qlogic/qed/qed_init_ops.h |  8 --------
- 3 files changed, 6 insertions(+), 21 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed.h              |   3 +
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  18 ++-
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          |  58 +++++++++
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    | 141 +++++++++++++++++++++
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |   5 +
+ 5 files changed, 224 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
+index cfbfe7441ecb..fedb1ab0b223 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed.h
++++ b/drivers/net/ethernet/qlogic/qed/qed.h
+@@ -462,6 +462,8 @@ struct qed_fw_data {
+ 	const u8		*modes_tree_buf;
+ 	union init_op		*init_ops;
+ 	const u32		*arr_data;
++	const u32		*fw_overlays;
++	u32			fw_overlays_len;
+ 	u32			init_ops_size;
+ };
+ 
+@@ -686,6 +688,7 @@ struct qed_hwfn {
+ 	/* Nvm images number and attributes */
+ 	struct qed_nvm_image_info nvm_info;
+ 
++	struct phys_mem_desc *fw_overlay_mem;
+ 	struct qed_ptt *p_arfs_ptt;
+ 
+ 	struct qed_simd_fp_handler	simd_proto_handler[64];
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index df97810b09b9..3fb73ce8c1d6 100644
+index e3e0376c13d6..df97810b09b9 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -2106,9 +2106,6 @@ int qed_qm_reconf(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 	if (!b_rc)
- 		return -EINVAL;
+@@ -1412,6 +1412,7 @@ void qed_resc_free(struct qed_dev *cdev)
+ 		qed_dmae_info_free(p_hwfn);
+ 		qed_dcbx_info_free(p_hwfn);
+ 		qed_dbg_user_data_free(p_hwfn);
++		qed_fw_overlay_mem_free(p_hwfn, p_hwfn->fw_overlay_mem);
  
--	/* clear the QM_PF runtime phase leftovers from previous init */
--	qed_init_clear_rt_data(p_hwfn);
--
- 	/* prepare QM portion of runtime array */
- 	qed_qm_init_pf(p_hwfn, p_ptt, false);
+ 		/* Destroy doorbell recovery mechanism */
+ 		qed_db_recovery_teardown(p_hwfn);
+@@ -2893,6 +2894,8 @@ static int qed_hw_init_pf(struct qed_hwfn *p_hwfn,
+ 	if (rc)
+ 		return rc;
  
++	qed_fw_overlay_init_ram(p_hwfn, p_ptt, p_hwfn->fw_overlay_mem);
++
+ 	/* Pure runtime initializations - directly to the HW  */
+ 	qed_int_igu_init_pure_rt(p_hwfn, p_ptt, true, true);
+ 
+@@ -3002,8 +3005,10 @@ int qed_hw_init(struct qed_dev *cdev, struct qed_hw_init_params *p_params)
+ 	u32 load_code, resp, param, drv_mb_param;
+ 	bool b_default_mtu = true;
+ 	struct qed_hwfn *p_hwfn;
+-	int rc = 0, i;
++	const u32 *fw_overlays;
++	u32 fw_overlays_len;
+ 	u16 ether_type;
++	int rc = 0, i;
+ 
+ 	if ((p_params->int_mode == QED_INT_MODE_MSI) && (cdev->num_hwfns > 1)) {
+ 		DP_NOTICE(cdev, "MSI mode is not supported for CMT devices\n");
+@@ -3104,6 +3109,17 @@ int qed_hw_init(struct qed_dev *cdev, struct qed_hw_init_params *p_params)
+ 		 */
+ 		qed_pglueb_clear_err(p_hwfn, p_hwfn->p_main_ptt);
+ 
++		fw_overlays = cdev->fw_data->fw_overlays;
++		fw_overlays_len = cdev->fw_data->fw_overlays_len;
++		p_hwfn->fw_overlay_mem =
++		    qed_fw_overlay_mem_alloc(p_hwfn, fw_overlays,
++					     fw_overlays_len);
++		if (!p_hwfn->fw_overlay_mem) {
++			DP_NOTICE(p_hwfn,
++				  "Failed to allocate fw overlay memory\n");
++			goto load_err;
++		}
++
+ 		switch (load_code) {
+ 		case FW_MSG_CODE_DRV_LOAD_ENGINE:
+ 			rc = qed_hw_init_common(p_hwfn, p_hwfn->p_main_ptt,
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+index 2f269576d3b2..e9b88952a7ed 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+@@ -1843,6 +1843,19 @@ struct sdm_op_gen {
+ #define SDM_OP_GEN_RESERVED_SHIFT	20
+ };
+ 
++/* Physical memory descriptor */
++struct phys_mem_desc {
++	dma_addr_t phys_addr;
++	void *virt_addr;
++	u32 size;		/* In bytes */
++};
++
++/* Virtual memory descriptor */
++struct virt_mem_desc {
++	void *ptr;
++	u32 size;		/* In bytes */
++};
++
+ /****************************************/
+ /* Debug Tools HSI constants and macros */
+ /****************************************/
+@@ -2872,6 +2885,15 @@ enum bin_init_buffer_type {
+ 	MAX_BIN_INIT_BUFFER_TYPE
+ };
+ 
++/* FW overlay buffer header */
++struct fw_overlay_buf_hdr {
++	u32 data;
++#define FW_OVERLAY_BUF_HDR_STORM_ID_MASK  0xFF
++#define FW_OVERLAY_BUF_HDR_STORM_ID_SHIFT 0
++#define FW_OVERLAY_BUF_HDR_BUF_SIZE_MASK  0xFFFFFF
++#define FW_OVERLAY_BUF_HDR_BUF_SIZE_SHIFT 8
++};
++
+ /* init array header: raw */
+ struct init_array_raw_hdr {
+ 	u32 data;
+@@ -4346,6 +4368,42 @@ void qed_memset_task_ctx(void *p_ctx_mem, u32 ctx_size, u8 ctx_type);
+ void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
+ 			      struct qed_ptt *p_ptt,
+ 			      u8 assert_level[NUM_STORMS]);
++/**
++ * @brief qed_fw_overlay_mem_alloc - Allocates and fills the FW overlay memory.
++ *
++ * @param p_hwfn - HW device data
++ * @param fw_overlay_in_buf - the input FW overlay buffer.
++ * @param buf_size - the size of the input FW overlay buffer in bytes.
++ *		     must be aligned to dwords.
++ * @param fw_overlay_out_mem - OUT: a pointer to the allocated overlays memory.
++ *
++ * @return a pointer to the allocated overlays memory,
++ * or NULL in case of failures.
++ */
++struct phys_mem_desc *
++qed_fw_overlay_mem_alloc(struct qed_hwfn *p_hwfn,
++			 const u32 * const fw_overlay_in_buf,
++			 u32 buf_size_in_bytes);
++
++/**
++ * @brief qed_fw_overlay_init_ram - Initializes the FW overlay RAM.
++ *
++ * @param p_hwfn - HW device data.
++ * @param p_ptt - ptt window used for writing the registers.
++ * @param fw_overlay_mem - the allocated FW overlay memory.
++ */
++void qed_fw_overlay_init_ram(struct qed_hwfn *p_hwfn,
++			     struct qed_ptt *p_ptt,
++			     struct phys_mem_desc *fw_overlay_mem);
++
++/**
++ * @brief qed_fw_overlay_mem_free - Frees the FW overlay memory.
++ *
++ * @param p_hwfn - HW device data.
++ * @param fw_overlay_mem - the allocated FW overlay memory to free.
++ */
++void qed_fw_overlay_mem_free(struct qed_hwfn *p_hwfn,
++			     struct phys_mem_desc *fw_overlay_mem);
+ 
+ /* Ystorm flow control mode. Use enum fw_flow_ctrl_mode */
+ #define YSTORM_FLOW_CONTROL_MODE_OFFSET			(IRO[0].base)
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+index e09e6ce74705..9aacee539da1 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+@@ -1583,3 +1583,144 @@ void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
+ 		qed_wr(p_hwfn, p_ptt, ram_addr, assert_level[storm_id]);
+ 	}
+ }
++
++#define PHYS_ADDR_DWORDS        DIV_ROUND_UP(sizeof(dma_addr_t), 4)
++#define OVERLAY_HDR_SIZE_DWORDS (sizeof(struct fw_overlay_buf_hdr) / 4)
++
++static u32 qed_get_overlay_addr_ram_addr(struct qed_hwfn *p_hwfn, u8 storm_id)
++{
++	switch (storm_id) {
++	case 0:
++		return TSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    TSTORM_OVERLAY_BUF_ADDR_OFFSET;
++	case 1:
++		return MSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    MSTORM_OVERLAY_BUF_ADDR_OFFSET;
++	case 2:
++		return USEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    USTORM_OVERLAY_BUF_ADDR_OFFSET;
++	case 3:
++		return XSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    XSTORM_OVERLAY_BUF_ADDR_OFFSET;
++	case 4:
++		return YSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    YSTORM_OVERLAY_BUF_ADDR_OFFSET;
++	case 5:
++		return PSEM_REG_FAST_MEMORY + SEM_FAST_REG_INT_RAM +
++		    PSTORM_OVERLAY_BUF_ADDR_OFFSET;
++
++	default:
++		return 0;
++	}
++}
++
++struct phys_mem_desc *qed_fw_overlay_mem_alloc(struct qed_hwfn *p_hwfn,
++					       const u32 * const
++					       fw_overlay_in_buf,
++					       u32 buf_size_in_bytes)
++{
++	u32 buf_size = buf_size_in_bytes / sizeof(u32), buf_offset = 0;
++	struct phys_mem_desc *allocated_mem;
++
++	if (!buf_size)
++		return NULL;
++
++	allocated_mem = kcalloc(NUM_STORMS, sizeof(struct phys_mem_desc),
++				GFP_KERNEL);
++	if (!allocated_mem)
++		return NULL;
++
++	memset(allocated_mem, 0, NUM_STORMS * sizeof(struct phys_mem_desc));
++
++	/* For each Storm, set physical address in RAM */
++	while (buf_offset < buf_size) {
++		struct phys_mem_desc *storm_mem_desc;
++		struct fw_overlay_buf_hdr *hdr;
++		u32 storm_buf_size;
++		u8 storm_id;
++
++		hdr =
++		    (struct fw_overlay_buf_hdr *)&fw_overlay_in_buf[buf_offset];
++		storm_buf_size = GET_FIELD(hdr->data,
++					   FW_OVERLAY_BUF_HDR_BUF_SIZE);
++		storm_id = GET_FIELD(hdr->data, FW_OVERLAY_BUF_HDR_STORM_ID);
++		storm_mem_desc = allocated_mem + storm_id;
++		storm_mem_desc->size = storm_buf_size * sizeof(u32);
++
++		/* Allocate physical memory for Storm's overlays buffer */
++		storm_mem_desc->virt_addr =
++		    dma_alloc_coherent(&p_hwfn->cdev->pdev->dev,
++				       storm_mem_desc->size,
++				       &storm_mem_desc->phys_addr, GFP_KERNEL);
++		if (!storm_mem_desc->virt_addr)
++			break;
++
++		/* Skip overlays buffer header */
++		buf_offset += OVERLAY_HDR_SIZE_DWORDS;
++
++		/* Copy Storm's overlays buffer to allocated memory */
++		memcpy(storm_mem_desc->virt_addr,
++		       &fw_overlay_in_buf[buf_offset], storm_mem_desc->size);
++
++		/* Advance to next Storm */
++		buf_offset += storm_buf_size;
++	}
++
++	/* If memory allocation has failed, free all allocated memory */
++	if (buf_offset < buf_size) {
++		qed_fw_overlay_mem_free(p_hwfn, allocated_mem);
++		return NULL;
++	}
++
++	return allocated_mem;
++}
++
++void qed_fw_overlay_init_ram(struct qed_hwfn *p_hwfn,
++			     struct qed_ptt *p_ptt,
++			     struct phys_mem_desc *fw_overlay_mem)
++{
++	u8 storm_id;
++
++	for (storm_id = 0; storm_id < NUM_STORMS; storm_id++) {
++		struct phys_mem_desc *storm_mem_desc =
++		    (struct phys_mem_desc *)fw_overlay_mem + storm_id;
++		u32 ram_addr, i;
++
++		/* Skip Storms with no FW overlays */
++		if (!storm_mem_desc->virt_addr)
++			continue;
++
++		/* Calculate overlay RAM GRC address of current PF */
++		ram_addr = qed_get_overlay_addr_ram_addr(p_hwfn, storm_id) +
++			   sizeof(dma_addr_t) * p_hwfn->rel_pf_id;
++
++		/* Write Storm's overlay physical address to RAM */
++		for (i = 0; i < PHYS_ADDR_DWORDS; i++, ram_addr += sizeof(u32))
++			qed_wr(p_hwfn, p_ptt, ram_addr,
++			       ((u32 *)&storm_mem_desc->phys_addr)[i]);
++	}
++}
++
++void qed_fw_overlay_mem_free(struct qed_hwfn *p_hwfn,
++			     struct phys_mem_desc *fw_overlay_mem)
++{
++	u8 storm_id;
++
++	if (!fw_overlay_mem)
++		return;
++
++	for (storm_id = 0; storm_id < NUM_STORMS; storm_id++) {
++		struct phys_mem_desc *storm_mem_desc =
++		    (struct phys_mem_desc *)fw_overlay_mem + storm_id;
++
++		/* Free Storm's physical memory */
++		if (storm_mem_desc->virt_addr)
++			dma_free_coherent(&p_hwfn->cdev->pdev->dev,
++					  storm_mem_desc->size,
++					  storm_mem_desc->virt_addr,
++					  storm_mem_desc->phys_addr);
++	}
++
++	/* Free allocated virtual memory */
++	kfree(fw_overlay_mem);
++}
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-index 36f998c89e74..5a6e4ac4fef4 100644
+index 5ca117a8734a..36f998c89e74 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-@@ -74,15 +74,6 @@ void qed_init_iro_array(struct qed_dev *cdev)
- 	cdev->iro_arr = iro_arr;
- }
+@@ -589,5 +589,10 @@ int qed_init_fw_data(struct qed_dev *cdev, const u8 *data)
+ 	len = buf_hdr[BIN_BUF_INIT_CMD].length;
+ 	fw->init_ops_size = len / sizeof(struct init_raw_op);
  
--/* Runtime configuration helpers */
--void qed_init_clear_rt_data(struct qed_hwfn *p_hwfn)
--{
--	int i;
--
--	for (i = 0; i < RUNTIME_ARRAY_SIZE; i++)
--		p_hwfn->rt_data.b_valid[i] = false;
--}
--
- void qed_init_store_rt_reg(struct qed_hwfn *p_hwfn, u32 rt_offset, u32 val)
- {
- 	p_hwfn->rt_data.init_val[rt_offset] = val;
-@@ -106,7 +97,7 @@ static int qed_init_rt(struct qed_hwfn	*p_hwfn,
- {
- 	u32 *p_init_val = &p_hwfn->rt_data.init_val[rt_offset];
- 	bool *p_valid = &p_hwfn->rt_data.b_valid[rt_offset];
--	u16 i, segment;
-+	u16 i, j, segment;
- 	int rc = 0;
- 
- 	/* Since not all RT entries are initialized, go over the RT and
-@@ -121,6 +112,7 @@ static int qed_init_rt(struct qed_hwfn	*p_hwfn,
- 		 */
- 		if (!b_must_dmae) {
- 			qed_wr(p_hwfn, p_ptt, addr + (i << 2), p_init_val[i]);
-+			p_valid[i] = false;
- 			continue;
- 		}
- 
-@@ -135,6 +127,10 @@ static int qed_init_rt(struct qed_hwfn	*p_hwfn,
- 		if (rc)
- 			return rc;
- 
-+		/* invalidate after writing */
-+		for (j = i; j < i + segment; j++)
-+			p_valid[j] = false;
++	offset = buf_hdr[BIN_BUF_INIT_OVERLAYS].offset;
++	fw->fw_overlays = (u32 *)(data + offset);
++	len = buf_hdr[BIN_BUF_INIT_OVERLAYS].length;
++	fw->fw_overlays_len = len;
 +
- 		/* Jump over the entire segment, including invalid entry */
- 		i += segment;
- 	}
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_ops.h b/drivers/net/ethernet/qlogic/qed/qed_init_ops.h
-index 555dd086796d..e9e8ade50ed3 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_init_ops.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_init_ops.h
-@@ -80,14 +80,6 @@ int qed_init_alloc(struct qed_hwfn *p_hwfn);
-  */
- void qed_init_free(struct qed_hwfn *p_hwfn);
- 
--/**
-- * @brief qed_init_clear_rt_data - Clears the runtime init array.
-- *
-- *
-- * @param p_hwfn
-- */
--void qed_init_clear_rt_data(struct qed_hwfn *p_hwfn);
--
- /**
-  * @brief qed_init_store_rt_reg - Store a configuration value in the RT array.
-  *
+ 	return 0;
+ }
 -- 
 2.14.5
 
