@@ -6,49 +6,50 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 062EFC32771
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 05:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EA43C32771
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 05:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DAB9E2465B
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 05:08:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E9AF2465A
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Jan 2020 05:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725924AbgAVFIR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jan 2020 00:08:17 -0500
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:54201 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbgAVFIR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2020 00:08:17 -0500
-Received: by mail-pj1-f50.google.com with SMTP id n96so2553361pjc.3;
-        Tue, 21 Jan 2020 21:08:17 -0800 (PST)
+        id S1725871AbgAVFNS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jan 2020 00:13:18 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:38806 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbgAVFNS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2020 00:13:18 -0500
+Received: by mail-pf1-f196.google.com with SMTP id x185so2741991pfc.5;
+        Tue, 21 Jan 2020 21:13:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=Zrovp9VsqSaqwJVtpJRtZ3JQIioduCfVj4/P+Licp/E=;
-        b=PVGG6tsRF9ACvDeuQ3yvEc/Ev6t7ffAhmgMzVcoPAqCrKluDrrmDWF56cFdHqqel/+
-         Ls8u0zHxOI5HE82ixS37BGwrGsccu63hHZEFFGmuzhx+neUGBy92DeRaPiALEvOOQyP4
-         8oXN+3LfTjiUV8CeKd0ridpF57NdHhQOlV52DxFi1wyZzLzfDak6yMHAeXfTwKq6xXWf
-         5kAq+v0sO6BiA3CgeyhM1AmHiN+EplhOaDC2XRSMHepD6irrudIS71CZ6Ad8JNHE1VWB
-         /ipFSjq+/lapvvuR0hY/jgSQEZA2e+6tbsSE6AOSde0EBK6eR9g3LC4LSYYhK6hZksXv
-         CuXQ==
-X-Gm-Message-State: APjAAAW+dvt4bAMdjcnMw05TkoVJYtO2Z1TOR/bhUk5TyolJEFuR+TtM
-        dOukbYsEJ0+bWFsKtXmphUEBqlOn
-X-Google-Smtp-Source: APXvYqzA5XMm5bZfwIBqvdQDPF8P6GXHNs3BdosiWR/Ts4pfmgYKjE8zFOyDe4++hIml26yoEm+YZQ==
-X-Received: by 2002:a17:90a:25c2:: with SMTP id k60mr884453pje.127.1579669696108;
-        Tue, 21 Jan 2020 21:08:16 -0800 (PST)
+        bh=G4zWcG38QbfOgSj2GyrGGnsjW0vqGvdhkVYZ4/Opd0A=;
+        b=h3AI7ZF8s0P+PUkPIrdGfcWBiWdNrt06mkJ/vWASCjfSLCFH+rEMPeEUEIuF0kvI0i
+         JI8771n0FEZQF9cecE5014UUEAUsVeaj0iUaCOqVZpCyJN8E0e3hCMxNKS5i3RevZZ3Q
+         DDGMW7KRGv6GPpXNsfvPBfrkAQ0dOCXztpAISmoVERAiiZfYX6v+0AOmFWXvN8GHOyNH
+         dO0rM37RtRzWaohOZjDjP/TDurfCY/2uR/vpjN4WZWm4qYO1ErMSIxdZ8mtZp/m3Guxl
+         vD09z/dZcIqc/SAulxpkREzUUwhwsVb3q7/r/2ZREaLM5xX3fNK5Ydw3LDy2/Xr5Y7nB
+         nirw==
+X-Gm-Message-State: APjAAAURQ7LjSkP1X7xtdAOieyH9PAstVNMCcekky5LZ5USXGjlPQ8GS
+        W3l3Ijip7wnJi+n59RWaDyA0fYnP
+X-Google-Smtp-Source: APXvYqxGLSUJHoM41bF+Bf9z+IDOyfFAl9/s5eOA30klYiaibka+mmbEXGrpjQFVDHeIAvQYHXPgWA==
+X-Received: by 2002:a63:1a1c:: with SMTP id a28mr9654899pga.374.1579669996726;
+        Tue, 21 Jan 2020 21:13:16 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:1483:dec1:1c24:26ea? ([2601:647:4000:d7:1483:dec1:1c24:26ea])
-        by smtp.gmail.com with ESMTPSA id a26sm45507222pfo.27.2020.01.21.21.08.14
+        by smtp.gmail.com with ESMTPSA id z4sm44777776pfn.42.2020.01.21.21.13.15
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Jan 2020 21:08:15 -0800 (PST)
-Subject: Re: [PATCH v4 5/8] scsi: ufs: Inline two functions into their callers
+        Tue, 21 Jan 2020 21:13:16 -0800 (PST)
+Subject: Re: [PATCH v4 6/8] scsi: ufs: Delete is_init_prefetch from struct
+ ufs_hba
 To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
         avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200120130820.1737-1-huobean@gmail.com>
- <20200120130820.1737-6-huobean@gmail.com>
+ <20200120130820.1737-7-huobean@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <93cf6e96-8aff-f0a7-fc9a-c0efa12a68eb@acm.org>
-Date:   Tue, 21 Jan 2020 21:08:13 -0800
+Message-ID: <6b6a7998-b6e3-6019-8588-18dbf622579a@acm.org>
+Date:   Tue, 21 Jan 2020 21:13:14 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200120130820.1737-6-huobean@gmail.com>
+In-Reply-To: <20200120130820.1737-7-huobean@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -88,6 +89,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-20 05:08, Bean Huo wrote:
-> Delete ufshcd_read_power_desc() and ufshcd_read_device_desc(), directly
-> inline ufshcd_read_desc() into its callers.
+> Without variable is_init_prefetch, the current logic can guarantee
+> ufshcd_init_icc_levels() will execute only once, delete it now.
+
+How about changing this description into the following:
+
+A previous patch in this series introduced ufshcd_add_lus(). That
+function is called once per HBA which makes the is_init_prefetch member
+superfluous. Hence remove the is_init_prefetch member.
+
+Anyway:
+
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
