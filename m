@@ -2,110 +2,93 @@ Return-Path: <SRS0=fhi0=3M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3475C33CAA
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ECAEC33CAA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 07:25:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EB0E217F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:50:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F41EE217F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 07:25:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="S4eVyQXE"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Oqoq0lQg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725897AbgAWGuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 01:50:21 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:40886 "EHLO
+        id S1726083AbgAWHZ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 02:25:58 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:15242 "EHLO
         mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725535AbgAWGuV (ORCPT
+        by vger.kernel.org with ESMTP id S1726054AbgAWHZ6 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Jan 2020 01:50:21 -0500
+        Thu, 23 Jan 2020 02:25:58 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1579762220; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=bswcAiv/CdeJKAnXJ38wrotIhNQOHnYzuVA95WQWG8w=;
- b=S4eVyQXEJ/J6HSCVIMXtlztI/IBMMsD5ESfnYNz3GnX1dMyy9qJxzcOe9+pWPSo6tdWINac2
- b4GXtLO0rLwlY4O9lElstksCLSi/ud2F9eN/OxD21I/OCEEJdeaW2o+rpbfnMWv6MWu+dcl1
- 343X4cSw8+PJiTu8tYwM+CUcrfs=
+ s=smtp; t=1579764358; h=Message-Id: Date: Subject: To: From: Sender;
+ bh=xw3tpQP1eSeR9suory++WCmOgU2l4Ya4eM3ctblD2bo=; b=Oqoq0lQgYJRN3FaGxDl3PNZ7163SvFuRaDFTewrApvWc2s6780Qqup+P49KjW44M2Mlt7Jsf
+ 9WsFI/B83FhcUQjKIHJ+lnW8VsObcKqndNvvAGPVFyI3g/ruLUcVydgQH9WZr710XFwJkPgK
+ UbApDr+nzBHccPRgqCxSWRmEr9w=
 X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e29422b.7feba64c59d0-smtp-out-n02;
- Thu, 23 Jan 2020 06:50:19 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e294a84.7f878d86dc00-smtp-out-n02;
+ Thu, 23 Jan 2020 07:25:56 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 939F9C433A2; Thu, 23 Jan 2020 06:50:18 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 7CF28C4479F; Thu, 23 Jan 2020 07:25:56 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: hongwus)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A5249C43383;
-        Thu, 23 Jan 2020 06:50:16 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 23 Jan 2020 14:50:16 +0800
-From:   hongwus@codeaurora.org
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 5/8] scsi: ufs: Fix ufshcd_hold() caused scheduling
- while atomic
-In-Reply-To: <1579759946-5448-6-git-send-email-cang@codeaurora.org>
-References: <1579759946-5448-1-git-send-email-cang@codeaurora.org>
- <1579759946-5448-6-git-send-email-cang@codeaurora.org>
-Message-ID: <8b8347dbb9a32c71ba2e6992f30a974c@codeaurora.org>
-X-Sender: hongwus@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B366CC433CB;
+        Thu, 23 Jan 2020 07:25:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B366CC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v4 0/8] UFS driver general fixes bundle 4
+Date:   Wed, 22 Jan 2020 23:25:41 -0800
+Message-Id: <1579764349-15578-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Can,
+This bundle includes 8 general fixes for UFS driver.
 
-On 2020-01-23 14:12, Can Guo wrote:
-> The async version of ufshcd_hold(async == true), which is only called
-> in queuecommand path as for now, is expected to work in atomic context,
-> thus it should not sleep or schedule out. When it runs into the 
-> condition
-> that clocks are ON but link is still in hibern8 state, it should bail 
-> out
-> without flushing the clock ungate work.
-> 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 4dfd705..c316a07 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1542,6 +1542,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  		 */
->  		if (ufshcd_can_hibern8_during_gating(hba) &&
->  		    ufshcd_is_link_hibern8(hba)) {
-> +			if (async) {
-> +				rc = -EAGAIN;
-> +				hba->clk_gating.active_reqs--;
-> +				break;
-> +			}
->  			spin_unlock_irqrestore(hba->host->host_lock, flags);
->  			flush_work(&hba->clk_gating.ungate_work);
->  			spin_lock_irqsave(hba->host->host_lock, flags);
+Changes since v3:
+- Fixed patch #8
 
-It looks good to me.
+Changes since v2:
+- Move the ref clk gating wait delay to ufs-qcom.c
+- Added one more change to select INITIAL adapt for HS G4
 
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Changes since v1:
+- Fixed minor typo
+
+Asutosh Das (1):
+  scsi: ufs: set load before setting voltage in regulators
+
+Can Guo (6):
+  scsi: ufs: Remove the check before call setup clock notify vops
+  scsi: ufs-qcom: Adjust bus bandwidth voting and unvoting
+  scsi: ufs: Fix ufshcd_hold() caused scheduling while atomic
+  scsi: ufs: Add dev ref clock gating wait time support
+  scsi: ufs-qcom: Delay specific time before gate ref clk
+  scsi: ufs: Select INITIAL adapt for HS Gear4
+
+Sayali Lokhande (1):
+  scsi: ufs: Flush exception event before suspend
+
+ drivers/scsi/ufs/ufs-qcom.c |  70 ++++++++++++++++++--------
+ drivers/scsi/ufs/ufs.h      |   3 ++
+ drivers/scsi/ufs/ufshcd.c   | 117 +++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/ufs/ufshci.h   |   1 +
+ drivers/scsi/ufs/unipro.h   |   7 +++
+ 5 files changed, 148 insertions(+), 50 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
