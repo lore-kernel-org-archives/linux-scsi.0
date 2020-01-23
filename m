@@ -2,116 +2,149 @@ Return-Path: <SRS0=fhi0=3M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C5C4C32771
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 02:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5097EC3F68F
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 02:54:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D0112465A
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 02:45:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 281F324673
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 02:54:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ApLmwZQ+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725943AbgAWCpq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Jan 2020 21:45:46 -0500
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:54274 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725911AbgAWCpq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jan 2020 21:45:46 -0500
-Received: by mail-pj1-f66.google.com with SMTP id kx11so483823pjb.4;
-        Wed, 22 Jan 2020 18:45:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=0bTKL1nEMmiTu3DN8/wNxHjP2cGwCMK4tEMnT3FtOBI=;
-        b=s0kMqxltPtbhmFm/nMEveMzjTQTXXwFp9+LnB3QUWDEvFzbWzbZzuR/zujwHd1iGJf
-         /f+qJAOwU3neV9/nKKnhKxUJpCboxtrXiMWmo+6V1effVbe7gOj4cXuK1j3LpEgBi+eg
-         ik4qeMMPdjeuhmPxXT1zPOKISKKNsEsFwN4PX6tZOVK/iRY5eHm2oauO+drPYv1LcREs
-         qiTt7O7/RY1+dtgAL7i8mivf1/q6QglIatTUEIIuUQT/GVMndd2EYAsnZgL2c/PJxiPs
-         HK3gSRgwmtgvqxyVzCh5iiWgDkn64uatbAGDoR02NmRHafTut4wF5QiTBYrkerULJdzN
-         DOGg==
-X-Gm-Message-State: APjAAAV5hg0+zlTExqPqgVzpaNHnPFsQLFb166ydy72IDrVNh1oRPhpp
-        z/p+13Uej4r+HS+/9rssJrlI9Pyb
-X-Google-Smtp-Source: APXvYqyFjqN4SMdx78XQgp5nv9AZUTULnc9pP0nt+Zco5cy3IfTgnLZJV7ILLKiPHIbGOxLvQAc2vg==
-X-Received: by 2002:a17:90a:fa10:: with SMTP id cm16mr1916091pjb.129.1579747545094;
-        Wed, 22 Jan 2020 18:45:45 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:d957:4568:237a:bc62? ([2601:647:4000:d7:d957:4568:237a:bc62])
-        by smtp.gmail.com with ESMTPSA id b1sm288408pfp.44.2020.01.22.18.45.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Jan 2020 18:45:44 -0800 (PST)
-Subject: Re: [PATCH -next] scsi: qla2xxx: use PTR_ERR_OR_ZERO() to simplify
- code
-To:     Chen Zhou <chenzhou10@huawei.com>, hmadhani@marvell.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200122101812.94816-1-chenzhou10@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <697e27b4-a531-3670-0618-f5dc58a8608b@acm.org>
-Date:   Wed, 22 Jan 2020 18:45:43 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726054AbgAWCyz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Jan 2020 21:54:55 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:60899 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725911AbgAWCyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Jan 2020 21:54:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1579748092;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IjYQVjPqOQ1qGfooRJJ7hb+eYyaT9PGEQqIBw0hq/MA=;
+        b=ApLmwZQ+/gGJLvRo2ek3RAZvrn8VgEu2BBwVTvCzbn9AnIh/EyZsvd52Q8MbhEACDe6vmb
+        Jw3Y1bhbF8ZEr7CRWLNwq5q4h5a3f2uU3mZnbM4kbV8VReZJyKSqBlUSnw/sR9+XEV+kcm
+        R4L0OOA/BrigdRGh3xUFlbiuenfzhMk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-309-WLOrVAL8PoitTupn_QVZeg-1; Wed, 22 Jan 2020 21:54:46 -0500
+X-MC-Unique: WLOrVAL8PoitTupn_QVZeg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7E2A01005513;
+        Thu, 23 Jan 2020 02:54:44 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9FCA480A46;
+        Thu, 23 Jan 2020 02:54:33 +0000 (UTC)
+Date:   Thu, 23 Jan 2020 10:54:29 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD
+ when HBA needs
+Message-ID: <20200123025429.GA5191@ming.t460p>
+References: <20200119071432.18558-1-ming.lei@redhat.com>
+ <20200119071432.18558-6-ming.lei@redhat.com>
+ <yq1y2u1if7t.fsf@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20200122101812.94816-1-chenzhou10@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1y2u1if7t.fsf@oracle.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-22 02:18, Chen Zhou wrote:
-> PTR_ERR_OR_ZERO contains if(IS_ERR(...)) + PTR_ERR, just use 
-> PTR_ERR_OR_ZERO directly.
-> 
-> Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
-> ---
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> index abe7f79..719d53d 100644
-> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-> @@ -1462,10 +1462,8 @@ static int tcm_qla2xxx_check_initiator_node_acl(
->  				       sizeof(struct qla_tgt_cmd),
->  				       TARGET_PROT_ALL, port_name,
->  				       qlat_sess, tcm_qla2xxx_session_cb);
-> -	if (IS_ERR(se_sess))
-> -		return PTR_ERR(se_sess);
->  
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(se_sess);
->  }
+Hi Martin,
 
-Is this a useful change? My personal opinion is that the current
-implementation (without this patch) is easier to read.
+On Mon, Jan 20, 2020 at 11:52:06PM -0500, Martin K. Petersen wrote:
+> 
+> Ming,
+> 
+> > NVMe doesn't have such per-request-queue(namespace) queue depth, so it
+> > is reasonable to ignore the limit for SCSI SSD too.
+> 
+> It is really not. A free host tag does not guarantee that the target
+> device can queue the command.
+
+Yeah, I agree.
+
+> 
+> The assumption that SSDs are somehow special because they are "fast" is
+> not valid. Given the common hardware queue depth for a SAS device of
+> ~128 it is often trivial to drive a device into a congestion
+> scenario. We see it all the time for non-rotational devices, SSDs and
+> arrays alike. The SSD heuristic is simply not going to fly.
+
+In reality, the channel number of SSD is very limited, it should be
+dozens of in enterprise grade SSD, so the device itself can be
+saturated by limited in-flight IOs.
+
+However, it depends on if the target device returns the congestion
+to host. From my observation, looks there isn't such feedback
+from NVMe target.
+
+If SSD target device doesn't provide such kind of congestion feedback,
+tracking in-flight per-LUN IO via .device_busy doesn't make any
+difference.
+
+Even if there was such SSD target which provides such congestion
+feedback, bypassing .device_busy won't cause big effect too since
+blk-mq's SCHED_RESTART will retry this IO returning STS_RESOURCE
+only after another in-flight one is completed.
+
+> 
+> Don't get me wrong, I am very sympathetic to obliterating device_busy in
+> the hot path. I just don't think it is as easy as just ignoring the
+> counter and hope for the best. Dynamic queue depth management is an
+> integral part of the SCSI protocol, not something we can just decide to
+> bypass because a device claims to be of a certain media type or speed.
+
+At least, Broadcom guys tests this patch on megaraid raid and the results
+shows that big improvement was got, that is why the flag is only set
+on megaraid host.
+
+> 
+> I would prefer not to touch drivers that rely on cmd_per_lun / untagged
+> operation and focus exclusively on the ones that use .track_queue_depth.
+> For those we could consider an adaptive queue depth management scheme.
+> Something like not maintaining device_busy until we actually get a
+> QUEUE_FULL condition. And then rely on the existing queue depth ramp up
+> heuristics to determine when to disable the busy counter again. Maybe
+> with an additional watermark or time limit to avoid flip-flopping.
+> 
+> If that approach turns out to work, we should convert all remaining
+> non-legacy drivers to .track_queue_depth so we only have two driver
+> queuing flavors to worry about.
+
+In theory, .track_queue_depth may only improve sequential IO's
+performance for HDD., not very effective for SSD. Or just save a bit
+CPU cycles in case of SSD.
+
+I will study the related drivers/device a bit more wrt. track_queue_depth().
+
 
 Thanks,
+Ming
 
-Bart.
