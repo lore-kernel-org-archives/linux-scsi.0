@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAD8C4741C
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 206A7C33CB6
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1ED522253D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD9F42253D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="RCu0EBOO"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="OSd9qK0B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728939AbgAWK7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 05:59:02 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28576 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727307AbgAWK7A (ORCPT
+        id S1727893AbgAWK6x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 05:58:53 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18164 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726099AbgAWK6x (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Jan 2020 05:59:00 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00NAwsNC023278;
-        Thu, 23 Jan 2020 02:58:59 -0800
+        Thu, 23 Jan 2020 05:58:53 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00NAuoNR005434;
+        Thu, 23 Jan 2020 02:58:49 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=p3gTDjPZ/+fCryOek3cQyILqX/pp7CB+qzDU7FIuyVg=;
- b=RCu0EBOOXHYC2PSswP1ixyN+111O4LLqT9x2+VPRNmatsPbZh/7e78Nvw+DaYbnzFL6t
- I125HM4w7B4p2o2soU1goPgp3LbujkWVRzDDINxnkjt2U/1XhVCpyV8E7PAt2kxZ3ryb
- FCkslocgU6ZUrl8447wFZ8Qf1GKihVCbYLTxX1oox2tPR+EF0Qxkuuc1Ih/j/0H10otN
- zIem3EmDMBCXCtZiqFEHacjmDP5iMHDzxrtZ4cF2zORAfAA4sJdSfo4thRrMa5ZtfFPa
- 8kJuQ2mMz4x6fqvcPPAJiUDmlFCI70o8uZ8K6uAKDobapAtVHG/6MDV63++J/MCs/eN6 MA== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2xq4x4h2yj-1
+ content-type; s=pfpt0818; bh=g+yv2h4QzZgi9xvC2bD2bxF4wswprEmI+EpqU76OyFY=;
+ b=OSd9qK0BCScp/a0t3ExXN5Z48IE4+j074Wr2TBtjvjNV8Djy6daMjGoCeM31HF+KPzwk
+ W6RC8FTCfshcrS/Qmptepj+nKnpcwmXcoLFauaidb+TndCwCsQHJpAe7jo7bnAH52FjL
+ II83+ptp5ZFNJ6K9RpFkAGomFyok7h7L2+sIU77RhhvEfMZXmpAxG7E7FpFLwuGj+xXy
+ ped8Gn595a5A9JxNHNxDfIECOSOf5l0Vd4TSNWchtkZnrbZHFWZQGlR12py9zptrFUYe
+ 6ue+Nz4oltzhLDV1TpDCKCpz2Go7k2xqqH2tdJaYLkdSCJ0RRiLfHeQc6gMS5GUQC+F0 nw== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dtbd2p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 23 Jan 2020 02:58:59 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 23 Jan
- 2020 02:58:57 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 23 Jan 2020 02:58:57 -0800
+        Thu, 23 Jan 2020 02:58:49 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 23 Jan
+ 2020 02:58:46 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 23 Jan 2020 02:58:46 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id D5CA33F7041;
-        Thu, 23 Jan 2020 02:58:55 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 806153F7040;
+        Thu, 23 Jan 2020 02:58:44 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2 net-next 06/13] qed: FW 8.42.2.0 Additional ll2 type
-Date:   Thu, 23 Jan 2020 12:58:29 +0200
-Message-ID: <20200123105836.15090-7-michal.kalderon@marvell.com>
+Subject: [PATCH v2 net-next 01/13] qed: FW 8.42.2.0 Internal ram offsets modifications
+Date:   Thu, 23 Jan 2020 12:58:24 +0200
+Message-ID: <20200123105836.15090-2-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200123105836.15090-1-michal.kalderon@marvell.com>
 References: <20200123105836.15090-1-michal.kalderon@marvell.com>
@@ -66,661 +66,592 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-LL2 queues were a limited resource due to FW constraints.
-This FW introduced a new resource which is a context based ll2 queue
-(memory on host). The additional ll2 queues are required for RDMA SRIOV.
-The code refers to the previous ll2 queues as ram-based or legacy, and the
-new queues as ctx-based.
-This change decreased the "legacy" ram-based queues therefore the first ll2
-queue used for iWARP was converted to the ctx-based ll2 queue.
-This feature also exposed a bug in the DIRECT_REG_WR64 macro implementation
-which didn't have an effect in other use cases.
+IRO stands for internal RAM offsets. Updating the FW binary produces
+different iro offsets. This file contains the different values,
+and a new representation of the values.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed.h       |   3 +-
- drivers/net/ethernet/qlogic/qed/qed_dev.c   |  20 ++--
- drivers/net/ethernet/qlogic/qed/qed_hsi.h   |  42 +++++++-
- drivers/net/ethernet/qlogic/qed/qed_iscsi.c |   5 +-
- drivers/net/ethernet/qlogic/qed/qed_iwarp.c |   8 +-
- drivers/net/ethernet/qlogic/qed/qed_ll2.c   | 149 ++++++++++++++++++++++++----
- drivers/net/ethernet/qlogic/qed/qed_ll2.h   |  14 +++
- drivers/net/ethernet/qlogic/qed/qed_mcp.c   |   5 +-
- include/linux/qed/common_hsi.h              |  15 ++-
- include/linux/qed/qed_if.h                  |   4 +-
- include/linux/qed/qed_ll2_if.h              |   7 ++
- 11 files changed, 235 insertions(+), 37 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed.h     |   4 +-
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h | 419 ++++++++++++++++--------------
+ 2 files changed, 232 insertions(+), 191 deletions(-)
 
 diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
-index 8ec46bf409c2..cfa45fb9a5a4 100644
+index 89fe091c958d..8ec46bf409c2 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed.h
-@@ -253,7 +253,8 @@ enum qed_resources {
- 	QED_VLAN,
- 	QED_RDMA_CNQ_RAM,
- 	QED_ILT,
--	QED_LL2_QUEUE,
-+	QED_LL2_RAM_QUEUE,
-+	QED_LL2_CTX_QUEUE,
- 	QED_CMDQS_CQS,
- 	QED_RDMA_STATS_QUEUE,
- 	QED_BDQ,
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index 479d98e6187a..898c1f8d1530 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -3565,8 +3565,10 @@ const char *qed_hw_get_resc_name(enum qed_resources res_id)
- 		return "RDMA_CNQ_RAM";
- 	case QED_ILT:
- 		return "ILT";
--	case QED_LL2_QUEUE:
--		return "LL2_QUEUE";
-+	case QED_LL2_RAM_QUEUE:
-+		return "LL2_RAM_QUEUE";
-+	case QED_LL2_CTX_QUEUE:
-+		return "LL2_CTX_QUEUE";
- 	case QED_CMDQS_CQS:
- 		return "CMDQS_CQS";
- 	case QED_RDMA_STATS_QUEUE:
-@@ -3615,8 +3617,11 @@ qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+@@ -796,8 +796,8 @@ struct qed_dev {
+ 	u8				cache_shift;
  
- 	for (res_id = 0; res_id < QED_MAX_RESC; res_id++) {
- 		switch (res_id) {
--		case QED_LL2_QUEUE:
--			resc_max_val = MAX_NUM_LL2_RX_QUEUES;
-+		case QED_LL2_RAM_QUEUE:
-+			resc_max_val = MAX_NUM_LL2_RX_RAM_QUEUES;
-+			break;
-+		case QED_LL2_CTX_QUEUE:
-+			resc_max_val = MAX_NUM_LL2_RX_CTX_QUEUES;
- 			break;
- 		case QED_RDMA_CNQ_RAM:
- 			/* No need for a case for QED_CMDQS_CQS since
-@@ -3691,8 +3696,11 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
- 		*p_resc_num = (b_ah ? PXP_NUM_ILT_RECORDS_K2 :
- 			       PXP_NUM_ILT_RECORDS_BB) / num_funcs;
- 		break;
--	case QED_LL2_QUEUE:
--		*p_resc_num = MAX_NUM_LL2_RX_QUEUES / num_funcs;
-+	case QED_LL2_RAM_QUEUE:
-+		*p_resc_num = MAX_NUM_LL2_RX_RAM_QUEUES / num_funcs;
-+		break;
-+	case QED_LL2_CTX_QUEUE:
-+		*p_resc_num = MAX_NUM_LL2_RX_CTX_QUEUES / num_funcs;
- 		break;
- 	case QED_RDMA_CNQ_RAM:
- 	case QED_CMDQS_CQS:
+ 	/* Init */
+-	const struct iro		*iro_arr;
+-#define IRO (p_hwfn->cdev->iro_arr)
++	const u32 *iro_arr;
++#define IRO ((const struct iro *)p_hwfn->cdev->iro_arr)
+ 
+ 	/* HW functions */
+ 	u8				num_hwfns;
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index 565ab12fa87c..8cec6dc179d6 100644
+index cf3ceb62e397..aaff7117291c 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -98,6 +98,7 @@ enum core_event_opcode {
- 	CORE_EVENT_RX_QUEUE_STOP,
- 	CORE_EVENT_RX_QUEUE_FLUSH,
- 	CORE_EVENT_TX_QUEUE_UPDATE,
-+	CORE_EVENT_QUEUE_STATS_QUERY,
- 	MAX_CORE_EVENT_OPCODE
- };
+@@ -4282,325 +4282,366 @@ void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
+ 	(IRO[7].base + ((queue_zone_id) * IRO[7].m1))
+ #define USTORM_COMMON_QUEUE_CONS_SIZE			(IRO[7].size)
  
-@@ -116,7 +117,7 @@ struct core_ll2_port_stats {
- 	struct regpair gsi_crcchksm_error;
- };
- 
--/* Ethernet TX Per Queue Stats */
-+/* LL2 TX Per Queue Stats */
- struct core_ll2_pstorm_per_queue_stat {
- 	struct regpair sent_ucast_bytes;
- 	struct regpair sent_mcast_bytes;
-@@ -124,13 +125,13 @@ struct core_ll2_pstorm_per_queue_stat {
- 	struct regpair sent_ucast_pkts;
- 	struct regpair sent_mcast_pkts;
- 	struct regpair sent_bcast_pkts;
-+	struct regpair error_drop_pkts;
- };
- 
- /* Light-L2 RX Producers in Tstorm RAM */
- struct core_ll2_rx_prod {
- 	__le16 bd_prod;
- 	__le16 cqe_prod;
--	__le32 reserved;
- };
- 
- struct core_ll2_tstorm_per_queue_stat {
-@@ -147,6 +148,18 @@ struct core_ll2_ustorm_per_queue_stat {
- 	struct regpair rcv_bcast_pkts;
- };
- 
-+/* Structure for doorbell data, in PWM mode, for RX producers update. */
-+struct core_pwm_prod_update_data {
-+	__le16 icid; /* internal CID */
-+	u8 reserved0;
-+	u8 params;
-+#define CORE_PWM_PROD_UPDATE_DATA_AGG_CMD_MASK	  0x3
-+#define CORE_PWM_PROD_UPDATE_DATA_AGG_CMD_SHIFT   0
-+#define CORE_PWM_PROD_UPDATE_DATA_RESERVED1_MASK  0x3F	/* Set 0 */
-+#define CORE_PWM_PROD_UPDATE_DATA_RESERVED1_SHIFT 2
-+	struct core_ll2_rx_prod prod; /* Producers */
-+};
++/* Xstorm common PQ info */
++#define XSTORM_PQ_INFO_OFFSET(pq_id) \
++	(IRO[8].base + ((pq_id) * IRO[8].m1))
++#define XSTORM_PQ_INFO_SIZE				(IRO[8].size)
 +
- /* Core Ramrod Command IDs (light L2) */
- enum core_ramrod_cmd_id {
- 	CORE_RAMROD_UNUSED,
-@@ -156,6 +169,7 @@ enum core_ramrod_cmd_id {
- 	CORE_RAMROD_TX_QUEUE_STOP,
- 	CORE_RAMROD_RX_QUEUE_FLUSH,
- 	CORE_RAMROD_TX_QUEUE_UPDATE,
-+	CORE_RAMROD_QUEUE_STATS_QUERY,
- 	MAX_CORE_RAMROD_CMD_ID
- };
+ /* Xstorm Integration Test Data */
+-#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[8].base)
+-#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[8].size)
++#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
++#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
  
-@@ -274,8 +288,11 @@ struct core_rx_start_ramrod_data {
- 	u8 mf_si_mcast_accept_all;
- 	struct core_rx_action_on_error action_on_error;
- 	u8 gsi_offload_flag;
-+	u8 vport_id_valid;
-+	u8 vport_id;
-+	u8 zero_prod_flg;
- 	u8 wipe_inner_vlan_pri_en;
--	u8 reserved[5];
-+	u8 reserved[2];
- };
+ /* Ystorm Integration Test Data */
+-#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
+-#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
++#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
++#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
  
- /* Ramrod data for rx queue stop ramrod */
-@@ -352,8 +369,11 @@ struct core_tx_start_ramrod_data {
- 	__le16 pbl_size;
- 	__le16 qm_pq_id;
- 	u8 gsi_offload_flag;
-+	u8 ctx_stats_en;
-+	u8 vport_id_valid;
- 	u8 vport_id;
--	u8 resrved[2];
-+	u8 enforce_security_flag;
-+	u8 reserved[7];
- };
+ /* Pstorm Integration Test Data */
+-#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
+-#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
++#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
++#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
  
- /* Ramrod data for tx queue stop ramrod */
-@@ -761,7 +781,7 @@ struct e4_tstorm_core_conn_ag_ctx {
- 	__le16 word1;
- 	__le16 word2;
- 	__le16 word3;
--	__le32 reg9;
-+	__le32 ll2_rx_prod;
- 	__le32 reg10;
- };
+ /* Tstorm Integration Test Data */
+-#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
+-#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
++#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
++#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
  
-@@ -844,6 +864,11 @@ struct ustorm_core_conn_st_ctx {
- 	__le32 reserved[4];
- };
+ /* Mstorm Integration Test Data */
+-#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
+-#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
++#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
++#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
  
-+/* The core storm context for the Tstorm */
-+struct tstorm_core_conn_st_ctx {
-+	__le32 reserved[4];
-+};
+ /* Ustorm Integration Test Data */
+-#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
+-#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
++#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[14].base)
++#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[14].size)
 +
- /* core connection context */
- struct e4_core_conn_context {
- 	struct ystorm_core_conn_st_ctx ystorm_st_context;
-@@ -857,6 +882,8 @@ struct e4_core_conn_context {
- 	struct mstorm_core_conn_st_ctx mstorm_st_context;
- 	struct ustorm_core_conn_st_ctx ustorm_st_context;
- 	struct regpair ustorm_st_padding[2];
-+	struct tstorm_core_conn_st_ctx tstorm_st_context;
-+	struct regpair tstorm_st_padding[2];
- };
++/* Xstorm overlay buffer host address */
++#define XSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[15].base)
++#define XSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[15].size)
++
++/* Ystorm overlay buffer host address */
++#define YSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[16].base)
++#define YSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[16].size)
++
++/* Pstorm overlay buffer host address */
++#define PSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[17].base)
++#define PSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[17].size)
++
++/* Tstorm overlay buffer host address */
++#define TSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[18].base)
++#define TSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[18].size)
++
++/* Mstorm overlay buffer host address */
++#define MSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[19].base)
++#define MSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[19].size)
++
++/* Ustorm overlay buffer host address */
++#define USTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[20].base)
++#define USTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[20].size)
  
- struct eth_mstorm_per_pf_stat {
-@@ -12484,6 +12511,11 @@ enum resource_id_enum {
- 	RESOURCE_LL2_QUEUE_E = 15,
- 	RESOURCE_RDMA_STATS_QUEUE_E = 16,
- 	RESOURCE_BDQ_E = 17,
-+	RESOURCE_QCN_E = 18,
-+	RESOURCE_LLH_FILTER_E = 19,
-+	RESOURCE_VF_MAC_ADDR = 20,
-+	RESOURCE_LL2_CQS_E = 21,
-+	RESOURCE_VF_CNQS = 22,
- 	RESOURCE_MAX_NUM,
- 	RESOURCE_NUM_INVALID = 0xFFFFFFFF
- };
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-index 5585c18053ec..8ee668d66b4b 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-@@ -213,8 +213,9 @@ qed_sp_iscsi_func_start(struct qed_hwfn *p_hwfn,
- 	p_init->num_sq_pages_in_ring = p_params->num_sq_pages_in_ring;
- 	p_init->num_r2tq_pages_in_ring = p_params->num_r2tq_pages_in_ring;
- 	p_init->num_uhq_pages_in_ring = p_params->num_uhq_pages_in_ring;
--	p_init->ll2_rx_queue_id = p_hwfn->hw_info.resc_start[QED_LL2_QUEUE] +
--				  p_params->ll2_ooo_queue_id;
-+	p_init->ll2_rx_queue_id =
-+	    p_hwfn->hw_info.resc_start[QED_LL2_RAM_QUEUE] +
-+	    p_params->ll2_ooo_queue_id;
+ /* Tstorm producers */
+ #define TSTORM_LL2_RX_PRODS_OFFSET(core_rx_queue_id) \
+-	(IRO[14].base + ((core_rx_queue_id) * IRO[14].m1))
+-#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[14].size)
++	(IRO[21].base + ((core_rx_queue_id) * IRO[21].m1))
++#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[21].size)
  
- 	p_init->func_params.log_page_size = p_params->log_page_size;
- 	val = p_params->num_tasks;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_iwarp.c b/drivers/net/ethernet/qlogic/qed/qed_iwarp.c
-index 65ec16a31658..d2fe61a5cf56 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_iwarp.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_iwarp.c
-@@ -137,8 +137,8 @@ qed_iwarp_init_fw_ramrod(struct qed_hwfn *p_hwfn,
- 			 struct iwarp_init_func_ramrod_data *p_ramrod)
- {
- 	p_ramrod->iwarp.ll2_ooo_q_index =
--		RESC_START(p_hwfn, QED_LL2_QUEUE) +
--		p_hwfn->p_rdma_info->iwarp.ll2_ooo_handle;
-+	    RESC_START(p_hwfn, QED_LL2_RAM_QUEUE) +
-+	    p_hwfn->p_rdma_info->iwarp.ll2_ooo_handle;
+ /* Tstorm LightL2 queue statistics */
+ #define CORE_LL2_TSTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
+-	(IRO[15].base + ((core_rx_queue_id) * IRO[15].m1))
+-#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[15].size)
++	(IRO[22].base + ((core_rx_queue_id) * IRO[22].m1))
++#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[22].size)
  
- 	p_ramrod->tcp.max_fin_rt = QED_IWARP_MAX_FIN_RT_DEFAULT;
+ /* Ustorm LiteL2 queue statistics */
+ #define CORE_LL2_USTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
+-	(IRO[16].base + ((core_rx_queue_id) * IRO[16].m1))
+-#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[16].size)
++	(IRO[23].base + ((core_rx_queue_id) * IRO[23].m1))
++#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[23].size)
  
-@@ -2651,6 +2651,8 @@ qed_iwarp_ll2_start(struct qed_hwfn *p_hwfn,
+ /* Pstorm LiteL2 queue statistics */
+ #define CORE_LL2_PSTORM_PER_QUEUE_STAT_OFFSET(core_tx_stats_id) \
+-	(IRO[17].base + ((core_tx_stats_id) * IRO[17].m1))
+-#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[17].size)
++	(IRO[24].base + ((core_tx_stats_id) * IRO[24].m1))
++#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[24].size)
  
- 	memset(&data, 0, sizeof(data));
- 	data.input.conn_type = QED_LL2_TYPE_IWARP;
-+	/* SYN will use ctx based queues */
-+	data.input.rx_conn_type = QED_LL2_RX_TYPE_CTX;
- 	data.input.mtu = params->max_mtu;
- 	data.input.rx_num_desc = QED_IWARP_LL2_SYN_RX_SIZE;
- 	data.input.tx_num_desc = QED_IWARP_LL2_SYN_TX_SIZE;
-@@ -2683,6 +2685,8 @@ qed_iwarp_ll2_start(struct qed_hwfn *p_hwfn,
+ /* Mstorm queue statistics */
+ #define MSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
+-	(IRO[18].base + ((stat_counter_id) * IRO[18].m1))
+-#define MSTORM_QUEUE_STAT_SIZE				(IRO[18].size)
++	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
++#define MSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
  
- 	/* Start OOO connection */
- 	data.input.conn_type = QED_LL2_TYPE_OOO;
-+	/* OOO/unaligned will use legacy ll2 queues (ram based) */
-+	data.input.rx_conn_type = QED_LL2_RX_TYPE_LEGACY;
- 	data.input.mtu = params->max_mtu;
+-/* Mstorm ETH PF queues producers */
+-#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
+-	(IRO[19].base + ((queue_id) * IRO[19].m1))
+-#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[19].size)
++/* TPA agregation timeout in us resolution (on ASIC) */
++#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[26].base)
++#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[26].size)
  
- 	n_ooo_bufs = (QED_IWARP_MAX_OOO * rcv_wnd_size) /
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.c b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-index 19a1a58d60f8..037e5978787e 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-@@ -962,7 +962,7 @@ static int qed_sp_ll2_rx_queue_start(struct qed_hwfn *p_hwfn,
- 		return rc;
+ /* Mstorm ETH VF queues producers offset in RAM. Used in default VF zone size
+- * mode.
++ * mode
+  */
+ #define MSTORM_ETH_VF_PRODS_OFFSET(vf_id, vf_queue_id) \
+-	(IRO[20].base + ((vf_id) * IRO[20].m1) + ((vf_queue_id) * IRO[20].m2))
+-#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[20].size)
++	(IRO[27].base + ((vf_id) * IRO[27].m1) + ((vf_queue_id) * IRO[27].m2))
++#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[27].size)
  
- 	p_ramrod = &p_ent->ramrod.core_rx_queue_start;
+-/* TPA agregation timeout in us resolution (on ASIC) */
+-#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[21].base)
+-#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[21].size)
++/* Mstorm ETH PF queues producers */
++#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
++	(IRO[28].base + ((queue_id) * IRO[28].m1))
++#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[28].size)
+ 
+ /* Mstorm pf statistics */
+ #define MSTORM_ETH_PF_STAT_OFFSET(pf_id) \
+-	(IRO[22].base + ((pf_id) * IRO[22].m1))
+-#define MSTORM_ETH_PF_STAT_SIZE				(IRO[22].size)
++	(IRO[29].base + ((pf_id) * IRO[29].m1))
++#define MSTORM_ETH_PF_STAT_SIZE				(IRO[29].size)
+ 
+ /* Ustorm queue statistics */
+ #define USTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
+-	(IRO[23].base + ((stat_counter_id) * IRO[23].m1))
+-#define USTORM_QUEUE_STAT_SIZE				(IRO[23].size)
++	(IRO[30].base + ((stat_counter_id) * IRO[30].m1))
++#define USTORM_QUEUE_STAT_SIZE				(IRO[30].size)
+ 
+ /* Ustorm pf statistics */
+-#define USTORM_ETH_PF_STAT_OFFSET(pf_id)\
+-	(IRO[24].base + ((pf_id) * IRO[24].m1))
+-#define USTORM_ETH_PF_STAT_SIZE				(IRO[24].size)
++#define USTORM_ETH_PF_STAT_OFFSET(pf_id) \
++	(IRO[31].base + ((pf_id) * IRO[31].m1))
++#define USTORM_ETH_PF_STAT_SIZE				(IRO[31].size)
+ 
+ /* Pstorm queue statistics */
+-#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
+-	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
+-#define PSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
++#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id)	\
++	(IRO[32].base + ((stat_counter_id) * IRO[32].m1))
++#define PSTORM_QUEUE_STAT_SIZE				(IRO[32].size)
+ 
+ /* Pstorm pf statistics */
+ #define PSTORM_ETH_PF_STAT_OFFSET(pf_id) \
+-	(IRO[26].base + ((pf_id) * IRO[26].m1))
+-#define PSTORM_ETH_PF_STAT_SIZE				(IRO[26].size)
++	(IRO[33].base + ((pf_id) * IRO[33].m1))
++#define PSTORM_ETH_PF_STAT_SIZE				(IRO[33].size)
+ 
+ /* Control frame's EthType configuration for TX control frame security */
+-#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id) \
+-	(IRO[27].base + ((eth_type_id) * IRO[27].m1))
+-#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[27].size)
++#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id)	\
++	(IRO[34].base + ((eth_type_id) * IRO[34].m1))
++#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[34].size)
+ 
+ /* Tstorm last parser message */
+-#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[28].base)
+-#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[28].size)
++#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[35].base)
++#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[35].size)
+ 
+ /* Tstorm Eth limit Rx rate */
+-#define ETH_RX_RATE_LIMIT_OFFSET(pf_id) \
+-	(IRO[29].base + ((pf_id) * IRO[29].m1))
+-#define ETH_RX_RATE_LIMIT_SIZE				(IRO[29].size)
++#define ETH_RX_RATE_LIMIT_OFFSET(pf_id)	\
++	(IRO[36].base + ((pf_id) * IRO[36].m1))
++#define ETH_RX_RATE_LIMIT_SIZE				(IRO[36].size)
+ 
+ /* RSS indirection table entry update command per PF offset in TSTORM PF BAR0.
+- * Use eth_tstorm_rss_update_data for update.
++ * Use eth_tstorm_rss_update_data for update
+  */
+ #define TSTORM_ETH_RSS_UPDATE_OFFSET(pf_id) \
+-	(IRO[30].base + ((pf_id) * IRO[30].m1))
+-#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[30].size)
++	(IRO[37].base + ((pf_id) * IRO[37].m1))
++#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[37].size)
+ 
+ /* Xstorm queue zone */
+ #define XSTORM_ETH_QUEUE_ZONE_OFFSET(queue_id) \
+-	(IRO[31].base + ((queue_id) * IRO[31].m1))
+-#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[31].size)
++	(IRO[38].base + ((queue_id) * IRO[38].m1))
++#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[38].size)
+ 
+ /* Ystorm cqe producer */
+ #define YSTORM_TOE_CQ_PROD_OFFSET(rss_id) \
+-	(IRO[32].base + ((rss_id) * IRO[32].m1))
+-#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[32].size)
++	(IRO[39].base + ((rss_id) * IRO[39].m1))
++#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[39].size)
+ 
+ /* Ustorm cqe producer */
+ #define USTORM_TOE_CQ_PROD_OFFSET(rss_id) \
+-	(IRO[33].base + ((rss_id) * IRO[33].m1))
+-#define USTORM_TOE_CQ_PROD_SIZE				(IRO[33].size)
++	(IRO[40].base + ((rss_id) * IRO[40].m1))
++#define USTORM_TOE_CQ_PROD_SIZE				(IRO[40].size)
+ 
+ /* Ustorm grq producer */
+ #define USTORM_TOE_GRQ_PROD_OFFSET(pf_id) \
+-	(IRO[34].base + ((pf_id) * IRO[34].m1))
+-#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[34].size)
++	(IRO[41].base + ((pf_id) * IRO[41].m1))
++#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[41].size)
+ 
+ /* Tstorm cmdq-cons of given command queue-id */
+ #define TSTORM_SCSI_CMDQ_CONS_OFFSET(cmdq_queue_id) \
+-	(IRO[35].base + ((cmdq_queue_id) * IRO[35].m1))
+-#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[35].size)
++	(IRO[42].base + ((cmdq_queue_id) * IRO[42].m1))
++#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[42].size)
+ 
+ /* Tstorm (reflects M-Storm) bdq-external-producer of given function ID,
+- * BDqueue-id.
++ * BDqueue-id
+  */
+-#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(func_id, bdq_id) \
+-	(IRO[36].base + ((func_id) * IRO[36].m1) + ((bdq_id) * IRO[36].m2))
+-#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[36].size)
++#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
++	(IRO[43].base + ((storage_func_id) * IRO[43].m1) + \
++	 ((bdq_id) * IRO[43].m2))
++#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[43].size)
+ 
+ /* Mstorm bdq-external-producer of given BDQ resource ID, BDqueue-id */
+-#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(func_id, bdq_id) \
+-	(IRO[37].base + ((func_id) * IRO[37].m1) + ((bdq_id) * IRO[37].m2))
+-#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[37].size)
++#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
++	(IRO[44].base + ((storage_func_id) * IRO[44].m1) + \
++	 ((bdq_id) * IRO[44].m2))
++#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[44].size)
+ 
+ /* Tstorm iSCSI RX stats */
+-#define TSTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
+-	(IRO[38].base + ((pf_id) * IRO[38].m1))
+-#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[38].size)
++#define TSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
++	(IRO[45].base + ((storage_func_id) * IRO[45].m1))
++#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[45].size)
+ 
+ /* Mstorm iSCSI RX stats */
+-#define MSTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
+-	(IRO[39].base + ((pf_id) * IRO[39].m1))
+-#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[39].size)
++#define MSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
++	(IRO[46].base + ((storage_func_id) * IRO[46].m1))
++#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[46].size)
+ 
+ /* Ustorm iSCSI RX stats */
+-#define USTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
+-	(IRO[40].base + ((pf_id) * IRO[40].m1))
+-#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[40].size)
++#define USTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
++	(IRO[47].base + ((storage_func_id) * IRO[47].m1))
++#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[47].size)
+ 
+ /* Xstorm iSCSI TX stats */
+-#define XSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
+-	(IRO[41].base + ((pf_id) * IRO[41].m1))
+-#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[41].size)
++#define XSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
++	(IRO[48].base + ((storage_func_id) * IRO[48].m1))
++#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[48].size)
+ 
+ /* Ystorm iSCSI TX stats */
+-#define YSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
+-	(IRO[42].base + ((pf_id) * IRO[42].m1))
+-#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[42].size)
++#define YSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
++	(IRO[49].base + ((storage_func_id) * IRO[49].m1))
++#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[49].size)
+ 
+ /* Pstorm iSCSI TX stats */
+-#define PSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
+-	(IRO[43].base + ((pf_id) * IRO[43].m1))
+-#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[43].size)
++#define PSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
++	(IRO[50].base + ((storage_func_id) * IRO[50].m1))
++#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[50].size)
+ 
+ /* Tstorm FCoE RX stats */
+ #define TSTORM_FCOE_RX_STATS_OFFSET(pf_id) \
+-	(IRO[44].base + ((pf_id) * IRO[44].m1))
+-#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[44].size)
++	(IRO[51].base + ((pf_id) * IRO[51].m1))
++#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[51].size)
+ 
+ /* Pstorm FCoE TX stats */
+ #define PSTORM_FCOE_TX_STATS_OFFSET(pf_id) \
+-	(IRO[45].base + ((pf_id) * IRO[45].m1))
+-#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[45].size)
++	(IRO[52].base + ((pf_id) * IRO[52].m1))
++#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[52].size)
+ 
+ /* Pstorm RDMA queue statistics */
+ #define PSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
+-	(IRO[46].base + ((rdma_stat_counter_id) * IRO[46].m1))
+-#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[46].size)
++	(IRO[53].base + ((rdma_stat_counter_id) * IRO[53].m1))
++#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[53].size)
+ 
+ /* Tstorm RDMA queue statistics */
+ #define TSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
+-	(IRO[47].base + ((rdma_stat_counter_id) * IRO[47].m1))
+-#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[47].size)
++	(IRO[54].base + ((rdma_stat_counter_id) * IRO[54].m1))
++#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[54].size)
+ 
+ /* Xstorm error level for assert */
+ #define XSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[48].base +	((pf_id) * IRO[48].m1))
+-#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[48].size)
++	(IRO[55].base + ((pf_id) * IRO[55].m1))
++#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[55].size)
+ 
+ /* Ystorm error level for assert */
+ #define YSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[49].base + ((pf_id) * IRO[49].m1))
+-#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[49].size)
++	(IRO[56].base + ((pf_id) * IRO[56].m1))
++#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[56].size)
+ 
+ /* Pstorm error level for assert */
+ #define PSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[50].base +	((pf_id) * IRO[50].m1))
+-#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[50].size)
++	(IRO[57].base + ((pf_id) * IRO[57].m1))
++#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[57].size)
+ 
+ /* Tstorm error level for assert */
+ #define TSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[51].base +	((pf_id) * IRO[51].m1))
+-#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[51].size)
++	(IRO[58].base + ((pf_id) * IRO[58].m1))
++#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[58].size)
+ 
+ /* Mstorm error level for assert */
+ #define MSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[52].base + ((pf_id) * IRO[52].m1))
+-#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[52].size)
++	(IRO[59].base + ((pf_id) * IRO[59].m1))
++#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[59].size)
+ 
+ /* Ustorm error level for assert */
+ #define USTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
+-	(IRO[53].base + ((pf_id) * IRO[53].m1))
+-#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[53].size)
++	(IRO[60].base + ((pf_id) * IRO[60].m1))
++#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[60].size)
+ 
+ /* Xstorm iWARP rxmit stats */
+ #define XSTORM_IWARP_RXMIT_STATS_OFFSET(pf_id) \
+-	(IRO[54].base +	((pf_id) * IRO[54].m1))
+-#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[54].size)
++	(IRO[61].base + ((pf_id) * IRO[61].m1))
++#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[61].size)
+ 
+ /* Tstorm RoCE Event Statistics */
+-#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id) \
+-	(IRO[55].base + ((roce_pf_id) * IRO[55].m1))
+-#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[55].size)
++#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id)	\
++	(IRO[62].base + ((roce_pf_id) * IRO[62].m1))
++#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[62].size)
+ 
+ /* DCQCN Received Statistics */
+-#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id) \
+-	(IRO[56].base + ((roce_pf_id) * IRO[56].m1))
+-#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[56].size)
++#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id)\
++	(IRO[63].base + ((roce_pf_id) * IRO[63].m1))
++#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[63].size)
+ 
+ /* RoCE Error Statistics */
+-#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id) \
+-	(IRO[57].base + ((roce_pf_id) * IRO[57].m1))
+-#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[57].size)
++#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id)	\
++	(IRO[64].base + ((roce_pf_id) * IRO[64].m1))
++#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[64].size)
+ 
+ /* DCQCN Sent Statistics */
+-#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id) \
+-	(IRO[58].base + ((roce_pf_id) * IRO[58].m1))
+-#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[58].size)
++#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id)	\
++	(IRO[65].base + ((roce_pf_id) * IRO[65].m1))
++#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[65].size)
+ 
+ /* RoCE CQEs Statistics */
+-#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id) \
+-	(IRO[59].base + ((roce_pf_id) * IRO[59].m1))
+-#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[59].size)
 -
-+	memset(p_ramrod, 0, sizeof(*p_ramrod));
- 	p_ramrod->sb_id = cpu_to_le16(qed_int_get_sp_sb_id(p_hwfn));
- 	p_ramrod->sb_index = p_rx->rx_sb_index;
- 	p_ramrod->complete_event_flg = 1;
-@@ -996,6 +996,8 @@ static int qed_sp_ll2_rx_queue_start(struct qed_hwfn *p_hwfn,
- 
- 	p_ramrod->action_on_error.error_type = action_on_error;
- 	p_ramrod->gsi_offload_flag = p_ll2_conn->input.gsi_enable;
-+	p_ramrod->zero_prod_flg = 1;
+-static const struct iro iro_arr[60] = {
+-	{0x0, 0x0, 0x0, 0x0, 0x8},
+-	{0x4cb8, 0x88, 0x0, 0x0, 0x88},
+-	{0x6530, 0x20, 0x0, 0x0, 0x20},
+-	{0xb00, 0x8, 0x0, 0x0, 0x4},
+-	{0xa80, 0x8, 0x0, 0x0, 0x4},
+-	{0x0, 0x8, 0x0, 0x0, 0x2},
+-	{0x80, 0x8, 0x0, 0x0, 0x4},
+-	{0x84, 0x8, 0x0, 0x0, 0x2},
+-	{0x4c48, 0x0, 0x0, 0x0, 0x78},
+-	{0x3e38, 0x0, 0x0, 0x0, 0x78},
+-	{0x3ef8, 0x0, 0x0, 0x0, 0x78},
+-	{0x4c40, 0x0, 0x0, 0x0, 0x78},
+-	{0x4998, 0x0, 0x0, 0x0, 0x78},
+-	{0x7f50, 0x0, 0x0, 0x0, 0x78},
+-	{0xa28, 0x8, 0x0, 0x0, 0x8},
+-	{0x6210, 0x10, 0x0, 0x0, 0x10},
+-	{0xb820, 0x30, 0x0, 0x0, 0x30},
+-	{0xa990, 0x30, 0x0, 0x0, 0x30},
+-	{0x4b68, 0x80, 0x0, 0x0, 0x40},
+-	{0x1f8, 0x4, 0x0, 0x0, 0x4},
+-	{0x53a8, 0x80, 0x4, 0x0, 0x4},
+-	{0xc7d0, 0x0, 0x0, 0x0, 0x4},
+-	{0x4ba8, 0x80, 0x0, 0x0, 0x20},
+-	{0x8158, 0x40, 0x0, 0x0, 0x30},
+-	{0xe770, 0x60, 0x0, 0x0, 0x60},
+-	{0x4090, 0x80, 0x0, 0x0, 0x38},
+-	{0xfea8, 0x78, 0x0, 0x0, 0x78},
+-	{0x1f8, 0x4, 0x0, 0x0, 0x4},
+-	{0xaf20, 0x0, 0x0, 0x0, 0xf0},
+-	{0xb010, 0x8, 0x0, 0x0, 0x8},
+-	{0xc00, 0x8, 0x0, 0x0, 0x8},
+-	{0x1f8, 0x8, 0x0, 0x0, 0x8},
+-	{0xac0, 0x8, 0x0, 0x0, 0x8},
+-	{0x2578, 0x8, 0x0, 0x0, 0x8},
+-	{0x24f8, 0x8, 0x0, 0x0, 0x8},
+-	{0x0, 0x8, 0x0, 0x0, 0x8},
+-	{0x400, 0x18, 0x8, 0x0, 0x8},
+-	{0xb78, 0x18, 0x8, 0x0, 0x2},
+-	{0xd898, 0x50, 0x0, 0x0, 0x3c},
+-	{0x12908, 0x18, 0x0, 0x0, 0x10},
+-	{0x11aa8, 0x40, 0x0, 0x0, 0x18},
+-	{0xa588, 0x50, 0x0, 0x0, 0x20},
+-	{0x8f00, 0x40, 0x0, 0x0, 0x28},
+-	{0x10e30, 0x18, 0x0, 0x0, 0x10},
+-	{0xde48, 0x48, 0x0, 0x0, 0x38},
+-	{0x11298, 0x20, 0x0, 0x0, 0x20},
+-	{0x40c8, 0x80, 0x0, 0x0, 0x10},
+-	{0x5048, 0x10, 0x0, 0x0, 0x10},
+-	{0xc748, 0x8, 0x0, 0x0, 0x1},
+-	{0xa928, 0x8, 0x0, 0x0, 0x1},
+-	{0x11a30, 0x8, 0x0, 0x0, 0x1},
+-	{0xf030, 0x8, 0x0, 0x0, 0x1},
+-	{0x13028, 0x8, 0x0, 0x0, 0x1},
+-	{0x12c58, 0x8, 0x0, 0x0, 0x1},
+-	{0xc9b8, 0x30, 0x0, 0x0, 0x10},
+-	{0xed90, 0x28, 0x0, 0x0, 0x28},
+-	{0xad20, 0x18, 0x0, 0x0, 0x18},
+-	{0xaea0, 0x8, 0x0, 0x0, 0x8},
+-	{0x13c38, 0x8, 0x0, 0x0, 0x8},
+-	{0x13c50, 0x18, 0x0, 0x0, 0x18},
++#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id)	\
++	(IRO[66].base + ((roce_pf_id) * IRO[66].m1))
++#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[66].size)
 +
- 	return qed_spq_post(p_hwfn, p_ent, NULL);
- }
- 
-@@ -1317,6 +1319,25 @@ qed_ll2_set_cbs(struct qed_ll2_info *p_ll2_info, const struct qed_ll2_cbs *cbs)
- 	return 0;
- }
- 
-+static void _qed_ll2_calc_allowed_conns(struct qed_hwfn *p_hwfn,
-+					struct qed_ll2_acquire_data *data,
-+					u8 *start_idx, u8 *last_idx)
-+{
-+	/* LL2 queues handles will be split as follows:
-+	 * First will be the legacy queues, and then the ctx based.
-+	 */
-+	if (data->input.rx_conn_type == QED_LL2_RX_TYPE_LEGACY) {
-+		*start_idx = QED_LL2_LEGACY_CONN_BASE_PF;
-+		*last_idx = *start_idx +
-+			QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF;
-+	} else {
-+		/* QED_LL2_RX_TYPE_CTX */
-+		*start_idx = QED_LL2_CTX_CONN_BASE_PF;
-+		*last_idx = *start_idx +
-+			QED_MAX_NUM_OF_CTX_LL2_CONNS_PF;
-+	}
-+}
-+
- static enum core_error_handle
- qed_ll2_get_error_choice(enum qed_ll2_error_handle err)
- {
-@@ -1337,14 +1358,16 @@ int qed_ll2_acquire_connection(void *cxt, struct qed_ll2_acquire_data *data)
- 	struct qed_hwfn *p_hwfn = cxt;
- 	qed_int_comp_cb_t comp_rx_cb, comp_tx_cb;
- 	struct qed_ll2_info *p_ll2_info = NULL;
--	u8 i, *p_tx_max;
-+	u8 i, first_idx, last_idx, *p_tx_max;
- 	int rc;
- 
- 	if (!data->p_connection_handle || !p_hwfn->p_ll2_info)
- 		return -EINVAL;
- 
-+	_qed_ll2_calc_allowed_conns(p_hwfn, data, &first_idx, &last_idx);
-+
- 	/* Find a free connection to be used */
--	for (i = 0; (i < QED_MAX_NUM_OF_LL2_CONNECTIONS); i++) {
-+	for (i = first_idx; i < last_idx; i++) {
- 		mutex_lock(&p_hwfn->p_ll2_info[i].mutex);
- 		if (p_hwfn->p_ll2_info[i].b_active) {
- 			mutex_unlock(&p_hwfn->p_ll2_info[i].mutex);
-@@ -1448,6 +1471,7 @@ static int qed_ll2_establish_connection_rx(struct qed_hwfn *p_hwfn,
- 	enum qed_ll2_error_handle error_input;
- 	enum core_error_handle error_mode;
- 	u8 action_on_error = 0;
-+	int rc;
- 
- 	if (!QED_LL2_RX_REGISTERED(p_ll2_conn))
- 		return 0;
-@@ -1461,7 +1485,18 @@ static int qed_ll2_establish_connection_rx(struct qed_hwfn *p_hwfn,
- 	error_mode = qed_ll2_get_error_choice(error_input);
- 	SET_FIELD(action_on_error, CORE_RX_ACTION_ON_ERROR_NO_BUFF, error_mode);
- 
--	return qed_sp_ll2_rx_queue_start(p_hwfn, p_ll2_conn, action_on_error);
-+	rc = qed_sp_ll2_rx_queue_start(p_hwfn, p_ll2_conn, action_on_error);
-+	if (rc)
-+		return rc;
-+
-+	if (p_ll2_conn->rx_queue.ctx_based) {
-+		rc = qed_db_recovery_add(p_hwfn->cdev,
-+					 p_ll2_conn->rx_queue.set_prod_addr,
-+					 &p_ll2_conn->rx_queue.db_data,
-+					 DB_REC_WIDTH_64B, DB_REC_KERNEL);
-+	}
-+
-+	return rc;
- }
- 
- static void
-@@ -1475,13 +1510,41 @@ qed_ll2_establish_connection_ooo(struct qed_hwfn *p_hwfn,
- 	qed_ooo_submit_rx_buffers(p_hwfn, p_ll2_conn);
- }
- 
-+static inline u8 qed_ll2_handle_to_queue_id(struct qed_hwfn *p_hwfn,
-+					    u8 handle,
-+					    u8 ll2_queue_type)
-+{
-+	u8 qid;
-+
-+	if (ll2_queue_type == QED_LL2_RX_TYPE_LEGACY)
-+		return p_hwfn->hw_info.resc_start[QED_LL2_RAM_QUEUE] + handle;
-+
-+	/* QED_LL2_RX_TYPE_CTX
-+	 * FW distinguishes between the legacy queues (ram based) and the
-+	 * ctx based queues by the queue_id.
-+	 * The first MAX_NUM_LL2_RX_RAM_QUEUES queues are legacy
-+	 * and the queue ids above that are ctx base.
-+	 */
-+	qid = p_hwfn->hw_info.resc_start[QED_LL2_CTX_QUEUE] +
-+	      MAX_NUM_LL2_RX_RAM_QUEUES;
-+
-+	/* See comment on the acquire connection for how the ll2
-+	 * queues handles are divided.
-+	 */
-+	qid += (handle - QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF);
-+
-+	return qid;
-+}
-+
- int qed_ll2_establish_connection(void *cxt, u8 connection_handle)
- {
--	struct qed_hwfn *p_hwfn = cxt;
--	struct qed_ll2_info *p_ll2_conn;
-+	struct e4_core_conn_context *p_cxt;
- 	struct qed_ll2_tx_packet *p_pkt;
-+	struct qed_ll2_info *p_ll2_conn;
-+	struct qed_hwfn *p_hwfn = cxt;
- 	struct qed_ll2_rx_queue *p_rx;
- 	struct qed_ll2_tx_queue *p_tx;
-+	struct qed_cxt_info cxt_info;
- 	struct qed_ptt *p_ptt;
- 	int rc = -EINVAL;
- 	u32 i, capacity;
-@@ -1539,13 +1602,46 @@ int qed_ll2_establish_connection(void *cxt, u8 connection_handle)
- 	rc = qed_cxt_acquire_cid(p_hwfn, PROTOCOLID_CORE, &p_ll2_conn->cid);
- 	if (rc)
- 		goto out;
-+	cxt_info.iid = p_ll2_conn->cid;
-+	rc = qed_cxt_get_cid_info(p_hwfn, &cxt_info);
-+	if (rc) {
-+		DP_NOTICE(p_hwfn, "Cannot find context info for cid=%d\n",
-+			  p_ll2_conn->cid);
-+		goto out;
-+	}
-+
-+	p_cxt = cxt_info.p_cxt;
-+
-+	memset(p_cxt, 0, sizeof(*p_cxt));
- 
--	qid = p_hwfn->hw_info.resc_start[QED_LL2_QUEUE] + connection_handle;
-+	qid = qed_ll2_handle_to_queue_id(p_hwfn, connection_handle,
-+					 p_ll2_conn->input.rx_conn_type);
- 	p_ll2_conn->queue_id = qid;
- 	p_ll2_conn->tx_stats_id = qid;
--	p_rx->set_prod_addr = (u8 __iomem *)p_hwfn->regview +
--					    GTT_BAR0_MAP_REG_TSDM_RAM +
--					    TSTORM_LL2_RX_PRODS_OFFSET(qid);
-+
-+	DP_VERBOSE(p_hwfn, QED_MSG_LL2,
-+		   "Establishing ll2 queue. PF %d ctx_based=%d abs qid=%d\n",
-+		   p_hwfn->rel_pf_id, p_ll2_conn->input.rx_conn_type, qid);
-+
-+	if (p_ll2_conn->input.rx_conn_type == QED_LL2_RX_TYPE_LEGACY) {
-+		p_rx->set_prod_addr = p_hwfn->regview +
-+		    GTT_BAR0_MAP_REG_TSDM_RAM + TSTORM_LL2_RX_PRODS_OFFSET(qid);
-+	} else {
-+		/* QED_LL2_RX_TYPE_CTX - using doorbell */
-+		p_rx->ctx_based = 1;
-+
-+		p_rx->set_prod_addr = p_hwfn->doorbells +
-+			p_hwfn->dpi_start_offset +
-+			DB_ADDR_SHIFT(DQ_PWM_OFFSET_TCM_LL2_PROD_UPDATE);
-+
-+		/* prepare db data */
-+		p_rx->db_data.icid = cpu_to_le16((u16)p_ll2_conn->cid);
-+		SET_FIELD(p_rx->db_data.params,
-+			  CORE_PWM_PROD_UPDATE_DATA_AGG_CMD, DB_AGG_CMD_SET);
-+		SET_FIELD(p_rx->db_data.params,
-+			  CORE_PWM_PROD_UPDATE_DATA_RESERVED1, 0);
-+	}
-+
- 	p_tx->doorbell_addr = (u8 __iomem *)p_hwfn->doorbells +
- 					    qed_db_addr(p_ll2_conn->cid,
- 							DQ_DEMS_LEGACY);
-@@ -1556,7 +1652,6 @@ int qed_ll2_establish_connection(void *cxt, u8 connection_handle)
- 		  DQ_XCM_CORE_TX_BD_PROD_CMD);
- 	p_tx->db_msg.agg_flags = DQ_XCM_CORE_DQ_CF_CMD;
- 
--
- 	rc = qed_ll2_establish_connection_rx(p_hwfn, p_ll2_conn);
- 	if (rc)
- 		goto out;
-@@ -1590,7 +1685,7 @@ static void qed_ll2_post_rx_buffer_notify_fw(struct qed_hwfn *p_hwfn,
- 					     struct qed_ll2_rx_packet *p_curp)
- {
- 	struct qed_ll2_rx_packet *p_posting_packet = NULL;
--	struct core_ll2_rx_prod rx_prod = { 0, 0, 0 };
-+	struct core_ll2_rx_prod rx_prod = { 0, 0 };
- 	bool b_notify_fw = false;
- 	u16 bd_prod, cq_prod;
- 
-@@ -1615,13 +1710,27 @@ static void qed_ll2_post_rx_buffer_notify_fw(struct qed_hwfn *p_hwfn,
- 
- 	bd_prod = qed_chain_get_prod_idx(&p_rx->rxq_chain);
- 	cq_prod = qed_chain_get_prod_idx(&p_rx->rcq_chain);
--	rx_prod.bd_prod = cpu_to_le16(bd_prod);
--	rx_prod.cqe_prod = cpu_to_le16(cq_prod);
-+	if (p_rx->ctx_based) {
-+		/* update producer by giving a doorbell */
-+		p_rx->db_data.prod.bd_prod = cpu_to_le16(bd_prod);
-+		p_rx->db_data.prod.cqe_prod = cpu_to_le16(cq_prod);
-+		/* Make sure chain element is updated before ringing the
-+		 * doorbell
-+		 */
-+		dma_wmb();
-+		DIRECT_REG_WR64(p_rx->set_prod_addr,
-+				*((u64 *)&p_rx->db_data));
-+	} else {
-+		rx_prod.bd_prod = cpu_to_le16(bd_prod);
-+		rx_prod.cqe_prod = cpu_to_le16(cq_prod);
- 
--	/* Make sure chain element is updated before ringing the doorbell */
--	dma_wmb();
-+		/* Make sure chain element is updated before ringing the
-+		 * doorbell
-+		 */
-+		dma_wmb();
- 
--	DIRECT_REG_WR(p_rx->set_prod_addr, *((u32 *)&rx_prod));
-+		DIRECT_REG_WR(p_rx->set_prod_addr, *((u32 *)&rx_prod));
-+	}
- }
- 
- int qed_ll2_post_rx_buffer(void *cxt,
-@@ -1965,6 +2074,12 @@ int qed_ll2_terminate_connection(void *cxt, u8 connection_handle)
- 	if (QED_LL2_RX_REGISTERED(p_ll2_conn)) {
- 		p_ll2_conn->rx_queue.b_cb_registered = false;
- 		smp_wmb(); /* Make sure this is seen by ll2_lb_rxq_completion */
-+
-+		if (p_ll2_conn->rx_queue.ctx_based)
-+			qed_db_recovery_del(p_hwfn->cdev,
-+					    p_ll2_conn->rx_queue.set_prod_addr,
-+					    &p_ll2_conn->rx_queue.db_data);
-+
- 		rc = qed_sp_ll2_rx_queue_stop(p_hwfn, p_ll2_conn);
- 		if (rc)
- 			goto out;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.h b/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-index 5f01fbd3c073..288642d526b7 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-@@ -46,6 +46,18 @@
- #include "qed_sp.h"
- 
- #define QED_MAX_NUM_OF_LL2_CONNECTIONS                    (4)
-+/* LL2 queues handles will be split as follows:
-+ * first will be legacy queues, and then the ctx based queues.
-+ */
-+#define QED_MAX_NUM_OF_LL2_CONNS_PF            (4)
-+#define QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF   (3)
-+
-+#define QED_MAX_NUM_OF_CTX_LL2_CONNS_PF	\
-+	(QED_MAX_NUM_OF_LL2_CONNS_PF - QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF)
-+
-+#define QED_LL2_LEGACY_CONN_BASE_PF     0
-+#define QED_LL2_CTX_CONN_BASE_PF        QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF
-+
- 
- struct qed_ll2_rx_packet {
- 	struct list_head list_entry;
-@@ -79,6 +91,7 @@ struct qed_ll2_rx_queue {
- 	struct qed_chain rxq_chain;
- 	struct qed_chain rcq_chain;
- 	u8 rx_sb_index;
-+	u8 ctx_based;
- 	bool b_cb_registered;
- 	__le16 *p_fw_cons;
- 	struct list_head active_descq;
-@@ -86,6 +99,7 @@ struct qed_ll2_rx_queue {
- 	struct list_head posting_descq;
- 	struct qed_ll2_rx_packet *descq_array;
- 	void __iomem *set_prod_addr;
-+	struct core_pwm_prod_update_data db_data;
++/* IRO Array */
++static const u32 iro_arr[] = {
++	0x00000000, 0x00000000, 0x00080000,
++	0x00003288, 0x00000088, 0x00880000,
++	0x000058e8, 0x00000020, 0x00200000,
++	0x00000b00, 0x00000008, 0x00040000,
++	0x00000a80, 0x00000008, 0x00040000,
++	0x00000000, 0x00000008, 0x00020000,
++	0x00000080, 0x00000008, 0x00040000,
++	0x00000084, 0x00000008, 0x00020000,
++	0x00005718, 0x00000004, 0x00040000,
++	0x00004dd0, 0x00000000, 0x00780000,
++	0x00003e40, 0x00000000, 0x00780000,
++	0x00004480, 0x00000000, 0x00780000,
++	0x00003210, 0x00000000, 0x00780000,
++	0x00003b50, 0x00000000, 0x00780000,
++	0x00007f58, 0x00000000, 0x00780000,
++	0x00005f58, 0x00000000, 0x00080000,
++	0x00007100, 0x00000000, 0x00080000,
++	0x0000aea0, 0x00000000, 0x00080000,
++	0x00004398, 0x00000000, 0x00080000,
++	0x0000a5a0, 0x00000000, 0x00080000,
++	0x0000bde8, 0x00000000, 0x00080000,
++	0x00000020, 0x00000004, 0x00040000,
++	0x000056c8, 0x00000010, 0x00100000,
++	0x0000c210, 0x00000030, 0x00300000,
++	0x0000b088, 0x00000038, 0x00380000,
++	0x00003d20, 0x00000080, 0x00400000,
++	0x0000bf60, 0x00000000, 0x00040000,
++	0x00004560, 0x00040080, 0x00040000,
++	0x000001f8, 0x00000004, 0x00040000,
++	0x00003d60, 0x00000080, 0x00200000,
++	0x00008960, 0x00000040, 0x00300000,
++	0x0000e840, 0x00000060, 0x00600000,
++	0x00004618, 0x00000080, 0x00380000,
++	0x00010738, 0x000000c0, 0x00c00000,
++	0x000001f8, 0x00000002, 0x00020000,
++	0x0000a2a0, 0x00000000, 0x01080000,
++	0x0000a3a8, 0x00000008, 0x00080000,
++	0x000001c0, 0x00000008, 0x00080000,
++	0x000001f8, 0x00000008, 0x00080000,
++	0x00000ac0, 0x00000008, 0x00080000,
++	0x00002578, 0x00000008, 0x00080000,
++	0x000024f8, 0x00000008, 0x00080000,
++	0x00000280, 0x00000008, 0x00080000,
++	0x00000680, 0x00080018, 0x00080000,
++	0x00000b78, 0x00080018, 0x00020000,
++	0x0000c640, 0x00000050, 0x003c0000,
++	0x00012038, 0x00000018, 0x00100000,
++	0x00011b00, 0x00000040, 0x00180000,
++	0x000095d0, 0x00000050, 0x00200000,
++	0x00008b10, 0x00000040, 0x00280000,
++	0x00011640, 0x00000018, 0x00100000,
++	0x0000c828, 0x00000048, 0x00380000,
++	0x00011710, 0x00000020, 0x00200000,
++	0x00004650, 0x00000080, 0x00100000,
++	0x00003618, 0x00000010, 0x00100000,
++	0x0000a968, 0x00000008, 0x00010000,
++	0x000097a0, 0x00000008, 0x00010000,
++	0x00011990, 0x00000008, 0x00010000,
++	0x0000f018, 0x00000008, 0x00010000,
++	0x00012628, 0x00000008, 0x00010000,
++	0x00011da8, 0x00000008, 0x00010000,
++	0x0000aa78, 0x00000030, 0x00100000,
++	0x0000d768, 0x00000028, 0x00280000,
++	0x00009a58, 0x00000018, 0x00180000,
++	0x00009bd8, 0x00000008, 0x00080000,
++	0x00013a18, 0x00000008, 0x00080000,
++	0x000126e8, 0x00000018, 0x00180000,
++	0x0000e608, 0x00500288, 0x00100000,
++	0x00012970, 0x00000138, 0x00280000,
  };
  
- struct qed_ll2_tx_queue {
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.c b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-index 36ddb89856a8..aeac359941de 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-@@ -3261,9 +3261,12 @@ static enum resource_id_enum qed_mcp_get_mfw_res_id(enum qed_resources res_id)
- 	case QED_ILT:
- 		mfw_res_id = RESOURCE_ILT_E;
- 		break;
--	case QED_LL2_QUEUE:
-+	case QED_LL2_RAM_QUEUE:
- 		mfw_res_id = RESOURCE_LL2_QUEUE_E;
- 		break;
-+	case QED_LL2_CTX_QUEUE:
-+		mfw_res_id = RESOURCE_LL2_CQS_E;
-+		break;
- 	case QED_RDMA_CNQ_RAM:
- 	case QED_CMDQS_CQS:
- 		/* CNQ/CMDQS are the same resource */
-diff --git a/include/linux/qed/common_hsi.h b/include/linux/qed/common_hsi.h
-index 03f59a28fefd..358566f1ff64 100644
---- a/include/linux/qed/common_hsi.h
-+++ b/include/linux/qed/common_hsi.h
-@@ -105,8 +105,15 @@
- 
- #define CORE_SPQE_PAGE_SIZE_BYTES	4096
- 
--#define MAX_NUM_LL2_RX_QUEUES		48
--#define MAX_NUM_LL2_TX_STATS_COUNTERS	48
-+/* Number of LL2 RAM based queues */
-+#define MAX_NUM_LL2_RX_RAM_QUEUES 32
-+
-+/* Number of LL2 context based queues */
-+#define MAX_NUM_LL2_RX_CTX_QUEUES 208
-+#define MAX_NUM_LL2_RX_QUEUES \
-+	(MAX_NUM_LL2_RX_RAM_QUEUES + MAX_NUM_LL2_RX_CTX_QUEUES)
-+
-+#define MAX_NUM_LL2_TX_STATS_COUNTERS  48
- 
- #define FW_MAJOR_VERSION	8
- #define FW_MINOR_VERSION        37
-@@ -340,6 +347,10 @@
- #define DQ_PWM_OFFSET_TCM_ROCE_RQ_PROD		(DQ_PWM_OFFSET_TCM16_BASE + 1)
- #define DQ_PWM_OFFSET_TCM_IWARP_RQ_PROD		(DQ_PWM_OFFSET_TCM16_BASE + 3)
- 
-+/* DQ_DEMS_AGG_VAL_BASE */
-+#define DQ_PWM_OFFSET_TCM_LL2_PROD_UPDATE \
-+	(DQ_PWM_OFFSET_TCM32_BASE + DQ_TCM_AGG_VAL_SEL_REG9 - 4)
-+
- #define	DQ_REGION_SHIFT			(12)
- 
- /* DPM */
-diff --git a/include/linux/qed/qed_if.h b/include/linux/qed/qed_if.h
-index b5db1ee96d78..9bcb2f419004 100644
---- a/include/linux/qed/qed_if.h
-+++ b/include/linux/qed/qed_if.h
-@@ -463,7 +463,7 @@ enum qed_db_rec_space {
- 
- #define DIRECT_REG_RD(reg_addr) readl((void __iomem *)(reg_addr))
- 
--#define DIRECT_REG_WR64(reg_addr, val) writeq((u32)val,	\
-+#define DIRECT_REG_WR64(reg_addr, val) writeq((u64)val,	\
- 					      (void __iomem *)(reg_addr))
- 
- #define QED_COALESCE_MAX 0x1FF
-@@ -1177,6 +1177,8 @@ struct qed_common_ops {
- #define GET_FIELD(value, name) \
- 	(((value) >> (name ## _SHIFT)) & name ## _MASK)
- 
-+#define DB_ADDR_SHIFT(addr) ((addr) << DB_PWM_ADDR_OFFSET_SHIFT)
-+
- /* Debug print definitions */
- #define DP_ERR(cdev, fmt, ...)					\
- 	do {							\
-diff --git a/include/linux/qed/qed_ll2_if.h b/include/linux/qed/qed_ll2_if.h
-index 5eb022953aca..1313c34d9a68 100644
---- a/include/linux/qed/qed_ll2_if.h
-+++ b/include/linux/qed/qed_ll2_if.h
-@@ -52,6 +52,12 @@ enum qed_ll2_conn_type {
- 	QED_LL2_TYPE_ROCE,
- 	QED_LL2_TYPE_IWARP,
- 	QED_LL2_TYPE_RESERVED3,
-+	MAX_QED_LL2_CONN_TYPE
-+};
-+
-+enum qed_ll2_rx_conn_type {
-+	QED_LL2_RX_TYPE_LEGACY,
-+	QED_LL2_RX_TYPE_CTX,
- 	MAX_QED_LL2_RX_CONN_TYPE
- };
- 
-@@ -165,6 +171,7 @@ struct qed_ll2_cbs {
- };
- 
- struct qed_ll2_acquire_data_inputs {
-+	enum qed_ll2_rx_conn_type rx_conn_type;
- 	enum qed_ll2_conn_type conn_type;
- 	u16 mtu;
- 	u16 rx_num_desc;
+ /* Runtime array offsets */
 -- 
 2.14.5
 
