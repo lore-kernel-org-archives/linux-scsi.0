@@ -2,107 +2,110 @@ Return-Path: <SRS0=fhi0=3M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7939CC33CAA
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3475C33CAA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52D682467B
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:13:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EB0E217F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 06:50:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="S4eVyQXE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726092AbgAWGNv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 01:13:51 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9237 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725938AbgAWGNv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Jan 2020 01:13:51 -0500
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id EF0F49EDA58A7335C42E;
-        Thu, 23 Jan 2020 14:13:48 +0800 (CST)
-Received: from huawei.com (10.175.124.28) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Thu, 23 Jan 2020
- 14:13:39 +0800
-From:   Ye Bin <yebin10@huawei.com>
-To:     <john.garry@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, Ye Bin <yebin10@huawei.com>
-Subject: [PATCH] hisi_sas: Fix unreasonable exit processing of hisi_sas_v3_probe
-Date:   Thu, 23 Jan 2020 14:12:49 +0800
-Message-ID: <20200123061249.896-1-yebin10@huawei.com>
-X-Mailer: git-send-email 2.17.2
+        id S1725897AbgAWGuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 01:50:21 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:40886 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725535AbgAWGuV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jan 2020 01:50:21 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1579762220; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=bswcAiv/CdeJKAnXJ38wrotIhNQOHnYzuVA95WQWG8w=;
+ b=S4eVyQXEJ/J6HSCVIMXtlztI/IBMMsD5ESfnYNz3GnX1dMyy9qJxzcOe9+pWPSo6tdWINac2
+ b4GXtLO0rLwlY4O9lElstksCLSi/ud2F9eN/OxD21I/OCEEJdeaW2o+rpbfnMWv6MWu+dcl1
+ 343X4cSw8+PJiTu8tYwM+CUcrfs=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e29422b.7feba64c59d0-smtp-out-n02;
+ Thu, 23 Jan 2020 06:50:19 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 939F9C433A2; Thu, 23 Jan 2020 06:50:18 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: hongwus)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A5249C43383;
+        Thu, 23 Jan 2020 06:50:16 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.124.28]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 23 Jan 2020 14:50:16 +0800
+From:   hongwus@codeaurora.org
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 5/8] scsi: ufs: Fix ufshcd_hold() caused scheduling
+ while atomic
+In-Reply-To: <1579759946-5448-6-git-send-email-cang@codeaurora.org>
+References: <1579759946-5448-1-git-send-email-cang@codeaurora.org>
+ <1579759946-5448-6-git-send-email-cang@codeaurora.org>
+Message-ID: <8b8347dbb9a32c71ba2e6992f30a974c@codeaurora.org>
+X-Sender: hongwus@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In this function, the exception return missed some processing.
+Hi Can,
 
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+On 2020-01-23 14:12, Can Guo wrote:
+> The async version of ufshcd_hold(async == true), which is only called
+> in queuecommand path as for now, is expected to work in atomic context,
+> thus it should not sleep or schedule out. When it runs into the 
+> condition
+> that clocks are ON but link is still in hibern8 state, it should bail 
+> out
+> without flushing the clock ungate work.
+> 
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 4dfd705..c316a07 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1542,6 +1542,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+>  		 */
+>  		if (ufshcd_can_hibern8_during_gating(hba) &&
+>  		    ufshcd_is_link_hibern8(hba)) {
+> +			if (async) {
+> +				rc = -EAGAIN;
+> +				hba->clk_gating.active_reqs--;
+> +				break;
+> +			}
+>  			spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  			flush_work(&hba->clk_gating.ungate_work);
+>  			spin_lock_irqsave(hba->host->host_lock, flags);
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index fa05e612d85a..394e20b8f622 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3166,8 +3166,8 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct Scsi_Host *shost;
- 	struct hisi_hba *hisi_hba;
- 	struct device *dev = &pdev->dev;
--	struct asd_sas_phy **arr_phy;
--	struct asd_sas_port **arr_port;
-+	struct asd_sas_phy **arr_phy = NULL;
-+	struct asd_sas_port **arr_port = NULL;
- 	struct sas_ha_struct *sha;
- 	int rc, phy_nr, port_nr, i;
- 
-@@ -3213,7 +3213,7 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
- 	if (!arr_phy || !arr_port) {
- 		rc = -ENOMEM;
--		goto err_out_ha;
-+		goto err_out_iomap;
- 	}
- 
- 	sha->sas_phy = arr_phy;
-@@ -3254,7 +3254,7 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	rc = scsi_add_host(shost, dev);
- 	if (rc)
--		goto err_out_ha;
-+		goto err_out_iomap;
- 
- 	rc = sas_register_ha(sha);
- 	if (rc)
-@@ -3262,14 +3262,20 @@ hisi_sas_v3_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	rc = hisi_hba->hw->hw_init(hisi_hba);
- 	if (rc)
--		goto err_out_register_ha;
-+		goto err_out_hw_init;
- 
- 	scsi_scan_host(shost);
- 
- 	return 0;
- 
-+err_out_hw_init:
-+	sas_unregister_ha(sha);
- err_out_register_ha:
- 	scsi_remove_host(shost);
-+err_out_iomap:
-+	devm_kfree(dev, arr_phy);
-+	devm_kfree(dev, arr_port);
-+	pcim_iounmap(pdev, hisi_hba->regs);
- err_out_ha:
- 	hisi_sas_debugfs_exit(hisi_hba);
- 	scsi_host_put(shost);
--- 
-2.17.2
+It looks good to me.
 
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
