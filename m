@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5232FC33CB6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8A23C33CB8
 	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F05F2253D
+	by mail.kernel.org (Postfix) with ESMTP id 7F4282467F
 	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 10:59:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="h4LANZJl"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="PDgcLgYr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729017AbgAWK7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 05:59:04 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36312 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728921AbgAWK7C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729008AbgAWK7C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 23 Jan 2020 05:59:02 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00NAuc93021337;
-        Thu, 23 Jan 2020 02:59:01 -0800
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60996 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726219AbgAWK7B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jan 2020 05:59:01 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00NAuoNS005434;
+        Thu, 23 Jan 2020 02:58:58 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=NuvLIK0dgzRQmldKuNwToly/8tRcKmb4d3KppaRfAHc=;
- b=h4LANZJlgLRKnyySca7exc1rjJ10BHBj6T6MeNdMGUKLFjqnuyX4EivjqfPXuPYktopY
- pIVAF7lYWdLCoZkk7he+2t+et3UP5/K92vCNv9Fz9v6klA0sE6EOq51skXlT4KkwxB4a
- ESPO0F1IJ2u/fSgJaXsBXdQoyyLbto0/s4wWkIpIFY98h3rXk+n4vRMm2Vl3Cy8GtZ/Q
- dbkAGn3Q4l9DvEIUVqiCvFz18ZpTgYDz2pLPdnaNTHqbMvNsNkgGV2Zhu2zCv64K8SXE
- e97yEbFnIXOCMpSRv8F85wDLL7WvhQZKQGosOjlzWKq1KS9/ChZpJaP530QKvisxaPE/ 8w== 
+ content-type; s=pfpt0818; bh=gDu7KcqiGexp16hOS/xYf8HRsKMOOw7uxAxTckSmwtc=;
+ b=PDgcLgYrNA/n2n10OGpJ/v+UyL78vwgabGAjpTCSKAcnjXhcwxcVh/43+YD/bwW6S4cc
+ vFBeqqynG/5Y+hrrGlqlyFFZ2zNbe2mtm36k4WxF8w4iztahXIJnIPfz0EGTuHQAATMT
+ OxTqoL477uKPI7hOy6gAEGay1Dh0n+3H5TUu/9SsDnFv/IXMTAOcBti1fG+WK9lBh2KX
+ jILE4uGlc11/NTjhnh7m2jVZ+3IxwcCFQVv0vNBZ/bhbQ/VTPYywyJ3RIFuCjvHCm3Ui
+ gwW39G2cFoaenJyLFwOFuxPXP8aO1iq87UG9z/M5QqomKbEhMauhMqhHncbd033/jtcb gw== 
 Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2xq4x4h2yk-1
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dtbd37-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 23 Jan 2020 02:59:01 -0800
+        Thu, 23 Jan 2020 02:58:57 -0800
 Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
  (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 23 Jan
- 2020 02:58:59 -0800
+ 2020 02:58:55 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 23 Jan 2020 02:58:59 -0800
+ Transport; Thu, 23 Jan 2020 02:58:55 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id 142573F703F;
-        Thu, 23 Jan 2020 02:58:57 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id AB97D3F7040;
+        Thu, 23 Jan 2020 02:58:53 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2 net-next 07/13] qed: Add abstraction for different hsi values per chip
-Date:   Thu, 23 Jan 2020 12:58:30 +0200
-Message-ID: <20200123105836.15090-8-michal.kalderon@marvell.com>
+Subject: [PATCH v2 net-next 05/13] qed: Use dmae to write to widebus registers in fw_funcs
+Date:   Thu, 23 Jan 2020 12:58:28 +0200
+Message-ID: <20200123105836.15090-6-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200123105836.15090-1-michal.kalderon@marvell.com>
 References: <20200123105836.15090-1-michal.kalderon@marvell.com>
@@ -66,245 +66,407 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The number of BTB blocks was modified to be different between the two chip
-flavors supported (BB/K2) as a result, this lead to a re-write of selecting
-the default hsi value based on the chip.
-This patch creates a lookup table for hsi values per chip rather than
-ask again and again for every value.
+There are several wide-bus registers written to by the fw_funcs
+that require using the dmae for atomicity. Therefore using the dmae
+channel functionality was added to the fw_funcs file, since the code
+is very similar to the previously used code, the structures used were
+moved to qed_hsi. Due to FW conventions, the names of the flags in the
+struct changed. Since this required slight modification in the places
+that set the flags the code was modified to use GET/SET FIELD macros.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed.h     | 56 +++++++++++++++++++++++-----
- drivers/net/ethernet/qlogic/qed/qed_dev.c | 62 +++++++++++++++++++++----------
- include/linux/qed/common_hsi.h            |  4 +-
- 3 files changed, 90 insertions(+), 32 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h      | 24 ------
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 41 ++++++++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           | 67 ++++++++---------
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    | 86 ++++++++++++++++------
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        | 11 +--
+ 7 files changed, 142 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
-index cfa45fb9a5a4..cfbfe7441ecb 100644
---- a/drivers/net/ethernet/qlogic/qed/qed.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed.h
-@@ -532,6 +532,23 @@ struct qed_nvm_image_info {
- 	bool valid;
- };
- 
-+enum qed_hsi_def_type {
-+	QED_HSI_DEF_MAX_NUM_VFS,
-+	QED_HSI_DEF_MAX_NUM_L2_QUEUES,
-+	QED_HSI_DEF_MAX_NUM_PORTS,
-+	QED_HSI_DEF_MAX_SB_PER_PATH,
-+	QED_HSI_DEF_MAX_NUM_PFS,
-+	QED_HSI_DEF_MAX_NUM_VPORTS,
-+	QED_HSI_DEF_NUM_ETH_RSS_ENGINE,
-+	QED_HSI_DEF_MAX_QM_TX_QUEUES,
-+	QED_HSI_DEF_NUM_PXP_ILT_RECORDS,
-+	QED_HSI_DEF_NUM_RDMA_STATISTIC_COUNTERS,
-+	QED_HSI_DEF_MAX_QM_GLOBAL_RLS,
-+	QED_HSI_DEF_MAX_PBF_CMD_LINES,
-+	QED_HSI_DEF_MAX_BTB_BLOCKS,
-+	QED_NUM_HSI_DEFS
-+};
-+
- #define DRV_MODULE_VERSION		      \
- 	__stringify(QED_MAJOR_VERSION) "."    \
- 	__stringify(QED_MINOR_VERSION) "."    \
-@@ -869,16 +886,35 @@ struct qed_dev {
- 	bool				iwarp_cmt;
- };
- 
--#define NUM_OF_VFS(dev)         (QED_IS_BB(dev) ? MAX_NUM_VFS_BB \
--						: MAX_NUM_VFS_K2)
--#define NUM_OF_L2_QUEUES(dev)   (QED_IS_BB(dev) ? MAX_NUM_L2_QUEUES_BB \
--						: MAX_NUM_L2_QUEUES_K2)
--#define NUM_OF_PORTS(dev)       (QED_IS_BB(dev) ? MAX_NUM_PORTS_BB \
--						: MAX_NUM_PORTS_K2)
--#define NUM_OF_SBS(dev)         (QED_IS_BB(dev) ? MAX_SB_PER_PATH_BB \
--						: MAX_SB_PER_PATH_K2)
--#define NUM_OF_ENG_PFS(dev)     (QED_IS_BB(dev) ? MAX_NUM_PFS_BB \
--						: MAX_NUM_PFS_K2)
-+u32 qed_get_hsi_def_val(struct qed_dev *cdev, enum qed_hsi_def_type type);
-+
-+#define NUM_OF_VFS(dev)	\
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_VFS)
-+#define NUM_OF_L2_QUEUES(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_L2_QUEUES)
-+#define NUM_OF_PORTS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_PORTS)
-+#define NUM_OF_SBS(dev)	\
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_SB_PER_PATH)
-+#define NUM_OF_ENG_PFS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_PFS)
-+#define NUM_OF_VPORTS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_VPORTS)
-+#define NUM_OF_RSS_ENGINES(dev)	\
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_ETH_RSS_ENGINE)
-+#define NUM_OF_QM_TX_QUEUES(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_QM_TX_QUEUES)
-+#define NUM_OF_PXP_ILT_RECORDS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_PXP_ILT_RECORDS)
-+#define NUM_OF_RDMA_STATISTIC_COUNTERS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_RDMA_STATISTIC_COUNTERS)
-+#define NUM_OF_QM_GLOBAL_RLS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_QM_GLOBAL_RLS)
-+#define NUM_OF_PBF_CMD_LINES(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_PBF_CMD_LINES)
-+#define NUM_OF_BTB_BLOCKS(dev) \
-+	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_BTB_BLOCKS)
-+
- 
- /**
-  * @brief qed_concrete_to_sw_fid - get the sw function id from
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index 898c1f8d1530..e3e0376c13d6 100644
+index 249fcc3dc138..479d98e6187a 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -1579,6 +1579,7 @@ static void qed_init_qm_port_params(struct qed_hwfn *p_hwfn)
- {
- 	/* Initialize qm port parameters */
- 	u8 i, active_phys_tcs, num_ports = p_hwfn->cdev->num_ports_in_engine;
-+	struct qed_dev *cdev = p_hwfn->cdev;
+@@ -907,7 +907,7 @@ qed_llh_access_filter(struct qed_hwfn *p_hwfn,
+ 	/* Filter value */
+ 	addr = NIG_REG_LLH_FUNC_FILTER_VALUE + 2 * filter_idx * 0x4;
  
- 	/* indicate how ooo and high pri traffic is dealt with */
- 	active_phys_tcs = num_ports == MAX_NUM_PORTS_K2 ?
-@@ -1588,11 +1589,13 @@ static void qed_init_qm_port_params(struct qed_hwfn *p_hwfn)
- 	for (i = 0; i < num_ports; i++) {
- 		struct init_qm_port_params *p_qm_port =
- 		    &p_hwfn->qm_info.qm_port_params[i];
-+		u16 pbf_max_cmd_lines;
+-	params.flags = QED_DMAE_FLAG_PF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_PF_VALID, 0x1);
+ 	params.dst_pfid = pfid;
+ 	rc = qed_dmae_host2grc(p_hwfn,
+ 			       p_ptt,
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+index 47376d4d071f..eb4808b3bf67 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+@@ -230,30 +230,6 @@ enum qed_dmae_address_type_t {
+ 	QED_DMAE_ADDRESS_GRC
+ };
  
- 		p_qm_port->active = 1;
- 		p_qm_port->active_phys_tcs = active_phys_tcs;
--		p_qm_port->num_pbf_cmd_lines = PBF_MAX_CMD_LINES / num_ports;
--		p_qm_port->num_btb_blocks = BTB_MAX_BLOCKS / num_ports;
-+		pbf_max_cmd_lines = (u16)NUM_OF_PBF_CMD_LINES(cdev);
-+		p_qm_port->num_pbf_cmd_lines = pbf_max_cmd_lines / num_ports;
-+		p_qm_port->num_btb_blocks = NUM_OF_BTB_BLOCKS(cdev) / num_ports;
- 	}
- }
+-/* value of flags If QED_DMAE_FLAG_RW_REPL_SRC flag is set and the
+- * source is a block of length DMAE_MAX_RW_SIZE and the
+- * destination is larger, the source block will be duplicated as
+- * many times as required to fill the destination block. This is
+- * used mostly to write a zeroed buffer to destination address
+- * using DMA
+- */
+-#define QED_DMAE_FLAG_RW_REPL_SRC	0x00000001
+-#define QED_DMAE_FLAG_VF_SRC		0x00000002
+-#define QED_DMAE_FLAG_VF_DST		0x00000004
+-#define QED_DMAE_FLAG_COMPLETION_DST	0x00000008
+-#define QED_DMAE_FLAG_PORT		0x00000010
+-#define QED_DMAE_FLAG_PF_SRC		0x00000020
+-#define QED_DMAE_FLAG_PF_DST		0x00000040
+-
+-struct qed_dmae_params {
+-	u32 flags; /* consists of QED_DMAE_FLAG_* values */
+-	u8 src_vfid;
+-	u8 dst_vfid;
+-	u8 port_id;
+-	u8 src_pfid;
+-	u8 dst_pfid;
+-};
+-
+ /**
+  * @brief qed_dmae_host2grc - copy data from source addr to
+  * dmae registers using the given ptt
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+index fb4c0de44aaa..565ab12fa87c 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+@@ -1435,7 +1435,11 @@ struct dmae_cmd {
+ 	__le16 crc16;
+ 	__le16 crc16_c;
+ 	__le16 crc10;
+-	__le16 reserved;
++	__le16 error_bit_reserved;
++#define DMAE_CMD_ERROR_BIT_MASK        0x1
++#define DMAE_CMD_ERROR_BIT_SHIFT       0
++#define DMAE_CMD_RESERVED_MASK	       0x7FFF
++#define DMAE_CMD_RESERVED_SHIFT        1
+ 	__le16 xsum16;
+ 	__le16 xsum8;
+ };
+@@ -1566,6 +1570,41 @@ struct e4_ystorm_core_conn_ag_ctx {
+ 	__le32 reg3;
+ };
  
-@@ -3607,14 +3610,39 @@ __qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn,
- 	return 0;
- }
- 
-+static u32 qed_hsi_def_val[][MAX_CHIP_IDS] = {
-+	{MAX_NUM_VFS_BB, MAX_NUM_VFS_K2},
-+	{MAX_NUM_L2_QUEUES_BB, MAX_NUM_L2_QUEUES_K2},
-+	{MAX_NUM_PORTS_BB, MAX_NUM_PORTS_K2},
-+	{MAX_SB_PER_PATH_BB, MAX_SB_PER_PATH_K2,},
-+	{MAX_NUM_PFS_BB, MAX_NUM_PFS_K2},
-+	{MAX_NUM_VPORTS_BB, MAX_NUM_VPORTS_K2},
-+	{ETH_RSS_ENGINE_NUM_BB, ETH_RSS_ENGINE_NUM_K2},
-+	{MAX_QM_TX_QUEUES_BB, MAX_QM_TX_QUEUES_K2},
-+	{PXP_NUM_ILT_RECORDS_BB, PXP_NUM_ILT_RECORDS_K2},
-+	{RDMA_NUM_STATISTIC_COUNTERS_BB, RDMA_NUM_STATISTIC_COUNTERS_K2},
-+	{MAX_QM_GLOBAL_RLS, MAX_QM_GLOBAL_RLS},
-+	{PBF_MAX_CMD_LINES, PBF_MAX_CMD_LINES},
-+	{BTB_MAX_BLOCKS_BB, BTB_MAX_BLOCKS_K2},
++/* DMAE parameters */
++struct qed_dmae_params {
++	__le32 flags;
++/* If QED_DMAE_PARAMS_RW_REPL_SRC flag is set and the
++ * source is a block of length DMAE_MAX_RW_SIZE and the
++ * destination is larger, the source block will be duplicated as
++ * many times as required to fill the destination block. This is
++ * used mostly to write a zeroed buffer to destination address
++ * using DMA
++ */
++#define QED_DMAE_PARAMS_RW_REPL_SRC_MASK	0x1
++#define QED_DMAE_PARAMS_RW_REPL_SRC_SHIFT	0
++#define QED_DMAE_PARAMS_SRC_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_VF_VALID_SHIFT	1
++#define QED_DMAE_PARAMS_DST_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_VF_VALID_SHIFT	2
++#define QED_DMAE_PARAMS_COMPLETION_DST_MASK	0x1
++#define QED_DMAE_PARAMS_COMPLETION_DST_SHIFT	3
++#define QED_DMAE_PARAMS_PORT_VALID_MASK		0x1
++#define QED_DMAE_PARAMS_PORT_VALID_SHIFT	4
++#define QED_DMAE_PARAMS_SRC_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_PF_VALID_SHIFT	5
++#define QED_DMAE_PARAMS_DST_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_PF_VALID_SHIFT	6
++#define QED_DMAE_PARAMS_RESERVED_MASK		0x1FFFFFF
++#define QED_DMAE_PARAMS_RESERVED_SHIFT		7
++	u8 src_vfid;
++	u8 dst_vfid;
++	u8 port_id;
++	u8 src_pfid;
++	u8 dst_pfid;
++	u8 reserved1;
++	__le16 reserved2;
 +};
 +
-+u32 qed_get_hsi_def_val(struct qed_dev *cdev, enum qed_hsi_def_type type)
-+{
-+	enum chip_ids chip_id = QED_IS_BB(cdev) ? CHIP_BB : CHIP_K2;
+ /* IGU cleanup command */
+ struct igu_cleanup {
+ 	__le32 sb_id_and_flags;
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_hw.c b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+index a4de9e3ef72c..4ab8cfaf63d1 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_hw.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+@@ -393,7 +393,7 @@ u32 qed_vfid_to_concrete(struct qed_hwfn *p_hwfn, u8 vfid)
+ 
+ /* DMAE */
+ #define QED_DMAE_FLAGS_IS_SET(params, flag) \
+-	((params) != NULL && ((params)->flags & QED_DMAE_FLAG_##flag))
++	((params) != NULL && GET_FIELD((params)->flags, QED_DMAE_PARAMS_##flag))
+ 
+ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 			    const u8 is_src_type_grc,
+@@ -408,62 +408,55 @@ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 	 * 0- The source is the PCIe
+ 	 * 1- The source is the GRC.
+ 	 */
+-	opcode |= (is_src_type_grc ? DMAE_CMD_SRC_MASK_GRC
+-				   : DMAE_CMD_SRC_MASK_PCIE) <<
+-		   DMAE_CMD_SRC_SHIFT;
+-	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_SRC) ?
+-		   p_params->src_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((src_pfid & DMAE_CMD_SRC_PF_ID_MASK) <<
+-		   DMAE_CMD_SRC_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC,
++		  (is_src_type_grc ? dmae_cmd_src_grc : dmae_cmd_src_pcie));
++	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, SRC_PF_VALID) ?
++	    p_params->src_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_SRC_PF_ID, src_pfid);
+ 
+ 	/* The destination of the DMA can be: 0-None 1-PCIe 2-GRC 3-None */
+-	opcode |= (is_dst_type_grc ? DMAE_CMD_DST_MASK_GRC
+-				   : DMAE_CMD_DST_MASK_PCIE) <<
+-		   DMAE_CMD_DST_SHIFT;
+-	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_DST) ?
+-		   p_params->dst_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((dst_pfid & DMAE_CMD_DST_PF_ID_MASK) <<
+-		   DMAE_CMD_DST_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST,
++		  (is_dst_type_grc ? dmae_cmd_dst_grc : dmae_cmd_dst_pcie));
++	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, DST_PF_VALID) ?
++	    p_params->dst_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_DST_PF_ID, dst_pfid);
 +
-+	if (type >= QED_NUM_HSI_DEFS) {
-+		DP_ERR(cdev, "Unexpected HSI definition type [%d]\n", type);
-+		return 0;
+ 
+ 	/* Whether to write a completion word to the completion destination:
+ 	 * 0-Do not write a completion word
+ 	 * 1-Write the completion word
+ 	 */
+-	opcode |= (DMAE_CMD_COMP_WORD_EN_MASK << DMAE_CMD_COMP_WORD_EN_SHIFT);
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_COMP_WORD_EN, 1);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
+ 
+ 	if (QED_DMAE_FLAGS_IS_SET(p_params, COMPLETION_DST))
+-		opcode |= (1 << DMAE_CMD_COMP_FUNC_SHIFT);
++		SET_FIELD(opcode, DMAE_CMD_COMP_FUNC, 1);
+ 
+-	opcode |= (DMAE_CMD_ENDIANITY << DMAE_CMD_ENDIANITY_MODE_SHIFT);
++	/* swapping mode 3 - big endian */
++	SET_FIELD(opcode, DMAE_CMD_ENDIANITY_MODE, DMAE_CMD_ENDIANITY);
+ 
+-	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT)) ?
+-		   p_params->port_id : p_hwfn->port_id;
+-	opcode |= (port_id << DMAE_CMD_PORT_ID_SHIFT);
++	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT_VALID)) ?
++	    p_params->port_id : p_hwfn->port_id;
++	SET_FIELD(opcode, DMAE_CMD_PORT_ID, port_id);
+ 
+ 	/* reset source address in next go */
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
+ 
+ 	/* reset dest address in next go */
+-	opcode |= (DMAE_CMD_DST_ADDR_RESET_MASK <<
+-		   DMAE_CMD_DST_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST_ADDR_RESET, 1);
+ 
+ 	/* SRC/DST VFID: all 1's - pf, otherwise VF id */
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_SRC)) {
+-		opcode |= 1 << DMAE_CMD_SRC_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->src_vfid << DMAE_CMD_SRC_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, SRC_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_SRC_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, p_params->src_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_SRC_VF_ID_MASK <<
+-			    DMAE_CMD_SRC_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, 0xFF);
+ 	}
+-
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_DST)) {
+-		opcode |= 1 << DMAE_CMD_DST_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->dst_vfid << DMAE_CMD_DST_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, DST_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_DST_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, p_params->dst_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_DST_VF_ID_MASK << DMAE_CMD_DST_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, 0xFF);
+ 	}
+ 
+ 	p_hwfn->dmae_info.p_dmae_cmd->opcode = cpu_to_le32(opcode);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+index a816fb5411b7..e09e6ce74705 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+@@ -1022,6 +1022,56 @@ bool qed_send_qm_stop_cmd(struct qed_hwfn *p_hwfn,
+ #define PRS_ETH_TUNN_OUTPUT_FORMAT     0xF4DAB910
+ #define PRS_ETH_OUTPUT_FORMAT          0xFFFF4910
+ 
++#define ARR_REG_WR(dev, ptt, addr, arr,	arr_size) \
++	do { \
++		u32 i; \
++		\
++		for (i = 0; i < (arr_size); i++) \
++			qed_wr(dev, ptt, \
++			       ((addr) + (4 * i)), \
++			       ((u32 *)&(arr))[i]); \
++	} while (0)
++
++/**
++ * @brief qed_dmae_to_grc - is an internal function - writes from host to
++ * wide-bus registers (split registers are not supported yet)
++ *
++ * @param p_hwfn - HW device data
++ * @param p_ptt - ptt window used for writing the registers.
++ * @param p_data - pointer to source data.
++ * @param addr - Destination register address.
++ * @param len_in_dwords - data length in DWARDS (u32)
++ */
++static int qed_dmae_to_grc(struct qed_hwfn *p_hwfn,
++			   struct qed_ptt *p_ptt,
++			   u32 *p_data, u32 addr, u32 len_in_dwords)
++{
++	struct qed_dmae_params params = {};
++	int rc;
++
++	if (!p_data)
++		return -1;
++
++	/* Set DMAE params */
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 1);
++
++	/* Execute DMAE command */
++	rc = qed_dmae_host2grc(p_hwfn, p_ptt,
++			       (u64)(uintptr_t)(p_data),
++			       addr, len_in_dwords, &params);
++
++	/* If not read using DMAE, read using GRC */
++	if (rc) {
++		DP_VERBOSE(p_hwfn,
++			   QED_MSG_DEBUG,
++			   "Failed writing to chip using DMAE, using GRC instead\n");
++		/* write to registers using GRC */
++		ARR_REG_WR(p_hwfn, p_ptt, addr, p_data, len_in_dwords);
 +	}
 +
-+	return qed_hsi_def_val[type][chip_id];
++	return len_in_dwords;
 +}
- static int
- qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
++
+ void qed_set_vxlan_dest_port(struct qed_hwfn *p_hwfn,
+ 			     struct qed_ptt *p_ptt, u16 dest_port)
  {
--	bool b_ah = QED_IS_AH(p_hwfn->cdev);
- 	u32 resc_max_val, mcp_resp;
- 	u8 res_id;
- 	int rc;
--
- 	for (res_id = 0; res_id < QED_MAX_RESC; res_id++) {
- 		switch (res_id) {
- 		case QED_LL2_RAM_QUEUE:
-@@ -3630,8 +3658,8 @@ qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 			resc_max_val = NUM_OF_GLOBAL_QUEUES;
- 			break;
- 		case QED_RDMA_STATS_QUEUE:
--			resc_max_val = b_ah ? RDMA_NUM_STATISTIC_COUNTERS_K2
--			    : RDMA_NUM_STATISTIC_COUNTERS_BB;
-+			resc_max_val =
-+			    NUM_OF_RDMA_STATISTIC_COUNTERS(p_hwfn->cdev);
- 			break;
- 		case QED_BDQ:
- 			resc_max_val = BDQ_NUM_RESOURCES;
-@@ -3664,28 +3692,24 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
- 			 u32 *p_resc_num, u32 *p_resc_start)
+@@ -1206,6 +1256,8 @@ void qed_set_vxlan_no_l2_enable(struct qed_hwfn *p_hwfn,
+ 
+ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
  {
- 	u8 num_funcs = p_hwfn->num_funcs_on_engine;
--	bool b_ah = QED_IS_AH(p_hwfn->cdev);
-+	struct qed_dev *cdev = p_hwfn->cdev;
++	struct regpair ram_line = { };
++
+ 	/* Disable gft search for PF */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 0);
  
- 	switch (res_id) {
- 	case QED_L2_QUEUE:
--		*p_resc_num = (b_ah ? MAX_NUM_L2_QUEUES_K2 :
--			       MAX_NUM_L2_QUEUES_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_L2_QUEUES(cdev) / num_funcs;
- 		break;
- 	case QED_VPORT:
--		*p_resc_num = (b_ah ? MAX_NUM_VPORTS_K2 :
--			       MAX_NUM_VPORTS_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_VPORTS(cdev) / num_funcs;
- 		break;
- 	case QED_RSS_ENG:
--		*p_resc_num = (b_ah ? ETH_RSS_ENGINE_NUM_K2 :
--			       ETH_RSS_ENGINE_NUM_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_RSS_ENGINES(cdev) / num_funcs;
- 		break;
- 	case QED_PQ:
--		*p_resc_num = (b_ah ? MAX_QM_TX_QUEUES_K2 :
--			       MAX_QM_TX_QUEUES_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_QM_TX_QUEUES(cdev) / num_funcs;
- 		*p_resc_num &= ~0x7;	/* The granularity of the PQs is 8 */
- 		break;
- 	case QED_RL:
--		*p_resc_num = MAX_QM_GLOBAL_RLS / num_funcs;
-+		*p_resc_num = NUM_OF_QM_GLOBAL_RLS(cdev) / num_funcs;
- 		break;
- 	case QED_MAC:
- 	case QED_VLAN:
-@@ -3693,8 +3717,7 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
- 		*p_resc_num = ETH_NUM_MAC_FILTERS / num_funcs;
- 		break;
- 	case QED_ILT:
--		*p_resc_num = (b_ah ? PXP_NUM_ILT_RECORDS_K2 :
--			       PXP_NUM_ILT_RECORDS_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_PXP_ILT_RECORDS(cdev) / num_funcs;
- 		break;
- 	case QED_LL2_RAM_QUEUE:
- 		*p_resc_num = MAX_NUM_LL2_RX_RAM_QUEUES / num_funcs;
-@@ -3708,8 +3731,7 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
- 		*p_resc_num = NUM_OF_GLOBAL_QUEUES / num_funcs;
- 		break;
- 	case QED_RDMA_STATS_QUEUE:
--		*p_resc_num = (b_ah ? RDMA_NUM_STATISTIC_COUNTERS_K2 :
--			       RDMA_NUM_STATISTIC_COUNTERS_BB) / num_funcs;
-+		*p_resc_num = NUM_OF_RDMA_STATISTIC_COUNTERS(cdev) / num_funcs;
- 		break;
- 	case QED_BDQ:
- 		if (p_hwfn->hw_info.personality != QED_PCI_ISCSI &&
-diff --git a/include/linux/qed/common_hsi.h b/include/linux/qed/common_hsi.h
-index 358566f1ff64..402288917f5b 100644
---- a/include/linux/qed/common_hsi.h
-+++ b/include/linux/qed/common_hsi.h
-@@ -663,8 +663,8 @@
- #define PBF_MAX_CMD_LINES	3328
+@@ -1215,12 +1267,9 @@ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_GFT_CAM + CAM_LINE_SIZE * pf_id, 0);
  
- /* Number of BTB blocks. Each block is 256B. */
--#define BTB_MAX_BLOCKS		1440
--
-+#define BTB_MAX_BLOCKS_BB 1440
-+#define BTB_MAX_BLOCKS_K2 1840
- /*****************/
- /* PRS CONSTANTS */
- /*****************/
+ 	/* Zero ramline */
+-	qed_wr(p_hwfn,
+-	       p_ptt, PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id, 0);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       0);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
+ }
+ 
+ void qed_gft_config(struct qed_hwfn *p_hwfn,
+@@ -1331,24 +1380,17 @@ void qed_gft_config(struct qed_hwfn *p_hwfn,
+ 
+ 	qed_wr(p_hwfn,
+ 	       p_ptt, PRS_REG_SEARCH_NON_IP_AS_GFT, search_non_ip_as_gft);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
+-	       ram_line.lo);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       ram_line.hi);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
+ 
+ 	/* Set default profile so that no filter match will happen */
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH, 0xffffffff);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH + REG_SIZE, 0x3ff);
++	ram_line.lo = 0xffffffff;
++	ram_line.hi = 0x3ff;
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
++			PRS_GFT_CAM_LINES_NO_MATCH,
++			sizeof(ram_line) / REG_SIZE);
+ 
+ 	/* Enable gft search */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 1);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
+index ef22a3596295..31222b3e3936 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
+@@ -215,7 +215,7 @@ static int qed_init_fill_dmae(struct qed_hwfn *p_hwfn,
+ 	 * 3. p_hwfb->temp_data,
+ 	 * 4. fill_count
+ 	 */
+-	params.flags = QED_DMAE_FLAG_RW_REPL_SRC;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_RW_REPL_SRC, 0x1);
+ 	return qed_dmae_host2grc(p_hwfn, p_ptt,
+ 				 (uintptr_t)(&zero_buffer[0]),
+ 				 addr, fill_count, &params);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_sriov.c b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+index fe4b740de14c..66876af814c4 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_sriov.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+@@ -352,7 +352,7 @@ static int qed_iov_post_vf_bulletin(struct qed_hwfn *p_hwfn,
+ 
+ 	/* propagate bulletin board via dmae to vm memory */
+ 	memset(&params, 0, sizeof(params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = p_vf->abs_vf_id;
+ 	return qed_dmae_host2host(p_hwfn, p_ptt, p_vf->bulletin.phys,
+ 				  p_vf->vf_bulletin, p_vf->bulletin.size / 4,
+@@ -1225,8 +1225,8 @@ static void qed_iov_send_response(struct qed_hwfn *p_hwfn,
+ 
+ 	eng_vf_id = p_vf->abs_vf_id;
+ 
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = eng_vf_id;
+ 
+ 	qed_dmae_host2host(p_hwfn, p_ptt, mbx->reply_phys + sizeof(u64),
+@@ -4103,8 +4103,9 @@ static int qed_iov_copy_vf_msg(struct qed_hwfn *p_hwfn, struct qed_ptt *ptt,
+ 	if (!vf_info)
+ 		return -EINVAL;
+ 
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_SRC | QED_DMAE_FLAG_COMPLETION_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_SRC_VF_VALID, 0x1);
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 0x1);
+ 	params.src_vfid = vf_info->abs_vf_id;
+ 
+ 	if (qed_dmae_host2host(p_hwfn, ptt,
 -- 
 2.14.5
 
