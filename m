@@ -2,79 +2,90 @@ Return-Path: <SRS0=fhi0=3M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 070EBC33CAA
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 22:24:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AE37C33CAA
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 22:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC1B1206D4
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 22:24:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19D7E207FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 22:51:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vLTGDOZ0"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Z0rf6ib5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729317AbgAWWYL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 17:24:11 -0500
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:34032 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgAWWYL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 17:24:11 -0500
-Received: by mail-pj1-f50.google.com with SMTP id f2so25103pjq.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 14:24:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=OHsqfkM66Et0yHbJc48Vy9BExS+CkNAPI7mBLuUS5dk=;
-        b=vLTGDOZ0aKkWOx+UJUxDViSEZvjQj7hZyD/MzEkzr9ikuzojAP8QOsmICdE4Zh7whC
-         F6WCQcb/0AZ0fdXYszqU+aTi38v2CdB8rMLThdFfU+7Ycnlk0bRJLr9mRlUwGvLAkBx2
-         M/0Ed6K3ek3t/hhLjfF7anJATxn2P3bm0vSjKJIE2XIoAaw54R1qqkDVzoe6Oor49aTE
-         8iguo//t4b6oL45+RvsYfiHxp/27Y00g/oS8lNC0lXzxmY/lNNtctctCJHK1C5jGJTzG
-         f1Y+kz2KM4/E5Uo88Ly+LSh+v6ZH1ravVkEj1NpzYw0SF061qzUtCMljSORPxhA9apJP
-         5QXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=OHsqfkM66Et0yHbJc48Vy9BExS+CkNAPI7mBLuUS5dk=;
-        b=po6ZZvFIWMmGI5jMwQK5+NhuhpgcRUmw7nh/d0l2/RFuKmUI7sDJ+BdfjUr4Q84uft
-         JO1C9oeNqrG00bygP+8FNlfgYlDbth3fVvjjlfz4Xryhs9drJwwwktdPvnMMOQ8e8YTG
-         jPGoQX3wo+Ipo+xbMUIeMpF70mabXA/4nIGSU8zNC0NCobwCReTsyBorw0lcBSuMzJav
-         kRyBlde4XIbBq9Ark0G+o9BweUALt5X70xCjY1jQyezD3odQt5fyI37t+IE5r4XxU59y
-         alu/YbPClPCZSLf8TGQJZ3x21ogu9FgjIry5+1TRz6TpDpU/uKd3J1uxKEPXrDkim58O
-         b5uw==
-X-Gm-Message-State: APjAAAVNGqmKNUmwXYFac5uSmyWAMd9LyZRpg77/HS6e8iyEKdcwi4M7
-        RL61UCNxOTQ/ObeScdaM1PMweznL
-X-Google-Smtp-Source: APXvYqy4eypW8goP0VJIXn7kpeq7+51EcmzSoFtGXL/2T46pRZGGvUEkTzVQKnvAsj07irjPonQtzA==
-X-Received: by 2002:a17:902:6b82:: with SMTP id p2mr322035plk.259.1579818250424;
-        Thu, 23 Jan 2020 14:24:10 -0800 (PST)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id q25sm3641790pfg.41.2020.01.23.14.24.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2020 14:24:10 -0800 (PST)
-Subject: Re: [PATCH] scsi: add attribute to set lun queue depth on all luns on
- shost
-To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
-References: <20200121235302.9955-1-jsmart2021@gmail.com>
- <eba0f027-f2d0-7209-c34d-78b0b93a9a78@acm.org>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <ca8e0a93-6fa7-aa8a-b415-a611084b7aeb@gmail.com>
-Date:   Thu, 23 Jan 2020 14:24:08 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1729462AbgAWWvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 17:51:07 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29378 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729259AbgAWWvH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jan 2020 17:51:07 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00NMp3v7015837;
+        Thu, 23 Jan 2020 14:51:03 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0818; bh=F6N8YR+BC18PgNYYRH7SZFHm43suo4cBPPCWwK8uDqA=;
+ b=Z0rf6ib5IX96f/zCLLQusqkVh1CabRWe2/CLepIZUm9XK5hXlN4hV2ptUj4jjMrMyUIb
+ Arb4OJ+FCQmjjZo8fSZb+ls8HS7UVySbmtZ/wysYlsppROEGmcipeAz4XVQHDhqSRRkn
+ bkkiZS5snqwcpmnVzBkBOKZhlgzLHKQZlCkJ4FCiShh5t02NafMjIZIdaLrr9Zz87qir
+ jF73fBtQpv6a2+qkUkg5WJ2t/igIOHsNXiGwvg8guq80Ywt3NzvreRDHHIJXBg5TF//p
+ rJtSrnTlnvXdAOXyupZGI1eE15323lULuVoWaINKrV9P8cah4K/F2S9Vwcjk+iQklMWK 4Q== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dtdy7w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 23 Jan 2020 14:51:03 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 23 Jan
+ 2020 14:51:01 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 23 Jan 2020 14:51:01 -0800
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id 826FF3F7040;
+        Thu, 23 Jan 2020 14:51:01 -0800 (PST)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 00NMp1QR016991;
+        Thu, 23 Jan 2020 14:51:01 -0800
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Thu, 23 Jan 2020 14:51:00 -0800
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "Elliott, Robert (Servers)" <elliott@hpe.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        "James.Bottomley@HansenPartnership.com" 
+        <James.Bottomley@HansenPartnership.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [EXT] Re: [PATCH v4] qla2xxx: Fix unbound NVME response length
+In-Reply-To: <yq1d0bbexkk.fsf@oracle.com>
+Message-ID: <alpine.LRH.2.21.9999.2001231450240.15850@irv1user01.caveonetworks.com>
+References: <20200121192710.32314-1-hmadhani@marvell.com>
+ <DF4PR8401MB1241B973AEE70A60D1D08133AB0C0@DF4PR8401MB1241.NAMPRD84.PROD.OUTLOOK.COM>
+ <alpine.LRH.2.21.9999.2001221611360.15850@irv1user01.caveonetworks.com>
+ <yq1d0bbexkk.fsf@oracle.com>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-In-Reply-To: <eba0f027-f2d0-7209-c34d-78b0b93a9a78@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-23_13:2020-01-23,2020-01-23 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks Bart - please see the v2 patch set just posted.
+On Wed, 22 Jan 2020, 6:06pm, Martin K. Petersen wrote:
 
--- james
+> Arun,
+> 
+> > I can post a follow on patch, with the WARN/log message under driver 
+> > debug.
+> 
+> Just send a v5. Thanks!
+> 
+
+Will do. Thanks Martin.
+
+Regards,
+-Arun
