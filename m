@@ -1,148 +1,137 @@
-Return-Path: <SRS0=fhi0=3M=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=sMUn=3N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEBA0C35240
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 23:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86408C35240
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 00:01:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C443207FF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Jan 2020 23:21:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5485A21569
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 00:01:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L8FY28kZ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="R0Dfs6DQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729816AbgAWXV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 18:21:56 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:39215 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729274AbgAWXV4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 18:21:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579821715;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=c7UEGeEpZsZ0ORA6OLKIvGl+QiPX0yRNqpxuQVwGo3w=;
-        b=L8FY28kZFieYQmq7050FFQybEg4IRWYTXx+qXTTreV/O7Mt0IpaSXePWBK7+Y242LMInNo
-        +WUtQ0RyhZdXL3LYMlSYgIjYM2T6VwAxhrVMFE4nKElYMZExKfgWgutp/WhaNvybTGcr6u
-        jBNnEV/pMX7FHyLGkdKRiNd44ilOU38=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-434-8QgirkNpMPaCKQJaDh9LJw-1; Thu, 23 Jan 2020 18:21:51 -0500
-X-MC-Unique: 8QgirkNpMPaCKQJaDh9LJw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E5F781005514;
-        Thu, 23 Jan 2020 23:21:49 +0000 (UTC)
-Received: from emilne (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3AC495D9E2;
-        Thu, 23 Jan 2020 23:21:49 +0000 (UTC)
-Message-ID: <adeced6da0dbdf33ac39fcfd8c16bf696e3a96d0.camel@redhat.com>
-Subject: Re: [PATCH v4] qla2xxx: Fix unbound NVME response length
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     Arun Easi <aeasi@marvell.com>,
-        "Elliott, Robert (Servers)" <elliott@hpe.com>
-Cc:     Himanshu Madhani <hmadhani@marvell.com>,
-        "James.Bottomley@HansenPartnership.com" 
-        <James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Date:   Thu, 23 Jan 2020 18:21:48 -0500
-In-Reply-To: <alpine.LRH.2.21.9999.2001221611360.15850@irv1user01.caveonetworks.com>
-References: <20200121192710.32314-1-hmadhani@marvell.com>
-         <DF4PR8401MB1241B973AEE70A60D1D08133AB0C0@DF4PR8401MB1241.NAMPRD84.PROD.OUTLOOK.COM>
-         <alpine.LRH.2.21.9999.2001221611360.15850@irv1user01.caveonetworks.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        id S1729972AbgAXABu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 19:01:50 -0500
+Received: from mail-il1-f196.google.com ([209.85.166.196]:43171 "EHLO
+        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729149AbgAXABu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 19:01:50 -0500
+Received: by mail-il1-f196.google.com with SMTP id v69so289178ili.10
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 16:01:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-transfer-encoding:content-language;
+        bh=MHEUN+jWgjuLYhWatYEBYMGBlZr/1h19E0RrVeUaIMs=;
+        b=R0Dfs6DQcAiry5jrwCbfaJPttuNPYdwVZHTWYXDUC29aAFFOzRf8aUlBeg4jq77ila
+         oaMPQxAFdLXvNFlMwNSkcEQcEvnJ+eWv9C9+Uo29zBf2Rte6WTbfbGiT3X76fP6ajpDY
+         cEkB+meTPstSlm6THCGkBrzgK8Z9EzZfRdknQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=MHEUN+jWgjuLYhWatYEBYMGBlZr/1h19E0RrVeUaIMs=;
+        b=MjkS0J9LxeQnK8UOjG4wSG5Aj0udJRSsPYVB0CgsVr78Wo0SIN390Ia8ZL7p/tIeUd
+         mlJcAK8iUgr+izNKOVfjrCl/gzpiVPfap3vm/mImez9DdLUCyXa/WmL3VJ6ZswWvMVq3
+         8At3YGq0gU9lws7LEqhIePEnajKfcYiQs3LCsEOEsL6VfxUd7aD3vu6NCPYMqdPSKFaJ
+         idX82e9sFfomOatk202xns5QsRMsmL2HWmikiipZTQXSWCHb3O2TWJZPb79jmZ39l+tN
+         L2VPUPmFb+Q1ggiTMMN69LSIplOOzyJDULOnEFEBDqOon6U/3Yyo99EoFgirzXmcK+Am
+         +qjQ==
+X-Gm-Message-State: APjAAAXmUTX3216NDY5YxPXpGFCVaU7PPO0bu3fx0STk7vMa1Ecuiw13
+        5GsQgO3Jv14EXlDtYKwr8mgarq3wmhw=
+X-Google-Smtp-Source: APXvYqwWfd1ja4rXfKu7Foi1LUMlfyLTbLKcEJ81vPO1P9+mbayLHBdEFLrW5ctPJSZ/1rdXVDbYbQ==
+X-Received: by 2002:a92:8307:: with SMTP id f7mr767169ild.73.1579824109755;
+        Thu, 23 Jan 2020 16:01:49 -0800 (PST)
+Received: from [192.168.1.179] (c-67-190-35-197.hsd1.co.comcast.net. [67.190.35.197])
+        by smtp.gmail.com with ESMTPSA id f76sm1078648ild.82.2020.01.23.16.01.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jan 2020 16:01:48 -0800 (PST)
+Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD
+ when HBA needs
+To:     linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20200119071432.18558-1-ming.lei@redhat.com>
+ <20200119071432.18558-6-ming.lei@redhat.com> <yq1y2u1if7t.fsf@oracle.com>
+From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
+Message-ID: <ab676c4c-03fb-7eb9-6212-129eb83d0ee8@broadcom.com>
+Date:   Thu, 23 Jan 2020 17:01:47 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
+In-Reply-To: <yq1y2u1if7t.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-01-22 at 16:20 -0800, Arun Easi wrote:
-> Thanks for the review, Robert. Response inline..
-> 
-> On Wed, 22 Jan 2020, 3:59pm, Elliott, Robert (Servers) wrote:
-> 
-> > 
-> > > -----Original Message-----
-> > > From: linux-scsi-owner@vger.kernel.org <linux-scsi-owner@vger.kernel.org>
-> > > On Behalf Of Himanshu Madhani
-> > > Sent: Tuesday, January 21, 2020 1:27 PM
-> > > Subject: [PATCH v4] qla2xxx: Fix unbound NVME response length
-> > ...
-> > > We discovered issue with our newer Gen7 adapter when response length
-> > > happens to be larger than 32 bytes, could result into crash.
-> > ...
-> > >  drivers/scsi/qla2xxx/qla_isr.c | 10 ++++++++++
-> > >  1 file changed, 10 insertions(+)
-> > > 
-> > > diff --git a/drivers/scsi/qla2xxx/qla_isr.c
-> > ...
-> > > +		if (unlikely(iocb->u.nvme.rsp_pyld_len >
-> > > +		    sizeof(struct nvme_fc_ersp_iu))) {
-> > > +			WARN_ONCE(1, "Unexpected response payload length %u.\n",
-> > > +			    iocb->u.nvme.rsp_pyld_len);
-> > 
-> > Do you really need a kernel stack dump for this error, which the WARN
-> > macros create? The problem would be caused by firmware behavior, not
-> > something wrong in the kernel.
-> 
-> The intent was to bring this to the tester's notice. My expectation is 
-> that this would be removed once the root cause is known. The issue was not 
-> reproducible internally.
+Hi Martin,
 
-We have a reproducible test case, so testing the patch was
-not a problem.  I agree the log message should be restricted
-or suppressed though, once would be enough.
+ >> A free host tag does not guarantee that the target
 
-The problem appeared to be that an extra bit was set (because
-the length was too long by 16K) and our testing worked OK with
-the ersp_iu data truncated to the correct structure size.
+Your point is absolutely correct for a single SSD device, and probably 
+for some low-end controllers, but not for high-end HBA that has its own 
+queuing mechanism.
 
--Ewan
+The high-end controllers might expose a SCSI interface, but can have all 
+kind of devices (NVMe/SCSI/SATA) behind it, and has its own capability 
+to queue IO and feed to devices as needed. Those devices should not be 
+penalized with the overhead of the device_busy counter, just because 
+they chose to expose themselves has SCSI devices (for historical and 
+backward compatibility reasons). Rather they should be enabled, so that 
+they can compete with devices exposing themselves as NVMe devices.
+It is those devices that this patch is meant for, and Ming has provided 
+a specific flag for it. For the devices that cannot tolerate more 
+outstanding IO, they need not set the flag, and will be unaffected.
 
-> 
-> > If this function runs in interrupt context (based on the filename),
-> > then printing lots of data to the slow serial port can cause soft
-> > lockups and other issues.
-> 
-> In retrospect, this should have been under the driver debug tunable (which 
-> is set usually by testers).
-> 
-> > > +			ql_log(ql_log_warn, fcport->vha, 0x5100,
-> > > +			    "Unexpected response payload length %u.\n",
-> > > +			    iocb->u.nvme.rsp_pyld_len);
-> > > +			iocb->u.nvme.rsp_pyld_len =
-> > > +			    sizeof(struct nvme_fc_ersp_iu);
-> > > +		}
-> > 
-> > If the problem is due to some firmware incompatibility and every
-> > response is long, the kernel log will quickly become full of
-> > these messages - per-IO prints are noisy. The handling implies
-> > the driver thinks it's safe to proceed, so there's nothing that
-> > is going to keep the problem from reoccurring. If the handling was
-> > to report a failed IO and shut down the device, then the number
-> > of possible error messages would quickly cease.
-> > 
-> > Safer approaches would be to print only once and maintain a count
-> > of errors in sysfs, or use ratelimited print functions.
-> 
-> I can post a follow on patch, with the WARN/log message under driver 
-> debug.
-> 
-> Regards,
-> -Arun
-> 
-> > 
-> > 
+In my humble opinion, the SCSI stack should be flexible enough to 
+support innovation and not limit some controllers, just because others 
+might have limited capability, especially when a whitelist flag is 
+provided so that such devices are unaffected.
 
+sincerely,
+Sumanesh
+
+
+device can queue the command.
+
+On 1/20/2020 9:52 PM, Martin K. Petersen wrote:
+> Ming,
+>
+>> NVMe doesn't have such per-request-queue(namespace) queue depth, so it
+>> is reasonable to ignore the limit for SCSI SSD too.
+> It is really not. A free host tag does not guarantee that the target
+> device can queue the command.
+>
+> The assumption that SSDs are somehow special because they are "fast" is
+> not valid. Given the common hardware queue depth for a SAS device of
+> ~128 it is often trivial to drive a device into a congestion
+> scenario. We see it all the time for non-rotational devices, SSDs and
+> arrays alike. The SSD heuristic is simply not going to fly.
+>
+> Don't get me wrong, I am very sympathetic to obliterating device_busy in
+> the hot path. I just don't think it is as easy as just ignoring the
+> counter and hope for the best. Dynamic queue depth management is an
+> integral part of the SCSI protocol, not something we can just decide to
+> bypass because a device claims to be of a certain media type or speed.
+>
+> I would prefer not to touch drivers that rely on cmd_per_lun / untagged
+> operation and focus exclusively on the ones that use .track_queue_depth.
+> For those we could consider an adaptive queue depth management scheme.
+> Something like not maintaining device_busy until we actually get a
+> QUEUE_FULL condition. And then rely on the existing queue depth ramp up
+> heuristics to determine when to disable the busy counter again. Maybe
+> with an additional watermark or time limit to avoid flip-flopping.
+>
+> If that approach turns out to work, we should convert all remaining
+> non-legacy drivers to .track_queue_depth so we only have two driver
+> queuing flavors to worry about.
+>
