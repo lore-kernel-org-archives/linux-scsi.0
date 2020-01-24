@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BA07C2D0DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE898C35242
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B82A21734
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:22:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 932C12087E
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:23:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875776;
+	s=default; t=1579875802;
 	bh=LwzExljeYI2evYxgrBuUsCwPgYYVMotkGukuDrg8DSM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=er2ECc3a1sTX7f0eOlA+MfOxsN9AjY7NjOUofmgExRlDBO2AUrrBSXxnreG9sEcKQ
-	 zR6Nuzt76WFKYcLZZHax/njLxriJO2eJY65rtWgQ3jPCGacYXWy2UTka5hTFvgzu51
-	 t8HoDRoqAKejb5W3iA5WroHH9krToRYL4sndo+t4=
+	b=G+OEtNy246bTJ721B6v9i/m1M/D1EqAdRA89s06PqcSTynGEyWP/VzsUfCxZ3xXF6
+	 s4CMClDIpJuGBXr8jbUXEIquRdhJAvSVURsh/H0pmfnsuyRX56S0fIiadxbRLorzHs
+	 U70cDdFAwwNsyQc08hDrX1ZUbav9yHGjz5rHwOk4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388530AbgAXOWz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:22:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44712 "EHLO mail.kernel.org"
+        id S1730320AbgAXOXV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jan 2020 09:23:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44430 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392397AbgAXOWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:22:33 -0500
+        id S2392356AbgAXOWW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:22:22 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BAEB122527;
-        Fri, 24 Jan 2020 14:22:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7915F2072C;
+        Fri, 24 Jan 2020 14:22:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875752;
+        s=default; t=1579875740;
         bh=LwzExljeYI2evYxgrBuUsCwPgYYVMotkGukuDrg8DSM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zlw5quaqEPz8yn8Iahg48ZAkrwejqDQ6xHvcPp+ePyT81+uFwfv7GZKFVkskUg7aR
-         4vqKlQaCt0lBKqy75TBnwPpz0hzY2p7ukq+aAr41OLawpKH0AKqYdE3tW3sXpJmBFv
-         cs6xj8CtHHwIK+v8J/GeBffGvzFcIa6Uyyq3ZwI8=
+        b=vlZPWuHpR2QPGVrVp0MkUeTerTYNCi5loivboIrxixRMJwrmyoSl36N3PCvOOC2tI
+         UZqjytONi5tCUWDCQewa1cY5eO5UCj2qqp/1iE+h5tsydyh7Me/ft28+cY3ZXmAoM8
+         xgIqOxCMgq3TYoiiE5Mathhnckzf5PffiqE7W9P8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
@@ -46,12 +46,12 @@ Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 9/9] scsi: mptfusion: Fix double fetch bug in ioctl
-Date:   Fri, 24 Jan 2020 09:22:21 -0500
-Message-Id: <20200124142221.31201-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 18/18] scsi: mptfusion: Fix double fetch bug in ioctl
+Date:   Fri, 24 Jan 2020 09:21:57 -0500
+Message-Id: <20200124142157.30931-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142221.31201-1-sashal@kernel.org>
-References: <20200124142221.31201-1-sashal@kernel.org>
+In-Reply-To: <20200124142157.30931-1-sashal@kernel.org>
+References: <20200124142157.30931-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
