@@ -2,129 +2,107 @@ Return-Path: <SRS0=sMUn=3N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E32C35242
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 19:41:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C3CC35242
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 21:16:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 777F320718
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 19:41:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YSzUg3W1"
+	by mail.kernel.org (Postfix) with ESMTP id 98A8820838
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 21:16:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390996AbgAXTl0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jan 2020 14:41:26 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42433 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390664AbgAXTlZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jan 2020 14:41:25 -0500
-Received: by mail-wr1-f68.google.com with SMTP id q6so3377563wro.9
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2020 11:41:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=KIoPgyD/uHdbw/hRYTLjyyF+abTVqKoC6UW0RlLuccs=;
-        b=YSzUg3W1HrCe+bgYHDU9A0rFSo+FDvP0TNM2cdGv2aU850+fH2rOc0kr+f4tAwTuKK
-         kXOpry1/o1XfYoJsz10jBzghAUIEvWJxoCwxppP+RhN0/YG3QoXP0eFOgNKr0qI5aUGL
-         V+hNCqsvRf5qAriFUeJFu/DXbUMa/BSlhMmOU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=KIoPgyD/uHdbw/hRYTLjyyF+abTVqKoC6UW0RlLuccs=;
-        b=gPPmkCJNrLtDgYyxHU41ndpxeaDcIQDDX/AedzPGvDHIXJKpYKRvmBUtEyjA1fRLtz
-         Z2732eJm81HomyNlB+7nvIGQwKUUulce6XTteZftmSoKmz3iX93c5zFod/U9CstOBPY1
-         QUIFbC3d6seDTU0oKVS6XWaBP2kDxp2q1DpGpPWqxEZ/Xht6DDANNB8VnC1UzbrrT8R8
-         WwnCAbt7RSTi+CoxqqOssKuqKZy4q4vZhb9CscYvDwkmBcoOw1siWWxl4oXUjqEtUFLI
-         BJ+vRZoDzLQttKm33tZT2EjJ7/iLqm9LDxMVfaqNkE81RYVnBOa9bI+2ixz9xE9FVUQN
-         /wEA==
-X-Gm-Message-State: APjAAAX8l/BhrveMQAyzeGdNeisJX5OZ8OrEdpKgQ8vah0Tk+sOfJzCi
-        aVEPPF/T1jh/8ELvrJQvKv1Cu1cWsrP2H6TfYvF/5g==
-X-Google-Smtp-Source: APXvYqyhuBrPE/e3gFMMRLeHpcFhRXQfqhqgPcw7PaiCrm6PIHL+eijqzcE8xi4WLy1ltHKdOS5umamvzo+dv6cSptA=
-X-Received: by 2002:adf:f3cc:: with SMTP id g12mr5922428wrp.236.1579894883745;
- Fri, 24 Jan 2020 11:41:23 -0800 (PST)
-From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-References: <20200119071432.18558-1-ming.lei@redhat.com>        <20200119071432.18558-6-ming.lei@redhat.com>
- <yq1y2u1if7t.fsf@oracle.com>   <ab676c4c-03fb-7eb9-6212-129eb83d0ee8@broadcom.com>
- <yq1iml1ehtl.fsf@oracle.com>
-In-Reply-To: <yq1iml1ehtl.fsf@oracle.com>
+        id S1729308AbgAXVQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jan 2020 16:16:50 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55401 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725765AbgAXVQu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jan 2020 16:16:50 -0500
+Received: from dread.disaster.area (pa49-195-162-125.pa.nsw.optusnet.com.au [49.195.162.125])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 991D1820C75;
+        Sat, 25 Jan 2020 08:16:44 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iv6Jm-00079w-Ii; Sat, 25 Jan 2020 08:16:42 +1100
+Date:   Sat, 25 Jan 2020 08:16:42 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Mike Christie <mchristi@redhat.com>
+Cc:     Shakeel Butt <shakeelb@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-api@vger.kernel.org, idryomov@gmail.com,
+        Michal Hocko <mhocko@kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-block@vger.kernel.org, martin@urbackup.org,
+        Damien.LeMoal@wdc.com, Michal Hocko <mhocko@suse.com>,
+        Masato Suzuki <masato.suzuki@wdc.com>
+Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V4
+Message-ID: <20200124211642.GB7216@dread.disaster.area>
+References: <20191112001900.9206-1-mchristi@redhat.com>
+ <CALvZod47XyD2x8TuZcb9PgeVY14JBwNhsUpN3RAeAt+RJJC=hg@mail.gmail.com>
+ <5E2B19C9.6080907@redhat.com>
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQMGKWhM81/SGNPryz/MgrKjfT/XowLUtWFaAjRd+LcBvgdOhwHnm/r4pVQPsFA=
-Date:   Fri, 24 Jan 2020 12:41:20 -0700
-Message-ID: <f4f06cf8459c21749335c6b7a4cfe729@mail.gmail.com>
-Subject: RE: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD
- when HBA needs
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        Sumit Saxena <sumit.saxena@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5E2B19C9.6080907@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LYdCFQXi c=1 sm=1 tr=0
+        a=eqEhQ2W7mF93FbYHClaXRw==:117 a=eqEhQ2W7mF93FbYHClaXRw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=Jdjhy38mL1oA:10
+        a=20KFwNOVAAAA:8 a=iox4zFpeAAAA:8 a=JF9118EUAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=3XgbrJ93Oiw9jx1WlK8A:9 a=CjuIK1q_8ugA:10
+        a=WzC6qhA0u3u7Ye7llzcV:22 a=xVlTc564ipvMDusKsbsT:22
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+On Fri, Jan 24, 2020 at 10:22:33AM -0600, Mike Christie wrote:
+> On 12/05/2019 04:43 PM, Shakeel Butt wrote:
+> > On Mon, Nov 11, 2019 at 4:19 PM Mike Christie <mchristi@redhat.com> wrote:
+> >> This patch adds a new prctl command that daemons can use after they have
+> >> done their initial setup, and before they start to do allocations that
+> >> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
+> >> flags so both userspace block and FS threads can use it to avoid the
+> >> allocation recursion and try to prevent from being throttled while
+> >> writing out data to free up memory.
+> >>
+> >> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> >> Acked-by: Michal Hocko <mhocko@suse.com>
+> >> Tested-by: Masato Suzuki <masato.suzuki@wdc.com>
+> >> Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+> > 
+> > I suppose this patch should be routed through MM tree, so, CCing Andrew.
+> >
+> 
+> Andrew and other mm/storage developers,
+> 
+> Do I need to handle anything else for this patch, or are there any other
+> concerns? Is this maybe something we want to talk about at a quick LSF
+> session?
+> 
+> I have retested it with Linus's current tree. It still applies cleanly
+> (just some offsets), and fixes the problem described above we have been
+> hitting.
 
->> Please read what I proposed. megaraid VDs don't report QUEUE_FULL so
-you would not trigger the device_busy counter.
+I must have missed this version being posted (just looked it up on
+lore.kernel.org). As far as I'm concerned this is good to go and it
+is absolutely necessary for userspace IO stacks to function
+correctly.
 
-Yes, megaraid does not use set track_queue_depth, and never reports
-QUEUE_FULL . Instead of relying on QUEUE_FULL and some complex heuristics
-of when to start tracking device_busy, why can't we simply use  "
-track_queue_depth" ( along with the other flag that Ming added) to decide
-which devices need queue depth tracking, and track device_busy only for
-them?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
->>Something like not maintaining device_busy until we actually get a
->>QUEUE_FULL condition. And then rely on the existing queue depth ramp up
->>heuristics to determine when to disable the busy counter again.
+If no manintainer picks it up before the next merge window, then I
+recommend resending the latest version to Linus asking him to merge
+it.
 
-I am not sure how we can suddenly start tracking device_busy on the fly,
-if we do not know how many IO are already pending for that device? Won't
-device_busy have a high chance of getting negative ( or at least wrong
-value) when pending IOs start getting completed?
+Cheers,
 
-Thanks,
-Sumanesh
-
-
------Original Message-----
-From: Martin K. Petersen <martin.petersen@oracle.com>
-Sent: Thursday, January 23, 2020 6:59 PM
-To: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Cc: linux-scsi@vger.kernel.org; Martin K. Petersen
-<martin.petersen@oracle.com>
-Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for
-SSD when HBA needs
-
-
-Sumanesh,
-
-> The high-end controllers might expose a SCSI interface, but can have
-> all kind of devices (NVMe/SCSI/SATA) behind it, and has its own
-> capability to queue IO and feed to devices as needed. Those devices
-> should not be penalized with the overhead of the device_busy counter,
-> just because they chose to expose themselves has SCSI devices (for
-> historical and backward compatibility reasons).
-
-Please read what I proposed. megaraid VDs don't report QUEUE_FULL so you
-would not trigger the device_busy counter.
-
+Dave.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dave Chinner
+david@fromorbit.com
