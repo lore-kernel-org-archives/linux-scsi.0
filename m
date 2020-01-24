@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BC5C35240
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 02:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C64D5C35240
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 02:55:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B47121D7E
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 02:52:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 998602064C
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 02:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730422AbgAXCwb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 21:52:31 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:34780 "EHLO
+        id S1730493AbgAXCzp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 21:55:45 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:55946 "EHLO
         mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730355AbgAXCwb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 21:52:31 -0500
-Received: by mail-pj1-f65.google.com with SMTP id f2so217218pjq.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 18:52:30 -0800 (PST)
+        with ESMTP id S1730487AbgAXCzp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 21:55:45 -0500
+Received: by mail-pj1-f65.google.com with SMTP id d5so377102pjz.5
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 18:55:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=W96VRej6n/8Omgq45VBhp/sMwJRwhpYBnt2eREQW/tk=;
-        b=Wr2eSKDR71/CuGsNrZZYpYD2eKHAw4602ZD1DUVB7tMjp4kAYR1+vd/Qpn91mFfjnA
-         Ract3Vas50ABwe92NuPgE124D1miS6fiR9s0g/KiCn/qI1emuGGapXEsmG1pqeUkqkrV
-         QgNIJdl96ZNX5w/AMnBe/eNwlD4jrlN8HLEbpFmnWHvWC+UntLHWPek88hBqyGiCW4ha
-         bH0qa4VhlE4iB1dGniP44gSjChNDu/YNaxO8lMcD/fkHyN/UNq0doDqPYX4qyqdHUk9i
-         PiqwruS1JlzIuhBVFoVfznw/CzAddDwbdyH7uJrKM1M0UCXyvSbhgaXcxCMiESDu/XPc
-         BVhg==
-X-Gm-Message-State: APjAAAUCLeJx/fEcNPN3X84VMrWHeIhuZbwb3DTSDYESdCnTp/cGNfbO
-        hE+jdEeHixM0fFFBBfOy3f7l83dx
-X-Google-Smtp-Source: APXvYqwi7/2vWbGjBz3Y/kXn5BsZ7srzp8wx+yCW9QXJziUSsFmceB1B+75eSjvkVn6yATp6EaNcWw==
-X-Received: by 2002:a17:90a:8042:: with SMTP id e2mr880507pjw.16.1579834349950;
-        Thu, 23 Jan 2020 18:52:29 -0800 (PST)
+        bh=3NcvFQJ4rlIeUKxhaXQZHNHPekZIQMWtDFSEmvBiDPk=;
+        b=NcSWXtnbty/O/Y6rIeVO13cY15EkcxASUwWcMs5kN9nz+GgDgENeMY3wsp8rQwEH0h
+         d3mFd2vj4Ur8gGru4SiIGQ18rRffXF3tZ7S7Gw9+E5rsMHhVGKvaNzJEBlmaloncv9ND
+         uGtaBUwCYKmQ7d4fDjNWXJD+QKyO2gnnE8DuJAQCPgmydKuuNGHmgI5y+fS1MoI8dAOm
+         Z6d/bkjteShofcxkHDfhxTmSZLb90hVTOIqcqY/VyrdyVJbFf88+3pnFGsg0tZnBzNnj
+         y6y38Z93/8pTbhK6SNAN7yWYQgzSSdMEUsWUDPYCYtYoyUIt0Qvq8gc05OOPPMhZDAmL
+         H7ZQ==
+X-Gm-Message-State: APjAAAUlN0G6OFR2DE7h25roe3ExnvYPACpSnIxbzp1XVf2Ueazv8JPG
+        o8PuojRQGCJN250H/r5pc7ucY73A
+X-Google-Smtp-Source: APXvYqyuV3+c/7BvA8MUolDlIlcA6MK37dOwnU+Qnycyk1b2TVtRKIaaS+WTOyp5rk9Gggl9Um+0Wg==
+X-Received: by 2002:a17:90a:b008:: with SMTP id x8mr897086pjq.106.1579834544084;
+        Thu, 23 Jan 2020 18:55:44 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:3d7d:713:61bd:ca2a? ([2601:647:4000:d7:3d7d:713:61bd:ca2a])
-        by smtp.gmail.com with ESMTPSA id 65sm4174114pfu.140.2020.01.23.18.52.28
+        by smtp.gmail.com with ESMTPSA id a26sm4132263pfo.27.2020.01.23.18.55.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2020 18:52:29 -0800 (PST)
-Subject: Re: [PATCH v2 2/3] scsi: add shost helper to set max queue depth on
- all of its devices
+        Thu, 23 Jan 2020 18:55:43 -0800 (PST)
+Subject: Re: [PATCH v2 3/3] scsi: add shost attribute to set max queue depth
+ on all devices on the shost
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 References: <20200123222102.23383-1-jsmart2021@gmail.com>
- <20200123222102.23383-3-jsmart2021@gmail.com>
+ <20200123222102.23383-4-jsmart2021@gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -70,12 +70,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <57c43701-b9d1-6f4c-677e-16ac1cd43f43@acm.org>
-Date:   Thu, 23 Jan 2020 18:52:28 -0800
+Message-ID: <5f870a98-65d4-c4c6-8034-4c7dd8612b94@acm.org>
+Date:   Thu, 23 Jan 2020 18:55:42 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200123222102.23383-3-jsmart2021@gmail.com>
+In-Reply-To: <20200123222102.23383-4-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,20 +85,23 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-23 14:21, James Smart wrote:
->  /**
-> + * shost_change_max_queue_depths -  helper to walk all devices on a
-                                     ^^
-                  a single space here is probably sufficient?
+> +	depth = simple_strtoul(buf, NULL, 0);
 
-> +	if (!shost->hostt->change_queue_depth)
-> +		return -ENOTSUPP;
+From Documentation/process/deprecated.rst:
 
-ENOTSUPP is defined in include/linux/errno.h so that's a kernel-internal
-error code. I think only error codes from
-include/uapi/asm-generic/errno*.h should be returned to user space.
+The :c:func:`simple_strtol`, :c:func:`simple_strtoll`,
+:c:func:`simple_strtoul`, and :c:func:`simple_strtoull` functions
+explicitly ignore overflows, which may lead to unexpected results
+in callers. The respective :c:func:`kstrtol`, :c:func:`kstrtoll`,
+:c:func:`kstrtoul`, and :c:func:`kstrtoull` functions tend to be the
+correct replacements, though note that those require the string to be
+NUL or newline terminated.
 
-> +	if (depth < 1 || depth > shost->can_queue)
-> +		return -EINVAL;
+Did checkpatch recommend to use kstrtoul() instead?
+
+> +	return (retval < 0) ? retval : count;
+
+Are the parentheses necessary in this expression?
 
 Thanks,
 
