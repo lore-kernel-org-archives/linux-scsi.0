@@ -2,136 +2,130 @@ Return-Path: <SRS0=sMUn=3N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86408C35240
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 00:01:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD85BC35240
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 01:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5485A21569
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 00:01:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79772207FF
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 01:22:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="R0Dfs6DQ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qpgDHEW2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729972AbgAXABu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 19:01:50 -0500
-Received: from mail-il1-f196.google.com ([209.85.166.196]:43171 "EHLO
-        mail-il1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729149AbgAXABu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 19:01:50 -0500
-Received: by mail-il1-f196.google.com with SMTP id v69so289178ili.10
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 16:01:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-transfer-encoding:content-language;
-        bh=MHEUN+jWgjuLYhWatYEBYMGBlZr/1h19E0RrVeUaIMs=;
-        b=R0Dfs6DQcAiry5jrwCbfaJPttuNPYdwVZHTWYXDUC29aAFFOzRf8aUlBeg4jq77ila
-         oaMPQxAFdLXvNFlMwNSkcEQcEvnJ+eWv9C9+Uo29zBf2Rte6WTbfbGiT3X76fP6ajpDY
-         cEkB+meTPstSlm6THCGkBrzgK8Z9EzZfRdknQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=MHEUN+jWgjuLYhWatYEBYMGBlZr/1h19E0RrVeUaIMs=;
-        b=MjkS0J9LxeQnK8UOjG4wSG5Aj0udJRSsPYVB0CgsVr78Wo0SIN390Ia8ZL7p/tIeUd
-         mlJcAK8iUgr+izNKOVfjrCl/gzpiVPfap3vm/mImez9DdLUCyXa/WmL3VJ6ZswWvMVq3
-         8At3YGq0gU9lws7LEqhIePEnajKfcYiQs3LCsEOEsL6VfxUd7aD3vu6NCPYMqdPSKFaJ
-         idX82e9sFfomOatk202xns5QsRMsmL2HWmikiipZTQXSWCHb3O2TWJZPb79jmZ39l+tN
-         L2VPUPmFb+Q1ggiTMMN69LSIplOOzyJDULOnEFEBDqOon6U/3Yyo99EoFgirzXmcK+Am
-         +qjQ==
-X-Gm-Message-State: APjAAAXmUTX3216NDY5YxPXpGFCVaU7PPO0bu3fx0STk7vMa1Ecuiw13
-        5GsQgO3Jv14EXlDtYKwr8mgarq3wmhw=
-X-Google-Smtp-Source: APXvYqwWfd1ja4rXfKu7Foi1LUMlfyLTbLKcEJ81vPO1P9+mbayLHBdEFLrW5ctPJSZ/1rdXVDbYbQ==
-X-Received: by 2002:a92:8307:: with SMTP id f7mr767169ild.73.1579824109755;
-        Thu, 23 Jan 2020 16:01:49 -0800 (PST)
-Received: from [192.168.1.179] (c-67-190-35-197.hsd1.co.comcast.net. [67.190.35.197])
-        by smtp.gmail.com with ESMTPSA id f76sm1078648ild.82.2020.01.23.16.01.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2020 16:01:48 -0800 (PST)
-Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD
- when HBA needs
-To:     linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
+        id S1729719AbgAXBWH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 20:22:07 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:41576 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729151AbgAXBWG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 20:22:06 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O13lK0067647;
+        Fri, 24 Jan 2020 01:21:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=HSNXIrkKWzqjrkxH38nhSRbK/7lFLmAHJTkSh4hVzYE=;
+ b=qpgDHEW2UigTVKvxBVTCFbVPUrc9p0cqX5Z9c7d/3oQJOURzVv2cZt7RAUfn8jUmXMAC
+ IhwBDobcUgModjU4f5BuRG8zCzTRjyhUmC8gwyHZ7HO8dGCn9SXtw5s2mZTteWB9VHUh
+ 5xPMdITQibqfXN621wNZzSB/kYheHPvpjaq6n0zoCaB4Dw/EDnCRN8/O3rjt2FdSnRwT
+ +FQ8hZDGfUHwUeh2HhhmHSv9Wen6XMjXpBobP0tUBx3VZ1tEV62byIJjkKAr/t48cTbC
+ e8B0pvYoUU4j8hsqOFiMijX8PxE/OwB0+rLJV78XXPBc1GAGY5fqIFjK5FGQIZoqCo0n vQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2xkseux6p3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Jan 2020 01:21:53 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00O12XYb049263;
+        Fri, 24 Jan 2020 01:21:52 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2xqmwbct90-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Jan 2020 01:21:52 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00O1Lk3v001499;
+        Fri, 24 Jan 2020 01:21:46 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 23 Jan 2020 17:21:46 -0800
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bart.vanassche@wdc.com>
+Subject: Re: [PATCH 5/6] scsi: core: don't limit per-LUN queue depth for SSD when HBA needs
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
 References: <20200119071432.18558-1-ming.lei@redhat.com>
- <20200119071432.18558-6-ming.lei@redhat.com> <yq1y2u1if7t.fsf@oracle.com>
-From:   Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Message-ID: <ab676c4c-03fb-7eb9-6212-129eb83d0ee8@broadcom.com>
-Date:   Thu, 23 Jan 2020 17:01:47 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
+        <20200119071432.18558-6-ming.lei@redhat.com>
+        <yq1y2u1if7t.fsf@oracle.com> <20200123025429.GA5191@ming.t460p>
+Date:   Thu, 23 Jan 2020 20:21:42 -0500
+In-Reply-To: <20200123025429.GA5191@ming.t460p> (Ming Lei's message of "Thu,
+        23 Jan 2020 10:54:29 +0800")
+Message-ID: <yq1sgk5ejix.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <yq1y2u1if7t.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001240006
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9509 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001240006
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
 
- >> A free host tag does not guarantee that the target
+Ming,
 
-Your point is absolutely correct for a single SSD device, and probably 
-for some low-end controllers, but not for high-end HBA that has its own 
-queuing mechanism.
+> However, it depends on if the target device returns the congestion to
+> host. From my observation, looks there isn't such feedback from NVMe
+> target.
 
-The high-end controllers might expose a SCSI interface, but can have all 
-kind of devices (NVMe/SCSI/SATA) behind it, and has its own capability 
-to queue IO and feed to devices as needed. Those devices should not be 
-penalized with the overhead of the device_busy counter, just because 
-they chose to expose themselves has SCSI devices (for historical and 
-backward compatibility reasons). Rather they should be enabled, so that 
-they can compete with devices exposing themselves as NVMe devices.
-It is those devices that this patch is meant for, and Ming has provided 
-a specific flag for it. For the devices that cannot tolerate more 
-outstanding IO, they need not set the flag, and will be unaffected.
+It happens all the time with SCSI devices. It is imperative that this
+keeps working.
 
-In my humble opinion, the SCSI stack should be flexible enough to 
-support innovation and not limit some controllers, just because others 
-might have limited capability, especially when a whitelist flag is 
-provided so that such devices are unaffected.
+> Even if there was such SSD target which provides such congestion
+> feedback, bypassing .device_busy won't cause big effect too since
+> blk-mq's SCHED_RESTART will retry this IO returning STS_RESOURCE only
+> after another in-flight one is completed.
 
-sincerely,
-Sumanesh
+The reason we back off is that it allows the device to recover by
+temporarily reducing its workload. In addition, the lower queue depth
+alleviates the risk of commands timing out leading to application I/O
+failures.
 
+> At least, Broadcom guys tests this patch on megaraid raid and the
+> results shows that big improvement was got, that is why the flag is
+> only set on megaraid host.
 
-device can queue the command.
+I do not question that it improves performance. That's not my point.
 
-On 1/20/2020 9:52 PM, Martin K. Petersen wrote:
-> Ming,
->
->> NVMe doesn't have such per-request-queue(namespace) queue depth, so it
->> is reasonable to ignore the limit for SCSI SSD too.
-> It is really not. A free host tag does not guarantee that the target
-> device can queue the command.
->
-> The assumption that SSDs are somehow special because they are "fast" is
-> not valid. Given the common hardware queue depth for a SAS device of
-> ~128 it is often trivial to drive a device into a congestion
-> scenario. We see it all the time for non-rotational devices, SSDs and
-> arrays alike. The SSD heuristic is simply not going to fly.
->
-> Don't get me wrong, I am very sympathetic to obliterating device_busy in
-> the hot path. I just don't think it is as easy as just ignoring the
-> counter and hope for the best. Dynamic queue depth management is an
-> integral part of the SCSI protocol, not something we can just decide to
-> bypass because a device claims to be of a certain media type or speed.
->
-> I would prefer not to touch drivers that rely on cmd_per_lun / untagged
-> operation and focus exclusively on the ones that use .track_queue_depth.
-> For those we could consider an adaptive queue depth management scheme.
-> Something like not maintaining device_busy until we actually get a
-> QUEUE_FULL condition. And then rely on the existing queue depth ramp up
-> heuristics to determine when to disable the busy counter again. Maybe
-> with an additional watermark or time limit to avoid flip-flopping.
->
-> If that approach turns out to work, we should convert all remaining
-> non-legacy drivers to .track_queue_depth so we only have two driver
-> queuing flavors to worry about.
->
+> In theory, .track_queue_depth may only improve sequential IO's
+> performance for HDD., not very effective for SSD. Or just save a bit
+> CPU cycles in case of SSD.
+
+This is not about performance. This is about how the system behaves when
+a device is starved for resources or experiencing transient failures.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
