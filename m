@@ -2,99 +2,172 @@ Return-Path: <SRS0=sMUn=3N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C5DC35240
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 03:13:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1971C2D0CE
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 04:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CBA620704
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 03:13:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E01220718
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 04:50:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="xFzevr3P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730679AbgAXDN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Jan 2020 22:13:29 -0500
-Received: from mail-pf1-f169.google.com ([209.85.210.169]:39596 "EHLO
-        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730664AbgAXDN3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jan 2020 22:13:29 -0500
-Received: by mail-pf1-f169.google.com with SMTP id q10so400694pfs.6
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Jan 2020 19:13:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=nmaQKSIkZfjQx4a5bCTAkinQ0w+y5qAslUd9NEqe5+Y=;
-        b=ULIXDdaIOehn3H7OWBP9cxDd8GgbvQU8OUJgDfLhN16RbH3/wgOagoW9pz/pmgv3cX
-         SAhsQSuVsciugjfIm4Gj1MSz9QyCf3si/5BmM3KURkBEsN6R6T/kifbE57p316GkNJHX
-         7BO/hnDNJgxq/WHt08S8bvtqg/QVOlE871rUr7elY0QpS4/nWfco9lfrcn0Ec7HudiE6
-         LLPYvh3rRPgeOWjnLYchSvsBHM7uL7+BlOKjwste141V2tVoa0gBCDzHcgycchitfWO8
-         ZnupwcZBbyQ9j0GGVDMAs4rojjeeFOgdJ61Tg1cCMoaKPN0JpC827qGpoPGq3TwjEYB6
-         4IJQ==
-X-Gm-Message-State: APjAAAVKO5/6MfdnrvpaODZOHsxgyhT9Tsfx0SqxRzmf5WxZrh9W2W0s
-        oxUTf1TsCwJw8N/Td11gZY0=
-X-Google-Smtp-Source: APXvYqzRYCLvSYIu4u1FmKn/ay/BKAl7v6RMkIope+HquJWCne3N878eKq8PTdUPecb5DPHnm1OG4w==
-X-Received: by 2002:aa7:9d9c:: with SMTP id f28mr1355997pfq.20.1579835608890;
-        Thu, 23 Jan 2020 19:13:28 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:3d7d:713:61bd:ca2a? ([2601:647:4000:d7:3d7d:713:61bd:ca2a])
-        by smtp.gmail.com with ESMTPSA id c19sm4390081pfc.144.2020.01.23.19.13.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2020 19:13:28 -0800 (PST)
-Subject: Re: [PATCH v2 5/6] qla2xxx: Convert MAKE_HANDLE() from a define into
- an inline function
-To:     Daniel Wagner <dwagner@suse.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-References: <20200123042345.23886-1-bvanassche@acm.org>
- <20200123042345.23886-6-bvanassche@acm.org>
- <20200123103900.lgfr23w7p7fgcshr@beryllium.lan>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <5931014b-0170-8e82-174f-31b93ec14229@acm.org>
-Date:   Thu, 23 Jan 2020 19:13:26 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1730005AbgAXEuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Jan 2020 23:50:21 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43516 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729497AbgAXEuU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Jan 2020 23:50:20 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00O4jV3K014280;
+        Thu, 23 Jan 2020 20:50:17 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=2hqxFBaIFSVftmntsumSka20YchL0F7K85/hiF7ksrs=;
+ b=xFzevr3PC+qJ33twy+/aw0d6Jc01Ffh6hDNcR833C4Rl2CkSATZvSY4U6WYthLWOEPYh
+ OwVIa+Ytb9GkATD2E6z8rU3xDcNsd5CeGf6nI7BsRi7xF+30OfU6rYCCIWDAyYhyYx8x
+ Ejtd6vfbucDXYtFVR5xZXGhW8b1lB92cOWqOcO2hJgWL40/gPcddn6DqpgeNWPfEZsOv
+ jiTFAy6VXDQi5AZLNOen8OmPCvg2EbeUaTsC2fuN5E94ZbrXOXGHvRA9C9QB4XdOjhgr
+ DJ01lEC6v9MDhcptU1EFCPD4zcSKl597kU2akW0UdPi9P28cDjX+FAYZt1euhIWdqm1l LA== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xm2dtexnh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 23 Jan 2020 20:50:17 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 23 Jan
+ 2020 20:50:15 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 23 Jan 2020 20:50:15 -0800
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 445623F7043;
+        Thu, 23 Jan 2020 20:50:15 -0800 (PST)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 00O4oFpr023589;
+        Thu, 23 Jan 2020 20:50:15 -0800
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 00O4oEDM023588;
+        Thu, 23 Jan 2020 20:50:14 -0800
+From:   Himanshu Madhani <hmadhani@marvell.com>
+To:     <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH v5] qla2xxx: Fix unbound NVME response length
+Date:   Thu, 23 Jan 2020 20:50:14 -0800
+Message-ID: <20200124045014.23554-1-hmadhani@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <20200123103900.lgfr23w7p7fgcshr@beryllium.lan>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-23_13:2020-01-23,2020-01-23 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-23 02:39, Daniel Wagner wrote:
-> s/MAKE_HANDLE/make_handle/ ?
+From: Arun Easi <aeasi@marvell.com>
 
-That will make the function name conformant with the coding style. I
-will look into this.
+On certain cases when response length is less than 32, NVME response data
+is supplied inline in IOCB. This is indicated by some combination of state
+flags. There was an instance when a high, and incorrect, response length was
+indicated causing driver to overrun buffers. Fix this by checking and
+limiting the response payload length.
 
-Bart.
+Fixes: 7401bc18d1ee3 ("scsi: qla2xxx: Add FC-NVMe command handling")
+Cc: stable@vger.kernel.org
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+---
+Hi Martin,
+
+We discovered issue with our newer Gen7 adapter when response length
+happens to be larger than 32 bytes, could result into crash.
+
+Please apply this to 5.5/scsi-fixes branch at your earliest convenience.
+
+Changes from v4 -> v5
+
+o Added WARN_ONCE and moved it under ql_dbg bits to avoid excessive logging
+
+Changes from v3 -> v4
+
+o use "sizeof(struct nvme_fc_ersp_iu)" in missed place.
+
+Changes from v2 -> v3
+
+o Use "sizeof(struct nvme_fc_ersp_iu)" to indicate response payload size.
+
+Changes from v1 -> v2
+
+o Fixed the tag for stable.
+o Removed logit which got spilled from other patch to prevent compile failure.
+
+Thanks,
+Himanshu
+---
+ drivers/scsi/qla2xxx/qla_dbg.c |  6 ------
+ drivers/scsi/qla2xxx/qla_dbg.h |  6 ++++++
+ drivers/scsi/qla2xxx/qla_isr.c | 12 ++++++++++++
+ 3 files changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index e5500bba06ca..88a56e8480f7 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -2519,12 +2519,6 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ /*                         Driver Debug Functions.                          */
+ /****************************************************************************/
+ 
+-static inline int
+-ql_mask_match(uint level)
+-{
+-	return (level & ql2xextended_error_logging) == level;
+-}
+-
+ /*
+  * This function is for formatting and logging debug information.
+  * It is to be used when vha is available. It formats the message
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index bb01b680ce9f..433e95502808 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -374,3 +374,9 @@ extern int qla24xx_dump_ram(struct qla_hw_data *, uint32_t, uint32_t *,
+ extern void qla24xx_pause_risc(struct device_reg_24xx __iomem *,
+ 	struct qla_hw_data *);
+ extern int qla24xx_soft_reset(struct qla_hw_data *);
++
++static inline int
++ql_mask_match(uint level)
++{
++	return (level & ql2xextended_error_logging) == level;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index e7bad0bfffda..e40705d38cea 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1939,6 +1939,18 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		inbuf = (uint32_t *)&sts->nvme_ersp_data;
+ 		outbuf = (uint32_t *)fd->rspaddr;
+ 		iocb->u.nvme.rsp_pyld_len = le16_to_cpu(sts->nvme_rsp_pyld_len);
++		if (unlikely(iocb->u.nvme.rsp_pyld_len >
++		    sizeof(struct nvme_fc_ersp_iu))) {
++			if (ql_mask_match(ql_dbg_io)) {
++				WARN_ONCE(1, "Unexpected response payload length %u.\n",
++				    iocb->u.nvme.rsp_pyld_len);
++				ql_log(ql_log_warn, fcport->vha, 0x5100,
++				    "Unexpected response payload length %u.\n",
++				    iocb->u.nvme.rsp_pyld_len);
++			}
++			iocb->u.nvme.rsp_pyld_len =
++			    sizeof(struct nvme_fc_ersp_iu);
++		}
+ 		iter = iocb->u.nvme.rsp_pyld_len >> 2;
+ 		for (; iter; iter--)
+ 			*outbuf++ = swab32(*inbuf++);
+-- 
+2.12.0
 
