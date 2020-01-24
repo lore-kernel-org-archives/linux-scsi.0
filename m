@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B2FC35242
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31703C2D0DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:28:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 70BF224688
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:25:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DED2B206F0
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:28:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875910;
-	bh=VFVlQoFiGed9NGWrouU+wwPZbLrl4yDz2ygQYAGuk40=;
+	s=default; t=1579876116;
+	bh=myvnqDm2vXOgvBlt/KoPWLRCFS8ra8lMtR6e3ZL2R+s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FYwWccKvmsDFmKxvs1fH2dhN04sjnZzxXfpexXYpizNcj1d9yUYfKq2cfhiKE0s+6
-	 c7f1TcrMdpnzvl+mre7t9MioxbkiihvKopk4hQkfCH8sUGacF7hsI4Ic0+aOtsrYNt
-	 df8qhAmg7ZJsj9jg+9UqMR2eZzKdhm1mLtGcFjNQ=
+	b=ojfbKJiDISfNwYPqWObwhlRf1dMhwFadvHgQaOzQEpf1z0LiszHxofDfgX7jZf6wx
+	 vpzLhqcFrg+qaY0BZ86OLrRry/POiUSeaMAvml/6DuR1YfYDbbNvmQrA0aNzZ+ZL+t
+	 wvqsH5g2Ompk4vwJp3N3G8t/anBhJgn60KQjU+Jk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392275AbgAXOV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:21:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43946 "EHLO mail.kernel.org"
+        id S2405207AbgAXOVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jan 2020 09:21:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42576 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392260AbgAXOVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:21:55 -0500
+        id S2405162AbgAXOVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:21:08 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 03907222C2;
-        Fri, 24 Jan 2020 14:21:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CC1FA2087E;
+        Fri, 24 Jan 2020 14:21:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875714;
-        bh=VFVlQoFiGed9NGWrouU+wwPZbLrl4yDz2ygQYAGuk40=;
+        s=default; t=1579875667;
+        bh=myvnqDm2vXOgvBlt/KoPWLRCFS8ra8lMtR6e3ZL2R+s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=siQSW/xmDnZAuVP75njzWAEZ9bULds+eMNWig+yk1XZGgrFvqxyirWfuIjQvipbV6
-         cBCG8Zr+WslMdBInQ4Q2KEvvlyKQVOhXFcOhIQCDheool09O9z1LHmMp31Ib84MdId
-         tiM/dC0Cj/qs6/uB9sc4d+jY+LyG98GflWQ0qAzI=
+        b=0MM+vqmpmuqrAosRDlLxFKz7u/41Bo5l4BoOXUNL4ZVKfiwxpeE68MaWSagQpLjV1
+         kVMuIJMUrwLDtUQvNs1Dde3giMiI545DdlE1WxU4owERh9cJS1SfjXbwlq8BVqsQ0i
+         C785sn0SMQT7DDwajWBEZPbdmS/H1uFIZO84y7kE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
@@ -46,12 +46,12 @@ Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 29/32] scsi: mptfusion: Fix double fetch bug in ioctl
-Date:   Fri, 24 Jan 2020 09:21:16 -0500
-Message-Id: <20200124142119.30484-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 47/56] scsi: mptfusion: Fix double fetch bug in ioctl
+Date:   Fri, 24 Jan 2020 09:20:03 -0500
+Message-Id: <20200124142012.29752-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142119.30484-1-sashal@kernel.org>
-References: <20200124142119.30484-1-sashal@kernel.org>
+In-Reply-To: <20200124142012.29752-1-sashal@kernel.org>
+References: <20200124142012.29752-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -107,7 +107,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 50 insertions(+), 163 deletions(-)
 
 diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index cf6ce9f600ca8..f9b2e652c399c 100644
+index 8d22d6134a89d..a0a42bdc3028b 100644
 --- a/drivers/message/fusion/mptctl.c
 +++ b/drivers/message/fusion/mptctl.c
 @@ -100,19 +100,19 @@ struct buflist {
@@ -586,7 +586,7 @@ index cf6ce9f600ca8..f9b2e652c399c 100644
  	dctlprintk(ioc, printk(MYIOC_s_DEBUG_FMT ": mptctl_hp_hostinfo called.\n",
  	    ioc->name));
  
-@@ -2670,15 +2565,13 @@ retry_wait:
+@@ -2659,15 +2554,13 @@ retry_wait:
   *		-ENOMEM if memory allocation error
   */
  static int
@@ -603,7 +603,7 @@ index cf6ce9f600ca8..f9b2e652c399c 100644
  	int			data_sz;
  	dma_addr_t		page_dma;
  	CONFIGPARMS	 	cfg;
-@@ -2692,12 +2585,6 @@ mptctl_hp_targetinfo(unsigned long arg)
+@@ -2681,12 +2574,6 @@ mptctl_hp_targetinfo(unsigned long arg)
  		return -EFAULT;
  	}
  
@@ -616,7 +616,7 @@ index cf6ce9f600ca8..f9b2e652c399c 100644
  	if (karg.hdr.id >= MPT_MAX_FC_DEVICES)
  		return -EINVAL;
  	dctlprintk(ioc, printk(MYIOC_s_DEBUG_FMT "mptctl_hp_targetinfo called.\n",
-@@ -2865,7 +2752,7 @@ compat_mptfwxfer_ioctl(struct file *filp, unsigned int cmd,
+@@ -2854,7 +2741,7 @@ compat_mptfwxfer_ioctl(struct file *filp, unsigned int cmd,
  	kfw.fwlen = kfw32.fwlen;
  	kfw.bufp = compat_ptr(kfw32.bufp);
  
@@ -625,7 +625,7 @@ index cf6ce9f600ca8..f9b2e652c399c 100644
  
  	mutex_unlock(&iocp->ioctl_cmds.mutex);
  
-@@ -2919,7 +2806,7 @@ compat_mpt_command(struct file *filp, unsigned int cmd,
+@@ -2908,7 +2795,7 @@ compat_mpt_command(struct file *filp, unsigned int cmd,
  
  	/* Pass new structure to do_mpt_command
  	 */
