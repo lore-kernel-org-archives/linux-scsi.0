@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31703C2D0DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECF3C2D0DB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:32:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DED2B206F0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:28:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FDEB2077C
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Jan 2020 14:32:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579876116;
-	bh=myvnqDm2vXOgvBlt/KoPWLRCFS8ra8lMtR6e3ZL2R+s=;
+	s=default; t=1579876372;
+	bh=Lwg0yO/4d5duqWgWNop+9/lMGQSytVmU814DHu/KnKQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ojfbKJiDISfNwYPqWObwhlRf1dMhwFadvHgQaOzQEpf1z0LiszHxofDfgX7jZf6wx
-	 vpzLhqcFrg+qaY0BZ86OLrRry/POiUSeaMAvml/6DuR1YfYDbbNvmQrA0aNzZ+ZL+t
-	 wvqsH5g2Ompk4vwJp3N3G8t/anBhJgn60KQjU+Jk=
+	b=bkpoculjhnX4GH2qIQP1spJx1R2xko5Nk0DTWuNuYuFn1P+/rnX3BhdD8J/bpdF1z
+	 0XdtRPHB0Sq+aNO2xl24nfhb54TIiWQjcuRe4+M3IHlSkyfPKvUtqNV5vJUTb7GySy
+	 bD3Yfcf9+tPVA9X5yuraYR+cvH3Lg4U9RpwmxxEY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405207AbgAXOVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:21:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42576 "EHLO mail.kernel.org"
+        id S2404307AbgAXOUA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Jan 2020 09:20:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40710 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405162AbgAXOVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:21:08 -0500
+        id S2404300AbgAXOUA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:20:00 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CC1FA2087E;
-        Fri, 24 Jan 2020 14:21:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C91CA22464;
+        Fri, 24 Jan 2020 14:19:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875667;
-        bh=myvnqDm2vXOgvBlt/KoPWLRCFS8ra8lMtR6e3ZL2R+s=;
+        s=default; t=1579875598;
+        bh=Lwg0yO/4d5duqWgWNop+9/lMGQSytVmU814DHu/KnKQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0MM+vqmpmuqrAosRDlLxFKz7u/41Bo5l4BoOXUNL4ZVKfiwxpeE68MaWSagQpLjV1
-         kVMuIJMUrwLDtUQvNs1Dde3giMiI545DdlE1WxU4owERh9cJS1SfjXbwlq8BVqsQ0i
-         C785sn0SMQT7DDwajWBEZPbdmS/H1uFIZO84y7kE=
+        b=2fZW4uiYPCpvinLhwaEBz9cgAW0K3pWD+xnF9CUFXeu8cO1hfy4/aEwHTxDhU0ssa
+         IM4KkleUpg1G6ibksEJnVd88VT2vVXJFdTEqaC5H05oocULX6G4sAjgjErmSoB0qmQ
+         GTfUG9l707NSAHJlf6zDR+AWDMwGvat7zwrrJfUQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
@@ -46,12 +46,12 @@ Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 47/56] scsi: mptfusion: Fix double fetch bug in ioctl
-Date:   Fri, 24 Jan 2020 09:20:03 -0500
-Message-Id: <20200124142012.29752-47-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 087/107] scsi: mptfusion: Fix double fetch bug in ioctl
+Date:   Fri, 24 Jan 2020 09:17:57 -0500
+Message-Id: <20200124141817.28793-87-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142012.29752-1-sashal@kernel.org>
-References: <20200124142012.29752-1-sashal@kernel.org>
+In-Reply-To: <20200124141817.28793-1-sashal@kernel.org>
+References: <20200124141817.28793-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -107,7 +107,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 50 insertions(+), 163 deletions(-)
 
 diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 8d22d6134a89d..a0a42bdc3028b 100644
+index f9ac224130008..1074b882c57c8 100644
 --- a/drivers/message/fusion/mptctl.c
 +++ b/drivers/message/fusion/mptctl.c
 @@ -100,19 +100,19 @@ struct buflist {
