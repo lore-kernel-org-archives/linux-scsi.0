@@ -2,96 +2,258 @@ Return-Path: <SRS0=90Tc=3O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC23C35241
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jan 2020 05:54:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E299AC35241
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jan 2020 06:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38B742071E
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jan 2020 05:54:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B01372071A
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Jan 2020 06:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726146AbgAYFy6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jan 2020 00:54:58 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:33885 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725781AbgAYFy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 00:54:57 -0500
-Received: by mail-pf1-f193.google.com with SMTP id i6so2175574pfc.1
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Jan 2020 21:54:57 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=yY/7x8bXW6P4n45s2vq/+aHauXUZ/ontaRxvRjgaFgI=;
-        b=ODRz0UWNHcXjcx9EeXzgAhFSz4MFqG+z1vwqIzMYqinfbBtVUVVXdE3eEIbte46mim
-         n1GfEOX6znt7/K560eJr3oLoJtViT2EtNC+XZzGyi1wQVIxte1u86WENd2ZUPtw7yq8o
-         awTEgOJM/8ekPGdaZjOWHvF92h15zEDzQe2386bYlNVRbVvuUUFjCKEtRLh9wHBH3PMu
-         oakkKFJ5ZfjOwxxix6Ll2N+BMS6+uM7JRCbiLtVVsN+s+09DPLe0d193qF1o1fNIwPAV
-         oqjOMu34rZO78xctEuYXHUW/+q89IdHjH9Vq2BpARf1atfgptlNp2wIJ8trsMSMCOBYJ
-         fAww==
-X-Gm-Message-State: APjAAAUrKYjjqlfpRZP0m2W9emeL7Gig7NMJP9L4fnbRDwTur8PCslO2
-        WP3kKpDT+9cnr0U5O/TwuCy+xvYz
-X-Google-Smtp-Source: APXvYqxh8Zzr67QMFESlpOM6/GiKJ6mXPQSJjHx8C+75xL67W9PpmtwAPYlmajtLXr0NUySX8HaONw==
-X-Received: by 2002:a63:c508:: with SMTP id f8mr7854604pgd.17.1579931696715;
-        Fri, 24 Jan 2020 21:54:56 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:1596:afb1:10e:95ae? ([2601:647:4000:d7:1596:afb1:10e:95ae])
-        by smtp.gmail.com with ESMTPSA id e15sm8509415pja.13.2020.01.24.21.54.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 24 Jan 2020 21:54:56 -0800 (PST)
-Subject: Re: [PATCH v3 1/3] scsi: refactor sdev lun queue depth setting via
- sysfs
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-References: <20200124230115.14562-1-jsmart2021@gmail.com>
- <20200124230115.14562-2-jsmart2021@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <0502d67b-202e-a11c-a2d5-113838deded0@acm.org>
-Date:   Fri, 24 Jan 2020 21:54:55 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1728583AbgAYGTi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Jan 2020 01:19:38 -0500
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:38098 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725781AbgAYGTi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 01:19:38 -0500
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: krisman)
+        with ESMTPSA id A453629193A
+From:   Gabriel Krisman Bertazi <krisman@collabora.com>
+To:     lduncan@suse.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, Bharath Ravi <rbharath@google.com>,
+        kernel@collabora.com, Mike Christie <mchristi@redhat.com>,
+        Lee Duncan <LDuncan@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Dave Clausen <dclausen@google.com>,
+        Nick Black <nlb@google.com>,
+        Vaibhav Nagarnaik <vnagarnaik@google.com>,
+        Anatol Pomazau <anatol@google.com>,
+        Tahsin Erdogan <tahsin@google.com>,
+        Frank Mayhar <fmayhar@google.com>, Junho Ryu <jayr@google.com>,
+        Khazhismel Kumykov <khazhy@google.com>,
+        Gabriel Krisman Bertazi <krisman@collabora.com>
+Subject: [PATCH RESEND v4] iscsi: Perform connection failure entirely in kernel space
+Date:   Sat, 25 Jan 2020 01:19:25 -0500
+Message-Id: <20200125061925.191601-1-krisman@collabora.com>
+X-Mailer: git-send-email 2.25.0.rc2
 MIME-Version: 1.0
-In-Reply-To: <20200124230115.14562-2-jsmart2021@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-24 15:01, James Smart wrote:
-> In preparation for allowing other attributes and routines to change
-> the current and max lun queue depth on an sdev, refactor the sysfs
-> sdev attribute change routine. The refactoring creates a new scsi-internal
-> routine, scsi_change_max_queue_depth(), which changes a devices current
-> and max queue value.
-> 
-> The new routine is placed next to the routine, scsi_change_queue_depth(),
-> which is used by most lldds to implement a queue depth change.
+From: Bharath Ravi <rbharath@google.com>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi Lee,
+
+Martin asked for you to re-review this patch before he applies it, since
+there was a small change from v3 after you acked it.  The change is that
+we started to protect the list_empty() verification with the spin lock
+on session destruction.
+
+For that reason, I dropped your reviewed-by.  Can you please take
+another look so we can have this merged?
+
+Thanks,
+
+-- >8 -- 
+
+Connection failure processing depends on a daemon being present to (at
+least) stop the connection and start recovery.  This is a problem on a
+multipath scenario, where if the daemon failed for whatever reason, the
+SCSI path is never marked as down, multipath won't perform the
+failover and IO to the device will be forever waiting for that
+connection to come back.
+
+This patch performs the connection failure entirely inside the kernel.
+This way, the failover can happen and pending IO can continue even if
+the daemon is dead. Once the daemon comes alive again, it can execute
+recovery procedures if applicable.
+
+Changes since v3:
+  - Protect list_empty with connlock on session destroy
+
+Changes since v2:
+  - Don't hold rx_mutex for too long at once
+
+Changes since v1:
+  - Remove module parameter.
+  - Always do kernel-side stop work.
+  - Block recovery timeout handler if system is dying.
+  - send a CONN_TERM stop if the system is dying.
+
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Lee Duncan <LDuncan@suse.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Co-developed-by: Dave Clausen <dclausen@google.com>
+Signed-off-by: Dave Clausen <dclausen@google.com>
+Co-developed-by: Nick Black <nlb@google.com>
+Signed-off-by: Nick Black <nlb@google.com>
+Co-developed-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Signed-off-by: Vaibhav Nagarnaik <vnagarnaik@google.com>
+Co-developed-by: Anatol Pomazau <anatol@google.com>
+Signed-off-by: Anatol Pomazau <anatol@google.com>
+Co-developed-by: Tahsin Erdogan <tahsin@google.com>
+Signed-off-by: Tahsin Erdogan <tahsin@google.com>
+Co-developed-by: Frank Mayhar <fmayhar@google.com>
+Signed-off-by: Frank Mayhar <fmayhar@google.com>
+Co-developed-by: Junho Ryu <jayr@google.com>
+Signed-off-by: Junho Ryu <jayr@google.com>
+Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
+Reviewed-by: Reviewed-by: Khazhismel Kumykov <khazhy@google.com>
+Signed-off-by: Bharath Ravi <rbharath@google.com>
+Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 68 +++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 2 files changed, 69 insertions(+)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 271afea654e2..ba6cfaf71aef 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -86,6 +86,12 @@ struct iscsi_internal {
+ 	struct transport_container session_cont;
+ };
+ 
++/* Worker to perform connection failure on unresponsive connections
++ * completely in kernel space.
++ */
++static void stop_conn_work_fn(struct work_struct *work);
++static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
++
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+ static struct workqueue_struct *iscsi_eh_timer_workq;
+ 
+@@ -1611,6 +1617,7 @@ static DEFINE_MUTEX(rx_queue_mutex);
+ static LIST_HEAD(sesslist);
+ static DEFINE_SPINLOCK(sesslock);
+ static LIST_HEAD(connlist);
++static LIST_HEAD(connlist_err);
+ static DEFINE_SPINLOCK(connlock);
+ 
+ static uint32_t iscsi_conn_get_sid(struct iscsi_cls_conn *conn)
+@@ -2247,6 +2254,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
+ 
+ 	mutex_init(&conn->ep_mutex);
+ 	INIT_LIST_HEAD(&conn->conn_list);
++	INIT_LIST_HEAD(&conn->conn_list_err);
+ 	conn->transport = transport;
+ 	conn->cid = cid;
+ 
+@@ -2293,6 +2301,7 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ 
+ 	spin_lock_irqsave(&connlock, flags);
+ 	list_del(&conn->conn_list);
++	list_del(&conn->conn_list_err);
+ 	spin_unlock_irqrestore(&connlock, flags);
+ 
+ 	transport_unregister_device(&conn->dev);
+@@ -2407,6 +2416,51 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
+ 
++static void stop_conn_work_fn(struct work_struct *work)
++{
++	struct iscsi_cls_conn *conn, *tmp;
++	unsigned long flags;
++	LIST_HEAD(recovery_list);
++
++	spin_lock_irqsave(&connlock, flags);
++	if (list_empty(&connlist_err)) {
++		spin_unlock_irqrestore(&connlock, flags);
++		return;
++	}
++	list_splice_init(&connlist_err, &recovery_list);
++	spin_unlock_irqrestore(&connlock, flags);
++
++	list_for_each_entry_safe(conn, tmp, &recovery_list, conn_list_err) {
++		uint32_t sid = iscsi_conn_get_sid(conn);
++		struct iscsi_cls_session *session;
++
++		mutex_lock(&rx_queue_mutex);
++
++		session = iscsi_session_lookup(sid);
++		if (session) {
++			if (system_state != SYSTEM_RUNNING) {
++				session->recovery_tmo = 0;
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_TERM);
++			} else {
++				conn->transport->stop_conn(conn,
++							   STOP_CONN_RECOVER);
++			}
++		}
++
++		list_del_init(&conn->conn_list_err);
++
++		mutex_unlock(&rx_queue_mutex);
++
++		/* we don't want to hold rx_queue_mutex for too long,
++		 * for instance if many conns failed at the same time,
++		 * since this stall other iscsi maintenance operations.
++		 * Give other users a chance to proceed.
++		 */
++		cond_resched();
++	}
++}
++
+ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ {
+ 	struct nlmsghdr	*nlh;
+@@ -2414,6 +2468,12 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+ 	int len = nlmsg_total_size(sizeof(*ev));
++	unsigned long flags;
++
++	spin_lock_irqsave(&connlock, flags);
++	list_add(&conn->conn_list_err, &connlist_err);
++	spin_unlock_irqrestore(&connlock, flags);
++	queue_work(system_unbound_wq, &stop_conn_work);
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -2743,11 +2803,19 @@ static int
+ iscsi_if_destroy_conn(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ {
+ 	struct iscsi_cls_conn *conn;
++	unsigned long flags;
+ 
+ 	conn = iscsi_conn_lookup(ev->u.d_conn.sid, ev->u.d_conn.cid);
+ 	if (!conn)
+ 		return -EINVAL;
+ 
++	spin_lock_irqsave(&connlock, flags);
++	if (!list_empty(&conn->conn_list_err)) {
++		spin_unlock_irqrestore(&connlock, flags);
++		return -EAGAIN;
++	}
++	spin_unlock_irqrestore(&connlock, flags);
++
+ 	ISCSI_DBG_TRANS_CONN(conn, "Destroying transport conn\n");
+ 	if (transport->destroy_conn)
+ 		transport->destroy_conn(conn);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 325ae731d9ad..2129dc9e2dec 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -190,6 +190,7 @@ extern void iscsi_ping_comp_event(uint32_t host_no,
+ 
+ struct iscsi_cls_conn {
+ 	struct list_head conn_list;	/* item in connlist */
++	struct list_head conn_list_err;	/* item in connlist_err */
+ 	void *dd_data;			/* LLD private data */
+ 	struct iscsi_transport *transport;
+ 	uint32_t cid;			/* connection id */
+-- 
+2.25.0.rc2
+
