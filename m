@@ -6,43 +6,42 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B56DFC35240
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:34:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7620BC4741C
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:45:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95E312071E
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:34:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D34920702
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:38:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729154AbgAZDeI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jan 2020 22:34:08 -0500
-Received: from mail-pj1-f47.google.com ([209.85.216.47]:40468 "EHLO
-        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728842AbgAZDeI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 22:34:08 -0500
-Received: by mail-pj1-f47.google.com with SMTP id 12so248616pjb.5;
-        Sat, 25 Jan 2020 19:34:07 -0800 (PST)
+        id S1729100AbgAZDiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Jan 2020 22:38:11 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:45152 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728842AbgAZDiL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 22:38:11 -0500
+Received: by mail-pl1-f194.google.com with SMTP id b22so2447313pls.12;
+        Sat, 25 Jan 2020 19:38:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=khgZlIuPTL2YZy5ATnnTiJZReqwOUFRwMdyJ7YG/QAw=;
-        b=VGjRGBVXHUxIhUJ9wwqujxFrM1EFH0lg5j2bUoTJN2kJA/dfp553LDuxUU6IrAs1c7
-         frX2qnobxTFR50WpC8mToUyn2fJxAVk0YvfszHIlQDg4jfwTLhwtrr4MB76qg7YTlje5
-         yNFVUdPs4mUM0BRVwmlasiMQiUq8tpsg4avEkt8kAOYpOmp9IjU6z3F2+TX76hwaZVOD
-         TKdBDVXZEFXnBf7lZP9aMA/mE7fc+sOfrn+OygUaB/FsH7Xlqtx8PrUvP/c6Ol9+0wFO
-         WVJBcs6z24Oa1Ym5Mg+LhEasrdnSj8HBHDQINxy3nfF31eGYRZXqjgRfOttLZrf5fztZ
-         drcw==
-X-Gm-Message-State: APjAAAU8MqWYb9AbLCaikDfOcKmf9Kx6sT208jMdr0xSFi0vQ/WbHHKD
-        TG8VSAtQ59113DyoXmnpI9FMvZl4OYU=
-X-Google-Smtp-Source: APXvYqwFY+pvwRLxdQBML7+E9mI8DDqpewpX4AA39ZF5j6Cq1u83ohoL8ilS6uiE+6tSRZZyi1fvUw==
-X-Received: by 2002:a17:90a:8545:: with SMTP id a5mr7658920pjw.43.1580009646863;
-        Sat, 25 Jan 2020 19:34:06 -0800 (PST)
+        bh=C6J2vyrfwsbzKsETG3LdMn6/JpdelGe+VlbRl2W8eUc=;
+        b=Xg7hh0RhCvIGfL2RmSH/tYrI7acX3PNOxbFCBJyuKKy4yualskEtJZdaqqmAuR/eSA
+         p65cxS9Wejh4tmxxdv7JGPYvc8ZGkMeJ8oqyBXZ79/fEogzeywuFxX5w4I/DnhlFp23u
+         /TqCXWXOve64MxPqJAlWa84NluwSxbOTt79gmP21TIZ+GmOTfD2Udeel8N2asfS5um46
+         QS5i+KGnFGjLF4r5mwANHzXN8sKc/ev41cLEYlRqUn21Iqdpt2xBBjyJ9kc1ph35sc69
+         0oC7U9T0KW5cuAcL0mNXU4NYtBvj3C43zg158Qu4uGXwkBs88ixNKYZQbBB/01EOMUkg
+         iYhQ==
+X-Gm-Message-State: APjAAAXJYCvEND9jhiZtLuUwyXkUGsreidGrW2nWtFV29FSkd6527OA7
+        izH03w/bwo0eOXJUAX6PMlEW2xcJtjE=
+X-Google-Smtp-Source: APXvYqxI6mkRQt/PbIcKWf14pVYB4bykJ7v6vJj2WBirNIJqdo0ruqI/t84mjnUzzLLppZGKEAWhUQ==
+X-Received: by 2002:a17:902:bb8d:: with SMTP id m13mr11340594pls.157.1580009890548;
+        Sat, 25 Jan 2020 19:38:10 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:a876:9802:4659:f0bd? ([2601:647:4000:d7:a876:9802:4659:f0bd])
-        by smtp.gmail.com with ESMTPSA id x10sm2394911pfi.180.2020.01.25.19.34.05
+        by smtp.gmail.com with ESMTPSA id b8sm11221149pff.114.2020.01.25.19.38.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jan 2020 19:34:06 -0800 (PST)
-Subject: Re: [PATCH v4 6/8] scsi: ufs: Add dev ref clock gating wait time
- support
+        Sat, 25 Jan 2020 19:38:09 -0800 (PST)
+Subject: Re: [PATCH v4 8/8] scsi: ufs: Select INITIAL adapt for HS Gear4
 To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
@@ -52,12 +51,16 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Allison Randal <allison@lohutok.net>,
         open list <linux-kernel@vger.kernel.org>
 References: <1579764349-15578-1-git-send-email-cang@codeaurora.org>
- <1579764349-15578-7-git-send-email-cang@codeaurora.org>
+ <1579764349-15578-9-git-send-email-cang@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -82,12 +85,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <d51c7c51-482a-01c3-fae0-1e83f9df45ac@acm.org>
-Date:   Sat, 25 Jan 2020 19:34:04 -0800
+Message-ID: <0b782a25-a9a3-f6bc-6e2e-4ec0403b62a1@acm.org>
+Date:   Sat, 25 Jan 2020 19:38:08 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <1579764349-15578-7-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1579764349-15578-9-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -97,11 +100,21 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-22 23:25, Can Guo wrote:
-> +	/* getting Specification Version in big endian format */
-> +	hba->dev_info.spec_version = desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
-> +				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
+> @@ -8422,7 +8433,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>  	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_11) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_20) &&
+> -	    (hba->ufs_version != UFSHCI_VERSION_21))
+> +	    (hba->ufs_version != UFSHCI_VERSION_21) &&
+> +	    (hba->ufs_version != UFSHCI_VERSION_30))
+>  		dev_err(hba->dev, "invalid UFS version 0x%x\n",
+>  			hba->ufs_version);
 
-Please use get_unaligned_be16() instead of open-coding it.
+Is the UFS specification backwards compatible? Or in other words, does
+the existing driver work fine for devices with a controller that
+supports a newer version of the spec? I'm asking this because in Linux
+kernel driver a version check that excludes newer controller versions is
+very unusual. Can the above version check be removed in its entirety?
 
 Thanks,
 
