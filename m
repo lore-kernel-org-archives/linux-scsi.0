@@ -2,63 +2,62 @@ Return-Path: <SRS0=GUYw=3P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2877C35246
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B56DFC35240
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:34:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E23A2075D
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95E312071E
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:34:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729076AbgAZD37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jan 2020 22:29:59 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:39841 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728842AbgAZD37 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 22:29:59 -0500
-Received: by mail-pf1-f194.google.com with SMTP id q10so3195411pfs.6;
-        Sat, 25 Jan 2020 19:29:58 -0800 (PST)
+        id S1729154AbgAZDeI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Jan 2020 22:34:08 -0500
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:40468 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728842AbgAZDeI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 22:34:08 -0500
+Received: by mail-pj1-f47.google.com with SMTP id 12so248616pjb.5;
+        Sat, 25 Jan 2020 19:34:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=N+COkGkdfHeb1HY7LPYrfTxzXMweLGHf0JX8QC6GcnE=;
-        b=l/4WbgkerBcuHFxWDnUNtCGnrGS9nKPTQVgnppUhw2/jg5zWfZy1uCma+Y4Wjf1oq9
-         S3oU8fs5He6w7Isp3CTDq78laLeqh0m5n64YCzeYTa9K7At0UINa0cK4P0hzWy7QoNbM
-         421RRImHSCZYUSp+bZ0K1FwMifQkx8KzlDw3INjoduaI6CT126WvJ7EN9YBCe1WFErOo
-         1duK6bmS4oVELCMsRuCKXs0X1M/qzR0lYyUykRjNwg1xic9T/I16oqU7V7c6v0Q+UT2G
-         EbMGnkLdSmKVTbDoVnBKj8U6HBZZfVUpgaaQZzUu+o8xQ5cFrE1buYf6dFrqn31SI5al
-         qPBw==
-X-Gm-Message-State: APjAAAWhe2KwlGI9gnpEXCVzTvv679aX4ryGSNTvnPw6WdPn0H501FFo
-        2xfnaKmhsWFV9KWWo0BmtjNVVWFJoeM=
-X-Google-Smtp-Source: APXvYqwQ5vnYMPjXlEC23TI50IHXd8maikfNyaFxlIbAfHWWbi7aeaUZ/eMahXpiCU1ZobApoKYcgQ==
-X-Received: by 2002:a63:7c2:: with SMTP id 185mr12219013pgh.446.1580009398138;
-        Sat, 25 Jan 2020 19:29:58 -0800 (PST)
+        bh=khgZlIuPTL2YZy5ATnnTiJZReqwOUFRwMdyJ7YG/QAw=;
+        b=VGjRGBVXHUxIhUJ9wwqujxFrM1EFH0lg5j2bUoTJN2kJA/dfp553LDuxUU6IrAs1c7
+         frX2qnobxTFR50WpC8mToUyn2fJxAVk0YvfszHIlQDg4jfwTLhwtrr4MB76qg7YTlje5
+         yNFVUdPs4mUM0BRVwmlasiMQiUq8tpsg4avEkt8kAOYpOmp9IjU6z3F2+TX76hwaZVOD
+         TKdBDVXZEFXnBf7lZP9aMA/mE7fc+sOfrn+OygUaB/FsH7Xlqtx8PrUvP/c6Ol9+0wFO
+         WVJBcs6z24Oa1Ym5Mg+LhEasrdnSj8HBHDQINxy3nfF31eGYRZXqjgRfOttLZrf5fztZ
+         drcw==
+X-Gm-Message-State: APjAAAU8MqWYb9AbLCaikDfOcKmf9Kx6sT208jMdr0xSFi0vQ/WbHHKD
+        TG8VSAtQ59113DyoXmnpI9FMvZl4OYU=
+X-Google-Smtp-Source: APXvYqwFY+pvwRLxdQBML7+E9mI8DDqpewpX4AA39ZF5j6Cq1u83ohoL8ilS6uiE+6tSRZZyi1fvUw==
+X-Received: by 2002:a17:90a:8545:: with SMTP id a5mr7658920pjw.43.1580009646863;
+        Sat, 25 Jan 2020 19:34:06 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:a876:9802:4659:f0bd? ([2601:647:4000:d7:a876:9802:4659:f0bd])
-        by smtp.gmail.com with ESMTPSA id z30sm11605612pfq.154.2020.01.25.19.29.56
+        by smtp.gmail.com with ESMTPSA id x10sm2394911pfi.180.2020.01.25.19.34.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jan 2020 19:29:57 -0800 (PST)
-Subject: Re: [PATCH v4 1/8] scsi: ufs: Flush exception event before suspend
+        Sat, 25 Jan 2020 19:34:06 -0800 (PST)
+Subject: Re: [PATCH v4 6/8] scsi: ufs: Add dev ref clock gating wait time
+ support
 To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com
-Cc:     Sayali Lokhande <sayalil@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         Pedro Sousa <pedrom.sousa@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         Tomas Winkler <tomas.winkler@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <1579764349-15578-1-git-send-email-cang@codeaurora.org>
- <1579764349-15578-2-git-send-email-cang@codeaurora.org>
+ <1579764349-15578-7-git-send-email-cang@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -83,12 +82,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <525e4f67-f471-54a6-aaea-b3772a550af1@acm.org>
-Date:   Sat, 25 Jan 2020 19:29:55 -0800
+Message-ID: <d51c7c51-482a-01c3-fae0-1e83f9df45ac@acm.org>
+Date:   Sat, 25 Jan 2020 19:34:04 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <1579764349-15578-2-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1579764349-15578-7-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -98,69 +97,12 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-01-22 23:25, Can Guo wrote:
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 1201578..c2de29f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4760,8 +4760,15 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
->  			 * UFS device needs urgent BKOPs.
->  			 */
->  			if (!hba->pm_op_in_progress &&
-> -			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
-> -				schedule_work(&hba->eeh_work);
-> +			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr)) {
-> +				/*
-> +				 * Prevent suspend once eeh_work is scheduled
-> +				 * to avoid deadlock between ufshcd_suspend
-> +				 * and exception event handler.
-> +				 */
-> +				if (schedule_work(&hba->eeh_work))
-> +					pm_runtime_get_noresume(hba->dev);
-> +			}
+> +	/* getting Specification Version in big endian format */
+> +	hba->dev_info.spec_version = desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
+> +				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
 
-Please combine the two logical tests with "&&" instead of nesting two
-if-statements inside each other.
-
->  			break;
->  		case UPIU_TRANSACTION_REJECT_UPIU:
->  			/* TODO: handle Reject UPIU Response */
-> @@ -5215,7 +5222,14 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
->  
->  out:
->  	scsi_unblock_requests(hba->host);
-> -	pm_runtime_put_sync(hba->dev);
-> +	/*
-> +	 * pm_runtime_get_noresume is called while scheduling
-> +	 * eeh_work to avoid suspend racing with exception work.
-> +	 * Hence decrement usage counter using pm_runtime_put_noidle
-> +	 * to allow suspend on completion of exception event handler.
-> +	 */
-> +	pm_runtime_put_noidle(hba->dev);
-> +	pm_runtime_put(hba->dev);
->  	return;
->  }
->  
-> @@ -7901,6 +7915,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->  			goto enable_gating;
->  	}
->  
-> +	flush_work(&hba->eeh_work);
->  	ret = ufshcd_link_state_transition(hba, req_link_state, 1);
->  	if (ret)
->  		goto set_dev_active;
-
-I think this patch introduces a new race condition, namely the following:
-- ufshcd_slave_destroy() tests pm_op_in_progress and reads the value
-  zero from that variable.
-- ufshcd_suspend() sets hba->pm_op_in_progress to one.
-- ufshcd_slave_destroy() calls schedule_work().
-
-How about fixing this race condition by calling
-pm_runtime_get_noresume() before checking pm_op_in_progress and by
-reallowing resume if no work is scheduled?
+Please use get_unaligned_be16() instead of open-coding it.
 
 Thanks,
 
 Bart.
-
-
