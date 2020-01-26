@@ -2,120 +2,158 @@ Return-Path: <SRS0=GUYw=3P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7620BC4741C
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B6FC35246
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 11:30:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D34920702
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 03:38:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D18F20700
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Jan 2020 11:30:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="rzaOwu2U";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="KZ/0rbh4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729100AbgAZDiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Jan 2020 22:38:11 -0500
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:45152 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728842AbgAZDiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Jan 2020 22:38:11 -0500
-Received: by mail-pl1-f194.google.com with SMTP id b22so2447313pls.12;
-        Sat, 25 Jan 2020 19:38:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=C6J2vyrfwsbzKsETG3LdMn6/JpdelGe+VlbRl2W8eUc=;
-        b=Xg7hh0RhCvIGfL2RmSH/tYrI7acX3PNOxbFCBJyuKKy4yualskEtJZdaqqmAuR/eSA
-         p65cxS9Wejh4tmxxdv7JGPYvc8ZGkMeJ8oqyBXZ79/fEogzeywuFxX5w4I/DnhlFp23u
-         /TqCXWXOve64MxPqJAlWa84NluwSxbOTt79gmP21TIZ+GmOTfD2Udeel8N2asfS5um46
-         QS5i+KGnFGjLF4r5mwANHzXN8sKc/ev41cLEYlRqUn21Iqdpt2xBBjyJ9kc1ph35sc69
-         0oC7U9T0KW5cuAcL0mNXU4NYtBvj3C43zg158Qu4uGXwkBs88ixNKYZQbBB/01EOMUkg
-         iYhQ==
-X-Gm-Message-State: APjAAAXJYCvEND9jhiZtLuUwyXkUGsreidGrW2nWtFV29FSkd6527OA7
-        izH03w/bwo0eOXJUAX6PMlEW2xcJtjE=
-X-Google-Smtp-Source: APXvYqxI6mkRQt/PbIcKWf14pVYB4bykJ7v6vJj2WBirNIJqdo0ruqI/t84mjnUzzLLppZGKEAWhUQ==
-X-Received: by 2002:a17:902:bb8d:: with SMTP id m13mr11340594pls.157.1580009890548;
-        Sat, 25 Jan 2020 19:38:10 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:a876:9802:4659:f0bd? ([2601:647:4000:d7:a876:9802:4659:f0bd])
-        by smtp.gmail.com with ESMTPSA id b8sm11221149pff.114.2020.01.25.19.38.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jan 2020 19:38:09 -0800 (PST)
-Subject: Re: [PATCH v4 8/8] scsi: ufs: Select INITIAL adapt for HS Gear4
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Allison Randal <allison@lohutok.net>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1579764349-15578-1-git-send-email-cang@codeaurora.org>
- <1579764349-15578-9-git-send-email-cang@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <0b782a25-a9a3-f6bc-6e2e-4ec0403b62a1@acm.org>
-Date:   Sat, 25 Jan 2020 19:38:08 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-MIME-Version: 1.0
-In-Reply-To: <1579764349-15578-9-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+        id S2387398AbgAZLaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Jan 2020 06:30:00 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40396 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729317AbgAZLaA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 26 Jan 2020 06:30:00 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00QBTtqb028037;
+        Sun, 26 Jan 2020 03:29:55 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=4wamVyEPxOI1wjutJmUJfv9w7/69b/hVup2DGTrP+FA=;
+ b=rzaOwu2UKxk9EtD7+gUEuJeDe0tiWwkUV/ZS65tfo5CO6MIZPE+fTyZDQFqgq2cuBQVq
+ 6oOmXNekdhuTv4WMz5rO+Zo32AZ3lh00/C3dgkbl9kBq57hbFtOcbnfwj3DkoKazgx+f
+ 3Ys7JuCbOGovzJiFhNaqGW+cqMeTfmhh+olAoGKH2lqidvmkeDm3831bl2CYoyxsftW4
+ FXsfjso8x25/ZbunV6+6p7TIGPbwhhfmW0yClmZPne6jRD0RMz1ynRIS9EF/s9Wufvl1
+ 2NIN127Hrg2RbELm42Run31veBAXolGtfGZol7bv3w4ypGmTtFdmOsXVjat47X1swhyD rQ== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xrp2su10d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Sun, 26 Jan 2020 03:29:55 -0800
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 26 Jan
+ 2020 03:29:52 -0800
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.168)
+ by SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Sun, 26 Jan 2020 03:29:52 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ehIvv3flkuYl6XXkB+q/meYhOkkzNiyB9GZC/5vSboZ730r1JdHS/uqGp6/kUsEwi+pEf3pWXG0DZpMC0CKJHCrrwb7ReU8DPN4oL6cPJ0a18Arjgd9xH43pMkvboeISeQelVbcZmYXfZ7esFzX1MZg0Ni9w4ObpuoQ0KAeAOfXAZ51AIuSx5TmaGI7znvPe+YUzJs/GVaFmwsf+JrnOMRwUQ5qBcHcS0qj3LWgnVttkPVJc6t5+xcZbS7PFEEhj40RjMKAKLTHmeE6LVs7XZJNRths2wuoM7MPJrnPlDCvvQahm9+k8G7pt/LjS2rSRq9VlDwB7w9NnJme+FNSBXA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4wamVyEPxOI1wjutJmUJfv9w7/69b/hVup2DGTrP+FA=;
+ b=kt8CMnNnNIk6yzwo0U0z3AbrBDXFehpNUCkmKER0PDsSijfYm+jZ+/fjEKDflclWiWOVO5ufe9ZCV3F4fBPLbcu5kNiR8WDS5PlXU0kadIaHWeQtm2IoPcEFatc3IqXN4lYg8agtaHsS5FGduZkl5VSIwPQcZemt312T/T+nQeG9q6YiQgrrvu6GHCV9aUmP3RMmkbHLVL8NOun2U8HFrXDEjqeflCfJUC0dKmr5Zjog6f7jtB5iA06/OSTxdfU+daVjwGrlwK/o0UOBDZZaRcmjbhersVQE0Z+oURpX0djO2NphoNlT324MHliJlYOYo2E/2UDqkPShgd4AVdooYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4wamVyEPxOI1wjutJmUJfv9w7/69b/hVup2DGTrP+FA=;
+ b=KZ/0rbh4J4NvgNSfkwJ1J22OmxOgK2Dm0xuW/0Fe2Sz6kGvaiIRTEddB7pgvECw9z5pL1J8w/Fvo31fL9qv7FGMRw7FWk1diKnGb6MlI8j716YVRixbrUMd3R+lgshHUgZEfzVUE9DnNayxfiOfayybYR5xWS9ef3dfzPX418cw=
+Received: from MN2PR18MB3182.namprd18.prod.outlook.com (10.255.236.143) by
+ MN2PR18MB3024.namprd18.prod.outlook.com (20.179.84.29) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2665.22; Sun, 26 Jan 2020 11:29:50 +0000
+Received: from MN2PR18MB3182.namprd18.prod.outlook.com
+ ([fe80::ed5e:f764:4726:6599]) by MN2PR18MB3182.namprd18.prod.outlook.com
+ ([fe80::ed5e:f764:4726:6599%7]) with mapi id 15.20.2665.017; Sun, 26 Jan 2020
+ 11:29:50 +0000
+From:   Michal Kalderon <mkalderon@marvell.com>
+To:     Jakub Kicinski <kuba@kernel.org>
+CC:     Ariel Elior <aelior@marvell.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH v2 net-next 00/13] qed*: Utilize FW 8.42.2.0
+Thread-Topic: [PATCH v2 net-next 00/13] qed*: Utilize FW 8.42.2.0
+Thread-Index: AQHV0dwXnqaSTkldXU2Q/xI2dRpRK6f4ffuAgARVS/A=
+Date:   Sun, 26 Jan 2020 11:29:50 +0000
+Message-ID: <MN2PR18MB318249831CD5207588443F6EA1080@MN2PR18MB3182.namprd18.prod.outlook.com>
+References: <20200123105836.15090-1-michal.kalderon@marvell.com>
+ <20200123091629.0291bbaf@cakuba>
+In-Reply-To: <20200123091629.0291bbaf@cakuba>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [108.20.23.69]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 33f2f4df-3d82-4aea-046d-08d7a2530e7f
+x-ms-traffictypediagnostic: MN2PR18MB3024:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR18MB3024DCAA4A81E75F4A4DE2D0A1080@MN2PR18MB3024.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 02945962BD
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(346002)(366004)(376002)(136003)(39850400004)(396003)(199004)(189003)(26005)(86362001)(186003)(6916009)(52536014)(4326008)(71200400001)(8936002)(81166006)(81156014)(8676002)(5660300002)(7696005)(33656002)(2906002)(66946007)(76116006)(66446008)(64756008)(66556008)(66476007)(55016002)(9686003)(53546011)(6506007)(966005)(478600001)(54906003)(316002);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3024;H:MN2PR18MB3182.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 4ZK1ejR4T1BztsrvvT8Thqpmh6b6zOLtAUrCSVTunet+Mk9ygOxq5hZ1HdIQB/XhitSVGvhLxSjBNMCkfi05B41XFhifdG6/oy8pVoJRsKaTLSw+5EU0Tg9dg1kVtTypvPuN5N2hy+VDTurVgSDoov54+lcXIKGc6+ppeNq+6XNkCH5jTD4O7ASfFNorEH6+L3PgWd/g9jzGMaTX/M9P2rLZCGftEyhIq1OHvewDHrKKQwDs+wvbERGUX4ZG13TdZp5ucTNScBy/6VWEjJY/cs6f1+9e+mZrL78vBXFQ+rldCoGkvT/20P4JOxsRlrEYEC1bltEen++Be4qHnYUsgWWKwkz80a8odmK71e39MwBDPbRbFAUwL2Zgrk8q5/OKo0nvSym2rxjcZqRr9T0mF5wEE/nLE9LZ+ukFsV1v+EWQAGepMs42KkoOTdUL7GTfMQpSskfm+eMugOGBB3NZfKhqj3mEoahwhHbwMNMjSMY83JupggyphVOSOgSRZ4dfqPjaeUfJBi48hT8U2o0gvg==
+x-ms-exchange-antispam-messagedata: LaoqpV59qdVIcSjB9RWKmjji4lxQUSvHpXgyWl4IYLxI6xNNWTSvY3jh1ZsRfJT8VLq1gbsMCOjUO4wXd3NnWw+ZOSVqAH4hdege36j0NyUNAz+6AfihRRABxkRM2Pxn2WSekeuwZQXr53XyLi/d5g==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33f2f4df-3d82-4aea-046d-08d7a2530e7f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jan 2020 11:29:50.3386
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wkI8MV7nPJKxH4djyi9FGdbeMNQLSk0huipz6pRqQrOEjZUstWmVFP/jc6LWznnxJeZ6rkfcOzSnr+onsn05cA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3024
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-25_09:2020-01-24,2020-01-25 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-22 23:25, Can Guo wrote:
-> @@ -8422,7 +8433,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->  	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
->  	    (hba->ufs_version != UFSHCI_VERSION_11) &&
->  	    (hba->ufs_version != UFSHCI_VERSION_20) &&
-> -	    (hba->ufs_version != UFSHCI_VERSION_21))
-> +	    (hba->ufs_version != UFSHCI_VERSION_21) &&
-> +	    (hba->ufs_version != UFSHCI_VERSION_30))
->  		dev_err(hba->dev, "invalid UFS version 0x%x\n",
->  			hba->ufs_version);
+> From: linux-rdma-owner@vger.kernel.org <linux-rdma-
+> owner@vger.kernel.org> On Behalf Of Jakub Kicinski
+> Sent: Thursday, January 23, 2020 7:16 PM
+> To: Michal Kalderon <mkalderon@marvell.com>
+> Cc: Ariel Elior <aelior@marvell.com>; davem@davemloft.net;
+> netdev@vger.kernel.org; linux-rdma@vger.kernel.org; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH v2 net-next 00/13] qed*: Utilize FW 8.42.2.0
+>=20
+> On Thu, 23 Jan 2020 12:58:23 +0200, Michal Kalderon wrote:
+> > Changes from V1
+> > ---------------
+> > - Remove epoch + kernel version from device debug dump
+> > - don't bump driver version
+>=20
+> But you haven't fixed the fact that in patch 1 you already strat changing
+> defines for the new FW version, even though the version is only enforced
+> (reportedly) in patch 9?
+Right, I'll move the version change to patch #1 in V3.=20
 
-Is the UFS specification backwards compatible? Or in other words, does
-the existing driver work fine for devices with a controller that
-supports a newer version of the spec? I'm asking this because in Linux
-kernel driver a version check that excludes newer controller versions is
-very unusual. Can the above version check be removed in its entirety?
+However,  the entire series is required (except a few patches not prefixed =
+with FW 8.42.2.0 ) to be
+taken to work correctly with the FW.
+Our FW is not backward/forward compatible. I have mentioned this in the cov=
+er letter, the split into smaller patches and prefix with
+FW 8.42.2.0 is to ease review and was done due to previous feedback that it=
+ is very difficult to review the FW patches:
+
+https://www.spinics.net/lists/linux-rdma/msg58810.html
+
+I am fine with squashing all the patches that are required to working with =
+FW8.42.2.0 into one single patch if that is required and acceptable,
+But I believe that would make reviewing the changes more difficult.
 
 Thanks,
+Michal
 
-Bart.
