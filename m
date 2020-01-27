@@ -2,37 +2,72 @@ Return-Path: <SRS0=udu7=3Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE60C32771
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 03:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10A9AC32771
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 05:07:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C05F2071E
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 03:25:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2C0521569
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 05:07:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="K1zdDq08"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726743AbgA0DZD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Jan 2020 22:25:03 -0500
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:53362 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726545AbgA0DZC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jan 2020 22:25:02 -0500
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: krisman)
-        with ESMTPSA id 1AA0C292ADF
-From:   Gabriel Krisman Bertazi <krisman@collabora.com>
-To:     lduncan@suse.com
-Cc:     martin.petersen@oracle.com, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, padovan@collabora.com,
-        Frank Mayhar <fmayhar@google.com>, kernel@collabora.com,
-        Khazhismel Kumykov <khazhy@google.com>,
-        Gabriel Krisman Bertazi <krisman@collabora.com>
-Subject: [PATCH RESEND] iscsi: Add support for asynchronous iSCSI session destruction
-Date:   Sun, 26 Jan 2020 22:24:50 -0500
-Message-Id: <20200127032450.924711-1-krisman@collabora.com>
-X-Mailer: git-send-email 2.25.0.rc2
+        id S1725830AbgA0FHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 00:07:49 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:41039 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725763AbgA0FHt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 00:07:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580101669; x=1611637669;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=8Np8hgmnq2WhrIwnDAbJU//tSHUZ95CGVkqc8Ph52tQ=;
+  b=K1zdDq08tpOQyvuBYT7xMvKHVAPqvAfQI+p7spWfjbGxh+ZDOAP+FMFI
+   OZIhHtPvu3b6N5Swo68PrkdYHREa4mO3T7iYI0fV9ptzgWBw8GaE2j91i
+   vx0iO4jaEKHCYBRzOaffxGE/H6vdWSsCRJ75k48M9lUzzrN7QdZUn2+Nn
+   MApCZXrZblp/OOSE+9rHBo20OI0pOHWvgKfezigjUrQOQAipvY8AqDlWI
+   Kfd4hnvJCXmuplcZSFi6ycxazpO0Er2hnautVZ5vXwDSuoWzXuA5yiryU
+   OX9rDl03Ajk/JGYzNqZ8FOp2B64TgDlHr+f1ACkoCY+rs4VbFnxHOOABb
+   w==;
+IronPort-SDR: rKMe4SNX+NNRSTWMvWW1d8kgZb8UlRjZiQGO+7o/2chIl/vkNCWSbIz19Zn+nQGQtQxCDLfp8H
+ 6uDoyIlYXCyMqRZ2YrgdqMUUzx0AcOCJJ5ksILPGIKEmcFfKLk6y5b5SzZQ8jwxHvDwik1CPIS
+ OZBWkGbK+L2lrqUt3QEoEN/TJmcHlgILf7XTf/g3mbCCnltRaEXFag1CCsSOD1p+vB6bhPhsr8
+ QFGLgx+AFJUVbd95B1fEK7Xl7vu6PZFXb1sblrQ5GQhuWavyWW3oqso4+2QosGRFjSYnE2/9zq
+ dbw=
+X-IronPort-AV: E=Sophos;i="5.70,368,1574092800"; 
+   d="scan'208";a="129913800"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Jan 2020 13:07:49 +0800
+IronPort-SDR: Tn8XA/FWn4VAi4NFt8qjmPRY+0HR9wSRPPINeWp6I6S0Sh9SWqdUMJgM221zPc10r3wOnnnWbR
+ Bp5KaQeGOUO2F6Em2VoTPYcLmg3vWZRsFuKdIkzWFrGc+dZRKrSgJkaSjJTrFr+vNfrASVirhc
+ +HjRblzWe2BopmnvAcdtXeExsrbA62kwtp21ZTg+rqH/tYi9nDf4+1Nsnf/XIsa9mti8RIaVwr
+ HrHP0hqPtYbjYeNJtWE/SQMurR0lSvmT12qB0eFk4841vK4GfJBEfUk1eBnuiut86M5r39XCwp
+ p1GjU4pfie+tYAyKDUBC9T7M
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2020 21:01:04 -0800
+IronPort-SDR: Ndn6vtCT1w95arzq2EmKO/3Ef3Mqa39EtGTSp5x/4xwNuzzdwK/ruv0SRbwk7VrTWNvaXeDkr6
+ LWw6sqDg+D7irmQKY0JjwvCp7NWNpFdYm84bbGfWK+t68vm0D1TDEswgQPfwIyhcFv+x2w26hS
+ 1SoI1XFfrAM8qX/LQz0pS6WMhnoNQEpk1METZHLBfsbctcQLblMXv1Oi6HwFZjna6S1r7WMtHR
+ 1QLzbCzZ34x41u38xFi7WeKKoTa5MIFzsJDT12hw9FE+mI/uzuBP2Gz2XXWnWsNXsOMuzMY1td
+ a+s=
+WDCIronportException: Internal
+Received: from yusei.dhcp.fujisawa.hgst.com ([10.149.53.79])
+  by uls-op-cesaip01.wdc.com with ESMTP; 26 Jan 2020 21:07:47 -0800
+From:   Masato Suzuki <masato.suzuki@wdc.com>
+To:     stable@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH] sd: Fix REQ_OP_ZONE_REPORT completion handling
+Date:   Mon, 27 Jan 2020 14:07:46 +0900
+Message-Id: <20200127050746.136440-1-masato.suzuki@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -40,146 +75,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Frank Mayhar <fmayhar@google.com>
+ZBC/ZAC report zones command may return less bytes than requested if the
+number of matching zones for the report request is small. However, unlike
+read or write commands, the remainder of incomplete report zones commands
+cannot be automatically requested by the block layer: the start sector of
+the next report cannot be known, and the report reply may not be 512B
+aligned for SAS drives (a report zone reply size is always a multiple of
+64B). The regular request completion code executing bio_advance() and
+restart of the command remainder part currently causes invalid zone
+descriptor data to be reported to the caller if the report zone size is
+smaller than 512B (a case that can happen easily for a report of the last
+zones of a SAS drive for example).
 
-iSCSI session destruction can be arbitrarily slow, since it might
-require network operations and serialization inside the scsi layer.
-This patch adds a new user event to trigger the destruction work
-asynchronously, releasing the rx_queue_mutex as soon as the operation is
-queued and before it is performed.  This change allow other operations
-to run in other sessions in the meantime, removing one of the major
-iSCSI bottlenecks for us.
+Since blkdev_report_zones() handles report zone command processing in a
+loop until completion (no more zones are being reported), we can safely
+avoid that the block layer performs an incorrect bio_advance() call and
+restart of the remainder of incomplete report zone BIOs. To do so, always
+indicate a full completion of REQ_OP_ZONE_REPORT by setting good_bytes to
+the request buffer size and by setting the command resid to 0. This does
+not affect the post processing of the report zone reply done by
+sd_zbc_complete() since the reply header indicates the number of zones
+reported.
 
-To prevent the session from being used after the destruction request, we
-remove it immediately from the sesslist. This simplifies the locking
-required during the asynchronous removal.
-
-Co-developed-by: Khazhismel Kumykov <khazhy@google.com>
-Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
-Signed-off-by: Frank Mayhar <fmayhar@google.com>
-Co-developed-by: Gabriel Krisman Bertazi <krisman@collabora.com>
-Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
+Cc: <stable@vger.kernel.org> # 4.19
+Cc: <stable@vger.kernel.org> # 4.14
+Signed-off-by: Masato Suzuki <masato.suzuki@wdc.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 36 +++++++++++++++++++++++++++++
- include/scsi/iscsi_if.h             |  1 +
- include/scsi/scsi_transport_iscsi.h |  1 +
- 3 files changed, 38 insertions(+)
+ drivers/scsi/sd.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ba6cfaf71aef..e9a8e0317b0d 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -95,6 +95,8 @@ static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
- static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
- static struct workqueue_struct *iscsi_eh_timer_workq;
- 
-+static struct workqueue_struct *iscsi_destroy_workq;
-+
- static DEFINE_IDA(iscsi_sess_ida);
- /*
-  * list of registered transports and lock that must
-@@ -1615,6 +1617,7 @@ static struct sock *nls;
- static DEFINE_MUTEX(rx_queue_mutex);
- 
- static LIST_HEAD(sesslist);
-+static LIST_HEAD(sessdestroylist);
- static DEFINE_SPINLOCK(sesslock);
- static LIST_HEAD(connlist);
- static LIST_HEAD(connlist_err);
-@@ -2035,6 +2038,14 @@ static void __iscsi_unbind_session(struct work_struct *work)
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
- }
- 
-+static void __iscsi_destroy_session(struct work_struct *work)
-+{
-+	struct iscsi_cls_session *session =
-+		container_of(work, struct iscsi_cls_session, destroy_work);
-+
-+	session->transport->destroy_session(session);
-+}
-+
- struct iscsi_cls_session *
- iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
- 		    int dd_size)
-@@ -2057,6 +2068,7 @@ iscsi_alloc_session(struct Scsi_Host *shost, struct iscsi_transport *transport,
- 	INIT_WORK(&session->block_work, __iscsi_block_session);
- 	INIT_WORK(&session->unbind_work, __iscsi_unbind_session);
- 	INIT_WORK(&session->scan_work, iscsi_scan_session);
-+	INIT_WORK(&session->destroy_work, __iscsi_destroy_session);
- 	spin_lock_init(&session->lock);
- 
- 	/* this is released in the dev's release function */
-@@ -3617,6 +3629,23 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		else
- 			transport->destroy_session(session);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2955b856e9ec..e8c2afbb82e9 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1981,9 +1981,13 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 		}
  		break;
-+	case ISCSI_UEVENT_DESTROY_SESSION_ASYNC:
-+		session = iscsi_session_lookup(ev->u.d_session.sid);
-+		if (!session)
-+			err = -EINVAL;
-+		else if (iscsi_session_has_conns(ev->u.d_session.sid))
-+			err = -EBUSY;
-+		else {
-+			unsigned long flags;
-+
-+			/* Prevent this session from being found again */
-+			spin_lock_irqsave(&sesslock, flags);
-+			list_move(&session->sess_list, &sessdestroylist);
-+			spin_unlock_irqrestore(&sesslock, flags);
-+
-+			queue_work(iscsi_destroy_workq, &session->destroy_work);
-+		}
-+		break;
- 	case ISCSI_UEVENT_UNBIND_SESSION:
- 		session = iscsi_session_lookup(ev->u.d_session.sid);
- 		if (session)
-@@ -4662,8 +4691,14 @@ static __init int iscsi_transport_init(void)
- 		goto release_nls;
- 	}
- 
-+	iscsi_destroy_workq = create_singlethread_workqueue("iscsi_destroy");
-+	if (!iscsi_destroy_workq)
-+		goto destroy_wq;
-+
- 	return 0;
- 
-+destroy_wq:
-+	destroy_workqueue(iscsi_eh_timer_workq);
- release_nls:
- 	netlink_kernel_release(nls);
- unregister_flashnode_bus:
-@@ -4685,6 +4720,7 @@ static __init int iscsi_transport_init(void)
- 
- static void __exit iscsi_transport_exit(void)
- {
-+	destroy_workqueue(iscsi_destroy_workq);
- 	destroy_workqueue(iscsi_eh_timer_workq);
- 	netlink_kernel_release(nls);
- 	bus_unregister(&iscsi_flashnode_bus);
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 92b11c7e0b4f..deacaee53e61 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -60,6 +60,7 @@ enum iscsi_uevent_e {
- 	ISCSI_UEVENT_LOGOUT_FLASHNODE_SID	= UEVENT_BASE + 30,
- 	ISCSI_UEVENT_SET_CHAP		= UEVENT_BASE + 31,
- 	ISCSI_UEVENT_GET_HOST_STATS	= UEVENT_BASE + 32,
-+	ISCSI_UEVENT_DESTROY_SESSION_ASYNC	= UEVENT_BASE + 33,
- 
- 	/* up events */
- 	ISCSI_KEVENT_RECV_PDU		= KEVENT_BASE + 1,
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 2129dc9e2dec..fa8814245796 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -226,6 +226,7 @@ struct iscsi_cls_session {
- 	struct work_struct unblock_work;
- 	struct work_struct scan_work;
- 	struct work_struct unbind_work;
-+	struct work_struct destroy_work;
- 
- 	/* recovery fields */
- 	int recovery_tmo;
+ 	case REQ_OP_ZONE_REPORT:
++		/* To avoid that the block layer performs an incorrect
++		 * bio_advance() call and restart of the remainder of
++		 * incomplete report zone BIOs, always indicate a full
++		 * completion of REQ_OP_ZONE_REPORT.
++		 */
+ 		if (!result) {
+-			good_bytes = scsi_bufflen(SCpnt)
+-				- scsi_get_resid(SCpnt);
++			good_bytes = scsi_bufflen(SCpnt);
+ 			scsi_set_resid(SCpnt, 0);
+ 		} else {
+ 			good_bytes = 0;
 -- 
-2.25.0.rc2
+2.24.1
 
