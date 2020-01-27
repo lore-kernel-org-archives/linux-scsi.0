@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4873C33CB1
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 015CCC3524A
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:27:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 901E7217BA
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:27:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B98E9217BA
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:27:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="MoA3Dabm"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Gb9XvEZE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729137AbgA0N05 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 08:26:57 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6762 "EHLO
+        id S1728760AbgA0N0p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 08:26:45 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49348 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726725AbgA0N0z (ORCPT
+        by vger.kernel.org with ESMTP id S1728241AbgA0N0n (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jan 2020 08:26:55 -0500
+        Mon, 27 Jan 2020 08:26:43 -0500
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00RDQbv0032252;
-        Mon, 27 Jan 2020 05:26:51 -0800
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00RDQUGN032217;
+        Mon, 27 Jan 2020 05:26:41 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=WJbRjhdgLxEmNFUWNpGmmkmJTVrIyzVXyPpRJq8SASE=;
- b=MoA3DabmMhAtojVSCpfdTi5a6mT0UJGNh8jndLp0O8xqXNbct20qiZbTN5Gb180LKoOg
- lI35q4z8Gn5MvmJ2CznwjGkZrzhKD7S7XBX0wx8F7Cq+dCWq1EnSpOWq3UfWvosvxTwp
- 3ToPGjbKVCO/PzbORDrVAypF9su2YU6by7CunADZwXq7uGvp2FOW1PjSXqCZkHev/4yt
- m/2Ne04BRJWEmukVj0009+HRQ2ftwcl1aF5BanI5VvLC4wqVgDJDlr/+mg1Sx/soJF6U
- 0L/FQoQlKNQzIFPvi8e8WEbbuyThIThGpVvoAH5ZT700kuB/cNDQx7e9R/AWOBinCUXS Kg== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2xrp2sxxvk-1
+ content-type; s=pfpt0818; bh=9Qz8Zwid3sBiEMKA6h5+l2QapFR3RGuYSEOsPJWmuNg=;
+ b=Gb9XvEZE68sIpuS4TQlGWu7di8P/mNkyPqsSc9G2bbj5X4r9DhkXwjUTSoNEU/2+S3Xo
+ pRpK8oUN3QNwKKnfucihHyKQ7awsXSkpFv658LnWCIG5RBLk4mG+rwcc3vOlMGtDmxUV
+ /a5QNzUh2DjhWxIHtK7Vht2BGYIrybo+4XFSpZ2a7kUzOAY6l9obYARlayBEZ9IPWTD6
+ fIIRqhhTL8vvDqME9S99qjKZRq0xxH362MCKBVD0lCOSF1PCfVrPfy06tFMMeQztGIHS
+ W+Fed6JZGn6D+DwTha5XKq4M7UKCAqSXNAEEd+A9OjGfeqHuQybIvcgVKppvwlUxapec 2A== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2xrp2sxxuv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 27 Jan 2020 05:26:51 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 27 Jan
- 2020 05:26:48 -0800
+        Mon, 27 Jan 2020 05:26:41 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 27 Jan
+ 2020 05:26:39 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 27 Jan 2020 05:26:48 -0800
+ Transport; Mon, 27 Jan 2020 05:26:39 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id 0AD5D3F703F;
-        Mon, 27 Jan 2020 05:26:46 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id E4C713F703F;
+        Mon, 27 Jan 2020 05:26:37 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH v3 net-next 09/13] qed: FW 8.42.2.0 HSI changes
-Date:   Mon, 27 Jan 2020 15:26:15 +0200
-Message-ID: <20200127132619.27144-10-michal.kalderon@marvell.com>
+Subject: [PATCH v3 net-next 05/13] qed: Use dmae to write to widebus registers in fw_funcs
+Date:   Mon, 27 Jan 2020 15:26:11 +0200
+Message-ID: <20200127132619.27144-6-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200127132619.27144-1-michal.kalderon@marvell.com>
 References: <20200127132619.27144-1-michal.kalderon@marvell.com>
@@ -66,1104 +66,407 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch contains several HSI changes. The changes are part of
-features like RDMA VF and OVS, the patch also contains a fix to
-how the init code determines if the dmae is ready to be used.
+There are several wide-bus registers written to by the fw_funcs
+that require using the dmae for atomicity. Therefore using the dmae
+channel functionality was added to the fw_funcs file, since the code
+is very similar to the previously used code, the structures used were
+moved to qed_hsi. Due to FW conventions, the names of the flags in the
+struct changed. Since this required slight modification in the places
+that set the flags the code was modified to use GET/SET FIELD macros.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed_hsi.h      | 317 ++++++++++++++++---------
- drivers/net/ethernet/qlogic/qed/qed_init_ops.c |   6 +-
- drivers/net/ethernet/qlogic/qed/qed_mcp.c      |   2 +
- drivers/net/ethernet/qlogic/qed/qed_roce.c     |   2 +-
- drivers/net/ethernet/qlogic/qede/qede_fp.c     |   8 +-
- include/linux/qed/common_hsi.h                 |  21 +-
- include/linux/qed/eth_common.h                 |  78 ++++--
- 7 files changed, 280 insertions(+), 154 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h      | 24 ------
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 41 ++++++++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           | 67 ++++++++---------
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    | 86 ++++++++++++++++------
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |  2 +-
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        | 11 +--
+ 7 files changed, 142 insertions(+), 91 deletions(-)
 
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+index 249fcc3dc138..479d98e6187a 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+@@ -907,7 +907,7 @@ qed_llh_access_filter(struct qed_hwfn *p_hwfn,
+ 	/* Filter value */
+ 	addr = NIG_REG_LLH_FUNC_FILTER_VALUE + 2 * filter_idx * 0x4;
+ 
+-	params.flags = QED_DMAE_FLAG_PF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_PF_VALID, 0x1);
+ 	params.dst_pfid = pfid;
+ 	rc = qed_dmae_host2grc(p_hwfn,
+ 			       p_ptt,
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+index 47376d4d071f..eb4808b3bf67 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
+@@ -230,30 +230,6 @@ enum qed_dmae_address_type_t {
+ 	QED_DMAE_ADDRESS_GRC
+ };
+ 
+-/* value of flags If QED_DMAE_FLAG_RW_REPL_SRC flag is set and the
+- * source is a block of length DMAE_MAX_RW_SIZE and the
+- * destination is larger, the source block will be duplicated as
+- * many times as required to fill the destination block. This is
+- * used mostly to write a zeroed buffer to destination address
+- * using DMA
+- */
+-#define QED_DMAE_FLAG_RW_REPL_SRC	0x00000001
+-#define QED_DMAE_FLAG_VF_SRC		0x00000002
+-#define QED_DMAE_FLAG_VF_DST		0x00000004
+-#define QED_DMAE_FLAG_COMPLETION_DST	0x00000008
+-#define QED_DMAE_FLAG_PORT		0x00000010
+-#define QED_DMAE_FLAG_PF_SRC		0x00000020
+-#define QED_DMAE_FLAG_PF_DST		0x00000040
+-
+-struct qed_dmae_params {
+-	u32 flags; /* consists of QED_DMAE_FLAG_* values */
+-	u8 src_vfid;
+-	u8 dst_vfid;
+-	u8 port_id;
+-	u8 src_pfid;
+-	u8 dst_pfid;
+-};
+-
+ /**
+  * @brief qed_dmae_host2grc - copy data from source addr to
+  * dmae registers using the given ptt
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index 0c3d714e6518..06b94508115a 100644
+index 5ac68ec01a04..cced2ce365de 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -250,7 +250,8 @@ struct core_rx_gsi_offload_cqe {
- 	__le16 src_mac_addrlo;
- 	__le16 qp_id;
- 	__le32 src_qp;
--	__le32 reserved[3];
-+	struct core_rx_cqe_opaque_data opaque_data;
-+	__le32 reserved;
+@@ -1435,7 +1435,11 @@ struct dmae_cmd {
+ 	__le16 crc16;
+ 	__le16 crc16_c;
+ 	__le16 crc10;
+-	__le16 reserved;
++	__le16 error_bit_reserved;
++#define DMAE_CMD_ERROR_BIT_MASK        0x1
++#define DMAE_CMD_ERROR_BIT_SHIFT       0
++#define DMAE_CMD_RESERVED_MASK	       0x7FFF
++#define DMAE_CMD_RESERVED_SHIFT        1
+ 	__le16 xsum16;
+ 	__le16 xsum8;
+ };
+@@ -1566,6 +1570,41 @@ struct e4_ystorm_core_conn_ag_ctx {
+ 	__le32 reg3;
  };
  
- /* Core RX CQE for Light L2 */
-@@ -405,7 +406,7 @@ struct ystorm_core_conn_st_ctx {
- 
- /* The core storm context for the Pstorm */
- struct pstorm_core_conn_st_ctx {
--	__le32 reserved[4];
-+	__le32 reserved[20];
- };
- 
- /* Core Slowpath Connection storm context of Xstorm */
-@@ -856,12 +857,12 @@ struct e4_ustorm_core_conn_ag_ctx {
- 
- /* The core storm context for the Mstorm */
- struct mstorm_core_conn_st_ctx {
--	__le32 reserved[24];
-+	__le32 reserved[40];
- };
- 
- /* The core storm context for the Ustorm */
- struct ustorm_core_conn_st_ctx {
--	__le32 reserved[4];
-+	__le32 reserved[20];
- };
- 
- /* The core storm context for the Tstorm */
-@@ -915,12 +916,21 @@ struct eth_pstorm_per_pf_stat {
- 	struct regpair sent_gre_bytes;
- 	struct regpair sent_vxlan_bytes;
- 	struct regpair sent_geneve_bytes;
-+	struct regpair sent_mpls_bytes;
-+	struct regpair sent_gre_mpls_bytes;
-+	struct regpair sent_udp_mpls_bytes;
- 	struct regpair sent_gre_pkts;
- 	struct regpair sent_vxlan_pkts;
- 	struct regpair sent_geneve_pkts;
-+	struct regpair sent_mpls_pkts;
-+	struct regpair sent_gre_mpls_pkts;
-+	struct regpair sent_udp_mpls_pkts;
- 	struct regpair gre_drop_pkts;
- 	struct regpair vxlan_drop_pkts;
- 	struct regpair geneve_drop_pkts;
-+	struct regpair mpls_drop_pkts;
-+	struct regpair gre_mpls_drop_pkts;
-+	struct regpair udp_mpls_drop_pkts;
- };
- 
- /* Ethernet TX Per Queue Stats */
-@@ -1010,7 +1020,8 @@ union event_ring_data {
- struct event_ring_entry {
- 	u8 protocol_id;
- 	u8 opcode;
--	__le16 reserved0;
-+	u8 reserved0;
-+	u8 vf_id;
- 	__le16 echo;
- 	u8 fw_return_code;
- 	u8 flags;
-@@ -1088,7 +1099,20 @@ enum malicious_vf_error_id {
- 	ETH_CONTROL_PACKET_VIOLATION,
- 	ETH_ANTI_SPOOFING_ERR,
- 	ETH_PACKET_SIZE_TOO_LARGE,
--	MAX_MALICIOUS_VF_ERROR_ID
-+	CORE_ILLEGAL_VLAN_MODE,
-+	CORE_ILLEGAL_NBDS,
-+	CORE_FIRST_BD_WO_SOP,
-+	CORE_INSUFFICIENT_BDS,
-+	CORE_PACKET_TOO_SMALL,
-+	CORE_ILLEGAL_INBAND_TAGS,
-+	CORE_VLAN_INSERT_AND_INBAND_VLAN,
-+	CORE_MTU_VIOLATION,
-+	CORE_CONTROL_PACKET_VIOLATION,
-+	CORE_ANTI_SPOOFING_ERR,
-+	CORE_PACKET_SIZE_TOO_LARGE,
-+	CORE_ILLEGAL_BD_FLAGS,
-+	CORE_GSI_PACKET_VIOLATION,
-+	MAX_MALICIOUS_VF_ERROR_ID,
- };
- 
- /* Mstorm non-triggering VF zone */
-@@ -1394,6 +1418,16 @@ enum vf_zone_size_mode {
- 	MAX_VF_ZONE_SIZE_MODE
- };
- 
-+/* Xstorm non-triggering VF zone */
-+struct xstorm_non_trigger_vf_zone {
-+	struct regpair non_edpm_ack_pkts;
-+};
-+
-+/* Tstorm VF zone */
-+struct xstorm_vf_zone {
-+	struct xstorm_non_trigger_vf_zone non_trigger;
-+};
-+
- /* Attentions status block */
- struct atten_status_block {
- 	__le32 atten_bits;
-@@ -2748,8 +2782,8 @@ enum chip_ids {
- };
- 
- struct fw_asserts_ram_section {
--	u16 section_ram_line_offset;
--	u16 section_ram_line_size;
-+	__le16 section_ram_line_offset;
-+	__le16 section_ram_line_size;
- 	u8 list_dword_offset;
- 	u8 list_element_dword_size;
- 	u8 list_num_elements;
-@@ -2799,6 +2833,7 @@ enum init_modes {
- 	MODE_PORTS_PER_ENG_4,
- 	MODE_100G,
- 	MODE_RESERVED6,
-+	MODE_RESERVED7,
- 	MAX_INIT_MODES
- };
- 
-@@ -2833,6 +2868,7 @@ enum bin_init_buffer_type {
- 	BIN_BUF_INIT_VAL,
- 	BIN_BUF_INIT_MODE_TREE,
- 	BIN_BUF_INIT_IRO,
-+	BIN_BUF_INIT_OVERLAYS,
- 	MAX_BIN_INIT_BUFFER_TYPE
- };
- 
-@@ -2929,10 +2965,8 @@ struct init_if_phase_op {
- 	u32 op_data;
- #define INIT_IF_PHASE_OP_OP_MASK		0xF
- #define INIT_IF_PHASE_OP_OP_SHIFT		0
--#define INIT_IF_PHASE_OP_DMAE_ENABLE_MASK	0x1
--#define INIT_IF_PHASE_OP_DMAE_ENABLE_SHIFT	4
--#define INIT_IF_PHASE_OP_RESERVED1_MASK		0x7FF
--#define INIT_IF_PHASE_OP_RESERVED1_SHIFT	5
-+#define INIT_IF_PHASE_OP_RESERVED1_MASK		0xFFF
-+#define INIT_IF_PHASE_OP_RESERVED1_SHIFT	4
- #define INIT_IF_PHASE_OP_CMD_OFFSET_MASK	0xFFFF
- #define INIT_IF_PHASE_OP_CMD_OFFSET_SHIFT	16
- 	u32 phase_data;
-@@ -4226,7 +4260,7 @@ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id);
- /**
-  * @brief qed_gft_config - Enable and configure HW for GFT
-  *
-- * @param p_hwfn
-+ * @param p_hwfn - HW device data
-  * @param p_ptt - ptt window used for writing the registers.
-  * @param pf_id - pf on which to enable GFT.
-  * @param tcp - set profile tcp packets.
-@@ -5673,9 +5707,9 @@ struct e4_eth_conn_context {
- 	struct pstorm_eth_conn_st_ctx pstorm_st_context;
- 	struct xstorm_eth_conn_st_ctx xstorm_st_context;
- 	struct e4_xstorm_eth_conn_ag_ctx xstorm_ag_context;
-+	struct e4_tstorm_eth_conn_ag_ctx tstorm_ag_context;
- 	struct ystorm_eth_conn_st_ctx ystorm_st_context;
- 	struct e4_ystorm_eth_conn_ag_ctx ystorm_ag_context;
--	struct e4_tstorm_eth_conn_ag_ctx tstorm_ag_context;
- 	struct e4_ustorm_eth_conn_ag_ctx ustorm_ag_context;
- 	struct ustorm_eth_conn_st_ctx ustorm_st_context;
- 	struct mstorm_eth_conn_st_ctx mstorm_st_context;
-@@ -5705,6 +5739,16 @@ enum eth_error_code {
- 	ETH_FILTERS_VNI_ADD_FAIL_FULL,
- 	ETH_FILTERS_VNI_ADD_FAIL_DUP,
- 	ETH_FILTERS_GFT_UPDATE_FAIL,
-+	ETH_RX_QUEUE_FAIL_LOAD_VF_DATA,
-+	ETH_FILTERS_GFS_ADD_FILTER_FAIL_MAX_HOPS,
-+	ETH_FILTERS_GFS_ADD_FILTER_FAIL_NO_FREE_ENRTY,
-+	ETH_FILTERS_GFS_ADD_FILTER_FAIL_ALREADY_EXISTS,
-+	ETH_FILTERS_GFS_ADD_FILTER_FAIL_PCI_ERROR,
-+	ETH_FILTERS_GFS_ADD_FINLER_FAIL_MAGIC_NUM_ERROR,
-+	ETH_FILTERS_GFS_DEL_FILTER_FAIL_MAX_HOPS,
-+	ETH_FILTERS_GFS_DEL_FILTER_FAIL_NO_MATCH_ENRTY,
-+	ETH_FILTERS_GFS_DEL_FILTER_FAIL_PCI_ERROR,
-+	ETH_FILTERS_GFS_DEL_FILTER_FAIL_MAGIC_NUM_ERROR,
- 	MAX_ETH_ERROR_CODE
- };
- 
-@@ -5728,6 +5772,11 @@ enum eth_event_opcode {
- 	ETH_EVENT_RX_CREATE_GFT_ACTION,
- 	ETH_EVENT_RX_GFT_UPDATE_FILTER,
- 	ETH_EVENT_TX_QUEUE_UPDATE,
-+	ETH_EVENT_RGFS_ADD_FILTER,
-+	ETH_EVENT_RGFS_DEL_FILTER,
-+	ETH_EVENT_TGFS_ADD_FILTER,
-+	ETH_EVENT_TGFS_DEL_FILTER,
-+	ETH_EVENT_GFS_COUNTERS_REPORT_REQUEST,
- 	MAX_ETH_EVENT_OPCODE
- };
- 
-@@ -5820,18 +5869,31 @@ enum eth_ramrod_cmd_id {
- 	ETH_RAMROD_RX_CREATE_GFT_ACTION,
- 	ETH_RAMROD_GFT_UPDATE_FILTER,
- 	ETH_RAMROD_TX_QUEUE_UPDATE,
-+	ETH_RAMROD_RGFS_FILTER_ADD,
-+	ETH_RAMROD_RGFS_FILTER_DEL,
-+	ETH_RAMROD_TGFS_FILTER_ADD,
-+	ETH_RAMROD_TGFS_FILTER_DEL,
-+	ETH_RAMROD_GFS_COUNTERS_REPORT_REQUEST,
- 	MAX_ETH_RAMROD_CMD_ID
- };
- 
- /* Return code from eth sp ramrods */
- struct eth_return_code {
- 	u8 value;
--#define ETH_RETURN_CODE_ERR_CODE_MASK	0x1F
--#define ETH_RETURN_CODE_ERR_CODE_SHIFT	0
--#define ETH_RETURN_CODE_RESERVED_MASK	0x3
--#define ETH_RETURN_CODE_RESERVED_SHIFT	5
--#define ETH_RETURN_CODE_RX_TX_MASK	0x1
--#define ETH_RETURN_CODE_RX_TX_SHIFT	7
-+#define ETH_RETURN_CODE_ERR_CODE_MASK  0x3F
-+#define ETH_RETURN_CODE_ERR_CODE_SHIFT 0
-+#define ETH_RETURN_CODE_RESERVED_MASK  0x1
-+#define ETH_RETURN_CODE_RESERVED_SHIFT 6
-+#define ETH_RETURN_CODE_RX_TX_MASK     0x1
-+#define ETH_RETURN_CODE_RX_TX_SHIFT    7
-+};
-+
-+/* tx destination enum */
-+enum eth_tx_dst_mode_config_enum {
-+	ETH_TX_DST_MODE_CONFIG_DISABLE,
-+	ETH_TX_DST_MODE_CONFIG_FORWARD_DATA_IN_BD,
-+	ETH_TX_DST_MODE_CONFIG_FORWARD_DATA_IN_VPORT,
-+	MAX_ETH_TX_DST_MODE_CONFIG_ENUM
- };
- 
- /* What to do in case an error occurs */
-@@ -5858,8 +5920,10 @@ struct eth_tx_err_vals {
- #define ETH_TX_ERR_VALS_MTU_VIOLATION_SHIFT			5
- #define ETH_TX_ERR_VALS_ILLEGAL_CONTROL_FRAME_MASK		0x1
- #define ETH_TX_ERR_VALS_ILLEGAL_CONTROL_FRAME_SHIFT		6
--#define ETH_TX_ERR_VALS_RESERVED_MASK				0x1FF
--#define ETH_TX_ERR_VALS_RESERVED_SHIFT				7
-+#define ETH_TX_ERR_VALS_ILLEGAL_BD_FLAGS_MASK			0x1
-+#define ETH_TX_ERR_VALS_ILLEGAL_BD_FLAGS_SHIFT			7
-+#define ETH_TX_ERR_VALS_RESERVED_MASK				0xFF
-+#define ETH_TX_ERR_VALS_RESERVED_SHIFT				8
- };
- 
- /* vport rss configuration data */
-@@ -5889,7 +5953,6 @@ struct eth_vport_rss_config {
- 	u8 tbl_size;
- 	__le32 reserved2[2];
- 	__le16 indirection_table[ETH_RSS_IND_TABLE_ENTRIES_NUM];
--
- 	__le32 rss_key[ETH_RSS_KEY_SIZE_REGS];
- 	__le32 reserved3[2];
- };
-@@ -6091,7 +6154,7 @@ struct rx_update_gft_filter_data {
- 	u8 inner_vlan_removal_en;
- };
- 
--/* Ramrod data for rx queue start ramrod */
-+/* Ramrod data for tx queue start ramrod */
- struct tx_queue_start_ramrod_data {
- 	__le16 sb_id;
- 	u8 sb_index;
-@@ -6104,16 +6167,14 @@ struct tx_queue_start_ramrod_data {
- #define TX_QUEUE_START_RAMROD_DATA_DISABLE_OPPORTUNISTIC_SHIFT	0
- #define TX_QUEUE_START_RAMROD_DATA_TEST_MODE_PKT_DUP_MASK	0x1
- #define TX_QUEUE_START_RAMROD_DATA_TEST_MODE_PKT_DUP_SHIFT	1
--#define TX_QUEUE_START_RAMROD_DATA_TEST_MODE_TX_DEST_MASK	0x1
--#define TX_QUEUE_START_RAMROD_DATA_TEST_MODE_TX_DEST_SHIFT	2
- #define TX_QUEUE_START_RAMROD_DATA_PMD_MODE_MASK		0x1
--#define TX_QUEUE_START_RAMROD_DATA_PMD_MODE_SHIFT		3
-+#define TX_QUEUE_START_RAMROD_DATA_PMD_MODE_SHIFT		2
- #define TX_QUEUE_START_RAMROD_DATA_NOTIFY_EN_MASK		0x1
--#define TX_QUEUE_START_RAMROD_DATA_NOTIFY_EN_SHIFT		4
-+#define TX_QUEUE_START_RAMROD_DATA_NOTIFY_EN_SHIFT		3
- #define TX_QUEUE_START_RAMROD_DATA_PIN_CONTEXT_MASK		0x1
--#define TX_QUEUE_START_RAMROD_DATA_PIN_CONTEXT_SHIFT		5
--#define TX_QUEUE_START_RAMROD_DATA_RESERVED1_MASK		0x3
--#define TX_QUEUE_START_RAMROD_DATA_RESERVED1_SHIFT		6
-+#define TX_QUEUE_START_RAMROD_DATA_PIN_CONTEXT_SHIFT		4
-+#define TX_QUEUE_START_RAMROD_DATA_RESERVED1_MASK		0x7
-+#define TX_QUEUE_START_RAMROD_DATA_RESERVED1_SHIFT		5
- 	u8 pxp_st_hint;
- 	u8 pxp_tph_valid_bd;
- 	u8 pxp_tph_valid_pkt;
-@@ -6169,18 +6230,22 @@ struct vport_start_ramrod_data {
- 	__le16 default_vlan;
- 	u8 tx_switching_en;
- 	u8 anti_spoofing_en;
--
- 	u8 default_vlan_en;
--
- 	u8 handle_ptp_pkts;
- 	u8 silent_vlan_removal_en;
- 	u8 untagged;
- 	struct eth_tx_err_vals tx_err_behav;
--
- 	u8 zero_placement_offset;
- 	u8 ctl_frame_mac_check_en;
- 	u8 ctl_frame_ethtype_check_en;
-+	u8 reserved0;
++/* DMAE parameters */
++struct qed_dmae_params {
++	u32 flags;
++/* If QED_DMAE_PARAMS_RW_REPL_SRC flag is set and the
++ * source is a block of length DMAE_MAX_RW_SIZE and the
++ * destination is larger, the source block will be duplicated as
++ * many times as required to fill the destination block. This is
++ * used mostly to write a zeroed buffer to destination address
++ * using DMA
++ */
++#define QED_DMAE_PARAMS_RW_REPL_SRC_MASK	0x1
++#define QED_DMAE_PARAMS_RW_REPL_SRC_SHIFT	0
++#define QED_DMAE_PARAMS_SRC_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_VF_VALID_SHIFT	1
++#define QED_DMAE_PARAMS_DST_VF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_VF_VALID_SHIFT	2
++#define QED_DMAE_PARAMS_COMPLETION_DST_MASK	0x1
++#define QED_DMAE_PARAMS_COMPLETION_DST_SHIFT	3
++#define QED_DMAE_PARAMS_PORT_VALID_MASK		0x1
++#define QED_DMAE_PARAMS_PORT_VALID_SHIFT	4
++#define QED_DMAE_PARAMS_SRC_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_SRC_PF_VALID_SHIFT	5
++#define QED_DMAE_PARAMS_DST_PF_VALID_MASK	0x1
++#define QED_DMAE_PARAMS_DST_PF_VALID_SHIFT	6
++#define QED_DMAE_PARAMS_RESERVED_MASK		0x1FFFFFF
++#define QED_DMAE_PARAMS_RESERVED_SHIFT		7
++	u8 src_vfid;
++	u8 dst_vfid;
++	u8 port_id;
++	u8 src_pfid;
++	u8 dst_pfid;
 +	u8 reserved1;
-+	u8 tx_dst_port_mode_config;
-+	u8 dst_vport_id;
-+	u8 tx_dst_port_mode;
-+	u8 dst_vport_id_valid;
- 	u8 wipe_inner_vlan_pri_en;
-+	u8 reserved2[2];
- 	struct eth_in_to_in_pri_map_cfg in_to_in_vlan_pri_map_cfg;
- };
- 
-@@ -6740,19 +6805,6 @@ struct e4_xstorm_eth_hw_conn_ag_ctx {
- 	__le16 conn_dpi;
- };
- 
--/* GFT CAM line struct */
--struct gft_cam_line {
--	__le32 camline;
--#define GFT_CAM_LINE_VALID_MASK		0x1
--#define GFT_CAM_LINE_VALID_SHIFT	0
--#define GFT_CAM_LINE_DATA_MASK		0x3FFF
--#define GFT_CAM_LINE_DATA_SHIFT		1
--#define GFT_CAM_LINE_MASK_BITS_MASK	0x3FFF
--#define GFT_CAM_LINE_MASK_BITS_SHIFT	15
--#define GFT_CAM_LINE_RESERVED1_MASK	0x7
--#define GFT_CAM_LINE_RESERVED1_SHIFT	29
--};
--
- /* GFT CAM line struct with fields breakout */
- struct gft_cam_line_mapped {
- 	__le32 camline;
-@@ -6782,10 +6834,6 @@ struct gft_cam_line_mapped {
- #define GFT_CAM_LINE_MAPPED_RESERVED1_SHIFT			29
- };
- 
--union gft_cam_line_union {
--	struct gft_cam_line cam_line;
--	struct gft_cam_line_mapped cam_line_mapped;
--};
- 
- /* Used in gft_profile_key: Indication for ip version */
- enum gft_profile_ip_version {
-@@ -7064,6 +7112,11 @@ struct mstorm_rdma_task_st_ctx {
- 	struct regpair temp[4];
- };
- 
-+/* The roce task context of Ustorm */
-+struct ustorm_rdma_task_st_ctx {
-+	struct regpair temp[6];
++	__le16 reserved2;
 +};
 +
- struct e4_ustorm_rdma_task_ag_ctx {
- 	u8 reserved;
- 	u8 state;
-@@ -7073,8 +7126,8 @@ struct e4_ustorm_rdma_task_ag_ctx {
- #define E4_USTORM_RDMA_TASK_AG_CTX_CONNECTION_TYPE_SHIFT	0
- #define E4_USTORM_RDMA_TASK_AG_CTX_EXIST_IN_QM0_MASK		0x1
- #define E4_USTORM_RDMA_TASK_AG_CTX_EXIST_IN_QM0_SHIFT		4
--#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_RUNT_VALID_MASK		0x1
--#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_RUNT_VALID_SHIFT		5
-+#define E4_USTORM_RDMA_TASK_AG_CTX_BIT1_MASK			0x1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_BIT1_SHIFT			5
- #define E4_USTORM_RDMA_TASK_AG_CTX_DIF_WRITE_RESULT_CF_MASK	0x3
- #define E4_USTORM_RDMA_TASK_AG_CTX_DIF_WRITE_RESULT_CF_SHIFT	6
- 	u8 flags1;
-@@ -7104,29 +7157,29 @@ struct e4_ustorm_rdma_task_ag_ctx {
- #define E4_USTORM_RDMA_TASK_AG_CTX_RULE2EN_MASK			0x1
- #define E4_USTORM_RDMA_TASK_AG_CTX_RULE2EN_SHIFT		7
- 	u8 flags3;
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE3EN_MASK		0x1
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE3EN_SHIFT	0
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE4EN_MASK		0x1
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE4EN_SHIFT	1
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE5EN_MASK		0x1
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE5EN_SHIFT	2
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE6EN_MASK		0x1
--#define E4_USTORM_RDMA_TASK_AG_CTX_RULE6EN_SHIFT	3
--#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_ERROR_TYPE_MASK	0xF
--#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_ERROR_TYPE_SHIFT	4
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_RXMIT_PROD_CONS_EN_MASK	0x1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_RXMIT_PROD_CONS_EN_SHIFT	0
-+#define E4_USTORM_RDMA_TASK_AG_CTX_RULE4EN_MASK			0x1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_RULE4EN_SHIFT		1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_WRITE_PROD_CONS_EN_MASK	0x1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_WRITE_PROD_CONS_EN_SHIFT	2
-+#define E4_USTORM_RDMA_TASK_AG_CTX_RULE6EN_MASK			0x1
-+#define E4_USTORM_RDMA_TASK_AG_CTX_RULE6EN_SHIFT		3
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_ERROR_TYPE_MASK		0xF
-+#define E4_USTORM_RDMA_TASK_AG_CTX_DIF_ERROR_TYPE_SHIFT		4
- 	__le32 dif_err_intervals;
- 	__le32 dif_error_1st_interval;
--	__le32 sq_cons;
--	__le32 dif_runt_value;
-+	__le32 dif_rxmit_cons;
-+	__le32 dif_rxmit_prod;
- 	__le32 sge_index;
--	__le32 reg5;
-+	__le32 sq_cons;
- 	u8 byte2;
- 	u8 byte3;
--	__le16 word1;
--	__le16 word2;
-+	__le16 dif_write_cons;
-+	__le16 dif_write_prod;
- 	__le16 word3;
--	__le32 reg6;
--	__le32 reg7;
-+	__le32 dif_error_buffer_address_lo;
-+	__le32 dif_error_buffer_address_hi;
- };
+ /* IGU cleanup command */
+ struct igu_cleanup {
+ 	__le32 sb_id_and_flags;
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_hw.c b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+index a4de9e3ef72c..4ab8cfaf63d1 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_hw.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_hw.c
+@@ -393,7 +393,7 @@ u32 qed_vfid_to_concrete(struct qed_hwfn *p_hwfn, u8 vfid)
  
- /* RDMA task context */
-@@ -7137,6 +7190,8 @@ struct e4_rdma_task_context {
- 	struct e4_mstorm_rdma_task_ag_ctx mstorm_ag_context;
- 	struct mstorm_rdma_task_st_ctx mstorm_st_context;
- 	struct rdif_task_context rdif_context;
-+	struct ustorm_rdma_task_st_ctx ustorm_st_context;
-+	struct regpair ustorm_st_padding[2];
- 	struct e4_ustorm_rdma_task_ag_ctx ustorm_ag_context;
- };
+ /* DMAE */
+ #define QED_DMAE_FLAGS_IS_SET(params, flag) \
+-	((params) != NULL && ((params)->flags & QED_DMAE_FLAG_##flag))
++	((params) != NULL && GET_FIELD((params)->flags, QED_DMAE_PARAMS_##flag))
  
-@@ -7172,7 +7227,12 @@ struct rdma_create_cq_ramrod_data {
- 	u8 pbl_log_page_size;
- 	u8 toggle_bit;
- 	__le16 int_timeout;
--	__le16 reserved1;
-+	u8 vf_id;
-+	u8 flags;
-+#define RDMA_CREATE_CQ_RAMROD_DATA_VF_ID_VALID_MASK  0x1
-+#define RDMA_CREATE_CQ_RAMROD_DATA_VF_ID_VALID_SHIFT 0
-+#define RDMA_CREATE_CQ_RAMROD_DATA_RESERVED1_MASK    0x7F
-+#define RDMA_CREATE_CQ_RAMROD_DATA_RESERVED1_SHIFT   1
- };
+ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 			    const u8 is_src_type_grc,
+@@ -408,62 +408,55 @@ static void qed_dmae_opcode(struct qed_hwfn *p_hwfn,
+ 	 * 0- The source is the PCIe
+ 	 * 1- The source is the GRC.
+ 	 */
+-	opcode |= (is_src_type_grc ? DMAE_CMD_SRC_MASK_GRC
+-				   : DMAE_CMD_SRC_MASK_PCIE) <<
+-		   DMAE_CMD_SRC_SHIFT;
+-	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_SRC) ?
+-		   p_params->src_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((src_pfid & DMAE_CMD_SRC_PF_ID_MASK) <<
+-		   DMAE_CMD_SRC_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC,
++		  (is_src_type_grc ? dmae_cmd_src_grc : dmae_cmd_src_pcie));
++	src_pfid = QED_DMAE_FLAGS_IS_SET(p_params, SRC_PF_VALID) ?
++	    p_params->src_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_SRC_PF_ID, src_pfid);
  
- /* rdma deregister tid ramrod data */
-@@ -7216,6 +7276,7 @@ enum rdma_fw_return_code {
- 	RDMA_RETURN_DEREGISTER_MR_BAD_STATE_ERR,
- 	RDMA_RETURN_RESIZE_CQ_ERR,
- 	RDMA_RETURN_NIG_DRAIN_REQ,
-+	RDMA_RETURN_GENERAL_ERR,
- 	MAX_RDMA_FW_RETURN_CODE
- };
+ 	/* The destination of the DMA can be: 0-None 1-PCIe 2-GRC 3-None */
+-	opcode |= (is_dst_type_grc ? DMAE_CMD_DST_MASK_GRC
+-				   : DMAE_CMD_DST_MASK_PCIE) <<
+-		   DMAE_CMD_DST_SHIFT;
+-	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, PF_DST) ?
+-		   p_params->dst_pfid : p_hwfn->rel_pf_id;
+-	opcode |= ((dst_pfid & DMAE_CMD_DST_PF_ID_MASK) <<
+-		   DMAE_CMD_DST_PF_ID_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST,
++		  (is_dst_type_grc ? dmae_cmd_dst_grc : dmae_cmd_dst_pcie));
++	dst_pfid = QED_DMAE_FLAGS_IS_SET(p_params, DST_PF_VALID) ?
++	    p_params->dst_pfid : p_hwfn->rel_pf_id;
++	SET_FIELD(opcode, DMAE_CMD_DST_PF_ID, dst_pfid);
++
  
-@@ -7229,7 +7290,10 @@ struct rdma_init_func_hdr {
- 	u8 relaxed_ordering;
- 	__le16 first_reg_srq_id;
- 	__le32 reg_srq_base_addr;
--	__le32 reserved;
-+	u8 searcher_mode;
-+	u8 pvrdma_mode;
-+	u8 max_num_ns_log;
-+	u8 reserved;
- };
+ 	/* Whether to write a completion word to the completion destination:
+ 	 * 0-Do not write a completion word
+ 	 * 1-Write the completion word
+ 	 */
+-	opcode |= (DMAE_CMD_COMP_WORD_EN_MASK << DMAE_CMD_COMP_WORD_EN_SHIFT);
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_COMP_WORD_EN, 1);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
  
- /* rdma function init ramrod data */
-@@ -7319,16 +7383,20 @@ struct rdma_resize_cq_ramrod_data {
- #define RDMA_RESIZE_CQ_RAMROD_DATA_TOGGLE_BIT_SHIFT		0
- #define RDMA_RESIZE_CQ_RAMROD_DATA_IS_TWO_LEVEL_PBL_MASK	0x1
- #define RDMA_RESIZE_CQ_RAMROD_DATA_IS_TWO_LEVEL_PBL_SHIFT	1
--#define RDMA_RESIZE_CQ_RAMROD_DATA_RESERVED_MASK		0x3F
--#define RDMA_RESIZE_CQ_RAMROD_DATA_RESERVED_SHIFT		2
-+#define RDMA_RESIZE_CQ_RAMROD_DATA_VF_ID_VALID_MASK		0x1
-+#define RDMA_RESIZE_CQ_RAMROD_DATA_VF_ID_VALID_SHIFT		2
-+#define RDMA_RESIZE_CQ_RAMROD_DATA_RESERVED_MASK		0x1F
-+#define RDMA_RESIZE_CQ_RAMROD_DATA_RESERVED_SHIFT		3
- 	u8 pbl_log_page_size;
- 	__le16 pbl_num_pages;
- 	__le32 max_cqes;
- 	struct regpair pbl_addr;
- 	struct regpair output_params_addr;
-+	u8 vf_id;
-+	u8 reserved1[7];
- };
+ 	if (QED_DMAE_FLAGS_IS_SET(p_params, COMPLETION_DST))
+-		opcode |= (1 << DMAE_CMD_COMP_FUNC_SHIFT);
++		SET_FIELD(opcode, DMAE_CMD_COMP_FUNC, 1);
  
--/* The rdma storm context of Mstorm */
-+/* The rdma SRQ context */
- struct rdma_srq_context {
- 	struct regpair temp[8];
- };
-@@ -7375,6 +7443,7 @@ enum rdma_tid_type {
- 	MAX_RDMA_TID_TYPE
- };
+-	opcode |= (DMAE_CMD_ENDIANITY << DMAE_CMD_ENDIANITY_MODE_SHIFT);
++	/* swapping mode 3 - big endian */
++	SET_FIELD(opcode, DMAE_CMD_ENDIANITY_MODE, DMAE_CMD_ENDIANITY);
  
-+/* The rdma XRC SRQ context */
- struct rdma_xrc_srq_context {
- 	struct regpair temp[9];
- };
-@@ -7556,12 +7625,12 @@ struct e4_xstorm_roce_conn_ag_ctx {
- #define E4_XSTORM_ROCE_CONN_AG_CTX_BIT10_SHIFT            2
- #define E4_XSTORM_ROCE_CONN_AG_CTX_BIT11_MASK             0x1
- #define E4_XSTORM_ROCE_CONN_AG_CTX_BIT11_SHIFT            3
--#define E4_XSTORM_ROCE_CONN_AG_CTX_BIT12_MASK             0x1
--#define E4_XSTORM_ROCE_CONN_AG_CTX_BIT12_SHIFT            4
-+#define E4_XSTORM_ROCE_CONN_AG_CTX_MSDM_FLUSH_MASK        0x1
-+#define E4_XSTORM_ROCE_CONN_AG_CTX_MSDM_FLUSH_SHIFT       4
- #define E4_XSTORM_ROCE_CONN_AG_CTX_MSEM_FLUSH_MASK        0x1
- #define E4_XSTORM_ROCE_CONN_AG_CTX_MSEM_FLUSH_SHIFT       5
--#define E4_XSTORM_ROCE_CONN_AG_CTX_MSDM_FLUSH_MASK        0x1
--#define E4_XSTORM_ROCE_CONN_AG_CTX_MSDM_FLUSH_SHIFT       6
-+#define E4_XSTORM_ROCE_CONN_AG_CTX_BIT14_MASK	       0x1
-+#define E4_XSTORM_ROCE_CONN_AG_CTX_BIT14_SHIFT	       6
- #define E4_XSTORM_ROCE_CONN_AG_CTX_YSTORM_FLUSH_MASK      0x1
- #define E4_XSTORM_ROCE_CONN_AG_CTX_YSTORM_FLUSH_SHIFT     7
- 	u8 flags2;
-@@ -7885,9 +7954,9 @@ struct mstorm_roce_conn_st_ctx {
- 	struct regpair temp[6];
- };
+-	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT)) ?
+-		   p_params->port_id : p_hwfn->port_id;
+-	opcode |= (port_id << DMAE_CMD_PORT_ID_SHIFT);
++	port_id = (QED_DMAE_FLAGS_IS_SET(p_params, PORT_VALID)) ?
++	    p_params->port_id : p_hwfn->port_id;
++	SET_FIELD(opcode, DMAE_CMD_PORT_ID, port_id);
  
--/* The roce storm context of Ystorm */
-+/* The roce storm context of Ustorm */
- struct ustorm_roce_conn_st_ctx {
--	struct regpair temp[12];
-+	struct regpair temp[14];
- };
+ 	/* reset source address in next go */
+-	opcode |= (DMAE_CMD_SRC_ADDR_RESET_MASK <<
+-		   DMAE_CMD_SRC_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_SRC_ADDR_RESET, 1);
  
- /* roce connection context */
-@@ -7905,6 +7974,7 @@ struct e4_roce_conn_context {
- 	struct mstorm_roce_conn_st_ctx mstorm_st_context;
- 	struct regpair mstorm_st_padding[2];
- 	struct ustorm_roce_conn_st_ctx ustorm_st_context;
-+	struct regpair ustorm_st_padding[2];
- };
+ 	/* reset dest address in next go */
+-	opcode |= (DMAE_CMD_DST_ADDR_RESET_MASK <<
+-		   DMAE_CMD_DST_ADDR_RESET_SHIFT);
++	SET_FIELD(opcode, DMAE_CMD_DST_ADDR_RESET, 1);
  
- /* roce cqes statistics */
-@@ -7959,12 +8029,17 @@ struct roce_create_qp_req_ramrod_data {
- 	struct regpair qp_handle_for_cqe;
- 	struct regpair qp_handle_for_async;
- 	u8 stats_counter_id;
--	u8 reserved3[6];
-+	u8 vf_id;
-+	u8 vport_id;
- 	u8 flags2;
- #define ROCE_CREATE_QP_REQ_RAMROD_DATA_EDPM_MODE_MASK			0x1
- #define ROCE_CREATE_QP_REQ_RAMROD_DATA_EDPM_MODE_SHIFT			0
--#define ROCE_CREATE_QP_REQ_RAMROD_DATA_RESERVED_MASK			0x7F
--#define ROCE_CREATE_QP_REQ_RAMROD_DATA_RESERVED_SHIFT			1
-+#define ROCE_CREATE_QP_REQ_RAMROD_DATA_VF_ID_VALID_MASK			0x1
-+#define ROCE_CREATE_QP_REQ_RAMROD_DATA_VF_ID_VALID_SHIFT		1
-+#define ROCE_CREATE_QP_REQ_RAMROD_DATA_RESERVED_MASK			0x3F
-+#define ROCE_CREATE_QP_REQ_RAMROD_DATA_RESERVED_SHIFT			2
-+	u8 name_space;
-+	u8 reserved3[3];
- 	__le16 regular_latency_phy_queue;
- 	__le16 dpi;
- };
-@@ -7992,8 +8067,10 @@ struct roce_create_qp_resp_ramrod_data {
- #define ROCE_CREATE_QP_RESP_RAMROD_DATA_MIN_RNR_NAK_TIMER_SHIFT		11
- #define ROCE_CREATE_QP_RESP_RAMROD_DATA_XRC_FLAG_MASK             0x1
- #define ROCE_CREATE_QP_RESP_RAMROD_DATA_XRC_FLAG_SHIFT            16
--#define ROCE_CREATE_QP_RESP_RAMROD_DATA_RESERVED_MASK             0x7FFF
--#define ROCE_CREATE_QP_RESP_RAMROD_DATA_RESERVED_SHIFT            17
-+#define ROCE_CREATE_QP_RESP_RAMROD_DATA_VF_ID_VALID_MASK	0x1
-+#define ROCE_CREATE_QP_RESP_RAMROD_DATA_VF_ID_VALID_SHIFT	17
-+#define ROCE_CREATE_QP_RESP_RAMROD_DATA_RESERVED_MASK		0x3FFF
-+#define ROCE_CREATE_QP_RESP_RAMROD_DATA_RESERVED_SHIFT		18
- 	__le16 xrc_domain;
- 	u8 max_ird;
- 	u8 traffic_class;
-@@ -8020,10 +8097,14 @@ struct roce_create_qp_resp_ramrod_data {
- 	struct regpair qp_handle_for_cqe;
- 	struct regpair qp_handle_for_async;
- 	__le16 low_latency_phy_queue;
--	u8 reserved2[2];
-+	u8 vf_id;
-+	u8 vport_id;
- 	__le32 cq_cid;
- 	__le16 regular_latency_phy_queue;
- 	__le16 dpi;
-+	__le32 src_qp_id;
-+	u8 name_space;
-+	u8 reserved3[3];
- };
+ 	/* SRC/DST VFID: all 1's - pf, otherwise VF id */
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_SRC)) {
+-		opcode |= 1 << DMAE_CMD_SRC_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->src_vfid << DMAE_CMD_SRC_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, SRC_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_SRC_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, p_params->src_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_SRC_VF_ID_MASK <<
+-			    DMAE_CMD_SRC_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_SRC_VF_ID, 0xFF);
+ 	}
+-
+-	if (QED_DMAE_FLAGS_IS_SET(p_params, VF_DST)) {
+-		opcode |= 1 << DMAE_CMD_DST_VF_ID_VALID_SHIFT;
+-		opcode_b |= p_params->dst_vfid << DMAE_CMD_DST_VF_ID_SHIFT;
++	if (QED_DMAE_FLAGS_IS_SET(p_params, DST_VF_VALID)) {
++		SET_FIELD(opcode, DMAE_CMD_DST_VF_ID_VALID, 1);
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, p_params->dst_vfid);
+ 	} else {
+-		opcode_b |= DMAE_CMD_DST_VF_ID_MASK << DMAE_CMD_DST_VF_ID_SHIFT;
++		SET_FIELD(opcode_b, DMAE_CMD_DST_VF_ID, 0xFF);
+ 	}
  
- /* roce DCQCN received statistics */
-@@ -8057,6 +8138,8 @@ struct roce_destroy_qp_resp_output_params {
- /* RoCE destroy qp responder ramrod data */
- struct roce_destroy_qp_resp_ramrod_data {
- 	struct regpair output_params_addr;
-+	__le32 src_qp_id;
-+	__le32 reserved;
- };
+ 	p_hwfn->dmae_info.p_dmae_cmd->opcode = cpu_to_le32(opcode);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+index 40b8a52dbfa3..6fdf9ab98685 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
+@@ -1011,6 +1011,56 @@ bool qed_send_qm_stop_cmd(struct qed_hwfn *p_hwfn,
+ #define PRS_ETH_TUNN_OUTPUT_FORMAT     0xF4DAB910
+ #define PRS_ETH_OUTPUT_FORMAT          0xFFFF4910
  
- /* roce error statistics */
-@@ -8140,8 +8223,8 @@ struct roce_modify_qp_req_ramrod_data {
- #define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PRI_FLG_SHIFT			9
- #define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PRI_MASK				0x7
- #define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PRI_SHIFT			10
--#define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PHYSICAL_QUEUES_FLG_MASK		0x1
--#define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PHYSICAL_QUEUES_FLG_SHIFT	13
-+#define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PHYSICAL_QUEUE_FLG_MASK		0x1
-+#define ROCE_MODIFY_QP_REQ_RAMROD_DATA_PHYSICAL_QUEUE_FLG_SHIFT		13
- #define ROCE_MODIFY_QP_REQ_RAMROD_DATA_RESERVED1_MASK			0x3
- #define ROCE_MODIFY_QP_REQ_RAMROD_DATA_RESERVED1_SHIFT			14
- 	u8 fields;
-@@ -8187,8 +8270,8 @@ struct roce_modify_qp_resp_ramrod_data {
- #define ROCE_MODIFY_QP_RESP_RAMROD_DATA_MIN_RNR_NAK_TIMER_FLG_SHIFT	8
- #define ROCE_MODIFY_QP_RESP_RAMROD_DATA_RDMA_OPS_EN_FLG_MASK		0x1
- #define ROCE_MODIFY_QP_RESP_RAMROD_DATA_RDMA_OPS_EN_FLG_SHIFT		9
--#define ROCE_MODIFY_QP_RESP_RAMROD_DATA_PHYSICAL_QUEUES_FLG_MASK	0x1
--#define ROCE_MODIFY_QP_RESP_RAMROD_DATA_PHYSICAL_QUEUES_FLG_SHIFT	10
-+#define ROCE_MODIFY_QP_RESP_RAMROD_DATA_PHYSICAL_QUEUE_FLG_MASK		0x1
-+#define ROCE_MODIFY_QP_RESP_RAMROD_DATA_PHYSICAL_QUEUE_FLG_SHIFT	10
- #define ROCE_MODIFY_QP_RESP_RAMROD_DATA_RESERVED1_MASK			0x1F
- #define ROCE_MODIFY_QP_RESP_RAMROD_DATA_RESERVED1_SHIFT			11
- 	u8 fields;
-@@ -8229,7 +8312,7 @@ struct roce_query_qp_req_ramrod_data {
- /* RoCE query qp responder output params */
- struct roce_query_qp_resp_output_params {
- 	__le32 psn;
--	__le32 err_flag;
-+	__le32 flags;
- #define ROCE_QUERY_QP_RESP_OUTPUT_PARAMS_ERROR_FLG_MASK  0x1
- #define ROCE_QUERY_QP_RESP_OUTPUT_PARAMS_ERROR_FLG_SHIFT 0
- #define ROCE_QUERY_QP_RESP_OUTPUT_PARAMS_RESERVED0_MASK  0x7FFFFFFF
-@@ -8296,12 +8379,12 @@ struct e4_xstorm_roce_conn_ag_ctx_dq_ext_ld_part {
- #define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT10_SHIFT		2
- #define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT11_MASK		0x1
- #define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT11_SHIFT		3
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT12_MASK		0x1
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT12_SHIFT		4
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSEM_FLUSH_MASK        0x1
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSEM_FLUSH_SHIFT       5
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSDM_FLUSH_MASK        0x1
--#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSDM_FLUSH_SHIFT       6
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSDM_FLUSH_MASK	0x1
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSDM_FLUSH_SHIFT	4
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSEM_FLUSH_MASK	0x1
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_MSEM_FLUSH_SHIFT	5
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT14_MASK		0x1
-+#define E4XSTORMROCECONNAGCTXDQEXTLDPART_BIT14_SHIFT		6
- #define E4XSTORMROCECONNAGCTXDQEXTLDPART_YSTORM_FLUSH_MASK	0x1
- #define E4XSTORMROCECONNAGCTXDQEXTLDPART_YSTORM_FLUSH_SHIFT	7
- 	u8 flags2;
-@@ -8674,8 +8757,8 @@ struct e4_tstorm_roce_req_conn_ag_ctx {
- 	u8 flags5;
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE1EN_MASK		0x1
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE1EN_SHIFT		0
--#define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE2EN_MASK		0x1
--#define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE2EN_SHIFT		1
-+#define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_DIF_CNT_EN_MASK		0x1
-+#define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_DIF_CNT_EN_SHIFT		1
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE3EN_MASK		0x1
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE3EN_SHIFT		2
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE4EN_MASK		0x1
-@@ -8688,13 +8771,13 @@ struct e4_tstorm_roce_req_conn_ag_ctx {
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE7EN_SHIFT		6
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE8EN_MASK		0x1
- #define E4_TSTORM_ROCE_REQ_CONN_AG_CTX_RULE8EN_SHIFT		7
--	__le32 reg0;
-+	__le32 dif_rxmit_cnt;
- 	__le32 snd_nxt_psn;
- 	__le32 snd_max_psn;
- 	__le32 orq_prod;
- 	__le32 reg4;
--	__le32 reg5;
--	__le32 reg6;
-+	__le32 dif_acked_cnt;
-+	__le32 dif_cnt;
- 	__le32 reg7;
- 	__le32 reg8;
- 	u8 tx_cqe_error_type;
-@@ -8705,7 +8788,7 @@ struct e4_tstorm_roce_req_conn_ag_ctx {
- 	__le16 snd_sq_cons;
- 	__le16 conn_dpi;
- 	__le16 force_comp_cons;
--	__le32 reg9;
-+	__le32 dif_rxmit_acked_cnt;
- 	__le32 reg10;
- };
++#define ARR_REG_WR(dev, ptt, addr, arr,	arr_size) \
++	do { \
++		u32 i; \
++		\
++		for (i = 0; i < (arr_size); i++) \
++			qed_wr(dev, ptt, \
++			       ((addr) + (4 * i)), \
++			       ((u32 *)&(arr))[i]); \
++	} while (0)
++
++/**
++ * @brief qed_dmae_to_grc - is an internal function - writes from host to
++ * wide-bus registers (split registers are not supported yet)
++ *
++ * @param p_hwfn - HW device data
++ * @param p_ptt - ptt window used for writing the registers.
++ * @param p_data - pointer to source data.
++ * @param addr - Destination register address.
++ * @param len_in_dwords - data length in DWARDS (u32)
++ */
++static int qed_dmae_to_grc(struct qed_hwfn *p_hwfn,
++			   struct qed_ptt *p_ptt,
++			   u32 *p_data, u32 addr, u32 len_in_dwords)
++{
++	struct qed_dmae_params params = {};
++	int rc;
++
++	if (!p_data)
++		return -1;
++
++	/* Set DMAE params */
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 1);
++
++	/* Execute DMAE command */
++	rc = qed_dmae_host2grc(p_hwfn, p_ptt,
++			       (u64)(uintptr_t)(p_data),
++			       addr, len_in_dwords, &params);
++
++	/* If not read using DMAE, read using GRC */
++	if (rc) {
++		DP_VERBOSE(p_hwfn,
++			   QED_MSG_DEBUG,
++			   "Failed writing to chip using DMAE, using GRC instead\n");
++		/* write to registers using GRC */
++		ARR_REG_WR(p_hwfn, p_ptt, addr, p_data, len_in_dwords);
++	}
++
++	return len_in_dwords;
++}
++
+ void qed_set_vxlan_dest_port(struct qed_hwfn *p_hwfn,
+ 			     struct qed_ptt *p_ptt, u16 dest_port)
+ {
+@@ -1195,6 +1245,8 @@ void qed_set_vxlan_no_l2_enable(struct qed_hwfn *p_hwfn,
  
-@@ -8980,10 +9063,10 @@ struct e4_xstorm_roce_req_conn_ag_ctx {
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT10_SHIFT		2
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT11_MASK		0x1
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT11_SHIFT		3
--#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT12_MASK		0x1
--#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT12_SHIFT		4
--#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT13_MASK		0x1
--#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_BIT13_SHIFT		5
-+#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_MSDM_FLUSH_MASK		0x1
-+#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_MSDM_FLUSH_SHIFT		4
-+#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_MSEM_FLUSH_MASK		0x1
-+#define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_MSEM_FLUSH_SHIFT		5
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_ERROR_STATE_MASK		0x1
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_ERROR_STATE_SHIFT	6
- #define E4_XSTORM_ROCE_REQ_CONN_AG_CTX_YSTORM_FLUSH_MASK	0x1
-@@ -9209,10 +9292,10 @@ struct e4_xstorm_roce_resp_conn_ag_ctx {
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT10_SHIFT		2
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT11_MASK		0x1
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT11_SHIFT		3
--#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT12_MASK		0x1
--#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT12_SHIFT		4
--#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT13_MASK		0x1
--#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_BIT13_SHIFT		5
-+#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_MSDM_FLUSH_MASK		0x1
-+#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_MSDM_FLUSH_SHIFT	4
-+#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_MSEM_FLUSH_MASK		0x1
-+#define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_MSEM_FLUSH_SHIFT	5
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_ERROR_STATE_MASK	0x1
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_ERROR_STATE_SHIFT	6
- #define E4_XSTORM_ROCE_RESP_CONN_AG_CTX_YSTORM_FLUSH_MASK	0x1
-@@ -9939,7 +10022,7 @@ struct mstorm_iwarp_conn_st_ctx {
+ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
+ {
++	struct regpair ram_line = { };
++
+ 	/* Disable gft search for PF */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 0);
  
- /* The iwarp storm context of Ustorm */
- struct ustorm_iwarp_conn_st_ctx {
--	__le32 reserved[24];
-+	struct regpair reserved[14];
- };
+@@ -1204,12 +1256,9 @@ void qed_gft_disable(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, u16 pf_id)
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_GFT_CAM + CAM_LINE_SIZE * pf_id, 0);
  
- /* iwarp connection context */
-@@ -9957,6 +10040,7 @@ struct e4_iwarp_conn_context {
- 	struct regpair tstorm_st_padding[2];
- 	struct mstorm_iwarp_conn_st_ctx mstorm_st_context;
- 	struct ustorm_iwarp_conn_st_ctx ustorm_st_context;
-+	struct regpair ustorm_st_padding[2];
- };
+ 	/* Zero ramline */
+-	qed_wr(p_hwfn,
+-	       p_ptt, PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id, 0);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       0);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
+ }
  
- /* iWARP create QP params passed by driver to FW in CreateQP Request Ramrod */
-@@ -10009,7 +10093,8 @@ enum iwarp_eqe_async_opcode {
+ void qed_gft_config(struct qed_hwfn *p_hwfn,
+@@ -1320,24 +1369,17 @@ void qed_gft_config(struct qed_hwfn *p_hwfn,
  
- struct iwarp_eqe_data_mpa_async_completion {
- 	__le16 ulp_data_len;
--	u8 reserved[6];
-+	u8 rtr_type_sent;
-+	u8 reserved[5];
- };
+ 	qed_wr(p_hwfn,
+ 	       p_ptt, PRS_REG_SEARCH_NON_IP_AS_GFT, search_non_ip_as_gft);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
+-	       ram_line.lo);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id + REG_SIZE,
+-	       ram_line.hi);
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE * pf_id,
++			sizeof(ram_line) / REG_SIZE);
  
- struct iwarp_eqe_data_tcp_async_completion {
-@@ -10034,7 +10119,7 @@ enum iwarp_eqe_sync_opcode {
+ 	/* Set default profile so that no filter match will happen */
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH, 0xffffffff);
+-	qed_wr(p_hwfn,
+-	       p_ptt,
+-	       PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
+-	       PRS_GFT_CAM_LINES_NO_MATCH + REG_SIZE, 0x3ff);
++	ram_line.lo = 0xffffffff;
++	ram_line.hi = 0x3ff;
++	qed_dmae_to_grc(p_hwfn, p_ptt, (u32 *)&ram_line,
++			PRS_REG_GFT_PROFILE_MASK_RAM + RAM_LINE_SIZE *
++			PRS_GFT_CAM_LINES_NO_MATCH,
++			sizeof(ram_line) / REG_SIZE);
  
- /* iWARP EQE completion status */
- enum iwarp_fw_return_code {
--	IWARP_CONN_ERROR_TCP_CONNECT_INVALID_PACKET = 5,
-+	IWARP_CONN_ERROR_TCP_CONNECT_INVALID_PACKET = 6,
- 	IWARP_CONN_ERROR_TCP_CONNECTION_RST,
- 	IWARP_CONN_ERROR_TCP_CONNECT_TIMEOUT,
- 	IWARP_CONN_ERROR_MPA_ERROR_REJECT,
-@@ -10203,8 +10288,8 @@ struct iwarp_rxmit_stats_drv {
-  * offload ramrod.
-  */
- struct iwarp_tcp_offload_ramrod_data {
--	struct iwarp_offload_params iwarp;
- 	struct tcp_offload_params_opt2 tcp;
-+	struct iwarp_offload_params iwarp;
- };
- 
- /* iWARP MPA negotiation types */
+ 	/* Enable gft search */
+ 	qed_wr(p_hwfn, p_ptt, PRS_REG_SEARCH_GFT, 1);
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-index 31222b3e3936..5ca117a8734a 100644
+index ef22a3596295..31222b3e3936 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_init_ops.c
-@@ -490,10 +490,10 @@ static u32 qed_init_cmd_phase(struct qed_hwfn *p_hwfn,
- int qed_init_run(struct qed_hwfn *p_hwfn,
- 		 struct qed_ptt *p_ptt, int phase, int phase_id, int modes)
- {
-+	bool b_dmae = (phase != PHASE_ENGINE);
- 	struct qed_dev *cdev = p_hwfn->cdev;
- 	u32 cmd_num, num_init_ops;
- 	union init_op *init_ops;
--	bool b_dmae = false;
- 	int rc = 0;
+@@ -215,7 +215,7 @@ static int qed_init_fill_dmae(struct qed_hwfn *p_hwfn,
+ 	 * 3. p_hwfb->temp_data,
+ 	 * 4. fill_count
+ 	 */
+-	params.flags = QED_DMAE_FLAG_RW_REPL_SRC;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_RW_REPL_SRC, 0x1);
+ 	return qed_dmae_host2grc(p_hwfn, p_ptt,
+ 				 (uintptr_t)(&zero_buffer[0]),
+ 				 addr, fill_count, &params);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_sriov.c b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+index fe4b740de14c..66876af814c4 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_sriov.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
+@@ -352,7 +352,7 @@ static int qed_iov_post_vf_bulletin(struct qed_hwfn *p_hwfn,
  
- 	num_init_ops = cdev->fw_data->init_ops_size;
-@@ -522,7 +522,6 @@ int qed_init_run(struct qed_hwfn *p_hwfn,
- 		case INIT_OP_IF_PHASE:
- 			cmd_num += qed_init_cmd_phase(p_hwfn, &cmd->if_phase,
- 						      phase, phase_id);
--			b_dmae = GET_FIELD(data, INIT_IF_PHASE_OP_DMAE_ENABLE);
- 			break;
- 		case INIT_OP_DELAY:
- 			/* qed_init_run is always invoked from
-@@ -533,6 +532,9 @@ int qed_init_run(struct qed_hwfn *p_hwfn,
+ 	/* propagate bulletin board via dmae to vm memory */
+ 	memset(&params, 0, sizeof(params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = p_vf->abs_vf_id;
+ 	return qed_dmae_host2host(p_hwfn, p_ptt, p_vf->bulletin.phys,
+ 				  p_vf->vf_bulletin, p_vf->bulletin.size / 4,
+@@ -1225,8 +1225,8 @@ static void qed_iov_send_response(struct qed_hwfn *p_hwfn,
  
- 		case INIT_OP_CALLBACK:
- 			rc = qed_init_cmd_cb(p_hwfn, p_ptt, &cmd->callback);
-+			if (phase == PHASE_ENGINE &&
-+			    cmd->callback.callback_id == DMAE_READY_CB)
-+				b_dmae = true;
- 			break;
- 		}
+ 	eng_vf_id = p_vf->abs_vf_id;
  
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.c b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-index aeac359941de..af981ff5595e 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-@@ -48,6 +48,8 @@
- #include "qed_reg_addr.h"
- #include "qed_sriov.h"
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_DST_VF_VALID, 0x1);
+ 	params.dst_vfid = eng_vf_id;
  
-+#define GRCBASE_MCP     0xe00000
-+
- #define QED_MCP_RESP_ITER_US	10
+ 	qed_dmae_host2host(p_hwfn, p_ptt, mbx->reply_phys + sizeof(u64),
+@@ -4103,8 +4103,9 @@ static int qed_iov_copy_vf_msg(struct qed_hwfn *p_hwfn, struct qed_ptt *ptt,
+ 	if (!vf_info)
+ 		return -EINVAL;
  
- #define QED_DRV_MB_MAX_RETRIES	(500 * 1000)	/* Account for 5 sec */
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_roce.c b/drivers/net/ethernet/qlogic/qed/qed_roce.c
-index e49fada85410..37e70562a964 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_roce.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_roce.c
-@@ -900,7 +900,7 @@ int qed_roce_query_qp(struct qed_hwfn *p_hwfn,
- 		goto err_resp;
+-	memset(&params, 0, sizeof(struct qed_dmae_params));
+-	params.flags = QED_DMAE_FLAG_VF_SRC | QED_DMAE_FLAG_COMPLETION_DST;
++	memset(&params, 0, sizeof(params));
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_SRC_VF_VALID, 0x1);
++	SET_FIELD(params.flags, QED_DMAE_PARAMS_COMPLETION_DST, 0x1);
+ 	params.src_vfid = vf_info->abs_vf_id;
  
- 	out_params->rq_psn = le32_to_cpu(p_resp_ramrod_res->psn);
--	rq_err_state = GET_FIELD(le32_to_cpu(p_resp_ramrod_res->err_flag),
-+	rq_err_state = GET_FIELD(le32_to_cpu(p_resp_ramrod_res->flags),
- 				 ROCE_QUERY_QP_RESP_OUTPUT_PARAMS_ERROR_FLG);
- 
- 	dma_free_coherent(&p_hwfn->cdev->pdev->dev, sizeof(*p_resp_ramrod_res),
-diff --git a/drivers/net/ethernet/qlogic/qede/qede_fp.c b/drivers/net/ethernet/qlogic/qede/qede_fp.c
-index 004c0bfec41d..c6c20776b474 100644
---- a/drivers/net/ethernet/qlogic/qede/qede_fp.c
-+++ b/drivers/net/ethernet/qlogic/qede/qede_fp.c
-@@ -848,13 +848,13 @@ static void qede_tpa_start(struct qede_dev *edev,
- 	qede_set_gro_params(edev, tpa_info->skb, cqe);
- 
- cons_buf: /* We still need to handle bd_len_list to consume buffers */
--	if (likely(cqe->ext_bd_len_list[0]))
-+	if (likely(cqe->bw_ext_bd_len_list[0]))
- 		qede_fill_frag_skb(edev, rxq, cqe->tpa_agg_index,
--				   le16_to_cpu(cqe->ext_bd_len_list[0]));
-+				   le16_to_cpu(cqe->bw_ext_bd_len_list[0]));
- 
--	if (unlikely(cqe->ext_bd_len_list[1])) {
-+	if (unlikely(cqe->bw_ext_bd_len_list[1])) {
- 		DP_ERR(edev,
--		       "Unlikely - got a TPA aggregation with more than one ext_bd_len_list entry in the TPA start\n");
-+		       "Unlikely - got a TPA aggregation with more than one bw_ext_bd_len_list entry in the TPA start\n");
- 		tpa_info->state = QEDE_AGG_STATE_ERROR;
- 	}
- }
-diff --git a/include/linux/qed/common_hsi.h b/include/linux/qed/common_hsi.h
-index 718ce72e5965..2c4737e6694a 100644
---- a/include/linux/qed/common_hsi.h
-+++ b/include/linux/qed/common_hsi.h
-@@ -76,7 +76,6 @@
- 
- #define FW_ASSERT_GENERAL_ATTN_IDX		32
- 
--#define MAX_PINNED_CCFC				32
- 
- /* Queue Zone sizes in bytes */
- #define TSTORM_QZONE_SIZE	8
-@@ -139,10 +138,10 @@
- #define MAX_NUM_VFS	(MAX_NUM_VFS_K2)
- 
- #define MAX_NUM_FUNCTIONS_BB	(MAX_NUM_PFS_BB + MAX_NUM_VFS_BB)
--#define MAX_NUM_FUNCTIONS	(MAX_NUM_PFS + MAX_NUM_VFS)
- 
- #define MAX_FUNCTION_NUMBER_BB	(MAX_NUM_PFS + MAX_NUM_VFS_BB)
--#define MAX_FUNCTION_NUMBER	(MAX_NUM_PFS + MAX_NUM_VFS)
-+#define MAX_FUNCTION_NUMBER_K2  (MAX_NUM_PFS + MAX_NUM_VFS_K2)
-+#define MAX_NUM_FUNCTIONS	(MAX_FUNCTION_NUMBER_K2)
- 
- #define MAX_NUM_VPORTS_K2	(208)
- #define MAX_NUM_VPORTS_BB	(160)
-@@ -229,6 +228,7 @@
- #define DQ_XCM_TOE_TX_BD_PROD_CMD		DQ_XCM_AGG_VAL_SEL_WORD4
- #define DQ_XCM_TOE_MORE_TO_SEND_SEQ_CMD		DQ_XCM_AGG_VAL_SEL_REG3
- #define DQ_XCM_TOE_LOCAL_ADV_WND_SEQ_CMD	DQ_XCM_AGG_VAL_SEL_REG4
-+#define DQ_XCM_ROCE_ACK_EDPM_DORQ_SEQ_CMD	DQ_XCM_AGG_VAL_SEL_WORD5
- 
- /* UCM agg val selection (HW) */
- #define	DQ_UCM_AGG_VAL_SEL_WORD0	0
-@@ -406,6 +406,7 @@
- 
- /* Number of Protocol Indices per Status Block */
- #define PIS_PER_SB_E4	12
-+#define MAX_PIS_PER_SB	PIS_PER_SB
- 
- #define CAU_HC_STOPPED_STATE	3
- #define CAU_HC_DISABLE_STATE	4
-@@ -436,8 +437,6 @@
- #define IGU_MEM_PBA_MSIX_RESERVED_UPPER	0x03ff
- 
- #define IGU_CMD_INT_ACK_BASE		0x0400
--#define IGU_CMD_INT_ACK_UPPER		(IGU_CMD_INT_ACK_BASE +	\
--					 MAX_TOT_SB_PER_PATH - 1)
- #define IGU_CMD_INT_ACK_RESERVED_UPPER	0x05ff
- 
- #define IGU_CMD_ATTN_BIT_UPD_UPPER	0x05f0
-@@ -450,8 +449,6 @@
- #define IGU_REG_SISR_MDPC_WOMASK_UPPER		0x05f6
- 
- #define IGU_CMD_PROD_UPD_BASE			0x0600
--#define IGU_CMD_PROD_UPD_UPPER			(IGU_CMD_PROD_UPD_BASE +\
--						 MAX_TOT_SB_PER_PATH - 1)
- #define IGU_CMD_PROD_UPD_RESERVED_UPPER		0x07ff
- 
- /*****************/
-@@ -741,6 +738,8 @@ enum protocol_type {
- 	PROTOCOLID_PREROCE,
- 	PROTOCOLID_COMMON,
- 	PROTOCOLID_RESERVED1,
-+	PROTOCOLID_RDMA,
-+	PROTOCOLID_SCSI,
- 	MAX_PROTOCOL_TYPE
- };
- 
-@@ -761,6 +760,10 @@ union rdma_eqe_data {
- 	struct rdma_eqe_destroy_qp rdma_destroy_qp_data;
- };
- 
-+struct tstorm_queue_zone {
-+	__le32 reserved[2];
-+};
-+
- /* Ustorm Queue Zone */
- struct ustorm_eth_queue_zone {
- 	struct coalescing_timeset int_coalescing_timeset;
-@@ -883,8 +886,8 @@ struct db_l2_dpm_data {
- #define DB_L2_DPM_DATA_RESERVED0_SHIFT 27
- #define DB_L2_DPM_DATA_SGE_NUM_MASK	0x7
- #define DB_L2_DPM_DATA_SGE_NUM_SHIFT	28
--#define DB_L2_DPM_DATA_GFS_SRC_EN_MASK	0x1
--#define DB_L2_DPM_DATA_GFS_SRC_EN_SHIFT	31
-+#define DB_L2_DPM_DATA_TGFS_SRC_EN_MASK  0x1
-+#define DB_L2_DPM_DATA_TGFS_SRC_EN_SHIFT 31
- };
- 
- /* Structure for SGE in a DPM doorbell of type DPM_L2_BD */
-diff --git a/include/linux/qed/eth_common.h b/include/linux/qed/eth_common.h
-index d9416ad5ef59..95f5fd615852 100644
---- a/include/linux/qed/eth_common.h
-+++ b/include/linux/qed/eth_common.h
-@@ -38,9 +38,11 @@
- /********************/
- 
- #define ETH_HSI_VER_MAJOR		3
--#define ETH_HSI_VER_MINOR		10
-+#define ETH_HSI_VER_MINOR		11
- 
--#define ETH_HSI_VER_NO_PKT_LEN_TUNN	5
-+#define ETH_HSI_VER_NO_PKT_LEN_TUNN         5
-+/* Maximum number of pinned L2 connections (CIDs) */
-+#define ETH_PINNED_CONN_MAX_NUM             32
- 
- #define ETH_CACHE_LINE_SIZE		64
- #define ETH_RX_CQE_GAP			32
-@@ -61,6 +63,7 @@
- #define ETH_TX_MIN_BDS_PER_TUNN_IPV6_WITH_EXT_PKT	3
- #define ETH_TX_MIN_BDS_PER_IPV6_WITH_EXT_PKT		2
- #define ETH_TX_MIN_BDS_PER_PKT_W_LOOPBACK_MODE		2
-+#define ETH_TX_MIN_BDS_PER_PKT_W_VPORT_FORWARDING	4
- #define ETH_TX_MAX_NON_LSO_PKT_LEN		(9700 - (4 + 4 + 12 + 8))
- #define ETH_TX_MAX_LSO_HDR_BYTES			510
- #define ETH_TX_LSO_WINDOW_BDS_NUM			(18 - 1)
-@@ -75,9 +78,8 @@
- #define ETH_NUM_STATISTIC_COUNTERS_QUAD_VF_ZONE \
- 	(ETH_NUM_STATISTIC_COUNTERS - 3 * MAX_NUM_VFS / 4)
- 
--/* Maximum number of buffers, used for RX packet placement */
- #define ETH_RX_MAX_BUFF_PER_PKT		5
--#define ETH_RX_BD_THRESHOLD		12
-+#define ETH_RX_BD_THRESHOLD             16
- 
- /* Num of MAC/VLAN filters */
- #define ETH_NUM_MAC_FILTERS		512
-@@ -96,24 +98,24 @@
- #define ETH_RSS_ENGINE_NUM_BB		127
- 
- /* TPA constants */
--#define ETH_TPA_MAX_AGGS_NUM		64
--#define ETH_TPA_CQE_START_LEN_LIST_SIZE	ETH_RX_MAX_BUFF_PER_PKT
--#define ETH_TPA_CQE_CONT_LEN_LIST_SIZE	6
--#define ETH_TPA_CQE_END_LEN_LIST_SIZE	4
-+#define ETH_TPA_MAX_AGGS_NUM                64
-+#define ETH_TPA_CQE_START_BW_LEN_LIST_SIZE  2
-+#define ETH_TPA_CQE_CONT_LEN_LIST_SIZE      6
-+#define ETH_TPA_CQE_END_LEN_LIST_SIZE       4
- 
- /* Control frame check constants */
--#define ETH_CTL_FRAME_ETH_TYPE_NUM	4
-+#define ETH_CTL_FRAME_ETH_TYPE_NUM        4
- 
- /* GFS constants */
- #define ETH_GFT_TRASHCAN_VPORT         0x1FF	/* GFT drop flow vport number */
- 
- /* Destination port mode */
--enum dest_port_mode {
--	DEST_PORT_PHY,
--	DEST_PORT_LOOPBACK,
--	DEST_PORT_PHY_LOOPBACK,
--	DEST_PORT_DROP,
--	MAX_DEST_PORT_MODE
-+enum dst_port_mode {
-+	DST_PORT_PHY,
-+	DST_PORT_LOOPBACK,
-+	DST_PORT_PHY_LOOPBACK,
-+	DST_PORT_DROP,
-+	MAX_DST_PORT_MODE
- };
- 
- /* Ethernet address type */
-@@ -167,8 +169,8 @@ struct eth_tx_data_2nd_bd {
- #define ETH_TX_DATA_2ND_BD_TUNN_INNER_L2_HDR_SIZE_W_SHIFT	0
- #define ETH_TX_DATA_2ND_BD_TUNN_INNER_ETH_TYPE_MASK		0x3
- #define ETH_TX_DATA_2ND_BD_TUNN_INNER_ETH_TYPE_SHIFT		4
--#define ETH_TX_DATA_2ND_BD_DEST_PORT_MODE_MASK			0x3
--#define ETH_TX_DATA_2ND_BD_DEST_PORT_MODE_SHIFT			6
-+#define ETH_TX_DATA_2ND_BD_DST_PORT_MODE_MASK			0x3
-+#define ETH_TX_DATA_2ND_BD_DST_PORT_MODE_SHIFT			6
- #define ETH_TX_DATA_2ND_BD_START_BD_MASK			0x1
- #define ETH_TX_DATA_2ND_BD_START_BD_SHIFT			8
- #define ETH_TX_DATA_2ND_BD_TUNN_TYPE_MASK			0x3
-@@ -244,8 +246,9 @@ struct eth_fast_path_rx_reg_cqe {
- 	struct eth_tunnel_parsing_flags tunnel_pars_flags;
- 	u8 bd_num;
- 	u8 reserved;
--	__le16 flow_id;
--	u8 reserved1[11];
-+	__le16 reserved2;
-+	__le32 flow_id_or_resource_id;
-+	u8 reserved1[7];
- 	struct eth_pmd_flow_flags pmd_flags;
- };
- 
-@@ -296,9 +299,10 @@ struct eth_fast_path_rx_tpa_start_cqe {
- 	struct eth_tunnel_parsing_flags tunnel_pars_flags;
- 	u8 tpa_agg_index;
- 	u8 header_len;
--	__le16 ext_bd_len_list[ETH_TPA_CQE_START_LEN_LIST_SIZE];
--	__le16 flow_id;
--	u8 reserved;
-+	__le16 bw_ext_bd_len_list[ETH_TPA_CQE_START_BW_LEN_LIST_SIZE];
-+	__le16 reserved2;
-+	__le32 flow_id_or_resource_id;
-+	u8 reserved[3];
- 	struct eth_pmd_flow_flags pmd_flags;
- };
- 
-@@ -407,6 +411,29 @@ struct eth_tx_3rd_bd {
- 	struct eth_tx_data_3rd_bd data;
- };
- 
-+/* The parsing information data for the forth tx bd of a given packet. */
-+struct eth_tx_data_4th_bd {
-+	u8 dst_vport_id;
-+	u8 reserved4;
-+	__le16 bitfields;
-+#define ETH_TX_DATA_4TH_BD_DST_VPORT_ID_VALID_MASK  0x1
-+#define ETH_TX_DATA_4TH_BD_DST_VPORT_ID_VALID_SHIFT 0
-+#define ETH_TX_DATA_4TH_BD_RESERVED1_MASK           0x7F
-+#define ETH_TX_DATA_4TH_BD_RESERVED1_SHIFT          1
-+#define ETH_TX_DATA_4TH_BD_START_BD_MASK            0x1
-+#define ETH_TX_DATA_4TH_BD_START_BD_SHIFT           8
-+#define ETH_TX_DATA_4TH_BD_RESERVED2_MASK           0x7F
-+#define ETH_TX_DATA_4TH_BD_RESERVED2_SHIFT          9
-+	__le16 reserved3;
-+};
-+
-+/* The forth tx bd of a given packet */
-+struct eth_tx_4th_bd {
-+	struct regpair addr; /* Single continuous buffer */
-+	__le16 nbytes; /* Number of bytes in this BD */
-+	struct eth_tx_data_4th_bd data; /* Parsing information data */
-+};
-+
- /* Complementary information for the regular tx bd of a given packet */
- struct eth_tx_data_bd {
- 	__le16 reserved0;
-@@ -431,6 +458,7 @@ union eth_tx_bd_types {
- 	struct eth_tx_1st_bd first_bd;
- 	struct eth_tx_2nd_bd second_bd;
- 	struct eth_tx_3rd_bd third_bd;
-+	struct eth_tx_4th_bd fourth_bd;
- 	struct eth_tx_bd reg_bd;
- };
- 
-@@ -443,6 +471,12 @@ enum eth_tx_tunn_type {
- 	MAX_ETH_TX_TUNN_TYPE
- };
- 
-+/* Mstorm Queue Zone */
-+struct mstorm_eth_queue_zone {
-+	struct eth_rx_prod_data rx_producers;
-+	__le32 reserved[3];
-+};
-+
- /* Ystorm Queue Zone */
- struct xstorm_eth_queue_zone {
- 	struct coalescing_timeset int_coalescing_timeset;
+ 	if (qed_dmae_host2host(p_hwfn, ptt,
 -- 
 2.14.5
 
