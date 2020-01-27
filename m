@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD4DC33CB7
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2C37C33CB1
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 240E4207FD
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F16B207FD
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ZbGudmzT"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="SC/sN0Cm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgA0N0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 08:26:39 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45142 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725938AbgA0N0j (ORCPT
+        id S1728984AbgA0N0r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 08:26:47 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27542 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726725AbgA0N0q (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jan 2020 08:26:39 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00RDQX6r032236;
-        Mon, 27 Jan 2020 05:26:33 -0800
+        Mon, 27 Jan 2020 08:26:46 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00RDPEve006267;
+        Mon, 27 Jan 2020 05:26:45 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=Yv/3ISpiOcz8P0CLcJvfBEXZypI0odrA4wlIAmqxVnU=;
- b=ZbGudmzTB0A4+FcrE4O2VOWDcZFJmbg4ZBLOwrlvHyszAI2gc9TJMMfyspO3eLVe5dKz
- BrIq1qmGxOgnn/7TUo1r8ZiOsBaoObKfwT/jtLq2zmLj5hbCqeVF2dCK7HGV2AzkEpDu
- 1tKpqgoGIVneJ7HJOVvct4HzNyAh8JgCdztgrZcqK6ycWHKzFjKEUoKN2ClNB1JwiLcj
- rbi8S1/+1LR6fGBTfOYZZW3sbktbYmUNlml/y+7cFSvuAmNUGtPHTybC2ioFJvzFQmkn
- TTPiB30qN4y+1Zgww2CKlujvktYgv7hx/yrZj1X0SzZCZInr14kryAO585EPh6U2MFsy KQ== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2xrp2sxxua-1
+ content-type; s=pfpt0818; bh=u1CNqM77EmVeizaAqJJlcfhZrYc9vkRlnd533HffqIA=;
+ b=SC/sN0CmKA+dzNbGQlbw4aLrjPTegT+CQWKlUwn/kmVVhY4wIo5zpbXFygXPr7TlF9X7
+ 9faJ9t62PnFMmkPbEEGbKwx8Ov6L+sXpSrDeopTeJvdyrG6dPDFaKv0TvP+tYQ7iw14E
+ Y1PmK2GImqza87Op/3H8KsncdXEdh1QGy/Ypb4NYV2Ydl2iPrC2EznLWij7OhMxHhY3n
+ kTHhg1CV46VoxuOSl4IX/dJUB7GQaaxVRLO/mZR5FtSBbmg3mnrqFnJ3Qwiz/fvNbJ3P
+ ItLdysrEYr0BU0A2vtuWiwLB+zZfPf1VNfieieSuIn2g4kmSUJEhDIcBxCVtGPbqHQLW PQ== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2xrkwufduj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 27 Jan 2020 05:26:32 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 27 Jan
- 2020 05:26:30 -0800
+        Mon, 27 Jan 2020 05:26:45 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 27 Jan
+ 2020 05:26:43 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 27 Jan 2020 05:26:30 -0800
+ Transport; Mon, 27 Jan 2020 05:26:43 -0800
 Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
-        by maili.marvell.com (Postfix) with ESMTP id D1F603F7040;
-        Mon, 27 Jan 2020 05:26:28 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 422A03F703F;
+        Mon, 27 Jan 2020 05:26:42 -0800 (PST)
 From:   Michal Kalderon <michal.kalderon@marvell.com>
 To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
         <davem@davemloft.net>
 CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>
-Subject: [PATCH v3 net-next 01/13] qed: FW 8.42.2.0 Internal ram offsets modifications
-Date:   Mon, 27 Jan 2020 15:26:07 +0200
-Message-ID: <20200127132619.27144-2-michal.kalderon@marvell.com>
+Subject: [PATCH v3 net-next 07/13] qed: Add abstraction for different hsi values per chip
+Date:   Mon, 27 Jan 2020 15:26:13 +0200
+Message-ID: <20200127132619.27144-8-michal.kalderon@marvell.com>
 X-Mailer: git-send-email 2.14.5
 In-Reply-To: <20200127132619.27144-1-michal.kalderon@marvell.com>
 References: <20200127132619.27144-1-michal.kalderon@marvell.com>
@@ -66,609 +66,245 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-IRO stands for internal RAM offsets. Updating the FW binary produces
-different iro offsets. This file contains the different values,
-and a new representation of the values.
-Update the FW version
+The number of BTB blocks was modified to be different between the two chip
+flavors supported (BB/K2) as a result, this lead to a re-write of selecting
+the default hsi value based on the chip.
+This patch creates a lookup table for hsi values per chip rather than
+ask again and again for every value.
 
 Signed-off-by: Ariel Elior <ariel.elior@marvell.com>
 Signed-off-by: Michal Kalderon <michal.kalderon@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed.h     |   4 +-
- drivers/net/ethernet/qlogic/qed/qed_hsi.h | 419 ++++++++++++++++--------------
- include/linux/qed/common_hsi.h            |   4 +-
- 3 files changed, 234 insertions(+), 193 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed.h     | 56 +++++++++++++++++++++++-----
+ drivers/net/ethernet/qlogic/qed/qed_dev.c | 62 +++++++++++++++++++++----------
+ include/linux/qed/common_hsi.h            |  4 +-
+ 3 files changed, 90 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
-index 89fe091c958d..8ec46bf409c2 100644
+index cfa45fb9a5a4..cfbfe7441ecb 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed.h
-@@ -796,8 +796,8 @@ struct qed_dev {
- 	u8				cache_shift;
- 
- 	/* Init */
--	const struct iro		*iro_arr;
--#define IRO (p_hwfn->cdev->iro_arr)
-+	const u32 *iro_arr;
-+#define IRO ((const struct iro *)p_hwfn->cdev->iro_arr)
- 
- 	/* HW functions */
- 	u8				num_hwfns;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index cf3ceb62e397..aaff7117291c 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -4282,325 +4282,366 @@ void qed_set_rdma_error_level(struct qed_hwfn *p_hwfn,
- 	(IRO[7].base + ((queue_zone_id) * IRO[7].m1))
- #define USTORM_COMMON_QUEUE_CONS_SIZE			(IRO[7].size)
- 
-+/* Xstorm common PQ info */
-+#define XSTORM_PQ_INFO_OFFSET(pq_id) \
-+	(IRO[8].base + ((pq_id) * IRO[8].m1))
-+#define XSTORM_PQ_INFO_SIZE				(IRO[8].size)
-+
- /* Xstorm Integration Test Data */
--#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[8].base)
--#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[8].size)
-+#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
-+#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
- 
- /* Ystorm Integration Test Data */
--#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
--#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
-+#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
-+#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
- 
- /* Pstorm Integration Test Data */
--#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
--#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
-+#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
-+#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
- 
- /* Tstorm Integration Test Data */
--#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
--#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
-+#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
-+#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
- 
- /* Mstorm Integration Test Data */
--#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
--#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
-+#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
-+#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
- 
- /* Ustorm Integration Test Data */
--#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
--#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
-+#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[14].base)
-+#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[14].size)
-+
-+/* Xstorm overlay buffer host address */
-+#define XSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[15].base)
-+#define XSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[15].size)
-+
-+/* Ystorm overlay buffer host address */
-+#define YSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[16].base)
-+#define YSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[16].size)
-+
-+/* Pstorm overlay buffer host address */
-+#define PSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[17].base)
-+#define PSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[17].size)
-+
-+/* Tstorm overlay buffer host address */
-+#define TSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[18].base)
-+#define TSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[18].size)
-+
-+/* Mstorm overlay buffer host address */
-+#define MSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[19].base)
-+#define MSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[19].size)
-+
-+/* Ustorm overlay buffer host address */
-+#define USTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[20].base)
-+#define USTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[20].size)
- 
- /* Tstorm producers */
- #define TSTORM_LL2_RX_PRODS_OFFSET(core_rx_queue_id) \
--	(IRO[14].base + ((core_rx_queue_id) * IRO[14].m1))
--#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[14].size)
-+	(IRO[21].base + ((core_rx_queue_id) * IRO[21].m1))
-+#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[21].size)
- 
- /* Tstorm LightL2 queue statistics */
- #define CORE_LL2_TSTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
--	(IRO[15].base + ((core_rx_queue_id) * IRO[15].m1))
--#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[15].size)
-+	(IRO[22].base + ((core_rx_queue_id) * IRO[22].m1))
-+#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[22].size)
- 
- /* Ustorm LiteL2 queue statistics */
- #define CORE_LL2_USTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
--	(IRO[16].base + ((core_rx_queue_id) * IRO[16].m1))
--#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[16].size)
-+	(IRO[23].base + ((core_rx_queue_id) * IRO[23].m1))
-+#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[23].size)
- 
- /* Pstorm LiteL2 queue statistics */
- #define CORE_LL2_PSTORM_PER_QUEUE_STAT_OFFSET(core_tx_stats_id) \
--	(IRO[17].base + ((core_tx_stats_id) * IRO[17].m1))
--#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[17].size)
-+	(IRO[24].base + ((core_tx_stats_id) * IRO[24].m1))
-+#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[24].size)
- 
- /* Mstorm queue statistics */
- #define MSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
--	(IRO[18].base + ((stat_counter_id) * IRO[18].m1))
--#define MSTORM_QUEUE_STAT_SIZE				(IRO[18].size)
-+	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
-+#define MSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
- 
--/* Mstorm ETH PF queues producers */
--#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
--	(IRO[19].base + ((queue_id) * IRO[19].m1))
--#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[19].size)
-+/* TPA agregation timeout in us resolution (on ASIC) */
-+#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[26].base)
-+#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[26].size)
- 
- /* Mstorm ETH VF queues producers offset in RAM. Used in default VF zone size
-- * mode.
-+ * mode
-  */
- #define MSTORM_ETH_VF_PRODS_OFFSET(vf_id, vf_queue_id) \
--	(IRO[20].base + ((vf_id) * IRO[20].m1) + ((vf_queue_id) * IRO[20].m2))
--#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[20].size)
-+	(IRO[27].base + ((vf_id) * IRO[27].m1) + ((vf_queue_id) * IRO[27].m2))
-+#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[27].size)
- 
--/* TPA agregation timeout in us resolution (on ASIC) */
--#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[21].base)
--#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[21].size)
-+/* Mstorm ETH PF queues producers */
-+#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
-+	(IRO[28].base + ((queue_id) * IRO[28].m1))
-+#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[28].size)
- 
- /* Mstorm pf statistics */
- #define MSTORM_ETH_PF_STAT_OFFSET(pf_id) \
--	(IRO[22].base + ((pf_id) * IRO[22].m1))
--#define MSTORM_ETH_PF_STAT_SIZE				(IRO[22].size)
-+	(IRO[29].base + ((pf_id) * IRO[29].m1))
-+#define MSTORM_ETH_PF_STAT_SIZE				(IRO[29].size)
- 
- /* Ustorm queue statistics */
- #define USTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
--	(IRO[23].base + ((stat_counter_id) * IRO[23].m1))
--#define USTORM_QUEUE_STAT_SIZE				(IRO[23].size)
-+	(IRO[30].base + ((stat_counter_id) * IRO[30].m1))
-+#define USTORM_QUEUE_STAT_SIZE				(IRO[30].size)
- 
- /* Ustorm pf statistics */
--#define USTORM_ETH_PF_STAT_OFFSET(pf_id)\
--	(IRO[24].base + ((pf_id) * IRO[24].m1))
--#define USTORM_ETH_PF_STAT_SIZE				(IRO[24].size)
-+#define USTORM_ETH_PF_STAT_OFFSET(pf_id) \
-+	(IRO[31].base + ((pf_id) * IRO[31].m1))
-+#define USTORM_ETH_PF_STAT_SIZE				(IRO[31].size)
- 
- /* Pstorm queue statistics */
--#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
--	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
--#define PSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
-+#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id)	\
-+	(IRO[32].base + ((stat_counter_id) * IRO[32].m1))
-+#define PSTORM_QUEUE_STAT_SIZE				(IRO[32].size)
- 
- /* Pstorm pf statistics */
- #define PSTORM_ETH_PF_STAT_OFFSET(pf_id) \
--	(IRO[26].base + ((pf_id) * IRO[26].m1))
--#define PSTORM_ETH_PF_STAT_SIZE				(IRO[26].size)
-+	(IRO[33].base + ((pf_id) * IRO[33].m1))
-+#define PSTORM_ETH_PF_STAT_SIZE				(IRO[33].size)
- 
- /* Control frame's EthType configuration for TX control frame security */
--#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id) \
--	(IRO[27].base + ((eth_type_id) * IRO[27].m1))
--#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[27].size)
-+#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id)	\
-+	(IRO[34].base + ((eth_type_id) * IRO[34].m1))
-+#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[34].size)
- 
- /* Tstorm last parser message */
--#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[28].base)
--#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[28].size)
-+#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[35].base)
-+#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[35].size)
- 
- /* Tstorm Eth limit Rx rate */
--#define ETH_RX_RATE_LIMIT_OFFSET(pf_id) \
--	(IRO[29].base + ((pf_id) * IRO[29].m1))
--#define ETH_RX_RATE_LIMIT_SIZE				(IRO[29].size)
-+#define ETH_RX_RATE_LIMIT_OFFSET(pf_id)	\
-+	(IRO[36].base + ((pf_id) * IRO[36].m1))
-+#define ETH_RX_RATE_LIMIT_SIZE				(IRO[36].size)
- 
- /* RSS indirection table entry update command per PF offset in TSTORM PF BAR0.
-- * Use eth_tstorm_rss_update_data for update.
-+ * Use eth_tstorm_rss_update_data for update
-  */
- #define TSTORM_ETH_RSS_UPDATE_OFFSET(pf_id) \
--	(IRO[30].base + ((pf_id) * IRO[30].m1))
--#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[30].size)
-+	(IRO[37].base + ((pf_id) * IRO[37].m1))
-+#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[37].size)
- 
- /* Xstorm queue zone */
- #define XSTORM_ETH_QUEUE_ZONE_OFFSET(queue_id) \
--	(IRO[31].base + ((queue_id) * IRO[31].m1))
--#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[31].size)
-+	(IRO[38].base + ((queue_id) * IRO[38].m1))
-+#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[38].size)
- 
- /* Ystorm cqe producer */
- #define YSTORM_TOE_CQ_PROD_OFFSET(rss_id) \
--	(IRO[32].base + ((rss_id) * IRO[32].m1))
--#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[32].size)
-+	(IRO[39].base + ((rss_id) * IRO[39].m1))
-+#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[39].size)
- 
- /* Ustorm cqe producer */
- #define USTORM_TOE_CQ_PROD_OFFSET(rss_id) \
--	(IRO[33].base + ((rss_id) * IRO[33].m1))
--#define USTORM_TOE_CQ_PROD_SIZE				(IRO[33].size)
-+	(IRO[40].base + ((rss_id) * IRO[40].m1))
-+#define USTORM_TOE_CQ_PROD_SIZE				(IRO[40].size)
- 
- /* Ustorm grq producer */
- #define USTORM_TOE_GRQ_PROD_OFFSET(pf_id) \
--	(IRO[34].base + ((pf_id) * IRO[34].m1))
--#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[34].size)
-+	(IRO[41].base + ((pf_id) * IRO[41].m1))
-+#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[41].size)
- 
- /* Tstorm cmdq-cons of given command queue-id */
- #define TSTORM_SCSI_CMDQ_CONS_OFFSET(cmdq_queue_id) \
--	(IRO[35].base + ((cmdq_queue_id) * IRO[35].m1))
--#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[35].size)
-+	(IRO[42].base + ((cmdq_queue_id) * IRO[42].m1))
-+#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[42].size)
- 
- /* Tstorm (reflects M-Storm) bdq-external-producer of given function ID,
-- * BDqueue-id.
-+ * BDqueue-id
-  */
--#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(func_id, bdq_id) \
--	(IRO[36].base + ((func_id) * IRO[36].m1) + ((bdq_id) * IRO[36].m2))
--#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[36].size)
-+#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
-+	(IRO[43].base + ((storage_func_id) * IRO[43].m1) + \
-+	 ((bdq_id) * IRO[43].m2))
-+#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[43].size)
- 
- /* Mstorm bdq-external-producer of given BDQ resource ID, BDqueue-id */
--#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(func_id, bdq_id) \
--	(IRO[37].base + ((func_id) * IRO[37].m1) + ((bdq_id) * IRO[37].m2))
--#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[37].size)
-+#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
-+	(IRO[44].base + ((storage_func_id) * IRO[44].m1) + \
-+	 ((bdq_id) * IRO[44].m2))
-+#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[44].size)
- 
- /* Tstorm iSCSI RX stats */
--#define TSTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
--	(IRO[38].base + ((pf_id) * IRO[38].m1))
--#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[38].size)
-+#define TSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[45].base + ((storage_func_id) * IRO[45].m1))
-+#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[45].size)
- 
- /* Mstorm iSCSI RX stats */
--#define MSTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
--	(IRO[39].base + ((pf_id) * IRO[39].m1))
--#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[39].size)
-+#define MSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[46].base + ((storage_func_id) * IRO[46].m1))
-+#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[46].size)
- 
- /* Ustorm iSCSI RX stats */
--#define USTORM_ISCSI_RX_STATS_OFFSET(pf_id) \
--	(IRO[40].base + ((pf_id) * IRO[40].m1))
--#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[40].size)
-+#define USTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[47].base + ((storage_func_id) * IRO[47].m1))
-+#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[47].size)
- 
- /* Xstorm iSCSI TX stats */
--#define XSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
--	(IRO[41].base + ((pf_id) * IRO[41].m1))
--#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[41].size)
-+#define XSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[48].base + ((storage_func_id) * IRO[48].m1))
-+#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[48].size)
- 
- /* Ystorm iSCSI TX stats */
--#define YSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
--	(IRO[42].base + ((pf_id) * IRO[42].m1))
--#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[42].size)
-+#define YSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[49].base + ((storage_func_id) * IRO[49].m1))
-+#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[49].size)
- 
- /* Pstorm iSCSI TX stats */
--#define PSTORM_ISCSI_TX_STATS_OFFSET(pf_id) \
--	(IRO[43].base + ((pf_id) * IRO[43].m1))
--#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[43].size)
-+#define PSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[50].base + ((storage_func_id) * IRO[50].m1))
-+#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[50].size)
- 
- /* Tstorm FCoE RX stats */
- #define TSTORM_FCOE_RX_STATS_OFFSET(pf_id) \
--	(IRO[44].base + ((pf_id) * IRO[44].m1))
--#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[44].size)
-+	(IRO[51].base + ((pf_id) * IRO[51].m1))
-+#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[51].size)
- 
- /* Pstorm FCoE TX stats */
- #define PSTORM_FCOE_TX_STATS_OFFSET(pf_id) \
--	(IRO[45].base + ((pf_id) * IRO[45].m1))
--#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[45].size)
-+	(IRO[52].base + ((pf_id) * IRO[52].m1))
-+#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[52].size)
- 
- /* Pstorm RDMA queue statistics */
- #define PSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
--	(IRO[46].base + ((rdma_stat_counter_id) * IRO[46].m1))
--#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[46].size)
-+	(IRO[53].base + ((rdma_stat_counter_id) * IRO[53].m1))
-+#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[53].size)
- 
- /* Tstorm RDMA queue statistics */
- #define TSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
--	(IRO[47].base + ((rdma_stat_counter_id) * IRO[47].m1))
--#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[47].size)
-+	(IRO[54].base + ((rdma_stat_counter_id) * IRO[54].m1))
-+#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[54].size)
- 
- /* Xstorm error level for assert */
- #define XSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[48].base +	((pf_id) * IRO[48].m1))
--#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[48].size)
-+	(IRO[55].base + ((pf_id) * IRO[55].m1))
-+#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[55].size)
- 
- /* Ystorm error level for assert */
- #define YSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[49].base + ((pf_id) * IRO[49].m1))
--#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[49].size)
-+	(IRO[56].base + ((pf_id) * IRO[56].m1))
-+#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[56].size)
- 
- /* Pstorm error level for assert */
- #define PSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[50].base +	((pf_id) * IRO[50].m1))
--#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[50].size)
-+	(IRO[57].base + ((pf_id) * IRO[57].m1))
-+#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[57].size)
- 
- /* Tstorm error level for assert */
- #define TSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[51].base +	((pf_id) * IRO[51].m1))
--#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[51].size)
-+	(IRO[58].base + ((pf_id) * IRO[58].m1))
-+#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[58].size)
- 
- /* Mstorm error level for assert */
- #define MSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[52].base + ((pf_id) * IRO[52].m1))
--#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[52].size)
-+	(IRO[59].base + ((pf_id) * IRO[59].m1))
-+#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[59].size)
- 
- /* Ustorm error level for assert */
- #define USTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[53].base + ((pf_id) * IRO[53].m1))
--#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[53].size)
-+	(IRO[60].base + ((pf_id) * IRO[60].m1))
-+#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[60].size)
- 
- /* Xstorm iWARP rxmit stats */
- #define XSTORM_IWARP_RXMIT_STATS_OFFSET(pf_id) \
--	(IRO[54].base +	((pf_id) * IRO[54].m1))
--#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[54].size)
-+	(IRO[61].base + ((pf_id) * IRO[61].m1))
-+#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[61].size)
- 
- /* Tstorm RoCE Event Statistics */
--#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id) \
--	(IRO[55].base + ((roce_pf_id) * IRO[55].m1))
--#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[55].size)
-+#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id)	\
-+	(IRO[62].base + ((roce_pf_id) * IRO[62].m1))
-+#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[62].size)
- 
- /* DCQCN Received Statistics */
--#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id) \
--	(IRO[56].base + ((roce_pf_id) * IRO[56].m1))
--#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[56].size)
-+#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id)\
-+	(IRO[63].base + ((roce_pf_id) * IRO[63].m1))
-+#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[63].size)
- 
- /* RoCE Error Statistics */
--#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id) \
--	(IRO[57].base + ((roce_pf_id) * IRO[57].m1))
--#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[57].size)
-+#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[64].base + ((roce_pf_id) * IRO[64].m1))
-+#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[64].size)
- 
- /* DCQCN Sent Statistics */
--#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id) \
--	(IRO[58].base + ((roce_pf_id) * IRO[58].m1))
--#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[58].size)
-+#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[65].base + ((roce_pf_id) * IRO[65].m1))
-+#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[65].size)
- 
- /* RoCE CQEs Statistics */
--#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id) \
--	(IRO[59].base + ((roce_pf_id) * IRO[59].m1))
--#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[59].size)
--
--static const struct iro iro_arr[60] = {
--	{0x0, 0x0, 0x0, 0x0, 0x8},
--	{0x4cb8, 0x88, 0x0, 0x0, 0x88},
--	{0x6530, 0x20, 0x0, 0x0, 0x20},
--	{0xb00, 0x8, 0x0, 0x0, 0x4},
--	{0xa80, 0x8, 0x0, 0x0, 0x4},
--	{0x0, 0x8, 0x0, 0x0, 0x2},
--	{0x80, 0x8, 0x0, 0x0, 0x4},
--	{0x84, 0x8, 0x0, 0x0, 0x2},
--	{0x4c48, 0x0, 0x0, 0x0, 0x78},
--	{0x3e38, 0x0, 0x0, 0x0, 0x78},
--	{0x3ef8, 0x0, 0x0, 0x0, 0x78},
--	{0x4c40, 0x0, 0x0, 0x0, 0x78},
--	{0x4998, 0x0, 0x0, 0x0, 0x78},
--	{0x7f50, 0x0, 0x0, 0x0, 0x78},
--	{0xa28, 0x8, 0x0, 0x0, 0x8},
--	{0x6210, 0x10, 0x0, 0x0, 0x10},
--	{0xb820, 0x30, 0x0, 0x0, 0x30},
--	{0xa990, 0x30, 0x0, 0x0, 0x30},
--	{0x4b68, 0x80, 0x0, 0x0, 0x40},
--	{0x1f8, 0x4, 0x0, 0x0, 0x4},
--	{0x53a8, 0x80, 0x4, 0x0, 0x4},
--	{0xc7d0, 0x0, 0x0, 0x0, 0x4},
--	{0x4ba8, 0x80, 0x0, 0x0, 0x20},
--	{0x8158, 0x40, 0x0, 0x0, 0x30},
--	{0xe770, 0x60, 0x0, 0x0, 0x60},
--	{0x4090, 0x80, 0x0, 0x0, 0x38},
--	{0xfea8, 0x78, 0x0, 0x0, 0x78},
--	{0x1f8, 0x4, 0x0, 0x0, 0x4},
--	{0xaf20, 0x0, 0x0, 0x0, 0xf0},
--	{0xb010, 0x8, 0x0, 0x0, 0x8},
--	{0xc00, 0x8, 0x0, 0x0, 0x8},
--	{0x1f8, 0x8, 0x0, 0x0, 0x8},
--	{0xac0, 0x8, 0x0, 0x0, 0x8},
--	{0x2578, 0x8, 0x0, 0x0, 0x8},
--	{0x24f8, 0x8, 0x0, 0x0, 0x8},
--	{0x0, 0x8, 0x0, 0x0, 0x8},
--	{0x400, 0x18, 0x8, 0x0, 0x8},
--	{0xb78, 0x18, 0x8, 0x0, 0x2},
--	{0xd898, 0x50, 0x0, 0x0, 0x3c},
--	{0x12908, 0x18, 0x0, 0x0, 0x10},
--	{0x11aa8, 0x40, 0x0, 0x0, 0x18},
--	{0xa588, 0x50, 0x0, 0x0, 0x20},
--	{0x8f00, 0x40, 0x0, 0x0, 0x28},
--	{0x10e30, 0x18, 0x0, 0x0, 0x10},
--	{0xde48, 0x48, 0x0, 0x0, 0x38},
--	{0x11298, 0x20, 0x0, 0x0, 0x20},
--	{0x40c8, 0x80, 0x0, 0x0, 0x10},
--	{0x5048, 0x10, 0x0, 0x0, 0x10},
--	{0xc748, 0x8, 0x0, 0x0, 0x1},
--	{0xa928, 0x8, 0x0, 0x0, 0x1},
--	{0x11a30, 0x8, 0x0, 0x0, 0x1},
--	{0xf030, 0x8, 0x0, 0x0, 0x1},
--	{0x13028, 0x8, 0x0, 0x0, 0x1},
--	{0x12c58, 0x8, 0x0, 0x0, 0x1},
--	{0xc9b8, 0x30, 0x0, 0x0, 0x10},
--	{0xed90, 0x28, 0x0, 0x0, 0x28},
--	{0xad20, 0x18, 0x0, 0x0, 0x18},
--	{0xaea0, 0x8, 0x0, 0x0, 0x8},
--	{0x13c38, 0x8, 0x0, 0x0, 0x8},
--	{0x13c50, 0x18, 0x0, 0x0, 0x18},
-+#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[66].base + ((roce_pf_id) * IRO[66].m1))
-+#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[66].size)
-+
-+/* IRO Array */
-+static const u32 iro_arr[] = {
-+	0x00000000, 0x00000000, 0x00080000,
-+	0x00003288, 0x00000088, 0x00880000,
-+	0x000058e8, 0x00000020, 0x00200000,
-+	0x00000b00, 0x00000008, 0x00040000,
-+	0x00000a80, 0x00000008, 0x00040000,
-+	0x00000000, 0x00000008, 0x00020000,
-+	0x00000080, 0x00000008, 0x00040000,
-+	0x00000084, 0x00000008, 0x00020000,
-+	0x00005718, 0x00000004, 0x00040000,
-+	0x00004dd0, 0x00000000, 0x00780000,
-+	0x00003e40, 0x00000000, 0x00780000,
-+	0x00004480, 0x00000000, 0x00780000,
-+	0x00003210, 0x00000000, 0x00780000,
-+	0x00003b50, 0x00000000, 0x00780000,
-+	0x00007f58, 0x00000000, 0x00780000,
-+	0x00005f58, 0x00000000, 0x00080000,
-+	0x00007100, 0x00000000, 0x00080000,
-+	0x0000aea0, 0x00000000, 0x00080000,
-+	0x00004398, 0x00000000, 0x00080000,
-+	0x0000a5a0, 0x00000000, 0x00080000,
-+	0x0000bde8, 0x00000000, 0x00080000,
-+	0x00000020, 0x00000004, 0x00040000,
-+	0x000056c8, 0x00000010, 0x00100000,
-+	0x0000c210, 0x00000030, 0x00300000,
-+	0x0000b088, 0x00000038, 0x00380000,
-+	0x00003d20, 0x00000080, 0x00400000,
-+	0x0000bf60, 0x00000000, 0x00040000,
-+	0x00004560, 0x00040080, 0x00040000,
-+	0x000001f8, 0x00000004, 0x00040000,
-+	0x00003d60, 0x00000080, 0x00200000,
-+	0x00008960, 0x00000040, 0x00300000,
-+	0x0000e840, 0x00000060, 0x00600000,
-+	0x00004618, 0x00000080, 0x00380000,
-+	0x00010738, 0x000000c0, 0x00c00000,
-+	0x000001f8, 0x00000002, 0x00020000,
-+	0x0000a2a0, 0x00000000, 0x01080000,
-+	0x0000a3a8, 0x00000008, 0x00080000,
-+	0x000001c0, 0x00000008, 0x00080000,
-+	0x000001f8, 0x00000008, 0x00080000,
-+	0x00000ac0, 0x00000008, 0x00080000,
-+	0x00002578, 0x00000008, 0x00080000,
-+	0x000024f8, 0x00000008, 0x00080000,
-+	0x00000280, 0x00000008, 0x00080000,
-+	0x00000680, 0x00080018, 0x00080000,
-+	0x00000b78, 0x00080018, 0x00020000,
-+	0x0000c640, 0x00000050, 0x003c0000,
-+	0x00012038, 0x00000018, 0x00100000,
-+	0x00011b00, 0x00000040, 0x00180000,
-+	0x000095d0, 0x00000050, 0x00200000,
-+	0x00008b10, 0x00000040, 0x00280000,
-+	0x00011640, 0x00000018, 0x00100000,
-+	0x0000c828, 0x00000048, 0x00380000,
-+	0x00011710, 0x00000020, 0x00200000,
-+	0x00004650, 0x00000080, 0x00100000,
-+	0x00003618, 0x00000010, 0x00100000,
-+	0x0000a968, 0x00000008, 0x00010000,
-+	0x000097a0, 0x00000008, 0x00010000,
-+	0x00011990, 0x00000008, 0x00010000,
-+	0x0000f018, 0x00000008, 0x00010000,
-+	0x00012628, 0x00000008, 0x00010000,
-+	0x00011da8, 0x00000008, 0x00010000,
-+	0x0000aa78, 0x00000030, 0x00100000,
-+	0x0000d768, 0x00000028, 0x00280000,
-+	0x00009a58, 0x00000018, 0x00180000,
-+	0x00009bd8, 0x00000008, 0x00080000,
-+	0x00013a18, 0x00000008, 0x00080000,
-+	0x000126e8, 0x00000018, 0x00180000,
-+	0x0000e608, 0x00500288, 0x00100000,
-+	0x00012970, 0x00000138, 0x00280000,
+@@ -532,6 +532,23 @@ struct qed_nvm_image_info {
+ 	bool valid;
  };
  
- /* Runtime array offsets */
++enum qed_hsi_def_type {
++	QED_HSI_DEF_MAX_NUM_VFS,
++	QED_HSI_DEF_MAX_NUM_L2_QUEUES,
++	QED_HSI_DEF_MAX_NUM_PORTS,
++	QED_HSI_DEF_MAX_SB_PER_PATH,
++	QED_HSI_DEF_MAX_NUM_PFS,
++	QED_HSI_DEF_MAX_NUM_VPORTS,
++	QED_HSI_DEF_NUM_ETH_RSS_ENGINE,
++	QED_HSI_DEF_MAX_QM_TX_QUEUES,
++	QED_HSI_DEF_NUM_PXP_ILT_RECORDS,
++	QED_HSI_DEF_NUM_RDMA_STATISTIC_COUNTERS,
++	QED_HSI_DEF_MAX_QM_GLOBAL_RLS,
++	QED_HSI_DEF_MAX_PBF_CMD_LINES,
++	QED_HSI_DEF_MAX_BTB_BLOCKS,
++	QED_NUM_HSI_DEFS
++};
++
+ #define DRV_MODULE_VERSION		      \
+ 	__stringify(QED_MAJOR_VERSION) "."    \
+ 	__stringify(QED_MINOR_VERSION) "."    \
+@@ -869,16 +886,35 @@ struct qed_dev {
+ 	bool				iwarp_cmt;
+ };
+ 
+-#define NUM_OF_VFS(dev)         (QED_IS_BB(dev) ? MAX_NUM_VFS_BB \
+-						: MAX_NUM_VFS_K2)
+-#define NUM_OF_L2_QUEUES(dev)   (QED_IS_BB(dev) ? MAX_NUM_L2_QUEUES_BB \
+-						: MAX_NUM_L2_QUEUES_K2)
+-#define NUM_OF_PORTS(dev)       (QED_IS_BB(dev) ? MAX_NUM_PORTS_BB \
+-						: MAX_NUM_PORTS_K2)
+-#define NUM_OF_SBS(dev)         (QED_IS_BB(dev) ? MAX_SB_PER_PATH_BB \
+-						: MAX_SB_PER_PATH_K2)
+-#define NUM_OF_ENG_PFS(dev)     (QED_IS_BB(dev) ? MAX_NUM_PFS_BB \
+-						: MAX_NUM_PFS_K2)
++u32 qed_get_hsi_def_val(struct qed_dev *cdev, enum qed_hsi_def_type type);
++
++#define NUM_OF_VFS(dev)	\
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_VFS)
++#define NUM_OF_L2_QUEUES(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_L2_QUEUES)
++#define NUM_OF_PORTS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_PORTS)
++#define NUM_OF_SBS(dev)	\
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_SB_PER_PATH)
++#define NUM_OF_ENG_PFS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_PFS)
++#define NUM_OF_VPORTS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_NUM_VPORTS)
++#define NUM_OF_RSS_ENGINES(dev)	\
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_ETH_RSS_ENGINE)
++#define NUM_OF_QM_TX_QUEUES(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_QM_TX_QUEUES)
++#define NUM_OF_PXP_ILT_RECORDS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_PXP_ILT_RECORDS)
++#define NUM_OF_RDMA_STATISTIC_COUNTERS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_NUM_RDMA_STATISTIC_COUNTERS)
++#define NUM_OF_QM_GLOBAL_RLS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_QM_GLOBAL_RLS)
++#define NUM_OF_PBF_CMD_LINES(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_PBF_CMD_LINES)
++#define NUM_OF_BTB_BLOCKS(dev) \
++	qed_get_hsi_def_val(dev, QED_HSI_DEF_MAX_BTB_BLOCKS)
++
+ 
+ /**
+  * @brief qed_concrete_to_sw_fid - get the sw function id from
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+index 898c1f8d1530..e3e0376c13d6 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+@@ -1579,6 +1579,7 @@ static void qed_init_qm_port_params(struct qed_hwfn *p_hwfn)
+ {
+ 	/* Initialize qm port parameters */
+ 	u8 i, active_phys_tcs, num_ports = p_hwfn->cdev->num_ports_in_engine;
++	struct qed_dev *cdev = p_hwfn->cdev;
+ 
+ 	/* indicate how ooo and high pri traffic is dealt with */
+ 	active_phys_tcs = num_ports == MAX_NUM_PORTS_K2 ?
+@@ -1588,11 +1589,13 @@ static void qed_init_qm_port_params(struct qed_hwfn *p_hwfn)
+ 	for (i = 0; i < num_ports; i++) {
+ 		struct init_qm_port_params *p_qm_port =
+ 		    &p_hwfn->qm_info.qm_port_params[i];
++		u16 pbf_max_cmd_lines;
+ 
+ 		p_qm_port->active = 1;
+ 		p_qm_port->active_phys_tcs = active_phys_tcs;
+-		p_qm_port->num_pbf_cmd_lines = PBF_MAX_CMD_LINES / num_ports;
+-		p_qm_port->num_btb_blocks = BTB_MAX_BLOCKS / num_ports;
++		pbf_max_cmd_lines = (u16)NUM_OF_PBF_CMD_LINES(cdev);
++		p_qm_port->num_pbf_cmd_lines = pbf_max_cmd_lines / num_ports;
++		p_qm_port->num_btb_blocks = NUM_OF_BTB_BLOCKS(cdev) / num_ports;
+ 	}
+ }
+ 
+@@ -3607,14 +3610,39 @@ __qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn,
+ 	return 0;
+ }
+ 
++static u32 qed_hsi_def_val[][MAX_CHIP_IDS] = {
++	{MAX_NUM_VFS_BB, MAX_NUM_VFS_K2},
++	{MAX_NUM_L2_QUEUES_BB, MAX_NUM_L2_QUEUES_K2},
++	{MAX_NUM_PORTS_BB, MAX_NUM_PORTS_K2},
++	{MAX_SB_PER_PATH_BB, MAX_SB_PER_PATH_K2,},
++	{MAX_NUM_PFS_BB, MAX_NUM_PFS_K2},
++	{MAX_NUM_VPORTS_BB, MAX_NUM_VPORTS_K2},
++	{ETH_RSS_ENGINE_NUM_BB, ETH_RSS_ENGINE_NUM_K2},
++	{MAX_QM_TX_QUEUES_BB, MAX_QM_TX_QUEUES_K2},
++	{PXP_NUM_ILT_RECORDS_BB, PXP_NUM_ILT_RECORDS_K2},
++	{RDMA_NUM_STATISTIC_COUNTERS_BB, RDMA_NUM_STATISTIC_COUNTERS_K2},
++	{MAX_QM_GLOBAL_RLS, MAX_QM_GLOBAL_RLS},
++	{PBF_MAX_CMD_LINES, PBF_MAX_CMD_LINES},
++	{BTB_MAX_BLOCKS_BB, BTB_MAX_BLOCKS_K2},
++};
++
++u32 qed_get_hsi_def_val(struct qed_dev *cdev, enum qed_hsi_def_type type)
++{
++	enum chip_ids chip_id = QED_IS_BB(cdev) ? CHIP_BB : CHIP_K2;
++
++	if (type >= QED_NUM_HSI_DEFS) {
++		DP_ERR(cdev, "Unexpected HSI definition type [%d]\n", type);
++		return 0;
++	}
++
++	return qed_hsi_def_val[type][chip_id];
++}
+ static int
+ qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+ {
+-	bool b_ah = QED_IS_AH(p_hwfn->cdev);
+ 	u32 resc_max_val, mcp_resp;
+ 	u8 res_id;
+ 	int rc;
+-
+ 	for (res_id = 0; res_id < QED_MAX_RESC; res_id++) {
+ 		switch (res_id) {
+ 		case QED_LL2_RAM_QUEUE:
+@@ -3630,8 +3658,8 @@ qed_hw_set_soft_resc_size(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+ 			resc_max_val = NUM_OF_GLOBAL_QUEUES;
+ 			break;
+ 		case QED_RDMA_STATS_QUEUE:
+-			resc_max_val = b_ah ? RDMA_NUM_STATISTIC_COUNTERS_K2
+-			    : RDMA_NUM_STATISTIC_COUNTERS_BB;
++			resc_max_val =
++			    NUM_OF_RDMA_STATISTIC_COUNTERS(p_hwfn->cdev);
+ 			break;
+ 		case QED_BDQ:
+ 			resc_max_val = BDQ_NUM_RESOURCES;
+@@ -3664,28 +3692,24 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
+ 			 u32 *p_resc_num, u32 *p_resc_start)
+ {
+ 	u8 num_funcs = p_hwfn->num_funcs_on_engine;
+-	bool b_ah = QED_IS_AH(p_hwfn->cdev);
++	struct qed_dev *cdev = p_hwfn->cdev;
+ 
+ 	switch (res_id) {
+ 	case QED_L2_QUEUE:
+-		*p_resc_num = (b_ah ? MAX_NUM_L2_QUEUES_K2 :
+-			       MAX_NUM_L2_QUEUES_BB) / num_funcs;
++		*p_resc_num = NUM_OF_L2_QUEUES(cdev) / num_funcs;
+ 		break;
+ 	case QED_VPORT:
+-		*p_resc_num = (b_ah ? MAX_NUM_VPORTS_K2 :
+-			       MAX_NUM_VPORTS_BB) / num_funcs;
++		*p_resc_num = NUM_OF_VPORTS(cdev) / num_funcs;
+ 		break;
+ 	case QED_RSS_ENG:
+-		*p_resc_num = (b_ah ? ETH_RSS_ENGINE_NUM_K2 :
+-			       ETH_RSS_ENGINE_NUM_BB) / num_funcs;
++		*p_resc_num = NUM_OF_RSS_ENGINES(cdev) / num_funcs;
+ 		break;
+ 	case QED_PQ:
+-		*p_resc_num = (b_ah ? MAX_QM_TX_QUEUES_K2 :
+-			       MAX_QM_TX_QUEUES_BB) / num_funcs;
++		*p_resc_num = NUM_OF_QM_TX_QUEUES(cdev) / num_funcs;
+ 		*p_resc_num &= ~0x7;	/* The granularity of the PQs is 8 */
+ 		break;
+ 	case QED_RL:
+-		*p_resc_num = MAX_QM_GLOBAL_RLS / num_funcs;
++		*p_resc_num = NUM_OF_QM_GLOBAL_RLS(cdev) / num_funcs;
+ 		break;
+ 	case QED_MAC:
+ 	case QED_VLAN:
+@@ -3693,8 +3717,7 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
+ 		*p_resc_num = ETH_NUM_MAC_FILTERS / num_funcs;
+ 		break;
+ 	case QED_ILT:
+-		*p_resc_num = (b_ah ? PXP_NUM_ILT_RECORDS_K2 :
+-			       PXP_NUM_ILT_RECORDS_BB) / num_funcs;
++		*p_resc_num = NUM_OF_PXP_ILT_RECORDS(cdev) / num_funcs;
+ 		break;
+ 	case QED_LL2_RAM_QUEUE:
+ 		*p_resc_num = MAX_NUM_LL2_RX_RAM_QUEUES / num_funcs;
+@@ -3708,8 +3731,7 @@ int qed_hw_get_dflt_resc(struct qed_hwfn *p_hwfn,
+ 		*p_resc_num = NUM_OF_GLOBAL_QUEUES / num_funcs;
+ 		break;
+ 	case QED_RDMA_STATS_QUEUE:
+-		*p_resc_num = (b_ah ? RDMA_NUM_STATISTIC_COUNTERS_K2 :
+-			       RDMA_NUM_STATISTIC_COUNTERS_BB) / num_funcs;
++		*p_resc_num = NUM_OF_RDMA_STATISTIC_COUNTERS(cdev) / num_funcs;
+ 		break;
+ 	case QED_BDQ:
+ 		if (p_hwfn->hw_info.personality != QED_PCI_ISCSI &&
 diff --git a/include/linux/qed/common_hsi.h b/include/linux/qed/common_hsi.h
-index 03f59a28fefd..3f437e826a4c 100644
+index a2b7826b36f0..718ce72e5965 100644
 --- a/include/linux/qed/common_hsi.h
 +++ b/include/linux/qed/common_hsi.h
-@@ -109,8 +109,8 @@
- #define MAX_NUM_LL2_TX_STATS_COUNTERS	48
+@@ -663,8 +663,8 @@
+ #define PBF_MAX_CMD_LINES	3328
  
- #define FW_MAJOR_VERSION	8
--#define FW_MINOR_VERSION        37
--#define FW_REVISION_VERSION     7
-+#define FW_MINOR_VERSION	42
-+#define FW_REVISION_VERSION	2
- #define FW_ENGINEERING_VERSION	0
- 
- /***********************/
+ /* Number of BTB blocks. Each block is 256B. */
+-#define BTB_MAX_BLOCKS		1440
+-
++#define BTB_MAX_BLOCKS_BB 1440
++#define BTB_MAX_BLOCKS_K2 1840
+ /*****************/
+ /* PRS CONSTANTS */
+ /*****************/
 -- 
 2.14.5
 
