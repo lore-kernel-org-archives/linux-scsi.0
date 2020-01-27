@@ -2,97 +2,165 @@ Return-Path: <SRS0=udu7=3Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82692C33CB7
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE5F7C33CB7
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63A90215A4
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:03:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A373E21739
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Jan 2020 13:26:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="W7ng3wfK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726485AbgA0NDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 08:03:06 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:53846 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725807AbgA0NDF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 08:03:05 -0500
-Received: from ip5f5bd665.dynamic.kabel-deutschland.de ([95.91.214.101] helo=wittgenstein)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <christian.brauner@ubuntu.com>)
-        id 1iw42e-0001Yk-8w; Mon, 27 Jan 2020 13:03:00 +0000
-Date:   Mon, 27 Jan 2020 14:02:59 +0100
-From:   Christian Brauner <christian.brauner@ubuntu.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Mike Christie <mchristi@redhat.com>,
-        Shakeel Butt <shakeelb@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-api@vger.kernel.org, idryomov@gmail.com,
-        Michal Hocko <mhocko@kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-block@vger.kernel.org, martin@urbackup.org,
-        Damien.LeMoal@wdc.com, Michal Hocko <mhocko@suse.com>,
-        Masato Suzuki <masato.suzuki@wdc.com>
-Subject: Re: [PATCH] Add prctl support for controlling mem reclaim V4
-Message-ID: <20200127130258.2bknkl3mwpkfyml4@wittgenstein>
-References: <20191112001900.9206-1-mchristi@redhat.com>
- <CALvZod47XyD2x8TuZcb9PgeVY14JBwNhsUpN3RAeAt+RJJC=hg@mail.gmail.com>
- <5E2B19C9.6080907@redhat.com>
- <20200124211642.GB7216@dread.disaster.area>
+        id S1726590AbgA0N0c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 08:26:32 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20404 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725938AbgA0N0c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Jan 2020 08:26:32 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 00RDP39X006196;
+        Mon, 27 Jan 2020 05:26:29 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=1U7f5/ABf2s+ONHVm/4zYew7hk1QWA/Z1enYrETLVnA=;
+ b=W7ng3wfKwi1hAxHOspUKu2mhTHi/UbG48XF9hGLWSG8ZNrNmx+cmksOO6TowFCjre3Dy
+ cxeMQq56tHicLWg9D2cW0GLQX9+0GF5CUzDkU4QKS0QnCIYYlXpUcIFpPSjsXgDyPfhF
+ oil6cHTqbmWjgIDF2K646sjlrrM3x67RJG0Dr1KxslmPnq7hJG5iysOwnbOu5cThaBAj
+ UgxQ3N0VxU5JHqMuKqVoZpuIj+oGU39GiszyDNpr+yTU6ponT/DK4z7ODICTnUW8awcq
+ dGP6EJz9lfRytWxuTme/OCF5WT6POWQleVCINtx2JoGPFOxGESvzBTSDMVaz/2jWSplD Aw== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2xrkwufdtg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 27 Jan 2020 05:26:29 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 27 Jan
+ 2020 05:26:28 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 27 Jan 2020 05:26:28 -0800
+Received: from lb-tlvb-michal.il.qlogic.org (unknown [10.5.220.215])
+        by maili.marvell.com (Postfix) with ESMTP id A60893F703F;
+        Mon, 27 Jan 2020 05:26:26 -0800 (PST)
+From:   Michal Kalderon <michal.kalderon@marvell.com>
+To:     <michal.kalderon@marvell.com>, <ariel.elior@marvell.com>,
+        <davem@davemloft.net>
+CC:     <netdev@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+Subject: [PATCH v3 net-next 00/13] qed*: Utilize FW 8.42.2.0
+Date:   Mon, 27 Jan 2020 15:26:06 +0200
+Message-ID: <20200127132619.27144-1-michal.kalderon@marvell.com>
+X-Mailer: git-send-email 2.14.5
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200124211642.GB7216@dread.disaster.area>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-01-27_02:2020-01-24,2020-01-27 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jan 25, 2020 at 08:16:42AM +1100, Dave Chinner wrote:
-> On Fri, Jan 24, 2020 at 10:22:33AM -0600, Mike Christie wrote:
-> > On 12/05/2019 04:43 PM, Shakeel Butt wrote:
-> > > On Mon, Nov 11, 2019 at 4:19 PM Mike Christie <mchristi@redhat.com> wrote:
-> > >> This patch adds a new prctl command that daemons can use after they have
-> > >> done their initial setup, and before they start to do allocations that
-> > >> are in the IO path. It sets the PF_MEMALLOC_NOIO and PF_LESS_THROTTLE
-> > >> flags so both userspace block and FS threads can use it to avoid the
-> > >> allocation recursion and try to prevent from being throttled while
-> > >> writing out data to free up memory.
-> > >>
-> > >> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> > >> Acked-by: Michal Hocko <mhocko@suse.com>
-> > >> Tested-by: Masato Suzuki <masato.suzuki@wdc.com>
-> > >> Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-> > > 
-> > > I suppose this patch should be routed through MM tree, so, CCing Andrew.
-> > >
-> > 
-> > Andrew and other mm/storage developers,
-> > 
-> > Do I need to handle anything else for this patch, or are there any other
-> > concerns? Is this maybe something we want to talk about at a quick LSF
-> > session?
-> > 
-> > I have retested it with Linus's current tree. It still applies cleanly
-> > (just some offsets), and fixes the problem described above we have been
-> > hitting.
-> 
-> I must have missed this version being posted (just looked it up on
-> lore.kernel.org). As far as I'm concerned this is good to go and it
-> is absolutely necessary for userspace IO stacks to function
-> correctly.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> If no manintainer picks it up before the next merge window, then I
+This FW contains several fixes and features, main ones listed below.
+We have taken into consideration past comments on previous FW versions
+that were uploaded and tried to separate this one to smaller patches to
+ease review.
 
-Since prctl() is thread-management and fs people seem to be happy and
-have acked it I can pick this up too if noone objects and send this
-along with the rest of process management.
+- RoCE
+	- SRIOV support
+	- Fixes in following flows:
+		- latency optimization flow for inline WQEs
+		- iwarp OOO packed DDPs flow
+		- tx-dif workaround calculations flow
+		- XRC-SRQ exceed cache num
 
-Christian
+- iSCSI
+	- Fixes:
+		- iSCSI TCP out-of-order handling.
+		- iscsi retransmit flow
+
+- Fcoe
+	- Fixes:
+		- upload + cleanup flows
+
+- Debug
+	- Better handling of extracting data during traffic
+	- ILT Dump -> dumping host memory used by chip
+	- MDUMP -> collect debug data on system crash and extract after
+	  reboot
+
+Patches prefixed with FW 8.42.2.0 are required to work with binary
+8.42.2.0 FW where as the rest are FW related but do not require the
+binary.
+
+Changes from V2
+---------------
+- Move FW version to the start of the series to maintain minimal compatibility
+- Fix some kbuild errors:
+	- frame size larger than 1024 (Queue Manager patch - remove redundant
+	  field from struct)
+	- sparse warning on endianity (Dmae patch fix - wrong use of __le32 for field
+	  used only on host, should be u32)
+	- static should be used for some functions (Debug feature ilt and mdump)
+
+Reported-by: kbuild test robot <lkp@intel.com>
+
+Changes from V1
+---------------
+- Remove epoch + kernel version from device debug dump
+- don't bump driver version
+
+
+Michal Kalderon (13):
+  qed: FW 8.42.2.0 Internal ram offsets modifications
+  qed: FW 8.42.2.0 Expose new registers and change windows
+  qed: FW 8.42.2.0 Queue Manager changes
+  qed: FW 8.42.2.0 Parser offsets modified
+  qed: Use dmae to write to widebus registers in fw_funcs
+  qed: FW 8.42.2.0 Additional ll2 type
+  qed: Add abstraction for different hsi values per chip
+  qed: FW 8.42.2.0 iscsi/fcoe changes
+  qed: FW 8.42.2.0 HSI changes
+  qed: FW 8.42.2.0 Add fw overlay feature
+  qed: Debug feature: ilt and mdump
+  qed: rt init valid initialization changed
+  qed: FW 8.42.2.0 debug features
+
+ drivers/net/ethernet/qlogic/qed/qed.h              |   69 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c          |  358 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h          |  130 +
+ drivers/net/ethernet/qlogic/qed/qed_debug.c        | 4055 +++++++++-----------
+ drivers/net/ethernet/qlogic/qed/qed_debug.h        |    4 +
+ drivers/net/ethernet/qlogic/qed/qed_dev.c          |  128 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h      |   24 -
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c         |    2 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h          | 2564 ++++++-------
+ drivers/net/ethernet/qlogic/qed/qed_hw.c           |   67 +-
+ .../net/ethernet/qlogic/qed/qed_init_fw_funcs.c    |  521 ++-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.c     |   47 +-
+ drivers/net/ethernet/qlogic/qed/qed_init_ops.h     |    8 -
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c        |   36 +-
+ drivers/net/ethernet/qlogic/qed/qed_iwarp.c        |    8 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c          |  149 +-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h          |   14 +
+ drivers/net/ethernet/qlogic/qed/qed_main.c         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c          |   10 +-
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h     |   38 +
+ drivers/net/ethernet/qlogic/qed/qed_roce.c         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_sp.h           |    2 -
+ drivers/net/ethernet/qlogic/qed/qed_sriov.c        |   19 +-
+ drivers/net/ethernet/qlogic/qede/qede_fp.c         |    8 +-
+ include/linux/qed/common_hsi.h                     |   44 +-
+ include/linux/qed/eth_common.h                     |   78 +-
+ include/linux/qed/iscsi_common.h                   |   64 +-
+ include/linux/qed/qed_if.h                         |   14 +-
+ include/linux/qed/qed_ll2_if.h                     |    7 +
+ include/linux/qed/storage_common.h                 |    3 +-
+ 30 files changed, 4324 insertions(+), 4151 deletions(-)
+
+-- 
+2.14.5
+
