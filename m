@@ -7,76 +7,77 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59C35C35240
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:52:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 183FAC35240
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:52:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F85D24656
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:52:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E106B24656
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:52:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bKJloUjM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CpOy58WE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726205AbgA1DwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 22:52:23 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:58460 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726191AbgA1DwX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 22:52:23 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3m6aT188651;
-        Tue, 28 Jan 2020 03:52:06 GMT
+        id S1726481AbgA1Dwa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 22:52:30 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56890 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726191AbgA1Dwa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 22:52:30 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3mEiU175136;
+        Tue, 28 Jan 2020 03:52:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2019-08-05;
- bh=Pt8oYJ2JCcXCYc0vllFIns3kPSMnFS4K+yVa/R3Im/M=;
- b=bKJloUjM0jYIlyO1nc9p4CC+2aO4XKcDoXMWrmkdwCBzVOSacQAMnY7O92HPRky9YYM1
- 3Zj7M3JQn5gADUrfztNz9mX9QT7fBB4opO5MDoIXydag5D3VEkjfEo1ma1zIt5R3Xhlq
- XmnmJElkiT/mlDRgvFpX+W84H8S4N/Qf9pr84NaWvDAdvgRynmlXjQdq8CPbBsN+YYX2
- cY3DD9fxKFEn6X643Cyfn8NhKbnXGGlD7TnJljFka+YcaLWqlgYFYjG329R65bsOlwMU
- r/u12zdN5BN7amncDnPdPsgQMEAdUDAGsdvPFWOlQxgyLOjULDg6FKlILLuHsFXyGXNv rw== 
+ bh=nLDTUGAT4+eWOb01J64hPLWPl7+w5fa/zfmtzeV1PPg=;
+ b=CpOy58WE0N8/Kumzxz19Ke3O1u+ei+0FeIs4QEgpbSwsYqoGYAT1VGxMiMSJICZKzxUD
+ LlmC4t3P3I142UHf/u6t6alFWNZu5l9mLTbAn7gaksNgpFafWa1b+au69yKsIkLm3Lq7
+ vRlzgl2iWOjo+ukfsKE14x7svmSV4EM2t6SbBeguTt+8hoL+Auf9Ky25TOu7liePUiQR
+ Zw8q8C03RY3bNsiDqvxCzykdNlhLfRRLRjTSIFETB+uD3BjgAeEco544ZpLPGB6gBgZW
+ QDD4CsgrDzi/9LxIHYE10fKfj3lA4tuOL2qQZtaH3pvocnzQ81W57MXdjCyVp0kNsl4S 2w== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2xrear3anx-1
+        by aserp2120.oracle.com with ESMTP id 2xrdmqbeq7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jan 2020 03:52:06 +0000
+        Tue, 28 Jan 2020 03:52:21 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3nRRI060905;
-        Tue, 28 Jan 2020 03:50:06 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2xryuarvxd-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3nSx8061004;
+        Tue, 28 Jan 2020 03:52:21 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xryuas0hr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Jan 2020 03:50:05 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00S3o36S004490;
-        Tue, 28 Jan 2020 03:50:03 GMT
+        Tue, 28 Jan 2020 03:52:20 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00S3qIlK011271;
+        Tue, 28 Jan 2020 03:52:19 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 27 Jan 2020 19:50:03 -0800
-To:     Bean Huo <huobean@gmail.com>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, linux-scsi@vger.kernel.org,
+        with ESMTP ; Mon, 27 Jan 2020 19:52:18 -0800
+To:     Colin King <colin.king@canonical.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: scsi: ufs: remove pedrom.sousa@synopsys.com
+Subject: Re: [PATCH][next] scsi: ufs: fix spelling mistake "initilized" -> "initialized"
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20200122102751.3490-1-beanhuo@micron.com>
-Date:   Mon, 27 Jan 2020 22:50:00 -0500
-In-Reply-To: <20200122102751.3490-1-beanhuo@micron.com> (Bean Huo's message of
-        "Wed, 22 Jan 2020 11:27:51 +0100")
-Message-ID: <yq14kwgb5p3.fsf@oracle.com>
+References: <20200122091250.2777221-1-colin.king@canonical.com>
+Date:   Mon, 27 Jan 2020 22:52:15 -0500
+In-Reply-To: <20200122091250.2777221-1-colin.king@canonical.com> (Colin King's
+        message of "Wed, 22 Jan 2020 09:12:50 +0000")
+Message-ID: <yq1v9ow9r0w.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9513 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=826
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1911140001 definitions=main-2001280029
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9513 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=904 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
  definitions=main-2001280029
 Sender: linux-scsi-owner@vger.kernel.org
@@ -85,11 +86,9 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Bean,
+Colin,
 
-> Since Pedrom has left Synopsys and his email address doesn't work now.
-> Everytime after sending email, I will receive his undeliverable email.
-> Hence delete his email address.
+> There is a spelling mistake in a pr_err message. Fix it.
 
 Applied to 5.6/scsi-fixes, thanks!
 
