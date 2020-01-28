@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B68C33CB1
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 00:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2912DC32771
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 00:23:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18F6C2467E
+	by mail.kernel.org (Postfix) with ESMTP id F339F22527
 	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 00:23:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yl7dVeq1"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vcN7LwfC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726571AbgA1AXd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 19:23:33 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:52723 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726444AbgA1AXd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 19:23:33 -0500
-Received: by mail-wm1-f68.google.com with SMTP id p9so614477wmc.2
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2020 16:23:31 -0800 (PST)
+        id S1726599AbgA1AXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 19:23:34 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:42108 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726444AbgA1AXe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 19:23:34 -0500
+Received: by mail-wr1-f65.google.com with SMTP id q6so13898009wro.9
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jan 2020 16:23:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=wuzLHqakvnNgZW9rPCCfZQiW1py/VLkR94NJjS2NNqw=;
-        b=Yl7dVeq1EIf2Bu3DVjz7dJb6WtpRFFSdhcjHsFFAODxMcGiQADYRQRm5B4Cz7xA2yy
-         G1T9bPoVouvJ12K/6SKyTe9FvvuNHA81GomJkNL2bPUob6zds6EHZgI4HNw1ncogSB3T
-         5x5V1cH3NrlHmVUhocFSP7hOeeI0OEEdbu6YBL50+WAIdk0i6Ykogp+xLDpQkearYm83
-         jAK8aByKZDR+7UIGrYnJMJAP1VNk8lLwJAi2fsmB9ye00Xq4cbKwNFnFbvVzwFwOjWWj
-         gDpuLt/HLzCnXSif+/QlW05//sS+pfreegGfAHB0X8KzjgE9Oeg3hi1jTsKsAMvy0+Ar
-         F/Pg==
+        bh=jGGAU+K0S5n5n6rS0ZxDt0tDz08INxWomqkwdV9bU6k=;
+        b=vcN7LwfCJUSIldOaClFed7zsFFoqIvnS/OBX6A/CrmF0CZi3TmdDoB1dtuS2eguDsm
+         zG5rSEiMy6CA2egj0n5ni9n2RjltTeJ2zOxxIcxDBx+eH96XaStbo/g74GNt5oVxDFXM
+         B6aUXqwlIovhhtCcFOBXm1OQOV8ugCzpetC/fJmUVX90QhsF9cTmIAbgaee9vf+nHnGJ
+         JAy/Cw0FX4j6PLSn0lpEuQgIV7d9v0O9svINCu++i8x6WEx2AepEpSTKGUsdhe3Qa0KD
+         LdaaNHG8m+T1FMfTU/kcC9C6NN4+2GzXJKQHbpmPh0sm+JrRbYVBK+crpzgimPVVc7In
+         tVOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=wuzLHqakvnNgZW9rPCCfZQiW1py/VLkR94NJjS2NNqw=;
-        b=QIKRcsVHgDrV389/7TKwzQM1OSx7/12MNzzLW7eq7vOu+QAC0hnBAsk54xhZgRu81r
-         o4Tw02EQoNsV0fKnH4nNmEfikaRPCq+4WuzzvU1tVKlKhfmRhsWj85LQk2TyVed1AfpG
-         DB8zfKnDd79yeUn4XwApzBT2cU8q2/FtFpYQMe5bfqL781+9MXKRX1JK0xwO6zKVvPoO
-         FTNfhTCzGO1beG6GFIXVfVy+Z9+Ztmh7Do1YUKHlbGZsde5s/ajmKCBFggaCoUqn6CiQ
-         3ZNrUJCAfDq8ksuniu+AteFgauxg5E+oxil43aEN1eAgJ8/S+Db+seRBWZm5QtoiibgL
-         PNQg==
-X-Gm-Message-State: APjAAAU+aUH4qsfMhrQPqcS/ROBBdz2R5hqZ5bNuz+2HkYBLlrxyIPUy
-        eyzH+S9cpBtg/36jfFRVIuGjgURh
-X-Google-Smtp-Source: APXvYqx374wxgj8EPyMxNL3EdSdspC3KN9Y/Fegh68tZuvvVZbDWnHcMJHgBKy8n+vgLDoHWvsbQbQ==
-X-Received: by 2002:a1c:9d07:: with SMTP id g7mr1243373wme.130.1580171010712;
-        Mon, 27 Jan 2020 16:23:30 -0800 (PST)
+        bh=jGGAU+K0S5n5n6rS0ZxDt0tDz08INxWomqkwdV9bU6k=;
+        b=ijdE2BJzJWWHCtbT63J6l9QS88y9fMLgAP31FJNFxi0wVSYszfD5Y24dH/nbwhQSyO
+         bXWdtfz7W4ScIgvkJXby0ALyjv3Ei6hzxjTkQ5bBADOlNptNg37pto6ybz7eksVQ+s+D
+         QDBCCULE1Z5kwjKzmwwjpz0CLmiec6jEfJfG81Km1fRrLSFD1blNK2efV0jdxC3RNjeG
+         EdmtGgX1W117+55051OVI1mFg7hZ70rnFCIH3I6+z6CL1nPFrJISNrTkSPSMzr9/Cr8r
+         wpQ9ujZY6Q9PP/Iv/Jn5HaMNEqMXtaa++LmHqKi2MgSJihlRmkY9kvDVbutU6aiEkKeg
+         NH7w==
+X-Gm-Message-State: APjAAAVQnGN8Dka5BF1IzqwTjX8GG11duQ6Itx0YJDheEru9DhJCAswE
+        We2lGyN60rFgEDlF9hfIGYDvUsyT
+X-Google-Smtp-Source: APXvYqxPr4qr1mV07sDhgLHsiD5bUeyHn70tXFYUV8InjmrpmjHmuw8QcgqZ10cZjeiwbAeEXPAJnA==
+X-Received: by 2002:a5d:4a84:: with SMTP id o4mr24818538wrq.396.1580171012669;
+        Mon, 27 Jan 2020 16:23:32 -0800 (PST)
 Received: from os42.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id z19sm583769wmi.43.2020.01.27.16.23.28
+        by smtp.gmail.com with ESMTPSA id z19sm583769wmi.43.2020.01.27.16.23.30
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Mon, 27 Jan 2020 16:23:30 -0800 (PST)
+        Mon, 27 Jan 2020 16:23:32 -0800 (PST)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 04/12] lpfc: Fix registration of ELS type support in fdmi
-Date:   Mon, 27 Jan 2020 16:23:04 -0800
-Message-Id: <20200128002312.16346-5-jsmart2021@gmail.com>
+Subject: [PATCH 05/12] lpfc: Fix release of hwq to clear the eq relationship
+Date:   Mon, 27 Jan 2020 16:23:05 -0800
+Message-Id: <20200128002312.16346-6-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.13.7
 In-Reply-To: <20200128002312.16346-1-jsmart2021@gmail.com>
 References: <20200128002312.16346-1-jsmart2021@gmail.com>
@@ -69,39 +69,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adjust FC4 Types in FDMI settings
+When performing reset testing, the eq's list for related hwq's was
+getting corrupted.  In cases where there is not a 1:1 eq to hwq, the
+eq is shared. The eq maintains a list of hwqs utilizing it in case of
+cpu offlining and polling. During the reset, the hwqs are being torn
+down so they can be recreated. The recreation was getting confused by
+seeing a non-null eq assignment on the eq and the eq list became
+corrupt.
 
-The driver sets FDMI information registring ELS as a FC4 type.
-ELS is a fc3 type and should not be registered.
-
-Fix by removing ELS type bit when we register for FDMI Port attributes.
+Correct by clearing the hdwq eq assignment when the hwq is cleaned up.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 58b35a1442c1..fa70e2001b8e 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -2453,7 +2453,6 @@ lpfc_fdmi_port_attr_fc4type(struct lpfc_vport *vport,
- 	ae = (struct lpfc_fdmi_attr_entry *)&ad->AttrValue;
- 	memset(ae, 0, 32);
- 
--	ae->un.AttrTypes[3] = 0x02; /* Type 0x1 - ELS */
- 	ae->un.AttrTypes[2] = 0x01; /* Type 0x8 - FCP */
- 	ae->un.AttrTypes[7] = 0x01; /* Type 0x20 - CT */
- 
-@@ -2771,7 +2770,6 @@ lpfc_fdmi_port_attr_active_fc4type(struct lpfc_vport *vport,
- 	ae = (struct lpfc_fdmi_attr_entry *)&ad->AttrValue;
- 	memset(ae, 0, 32);
- 
--	ae->un.AttrTypes[3] = 0x02; /* Type 0x1 - ELS */
- 	ae->un.AttrTypes[2] = 0x01; /* Type 0x8 - FCP */
- 	ae->un.AttrTypes[7] = 0x01; /* Type 0x20 - CT */
- 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 5a605773dd0a..9fd238d49117 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -9235,6 +9235,7 @@ lpfc_sli4_release_hdwq(struct lpfc_hba *phba)
+ 		/* Free the CQ/WQ corresponding to the Hardware Queue */
+ 		lpfc_sli4_queue_free(hdwq[idx].io_cq);
+ 		lpfc_sli4_queue_free(hdwq[idx].io_wq);
++		hdwq[idx].hba_eq = NULL;
+ 		hdwq[idx].io_cq = NULL;
+ 		hdwq[idx].io_wq = NULL;
+ 		if (phba->cfg_xpsgl && !phba->nvmet_support)
 -- 
 2.13.7
 
