@@ -2,179 +2,98 @@ Return-Path: <SRS0=0wOg=3R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F97C35240
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AD6C35240
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:47:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2064A2173E
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:45:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 703C52467F
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Jan 2020 03:47:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I7E+XagI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgA1Dpj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Jan 2020 22:45:39 -0500
-Received: from mga14.intel.com ([192.55.52.115]:38214 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726164AbgA1Dpj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Jan 2020 22:45:39 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Jan 2020 19:45:35 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,372,1574150400"; 
-   d="scan'208";a="252154036"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 27 Jan 2020 19:45:34 -0800
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1iwHok-000FBN-B0; Tue, 28 Jan 2020 11:45:34 +0800
-Date:   Tue, 28 Jan 2020 11:45:06 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Michal Kalderon <michal.kalderon@marvell.com>
-Cc:     kbuild-all@lists.01.org, michal.kalderon@marvell.com,
-        ariel.elior@marvell.com, davem@davemloft.net,
-        netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+        id S1726240AbgA1Dri (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Jan 2020 22:47:38 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:53410 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726164AbgA1Drh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jan 2020 22:47:37 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3hbOQ171973;
+        Tue, 28 Jan 2020 03:47:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=Ax236AQfU2t8uiC5gmz7fwYFm6ebB0n/VDPETNEKVc8=;
+ b=I7E+XagIM38iCzOjAVZjVZ3x8jpT6dIzlxGqN5i7e/KtUIu21uALBFvvllHI0JR/52gi
+ gt/XvmsJzG/kqh+gaRRI6FZ/EW9eCXf3aBAsyMHgXTdXvjK2k7phSPey+3plAIfju3wK
+ NjGLehl17OLHVioxuVHNLeXJMeE37fEqENmiWWhMQsvW0CGelIMKjP7F4Af3c0XuEh0k
+ LM17d8VcbVsbq76i3cpZ+CSja5XabrQd4/dyRA2RcOrOJ2JvwcwvnOHrBFSZ8SlrrFHa
+ az/7CB1GUro66dsE7jTQYxY81m1dw/XcdDQ9Ol6kpFOnuq5VzGGlp0YoaYFL5iFXUtog VA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2xrdmqbeap-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Jan 2020 03:47:22 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00S3iEkX052190;
+        Tue, 28 Jan 2020 03:47:22 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2xryuart86-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Jan 2020 03:47:21 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00S3lEhY000571;
+        Tue, 28 Jan 2020 03:47:14 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 27 Jan 2020 19:47:14 -0800
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 net-next 09/13] qed: FW 8.42.2.0 HSI changes
-Message-ID: <202001281133.FfnErAlx%lkp@intel.com>
-References: <20200123105836.15090-10-michal.kalderon@marvell.com>
+Subject: Re: [PATCH] megaraid_sas: fixup MSIx interrupt setup during resume
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20200113132609.69536-1-hare@suse.de>
+Date:   Mon, 27 Jan 2020 22:47:11 -0500
+In-Reply-To: <20200113132609.69536-1-hare@suse.de> (Hannes Reinecke's message
+        of "Mon, 13 Jan 2020 14:26:09 +0100")
+Message-ID: <yq18slsb5ts.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200123105836.15090-10-michal.kalderon@marvell.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9513 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=814
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001280028
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9513 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=893 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001280028
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michal,
 
-I love your patch! Perhaps something to improve:
+Hannes,
 
-[auto build test WARNING on net-next/master]
-[also build test WARNING on linus/master v5.5 next-20200122]
-[if your patch is applied to the wrong git tree, please drop us a note to help
-improve the system. BTW, we also suggest to use '--base' option to specify the
-base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> Streamline resume workflow by using the same functions for enabling
+> MSIx interrupts as used during initialisation.  Without it the driver
+> might crash during resume with:
+>
+> WARNING: CPU: 2 PID: 4306 at ../drivers/pci/msi.c:1303
+> pci_irq_get_affinity+0x3b/0x90
 
-url:    https://github.com/0day-ci/linux/commits/Michal-Kalderon/qed-Utilize-FW-8-42-2-0/20200125-055253
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git 9bbc8be29d66cc34b650510f2c67b5c55235fe5d
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.1-153-g47b6dfef-dirty
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+Applied to 5.6/scsi-fixes. Thanks!
 
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
-
-
-sparse warnings: (new ones prefixed by >>)
-
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1897:29: sparse: sparse: restricted __le32 degrades to integer
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1897:58: sparse: sparse: restricted __le32 degrades to integer
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1899:22: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1899:22: sparse:    expected unsigned int [assigned] [usertype] addr
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1899:22: sparse:    got restricted __le32 [addressable] [usertype] grc_addr
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:1901:33: sparse: sparse: restricted __le32 degrades to integer
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:2030:65: sparse: sparse: incorrect type in argument 4 (different base types)
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:2030:65: sparse:    expected unsigned int [usertype] param_val
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:2030:65: sparse:    got restricted __le32 [addressable] [usertype] timestamp
->> drivers/net/ethernet/qlogic/qed/qed_debug.c:5067:25: sparse: sparse: restricted __le16 degrades to integer
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:7992:46: sparse: sparse: incorrect type in assignment (different base types)
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:7992:46: sparse:    expected unsigned int [usertype]
-   drivers/net/ethernet/qlogic/qed/qed_debug.c:7992:46: sparse:    got restricted __be32 [assigned] [usertype] val
-
-vim +5067 drivers/net/ethernet/qlogic/qed/qed_debug.c
-
-c965db44462919 Tomer Tayar     2016-09-07  5013  
-c965db44462919 Tomer Tayar     2016-09-07  5014  /* Performs FW Asserts Dump to the specified buffer.
-c965db44462919 Tomer Tayar     2016-09-07  5015   * Returns the dumped size in dwords.
-c965db44462919 Tomer Tayar     2016-09-07  5016   */
-c965db44462919 Tomer Tayar     2016-09-07  5017  static u32 qed_fw_asserts_dump(struct qed_hwfn *p_hwfn,
-c965db44462919 Tomer Tayar     2016-09-07  5018  			       struct qed_ptt *p_ptt, u32 *dump_buf, bool dump)
-c965db44462919 Tomer Tayar     2016-09-07  5019  {
-c965db44462919 Tomer Tayar     2016-09-07  5020  	struct dbg_tools_data *dev_data = &p_hwfn->dbg_info;
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5021  	struct fw_asserts_ram_section *asserts;
-c965db44462919 Tomer Tayar     2016-09-07  5022  	char storm_letter_str[2] = "?";
-c965db44462919 Tomer Tayar     2016-09-07  5023  	struct fw_info fw_info;
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5024  	u32 offset = 0;
-c965db44462919 Tomer Tayar     2016-09-07  5025  	u8 storm_id;
-c965db44462919 Tomer Tayar     2016-09-07  5026  
-c965db44462919 Tomer Tayar     2016-09-07  5027  	/* Dump global params */
-c965db44462919 Tomer Tayar     2016-09-07  5028  	offset += qed_dump_common_global_params(p_hwfn,
-c965db44462919 Tomer Tayar     2016-09-07  5029  						p_ptt,
-c965db44462919 Tomer Tayar     2016-09-07  5030  						dump_buf + offset, dump, 1);
-c965db44462919 Tomer Tayar     2016-09-07  5031  	offset += qed_dump_str_param(dump_buf + offset,
-c965db44462919 Tomer Tayar     2016-09-07  5032  				     dump, "dump-type", "fw-asserts");
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5033  
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5034  	/* Find Storm dump size */
-c965db44462919 Tomer Tayar     2016-09-07  5035  	for (storm_id = 0; storm_id < MAX_DBG_STORMS; storm_id++) {
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5036  		u32 fw_asserts_section_addr, next_list_idx_addr, next_list_idx;
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5037  		struct storm_defs *storm = &s_storm_defs[storm_id];
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5038  		u32 last_list_idx, addr;
-c965db44462919 Tomer Tayar     2016-09-07  5039  
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5040  		if (dev_data->block_in_reset[storm->block_id])
-c965db44462919 Tomer Tayar     2016-09-07  5041  			continue;
-c965db44462919 Tomer Tayar     2016-09-07  5042  
-c965db44462919 Tomer Tayar     2016-09-07  5043  		/* Read FW info for the current Storm */
-d52c89f120de84 Michal Kalderon 2018-06-05  5044  		qed_read_storm_fw_info(p_hwfn, p_ptt, storm_id, &fw_info);
-c965db44462919 Tomer Tayar     2016-09-07  5045  
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5046  		asserts = &fw_info.fw_asserts_section;
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5047  
-c965db44462919 Tomer Tayar     2016-09-07  5048  		/* Dump FW Asserts section header and params */
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5049  		storm_letter_str[0] = storm->letter;
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5050  		offset += qed_dump_section_hdr(dump_buf + offset,
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5051  					       dump, "fw_asserts", 2);
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5052  		offset += qed_dump_str_param(dump_buf + offset,
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5053  					     dump, "storm", storm_letter_str);
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5054  		offset += qed_dump_num_param(dump_buf + offset,
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5055  					     dump,
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5056  					     "size",
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5057  					     asserts->list_element_dword_size);
-c965db44462919 Tomer Tayar     2016-09-07  5058  
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5059  		/* Read and dump FW Asserts data */
-c965db44462919 Tomer Tayar     2016-09-07  5060  		if (!dump) {
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5061  			offset += asserts->list_element_dword_size;
-c965db44462919 Tomer Tayar     2016-09-07  5062  			continue;
-c965db44462919 Tomer Tayar     2016-09-07  5063  		}
-c965db44462919 Tomer Tayar     2016-09-07  5064  
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5065  		fw_asserts_section_addr = storm->sem_fast_mem_addr +
-c965db44462919 Tomer Tayar     2016-09-07  5066  			SEM_FAST_REG_INT_RAM +
-be086e7c53f1fa Mintz, Yuval    2017-03-11 @5067  			RAM_LINES_TO_BYTES(asserts->section_ram_line_offset);
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5068  		next_list_idx_addr = fw_asserts_section_addr +
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5069  			DWORDS_TO_BYTES(asserts->list_next_index_dword_offset);
-c965db44462919 Tomer Tayar     2016-09-07  5070  		next_list_idx = qed_rd(p_hwfn, p_ptt, next_list_idx_addr);
-da09091732aecc Tomer Tayar     2017-12-27  5071  		last_list_idx = (next_list_idx > 0 ?
-da09091732aecc Tomer Tayar     2017-12-27  5072  				 next_list_idx :
-da09091732aecc Tomer Tayar     2017-12-27  5073  				 asserts->list_num_elements) - 1;
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5074  		addr = BYTES_TO_DWORDS(fw_asserts_section_addr) +
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5075  		       asserts->list_dword_offset +
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5076  		       last_list_idx * asserts->list_element_dword_size;
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5077  		offset +=
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5078  		    qed_grc_dump_addr_range(p_hwfn, p_ptt,
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5079  					    dump_buf + offset,
-be086e7c53f1fa Mintz, Yuval    2017-03-11  5080  					    dump, addr,
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5081  					    asserts->list_element_dword_size,
-d52c89f120de84 Michal Kalderon 2018-06-05  5082  						  false, SPLIT_TYPE_NONE, 0);
-c965db44462919 Tomer Tayar     2016-09-07  5083  	}
-c965db44462919 Tomer Tayar     2016-09-07  5084  
-c965db44462919 Tomer Tayar     2016-09-07  5085  	/* Dump last section */
-da09091732aecc Tomer Tayar     2017-12-27  5086  	offset += qed_dump_last_section(dump_buf, offset, dump);
-7b6859fbdcc4a5 Mintz, Yuval    2017-05-18  5087  
-c965db44462919 Tomer Tayar     2016-09-07  5088  	return offset;
-c965db44462919 Tomer Tayar     2016-09-07  5089  }
-c965db44462919 Tomer Tayar     2016-09-07  5090  
-
-:::::: The code at line 5067 was first introduced by commit
-:::::: be086e7c53f1fac51eed14523b28f2214b548dd2 qed*: Utilize Firmware 8.15.3.0
-
-:::::: TO: Mintz, Yuval <Yuval.Mintz@cavium.com>
-:::::: CC: David S. Miller <davem@davemloft.net>
-
----
-0-DAY kernel test infrastructure                 Open Source Technology Center
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
+-- 
+Martin K. Petersen	Oracle Linux Engineering
