@@ -2,135 +2,104 @@ Return-Path: <SRS0=QSS4=3W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E569EC35249
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEDE3C3524B
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 19:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B19F62067C
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:39:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3E6B206D3
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 19:21:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Uj3RBFmf"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mZ/7jAOP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726836AbgBBOja (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Feb 2020 09:39:30 -0500
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:33120 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726758AbgBBOja (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 09:39:30 -0500
-Received: by mail-vs1-f68.google.com with SMTP id n27so7352630vsa.0;
-        Sun, 02 Feb 2020 06:39:29 -0800 (PST)
+        id S1726916AbgBBTVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Feb 2020 14:21:09 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:40644 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726893AbgBBTVJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 14:21:09 -0500
+Received: by mail-pg1-f195.google.com with SMTP id k25so6584326pgt.7;
+        Sun, 02 Feb 2020 11:21:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=F3Dg6x9hnD70y5KWc5Dl2R5pAeERtj8ATYaWnvKE23s=;
-        b=Uj3RBFmff7CUg/JT7/qkMO1/Go8IME3xKzS0206G+MAG/MGh5yWGd9Rv1i5Vv9Jlx2
-         WnB9pXZhcl8mRzk0o6Wbn0MDVYJpu9dgg6/TL+yni2fNUn1oMIDlp6JkYfDJKN77Z+RV
-         /NRaJkxTSnGpigWW+eQtCUUxp+kc0ySTyut4D8TH0krIQfcrjppCZSgJ+CbGQiPmc59k
-         WxymGpppwUH/uFFXBOMB5nsQpMiDaynKT+yJNNeHLc3uBJFhXAKWiIQZneBN/1hsbtoO
-         Sl+uPEcpGOHILNrn6siLX42quB5zq59tO2DE7HCLuZAzNJfdLM6uvm7rItCcilb/vMaY
-         0RJQ==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=WhbyccFYxDUetkxi0lachTOu0Psik/R8xkRSrrDTrL0=;
+        b=mZ/7jAOP/h6yiWmdHyEHMv0HBowYNttgAeAUTXLAm6ezCPizNZdVjJOyrwdBl8ZxcE
+         5CH/0sq9hlUJ+Gkc92w8zYXXP7/bEE5bbvAhFW/lN0wa3lVP40KJkS1AnxD6DnPL8etL
+         4WafobsrnwBFIjQbOs1rXo8iDuE3V5/G3wVYgZZaScqNyfAEBf/KVoqj390RMzBbMIj0
+         MP/uMRfuxOaWt2ZLgQy+GqzO/zqns9n1EdgCVz2e/kcWp43W5hoDKFYoUvDIVTUZLnQb
+         //kcVt5fD6PxZKL/Ga9FN2PzUasEx1hvnnZGwS5c/awOyc1va2DQi5NGmhV2VmsLF6lG
+         yScw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=F3Dg6x9hnD70y5KWc5Dl2R5pAeERtj8ATYaWnvKE23s=;
-        b=aO1jM7PUzKU0r//S/4P6JFh3TQMrW66y5YwylZ5mmZBk4jZsvm0oV0KE+NMc6v19to
-         tjOSItqWiHc6TJRsAoIcVxbt9Cf2F5JrnwPfRSKfrri+paUtjiRDIj4ZTYmFKXs2WF3+
-         5jKIM3i7lCKBhtZK3SuMMuU+7DeEX24wFvkWy2YZsxUqVFI2zLM2ABs1d2IZJpUJlLKl
-         wLaIDbV0J9CMRs72R/DqxR1u+KiM0Rt3rIe7LK1z732cjd918hyme93VzaIsYoNptXMn
-         BBzZKgndVbQe5evNp2Bysnzqb4Xj/7NaXyaa7p1qJluNRagm10WmqKip7nj/nfw/q9Re
-         T0yw==
-X-Gm-Message-State: APjAAAXLcaegWFBUMju5jTgOZysVyxdIhnOHM+hPakNAka9IZmTk+n2u
-        WGEObxZZWmoTwzVmIH0gC0fF5sFBBUCbml2zo2bxIZfx9u0=
-X-Google-Smtp-Source: APXvYqw6zgyNgIA2W7l7G+72km62tYoznEG8yQuAPP40j+jTysNsnG/FBCpj6ZCZhRFETBUC23O1GURk7wjvrmianrw=
-X-Received: by 2002:a67:10c1:: with SMTP id 184mr11097055vsq.76.1580654368977;
- Sun, 02 Feb 2020 06:39:28 -0800 (PST)
-MIME-Version: 1.0
-References: <20200129105251.12466-1-stanley.chu@mediatek.com>
-In-Reply-To: <20200129105251.12466-1-stanley.chu@mediatek.com>
-From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 2 Feb 2020 20:08:52 +0530
-Message-ID: <CAGOxZ53r7O2PbOTXAs4y9diE_Hc-yj0Q-keHLp00HUwMzjbSag@mail.gmail.com>
-Subject: Re: [PATCH RESEND v3 0/4] MediaTek UFS vendor implemenation part III
- and Auto-Hibern8 fix
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to:user-agent;
+        bh=WhbyccFYxDUetkxi0lachTOu0Psik/R8xkRSrrDTrL0=;
+        b=jFcbdr4qAXIB16CWtEfGs1qJ6uPiHXbD1QWw+Vl+QGgv1/GlE2a6pggPxFVTepo1JH
+         UMmOiMhKfU0iRk4uG97BWoQ29BJ6O/JCqEjqyGCA6jF1ZR9J4UbGZyUEjL7Nfm+sVQmL
+         wzD5q3RJsfuBcXJU6b3EUIbHWKaJnnZrwyq3KzGzG/NAoURJWZ3F9djliVzbLcItXrSK
+         +3ICa+IBjzTzVCnu10JAFGB2EdfnQvCwHEKe8UCrM1CiqsZc/gf/CjLINmIm+5XcTbz5
+         eSwo/mEETXfCtNnLNWZh4NWvWuRDEOPSfBxcpaxdZygp+V5t8VQQlWDyAWJmUtkVVeQd
+         9Tow==
+X-Gm-Message-State: APjAAAWVqxZ5H4y9Md2bUG9IV32dolwWndz7DUY7AjGXMrx8JAovXVj1
+        cd6bBvUNjy4q6m9dbufAbSo=
+X-Google-Smtp-Source: APXvYqyYXeyjbiJcsLHIWb5ki4uiBDYotuR0yEOcYTlwSGD4OCJXfT+R+988pdmOjkfqMnSJXII8Tg==
+X-Received: by 2002:a63:ba43:: with SMTP id l3mr7078662pgu.120.1580671266991;
+        Sun, 02 Feb 2020 11:21:06 -0800 (PST)
+Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id i68sm17605873pfe.173.2020.02.02.11.21.05
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 02 Feb 2020 11:21:06 -0800 (PST)
+Date:   Sun, 2 Feb 2020 11:21:05 -0800
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Avi Shchislowski <avi.shchislowski@wdc.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>, asutoshd@codeaurora.org,
-        Can Guo <cang@codeaurora.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        peter.wang@mediatek.com, chun-hung.wu@mediatek.com,
-        andy.teng@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
+Message-ID: <20200202192105.GA20107@roeck-us.net>
+References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-hello Stanley
+On Sun, Feb 02, 2020 at 12:46:54PM +0200, Avi Shchislowski wrote:
+> UFS3.0 allows using the ufs device as a temperature sensor. The
+> purpose of this feature is to provide notification to the host of the
+> UFS device case temperature. It allows reading of a rough estimate
+> (+-10 degrees centigrade) of the current case temperature, And
+> setting a lower and upper temperature bounds, in which the device
+> will trigger an applicable exception event.
+> 
+> We added the capability of responding to such notifications, while
+> notifying the kernel's thermal core, which further exposes the thermal
+> zone attributes to user space. UFS temperature attributes are all
+> read-only, so only thermal read ops (.get_xxx) can be implemented.
+> 
 
-On Wed, Jan 29, 2020 at 4:24 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
->
-> Hi,
->
-> This series provides MediaTek vendor implementations and some general fixes.
->
-> - General fixes
->         - Fix Auto-Hibern8 error detection
->
-> - MediaTek vendor implementations
->         - Ensure UniPro is powered on before every link startup
->         - Support linkoff state during suspend
->         - Gate reference clock for Auto-Hibern8 case
->
-> v3 (Resend)
->         - Fix "Fixes" tag in patch "scsi: ufs: fix Auto-Hibern8 error detection" (Greg KH)
->
-> v2 -> v3
->         - Squash below patches to a single patch (Bean Huo)
->                 - scsi: ufs: add ufshcd_is_auto_hibern8_enabled facility
->                 - scsi: ufs: fix auto-hibern8 error detection
->         - Add Fixes tag in patch "scsi: ufs: fix Auto-Hibern8 error detection" (Bean Huo)
->         - Rename VS_LINK_HIBER8 to VS_LINK_HIBERN8 in patch "scsi: ufs-mediatek: gate ref-clk during Auto-Hibern8"
->
-> v1 -> v2
->         - Fix and refine commit messages.
->
-> Stanley Chu (4):
->   scsi: ufs-mediatek: ensure UniPro is not powered down before linkup
->   scsi: ufs-mediatek: support linkoff state during suspend
->   scsi: ufs: fix Auto-Hibern8 error detection
->   scsi: ufs-mediatek: gate ref-clk during Auto-Hibern8
->
-For this series, feel free to add
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Can you add an explanation why this can't be added to the just-introduced
+'drivetemp' driver in the hwmon subsystem, and why it make sense to
+have proprietary attributes for temperature and temperature limits ?
 
-Thanks
+Thanks,
+Guenter
 
->  drivers/scsi/ufs/ufs-mediatek.c | 67 +++++++++++++++++++++------------
->  drivers/scsi/ufs/ufs-mediatek.h | 12 ++++++
->  drivers/scsi/ufs/ufshcd.c       |  3 +-
->  drivers/scsi/ufs/ufshcd.h       |  6 +++
->  4 files changed, 63 insertions(+), 25 deletions(-)
->
-> --
-> 2.18.0
+> Avi Shchislowski (5):
+>   scsi: ufs: Add ufs thermal support
+>   scsi: ufs: export ufshcd_enable_ee
+>   scsi: ufs: enable thermal exception event
+>   scsi: ufs-thermal: implement thermal file ops
+>   scsi: ufs: temperature atrributes add to ufs_sysfs
 
-
-
--- 
-Regards,
-Alim
+attributes
