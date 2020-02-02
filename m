@@ -5,59 +5,59 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E75D8C3524C
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F19C35249
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:37:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD1F02082E
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:36:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5AEE21655
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:37:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nkGIcVJU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CIVyqfkm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726952AbgBBOgJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Feb 2020 09:36:09 -0500
-Received: from mail-vk1-f196.google.com ([209.85.221.196]:40237 "EHLO
-        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726679AbgBBOgI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 09:36:08 -0500
-Received: by mail-vk1-f196.google.com with SMTP id c129so3414685vkh.7;
-        Sun, 02 Feb 2020 06:36:08 -0800 (PST)
+        id S1726992AbgBBOhK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Feb 2020 09:37:10 -0500
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:38939 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726837AbgBBOhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 09:37:09 -0500
+Received: by mail-ua1-f68.google.com with SMTP id 73so4344549uac.6;
+        Sun, 02 Feb 2020 06:37:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=+7SXwisOz3MJdWhABlsmYfw2UinRaMfqXmyYRTMi5bI=;
-        b=nkGIcVJUjrMDSCgg9dnvxyApE+KcfK1JRDvG9M7U69uj4lu4YeheYaqQ2B2zYSHejF
-         HtyDT9986T1/59nJv7gUpX4p3b04B4cUUJ38raYyX5kaGSuNmDDQX2tuz7BF4FG5J4ri
-         /o0xrbv1G0wkzFupwOvxgiHxTfde5/sY89NBglGhIQ9zKDqPrbcmikAM/SO9aD9VMLJ7
-         DENW0BEgzEZ8NGFO7Dbz6loV1SAF3rKSJvkB029la8q0b0d9qxwf/hzaM5N6Z84EQVRT
-         HyaLMek17KZSxzfbyj84G5GprKqrNJeuXLNuFuM2RlKt4ERX0B6YGiY+K7wXz1SHYocf
-         5ukg==
+        bh=ih4Pj7LjGlqiueuD3OMdD/Ubng6cDHlRXAZYVnlfnn8=;
+        b=CIVyqfkmn/pL+mv/Mec0ynNmwkLzpZOKb3nQ5xFudSemA+Gw5ekljtq6uQQ5siajF+
+         nmC0DRQb6XGmv33YtbbsH4QzxWt9lXnMXAA6SRxK2WtydG4QxN0bzkrNGf2dKUWhT/rd
+         jlWdKpKjuSiaeeeVpUj4fKrt88pUVVE06Msnf/BDPb1s3Av6VW4DDBKSAqnzwimwjvPP
+         F7GhqRZXiCXpGOuYhW/0l8CY9xE36zvRsQtjviFByKEawdJvbdh25wxsnU7VyXJGwlxL
+         SE2XUMmkq8IofSSfWsqsBWjs0LKJRxD+1VbVISBWFxNyme+y8CTiM/f6/tJICwfq9+y3
+         a6Tg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=+7SXwisOz3MJdWhABlsmYfw2UinRaMfqXmyYRTMi5bI=;
-        b=PbKHXtIS7ZaPTnR3tzTnf19efAYlIF6hsoRZP2B9CbnL/MPBcJPI1hOBm+8ZV4uewA
-         wzSU0/WB41XBNGDBZOFCj2DVnIM0itmUuKxObUXpbE00mdrpjIaheL0Dr8wHuCne8gPP
-         fj1kHKY214Y8xVg3Z1ImFJ2gOC1Sw3kFA86H4Mm9/PSy7Mo88k/Vts3D+0LVMlvTTefp
-         ptWr0sJWncnEr4ljRNQSB5boHlGFJ5Rf2E6owJtZPr54pI3O3/P0FsVyx0u8Qb/toTEa
-         E22bEkhnSlyWmY8FoFFzkuFrxPWkdM5mlWrMQSfChmuKWnLCgGLkkR+tiR4riNOH83q9
-         /ytg==
-X-Gm-Message-State: APjAAAVtFFY8IULbBATFtBeKoKoIMOnIc+ma5AQC1FHrlFLQ7Hx0pfLO
-        07rDeWE/wrF7UDfOaaqP62ysu09/ObPtTpzr500=
-X-Google-Smtp-Source: APXvYqxUF/vzSYFVDONbzX5O+4sOxZwqpd7IDmHOLLBnyBb6Su9xFaTefRJE+qFipRJfPxVP+N294T442JccyQNgqDc=
-X-Received: by 2002:a1f:4541:: with SMTP id s62mr11624924vka.59.1580654167536;
- Sun, 02 Feb 2020 06:36:07 -0800 (PST)
+        bh=ih4Pj7LjGlqiueuD3OMdD/Ubng6cDHlRXAZYVnlfnn8=;
+        b=Ui+qUmskjt+8aKgi7gO8788TRImNkWEmfWUd3/XaUOCrb5v+/DdM1bScY9il6NTpDm
+         eVujdqTe16eyp3kOoFXUp37iCvwDa/jjsqo5nggATFdnc1ZlMdzIh4atdcCaaAowTqEI
+         JMs6s/bK+DLSY+To/tiMolUcWl6ufBH7l7CNcvioOLA1YQqPrUrF0pOYfq6ktj59jeFf
+         8/wr21vGE/2xG1Pli6zj8xL1UYyRpvumMkk0779Wje9KbUr/80S8C8GQcqh+XmdPiUsa
+         gKVaaO9TdQ1qNVe5fE4piYTZnXrVzw2q0Xh8tJj6aal7EEF3uiaymIuEMbOy0Njknj80
+         WSyw==
+X-Gm-Message-State: APjAAAW/UngjpA5aZQdOjWPEB2ugGulvXst44bdBuBPBFiOi+p09qxEK
+        i2TssTP9To0SUVGHS19DMlIUziLc0hUQUYFVOnE=
+X-Google-Smtp-Source: APXvYqzRU5AR6Q1KzIz1EqIEz3VEXTxT65lb27mSl+ah6Nwo+0NacBNcvtSRyN8NMgiJb56Zi3AJ6vcKtpWkEZ0pmrU=
+X-Received: by 2002:ab0:2881:: with SMTP id s1mr11115054uap.95.1580654228212;
+ Sun, 02 Feb 2020 06:37:08 -0800 (PST)
 MIME-Version: 1.0
-References: <20200129073902.5786-1-stanley.chu@mediatek.com> <20200129073902.5786-3-stanley.chu@mediatek.com>
-In-Reply-To: <20200129073902.5786-3-stanley.chu@mediatek.com>
+References: <20200129073902.5786-1-stanley.chu@mediatek.com> <20200129073902.5786-5-stanley.chu@mediatek.com>
+In-Reply-To: <20200129073902.5786-5-stanley.chu@mediatek.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 2 Feb 2020 20:05:31 +0530
-Message-ID: <CAGOxZ51Up7xQm0MXFhy3_oDOVy69NM2e4MKjoZvzK8-0SFyKWg@mail.gmail.com>
-Subject: Re: [PATCH v3 2/4] scsi: ufs-mediatek: support linkoff state during suspend
+Date:   Sun, 2 Feb 2020 20:06:32 +0530
+Message-ID: <CAGOxZ51FwULV_XpZAWMOMd0Qn8dqv8Ea7koLmPrtn3HxU8fJuQ@mail.gmail.com>
+Subject: Re: [PATCH v3 4/4] scsi: ufs-mediatek: gate ref-clk during Auto-Hibern8
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -80,65 +80,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley
+Hello Stanley
 
-On Wed, Jan 29, 2020 at 1:11 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
+On Wed, Jan 29, 2020 at 1:10 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
 >
-> If system suspend or runtime suspend mode is configured as
-> linkoff state, phy can be powered off and reference clock
-> can be gated in MediaTek Chipsets.
+> In current UFS driver design, hba->uic_link_state will not
+> be changed after link enters Hibern8 state by Auto-Hibern8 mechanism.
+> In this case, reference clock gating will be skipped unless special
+> handling is implemented in vendor's callbacks.
 >
-> In the same time, remove redundant reference clock control
-> in suspend and resume callbacks because such control can be
-> well-handled in setup_clocks callback..
+> Support reference clock gating during Auto-Hibern8 period in
+> MediaTek Chipsets: If link state is already in Hibern8 while
+> Auto-Hibern8 feature is enabled, gate reference clock in
+> setup_clocks callback.
 >
 > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 > ---
->  drivers/scsi/ufs/ufs-mediatek.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
+>  drivers/scsi/ufs/ufs-mediatek.c | 38 +++++++++++++++++++++++----------
+>  drivers/scsi/ufs/ufs-mediatek.h | 12 +++++++++++
+>  2 files changed, 39 insertions(+), 11 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index 7ac838cc15d1..d78897a14905 100644
+> index d78897a14905..0ce08872d671 100644
 > --- a/drivers/scsi/ufs/ufs-mediatek.c
 > +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -167,7 +167,7 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
->
->         switch (status) {
->         case PRE_CHANGE:
-> -               if (!on) {
-> +               if (!on && !ufshcd_is_link_active(hba)) {
->                         ufs_mtk_setup_ref_clk(hba, on);
->                         ret = phy_power_off(host->mphy);
->                 }
-> @@ -437,10 +437,11 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->                 err = ufs_mtk_link_set_lpm(hba);
->                 if (err)
->                         return -EAGAIN;
-> -               phy_power_off(host->mphy);
-> -               ufs_mtk_setup_ref_clk(hba, false);
->         }
->
-> +       if (!ufshcd_is_link_active(hba))
-> +               phy_power_off(host->mphy);
-> +
+> @@ -143,6 +143,17 @@ static int ufs_mtk_setup_ref_clk(struct ufs_hba *hba, bool on)
 >         return 0;
 >  }
 >
-> @@ -449,9 +450,10 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
->         int err;
->
-> -       if (ufshcd_is_link_hibern8(hba)) {
-> -               ufs_mtk_setup_ref_clk(hba, true);
-> +       if (!ufshcd_is_link_active(hba))
->                 phy_power_on(host->mphy);
+> +static u32 ufs_mtk_link_get_state(struct ufs_hba *hba)
+> +{
+> +       u32 val;
 > +
-> +       if (ufshcd_is_link_hibern8(hba)) {
->                 err = ufs_mtk_link_set_hpm(hba);
->                 if (err)
->                         return err;
+> +       ufshcd_writel(hba, 0x20, REG_UFS_DEBUG_SEL);
+> +       val = ufshcd_readl(hba, REG_UFS_PROBE);
+> +       val = val >> 28;
+> +
+> +       return val;
+> +}
+> +
+>  /**
+>   * ufs_mtk_setup_clocks - enables/disable clocks
+>   * @hba: host controller instance
+> @@ -155,7 +166,7 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>                                 enum ufs_notify_change_status status)
+>  {
+>         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+> -       int ret = -EINVAL;
+> +       int ret = 0;
+>
+>         /*
+>          * In case ufs_mtk_init() is not yet done, simply ignore.
+> @@ -165,19 +176,24 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
+>         if (!host)
+>                 return 0;
+>
+> -       switch (status) {
+> -       case PRE_CHANGE:
+> -               if (!on && !ufshcd_is_link_active(hba)) {
+> +       if (!on && status == PRE_CHANGE) {
+> +               if (!ufshcd_is_link_active(hba)) {
+>                         ufs_mtk_setup_ref_clk(hba, on);
+>                         ret = phy_power_off(host->mphy);
+> +               } else {
+> +                       /*
+> +                        * Gate ref-clk if link state is in Hibern8
+> +                        * triggered by Auto-Hibern8.
+> +                        */
+> +                       if (!ufshcd_can_hibern8_during_gating(hba) &&
+> +                           ufshcd_is_auto_hibern8_enabled(hba) &&
+> +                           ufs_mtk_link_get_state(hba) ==
+> +                           VS_LINK_HIBERN8)
+> +                               ufs_mtk_setup_ref_clk(hba, on);
+>                 }
+> -               break;
+> -       case POST_CHANGE:
+> -               if (on) {
+> -                       ret = phy_power_on(host->mphy);
+> -                       ufs_mtk_setup_ref_clk(hba, on);
+> -               }
+> -               break;
+> +       } else if (on && status == POST_CHANGE) {
+> +               ret = phy_power_on(host->mphy);
+> +               ufs_mtk_setup_ref_clk(hba, on);
+>         }
+>
+>         return ret;
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.h b/drivers/scsi/ufs/ufs-mediatek.h
+> index fccdd979d6fb..492414e5f481 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.h
+> +++ b/drivers/scsi/ufs/ufs-mediatek.h
+> @@ -53,6 +53,18 @@
+>  #define VS_SAVEPOWERCONTROL         0xD0A6
+>  #define VS_UNIPROPOWERDOWNCONTROL   0xD0A8
+>
+> +/*
+> + * Vendor specific link state
+> + */
+> +enum {
+> +       VS_LINK_DISABLED            = 0,
+> +       VS_LINK_DOWN                = 1,
+> +       VS_LINK_UP                  = 2,
+> +       VS_LINK_HIBERN8             = 3,
+> +       VS_LINK_LOST                = 4,
+> +       VS_LINK_CFG                 = 5,
+> +};
+> +
+>  /*
+>   * SiP commands
+>   */
 > --
 > 2.18.0
 
