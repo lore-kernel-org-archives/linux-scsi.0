@@ -8,57 +8,56 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8323C3F68F
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E75D8C3524C
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF36C2080D
-	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:35:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD1F02082E
+	for <linux-scsi@archiver.kernel.org>; Sun,  2 Feb 2020 14:36:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mcWFcyry"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nkGIcVJU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726907AbgBBOfd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 2 Feb 2020 09:35:33 -0500
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:43148 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726679AbgBBOfc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 09:35:32 -0500
-Received: by mail-vs1-f68.google.com with SMTP id 7so7291040vsr.10;
-        Sun, 02 Feb 2020 06:35:32 -0800 (PST)
+        id S1726952AbgBBOgJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 2 Feb 2020 09:36:09 -0500
+Received: from mail-vk1-f196.google.com ([209.85.221.196]:40237 "EHLO
+        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726679AbgBBOgI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Feb 2020 09:36:08 -0500
+Received: by mail-vk1-f196.google.com with SMTP id c129so3414685vkh.7;
+        Sun, 02 Feb 2020 06:36:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=LZE+Xo98zuPfEJJYc3IqeQRPxedI7zj+vekRKI0XAyw=;
-        b=mcWFcyryu3pb908p8t2ntneOZGWX637x+66nF8J6woHFUe8Nfw26wsxiSbrLieqQZf
-         u/B7Bv73fme8G/rf4KYLbrJdYkXrq2F1DFiOQciq9P+SRlDN6F4Ry/ySeWMERU3Di0v5
-         BYEXlSRbilubviP4KoXvTS4c8ImwmqWC9iYOk9dMsGuAieWURS09EtY8wnhgxXJnwrqq
-         HNbQgKsucidqfbOEY+4aseWUiC1tCiurI3vguTqqAGHLRIdAPkBHUUpFDD+FlWH0UiU9
-         1IYJywc/l7rmVPf5EyMcK4xM+GfQZl2ru89QJc12JfJJDGo3ZClbJl2OBviUKn1Z9pKG
-         jdvA==
+        bh=+7SXwisOz3MJdWhABlsmYfw2UinRaMfqXmyYRTMi5bI=;
+        b=nkGIcVJUjrMDSCgg9dnvxyApE+KcfK1JRDvG9M7U69uj4lu4YeheYaqQ2B2zYSHejF
+         HtyDT9986T1/59nJv7gUpX4p3b04B4cUUJ38raYyX5kaGSuNmDDQX2tuz7BF4FG5J4ri
+         /o0xrbv1G0wkzFupwOvxgiHxTfde5/sY89NBglGhIQ9zKDqPrbcmikAM/SO9aD9VMLJ7
+         DENW0BEgzEZ8NGFO7Dbz6loV1SAF3rKSJvkB029la8q0b0d9qxwf/hzaM5N6Z84EQVRT
+         HyaLMek17KZSxzfbyj84G5GprKqrNJeuXLNuFuM2RlKt4ERX0B6YGiY+K7wXz1SHYocf
+         5ukg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=LZE+Xo98zuPfEJJYc3IqeQRPxedI7zj+vekRKI0XAyw=;
-        b=LsgnU8bZ9JIEk2xc/37jNEyYs25uJPCvJw+pYSIz4nHFVyrenJxTMjpliVm9UytzjA
-         ugi+B+oMSl06T2ru2EBdz29qthQW+B+AqHMmKzeJX8W/jvjSaift8keVfbvhxk5BYsB7
-         0D5z5bZidlNbwLHVV9bYJMSdjfOr43o2+fRGRFWj4GR1bX+JVWzC+dxpT1GjsTprlU/T
-         xR2GWXHEBZAcU4kNXTaXRM9kBCN8ecqZzJAsUD8PmUlbsyL7EGBnoQfETV+7AVbkhCCU
-         Z13X43NauAJ+BoyJYaqV9EIEid9QVZPc50f6YAMZuQSALi7uIS71UXqubfR38WAs81+T
-         yrqg==
-X-Gm-Message-State: APjAAAWWwAGCapkUEqkUnFMDsm45iK4Zzvior7ItjgbvTyHPgcso2nER
-        9N3eyz6xleQhzqFZE3406Mwxv3J/WT4C10KLOrw=
-X-Google-Smtp-Source: APXvYqxZNyOg7XGNhoutzokbnVc5nQbhtV3AlWk76sEbJJ8d09qRGIpzB/q7iLwEM4Rkk0nO84vGVSnjlYvqgh9b+S8=
-X-Received: by 2002:a67:fb14:: with SMTP id d20mr11886738vsr.136.1580654131573;
- Sun, 02 Feb 2020 06:35:31 -0800 (PST)
+        bh=+7SXwisOz3MJdWhABlsmYfw2UinRaMfqXmyYRTMi5bI=;
+        b=PbKHXtIS7ZaPTnR3tzTnf19efAYlIF6hsoRZP2B9CbnL/MPBcJPI1hOBm+8ZV4uewA
+         wzSU0/WB41XBNGDBZOFCj2DVnIM0itmUuKxObUXpbE00mdrpjIaheL0Dr8wHuCne8gPP
+         fj1kHKY214Y8xVg3Z1ImFJ2gOC1Sw3kFA86H4Mm9/PSy7Mo88k/Vts3D+0LVMlvTTefp
+         ptWr0sJWncnEr4ljRNQSB5boHlGFJ5Rf2E6owJtZPr54pI3O3/P0FsVyx0u8Qb/toTEa
+         E22bEkhnSlyWmY8FoFFzkuFrxPWkdM5mlWrMQSfChmuKWnLCgGLkkR+tiR4riNOH83q9
+         /ytg==
+X-Gm-Message-State: APjAAAVtFFY8IULbBATFtBeKoKoIMOnIc+ma5AQC1FHrlFLQ7Hx0pfLO
+        07rDeWE/wrF7UDfOaaqP62ysu09/ObPtTpzr500=
+X-Google-Smtp-Source: APXvYqxUF/vzSYFVDONbzX5O+4sOxZwqpd7IDmHOLLBnyBb6Su9xFaTefRJE+qFipRJfPxVP+N294T442JccyQNgqDc=
+X-Received: by 2002:a1f:4541:: with SMTP id s62mr11624924vka.59.1580654167536;
+ Sun, 02 Feb 2020 06:36:07 -0800 (PST)
 MIME-Version: 1.0
-References: <20200129073902.5786-1-stanley.chu@mediatek.com> <20200129073902.5786-2-stanley.chu@mediatek.com>
-In-Reply-To: <20200129073902.5786-2-stanley.chu@mediatek.com>
+References: <20200129073902.5786-1-stanley.chu@mediatek.com> <20200129073902.5786-3-stanley.chu@mediatek.com>
+In-Reply-To: <20200129073902.5786-3-stanley.chu@mediatek.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Sun, 2 Feb 2020 20:04:55 +0530
-Message-ID: <CAGOxZ521Vz4EcmWApZLqcDwkwa-XHLFLDx2n1HRht0Pf0fFkmw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/4] scsi: ufs-mediatek: ensure UniPro is not powered
- down before linkup
+Date:   Sun, 2 Feb 2020 20:05:31 +0530
+Message-ID: <CAGOxZ51Up7xQm0MXFhy3_oDOVy69NM2e4MKjoZvzK8-0SFyKWg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/4] scsi: ufs-mediatek: support linkoff state during suspend
 To:     Stanley Chu <stanley.chu@mediatek.com>
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -81,77 +80,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-HI Stanley
+Hi Stanley
 
-On Wed, Jan 29, 2020 at 1:09 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
+On Wed, Jan 29, 2020 at 1:11 PM Stanley Chu <stanley.chu@mediatek.com> wrote:
 >
-> MediaTek Chipsets can enter proprietary UniPro low-power mode during
-> suspend while link is in hibern8 state. Make sure leaving low-power
-> mode before every link startup to prevent lockup in any possible error recovery
-> path.
+> If system suspend or runtime suspend mode is configured as
+> linkoff state, phy can be powered off and reference clock
+> can be gated in MediaTek Chipsets.
 >
-> In the same time, re-factor related funcitons to improve code readability.
+> In the same time, remove redundant reference clock control
+> in suspend and resume callbacks because such control can be
+> well-handled in setup_clocks callback..
 >
 > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+
 > ---
->  drivers/scsi/ufs/ufs-mediatek.c | 19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
+>  drivers/scsi/ufs/ufs-mediatek.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 >
 > diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-> index 53eae5fe2ade..7ac838cc15d1 100644
+> index 7ac838cc15d1..d78897a14905 100644
 > --- a/drivers/scsi/ufs/ufs-mediatek.c
 > +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -30,6 +30,11 @@
->  #define ufs_mtk_device_reset_ctrl(high, res) \
->         ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, high, res)
+> @@ -167,7 +167,7 @@ static int ufs_mtk_setup_clocks(struct ufs_hba *hba, bool on,
 >
-> +#define ufs_mtk_unipro_powerdown(hba, powerdown) \
-> +       ufshcd_dme_set(hba, \
-> +                      UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0), \
-> +                      powerdown)
-> +
->  static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
->  {
->         u32 tmp;
-> @@ -290,6 +295,8 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
->         int ret;
->         u32 tmp;
->
-> +       ufs_mtk_unipro_powerdown(hba, 0);
-> +
->         /* disable deep stall */
->         ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
->         if (ret)
-> @@ -390,9 +397,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
->         if (err)
->                 return err;
->
-> -       err = ufshcd_dme_set(hba,
-> -                            UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> -                            0);
-> +       err = ufs_mtk_unipro_powerdown(hba, 0);
->         if (err)
->                 return err;
->
-> @@ -413,14 +418,10 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
->  {
->         int err;
->
-> -       err = ufshcd_dme_set(hba,
-> -                            UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> -                            1);
-> +       err = ufs_mtk_unipro_powerdown(hba, 1);
->         if (err) {
->                 /* Resume UniPro state for following error recovery */
-> -               ufshcd_dme_set(hba,
-> -                              UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
-> -                              0);
-> +               ufs_mtk_unipro_powerdown(hba, 0);
->                 return err;
+>         switch (status) {
+>         case PRE_CHANGE:
+> -               if (!on) {
+> +               if (!on && !ufshcd_is_link_active(hba)) {
+>                         ufs_mtk_setup_ref_clk(hba, on);
+>                         ret = phy_power_off(host->mphy);
+>                 }
+> @@ -437,10 +437,11 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>                 err = ufs_mtk_link_set_lpm(hba);
+>                 if (err)
+>                         return -EAGAIN;
+> -               phy_power_off(host->mphy);
+> -               ufs_mtk_setup_ref_clk(hba, false);
 >         }
 >
+> +       if (!ufshcd_is_link_active(hba))
+> +               phy_power_off(host->mphy);
+> +
+>         return 0;
+>  }
+>
+> @@ -449,9 +450,10 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>         struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+>         int err;
+>
+> -       if (ufshcd_is_link_hibern8(hba)) {
+> -               ufs_mtk_setup_ref_clk(hba, true);
+> +       if (!ufshcd_is_link_active(hba))
+>                 phy_power_on(host->mphy);
+> +
+> +       if (ufshcd_is_link_hibern8(hba)) {
+>                 err = ufs_mtk_link_set_hpm(hba);
+>                 if (err)
+>                         return err;
 > --
 > 2.18.0
 
