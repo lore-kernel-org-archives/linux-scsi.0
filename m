@@ -2,145 +2,140 @@ Return-Path: <SRS0=0hmW=3X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B69DC33CAC
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 12:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94812C35247
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 14:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A9ED2082E
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 12:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C1022080C
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 14:48:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VPRH1NIq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jx6r5Lia"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727649AbgBCMUM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Feb 2020 07:20:12 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:28062 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726268AbgBCMUL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 07:20:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580732411;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=CMiwcjdWwKYY2iBTL+7SSYuwnhzwvGB0EHKGhnMTfGA=;
-        b=VPRH1NIqIqLM86dixSQ51NfawDdWTkb5Gk5P1ucQwCXEE4M4hx+JL6DwgHuhyex2SHdVWt
-        aoGa2WalR2TAp/xzv+Rh7phezHH1nJ9pYU5IzDro4UaS+jN/NguqjDkjwYYqgdWeh16Hoz
-        9yJqNRPXi/ly+bNEnoZczbo6bKZCbnU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-285-Z2swCJ7yOXqQnw7SjtiaYg-1; Mon, 03 Feb 2020 07:20:07 -0500
-X-MC-Unique: Z2swCJ7yOXqQnw7SjtiaYg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D578D800D41;
-        Mon,  3 Feb 2020 12:20:05 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.43.2.86])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 065B75DDAA;
-        Mon,  3 Feb 2020 12:20:04 +0000 (UTC)
-Subject: Re: [PATCH] megaraid_sas: silence a warning
-To:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Lee Duncan <lduncan@suse.com>
-Cc:     Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-References: <20200131132350.31840-1-thenzl@redhat.com>
- <ff50f95a-1885-9fce-946c-f31861c06486@suse.com>
- <CAL2rwxqDTRmmk_RUEHQpf6MUu5CBaKKBu8W0D3o=y0Yygo6unw@mail.gmail.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <4fac061b-a026-4b5d-b420-787733b961b5@redhat.com>
-Date:   Mon, 3 Feb 2020 13:20:04 +0100
+        id S1728306AbgBCOsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Feb 2020 09:48:01 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44694 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727427AbgBCOsB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 09:48:01 -0500
+Received: by mail-pg1-f194.google.com with SMTP id g3so2229971pgs.11;
+        Mon, 03 Feb 2020 06:48:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=83ABERR3SXd05uLlC6qxZc3SIAbiKjtXN4TG7rOd3Iw=;
+        b=jx6r5LiaMOeXKCsrDYstzaXd7gnLPfl8GsxDRXbrlpiegDSSSs6lfqikAOxXcpCw/g
+         zcoBvk656wdjPs/cXgQE0zZXdJjw3tMvGZzWdXu/EWmXCvQUASsXrepUkWMXhzrwvwc6
+         3zvYITHwDyHM8NLtg0u/YxV3u+JX7mMu5Nv+vhLLDAkZYVPmnB3KkFwJx1dH8hu5S/lP
+         fArySjxW9I+ydFx7oOCR0GTdMtyMZ9ftfKw9Dt0gQs4mTpelN6D8FVYoccGaiMhrpO3+
+         BpzwFlW/2qjRKa11OFh2Xs5NouhLtUpQyfGx47q/qpamFd+1g06/Ar7jPjoLeIXZhSuN
+         CwJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=83ABERR3SXd05uLlC6qxZc3SIAbiKjtXN4TG7rOd3Iw=;
+        b=PSo4W8BvapONgwfPWquFH+vFhOyTeHJkfF7RG9O3wgcHXqqenCmLiYMacStreFf+le
+         faOfPrcR3jTQGWeeGsbLHRtoVoTKjyjLKjgcFDmDcIszs0U5x6NOHHQi/POcX1A9EvX/
+         O9OaKuhhO+XGfA03CJqMPFHE7pMg7ZDSH5OiIG+1anWYf4B7vOQN2QBJ0fAU7VcX3kjY
+         gDmIBVbI3RCX/asiaxaAp8IzgQu3NBdES4HKU6IjJdWzu/N0jTOCLeoxx87SmU3MRYMi
+         Ryws4zvM5O0be43vqSe7FWQIpc729pDzu/ZvnaFjRQ8uqkztlvGmcZfhX6y6UBA0xBTv
+         H5QA==
+X-Gm-Message-State: APjAAAXmmetBwnU00sFFDn4NFZfEepiLAcyzK34V0zfR1u5HByOB8GYs
+        HwqxWrpUoehlfZfTHL6s9ZER23aq
+X-Google-Smtp-Source: APXvYqyBFaoP5ZJZ+WoBLALu6+7YmzoFOXgRahLjQGDeB3p6e69HOopAuyLkHP4C/vNi39uai6rA8g==
+X-Received: by 2002:a63:f403:: with SMTP id g3mr25999128pgi.62.1580741279858;
+        Mon, 03 Feb 2020 06:47:59 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id a16sm20142226pgb.5.2020.02.03.06.47.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Feb 2020 06:47:57 -0800 (PST)
+Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
+To:     Avi Shchislowski <Avi.Shchislowski@wdc.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
+ <20200202192105.GA20107@roeck-us.net>
+ <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <94cb1e97-18ed-ebec-23c2-b4d87434726a@roeck-us.net>
+Date:   Mon, 3 Feb 2020 06:47:54 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <CAL2rwxqDTRmmk_RUEHQpf6MUu5CBaKKBu8W0D3o=y0Yygo6unw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/3/20 10:16 AM, Sumit Saxena wrote:
-> On Sat, Feb 1, 2020 at 10:57 PM Lee Duncan <lduncan@suse.com> wrote:
->>
->> On 1/31/20 5:23 AM, Tomas Henzl wrote:
->>> Add a flag to dma mem allocation to silence a warning.
->>>
->>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
->>> ---
->>>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 5 +++--
->>>  1 file changed, 3 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>> index 0f5399b3e..1fa2d1449 100644
->>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>> @@ -606,7 +606,8 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
->>>
->>>       fusion->io_request_frames =
->>>                       dma_pool_alloc(fusion->io_request_frames_pool,
->>> -                             GFP_KERNEL, &fusion->io_request_frames_phys);
->>> +                             GFP_KERNEL | __GFP_NOWARN,
->>> +                             &fusion->io_request_frames_phys);
->>>       if (!fusion->io_request_frames) {
->>>               if (instance->max_fw_cmds >= (MEGASAS_REDUCE_QD_COUNT * 2)) {
->>>                       instance->max_fw_cmds -= MEGASAS_REDUCE_QD_COUNT;
->>> @@ -644,7 +645,7 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
->>>  open-isns-updates.diff.bz2
->>>               fusion->io_request_frames =
->>>                       dma_pool_alloc(fusion->io_request_frames_pool,
->>> -                                    GFP_KERNEL,
->>> +                                    GFP_KERNEL | __GFP_NOWARN,
->>>                                      &fusion->io_request_frames_phys);
->>>
->>>               if (!fusion->io_request_frames) {
->>>
->>
->> I'm fairly sure this is a good fix, but I'd appreciate more information
->> in the comment, such as what warning was silenced, and why it's okay to
->> silence it rather than "fix" it. I know from experience that, when
->> choosing which commits to backport, more information is better than less.
-> This code allocates DMA memory for driver's IO frames which may exceed
-> MAX_ORDER pages for few
-> megaraid_sas controllers(controllers with High Queue Depth). So there
-> is logic to keep on reducing controller
-> Queue Depth until DMA memory required for IO frames fits within
-> MAX_ORDER. So or impacted megaraid_sas controllers,
-> there would be multiple DMA allocation failure until driver settles
-> down to Controller Queue Depth which has memory requirement
-> within MAX_ORDER. These failed DMA allocation requests causes stack
-> traces in system logs which is not harmful and this patch
-> would silence those warnings/stack traces.
+On 2/3/20 3:57 AM, Avi Shchislowski wrote:
 > 
-> With CMA (Contiguous Memory Allocator) enabled, it's possible  to
-> allocate DMA memory exceeding MAX_ORDER.
-> And that is the reason of keeping this retry logic with less
-> controller Queue Depth instead of calculating controller Queue depth
-> at first hand which has memory requirement less than MAX_ORDER.
-
-Thank you Sumit for writing it down.
-An over-sized allocation failure is sanitized in a proper way. The
-warning may hide other allocation warnings in other parts of kernel as
-it is printed only once.
-
-I could have written more vecasue I've underestimated it and I'm sorry
-for that.
-
-Tomas
-
-
-> Thanks,
-> Sumit
+> 
+>> -----Original Message-----
+>> From: Guenter Roeck <groeck7@gmail.com> On Behalf Of Guenter Roeck
+>> Sent: Sunday, February 2, 2020 9:21 PM
+>> To: Avi Shchislowski <Avi.Shchislowski@wdc.com>
+>> Cc: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
+>> <Avri.Altman@wdc.com>; James E.J. Bottomley <jejb@linux.ibm.com>;
+>> Martin K. Petersen <martin.petersen@oracle.com>; linux-
+>> kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+>> Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
 >>
->> --
->> Lee Duncan
+>   
+>> On Sun, Feb 02, 2020 at 12:46:54PM +0200, Avi Shchislowski wrote:
+>>> UFS3.0 allows using the ufs device as a temperature sensor. The
+>>> purpose of this feature is to provide notification to the host of the
+>>> UFS device case temperature. It allows reading of a rough estimate
+>>> (+-10 degrees centigrade) of the current case temperature, And setting
+>>> a lower and upper temperature bounds, in which the device will trigger
+>>> an applicable exception event.
+>>>
+>>> We added the capability of responding to such notifications, while
+>>> notifying the kernel's thermal core, which further exposes the thermal
+>>> zone attributes to user space. UFS temperature attributes are all
+>>> read-only, so only thermal read ops (.get_xxx) can be implemented.
+>>>
+>>
+>> Can you add an explanation why this can't be added to the just-introduced
+>> 'drivetemp' driver in the hwmon subsystem, and why it make sense to have
+>> proprietary attributes for temperature and temperature limits ?
+>>
+>> Thanks,
+>> Guenter
+>>
+> Hi Guenter
+> 
+> Thank you for your comment
+> 
+> The ufs device is not a temperature sensor per-se.  It is, first and foremost, a storage device.
+
+Huh ? Many non-temperature-sensor devices in the kernel report their temperature
+through the hardware monitoring subsystem.
+
+> Reporting the device case temperature is a feature added in a recently released UFS spec (UFS3.0).
+> Therefore, adding a thermal-core module, in opposed to hwmon module, seemed more appropriate.
+> Registering a hwmon device look excessive, as no other hw-monitoring attribute is available - aside temperature.
+> 
+Really ? Interesting position. Are you saying that instantiating a thermal core
+module, plus providing non-standard sysfs attributes to report the temperature,
+is less complex ? Are you sure ? Can you provide evidence that this is indeed
+the case ?
+
+> Using Martin's tree, I wasn't able to locate the 'drivetemp' module, nor any reference to  it in the hwmon documentation.
 > 
 
+You might want to consider looking in the mainline kernel.
+
+Guenter
