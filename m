@@ -2,179 +2,145 @@ Return-Path: <SRS0=0hmW=3X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DAC8C33CAC
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 11:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B69DC33CAC
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 12:20:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE29320838
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 11:57:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A9ED2082E
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 12:20:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="IgRIx0y1";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="hw1NLI1w"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VPRH1NIq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727388AbgBCL5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Feb 2020 06:57:21 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:27343 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726258AbgBCL5V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 06:57:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1580731041; x=1612267041;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=gj/uQW7xpP7ts4drMmgqU3lWyN2fQZfJQnidJjrISBY=;
-  b=IgRIx0y1wIYKBs0FSL4gPKtcQ2ezJvM9MrvF2kTpY8yHaW0uxHrUXYq6
-   cijuo0j/WCBjFegOb4CxON1aJhwIEQBqbfWcgbV8hJcKerypkbtWLxSIh
-   dfSWZIgADoCJxHrFRP7JmVY2GtWhEHplKWBfDNbWFvT2nuWpcvgFwqMlh
-   QkSzVKPOF1hdV+EmALHu/PF8MRKZNff8t4+pvGNb2O00KvODxYEvvzGX9
-   Y9I4xGGZGhaJsPx4HcL1z7ACVSAsfBETFR62XQLCt6F1S0JHKzk88Anhn
-   VwJt0wJ71o4pGMl/kB6Ozf+/KYOFD6h97RuALM0yLrm/kslXAcsMDF6Na
-   A==;
-IronPort-SDR: 2GbKT/VjuBosUULWXJAjtk1xtrvwwrexE16bFfp5An0gW4hTQqd/bTDdDzlKgZtVmCUpMPzgbF
- YGmhsXmByzFZmW2qhekWgBWLVM2OwsQu3qRjNtCVlXJpdb0BBrp6G5czfaCCmVHBFE90j0ymhW
- D+YHPBP3ECIaNIXbKw7PWnSVyYCKOV6aVonLBgggoJX/+3mYdPIol+w34ZUF752bsxIK9Wss6y
- SaWVxHkY6+S6boXkfb1JtBLMt8TXIJCVu4SZPdnJ6ToVqaziP5xcP00fXrs3YKSFrGte6Zp1pm
- obU=
-X-IronPort-AV: E=Sophos;i="5.70,397,1574092800"; 
-   d="scan'208";a="129525891"
-Received: from mail-dm6nam12lp2170.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.170])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Feb 2020 19:57:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PDST02TbSBNHnkFhX8xR7p+D2LNqnzmgItlMf3pnaiaFPCQUn8m9uUV3cHCEEdMbt7YIBI338GXrFn9bqtWk6yRLntEQQvV4HFiO85Z1VDN/ruwOkpne72CszJmho0tDx7LD13NVCIu4NTcT6JZzBzP/8jyprzahw35u+umjMjI76Ov5wBIhrcUgyzpztHM85r75CQSmso/sSahrR3JdqOJKcNbmwM4xLKcqF+F4dFWCIEYrj00rqM6uz6nBAMJ36Jofm7yC8ktKX5ziQqpJHtexIVzxFsvSNav72+95lNNKLhRRSzeA+5qZKH2ktlT0jhO2hoEwAdlXQEnDdeoZEA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bCH8iSWWC3A5z0Ej/DanXDXCGE9VBlGy6H7ClXwrNhU=;
- b=mh2mNcAASlqEpdiptvvOe5cMdORMOTxC+0MLtYu3heK853aTpcKssVTLRzM9b+W8bFTBPMmMG0kz5lbRVcS5fOdiBpMP5z7HEXH0unTTUKeVY/rBe5mscEX0/iy2Fmtq0vlq11cdPkFwktNmOlN/iVPV4s7UXZU9rVaeEb/y6C9YU9Xi2OY1k7yFE44APOyn8p3QsMGKcwTh5iqheM5MCQnSstFkulSQtMwPx0KzycdrNzsMe2fvY+w9ADZynnLIGFEwFtwOOv1FI19rzjPsxv0DqGyfz5aBv7sfa9zPAErTM2DyxPRdrjXbbea0UfrMiucL14Mtphv13nJHqyy7Og==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bCH8iSWWC3A5z0Ej/DanXDXCGE9VBlGy6H7ClXwrNhU=;
- b=hw1NLI1w9bj0SmJoceO+X/4y7RWHUz2X8yMWVIkYThI0ZiAVRKW1DR/dvRVQDqLXl2hN5H/zRblYZBblhvcdpgD9hozw/wQ+fxDvVEVmoHZNRRQ1UY2VDnafRk22vwRaxV6pRPEg7xMXYaf0/6mmkoad7+YBofTujqkyL3tDYxg=
-Received: from MN2PR04MB6190.namprd04.prod.outlook.com (20.178.247.224) by
- MN2PR04MB6685.namprd04.prod.outlook.com (10.186.147.144) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2686.32; Mon, 3 Feb 2020 11:57:18 +0000
-Received: from MN2PR04MB6190.namprd04.prod.outlook.com
- ([fe80::940c:d0bb:3927:fdca]) by MN2PR04MB6190.namprd04.prod.outlook.com
- ([fe80::940c:d0bb:3927:fdca%7]) with mapi id 15.20.2686.031; Mon, 3 Feb 2020
- 11:57:18 +0000
-From:   Avi Shchislowski <Avi.Shchislowski@wdc.com>
-To:     Guenter Roeck <linux@roeck-us.net>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
-Thread-Topic: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
-Thread-Index: AQHV2bYg6ExsysKG0EeYEdSzahFFuKgISGeAgAEWP7A=
-Date:   Mon, 3 Feb 2020 11:57:18 +0000
-Message-ID: <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
-References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
- <20200202192105.GA20107@roeck-us.net>
-In-Reply-To: <20200202192105.GA20107@roeck-us.net>
-Accept-Language: en-US, he-IL
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avi.Shchislowski@wdc.com; 
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 31105a18-7f74-48b3-a7d7-08d7a8a037e7
-x-ms-traffictypediagnostic: MN2PR04MB6685:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR04MB66851A45EA18CF537C6CA1539A000@MN2PR04MB6685.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 0302D4F392
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(189003)(199004)(66476007)(64756008)(66556008)(66446008)(52536014)(33656002)(66946007)(76116006)(5660300002)(9686003)(4326008)(54906003)(7696005)(55016002)(316002)(186003)(26005)(6916009)(8936002)(81156014)(81166006)(6506007)(53546011)(86362001)(478600001)(71200400001)(2906002)(8676002)(21314003);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6685;H:MN2PR04MB6190.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rRBjAPUfKblY9lcOKkucWe0x70LvSHK3a0Z1aTHa93mtpyW4EijLORFcrwUPAqvNmHBbudJtGV/8azZN48a+vgkAY06fUJLq6/lPTMcsUOYCuA7a/XGk0W864P0z8n+/WxBz8EXbkuTyASrjPtaW+++zejcoLesTyWmzrDZqXnvBH6/QNhTP05mKBJjq3GtOO5XBxwHcLz10FzbcBIeBwbBejFhin6kU4t+qffwdvpuoabO0LWP+k8dP52S5W5c1pSFbmsov44Hd8K8YVf7EiUjzGihA6r71lDP8hvx+jwrIrqv9X0gvfoYoSW1scwyFnwDTAncdiUr7V7noyCezuGLzt1p2iPeJa7Cw1a3bi1pKPQVibSw5vqJKagrJZ5yOjDuQeJPJpXPmvaS35hl6jpHKlh6+D87WT8l4vMG2RcTUy7n6XZbPU4+Jk12G/+So+2gMJKO77XQUZgIt/IGufqdgZD/9rRMALbhE1FyuFJ8MQ/cErtMZ1AOrs+MuEKuf
-x-ms-exchange-antispam-messagedata: oEHJGq05mGjzCCW58WA6V08EBcvRu1OmD/q8hcchkHOEsg8s8D1B4TNOTWY0oHZW8EFmX8XIz3FJFrJbykD5zN2zOZWT7Wzf7gWGEzFYLy83ZtQ7gga5L+5Ml3YsqCxJlRIInjNXsothJYBsNZkXPw==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727649AbgBCMUM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Feb 2020 07:20:12 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:28062 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726268AbgBCMUL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 07:20:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580732411;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CMiwcjdWwKYY2iBTL+7SSYuwnhzwvGB0EHKGhnMTfGA=;
+        b=VPRH1NIqIqLM86dixSQ51NfawDdWTkb5Gk5P1ucQwCXEE4M4hx+JL6DwgHuhyex2SHdVWt
+        aoGa2WalR2TAp/xzv+Rh7phezHH1nJ9pYU5IzDro4UaS+jN/NguqjDkjwYYqgdWeh16Hoz
+        9yJqNRPXi/ly+bNEnoZczbo6bKZCbnU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-285-Z2swCJ7yOXqQnw7SjtiaYg-1; Mon, 03 Feb 2020 07:20:07 -0500
+X-MC-Unique: Z2swCJ7yOXqQnw7SjtiaYg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D578D800D41;
+        Mon,  3 Feb 2020 12:20:05 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.43.2.86])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 065B75DDAA;
+        Mon,  3 Feb 2020 12:20:04 +0000 (UTC)
+Subject: Re: [PATCH] megaraid_sas: silence a warning
+To:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        Lee Duncan <lduncan@suse.com>
+Cc:     Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+References: <20200131132350.31840-1-thenzl@redhat.com>
+ <ff50f95a-1885-9fce-946c-f31861c06486@suse.com>
+ <CAL2rwxqDTRmmk_RUEHQpf6MUu5CBaKKBu8W0D3o=y0Yygo6unw@mail.gmail.com>
+From:   Tomas Henzl <thenzl@redhat.com>
+Message-ID: <4fac061b-a026-4b5d-b420-787733b961b5@redhat.com>
+Date:   Mon, 3 Feb 2020 13:20:04 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 31105a18-7f74-48b3-a7d7-08d7a8a037e7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Feb 2020 11:57:18.1337
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: wZaOkMNxmKxchIdTOSm5SqZcpxJul4gLyaKNYJDJFW0xI9ZVk8ssiNfXUUf6WnUFQ0+BWVNaeR2fTwbEHjE9V2V32g3pL7hKUGlu0vvHfKY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6685
+In-Reply-To: <CAL2rwxqDTRmmk_RUEHQpf6MUu5CBaKKBu8W0D3o=y0Yygo6unw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2/3/20 10:16 AM, Sumit Saxena wrote:
+> On Sat, Feb 1, 2020 at 10:57 PM Lee Duncan <lduncan@suse.com> wrote:
+>>
+>> On 1/31/20 5:23 AM, Tomas Henzl wrote:
+>>> Add a flag to dma mem allocation to silence a warning.
+>>>
+>>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>>> ---
+>>>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 5 +++--
+>>>  1 file changed, 3 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> index 0f5399b3e..1fa2d1449 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>>> @@ -606,7 +606,8 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
+>>>
+>>>       fusion->io_request_frames =
+>>>                       dma_pool_alloc(fusion->io_request_frames_pool,
+>>> -                             GFP_KERNEL, &fusion->io_request_frames_phys);
+>>> +                             GFP_KERNEL | __GFP_NOWARN,
+>>> +                             &fusion->io_request_frames_phys);
+>>>       if (!fusion->io_request_frames) {
+>>>               if (instance->max_fw_cmds >= (MEGASAS_REDUCE_QD_COUNT * 2)) {
+>>>                       instance->max_fw_cmds -= MEGASAS_REDUCE_QD_COUNT;
+>>> @@ -644,7 +645,7 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
+>>>  open-isns-updates.diff.bz2
+>>>               fusion->io_request_frames =
+>>>                       dma_pool_alloc(fusion->io_request_frames_pool,
+>>> -                                    GFP_KERNEL,
+>>> +                                    GFP_KERNEL | __GFP_NOWARN,
+>>>                                      &fusion->io_request_frames_phys);
+>>>
+>>>               if (!fusion->io_request_frames) {
+>>>
+>>
+>> I'm fairly sure this is a good fix, but I'd appreciate more information
+>> in the comment, such as what warning was silenced, and why it's okay to
+>> silence it rather than "fix" it. I know from experience that, when
+>> choosing which commits to backport, more information is better than less.
+> This code allocates DMA memory for driver's IO frames which may exceed
+> MAX_ORDER pages for few
+> megaraid_sas controllers(controllers with High Queue Depth). So there
+> is logic to keep on reducing controller
+> Queue Depth until DMA memory required for IO frames fits within
+> MAX_ORDER. So or impacted megaraid_sas controllers,
+> there would be multiple DMA allocation failure until driver settles
+> down to Controller Queue Depth which has memory requirement
+> within MAX_ORDER. These failed DMA allocation requests causes stack
+> traces in system logs which is not harmful and this patch
+> would silence those warnings/stack traces.
+> 
+> With CMA (Contiguous Memory Allocator) enabled, it's possible  to
+> allocate DMA memory exceeding MAX_ORDER.
+> And that is the reason of keeping this retry logic with less
+> controller Queue Depth instead of calculating controller Queue depth
+> at first hand which has memory requirement less than MAX_ORDER.
+
+Thank you Sumit for writing it down.
+An over-sized allocation failure is sanitized in a proper way. The
+warning may hide other allocation warnings in other parts of kernel as
+it is printed only once.
+
+I could have written more vecasue I've underestimated it and I'm sorry
+for that.
+
+Tomas
 
 
-> -----Original Message-----
-> From: Guenter Roeck <groeck7@gmail.com> On Behalf Of Guenter Roeck
-> Sent: Sunday, February 2, 2020 9:21 PM
-> To: Avi Shchislowski <Avi.Shchislowski@wdc.com>
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
-> <Avri.Altman@wdc.com>; James E.J. Bottomley <jejb@linux.ibm.com>;
-> Martin K. Petersen <martin.petersen@oracle.com>; linux-
-> kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
->=20
-=20
-> On Sun, Feb 02, 2020 at 12:46:54PM +0200, Avi Shchislowski wrote:
-> > UFS3.0 allows using the ufs device as a temperature sensor. The
-> > purpose of this feature is to provide notification to the host of the
-> > UFS device case temperature. It allows reading of a rough estimate
-> > (+-10 degrees centigrade) of the current case temperature, And setting
-> > a lower and upper temperature bounds, in which the device will trigger
-> > an applicable exception event.
-> >
-> > We added the capability of responding to such notifications, while
-> > notifying the kernel's thermal core, which further exposes the thermal
-> > zone attributes to user space. UFS temperature attributes are all
-> > read-only, so only thermal read ops (.get_xxx) can be implemented.
-> >
->=20
-> Can you add an explanation why this can't be added to the just-introduced
-> 'drivetemp' driver in the hwmon subsystem, and why it make sense to have
-> proprietary attributes for temperature and temperature limits ?
->=20
 > Thanks,
-> Guenter
->=20
-Hi Guenter
+> Sumit
+>>
+>> --
+>> Lee Duncan
+> 
 
-Thank you for your comment
-
-The ufs device is not a temperature sensor per-se.  It is, first and foremo=
-st, a storage device.
-Reporting the device case temperature is a feature added in a recently rele=
-ased UFS spec (UFS3.0).
-Therefore, adding a thermal-core module, in opposed to hwmon module, seemed=
- more appropriate.
-Registering a hwmon device look excessive, as no other hw-monitoring attrib=
-ute is available - aside temperature.
-
-Using Martin's tree, I wasn't able to locate the 'drivetemp' module, nor an=
-y reference to  it in the hwmon documentation.
-
-> > Avi Shchislowski (5):
-> >   scsi: ufs: Add ufs thermal support
-> >   scsi: ufs: export ufshcd_enable_ee
-> >   scsi: ufs: enable thermal exception event
-> >   scsi: ufs-thermal: implement thermal file ops
-> >   scsi: ufs: temperature atrributes add to ufs_sysfs
->=20
-> attributes
