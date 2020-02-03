@@ -2,188 +2,141 @@ Return-Path: <SRS0=0hmW=3X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0998C35249
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 16:30:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FD4C35247
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 21:30:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 74AF320838
-	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 16:30:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07DA920658
+	for <linux-scsi@archiver.kernel.org>; Mon,  3 Feb 2020 21:30:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="aVn9RNE1";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="DvArOm4Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729925AbgBCQaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Feb 2020 11:30:08 -0500
-Received: from m4a0072g.houston.softwaregrp.com ([15.124.2.130]:45532 "EHLO
-        m4a0072g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729418AbgBCQaH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 11:30:07 -0500
-Received: FROM m4a0072g.houston.softwaregrp.com (15.120.17.146) BY m4a0072g.houston.softwaregrp.com WITH ESMTP;
- Mon,  3 Feb 2020 16:28:36 +0000
-Received: from M9W0068.microfocus.com (2002:f79:bf::f79:bf) by
- M4W0334.microfocus.com (2002:f78:1192::f78:1192) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Mon, 3 Feb 2020 16:29:19 +0000
-Received: from NAM02-CY1-obe.outbound.protection.outlook.com (15.124.72.12) by
- M9W0068.microfocus.com (15.121.0.191) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Mon, 3 Feb 2020 16:29:19 +0000
+        id S1726872AbgBCVaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Feb 2020 16:30:00 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:48200 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726278AbgBCVaA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 16:30:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1580765399; x=1612301399;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=T5JeN45QnDNMVLmG/LU3J8n+j03nYs/4xr2EGmeydy4=;
+  b=aVn9RNE1OFdLESUCQFqmju+nOEU7F1SHLlDNZrCnM/SIrWRrQDk/UjfM
+   RELm6wBOfhtx/QVWmoQ4V8osqJEHY0PTCI3Ktmf916lkz+msqY/g4UbeG
+   FMiwNNT0nUPMKA8PboJyVggcpCM7hCpaZuU+xWRS+qBGH0rBCPxCzfgyl
+   +GoUz3b5X6oe80v+v07jxceTzsSPmYT/Jg7nvMwvObCuElZcdL2ASQIq+
+   MqX1m9wlzabqYnCW0Aapaz0NvUYc4b3Veh2tAAHIM5UV0W0fOOUc5WfC7
+   K+M4pKMqquQBmJ+j3lFA4Swo8aehyMs8rKtmnsa3leQIydfkTSrBlkahb
+   A==;
+IronPort-SDR: HLSzfg1CdScC+fNNSLbigt/BhAmUxhhGT8NSSfD8Bnyo0rwKZPlFFO11daM4CYzzr2OQOHEMsc
+ S3dozOoovrfHcqe1YvvWIiZzGUjnCxenSbw/hAxp0plSFDr18xGDLHj/kEJoDmlXTEOU8fXoPq
+ /wVjWrSfhvWy6aAarIQLROl7sIu2z/9gAA94OujQdsnAYworNiGJGo4OFrcKg0vW41g2Tv9ifL
+ Brx+7PaxkyalH2yR6kCIFbEDIvT00foHspZIZ4xRpG/l+s8UtnNSwgKKDvedTMLQLwngMTkEwD
+ x44=
+X-IronPort-AV: E=Sophos;i="5.70,398,1574092800"; 
+   d="scan'208";a="236969350"
+Received: from mail-co1nam11lp2171.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.171])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2020 05:29:58 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OW7lZb0FMGlO2K5HbYUk5tyGLIBesnYexX7Eu71UbpRtuiksagLTo7srlaxQn0+kV7GPMjB0wzvynSm8yfaFkl3OTnHOKgvXIO79vVyn/hh82GXihKFPSpdiw+bnYCgfPZSuX79VYBV49qxNvuwg1sU2XboDzLG2dwFKIwlWXzgAYyhpMajjJTVYkjqs8VdLSshdIBtbcKU5RvrYe1z41bSrQB1Xd6yS7d9IvRAF0ltmmJVdVTJ1IBhqHLgenxmrPdvhAgILqC2smYgj/DVKdupmCy+mOjUoIDll9MYl/mNRZyPJBNutEPGZdep5lsc+uT1YPj/3TiAy9ID6p928fA==
+ b=X/tYH+nY5ibwM/JPWa00gmTJWXt1EVx3laNTUTfZ98h9xZLWXBKDRsv1vYKU0XnNN8/f9f/aLeMjfteHQ9x+G9G6CPljDbPH2sb/czrs7igY8ADxZGxfYx8SfuNrHMYxf6ceuxBucrLjDOnn6ha6aFjbCLCKjodt9jhebV85OfXjBxfaZkdHn+2aE8o6D5ANxiaK1rGCBI8yo2kS5PUBlaLbkppMFA9HMq+nYPHw5+kav2kWgqOFOGwEuE5QVZBRcuaUUNG6CMegLaXj562SBcZHnS7l7v0mUNkhM6F23p5XXTQ8XDV6bcBDs+0K5uJO1IGFuj+PGtTZ/8xx0frRWA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XbvrxZsUTex/uaFtba2/6ycgPtDfDa/xhpeIyTXxzHU=;
- b=LN1x0IbGlcen3xdhLvBMre5bByfTPK4jyfluaQF71ZbuUJW6gvbKg5ndxzyJLnsS4I52ORRAT9mXDDgT0KZv/TOUHDHz6XynmeL/b4b9AhG5Y90UxnQ71b4XxexqrfRxYRWLTb9i6BAafGEDCJNNA4lTc+65WtH+9toSbaIM61qCHIKbB4ceYvGMprqrn+j0neMdgTOUnv9OWSEUT0qnt66Usf7dBuKS8rSVdNa6RBuC/qjSQ7Fdpza2vtpxbjwVAL5XQNGlnDjJLpm4NxaUotGe8tg+F6jmRHtf/2L/pStnh1gNSfEYXcGbtb0TSB+DN8vB9zoH72mFknIRTAKvDQ==
+ bh=T5JeN45QnDNMVLmG/LU3J8n+j03nYs/4xr2EGmeydy4=;
+ b=Eq6KhgDsQ80C8UdDU7OOdAOBXCKVavMmljHUXEUQznOveu93ORr3dJhmVubjKxDf6ze9jX5e27fcYdmh8CeJSf0wCGtPaGhihiGw8S6JHxbTiZadZ2qc6gu2U+wae+hUwnkOeP/BM/bO4KZMkoaIZL5ab7LDREl83Acxh5KutqpWBd54peWDb2hYIFB9rbDp71Sqsrl/rqkYZ1VqjEcx7bFuM7ln8SxMnNs79BIgMLOMLpFBnZ/KYnP+C/xF0LlYWfeKlMKikzO7IuHGjCXIpE6GgSiOtyixNPsU8CRgP6PjmguQFeV/+5Tipx1KxAHbsIOycenkqVcnnNYTKoD46A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: spf=none (sender IP is )
- smtp.mailfrom=LDuncan@suse.com; 
-Received: from MN2PR18MB3278.namprd18.prod.outlook.com (10.255.237.204) by
- MN2PR18MB2592.namprd18.prod.outlook.com (20.179.83.148) with Microsoft SMTP
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=T5JeN45QnDNMVLmG/LU3J8n+j03nYs/4xr2EGmeydy4=;
+ b=DvArOm4Q0+ALMOhisBgigch4ufloYPREQzlAmMp8xX+JWGPHvAhXHH6TaMDeNMXr66ddu5upoQNKvNUWtVToI5MyL6X1gfteUu3+ZZfeZawb9JsxyTF5z+B2av5VZdob85m8UMq9t9hmlUN0ngUCowVbDTf++UhC4PjMVR2QpR4=
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
+ MN2PR04MB6415.namprd04.prod.outlook.com (52.132.168.213) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2686.30; Mon, 3 Feb 2020 16:29:17 +0000
-Received: from MN2PR18MB3278.namprd18.prod.outlook.com
- ([fe80::3050:6182:4666:6784]) by MN2PR18MB3278.namprd18.prod.outlook.com
- ([fe80::3050:6182:4666:6784%5]) with mapi id 15.20.2686.031; Mon, 3 Feb 2020
- 16:29:17 +0000
-Subject: Re: [PATCH] megaraid_sas: silence a warning
-To:     Tomas Henzl <thenzl@redhat.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>
-CC:     Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-References: <20200131132350.31840-1-thenzl@redhat.com>
- <ff50f95a-1885-9fce-946c-f31861c06486@suse.com>
- <CAL2rwxqDTRmmk_RUEHQpf6MUu5CBaKKBu8W0D3o=y0Yygo6unw@mail.gmail.com>
- <4fac061b-a026-4b5d-b420-787733b961b5@redhat.com>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <92ecd372-7798-98ec-cfa2-ae1d7532028a@suse.com>
-Date:   Mon, 3 Feb 2020 08:29:10 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-In-Reply-To: <4fac061b-a026-4b5d-b420-787733b961b5@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+ 15.20.2686.27; Mon, 3 Feb 2020 21:29:58 +0000
+Received: from MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::b870:3f25:f3be:535d]) by MN2PR04MB6991.namprd04.prod.outlook.com
+ ([fe80::b870:3f25:f3be:535d%2]) with mapi id 15.20.2686.025; Mon, 3 Feb 2020
+ 21:29:58 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Guenter Roeck <linux@roeck-us.net>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>
+CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
+Thread-Topic: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
+Thread-Index: AQHV2bYgyCYLCd8TvkGCDJX1L0irp6gISGeAgAEWVwCAAC+qAIAAZ98A
+Date:   Mon, 3 Feb 2020 21:29:57 +0000
+Message-ID: <MN2PR04MB69910152F14A7D481029E4ECFC000@MN2PR04MB6991.namprd04.prod.outlook.com>
+References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
+ <20200202192105.GA20107@roeck-us.net>
+ <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
+ <94cb1e97-18ed-ebec-23c2-b4d87434726a@roeck-us.net>
+In-Reply-To: <94cb1e97-18ed-ebec-23c2-b4d87434726a@roeck-us.net>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LNXP265CA0001.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:5e::13) To MN2PR18MB3278.namprd18.prod.outlook.com
- (2603:10b6:208:168::12)
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [2a00:a040:19b:4327:f9eb:12cc:8585:ceaa]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 948c1c0a-439a-495f-c7c7-08d7a8f037ed
+x-ms-traffictypediagnostic: MN2PR04MB6415:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR04MB64157893F03BAE53B1271FC0FC000@MN2PR04MB6415.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 0302D4F392
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(376002)(39860400002)(346002)(396003)(136003)(199004)(189003)(71200400001)(33656002)(55016002)(76116006)(86362001)(4326008)(81166006)(81156014)(8936002)(66946007)(8676002)(316002)(9686003)(54906003)(6506007)(110136005)(186003)(7696005)(6636002)(478600001)(5660300002)(4744005)(2906002)(52536014)(64756008)(66446008)(66476007)(66556008);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6415;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: m17UDNxdWvgUYdk7wI4CsCGyPw5EuqzETAaJRx6m1LTIjtvl4OhVH/Qq9jDQrTqHzs/9cJQhWfnSc84c2/2sYwXgoBEcwsP0CFABfXHsYv54LWo3vpOnQOzOpZ5cp0qARF3A0fj76KLlrAKOxN6zC0ZYyNOEcWuIOVsICFzdbevhvJibIGRF4INGXHM3nxZMPqtgXF/gd6G3WMGMqI/ZTfIKTJ07EfdNkGrC93AYD6LzU7WYrRCNH1l7CdH1j+xSlo4QpxAl+78FEY4cw3VFhIQXvZGLHJWcE8OO+aQK8iU3ZI8G4zQHf5+JSdcYvfU121CDGlv3zs85eITkdGouNP3EhqwNfMHZikw8aue+zTd72WPMYW77U8WKspYsJzZ8+NBw+oi0U8Sq7NcEZmawNTfABJXoicstQMpmWbBpW2C/4aGv/oLYmBtI3zJ/s8D4
+x-ms-exchange-antispam-messagedata: 2IhrvTWUj9b8K7ktM8TlkQqpsHUF2rY2oiC6VyyxCyzxTAQoRLzAwQkrgrKi8Zs5DBHJrn2gl/pKeBBGUBrb9B+7RGtC5DNLrxflD678q1MuP77tFePkASB+d8+U488AQUXddg4FbENM8F7Tt59FFfDQmR4qhyvkvthOnoIsOVoCAeYXdQXeRTfmNLdikPEyCyCbHlu7N8oGPldKC3rJ9g==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Received: from [192.168.20.3] (73.25.22.216) by LNXP265CA0001.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:5e::13) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2686.29 via Frontend Transport; Mon, 3 Feb 2020 16:29:16 +0000
-X-Originating-IP: [73.25.22.216]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4868dc67-9914-40ca-9152-08d7a8c63700
-X-MS-TrafficTypeDiagnostic: MN2PR18MB2592:
-X-Microsoft-Antispam-PRVS: <MN2PR18MB2592CD1548CD267A0F597692DA000@MN2PR18MB2592.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
-X-Forefront-PRVS: 0302D4F392
-X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(366004)(396003)(376002)(346002)(39860400002)(189003)(199004)(6486002)(31686004)(478600001)(26005)(53546011)(81156014)(81166006)(16576012)(8676002)(8936002)(6666004)(86362001)(2906002)(4326008)(31696002)(66476007)(66556008)(66946007)(316002)(54906003)(110136005)(186003)(36756003)(16526019)(52116002)(2616005)(956004)(5660300002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR18MB2592;H:MN2PR18MB3278.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-Received-SPF: None (protection.outlook.com: suse.com does not designate
- permitted sender hosts)
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: /kFcH9FdwVaG+XZxPjrYZ69SQ5ofJP3XZ0u3Oi8LCx2y3nf9+bMBdIyVzDU3VspjZ2JbmYPu4rHpgrHE3/PhHfGxqWNjLfKqeVabrSPoJk74FclIkZcg9j1Xav8szsT+6A5tbFBPL+6CLTIO90v8MYHtEHApYjN9FolHVxXseIweWyjAS4ERoFcFhSuxHZma4VVn7PQDoGTwFs5HUoLfRFw4zr7HhTSNLHNYXFsaGKo0nPR6MipvSMZUDvfanvDeoLe51yRFfCVeB6C1SjlRCC0GSCNagfvV0DKNcA4Amb/EiUx7LqXScTspNuCGH5luGXhsorIGdjuP4plmp7OAgyrXJf5J7+v0OcOzts3idaluvajyoDsbBAuUiwyrNGoefEGWAx3d06nlzn3spgHMMwx4kwnwPBzs4tJiWdqkpgBQ1xMHiH2+ltvcMTrCQF+Y
-X-MS-Exchange-AntiSpam-MessageData: KRCadjmJhjxpuDqDBGdKUQDVn6E1dTHJGoQPH4JXHQuYFQnMmgcSxla+eByeAvzBgLPUb9f91JYHtrdeGuratNNyOCXHJZpCFuOq2MwrEJmKOuEUTBjDApsA1EvZHKvqL4G3t1DcWOJmin2U5XAdvw==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4868dc67-9914-40ca-9152-08d7a8c63700
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Feb 2020 16:29:17.8358
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 948c1c0a-439a-495f-c7c7-08d7a8f037ed
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Feb 2020 21:29:57.8250
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4c+LzPWXtVTsOSagWZh0t3onUJWsbfKb2VHPbQSa0ZKFac2loWLoNNTlUsFdmW7xbVpi7PfTpnlJwT9crAry+Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2592
-X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: hn1iAG+86LOIE5+lpz2LZJMIriTtb7fR7348X0Wxf6UgqPMewlX1cV96Snk+8rC9Fae0tm4ggql4BhkkzwOIOw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6415
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/3/20 4:20 AM, Tomas Henzl wrote:
-> On 2/3/20 10:16 AM, Sumit Saxena wrote:
->> On Sat, Feb 1, 2020 at 10:57 PM Lee Duncan <lduncan@suse.com> wrote:
->>>
->>> On 1/31/20 5:23 AM, Tomas Henzl wrote:
->>>> Add a flag to dma mem allocation to silence a warning.
->>>>
->>>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
->>>> ---
->>>>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 5 +++--
->>>>  1 file changed, 3 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>>> index 0f5399b3e..1fa2d1449 100644
->>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->>>> @@ -606,7 +606,8 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
->>>>
->>>>       fusion->io_request_frames =
->>>>                       dma_pool_alloc(fusion->io_request_frames_pool,
->>>> -                             GFP_KERNEL, &fusion->io_request_frames_phys);
->>>> +                             GFP_KERNEL | __GFP_NOWARN,
->>>> +                             &fusion->io_request_frames_phys);
->>>>       if (!fusion->io_request_frames) {
->>>>               if (instance->max_fw_cmds >= (MEGASAS_REDUCE_QD_COUNT * 2)) {
->>>>                       instance->max_fw_cmds -= MEGASAS_REDUCE_QD_COUNT;
->>>> @@ -644,7 +645,7 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
->>>>  open-isns-updates.diff.bz2
->>>>               fusion->io_request_frames =
->>>>                       dma_pool_alloc(fusion->io_request_frames_pool,
->>>> -                                    GFP_KERNEL,
->>>> +                                    GFP_KERNEL | __GFP_NOWARN,
->>>>                                      &fusion->io_request_frames_phys);
->>>>
->>>>               if (!fusion->io_request_frames) {
->>>>
->>>
->>> I'm fairly sure this is a good fix, but I'd appreciate more information
->>> in the comment, such as what warning was silenced, and why it's okay to
->>> silence it rather than "fix" it. I know from experience that, when
->>> choosing which commits to backport, more information is better than less.
->> This code allocates DMA memory for driver's IO frames which may exceed
->> MAX_ORDER pages for few
->> megaraid_sas controllers(controllers with High Queue Depth). So there
->> is logic to keep on reducing controller
->> Queue Depth until DMA memory required for IO frames fits within
->> MAX_ORDER. So or impacted megaraid_sas controllers,
->> there would be multiple DMA allocation failure until driver settles
->> down to Controller Queue Depth which has memory requirement
->> within MAX_ORDER. These failed DMA allocation requests causes stack
->> traces in system logs which is not harmful and this patch
->> would silence those warnings/stack traces.
->>
->> With CMA (Contiguous Memory Allocator) enabled, it's possible  to
->> allocate DMA memory exceeding MAX_ORDER.
->> And that is the reason of keeping this retry logic with less
->> controller Queue Depth instead of calculating controller Queue depth
->> at first hand which has memory requirement less than MAX_ORDER.
-> 
-> Thank you Sumit for writing it down.
-> An over-sized allocation failure is sanitized in a proper way. The
-> warning may hide other allocation warnings in other parts of kernel as
-> it is printed only once.
-> 
-> I could have written more vecasue I've underestimated it and I'm sorry
-> for that.
-> 
-> Tomas
-
-No problem! Thank you for adding this. Can you resubmit with this info?
-
-If you're not familiar with submitting a 2nd version (V2), please look
-at the mailing list archives (or email me directly for advice).
-
-I'd be glad to add my reviewed tag once the patch is updated.
-
-> 
-> 
->> Thanks,
->> Sumit
->>>
->>> --
->>> Lee Duncan
->>
-> 
-
+PiA+PiBDYW4geW91IGFkZCBhbiBleHBsYW5hdGlvbiB3aHkgdGhpcyBjYW4ndCBiZSBhZGRlZCB0
+byB0aGUganVzdC0NCj4gaW50cm9kdWNlZA0KPiA+PiAnZHJpdmV0ZW1wJyBkcml2ZXIgaW4gdGhl
+IGh3bW9uIHN1YnN5c3RlbSwgYW5kIHdoeSBpdCBtYWtlIHNlbnNlIHRvDQo+IGhhdmUNCj4gPj4g
+cHJvcHJpZXRhcnkgYXR0cmlidXRlcyBmb3IgdGVtcGVyYXR1cmUgYW5kIHRlbXBlcmF0dXJlIGxp
+bWl0cyA/DQoNCg0KR3VlbnRlciBoaSwNClllYWggLSBJIHNlZSB5b3VyIHBvaW50LiBCdXQgaGVy
+ZSBpcyB0aGUgdGhpbmcgLSANClVGUyBkZXZpY2VzIHN1cHBvcnQgb25seSBhIHN1YnNldCBvZiBz
+Y3NpIGNvbW1hbmRzLg0KSXQgZG9lcyBub3Qgc3VwcG9ydCBBVEFfMTYgbm9yIFNNQVJUIGF0dHJp
+YnV0ZXMuDQpNb3Jlb3ZlciwgeW91IGNhbid0IHJlYWQgVUZTIGF0dHJpYnV0ZXMgdXNpbmcgYW55
+IG90aGVyIHNjc2kvQVRBL1NBVEENCkNvbW1hbmRzLCBub3IgaXQgb2JleSB0aGUgQVRBIHRlbXBl
+cmF0dXJlIHNlbnNpbmcgY29udmVudGlvbnMuDQpTbyB1bmxlc3MgeW91IHdhbnQgdG8gdG90YWxs
+eSBicmVhayB0aGUgbmV3bHkgYm9ybiBkcml2ZXRlbXAgLSANCkJldHRlciB0byBsZWF2ZSB1ZnMg
+ZGV2aWNlcyBvdXQgb2YgaXQuDQoNCkFub3RoZXIgb3B0aW9uIGlzIHRvIHB1dCBhIHVmcyBtb2R1
+bGUgdW5kZXIgaHdtb24uDQpEbyB5b3Ugc2VlIHdoeSB3b3VsZCB0aGF0IGJlIG1vcmUgYWR2YW50
+YWdlb3VzIHRvIHVzaW5nIHRoZSB0aGVybWFsIGNvcmU/DQpQcm92aWRlZCB0aGF0IHlvdSBhcmUg
+bm90IGdvaW5nIHRvIGRlcHJlY2F0ZSBpdCAoSW50ZWwncyB3aWZpIGNhcmQgaXMgc3RpbGwgdXNp
+bmcgaXQpLi4uDQoNCkFzIGZvciBhZGRpbmcgdGhvc2UgYXR0cmlidXRlcyB0byB1ZnMtc3lzZnMg
+LSANCnRoaXMgaXMganVzdCBhIHN1cHBsZW1lbnRhcnkgYXMgYWxsIG90aGVyIGF0dHJpYnV0ZXMg
+YXJlIGV4cG9zZWQgdGhpcyB3YXkuDQoNClRoYW5rcywNCkF2cmkgDQoNCg==
