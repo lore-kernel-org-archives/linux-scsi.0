@@ -2,161 +2,139 @@ Return-Path: <SRS0=WdRn=3Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
+	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56FD9C3524A
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 03:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E43C3524F
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 03:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DC8720732
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 03:13:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 341192087E
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 03:39:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="V35oksgS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727090AbgBDDM7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 3 Feb 2020 22:12:59 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:38850 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726984AbgBDDM7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 22:12:59 -0500
-Received: by mail-pf1-f194.google.com with SMTP id x185so8688206pfc.5;
-        Mon, 03 Feb 2020 19:12:58 -0800 (PST)
+        id S1726992AbgBDDjX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 3 Feb 2020 22:39:23 -0500
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:36683 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726930AbgBDDjX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Feb 2020 22:39:23 -0500
+Received: by mail-pj1-f68.google.com with SMTP id gv17so738346pjb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Feb 2020 19:39:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=mPedbGLBNu2L3k6HSm0HBzkbV9veK3pUwD/I6GC5AJI=;
+        b=V35oksgSkm4ljAJXfpnCVS3GtTn17dSUeg2MvjUD8k9o4vbf9KU6/80bq/BynnK1Qf
+         IsJGGcd5RzKRTU+nuDS2OYIOc9FrCpdpjRZyPBPFE4VGdh8TVYGf/KZWj18ekArH9rB1
+         w8p1F8d+QpPkaiSpRGyBDkj03c0jf2DQ57xf2Mxcugwiy69Pm15KEyOVkkUu7FV9znsq
+         UVvWnmAFcbKMwQUVUJe/J9SizvP5DudE2sXnJ5u1ewncR+bSgjEEpmtsP8PzxWChcBCK
+         6pM/4UvjdlaLkbLMTSJpg7PKD37OS6sT9PM/ja7gJe1oJXxJfSA2WaA9rGwsQ7HAVGGd
+         1tug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=M+auj8u/G0hOUSjRgclLo4TJfIPU+Iqke+O3mqmT0Qg=;
-        b=h/JrE5AKgR3ENXpzdpExp8wBQgLkJ4WYPh7xwn77Gc1AU39JugJcRaN8RpyASAEzsT
-         BpvVqEIvkiYbKuC0exEpFBov46JYVwBlJs4TjxcUUj/9x7teRdyHCGNCg5ZHx9nlkpkY
-         ScWmTCKvzg47Ky6V0sK2J7FZ0bbqczCqkidQ6Q4fjWCU28gTuab1rhyF6Ff8Eeu2sIft
-         cvc/7pwTgFAu+f8zpoOfYCFEdX3Lu5lWgAwO1/6GpMSI+zOxJivVYQh5NbEwLIb5KouG
-         WqWYRtLtFlZl6b5T4qb6Tb6NJeo7+sYSRlpYpoE1q5lv2wcxmZXJtt2eiaGqpF2cbogw
-         sKEw==
-X-Gm-Message-State: APjAAAXB608Qhtk2mFPxjDtK0zKOyJ2sP89qXHK9GRzC1/Z877T8wfMF
-        eukqaO6AhKG0aGnoBch8gDVNbGSl
-X-Google-Smtp-Source: APXvYqxOmjEmEQQTHoXRq/1SojYDnyCpu0Vw8WNDCoHImQKkLHAzJTjo6LFTEDdxELBpKTkQeHOtug==
-X-Received: by 2002:a63:646:: with SMTP id 67mr11747056pgg.376.1580785977499;
-        Mon, 03 Feb 2020 19:12:57 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:39ff:b3e1:a9e7:4382? ([2601:647:4000:d7:39ff:b3e1:a9e7:4382])
-        by smtp.gmail.com with ESMTPSA id d69sm19765959pfd.72.2020.02.03.19.12.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Feb 2020 19:12:56 -0800 (PST)
-Subject: Re: [PATCH v4 1/8] scsi: ufs: Flush exception event before suspend
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Sayali Lokhande <sayalil@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1579764349-15578-1-git-send-email-cang@codeaurora.org>
- <1579764349-15578-2-git-send-email-cang@codeaurora.org>
- <525e4f67-f471-54a6-aaea-b3772a550af1@acm.org>
- <82723efc44714e8677505cb7999d3fd5@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <12716695-d9a3-a40c-e563-fa0365183b0e@acm.org>
-Date:   Mon, 3 Feb 2020 19:12:55 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=mPedbGLBNu2L3k6HSm0HBzkbV9veK3pUwD/I6GC5AJI=;
+        b=SX5qIJE0EIBceaOeEX9pIJt2kORB3LbmCUbJUzUWxBBemmxoknAU1eSWjexVKgzD6O
+         9xYXglwki/Tq2HnvLnIKZplOZCpoCvVv0Uc5bGWHKQZ1KSPHKazej21JOHewL0roS5Sz
+         3uS9dm5Gxhx/ds9jW6veSora/pKksSE5Z5yKEfLwWQi+4cMufOE+BwnKP8sC/Hhmx66O
+         m0R0aD10lhV+Sl/AMMDJczRJcr3Bhjbio7QPeiJmLyL8j/h/BjypL58cxHMHRIddyzm3
+         nK4VzJqZ82e/gFX+PsKBs0od2a7YADtWQUOkRF+0kLQ8/7pwyXRlQD1Q+P+70nDd4Isf
+         rYxw==
+X-Gm-Message-State: APjAAAWwoVzTiQnuaA6Oz3CejbEQCOCRZkvp53MsDwW2krhS4b9Wa8K9
+        Y16t29PmTQsA6L7abF6DZHlX8g==
+X-Google-Smtp-Source: APXvYqw1B1BjXGg0r30M6wu7yNLM6kBYQXBj/o7bHXB1/TSf0blx3HAUudnmN5lGww82QU4/vn4Bug==
+X-Received: by 2002:a17:902:8b85:: with SMTP id ay5mr25055691plb.253.1580787560953;
+        Mon, 03 Feb 2020 19:39:20 -0800 (PST)
+Received: from google.com ([2620:15c:201:0:7f8c:9d6e:20b8:e324])
+        by smtp.gmail.com with ESMTPSA id g10sm10397099pfo.166.2020.02.03.19.39.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Feb 2020 19:39:20 -0800 (PST)
+Date:   Mon, 3 Feb 2020 19:39:15 -0800
+From:   Satya Tangirala <satyat@google.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v6 0/9] Inline Encryption Support
+Message-ID: <20200204033915.GA122248@google.com>
+References: <20191218145136.172774-1-satyat@google.com>
+ <20200108140556.GB2896@infradead.org>
+ <20200108184305.GA173657@google.com>
+ <20200117085210.GA5473@infradead.org>
+ <20200201005341.GA134917@google.com>
+ <20200203091558.GA28527@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <82723efc44714e8677505cb7999d3fd5@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200203091558.GA28527@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-02 22:23, Can Guo wrote:
-> On 2020-01-26 11:29, Bart Van Assche wrote:
->> On 2020-01-22 23:25, Can Guo wrote:
->>>              break;
->>>          case UPIU_TRANSACTION_REJECT_UPIU:
->>>              /* TODO: handle Reject UPIU Response */
->>> @@ -5215,7 +5222,14 @@ static void
->>> ufshcd_exception_event_handler(struct work_struct *work)
->>>
->>>  out:
->>>      scsi_unblock_requests(hba->host);
->>> -    pm_runtime_put_sync(hba->dev);
->>> +    /*
->>> +     * pm_runtime_get_noresume is called while scheduling
->>> +     * eeh_work to avoid suspend racing with exception work.
->>> +     * Hence decrement usage counter using pm_runtime_put_noidle
->>> +     * to allow suspend on completion of exception event handler.
->>> +     */
->>> +    pm_runtime_put_noidle(hba->dev);
->>> +    pm_runtime_put(hba->dev);
->>>      return;
->>>  }
->>>
->>> @@ -7901,6 +7915,7 @@ static int ufshcd_suspend(struct ufs_hba *hba,
->>> enum ufs_pm_op pm_op)
->>>              goto enable_gating;
->>>      }
->>>
->>> +    flush_work(&hba->eeh_work);
->>>      ret = ufshcd_link_state_transition(hba, req_link_state, 1);
->>>      if (ret)
->>>          goto set_dev_active;
->>
->> I think this patch introduces a new race condition, namely the following:
->> - ufshcd_slave_destroy() tests pm_op_in_progress and reads the value
->>   zero from that variable.
->> - ufshcd_suspend() sets hba->pm_op_in_progress to one.
->> - ufshcd_slave_destroy() calls schedule_work().
->>
->> How about fixing this race condition by calling
->> pm_runtime_get_noresume() before checking pm_op_in_progress and by
->> reallowing resume if no work is scheduled?
+On Mon, Feb 03, 2020 at 01:15:58AM -0800, Christoph Hellwig wrote:
+> On Fri, Jan 31, 2020 at 04:53:41PM -0800, Satya Tangirala wrote:
+> > So I tried reading through more of blk-mq and the IO schedulers to figure
+> > out how to do this. As far as I can tell, requests may be merged with
+> > each other until they're taken off the scheduler. So ideally, we'd
+> > program a keyslot for a request when it's taken off the scheduler, but
+> > this happens from within an atomic context. Otoh, programming a keyslot
+> > might cause the thread to sleep (in the event that all keyslots are in use
+> > by other in-flight requests). Unless I'm missing something, or you had some
+> > other different idea in mind, I think it's a lot easier to stick to letting
+> > blk-crypto program keyslots and manage them per-bio...
 > 
-> If you apply this patch, you will find the change is not in
-> ufshcd_slave_destroy(), but in ufshcd_transfer_rsp_status().
-> So the racing you mentioned above does not exist.
+> But as far as I understand from reading the code it only sleeps because
+> it waits for another key slot to be released.  Which is exactly like
+> any other resource constraint in the storage device.  In that case
+> ->queue_rq returns BLK_STS_RESOURCE (or you do the equivalent in the
+> blk-mq code) and the queue gets woken again once the resource is
+> available.
+Wouldn't that mean that all the other requests in the queue, even ones that
+don't even need any inline encryption, also don't get processed until the
+queue is woken up again? And if so, are we really ok with that?
 
-Hi Can,
+As you said, we'd need the queue to wake up once a keyslot is available.
+It's possible that only some hardware queues and not others get blocked
+because of keyslot programming, so ideally, we could somehow make the
+correct hardware queue(s) wake up once a keyslot is freed. But the keyslot
+manager can't assume that it's actually blk-mq that's being used
+underneath, so if we want to get the keyslot manager to do something once
+a keyslot was freed, it would need some generic way to signal that to
+blk-mq. We can also just wait around for the queue to restart by itself
+after some time delay and try to program the keyslot again at that point,
+although I wouldn't want to do that because in the current design we know
+exactly when a keyslot is freed, and we don't need to rely on potentially
+inefficient guesswork about when we can successfully program a keyslot.
+Maybe we're alright with waking up all the queues rather than only the
+ones that really need it? But in any case, I don't know yet what the
+best way to solve this problem is.
 
-Apparently I got a function name wrong. Can the following race condition
-happen:
-- ufshcd_transfer_rsp_status() tests pm_op_in_progress and reads the
-  value zero from that variable.
-- ufshcd_suspend() sets hba->pm_op_in_progress to one.
-- ufshcd_suspend() calls flush_work(&hba->eeh_work).
-- ufshcd_transfer_rsp_status() calls schedule_work(&hba->eeh_work).
+We would also need to make changes to handle programming keyslots in
+some of the other make_request_fns besides blk_mq_make_request too
+(wherever relevant, at least) which adds more complexity. Overall, it seems
+to me like trying to manage programming of keyslots on a per-request basis
+is maybe more code than what we have now, and I'm not sure what we're
+really buying by doing it (other than perhaps the performance benefit of
+having to get fewer refcounts on a variable and fewer comparisions of
+cryptographic keys).
 
-Thanks,
+Also I forgot to mention this in my previous mail, but there may be some
+drivers/devices whose keyslots cannot be programmed from an atomic context,
+so this approach which might make things difficult in those situations (the
+UFS v2.1 spec, which I followed while implementing support for inline
+crypto for UFS, does not care whether we're in an atomic context or not,
+but there might be specifications for other drivers, or even some
+particular UFS inline encryption hardware that do).
 
-Bart.
+So unless you have strong objections, I'd want to continue programming
+keyslots per-bio for the above reasons.
