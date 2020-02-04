@@ -2,106 +2,114 @@ Return-Path: <SRS0=WdRn=3Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E16C3F68F
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 14:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DC0C35247
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 15:24:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8DB020674
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 14:58:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A8022082E
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 15:24:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jToIu+2g"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jC2lVX+x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727334AbgBDO6e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 09:58:34 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:35520 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727267AbgBDO6e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 09:58:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AfAKF0TXjgF6cXOTs0IpvR8bmv7Y5y+OTvhW+uwkYRk=; b=jToIu+2geApo4hExEekSN8//Dd
-        2Rr+plF0PB/eoNuH+8VtbAXDE4wYNJTu1b6Hwfffr8N7g3sN6DCWKoRtmBGp+SWEVhVij0/295+Xm
-        3KYG9tLY7mPgoajeQTZgnjfrZ6xrGHk8TzUFisU2KUe3DsgMpPSiIh3ixf2CkKWhkGlX/KElGf4dk
-        iZlJn5y8HhHxHYup8syqlIqOrhpMUibNDf2+udSBBTeqGaFZy2Kf3MVIgiD56cJ3muEF4LrO4XjLd
-        fU8nHmNSSwQ/sLJtRKRlo+OkWXSuQnCeW7JZuczjuyrd1raDGzt3bW6Mw90hAGtEGOlHripIRvONT
-        GICtGCaw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iyzeq-0001AI-T3; Tue, 04 Feb 2020 14:58:32 +0000
-Date:   Tue, 4 Feb 2020 06:58:32 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 0/9] Inline Encryption Support
-Message-ID: <20200204145832.GA28393@infradead.org>
-References: <20191218145136.172774-1-satyat@google.com>
- <20200108140556.GB2896@infradead.org>
- <20200108184305.GA173657@google.com>
- <20200117085210.GA5473@infradead.org>
- <20200201005341.GA134917@google.com>
- <20200203091558.GA28527@infradead.org>
- <20200204033915.GA122248@google.com>
+        id S1727318AbgBDPYX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 10:24:23 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:43584 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727305AbgBDPYX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 10:24:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580829861;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=uLNYjInZmuSB8p1vTFVvtLlVJKCKerG2KH+Xn1fvgmI=;
+        b=jC2lVX+x6k876WrRkABoevBLJ5wdEZB5dJe32CrOcbwUy09+N+7O5bU9Ln+eYKHUQZn2nl
+        oDPUr3H5jrgqngj+y5IL046hXZ2eFJxfLBq3BiHbB9yhyRUWTLRPZe1A4CT8dNwOqlUBxp
+        s4iJONBKdn77ks6liShF0MwjlS8KA5M=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-286-ROffcyp5OJun87cGKwsmVg-1; Tue, 04 Feb 2020 10:24:17 -0500
+X-MC-Unique: ROffcyp5OJun87cGKwsmVg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4637ADB23;
+        Tue,  4 Feb 2020 15:24:16 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.43.2.86])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4552C5C1B5;
+        Tue,  4 Feb 2020 15:24:15 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+        lduncan@suse.com
+Subject: [PATCH V2] megaraid_sas: silence a warning
+Date:   Tue,  4 Feb 2020 16:24:13 +0100
+Message-Id: <20200204152413.7107-1-thenzl@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200204033915.GA122248@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Feb 03, 2020 at 07:39:15PM -0800, Satya Tangirala wrote:
-> Wouldn't that mean that all the other requests in the queue, even ones that
-> don't even need any inline encryption, also don't get processed until the
-> queue is woken up again?
+Add a flag to dma mem allocation to silence a warning.
 
-For the basic implementation yes.
+This code allocates DMA memory for driver's IO frames which may exceed
+MAX_ORDER pages for few megaraid_sas controllers(controllers
+with High Queue Depth). So there is logic to keep on reducing controller
+Queue Depth until DMA memory required for IO frames fits within
+MAX_ORDER. So or impacted megaraid_sas controllers,
+there would be multiple DMA allocation failure until driver settles
+down to Controller Queue Depth which has memory requirement
+within MAX_ORDER. These failed DMA allocation requests causes stack
+traces in system logs which is not harmful and this patch
+would silence those warnings/stack traces.
 
-> And if so, are we really ok with that?
+With CMA (Contiguous Memory Allocator) enabled, it's possible  to
+allocate DMA memory exceeding MAX_ORDER.
+And that is the reason of keeping this retry logic with less
+controller Queue Depth instead of calculating controller Queue depth
+at first hand which has memory requirement less than MAX_ORDER.
 
-That depends on the use cases.  With the fscrypt setup are we still
-going to see unencrypted I/O to the device as well?  If so we'll need
-to refine the setup and only queue up unencrypted requests.  But I'd
-still try to dumb version first and then refine it.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+V2: A change in the description, additional information is added,
+kindly written by Sumit.
 
-> As you said, we'd need the queue to wake up once a keyslot is available.
-> It's possible that only some hardware queues and not others get blocked
-> because of keyslot programming, so ideally, we could somehow make the
-> correct hardware queue(s) wake up once a keyslot is freed. But the keyslot
-> manager can't assume that it's actually blk-mq that's being used
-> underneath,
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Why?  The legacy requet code is long gone.
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/m=
+egaraid/megaraid_sas_fusion.c
+index 0f5399b3e..1fa2d1449 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -606,7 +606,8 @@ megasas_alloc_request_fusion(struct megasas_instance =
+*instance)
+=20
+ 	fusion->io_request_frames =3D
+ 			dma_pool_alloc(fusion->io_request_frames_pool,
+-				GFP_KERNEL, &fusion->io_request_frames_phys);
++				GFP_KERNEL | __GFP_NOWARN,
++				&fusion->io_request_frames_phys);
+ 	if (!fusion->io_request_frames) {
+ 		if (instance->max_fw_cmds >=3D (MEGASAS_REDUCE_QD_COUNT * 2)) {
+ 			instance->max_fw_cmds -=3D MEGASAS_REDUCE_QD_COUNT;
+@@ -644,7 +645,7 @@ megasas_alloc_request_fusion(struct megasas_instance =
+*instance)
+=20
+ 		fusion->io_request_frames =3D
+ 			dma_pool_alloc(fusion->io_request_frames_pool,
+-				       GFP_KERNEL,
++				       GFP_KERNEL | __GFP_NOWARN,
+ 				       &fusion->io_request_frames_phys);
+=20
+ 		if (!fusion->io_request_frames) {
+--=20
+2.21.1
 
-> Also I forgot to mention this in my previous mail, but there may be some
-> drivers/devices whose keyslots cannot be programmed from an atomic context,
-> so this approach which might make things difficult in those situations (the
-> UFS v2.1 spec, which I followed while implementing support for inline
-> crypto for UFS, does not care whether we're in an atomic context or not,
-> but there might be specifications for other drivers, or even some
-> particular UFS inline encryption hardware that do).
-
-We have an option to never call ->queue_rq from atomic context
-(BLK_MQ_F_BLOCKING).  But do you know of existing hardware that behaves
-like this or is it just hypothetical?
-
-> So unless you have strong objections, I'd want to continue programming
-> keyslots per-bio for the above reasons.
-
-I'm pretty sure from looking at the code that doing inline encryption
-at the bio level is the wrong approach.  That isn't supposed to end
-the discussion, but especially things like waking up after a keyslot
-becomes available fits much better into the request layer resource
-model that is built around queuing limitations, and not the make_request
-model that assumes the driver can always queue.
