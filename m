@@ -2,126 +2,100 @@ Return-Path: <SRS0=WdRn=3Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 182A1C35247
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 21:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55272C35247
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 21:54:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA56321741
-	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 21:21:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580851274;
-	bh=KKB12bjPksD5iDE0UW+8PafWpWM7BZjKsP6ut1aSK0A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Zo7vnrPrgJuBqrXDZFoL5q6xU2NJ2He+x5kfXPc+qNz6nDu/AkbgkyfygZSqyWeEY
-	 3ZI0KMVDK4q4UHcTCeLEswrlHxK740hIV1aTq1H/T+wdkzkp0++xbBMqIxkKITV9wn
-	 qYiW08SlDkeRWLVBa9em3YqOLgHj7HomIM/B8FNI=
+	by mail.kernel.org (Postfix) with ESMTP id 250992166E
+	for <linux-scsi@archiver.kernel.org>; Tue,  4 Feb 2020 21:54:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UdbqxJiF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727586AbgBDVVO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 16:21:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37454 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727566AbgBDVVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 4 Feb 2020 16:21:14 -0500
-Received: from gmail.com (unknown [104.132.1.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727483AbgBDVyW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 16:54:22 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:53699 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727445AbgBDVyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 16:54:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580853261;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5CGuK6de7SvfrPQGZi9TzjbDs8J5q4lJn/GNUR3tnhw=;
+        b=UdbqxJiFYoeehZPguIyUkk3gVNh1mhxawJqjEKR/OY/jIYBuupPG2ZIgPQwXvpe0SK8N1t
+        g0njC4NVMJ3nFydP5Pf5LKoDtZB09XRE/QDX5KxEc04M0yBk+FRwQNX7lVPLA4jUvy8OKg
+        qGY6I5t2ew0lz05bF3TafebRE7GbcR0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-42-PT4awvMhML6b4fmrJ0uJsA-1; Tue, 04 Feb 2020 16:54:05 -0500
+X-MC-Unique: PT4awvMhML6b4fmrJ0uJsA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EB9E52082E;
-        Tue,  4 Feb 2020 21:21:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580851273;
-        bh=KKB12bjPksD5iDE0UW+8PafWpWM7BZjKsP6ut1aSK0A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oxmTWCjiquUMY/wLyhosQzPiJUtMVJpf+m1lgxRnrRYaMOAsKMe+YztcbPWFAAUfW
-         iI4xdmUCwP/eczU9zRInuGln1AqHPidnOQJDDwEhMnsC7PSPpuh221PGtC+P6WWC9o
-         fNNO9pXc/hjVFXtQuzkp0Oh/c6mafWyPFwBNDC30=
-Date:   Tue, 4 Feb 2020 13:21:11 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 0/9] Inline Encryption Support
-Message-ID: <20200204212110.GA122850@gmail.com>
-References: <20191218145136.172774-1-satyat@google.com>
- <20200108140556.GB2896@infradead.org>
- <20200108184305.GA173657@google.com>
- <20200117085210.GA5473@infradead.org>
- <20200201005341.GA134917@google.com>
- <20200203091558.GA28527@infradead.org>
- <20200204033915.GA122248@google.com>
- <20200204145832.GA28393@infradead.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AA4578010FA;
+        Tue,  4 Feb 2020 21:54:03 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B80325DA84;
+        Tue,  4 Feb 2020 21:54:02 +0000 (UTC)
+Message-ID: <688f38379efc25fb8adde2d5834b150e8db89c38.camel@redhat.com>
+Subject: Re: [PATCH] scsi: return correct status in
+ scsi_host_eh_past_deadline()
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Date:   Tue, 04 Feb 2020 16:54:02 -0500
+In-Reply-To: <20200204102316.39000-1-hare@suse.de>
+References: <20200204102316.39000-1-hare@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200204145832.GA28393@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 04, 2020 at 06:58:32AM -0800, Christoph Hellwig wrote:
-> On Mon, Feb 03, 2020 at 07:39:15PM -0800, Satya Tangirala wrote:
-> > Wouldn't that mean that all the other requests in the queue, even ones that
-> > don't even need any inline encryption, also don't get processed until the
-> > queue is woken up again?
+On Tue, 2020-02-04 at 11:23 +0100, Hannes Reinecke wrote:
+> If the user changed the 'eh_deadline' setting to 'off' while evaluating
+> the time_before() call we will return 'true', which is inconsistent
+> with the first conditional, where we return 'false' if 'eh_deadline'
+> is set to 'off'.
 > 
-> For the basic implementation yes.
+> Reported-by: Martin Wilck <martin.wilck@suse.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/scsi_error.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > And if so, are we really ok with that?
-> 
-> That depends on the use cases.  With the fscrypt setup are we still
-> going to see unencrypted I/O to the device as well?  If so we'll need
-> to refine the setup and only queue up unencrypted requests.  But I'd
-> still try to dumb version first and then refine it.
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index ae2fa170f6ad..ae29a9b4af56 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -113,7 +113,7 @@ static int scsi_host_eh_past_deadline(struct Scsi_Host *shost)
+>  	    shost->eh_deadline > -1)
+>  		return 0;
+>  
+> -	return 1;
+> +	return shost->eh_deadline == -1 ? 0 : 1;
+>  }
+>  
+>  /**
 
-Definitely, for several reasons:
+Hmm.  4 accesses to shost->eh_deadline in the function?
+Why don't we just copy it to a local variable and use that.
 
-- Not all files on the filesystem are necessarily encrypted.
-- Filesystem metadata is not encrypted (except for filenames, but those don't
-  use inline encryption).
-- Encryption isn't necessarily being used on all partitions on the disk.
+-Ewan
 
-It's also not just about unencrypted vs. encrypted, since just because someone
-is waiting for one keyslot doesn't mean we should pause all encrypted I/O to the
-device for all keyslots.
 
-> 
-> > As you said, we'd need the queue to wake up once a keyslot is available.
-> > It's possible that only some hardware queues and not others get blocked
-> > because of keyslot programming, so ideally, we could somehow make the
-> > correct hardware queue(s) wake up once a keyslot is freed. But the keyslot
-> > manager can't assume that it's actually blk-mq that's being used
-> > underneath,
-> 
-> Why?  The legacy requet code is long gone.
-> 
-> > Also I forgot to mention this in my previous mail, but there may be some
-> > drivers/devices whose keyslots cannot be programmed from an atomic context,
-> > so this approach which might make things difficult in those situations (the
-> > UFS v2.1 spec, which I followed while implementing support for inline
-> > crypto for UFS, does not care whether we're in an atomic context or not,
-> > but there might be specifications for other drivers, or even some
-> > particular UFS inline encryption hardware that do).
-> 
-> We have an option to never call ->queue_rq from atomic context
-> (BLK_MQ_F_BLOCKING).  But do you know of existing hardware that behaves
-> like this or is it just hypothetical?
 
-Maybe -- check the Qualcomm ICE (Inline Crypto Engine) driver I posted at
-https://lkml.kernel.org/linux-block/20200110061634.46742-1-ebiggers@kernel.org/.
-The hardware requires vendor-specific SMC calls to program keys, rather than the
-UFS standard way.  It's currently blocking, since the code to make the SMC calls
-in drivers/firmware/qcom_scm*.c uses GFP_KERNEL and mutex_lock().
 
-I'll test whether it can work in atomic context by using GFP_ATOMIC and
-qcom_scm_call_atomic() instead.  (Adding a spinlock might be needed too.)
-
-- Eric
