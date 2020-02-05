@@ -2,133 +2,106 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4E1C3524D
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:26:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 387DAC35247
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5181A21744
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:26:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05D1A21744
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:30:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="sHmoObS4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BYwAMglq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbgBEC0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 21:26:39 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:42126 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727140AbgBEC0i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:26:38 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580869597; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Pgq9KvjPRshhckyUvQfLK0OTeO6Xr6mnSEYtpz2S3GE=;
- b=sHmoObS4E3jnWjSxplM24CoB0oDzOE35gn2kSG/Bl9DrByLWmoF1ivOPo12KebDZnSIgxpZV
- mMkgJSO1chR9hfig6DO3vE9Htu2+y8ubpAySxTvFRrFp5Affd6rmk/jE6SJZ9BjDLYQK1Pcj
- SVswctkX/V1wHt0nRsReJpZECQY=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3a27dc.7f7f05ee4298-smtp-out-n01;
- Wed, 05 Feb 2020 02:26:36 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7BABBC447A1; Wed,  5 Feb 2020 02:26:36 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 38A01C433CB;
-        Wed,  5 Feb 2020 02:26:35 +0000 (UTC)
+        id S1727887AbgBECaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 21:30:21 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35634 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727674AbgBECaV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:30:21 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0152O7Kn194564;
+        Wed, 5 Feb 2020 02:30:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=Zg0+DiwI/K8/E+WQiW0JH09laZKD8erQQWdHWq52yFM=;
+ b=BYwAMglqvTSNmTV4K9POC+0F49mrfGG8uo8WdQb4tzi3Npk5NQjSuWI7q3HE1y2KQPX0
+ 6a5urVogIHmhvy1g6eKXtWCnFkoorkHQMS683MwCYedH4Dw5Cg8Mlyb1LM/tev5hbUWI
+ aaeumizI5aCinFoaTty9BL3WBLG45tUPLNhDfCl0+FWxzZ1Sk9Blm56I+/vvpRjM/EDh
+ wwjzSMy++ED6nJcHmdV31h11RZ3qndkjfvXoBuV9fO+pmCV5gMof6wlFimwEGd1SXFHO
+ 7cNV/fPM2/4B5Gjj3TpfOWyoZaxdBvfjcAOdbDolGc59HK2pRnX589PSaxB0WEjC7hRh 2A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2xykbp09kk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 05 Feb 2020 02:30:08 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0152OFK3188262;
+        Wed, 5 Feb 2020 02:30:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2xykbqnh2m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 05 Feb 2020 02:30:07 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0152U5YX025424;
+        Wed, 5 Feb 2020 02:30:05 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 04 Feb 2020 18:30:04 -0800
+To:     AlexChen <alex.chen@huawei.com>
+Cc:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <zhengchuan@huawei.com>,
+        <jiangyiwen@huawei.com>, <robin.yb@huawei.com>
+Subject: Re: [PATCH V2] scsi: add a new flag to set whether SCSI disks support WRITE_SAME_16 by default
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <5E28118F.3070706@huawei.com> <5E3520A7.5030501@huawei.com>
+Date:   Tue, 04 Feb 2020 21:30:02 -0500
+In-Reply-To: <5E3520A7.5030501@huawei.com> (AlexChen's message of "Sat, 1 Feb
+        2020 14:54:31 +0800")
+Message-ID: <yq14kw522c5.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 05 Feb 2020 10:26:35 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        stable@vger.kernel.org
-Subject: Re: [PATCH RESEND v3 3/4] scsi: ufs: fix Auto-Hibern8 error detection
-In-Reply-To: <20200129105251.12466-4-stanley.chu@mediatek.com>
-References: <20200129105251.12466-1-stanley.chu@mediatek.com>
- <20200129105251.12466-4-stanley.chu@mediatek.com>
-Message-ID: <42d40d961663b0a83e4d6bb266fe5ca1@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2002050018
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2002050018
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-01-29 18:52, Stanley Chu wrote:
-> Auto-Hibern8 may be disabled by some vendors or sysfs
-> in runtime even if Auto-Hibern8 capability is supported
-> by host. If Auto-Hibern8 capability is supported by host
-> but not actually enabled, Auto-Hibern8 error shall not happen.
-> 
-> To fix this, provide a way to detect if Auto-Hibern8 is
-> actually enabled first, and bypass Auto-Hibern8 disabling
-> case in ufshcd_is_auto_hibern8_error().
-> 
-> Fixes: 821744403913 ("scsi: ufs: Add error-handling of Auto-Hibernate")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
-> ---
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
+Hi Alex,
 
->  drivers/scsi/ufs/ufshcd.c | 3 ++-
->  drivers/scsi/ufs/ufshcd.h | 6 ++++++
->  2 files changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index abd0e6b05f79..214a3f373dd8 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5479,7 +5479,8 @@ static irqreturn_t
-> ufshcd_update_uic_error(struct ufs_hba *hba)
->  static bool ufshcd_is_auto_hibern8_error(struct ufs_hba *hba,
->  					 u32 intr_mask)
->  {
-> -	if (!ufshcd_is_auto_hibern8_supported(hba))
-> +	if (!ufshcd_is_auto_hibern8_supported(hba) ||
-> +	    !ufshcd_is_auto_hibern8_enabled(hba))
->  		return false;
-> 
->  	if (!(intr_mask & UFSHCD_UIC_HIBERN8_MASK))
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 2ae6c7c8528c..81c71a3e3474 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -55,6 +55,7 @@
->  #include <linux/clk.h>
->  #include <linux/completion.h>
->  #include <linux/regulator/consumer.h>
-> +#include <linux/bitfield.h>
->  #include "unipro.h"
-> 
->  #include <asm/irq.h>
-> @@ -773,6 +774,11 @@ static inline bool
-> ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
->  	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT);
->  }
-> 
-> +static inline bool ufshcd_is_auto_hibern8_enabled(struct ufs_hba *hba)
-> +{
-> +	return FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) ? true : 
-> false;
-> +}
-> +
->  #define ufshcd_writel(hba, val, reg)	\
->  	writel((val), (hba)->mmio_base + (reg))
->  #define ufshcd_readl(hba, reg)	\
+> When the SCSI device is initialized, check whether it supports
+> WRITE_SAME_16 or WRITE_SAME_10 in the sd_read_write_same(). If the
+> back-end storage device does not support queries, it will not set
+> sdkp->ws16 as 1.
+
+Your proposed code change is fine and to the point. However, I'd like to
+understand why you are adding a workaround to the kernel instead of
+fixing the affected device?
+
+Implementing support for either WRITE SAME(10) or REPORT SUPPORTED
+OPERATION CODES is easy. And the latter in particular is beneficial for
+discovering several other SCSI protocol features. It's a good command to
+support in general.
+
+Also, we generally don't add features to the kernel without any
+users. So if you add a blacklist flag, I would expect to see a set of
+device strings to be added to scsi_devinfo.c.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
