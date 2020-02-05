@@ -2,82 +2,172 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F316C35247
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 18:07:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01110C352A1
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 18:44:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E0DF217BA
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 18:07:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCE52217F4
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 18:44:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K5B5B1Wr"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="aRg9jp3V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727165AbgBESHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 13:07:17 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:39506 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727079AbgBESHR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 13:07:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=gs10jRZHLwjIOjYVjU5UoDYIxulcXGovME2eBvzaEu0=; b=K5B5B1Wr2NgBnfmyO9DXR16gbP
-        UWtIGk1NOt9+nnJLa9z8Hx9aSHXAN28QVk1+j81UZ4ps+KIX9PiL9RpepFY/llR8vFYM+VjxtlFKS
-        RDOAmrCz0xLwUfEcXOpE2w90vsqxK/HjozjZTrvXiNdfa3RLhAyBfl4ZvQeuUtR45EfyP1J4NEb91
-        ZQqGP8cVqKIEOApdbh+sWw7rj5D3LQJcioXoE1HLIt3g3pw4KsToRoLAKhhQafKmFFHfG7FQhSrxz
-        jPx50gFpHpM6INp9TKyjx7BSF1JuGgUr03bW8xgOuoy7ti96pTjdN62goLKbranqk9g+U3q97w5jc
-        i5/J1IIA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1izP52-0001RS-L0; Wed, 05 Feb 2020 18:07:16 +0000
-Date:   Wed, 5 Feb 2020 10:07:16 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Satya Tangirala <satyat@google.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 6/9] scsi: ufs: Add inline encryption support to UFS
-Message-ID: <20200205180716.GB32041@infradead.org>
-References: <20191218145136.172774-1-satyat@google.com>
- <20191218145136.172774-7-satyat@google.com>
- <20200117135808.GB5670@infradead.org>
- <20200118052720.GD3290@sol.localdomain>
+        id S1727385AbgBESoE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 13:44:04 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:38111 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727361AbgBESoD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 13:44:03 -0500
+Received: by mail-pl1-f196.google.com with SMTP id t6so1241489plj.5
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Feb 2020 10:44:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5T8MzJpEKCZQD1TpWCDlzD98e7wG/FbZy8dik7t5eOA=;
+        b=aRg9jp3VaplFOBgt2oPDi8HqIKx0WGZwBoRnQ1n0qNlh8vjzzZviyN+h94Gi7BZaFg
+         93DLnwMLm8qK9JZrzSgL1jBYWrDfjZ/oSvLyP9bPgFhTyugPMUXMpLRuURwojLD2LRbq
+         BN3tCsj0ZBNTv2tr/7QeYdiWYxRH3v+pOt7KU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5T8MzJpEKCZQD1TpWCDlzD98e7wG/FbZy8dik7t5eOA=;
+        b=UXJoSApbBsUUGlNdoBp+Szr4AHo0nFsvBjpKHehEjntaYrLWilQOTRDmjLcWmZI4wS
+         p75+kCKvEomvT2PTLXouqU0+v8zPzUWVt+H0DrPyIkr5V7Re5kqefMwfr8pyWDrP5enw
+         AzLX5+auJ12zldDW7Glonde1Wn/Zur9o3Mrn9Oms4KyRnVXh1/6kecORHAfXJTK2VSVk
+         /OZK7TZQq5QfVzCjPE2PsG8cN7Hbf/U6+Y//w3tyhuNowPKkeVA0ePJqBvbIJq1cWtmS
+         zSar5Oto0mbQvegx/H3+FmDU0z6Z5H58A3huM4EcgwDcjXaDQh52P20DVMuIqNTy+/XB
+         mQ1g==
+X-Gm-Message-State: APjAAAWHUwoRIN6de2v1nbMbJjf91x3xR4EUsexGAcTjy7UfWxA/1yPW
+        lBEvrord1rWqYZPPbmRRyUB5QA==
+X-Google-Smtp-Source: APXvYqyi42gAF8IDbEUzCkaIHLkoaxQsvKZJxw52io5DKj8A4zY2JCiFQSxn/xClzcAGrKziS7dQIQ==
+X-Received: by 2002:a17:902:9b93:: with SMTP id y19mr36176082plp.89.1580928243216;
+        Wed, 05 Feb 2020 10:44:03 -0800 (PST)
+Received: from localhost ([2620:15c:202:1:4cc0:7eee:97c9:3c1a])
+        by smtp.gmail.com with ESMTPSA id c26sm238920pfj.8.2020.02.05.10.44.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Feb 2020 10:44:02 -0800 (PST)
+From:   Gwendal Grignou <gwendal@chromium.org>
+To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Gwendal Grignou <gwendal@chromium.org>,
+        Guenter Roeck <groeck@chromium.org>
+Subject: [PATCH] ata/scsi: Prevent FS corruption on chromebook pixel2  at reboot
+Date:   Wed,  5 Feb 2020 10:43:58 -0800
+Message-Id: <20200205184358.116927-1-gwendal@chromium.org>
+X-Mailer: git-send-email 2.25.0.341.g760bfbb309-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200118052720.GD3290@sol.localdomain>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jan 17, 2020 at 09:27:20PM -0800, Eric Biggers wrote:
-> On Fri, Jan 17, 2020 at 05:58:08AM -0800, Christoph Hellwig wrote:
-> > On Wed, Dec 18, 2019 at 06:51:33AM -0800, Satya Tangirala wrote:
-> > > Wire up ufshcd.c with the UFS Crypto API, the block layer inline
-> > > encryption additions and the keyslot manager.
-> > 
-> > I think this patch should be merged into the previous patch, as the
-> > previous one isn't useful without wiring it up.
-> > 
-> 
-> Satya actually did this originally but then one of the UFS maintainers requested
-> the separate patches for (1) new registers, (2) ufshcd-crypto, and (3) ufshcd.c:
-> https://lore.kernel.org/linux-block/SN6PR04MB49259F70346E2055C9E0F401FC310@SN6PR04MB4925.namprd04.prod.outlook.com/
-> 
-> So, he's not going to be able to make everyone happy :-)
-> 
-> I personally would be fine with either way.
+On Samus, even when rebooting, the root device is power cycled.
+Normally, during reboot, root device is not power cycled, so the device
+does not have to flush its volatle drive cache to permanent media.
 
-Oh well, the split between adding functions and callers is highly
-unusual for Linux development.  Adding the defines I can see,
-especially if they are large (which these aren't).  But you'll need
-to get this accepted by the UFS folks, so I'll shut up now.
+However, in case of Samus, given the SSD is power cycled, we force the SSD
+to flush its cache by issuing a SCSI START_STOP command, translated into
+an ATA STANDBY command.
+
+Reviewed-by: Guenter Roeck <groeck@chromium.org>
+Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
+---
+ drivers/ata/ahci.c         | 25 +++++++++++++++++++++++++
+ drivers/scsi/sd.c          |  5 +++--
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dd92faf197d5e..0677c9f1d14af 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -29,6 +29,7 @@
+ #include <linux/msi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci-remap.h>
+ #include <linux/io-64-nonatomic-lo-hi.h>
+@@ -88,6 +89,8 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
+ static bool is_mcp89_apple(struct pci_dev *pdev);
+ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline);
++static int ahci_slave_configure(struct scsi_device *sdev);
++
+ #ifdef CONFIG_PM
+ static int ahci_pci_device_runtime_suspend(struct device *dev);
+ static int ahci_pci_device_runtime_resume(struct device *dev);
+@@ -99,6 +102,7 @@ static int ahci_pci_device_resume(struct device *dev);
+ 
+ static struct scsi_host_template ahci_sht = {
+ 	AHCI_SHT("ahci"),
++	.slave_configure	= ahci_slave_configure,
+ };
+ 
+ static struct ata_port_operations ahci_vt8251_ops = {
+@@ -1398,6 +1402,27 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
++static int ahci_slave_configure(struct scsi_device *sdev)
++{
++	/*
++	 * Machines cutting power to the SSD during a warm reboot must send
++	 * a STANDBY_IMMEDIATE before to prevent unclean shutdown of the disk.
++	 */
++	static struct dmi_system_id sysids[] = {
++		{
++			/* x86-samus, the Chromebook Pixel 2. */
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "GOOGLE"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Samus"),
++			},
++		},
++		{ /* sentinel */ }
++	};
++	if (dmi_check_system(sysids))
++		sdev->send_stop_reboot = 1;
++	return ata_scsi_slave_config(sdev);
++}
++
+ /*
+  * On the Acer Aspire Switch Alpha 12, sometimes all SATA ports are detected
+  * as DUMMY, or detected but eventually get a "link down" and never get up
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5abdf03083ae8..248e04cc46a9e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3533,8 +3533,9 @@ static void sd_shutdown(struct device *dev)
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+-
+-	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
++	if ((sdkp->device->send_stop_reboot ||
++	     system_state != SYSTEM_RESTART) &&
++	    sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a43421..eca9e5cf281f2 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -199,6 +199,7 @@ struct scsi_device {
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+ 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
++	unsigned send_stop_reboot:1;	/* Send START_STOP_UNIT at reboot */
+ 
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
+-- 
+2.25.0.341.g760bfbb309-goog
+
