@@ -2,94 +2,200 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5716C35249
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 03:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB55C35249
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 04:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A71D42085B
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 03:09:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4654F217F4
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 04:52:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eYD+zaez"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AmpZDnHm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727792AbgBEDJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 22:09:51 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48588 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727746AbgBEDJv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 22:09:51 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 01537wHY008232;
-        Wed, 5 Feb 2020 03:09:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=Z0c4IbtEMuxFrmcEE8YYxebJ7faz1+yhcOuuL46PqDY=;
- b=eYD+zaezfwC8epK98aqeBEOCMIa0yFLoul2RZp4OZi+Vmk/tAWvaZTRhCna+hDVEzRwc
- 5smgZFW+Px49APl2ROHooEfWn9Hljf+yXSDHeAJCZGRfPnWv16r1rTLafkxWRSsWZIBw
- eeIx2zhu/xcIhgv92GSOz85xI3I78rixT+RAp61GzXSrUf8nYZAbLn+UyKvYnV6t9Dx6
- Os1dI8J8/Er5fuDvYsiw1aXBQmXGVlZtn7bGFaaBvTxgwfuCJjJ28DCv4dOa4O779VLR
- 0ISn7J1DPYwgnWJB6AT7yx3026/iVmBYmOYMctHC1rZAnFTBhlTxGD7z4VwWAH0wupj/ EA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2xykbp0d44-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 03:09:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 01538F6R044135;
-        Wed, 5 Feb 2020 03:09:36 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2xymurjbc7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 03:09:36 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01539Z7b022060;
-        Wed, 5 Feb 2020 03:09:35 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 19:09:34 -0800
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] ufs: Let the SCSI core allocate per-command UFS data
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200123035637.21848-1-bvanassche@acm.org>
-Date:   Tue, 04 Feb 2020 22:09:33 -0500
-In-Reply-To: <20200123035637.21848-1-bvanassche@acm.org> (Bart Van Assche's
-        message of "Wed, 22 Jan 2020 19:56:33 -0800")
-Message-ID: <yq1mu9xzq4y.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727922AbgBEEwW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 23:52:22 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:53358 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727836AbgBEEwV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 23:52:21 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1580878340; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=qIsXFy+HHp7SSvQVHd8PMPwqr2p1gsi3igCBMs8ZZZg=;
+ b=AmpZDnHmZPgFmIBLtIxHyDsGhMppomTCve1hMzFKLXzb3FLzeK8vcos2W8I6Jf+KzPuv6m4H
+ N7vgUUW2KYxFAo0l8diwsfsVGGPiCmeYNb6ELIQhh308B4FeoJYp8iPjNaCarxQ6hF0ZqA3T
+ pjnY1ZydJ5MynInZWJYPJhjPhjE=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e3a49fb.7f46fdfc9dc0-smtp-out-n03;
+ Wed, 05 Feb 2020 04:52:11 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id B9D1BC447A6; Wed,  5 Feb 2020 04:52:11 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 85B99C43383;
+        Wed,  5 Feb 2020 04:52:10 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=954
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002050025
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002050025
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 05 Feb 2020 12:52:10 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 6/8] scsi: ufs: Add dev ref clock gating wait time
+ support
+In-Reply-To: <1580871040.21785.7.camel@mtksdccf07>
+References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
+ <1580721472-10784-7-git-send-email-cang@codeaurora.org>
+ <1580871040.21785.7.camel@mtksdccf07>
+Message-ID: <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-02-05 10:50, Stanley Chu wrote:
+> Hi Can,
+> 
+> On Mon, 2020-02-03 at 01:17 -0800, Can Guo wrote:
+>> In UFS version 3.0, a newly added attribute bRefClkGatingWaitTime 
+>> defines
+>> the minimum time for which the reference clock is required by device 
+>> during
+>> transition to LS-MODE or HIBERN8 state. Make this change to reflect 
+>> the new
+>> requirement by adding delays before turning off the clock.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufs.h    |  3 +++
+>>  drivers/scsi/ufs/ufshcd.c | 40 
+>> ++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 43 insertions(+)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+>> index cfe3803..304076e 100644
+>> --- a/drivers/scsi/ufs/ufs.h
+>> +++ b/drivers/scsi/ufs/ufs.h
+>> @@ -167,6 +167,7 @@ enum attr_idn {
+>>  	QUERY_ATTR_IDN_FFU_STATUS		= 0x14,
+>>  	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
+>>  	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
+>> +	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
+>>  };
+>> 
+>>  /* Descriptor idn for Query requests */
+>> @@ -534,6 +535,8 @@ struct ufs_dev_info {
+>>  	u16 wmanufacturerid;
+>>  	/*UFS device Product Name */
+>>  	u8 *model;
+>> +	u16 spec_version;
+>> +	u32 clk_gating_wait_us;
+>>  };
+>> 
+>>  /**
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index e8f7f9d..d5c547b 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -91,6 +91,9 @@
+>>  /* default delay of autosuspend: 2000 ms */
+>>  #define RPM_AUTOSUSPEND_DELAY_MS 2000
+>> 
+>> +/* Default value of wait time before gating device ref clock */
+>> +#define UFSHCD_REF_CLK_GATING_WAIT_US 0xFF /* microsecs */
+>> +
+>>  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+>>  	({                                                              \
+>>  		int _ret;                                               \
+>> @@ -3281,6 +3284,37 @@ static inline int 
+>> ufshcd_read_unit_desc_param(struct ufs_hba *hba,
+>>  				      param_offset, param_read_buf, param_size);
+>>  }
+>> 
+>> +static int ufshcd_get_ref_clk_gating_wait(struct ufs_hba *hba)
+>> +{
+>> +	int err = 0;
+>> +	u32 gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
+>> +
+>> +	if (hba->dev_info.spec_version >= 0x300) {
+>> +		err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+>> +				QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME, 0, 0,
+>> +				&gating_wait);
+>> +		if (err)
+>> +			dev_err(hba->dev, "Failed reading bRefClkGatingWait. err = %d, use 
+>> default %uus\n",
+>> +					 err, gating_wait);
+>> +
+>> +		if (gating_wait == 0) {
+>> +			gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
+>> +			dev_err(hba->dev, "Undefined ref clk gating wait time, use default 
+>> %uus\n",
+>> +					 gating_wait);
+>> +		}
+>> +
+>> +		/*
+>> +		 * bRefClkGatingWaitTime defines the minimum time for which the
+>> +		 * reference clock is required by device during transition from
+>> +		 * HS-MODE to LS-MODE or HIBERN8 state. Give it more time to be
+>> +		 * on the safe side.
+>> +		 */
+>> +		hba->dev_info.clk_gating_wait_us = gating_wait + 50;
+> 
+> 
+> Not sure if the additional 50us wait time here is too large.
+> 
+> Is there any special reason to fix it as "50"?
+> 
+> 
+> Thanks,
+> Stanley
+> 
 
-Bart,
+Hi Stanley,
 
-> This patch series lets the SCSI core allocate per-command UFS data and
-> hence simplifies and micro-optimizes the UFS driver. Please consider
-> this patch series for the v5.6 kernel.
+We used to ask vendors about it, 50 is somehow agreed by them. Do you 
+have a
+better value in mind?
 
-These changes look OK to me but I would like to see some Tested-by:
-tags.
+For me, I just wanted to give it 10, so that we can directly use 
+usleep_range
+with it, no need to decide whether to use udelay or usleep_range.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Can Guo.
+
+>>  				      &dev_info->model, SD_ASCII_STD);
+>> @@ -7003,6 +7041,8 @@ static int ufshcd_device_params_init(struct 
+>> ufs_hba *hba)
+>>  		goto out;
+>>  	}
+>> 
+>> +	ufshcd_get_ref_clk_gating_wait(hba);
+>> +
+>>  	ufs_fixup_device_setup(hba);
+>> 
+>>  	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
