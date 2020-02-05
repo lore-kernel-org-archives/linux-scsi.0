@@ -2,221 +2,133 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CE5C3524D
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4E1C3524D
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CA6A214AF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:17:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5181A21744
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:26:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZmNyi+Ev"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="sHmoObS4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727758AbgBECRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 21:17:09 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:13332 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727140AbgBECRI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:17:08 -0500
+        id S1727836AbgBEC0j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 21:26:39 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:42126 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727140AbgBEC0i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:26:38 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580869027; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=akJYwzCLbXwxHJd1f8VdXmC7moR+0lxrjFJgFgP3xb8=; b=ZmNyi+EvLIci41zhiZ1xOx8CcekTXz4x2optE5STD2MACU98nTNFv9yCLnwl7nybL1MB4bq+
- SKKeHxPcuqS11XapZlBHBRVI2J/iIFiOW7MOH3quLdrkFzZSG1pkz/4DwCzDMVPLkT4hTooB
- pT5Tam26ALDpfXaQiIACdg4x4l4=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ s=smtp; t=1580869597; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Pgq9KvjPRshhckyUvQfLK0OTeO6Xr6mnSEYtpz2S3GE=;
+ b=sHmoObS4E3jnWjSxplM24CoB0oDzOE35gn2kSG/Bl9DrByLWmoF1ivOPo12KebDZnSIgxpZV
+ mMkgJSO1chR9hfig6DO3vE9Htu2+y8ubpAySxTvFRrFp5Affd6rmk/jE6SJZ9BjDLYQK1Pcj
+ SVswctkX/V1wHt0nRsReJpZECQY=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3a25a2.7effbbc058b8-smtp-out-n02;
- Wed, 05 Feb 2020 02:17:06 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e3a27dc.7f7f05ee4298-smtp-out-n01;
+ Wed, 05 Feb 2020 02:26:36 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id DC71DC447A3; Wed,  5 Feb 2020 02:17:03 +0000 (UTC)
-Received: from [10.71.154.194] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id 7BABBC447A1; Wed,  5 Feb 2020 02:26:36 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 208A9C43383;
-        Wed,  5 Feb 2020 02:17:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 208A9C43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v5 4/8] scsi: ufs-qcom: Adjust bus bandwidth voting and
- unvoting
-To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
- <1580721472-10784-5-git-send-email-cang@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <ca9e97dc-0328-884e-0236-91c9f9ea9f41@codeaurora.org>
-Date:   Tue, 4 Feb 2020 18:17:01 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 38A01C433CB;
+        Wed,  5 Feb 2020 02:26:35 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <1580721472-10784-5-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Wed, 05 Feb 2020 10:26:35 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        beanhuo@micron.com, asutoshd@codeaurora.org,
+        matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        stable@vger.kernel.org
+Subject: Re: [PATCH RESEND v3 3/4] scsi: ufs: fix Auto-Hibern8 error detection
+In-Reply-To: <20200129105251.12466-4-stanley.chu@mediatek.com>
+References: <20200129105251.12466-1-stanley.chu@mediatek.com>
+ <20200129105251.12466-4-stanley.chu@mediatek.com>
+Message-ID: <42d40d961663b0a83e4d6bb266fe5ca1@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/3/2020 1:17 AM, Can Guo wrote:
-> The bus bandwidth voting is required to be done before the bus clocks
-> are enabled, and the unvoting is required to be done only after the bus
-> clocks are disabled.
+On 2020-01-29 18:52, Stanley Chu wrote:
+> Auto-Hibern8 may be disabled by some vendors or sysfs
+> in runtime even if Auto-Hibern8 capability is supported
+> by host. If Auto-Hibern8 capability is supported by host
+> but not actually enabled, Auto-Hibern8 error shall not happen.
 > 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
+> To fix this, provide a way to detect if Auto-Hibern8 is
+> actually enabled first, and bypass Auto-Hibern8 disabling
+> case in ufshcd_is_auto_hibern8_error().
+> 
+> Fixes: 821744403913 ("scsi: ufs: Add error-handling of Auto-Hibernate")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
 > ---
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Can Guo <cang@codeaurora.org>
 
->   drivers/scsi/ufs/ufs-qcom.c | 57 +++++++++++++++++++++++++++++++--------------
->   1 file changed, 39 insertions(+), 18 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 3 ++-
+>  drivers/scsi/ufs/ufshcd.h | 6 ++++++
+>  2 files changed, 8 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index c69c29a1c..85d7c17 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -38,7 +38,6 @@ enum {
->   
->   static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
->   
-> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote);
->   static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
->   static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
->   						       u32 clk_cycles);
-> @@ -674,7 +673,7 @@ static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
->   	}
->   }
->   
-> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
-> +static int __ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
->   {
->   	int err = 0;
->   
-> @@ -705,7 +704,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
->   
->   	vote = ufs_qcom_get_bus_vote(host, mode);
->   	if (vote >= 0)
-> -		err = ufs_qcom_set_bus_vote(host, vote);
-> +		err = __ufs_qcom_set_bus_vote(host, vote);
->   	else
->   		err = vote;
->   
-> @@ -716,6 +715,35 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
->   	return err;
->   }
->   
-> +static int ufs_qcom_set_bus_vote(struct ufs_hba *hba, bool on)
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index abd0e6b05f79..214a3f373dd8 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5479,7 +5479,8 @@ static irqreturn_t
+> ufshcd_update_uic_error(struct ufs_hba *hba)
+>  static bool ufshcd_is_auto_hibern8_error(struct ufs_hba *hba,
+>  					 u32 intr_mask)
+>  {
+> -	if (!ufshcd_is_auto_hibern8_supported(hba))
+> +	if (!ufshcd_is_auto_hibern8_supported(hba) ||
+> +	    !ufshcd_is_auto_hibern8_enabled(hba))
+>  		return false;
+> 
+>  	if (!(intr_mask & UFSHCD_UIC_HIBERN8_MASK))
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 2ae6c7c8528c..81c71a3e3474 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -55,6 +55,7 @@
+>  #include <linux/clk.h>
+>  #include <linux/completion.h>
+>  #include <linux/regulator/consumer.h>
+> +#include <linux/bitfield.h>
+>  #include "unipro.h"
+> 
+>  #include <asm/irq.h>
+> @@ -773,6 +774,11 @@ static inline bool
+> ufshcd_is_auto_hibern8_supported(struct ufs_hba *hba)
+>  	return (hba->capabilities & MASK_AUTO_HIBERN8_SUPPORT);
+>  }
+> 
+> +static inline bool ufshcd_is_auto_hibern8_enabled(struct ufs_hba *hba)
 > +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	int vote, err;
-> +
-> +	/*
-> +	 * In case ufs_qcom_init() is not yet done, simply ignore.
-> +	 * This ufs_qcom_set_bus_vote() shall be called from
-> +	 * ufs_qcom_init() after init is done.
-> +	 */
-> +	if (!host)
-> +		return 0;
-> +
-> +	if (on) {
-> +		vote = host->bus_vote.saved_vote;
-> +		if (vote == host->bus_vote.min_bw_vote)
-> +			ufs_qcom_update_bus_bw_vote(host);
-> +	} else {
-> +		vote = host->bus_vote.min_bw_vote;
-> +	}
-> +
-> +	err = __ufs_qcom_set_bus_vote(host, vote);
-> +	if (err)
-> +		dev_err(hba->dev, "%s: set bus vote failed %d\n",
-> +				 __func__, err);
-> +
-> +	return err;
+> +	return FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) ? true : 
+> false;
 > +}
 > +
->   static ssize_t
->   show_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
->   			char *buf)
-> @@ -792,7 +820,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
->   	return 0;
->   }
->   
-> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
-> +static int ufs_qcom_set_bus_vote(struct ufs_hba *host, bool on)
->   {
->   	return 0;
->   }
-> @@ -1030,8 +1058,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->   				 enum ufs_notify_change_status status)
->   {
->   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> -	int err;
-> -	int vote = 0;
-> +	int err = 0;
->   
->   	/*
->   	 * In case ufs_qcom_init() is not yet done, simply ignore.
-> @@ -1041,28 +1068,21 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->   	if (!host)
->   		return 0;
->   
-> -	if (on && (status == POST_CHANGE)) {
-> +	if (on && (status == PRE_CHANGE)) {
-> +		err = ufs_qcom_set_bus_vote(hba, true);
-> +	} else if (on && (status == POST_CHANGE)) {
->   		/* enable the device ref clock for HS mode*/
->   		if (ufshcd_is_hs_mode(&hba->pwr_info))
->   			ufs_qcom_dev_ref_clk_ctrl(host, true);
-> -		vote = host->bus_vote.saved_vote;
-> -		if (vote == host->bus_vote.min_bw_vote)
-> -			ufs_qcom_update_bus_bw_vote(host);
-> -
->   	} else if (!on && (status == PRE_CHANGE)) {
->   		if (!ufs_qcom_is_link_active(hba)) {
->   			/* disable device ref_clk */
->   			ufs_qcom_dev_ref_clk_ctrl(host, false);
->   		}
-> -
-> -		vote = host->bus_vote.min_bw_vote;
-> +	} else if (!on && (status == POST_CHANGE)) {
-> +		err = ufs_qcom_set_bus_vote(hba, false);
->   	}
->   
-> -	err = ufs_qcom_set_bus_vote(host, vote);
-> -	if (err)
-> -		dev_err(hba->dev, "%s: set bus vote failed %d\n",
-> -				__func__, err);
-> -
->   	return err;
->   }
->   
-> @@ -1238,6 +1258,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->   	ufs_qcom_set_caps(hba);
->   	ufs_qcom_advertise_quirks(hba);
->   
-> +	ufs_qcom_set_bus_vote(hba, true);
->   	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
->   
->   	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
-> 
-
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+>  #define ufshcd_writel(hba, val, reg)	\
+>  	writel((val), (hba)->mmio_base + (reg))
+>  #define ufshcd_readl(hba, reg)	\
