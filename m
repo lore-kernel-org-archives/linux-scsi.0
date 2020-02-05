@@ -2,77 +2,102 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AFCDC352A2
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 20:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E45C35247
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB606217F4
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 20:47:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580935635;
-	bh=+ZS+NN3+LYtwsrpUFYDvOFcmW2Zu5fsUZcqSPkhg4lU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=kWfXL4xT5i0nTpEnnrKqQp5G1p1fcpEh4XduOktkhSr1SfpwIB216//5nwi/9wiG1
-	 UTyYJ9pYMjP6P78gco3Cxm2KgIc34BIO1bfg3ej2/4nIbLrV+BGKyVbE9Jw0/JdDdb
-	 FNzuuuYytyTYwtxQuzdDrDMxvp3P3/YAjFosHROQ=
+	by mail.kernel.org (Postfix) with ESMTP id B38092072B
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727309AbgBEUrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 15:47:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57546 "EHLO mail.kernel.org"
+        id S1727234AbgBEVnY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 16:43:24 -0500
+Received: from mx2.suse.de ([195.135.220.15]:52424 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726534AbgBEUrO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Feb 2020 15:47:14 -0500
-Received: from gmail.com (unknown [104.132.1.77])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 294D02072B;
-        Wed,  5 Feb 2020 20:47:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1580935633;
-        bh=+ZS+NN3+LYtwsrpUFYDvOFcmW2Zu5fsUZcqSPkhg4lU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gjvMPyIRhoMGBaCI7MUINX99uO8A+WSahEkQxe0NwqVase8Kt3OdsPyTgQdAddwpe
-         sPqnpxP6yhP0i05boyaZUGSbzavu3uTCqEKyTBI1gAUbygv8J4fhmq4I+NrO1bIdbO
-         3fvVcT2HL0T8TSI8+QzmXbu1arwf2m7l9btJBDKA=
-Date:   Wed, 5 Feb 2020 12:47:11 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 6/9] scsi: ufs: Add inline encryption support to UFS
-Message-ID: <20200205204711.GA112437@gmail.com>
-References: <20191218145136.172774-1-satyat@google.com>
- <20191218145136.172774-7-satyat@google.com>
+        id S1727170AbgBEVnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 5 Feb 2020 16:43:24 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 37A2EACD0;
+        Wed,  5 Feb 2020 21:43:23 +0000 (UTC)
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Bottomley <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v2 2/3] scsi: qla2xxx: don't shut down firmware before closing sessions
+Date:   Wed,  5 Feb 2020 22:44:21 +0100
+Message-Id: <20200205214422.3657-3-mwilck@suse.com>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200205214422.3657-1-mwilck@suse.com>
+References: <20200205214422.3657-1-mwilck@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191218145136.172774-7-satyat@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Dec 18, 2019 at 06:51:33AM -0800, Satya Tangirala wrote:
-> @@ -2472,6 +2492,13 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->  	lrbp->task_tag = tag;
->  	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
->  	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
-> +
-> +	err = ufshcd_prepare_lrbp_crypto(hba, cmd, lrbp);
-> +	if (err) {
-> +		lrbp->cmd = NULL;
-> +		clear_bit_unlock(tag, &hba->lrb_in_use);
-> +		goto out;
-> +	}
+From: Martin Wilck <mwilck@suse.com>
 
-The error path here is missing a call to ufshcd_release().
+Since 45235022da99, the firmware is shut down early in the controller
+shutdown process. This causes commands sent to the firmware (such as LOGO)
+to hang forever. Eventually one or more timeouts will be triggered.
+Move the stopping of the firmware until after sessions have terminated.
 
-- Eric
+Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2dafb46..e81080d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3720,6 +3720,16 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	}
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
++	qla2x00_wait_for_sess_deletion(base_vha);
++
++	/*
++	 * if UNLOAD flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
++
++	set_bit(UNLOADING, &base_vha->dpc_flags);
+ 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+ 	    IS_QLA28XX(ha)) {
+ 		if (ha->flags.fw_started)
+@@ -3736,17 +3746,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 		qla2x00_try_to_stop_firmware(base_vha);
+ 	}
+ 
+-	qla2x00_wait_for_sess_deletion(base_vha);
+-
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
+-
+ 	qla_nvme_delete(base_vha);
+ 
+ 	dma_free_coherent(&ha->pdev->dev,
+-- 
+2.25.0
+
