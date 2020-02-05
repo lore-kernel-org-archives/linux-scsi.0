@@ -2,26 +2,26 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E45C35247
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43974C352A2
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B38092072B
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22F392072B
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727234AbgBEVnY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727237AbgBEVnY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 5 Feb 2020 16:43:24 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52424 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52402 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727170AbgBEVnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727165AbgBEVnY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 5 Feb 2020 16:43:24 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 37A2EACD0;
-        Wed,  5 Feb 2020 21:43:23 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id B7937AB3D;
+        Wed,  5 Feb 2020 21:43:22 +0000 (UTC)
 From:   mwilck@suse.com
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Himanshu Madhani <hmadhani@marvell.com>,
@@ -33,12 +33,10 @@ Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
         Daniel Wagner <dwagner@suse.de>,
         James Bottomley <jejb@linux.vnet.ibm.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH v2 2/3] scsi: qla2xxx: don't shut down firmware before closing sessions
-Date:   Wed,  5 Feb 2020 22:44:21 +0100
-Message-Id: <20200205214422.3657-3-mwilck@suse.com>
+Subject: [PATCH v2 0/3] scsi: qla2xxx: fixes for driver unloading
+Date:   Wed,  5 Feb 2020 22:44:19 +0100
+Message-Id: <20200205214422.3657-1-mwilck@suse.com>
 X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20200205214422.3657-1-mwilck@suse.com>
-References: <20200205214422.3657-1-mwilck@suse.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -48,56 +46,24 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Martin Wilck <mwilck@suse.com>
 
-Since 45235022da99, the firmware is shut down early in the controller
-shutdown process. This causes commands sent to the firmware (such as LOGO)
-to hang forever. Eventually one or more timeouts will be triggered.
-Move the stopping of the firmware until after sessions have terminated.
+Hello Martin, Himanshu, all,
 
-Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+here is v2 of the little series I first submitted on Nov 29, 2019.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2dafb46..e81080d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3720,6 +3720,16 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	}
- 	qla2x00_wait_for_hba_ready(base_vha);
- 
-+	qla2x00_wait_for_sess_deletion(base_vha);
-+
-+	/*
-+	 * if UNLOAD flag is already set, then continue unload,
-+	 * where it was set first.
-+	 */
-+	if (test_bit(UNLOADING, &base_vha->dpc_flags))
-+		return;
-+
-+	set_bit(UNLOADING, &base_vha->dpc_flags);
- 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
- 	    IS_QLA28XX(ha)) {
- 		if (ha->flags.fw_started)
-@@ -3736,17 +3746,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 		qla2x00_try_to_stop_firmware(base_vha);
- 	}
- 
--	qla2x00_wait_for_sess_deletion(base_vha);
--
--	/*
--	 * if UNLOAD flag is already set, then continue unload,
--	 * where it was set first.
--	 */
--	if (test_bit(UNLOADING, &base_vha->dpc_flags))
--		return;
--
--	set_bit(UNLOADING, &base_vha->dpc_flags);
--
- 	qla_nvme_delete(base_vha);
- 
- 	dma_free_coherent(&ha->pdev->dev,
+Changes wrt v2:
+ - Added patch 3 to set the UNLOADING flag before waiting for sessions
+   to end (Roman)
+ - Use test_and_set_bit() for UNLOADING (Hannes)
+
+Martin Wilck (3):
+  scsi: qla2xxx: avoid sending mailbox commands if firmware is stopped
+  scsi: qla2xxx: don't shut down firmware before closing sessions
+  scsi: qla2xxx: set UNLOADING before waiting for session deletion
+
+ drivers/scsi/qla2xxx/qla_mbx.c |  3 +++
+ drivers/scsi/qla2xxx/qla_os.c  | 39 +++++++++++++++++-----------------
+ 2 files changed, 22 insertions(+), 20 deletions(-)
+
 -- 
 2.25.0
 
