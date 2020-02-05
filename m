@@ -2,200 +2,174 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB55C35249
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 04:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BED5C3524D
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 06:06:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4654F217F4
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 04:52:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2232C217F4
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 06:06:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AmpZDnHm"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Z+8N+naH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727922AbgBEEwW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 23:52:22 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:53358 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727836AbgBEEwV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 23:52:21 -0500
+        id S1726592AbgBEGGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 01:06:55 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:18939 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725906AbgBEGGz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 01:06:55 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580878340; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=qIsXFy+HHp7SSvQVHd8PMPwqr2p1gsi3igCBMs8ZZZg=;
- b=AmpZDnHmZPgFmIBLtIxHyDsGhMppomTCve1hMzFKLXzb3FLzeK8vcos2W8I6Jf+KzPuv6m4H
- N7vgUUW2KYxFAo0l8diwsfsVGGPiCmeYNb6ELIQhh308B4FeoJYp8iPjNaCarxQ6hF0ZqA3T
- pjnY1ZydJ5MynInZWJYPJhjPhjE=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1580882814; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=+G5FxAByirlTokI5Q9wrrRy13bzlUXcKOxokwDpbu2I=; b=Z+8N+naH4BheNdjMu9UgXWmd0BTwJYIRRy5mjqhphvxGP8lMbj3KvCCnnquOCkAvMvTefxTF
+ WOqDC7rvA1NQxMxHMAsgmmL6Urs8rgdISyTKpUPSlH8JO823hlEtSSFWHCvEtb45TMdIWvtN
+ tzsCV7yUgV9/F98dpZqeuli/y6g=
+X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3a49fb.7f46fdfc9dc0-smtp-out-n03;
- Wed, 05 Feb 2020 04:52:11 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e3a5b76.7fc587a33650-smtp-out-n03;
+ Wed, 05 Feb 2020 06:06:46 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B9D1BC447A6; Wed,  5 Feb 2020 04:52:11 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 65606C447A5; Wed,  5 Feb 2020 06:06:44 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 85B99C43383;
-        Wed,  5 Feb 2020 04:52:10 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 05 Feb 2020 12:52:10 +0800
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3CC20C433CB;
+        Wed,  5 Feb 2020 06:06:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3CC20C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v5 6/8] scsi: ufs: Add dev ref clock gating wait time
- support
-In-Reply-To: <1580871040.21785.7.camel@mtksdccf07>
-References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
- <1580721472-10784-7-git-send-email-cang@codeaurora.org>
- <1580871040.21785.7.camel@mtksdccf07>
-Message-ID: <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: ufs: Fix registers dump vops caused scheduling while atomic
+Date:   Tue,  4 Feb 2020 22:06:28 -0800
+Message-Id: <1580882795-29675-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-05 10:50, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Mon, 2020-02-03 at 01:17 -0800, Can Guo wrote:
->> In UFS version 3.0, a newly added attribute bRefClkGatingWaitTime 
->> defines
->> the minimum time for which the reference clock is required by device 
->> during
->> transition to LS-MODE or HIBERN8 state. Make this change to reflect 
->> the new
->> requirement by adding delays before turning off the clock.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufs.h    |  3 +++
->>  drivers/scsi/ufs/ufshcd.c | 40 
->> ++++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 43 insertions(+)
->> 
->> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
->> index cfe3803..304076e 100644
->> --- a/drivers/scsi/ufs/ufs.h
->> +++ b/drivers/scsi/ufs/ufs.h
->> @@ -167,6 +167,7 @@ enum attr_idn {
->>  	QUERY_ATTR_IDN_FFU_STATUS		= 0x14,
->>  	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
->>  	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
->> +	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
->>  };
->> 
->>  /* Descriptor idn for Query requests */
->> @@ -534,6 +535,8 @@ struct ufs_dev_info {
->>  	u16 wmanufacturerid;
->>  	/*UFS device Product Name */
->>  	u8 *model;
->> +	u16 spec_version;
->> +	u32 clk_gating_wait_us;
->>  };
->> 
->>  /**
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index e8f7f9d..d5c547b 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -91,6 +91,9 @@
->>  /* default delay of autosuspend: 2000 ms */
->>  #define RPM_AUTOSUSPEND_DELAY_MS 2000
->> 
->> +/* Default value of wait time before gating device ref clock */
->> +#define UFSHCD_REF_CLK_GATING_WAIT_US 0xFF /* microsecs */
->> +
->>  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
->>  	({                                                              \
->>  		int _ret;                                               \
->> @@ -3281,6 +3284,37 @@ static inline int 
->> ufshcd_read_unit_desc_param(struct ufs_hba *hba,
->>  				      param_offset, param_read_buf, param_size);
->>  }
->> 
->> +static int ufshcd_get_ref_clk_gating_wait(struct ufs_hba *hba)
->> +{
->> +	int err = 0;
->> +	u32 gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
->> +
->> +	if (hba->dev_info.spec_version >= 0x300) {
->> +		err = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->> +				QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME, 0, 0,
->> +				&gating_wait);
->> +		if (err)
->> +			dev_err(hba->dev, "Failed reading bRefClkGatingWait. err = %d, use 
->> default %uus\n",
->> +					 err, gating_wait);
->> +
->> +		if (gating_wait == 0) {
->> +			gating_wait = UFSHCD_REF_CLK_GATING_WAIT_US;
->> +			dev_err(hba->dev, "Undefined ref clk gating wait time, use default 
->> %uus\n",
->> +					 gating_wait);
->> +		}
->> +
->> +		/*
->> +		 * bRefClkGatingWaitTime defines the minimum time for which the
->> +		 * reference clock is required by device during transition from
->> +		 * HS-MODE to LS-MODE or HIBERN8 state. Give it more time to be
->> +		 * on the safe side.
->> +		 */
->> +		hba->dev_info.clk_gating_wait_us = gating_wait + 50;
-> 
-> 
-> Not sure if the additional 50us wait time here is too large.
-> 
-> Is there any special reason to fix it as "50"?
-> 
-> 
-> Thanks,
-> Stanley
-> 
+Reigsters dump intiated from atomic context should not sleep. To fix it,
+add one boolean parameter to register dump vops to inform vendor driver if
+sleep is allowed or not.
 
-Hi Stanley,
+Signed-off-by: Can Guo <cang@codeaurora.org>
 
-We used to ask vendors about it, 50 is somehow agreed by them. Do you 
-have a
-better value in mind?
-
-For me, I just wanted to give it 10, so that we can directly use 
-usleep_range
-with it, no need to decide whether to use udelay or usleep_range.
-
-Thanks,
-Can Guo.
-
->>  				      &dev_info->model, SD_ASCII_STD);
->> @@ -7003,6 +7041,8 @@ static int ufshcd_device_params_init(struct 
->> ufs_hba *hba)
->>  		goto out;
->>  	}
->> 
->> +	ufshcd_get_ref_clk_gating_wait(hba);
->> +
->>  	ufs_fixup_device_setup(hba);
->> 
->>  	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3b5b2d9..c30139c 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1619,13 +1619,17 @@ static void ufs_qcom_print_unipro_testbus(struct ufs_hba *hba)
+ 	kfree(testbus);
+ }
+ 
+-static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
++static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba, bool no_sleep)
+ {
+ 	ufshcd_dump_regs(hba, REG_UFS_SYS1CLK_1US, 16 * 4,
+ 			 "HCI Vendor Specific Registers ");
+ 
+ 	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
++
++	if (no_sleep)
++		return;
++
+ 	usleep_range(1000, 1100);
+ 	ufs_qcom_testbus_read(hba);
+ 	usleep_range(1000, 1100);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0ac5d47..37f1539 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -398,7 +398,7 @@ static void ufshcd_print_err_hist(struct ufs_hba *hba,
+ 		dev_err(hba->dev, "No record of %s\n", err_name);
+ }
+ 
+-static void ufshcd_print_host_regs(struct ufs_hba *hba)
++static inline void __ufshcd_print_host_regs(struct ufs_hba *hba, bool no_sleep)
+ {
+ 	ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE, "host_regs: ");
+ 	dev_err(hba->dev, "hba->ufs_version = 0x%x, hba->capabilities = 0x%x\n",
+@@ -430,7 +430,12 @@ static void ufshcd_print_host_regs(struct ufs_hba *hba)
+ 
+ 	ufshcd_print_clk_freqs(hba);
+ 
+-	ufshcd_vops_dbg_register_dump(hba);
++	ufshcd_vops_dbg_register_dump(hba, no_sleep);
++}
++
++static void ufshcd_print_host_regs(struct ufs_hba *hba)
++{
++	__ufshcd_print_host_regs(hba, false);
+ }
+ 
+ static
+@@ -4821,7 +4826,7 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
+ 		dev_err(hba->dev,
+ 				"OCS error from controller = %x for tag %d\n",
+ 				ocs, lrbp->task_tag);
+-		ufshcd_print_host_regs(hba);
++		__ufshcd_print_host_regs(hba, true);
+ 		ufshcd_print_host_state(hba);
+ 		break;
+ 	} /* end of switch */
+@@ -5617,7 +5622,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba)
+ 					__func__, hba->saved_err,
+ 					hba->saved_uic_err);
+ 
+-				ufshcd_print_host_regs(hba);
++				__ufshcd_print_host_regs(hba, true);
+ 				ufshcd_print_pwr_info(hba);
+ 				ufshcd_print_tmrs(hba, hba->outstanding_tasks);
+ 				ufshcd_print_trs(hba, hba->outstanding_reqs,
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2ae6c7c..3de7cbb 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -323,7 +323,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*apply_dev_quirks)(struct ufs_hba *hba);
+ 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+-	void	(*dbg_register_dump)(struct ufs_hba *hba);
++	void	(*dbg_register_dump)(struct ufs_hba *hba, bool no_sleep);
+ 	int	(*phy_initialization)(struct ufs_hba *);
+ 	void	(*device_reset)(struct ufs_hba *hba);
+ };
+@@ -1078,10 +1078,11 @@ static inline int ufshcd_vops_resume(struct ufs_hba *hba, enum ufs_pm_op op)
+ 	return 0;
+ }
+ 
+-static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
++static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba,
++						 bool no_sleep)
+ {
+ 	if (hba->vops && hba->vops->dbg_register_dump)
+-		hba->vops->dbg_register_dump(hba);
++		hba->vops->dbg_register_dump(hba, no_sleep);
+ }
+ 
+ static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
