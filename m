@@ -2,124 +2,106 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A71C352A3
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D05AAC35247
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 22:45:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DB1520730
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 21:43:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD27D214AF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 22:45:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727305AbgBEVnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 16:43:25 -0500
-Received: from mx2.suse.de ([195.135.220.15]:52460 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727178AbgBEVnZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 5 Feb 2020 16:43:25 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 87A3AAD12;
-        Wed,  5 Feb 2020 21:43:23 +0000 (UTC)
-From:   mwilck@suse.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v2 3/3] scsi: qla2xxx: set UNLOADING before waiting for session deletion
-Date:   Wed,  5 Feb 2020 22:44:22 +0100
-Message-Id: <20200205214422.3657-4-mwilck@suse.com>
-X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20200205214422.3657-1-mwilck@suse.com>
-References: <20200205214422.3657-1-mwilck@suse.com>
+        id S1727567AbgBEWp0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 17:45:26 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:51281 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727565AbgBEWpZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 17:45:25 -0500
+Received: by mail-pj1-f65.google.com with SMTP id fa20so1597124pjb.1;
+        Wed, 05 Feb 2020 14:45:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0bcRadV2UJTOgRUGh5EQgbkbXanJFAz0E1VJFEcU0fA=;
+        b=nL19jTnr+UtIZUrUyh1qfCHUlc3mGJQzrBFaOFL7s0FKvVw0AAcZMWETyJu9M44+Fc
+         Z0U/W1IoFAcyx7HwZD1hb+k35lW2DNEh+Yh1FsyuQlv+fd3gZAwNnA16Gg3PePBaex3d
+         Xa40SjUp5d0r3AxwaLgrptYEYycKIVSjwogwwMpZ4/y0R7ADRWsTdmMTxa7+PzmwpsKc
+         L05i9OTo9MKvCd9+mdV5PSMM8XKypyUnqRlsZ1l/TzGhKwcm9+fB+qx0NtnqRgopwGGV
+         xUZkAy/7lpb9gNhvI9rzeEoOoInGn2ZtxbzNKEyOxHyvDFwvFYCl/kx94e1TBt4d98r/
+         y4uQ==
+X-Gm-Message-State: APjAAAWUTQxx771OjIwcvpvQ+MWe3YcKva0MF5EsydA/Wfx0irm6mHMj
+        Ms2ChOaVyQKSwHZmop2HmoYbF/34NUs=
+X-Google-Smtp-Source: APXvYqy2Be4/PSxc5lyGQOYsxvsoLyc1S9eltGyYFdxnWDALqWHhsNkTXSBAtsvN6XPP9vluDg6QHw==
+X-Received: by 2002:a17:90a:7781:: with SMTP id v1mr538716pjk.108.1580942724481;
+        Wed, 05 Feb 2020 14:45:24 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id f18sm796557pgn.2.2020.02.05.14.45.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Feb 2020 14:45:23 -0800 (PST)
+Subject: Re: [PATCH] scsi: ufs: Fix registers dump vops caused scheduling
+ while atomic
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1580882795-29675-1-git-send-email-cang@codeaurora.org>
+ <3e529862-7790-c506-abaa-9a6972f5d53c@acm.org>
+ <749a1db94df00278ec9f5c121cd937fe@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <7931a786-8e2c-1529-8910-3d4f6c816580@acm.org>
+Date:   Wed, 5 Feb 2020 14:45:22 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <749a1db94df00278ec9f5c121cd937fe@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+On 2/4/20 10:31 PM, Can Guo wrote:
+> Do you mean by splitting ufshcd_print_host_regs() into two functions?
+> One behaves identically same to the current function, another one called
+> ufshcd_print_host_regs_nosleep(). No?
 
-The purpose of the UNLOADING flag is to avoid port login procedures
-to continue when a controller is in the process of shutting down.
-It makes sense to set this flag before starting session teardown.
-The only operations that must be able to continue are LOGO, PRLO,
-and the like.
+Hi Can,
 
-Furthermore, use atomic test_and_set_bit() to avoid the shutdown
-being run multiple times in parallel. In qla2x00_disable_board_on_pci_error(),
-the test for UNLOADING is postponed until after the check for an already
-disabled PCI board.
+Not really. I had something else in mind.
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+Having taken a closer look at ufs_qcom_dump_dbg_regs() I started 
+wondering why there are sleep statements in that function. Is the goal 
+of these sleep statements perhaps to reduce how often printk() is 
+called? Has it been considered to remove all sleep calls from 
+ufs_qcom_dump_dbg_regs() and instead add something like the following at 
+the start of that function:
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e81080d..8329f95 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3720,16 +3720,15 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	}
- 	qla2x00_wait_for_hba_ready(base_vha);
- 
--	qla2x00_wait_for_sess_deletion(base_vha);
--
- 	/*
--	 * if UNLOAD flag is already set, then continue unload,
-+	 * if UNLOADING flag is already set, then continue unload,
- 	 * where it was set first.
- 	 */
--	if (test_bit(UNLOADING, &base_vha->dpc_flags))
-+	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
- 		return;
- 
--	set_bit(UNLOADING, &base_vha->dpc_flags);
-+	qla2x00_wait_for_sess_deletion(base_vha);
-+
- 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
- 	    IS_QLA28XX(ha)) {
- 		if (ha->flags.fw_started)
-@@ -6046,13 +6045,6 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
- 	struct pci_dev *pdev = ha->pdev;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
--	/*
--	 * if UNLOAD flag is already set, then continue unload,
--	 * where it was set first.
--	 */
--	if (test_bit(UNLOADING, &base_vha->dpc_flags))
--		return;
--
- 	ql_log(ql_log_warn, base_vha, 0x015b,
- 	    "Disabling adapter.\n");
- 
-@@ -6063,9 +6055,14 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
- 		return;
- 	}
- 
--	qla2x00_wait_for_sess_deletion(base_vha);
-+	/*
-+	 * if UNLOADING flag is already set, then continue unload,
-+	 * where it was set first.
-+	 */
-+	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
-+		return;
- 
--	set_bit(UNLOADING, &base_vha->dpc_flags);
-+	qla2x00_wait_for_sess_deletion(base_vha);
- 
- 	qla2x00_delete_all_vps(ha, base_vha);
- 
--- 
-2.25.0
+	static DEFINE_RATELIMIT_STATE(_rs,
+				      DEFAULT_RATELIMIT_INTERVAL,
+				      DEFAULT_RATELIMIT_BURST);
+									
+	if (!__ratelimit(&_rs))
+		return;
 
+
+Thanks,
+
+Bart.
