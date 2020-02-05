@@ -2,108 +2,221 @@ Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04725C3524B
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CE5C3524D
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:17:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD74B217BA
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:13:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CA6A214AF
+	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 02:17:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ARVFP1fw"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZmNyi+Ev"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727746AbgBECN2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 4 Feb 2020 21:13:28 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:48922 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727140AbgBECN1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:13:27 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0152DG48176120;
-        Wed, 5 Feb 2020 02:13:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=gdngC1oHh6vX+erxjCYWsk0NvuwiIWBC6N9gJ8DRVL0=;
- b=ARVFP1fwEso+F73Sggu5o37k4F4Lzf0PoD0ZVdWnSFctKcDBhsOrTFjWbXObnKzAkewj
- 6GYpMMJ5d5irGtG1+Ch5QSTLGvn9V913CHbwl3RSuTI4em594RhIG6mMwKy7RHuLL+1T
- lfXC/SRV2WlREj6QD78wasueacRpO43NSPNSEri4BFBBfAWteMryezQI4Nh3PwHKz0KX
- pbMzUXPSCh6ZeUZYXhizyI7NmjJUtTFoG8hgHG9H+rf1+81N7XurrwAYN8SAM/LUimcE
- PlAMZBfzrEYw7E8r2zQKY1oQfAhDJFbwFnbzsu+33vl3HHef0jnqFjRHsz8B8Hag9Dmn Tg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2xykbp881q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 02:13:16 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 01528KXm154758;
-        Wed, 5 Feb 2020 02:13:12 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2xykbqmd46-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Feb 2020 02:13:12 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0152D6Mq007816;
-        Wed, 5 Feb 2020 02:13:06 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 04 Feb 2020 18:13:06 -0800
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>
-Subject: Re: [PATCH 2/6] scsi: remove .for_blk_mq
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200119071432.18558-1-ming.lei@redhat.com>
-        <20200119071432.18558-3-ming.lei@redhat.com>
-        <20200131063035.GA18385@lst.de>
-Date:   Tue, 04 Feb 2020 21:13:02 -0500
-In-Reply-To: <20200131063035.GA18385@lst.de> (Christoph Hellwig's message of
-        "Fri, 31 Jan 2020 07:30:35 +0100")
-Message-ID: <yq1blqd234h.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727758AbgBECRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 4 Feb 2020 21:17:09 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:13332 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727140AbgBECRI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Feb 2020 21:17:08 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1580869027; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=akJYwzCLbXwxHJd1f8VdXmC7moR+0lxrjFJgFgP3xb8=; b=ZmNyi+EvLIci41zhiZ1xOx8CcekTXz4x2optE5STD2MACU98nTNFv9yCLnwl7nybL1MB4bq+
+ SKKeHxPcuqS11XapZlBHBRVI2J/iIFiOW7MOH3quLdrkFzZSG1pkz/4DwCzDMVPLkT4hTooB
+ pT5Tam26ALDpfXaQiIACdg4x4l4=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e3a25a2.7effbbc058b8-smtp-out-n02;
+ Wed, 05 Feb 2020 02:17:06 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DC71DC447A3; Wed,  5 Feb 2020 02:17:03 +0000 (UTC)
+Received: from [10.71.154.194] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 208A9C43383;
+        Wed,  5 Feb 2020 02:17:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 208A9C43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v5 4/8] scsi: ufs-qcom: Adjust bus bandwidth voting and
+ unvoting
+To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
+ <1580721472-10784-5-git-send-email-cang@codeaurora.org>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <ca9e97dc-0328-884e-0236-91c9f9ea9f41@codeaurora.org>
+Date:   Tue, 4 Feb 2020 18:17:01 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=968
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2002050015
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9521 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2002050016
+In-Reply-To: <1580721472-10784-5-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2/3/2020 1:17 AM, Can Guo wrote:
+> The bus bandwidth voting is required to be done before the bus clocks
+> are enabled, and the unvoting is required to be done only after the bus
+> clocks are disabled.
+> 
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
 
->> No one use it any more, so remove the flag.
->
-> Looks good modulo the subject typo, lets get this in ASAP even with
-> outstanding issue on the rest of the series:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-Applied to 5.7/scsi-queue. Thanks!
+>   drivers/scsi/ufs/ufs-qcom.c | 57 +++++++++++++++++++++++++++++++--------------
+>   1 file changed, 39 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index c69c29a1c..85d7c17 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -38,7 +38,6 @@ enum {
+>   
+>   static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
+>   
+> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote);
+>   static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+>   static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+>   						       u32 clk_cycles);
+> @@ -674,7 +673,7 @@ static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
+>   	}
+>   }
+>   
+> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
+> +static int __ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
+>   {
+>   	int err = 0;
+>   
+> @@ -705,7 +704,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+>   
+>   	vote = ufs_qcom_get_bus_vote(host, mode);
+>   	if (vote >= 0)
+> -		err = ufs_qcom_set_bus_vote(host, vote);
+> +		err = __ufs_qcom_set_bus_vote(host, vote);
+>   	else
+>   		err = vote;
+>   
+> @@ -716,6 +715,35 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+>   	return err;
+>   }
+>   
+> +static int ufs_qcom_set_bus_vote(struct ufs_hba *hba, bool on)
+> +{
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> +	int vote, err;
+> +
+> +	/*
+> +	 * In case ufs_qcom_init() is not yet done, simply ignore.
+> +	 * This ufs_qcom_set_bus_vote() shall be called from
+> +	 * ufs_qcom_init() after init is done.
+> +	 */
+> +	if (!host)
+> +		return 0;
+> +
+> +	if (on) {
+> +		vote = host->bus_vote.saved_vote;
+> +		if (vote == host->bus_vote.min_bw_vote)
+> +			ufs_qcom_update_bus_bw_vote(host);
+> +	} else {
+> +		vote = host->bus_vote.min_bw_vote;
+> +	}
+> +
+> +	err = __ufs_qcom_set_bus_vote(host, vote);
+> +	if (err)
+> +		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+> +				 __func__, err);
+> +
+> +	return err;
+> +}
+> +
+>   static ssize_t
+>   show_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+>   			char *buf)
+> @@ -792,7 +820,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+>   	return 0;
+>   }
+>   
+> -static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
+> +static int ufs_qcom_set_bus_vote(struct ufs_hba *host, bool on)
+>   {
+>   	return 0;
+>   }
+> @@ -1030,8 +1058,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>   				 enum ufs_notify_change_status status)
+>   {
+>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> -	int err;
+> -	int vote = 0;
+> +	int err = 0;
+>   
+>   	/*
+>   	 * In case ufs_qcom_init() is not yet done, simply ignore.
+> @@ -1041,28 +1068,21 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>   	if (!host)
+>   		return 0;
+>   
+> -	if (on && (status == POST_CHANGE)) {
+> +	if (on && (status == PRE_CHANGE)) {
+> +		err = ufs_qcom_set_bus_vote(hba, true);
+> +	} else if (on && (status == POST_CHANGE)) {
+>   		/* enable the device ref clock for HS mode*/
+>   		if (ufshcd_is_hs_mode(&hba->pwr_info))
+>   			ufs_qcom_dev_ref_clk_ctrl(host, true);
+> -		vote = host->bus_vote.saved_vote;
+> -		if (vote == host->bus_vote.min_bw_vote)
+> -			ufs_qcom_update_bus_bw_vote(host);
+> -
+>   	} else if (!on && (status == PRE_CHANGE)) {
+>   		if (!ufs_qcom_is_link_active(hba)) {
+>   			/* disable device ref_clk */
+>   			ufs_qcom_dev_ref_clk_ctrl(host, false);
+>   		}
+> -
+> -		vote = host->bus_vote.min_bw_vote;
+> +	} else if (!on && (status == POST_CHANGE)) {
+> +		err = ufs_qcom_set_bus_vote(hba, false);
+>   	}
+>   
+> -	err = ufs_qcom_set_bus_vote(host, vote);
+> -	if (err)
+> -		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+> -				__func__, err);
+> -
+>   	return err;
+>   }
+>   
+> @@ -1238,6 +1258,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>   	ufs_qcom_set_caps(hba);
+>   	ufs_qcom_advertise_quirks(hba);
+>   
+> +	ufs_qcom_set_bus_vote(hba, true);
+>   	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+>   
+>   	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
+> 
+
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
