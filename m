@@ -3,90 +3,98 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4769AC2D0B1
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 03:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6EB1C2D0B1
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 06:57:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AB63214AF
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 03:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ABE3206CC
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 06:57:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="IqIgKERY"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mBNUS7Qx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727702AbgBFDmt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 22:42:49 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:25441 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727307AbgBFDms (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 22:42:48 -0500
+        id S1727939AbgBFG5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Feb 2020 01:57:06 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:63714 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727843AbgBFG5G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2020 01:57:06 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580960568; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=4+cz2Wd6BRjl/2klKhe4XJ41Ph8D75H9lUOHkMUlZCk=;
- b=IqIgKERYCjTylIzin8vmJZcuFlLL5mxPGEooyjwmLg9jglweCf4Y+flBUBW2EeMtYNaqliqy
- tx7RTKI89eeZeozvlcofkqtGiy++JVA8L1NRcuG2c67mgvrw5WgB7ImL2/bnEcRwc6COk7yU
- nzOqZmwWWpnM38+hk+Fh+AVwnHQ=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1580972225; h=Message-Id: Date: Subject: To: From: Sender;
+ bh=FKKk7ttTBERPnDFgKMOiDn6qO9W0nqA+dc9TvyF5wj4=; b=mBNUS7Qx0mcT5uMXS2otbrwoucTdprsYBPsbkxzom+frcXoc+FQqy3xBNXDe3Mzq2xE3y+9L
+ M9d9pnhZp3+C1a0EfeZ1SsV2Fg4CqoZOE2algyFIEVKcMvYCGXsxk++Crt8bLEY8+6cssFP+
+ PIBE5Wi8vYalRgP9fqxZff9y/ho=
+X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3b8b36.7f0940795458-smtp-out-n03;
- Thu, 06 Feb 2020 03:42:46 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e3bb8bb.7fa68a4bd500-smtp-out-n03;
+ Thu, 06 Feb 2020 06:56:59 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0B04AC447AB; Thu,  6 Feb 2020 03:42:45 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id E1BC8C4479C; Thu,  6 Feb 2020 06:56:58 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 384A1C43383;
-        Thu,  6 Feb 2020 03:42:45 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 06 Feb 2020 11:42:45 +0800
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 20D3CC433CB;
+        Thu,  6 Feb 2020 06:56:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 20D3CC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: Fix registers dump vops caused scheduling
- while atomic
-In-Reply-To: <1580886875-31967-1-git-send-email-cang@codeaurora.org>
-References: <1580886875-31967-1-git-send-email-cang@codeaurora.org>
-Message-ID: <e932a4129b6e6a957b33d3435069172d@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Subject: [PATCH v6 0/8] UFS driver general fixes bundle 4
+Date:   Wed,  5 Feb 2020 22:56:43 -0800
+Message-Id: <1580972212-29881-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-05 15:14, Can Guo wrote:
-> Reigsters dump intiated from atomic context should not sleep. To fix 
-> it,
-> add one boolean parameter to register dump vops to inform vendor driver 
-> if
-> sleep is allowed or not.
-> 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> 
+This bundle includes 8 general fixes for UFS driver.
 
-Hi,
+Changes since v5:
+- Incoperated Stanley's suggestions to make the extra delay added up to bRefClkGatingWaitTime as vendor specific
 
-Sorry for bothering, I will just drop this patch as of now :)
+Changes since v4:
+- Rebased this series
 
-Thanks,
-Can Guo.
+Changes since v3:
+- Fixed patch #8
+
+Changes since v2:
+- Move the ref clk gating wait delay to ufs-qcom.c
+- Added one more change to select INITIAL adapt for HS G4
+
+Changes since v1:
+- Fixed minor typo
+
+
+Asutosh Das (1):
+  scsi: ufs: set load before setting voltage in regulators
+
+Can Guo (6):
+  scsi: ufs: Remove the check before call setup clock notify vops
+  scsi: ufs-qcom: Adjust bus bandwidth voting and unvoting
+  scsi: ufs: Fix ufshcd_hold() caused scheduling while atomic
+  scsi: ufs: Add dev ref clock gating wait time support
+  scsi: ufs-qcom: Delay specific time before gate ref clk
+  scsi: ufs: Select INITIAL adapt for HS Gear4
+
+Sayali Lokhande (1):
+  scsi: ufs: Flush exception event before suspend
+
+ drivers/scsi/ufs/ufs-qcom.c |  79 +++++++++++++++++++++++---------
+ drivers/scsi/ufs/ufs.h      |   3 ++
+ drivers/scsi/ufs/ufshcd.c   | 108 ++++++++++++++++++++++++++++++++------------
+ drivers/scsi/ufs/ufshci.h   |   1 +
+ drivers/scsi/ufs/unipro.h   |   7 +++
+ 5 files changed, 148 insertions(+), 50 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
