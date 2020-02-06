@@ -2,93 +2,128 @@ Return-Path: <SRS0=lyXb=32=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84DE5C35247
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 00:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3434C35247
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 02:40:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 559FE20658
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 00:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7493320659
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 02:40:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="RnmR3066"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Qv5ntAM9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727415AbgBFA4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 19:56:11 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:47123 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727149AbgBFA4L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 19:56:11 -0500
-X-UUID: f9d453bfefe44ec99df06b74cc22569c-20200206
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=goe3nKLi654rij3M3c+foadwHfpv05lQ2O5yWyHBAbE=;
-        b=RnmR3066tx6Vq++SAYfh/6z9iPLRA66CqrybBeilcYCFapZmcEWqnCE44vrTRl6YXeXBptAzoBsM+AEgDfiuOfmCvb/r6qDjoAyvZU+gFSmKEFdpc01MWHjh67ktJm7WjVwu+TpeEndWGVfplnvJbuHVPLpaFQtmXEwFmvJtOZo=;
-X-UUID: f9d453bfefe44ec99df06b74cc22569c-20200206
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1246544321; Thu, 06 Feb 2020 08:56:04 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 6 Feb 2020 08:54:26 +0800
-Received: from [172.21.84.99] (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 6 Feb 2020 08:55:30 +0800
-Message-ID: <1580950556.27391.11.camel@mtksdccf07>
-Subject: Re: [PATCH v5 6/8] scsi: ufs: Add dev ref clock gating wait time
- support
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <kuohong.wang@mediatek.com>, <asutoshd@codeaurora.org>,
-        <nguyenb@codeaurora.org>, <hongwus@codeaurora.org>,
-        <rnayak@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <kernel-team@android.com>, <saravanak@google.com>,
-        <salyzyn@google.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+        id S1727474AbgBFCkH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 21:40:07 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:42747 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727307AbgBFCkG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 21:40:06 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1580956806; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=x3250bc90bbLo/8nZIXvtLUJ7DKa2tZzcGBIY7u8bik=;
+ b=Qv5ntAM929Si9SDcpTuCy9uw0QcJske/k08xOYdDv9/k8Zcb+fkYXx1uFr8+sDRp3jG8+Y71
+ lPQkIj2TlnEaQIiMey1bqbqbYvHIZ2n5Gb7tq5UMvHmCIstROic+Xn5RdBEAFH5JZ5BHMahy
+ sQmkAOc1auNIJRV7sRcuPAYpwvo=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e3b7c80.7f99b82640a0-smtp-out-n03;
+ Thu, 06 Feb 2020 02:40:00 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 75EDEC447A4; Thu,  6 Feb 2020 02:39:58 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9CEAFC43383;
+        Thu,  6 Feb 2020 02:39:57 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 06 Feb 2020 10:39:57 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     kuohong.wang@mediatek.com, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Bean Huo <beanhuo@micron.com>,
         Colin Ian King <colin.king@canonical.com>,
         Tomas Winkler <tomas.winkler@intel.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
+        Bart Van Assche <bvanassche@acm.org>,
         Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         open list <linux-kernel@vger.kernel.org>
-Date:   Thu, 6 Feb 2020 08:55:56 +0800
-In-Reply-To: <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
+Subject: Re: [PATCH v5 6/8] scsi: ufs: Add dev ref clock gating wait time
+ support
+In-Reply-To: <1580950556.27391.11.camel@mtksdccf07>
 References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
-         <1580721472-10784-7-git-send-email-cang@codeaurora.org>
-         <1580871040.21785.7.camel@mtksdccf07>
-         <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+ <1580721472-10784-7-git-send-email-cang@codeaurora.org>
+ <1580871040.21785.7.camel@mtksdccf07>
+ <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
+ <1580950556.27391.11.camel@mtksdccf07>
+Message-ID: <8b6603db0bb793365542c39d33a64a0e@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBXZWQsIDIwMjAtMDItMDUgYXQgMTI6NTIgKzA4MDAsIENhbiBHdW8gd3Jv
-dGU6DQoNCg0KPiBIaSBTdGFubGV5LA0KPiANCj4gV2UgdXNlZCB0byBhc2sgdmVuZG9ycyBhYm91
-dCBpdCwgNTAgaXMgc29tZWhvdyBhZ3JlZWQgYnkgdGhlbS4gRG8geW91IA0KPiBoYXZlIGENCj4g
-YmV0dGVyIHZhbHVlIGluIG1pbmQ/DQo+IA0KPiBGb3IgbWUsIEkganVzdCB3YW50ZWQgdG8gZ2l2
-ZSBpdCAxMCwgc28gdGhhdCB3ZSBjYW4gZGlyZWN0bHkgdXNlIA0KPiB1c2xlZXBfcmFuZ2UNCj4g
-d2l0aCBpdCwgbm8gbmVlZCB0byBkZWNpZGUgd2hldGhlciB0byB1c2UgdWRlbGF5IG9yIHVzbGVl
-cF9yYW5nZS4NCg0KQWN0dWFsbHkgSSBkbyBub3QgaGF2ZSBhbnkgdmFsdWUgaW4gbWluZCBiZWNh
-dXNlIEkgZ3Vlc3MgdGhlIDUwdXMgaGVyZQ0KaXMganVzdCBhIG1hcmdpbiB0aW1lIGFkZGVkIGZv
-ciBzYWZldHkgYXMgeW91ciBjb21tZW50czogIkdpdmUgaXQgbW9yZQ0KdGltZSB0byBiZSBvbiB0
-aGUgc2FmZSBzaWRlIi4NCg0KQW4gZXhhbXBsZSBjYXNlIGlzIHRoYXQgc29tZSB2ZW5kb3JzIG9u
-bHkgc3BlY2lmeSAxdXMgaW4NCmJSZWZDbGtHYXRpbmdXYWl0VGltZSwgc28gdGhpcyA1MHVzIG1h
-eSBiZSB0b28gbG9uZyBjb21wYXJlZCB0byBkZXZpY2Uncw0KcmVxdWlyZW1lbnQuIElmIHN1Y2gg
-ZGV2aWNlIHJlYWxseSBuZWVkcyB0aGlzIGFkZGl0aW9uYWwgNTB1cywgaXQgc2hhbGwNCmJlIHNw
-ZWNpZmllZCBpbiBiUmVmQ2xrR2F0aW5nV2FpdFRpbWUuDQoNClNvIGlmIHRoaXMgYWRkaXRpb25h
-bCBkZWxheSBkb2VzIG5vdCBoYXZlIGFueSBzcGVjaWFsIHJlYXNvbiBvciBub3QNCm1lbnRpb25l
-ZCBieSBVRlMgc3BlY2lmaWNhdGlvbiwgd291bGQgeW91IGNvbnNpZGVyIG1vdmUgaXQgdG8gdmVu
-ZG9yDQpzcGVjaWZpYyBpbXBsZW1lbnRhdGlvbnMuIEJ5IHRoaXMgd2F5LCBpdCB3b3VsZCBiZSBt
-b3JlIGZsZXhpYmxlIHRvIGJlDQpjb250cm9sbGVkIGJ5IHZlbmRvcnMgb3IgYnkgcGxhdGZvcm1z
-Lg0KDQpUaGFua3MsDQpTdGFubGV5DQoNCj4gDQo+IFRoYW5rcywNCj4gQ2FuIEd1by4NCj4gDQo+
-ID4+ICAJCQkJICAgICAgJmRldl9pbmZvLT5tb2RlbCwgU0RfQVNDSUlfU1REKTsNCg0K
+On 2020-02-06 08:55, Stanley Chu wrote:
+> Hi Can,
+> 
+> On Wed, 2020-02-05 at 12:52 +0800, Can Guo wrote:
+> 
+> 
+>> Hi Stanley,
+>> 
+>> We used to ask vendors about it, 50 is somehow agreed by them. Do you
+>> have a
+>> better value in mind?
+>> 
+>> For me, I just wanted to give it 10, so that we can directly use
+>> usleep_range
+>> with it, no need to decide whether to use udelay or usleep_range.
+> 
+> Actually I do not have any value in mind because I guess the 50us here
+> is just a margin time added for safety as your comments: "Give it more
+> time to be on the safe side".
+> 
+> An example case is that some vendors only specify 1us in
+> bRefClkGatingWaitTime, so this 50us may be too long compared to 
+> device's
+> requirement. If such device really needs this additional 50us, it shall
+> be specified in bRefClkGatingWaitTime.
+> 
+> So if this additional delay does not have any special reason or not
+> mentioned by UFS specification, would you consider move it to vendor
+> specific implementations. By this way, it would be more flexible to be
+> controlled by vendors or by platforms.
+> 
+> Thanks,
+> Stanley
+> 
+>> 
+>> Thanks,
+>> Can Guo.
+>> 
+>> >>  				      &dev_info->model, SD_ASCII_STD);
 
+Hi Stanley,
+
+FYI, the default values in bRefClkGatingWaitTime from vendors are around
+50 - 100.
+
+I agree with you. I will just remove the extra delay here and let's
+handle it in our own platform drivers.
+
+Thanks,
+Can Guo.
