@@ -2,152 +2,150 @@ Return-Path: <SRS0=lyXb=32=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BC3C2D0B1
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 15:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E652C33CAC
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 15:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 06A7B222C2
-	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 15:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EB9221741
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 15:50:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q3t0/qNL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727530AbgBFP0d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Feb 2020 10:26:33 -0500
-Received: from m9a0014g.houston.softwaregrp.com ([15.124.64.90]:52802 "EHLO
-        m9a0014g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727512AbgBFP0d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2020 10:26:33 -0500
-Received: FROM m9a0014g.houston.softwaregrp.com (15.121.0.190) BY m9a0014g.houston.softwaregrp.com WITH ESMTP
- FOR linux-scsi@vger.kernel.org;
- Thu,  6 Feb 2020 15:25:35 +0000
-Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
- M9W0067.microfocus.com (2002:f79:be::f79:be) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Thu, 6 Feb 2020 15:23:00 +0000
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (15.124.8.12) by
- M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Thu, 6 Feb 2020 15:23:00 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ayv5AV6jsHNPRSrpNUwpMRNxfsK7TFWUyhcQiiNZRzTNHFivFsKk9csy5KV0YQPal5YQ6gmEfqWaG7qm2Fiij4zffHST+fybc27YHT98/eGl60BaKWdyBl+3rNN2zbgFC4BoeuD22CX/l9CKXXqS/qknaiTu5IiOrLaksPrY/cdXYB0Il3JEY/m5pKjCT4me53HN3dmDcomI6wSiUiuZbKHqAjG4FnBNGtRlGoQq0HQRoqEVrfhq7Fs64Zqg9SwyWxz4lQiJqGujDatBYdrgcyJu8UPaTajNlTLyLTn/6gf4EEMR7TJeQYBxlngIBDIJVfIwzQHioY6XmtkBB4alSQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=p7ng+O2i6YqenVr4xS9a8KtoVO6qVKMwRtKK5vm+QK8=;
- b=am83vmj/q70Ar4eBpS71gQgcBSVzFRONlN8zQYGdhx795SPbTQbSC5Wgy7tmPG8O/inqgkC2VCTu9Z9FQ93iY3YS+xrv8Gw43hr5ZSNdOG4IS0ZE/00xhAy75yW4S3kqAiFXVoo5dBRcqEsmmylNQWt+EoQ0skeIghm2sloW/ZWcffAuOC1KJoeiN2bI2yZCl+6SbrwvGlUcWI9bLJUXYaFfs0elAlwW2mQ8bA9RG5uJcpbpAQS4Qjl5XIbV1J223sqZ5FKLKzGi0c80tXtaHdudhx2Z0Lg1t225CtS2W8bxmC5c02b/NTNzTjGsNoIxQBsemlbyRo2Cj/wqnbx+iA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: spf=none (sender IP is )
- smtp.mailfrom=LDuncan@suse.com; 
-Received: from CH2PR18MB3269.namprd18.prod.outlook.com (52.132.245.10) by
- CH2PR18MB3269.namprd18.prod.outlook.com (52.132.245.10) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2686.29; Thu, 6 Feb 2020 15:22:59 +0000
-Received: from CH2PR18MB3269.namprd18.prod.outlook.com
- ([fe80::a9e1:c2b0:3b67:abb3]) by CH2PR18MB3269.namprd18.prod.outlook.com
- ([fe80::a9e1:c2b0:3b67:abb3%6]) with mapi id 15.20.2686.035; Thu, 6 Feb 2020
- 15:22:59 +0000
-Subject: Re: [PATCH] qla2xxx: Remove non functional code
-To:     Daniel Wagner <dwagner@suse.de>, <linux-scsi@vger.kernel.org>
-References: <20200206135443.110701-1-dwagner@suse.de>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <57515620-6680-8a7e-2ac7-759f059f79bf@suse.com>
-Date:   Thu, 6 Feb 2020 07:22:24 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-In-Reply-To: <20200206135443.110701-1-dwagner@suse.de>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LNXP265CA0078.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:76::18) To CH2PR18MB3269.namprd18.prod.outlook.com
- (2603:10b6:610:27::10)
+        id S1727516AbgBFPuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Feb 2020 10:50:13 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:34795 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727389AbgBFPuM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2020 10:50:12 -0500
+Received: by mail-lj1-f193.google.com with SMTP id x7so6643542ljc.1;
+        Thu, 06 Feb 2020 07:50:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2z7Od7AIdCSkZNC7374lA2NlsyOZzZfwKDy4TXEDbrY=;
+        b=Q3t0/qNL+UoB49FPTKL2l6AygWLc2Ikx8S6igun8o4Sxcga+X8EBlP6Pcfh+DNmtYr
+         1gbf48dby6DxuMWq7iBRglbsJuy96fVKHwh9mVPEpM9XW0mldy/RKnUlSzp7Hnb1O3gP
+         cqJy9WpdlsV3SZbs9nvkP346zyS1FKB1Wn9M3DvrRWjBYnYflpKLtzoUIuZVLFQy31CW
+         mp+SQkz2nIB49UmXKzWMZPWFCbSqBL6auKXhVeRFKlznHkJyiYVF+1HX2yRixP2pEI1s
+         lZGt4cZ7yqtMnZ+sTl6kF8/BNS2A7rjzOcqZOT3jyTy/ZYFr0TuzL9lKDc69ftfQXy1b
+         z2lQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2z7Od7AIdCSkZNC7374lA2NlsyOZzZfwKDy4TXEDbrY=;
+        b=dPuQ8B2e0VgTMP7Qrzfdt384HAB/OryfcqjXN09lLMhIr9JbiUP/KhIyunSXTc8qK3
+         dhTnjlcVTNj4AvFS3dJtzDGN/pPsWX0OR1MW/KO+jwO17Y2vJVnt5W7FvxcHpK1eC7br
+         Oj3nhjBKFntCJQITG6hh1bBeUOeXT9ethe3H9aupWyfdKQptbisOJOokQKFaxGhk96Ty
+         4iQknQ4SjbLDL9Do9pPAxSdPxuiKPWD+1l96oOo+Sew9uRIC7ZETYVCXrYX3Eb6sN0eV
+         H/4UTIhRInOWanhlqDZygxemVunWIi3GL9Qwl5UMIBV050ZVyIn1d40+Pj1mQQN3C+5N
+         WLuw==
+X-Gm-Message-State: APjAAAUnTAQILzcynd0guxyDlyvhVbED9TIoaZGr5ZiVv3yfMa5w2kke
+        GlwJGXJbJRwnfyhWeBAbiFdWfY5xS0NFG0Oj+38=
+X-Google-Smtp-Source: APXvYqysj+Ue4KAW4mCPufYx9BNobf4YllhVHp82p4KaVn4BbuKBI2bg4E7hwKbOE/6vveAIeznlIgtWI6njuazATlg=
+X-Received: by 2002:a2e:7c08:: with SMTP id x8mr2432034ljc.185.1581004210164;
+ Thu, 06 Feb 2020 07:50:10 -0800 (PST)
 MIME-Version: 1.0
-Received: from [192.168.20.3] (73.25.22.216) by LNXP265CA0078.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:76::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2707.21 via Frontend Transport; Thu, 6 Feb 2020 15:22:57 +0000
-X-Originating-IP: [73.25.22.216]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 9a8bd5ce-18b1-4612-f4c8-08d7ab1872bb
-X-MS-TrafficTypeDiagnostic: CH2PR18MB3269:
-X-Microsoft-Antispam-PRVS: <CH2PR18MB3269F4EC8520B2B4B547646ADA1D0@CH2PR18MB3269.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2582;
-X-Forefront-PRVS: 0305463112
-X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(396003)(136003)(366004)(39860400002)(376002)(189003)(199004)(2906002)(6486002)(26005)(31686004)(186003)(8936002)(16526019)(8676002)(86362001)(6666004)(52116002)(956004)(36756003)(5660300002)(478600001)(81166006)(81156014)(66476007)(66946007)(66556008)(16576012)(2616005)(53546011)(31696002)(316002);DIR:OUT;SFP:1102;SCL:1;SRVR:CH2PR18MB3269;H:CH2PR18MB3269.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-Received-SPF: None (protection.outlook.com: suse.com does not designate
- permitted sender hosts)
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rFebeYEjT/pFh0xSg30qoQA+c/pjlDGncifaVxAn1q7HwKWOyK5UNuIU21yOUMtj4O0yNSTAJ/WIDKe1iXoj+ipR4sewspKH65Y/pfxH08LbMTFdf0SyR3/22Cs29x9ZtegI0hJgBwnb8PZolqem0JF0/LaAVc0p3/DCKEfo3MumRpYURy8cd2gTacs7iOm3euG7xjtw26RMb3QYl+AxmtpNvQBnlDhPJtS9vC7KMEv3KqBKUdJZ84bCVm90bMwitCTKp9V9iAkqKXJcMSCC+DtPVUOqwFIMPBgAUPMS03qRIQeRxpm755JhUh8nimL+flFsCn1enwx9vXLAYTuxCwoR4o7D4hqjwZG79XGzqOfuEZenUP3o3U+03iDEA+bGuYm+x/2hHnuPqbAUn27pzpdspBNLi4FXy3/vEXxdDKsLiyvUdFU2kuU+jtvspmxW
-X-MS-Exchange-AntiSpam-MessageData: YUIJTvFr+iRWFhg8fp9+0pzRMwIpleYvWreNjvwiz9IShRk/Gl+ix+KzhfGqNYdxSGkrwXsa1A34ENtg12OFDIacyGgLlc5A+qwwjx8M/LpSfAMWMNqFel+zn0nl9puWbcOHRERMCuCCj1bKabD2RQ==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9a8bd5ce-18b1-4612-f4c8-08d7ab1872bb
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Feb 2020 15:22:59.0638
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ETdp6ks37bBCdN01gEnqf9sp3AGADF2Raq3WoKNjbYp43dWgAk3p23u51QHHJI4PtUdZY7TC/E9YhTvesK5PKQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR18MB3269
-X-OriginatorOrg: suse.com
+References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
+ <20200202192105.GA20107@roeck-us.net> <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
+ <94cb1e97-18ed-ebec-23c2-b4d87434726a@roeck-us.net> <MN2PR04MB69910152F14A7D481029E4ECFC000@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <20200203214733.GA30898@roeck-us.net> <BY5PR04MB69809A3BEFD629A67FB563CDFC030@BY5PR04MB6980.namprd04.prod.outlook.com>
+ <MN2PR04MB6190D9E63717D37285DADBB09A1D0@MN2PR04MB6190.namprd04.prod.outlook.com>
+ <CAGRGNgWG2fvY33j0m00SkguU8N4TJttY4KeNtOxZ7HzTTXA=yw@mail.gmail.com>
+ <MN2PR04MB6991848EBC8DED439FCD7C49FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
+ <CAGRGNgUA=LHbWqZY+hsYjfsTbyftc3uoGv6S3p8E4zPQyqsOGQ@mail.gmail.com> <MN2PR04MB699190E3474F82BEF9B91A58FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
+In-Reply-To: <MN2PR04MB699190E3474F82BEF9B91A58FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
+From:   Julian Calaby <julian.calaby@gmail.com>
+Date:   Fri, 7 Feb 2020 02:49:58 +1100
+Message-ID: <CAGRGNgWob+0t35AYXfzCqKtLjBgw=p8MhqDCKF=5_JGe5veqtQ@mail.gmail.com>
+Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/6/20 5:54 AM, Daniel Wagner wrote:
-> Remove code which has no functional use anymore since
-> 3c75ad1d87c7 ("scsi: qla2xxx: Remove defer flag to indicate immeadiate
-> port loss").
-> 
-> While at it remove also the stale function documentation.
-> 
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> ---
->  drivers/scsi/qla2xxx/qla_os.c | 23 -----------------------
->  1 file changed, 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 79387ac8936f..27a5d0c7e246 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -3909,19 +3909,6 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
->  	set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
->  }
->  
-> -/*
-> - * qla2x00_mark_all_devices_lost
-> - *	Updates fcport state when device goes offline.
-> - *
-> - * Input:
-> - *	ha = adapter block pointer.
-> - *	fcport = port structure pointer.
-> - *
-> - * Return:
-> - *	None.
-> - *
-> - * Context:
-> - */
->  void
->  qla2x00_mark_all_devices_lost(scsi_qla_host_t *vha)
->  {
-> @@ -3933,16 +3920,6 @@ qla2x00_mark_all_devices_lost(scsi_qla_host_t *vha)
->  	list_for_each_entry(fcport, &vha->vp_fcports, list) {
->  		fcport->scan_state = 0;
->  		qlt_schedule_sess_for_deletion(fcport);
-> -
-> -		if (vha->vp_idx != 0 && vha->vp_idx != fcport->vha->vp_idx)
-> -			continue;
-> -
-> -		/*
-> -		 * No point in marking the device as lost, if the device is
-> -		 * already DEAD.
-> -		 */
-> -		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD)
-> -			continue;
->  	}
->  }
->  
-> 
+Hi Avri,
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+On Fri, Feb 7, 2020 at 12:41 AM Avri Altman <Avri.Altman@wdc.com> wrote:
+>
+> >
+> > Hi Avri,
+> >
+> > On Thu, Feb 6, 2020 at 11:08 PM Avri Altman <Avri.Altman@wdc.com>
+> > wrote:
+> > >
+> > >
+> > > >
+> > > > Hi Avi,
+> > > >
+> > > > On Thu, Feb 6, 2020 at 9:48 PM Avi Shchislowski
+> > > > <Avi.Shchislowski@wdc.com> wrote:
+> > > > >
+> > > > > As it become evident that the hwmon is not a viable option to
+> > implement
+> > > > ufs thermal notification, I would appreciate some concrete comments of
+> > this
+> > > > series.
+> > > >
+> > > > That isn't my reading of this thread.
+> > > >
+> > > > You have two options:
+> > > > 1. extend drivetemp if that makes sense for this particular application.
+> > > > 2. follow the model of other devices that happen to have a built-in
+> > > > temperature sensor and expose the hwmon compatible attributes as a
+> > > > subdevice
+> > > >
+> > > > It appears that option 1 isn't viable, so what about option 2?
+> > > This will require to export the ufs device management commands,
+> > > Which is privet to the ufs driver.
+> > >
+> > > This is not a viable option as well, because it will allow unrestricted access
+> > > (Including format etc.) to the storage device.
+> > >
+> > > Sorry for not making it clearer before.
+> >
+> > I should have clarified further: I meant having the UFS device
+> > register a HWMON driver using this API:
+> > https://www.kernel.org/doc/html/latest/hwmon/hwmon-kernel-api.html
+> >
+> > *Not* writing a separate HWMON driver that uses some private interface.
+> Ok.
+> Just one last question:
+> The ufs spec requires to be able to react upon an exception event from the device.
+> The thermal core provides an api in the form of thermal_notify_framework().
+> What would be the hwmon equivalent for that?
+
+My understanding is that HWMON is just a standardised way to report
+hardware sensor data to userspace. There are "alarm" files that can be
+used to report fault conditions, so any action taken would have to be
+either managed by userspace or configured using thermal zones
+configured in the hardware's devicetree.
+
+thermal_notify_framework() is a way to notify the "other side" of a
+thermal zone to do something to reduce the temperature of that zone.
+E.g. spin up a fan or switch to a lower-power state to cool a CPU.
+Looking at your code, you're only implementing the "sensor" side of
+the thermal zone functionality, so your calls to
+thermal_notify_framework() won't do anything.
+
+Thanks,
+
+--
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
