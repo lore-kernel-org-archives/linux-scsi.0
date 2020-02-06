@@ -1,107 +1,94 @@
-Return-Path: <SRS0=gsTh=3Z=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=lyXb=32=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D05AAC35247
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 22:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84DE5C35247
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 00:56:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD27D214AF
-	for <linux-scsi@archiver.kernel.org>; Wed,  5 Feb 2020 22:45:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 559FE20658
+	for <linux-scsi@archiver.kernel.org>; Thu,  6 Feb 2020 00:56:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="RnmR3066"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727567AbgBEWp0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 5 Feb 2020 17:45:26 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:51281 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727565AbgBEWpZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 17:45:25 -0500
-Received: by mail-pj1-f65.google.com with SMTP id fa20so1597124pjb.1;
-        Wed, 05 Feb 2020 14:45:25 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0bcRadV2UJTOgRUGh5EQgbkbXanJFAz0E1VJFEcU0fA=;
-        b=nL19jTnr+UtIZUrUyh1qfCHUlc3mGJQzrBFaOFL7s0FKvVw0AAcZMWETyJu9M44+Fc
-         Z0U/W1IoFAcyx7HwZD1hb+k35lW2DNEh+Yh1FsyuQlv+fd3gZAwNnA16Gg3PePBaex3d
-         Xa40SjUp5d0r3AxwaLgrptYEYycKIVSjwogwwMpZ4/y0R7ADRWsTdmMTxa7+PzmwpsKc
-         L05i9OTo9MKvCd9+mdV5PSMM8XKypyUnqRlsZ1l/TzGhKwcm9+fB+qx0NtnqRgopwGGV
-         xUZkAy/7lpb9gNhvI9rzeEoOoInGn2ZtxbzNKEyOxHyvDFwvFYCl/kx94e1TBt4d98r/
-         y4uQ==
-X-Gm-Message-State: APjAAAWUTQxx771OjIwcvpvQ+MWe3YcKva0MF5EsydA/Wfx0irm6mHMj
-        Ms2ChOaVyQKSwHZmop2HmoYbF/34NUs=
-X-Google-Smtp-Source: APXvYqy2Be4/PSxc5lyGQOYsxvsoLyc1S9eltGyYFdxnWDALqWHhsNkTXSBAtsvN6XPP9vluDg6QHw==
-X-Received: by 2002:a17:90a:7781:: with SMTP id v1mr538716pjk.108.1580942724481;
-        Wed, 05 Feb 2020 14:45:24 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id f18sm796557pgn.2.2020.02.05.14.45.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Feb 2020 14:45:23 -0800 (PST)
-Subject: Re: [PATCH] scsi: ufs: Fix registers dump vops caused scheduling
- while atomic
+        id S1727415AbgBFA4L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 5 Feb 2020 19:56:11 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47123 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727149AbgBFA4L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Feb 2020 19:56:11 -0500
+X-UUID: f9d453bfefe44ec99df06b74cc22569c-20200206
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=goe3nKLi654rij3M3c+foadwHfpv05lQ2O5yWyHBAbE=;
+        b=RnmR3066tx6Vq++SAYfh/6z9iPLRA66CqrybBeilcYCFapZmcEWqnCE44vrTRl6YXeXBptAzoBsM+AEgDfiuOfmCvb/r6qDjoAyvZU+gFSmKEFdpc01MWHjh67ktJm7WjVwu+TpeEndWGVfplnvJbuHVPLpaFQtmXEwFmvJtOZo=;
+X-UUID: f9d453bfefe44ec99df06b74cc22569c-20200206
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1246544321; Thu, 06 Feb 2020 08:56:04 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 6 Feb 2020 08:54:26 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 6 Feb 2020 08:55:30 +0800
+Message-ID: <1580950556.27391.11.camel@mtksdccf07>
+Subject: Re: [PATCH v5 6/8] scsi: ufs: Add dev ref clock gating wait time
+ support
+From:   Stanley Chu <stanley.chu@mediatek.com>
 To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+CC:     <kuohong.wang@mediatek.com>, <asutoshd@codeaurora.org>,
+        <nguyenb@codeaurora.org>, <hongwus@codeaurora.org>,
+        <rnayak@codeaurora.org>, <linux-scsi@vger.kernel.org>,
+        <kernel-team@android.com>, <saravanak@google.com>,
+        <salyzyn@google.com>, Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Colin Ian King <colin.king@canonical.com>,
         Tomas Winkler <tomas.winkler@intel.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
         open list <linux-kernel@vger.kernel.org>
-References: <1580882795-29675-1-git-send-email-cang@codeaurora.org>
- <3e529862-7790-c506-abaa-9a6972f5d53c@acm.org>
- <749a1db94df00278ec9f5c121cd937fe@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <7931a786-8e2c-1529-8910-3d4f6c816580@acm.org>
-Date:   Wed, 5 Feb 2020 14:45:22 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.3.0
+Date:   Thu, 6 Feb 2020 08:55:56 +0800
+In-Reply-To: <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
+References: <1580721472-10784-1-git-send-email-cang@codeaurora.org>
+         <1580721472-10784-7-git-send-email-cang@codeaurora.org>
+         <1580871040.21785.7.camel@mtksdccf07>
+         <d37515ab264b0c46848ee2b88ba0a676@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-In-Reply-To: <749a1db94df00278ec9f5c121cd937fe@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/4/20 10:31 PM, Can Guo wrote:
-> Do you mean by splitting ufshcd_print_host_regs() into two functions?
-> One behaves identically same to the current function, another one called
-> ufshcd_print_host_regs_nosleep(). No?
+SGkgQ2FuLA0KDQpPbiBXZWQsIDIwMjAtMDItMDUgYXQgMTI6NTIgKzA4MDAsIENhbiBHdW8gd3Jv
+dGU6DQoNCg0KPiBIaSBTdGFubGV5LA0KPiANCj4gV2UgdXNlZCB0byBhc2sgdmVuZG9ycyBhYm91
+dCBpdCwgNTAgaXMgc29tZWhvdyBhZ3JlZWQgYnkgdGhlbS4gRG8geW91IA0KPiBoYXZlIGENCj4g
+YmV0dGVyIHZhbHVlIGluIG1pbmQ/DQo+IA0KPiBGb3IgbWUsIEkganVzdCB3YW50ZWQgdG8gZ2l2
+ZSBpdCAxMCwgc28gdGhhdCB3ZSBjYW4gZGlyZWN0bHkgdXNlIA0KPiB1c2xlZXBfcmFuZ2UNCj4g
+d2l0aCBpdCwgbm8gbmVlZCB0byBkZWNpZGUgd2hldGhlciB0byB1c2UgdWRlbGF5IG9yIHVzbGVl
+cF9yYW5nZS4NCg0KQWN0dWFsbHkgSSBkbyBub3QgaGF2ZSBhbnkgdmFsdWUgaW4gbWluZCBiZWNh
+dXNlIEkgZ3Vlc3MgdGhlIDUwdXMgaGVyZQ0KaXMganVzdCBhIG1hcmdpbiB0aW1lIGFkZGVkIGZv
+ciBzYWZldHkgYXMgeW91ciBjb21tZW50czogIkdpdmUgaXQgbW9yZQ0KdGltZSB0byBiZSBvbiB0
+aGUgc2FmZSBzaWRlIi4NCg0KQW4gZXhhbXBsZSBjYXNlIGlzIHRoYXQgc29tZSB2ZW5kb3JzIG9u
+bHkgc3BlY2lmeSAxdXMgaW4NCmJSZWZDbGtHYXRpbmdXYWl0VGltZSwgc28gdGhpcyA1MHVzIG1h
+eSBiZSB0b28gbG9uZyBjb21wYXJlZCB0byBkZXZpY2Uncw0KcmVxdWlyZW1lbnQuIElmIHN1Y2gg
+ZGV2aWNlIHJlYWxseSBuZWVkcyB0aGlzIGFkZGl0aW9uYWwgNTB1cywgaXQgc2hhbGwNCmJlIHNw
+ZWNpZmllZCBpbiBiUmVmQ2xrR2F0aW5nV2FpdFRpbWUuDQoNClNvIGlmIHRoaXMgYWRkaXRpb25h
+bCBkZWxheSBkb2VzIG5vdCBoYXZlIGFueSBzcGVjaWFsIHJlYXNvbiBvciBub3QNCm1lbnRpb25l
+ZCBieSBVRlMgc3BlY2lmaWNhdGlvbiwgd291bGQgeW91IGNvbnNpZGVyIG1vdmUgaXQgdG8gdmVu
+ZG9yDQpzcGVjaWZpYyBpbXBsZW1lbnRhdGlvbnMuIEJ5IHRoaXMgd2F5LCBpdCB3b3VsZCBiZSBt
+b3JlIGZsZXhpYmxlIHRvIGJlDQpjb250cm9sbGVkIGJ5IHZlbmRvcnMgb3IgYnkgcGxhdGZvcm1z
+Lg0KDQpUaGFua3MsDQpTdGFubGV5DQoNCj4gDQo+IFRoYW5rcywNCj4gQ2FuIEd1by4NCj4gDQo+
+ID4+ICAJCQkJICAgICAgJmRldl9pbmZvLT5tb2RlbCwgU0RfQVNDSUlfU1REKTsNCg0K
 
-Hi Can,
-
-Not really. I had something else in mind.
-
-Having taken a closer look at ufs_qcom_dump_dbg_regs() I started 
-wondering why there are sleep statements in that function. Is the goal 
-of these sleep statements perhaps to reduce how often printk() is 
-called? Has it been considered to remove all sleep calls from 
-ufs_qcom_dump_dbg_regs() and instead add something like the following at 
-the start of that function:
-
-	static DEFINE_RATELIMIT_STATE(_rs,
-				      DEFAULT_RATELIMIT_INTERVAL,
-				      DEFAULT_RATELIMIT_BURST);
-									
-	if (!__ratelimit(&_rs))
-		return;
-
-
-Thanks,
-
-Bart.
