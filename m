@@ -2,83 +2,178 @@ Return-Path: <SRS0=jGTy=33=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B16E6C2BA83
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 17:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D03EAC2BA83
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 18:14:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9039A217BA
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 17:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5A6020726
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 18:14:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mC3+NctI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727387AbgBGRGt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Feb 2020 12:06:49 -0500
-Received: from mout.kundenserver.de ([212.227.17.10]:51093 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727049AbgBGRGs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 12:06:48 -0500
-Received: from mail-lj1-f173.google.com ([209.85.208.173]) by
- mrelayeu.kundenserver.de (mreue108 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1M7ayR-1is7HH3r9p-007ym1; Fri, 07 Feb 2020 18:06:47 +0100
-Received: by mail-lj1-f173.google.com with SMTP id y6so93648lji.0;
-        Fri, 07 Feb 2020 09:06:46 -0800 (PST)
-X-Gm-Message-State: APjAAAUJHNPXCh/xK8YFHLoStO0M8ozKP/4l15jS3+ofrisLfvHUxlQn
-        iAOqtj8EusCpznG9RAxb7yFTLwI9MAu2e89RTqM=
-X-Google-Smtp-Source: APXvYqyFrxs4D067Cq+LTtKdfrn+W0Vf9eBI5h4pPAoPLWMwWdS7Kqx2r3OvJt5B7b7BK2Cuvpcqo/wFc3iKjBsrS34=
-X-Received: by 2002:a2e:5056:: with SMTP id v22mr138394ljd.164.1581095206323;
- Fri, 07 Feb 2020 09:06:46 -0800 (PST)
+        id S1727540AbgBGSOp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Feb 2020 13:14:45 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:62576 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727532AbgBGSOp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 13:14:45 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1581099284; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=Iv4PGza4+6jG1rG8Ui2Bh8AMg6XFP9qGnwOYs7sfY/g=; b=mC3+NctILQStJwPK6qbWGT+kwWW+nzZ/sU+BOkCupZ92uVwU8vu4kZOSO/ATm7/oVpOjfcQ5
+ q/1wlPY8mXBQrgqBR7vwDf2fCIjZiv/QIU0cr4KPvSJMy0XC962Y6Y+9NQr6EZCTPs+tFBNv
+ KmT8Zcy97whH9xIGu7wwskgTkW8=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e3da913.7ff5558e33e8-smtp-out-n01;
+ Fri, 07 Feb 2020 18:14:43 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 07B3CC447A2; Fri,  7 Feb 2020 18:14:42 +0000 (UTC)
+Received: from [10.71.154.194] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DB10BC43383;
+        Fri,  7 Feb 2020 18:14:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DB10BC43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v1 2/2] scsi: ufs: introduce common function to disable
+ host TX LCC
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com, beanhuo@micron.com
+Cc:     cang@codeaurora.org, matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
+References: <20200207070357.17169-1-stanley.chu@mediatek.com>
+ <20200207070357.17169-3-stanley.chu@mediatek.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <3edbf9cd-a3cb-7a99-f6ef-f767fdf64f1e@codeaurora.org>
+Date:   Fri, 7 Feb 2020 10:14:40 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-References: <20191217221708.3730997-21-arnd@arndb.de> <20200207072210.10134-1-youling257@gmail.com>
-In-Reply-To: <20200207072210.10134-1-youling257@gmail.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 7 Feb 2020 17:06:34 +0000
-X-Gmail-Original-Message-ID: <CAK8P3a2n6qttV0hhMHjb7XngA6-Aj4Q9Q_6LdK7LgyoYSvQJSw@mail.gmail.com>
-Message-ID: <CAK8P3a2n6qttV0hhMHjb7XngA6-Aj4Q9Q_6LdK7LgyoYSvQJSw@mail.gmail.com>
-Subject: Re: [PATCH v2 20/27] compat_ioctl: simplify the implementation
-To:     youling257 <youling257@gmail.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:fdtLroLKRF3z9lpaDoAat+saKdez6k1gz9YQ/JdPIcbHjwBh2SR
- cRQdIW8DVR79qmzqUQuhgKbx+WdYHxoQ0do7i5hr1fVa6EJKg5pC6cROq9wYyK9qhzoLcgM
- Jqafa17Fe8mwhjeEUUMPq4eC9N+kw6Vs78frR2Xohi8lDaDziOETYvOrzT20OYYC+p1K9mw
- B2R69JBXeNbHjhZ6gD94Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:ly7G1KQZ0uo=:fERR7UDTKiJeYRbOJJZXwJ
- mKHoYCmN3zdJ+sAOvBYptoQLTQ+oWDBVkJZyHI9LzcBuaRpEuLfs3Zp2V6ao2plD+q1TG1XDq
- Xb/Kb4xSHeH76ydf6aoLsX3cJjFtUP33xdYVxO8Y/nb/SLZTfIHL4ZsxWMAjDRyXG11s/MrLY
- H+hMQfE1zvrQtS0daFK0FtVXaYcIBKyzg/mNcyx+JAwfPL56NmG87tgd2rucwMn25h4aqmcdk
- vkSnMOdjxLE09hNEYb4ldkruUHySCkTOYrDcCaQv51KxO/JT7e76RthjVdrSRsAToK/im3lGZ
- SgBshuowGaZhBjVoTvxOjjRpdjEZREyKOjdsyz/mAN2vatU84hm47XjiSzZGHncelAXSm8yna
- QmqaoZoiEM/xS1T8VPiYORLbDkFyhPGdJefplJQsYYzgGElNeXWAjYq1mtl6BJBYvfVNu6Y+y
- AfOaDuohFym2X6kdekvWRF+Mb8tc3DIZawhs3XSwDHuxB9zWWybsdT6EylCPC8qq1t1Jsvx2D
- sdm25mQ3KV2Eh94d2mYN292LRd4Xl+AaPRrXLXy7iqeFoaSdfeD2dbOqbSUQx7NPff+R4L0MU
- YxzKOo26cCY0wfSnBr0HNQoIBJLHx6490ZUJ+lljfNHDbgGKB5oJgy6Ks5kxdePUHG77+s5vj
- p7vXXS5Gvg6hBpdaNL2TLLL5FBDeXP9ewEXecRIjTvnrx89zGkBupNACJuaTAq2jvX+UYiyT1
- FSsrkkExVn047OxAf7yGbgJHoCVETBYmtJ2vRoIKW3MB3juc98dJMslUAAx0Cyhla5i1JXwY2
- mhs3w49LwyDWx0dGExupZgph8hBMmhjdsu+F4JHqp5IzM1j3v4=
+In-Reply-To: <20200207070357.17169-3-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 7, 2020 at 8:22 AM youling257 <youling257@gmail.com> wrote:
->
-> This patch cause a problem on 64bit kernel 32bit userspace.
-> My 32bit Androidx86 userspace run on 64bit mainline kernel, this patch caused some app not detect root permission.
+On 2/6/2020 11:03 PM, Stanley Chu wrote:
+> Many vendors would like to disable host TX LCC during initialization
+> flow. Introduce a common function for all users to make drivers easier to
+> read and maintained. This patch does not change any functionality.
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
 
-Thanks for you work in bisecting the issue to my patch, sorry to have
-caused you trouble. After Christian Zigotzky
-also reported a problem in this file, I have been able to find a
-specific bug and just submitted a patch for it.
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-Please have a look if that fix addresses your problem, as it's
-possible that there was more than one bug introduced
-by the original patch.
+>   drivers/scsi/ufs/cdns-pltfrm.c  | 2 +-
+>   drivers/scsi/ufs/ufs-hisi.c     | 2 +-
+>   drivers/scsi/ufs/ufs-mediatek.c | 2 +-
+>   drivers/scsi/ufs/ufs-qcom.c     | 4 +---
+>   drivers/scsi/ufs/ufshcd-pci.c   | 2 +-
+>   drivers/scsi/ufs/ufshcd.h       | 5 +++++
+>   6 files changed, 10 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+> index 56a6a1ed5ec2..da065a259f6e 100644
+> --- a/drivers/scsi/ufs/cdns-pltfrm.c
+> +++ b/drivers/scsi/ufs/cdns-pltfrm.c
+> @@ -192,7 +192,7 @@ static int cdns_ufs_link_startup_notify(struct ufs_hba *hba,
+>   	 * and device TX LCC are disabled once link startup is
+>   	 * completed.
+>   	 */
+> -	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
+> +	ufshcd_disable_host_tx_lcc(hba);
+>   
+>   	/*
+>   	 * Disabling Autohibern8 feature in cadence UFS
+> diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+> index 5d6487350a6c..074a6a055a4c 100644
+> --- a/drivers/scsi/ufs/ufs-hisi.c
+> +++ b/drivers/scsi/ufs/ufs-hisi.c
+> @@ -235,7 +235,7 @@ static int ufs_hisi_link_startup_pre_change(struct ufs_hba *hba)
+>   	ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
+>   
+>   	/* Unipro PA_Local_TX_LCC_Enable */
+> -	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x155E, 0x0), 0x0);
+> +	ufshcd_disable_host_tx_lcc(hba);
+>   	/* close Unipro VS_Mk2ExtnSupport */
+>   	ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xD0AB, 0x0), 0x0);
+>   	ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(0xD0AB, 0x0), &value);
+> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+> index 8f73c860f423..9d05962feb15 100644
+> --- a/drivers/scsi/ufs/ufs-mediatek.c
+> +++ b/drivers/scsi/ufs/ufs-mediatek.c
+> @@ -318,7 +318,7 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
+>   	 * to make sure that both host and device TX LCC are disabled
+>   	 * once link startup is completed.
+>   	 */
+> -	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
+> +	ret = ufshcd_disable_host_tx_lcc(hba);
+>   	if (ret)
+>   		return ret;
+>   
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index c69c29a1ceb9..c2e703d58f63 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -554,9 +554,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
+>   		 * completed.
+>   		 */
+>   		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
+> -			err = ufshcd_dme_set(hba,
+> -					UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
+> -					0);
+> +			err = ufshcd_disable_host_tx_lcc(hba);
+>   
+>   		break;
+>   	case POST_CHANGE:
+> diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+> index 3b19de3ae9a3..8f78a8151499 100644
+> --- a/drivers/scsi/ufs/ufshcd-pci.c
+> +++ b/drivers/scsi/ufs/ufshcd-pci.c
+> @@ -44,7 +44,7 @@ static int ufs_intel_disable_lcc(struct ufs_hba *hba)
+>   
+>   	ufshcd_dme_get(hba, attr, &lcc_enable);
+>   	if (lcc_enable)
+> -		ufshcd_dme_set(hba, attr, 0);
+> +		ufshcd_disable_host_tx_lcc(hba);
+>   
+>   	return 0;
+>   }
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 81c71a3e3474..8f516b205c32 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -914,6 +914,11 @@ static inline bool ufshcd_is_hs_mode(struct ufs_pa_layer_attr *pwr_info)
+>   		pwr_info->pwr_tx == FASTAUTO_MODE);
+>   }
+>   
+> +static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
+> +{
+> +	return ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
+> +}
+> +
+>   /* Expose Query-Request API */
+>   int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+>   				  enum query_opcode opcode,
+> 
 
-       Arnd
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
