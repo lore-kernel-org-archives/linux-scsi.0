@@ -2,202 +2,177 @@ Return-Path: <SRS0=jGTy=33=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72122C352A3
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 00:47:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA16EC35247
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 01:09:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EC2F2082E
-	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 00:47:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A7B820658
+	for <linux-scsi@archiver.kernel.org>; Fri,  7 Feb 2020 01:09:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hZQYTq7W"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="M6KbOF8m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726674AbgBGArc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 6 Feb 2020 19:47:32 -0500
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:44866 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726509AbgBGArc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2020 19:47:32 -0500
-Received: by mail-lj1-f193.google.com with SMTP id q8so251540ljj.11;
-        Thu, 06 Feb 2020 16:47:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=AY8ajexCAjKq8Bc5ioUkiIPxTkipEMTNRaq2FmUDl74=;
-        b=hZQYTq7WKtFbU46SHYU9FbNPt7fDY32V6tPM8LIdbg29M/Hhxr5KOsJeXzzGcM9H9/
-         EFtEwDiiYf9IJUT5cFwmYzIDR1RpyhQZem3mS07l8ORF74yatZkc35OGVGH/4lcQfkSm
-         ghl82f09qpkYNh/FUGB7hgDpW/nrB7acERxNLGwared71ctAoeW2GBJwrxSH8fz8Km5W
-         zrfgqDHUpSE6EbqjDMu+lUpS5Vn8NCQv5PntRn+d/54eJKcqPnB+MyN9/HMDPuZgnSSk
-         6tOhAaNvnlpHbS3axVeGiLdNxvgHHkGCslCGy0X1Oks5457PIOO9dLKs/bT5xREoaSyo
-         1N7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AY8ajexCAjKq8Bc5ioUkiIPxTkipEMTNRaq2FmUDl74=;
-        b=S97OPjCm1qBqy1+TiVbxxvbHiNLfcBe7NCwoWq0UIDJIQX4zGjNly8ZHfk06tL8FRw
-         ldmpdOg0EJlreXxisuGpLkcbyf3dicHJTT8shCNKHp48PWX0zm7gf1my1I6G7BOZobQG
-         DoNLudYe4m3kRT0bpKa5Q/XZbCr8LCGlwrEaCwjmuZyFUOhHtrNLUBCmmjTLMu1TayMy
-         fjCiJ2yvNYikd1UD9G34LMHUppgbqiZEroP5ENE2KOwvv18v6pa0b9BoRQodsfBmNQLD
-         4I/Kdck9iZ0LQuPJQbC5MLiS+ACu1Y0nhaLg1f9mdI0yoSOmRfVTTCeppQN6iOy8dhLf
-         x6gw==
-X-Gm-Message-State: APjAAAUwQ+uCu00xNnhm45uJHXCVli/DID3E86S0pBQTeNxWOMUtoPnc
-        H+zPCD8akHRm4xw01CJt6RLqeY/b76y4RRoCznI=
-X-Google-Smtp-Source: APXvYqwTSf415WHuEeaUU89V7hBvGUArwzaJGD0UfY1+2mGcyXuC3ndtrGSJYGiImDHSEfMPoo124DodUi9SmfE6D3U=
-X-Received: by 2002:a2e:b6ce:: with SMTP id m14mr3412822ljo.99.1581036449777;
- Thu, 06 Feb 2020 16:47:29 -0800 (PST)
+        id S1726956AbgBGBJm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 6 Feb 2020 20:09:42 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:32687 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726597AbgBGBJl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Feb 2020 20:09:41 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1581037781; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=xylf21tQ/JOS5H4BtABwYa4jpJVYq9qvknGFCyM7akU=;
+ b=M6KbOF8mS0O9g9cBljiNVjdYY4yF9G+y9SGHX1QMQ8Gds0AIZNUvrVrWAuP8C0QPSrnMb0A9
+ pQGWe5ADah0cXZrApNmeYJMVLH4rbxCsbwgVKMRAtWK/yvqQ+afvkaFbvbOwtaGX7PCVrhQH
+ uVF1FX1XNi22sXULOqdzuc02WPw=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e3cb8d2.7fc8407b2ab0-smtp-out-n03;
+ Fri, 07 Feb 2020 01:09:38 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1CA3DC447A1; Fri,  7 Feb 2020 01:09:37 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 337AAC43383;
+        Fri,  7 Feb 2020 01:09:36 +0000 (UTC)
 MIME-Version: 1.0
-References: <1580640419-6703-1-git-send-email-avi.shchislowski@wdc.com>
- <20200202192105.GA20107@roeck-us.net> <MN2PR04MB61906E820FAF0F17082D53AE9A000@MN2PR04MB6190.namprd04.prod.outlook.com>
- <94cb1e97-18ed-ebec-23c2-b4d87434726a@roeck-us.net> <MN2PR04MB69910152F14A7D481029E4ECFC000@MN2PR04MB6991.namprd04.prod.outlook.com>
- <20200203214733.GA30898@roeck-us.net> <BY5PR04MB69809A3BEFD629A67FB563CDFC030@BY5PR04MB6980.namprd04.prod.outlook.com>
- <MN2PR04MB6190D9E63717D37285DADBB09A1D0@MN2PR04MB6190.namprd04.prod.outlook.com>
- <CAGRGNgWG2fvY33j0m00SkguU8N4TJttY4KeNtOxZ7HzTTXA=yw@mail.gmail.com>
- <MN2PR04MB6991848EBC8DED439FCD7C49FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
- <CAGRGNgUA=LHbWqZY+hsYjfsTbyftc3uoGv6S3p8E4zPQyqsOGQ@mail.gmail.com>
- <MN2PR04MB699190E3474F82BEF9B91A58FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
- <CAGRGNgWob+0t35AYXfzCqKtLjBgw=p8MhqDCKF=5_JGe5veqtQ@mail.gmail.com> <MN2PR04MB699192FB02C86DE567785A83FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
-In-Reply-To: <MN2PR04MB699192FB02C86DE567785A83FC1D0@MN2PR04MB6991.namprd04.prod.outlook.com>
-From:   Julian Calaby <julian.calaby@gmail.com>
-Date:   Fri, 7 Feb 2020 11:47:18 +1100
-Message-ID: <CAGRGNgXWiJ1BVU_kKTMYfxnGRnSJU-YUAWogrLmxagVm9_W1+g@mail.gmail.com>
-Subject: Re: [PATCH 0/5] scsi: ufs: ufs device as a temperature sensor
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Guenter Roeck <linux@roeck-us.net>,
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 07 Feb 2020 09:09:36 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7 7/8] scsi: ufs-qcom: Delay specific time before gate
+ ref clk
+In-Reply-To: <20200206203336.GQ2514@yoga>
+References: <1580978008-9327-1-git-send-email-cang@codeaurora.org>
+ <1580978008-9327-8-git-send-email-cang@codeaurora.org>
+ <20200206203336.GQ2514@yoga>
+Message-ID: <9de3632cf0c65347684b8c5f4f3c63b3@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri,
+On 2020-02-07 04:33, Bjorn Andersson wrote:
+> On Thu 06 Feb 00:33 PST 2020, Can Guo wrote:
+> 
+>> After enter hibern8, as UFS JEDEC ver 3.0 requires, a specific gating 
+>> wait
+>> time is required before disable the device reference clock. If it is 
+>> not
+>> specified, use the old delay.
+>> 
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+>> Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufs-qcom.c | 22 +++++++++++++++++++---
+>>  1 file changed, 19 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+>> index 85d7c17..39eefa4 100644
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>> @@ -833,6 +833,8 @@ static int ufs_qcom_bus_register(struct 
+>> ufs_qcom_host *host)
+>> 
+>>  static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, 
+>> bool enable)
+>>  {
+>> +	unsigned long gating_wait;
+>> +
+>>  	if (host->dev_ref_clk_ctrl_mmio &&
+>>  	    (enable ^ host->is_dev_ref_clk_enabled)) {
+>>  		u32 temp = readl_relaxed(host->dev_ref_clk_ctrl_mmio);
+>> @@ -845,11 +847,25 @@ static void ufs_qcom_dev_ref_clk_ctrl(struct 
+>> ufs_qcom_host *host, bool enable)
+>>  		/*
+>>  		 * If we are here to disable this clock it might be immediately
+>>  		 * after entering into hibern8 in which case we need to make
+>> -		 * sure that device ref_clk is active at least 1us after the
+>> +		 * sure that device ref_clk is active for specific time after
+>>  		 * hibern8 enter.
+>>  		 */
+>> -		if (!enable)
+>> -			udelay(1);
+>> +		if (!enable) {
+>> +			gating_wait = host->hba->dev_info.clk_gating_wait_us;
+>> +			if (!gating_wait) {
+> 
+> Afaict this can't happen, because in patch 6 you check for gating_wait
+> being 0 and if so set it to 0xff.
+> 
 
-On Fri, Feb 7, 2020 at 6:32 AM Avri Altman <Avri.Altman@wdc.com> wrote:
->
-> Hi Julian,
->
-> >
-> >
-> > Hi Avri,
-> >
-> > On Fri, Feb 7, 2020 at 12:41 AM Avri Altman <Avri.Altman@wdc.com> wrote:
-> > >
-> > > >
-> > > > Hi Avri,
-> > > >
-> > > > On Thu, Feb 6, 2020 at 11:08 PM Avri Altman <Avri.Altman@wdc.com>
-> > > > wrote:
-> > > > >
-> > > > >
-> > > > > >
-> > > > > > Hi Avi,
-> > > > > >
-> > > > > > On Thu, Feb 6, 2020 at 9:48 PM Avi Shchislowski
-> > > > > > <Avi.Shchislowski@wdc.com> wrote:
-> > > > > > >
-> > > > > > > As it become evident that the hwmon is not a viable option to
-> > > > implement
-> > > > > > ufs thermal notification, I would appreciate some concrete comments
-> > of
-> > > > this
-> > > > > > series.
-> > > > > >
-> > > > > > That isn't my reading of this thread.
-> > > > > >
-> > > > > > You have two options:
-> > > > > > 1. extend drivetemp if that makes sense for this particular application.
-> > > > > > 2. follow the model of other devices that happen to have a built-in
-> > > > > > temperature sensor and expose the hwmon compatible attributes as
-> > a
-> > > > > > subdevice
-> > > > > >
-> > > > > > It appears that option 1 isn't viable, so what about option 2?
-> > > > > This will require to export the ufs device management commands,
-> > > > > Which is privet to the ufs driver.
-> > > > >
-> > > > > This is not a viable option as well, because it will allow unrestricted
-> > access
-> > > > > (Including format etc.) to the storage device.
-> > > > >
-> > > > > Sorry for not making it clearer before.
-> > > >
-> > > > I should have clarified further: I meant having the UFS device
-> > > > register a HWMON driver using this API:
-> > > > https://www.kernel.org/doc/html/latest/hwmon/hwmon-kernel-
-> > api.html
-> > > >
-> > > > *Not* writing a separate HWMON driver that uses some private
-> > interface.
-> > > Ok.
-> > > Just one last question:
-> > > The ufs spec requires to be able to react upon an exception event from the
-> > device.
-> > > The thermal core provides an api in the form of
-> > thermal_notify_framework().
-> > > What would be the hwmon equivalent for that?
-> >
-> > My understanding is that HWMON is just a standardised way to report
-> > hardware sensor data to userspace. There are "alarm" files that can be
-> > used to report fault conditions, so any action taken would have to be
-> > either managed by userspace or configured using thermal zones
-> > configured in the hardware's devicetree.
-> Those "alarms" are  implemented as part of the modules under drivers/hwmon/ isn't it?
-> We already established that this is not an option for the ufs driver.
+Sorry, I was intended to give clk_gating_wait_us values only if it is
+a UFS3.0 device. I will revise patch 6/8.
 
-The HWMON API I pointed you to is a way for _any_ driver to implement
-the necessary bits and pieces to report temperatures, alarms, etc.
+>> +				udelay(1);
+>> +			} else {
+>> +				/*
+>> +				 * bRefClkGatingWaitTime defines the minimum
+>> +				 * time for which the reference clock is
+>> +				 * required by device during transition from
+>> +				 * HS-MODE to LS-MODE or HIBERN8 state. Give it
+>> +				 * more time to be on the safe side.
+>> +				 */
+>> +				gating_wait += 10;
+>> +				usleep_range(gating_wait, gating_wait + 10);
+> 
+> I presume there's no strong requirement on the max, so how about using 
+> a
+> substantially larger max - say 1k, or 10k - to allow the usleep_range()
+> to do it's job?
+> 
+> 
+> PS. Please include linux-arm-msm@ on all the patches in the series, not
+> just two of them.
+> 
+> Regards,
+> Bjorn
+> 
 
-It is _not_ restricted to modules under drivers/hwmon/ - you can
-implement all parts of the HWMON interface from any driver anywhere.
+bRefClkGatingWaitTime, as vendor defined in their device attribute is 
+usually
+around 50~100, 1k or 10k delay makes it too large. usleep_range() works 
+well
+so long as the delay is within (10us - 20ms), so I added 10 to make sure 
+it is
+above 10us.
 
-Which means that all that is required to report alarms is to simply
-implement support for that particular type of file.
-
-> > thermal_notify_framework() is a way to notify the "other side" of a
-> > thermal zone to do something to reduce the temperature of that zone.
-> > E.g. spin up a fan or switch to a lower-power state to cool a CPU.
-> > Looking at your code, you're only implementing the "sensor" side of
-> > the thermal zone functionality, so your calls to
-> > thermal_notify_framework() won't do anything.
-> Right.  The thermal core allows to react to such notifications,
-> Provided that the thermal zone device has a governor defined,
-> And/or notify ops etc.
-
-Yes, but you don't define a cooling device, so there's nothing to
-react to those notifications.
-
-> Should the current patches implement those callbacks or not,
-> Can be discussed during their review process.
-> But the important thing is that the thermal core support it in an intuitive and simple way,
-> While the hwmon doesn't.
->
-> We are indifference with respect of which subsystem to use.
-> The thermal core was our first choice because we bumped into it,
-> Looking for a way to raise thermal exceptions.
-> It provides the functionality we need, and other devices uses it,
-> Why the insistence not to use it?
-
-Other devices using the thermal zone subsystem implement both "sides"
-of the zone: a sensor that monitors the device and cooling device(s)
-which should be able to react to that. E.g. lowering the clock speed
-of a CPU, slowing the transmission speed of a WiFi card, etc.
-
-Your implementation doesn't do that.
+SLEEPING FOR ~USECS OR SMALL MSECS ( 10us - 20ms):
+	* Use usleep_range
+https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
 Thanks,
 
--- 
-Julian Calaby
+Can Guo.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+>> +			}
+>> +		}
+>> 
+>>  		writel_relaxed(temp, host->dev_ref_clk_ctrl_mmio);
+>> 
+>> --
+>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
+>> Forum,
+>> a Linux Foundation Collaborative Project
