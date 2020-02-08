@@ -2,114 +2,106 @@ Return-Path: <SRS0=yjur=34=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 560CEC2BA83
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 00:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0782C35250
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:12:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 282B822522
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 00:51:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="otksY1Gj"
+	by mail.kernel.org (Postfix) with ESMTP id 9F6FA21741
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727597AbgBHAvS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Feb 2020 19:51:18 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:60387 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727574AbgBHAvQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 19:51:16 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581123076; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=i0UPuEk6K/s4FZ/ntBE5LFbUEQNQedXOFXrUR/093vk=; b=otksY1GjodiF1ssez79DbOolUSMJ3jcYdKYhqjHKg3EdiMZattSOZ2j0cqDwcY++8WmDo1AM
- qKgGWiOVQ3rUSHYNVOmlgg9bWm/m78tXRGG7n2UPDcm5YMvQpUIP+J8thVHFae/H7hMC/3+i
- I1zuw1FpIiXPQzBCN18hh0iS/Ts=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3e05ff.7f4e4b528df8-smtp-out-n02;
- Sat, 08 Feb 2020 00:51:11 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B4723C447B2; Sat,  8 Feb 2020 00:51:09 +0000 (UTC)
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5D22AC4479C;
-        Sat,  8 Feb 2020 00:51:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5D22AC4479C
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 7/7] scsi: ufs-qcom: Delay specific time before gate ref clk
-Date:   Fri,  7 Feb 2020 16:50:29 -0800
-Message-Id: <1581123030-12023-8-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1581123030-12023-1-git-send-email-cang@codeaurora.org>
-References: <1581123030-12023-1-git-send-email-cang@codeaurora.org>
+        id S1727123AbgBHDMK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Feb 2020 22:12:10 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:33582 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbgBHDMK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 22:12:10 -0500
+Received: by mail-pg1-f196.google.com with SMTP id 6so802840pgk.0;
+        Fri, 07 Feb 2020 19:12:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=LHjE4aw0geMA8WyiTQM05zFr0hQYO2SelPCxCuQgepg=;
+        b=e9n/Yzds49DveJbJcMLJxZKsO0CN42S/bR9JhhwEa99nYxXXUyGRgXEt0RzeQ42CP5
+         o1uiVMgmrQTKC6+6H7c1LEKwr3sBuTtKN7qlw127S0vlXdbWtO9gnkYYbMPfF7sz/FwT
+         4io8P43UYf6b0Eg1SZvqen3fPcamw0xMfO71QGwaDpXAb9UeQWZF9BFCl2EUOab9472X
+         nabhDF14O8WUnKpHCRiWF8ufpsc0R+pzPp4yOYEdjqj0eBb596fgwBPKzN7+Q4WMnbzB
+         NQXMNjPhoSu7FYX6eIp1mw57etcc0yF60GfXtX9q9UGBCWM+QcipztEz+t0sewvHuPx5
+         2ttg==
+X-Gm-Message-State: APjAAAX+XsKBa2jtcO1CbhyfaBGfSEgLwK34brB8BX6Sk5866ZhGEPi3
+        VhLEa0hZw2Yc30QO7httdz3jXx1gb1Q=
+X-Google-Smtp-Source: APXvYqxSQXVjq8PdH9GA01Rd88i5qBTTXRYUs729DU+bD7YELr7saX5utp5rtYa7HODz8u8pLNhKEg==
+X-Received: by 2002:a63:ba05:: with SMTP id k5mr2409915pgf.158.1581131528931;
+        Fri, 07 Feb 2020 19:12:08 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:81e7:2f8f:8d7f:e4b7? ([2601:647:4000:d7:81e7:2f8f:8d7f:e4b7])
+        by smtp.gmail.com with ESMTPSA id v8sm4190556pff.151.2020.02.07.19.12.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Feb 2020 19:12:08 -0800 (PST)
+Subject: Re: [LIO-target] BUG: Deleting a LUN hangs in transport_clear_lun_ref
+To:     Pavel Zakharov <pavel.zakharov@delphix.com>,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <9A92D656-A796-4858-85CD-3750BDACFA28@delphix.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <a1291c13-628f-edf3-3778-56b25f02edaf@acm.org>
+Date:   Fri, 7 Feb 2020 19:12:06 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
+MIME-Version: 1.0
+In-Reply-To: <9A92D656-A796-4858-85CD-3750BDACFA28@delphix.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-After enter hibern8, as UFS JEDEC ver 3.0 requires, a specific gating wait
-time is required before disable the device reference clock. If it is not
-specified, use the old delay.
+On 2020-02-07 10:48, Pavel Zakharov wrote:
+> I haven’t yet tried rebuilding the kernel with the patch reverted,> but that is the next step I’m planning to try once I figure out how
+> to do it.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Hi Pavel,
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 85d7c17..db14a83 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -845,11 +845,27 @@ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
- 		/*
- 		 * If we are here to disable this clock it might be immediately
- 		 * after entering into hibern8 in which case we need to make
--		 * sure that device ref_clk is active at least 1us after the
-+		 * sure that device ref_clk is active for specific time after
- 		 * hibern8 enter.
- 		 */
--		if (!enable)
--			udelay(1);
-+		if (!enable) {
-+			unsigned long gating_wait;
-+
-+			gating_wait = host->hba->dev_info.clk_gating_wait_us;
-+			if (!gating_wait) {
-+				udelay(1);
-+			} else {
-+				/*
-+				 * bRefClkGatingWaitTime defines the minimum
-+				 * time for which the reference clock is
-+				 * required by device during transition from
-+				 * HS-MODE to LS-MODE or HIBERN8 state. Give it
-+				 * more delay to be on the safe side.
-+				 */
-+				gating_wait += 10;
-+				usleep_range(gating_wait, gating_wait + 10);
-+			}
-+		}
- 
- 		writel_relaxed(temp, host->dev_ref_clk_ctrl_mmio);
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+How about verifying as follows whether that patch is the root cause:
+
+git clone
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+linux-kernel &&
+cd linux-kernel &&
+git revert 83f85b8ec305
+
+and next configure, build and install the kernel, reboot and rerun your
+test.
+
+Thanks,
+
+Bart.
