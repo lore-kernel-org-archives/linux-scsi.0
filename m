@@ -2,51 +2,57 @@ Return-Path: <SRS0=yjur=34=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0782C35250
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4672C2BA83
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F6FA21741
-	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:12:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B67402082E
+	for <linux-scsi@archiver.kernel.org>; Sat,  8 Feb 2020 03:17:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727123AbgBHDMK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 7 Feb 2020 22:12:10 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:33582 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726995AbgBHDMK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 22:12:10 -0500
-Received: by mail-pg1-f196.google.com with SMTP id 6so802840pgk.0;
-        Fri, 07 Feb 2020 19:12:09 -0800 (PST)
+        id S1727076AbgBHDRV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 7 Feb 2020 22:17:21 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:55462 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbgBHDRV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Feb 2020 22:17:21 -0500
+Received: by mail-pj1-f65.google.com with SMTP id d5so1712920pjz.5
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Feb 2020 19:17:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=LHjE4aw0geMA8WyiTQM05zFr0hQYO2SelPCxCuQgepg=;
-        b=e9n/Yzds49DveJbJcMLJxZKsO0CN42S/bR9JhhwEa99nYxXXUyGRgXEt0RzeQ42CP5
-         o1uiVMgmrQTKC6+6H7c1LEKwr3sBuTtKN7qlw127S0vlXdbWtO9gnkYYbMPfF7sz/FwT
-         4io8P43UYf6b0Eg1SZvqen3fPcamw0xMfO71QGwaDpXAb9UeQWZF9BFCl2EUOab9472X
-         nabhDF14O8WUnKpHCRiWF8ufpsc0R+pzPp4yOYEdjqj0eBb596fgwBPKzN7+Q4WMnbzB
-         NQXMNjPhoSu7FYX6eIp1mw57etcc0yF60GfXtX9q9UGBCWM+QcipztEz+t0sewvHuPx5
-         2ttg==
-X-Gm-Message-State: APjAAAX+XsKBa2jtcO1CbhyfaBGfSEgLwK34brB8BX6Sk5866ZhGEPi3
-        VhLEa0hZw2Yc30QO7httdz3jXx1gb1Q=
-X-Google-Smtp-Source: APXvYqxSQXVjq8PdH9GA01Rd88i5qBTTXRYUs729DU+bD7YELr7saX5utp5rtYa7HODz8u8pLNhKEg==
-X-Received: by 2002:a63:ba05:: with SMTP id k5mr2409915pgf.158.1581131528931;
-        Fri, 07 Feb 2020 19:12:08 -0800 (PST)
+        bh=byhBZzoWFfwGTDH0WFpdeqjyck11jKKD2PxRgiJNnoE=;
+        b=Ne4OaxdQeRQLMWVzzP0EYYpnzh24217TdELc/zSpmb7/IlTpQV5OsRKnX/rFjyERT2
+         p2B6L2NMhIIw3oaWLjxLNFJwS43Gw3dZcN8j2EWKoq1yPNVO9ts4d8yBOzMe9FT33XMW
+         11I1yH3yzv1FJFsivctmeaTdRzJZtLVQAa2bUzd2IVywkj+uH/lKn8kF4POC8mCpWXcD
+         3m1oiFqrXHLfcf+1Hl+OIG0Coa2BUqOdZ5QnWzHaa7DKKMl8VL4Hfd5SKXaYMYPcruPJ
+         DbygtXgWOczaQJfLh9mVYsOLm0doDl0albgVOzySb4Cc76vp+1dMuTtmKfCbNsk+hdTO
+         J9kQ==
+X-Gm-Message-State: APjAAAUWtEFffMAeYOSAlp0W2ecOiCVAut1xciXcSXJUPJxtCAClZXtI
+        hOlCqnc+YNdjAU0o2S591cg=
+X-Google-Smtp-Source: APXvYqwpR5KdV3lzHF64cKOBqmMn45+YfXkfgrtjqxEcHlkd8D8v+PPAKBnS0ulmmZBcR5N2L4qxTA==
+X-Received: by 2002:a17:90a:858a:: with SMTP id m10mr7530448pjn.117.1581131840376;
+        Fri, 07 Feb 2020 19:17:20 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:81e7:2f8f:8d7f:e4b7? ([2601:647:4000:d7:81e7:2f8f:8d7f:e4b7])
-        by smtp.gmail.com with ESMTPSA id v8sm4190556pff.151.2020.02.07.19.12.07
+        by smtp.gmail.com with ESMTPSA id j8sm4009836pjb.4.2020.02.07.19.17.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Feb 2020 19:12:08 -0800 (PST)
-Subject: Re: [LIO-target] BUG: Deleting a LUN hangs in transport_clear_lun_ref
-To:     Pavel Zakharov <pavel.zakharov@delphix.com>,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <9A92D656-A796-4858-85CD-3750BDACFA28@delphix.com>
+        Fri, 07 Feb 2020 19:17:19 -0800 (PST)
+Subject: Re: [PATCH 0/4] qla2xxx patches for kernel v5.6
+To:     Martin Wilck <mwilck@suse.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>
+Cc:     linux-scsi@vger.kernel.org, "dwagner@suse.de" <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20191209180223.194959-1-bvanassche@acm.org>
+ <bb273446a0f294e37dc0afb2c450fb761e345260.camel@suse.com>
+ <559ee60f-43e8-b228-f14b-7453d62e7780@acm.org>
+ <cb2ad8b48a412ad164ebbe809bc80b238b16a0b4.camel@suse.com>
+ <4478372c-7e34-c35f-6ccc-dff1422b6256@acm.org>
+ <44e8e2cad35ea91f4b4a8fceb2e12930c62760b1.camel@suse.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -71,37 +77,37 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <a1291c13-628f-edf3-3778-56b25f02edaf@acm.org>
-Date:   Fri, 7 Feb 2020 19:12:06 -0800
+Message-ID: <f4c4a95d-7d93-9989-2bf7-097102618e01@acm.org>
+Date:   Fri, 7 Feb 2020 19:17:18 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <9A92D656-A796-4858-85CD-3750BDACFA28@delphix.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <44e8e2cad35ea91f4b4a8fceb2e12930c62760b1.camel@suse.com>
+Content-Type: text/plain; charset=iso-8859-15
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-07 10:48, Pavel Zakharov wrote:
-> I haven’t yet tried rebuilding the kernel with the patch reverted,> but that is the next step I’m planning to try once I figure out how
-> to do it.
+On 2020-02-07 01:09, Martin Wilck wrote:
+> Sorry for insisting - in your original submission "Revert "qla2xxx: Fix
+> Nport ID display value" from 11/09/2019, you'd identified this as a
+> regression caused by 0aabb6b699f7 ("scsi: qla2xxx: Fix Nport ID display
+> value"). Are you saying that that wasn't the whole truth? Had N2N been
+> broken before already? Did N2N with "old" adapters ever work with
+> previous versions of the driver? Which ones?
 
-Hi Pavel,
+Hi Martin,
 
-How about verifying as follows whether that patch is the root cause:
-
-git clone
-git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-linux-kernel &&
-cd linux-kernel &&
-git revert 83f85b8ec305
-
-and next configure, build and install the kernel, reboot and rerun your
-test.
-
-Thanks,
+My conclusion is indeed that N2N is broken since a long time for at
+least the 8 Gb/s QLogic FC adapter. The test I run is to set the
+qlini_mode kernel module parameter to dual, to connect two ports of a
+dual port adapter to each other and to make both ports log in to each
+other. If I run this test against a 32 Gb/s dual port adapter then I
+always see that both ports log in to each other. If I run this test
+against an 8 Gb/s dual port adapter then I see that most of the time
+only one port logs in to another port. Sometimes no login happens at all.
 
 Bart.
