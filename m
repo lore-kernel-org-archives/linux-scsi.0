@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F28A7C352A5
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 02:38:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C3FEC3F68F
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 02:38:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDA232070A
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 02:38:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6791120848
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 02:38:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="r3LmBELf"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="WJMvRR/9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727922AbgBKCiU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 10 Feb 2020 21:38:20 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:46297 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727877AbgBKCiT (ORCPT
+        id S1727891AbgBKCiX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 10 Feb 2020 21:38:23 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:48499 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727878AbgBKCiU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 10 Feb 2020 21:38:19 -0500
+        Mon, 10 Feb 2020 21:38:20 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581388698; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1581388699; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=9SGjnvm6LlZlgsWKDoqurru12ybAut9xXpgs6hQ/Ncc=; b=r3LmBELfH7VJV3jPsWMp+lkyHbGipyC51uciNdbkn1xlpmV2Jt9CN54EjqNN77pLXRPnIrHK
- 8UM5Mq0J+SSf+aVVFFtsvBx3UtHUNu450tsRtGaJ1Wt++AoHu81EtMcqqnhYXJIX/JYz5L+6
- hU7ego0KxCkDTOqaeRyaKh1S2sA=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ bh=9W9psAbZGCOY1elBSGC8NeGr+vg8svmuXjRyzFIlASU=; b=WJMvRR/9D9hYJh2bpXu4MdRkv5BZu7BQNCO9iuVlMY5wfQj8nJAmPyvY9PUHWSuIEKZFshEm
+ 5SPSo1XfGceOFgFyzzAsryHNEUZrIzbSaNNm2UUux9jheEr41y0qqjTEFVv3NXCltXixrNDJ
+ 3VQ9Rw6Ll0WRpGmPaAwqQoBEJRc=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e421399.7f39071e7688-smtp-out-n01;
- Tue, 11 Feb 2020 02:38:17 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e421395.7f8e2f324228-smtp-out-n01;
+ Tue, 11 Feb 2020 02:38:13 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 14EBAC447A4; Tue, 11 Feb 2020 02:38:16 +0000 (UTC)
+        id 483D6C447A2; Tue, 11 Feb 2020 02:38:12 +0000 (UTC)
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 42EBDC4479C;
-        Tue, 11 Feb 2020 02:38:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 42EBDC4479C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E5F68C4479D;
+        Tue, 11 Feb 2020 02:38:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E5F68C4479D
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
 From:   Can Guo <cang@codeaurora.org>
@@ -49,24 +49,17 @@ To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support),
-        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
-        support)
-Subject: [PATCH v9 4/7] scsi: ufs: Remove the check before call setup clock notify vops
-Date:   Mon, 10 Feb 2020 18:37:46 -0800
-Message-Id: <1581388671-18078-5-git-send-email-cang@codeaurora.org>
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v9 3/7] scsi: ufs-qcom: Adjust bus bandwidth voting and unvoting
+Date:   Mon, 10 Feb 2020 18:37:45 -0800
+Message-Id: <1581388671-18078-4-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1581388671-18078-1-git-send-email-cang@codeaurora.org>
 References: <1581388671-18078-1-git-send-email-cang@codeaurora.org>
@@ -75,60 +68,157 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The functionality of vendor specific ops should be handled properly in
-platform specific driver, but should not count on the UFS driver.
+The bus bandwidth voting is required to be done before the bus clocks
+are enabled, and the unvoting is required to be done only after the bus
+clocks are disabled.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 26 ++++++--------------------
- 1 file changed, 6 insertions(+), 20 deletions(-)
+ drivers/scsi/ufs/ufs-qcom.c | 78 ++++++++++++++++++++++++++++++---------------
+ 1 file changed, 53 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 83ae093..bbc2607 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7402,16 +7402,9 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 	if (list_empty(head))
- 		goto out;
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index c69c29a1c..ded08fb 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -38,7 +38,6 @@ enum {
  
--	/*
--	 * vendor specific setup_clocks ops may depend on clocks managed by
--	 * this standard driver hence call the vendor specific setup_clocks
--	 * before disabling the clocks managed here.
--	 */
--	if (!on) {
--		ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
--		if (ret)
--			return ret;
--	}
-+	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
-+	if (ret)
-+		return ret;
+ static struct ufs_qcom_host *ufs_qcom_hosts[MAX_UFS_QCOM_HOSTS];
  
- 	list_for_each_entry(clki, head, list) {
- 		if (!IS_ERR_OR_NULL(clki->clk)) {
-@@ -7435,16 +7428,9 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+-static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote);
+ static void ufs_qcom_get_default_testbus_cfg(struct ufs_qcom_host *host);
+ static int ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div(struct ufs_hba *hba,
+ 						       u32 clk_cycles);
+@@ -674,7 +673,7 @@ static void ufs_qcom_get_speed_mode(struct ufs_pa_layer_attr *p, char *result)
+ 	}
+ }
+ 
+-static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
++static int __ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
+ {
+ 	int err = 0;
+ 
+@@ -705,7 +704,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+ 
+ 	vote = ufs_qcom_get_bus_vote(host, mode);
+ 	if (vote >= 0)
+-		err = ufs_qcom_set_bus_vote(host, vote);
++		err = __ufs_qcom_set_bus_vote(host, vote);
+ 	else
+ 		err = vote;
+ 
+@@ -716,6 +715,35 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+ 	return err;
+ }
+ 
++static int ufs_qcom_set_bus_vote(struct ufs_hba *hba, bool on)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	int vote, err;
++
++	/*
++	 * In case ufs_qcom_init() is not yet done, simply ignore.
++	 * This ufs_qcom_set_bus_vote() shall be called from
++	 * ufs_qcom_init() after init is done.
++	 */
++	if (!host)
++		return 0;
++
++	if (on) {
++		vote = host->bus_vote.saved_vote;
++		if (vote == host->bus_vote.min_bw_vote)
++			ufs_qcom_update_bus_bw_vote(host);
++	} else {
++		vote = host->bus_vote.min_bw_vote;
++	}
++
++	err = __ufs_qcom_set_bus_vote(host, vote);
++	if (err)
++		dev_err(hba->dev, "%s: set bus vote failed %d\n",
++				 __func__, err);
++
++	return err;
++}
++
+ static ssize_t
+ show_ufs_to_mem_max_bus_bw(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
+@@ -792,7 +820,7 @@ static int ufs_qcom_update_bus_bw_vote(struct ufs_qcom_host *host)
+ 	return 0;
+ }
+ 
+-static int ufs_qcom_set_bus_vote(struct ufs_qcom_host *host, int vote)
++static int ufs_qcom_set_bus_vote(struct ufs_hba *host, bool on)
+ {
+ 	return 0;
+ }
+@@ -1030,8 +1058,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 				 enum ufs_notify_change_status status)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+-	int err;
+-	int vote = 0;
++	int err = 0;
+ 
+ 	/*
+ 	 * In case ufs_qcom_init() is not yet done, simply ignore.
+@@ -1041,28 +1068,28 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 	if (!host)
+ 		return 0;
+ 
+-	if (on && (status == POST_CHANGE)) {
+-		/* enable the device ref clock for HS mode*/
+-		if (ufshcd_is_hs_mode(&hba->pwr_info))
+-			ufs_qcom_dev_ref_clk_ctrl(host, true);
+-		vote = host->bus_vote.saved_vote;
+-		if (vote == host->bus_vote.min_bw_vote)
+-			ufs_qcom_update_bus_bw_vote(host);
+-
+-	} else if (!on && (status == PRE_CHANGE)) {
+-		if (!ufs_qcom_is_link_active(hba)) {
+-			/* disable device ref_clk */
+-			ufs_qcom_dev_ref_clk_ctrl(host, false);
++	switch(status) {
++	case PRE_CHANGE:
++		if (on) {
++			err = ufs_qcom_set_bus_vote(hba, true);
++		} else {
++			if (!ufs_qcom_is_link_active(hba)) {
++				/* disable device ref_clk */
++				ufs_qcom_dev_ref_clk_ctrl(host, false);
++			}
  		}
+-
+-		vote = host->bus_vote.min_bw_vote;
++		break;
++	case POST_CHANGE:
++		if (on) {
++			/* enable the device ref clock for HS mode*/
++			if (ufshcd_is_hs_mode(&hba->pwr_info))
++				ufs_qcom_dev_ref_clk_ctrl(host, true);
++		} else {
++			err = ufs_qcom_set_bus_vote(hba, false);
++		}
++		break;
  	}
  
--	/*
--	 * vendor specific setup_clocks ops may depend on clocks managed by
--	 * this standard driver hence call the vendor specific setup_clocks
--	 * after enabling the clocks managed here.
--	 */
--	if (on) {
--		ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
--		if (ret)
--			return ret;
--	}
-+	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
-+	if (ret)
-+		return ret;
+-	err = ufs_qcom_set_bus_vote(host, vote);
+-	if (err)
+-		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+-				__func__, err);
+-
+ 	return err;
+ }
  
- out:
- 	if (ret) {
+@@ -1238,6 +1265,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 	ufs_qcom_set_caps(hba);
+ 	ufs_qcom_advertise_quirks(hba);
+ 
++	ufs_qcom_set_bus_vote(hba, true);
+ 	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
+ 
+ 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
