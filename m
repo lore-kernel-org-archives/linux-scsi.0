@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2548C352A3
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 12:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFD9C352A3
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 12:12:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7798C206DB
-	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 12:12:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 112AA206DB
+	for <linux-scsi@archiver.kernel.org>; Tue, 11 Feb 2020 12:12:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aOLWFlZ2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hs33/e8C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728626AbgBKMMg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 11 Feb 2020 07:12:36 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:46508 "EHLO
+        id S1728324AbgBKMMm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 11 Feb 2020 07:12:42 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:58276 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728276AbgBKMMg (ORCPT
+        by vger.kernel.org with ESMTP id S1728241AbgBKMMm (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Feb 2020 07:12:36 -0500
+        Tue, 11 Feb 2020 07:12:42 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1581423155;
+        s=mimecast20190719; t=1581423161;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WiTipfkLrqtLl/ZixFIKofa3xAQ/IjBrUQCQVY1fURk=;
-        b=aOLWFlZ2VYGBBveNlushxqdKnPuyHnhxk9TnVH6BSJI24zlqBUsGw7+YpPoGcVfcqtY11s
-        yKOHyJ9XK5q9WDeYNcygiIt5y6A435mls+7nZSvB3UDx4oVpLPNpwZyZqLnZsiZtMu46L8
-        ausxFKM43c7z9vPuZHwiafu3hJN4sPA=
+        bh=dNMWdKtvi6Hy1HcK6nwSHcXHEGZv8eiC4BgPrfgPvCs=;
+        b=Hs33/e8CmzcMk4IAZp3xuMVH2BH8zM7zUmkqQj41OH5gQ/VyLii9HEsWS19aQE+FPfJ8/d
+        0AOnTOCVx6wFz8uHuZuLm1c4spR8em/stQzrg1JBXnqNdzwlFV8jwe840Ubx4fUQ5OXvVv
+        fhYUoXnRIw4Fnh8E8fRqFrDsX7tlosE=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-425-yZpK-6OgMEW43AngSoL3uA-1; Tue, 11 Feb 2020 07:12:31 -0500
-X-MC-Unique: yZpK-6OgMEW43AngSoL3uA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-282-FvDEbcXYMJOGcg5pLV9TGg-1; Tue, 11 Feb 2020 07:12:39 -0500
+X-MC-Unique: FvDEbcXYMJOGcg5pLV9TGg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 554A0800D55;
-        Tue, 11 Feb 2020 12:12:28 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD58F8014CA;
+        Tue, 11 Feb 2020 12:12:37 +0000 (UTC)
 Received: from localhost (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DFF4F27081;
-        Tue, 11 Feb 2020 12:12:22 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E9EE98B548;
+        Tue, 11 Feb 2020 12:12:30 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
@@ -60,21 +60,21 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH 05/10] sbitmap: export sbitmap_weight
-Date:   Tue, 11 Feb 2020 20:11:30 +0800
-Message-Id: <20200211121135.30064-6-ming.lei@redhat.com>
+Subject: [PATCH 06/10] sbitmap: add helper of sbitmap_calculate_shift
+Date:   Tue, 11 Feb 2020 20:11:31 +0800
+Message-Id: <20200211121135.30064-7-ming.lei@redhat.com>
 In-Reply-To: <20200211121135.30064-1-ming.lei@redhat.com>
 References: <20200211121135.30064-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI's .device_busy will be converted to sbitmap, and sbitmap_weight
-is needed, so export the helper.
+Move code for calculating default shift into one public helper,
+which can be used for SCSI to calculate shift.
 
 Cc: Omar Sandoval <osandov@fb.com>
 Cc: Sathya Prakash <sathya.prakash@broadcom.com>
@@ -88,65 +88,69 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Bart Van Assche <bart.vanassche@wdc.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- include/linux/sbitmap.h |  9 +++++++++
- lib/sbitmap.c           | 11 ++++++-----
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ include/linux/sbitmap.h | 18 ++++++++++++++++++
+ lib/sbitmap.c           | 16 +++-------------
+ 2 files changed, 21 insertions(+), 13 deletions(-)
 
 diff --git a/include/linux/sbitmap.h b/include/linux/sbitmap.h
-index 103b41c03311..34343ce3ef6c 100644
+index 34343ce3ef6c..2a40364d6d00 100644
 --- a/include/linux/sbitmap.h
 +++ b/include/linux/sbitmap.h
-@@ -346,6 +346,15 @@ static inline int sbitmap_test_bit(struct sbitmap *s=
+@@ -337,6 +337,24 @@ static inline int sbitmap_test_bit(struct sbitmap *s=
 b, unsigned int bitnr)
-  */
- void sbitmap_show(struct sbitmap *sb, struct seq_file *m);
+ 	return test_bit(SB_NR_TO_BIT(sb, bitnr), __sbitmap_word(sb, bitnr));
+ }
 =20
++static inline int sbitmap_calculate_shift(unsigned int depth)
++{
++	int	shift =3D ilog2(BITS_PER_LONG);
 +
-+/**
-+ * sbitmap_weight() - Return how many real bits set in a &struct sbitmap=
-.
-+ * @sb: Bitmap to check.
-+ *
-+ * Return: How many real bits set
-+ */
-+unsigned int sbitmap_weight(const struct sbitmap *sb);
++	/*
++	 * If the bitmap is small, shrink the number of bits per word so
++	 * we spread over a few cachelines, at least. If less than 4
++	 * bits, just forget about it, it's not going to work optimally
++	 * anyway.
++	 */
++	if (depth >=3D 4) {
++		while ((4U << shift) > depth)
++			shift--;
++	}
++
++	return shift;
++}
 +
  /**
-  * sbitmap_bitmap_show() - Write a hex dump of a &struct sbitmap to a &s=
-truct
-  * seq_file.
+  * sbitmap_show() - Dump &struct sbitmap information to a &struct seq_fi=
+le.
+  * @sb: Bitmap to show.
 diff --git a/lib/sbitmap.c b/lib/sbitmap.c
-index ca1a446574aa..254475865b3d 100644
+index 254475865b3d..bb88a3643d64 100644
 --- a/lib/sbitmap.c
 +++ b/lib/sbitmap.c
-@@ -345,20 +345,21 @@ static unsigned int __sbitmap_weight(const struct s=
-bitmap *sb, bool set)
- 	return weight;
- }
+@@ -96,19 +96,9 @@ int sbitmap_init_node(struct sbitmap *sb, unsigned int=
+ depth, int shift,
+ 	unsigned int bits_per_word;
+ 	unsigned int i;
 =20
--static unsigned int sbitmap_weight(const struct sbitmap *sb)
-+static unsigned int sbitmap_cleared(const struct sbitmap *sb)
- {
--	return __sbitmap_weight(sb, true);
-+	return __sbitmap_weight(sb, false);
- }
-=20
--static unsigned int sbitmap_cleared(const struct sbitmap *sb)
-+unsigned int sbitmap_weight(const struct sbitmap *sb)
- {
--	return __sbitmap_weight(sb, false);
-+	return __sbitmap_weight(sb, true) - sbitmap_cleared(sb);
- }
-+EXPORT_SYMBOL_GPL(sbitmap_weight);
-=20
- void sbitmap_show(struct sbitmap *sb, struct seq_file *m)
- {
- 	seq_printf(m, "depth=3D%u\n", sb->depth);
--	seq_printf(m, "busy=3D%u\n", sbitmap_weight(sb) - sbitmap_cleared(sb));
-+	seq_printf(m, "busy=3D%u\n", sbitmap_weight(sb));
- 	seq_printf(m, "cleared=3D%u\n", sbitmap_cleared(sb));
- 	seq_printf(m, "bits_per_word=3D%u\n", 1U << sb->shift);
- 	seq_printf(m, "map_nr=3D%u\n", sb->map_nr);
+-	if (shift < 0) {
+-		shift =3D ilog2(BITS_PER_LONG);
+-		/*
+-		 * If the bitmap is small, shrink the number of bits per word so
+-		 * we spread over a few cachelines, at least. If less than 4
+-		 * bits, just forget about it, it's not going to work optimally
+-		 * anyway.
+-		 */
+-		if (depth >=3D 4) {
+-			while ((4U << shift) > depth)
+-				shift--;
+-		}
+-	}
++	if (shift < 0)
++		shift =3D sbitmap_calculate_shift(depth);
++
+ 	bits_per_word =3D 1U << shift;
+ 	if (bits_per_word > BITS_PER_LONG)
+ 		return -EINVAL;
 --=20
 2.20.1
 
