@@ -2,93 +2,112 @@ Return-Path: <SRS0=6k2I=4A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BA3C352A4
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D177CC3F68F
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:50:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F8422168B
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:47:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="GkQm7+b4"
+	by mail.kernel.org (Postfix) with ESMTP id B15B424677
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:50:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729128AbgBLVr5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 16:47:57 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12814 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728447AbgBLVr5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Feb 2020 16:47:57 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01CLeja3001670;
-        Wed, 12 Feb 2020 13:45:56 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=sqO8xfa3I3a2v7UEtHjXIeTzJ4NiDz5YmVTP1c7pd1U=;
- b=GkQm7+b4rHO6q51PjzHNBBDG6nn9+v0u+Gzog0DLEf5AdQ2RDgUBZcJZSXmafjrKjm8U
- Xe1zoDS6UY6lJLOvwkK5PErBUc5kJYs4JlXKgnyTI1KMpoqhUSft+RWhCCDTTsL+AzgA
- cldH5gpUDBl4FMT1pwYYMNuHlpdWBkW4HHZmRT4xBARVxQ4EctbeHhtWz5KZokT1hF2z
- pkmcUCbXwWiFlkLJ3K81WOAzFn4PLuak/qKGJfqRUOeC4BMYG1cm4EeaattZKKIJ62Zs
- kDjd1xZXP+T9hTwcecrSLoWHeZ/fKirZfnagM5kPndqpnn6gypJeo7VC3ZiLUqdib1yK MA== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2y4j5jt533-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 12 Feb 2020 13:45:55 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 12 Feb
- 2020 13:45:54 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 12 Feb 2020 13:45:54 -0800
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 060483F703F;
-        Wed, 12 Feb 2020 13:45:54 -0800 (PST)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01CLjrNW025676;
-        Wed, 12 Feb 2020 13:45:53 -0800
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01CLjrNN025675;
-        Wed, 12 Feb 2020 13:45:53 -0800
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>
-CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 25/25] qla2xxx: Update driver version to 10.01.00.24-k
-Date:   Wed, 12 Feb 2020 13:44:36 -0800
-Message-ID: <20200212214436.25532-26-hmadhani@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200212214436.25532-1-hmadhani@marvell.com>
-References: <20200212214436.25532-1-hmadhani@marvell.com>
+        id S1729173AbgBLVuI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 16:50:08 -0500
+Received: from mout.kundenserver.de ([212.227.17.24]:37243 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728185AbgBLVuI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 16:50:08 -0500
+Received: from mail-qv1-f50.google.com ([209.85.219.50]) by
+ mrelayeu.kundenserver.de (mreue109 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1MDhpZ-1jAULx1JKB-00AoXF; Wed, 12 Feb 2020 22:50:06 +0100
+Received: by mail-qv1-f50.google.com with SMTP id g6so1679427qvy.5;
+        Wed, 12 Feb 2020 13:50:05 -0800 (PST)
+X-Gm-Message-State: APjAAAWppP3PsilR6zdVQALksCVMQUYmSp6cQRQkGg13p2bwzhRyTjJ+
+        Z3l3Z/yHY69cnTU+kEdPV9kHe1f2EVtvQSdbTJk=
+X-Google-Smtp-Source: APXvYqy8/dUIT78ziPbi+m7w9c1it35QsSL0SZ9iXSbO5y/IXrIrtcYAZ9F8FLr3BxGmZME4ZZPNyKpXXH0FnHsB7eo=
+X-Received: by 2002:a05:6214:524:: with SMTP id x4mr21607034qvw.4.1581544204910;
+ Wed, 12 Feb 2020 13:50:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-12_10:2020-02-12,2020-02-12 signatures=0
+References: <20200102145552.1853992-1-arnd@arndb.de> <20200102145552.1853992-14-arnd@arndb.de>
+ <20200212211452.GA5726@latitude>
+In-Reply-To: <20200212211452.GA5726@latitude>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 12 Feb 2020 22:49:49 +0100
+X-Gmail-Original-Message-ID: <CAK8P3a0oPpMC8367sEs+9Ae=wFH30BHAq+aRDbWLyeVLuNOnEw@mail.gmail.com>
+Message-ID: <CAK8P3a0oPpMC8367sEs+9Ae=wFH30BHAq+aRDbWLyeVLuNOnEw@mail.gmail.com>
+Subject: Re: [PATCH v3 13/22] compat_ioctl: scsi: move ioctl handling into drivers
+To:     Johannes Hirte <johannes.hirte@datenkhaos.de>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Dongli Zhang <dongli.zhang@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Ira Weiny <ira.weiny@intel.com>, Iustin Pop <iustin@k1024.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        virtualization@lists.linux-foundation.org,
+        linux-block <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:AMbg5Kbwp0ZgWpd+6x82VvNG+Xp6eE91XjdX6a0JmqQqHcsuLj1
+ y66vqJ+WySq/xm+jYa/KXKCMH62L0//GcfVaAuVk+E23z5wpntu28PdtPvdki5HxDHS4O7S
+ kyCITKBtNxjAQRBDg+C9XqvQsMEuOG7mi65XNjaf0dCqyogXpRW9uadkveWArF75zDrXA03
+ 1KBJcEAaYzOJ60lUhPjCQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:WPDNrXRrPvQ=:w55XpvFInf2VvVPbJc796H
+ lsKaQWa59drCUHCWu/cX+EdpXpA9FkYrEnbyL1h2kpH+2TeNsA4313htUsNcQIUXCR9A9N7QL
+ E+EN+ph6Fd1sBV2NcVt5a7wNLqeKKI5v2tgc1kwHTWCgyVt5CBhTgP4dCeY68+4l1rSqMkI5s
+ XclXxIdjrFgOlnEt5Xsq5Rjo98HQx+1S4HGsBPLodRKRMzGT8e6duVRuk/0g4Ld3jEfZkpMFW
+ eUhL6FTgUGNMAvtMAJLyvrVE6X2gVfKBzZcryk/se2GzirgFIlWSvzux9Rgu/iUKcRFRjf4Hz
+ qRm2wkcygz/Ui9LmL9tfQplHN16Hrydo3DqLHvSUgwNSjhEg+vvqI8xHFKoJ6UahA2bqMm3nL
+ tpWlU+6wBfgBkgXYRjAG4voYVpftOaMDJtu9R+IXngL9cRLJoetWQ8ZuUagh3rWsdDB0ZQU6s
+ lkIbWrkd6B3J9WHymvICUvsi3zs5diwH6oZC4P0Ltac8KFbzRnlQd9aJNfGF7rIKt+0W2x2uP
+ 7345rPGkIVppwCYqpst/rgVay8+BhGuq2tGJcn2QGsBGBvz4fe6u1vEu7sYqITQMaeZZ/3mK9
+ Jw6dyb3oi2GGDosXxXiVS2alqlG+2qL0Jj1dqoIaoJU3wgRKan9x/S8+gDcgjcqNy+TXFTCgz
+ bmnyK/jV7HkVgqkP8nLSfJMUSwVVWsbKH+ZQcRhkx70+8doTigMbR2+F3lAKCkivPMMajc9wx
+ fHk3jMWO0ZyMyQ4Mf8G+hovxSu4n3/1rzOiOi07cpQfTTjHNnqGRiOWP65PgHNELfGRVS2XJp
+ xBKa5ju70BRgFPCwiDOs4Zo2U+MKFEfNYYb4A2O+1ry3UwrHv4=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Feb 12, 2020 at 10:15 PM Johannes Hirte
+<johannes.hirte@datenkhaos.de> wrote:
+>
+> On 2020 Jan 02, Arnd Bergmann wrote:
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index bb03c022e023..6b4ca3ed8f22 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.01.00.22-k"
-+#define QLA2XXX_VERSION      "10.01.00.24-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	1
--- 
-2.12.0
+>
+> Error in getting drive hardware properties
+> Error in getting drive reading properties
+> Error in getting drive writing properties
+> __________________________________
+>
+> Disc mode is listed as: CD-DA
+> ++ WARN: error in ioctl CDROMREADTOCHDR: Bad address
+>
+> cd-info: Can't get first track number. I give up.
 
+Right, there was also a report about breaking the Fedora installer,
+see https://bugzilla.redhat.com/show_bug.cgi?id=1801353
+
+There is a preliminary patch that should fix this, I'll post a
+version with more references tomorrow:
+https://www.happyassassin.net/temp/0001-Replace-.ioctl-with-.compat_ioctl-in-three-appropria.patch
+
+      Arnd
