@@ -7,58 +7,61 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC7BC352A4
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC31C352A4
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:45:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E8DB21734
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:45:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9233524671
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 21:45:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="YJYOizRG"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="L2ZH4Lnl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729089AbgBLVpM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 16:45:12 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63048 "EHLO
+        id S1729103AbgBLVpZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 16:45:25 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50144 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728447AbgBLVpM (ORCPT
+        by vger.kernel.org with ESMTP id S1728447AbgBLVpZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Feb 2020 16:45:12 -0500
+        Wed, 12 Feb 2020 16:45:25 -0500
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01CLduPL006513;
-        Wed, 12 Feb 2020 13:45:10 -0800
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01CLe3Cp006707;
+        Wed, 12 Feb 2020 13:45:20 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=WfadcTOgQAYKn5qQuSGccptIvyhIbQQjxxv0fIJ2zco=;
- b=YJYOizRGeqhClrYRf9VtgNTo8JVJ+5jlzJLBx7q9RNIg8Pt3cM6MwggqoduFMq9dc/VZ
- taSMl3foxnpkgbjiascFIQnI2utTsHaTim2WTTaKn12lKw5wuLhPLmKmu+3O2Dr+gFjI
- tqH3S7wfI4y3ZxwSamjnhHUTJSDyGsCi++mX0YsL8tkg5txEt3bJP3WJmSKn1ONO9gSE
- xfx9TELz8NN8rlb9w3cxt/HwfOkqUvY+8k10Cvd3qlCKIUCvOSbuZrgM+1VK97gfpawA
- sHSQQREGo3Imk8GmSq6vUcQCJ1YNQ7X379NS9EVOjNFeiz5nCVE/ENmGpBEl5sXGMv0J bA== 
+ content-type; s=pfpt0818; bh=XxgY0x3lJle+Fxs8h1cMlwugTawm0r8oTs9Sj1nnlEg=;
+ b=L2ZH4LnlXhwr9FONScuHfZNb05N+bQP0bYwgJpOxfmJu2jL2R74y0/lUyRxZqZg/C49q
+ ilY23xY8NKWBWhcBcazp4NHokrtJgG2qE8lipeoL+Ohb7+F+PSF30mTAkHSkaXD6mpii
+ qDfTKhJCLfWUE/3nnTmmcgNZOpde21KN9Lb4Vl84Rs4o2+v1HAhX+Mf0MuCnh4FBYkhw
+ vdEi7lqKcbuwOAAUOidlUk8swGRqRq2wlMo6j7s8ocvRWO6a09d76nJg3zi4j4XJPVrA
+ qUkbY2cwpkNaYvHRW0l1cGYYjr0hKtcz3+kFHwTKnt1DFHNO/jTS18RresbNOcd5dBVb Mg== 
 Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2y4be2bpkb-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 2y4be2bpm9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 12 Feb 2020 13:45:10 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
+        Wed, 12 Feb 2020 13:45:20 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 12 Feb
- 2020 13:45:08 -0800
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 12 Feb 2020 13:45:08 -0800
+ 2020 13:45:19 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 12 Feb
+ 2020 13:45:18 -0800
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 12 Feb 2020 13:45:18 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id B80413F703F;
-        Wed, 12 Feb 2020 13:45:08 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 889E43F7041;
+        Wed, 12 Feb 2020 13:45:18 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01CLj8W7025620;
-        Wed, 12 Feb 2020 13:45:08 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01CLjIgI025632;
+        Wed, 12 Feb 2020 13:45:18 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01CLj8UN025619;
-        Wed, 12 Feb 2020 13:45:08 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01CLjI3e025631;
+        Wed, 12 Feb 2020 13:45:18 -0800
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 11/25] qla2xxx: Show correct port speed capabilities for RDP command
-Date:   Wed, 12 Feb 2020 13:44:22 -0800
-Message-ID: <20200212214436.25532-12-hmadhani@marvell.com>
+Subject: [PATCH 14/25] qla2xxx: Handle cases for limiting RDP response payload length
+Date:   Wed, 12 Feb 2020 13:44:25 -0800
+Message-ID: <20200212214436.25532-15-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200212214436.25532-1-hmadhani@marvell.com>
 References: <20200212214436.25532-1-hmadhani@marvell.com>
@@ -71,74 +74,109 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch correctly displays Port speed capabiltiy and
-current speed for RDP command.
+From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
+This patch reduces RDP response payload length, if
+requesting port is a domain Controller (sid 0xfffc01)
+and fw is earlier than 8.09.00 and fw is not 8.05.65
+then limit the RDP response payload length to maximum
+of 256 bytes by terminating the response just before the
+optical element descriptor.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 41 +++++++++++++++++++++++++++++++++++------
- 1 file changed, 35 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 42 ++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 40 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 4be99f13be42..dbbe20c7fbaf 100644
+index 1aad4b9ce4b6..d06fa318f378 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5762,13 +5762,39 @@ qla25xx_rdp_port_speed_capability(struct qla_hw_data *ha)
- 	if (IS_CNA_CAPABLE(ha))
- 		return RDP_PORT_SPEED_10GB;
+@@ -5767,6 +5767,32 @@ qla83xx_idc_lock(scsi_qla_host_t *base_vha, uint16_t requester_id)
+ 	return;
+ }
  
--	if (IS_QLA27XX(ha)) {
--		if (FW_ABILITY_MAX_SPEED(ha) == FW_ABILITY_MAX_SPEED_32G)
--			return RDP_PORT_SPEED_32GB|RDP_PORT_SPEED_16GB|
--			       RDP_PORT_SPEED_8GB;
-+	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-+		unsigned int speeds = 0;
++static bool
++qla25xx_rdp_rsp_reduce_size(struct scsi_qla_host *vha,
++    struct purex_entry_24xx *purex)
++{
++	char fwstr[16];
++	u32 sid = purex->s_id[2] << 16 | purex->s_id[1] << 8 | purex->s_id[0];
++
++	/* Domain Controller is always logged-out. */
++	/* if RDP request is not from Domain Controller: */
++	if (sid != 0xfffc01)
++		return false;
++
++	ql_dbg(ql_dbg_init, vha, 0x0181, "%s: s_id=%#x\n", __func__, sid);
++
++	vha->hw->isp_ops->fw_version_str(vha, fwstr, sizeof(fwstr));
++	fwstr[strcspn(fwstr, " ")] = 0;
++	/* if FW version allows RDP response length upto 2048 bytes: */
++	if (strcmp(fwstr, "8.09.00") > 0 || strcmp(fwstr, "8.05.65") == 0)
++		return false;
++
++	ql_dbg(ql_dbg_init, vha, 0x0181, "%s: fw=%s\n", __func__, fwstr);
++
++	/* RDP response length is to be reduced to maximum 256 bytes */
++	return true;
++}
++
+ static uint
+ qla25xx_rdp_port_speed_capability(struct qla_hw_data *ha)
+ {
+@@ -5885,6 +5911,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 	struct buffer_credit_24xx *bbc = NULL;
+ 	uint8_t *sfp = NULL;
+ 	uint16_t sfp_flags = 0;
++	uint rsp_payload_length = sizeof(*rsp_payload);
+ 	int rval;
  
--		return RDP_PORT_SPEED_16GB|RDP_PORT_SPEED_8GB|
--		       RDP_PORT_SPEED_4GB;
-+		if (ha->max_supported_speed == 2) {
-+			if (ha->min_supported_speed <= 6)
-+				speeds |= RDP_PORT_SPEED_64GB;
-+		}
+ 	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x0180,
+@@ -5895,6 +5922,14 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 	ql_dump_buffer(ql_dbg_init + ql_dbg_verbose, vha, 0x0182,
+ 	    (void *)purex, sizeof(*purex));
+ 
++	if (qla25xx_rdp_rsp_reduce_size(vha, purex)) {
++		rsp_payload_length =
++		    offsetof(typeof(*rsp_payload), optical_elmt_desc);
++		ql_dbg(ql_dbg_init, vha, 0x0181,
++		    "Reducing RSP payload length to %u bytes...\n",
++		    rsp_payload_length);
++	}
 +
-+		if (ha->max_supported_speed == 2 ||
-+		    ha->max_supported_speed == 1) {
-+			if (ha->min_supported_speed <= 5)
-+				speeds |= RDP_PORT_SPEED_32GB;
-+		}
-+
-+		if (ha->max_supported_speed == 2 ||
-+		    ha->max_supported_speed == 1 ||
-+		    ha->max_supported_speed == 0) {
-+			if (ha->min_supported_speed <= 4)
-+				speeds |= RDP_PORT_SPEED_16GB;
-+		}
-+
-+		if (ha->max_supported_speed == 1 ||
-+		    ha->max_supported_speed == 0) {
-+			if (ha->min_supported_speed <= 3)
-+				speeds |= RDP_PORT_SPEED_8GB;
-+		}
-+
-+		if (ha->max_supported_speed == 0) {
-+			if (ha->min_supported_speed <= 2)
-+				speeds |= RDP_PORT_SPEED_4GB;
-+		}
-+
-+		return speeds;
+ 	rsp_els = dma_alloc_coherent(&ha->pdev->dev, sizeof(*rsp_els),
+ 	    &rsp_els_dma, GFP_KERNEL);
+ 	if (!rsp_els) {
+@@ -5941,7 +5976,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 
+ 	rsp_els->control_flags = EPD_ELS_ACC;
+ 	rsp_els->rx_byte_count = 0;
+-	rsp_els->tx_byte_count = cpu_to_le32(sizeof(*rsp_payload));
++	rsp_els->tx_byte_count = cpu_to_le32(rsp_payload_length);
+ 
+ 	put_unaligned_le64(rsp_payload_dma, &rsp_els->tx_address);
+ 	rsp_els->tx_len = rsp_els->tx_byte_count;
+@@ -6116,6 +6151,9 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 		}
  	}
  
- 	if (IS_QLA2031(ha))
-@@ -5814,6 +5840,9 @@ qla25xx_rdp_port_speed_currently(struct qla_hw_data *ha)
- 	case PORT_SPEED_32GB:
- 		return RDP_PORT_SPEED_32GB;
- 
-+	case PORT_SPEED_64GB:
-+		return RDP_PORT_SPEED_64GB;
++	if (rsp_payload_length < sizeof(*rsp_payload))
++		goto send;
 +
- 	default:
- 		return RDP_PORT_SPEED_UNKNOWN;
- 	}
+ 	if (sfp) {
+ 		memset(sfp, 0, SFP_RTDI_LEN);
+ 		rval = qla2x00_read_sfp(vha, sfp_dma, sfp, 0xa2, 0, 64, 0);
+@@ -6276,7 +6314,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x0186,
+ 	    "-------- ELS RSP PAYLOAD -------\n");
+ 	ql_dump_buffer(ql_dbg_init + ql_dbg_verbose, vha, 0x0187,
+-	    (void *)rsp_payload, rsp_els->tx_byte_count);
++	    (void *)rsp_payload, rsp_payload_length);
+ 
+ 	rval = qla2x00_issue_iocb(vha, rsp_els, rsp_els_dma, 0);
+ 
 -- 
 2.12.0
 
