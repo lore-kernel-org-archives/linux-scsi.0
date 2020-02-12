@@ -2,144 +2,109 @@ Return-Path: <SRS0=6k2I=4A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 141F4C352A4
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4509C2BA83
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 16:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D528720675
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:26:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB2682168B
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 16:10:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="NUzC2Jwb";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="zDDbfQdm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hh/9JA8c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727756AbgBLM0i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 07:26:38 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:46075 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727007AbgBLM0h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 07:26:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581510417; x=1613046417;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
-  b=NUzC2Jwbuh6oO/y3e+tk7ehKGQJaJRHeYPtaebamGM+/RFdgI6aNQSlU
-   w+ohKqvu3OA9Yd1jYbv23nnOQZ1iSTy43R6X3gE9tDZQ59KQaukxzrHKD
-   ELX4OaTgjF+kD0KPsO+kL1G55WosEPN0QeKjwSQ1xNwT8Jta0yE/+349v
-   BPy2TwMzcaXHog39KBBnNIj+PXc6xSCeHDXAgKKN7xBxaIF/KC9Xxya93
-   EiVIC+1PAiq65KJF1EoAgg+Ub7/wRDc5XSD3jFVBf/vFJtWUGtlMrzlg/
-   P1cJWgqdlJcMydOZkWkYlkulbi03auRy0b6w+HK3cdxMxZQkk7lWK1tw6
-   g==;
-IronPort-SDR: IIl+Tp6vrysKn/S3cKgfDJ0jSNrwPLgedjawRY+HH29hL/+m8ReqcV+T7ArCfnSbRQwNq1ddve
- KaJFqA9pv7nbJ4MiWjun4xmyny5xz+7XspCh47/ONk/N/MS37D0RWNcDGI9YfZlExnm/1rxj8T
- 0KCVrxC7hOXhw01KqrS3uyAPvtA1vSUvKYK2Ux6+SjpAZQjcmrlSjr40USP7MgxXTanhUJPJkI
- PKZhBX9JMhUkvcuBKSo4rxYDIgsta19b7JiuZOdQLMe/kgGV3wQ7wS45BpnBPd+36HzCYHpilh
- s00=
-X-IronPort-AV: E=Sophos;i="5.70,428,1574092800"; 
-   d="scan'208";a="231465233"
-Received: from mail-bn7nam10lp2104.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.104])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Feb 2020 20:26:53 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CpDVFsenLBtbZCmW2cD223u0LkDTGd7Agw3xgBFrUChWOrsKYdwZAzgI9PtzSJ2f1q+nPzv1WFAk4ZyhxDr5Ortn6d6Mrx5X1KcTvG1tDAsgXrrE3n6o2eTle2fEHLwxFJdp1MrNsAUnrI+U3QfbLlltY1hUYiM3w4mxYLbPInQKsKJso04ZEfgva7UiurgTMFrwjXOXEmVDZjZ+n9av2eQmOFhNIdfUITXa7bwjzWEi+ofTDry6APOO9+0ni6I08fEXM/uwH1xw3XXiGSaSLynZD2o20RLnyhIL9lO4YYB/zG6ZWUMlYcF+HsHQpATCBw8//wp2UROu5X7gKUmcqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
- b=f8qPSAViFG13W6phycZTthrZDsn2DiHx1QXwCs83R9wkP8DTkAfn52p0YT7UKeahUlaX6yQTpUGGc1nyJt+dFXZu29uOnM80D3NYs+pm33nNbxv32KH0Lhdocy6u4rhxmkaUueh7Q+BFLi4ZtVf/FxBkW8SJuJqMPt0Z5QdS0asLxVwXJZeFNB7Mfyps0QkOkhVkO7jp5dakhWxgGKNe1D+dnRdGUozZijgV/Ejpe3lQsVdH3rDSmWzNwYpKqjCnwqMEpJ4e0SYoNtY1PDjV7HCTdaAMCdqGGbdsOaKOdm00HLifK3oRQ+6SKlSofv0Fq89cCgk4szdTmMbYxqzIDQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
- b=zDDbfQdmZ/LoLyGdYQPspgRBVA7E3SC53OCiYpmN9D6kEaMWnJSVoIQtLFtYHp6V6jJT8Dz282W7f0lSVQE3NzH5sM+OBYBfUgO+bn/KlYexn1pdSay/IcUdOf92BQI1sOUWR7HC3oKGL1AspFUYPeoKX4zrBVzJTsvjeROKipc=
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
- MN2PR04MB6430.namprd04.prod.outlook.com (52.132.170.145) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2707.24; Wed, 12 Feb 2020 12:26:34 +0000
-Received: from MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::3885:5fac:44af:5de7]) by MN2PR04MB6991.namprd04.prod.outlook.com
- ([fe80::3885:5fac:44af:5de7%7]) with mapi id 15.20.2707.030; Wed, 12 Feb 2020
- 12:26:34 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Can Guo <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>
-CC:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Pedro Sousa <sousa@synopsys.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
-Thread-Topic: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
-Thread-Index: AQHV4WdtEUG2fhkxEky/U6KeRj9UX6gXfB2g
-Date:   Wed, 12 Feb 2020 12:26:34 +0000
-Message-ID: <MN2PR04MB699176BCCB6B900617C96303FC1B0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
- <1581485910-8307-3-git-send-email-cang@codeaurora.org>
-In-Reply-To: <1581485910-8307-3-git-send-email-cang@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: b9dd74df-1e31-4ac3-a3d9-08d7afb6cc4f
-x-ms-traffictypediagnostic: MN2PR04MB6430:
-x-microsoft-antispam-prvs: <MN2PR04MB6430BEF0508A933235E16358FC1B0@MN2PR04MB6430.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:3631;
-x-forefront-prvs: 0311124FA9
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(366004)(39860400002)(376002)(396003)(346002)(199004)(189003)(86362001)(66446008)(76116006)(316002)(66476007)(8936002)(81166006)(66946007)(64756008)(6506007)(81156014)(186003)(26005)(8676002)(110136005)(52536014)(4326008)(5660300002)(54906003)(478600001)(66556008)(558084003)(2906002)(55016002)(71200400001)(7696005)(33656002)(9686003)(7416002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6430;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: HTZfjWIjuUyktmzTTjhAguknLVcOGueCHserBJeuLVoMc8Mksy0O3Aie0yWlxKw2PEMeV39ls/hbac+ybiyUzHPjgAvQBLq46odaadelqm6djncWiPTsRFXqJ6NJWzLcHUjHMkZWOz89Ff7nFzA8tY+fahtqc8b7QVeeSYD/tegqGjtq3ucsifl/Ex9dibSovrFraMKRCsovxVAy4En+rwO9Se7LIp7SHSKUHvatChETPXVQ4GGYqzekfi0BnI12KqouhtMOa4cDpofljozMx3BjxViLRb5R8YrMl553+o9hcfk/RSdGcuFFAD8K/uBHq4IL8E87i+8r+LFLQqsxj3OdEO2NYQcAKX/8resmP6CtAPOAWJkj6RiNHiOgQBC13UEAwKx1hcsoTVqoOm7OLzmidmMetK63CVpqiwI+9w60f7TBlirLMS0LFHUSEs2S
-x-ms-exchange-antispam-messagedata: mHxkg6fJkEDYYwzdiZUbLIaS3ywMBPEJpkMezsOkZNAaIWPRv6Zg2CLaOPP54aTvPKk7kJF3/yospoY1lCzkE7FITxcgxOsIByir7IDDyDv2YSaVT8pp0hERgJSU+NW5b0PHcdtGlIF45X3tWwIEcQ==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728595AbgBLQKw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 11:10:52 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:26639 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728575AbgBLQKw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Feb 2020 11:10:52 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581523851;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SVVq6qjRCsdQwLjJ3Pl2oKorAivzLQr7S00rXFIKNVM=;
+        b=Hh/9JA8ckC15wtm2NIqgxhL5Dzdqu2WOyQKpRyusIpH+T2NIsD7j8zE/ECnD1GXWUlIWVY
+        3sKN/bJitoPm2KpyiP/KMCM3fpuwEAFdYduhjnLw23xlTQfT8k81dO04wjoJLtf9edfYyw
+        4GRZ0IympuO9am3MK8Ks1Ak7ryiU8S0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-166-y1KLSIPVOpe_iMVvs1g-Og-1; Wed, 12 Feb 2020 11:10:47 -0500
+X-MC-Unique: y1KLSIPVOpe_iMVvs1g-Og-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7DA7D107ACCC;
+        Wed, 12 Feb 2020 16:10:45 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C5AF45C100;
+        Wed, 12 Feb 2020 16:10:44 +0000 (UTC)
+Message-ID: <eac106d0fd30e20b6df4287f8bc01844191d29c6.camel@redhat.com>
+Subject: Re: [PATCH] scsi: Delete scsi_use_blk_mq
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     John Garry <john.garry@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Wed, 12 Feb 2020 11:10:44 -0500
+In-Reply-To: <2e2ead7d-503e-3881-b837-7c689a4d44c6@huawei.com>
+References: <1581355992-139274-1-git-send-email-john.garry@huawei.com>
+         <3795ab1d-5282-458b-6199-91e3def32463@acm.org>
+         <2e2ead7d-503e-3881-b837-7c689a4d44c6@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b9dd74df-1e31-4ac3-a3d9-08d7afb6cc4f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Feb 2020 12:26:34.1799
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: N9Fg4x5CL/Q+jR6h9IwW6EEPx6/TZLrNXrcMBETQxbaZuza9CduTsrTVav8U2dsmpb3uymqhA4pl1Ow0xnG8Ew==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6430
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> ADAPT is added specifically for HS Gear4 mode only, select INITIAL ADAPT
-> before do power mode change to G4 and select NO ADAPT before switch to
-> non-G4 modes.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+On Tue, 2020-02-11 at 11:50 +0000, John Garry wrote:
+> On 10/02/2020 22:37, Bart Van Assche wrote:
+> > On 2/10/20 9:33 AM, John Garry wrote:
+> > > -module_param_named(use_blk_mq, scsi_use_blk_mq, bool, S_IWUSR | 
+> > > S_IRUGO);
+> 
+> Hi Bart,
+> 
+> > Will this change cause trouble to shell scripts that set or read this 
+> > parameter (/sys/module/scsi_mod/parameters/use_blk_mq)? 
+> 
+> The entry in Documentation/admin-guide/kernel-parameters.txt is gone for 
+> 2 years now.
+> 
+> And it is not an archaic module param, it was introduced 6 years ago. As 
+> such, I'd say that if a shell script was setup to access this parameter, 
+> then it would prob also pre-check if it exists and gracefully accept 
+> that it may not.
+> 
+> I will also note that there is still scsi_sysfs.c:show_use_blk_mq(), 
+> which would stay.
+> 
+> What will the
+> > impact be on systems where scsi_mod.use_blk_mq=Y is passed by GRUB to 
+> > the kernel at boot time, e.g. because it has been set in the 
+> > GRUB_CMDLINE_LINUX variable in /etc/default/grub?
+> 
+> The kernel should any params that does not recognize.
+> 
+> 
+> Having said all that, I don't feel too strongly about deleting this - 
+> it's only some tidy-up.
+> 
+> Thanks,
+> John
+> 
 
-Thanks,
-Avri
+I think we should remove it.  It is not good to have a kernel parameter
+that people used to be able to set to "N" that no longer does that.
+
+-Ewan
+
 
