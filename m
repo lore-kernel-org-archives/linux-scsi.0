@@ -2,70 +2,70 @@ Return-Path: <SRS0=6k2I=4A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ED55C2BA83
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 141F4C352A4
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:26:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AAF820675
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:21:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D528720675
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 12:26:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="it8LJrho";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="KbHJ/KX5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="NUzC2Jwb";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="zDDbfQdm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727761AbgBLMVr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 07:21:47 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:52693 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726146AbgBLMVr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 07:21:47 -0500
+        id S1727756AbgBLM0i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 07:26:38 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:46075 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727007AbgBLM0h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 07:26:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1581510106; x=1613046106;
+  t=1581510417; x=1613046417;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=t/zFM9wupqkBBYmHV62dAPwtKvKTv2+xl8snIqkp8YY=;
-  b=it8LJrhoMsTHEtBdvnRqzQVTLHJOQqkqsMRvpix6TBxLMxLk4JqLamKH
-   ur/IGs21lfkvMOK4bd3dy6Os6Xgr8lgadyow22Rkx878KEVrCS97joHEA
-   L7D6z+J894px86z2c7R1ONA3hAvz0TAcR6VBjYCUreSoVgwZflQQcFhkQ
-   pCSHDWQySviU0HSnWRKIO8yZxNhZ5870Xm/X1NfoD06t/wdhQ+9A1TUCr
-   bGfWuAgdZ6Vy7ZfhEiDiSz+/HmCM+Zz22YRiad91VqnSmoasRj0CeiNT1
-   7B/ANAiHSDDsRoSpe/ELks8lXNF5c/wc2/NJvqAqTRY3OSMcZOr2VnGNS
-   w==;
-IronPort-SDR: 4tDKme4gk+e/6KCjbBhr68l8abtwgE1ipkY75vJzIfbSbYtBuMtgxwTVeZoGa3cieeZzyzll/U
- e0z0MpXvlffbBqdQih21NtvL1zJUNRxKISd7HihnkB+gMD28CudTlXmI6Pt7NYGqmxftzla/Bp
- /jUPAcm9hlriUZ3X4NUZ+UiTgPS35wUuyd1XginGQ3wDChGpUZHpoNYhZUpengC1eo6kGJ0W6I
- +UhInvvtpagIrG3Ca8l/8IlavvkrXrt46PYgCTD1JWo4pkYLJKuWG3lX2hL5/+9OVOhZTr+Ngq
- RY4=
+  bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
+  b=NUzC2Jwbuh6oO/y3e+tk7ehKGQJaJRHeYPtaebamGM+/RFdgI6aNQSlU
+   w+ohKqvu3OA9Yd1jYbv23nnOQZ1iSTy43R6X3gE9tDZQ59KQaukxzrHKD
+   ELX4OaTgjF+kD0KPsO+kL1G55WosEPN0QeKjwSQ1xNwT8Jta0yE/+349v
+   BPy2TwMzcaXHog39KBBnNIj+PXc6xSCeHDXAgKKN7xBxaIF/KC9Xxya93
+   EiVIC+1PAiq65KJF1EoAgg+Ub7/wRDc5XSD3jFVBf/vFJtWUGtlMrzlg/
+   P1cJWgqdlJcMydOZkWkYlkulbi03auRy0b6w+HK3cdxMxZQkk7lWK1tw6
+   g==;
+IronPort-SDR: IIl+Tp6vrysKn/S3cKgfDJ0jSNrwPLgedjawRY+HH29hL/+m8ReqcV+T7ArCfnSbRQwNq1ddve
+ KaJFqA9pv7nbJ4MiWjun4xmyny5xz+7XspCh47/ONk/N/MS37D0RWNcDGI9YfZlExnm/1rxj8T
+ 0KCVrxC7hOXhw01KqrS3uyAPvtA1vSUvKYK2Ux6+SjpAZQjcmrlSjr40USP7MgxXTanhUJPJkI
+ PKZhBX9JMhUkvcuBKSo4rxYDIgsta19b7JiuZOdQLMe/kgGV3wQ7wS45BpnBPd+36HzCYHpilh
+ s00=
 X-IronPort-AV: E=Sophos;i="5.70,428,1574092800"; 
-   d="scan'208";a="129668258"
-Received: from mail-bn8nam12lp2175.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.175])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Feb 2020 20:21:44 +0800
+   d="scan'208";a="231465233"
+Received: from mail-bn7nam10lp2104.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.104])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Feb 2020 20:26:53 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NneyyJdfICcPyi+HzwzLzUCSjkqxNvO/zKVfRTGTGlEUSpWK4//AN/pwmBRZL0moMRW+1AFipNSjkTsuKqoagzXYdBaFcGAqunyHiu4eNOWGwKKlX+HfZgIXIDLuIgyjzRicGVgIjVpsOuHekRYcvKFrLrlpMOE8iDrxM81MijrZmEOeLsB57BY/UXrCjYhygmNocZEq2WLJzMvFVp6qvn+s6k2Zp1y6w8UrIqxUEuf0UokoGz8ZpPmdD8ITx4azeCaIeJ8dPrE1Qdo0jAVLkvFQ5aZL6WbSq9KuYieOT6WDR1GiT8e9ScJnd7/5VmQXH0SqI2QutpSrxCDsnAW2dQ==
+ b=CpDVFsenLBtbZCmW2cD223u0LkDTGd7Agw3xgBFrUChWOrsKYdwZAzgI9PtzSJ2f1q+nPzv1WFAk4ZyhxDr5Ortn6d6Mrx5X1KcTvG1tDAsgXrrE3n6o2eTle2fEHLwxFJdp1MrNsAUnrI+U3QfbLlltY1hUYiM3w4mxYLbPInQKsKJso04ZEfgva7UiurgTMFrwjXOXEmVDZjZ+n9av2eQmOFhNIdfUITXa7bwjzWEi+ofTDry6APOO9+0ni6I08fEXM/uwH1xw3XXiGSaSLynZD2o20RLnyhIL9lO4YYB/zG6ZWUMlYcF+HsHQpATCBw8//wp2UROu5X7gKUmcqg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/fkx7eYLDraqBmlcrfIlW+uIkUIWNUEKCCn2gZhuLRE=;
- b=SvbyMpSaE/3DGndu9EPprfSmNaK/8h2R1/5VG0inRYg8dOcFunQuz28I00rxA8nRzav1HT0SF3Ua81Rr4FC2NUgkheJZLi16blga2qP07N4ksVgbHCFlzaFI4g9AGMD8cmV429ENid9t7qJYnav51xrzgRRvn4FCmt6DaN15xlUQTZ3yiCwi3x3SmzJDa1IVQR861iRtn5z6J/XA024VnRaG9mmm7URg03P+vjq7XFUR5+FzB04zH1dJzvSpiFLirDNFoqrdA312Qr+9d56HijeyNZttGjazbp1Ajv6uHRR7cDZ5juwHr1KMR4g/3arvgf3VzXq1jYXHmawtqnlTug==
+ bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
+ b=f8qPSAViFG13W6phycZTthrZDsn2DiHx1QXwCs83R9wkP8DTkAfn52p0YT7UKeahUlaX6yQTpUGGc1nyJt+dFXZu29uOnM80D3NYs+pm33nNbxv32KH0Lhdocy6u4rhxmkaUueh7Q+BFLi4ZtVf/FxBkW8SJuJqMPt0Z5QdS0asLxVwXJZeFNB7Mfyps0QkOkhVkO7jp5dakhWxgGKNe1D+dnRdGUozZijgV/Ejpe3lQsVdH3rDSmWzNwYpKqjCnwqMEpJ4e0SYoNtY1PDjV7HCTdaAMCdqGGbdsOaKOdm00HLifK3oRQ+6SKlSofv0Fq89cCgk4szdTmMbYxqzIDQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/fkx7eYLDraqBmlcrfIlW+uIkUIWNUEKCCn2gZhuLRE=;
- b=KbHJ/KX567czfFA0eKrytsSZZyeQOhlCwUrKGnSk1GUmuOTxnv/muieLTmXWarcUsMiaynGc28rEh7DRDgSM6FyZooE/i65vDAyh4FlQhUHMPhKuMXYFSRbHnZ7DU2REoEF/+mxX7PHr0WNo/vshCQPJKU5IoYEzlxMM8LS63yQ=
+ bh=edZB7X97/QDoU/x8PWct6XHMJKIt938rIjPWy4fCKZg=;
+ b=zDDbfQdmZ/LoLyGdYQPspgRBVA7E3SC53OCiYpmN9D6kEaMWnJSVoIQtLFtYHp6V6jJT8Dz282W7f0lSVQE3NzH5sM+OBYBfUgO+bn/KlYexn1pdSay/IcUdOf92BQI1sOUWR7HC3oKGL1AspFUYPeoKX4zrBVzJTsvjeROKipc=
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com (10.186.144.209) by
- MN2PR04MB6976.namprd04.prod.outlook.com (10.186.146.80) with Microsoft SMTP
+ MN2PR04MB6430.namprd04.prod.outlook.com (52.132.170.145) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2707.21; Wed, 12 Feb 2020 12:21:44 +0000
+ 15.20.2707.24; Wed, 12 Feb 2020 12:26:34 +0000
 Received: from MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::3885:5fac:44af:5de7]) by MN2PR04MB6991.namprd04.prod.outlook.com
  ([fe80::3885:5fac:44af:5de7%7]) with mapi id 15.20.2707.030; Wed, 12 Feb 2020
- 12:21:44 +0000
+ 12:26:34 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     Can Guo <cang@codeaurora.org>,
         "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
@@ -76,25 +76,24 @@ To:     Can Guo <cang@codeaurora.org>,
         "kernel-team@android.com" <kernel-team@android.com>,
         "saravanak@google.com" <saravanak@google.com>,
         "salyzyn@google.com" <salyzyn@google.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
+CC:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pedro Sousa <sousa@synopsys.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 1/2] scsi: ufs: Use ufshcd_config_pwr_mode() when scale
- gear
-Thread-Topic: [PATCH v1 1/2] scsi: ufs: Use ufshcd_config_pwr_mode() when
- scale gear
-Thread-Index: AQHV4Wa4/7BeUknJikSF1o9Bj2JpaKgXdp1Q
-Date:   Wed, 12 Feb 2020 12:21:43 +0000
-Message-ID: <MN2PR04MB6991136AD340D28D930F27F3FC1B0@MN2PR04MB6991.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
+Thread-Topic: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
+Thread-Index: AQHV4WdtEUG2fhkxEky/U6KeRj9UX6gXfB2g
+Date:   Wed, 12 Feb 2020 12:26:34 +0000
+Message-ID: <MN2PR04MB699176BCCB6B900617C96303FC1B0@MN2PR04MB6991.namprd04.prod.outlook.com>
 References: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
- <1581485910-8307-2-git-send-email-cang@codeaurora.org>
-In-Reply-To: <1581485910-8307-2-git-send-email-cang@codeaurora.org>
+ <1581485910-8307-3-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1581485910-8307-3-git-send-email-cang@codeaurora.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -104,100 +103,43 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: ed26d036-ac11-489a-a5d3-08d7afb61f4a
-x-ms-traffictypediagnostic: MN2PR04MB6976:
-x-microsoft-antispam-prvs: <MN2PR04MB6976517096D2FC4350EBCC25FC1B0@MN2PR04MB6976.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: b9dd74df-1e31-4ac3-a3d9-08d7afb6cc4f
+x-ms-traffictypediagnostic: MN2PR04MB6430:
+x-microsoft-antispam-prvs: <MN2PR04MB6430BEF0508A933235E16358FC1B0@MN2PR04MB6430.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:576;
+x-ms-oob-tlc-oobclassifiers: OLM:3631;
 x-forefront-prvs: 0311124FA9
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(376002)(366004)(396003)(346002)(136003)(189003)(199004)(8676002)(110136005)(316002)(54906003)(2906002)(81156014)(7416002)(55016002)(8936002)(9686003)(33656002)(186003)(81166006)(71200400001)(86362001)(4326008)(478600001)(26005)(66556008)(66446008)(66476007)(5660300002)(76116006)(7696005)(64756008)(66946007)(6506007)(52536014);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6976;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(366004)(39860400002)(376002)(396003)(346002)(199004)(189003)(86362001)(66446008)(76116006)(316002)(66476007)(8936002)(81166006)(66946007)(64756008)(6506007)(81156014)(186003)(26005)(8676002)(110136005)(52536014)(4326008)(5660300002)(54906003)(478600001)(66556008)(558084003)(2906002)(55016002)(71200400001)(7696005)(33656002)(9686003)(7416002);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR04MB6430;H:MN2PR04MB6991.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xBiXRpPgjnGTaiz0o21Pz4EZfcuzUTXG8fH44Mqri1aJ4kad2vVIPCO+UVYqdeVyYinw1OCDV3riyKa6vGKEiL2KlDhDZJaQekYyebH9hQnU73C/81YBlPGNfY+IviWCSysfLficRio7SuJ+0c2t4uUbQL6W7WD0VFcxaAgA6kamjfo+QgIP6XEkS/Rc1wQ4+lLssQog1K5VYGh5tipZwctgJNV+OpyLotSSNIx7xtzj9v/7T8HYqdCv51gnaorWRV3tXD3kkqkIMbpJmjT1Qpfx8I8TKHV7gzO+ci/O7ylm67fG1kZaK2//OHJyoYdi3IhAufTBOf8ZH8NeFNYIRR2wxN6SRzhPDGxSwq8PQL341dxJxJGIL9OmB2r8BMR5bDVPtz2H4delkRjA2fsh5svDe+DpW/LL8YL+b7EAHxNc7ahwuPh+zLwYP3Qr7fvC
-x-ms-exchange-antispam-messagedata: BZYJvj8/fERvCz69WksrnLvYGzqSIMk96JB//TWP6cKv6NB0vA5Cpk5RryavHkKMpPJoAEZQmp4g5OdNxhTUhMp2KbfY4T/1HVPu7vpsAGjxwgsMtWbljQn2R5TbDc8SyJySWXmaOCLHRKVC1TBD3g==
+x-microsoft-antispam-message-info: HTZfjWIjuUyktmzTTjhAguknLVcOGueCHserBJeuLVoMc8Mksy0O3Aie0yWlxKw2PEMeV39ls/hbac+ybiyUzHPjgAvQBLq46odaadelqm6djncWiPTsRFXqJ6NJWzLcHUjHMkZWOz89Ff7nFzA8tY+fahtqc8b7QVeeSYD/tegqGjtq3ucsifl/Ex9dibSovrFraMKRCsovxVAy4En+rwO9Se7LIp7SHSKUHvatChETPXVQ4GGYqzekfi0BnI12KqouhtMOa4cDpofljozMx3BjxViLRb5R8YrMl553+o9hcfk/RSdGcuFFAD8K/uBHq4IL8E87i+8r+LFLQqsxj3OdEO2NYQcAKX/8resmP6CtAPOAWJkj6RiNHiOgQBC13UEAwKx1hcsoTVqoOm7OLzmidmMetK63CVpqiwI+9w60f7TBlirLMS0LFHUSEs2S
+x-ms-exchange-antispam-messagedata: mHxkg6fJkEDYYwzdiZUbLIaS3ywMBPEJpkMezsOkZNAaIWPRv6Zg2CLaOPP54aTvPKk7kJF3/yospoY1lCzkE7FITxcgxOsIByir7IDDyDv2YSaVT8pp0hERgJSU+NW5b0PHcdtGlIF45X3tWwIEcQ==
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ed26d036-ac11-489a-a5d3-08d7afb61f4a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Feb 2020 12:21:43.9392
+X-MS-Exchange-CrossTenant-Network-Message-Id: b9dd74df-1e31-4ac3-a3d9-08d7afb6cc4f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Feb 2020 12:26:34.1799
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: X4HuL70Bgzfl0C+fJlE29sBxthKn3qMA8B5ohWtd2Aleu6MIh1DZg0q9f4eFOsnIMVDJiBb2Xwf6CGK8Av6MaA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6976
+X-MS-Exchange-CrossTenant-userprincipalname: N9Fg4x5CL/Q+jR6h9IwW6EEPx6/TZLrNXrcMBETQxbaZuza9CduTsrTVav8U2dsmpb3uymqhA4pl1Ow0xnG8Ew==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6430
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
-
 >=20
-> When scale gear, use ufshcd_config_pwr_mode() instead of
-> ufshcd_change_power_mode() so that
-> vops_pwr_change_notify(PRE_CHANGE)
-> can be utilized to allow vendors use customized settings before change
-> the power mode.
+> ADAPT is added specifically for HS Gear4 mode only, select INITIAL ADAPT
+> before do power mode change to G4 and select NO ADAPT before switch to
+> non-G4 modes.
 >=20
 > Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index adcce41..67bd4f2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1059,8 +1059,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba,
-> bool scale_up)
->         }
->=20
->         /* check if the power mode needs to be changed or not? */
-> -       ret =3D ufshcd_change_power_mode(hba, &new_pwr_info);
-> -
-> +       ret =3D ufshcd_config_pwr_mode(hba, &new_pwr_info);
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
-You might want to inform ufshcd_config_pwr_mode() of the caller,
-As now it will be called much more frequently, and you want/don't want
-To call your vops on probe but not on scale_gear?
+Thanks,
+Avri
 
-Also, Alim exported ufshcd_config_pwr_mode a while ago,
-In commit 0d846e703dc8 "scsi: ufs: make ufshcd_config_pwr_mode of non-stati=
-c func"),
-But nobody uses it outside ufshcd - so maybe revert this commit as part of =
-this series?
-
-
-
->         if (ret)
->                 dev_err(hba->dev, "%s: failed err %d, old gear: (tx %d rx=
- %d), new
-> gear: (tx %d rx %d)",
->                         __func__, ret,
-> @@ -4126,8 +4125,6 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
->                 memcpy(&final_params, desired_pwr_mode, sizeof(final_para=
-ms));
->=20
->         ret =3D ufshcd_change_power_mode(hba, &final_params);
-> -       if (!ret)
-> -               ufshcd_print_pwr_info(hba);
->=20
->         return ret;
->  }
-> @@ -7157,6 +7154,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
-> bool async)
->                                         __func__, ret);
->                         goto out;
->                 }
-> +               ufshcd_print_pwr_info(hba);
->         }
->=20
->         /* set the state as operational after switching to desired gear *=
-/
-> --
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
-> Forum,
-> a Linux Foundation Collaborative Project
