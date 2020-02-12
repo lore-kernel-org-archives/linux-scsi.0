@@ -2,136 +2,128 @@ Return-Path: <SRS0=6k2I=4A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 345B1C2BA83
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 05:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7803C352A4
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 07:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 004AA2073C
-	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 05:43:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DC452073C
+	for <linux-scsi@archiver.kernel.org>; Wed, 12 Feb 2020 07:23:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="C/jtI4ck"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oxVdvJbp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726194AbgBLFnz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 00:43:55 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:64893 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725601AbgBLFnz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Feb 2020 00:43:55 -0500
-X-Greylist: delayed 300 seconds by postgrey-1.27 at vger.kernel.org; Wed, 12 Feb 2020 00:43:54 EST
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581486234; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=NMBFWs/iu5Xy2+tnmYgtFh5bOJ2ma0Oeqgf2koL0U1Y=; b=C/jtI4ck/lHi+LdYPqvWbUG5fZobVB3BaUIx5EHCcTisOj+Jo4YpyqKNQI26gLOPJwVr0E5n
- QcupE0xbIJZAjWLVIryaSwKJR/jz3RgDHpObO2eRKFeIQCghX3Tx94T5siwC0ldmla1h5JWN
- FZGlkvXl5dT6JKR72Ao+kpPXlUw=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e438f6d.7f8efb658228-smtp-out-n03;
- Wed, 12 Feb 2020 05:38:53 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A0ADDC447A6; Wed, 12 Feb 2020 05:38:51 +0000 (UTC)
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0E591C43383;
-        Wed, 12 Feb 2020 05:38:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0E591C43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S1728271AbgBLHXq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 02:23:46 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:44114 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728234AbgBLHXq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 02:23:46 -0500
+Received: by mail-pg1-f196.google.com with SMTP id g3so597824pgs.11;
+        Tue, 11 Feb 2020 23:23:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
+        bh=sSs36sQnxGTfCuz7UN6u9y3waBifKuK+zZ5r4rWQl60=;
+        b=oxVdvJbpI1X86ZupSuF4fCCHh+VlIFzg0QuIchF1F8Njm3jM6YS3bgcGYc3tMmJUtj
+         0dY2OWYizLldYRAF3MUfzDF+zSm+bnim1+dDYY2k1a3JvG383nyFfMMLm2yiiFtnIrUb
+         q2/gx7A+fTMuyvZCD4e31RC4BE18ZrXePmBYX5dn4KE0n/Qa45iYJgrQivYVkwmD3yH5
+         iiQH2Yl0JfvPr1YBNks97L97Z3o/f0kE9JGU7wHrjO/X+8G2jQ3IEAYrkEVW2Cc9VEYq
+         ixOxCWE4q5ekznrz1Y8s83snb7YkWP2zWmnQCT8q2CbydlM7y/xyo/+7aWsGElBj22Is
+         ZeYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=sSs36sQnxGTfCuz7UN6u9y3waBifKuK+zZ5r4rWQl60=;
+        b=Qhf+7eGC3hf9DBcQGiFqVJk/5rhFR6j1drXg201qulv0zHsoFoQaZt554AMtncM8oF
+         eK2ed+LDoyJ1v55F600J/XbmiUCDBbBDLdcpavPoH18kaNpikejflIUzZrg4Ytq3ao7O
+         tT+lKVASrIVvCRE4e+f3OAcilUyWQUikpCVG5oeZ5Z8zfzK71Mfcl4oB1qHMd/AK3kkI
+         OeGUWqWxFzTbokoI7EzPSS0BIxZURBxHDBrceu9TqxQ/qmzTRDLI5g3GVorYN0PGYQgy
+         230YGI2QOmFKvBtOFLFpvsWxaXr4Vw0kL1YBAHQZYDeWumAecZpLQUi7AereTDY3Xj4X
+         Vtsg==
+X-Gm-Message-State: APjAAAXjHGBIwVFt8k3rAX3DzEdR8yIapPO87BmHgAXAvmbtzhzaXob2
+        Yu1iK11oC4+EZx/aQyNVkIdxyvtXgJk=
+X-Google-Smtp-Source: APXvYqwBNgRED6yRsaWlnJLa6J3Vw4BvD2nWSBTOSjouHQDAwr2BAFix1nNzBKQslqhWrzDRlDiVAg==
+X-Received: by 2002:a65:4305:: with SMTP id j5mr11447953pgq.315.1581492226092;
+        Tue, 11 Feb 2020 23:23:46 -0800 (PST)
+Received: from workstation-portable ([103.211.17.79])
+        by smtp.gmail.com with ESMTPSA id r26sm6398986pga.55.2020.02.11.23.23.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Feb 2020 23:23:45 -0800 (PST)
+Date:   Wed, 12 Feb 2020 12:53:39 +0530
+From:   Amol Grover <frextrite@gmail.com>
+To:     Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Pedro Sousa <sousa@synopsys.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
-Date:   Tue, 11 Feb 2020 21:38:29 -0800
-Message-Id: <1581485910-8307-3-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
-References: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Amol Grover <frextrite@gmail.com>
+Subject: [PATCH 1/2 RESEND] scsi: fcoe: fcoe_ctlr: Pass lockdep expression to
+ RCU lists
+Message-ID: <20200212072339.GH14453@workstation-portable>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email 2.24.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ADAPT is added specifically for HS Gear4 mode only, select INITIAL ADAPT
-before do power mode change to G4 and select NO ADAPT before switch to
-non-G4 modes.
+lport->disc.rports and disc->rports are traversed using
+list_for_each_entry_rcu outside an RCU read-side critical section but
+under the protection of lport->disc.disc_mutex and disc->disc_mutex
+respectively.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+Hence, add corresponding lockdep expression to silence false-positive
+lockdep warnings, and harden RCU lists.
+
+Signed-off-by: Amol Grover <frextrite@gmail.com>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 14 ++++++++++++++
- drivers/scsi/ufs/unipro.h   |  7 +++++++
- 2 files changed, 21 insertions(+)
+ drivers/scsi/fcoe/fcoe_ctlr.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index d593523..6a905bb 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -942,6 +942,20 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
- 		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
- 			ufshcd_is_hs_mode(dev_req_params))
- 			ufs_qcom_dev_ref_clk_ctrl(host, true);
-+
-+		if (host->hw_ver.major >= 0x4) {
-+			if (dev_req_params->gear_tx == UFS_HS_G4) {
-+				/* INITIAL ADAPT */
-+				ufshcd_dme_set(hba,
-+					       UIC_ARG_MIB(PA_TXHSADAPTTYPE),
-+					       PA_INITIAL_ADAPT);
-+			} else {
-+				/* NO ADAPT */
-+				ufshcd_dme_set(hba,
-+					       UIC_ARG_MIB(PA_TXHSADAPTTYPE),
-+					       PA_NO_ADAPT);
-+			}
-+		}
- 		break;
- 	case POST_CHANGE:
- 		if (ufs_qcom_cfg_timers(hba, dev_req_params->gear_rx,
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index 3dc4d8b..766d551 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -146,6 +146,12 @@
- #define PA_SLEEPNOCONFIGTIME	0x15A2
- #define PA_STALLNOCONFIGTIME	0x15A3
- #define PA_SAVECONFIGTIME	0x15A4
-+#define PA_TXHSADAPTTYPE       0x15D4
-+
-+/* Adpat type for PA_TXHSADAPTTYPE attribute */
-+#define PA_REFRESH_ADAPT       0x00
-+#define PA_INITIAL_ADAPT       0x01
-+#define PA_NO_ADAPT            0x03
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 1791a393795d..0f59992c9cd9 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2167,7 +2167,8 @@ static void fcoe_ctlr_disc_stop_locked(struct fc_lport *lport)
+ 	struct fc_rport_priv *rdata;
  
- #define PA_TACTIVATE_TIME_UNIT_US	10
- #define PA_HIBERN8_TIME_UNIT_US		100
-@@ -203,6 +209,7 @@ enum ufs_hs_gear_tag {
- 	UFS_HS_G1,		/* HS Gear 1 (default for reset) */
- 	UFS_HS_G2,		/* HS Gear 2 */
- 	UFS_HS_G3,		/* HS Gear 3 */
-+	UFS_HS_G4,		/* HS Gear 4 */
- };
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers) {
++	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers,
++				lockdep_is_held(&lport->disc.disc_mutex)) {
+ 		if (kref_get_unless_zero(&rdata->kref)) {
+ 			fc_rport_logoff(rdata);
+ 			kref_put(&rdata->kref, fc_rport_destroy);
+@@ -2703,7 +2704,8 @@ static unsigned long fcoe_ctlr_vn_age(struct fcoe_ctlr *fip)
  
- enum ufs_unipro_ver {
+ 	next_time = jiffies + msecs_to_jiffies(FIP_VN_BEACON_INT * 10);
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers) {
++	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers,
++				lockdep_is_held(&lport->disc.disc_mutex)) {
+ 		if (!kref_get_unless_zero(&rdata->kref))
+ 			continue;
+ 		frport = fcoe_ctlr_rport(rdata);
+@@ -3061,7 +3063,8 @@ static void fcoe_ctlr_vn_disc(struct fcoe_ctlr *fip)
+ 	mutex_lock(&disc->disc_mutex);
+ 	callback = disc->pending ? disc->disc_callback : NULL;
+ 	disc->pending = 0;
+-	list_for_each_entry_rcu(rdata, &disc->rports, peers) {
++	list_for_each_entry_rcu(rdata, &disc->rports, peers,
++				lockdep_is_held(&disc->disc_mutex)) {
+ 		if (!kref_get_unless_zero(&rdata->kref))
+ 			continue;
+ 		frport = fcoe_ctlr_rport(rdata);
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.24.1
+
