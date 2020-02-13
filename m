@@ -2,174 +2,123 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93679C3B188
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 02:53:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3006C3B188
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 03:02:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 699D3206D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 02:53:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB592218AC
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 03:02:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kmqENplD"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uQ+dyeDm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729540AbgBMCxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 21:53:19 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:53761 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729378AbgBMCxT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Feb 2020 21:53:19 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581562398; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=qAAa2KbFfMvP0Xd5tKYvsl66uX6NHBgKUC21HuQOjBU=;
- b=kmqENplDK8lQ4uYZYf16cgLWKcj7BoXCUYk+1q7hw4xXAQejL/SpUOwv0vz0ArKTGTPlJ59o
- OkR0gj284F7oSH1jLcYWugfslALn2T6LEsZGcqCcXYw4I/ZU3GMbb2DxN5teDMCXppYbwYTu
- OB94kmg+FR4MPxktqcs4eisNPHs=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e44ba1c.7fa3b0c77a40-smtp-out-n02;
- Thu, 13 Feb 2020 02:53:16 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 43D3BC433A2; Thu, 13 Feb 2020 02:53:16 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DDC35C43383;
-        Thu, 13 Feb 2020 02:53:13 +0000 (UTC)
+        id S1729505AbgBMDCY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 22:02:24 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:32922 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729432AbgBMDCX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 22:02:23 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D32AML195412;
+        Thu, 13 Feb 2020 03:02:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=LLzhfUkTLcL96RVaoKPShnmZ7NANy0fpYjkZKVROifY=;
+ b=uQ+dyeDmJ6wPB5pK3LGgE+pkKrektaFXz12MHSbeXZ1YNpX7gdnisgU37ThSWTodnpNc
+ RJofHafsz1l3FnDPvIhVsC8w8g2R8yirzlFyjOcBEAe6dHDrg+QGI7pHV1qqBQmBNWlK
+ 19ZwNHRjJOk7X3p/xxEJ/eDXh3v5ntp7sN8qztebQTTXlV86hi/wBUDvf8U3XqEwHEaS
+ +gp4SHKAx/SNv9OvkOIS0WvZYZzp6S1SBGaVmwA+YziNs0buIiUtcvFn2j3wyVb1kq4U
+ lQyo05Glgk3nXPbxDeHJ6TKOFLIGA3nvma6Bc1FiV9dw9pGxAb9ewfRdfqyvnTT0ud33 MA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2y2p3spnhg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 13 Feb 2020 03:02:15 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D2vIjw131601;
+        Thu, 13 Feb 2020 03:02:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2y4k9gxatq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 13 Feb 2020 03:02:15 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01D32CWN010378;
+        Thu, 13 Feb 2020 03:02:13 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 12 Feb 2020 19:02:11 -0800
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     Tim Walker <tim.t.walker@seagate.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "linux-block\@vger.kernel.org" <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-nvme\@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
+        <20200211122821.GA29811@ming.t460p>
+        <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
+        <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
+Date:   Wed, 12 Feb 2020 22:02:08 -0500
+In-Reply-To: <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
+        (Damien Le Moal's message of "Wed, 12 Feb 2020 01:47:53 +0000")
+Message-ID: <yq1blq3rxzj.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 13 Feb 2020 10:53:13 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: Use ufshcd_config_pwr_mode() when scale
- gear
-In-Reply-To: <MN2PR04MB6991136AD340D28D930F27F3FC1B0@MN2PR04MB6991.namprd04.prod.outlook.com>
-References: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
- <1581485910-8307-2-git-send-email-cang@codeaurora.org>
- <MN2PR04MB6991136AD340D28D930F27F3FC1B0@MN2PR04MB6991.namprd04.prod.outlook.com>
-Message-ID: <5a54ea8f5c9f24a5c14b022d1d087a6d@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 spamscore=0
+ adultscore=0 bulkscore=0 phishscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002130023
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1011
+ impostorscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002130023
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-12 20:21, Avri Altman wrote:
-> Hi,
-> 
->> 
->> When scale gear, use ufshcd_config_pwr_mode() instead of
->> ufshcd_change_power_mode() so that
->> vops_pwr_change_notify(PRE_CHANGE)
->> can be utilized to allow vendors use customized settings before change
->> the power mode.
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 6 ++----
->>  1 file changed, 2 insertions(+), 4 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index adcce41..67bd4f2 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -1059,8 +1059,7 @@ static int ufshcd_scale_gear(struct ufs_hba 
->> *hba,
->> bool scale_up)
->>         }
->> 
->>         /* check if the power mode needs to be changed or not? */
->> -       ret = ufshcd_change_power_mode(hba, &new_pwr_info);
->> -
->> +       ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
-> 
-> You might want to inform ufshcd_config_pwr_mode() of the caller,
-> As now it will be called much more frequently, and you want/don't want
-> To call your vops on probe but not on scale_gear?
-> 
-> Also, Alim exported ufshcd_config_pwr_mode a while ago,
-> In commit 0d846e703dc8 "scsi: ufs: make ufshcd_config_pwr_mode of
-> non-static func"),
-> But nobody uses it outside ufshcd - so maybe revert this commit as
-> part of this series?
-> 
-> 
-> 
 
-Hi Avri,
+Damien,
 
-Thanks for your review and suggestion.
+> Exposing an HDD through multiple-queues each with a high queue depth
+> is simply asking for troubles. Commands will end up spending so much
+> time sitting in the queues that they will timeout.
 
-What I get from your suggestion is that add one more parameter to
-ufshcd_config_pwr_mode(say: bool from_probe), and pass the param to
-ufshcd_vops_pwr_change_notify() so that vendor drivers know where
-is the call comes from? If I get it correctly, then yes, we can
-do that.
+Yep!
 
-However, in ufs-qcom.c, ufs_qcom_pwr_change_notify(PRE_CHANGE)
-is fine being called every time whenever there is a power mode change,
-we have no problem with that. And as we are the only user of clock 
-scaling
-in the latest code base, so this change does not impact any other 
-vendors.
-If later other vendors need to use clock scaling, they can do this
-change as you suggested above.
+> This can already be observed with the smartpqi SAS HBA which exposes
+> single drives as multiqueue block devices with high queue depth.
+> Exercising these drives heavily leads to thousands of commands being
+> queued and to timeouts. It is fairly easy to trigger this without a
+> manual change to the QD. This is on my to-do list of fixes for some
+> time now (lacking time to do it).
 
-As for the commit from Alim, I think I should leave it to Alim's
-call on it, maybe he has changes that use this func outside ufshcd.c
-but not uploaded yet.
+Controllers that queue internally are very susceptible to application or
+filesystem timeouts when drives are struggling to keep up.
 
-Thanks,
-Can Guo.
+> NVMe HDDs need to have an interface setup that match their speed, that
+> is, something like a SAS interface: *single* queue pair with a max QD
+> of 256 or less depending on what the drive can take. Their is no
+> TASK_SET_FULL notification on NVMe, so throttling has to come from the
+> max QD of the SQ, which the drive will advertise to the host.
 
->>         if (ret)
->>                 dev_err(hba->dev, "%s: failed err %d, old gear: (tx %d 
->> rx %d), new
->> gear: (tx %d rx %d)",
->>                         __func__, ret,
->> @@ -4126,8 +4125,6 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
->>                 memcpy(&final_params, desired_pwr_mode, 
->> sizeof(final_params));
->> 
->>         ret = ufshcd_change_power_mode(hba, &final_params);
->> -       if (!ret)
->> -               ufshcd_print_pwr_info(hba);
->> 
->>         return ret;
->>  }
->> @@ -7157,6 +7154,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
->> bool async)
->>                                         __func__, ret);
->>                         goto out;
->>                 }
->> +               ufshcd_print_pwr_info(hba);
->>         }
->> 
->>         /* set the state as operational after switching to desired 
->> gear */
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
->> Forum,
->> a Linux Foundation Collaborative Project
+At the very minimum we'll need low queue depths. But I have my doubts
+whether we can make this work well enough without some kind of TASK SET
+FULL style AER to throttle the I/O.
+
+> NVMe specs will need an update to have a "NONROT" (non-rotational) bit in
+> the identify data for all this to fit well in the current stack.
+
+Absolutely.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
