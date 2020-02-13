@@ -7,92 +7,99 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF330C352A4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:34:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F29C352A4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:36:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96A6A21734
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:34:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE9E32173E
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:36:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eCLtkIiK"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Dlpe4f+H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729299AbgBMAeM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 19:34:12 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:45664 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729152AbgBMAeM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 19:34:12 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D0WqEV134427;
-        Thu, 13 Feb 2020 00:33:49 GMT
+        id S1729333AbgBMAgs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 19:36:48 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57024 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729190AbgBMAgr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 19:36:47 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D0WdCG162252;
+        Thu, 13 Feb 2020 00:36:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2020-01-29;
- bh=Rb//SEZ0CJSW/i1UMf5u5+V3oAEWZp+kaH8h7C+3sRQ=;
- b=eCLtkIiKdDHJL56FXLYojqWwYhUypD9awMIZ82K3k5u0yEmUbkl6kePBEwvByQ5Krs2y
- OtQHYrq0HVMjA2gy4RIhIdV1/DFVBImDINgSYk67RKHkc+4PzmiTx/+vu942FCz0/sCV
- /J90+ldUyq5Nu6LvE84xQ8I4WI1T5Z90m1hFwUXGXMN8D2b1QvWQWXFq7V+/Q5Tc7u4t
- 3Z6qI5iMjzFLdMILpMJpOH66GCj86VUmJjky/j/bcCtP02sWQtDbhHWbeSvUMYFjykhf
- qM0YVcERmY7MhpfYXx7wDW5mRzagHGiovAFWDi3upCMvKpSkf1SNNPHus4BD37lJ9BvN 1A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2y2jx6ennr-1
+ bh=lOJCfJT2udTX7MkccrkOVv4P5oDuCzc4Q2DUeaZKbrE=;
+ b=Dlpe4f+H1r69N2rHehey7P0mPaXk15GrcsiDJG8KtBhrwPkNR/gwBuqms/rlhA9BH8Di
+ MiMf8gAZ1BI+KuVATAeoHT9oZdnO7dIgCifpFmoNHfIuqzMIYdyUdaUcftZo8/ex2DeG
+ kkAg/vdDYwie3Ik8Z/+5qMF4rk5kZQAZs6ZmJlLvvo0qE+EOARETZ7iI7yaLx4TS74Li
+ bWk1jWtJBWaLKdTtK5y0cpcKqK3H1Hlalulh2K2O+eqN/6zynqqDI3MBsOpvCXLrRoHU
+ RZyr1AiYWimZPCDsP7+g5xCZn0gPTpoG42P8r+fxM7PM1zXmaRsnUkwNBljOOKRceFJp BQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2y2k88eg7q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 13 Feb 2020 00:33:49 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D0XBqi107512;
-        Thu, 13 Feb 2020 00:33:48 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2y4k9gqmue-1
+        Thu, 13 Feb 2020 00:36:26 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01D0X9n8114293;
+        Thu, 13 Feb 2020 00:36:26 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2y4kah7bbs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 13 Feb 2020 00:33:48 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01D0XiJw005408;
-        Thu, 13 Feb 2020 00:33:46 GMT
+        Thu, 13 Feb 2020 00:36:26 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01D0aLRc024911;
+        Thu, 13 Feb 2020 00:36:23 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 12 Feb 2020 16:33:44 -0800
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <beanhuo@micron.com>,
-        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>
-Subject: Re: [PATCH v1 0/2] scsi: ufs: introduce common function to disable host TX LCC
+        with ESMTP ; Wed, 12 Feb 2020 16:36:21 -0800
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pedro Sousa <sousa@synopsys.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM SUPPORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: Re: [PATCH v1 2/2] scsi: ufs: Select INITIAL ADAPT type for HS Gear4
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20200207070357.17169-1-stanley.chu@mediatek.com>
-Date:   Wed, 12 Feb 2020 19:33:41 -0500
-In-Reply-To: <20200207070357.17169-1-stanley.chu@mediatek.com> (Stanley Chu's
-        message of "Fri, 7 Feb 2020 15:03:55 +0800")
-Message-ID: <yq1o8u3s4uy.fsf@oracle.com>
+References: <1581485910-8307-1-git-send-email-cang@codeaurora.org>
+        <1581485910-8307-3-git-send-email-cang@codeaurora.org>
+Date:   Wed, 12 Feb 2020 19:36:16 -0500
+In-Reply-To: <1581485910-8307-3-git-send-email-cang@codeaurora.org> (Can Guo's
+        message of "Tue, 11 Feb 2020 21:38:29 -0800")
+Message-ID: <yq1k14rs4qn.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 spamscore=0
- adultscore=0 bulkscore=0 phishscore=0 malwarescore=0 mlxlogscore=842
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
  definitions=main-2002130003
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9529 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=902 malwarescore=0
- priorityscore=1501 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
- bulkscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130003
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
+ suspectscore=0 bulkscore=0 phishscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 impostorscore=0 clxscore=1011 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002130003
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Can,
 
-> This patchset introduces a common function to disable host TX LCC for
-> all vendors and fixes a TX LCC issue in MediaTek UFS driver.
+> ADAPT is added specifically for HS Gear4 mode only, select INITIAL
+> ADAPT before do power mode change to G4 and select NO ADAPT before
+> switch to non-G4 modes.
 
 Applied to 5.7/scsi-queue, thanks!
 
