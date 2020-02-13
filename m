@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60FBEC3B18E
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96846C3B18F
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E8CF2073C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70B1F218AC
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730187AbgBMOFb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 09:05:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46294 "EHLO mx2.suse.de"
+        id S1730193AbgBMOFd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 09:05:33 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46300 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730154AbgBMOFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Feb 2020 09:05:30 -0500
+        id S1730163AbgBMOFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 09:05:31 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 8C948AFA7;
+        by mx2.suse.de (Postfix) with ESMTP id 9650CAFC1;
         Thu, 13 Feb 2020 14:05:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 09/13] aacraid: use scsi_host_(block,unblock) to block I/O
-Date:   Thu, 13 Feb 2020 15:04:18 +0100
-Message-Id: <20200213140422.128382-10-hare@suse.de>
+Subject: [PATCH 13/13] scsi: Remove cmd_list functionality
+Date:   Thu, 13 Feb 2020 15:04:22 +0100
+Message-Id: <20200213140422.128382-14-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200213140422.128382-1-hare@suse.de>
 References: <20200213140422.128382-1-hare@suse.de>
@@ -38,126 +38,177 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use scsi_host_block() and scsi_host_unblock() instead of
-scsi_block_requests()/scsi_unblock_requests() to block and unblock I/O.
-This has the advantage that the block layer will stop sending I/O
-to the adapter instead of having the SCSI midlayer requeueing I/O
-internally.
+Remove cmd_list functionality; no users left.
+With that the scsi_put_command() becomes empty,
+so remove that one, too.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Balsundar P < Balsundar.P@microchip.com>
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aacraid/commsup.c | 14 ++------------
- drivers/scsi/aacraid/linit.c   | 15 ++++++---------
- 2 files changed, 8 insertions(+), 21 deletions(-)
+ drivers/scsi/scsi.c        | 14 --------------
+ drivers/scsi/scsi_error.c  |  1 -
+ drivers/scsi/scsi_lib.c    | 31 -------------------------------
+ drivers/scsi/scsi_priv.h   |  2 --
+ drivers/scsi/scsi_scan.c   |  1 -
+ include/scsi/scsi_cmnd.h   |  1 -
+ include/scsi/scsi_device.h |  1 -
+ include/scsi/scsi_host.h   |  2 --
+ 8 files changed, 53 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 0d8c1ee40759..9c227eefd14c 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1477,7 +1477,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	int index, quirks;
- 	int retval;
- 	struct Scsi_Host *host = aac->scsi_host_ptr;
--	struct scsi_device *dev;
- 	int jafo = 0;
- 	int bled;
- 	u64 dmamask;
-@@ -1605,16 +1604,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 */
- 	scsi_host_complete_all_commands(host, DID_RESET);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 930e4803d888..3c4bb92a451d 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -94,20 +94,6 @@ EXPORT_SYMBOL(scsi_logging_level);
+ ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain);
+ EXPORT_SYMBOL(scsi_sd_pm_domain);
  
--	/*
--	 * Any Device that was already marked offline needs to be marked
--	 * running
--	 */
--	__shost_for_each_device(dev, host) {
--		if (!scsi_device_online(dev))
--			scsi_device_set_state(dev, SDEV_RUNNING);
--	}
- 	retval = 0;
+-/**
+- * scsi_put_command - Free a scsi command block
+- * @cmd: command block to free
+- *
+- * Returns:	Nothing.
+- *
+- * Notes:	The command must not belong to any lists.
+- */
+-void scsi_put_command(struct scsi_cmnd *cmd)
+-{
+-	scsi_del_cmd_from_list(cmd);
+-	BUG_ON(delayed_work_pending(&cmd->abort_work));
+-}
 -
- out:
- 	aac->in_reset = 0;
- 
-@@ -1655,7 +1645,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 * target (block maximum 60 seconds). Although not necessary,
- 	 * it does make us a good storage citizen.
- 	 */
--	scsi_block_requests(host);
-+	scsi_host_block(host);
- 
- 	/* Quiesce build, flush cache, write through mode */
- 	if (forced < 2)
-@@ -1666,7 +1656,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	retval = _aac_reset_adapter(aac, bled, reset_type);
- 	spin_unlock_irqrestore(host->host_lock, flagv);
- 
--	scsi_unblock_requests(host);
-+	retval = scsi_host_unblock(host, SDEV_RUNNING);
- 
- 	if ((forced < 2) && (retval == -ENODEV)) {
- 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 4d5b34e0d3a9..877464e9d520 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1894,7 +1894,7 @@ static int aac_suspend(struct pci_dev *pdev, pm_message_t state)
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
- 	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
- 
--	scsi_block_requests(shost);
-+	scsi_host_block(shost);
- 	aac_cancel_rescan_worker(aac);
- 	aac_send_shutdown(aac);
- 
-@@ -1930,7 +1930,7 @@ static int aac_resume(struct pci_dev *pdev)
- 	* aac_send_shutdown() to block ioctls from upperlayer
- 	*/
- 	aac->adapter_shutdown = 0;
--	scsi_unblock_requests(shost);
-+	scsi_host_unblock(shost, SDEV_RUNNING);
- 
- 	return 0;
- 
-@@ -1945,7 +1945,8 @@ static int aac_resume(struct pci_dev *pdev)
- static void aac_shutdown(struct pci_dev *dev)
+ #ifdef CONFIG_SCSI_LOGGING
+ void scsi_log_send(struct scsi_cmnd *cmd)
  {
- 	struct Scsi_Host *shost = pci_get_drvdata(dev);
--	scsi_block_requests(shost);
-+
-+	scsi_host_block(shost);
- 	__aac_shutdown((struct aac_dev *)shost->hostdata);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index ae2fa170f6ad..978be1602f71 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2412,7 +2412,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 	wake_up(&shost->host_wait);
+ 	scsi_run_host_queues(shost);
+ 
+-	scsi_put_command(scmd);
+ 	kfree(rq);
+ 
+ out_put_autopm_host:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index a48a5727831b..258a428a0a3f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -562,7 +562,6 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ {
+ 	scsi_mq_free_sgtables(cmd);
+ 	scsi_uninit_cmd(cmd);
+-	scsi_del_cmd_from_list(cmd);
  }
  
-@@ -1991,7 +1992,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
- 	case pci_channel_io_frozen:
- 		aac->handle_pci_error = 1;
+ /* Returns false when no more bytes to process, true if there are more */
+@@ -1098,35 +1097,6 @@ static void scsi_cleanup_rq(struct request *rq)
+ 	}
+ }
  
--		scsi_block_requests(aac->scsi_host_ptr);
-+		scsi_host_block(shost);
- 		aac_cancel_rescan_worker(aac);
- 		scsi_host_complete_all_commands(shost, DID_NO_CONNECT);
- 		aac_release_resources(aac);
-@@ -2044,7 +2045,6 @@ static pci_ers_result_t aac_pci_slot_reset(struct pci_dev *pdev)
- static void aac_pci_resume(struct pci_dev *pdev)
+-/* Add a command to the list used by the aacraid and dpt_i2o drivers */
+-void scsi_add_cmd_to_list(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device *sdev = cmd->device;
+-	struct Scsi_Host *shost = sdev->host;
+-	unsigned long flags;
+-
+-	if (shost->use_cmd_list) {
+-		spin_lock_irqsave(&sdev->list_lock, flags);
+-		list_add_tail(&cmd->list, &sdev->cmd_list);
+-		spin_unlock_irqrestore(&sdev->list_lock, flags);
+-	}
+-}
+-
+-/* Remove a command from the list used by the aacraid and dpt_i2o drivers */
+-void scsi_del_cmd_from_list(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_device *sdev = cmd->device;
+-	struct Scsi_Host *shost = sdev->host;
+-	unsigned long flags;
+-
+-	if (shost->use_cmd_list) {
+-		spin_lock_irqsave(&sdev->list_lock, flags);
+-		BUG_ON(list_empty(&cmd->list));
+-		list_del_init(&cmd->list);
+-		spin_unlock_irqrestore(&sdev->list_lock, flags);
+-	}
+-}
+-
+ /* Called after a request has been started. */
+ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
  {
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
--	struct scsi_device *sdev = NULL;
- 	struct aac_dev *aac = (struct aac_dev *)shost_priv(shost);
+@@ -1160,7 +1130,6 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 	if (in_flight)
+ 		__set_bit(SCMD_STATE_INFLIGHT, &cmd->state);
  
- 	if (aac_adapter_ioremap(aac, aac->base_size)) {
-@@ -2071,10 +2071,7 @@ static void aac_pci_resume(struct pci_dev *pdev)
- 	aac->adapter_shutdown = 0;
- 	aac->handle_pci_error = 0;
+-	scsi_add_cmd_to_list(cmd);
+ }
  
--	shost_for_each_device(sdev, shost)
--		if (sdev->sdev_state == SDEV_OFFLINE)
--			sdev->sdev_state = SDEV_RUNNING;
--	scsi_unblock_requests(aac->scsi_host_ptr);
-+	scsi_host_unblock(shost, SDEV_RUNNING);
- 	aac_scan_host(aac);
- 	pci_save_state(pdev);
+ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 3bff9f7aa684..5eab5da4efe7 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -84,8 +84,6 @@ int scsi_eh_get_sense(struct list_head *work_q,
+ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
+ 
+ /* scsi_lib.c */
+-extern void scsi_add_cmd_to_list(struct scsi_cmnd *cmd);
+-extern void scsi_del_cmd_from_list(struct scsi_cmnd *cmd);
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ extern void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 058079f915f1..f2437a7570ce 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -236,7 +236,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	sdev->sdev_state = SDEV_CREATED;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+-	INIT_LIST_HEAD(&sdev->cmd_list);
+ 	INIT_LIST_HEAD(&sdev->starved_entry);
+ 	INIT_LIST_HEAD(&sdev->event_list);
+ 	spin_lock_init(&sdev->list_lock);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a2849bb9cd19..80ac89e47b47 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -159,7 +159,6 @@ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ 	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+ }
+ 
+-extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+ 
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f8312a3e5b42..f146a4557787 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -110,7 +110,6 @@ struct scsi_device {
+ 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
+ 
+ 	spinlock_t list_lock;
+-	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
+ 	struct list_head starved_entry;
+ 	unsigned short queue_depth;	/* How deep of a queue we want */
+ 	unsigned short max_queue_depth;	/* max queue depth */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f5300ad887c4..18321103a04f 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -624,8 +624,6 @@ struct Scsi_Host {
+ 	/* The controller does not support WRITE SAME */
+ 	unsigned no_write_same:1;
+ 
+-	unsigned use_cmd_list:1;
+-
+ 	/* Host responded with short (<36 bytes) INQUIRY result */
+ 	unsigned short_inquiry:1;
  
 -- 
 2.16.4
