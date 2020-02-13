@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7E06C2BA83
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A58DDC3B18B
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B98182073C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73281222C2
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730190AbgBMOFb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 09:05:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46308 "EHLO mx2.suse.de"
+        id S1730192AbgBMOFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 09:05:32 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46228 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730184AbgBMOFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Feb 2020 09:05:30 -0500
+        id S1730079AbgBMOF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 09:05:29 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 97499AFC2;
+        by mx2.suse.de (Postfix) with ESMTP id 6E7E9AF8C;
         Thu, 13 Feb 2020 14:05:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/13] scsi: add scsi_host_complete_all_commands() helper
-Date:   Thu, 13 Feb 2020 15:04:11 +0100
-Message-Id: <20200213140422.128382-3-hare@suse.de>
+Subject: [PATCH 05/13] aacraid: use scsi_host_complete_all_commands() to terminate outstanding commands
+Date:   Thu, 13 Feb 2020 15:04:14 +0100
+Message-Id: <20200213140422.128382-6-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200213140422.128382-1-hare@suse.de>
 References: <20200213140422.128382-1-hare@suse.de>
@@ -38,63 +38,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper scsi_host_complete_all_commands() to terminate all outstanding
-commands on a scsi host.
+Use scsi_host_complete_all_commands() to terminate all outstanding commands
+instead, and change the command result for terminated commands to
+the more common 'DID_RESET' instead of 'QUEUE_FULL'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Balsundar P <balsundar.p@microchip.com>
 ---
- drivers/scsi/hosts.c     | 28 ++++++++++++++++++++++++++++
- include/scsi/scsi_host.h |  1 +
- 2 files changed, 29 insertions(+)
+ drivers/scsi/aacraid/commsup.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1d669e47b692..00ae9d43ce9f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -650,3 +650,31 @@ void scsi_flush_work(struct Scsi_Host *shost)
- 	flush_workqueue(shost->work_q);
- }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 5a8a999606ea..8736a540a048 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1478,8 +1478,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	int retval;
+ 	struct Scsi_Host *host;
+ 	struct scsi_device *dev;
+-	struct scsi_cmnd *command;
+-	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
+@@ -1607,26 +1605,8 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	 * This is where the assumption that the Adapter is quiesced
+ 	 * is important.
+ 	 */
+-	command_list = NULL;
+-	__shost_for_each_device(dev, host) {
+-		unsigned long flags;
+-		spin_lock_irqsave(&dev->list_lock, flags);
+-		list_for_each_entry(command, &dev->cmd_list, list)
+-			if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+-				command->SCp.buffer = (struct scatterlist *)command_list;
+-				command_list = command;
+-			}
+-		spin_unlock_irqrestore(&dev->list_lock, flags);
+-	}
+-	while ((command = command_list)) {
+-		command_list = (struct scsi_cmnd *)command->SCp.buffer;
+-		command->SCp.buffer = NULL;
+-		command->result = DID_OK << 16
+-		  | COMMAND_COMPLETE << 8
+-		  | SAM_STAT_TASK_SET_FULL;
+-		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+-		command->scsi_done(command);
+-	}
++	scsi_host_complete_all_commands(host, DID_RESET);
 +
-+static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
-+{
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	int status = *(int *)data;
-+
-+	scsi_dma_unmap(scmd);
-+	scmd->result = status << 16;
-+	scmd->scsi_done(scmd);
-+	return true;
-+}
-+
-+/**
-+ * scsi_host_complete_all_commands - Terminate all running commands
-+ * @shost:	Scsi Host on which commands should be terminated
-+ * @status:	Status to be set for the terminated commands
-+ *
-+ * There is no protection against modification of the number
-+ * of outstanding commands. It is the responsibility of the
-+ * caller to ensure that concurrent I/O submission and/or
-+ * completion is stopped when calling this function.
-+ */
-+void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status)
-+{
-+	blk_mq_tagset_busy_iter(&shost->tag_set, complete_all_cmds_iter,
-+				&status);
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_complete_all_commands);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 7a97fb8104cf..d11a0a030dd3 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -732,6 +732,7 @@ extern int scsi_host_busy(struct Scsi_Host *shost);
- extern void scsi_host_put(struct Scsi_Host *t);
- extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern const char *scsi_host_state_name(enum scsi_host_state);
-+extern void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status);
- 
- static inline int __must_check scsi_add_host(struct Scsi_Host *host,
- 					     struct device *dev)
+ 	/*
+ 	 * Any Device that was already marked offline needs to be marked
+ 	 * running
 -- 
 2.16.4
 
