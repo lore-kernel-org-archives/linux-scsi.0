@@ -2,34 +2,34 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01535C3B18C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62482C3B18D
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAFAF2073C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 376532073C
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730186AbgBMOFa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 09:05:30 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46296 "EHLO mx2.suse.de"
+        id S1730191AbgBMOFb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 09:05:31 -0500
+Received: from mx2.suse.de ([195.135.220.15]:46304 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730135AbgBMOF3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Feb 2020 09:05:29 -0500
+        id S1730172AbgBMOFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 09:05:30 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 71E0FAF98;
+        by mx2.suse.de (Postfix) with ESMTP id 8E4CCAFAC;
         Thu, 13 Feb 2020 14:05:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/13] aacraid: replace aac_flush_ios() with midlayer helper
-Date:   Thu, 13 Feb 2020 15:04:15 +0100
-Message-Id: <20200213140422.128382-7-hare@suse.de>
+Subject: [PATCH 11/13] aacraid: use scsi_host_busy_iter() to wait for outstanding commands
+Date:   Thu, 13 Feb 2020 15:04:20 +0100
+Message-Id: <20200213140422.128382-12-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200213140422.128382-1-hare@suse.de>
 References: <20200213140422.128382-1-hare@suse.de>
@@ -38,65 +38,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the midlayer helper scsi_host_complete_all_commands() to flush all
+Instead of traversing the list of possible commands by hands we
+should be using scsi_host_busy_iter() to figure out if there are
 outstanding commands.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Acked-by: Balsundar P <balsundar.p@microchip.com>
+Acked-by: Balsundar P < Balsundar.P@microchip.com>
 ---
- drivers/scsi/aacraid/linit.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+ drivers/scsi/aacraid/comminit.c | 35 +++++++++++++++++------------------
+ 1 file changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index ee6bc2f9b80a..4d5b34e0d3a9 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1977,26 +1977,6 @@ static void aac_remove_one(struct pci_dev *pdev)
- 	}
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index f75878d773cf..355b16f0b145 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -272,36 +272,35 @@ static void aac_queue_init(struct aac_dev * dev, struct aac_queue * q, u32 *mem,
+ 	q->entries = qsize;
  }
  
--static void aac_flush_ios(struct aac_dev *aac)
--{
--	int i;
--	struct scsi_cmnd *cmd;
--
--	for (i = 0; i < aac->scsi_host_ptr->can_queue; i++) {
--		cmd = (struct scsi_cmnd *)aac->fibs[i].callback_data;
--		if (cmd && (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
--			scsi_dma_unmap(cmd);
--
--			if (aac->handle_pci_error)
--				cmd->result = DID_NO_CONNECT << 16;
--			else
--				cmd->result = DID_RESET << 16;
--
--			cmd->scsi_done(cmd);
--		}
--	}
--}
--
- static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
- 					enum pci_channel_state error)
++static bool wait_for_io_iter(struct scsi_cmnd *cmd, void *data, bool rsvd)
++{
++	int *active = data;
++
++	if (cmd->SCp.phase == AAC_OWNER_FIRMWARE)
++		*active = *active + 1;
++	return true;
++}
+ static void aac_wait_for_io_completion(struct aac_dev *aac)
  {
-@@ -2013,7 +1993,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
+-	unsigned long flagv = 0;
+-	int i = 0;
++	int i = 0, active;
  
- 		scsi_block_requests(aac->scsi_host_ptr);
- 		aac_cancel_rescan_worker(aac);
--		aac_flush_ios(aac);
-+		scsi_host_complete_all_commands(shost, DID_NO_CONNECT);
- 		aac_release_resources(aac);
+ 	for (i = 60; i; --i) {
+-		struct scsi_device *dev;
+-		struct scsi_cmnd *command;
+-		int active = 0;
+-
+-		__shost_for_each_device(dev, aac->scsi_host_ptr) {
+-			spin_lock_irqsave(&dev->list_lock, flagv);
+-			list_for_each_entry(command, &dev->cmd_list, list) {
+-				if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+-					active++;
+-					break;
+-				}
+-			}
+-			spin_unlock_irqrestore(&dev->list_lock, flagv);
+-			if (active)
+-				break;
  
- 		pci_disable_pcie_error_reporting(pdev);
-@@ -2023,7 +2003,7 @@ static pci_ers_result_t aac_pci_error_detected(struct pci_dev *pdev,
- 	case pci_channel_io_perm_failure:
- 		aac->handle_pci_error = 1;
- 
--		aac_flush_ios(aac);
-+		scsi_host_complete_all_commands(shost, DID_NO_CONNECT);
- 		return PCI_ERS_RESULT_DISCONNECT;
+-		}
++		active = 0;
++		scsi_host_busy_iter(aac->scsi_host_ptr,
++				    wait_for_io_iter, &active);
+ 		/*
+ 		 * We can exit If all the commands are complete
+ 		 */
+ 		if (active == 0)
+ 			break;
++		dev_info(&aac->pdev->dev,
++			 "Wait for %d commands to complete\n", active);
+ 		ssleep(1);
  	}
++	if (active)
++		dev_err(&aac->pdev->dev,
++			"%d outstanding commands during shutdown\n", active);
+ }
  
+ /**
 -- 
 2.16.4
 
