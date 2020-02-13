@@ -2,155 +2,133 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5911CC3B18D
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C31C2BA83
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 15:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 32CE22073C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 14:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 508EF217F4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 15:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730197AbgBMOFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 09:05:34 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46310 "EHLO mx2.suse.de"
+        id S1728366AbgBMPfD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 10:35:03 -0500
+Received: from mx2.suse.de ([195.135.220.15]:37674 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730055AbgBMOFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Feb 2020 09:05:31 -0500
+        id S2388138AbgBMPcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 10:32:11 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id A827DAFC6;
-        Thu, 13 Feb 2020 14:05:27 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 1C291AF0E;
+        Thu, 13 Feb 2020 15:32:09 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
+        Bart van Assche <bvanassche@acm.org>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 04/13] aacraid: Do not wait for outstanding write commands on synchronize_cache
-Date:   Thu, 13 Feb 2020 15:04:13 +0100
-Message-Id: <20200213140422.128382-5-hare@suse.de>
+Subject: [PATCH 1/3] ch: fixup refcounting imbalance for SCSI devices
+Date:   Thu, 13 Feb 2020 16:32:05 +0100
+Message-Id: <20200213153207.123357-2-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200213140422.128382-1-hare@suse.de>
-References: <20200213140422.128382-1-hare@suse.de>
+In-Reply-To: <20200213153207.123357-1-hare@suse.de>
+References: <20200213153207.123357-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need to wait for outstanding write commands on synchronize
-cache; the block layer is responsible for I/O scheduling, no need
-to out-guess it on the driver layer.
+The SCSI device is required to be present during ch_probe()
+and ch_open(). But the SCSI device itself is only checked during
+ch_open(), so it's anyones guess if it had been present during
+ch_probe(). And consequently we can't reliably detach it during
+ch_release(), as ch_remove() might have been called first.
+So initialize the changer device during ch_probe(), and
+take a reference to the SCSI device during both ch_probe()
+and ch_open().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Balsundar P <balsundar.b@microchip.com>
 ---
- drivers/scsi/aacraid/aachba.c | 76 ++-----------------------------------------
- 1 file changed, 2 insertions(+), 74 deletions(-)
+ drivers/scsi/ch.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 33dbc051bff9..474d48eb1348 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2601,9 +2601,7 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- static void synchronize_callback(void *context, struct fib *fibptr)
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index ed5f4a6ae270..974afb4bd5fe 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -569,6 +569,7 @@ static void ch_destroy(struct kref *ref)
  {
- 	struct aac_synchronize_reply *synchronizereply;
--	struct scsi_cmnd *cmd;
--
--	cmd = context;
-+	struct scsi_cmnd *cmd = context;
+ 	scsi_changer *ch = container_of(ref, scsi_changer, ref);
  
- 	if (!aac_valid_context(cmd, fibptr))
- 		return;
-@@ -2644,77 +2642,8 @@ static int aac_synchronize(struct scsi_cmnd *scsicmd)
- 	int status;
- 	struct fib *cmd_fibcontext;
- 	struct aac_synchronize *synchronizecmd;
--	struct scsi_cmnd *cmd;
- 	struct scsi_device *sdev = scsicmd->device;
--	int active = 0;
- 	struct aac_dev *aac;
--	u64 lba = ((u64)scsicmd->cmnd[2] << 24) | (scsicmd->cmnd[3] << 16) |
--		(scsicmd->cmnd[4] << 8) | scsicmd->cmnd[5];
--	u32 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
--	unsigned long flags;
--
--	/*
--	 * Wait for all outstanding queued commands to complete to this
--	 * specific target (block).
--	 */
--	spin_lock_irqsave(&sdev->list_lock, flags);
--	list_for_each_entry(cmd, &sdev->cmd_list, list)
--		if (cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
--			u64 cmnd_lba;
--			u32 cmnd_count;
--
--			if (cmd->cmnd[0] == WRITE_6) {
--				cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
--					(cmd->cmnd[2] << 8) |
--					cmd->cmnd[3];
--				cmnd_count = cmd->cmnd[4];
--				if (cmnd_count == 0)
--					cmnd_count = 256;
--			} else if (cmd->cmnd[0] == WRITE_16) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
--					((u64)cmd->cmnd[3] << 48) |
--					((u64)cmd->cmnd[4] << 40) |
--					((u64)cmd->cmnd[5] << 32) |
--					((u64)cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--				cmnd_count = (cmd->cmnd[10] << 24) |
--					(cmd->cmnd[11] << 16) |
--					(cmd->cmnd[12] << 8) |
--					cmd->cmnd[13];
--			} else if (cmd->cmnd[0] == WRITE_12) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--			} else if (cmd->cmnd[0] == WRITE_10) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[7] << 8) |
--					cmd->cmnd[8];
--			} else
--				continue;
--			if (((cmnd_lba + cmnd_count) < lba) ||
--			  (count && ((lba + count) < cmnd_lba)))
--				continue;
--			++active;
--			break;
--		}
--
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
--
--	/*
--	 *	Yield the processor (requeue for later)
--	 */
--	if (active)
--		return SCSI_MLQUEUE_DEVICE_BUSY;
++	ch->device = NULL;
+ 	kfree(ch->dt);
+ 	kfree(ch);
+ }
+@@ -594,14 +595,17 @@ ch_open(struct inode *inode, struct file *file)
+ 	spin_lock(&ch_index_lock);
+ 	ch = idr_find(&ch_index_idr, minor);
  
- 	aac = (struct aac_dev *)sdev->host->hostdata;
- 	if (aac->in_reset)
-@@ -2723,8 +2652,7 @@ static int aac_synchronize(struct scsi_cmnd *scsicmd)
- 	/*
- 	 *	Allocate and initialize a Fib
- 	 */
--	if (!(cmd_fibcontext = aac_fib_alloc(aac)))
--		return SCSI_MLQUEUE_HOST_BUSY;
-+	cmd_fibcontext = aac_fib_alloc_tag(aac, scsicmd);
+-	if (NULL == ch || scsi_device_get(ch->device)) {
++	if (NULL == ch || !kref_get_unless_zero(&ch->ref)) {
+ 		spin_unlock(&ch_index_lock);
+ 		mutex_unlock(&ch_mutex);
+ 		return -ENXIO;
+ 	}
+-	kref_get(&ch->ref);
+ 	spin_unlock(&ch_index_lock);
+-
++	if (scsi_device_get(ch->device)) {
++		kref_put(&ch->ref, ch_destroy);
++		mutex_unlock(&ch_mutex);
++		return -ENXIO;
++	}
+ 	file->private_data = ch;
+ 	mutex_unlock(&ch_mutex);
+ 	return 0;
+@@ -938,6 +942,12 @@ static int ch_probe(struct device *dev)
  
- 	aac_fib_init(cmd_fibcontext);
+ 	ch->minor = ret;
+ 	sprintf(ch->name,"ch%d",ch->minor);
++	ret = scsi_device_get(sd);
++	if (ret) {
++		sdev_printk(KERN_WARNING, sd, "ch%d: failed to get device\n",
++			    ch->minor);
++		goto remove_idr;
++	}
  
+ 	class_dev = device_create(ch_sysfs_class, dev,
+ 				  MKDEV(SCSI_CHANGER_MAJOR, ch->minor), ch,
+@@ -946,7 +956,7 @@ static int ch_probe(struct device *dev)
+ 		sdev_printk(KERN_WARNING, sd, "ch%d: device_create failed\n",
+ 			    ch->minor);
+ 		ret = PTR_ERR(class_dev);
+-		goto remove_idr;
++		goto put_device;
+ 	}
+ 
+ 	mutex_init(&ch->lock);
+@@ -964,6 +974,8 @@ static int ch_probe(struct device *dev)
+ 	return 0;
+ destroy_dev:
+ 	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR, ch->minor));
++put_device:
++	scsi_device_put(sd);
+ remove_idr:
+ 	idr_remove(&ch_index_idr, ch->minor);
+ free_ch:
+@@ -977,9 +989,11 @@ static int ch_remove(struct device *dev)
+ 
+ 	spin_lock(&ch_index_lock);
+ 	idr_remove(&ch_index_idr, ch->minor);
++	dev_set_drvdata(dev, NULL);
+ 	spin_unlock(&ch_index_lock);
+ 
+ 	device_destroy(ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
++	scsi_device_put(ch->device);
+ 	kref_put(&ch->ref, ch_destroy);
+ 	return 0;
+ }
 -- 
 2.16.4
 
