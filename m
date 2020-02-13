@@ -2,126 +2,85 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B7AC2BA83
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:02:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F294C3B18C
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:30:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84FEC217F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:02:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bqymz4bb"
+	by mail.kernel.org (Postfix) with ESMTP id 3D76724673
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:30:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581611446;
+	bh=nsWJZz/XRgp46cV0agCDAmZPkwPwLp1ic2dkZW13uMI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=MqCX6lXQCelErkCq37zATsKXUMFXXnrScv+JW2/0rwnAS1EnHTXIK3m2k01Q72ioH
+	 4j2CzYhd+slSelHzFKJdjrL4LMqYFc9ulyfPuyZ3caD9+ND9slMi3K8sFiF2gAWTvu
+	 skahSaRhveB3GsoJtD6RQ0OZMQxIKh6Q2T5FEDwk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388294AbgBMQC2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 11:02:28 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:40557 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388287AbgBMQC1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Feb 2020 11:02:27 -0500
-Received: by mail-pj1-f65.google.com with SMTP id 12so2599015pjb.5
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2020 08:02:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=hVrsdnuvDqO8d5RxwZITUcgpQUZuGnOUAkOJjAWAeSc=;
-        b=bqymz4bbnz/uGooKU++Gci42BVLC7ER6w5ypkEU/bnOQE4aLMaB/b3aDJwVKMwukzd
-         fV6zOhyo5GnBTZs9VaDX+xKVzdyo18dUX6JVEJ92WNNy3QZ9zqKT2NM/aJhrDKkWqz97
-         1iDBFKBr+ZSCEFUYuKQEu+VWhf1C3iNFDo22MnqyW5ZRbBqpwrVCrKpAACl3LcmnZlkg
-         0HYAQaQj9WkyWR0MXg1qJ0az3Sli+tiGKRZix0b657WTYFt/twVjhdPuEdcYLBV4SPXa
-         F6LlKb85xlzhwMwtH5Q+CIeHMBtQlL+pyQF4pfWOYqdcZcsFd9p/MGr488d3gfhVbD5/
-         F/6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=hVrsdnuvDqO8d5RxwZITUcgpQUZuGnOUAkOJjAWAeSc=;
-        b=Xux9cQ4ICCw8Y5t5HWpaONu6a/O2Oo7J+HK6XFLJS1rdieyIi0FpYL3XLjz3GfGoCa
-         jO/q78aLsX8PVNuVw7qg/9o2lxMX8ePLOflI/O7m6rzMoDyQyc0bc05Wj2vgn0rGuHH/
-         +/hBtc0x136OITEib671kLpHM9O+kFrWgype68sG0YKQLN0XcWF9nwTMSw58p9CaH66X
-         LyPpj0GZ/v8hj5/te15THkwVrRoFCSWnSMYZa2t1/teqBKx/pKkLJFtvgZD4/DdVgrQ0
-         PLFCwqSdL4RrxzLV7j6OInl4y4+sS+Ay3xbTHKaPsNjUSYmmq+8K2JPUQEG0e5Muy8Zr
-         6OKg==
-X-Gm-Message-State: APjAAAUE4eBX5hmKRyOmxhtpOs+kdLQAHhP3P7qVgfDGyS+Xd5YHYGCn
-        4UbHzuC0e2XlmNr+kjWwg5em9May
-X-Google-Smtp-Source: APXvYqymo4t6yus5lA4ARRP92do9uNCgs2FfdZcsXcYrS8KXnPV1WNFgmpmvw2ZHZHCYQsz6V8dw5A==
-X-Received: by 2002:a17:90a:de05:: with SMTP id m5mr6000239pjv.10.1581609745934;
-        Thu, 13 Feb 2020 08:02:25 -0800 (PST)
-Received: from [10.230.31.62] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t16sm3875302pgo.80.2020.02.13.08.02.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Feb 2020 08:02:25 -0800 (PST)
-Subject: Re: [PATCH v2 1/2] fc: Update Descriptor definition and add RDF and
- Link Integrity FPINs
-To:     kbuild test robot <lkp@intel.com>
-Cc:     kbuild-all@lists.01.org, linux-scsi@vger.kernel.org
-References: <20200210173155.547-2-jsmart2021@gmail.com>
- <202002131725.WpnYjjEN%lkp@intel.com>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <4b1a9f43-7d1a-ed12-8c49-bac9517a2e1a@gmail.com>
-Date:   Thu, 13 Feb 2020 08:02:23 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1728055AbgBMQap (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 11:30:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35554 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727926AbgBMQap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 11:30:45 -0500
+Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id F3DB5217F4;
+        Thu, 13 Feb 2020 16:30:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581611444;
+        bh=nsWJZz/XRgp46cV0agCDAmZPkwPwLp1ic2dkZW13uMI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=0rnNxsBFGlcfGbSG5+CPtnSIx21akwCBsUsO6wdm8O34Z+ufB7LBXP/sU8jM1/IAI
+         qPlyr6r7813v+7XU0QhXvqwNLFInRY775lp723vSXcB+xNbXJchlbi7zjiPjNIn0aK
+         HTV6p84oCg8+9UkaAdadR9A6sOBb1urepBHIDXvI=
+Date:   Fri, 14 Feb 2020 01:30:38 +0900
+From:   Keith Busch <kbusch@kernel.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Tim Walker <tim.t.walker@seagate.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
+Message-ID: <20200213163038.GB7634@redsun51.ssa.fujisawa.hgst.com>
+References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
+ <20200211122821.GA29811@ming.t460p>
+ <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
+ <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20200212220328.GB25314@ming.t460p>
+ <BYAPR04MB581622DDD1B8B56CEFF3C23AE71A0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20200213075348.GA9144@ming.t460p>
+ <BYAPR04MB58160C04182D5FE3A15842BBE71A0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20200213083413.GC9144@ming.t460p>
 MIME-Version: 1.0
-In-Reply-To: <202002131725.WpnYjjEN%lkp@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200213083413.GC9144@ming.t460p>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/13/2020 2:00 AM, kbuild test robot wrote:
-> Hi James,
+On Thu, Feb 13, 2020 at 04:34:13PM +0800, Ming Lei wrote:
+> On Thu, Feb 13, 2020 at 08:24:36AM +0000, Damien Le Moal wrote:
+> > Got it. And since queue full will mean no more tags, submission will block
+> > on get_request() and there will be no chance in the elevator to merge
+> > anything (aside from opportunistic merging in plugs), isn't it ?
+> > So I guess NVMe HDDs will need some tuning in this area.
 > 
-> I love your patch! Yet something to improve:
+> scheduler queue depth is usually 2 times of hw queue depth, so requests
+> ar usually enough for merging.
 > 
-> [auto build test ERROR on scsi/for-next]
-> [also build test ERROR on mkp-scsi/for-next linus/master v5.6-rc1 next-20200213]
-> [if your patch is applied to the wrong git tree, please drop us a note to help
-> improve the system. BTW, we also suggest to use '--base' option to specify the
-> base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
-> 
-> url:    https://github.com/0day-ci/linux/commits/James-Smart/lpfc-Add-Link-Integrity-FPIN-registration-and-logging/20200213-051448
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-> config: i386-randconfig-g002-20200213 (attached as .config)
-> compiler: gcc-7 (Debian 7.5.0-4) 7.5.0
-> reproduce:
->          # save the attached .config to linux build tree
->          make ARCH=i386
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
-> 
-> All error/warnings (new ones prefixed by >>):
-> 
->     In file included from <command-line>:32:0:
->     ./usr/include/scsi/fc/fc_els.h: In function 'fc_tlv_next_desc':
->>> ./usr/include/scsi/fc/fc_els.h:274:4: error: implicit declaration of function 'be32_to_cpu'; did you mean '__be32_to_cpu'? [-Werror=implicit-function-declaration]
->        (be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
->         ^
->>> ./usr/include/scsi/fc/fc_els.h:286:17: note: in expansion of macro 'FC_TLV_DESC_SZ_FROM_LENGTH'
->       return (desc + FC_TLV_DESC_SZ_FROM_LENGTH(tlv));
->                      ^~~~~~~~~~~~~~~~~~~~~~~~~~
->     cc1: some warnings being treated as errors
-> 
-> ---
-> 0-DAY CI Kernel Test Service, Intel Corporation
-> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
-> 
+> For NVMe, there isn't ns queue depth, such as scsi's device queue depth,
+> meantime the hw queue depth is big enough, so no chance to trigger merge.
 
-Can you tell me what it was that was built that failed.
-This should have been addressed by the "#include <asm/byteorder.h>" at 
-the top of the header.
-
-I'm suspecting it's a non-kernel entity, so the header didn't resolve as 
-it should (perhaps the suggestion should be used instead).
-
--- james
-
+Most NVMe devices contain a single namespace anyway, so the shared tag
+queue depth is effectively the ns queue depth, and an NVMe HDD should
+advertise queue count and depth capabilities orders of magnitude lower
+than what we're used to with nvme SSDs. That should get merging and
+BLK_STS_DEV_RESOURCE handling to occur as desired, right?
