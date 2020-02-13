@@ -2,85 +2,106 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F294C3B18C
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16358C3B189
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D76724673
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:30:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581611446;
-	bh=nsWJZz/XRgp46cV0agCDAmZPkwPwLp1ic2dkZW13uMI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=MqCX6lXQCelErkCq37zATsKXUMFXXnrScv+JW2/0rwnAS1EnHTXIK3m2k01Q72ioH
-	 4j2CzYhd+slSelHzFKJdjrL4LMqYFc9ulyfPuyZ3caD9+ND9slMi3K8sFiF2gAWTvu
-	 skahSaRhveB3GsoJtD6RQ0OZMQxIKh6Q2T5FEDwk=
+	by mail.kernel.org (Postfix) with ESMTP id E9E9522314
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 16:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728055AbgBMQap (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 11:30:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35554 "EHLO mail.kernel.org"
+        id S1728206AbgBMQw3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 11:52:29 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53920 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727926AbgBMQap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Feb 2020 11:30:45 -0500
-Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F3DB5217F4;
-        Thu, 13 Feb 2020 16:30:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581611444;
-        bh=nsWJZz/XRgp46cV0agCDAmZPkwPwLp1ic2dkZW13uMI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0rnNxsBFGlcfGbSG5+CPtnSIx21akwCBsUsO6wdm8O34Z+ufB7LBXP/sU8jM1/IAI
-         qPlyr6r7813v+7XU0QhXvqwNLFInRY775lp723vSXcB+xNbXJchlbi7zjiPjNIn0aK
-         HTV6p84oCg8+9UkaAdadR9A6sOBb1urepBHIDXvI=
-Date:   Fri, 14 Feb 2020 01:30:38 +0900
-From:   Keith Busch <kbusch@kernel.org>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Tim Walker <tim.t.walker@seagate.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
-Message-ID: <20200213163038.GB7634@redsun51.ssa.fujisawa.hgst.com>
-References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
- <20200211122821.GA29811@ming.t460p>
- <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
- <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20200212220328.GB25314@ming.t460p>
- <BYAPR04MB581622DDD1B8B56CEFF3C23AE71A0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20200213075348.GA9144@ming.t460p>
- <BYAPR04MB58160C04182D5FE3A15842BBE71A0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20200213083413.GC9144@ming.t460p>
+        id S1727992AbgBMQw3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 11:52:29 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 5458AAECB;
+        Thu, 13 Feb 2020 16:52:27 +0000 (UTC)
+Subject: Re: [PATCH] scsi: advansys: Replace zero-length array with
+ flexible-array member
+To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200213000211.GA23171@embeddedor.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <d200c066-76b6-b02a-e009-ec82789c8ad9@suse.de>
+Date:   Thu, 13 Feb 2020 17:52:24 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200213083413.GC9144@ming.t460p>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+In-Reply-To: <20200213000211.GA23171@embeddedor.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 13, 2020 at 04:34:13PM +0800, Ming Lei wrote:
-> On Thu, Feb 13, 2020 at 08:24:36AM +0000, Damien Le Moal wrote:
-> > Got it. And since queue full will mean no more tags, submission will block
-> > on get_request() and there will be no chance in the elevator to merge
-> > anything (aside from opportunistic merging in plugs), isn't it ?
-> > So I guess NVMe HDDs will need some tuning in this area.
+On 2/13/20 1:02 AM, Gustavo A. R. Silva wrote:
+> The current codebase makes use of the zero-length array language
+> extension to the C90 standard, but the preferred mechanism to declare
+> variable-length types such as these ones is a flexible array member[1][2],
+> introduced in C99:
 > 
-> scheduler queue depth is usually 2 times of hw queue depth, so requests
-> ar usually enough for merging.
+> struct foo {
+>          int stuff;
+>          struct boo array[];
+> };
 > 
-> For NVMe, there isn't ns queue depth, such as scsi's device queue depth,
-> meantime the hw queue depth is big enough, so no chance to trigger merge.
+> By making use of the mechanism above, we will get a compiler warning
+> in case the flexible array does not occur last in the structure, which
+> will help us prevent some kind of undefined behavior bugs from being
+> inadvertently introduced[3] to the codebase from now on.
+> 
+> Also, notice that, dynamic memory allocations won't be affected by
+> this change:
+> 
+> "Flexible array members have incomplete type, and so the sizeof operator
+> may not be applied. As a quirk of the original implementation of
+> zero-length arrays, sizeof evaluates to zero."[1]
+> 
+> This issue was found with the help of Coccinelle.
+> 
+> [1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+> [2] https://github.com/KSPP/linux/issues/21
+> [3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> ---
+>   drivers/scsi/advansys.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> index a242a62caaa1..c2c7850ff7b4 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -316,7 +316,7 @@ typedef struct asc_sg_head {
+>   	ushort queue_cnt;
+>   	ushort entry_to_copy;
+>   	ushort res;
+> -	ASC_SG_LIST sg_list[0];
+> +	ASC_SG_LIST sg_list[];
+>   } ASC_SG_HEAD;
+>   
+>   typedef struct asc_scsi_q {
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Most NVMe devices contain a single namespace anyway, so the shared tag
-queue depth is effectively the ns queue depth, and an NVMe HDD should
-advertise queue count and depth capabilities orders of magnitude lower
-than what we're used to with nvme SSDs. That should get merging and
-BLK_STS_DEV_RESOURCE handling to occur as desired, right?
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
