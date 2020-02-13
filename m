@@ -2,189 +2,132 @@ Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76503C3B187
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:40:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C544BC352A4
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:47:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 579AD2465D
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:40:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9360621734
+	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 00:47:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="zJi4CweL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729194AbgBMAk1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 12 Feb 2020 19:40:27 -0500
-Received: from esa3.microchip.iphmx.com ([68.232.153.233]:57544 "EHLO
-        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729103AbgBMAk1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Feb 2020 19:40:27 -0500
-Received-SPF: Pass (esa3.microchip.iphmx.com: domain of
-  Sagar.Biradar@microchip.com designates 198.175.253.82 as
-  permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
-  envelope-from="Sagar.Biradar@microchip.com";
-  x-sender="Sagar.Biradar@microchip.com";
-  x-conformance=spf_only; x-record-type="v=spf1";
-  x-record-text="v=spf1 mx a:ushub1.microchip.com
-  a:smtpout.microchip.com -exists:%{i}.spf.microchip.iphmx.com
-  include:servers.mcsv.net include:mktomail.com
-  include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa3.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
-  envelope-from="Sagar.Biradar@microchip.com";
-  x-sender="postmaster@email.microchip.com";
-  x-conformance=spf_only
-Authentication-Results: esa3.microchip.iphmx.com; spf=Pass smtp.mailfrom=Sagar.Biradar@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: VshFThL2DK1SpMOzQEMXVIlZGFqCdWQ5q3ePvjPM6idNCPfvKBzXIuk/GC2RezyZ+B2jLPFlkm
- jK+z+gtbnINRTc6YU64vLQIjLOg+w5S5SiS1m3O9ZvGySPtLt4feYaE655URccwBwz4Z365mU7
- h+GLWxLKyZlZYExq7V/3K5PLnDmWs8V+jGN571l+K7fQz3pd5lBuLAZKnUhp+OuaJA0YCSsOKU
- Q8p2iGgb6MUicO2X2u61duSDSzG2aWVtlIAvab5XQ0bEn3ilK1P9NBsUcmyoEwqs/aFKYZY2LQ
- 4pE=
-X-IronPort-AV: E=Sophos;i="5.70,434,1574146800"; 
-   d="scan'208";a="66509747"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 12 Feb 2020 17:40:26 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Wed, 12 Feb 2020 17:40:25 -0700
-Received: from LinuxBuild.microsemi.net (10.10.85.251) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server id
- 15.1.1713.5 via Frontend Transport; Wed, 12 Feb 2020 17:40:26 -0700
-From:   Sagar Biradar <Sagar.Biradar@microchip.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>
-CC:     Sagar Biradar <Sagar.Biradar@microchip.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>, <aacraid@microsemi.com>,
-        Scott Benesh <scott.benesh@microsemi.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        <stable@vger.kernel.org>, Balsundar P <balsundar.p@microsemi.com>
-Subject: [PATCH] aacraid: Disabling TM path and only processing IOP reset
-Date:   Wed, 12 Feb 2020 16:29:31 -0800
-Message-ID: <1581553771-25796-1-git-send-email-Sagar.Biradar@microchip.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1729190AbgBMArT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 12 Feb 2020 19:47:19 -0500
+Received: from gateway22.websitewelcome.com ([192.185.46.224]:35819 "EHLO
+        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729103AbgBMArS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Feb 2020 19:47:18 -0500
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway22.websitewelcome.com (Postfix) with ESMTP id 9782835E97
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Feb 2020 18:02:16 -0600 (CST)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id 21xQjBZepAGTX21xQjNioO; Wed, 12 Feb 2020 18:02:16 -0600
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Type:MIME-Version:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=nXaq/PXqZxbU7kVjiYvodNDl1FBevhWEOS3v4Dhk6FQ=; b=zJi4CweLC22QHfduKolYIS+PUI
+        gJHby1BicXV0UJAuUN2C8m1qt4e5XoIR0oAng6BaGivWnOO+zsbubFdTQOS+Xxx2FAP+0JEgPBB12
+        XIckDGb6BWwaD9HQ3LEd0yxWrfDvMZgTPgREjW+Ab9VM5Uxyh6Cpo31w0zs0TB6dWvzqy90NOAKPA
+        G80Rw7JDi4nY5iIVHnqAH7VmibDutp0WQFZEH5A3bM4JzrZQTf9isZfvfvD2BNMHkTGYyy6LizTjD
+        B9p6nE0Xt6jvJ4g8rG0icA2BLdQKwg+HUieE1KlTGCcBUHD5Kh4sVors6fv7PKCA4bAFg3xjW9Jyh
+        wopYkkhg==;
+Received: from [200.68.141.42] (port=17871 helo=embeddedor)
+        by gator4166.hostgator.com with esmtpa (Exim 4.92)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1j21xN-003P9t-Ih; Wed, 12 Feb 2020 18:02:14 -0600
+Date:   Wed, 12 Feb 2020 18:02:11 -0600
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] scsi: advansys: Replace zero-length array with
+ flexible-array member
+Message-ID: <20200213000211.GA23171@embeddedor.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 200.68.141.42
+X-Source-L: No
+X-Exim-ID: 1j21xN-003P9t-Ih
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: (embeddedor) [200.68.141.42]:17871
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 5
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fixes the occasional adapter panic when sg_reset is 
-issued with -d, -t, -b and -H flags.
-Removal of command type HBA_IU_TYPE_SCSI_TM_REQ in aac_hba_send since 
-iu_type, request_id and fib_flags are not populated.
-Device and target reset handlers made to send TMF commands only when 
-reset_state is 0.
+The current codebase makes use of the zero-length array language
+extension to the C90 standard, but the preferred mechanism to declare
+variable-length types such as these ones is a flexible array member[1][2],
+introduced in C99:
 
-Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
-Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
-Reviewed-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+struct foo {
+        int stuff;
+        struct boo array[];
+};
+
+By making use of the mechanism above, we will get a compiler warning
+in case the flexible array does not occur last in the structure, which
+will help us prevent some kind of undefined behavior bugs from being
+inadvertently introduced[3] to the codebase from now on.
+
+Also, notice that, dynamic memory allocations won't be affected by
+this change:
+
+"Flexible array members have incomplete type, and so the sizeof operator
+may not be applied. As a quirk of the original implementation of
+zero-length arrays, sizeof evaluates to zero."[1]
+
+This issue was found with the help of Coccinelle.
+
+[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+[2] https://github.com/KSPP/linux/issues/21
+[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/scsi/aacraid/commsup.c |  2 +-
- drivers/scsi/aacraid/linit.c   | 34 +++++++++++++++++++++++++---------
- 2 files changed, 26 insertions(+), 10 deletions(-)
+ drivers/scsi/advansys.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 5a8a999..5118bee 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -729,7 +729,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
- 		hbacmd->request_id =
- 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
- 		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
--	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
-+	} else
- 		return -EINVAL;
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index a242a62caaa1..c2c7850ff7b4 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -316,7 +316,7 @@ typedef struct asc_sg_head {
+ 	ushort queue_cnt;
+ 	ushort entry_to_copy;
+ 	ushort res;
+-	ASC_SG_LIST sg_list[0];
++	ASC_SG_LIST sg_list[];
+ } ASC_SG_HEAD;
  
- 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index ee6bc2f..9130e03 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -731,7 +731,11 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
- 		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
- 				  (fib_callback) aac_hba_callback,
- 				  (void *) cmd);
--
-+		if (status != -EINPROGRESS) {
-+			aac_fib_complete(fib);
-+			aac_fib_free(fib);
-+			return ret;
-+		}
- 		/* Wait up to 15 secs for completion */
- 		for (count = 0; count < 15; ++count) {
- 			if (cmd->SCp.sent_command) {
-@@ -910,11 +914,11 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
- 
- 	info = &aac->hba_map[bus][cid];
- 
--	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
--	    info->reset_state > 0)
-+	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
-+	 !(info->reset_state > 0)))
- 		return FAILED;
- 
--	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-+	pr_err("%s: Host device reset request. SCSI hang ?\n",
- 	       AAC_DRIVERNAME);
- 
- 	fib = aac_fib_alloc(aac);
-@@ -929,7 +933,12 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
- 	status = aac_hba_send(command, fib,
- 			      (fib_callback) aac_tmf_callback,
- 			      (void *) info);
--
-+	if (status != -EINPROGRESS) {
-+		info->reset_state = 0;
-+		aac_fib_complete(fib);
-+		aac_fib_free(fib);
-+		return ret;
-+	}
- 	/* Wait up to 15 seconds for completion */
- 	for (count = 0; count < 15; ++count) {
- 		if (info->reset_state == 0) {
-@@ -968,11 +977,11 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
- 
- 	info = &aac->hba_map[bus][cid];
- 
--	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
--	    info->reset_state > 0)
-+	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
-+	 !(info->reset_state > 0)))
- 		return FAILED;
- 
--	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
-+	pr_err("%s: Host target reset request. SCSI hang ?\n",
- 	       AAC_DRIVERNAME);
- 
- 	fib = aac_fib_alloc(aac);
-@@ -989,6 +998,13 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
- 			      (fib_callback) aac_tmf_callback,
- 			      (void *) info);
- 
-+	if (status != -EINPROGRESS) {
-+		info->reset_state = 0;
-+		aac_fib_complete(fib);
-+		aac_fib_free(fib);
-+		return ret;
-+	}
-+
- 	/* Wait up to 15 seconds for completion */
- 	for (count = 0; count < 15; ++count) {
- 		if (info->reset_state <= 0) {
-@@ -1041,7 +1057,7 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
- 		}
- 	}
- 
--	pr_err("%s: Host adapter reset request. SCSI hang ?\n", AAC_DRIVERNAME);
-+	pr_err("%s: Host bus reset request. SCSI hang ?\n", AAC_DRIVERNAME);
- 
- 	/*
- 	 * Check the health of the controller
+ typedef struct asc_scsi_q {
 -- 
-1.8.3.1
+2.23.0
 
