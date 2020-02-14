@@ -7,53 +7,56 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 809BAC3B1A6
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B612DC3B1B2
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B02E20873
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:41:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C4E72168B
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:58:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581702116;
-	bh=bF3mm8LgK4WLj9DZFyScvnTUuhRmv0kvP5u5CVxcBuw=;
+	s=default; t=1581703122;
+	bh=5tGjCaR0U/4Sbp7vkRaZfh3f9+5qvqqeBO9WpmTPe1E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=qabZpiOA3TCjsmG/f+fSGuTWRLlmNjICTrTmdp/ordpBgnV6K+U5Wqp/fClyuqZBe
-	 F6O5o6QcYtpodPY7RzdfdChSOh08JFh7rITwyfmJ3N8H1Mhs38E8OI7Q78Vbs+lN4r
-	 lO+3d4Ml4oMgIra6x+K0ikY64DaUNWQVvjPjxRJc=
+	b=Yy0QlDlSMNfY/NfxkAGQr5irL+d9DUtM5x+MSnOh0qM1CQ3GVRgnwuHyHLBi+SP1H
+	 YpTNLGRDxDN8XA9wV4H2iD/UTROyA8wMlFpFlFfjfqmYD+SP0peQfqMiTMOEeMbDny
+	 tYfoiXu8C951mgEWKSOb5O1keecyqrPDGa/Gyc8c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389687AbgBNQDg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:03:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50918 "EHLO mail.kernel.org"
+        id S2388094AbgBNP5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 10:57:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389682AbgBNQDg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:03:36 -0500
+        id S2388082AbgBNP5C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:57:02 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A9D32467D;
-        Fri, 14 Feb 2020 16:03:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CF79A2467B;
+        Fri, 14 Feb 2020 15:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696215;
-        bh=bF3mm8LgK4WLj9DZFyScvnTUuhRmv0kvP5u5CVxcBuw=;
+        s=default; t=1581695821;
+        bh=5tGjCaR0U/4Sbp7vkRaZfh3f9+5qvqqeBO9WpmTPe1E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ozb+ZQ8kaafj5iAKmnntAR4VDZ/mPoERy6SF5x/Fmm4axPjqFZMI5nobmNn2Z8jWq
-         RfWz4zorYUDJ1gTlVVWbr1eyuK6XArtqrUSmCs2bfJ5xFr+tMQM+XH8rpMbImGzl+m
-         HjRt20N31n2IEikd7lyV7QI+HD/AFdqSB9FaDIBg=
+        b=w382Nb2CUFypLogObseDTlAjvN0pGYzb6eGIuRfvtTe0is6iGVaBPNtRnjkBvfIa/
+         L7uTSmLpswgLNuxcydAQqaTrUd3UtpMeogAsGo56k+jLwWTtpGgT8gFnNMcCis3q9o
+         iourcNuhA6qk0H68RbU32zOVgcnYZJaWE1dioXno=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 079/459] scsi: ufs: Fix ufshcd_probe_hba() reture value in case ufshcd_scsi_add_wlus() fails
-Date:   Fri, 14 Feb 2020 10:55:29 -0500
-Message-Id: <20200214160149.11681-79-sashal@kernel.org>
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.5 376/542] scsi: ufs-mediatek: add apply_dev_quirks variant operation
+Date:   Fri, 14 Feb 2020 10:46:08 -0500
+Message-Id: <20200214154854.6746-376-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
-References: <20200214160149.11681-1-sashal@kernel.org>
+In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
+References: <20200214154854.6746-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,41 +66,66 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-[ Upstream commit b9fc5320212efdfb4e08b825aaa007815fd11d16 ]
+[ Upstream commit ea92c32bd336efba89c5b09cf609e6e26e963796 ]
 
-A non-zero error value likely being returned by ufshcd_scsi_add_wlus() in
-case of failure of adding the WLs, but ufshcd_probe_hba() doesn't use this
-value, and doesn't report this failure to upper caller.  This patch is to
-fix this issue.
+Add vendor-specific variant callback "apply_dev_quirks" to MediaTek UFS
+driver.
 
-Fixes: 2a8fa600445c ("ufs: manually add well known logical units")
-Link: https://lore.kernel.org/r/20200120130820.1737-2-huobean@gmail.com
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Link: https://lore.kernel.org/r/1578726707-6596-3-git-send-email-stanley.chu@mediatek.com
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufs-mediatek.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0d41a7dc1d6b2..b0d6978d78bf8 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6953,7 +6953,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 			ufshcd_init_icc_levels(hba);
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index 83e28edc3ac5b..8a21f49caf0d9 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -13,6 +13,7 @@
  
- 		/* Add required well known logical units to scsi mid layer */
--		if (ufshcd_scsi_add_wlus(hba))
-+		ret = ufshcd_scsi_add_wlus(hba);
-+		if (ret)
- 			goto out;
+ #include "ufshcd.h"
+ #include "ufshcd-pltfrm.h"
++#include "ufs_quirks.h"
+ #include "unipro.h"
+ #include "ufs-mediatek.h"
  
- 		/* Initialize devfreq after UFS device is detected */
+@@ -289,6 +290,15 @@ static int ufs_mtk_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return 0;
+ }
+ 
++static int ufs_mtk_apply_dev_quirks(struct ufs_hba *hba,
++				    struct ufs_dev_desc *card)
++{
++	if (card->wmanufacturerid == UFS_VENDOR_SAMSUNG)
++		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 6);
++
++	return 0;
++}
++
+ /**
+  * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
+  *
+@@ -301,6 +311,7 @@ static struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
+ 	.setup_clocks        = ufs_mtk_setup_clocks,
+ 	.link_startup_notify = ufs_mtk_link_startup_notify,
+ 	.pwr_change_notify   = ufs_mtk_pwr_change_notify,
++	.apply_dev_quirks    = ufs_mtk_apply_dev_quirks,
+ 	.suspend             = ufs_mtk_suspend,
+ 	.resume              = ufs_mtk_resume,
+ };
 -- 
 2.20.1
 
