@@ -2,106 +2,102 @@ Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFF9C3B1A6
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:39:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 809BAC3B1A6
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:41:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 184312168B
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:39:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B02E20873
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:41:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581702116;
+	bh=bF3mm8LgK4WLj9DZFyScvnTUuhRmv0kvP5u5CVxcBuw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=qabZpiOA3TCjsmG/f+fSGuTWRLlmNjICTrTmdp/ordpBgnV6K+U5Wqp/fClyuqZBe
+	 F6O5o6QcYtpodPY7RzdfdChSOh08JFh7rITwyfmJ3N8H1Mhs38E8OI7Q78Vbs+lN4r
+	 lO+3d4Ml4oMgIra6x+K0ikY64DaUNWQVvjPjxRJc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390296AbgBNRjU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:39:20 -0500
-Received: from mx2.suse.de ([195.135.220.15]:45534 "EHLO mx2.suse.de"
+        id S2389687AbgBNQDg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 11:03:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50918 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389941AbgBNQEa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:04:30 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3B00FABEA;
-        Fri, 14 Feb 2020 16:04:28 +0000 (UTC)
-Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tim Walker <tim.t.walker@seagate.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
- <20200211122821.GA29811@ming.t460p>
- <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
- <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <yq1blq3rxzj.fsf@oracle.com>
- <CANo=J16cDBUDWdV7tdY33UO0UT0t-g7jRfMVTxZpePvLew7Mxg@mail.gmail.com>
- <yq1r1yzqfyb.fsf@oracle.com> <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
- <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d043a58d-6584-1792-4433-ac2cc39526ca@suse.de>
-Date:   Fri, 14 Feb 2020 17:04:25 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S2389682AbgBNQDg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:03:36 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5A9D32467D;
+        Fri, 14 Feb 2020 16:03:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581696215;
+        bh=bF3mm8LgK4WLj9DZFyScvnTUuhRmv0kvP5u5CVxcBuw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ozb+ZQ8kaafj5iAKmnntAR4VDZ/mPoERy6SF5x/Fmm4axPjqFZMI5nobmNn2Z8jWq
+         RfWz4zorYUDJ1gTlVVWbr1eyuK6XArtqrUSmCs2bfJ5xFr+tMQM+XH8rpMbImGzl+m
+         HjRt20N31n2IEikd7lyV7QI+HD/AFdqSB9FaDIBg=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 079/459] scsi: ufs: Fix ufshcd_probe_hba() reture value in case ufshcd_scsi_add_wlus() fails
+Date:   Fri, 14 Feb 2020 10:55:29 -0500
+Message-Id: <20200214160149.11681-79-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
+References: <20200214160149.11681-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/14/20 3:40 PM, Keith Busch wrote:
-> On Fri, Feb 14, 2020 at 08:32:57AM +0100, Hannes Reinecke wrote:
->> On 2/13/20 5:17 AM, Martin K. Petersen wrote:
->>> People often artificially lower the queue depth to avoid timeouts. The
->>> default timeout is 30 seconds from an I/O is queued. However, many
->>> enterprise applications set the timeout to 3-5 seconds. Which means that
->>> with deep queues you'll quickly start seeing timeouts if a drive
->>> temporarily is having issues keeping up (media errors, excessive spare
->>> track seeks, etc.).
->>>
->>> Well-behaved devices will return QF/TSF if they have transient resource
->>> starvation or exceed internal QoS limits. QF will cause the SCSI stack
->>> to reduce the number of I/Os in flight. This allows the drive to recover
->>> from its congested state and reduces the potential of application and
->>> filesystem timeouts.
->>>
->> This may even be a chance to revisit QoS / queue busy handling.
->> NVMe has this SQ head pointer mechanism which was supposed to handle
->> this kind of situations, but to my knowledge no-one has been
->> implementing it.
->> Might be worthwhile revisiting it; guess NVMe HDDs would profit from that.
-> 
-> We don't need that because we don't allocate enough tags to potentially
-> wrap the tail past the head. If you can allocate a tag, the queue is not
-> full. And convesely, no tag == queue full.
-> 
-It's not a problem on our side.
-It's a problem on the target/controller side.
-The target/controller might have a need to throttle I/O (due to QoS 
-settings or competing resources from other hosts), but currently no 
-means of signalling that to the host.
-Which, incidentally, is the underlying reason for the DNR handling 
-discussion we had; NetApp tried to model QoS by sending "Namespace not 
-ready" without the DNR bit set, which of course is a totally different 
-use-case as the typical 'Namespace not ready' response we get (with the 
-DNR bit set) when a namespace was unmapped.
+From: Bean Huo <beanhuo@micron.com>
 
-And that is where SQ head pointer updates comes in; it would allow the 
-controller to signal back to the host that it should hold off sending 
-I/O for a bit.
-So this could / might be used for NVMe HDDs, too, which also might have 
-a need to signal back to the host that I/Os should be throttled...
+[ Upstream commit b9fc5320212efdfb4e08b825aaa007815fd11d16 ]
 
-Cheers,
+A non-zero error value likely being returned by ufshcd_scsi_add_wlus() in
+case of failure of adding the WLs, but ufshcd_probe_hba() doesn't use this
+value, and doesn't report this failure to upper caller.  This patch is to
+fix this issue.
 
-Hannes
+Fixes: 2a8fa600445c ("ufs: manually add well known logical units")
+Link: https://lore.kernel.org/r/20200120130820.1737-2-huobean@gmail.com
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 0d41a7dc1d6b2..b0d6978d78bf8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6953,7 +6953,8 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 			ufshcd_init_icc_levels(hba);
+ 
+ 		/* Add required well known logical units to scsi mid layer */
+-		if (ufshcd_scsi_add_wlus(hba))
++		ret = ufshcd_scsi_add_wlus(hba);
++		if (ret)
+ 			goto out;
+ 
+ 		/* Initialize devfreq after UFS device is detected */
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.20.1
+
