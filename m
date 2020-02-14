@@ -2,51 +2,51 @@ Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D78C2BA83
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 18:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7AE9C3B1B2
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC5202168B
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 18:08:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACE132168B
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581703732;
-	bh=S3JQ2UnbkSepe0YPKZPgiY0Z/Igmz5BB5w122SddXJ8=;
+	s=default; t=1581703749;
+	bh=1L6PruW8DRWloz+xn+Gy+OBmxLDKPYs4iLoR6I/pKrg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aAS+5Uy623uWvoYwQBHw6GRb/r7TYFRoNOVKzBOOS1umna/5PTGcCG0f9QlRlTJg/
-	 oSpQn65QcdiHEowO91UObdEYhZriUELklfMFx3VSJYXVpgXlt8rkqCU7bUpfXDI345
-	 Up5XBpV3Qv0s+OaL26zOIN+F7nEGlsuZYoWCk1O8=
+	b=2pHWw73fuSAYPCwB3HuV/UVsGU9e+LtBr8eLxenD75xTjAUQmnzlu4hL5Tj/yxfwy
+	 0SiiofXPa7bvBRcBEyn+Eaqyi6hcMKugj7rW/WLbDhzRRXHYFvtPLrbomRlI5TOfPB
+	 U5JI8l1dTAD1BEhalgRgcxknf6wRyh59lowznG/A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731028AbgBNPyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 10:54:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33902 "EHLO mail.kernel.org"
+        id S2392776AbgBNSJF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 13:09:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730420AbgBNPyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:54:08 -0500
+        id S1731419AbgBNPyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:54:07 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 42D7324673;
-        Fri, 14 Feb 2020 15:54:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EC4F424676;
+        Fri, 14 Feb 2020 15:54:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695648;
-        bh=S3JQ2UnbkSepe0YPKZPgiY0Z/Igmz5BB5w122SddXJ8=;
+        s=default; t=1581695646;
+        bh=1L6PruW8DRWloz+xn+Gy+OBmxLDKPYs4iLoR6I/pKrg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=erdbXurocbHAz+9r622ZjrWUgzfL0I3PjcohQ1ySgjY7R9YQLef0qqrqC2LxSauHx
-         oYtvdejThXZNY/tSgVg/ak4GzcrloSg2p/mVaQieS4LR98MAtE+AnShbD/O+4EBt+k
-         /hdSa7Y3GtGci1gzJ/Fe7RJu424TRQhUxY3pYOjM=
+        b=RiJ6WX+SD4eabAAC8DAz/a74nd32UMTzPD1Bx/2xCcYCBtCXZZaXNxjV5Fbl9dFa3
+         VjG7UdV/Z8P5JyhccGH3WPoUcDTh0Id37h1pNZKJI7R3LOD0tEqmeq2AqAypiZGhTS
+         +a4WHzhojxAa6mLovYyIMydNRHYriqC3nUseRDlk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+Cc:     Chen Zhou <chenzhou10@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 5.5 241/542] scsi: aic7xxx: Adjust indentation in ahc_find_syncrate
-Date:   Fri, 14 Feb 2020 10:43:53 -0500
-Message-Id: <20200214154854.6746-241-sashal@kernel.org>
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 240/542] scsi: ibmvscsi_tgt: remove set but not used variables 'iue' and 'sd'
+Date:   Fri, 14 Feb 2020 10:43:52 -0500
+Message-Id: <20200214154854.6746-240-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -59,52 +59,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: Chen Zhou <chenzhou10@huawei.com>
 
-[ Upstream commit 4dbc96ad65c45cdd4e895ed7ae4c151b780790c5 ]
+[ Upstream commit 4aca8fe7716669e39f7857b2e1fc5dfd4475b7e5 ]
 
-Clang warns:
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-../drivers/scsi/aic7xxx/aic7xxx_core.c:2317:5: warning: misleading
-indentation; statement is not part of the previous 'if'
-[-Wmisleading-indentation]
-                        if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
-                        ^
-../drivers/scsi/aic7xxx/aic7xxx_core.c:2310:4: note: previous statement
-is here
-                        if (syncrate == &ahc_syncrates[maxsync])
-                        ^
-1 warning generated.
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function ibmvscsis_send_messages:
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1888:19: warning: variable iue set but not used [-Wunused-but-set-variable]
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function ibmvscsis_queue_data_in:
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3806:8: warning: variable sd set but not used [-Wunused-but-set-variable]
 
-This warning occurs because there is a space amongst the tabs on this
-line. Remove it so that the indentation is consistent with the Linux kernel
-coding style and clang no longer warns.
-
-This has been a problem since the beginning of git history hence no fixes
-tag.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/817
-Link: https://lore.kernel.org/r/20191218014220.52746-1-natechancellor@gmail.com
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Link: https://lore.kernel.org/r/20191213064042.161840-1-chenzhou10@huawei.com
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aic7xxx/aic7xxx_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index a9d40d3b90efc..4190a025381a5 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -2314,7 +2314,7 @@ ahc_find_syncrate(struct ahc_softc *ahc, u_int *period,
- 			 * At some speeds, we only support
- 			 * ST transfers.
- 			 */
--		 	if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
-+			if ((syncrate->sxfr_u2 & ST_SXFR) != 0)
- 				*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
- 			break;
- 		}
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 54b8c6f9daf4b..d9e94e81da017 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -1877,7 +1877,6 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ 	 */
+ 	struct viosrp_crq *crq = (struct viosrp_crq *)&msg_hi;
+ 	struct ibmvscsis_cmd *cmd, *nxt;
+-	struct iu_entry *iue;
+ 	long rc = ADAPT_SUCCESS;
+ 	bool retry = false;
+ 
+@@ -1931,8 +1930,6 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ 					 */
+ 					vscsi->credit += 1;
+ 				} else {
+-					iue = cmd->iue;
+-
+ 					crq->valid = VALID_CMD_RESP_EL;
+ 					crq->format = cmd->rsp.format;
+ 
+@@ -3796,7 +3793,6 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
+ 						 se_cmd);
+ 	struct iu_entry *iue = cmd->iue;
+ 	struct scsi_info *vscsi = cmd->adapter;
+-	char *sd;
+ 	uint len = 0;
+ 	int rc;
+ 
+@@ -3804,7 +3800,6 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
+ 			       1);
+ 	if (rc) {
+ 		dev_err(&vscsi->dev, "srp_transfer_data failed: %d\n", rc);
+-		sd = se_cmd->sense_buffer;
+ 		se_cmd->scsi_sense_length = 18;
+ 		memset(se_cmd->sense_buffer, 0, se_cmd->scsi_sense_length);
+ 		/* Logical Unit Communication Time-out asc/ascq = 0x0801 */
 -- 
 2.20.1
 
