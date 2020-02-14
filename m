@@ -2,41 +2,30 @@ Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E286BC3F68F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 07:33:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B245C2BA83
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 07:34:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C480422314
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 07:33:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 376F9222C4
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 07:34:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728791AbgBNHdA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 02:33:00 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36972 "EHLO mx2.suse.de"
+        id S1728914AbgBNHeC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 02:34:02 -0500
+Received: from mx2.suse.de ([195.135.220.15]:37584 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728691AbgBNHdA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 02:33:00 -0500
+        id S1728740AbgBNHeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 02:34:02 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1CA16AC4B;
-        Fri, 14 Feb 2020 07:32:58 +0000 (UTC)
-Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tim Walker <tim.t.walker@seagate.com>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
- <20200211122821.GA29811@ming.t460p>
- <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
- <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <yq1blq3rxzj.fsf@oracle.com>
- <CANo=J16cDBUDWdV7tdY33UO0UT0t-g7jRfMVTxZpePvLew7Mxg@mail.gmail.com>
- <yq1r1yzqfyb.fsf@oracle.com>
+        by mx2.suse.de (Postfix) with ESMTP id 2B3C7AC69;
+        Fri, 14 Feb 2020 07:34:00 +0000 (UTC)
+Subject: Re: [PATCH] fc: fix fpin_els build breakage
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+References: <20200213224042.26986-1-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -82,12 +71,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
-Date:   Fri, 14 Feb 2020 08:32:57 +0100
+Message-ID: <c58d114a-c3f1-9fc7-e295-5fd5b3a7772a@suse.de>
+Date:   Fri, 14 Feb 2020 08:33:59 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <yq1r1yzqfyb.fsf@oracle.com>
+In-Reply-To: <20200213224042.26986-1-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -96,33 +85,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/13/20 5:17 AM, Martin K. Petersen wrote:
+On 2/13/20 11:40 PM, James Smart wrote:
+> Kbuild reported the following error:
 > 
-> Tim,
+> All error/warnings (new ones prefixed by >>):
 > 
->> SAS currently supports QD256, but the general consensus is that most
->> customers don't run anywhere near that deep. Does it help the system
->> for the HD to report a limited (256) max queue depth, or is it really
->> up to the system to decide many commands to queue?
+>    In file included from <command-line>:32:0:
+>    ./usr/include/scsi/fc/fc_els.h: In function 'fc_tlv_next_desc':
+>>> ./usr/include/scsi/fc/fc_els.h:274:4: error: implicit declaration of
+>     function 'be32_to_cpu'; did you mean '__be32_to_cpu'?
+>     [-Werror=implicit-function-declaration]
+>       (be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
+>        ^
+>>> ./usr/include/scsi/fc/fc_els.h:286:17: note: in expansion of macro
+>     'FC_TLV_DESC_SZ_FROM_LENGTH'
+>      return (desc + FC_TLV_DESC_SZ_FROM_LENGTH(tlv));
+>                     ^~~~~~~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
 > 
-> People often artificially lower the queue depth to avoid timeouts. The
-> default timeout is 30 seconds from an I/O is queued. However, many
-> enterprise applications set the timeout to 3-5 seconds. Which means that
-> with deep queues you'll quickly start seeing timeouts if a drive
-> temporarily is having issues keeping up (media errors, excessive spare
-> track seeks, etc.).
+> Fix by converting fc_tlv_next_desc to use __be32_to_cpu().
 > 
-> Well-behaved devices will return QF/TSF if they have transient resource
-> starvation or exceed internal QoS limits. QF will cause the SCSI stack
-> to reduce the number of I/Os in flight. This allows the drive to recover
-> from its congested state and reduces the potential of application and
-> filesystem timeouts.
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> Reported-by: kbuild test robot <lkp@intel.com>
+> ---
+>  include/uapi/scsi/fc/fc_els.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-This may even be a chance to revisit QoS / queue busy handling.
-NVMe has this SQ head pointer mechanism which was supposed to handle
-this kind of situations, but to my knowledge no-one has been
-implementing it.
-Might be worthwhile revisiting it; guess NVMe HDDs would profit from that.
+> diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
+> index 10b609a2f863..66318c44acd7 100644
+> --- a/include/uapi/scsi/fc/fc_els.h
+> +++ b/include/uapi/scsi/fc/fc_els.h
+> @@ -271,7 +271,7 @@ struct fc_tlv_desc {
+>  
+>  /* Macro, used on received payloads, to return the descriptor length */
+>  #define FC_TLV_DESC_SZ_FROM_LENGTH(tlv)		\
+> -		(be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
+> +		(__be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
+>  
+>  /*
+>   * This helper is used to walk descriptors in a descriptor list.
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
