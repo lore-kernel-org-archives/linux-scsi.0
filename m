@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43DDFC2BA83
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 16:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC59C3B19F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 16:32:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A2DA24772
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 16:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A624124696
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 16:32:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581697416;
-	bh=yRiUPjvZe88BFhBsUBNoMexpEcsIUdxMwGHCRCzL1Ig=;
+	s=default; t=1581697927;
+	bh=CB0F8aCPLhPs8qvnqAR7Y1CnayOQkzXYicU29pEo2GE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lWKR21BPdCiTQVVscsV2BwI0iXxvc2MI4LvIDRihfvl43o0PFMUN53J6R+KEwZ/36
-	 LHqhdVbnRAHKb9a6Rm4PfdKnnCfFc+iQJaX6OgGHdUd9L+hUtnzgdHzxUOPq2VM5w0
-	 z2dlCTqyWhD47rDjLQFC5y0MmPoc8hHakFnJIgQc=
+	b=wktp1S30AMoo8iZ2ArkWNCE9LtwTD1kqRurInH3POc+k/tDcppp+wn2oOnr8YOGLu
+	 VLZK5DH0oTyBpBA9JHP8D9n30PSTDOVSeGzIHWq/JjTu8CGfViwUIjegT2So7Mjjpd
+	 MShG9lH8uY9fQHSO6Mvs68EamfFOoYTOx/nuiDo0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405669AbgBNQXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:23:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59860 "EHLO mail.kernel.org"
+        id S2406260AbgBNQZ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 11:25:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35946 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405661AbgBNQXd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:23:33 -0500
+        id S2405712AbgBNQZ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:25:57 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 04DB824779;
-        Fri, 14 Feb 2020 16:23:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02125247DB;
+        Fri, 14 Feb 2020 16:25:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697412;
-        bh=yRiUPjvZe88BFhBsUBNoMexpEcsIUdxMwGHCRCzL1Ig=;
+        s=default; t=1581697556;
+        bh=CB0F8aCPLhPs8qvnqAR7Y1CnayOQkzXYicU29pEo2GE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zfsSum5Q6fC0dKIWdBxw6AQVjksYAdfwkO2OrI3SxzgvAx84nCPZhL0BXDe9cmciQ
-         KjyGJe8AHIOtFEF9GxGcV4xExk6kx/OWyB5n2NDEwmwDd6sP9z2eSqWnGr03wKFFF5
-         7BGzEMlUa0BHEJo6r8tX6HvubF+o0l43j/if2fsY=
+        b=v04QVEK25+4RYlqnbLvfnhDKT2SXPrjaAJrRvKwBod/t7N4u3Q+bJIANP6G0o4Ytt
+         zxgI6bkOYtBDVC0ocjzOOP5Tpu770Rmud2kHq2mEKiFUlNrGTXdjZXTCQx+lJ9GOHZ
+         MyyHn0+G+a8HKMR6WnzEUK5P4bZmEBjZK5sgLg6Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nick Black <nlb@google.com>, Salman Qazi <sqazi@google.com>,
@@ -48,12 +48,12 @@ Cc:     Nick Black <nlb@google.com>, Salman Qazi <sqazi@google.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 103/141] scsi: iscsi: Don't destroy session if there are outstanding connections
-Date:   Fri, 14 Feb 2020 11:20:43 -0500
-Message-Id: <20200214162122.19794-103-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 073/100] scsi: iscsi: Don't destroy session if there are outstanding connections
+Date:   Fri, 14 Feb 2020 11:23:57 -0500
+Message-Id: <20200214162425.21071-73-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214162122.19794-1-sashal@kernel.org>
-References: <20200214162122.19794-1-sashal@kernel.org>
+In-Reply-To: <20200214162425.21071-1-sashal@kernel.org>
+References: <20200214162425.21071-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -133,10 +133,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index d60564397be54..60c3e2bf87619 100644
+index fccb8991bd5b7..64a49dccb0b63 100644
 --- a/drivers/scsi/iscsi_tcp.c
 +++ b/drivers/scsi/iscsi_tcp.c
-@@ -882,6 +882,10 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
+@@ -872,6 +872,10 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
  static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
  {
  	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
@@ -148,10 +148,10 @@ index d60564397be54..60c3e2bf87619 100644
  	iscsi_tcp_r2tpool_free(cls_session->dd_data);
  	iscsi_session_teardown(cls_session);
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ab7bc4e634251..fff9c4d0f7c80 100644
+index ab32e60736424..20cf01d6ded7e 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2964,6 +2964,24 @@ iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+@@ -2965,6 +2965,24 @@ iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
  	return err;
  }
  
@@ -176,7 +176,7 @@ index ab7bc4e634251..fff9c4d0f7c80 100644
  static int
  iscsi_set_iface_params(struct iscsi_transport *transport,
  		       struct iscsi_uevent *ev, uint32_t len)
-@@ -3538,10 +3556,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+@@ -3539,10 +3557,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
  		break;
  	case ISCSI_UEVENT_DESTROY_SESSION:
  		session = iscsi_session_lookup(ev->u.d_session.sid);
