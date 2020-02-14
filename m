@@ -2,120 +2,106 @@ Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B4AC3B1AB
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:33:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFF9C3B1A6
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:39:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 052FF2082F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:33:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581701623;
-	bh=SCVRKuEAGMM0bp7RoFRaC32vJKNwWSfFNJc+9Rx3xMw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=z9xNg8uhOEGtt3xkfl5R+Joe5AZfl28dJGKS72EuqiYrYmS4bqwZnBMyeoJDptlnZ
-	 BTA2HtZEdfzRmhA19/9IyEe0XQiSPZjO61pwNVbcIcXqKQPWm5qtIKUKqIM4Cj1Vgi
-	 RSqaH0LKtcFsJxqAtVhLM6PV1LnbB0p84qVYQl/c=
+	by mail.kernel.org (Postfix) with ESMTP id 184312168B
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 17:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390427AbgBNRdi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:33:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56842 "EHLO mail.kernel.org"
+        id S2390296AbgBNRjU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 12:39:20 -0500
+Received: from mx2.suse.de ([195.135.220.15]:45534 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390027AbgBNQGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:06:22 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 479E824650;
-        Fri, 14 Feb 2020 16:06:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696382;
-        bh=SCVRKuEAGMM0bp7RoFRaC32vJKNwWSfFNJc+9Rx3xMw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TL34ghD8jrpg7JABNu1VPSUql/ah7ZuteY8fD11MXLADwqZ4WK+m5nlAx1f5Zfaj0
-         P7KfBYaLA77xI0hbcWm6hj3gDrqUyO4/tF328Had3LjL2NdvIDlRD8qqB0/AC7Q2K1
-         ru0XlCBF1iiVnaOD4vip4sH7HY/etWT/WZmqgv5c=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chen Zhou <chenzhou10@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 209/459] scsi: ibmvscsi_tgt: remove set but not used variables 'iue' and 'sd'
-Date:   Fri, 14 Feb 2020 10:57:39 -0500
-Message-Id: <20200214160149.11681-209-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
-References: <20200214160149.11681-1-sashal@kernel.org>
+        id S2389941AbgBNQEa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:04:30 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 3B00FABEA;
+        Fri, 14 Feb 2020 16:04:28 +0000 (UTC)
+Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
+To:     Keith Busch <kbusch@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Tim Walker <tim.t.walker@seagate.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
+ <20200211122821.GA29811@ming.t460p>
+ <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
+ <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <yq1blq3rxzj.fsf@oracle.com>
+ <CANo=J16cDBUDWdV7tdY33UO0UT0t-g7jRfMVTxZpePvLew7Mxg@mail.gmail.com>
+ <yq1r1yzqfyb.fsf@oracle.com> <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
+ <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <d043a58d-6584-1792-4433-ac2cc39526ca@suse.de>
+Date:   Fri, 14 Feb 2020 17:04:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+In-Reply-To: <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chen Zhou <chenzhou10@huawei.com>
+On 2/14/20 3:40 PM, Keith Busch wrote:
+> On Fri, Feb 14, 2020 at 08:32:57AM +0100, Hannes Reinecke wrote:
+>> On 2/13/20 5:17 AM, Martin K. Petersen wrote:
+>>> People often artificially lower the queue depth to avoid timeouts. The
+>>> default timeout is 30 seconds from an I/O is queued. However, many
+>>> enterprise applications set the timeout to 3-5 seconds. Which means that
+>>> with deep queues you'll quickly start seeing timeouts if a drive
+>>> temporarily is having issues keeping up (media errors, excessive spare
+>>> track seeks, etc.).
+>>>
+>>> Well-behaved devices will return QF/TSF if they have transient resource
+>>> starvation or exceed internal QoS limits. QF will cause the SCSI stack
+>>> to reduce the number of I/Os in flight. This allows the drive to recover
+>>> from its congested state and reduces the potential of application and
+>>> filesystem timeouts.
+>>>
+>> This may even be a chance to revisit QoS / queue busy handling.
+>> NVMe has this SQ head pointer mechanism which was supposed to handle
+>> this kind of situations, but to my knowledge no-one has been
+>> implementing it.
+>> Might be worthwhile revisiting it; guess NVMe HDDs would profit from that.
+> 
+> We don't need that because we don't allocate enough tags to potentially
+> wrap the tail past the head. If you can allocate a tag, the queue is not
+> full. And convesely, no tag == queue full.
+> 
+It's not a problem on our side.
+It's a problem on the target/controller side.
+The target/controller might have a need to throttle I/O (due to QoS 
+settings or competing resources from other hosts), but currently no 
+means of signalling that to the host.
+Which, incidentally, is the underlying reason for the DNR handling 
+discussion we had; NetApp tried to model QoS by sending "Namespace not 
+ready" without the DNR bit set, which of course is a totally different 
+use-case as the typical 'Namespace not ready' response we get (with the 
+DNR bit set) when a namespace was unmapped.
 
-[ Upstream commit 4aca8fe7716669e39f7857b2e1fc5dfd4475b7e5 ]
+And that is where SQ head pointer updates comes in; it would allow the 
+controller to signal back to the host that it should hold off sending 
+I/O for a bit.
+So this could / might be used for NVMe HDDs, too, which also might have 
+a need to signal back to the host that I/Os should be throttled...
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+Cheers,
 
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function ibmvscsis_send_messages:
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1888:19: warning: variable iue set but not used [-Wunused-but-set-variable]
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c: In function ibmvscsis_queue_data_in:
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:3806:8: warning: variable sd set but not used [-Wunused-but-set-variable]
-
-Link: https://lore.kernel.org/r/20191213064042.161840-1-chenzhou10@huawei.com
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index a929fe76102b0..db2df02214d43 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1877,7 +1877,6 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
- 	 */
- 	struct viosrp_crq *crq = (struct viosrp_crq *)&msg_hi;
- 	struct ibmvscsis_cmd *cmd, *nxt;
--	struct iu_entry *iue;
- 	long rc = ADAPT_SUCCESS;
- 	bool retry = false;
- 
-@@ -1931,8 +1930,6 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
- 					 */
- 					vscsi->credit += 1;
- 				} else {
--					iue = cmd->iue;
--
- 					crq->valid = VALID_CMD_RESP_EL;
- 					crq->format = cmd->rsp.format;
- 
-@@ -3797,7 +3794,6 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
- 						 se_cmd);
- 	struct iu_entry *iue = cmd->iue;
- 	struct scsi_info *vscsi = cmd->adapter;
--	char *sd;
- 	uint len = 0;
- 	int rc;
- 
-@@ -3805,7 +3801,6 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
- 			       1);
- 	if (rc) {
- 		dev_err(&vscsi->dev, "srp_transfer_data failed: %d\n", rc);
--		sd = se_cmd->sense_buffer;
- 		se_cmd->scsi_sense_length = 18;
- 		memset(se_cmd->sense_buffer, 0, se_cmd->scsi_sense_length);
- 		/* Logical Unit Communication Time-out asc/ascq = 0x0801 */
+Hannes
 -- 
-2.20.1
-
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
