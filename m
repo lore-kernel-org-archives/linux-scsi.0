@@ -1,109 +1,111 @@
-Return-Path: <SRS0=mSyi=4B=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC179C352A3
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 22:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 197E8C3F68F
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 00:36:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEBB420873
-	for <linux-scsi@archiver.kernel.org>; Thu, 13 Feb 2020 22:40:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF4642168B
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 00:36:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P9hX9Dgc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ymj9V5Yn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727609AbgBMWkv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 13 Feb 2020 17:40:51 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:46987 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726780AbgBMWkv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Feb 2020 17:40:51 -0500
-Received: by mail-pl1-f193.google.com with SMTP id y8so2898525pll.13
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Feb 2020 14:40:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=voJlDhemiKgdQlPlMyGmEyFFS62qPjx7Ahz5Mhyc9nw=;
-        b=P9hX9DgckOjdGJ5lFNNxSfClHYd6F8TQOtfHhdCMRzR9tNToP+J/627OAdfzjTD/wm
-         g9eMZExcFES5Kr5jvGu6K40RKNIlr/KwqYIJzJllf/XkDiAbaTTIcrXN8tapUA/5fkEH
-         zahpIEytAEq67l7CYgJ5o0/Jqjq6tLNPO13l3HT6o+IWPK+TfwpQ2RhxaAknnTl2xvgU
-         rBYx44FN1ftISb6wO5L9kpzcEF9YhRn0WzslSvhe8CAhkDipFO8Pzdj3omNRltMFpXVm
-         3SLGln8338gir9bb0oS1N7jtUSURWAqAp/YcfQY7AHg8NBf0Z/6m/7w9NWniRbH+hnpW
-         bMfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=voJlDhemiKgdQlPlMyGmEyFFS62qPjx7Ahz5Mhyc9nw=;
-        b=krpWs3m+cSNcvdfPHznfK0cpgBrKPx3B6EeS1NJKMc/ZTa2pTeLD0V3X1JUe3vU5LU
-         KzopT6qk42sKwVpATKmo+lILEu8Tn6OphfgMAOuA9Fg2iTlcPMS9TrOqNXfMEwGT0KM6
-         TBXMlf+Sgox9xXkvKo0th4i15eixxUSJQy4tknFCXOrDPmDgzR9Z+cu23tGsnjG6OBJy
-         dvSB0EWlxQ3E0w2EYgJ2GLnjHsp0iJ5el/j43vdHa+ro6XtNwGAAaIelOBUahzWj5lOm
-         zcmDpXeHiMnvQSecWD97Ra2EqVppjucGOSekW0fp/30gxWsy4Ee9dQtC3SUFeY6c5frt
-         TfrQ==
-X-Gm-Message-State: APjAAAVF0zscHjprk/8icDfASKk86ShGue/ek8j6W1w9REf2dydVXvc1
-        WyDZxX3cLK2E/Cf+CcaG7uLbr5f/
-X-Google-Smtp-Source: APXvYqwfxibnjBpHyJSnvAX/uA1F1Ten9IpawO+6bKYFEnEwtk4XSyLtxp/4uzfv8aN6IwKfjzAFvQ==
-X-Received: by 2002:a17:90a:8547:: with SMTP id a7mr8191271pjw.0.1581633649907;
-        Thu, 13 Feb 2020 14:40:49 -0800 (PST)
-Received: from os42.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 11sm4371079pfz.25.2020.02.13.14.40.48
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 13 Feb 2020 14:40:49 -0800 (PST)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] fc: fix fpin_els build breakage
-Date:   Thu, 13 Feb 2020 14:40:42 -0800
-Message-Id: <20200213224042.26986-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.13.7
+        id S1727955AbgBNAgA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 13 Feb 2020 19:36:00 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:49717 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727594AbgBNAgA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Feb 2020 19:36:00 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1581640559;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0ME/CnINQO2pWAEByneP/dtw6TscGVRMxunDfKVudhs=;
+        b=Ymj9V5YniZvqmqK/qiV8iwi6OS+Bf16Nq0lPXWD5STuMpKAVO5fOt4I6FPp+xBtQwRdGyN
+        ZRufDO94S890F32w+7vcVLyRoYi2eYVrZznMSTAsGMjyhBU0n2WFUNOBHqCmZvMfBsnQmM
+        3UvGb+z0DfK9nNorokWYR955ZUUUvJg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-409-5oZdy6SWOIW8J9jkT1Gj2A-1; Thu, 13 Feb 2020 19:35:57 -0500
+X-MC-Unique: 5oZdy6SWOIW8J9jkT1Gj2A-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 979558017CC;
+        Fri, 14 Feb 2020 00:35:55 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2C53E90095;
+        Fri, 14 Feb 2020 00:35:49 +0000 (UTC)
+Date:   Fri, 14 Feb 2020 08:35:45 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        Tim Walker <tim.t.walker@seagate.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
+Message-ID: <20200214003545.GB4907@ming.t460p>
+References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
+ <20200211122821.GA29811@ming.t460p>
+ <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
+ <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <yq1blq3rxzj.fsf@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1blq3rxzj.fsf@oracle.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Kbuild reported the following error:
+On Wed, Feb 12, 2020 at 10:02:08PM -0500, Martin K. Petersen wrote:
+> 
+> Damien,
+> 
+> > Exposing an HDD through multiple-queues each with a high queue depth
+> > is simply asking for troubles. Commands will end up spending so much
+> > time sitting in the queues that they will timeout.
+> 
+> Yep!
+> 
+> > This can already be observed with the smartpqi SAS HBA which exposes
+> > single drives as multiqueue block devices with high queue depth.
+> > Exercising these drives heavily leads to thousands of commands being
+> > queued and to timeouts. It is fairly easy to trigger this without a
+> > manual change to the QD. This is on my to-do list of fixes for some
+> > time now (lacking time to do it).
+> 
+> Controllers that queue internally are very susceptible to application or
+> filesystem timeouts when drives are struggling to keep up.
+> 
+> > NVMe HDDs need to have an interface setup that match their speed, that
+> > is, something like a SAS interface: *single* queue pair with a max QD
+> > of 256 or less depending on what the drive can take. Their is no
+> > TASK_SET_FULL notification on NVMe, so throttling has to come from the
+> > max QD of the SQ, which the drive will advertise to the host.
+> 
+> At the very minimum we'll need low queue depths. But I have my doubts
+> whether we can make this work well enough without some kind of TASK SET
+> FULL style AER to throttle the I/O.
 
-All error/warnings (new ones prefixed by >>):
+Looks 32 or sort of works fine for HDD, and 128 is good enough for
+SSD.
 
-   In file included from <command-line>:32:0:
-   ./usr/include/scsi/fc/fc_els.h: In function 'fc_tlv_next_desc':
->> ./usr/include/scsi/fc/fc_els.h:274:4: error: implicit declaration of
-    function 'be32_to_cpu'; did you mean '__be32_to_cpu'?
-    [-Werror=implicit-function-declaration]
-      (be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
-       ^
->> ./usr/include/scsi/fc/fc_els.h:286:17: note: in expansion of macro
-    'FC_TLV_DESC_SZ_FROM_LENGTH'
-     return (desc + FC_TLV_DESC_SZ_FROM_LENGTH(tlv));
-                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
+And this number should drive enough parallelism, meantime timeout can be
+avoided most of times if not too small timeout value is set. But SCSI
+still allows to adjust the queue depth via sysfs.
 
-Fix by converting fc_tlv_next_desc to use __be32_to_cpu().
-
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Reported-by: kbuild test robot <lkp@intel.com>
----
- include/uapi/scsi/fc/fc_els.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
-index 10b609a2f863..66318c44acd7 100644
---- a/include/uapi/scsi/fc/fc_els.h
-+++ b/include/uapi/scsi/fc/fc_els.h
-@@ -271,7 +271,7 @@ struct fc_tlv_desc {
- 
- /* Macro, used on received payloads, to return the descriptor length */
- #define FC_TLV_DESC_SZ_FROM_LENGTH(tlv)		\
--		(be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
-+		(__be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
- 
- /*
-  * This helper is used to walk descriptors in a descriptor list.
--- 
-2.13.7
+Thanks,
+Ming
 
