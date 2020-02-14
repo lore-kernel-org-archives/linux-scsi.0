@@ -2,92 +2,179 @@ Return-Path: <SRS0=bR62=4C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36459C3B19F
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 14:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9440EC3B19D
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 15:57:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05F0724670
-	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 14:40:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A9BE24685
+	for <linux-scsi@archiver.kernel.org>; Fri, 14 Feb 2020 15:57:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581691216;
-	bh=mH5i6V3YTMULw6H6EwUEg5VymMpkbQ9unTGmkWMJHw0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=syOmXIYWZVM5k/YA6bjYdnpRHH+J4qXvu0IOTb0G1QoLDUiqO6THfFEB73tBGjAzr
-	 gz30vAPvK/YF+mLwb9uId4h3BtkanHf4ppVSm8REZ/SnL2mi1dVYqpciwisUk0PPj2
-	 dyVaWV/1PMj0s2Q2wLk8rVVfA7F2y/qKnEkvy+ac=
+	s=default; t=1581695821;
+	bh=q5ORAojMxwad59xI5c6d6JteflbcHpDRYl9FxkS42AQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=ms4O2yqwQ4UHYw44XHRu/Z2a9lO5l1F0xEWoPDH93ddAK/pT2M7kJBxmXlbYDPpfw
+	 Xgh9U5sNwWRID3WtM7EWPN316xnwn7mYCOdUDNDS9lBrkQueLEvVcPlzTrgxk39nGF
+	 ZmbJqXeeqOSnqhm+/iMnJo6T/gzMhrwr4exFJcpA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729355AbgBNOkP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 14 Feb 2020 09:40:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38624 "EHLO mail.kernel.org"
+        id S2388077AbgBNP5B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 14 Feb 2020 10:57:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39288 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729102AbgBNOkP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Feb 2020 09:40:15 -0500
-Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S2387960AbgBNP5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:57:00 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 23A382187F;
-        Fri, 14 Feb 2020 14:40:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CBD5822314;
+        Fri, 14 Feb 2020 15:56:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581691214;
-        bh=mH5i6V3YTMULw6H6EwUEg5VymMpkbQ9unTGmkWMJHw0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RSBxjsv7GyGJhd5Tv6ppSe4iLV+As/SfqLKHeujuydizvxrBM+N3DzUBweJfetWPm
-         YGerA1vuipxeTZRNMLqQYLyP6xaqElvmx0eYrnzH/brjKtXWHL2ETNESFs5UYX4bga
-         yr/ufxeOHFtFFAJak/Lhio4plQw85jwOA9fBDy2E=
-Date:   Fri, 14 Feb 2020 23:40:07 +0900
-From:   Keith Busch <kbusch@kernel.org>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tim Walker <tim.t.walker@seagate.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
-Message-ID: <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
-References: <CANo=J14resJ4U1nufoiDq+ULd0k-orRCsYah8Dve-y8uCjA62Q@mail.gmail.com>
- <20200211122821.GA29811@ming.t460p>
- <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
- <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <yq1blq3rxzj.fsf@oracle.com>
- <CANo=J16cDBUDWdV7tdY33UO0UT0t-g7jRfMVTxZpePvLew7Mxg@mail.gmail.com>
- <yq1r1yzqfyb.fsf@oracle.com>
- <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
+        s=default; t=1581695819;
+        bh=q5ORAojMxwad59xI5c6d6JteflbcHpDRYl9FxkS42AQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=GdYT8KJUuJ6uwuTN632TGQPSLn6vuHI/MZ1wzifCvp/l5AZjoTxgMak7QqtYEHwtr
+         kXUgLso+j5VlpX9ontFD2CueKPeQqiDsrsAjIMufyYRjw0uZRjq/1mXL/GcS6icKlx
+         82Wz+ugEu+/Es7jhBKWpDtC/2jrlnvf0sjoQPsV4=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.5 375/542] scsi: ufs: pass device information to apply_dev_quirks
+Date:   Fri, 14 Feb 2020 10:46:07 -0500
+Message-Id: <20200214154854.6746-375-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
+References: <20200214154854.6746-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 14, 2020 at 08:32:57AM +0100, Hannes Reinecke wrote:
-> On 2/13/20 5:17 AM, Martin K. Petersen wrote:
-> > People often artificially lower the queue depth to avoid timeouts. The
-> > default timeout is 30 seconds from an I/O is queued. However, many
-> > enterprise applications set the timeout to 3-5 seconds. Which means that
-> > with deep queues you'll quickly start seeing timeouts if a drive
-> > temporarily is having issues keeping up (media errors, excessive spare
-> > track seeks, etc.).
-> > 
-> > Well-behaved devices will return QF/TSF if they have transient resource
-> > starvation or exceed internal QoS limits. QF will cause the SCSI stack
-> > to reduce the number of I/Os in flight. This allows the drive to recover
-> > from its congested state and reduces the potential of application and
-> > filesystem timeouts.
-> > 
-> This may even be a chance to revisit QoS / queue busy handling.
-> NVMe has this SQ head pointer mechanism which was supposed to handle
-> this kind of situations, but to my knowledge no-one has been
-> implementing it.
-> Might be worthwhile revisiting it; guess NVMe HDDs would profit from that.
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-We don't need that because we don't allocate enough tags to potentially
-wrap the tail past the head. If you can allocate a tag, the queue is not
-full. And convesely, no tag == queue full.
+[ Upstream commit c40ad6b7fcd35bc4d36db820c7737e1aa18d5d41 ]
+
+Pass UFS device information to vendor-specific variant callback
+"apply_dev_quirks" because some platform vendors need to know such
+information to apply special handling or quirks in specific devices.
+
+At the same time, modify existing vendor implementations according to the
+new interface for those vendor drivers which will be built-in or built as a
+module alone with UFS core driver.
+
+[mkp: clarified commit desc]
+
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Link: https://lore.kernel.org/r/1578726707-6596-2-git-send-email-stanley.chu@mediatek.com
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 3 ++-
+ drivers/scsi/ufs/ufshcd.c   | 8 ++++----
+ drivers/scsi/ufs/ufshcd.h   | 7 ++++---
+ 3 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index c69c29a1ceb90..ebb5c66e069fa 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -949,7 +949,8 @@ static int ufs_qcom_quirk_host_pa_saveconfigtime(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
+-static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
++static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba,
++				     struct ufs_dev_desc *card)
+ {
+ 	int err = 0;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 7d8300c9a0148..5340a980d24b8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6798,7 +6798,8 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
+ 	return ret;
+ }
+ 
+-static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
++static void ufshcd_tune_unipro_params(struct ufs_hba *hba,
++				      struct ufs_dev_desc *card)
+ {
+ 	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
+ 		ufshcd_tune_pa_tactivate(hba);
+@@ -6812,7 +6813,7 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
+ 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE)
+ 		ufshcd_quirk_tune_host_pa_tactivate(hba);
+ 
+-	ufshcd_vops_apply_dev_quirks(hba);
++	ufshcd_vops_apply_dev_quirks(hba, card);
+ }
+ 
+ static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
+@@ -6975,10 +6976,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 	}
+ 
+ 	ufs_fixup_device_setup(hba, &card);
++	ufshcd_tune_unipro_params(hba, &card);
+ 	ufs_put_device_desc(&card);
+ 
+-	ufshcd_tune_unipro_params(hba);
+-
+ 	/* UFS device is also active now */
+ 	ufshcd_set_ufs_dev_active(hba);
+ 	ufshcd_force_reset_auto_bkops(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2e59f9d8ab89e..46bec0e18c724 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -322,7 +322,7 @@ struct ufs_hba_variant_ops {
+ 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+ 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+ 					enum ufs_notify_change_status);
+-	int	(*apply_dev_quirks)(struct ufs_hba *);
++	int	(*apply_dev_quirks)(struct ufs_hba *, struct ufs_dev_desc *);
+ 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+ 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+ 	void	(*dbg_register_dump)(struct ufs_hba *hba);
+@@ -1057,10 +1057,11 @@ static inline void ufshcd_vops_hibern8_notify(struct ufs_hba *hba,
+ 		return hba->vops->hibern8_notify(hba, cmd, status);
+ }
+ 
+-static inline int ufshcd_vops_apply_dev_quirks(struct ufs_hba *hba)
++static inline int ufshcd_vops_apply_dev_quirks(struct ufs_hba *hba,
++					       struct ufs_dev_desc *card)
+ {
+ 	if (hba->vops && hba->vops->apply_dev_quirks)
+-		return hba->vops->apply_dev_quirks(hba);
++		return hba->vops->apply_dev_quirks(hba, card);
+ 	return 0;
+ }
+ 
+-- 
+2.20.1
+
