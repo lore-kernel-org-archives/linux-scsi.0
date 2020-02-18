@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E60C34036
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 11:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3C35C34026
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:40:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3480B2173E
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 11:16:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C37D20801
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:40:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wizzup.org header.i=@wizzup.org header.b="j+wwynb3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wizzup.org header.i=@wizzup.org header.b="pVxiJO6d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726539AbgBRLQa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Feb 2020 06:16:30 -0500
-Received: from a80-127-99-228.adsl.xs4all.nl ([80.127.99.228]:49546 "EHLO
+        id S1726442AbgBROkO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Feb 2020 09:40:14 -0500
+Received: from a80-127-99-228.adsl.xs4all.nl ([80.127.99.228]:51262 "EHLO
         hetgrotebos.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726303AbgBRLQ3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 06:16:29 -0500
+        with ESMTP id S1726116AbgBROkO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 09:40:14 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=wizzup.org;
          s=mail; h=Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:
         References:Cc:To:Subject:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
         :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
         Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
         :List-Post:List-Owner:List-Archive;
-        bh=7M0HR2zpCnm4sCvIC3mUsPj5+ZJKlLcfDj5Y+CS8DDM=; b=j+wwynb3vXGLrHLWJrNnUvvrk3
-        F4jK/cdFWyCM8+oygOcLZqVsGHduzgH6jhMf4MT/VP2qoNTtJ2fZmNMYvNiPN4nfvQFnjAHwxUksa
-        rs+RGh4suL/w+N45zpx9CrmdwEo4Y/JLukJvKv4xo0AyTUZiauAKQHk3FpA26YV2yRfgDoh2iiSl1
-        VvrVY49XixzCPDZ0e6slxZM5Zj/bjeHdqFOILmnbwtB1f0DLbX3mrXEJzuxvn+V+eR2EADtI3SnN1
-        KyH8lxyLVoytQu9t49a2Z7golg3jrFtS/xld93LA4BKZ0/gAibedLKKhJh0EMtfoP0dDzFJB43Jap
-        g53izlHQ==;
+        bh=hllLoCyM9RmK7u/rPo0DwB939Hm+Eyw+3efkMrghnmY=; b=pVxiJO6d9ZEI422RObEcVc8TMW
+        dDURo5BgGRHeVFnVGBzv2seORa+1r1KstBytKEMeHO9z1nHMY9VDcIHs6RR1A9aG6HDUu8Pku0WA/
+        ByW+AUxZUG1Jwl1PuzNA6rpQamOH5xfCy/Ao/p8m0FSyu6QPVKr6vEZN+jX0dMA48yBMCRVObYRCd
+        rRl/4oUBgXIzik98UXKO0IGRWFoihqGykX9OfuYf+v9ew8Npw+rH3NWoy4XH1zaX5CiQ30hazCL4L
+        Y0XUE6BSC/6l5DWpOx3S+FARkvvfO2iZCXf/VPjFeMhHtfRWRbh5EfwgfDP2F7wFOW7gF6IcNEa7D
+        CRaZJ82g==;
 Received: from deepwater.fritz.box ([192.168.178.25] helo=[0.0.0.0])
         by hetgrotebos.org with esmtpsa  (TLS1.3) tls TLS_AES_128_GCM_SHA256
         (Exim 4.93)
         (envelope-from <merlijn@wizzup.org>)
-        id 1j40ra-00047N-Ne; Tue, 18 Feb 2020 11:16:26 +0000
+        id 1j442l-0004Bt-LR; Tue, 18 Feb 2020 14:40:11 +0000
 Subject: Re: [PATCH] scsi: sr: get rid of sr global mutex
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Merlijn Wajer <merlijn@archive.org>,
@@ -107,25 +107,25 @@ Autocrypt: addr=merlijn@wizzup.org; prefer-encrypt=mutual; keydata=
  auuXY5GfVPDcxjPwzm4Yjj4YvbfRLpAiQOOciMgiJlbn4A+BhvSSS54scJMln1Jh7KkDgeqz
  aP0nj9EfQy1vMXGp1i0sYzhMKaM9nsmV/q1Iisqc8ojjpmR00jVnz/aSX3eHexXOlB3Y6Qs+
  /XslHw==
-Message-ID: <816d0b72-2756-dde8-3fbc-43ed5c00c9e2@wizzup.org>
-Date:   Tue, 18 Feb 2020 12:17:36 +0100
+Message-ID: <02f9ad3c-632a-dbfe-8cca-3a8c61d77923@wizzup.org>
+Date:   Tue, 18 Feb 2020 15:41:23 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.2.0
 MIME-Version: 1.0
 In-Reply-To: <yq11rqsmp2s.fsf@oracle.com>
 Content-Type: multipart/signed; micalg=pgp-sha256;
  protocol="application/pgp-signature";
- boundary="gJ8AYWUA6K41wcHIdBVPERfpmMlAfbeA3"
+ boundary="ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gJ8AYWUA6K41wcHIdBVPERfpmMlAfbeA3
-Content-Type: multipart/mixed; boundary="XGKaLjrNq2NqGGa6Z4syGKJd30SyB0UmZ"
+--ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u
+Content-Type: multipart/mixed; boundary="1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG"
 
---XGKaLjrNq2NqGGa6Z4syGKJd30SyB0UmZ
+--1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-GB
 Content-Transfer-Encoding: quoted-printable
@@ -146,27 +146,36 @@ On 18/02/2020 06:39, Martin K. Petersen wrote:
 >=20
 > Doesn't build. Please rebase on top of 5.7/scsi-queue and
 > resubmit. Thanks!
->=20
 
-Odd, I will take a look.
+I've sent out a new (v2) patch, based on `5.7/scsi-queue`. I've sent it
+out using my work-email for proper attribution, and now it also matches
+the Signed-off-by.
 
+Sorry for the hassle.
+
+One question -- I would like to put in some extra work to get this patch
+(or some version of it) sent out to stable trees as well. Is there any
+additional work I can do to get that going, or is it a matter of
+emailing the right person/list?
+
+Thanks,
 Cheers,
 Merlijn
 
 
---XGKaLjrNq2NqGGa6Z4syGKJd30SyB0UmZ--
+--1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG--
 
---gJ8AYWUA6K41wcHIdBVPERfpmMlAfbeA3
+--ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYIAB0WIQRM5LT7NbLF9yb6a/UGN09rynK8WgUCXkvH0AAKCRAGN09rynK8
-WmL2AQCyVmBZogjYIFQPw5bQYi19grQ2mBq7mjAbbwlW/v+OFAEApfeOG2SZ2tub
-z79H7TNspaUKLcsoDkfmZtRzrbf+xg0=
-=lnIN
+iHUEARYIAB0WIQRM5LT7NbLF9yb6a/UGN09rynK8WgUCXkv3kwAKCRAGN09rynK8
+WmkGAQCtv8Y4royWjK/XfgIlc/0h6WlkrndRw5oZvuvkLG4AvgEAt+7wpCd0l3eu
+DyO1931vuvVNAJxk6XpDeCsINWeKSgs=
+=0JI0
 -----END PGP SIGNATURE-----
 
---gJ8AYWUA6K41wcHIdBVPERfpmMlAfbeA3--
+--ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u--
