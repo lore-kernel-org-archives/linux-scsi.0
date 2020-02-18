@@ -2,128 +2,105 @@ Return-Path: <SRS0=T7Zk=4G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E83DC34049
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 17:52:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 113EEC34049
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 19:20:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A9DE24654
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 17:52:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TQNwyIVa"
+	by mail.kernel.org (Postfix) with ESMTP id E898120801
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 19:20:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726636AbgBRRwZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Feb 2020 12:52:25 -0500
-Received: from mail-wm1-f43.google.com ([209.85.128.43]:53195 "EHLO
-        mail-wm1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726422AbgBRRwZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 12:52:25 -0500
-Received: by mail-wm1-f43.google.com with SMTP id p9so3706872wmc.2
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2020 09:52:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=BPfhtFI4dL6bMuI+S7/9pZqCvnVzrtE24J1oai+Y2JE=;
-        b=TQNwyIVaeGZAEy1lYknE5xsIAa0rBavt7l6Xmx/2bHlDBMOsXJwLPHQ964j4fuLcoz
-         CPjx5zkQGtf+You9j0jK64MvycHq6vIu/zHfO94MzAx+dIz48bkC+5QGdC2Vrw7tTyxL
-         SPBEpQ/1ADIBljRVGAuEJKqlyIAwoL+CBevbo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=BPfhtFI4dL6bMuI+S7/9pZqCvnVzrtE24J1oai+Y2JE=;
-        b=DXoDSAkwvLdGbepb6qv+ZJpxOAPI61tJsvs4bVOY/OVRhT1nj9O4t0pS065EsEMVJn
-         39TBFzgHpansaYsooHF92CGdWqSkO0L4zNIXQ0+on0w7UKPfseKKd+vnA6t0I6SVlT1Z
-         E+USzSzfrnKqVubT50DL/xpf59noPbY3lNVIalIp3HBjAAbWcFql7C8zxEWP5pkMnU12
-         DI5LUvvnZng8wsCkO07Y2v9L5ZR0+eQK2Yjxn37VW0bo2Y85KhGDpjZSsB6qQWAec+Cw
-         99nSBAHIMU9JHRsYf38UvqqNn4g/MmlIade1vNqGKZtgj71eS84cGe+wqy+gvh7XjBc+
-         7PEg==
-X-Gm-Message-State: APjAAAU3ueO6vLZFnuBlBbXTYiyCUqKy6CkXbST19pt2TamYBEfk7dNH
-        lAn7ue2uojU89tEU+NHhMv/uhA==
-X-Google-Smtp-Source: APXvYqxMH7yn1TaQwXwjUrc6VJrsiZ4MPGS2ygdZKaispo5YPjWBDjd2WX9yMvgr/UG2egQLmZi2uw==
-X-Received: by 2002:a05:600c:2187:: with SMTP id e7mr4328310wme.11.1582048343034;
-        Tue, 18 Feb 2020 09:52:23 -0800 (PST)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v22sm4202888wml.11.2020.02.18.09.52.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Feb 2020 09:52:22 -0800 (PST)
-Subject: Re: [LSF/MM/BPF TOPIC] NVMe HDD
-To:     Keith Busch <kbusch@kernel.org>,
-        Tim Walker <tim.t.walker@seagate.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
+        id S1726346AbgBRTUa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Feb 2020 14:20:30 -0500
+Received: from mail.archive.org ([207.241.224.6]:57414 "EHLO mail.archive.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726283AbgBRTU3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Feb 2020 14:20:29 -0500
+Received: from mail.archive.org (localhost [127.0.0.1])
+        by mail.archive.org (Postfix) with ESMTP id 06B371FB34;
+        Tue, 18 Feb 2020 19:20:25 +0000 (UTC)
+Received: from [0.0.0.0] (a82-161-36-93.adsl.xs4all.nl [82.161.36.93])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: merlijn@archive.org)
+        by mail.archive.org (Postfix) with ESMTPSA id 971A71FB1D;
+        Tue, 18 Feb 2020 19:20:23 +0000 (UTC)
+Subject: Re: [PATCH v2] scsi: sr: get rid of sr global mutex
+To:     Christoph Hellwig <hch@infradead.org>,
+        James Bottomley <jejb@linux.ibm.com>
+Cc:     merlijn@wizzup.org, linux-scsi@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-References: <CANo=J14iRK8K3bc1g3rLBp=QTLZQak0DcHkvgZS2f=xO_HFgxQ@mail.gmail.com>
- <BYAPR04MB5816AA843E63FFE2EA1D5D23E71B0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <yq1blq3rxzj.fsf@oracle.com>
- <CANo=J16cDBUDWdV7tdY33UO0UT0t-g7jRfMVTxZpePvLew7Mxg@mail.gmail.com>
- <yq1r1yzqfyb.fsf@oracle.com> <2d66bb0b-29ca-6888-79ce-9e3518ee4b61@suse.de>
- <20200214144007.GD9819@redsun51.ssa.fujisawa.hgst.com>
- <d043a58d-6584-1792-4433-ac2cc39526ca@suse.de>
- <20200214170514.GA10757@redsun51.ssa.fujisawa.hgst.com>
- <CANo=J17Rve2mMLb_yJNFK5m8wt5Wi4c+b=-a5BJ5kW3RaWuQVg@mail.gmail.com>
- <20200218174114.GA17609@redsun51.ssa.fujisawa.hgst.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <57808194-dc89-a044-3778-bef607ebe6c8@broadcom.com>
-Date:   Tue, 18 Feb 2020 09:52:18 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+References: <20200218143918.30267-1-merlijn@archive.org>
+ <20200218171259.GA6724@infradead.org>
+ <1582046428.16681.7.camel@linux.ibm.com>
+ <20200218172347.GA3020@infradead.org>
+ <1582046914.16681.11.camel@linux.ibm.com>
+ <20200218173158.GA18386@infradead.org>
+From:   "Merlijn B.W. Wajer" <merlijn@archive.org>
+Message-ID: <33da5f81-ad37-05fd-d765-8bd997995dd2@archive.org>
+Date:   Tue, 18 Feb 2020 20:21:35 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <20200218174114.GA17609@redsun51.ssa.fujisawa.hgst.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200218173158.GA18386@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+X-Envelope-From: <merlijn@archive.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi,
 
-
-On 2/18/2020 9:41 AM, Keith Busch wrote:
-> On Tue, Feb 18, 2020 at 10:54:54AM -0500, Tim Walker wrote:
->> With regards to our discussion on queue depths, it's common knowledge
->> that an HDD choses commands from its internal command queue to
->> optimize performance. The HDD looks at things like the current
->> actuator position, current media rotational position, power
->> constraints, command age, etc to choose the best next command to
->> service. A large number of commands in the queue gives the HDD a
->> better selection of commands from which to choose to maximize
->> throughput/IOPS/etc but at the expense of the added latency due to
->> commands sitting in the queue.
+On 18/02/2020 18:31, Christoph Hellwig wrote:
+> On Tue, Feb 18, 2020 at 09:28:34AM -0800, James Bottomley wrote:
+>> On Tue, 2020-02-18 at 09:23 -0800, Christoph Hellwig wrote:
+>>> On Tue, Feb 18, 2020 at 09:20:28AM -0800, James Bottomley wrote:
+>>>>>> Replace the global mutex with per-sr-device mutex.
+>>>>>
+>>>>> Do we actually need the lock at all?  What is protected by it?
+>>>>
+>>>> We do at least for cdrom_open.  It modifies the cdi structure with
+>>>> no other protection and concurrent modification would at least
+>>>> screw up the use counter which is not atomic.  Same reasoning for
+>>>> cdrom_release.
+>>>
+>>> Wouldn't the right fix to add locking to cdrom_open/release instead
+>>> of having an undocumented requirement for the callers?
 >>
->> NVMe doesn't allow us to pull commands randomly from the SQ, so the
->> HDD should attempt to fill its internal queue from the various SQs,
->> according to the SQ servicing policy, so it can have a large number of
->> commands to choose from for its internal command processing
->> optimization.
-> You don't need multiple queues for that. While the device has to fifo
-> fetch commands from a host's submission queue, it may reorder their
-> executuion and completion however it wants, which you can do with a
-> single queue.
->   
->> It seems to me that the host would want to limit the total number of
->> outstanding commands to an NVMe HDD
-> The host shouldn't have to decide on limits. NVMe lets the device report
-> it's queue count and depth. It should the device's responsibility to
-> report appropriate values that maximize iops within your latency limits,
-> and the host will react accordingly.
+>> Yes ... but that's somewhat of a bigger patch because you now have to
+>> reason about the callbacks within cdrom.  There's also the question of
+>> whether you can assume ops->generic_packet() has its own concurrency
+>> protections ... it's certainly true for SCSI, but is it for anything
+>> else?  Although I suppose you can just not care and run the internal
+>> lock over it anyway.
+> 
+> We have 4 instances of struct cdrom_device_ops in the kernel, one of
+> which has a no-op generic_packet.  So I don't think this should be a
+> huge project.
 
-+1 on Keith's comments. Also, if a ns depth limit needs to be 
-introduced, it should be via the nvme committee and then reported back 
-as device attributes. Many of SCSI's problems where the protocol didn't 
-solve it, especially in multi-initiator environments, which made all 
-kinds of requirements/mish-mashes on host stacks and target behaviors. 
-none of that should be repeated.
+The are two reasons I decided to make minor changes to fix the
+performance regression.
 
--- james
+First, being able to send the patch to the various stable branches once
+merged. For people working with many CD drives attached to one station,
+this is a pretty big deal, so I tried to keep the patch simple. It fixes
+the regression introduced in another commit.
 
+Secondly, I don't have the hardware to test sophisticated or old setups,
+like some of the issues linked from my patch. I have SATA CD drives with
+USB->SATA bridges, no IDE, no PATA, etc. So the testing I can do is
+relatively limited.
+
+Perhaps I or someone else can work on removing the usage of the locks,
+but as it stands I think this addresses the performance issue present in
+the current kernel, and removing locks and the associated testing
+required with that is something I am not entirely comfortable doing.
+
+Cheers,
+Merlijn
