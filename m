@@ -2,164 +2,123 @@ Return-Path: <SRS0=T7Zk=4G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC3CEC3404C
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 23:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F934C34031
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 23:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DD5E2173E
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 23:45:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14BF324655
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 23:54:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UTHpxAfh"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VL8xspjR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726823AbgBRXpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Feb 2020 18:45:08 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:45216 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726461AbgBRXpI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 18:45:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=IHUJYItcDDU/OeAN1gGr74TVCKMfi4duJPgNqccaa9k=; b=UTHpxAfhGipnUq+NniFWY/1RXT
-        4hLub/Gvqhqn4JMACMsVFS9yiUDwYFzqNcFvoChRm23uuoKnMsN0mfmezvuQOBff/HCroBOQYJv6+
-        sHTM6Tm6qYWDKLMiTU8lRnaIxB9dUvj9/+tNMsGT+0WUSlcW4tqecX2s0sLUYmSutLyhJCfZsK7O5
-        sZnTTYZOtC6waxmiDOOf03npCn+efOYyGmUU1e3wYigK0InpfMtCUr3ofdNL/EXCHnlK1DJCrBHE7
-        fK4NdnhK1VXHjIAAoKrpCjo1I57z/1W1EljR0FeMea/l68q2v2HOthmr+Pm4cbfQgvQ+juuXSs5sd
-        fu+VzhGw==;
-Received: from [199.255.44.128] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j4CY7-0005vO-Ol; Tue, 18 Feb 2020 23:45:07 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/2] ufshcd: use an enum for quirks
-Date:   Tue, 18 Feb 2020 15:44:50 -0800
-Message-Id: <20200218234450.69412-3-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200218234450.69412-1-hch@lst.de>
-References: <20200218234450.69412-1-hch@lst.de>
+        id S1727960AbgBRXy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Feb 2020 18:54:56 -0500
+Received: from mailout1.samsung.com ([203.254.224.24]:10124 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727893AbgBRXym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 18:54:42 -0500
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200218235440epoutp014c34998a5f7a9501f078a83a52eeab80~0pFstibow2732027320epoutp01V
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Feb 2020 23:54:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200218235440epoutp014c34998a5f7a9501f078a83a52eeab80~0pFstibow2732027320epoutp01V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1582070080;
+        bh=yF3JGuGdN4xhNcQhIo1FaQTWrBbwamNmfNAYDHcTrMw=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=VL8xspjRUM5JYoirwWq87qEuBDXF2rFGKqowcrK7mRHp2X8ns3vakzCYBggvT63e5
+         JayYEdYhlOmVLmRiSBk5qdYSdQs+ERg6390PXFZ6jhKz0+in/U6SK8Ac+Qzi3WoQNT
+         N8G6FFHD5Y9dASikRJTyeZZH31PsZLusmmDMSG34=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20200218235439epcas2p2de50da0ed2ce1f276a390ed16fbeb4e1~0pFsAe-h00633006330epcas2p2S;
+        Tue, 18 Feb 2020 23:54:39 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.183]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 48Md4Y16P3zMqYm2; Tue, 18 Feb
+        2020 23:54:37 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        07.1C.17124.C397C4E5; Wed, 19 Feb 2020 08:54:36 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200218235436epcas2p14d1dfb83b6198a8eb19c806ac7381e83~0pFoc_hNi3145031450epcas2p1d;
+        Tue, 18 Feb 2020 23:54:36 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200218235436epsmtrp1648c08ffb0394feb3de7ba5584e92b28~0pFocYDEk1058010580epsmtrp1V;
+        Tue, 18 Feb 2020 23:54:36 +0000 (GMT)
+X-AuditID: b6c32a46-48fff700000142e4-a1-5e4c793c08b4
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        11.E3.10238.B397C4E5; Wed, 19 Feb 2020 08:54:35 +0900 (KST)
+Received: from KORCO002087 (unknown [180.236.228.110]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200218235434epsmtip1356fceea490f1239011b6e4cd08c2283~0pFnaqUoi3070530705epsmtip1p;
+        Tue, 18 Feb 2020 23:54:34 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Christoph Hellwig'" <hch@infradead.org>
+Cc:     <linux-scsi@vger.kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+In-Reply-To: <20200218233222.GA6827@infradead.org>
+Subject: RE: [PATCH] ufs: add quirk to fix abnormal ocs fatal error
+Date:   Wed, 19 Feb 2020 08:54:45 +0900
+Message-ID: <0afa01d5e6b6$cce7b030$66b71090$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQLWtATr2+I0rcQn+9BDLX+A1N6BfgJVPwaXAeVunAml/jASoA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupnk+LIzCtJLcpLzFFi42LZdljTXNem0ifOYMJucYvTExYxWSy6sY3J
+        ovv6DjaL5cf/MTmweGxeoeUxYdEBRo+PT2+xeHzeJBfAEpVjk5GamJJapJCal5yfkpmXbqvk
+        HRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQO0UUmhLDGnFCgUkFhcrKRvZ1OUX1qSqpCR
+        X1xiq5RakJJTYGhYoFecmFtcmpeul5yfa2VoYGBkClSZkJMx7XpNwSbmiuUfDzE2MF5h6mLk
+        5JAQMJG4u+QucxcjF4eQwA5GiaOf9rJDOJ8YJR68v8EI4XxjlJix8C8zTMvvayfB2oUE9jJK
+        nHlSCVH0mlHiybdbYEVsAtoS0x7uZgWxRQR0Jc4ufMEIYjMLhEksvP6TBcTmFDCSOHrjDFi9
+        sICzRP+in2BDWQRUJb6dWglm8wpYSix+1sEGYQtKnJz5hAVijrzE9rdzoA5SkPj5dBnULieJ
+        ZfduMEHUiEjM7mwD+01C4ACbxJNfS6GedpFo278dyhaWeHV8CzuELSXxsr8Nyq6X2De1gRWi
+        uYdR4um+f4wQCWOJWc/agWwOoA2aEut36YOYEgLKEkduQd3GJ9Fx+C87RJhXoqNNCKJRWeLX
+        pMlQQyQlZt68wz6BUWkWks9mIflsFpIPZiHsWsDIsopRLLWgODc9tdiowAg5rjcxghOjltsO
+        xiXnfA4xCnAwKvHwHrjoHSfEmlhWXJl7iFGCg1lJhNdb3CtOiDclsbIqtSg/vqg0J7X4EKMp
+        MOAnMkuJJucDk3ZeSbyhqZGZmYGlqYWpmZGFkjjvJu6bMUIC6YklqdmpqQWpRTB9TBycUg2M
+        LIm3FgpunBvtsHylmq5HqifbqivPPBffPpVfkv6J+0PJ17AtXjmbQ5b68vEWzF72aO8kRUO1
+        Lwc49p6VroxMZljZ9ftI2UGG1d83SL72l165NEHi/lHLFTu7N/xy7E69xfrEddm21Gh+NxPh
+        l5efHzN7c2GBVKQLw1zzwgNbrntd7OB99NNbW4mlOCPRUIu5qDgRAHhmI/qiAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrOLMWRmVeSWpSXmKPExsWy7bCSnK5NpU+cwXJDi9MTFjFZLLqxjcmi
+        +/oONovlx/8xObB4bF6h5TFh0QFGj49Pb7F4fN4kF8ASxWWTkpqTWZZapG+XwJUx7XpNwSbm
+        iuUfDzE2MF5h6mLk5JAQMJH4fe0kkM3FISSwm1Fi0oW1rBAJSYkTO58zQtjCEvdbjrBCFL1k
+        lLg2aTVYgk1AW2Law91gDSICuhJnF74AizMLREjc6j7MAmILCWxklPjzAyzOKWAkcfTGGWYQ
+        W1jAWaJ/0U+wK1gEVCW+nVoJZvMKWEosftbBBmELSpyc+QRoDgfQTD2Jto1Q4+Ultr+dwwxx
+        m4LEz6fLoE5wklh27wYTRI2IxOzONuYJjMKzkEyahTBpFpJJs5B0LGBkWcUomVpQnJueW2xY
+        YJiXWq5XnJhbXJqXrpecn7uJERwdWpo7GC8viT/EKMDBqMTDm3HeO06INbGsuDL3EKMEB7OS
+        CK+3uFecEG9KYmVValF+fFFpTmrxIUZpDhYlcd6neccihQTSE0tSs1NTC1KLYLJMHJxSDYz8
+        puc8zrTuXN23ge3HyZAdx+pZfm3vV/DU/GcjWHH7jdKTZ6LzPWfVWWfWO6e7hofm8leqFZtn
+        7BBeI+v6N/CV0XNFmZAet4zDMaraNmVKsfc6Dl+yfOCSUBUt7TnBPOL/7+Sqv71WvdnX3R5e
+        l+hn/11SqB+ZUvniV8B13g+bu1eu4m7SVGIpzkg01GIuKk4EAFfiTOGKAgAA
+X-CMS-MailID: 20200218235436epcas2p14d1dfb83b6198a8eb19c806ac7381e83
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200218224503epcas2p46cec6f56d7564ea7dca4ab600476d938
+References: <CGME20200218224503epcas2p46cec6f56d7564ea7dca4ab600476d938@epcas2p4.samsung.com>
+        <20200218224307.8017-1-kwmad.kim@samsung.com>
+        <20200218233222.GA6827@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use an enum to specify the various quirks instead of #defines inside
-the structure definition.
+> On Wed, Feb 19, 2020 at 07:43:07AM +0900, Kiwoong Kim wrote:
+> > Some architectures determines if fatal error for OCS occurrs to check
+> > status in response upiu. This patch is to prevent from reporting
+> > command results with that.
+> 
+> This seems to be missing the hunk to actually set the quirk bit..
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/ufs/ufshcd.h | 82 ++++++++++++++++++++-------------------
- 1 file changed, 42 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 9c2b80f87b9f..f68b3cd2e465 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -469,6 +469,48 @@ struct ufs_stats {
- 	struct ufs_err_reg_hist task_abort;
- };
- 
-+enum ufshcd_quirks {
-+	/* Interrupt aggregation support is broken */
-+	UFSHCD_QUIRK_BROKEN_INTR_AGGR			= 1 << 0,
-+
-+	/*
-+	 * delay before each dme command is required as the unipro
-+	 * layer has shown instabilities
-+	 */
-+	UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS		= 1 << 1,
-+
-+	/*
-+	 * If UFS host controller is having issue in processing LCC (Line
-+	 * Control Command) coming from device then enable this quirk.
-+	 * When this quirk is enabled, host controller driver should disable
-+	 * the LCC transmission on UFS device (by clearing TX_LCC_ENABLE
-+	 * attribute of device to 0).
-+	 */
-+	UFSHCD_QUIRK_BROKEN_LCC				= 1 << 2,
-+
-+	/*
-+	 * The attribute PA_RXHSUNTERMCAP specifies whether or not the
-+	 * inbound Link supports unterminated line in HS mode. Setting this
-+	 * attribute to 1 fixes moving to HS gear.
-+	 */
-+	UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP		= 1 << 3,
-+
-+	/*
-+	 * This quirk needs to be enabled if the host contoller only allows
-+	 * accessing the peer dme attributes in AUTO mode (FAST AUTO or
-+	 * SLOW AUTO).
-+	 */
-+	UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE		= 1 << 4,
-+
-+	/*
-+	 * This quirk needs to be enabled if the host contoller doesn't
-+	 * advertise the correct version in UFS_VER register. If this quirk
-+	 * is enabled, standard UFS host driver will call the vendor specific
-+	 * ops (get_ufs_hci_version) to get the correct version.
-+	 */
-+	UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		= 1 << 5,
-+};
-+
- /**
-  * struct ufs_hba - per adapter private structure
-  * @mmio_base: UFSHCI base register address
-@@ -572,46 +614,6 @@ struct ufs_hba {
- 	bool is_irq_enabled;
- 	enum ufs_ref_clk_freq dev_ref_clk_freq;
- 
--	/* Interrupt aggregation support is broken */
--	#define UFSHCD_QUIRK_BROKEN_INTR_AGGR			0x1
--
--	/*
--	 * delay before each dme command is required as the unipro
--	 * layer has shown instabilities
--	 */
--	#define UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS		0x2
--
--	/*
--	 * If UFS host controller is having issue in processing LCC (Line
--	 * Control Command) coming from device then enable this quirk.
--	 * When this quirk is enabled, host controller driver should disable
--	 * the LCC transmission on UFS device (by clearing TX_LCC_ENABLE
--	 * attribute of device to 0).
--	 */
--	#define UFSHCD_QUIRK_BROKEN_LCC				0x4
--
--	/*
--	 * The attribute PA_RXHSUNTERMCAP specifies whether or not the
--	 * inbound Link supports unterminated line in HS mode. Setting this
--	 * attribute to 1 fixes moving to HS gear.
--	 */
--	#define UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP		0x8
--
--	/*
--	 * This quirk needs to be enabled if the host contoller only allows
--	 * accessing the peer dme attributes in AUTO mode (FAST AUTO or
--	 * SLOW AUTO).
--	 */
--	#define UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE		0x10
--
--	/*
--	 * This quirk needs to be enabled if the host contoller doesn't
--	 * advertise the correct version in UFS_VER register. If this quirk
--	 * is enabled, standard UFS host driver will call the vendor specific
--	 * ops (get_ufs_hci_version) to get the correct version.
--	 */
--	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		0x20
--
- 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
- 
- 	/* Device deviations from standard UFS device spec. */
--- 
-2.24.1
+Exynos specific driver sets and is using it but the driver is not updated
+yet. I'll do upstream it in the future.
 
