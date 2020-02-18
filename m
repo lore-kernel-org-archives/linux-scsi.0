@@ -2,180 +2,187 @@ Return-Path: <SRS0=T7Zk=4G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3C35C34026
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D030C34040
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:43:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C37D20801
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:40:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wizzup.org header.i=@wizzup.org header.b="pVxiJO6d"
+	by mail.kernel.org (Postfix) with ESMTP id 2F1D824656
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 Feb 2020 14:43:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726442AbgBROkO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 Feb 2020 09:40:14 -0500
-Received: from a80-127-99-228.adsl.xs4all.nl ([80.127.99.228]:51262 "EHLO
-        hetgrotebos.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726116AbgBROkO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Feb 2020 09:40:14 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=wizzup.org;
-         s=mail; h=Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:
-        References:Cc:To:Subject:Sender:Reply-To:Content-Transfer-Encoding:Content-ID
-        :Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:
-        Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe
-        :List-Post:List-Owner:List-Archive;
-        bh=hllLoCyM9RmK7u/rPo0DwB939Hm+Eyw+3efkMrghnmY=; b=pVxiJO6d9ZEI422RObEcVc8TMW
-        dDURo5BgGRHeVFnVGBzv2seORa+1r1KstBytKEMeHO9z1nHMY9VDcIHs6RR1A9aG6HDUu8Pku0WA/
-        ByW+AUxZUG1Jwl1PuzNA6rpQamOH5xfCy/Ao/p8m0FSyu6QPVKr6vEZN+jX0dMA48yBMCRVObYRCd
-        rRl/4oUBgXIzik98UXKO0IGRWFoihqGykX9OfuYf+v9ew8Npw+rH3NWoy4XH1zaX5CiQ30hazCL4L
-        Y0XUE6BSC/6l5DWpOx3S+FARkvvfO2iZCXf/VPjFeMhHtfRWRbh5EfwgfDP2F7wFOW7gF6IcNEa7D
-        CRaZJ82g==;
-Received: from deepwater.fritz.box ([192.168.178.25] helo=[0.0.0.0])
-        by hetgrotebos.org with esmtpsa  (TLS1.3) tls TLS_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <merlijn@wizzup.org>)
-        id 1j442l-0004Bt-LR; Tue, 18 Feb 2020 14:40:11 +0000
-Subject: Re: [PATCH] scsi: sr: get rid of sr global mutex
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Merlijn Wajer <merlijn@archive.org>,
-        Jens Axboe <axboe@kernel.dk>,
+        id S1726713AbgBROnX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 Feb 2020 09:43:23 -0500
+Received: from mail.archive.org ([207.241.224.6]:60886 "EHLO mail.archive.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726116AbgBROnW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Feb 2020 09:43:22 -0500
+X-Greylist: delayed 372 seconds by postgrey-1.27 at vger.kernel.org; Tue, 18 Feb 2020 09:43:22 EST
+Received: from mail.archive.org (localhost [127.0.0.1])
+        by mail.archive.org (Postfix) with ESMTP id 64DB71FAF0;
+        Tue, 18 Feb 2020 14:37:08 +0000 (UTC)
+Received: from kgpe-d16.fritz.box (a82-161-36-93.adsl.xs4all.nl [82.161.36.93])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: merlijn@archive.org)
+        by mail.archive.org (Postfix) with ESMTPSA id DD9731FAEF;
+        Tue, 18 Feb 2020 14:37:06 +0000 (UTC)
+From:   Merlijn Wajer <merlijn@archive.org>
+To:     merlijn@wizzup.org, linux-scsi@vger.kernel.org
+Cc:     Merlijn Wajer <merlijn@archive.org>, Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
-References: <20200214135433.29448-1-merlijn@wizzup.org>
- <yq1a75gmpsv.fsf@oracle.com> <yq11rqsmp2s.fsf@oracle.com>
-From:   Merlijn Wajer <merlijn@wizzup.org>
-Autocrypt: addr=merlijn@wizzup.org; prefer-encrypt=mutual; keydata=
- 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
- /XslHw==
-Message-ID: <02f9ad3c-632a-dbfe-8cca-3a8c61d77923@wizzup.org>
-Date:   Tue, 18 Feb 2020 15:41:23 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.0
+Subject: [PATCH v2] scsi: sr: get rid of sr global mutex
+Date:   Tue, 18 Feb 2020 15:39:17 +0100
+Message-Id: <20200218143918.30267-1-merlijn@archive.org>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-In-Reply-To: <yq11rqsmp2s.fsf@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u"
+Content-Transfer-Encoding: 8bit
+X-Envelope-From: <merlijn@archive.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u
-Content-Type: multipart/mixed; boundary="1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG"
+When replacing the Big Kernel Lock in commit
+2a48fc0ab24241755dc93bfd4f01d68efab47f5a ("block: autoconvert trivial
+BKL users to private mutex"), the lock was replaced with a sr-wide lock.
 
---1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: quoted-printable
+This causes very poor performance when using multiple sr devices, as the
+sr driver was not able to execute more than one command to one drive at
+any given time, even when there were many CD drives available.
 
-Hi Martin,
+Replace the global mutex with per-sr-device mutex.
 
-On 18/02/2020 06:39, Martin K. Petersen wrote:
->=20
-> Merlijn,
->=20
->>> When replacing the Big Kernel Lock in commit
->>> 2a48fc0ab24241755dc93bfd4f01d68efab47f5a ("block: autoconvert trivial=
+Someone tried this patch at the time, but it never made it
+upstream, due to possible concerns with race conditions, but it's not
+clear the patch actually caused those:
 
->>> BKL users to private mutex"), the lock was replaced with a sr-wide
->>> lock.
->>
->> Applied to 5.7/scsi-queue, thanks!
->=20
-> Doesn't build. Please rebase on top of 5.7/scsi-queue and
-> resubmit. Thanks!
+https://www.spinics.net/lists/linux-scsi/msg63706.html
+https://www.spinics.net/lists/linux-scsi/msg63750.html
 
-I've sent out a new (v2) patch, based on `5.7/scsi-queue`. I've sent it
-out using my work-email for proper attribution, and now it also matches
-the Signed-off-by.
+Also see
 
-Sorry for the hassle.
+http://lists.xiph.org/pipermail/paranoia/2019-December/001647.html
 
-One question -- I would like to put in some extra work to get this patch
-(or some version of it) sent out to stable trees as well. Is there any
-additional work I can do to get that going, or is it a matter of
-emailing the right person/list?
+Signed-off-by: Merlijn Wajer <merlijn@archive.org>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/sr.c | 20 +++++++++++---------
+ drivers/scsi/sr.h |  2 ++
+ 2 files changed, 13 insertions(+), 9 deletions(-)
 
-Thanks,
-Cheers,
-Merlijn
-
-
---1h7b2dFr87mLIl72K3vSp02SDsmxUDEhG--
-
---ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQRM5LT7NbLF9yb6a/UGN09rynK8WgUCXkv3kwAKCRAGN09rynK8
-WmkGAQCtv8Y4royWjK/XfgIlc/0h6WlkrndRw5oZvuvkLG4AvgEAt+7wpCd0l3eu
-DyO1931vuvVNAJxk6XpDeCsINWeKSgs=
-=0JI0
------END PGP SIGNATURE-----
-
---ss2PJczctqRhK1AxEE5q8BDZsVzTIB80u--
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 0fbb8fe6e521..fe0e1c721a99 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -79,7 +79,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_WORM);
+ 	 CDC_CD_R|CDC_CD_RW|CDC_DVD|CDC_DVD_R|CDC_DVD_RAM|CDC_GENERIC_PACKET| \
+ 	 CDC_MRW|CDC_MRW_W|CDC_RAM)
+ 
+-static DEFINE_MUTEX(sr_mutex);
+ static int sr_probe(struct device *);
+ static int sr_remove(struct device *);
+ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt);
+@@ -536,9 +535,9 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
+ 	scsi_autopm_get_device(sdev);
+ 	check_disk_change(bdev);
+ 
+-	mutex_lock(&sr_mutex);
++	mutex_lock(&cd->lock);
+ 	ret = cdrom_open(&cd->cdi, bdev, mode);
+-	mutex_unlock(&sr_mutex);
++	mutex_unlock(&cd->lock);
+ 
+ 	scsi_autopm_put_device(sdev);
+ 	if (ret)
+@@ -551,10 +550,10 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
+ static void sr_block_release(struct gendisk *disk, fmode_t mode)
+ {
+ 	struct scsi_cd *cd = scsi_cd(disk);
+-	mutex_lock(&sr_mutex);
++	mutex_lock(&cd->lock);
+ 	cdrom_release(&cd->cdi, mode);
+ 	scsi_cd_put(cd);
+-	mutex_unlock(&sr_mutex);
++	mutex_unlock(&cd->lock);
+ }
+ 
+ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+@@ -565,7 +564,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+ 
+-	mutex_lock(&sr_mutex);
++	mutex_lock(&cd->lock);
+ 
+ 	ret = scsi_ioctl_block_when_processing_errors(sdev, cmd,
+ 			(mode & FMODE_NDELAY) != 0);
+@@ -595,7 +594,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	scsi_autopm_put_device(sdev);
+ 
+ out:
+-	mutex_unlock(&sr_mutex);
++	mutex_unlock(&cd->lock);
+ 	return ret;
+ }
+ 
+@@ -608,7 +607,7 @@ static int sr_block_compat_ioctl(struct block_device *bdev, fmode_t mode, unsign
+ 	void __user *argp = compat_ptr(arg);
+ 	int ret;
+ 
+-	mutex_lock(&sr_mutex);
++	mutex_lock(&cd->lock);
+ 
+ 	ret = scsi_ioctl_block_when_processing_errors(sdev, cmd,
+ 			(mode & FMODE_NDELAY) != 0);
+@@ -638,7 +637,7 @@ static int sr_block_compat_ioctl(struct block_device *bdev, fmode_t mode, unsign
+ 	scsi_autopm_put_device(sdev);
+ 
+ out:
+-	mutex_unlock(&sr_mutex);
++	mutex_unlock(&cd->lock);
+ 	return ret;
+ 
+ }
+@@ -745,6 +744,7 @@ static int sr_probe(struct device *dev)
+ 	disk = alloc_disk(1);
+ 	if (!disk)
+ 		goto fail_free;
++	mutex_init(&cd->lock);
+ 
+ 	spin_lock(&sr_index_lock);
+ 	minor = find_first_zero_bit(sr_index_bits, SR_DISKS);
+@@ -1055,6 +1055,8 @@ static void sr_kref_release(struct kref *kref)
+ 
+ 	put_disk(disk);
+ 
++	mutex_destroy(&cd->lock);
++
+ 	kfree(cd);
+ }
+ 
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index a2bb7b8bace5..339c624e04d8 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -20,6 +20,7 @@
+ 
+ #include <linux/genhd.h>
+ #include <linux/kref.h>
++#include <linux/mutex.h>
+ 
+ #define MAX_RETRIES	3
+ #define SR_TIMEOUT	(30 * HZ)
+@@ -51,6 +52,7 @@ typedef struct scsi_cd {
+ 	bool ignore_get_event:1;	/* GET_EVENT is unreliable, use TUR */
+ 
+ 	struct cdrom_device_info cdi;
++	struct mutex lock;
+ 	/* We hold gendisk and scsi_device references on probe and use
+ 	 * the refs on this kref to decide when to release them */
+ 	struct kref kref;
+-- 
+2.23.0
