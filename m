@@ -2,170 +2,87 @@ Return-Path: <SRS0=YE2i=4H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10A9CC34047
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 15:09:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEDEC34047
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 16:24:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E480A24670
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 15:09:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FDEB2465D
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 16:24:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sI/5SrP1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726735AbgBSPJd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Feb 2020 10:09:33 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51454 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726634AbgBSPJd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Feb 2020 10:09:33 -0500
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01JF6Nq0072644
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 10:09:32 -0500
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2y8xdnkxux-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 10:09:31 -0500
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bblock@linux.ibm.com>;
-        Wed, 19 Feb 2020 15:09:30 -0000
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Wed, 19 Feb 2020 15:09:27 -0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01JF9PgR54788154
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Feb 2020 15:09:25 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 61E0C52057;
-        Wed, 19 Feb 2020 15:09:25 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.152.212.144])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTPS id 4FD1F5204F;
-        Wed, 19 Feb 2020 15:09:25 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.92.3)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1j4Qyb-0047kL-1z; Wed, 19 Feb 2020 16:09:25 +0100
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Benjamin Block <bblock@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Fedor Loshakov <loshakov@linux.ibm.com>,
-        Jens Remus <jremus@linux.ibm.com>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH] zfcp: fix wrong data and display format of SFP+ temperature
-Date:   Wed, 19 Feb 2020 16:09:25 +0100
-X-Mailer: git-send-email 2.24.1
+        id S1726761AbgBSQY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Feb 2020 11:24:58 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:60044 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726659AbgBSQY6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Feb 2020 11:24:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=uTtv1oeHje05oqfK5vvQ8tLi/KVTH8AsIg1t2yM8W9o=; b=sI/5SrP1/o3kBho74acLhO+nxY
+        HlJhnTzdTFaK3w4D3DHUnw/P8ukFqbXG1KqUx3O7eoG6BnEwQjysuSCHMN6IMqWJm8BkTxrZ+73gh
+        QsZ2EH1QqmAdc7KTlMJbQ053qYlZJdJnUmSflw1hV/7t4ujlMK9mDJF3j6h4ItvRoKq7dAFAd4f6R
+        W8wCB4P+v7RpjqYrhSe/df6vtLsOwfi5tLuEORn9NSP6GT50s0jeiWsVp50SabmozBByywcZE4NOu
+        7U9qRMGWPVomSWdI06ETtjnkOHwdypNMw3y7itTjeNR5F1ylRXeIU6RY5fGM1dFoLVURC58OHi0Mp
+        PsFF5p9g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j4S9h-0001XN-Tq; Wed, 19 Feb 2020 16:24:57 +0000
+Date:   Wed, 19 Feb 2020 08:24:57 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sd_sbc: Fix sd_zbc_report_zones()
+Message-ID: <20200219162457.GA5614@infradead.org>
+References: <20200219063800.880834-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Organization: IBM Deutschland Research & Development GmbH, Vorsitz. AufsR. Gregor Pillen, Geschaeftsfuehrung Dirk Wittkopp, Sitz der Gesellschaft Boeblingen, Registergericht AmtsG Stuttgart, HRB 243294
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-x-cbid: 20021915-0016-0000-0000-000002E84E59
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20021915-0017-0000-0000-0000334B672F
-Message-Id: <d6e3be5428da5c9490cfff4df7cae868bc9f1a7e.1582039501.git.bblock@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-19_03:2020-02-19,2020-02-19 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- impostorscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501 adultscore=0
- lowpriorityscore=0 suspectscore=0 clxscore=1011 spamscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002190115
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200219063800.880834-1-damien.lemoal@wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When implementing support for retrieval of local diagnostic data from
-the FCP channel, the wrong data format was assumed for the temperature
-of the local SFP+ connector. The Fibre Channel Link Services (FC-LS-3)
-specification is not clear on the format of the stored integer, and only
-after consulting the SNIA specification SFF-8472 did we realize it is
-stored as two's complement. Thus, the used data and display format is
-wrong, and highly misleading for users when the temperature should drop
-below 0°C (however unlikely that may be).
+On Wed, Feb 19, 2020 at 03:38:00PM +0900, Damien Le Moal wrote:
+> The block layer generic blk_revalidate_disk_zones() checks the validity
+> of zone descriptors reported by a disk using the
+> blk_revalidate_zone_cb() callback function executed for each zone
+> descriptor. If a ZBC disk reports invalid zone descriptors,
+> blk_revalidate_disk_zones() returns an error and sd_zbc_read_zones()
+> changes the disk capacity to 0, which in turn results in the gendisk
+> structure capacity to be set to 0. This all works well for the first
+> revalidate pass on a disk and the block layer detects the capactiy
+> change.
+> 
+> On the second revalidate pass, blk_revalidate_disk_zones() is called
+> again and sd_zbc_report_zones() executed to check the zones a second
+> time. However, for this second pass, the gendisk capacity is now 0,
+> which results in sd_zbc_report_zones() to do nothing and to report
+> success and no zones. blk_revalidate_disk_zones() in turn returns
+> success and sets the disk queue chunk_sectors limit with zero as
+> no zones were checked, causing a oops to trigger on the
+> BUG_ON(!is_power_of_2(chunk_sectors)) in blk_queue_chunk_sectors().
+> 
+> Fix this by using the sdkp capacity field rather than the gendisk
+> capacity for the report zones loop in sd_zbc_report_zones(). Also add a
+> check to return immediately an error if the sdkp capacity is 0.
+> With this fix, invalid/buggy ZBC disk scan does not trigger a oops and
+> are exposed with a 0 capacity. This change also preserve the chance for
+> the disk to be correctly revalidated on the second revalidate pass as
+> the scsi disk structure capacity field is always set to the disk
+> reported value when sd_zbc_report_zones() is called.
+> 
+> Fixes: d41003513e61 ("block: rework zone reporting")
+> Cc: Cc: <stable@vger.kernel.org> # v5.5
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-To fix this, change the data format in `struct fsf_qtcb_bottom_port`
-from unsigned to signed, and change the printf format string used to
-generate `zfcp_sysfs_adapter_diag_sfp_temperature_show()` from `%hu` to
-`%hd`.
+Looks good,
 
-Fixes: a10a61e807b0 ("scsi: zfcp: support retrieval of SFP Data via Exchange Port Data")
-Fixes: 6028f7c4cd87 ("scsi: zfcp: introduce sysfs interface for diagnostics of local SFP transceiver")
-Cc: <stable@vger.kernel.org> # 5.5+
-Reviewed-by: Jens Remus <jremus@linux.ibm.com>
-Reviewed-by: Fedor Loshakov <loshakov@linux.ibm.com>
-Reviewed-by: Steffen Maier <maier@linux.ibm.com>
-Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
----
-
-Hello James, Martin,
-
-please consider this patch to be included in scsi-fixes, I also tagged
-it for stable. It fixes a bug I found with the exposed hardware
-diagnostics we introduced with 5.5.
-
-Tests have been done by injecting negative temperatures in the used data
-structures, in the same format specified in SNIA's SFF-8472 (Table
-9-2).
-
-    crash vmlinux /proc/kcore
-    p ((struct zfcp_adapter *)((struct ccw_device *)0x00000001be250800)->dev.driver_data)->diagnostics->port_data.data.temperature
-    $8 = 0xffff
-    crash> ^Z
-    [1]+  Stopped                 crash vmlinux /proc/kcore
-    ~ # cat /sys/bus/ccw/drivers/zfcp/0.0.1900/diagnostics/temperature
-    -1
-
-    crash vmlinux /proc/kcore
-    p ((struct zfcp_adapter *)((struct ccw_device *)0x00000001be250800)->dev.driver_data)->diagnostics->port_data.data.temperature
-    $9 = 0xff00
-    crash> ^Z
-    [1]+  Stopped                 crash vmlinux /proc/kcore
-    ~ # cat /sys/bus/ccw/drivers/zfcp/0.0.1900/diagnostics/temperature
-    -256
-
-Reviews and comments are welcome :-).
-
-
- drivers/s390/scsi/zfcp_fsf.h   | 2 +-
- drivers/s390/scsi/zfcp_sysfs.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
-index 2b1e4da1944f..4bfb79f20588 100644
---- a/drivers/s390/scsi/zfcp_fsf.h
-+++ b/drivers/s390/scsi/zfcp_fsf.h
-@@ -410,7 +410,7 @@ struct fsf_qtcb_bottom_port {
- 	u8 cb_util;
- 	u8 a_util;
- 	u8 res2;
--	u16 temperature;
-+	s16 temperature;
- 	u16 vcc;
- 	u16 tx_bias;
- 	u16 tx_power;
-diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
-index 494b9fe9cc94..a711a0d15100 100644
---- a/drivers/s390/scsi/zfcp_sysfs.c
-+++ b/drivers/s390/scsi/zfcp_sysfs.c
-@@ -800,7 +800,7 @@ static ZFCP_DEV_ATTR(adapter_diag, b2b_credit, 0400,
- 	static ZFCP_DEV_ATTR(adapter_diag_sfp, _name, 0400,		       \
- 			     zfcp_sysfs_adapter_diag_sfp_##_name##_show, NULL)
- 
--ZFCP_DEFINE_DIAG_SFP_ATTR(temperature, temperature, 5, "%hu");
-+ZFCP_DEFINE_DIAG_SFP_ATTR(temperature, temperature, 6, "%hd");
- ZFCP_DEFINE_DIAG_SFP_ATTR(vcc, vcc, 5, "%hu");
- ZFCP_DEFINE_DIAG_SFP_ATTR(tx_bias, tx_bias, 5, "%hu");
- ZFCP_DEFINE_DIAG_SFP_ATTR(tx_power, tx_power, 5, "%hu");
--- 
-2.24.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
