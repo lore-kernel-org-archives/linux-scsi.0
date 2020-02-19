@@ -2,142 +2,89 @@ Return-Path: <SRS0=YE2i=4H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 931F8C34047
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 16:52:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 708E1C34056
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 17:19:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 705252464E
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 16:52:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C74E24677
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 17:19:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582132791;
+	bh=M4r2Ez8Ut7guqGx0FgNf2afCC29E2/mHpY61lj2zi2Q=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=MHY7YS5tUOpDgVadNDF5XPpAjjkkn6rayz85hQ3AJPrL+Mb0p3ANBE5QHcXJ/cTjq
+	 ZYsCdVF44IXcbrzEYZqdGgOGBIUUCXe8wem3pV1i+HGF1MVHnRIpMVaHKPgyDkNXXp
+	 e98mYXS16PxMyThZLqm0LwAiUI+K/EuHOORwiIoI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgBSQwU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Feb 2020 11:52:20 -0500
-Received: from mout.kundenserver.de ([217.72.192.75]:52941 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726450AbgBSQwU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Feb 2020 11:52:20 -0500
-Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
- (mreue107 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1M8QFi-1j8sQZ3yPg-004Vt0; Wed, 19 Feb 2020 17:51:52 +0100
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Jens Axboe <axboe@kernel.dk>,
+        id S1726703AbgBSRTu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Feb 2020 12:19:50 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43112 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726514AbgBSRTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Feb 2020 12:19:50 -0500
+Received: from cam-smtp0.cambridge.arm.com (fw-tnat.cambridge.arm.com [217.140.96.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6E07C24656;
+        Wed, 19 Feb 2020 17:19:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582132790;
+        bh=M4r2Ez8Ut7guqGx0FgNf2afCC29E2/mHpY61lj2zi2Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=EVh769Q66PKvWmXOtHZCOavCS6fMoGlEmkjIVgVApkiaV+6PYHCzRxvcMeTgyuMXz
+         EExeUbAlJhdGRTL4ChntqilB1MEkdi5+5HKsC8N8pqXFQecOZOyL6x1E11HNrAjm53
+         aUS2ij0p8GYOW+IjChiiFHC3AgZzyIld2ZZniqM8=
+From:   Ard Biesheuvel <ardb@kernel.org>
+To:     linux-efi@vger.kernel.org
+Cc:     Ard Biesheuvel <ardb@kernel.org>,
+        Leif Lindholm <leif@nuviainc.com>,
+        Peter Jones <pjones@redhat.com>,
+        Alexander Graf <agraf@csgraf.de>,
+        Heinrich Schuchardt <xypron.glpk@gmx.de>,
+        Jeff Brasen <jbrasen@nvidia.com>,
+        Atish Patra <Atish.Patra@wdc.com>, x86@kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Adam Williamson <awilliam@redhat.com>,
-        Chris Murphy <bugzilla@colorremedies.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ben Hutchings <ben.hutchings@codethink.co.uk>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Tim Waugh <tim@cyberelk.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH] compat_ioctl, cdrom: Replace .ioctl with .compat_ioctl in four appropriate places
-Date:   Wed, 19 Feb 2020 17:50:07 +0100
-Message-Id: <20200219165139.3467320-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.25.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:s83bO8mKDR7xliqovCqp1GmWzEogAJvpGM54ZuLLH4pmNDsLTFY
- ZxQUDSrXrb28nM+9drVbtrJ8MxqeW1pcICoxq0M2y+aB7qvD7iMDpcHWlECDzZL3mhdhI8K
- BS8BYAcJqRI2ZWDXrlXqDDTO/DjF/Q05SjUWe1SBIBOeT7W12CpXurHmSTHy5X5VVQQIUtO
- bOHv7lVkw7ikMgz7kiz/w==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:6qcWV+qWiLI=:kjXIiUB/VicY7yGRA7ziGY
- 1kANGtrqCMHfXJf786bqSJ4WFSALkZjbMLtINIV4T+vxgzLgP14+/+o87XoB8AVtCbsM8kSU2
- JI4f2MPP0HNWgn+2LpS3cLb7xghKtlFrZesE8ZoHQdrwNQA8TYnwo7i8iyWT9HB/jOsfGV3LL
- 44C+RdOO+cVWTpSTxrIQlkh0FqrhHoevLjCx+9RY95AdV8S2y5F34wcsWwJ6ip0PT5kuzV6Il
- hzgefpeFTffFB3QgfQolJedi0HJGGr8LxI0ncuaVgWICAk3xBtKfPuNevbrVXP4lsI1AM8hgF
- e+AIJYY4vi0qSKjKANRQ/QT0Dx71Txo5/LLy3/UAuJTwirsg+AcLyZvPJMm64+1WptLr3b6BF
- RKNkDnFWVixEY95EGsfpmnYdt9NeK0dbodW6RUy81Q/jnEPU2MGfTAu1tIbqmB2W35IXC6DuF
- podvY+5Xxnq/2Q2vk9VqoBFXvehS9LY6pj6EZ5yEWpyT7NauOEat01WVpSczGhPHXHnEN/3h6
- aKIueqLHBKpGHnXYIjiuy2iGxQsibiG/eLbSbcBMKwYVdRWRbqcnHP4Kq9GTyLwL4dTE5USZi
- aPOlnrKGSAjB/LMbVO4F7dN1KG6ykrsF2HvXh7QxFP6Q1NvKuZte5cMMhgj1N8BSC4ARzLYxv
- LBdyXTSwHlhJGZV+d1tLgWwyR1mZFiTy0jP5n1sx42z9DwEe1XaujjxQN57RcT2S93y3Qj0Ky
- rm7R3B5pUNK3kdNFswGHNan0hA50VY7ikJxsHyKcBI69ebqUEeCdCLq1mGBHTdpDNsPeiCTQE
- 1WnDQxC7sbtImKsPybVj6QylWejuYsNDlTlTBj14+wohn9SOzM=
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 6/9] scsi: iscsi: use EFI GetVariable only when available
+Date:   Wed, 19 Feb 2020 18:19:04 +0100
+Message-Id: <20200219171907.11894-7-ardb@kernel.org>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200219171907.11894-1-ardb@kernel.org>
+References: <20200219171907.11894-1-ardb@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Adam Williamson <awilliam@redhat.com>
+Replace the EFI runtime services check with one that tells us whether
+EFI GetVariable() is implemented by the firmware.
 
-Arnd Bergmann inadvertently typoed these in d320a9551e394 and
-64cbfa96551a; they seem to be the cause of
-https://bugzilla.redhat.com/show_bug.cgi?id=1801353 , invalid
-SCSI commands when udev tries to query a DVD drive.
-
-[arnd] Found another instance of the same bug, also introduced
-in my compat_ioctl series.
-
-Fixes: d320a9551e39 ("compat_ioctl: scsi: move ioctl handling into drivers")
-Fixes: 64cbfa96551a ("compat_ioctl: move cdrom commands into cdrom.c")
-Fixes: c103d6ee69f9 ("compat_ioctl: ide: floppy: add handler")
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1801353
-Bisected-by: Chris Murphy <bugzilla@colorremedies.com>
-Signed-off-by: Adam Williamson <awilliam@redhat.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Ard Biesheuvel <ardb@kernel.org>
 ---
- drivers/block/paride/pcd.c | 2 +-
- drivers/cdrom/gdrom.c      | 2 +-
- drivers/ide/ide-gd.c       | 2 +-
- drivers/scsi/sr.c          | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/isci/init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index 117cfc8cd05a..cda5cf917e9a 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -276,7 +276,7 @@ static const struct block_device_operations pcd_bdops = {
- 	.release	= pcd_block_release,
- 	.ioctl		= pcd_block_ioctl,
- #ifdef CONFIG_COMPAT
--	.ioctl		= blkdev_compat_ptr_ioctl,
-+	.compat_ioctl	= blkdev_compat_ptr_ioctl,
- #endif
- 	.check_events	= pcd_block_check_events,
- };
-diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
-index 886b2638c730..c51292c2a131 100644
---- a/drivers/cdrom/gdrom.c
-+++ b/drivers/cdrom/gdrom.c
-@@ -519,7 +519,7 @@ static const struct block_device_operations gdrom_bdops = {
- 	.check_events		= gdrom_bdops_check_events,
- 	.ioctl			= gdrom_bdops_ioctl,
- #ifdef CONFIG_COMPAT
--	.ioctl			= blkdev_compat_ptr_ioctl,
-+	.compat_ioctl		= blkdev_compat_ptr_ioctl,
- #endif
- };
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index b48aac8dfcb8..974c3b9116d5 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -621,7 +621,7 @@ static int isci_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return -ENOMEM;
+ 	pci_set_drvdata(pdev, pci_info);
  
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 1bb99b556393..05c26986637b 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -361,7 +361,7 @@ static const struct block_device_operations ide_gd_ops = {
- 	.release		= ide_gd_release,
- 	.ioctl			= ide_gd_ioctl,
- #ifdef CONFIG_COMPAT
--	.ioctl			= ide_gd_compat_ioctl,
-+	.compat_ioctl		= ide_gd_compat_ioctl,
- #endif
- 	.getgeo			= ide_gd_getgeo,
- 	.check_events		= ide_gd_check_events,
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 0fbb8fe6e521..e4240e4ae8bb 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -688,7 +688,7 @@ static const struct block_device_operations sr_bdops =
- 	.release	= sr_block_release,
- 	.ioctl		= sr_block_ioctl,
- #ifdef CONFIG_COMPAT
--	.ioctl		= sr_block_compat_ioctl,
-+	.compat_ioctl	= sr_block_compat_ioctl,
- #endif
- 	.check_events	= sr_block_check_events,
- 	.revalidate_disk = sr_block_revalidate_disk,
+-	if (efi_enabled(EFI_RUNTIME_SERVICES))
++	if (efi_rt_services_supported(EFI_RT_SUPPORTED_GET_VARIABLE))
+ 		orom = isci_get_efi_var(pdev);
+ 
+ 	if (!orom)
 -- 
-2.25.0
+2.17.1
 
