@@ -2,155 +2,170 @@ Return-Path: <SRS0=YE2i=4H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E947C34047
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 10:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10A9CC34047
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 15:09:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33A0F208E4
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 10:33:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Lita4j8V"
+	by mail.kernel.org (Postfix) with ESMTP id E480A24670
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 Feb 2020 15:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726530AbgBSKdp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Feb 2020 05:33:45 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:23425 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726497AbgBSKdp (ORCPT
+        id S1726735AbgBSPJd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Feb 2020 10:09:33 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51454 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726634AbgBSPJd (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Feb 2020 05:33:45 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1582108425; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=rw6UHf0KTPLkHoH94qTywzRb5mw/2w3OWlPPBjvpPNw=;
- b=Lita4j8Vo+12yohtKUda38CRGo4YiaVYzSNZoQr1muQKs2rqct7K7PEzHmgEML0VHW1/kePF
- 1X5eiT+YKfWfwmuXH5KeLvhQe7RH+h9DXRjIkERHYvobZnmU+60JENE8t/eetP7Ud1XWj474
- rWkHxQSQ6y2AXIc9djTI1UDdyQk=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e4d0eff.7f3c98b57f80-smtp-out-n01;
- Wed, 19 Feb 2020 10:33:35 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 40509C4479C; Wed, 19 Feb 2020 10:33:35 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 75BA6C43383;
-        Wed, 19 Feb 2020 10:33:34 +0000 (UTC)
+        Wed, 19 Feb 2020 10:09:33 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01JF6Nq0072644
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 10:09:32 -0500
+Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2y8xdnkxux-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 10:09:31 -0500
+Received: from localhost
+        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.ibm.com>;
+        Wed, 19 Feb 2020 15:09:30 -0000
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Wed, 19 Feb 2020 15:09:27 -0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01JF9PgR54788154
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Feb 2020 15:09:25 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 61E0C52057;
+        Wed, 19 Feb 2020 15:09:25 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.152.212.144])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTPS id 4FD1F5204F;
+        Wed, 19 Feb 2020 15:09:25 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.92.3)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1j4Qyb-0047kL-1z; Wed, 19 Feb 2020 16:09:25 +0100
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Benjamin Block <bblock@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Fedor Loshakov <loshakov@linux.ibm.com>,
+        Jens Remus <jremus@linux.ibm.com>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH] zfcp: fix wrong data and display format of SFP+ temperature
+Date:   Wed, 19 Feb 2020 16:09:25 +0100
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 19 Feb 2020 18:33:34 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        Asutosh Das <asutoshd@codeaurora.org>, hongwus@codeaurora.org,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, asutoshd@codeaurora.org,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-Subject: Re: [PATCH v1 1/2] scsi: ufs: add required delay after gating
- reference clock
-In-Reply-To: <1582103495.26304.42.camel@mtksdccf07>
-References: <20200217093559.16830-1-stanley.chu@mediatek.com>
- <20200217093559.16830-2-stanley.chu@mediatek.com>
- <c6874825dd60ea04ed401fbd1b5cb568@codeaurora.org>
- <1581945168.26304.4.camel@mtksdccf07>
- <e518c4d1d94ec15e9c4c31c34a9e42d1@codeaurora.org>
- <1581946449.26304.15.camel@mtksdccf07>
- <56c1fc80919491d058d904fcc7301835@codeaurora.org>
- <a8cd5beee0a1e12a40da752c6cd9b5de@codeaurora.org>
- <1582103495.26304.42.camel@mtksdccf07>
-Message-ID: <bbb0b0637d9667d4691a9a28f9988dea@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=UTF-8
+Organization: IBM Deutschland Research & Development GmbH, Vorsitz. AufsR. Gregor Pillen, Geschaeftsfuehrung Dirk Wittkopp, Sitz der Gesellschaft Boeblingen, Registergericht AmtsG Stuttgart, HRB 243294
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+x-cbid: 20021915-0016-0000-0000-000002E84E59
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20021915-0017-0000-0000-0000334B672F
+Message-Id: <d6e3be5428da5c9490cfff4df7cae868bc9f1a7e.1582039501.git.bblock@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-19_03:2020-02-19,2020-02-19 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
+ impostorscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501 adultscore=0
+ lowpriorityscore=0 suspectscore=0 clxscore=1011 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002190115
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+When implementing support for retrieval of local diagnostic data from
+the FCP channel, the wrong data format was assumed for the temperature
+of the local SFP+ connector. The Fibre Channel Link Services (FC-LS-3)
+specification is not clear on the format of the stored integer, and only
+after consulting the SNIA specification SFF-8472 did we realize it is
+stored as two's complement. Thus, the used data and display format is
+wrong, and highly misleading for users when the temperature should drop
+below 0°C (however unlikely that may be).
 
-On 2020-02-19 17:11, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Wed, 2020-02-19 at 10:35 +0800, Can Guo wrote:
-> 
->> Since we all need this delay here, how about put the delay in the
->> entrence of ufshcd_setup_clocks(), before vops_setup_clocks()?
->> If so, we can remove all the delays we added in our vops since the
->> delay anyways delays everything inside ufshcd_setup_clocks().
->> 
-> 
-> Always putting the delay in the entrance of ufshcd_setup_clocks() may
-> add unwanted delay for vendors, just like your current implementation,
-> or some other vendors who do not want to disable the reference clock.
-> 
-> I think current patch is more reasonable because the delay is applied 
-> to
-> clock only named as "ref_clk" specifically.
-> 
-> If you needs to keep "ref_clk" in DT, would you consider to remove the
-> delay in your ufs_qcom_dev_ref_clk_ctrl() and let the delay happens via
-> common ufshcd_setup_clocks() only? However you may still need delay if
-> call path comes from ufs_qcom_pwr_change_notify().
-> 
-> What do you think?
-> 
+To fix this, change the data format in `struct fsf_qtcb_bottom_port`
+from unsigned to signed, and change the printf format string used to
+generate `zfcp_sysfs_adapter_diag_sfp_temperature_show()` from `%hu` to
+`%hd`.
 
-I agree current change is more reasonable from what it looks, but the 
-fact
-is that I canont remove the delay in ufs_qcom_dev_ref_clk_ctrl() even 
-with
-this change. On our platforms, ref_clk in DT serves multipule purposes,
-the ref_clk provided to UFS device is actually controlled in
-ufs_qcom_dev_ref_clk_ctrl(), which comes before where this change kicks 
-start,
-so if I remove the delay in ufs_qcom_dev_ref_clk_ctrl(), this change 
-cannot
-provide us the correct delay before gate the ref_clk provided to UFS 
-device.
+Fixes: a10a61e807b0 ("scsi: zfcp: support retrieval of SFP Data via Exchange Port Data")
+Fixes: 6028f7c4cd87 ("scsi: zfcp: introduce sysfs interface for diagnostics of local SFP transceiver")
+Cc: <stable@vger.kernel.org> # 5.5+
+Reviewed-by: Jens Remus <jremus@linux.ibm.com>
+Reviewed-by: Fedor Loshakov <loshakov@linux.ibm.com>
+Reviewed-by: Steffen Maier <maier@linux.ibm.com>
+Signed-off-by: Benjamin Block <bblock@linux.ibm.com>
+---
 
-> Always putting the delay in the entrance of ufshcd_setup_clocks() may
-> add unwanted delay for vendors, just like your current implementation,
-> or some other vendors who do not want to disable the reference clock.
+Hello James, Martin,
 
-I meant if we put the delay in the entrance, I will be able to remove
-the delay in ufs_qcom_dev_ref_clk_ctrl(). Meanwhile, we can add proper
-checks before the delay to make sure it is initiated only if ref_clk 
-needs
-to be disabled, i.e:
+please consider this patch to be included in scsi-fixes, I also tagged
+it for stable. It fixes a bug I found with the exposed hardware
+diagnostics we introduced with 5.5.
 
-if(!on && !skip_ref_clk && hba->dev_info.clk_gating_wait_us)
-     usleep_range();
+Tests have been done by injecting negative temperatures in the used data
+structures, in the same format specified in SNIA's SFF-8472 (Table
+9-2).
 
-Does this look better to you?
+    crash vmlinux /proc/kcore
+    p ((struct zfcp_adapter *)((struct ccw_device *)0x00000001be250800)->dev.driver_data)->diagnostics->port_data.data.temperature
+    $8 = 0xffff
+    crash> ^Z
+    [1]+  Stopped                 crash vmlinux /proc/kcore
+    ~ # cat /sys/bus/ccw/drivers/zfcp/0.0.1900/diagnostics/temperature
+    -1
 
-Anyways, we will see regressions with this change on our platforms, can 
-we
-have more discussions before get it merged? It should be OK if you go 
-with
-patch #2 alone first, right? Thanks.
+    crash vmlinux /proc/kcore
+    p ((struct zfcp_adapter *)((struct ccw_device *)0x00000001be250800)->dev.driver_data)->diagnostics->port_data.data.temperature
+    $9 = 0xff00
+    crash> ^Z
+    [1]+  Stopped                 crash vmlinux /proc/kcore
+    ~ # cat /sys/bus/ccw/drivers/zfcp/0.0.1900/diagnostics/temperature
+    -256
 
-Best regards,
-Can Guo.
+Reviews and comments are welcome :-).
 
->> Meanwhile, if you want to modify the delay
->> (hba->dev_info.clk_gating_wait_us) for some reasons, say for specific
->> UFS devices, you still can do it in vops_apply_dev_quirks().
->> 
->> What do you say?
->> 
->> Thanks,
->> Can Guo.
-> 
-> Thanks,
-> Stanley Chu
+
+ drivers/s390/scsi/zfcp_fsf.h   | 2 +-
+ drivers/s390/scsi/zfcp_sysfs.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
+index 2b1e4da1944f..4bfb79f20588 100644
+--- a/drivers/s390/scsi/zfcp_fsf.h
++++ b/drivers/s390/scsi/zfcp_fsf.h
+@@ -410,7 +410,7 @@ struct fsf_qtcb_bottom_port {
+ 	u8 cb_util;
+ 	u8 a_util;
+ 	u8 res2;
+-	u16 temperature;
++	s16 temperature;
+ 	u16 vcc;
+ 	u16 tx_bias;
+ 	u16 tx_power;
+diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
+index 494b9fe9cc94..a711a0d15100 100644
+--- a/drivers/s390/scsi/zfcp_sysfs.c
++++ b/drivers/s390/scsi/zfcp_sysfs.c
+@@ -800,7 +800,7 @@ static ZFCP_DEV_ATTR(adapter_diag, b2b_credit, 0400,
+ 	static ZFCP_DEV_ATTR(adapter_diag_sfp, _name, 0400,		       \
+ 			     zfcp_sysfs_adapter_diag_sfp_##_name##_show, NULL)
+ 
+-ZFCP_DEFINE_DIAG_SFP_ATTR(temperature, temperature, 5, "%hu");
++ZFCP_DEFINE_DIAG_SFP_ATTR(temperature, temperature, 6, "%hd");
+ ZFCP_DEFINE_DIAG_SFP_ATTR(vcc, vcc, 5, "%hu");
+ ZFCP_DEFINE_DIAG_SFP_ATTR(tx_bias, tx_bias, 5, "%hu");
+ ZFCP_DEFINE_DIAG_SFP_ATTR(tx_power, tx_power, 5, "%hu");
+-- 
+2.24.1
+
