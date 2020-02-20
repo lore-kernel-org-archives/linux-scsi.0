@@ -6,49 +6,49 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC260C3404C
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 04:49:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C52F0C34031
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 04:51:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A880424656
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 04:49:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EA212465D
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 04:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727922AbgBTEt3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 Feb 2020 23:49:29 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:34924 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727637AbgBTEt3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Feb 2020 23:49:29 -0500
-Received: by mail-pl1-f195.google.com with SMTP id g6so1050624plt.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 20:49:28 -0800 (PST)
+        id S1727922AbgBTEvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 Feb 2020 23:51:07 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:45878 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727806AbgBTEvH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Feb 2020 23:51:07 -0500
+Received: by mail-pl1-f196.google.com with SMTP id b22so1032279pls.12
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Feb 2020 20:51:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=6fbp7IfaIesFfYaHSMdlQNMpltNPLhuMUgtJ+6D/hv8=;
-        b=AHrxWPE8vlqdZxZeBltWWf8Bvukqxv4yeZPDIG5KqdRoem/j+V8nDoL3XQgd+IDYs1
-         LSJT/0LKSxz87Ga7WETikqSOIGnSP2A2rQcnpI+x7XagG+oaL09Dug4zj2nY4JPwy6JM
-         2XeCowsGeMyjnhz4AwZ2mFZGuLnLqvrs2rufm3RqwlFs/Q35q/awuTOP4nYdkGsC2KbZ
-         us8YgLXh25WppFL7IjSNpjaj1vqkZ94+WtMS7LVVoonUSnBY04fv7EQwSDhXv33Ep9e5
-         G6c48+XxXUAhODDMLiCP03ksxCS4O27Ydef4/MzLFfECxufX3V/LAXZHmtVZRnSbDzt3
-         /0yg==
-X-Gm-Message-State: APjAAAXAkicPb6iz9bNs+CF6wDuQO/+Azf17GRphX1tb/EQHgI76wT+v
-        cif8rYM48y0oGoU1L+alktOB+rbB1g0=
-X-Google-Smtp-Source: APXvYqwTOtAqkaKfIWY6frFFgB3JhLrDm4X58hX3eVh+7xTGgx5OoCFpRO5EC5Il7CGlAZUzJIJkbg==
-X-Received: by 2002:a17:902:ba8a:: with SMTP id k10mr30264995pls.333.1582174167973;
-        Wed, 19 Feb 2020 20:49:27 -0800 (PST)
+        bh=rvX3XEOXqDEH9MES5sM6cds1p7zG5/RC7LDBMlKugeU=;
+        b=RfwL7k2ItiZEEUelaGjR/TeeGN7BlzqmxnhzeE0D1XpioenLjNUazT7KeKIjVj3jd6
+         uEiQAIZ6GF+gHJgcnj0tFAIsqm/6O/TM9iO/yCPgZfYgDJUrvAdQY+YqR9L/MuWkqKV4
+         N1bsGK2SKzq91aYBHPI108apaXxuWLIz8/kswplFv3SsBjarxNQ1NwVxxGGm48KzFlGu
+         BkdBHGR/Fdn4ONj6WuM4N9Vtj47V55G5fJR+VxAnEPaRvq+Z4ViYKUDwstEjhcBlG5v9
+         M1ULAQKhcjI/Ox/MTf6eezmbb6ZQNo1AKRbMo7TbXkpqlheI6IWEQPffGZqEJdpS+z96
+         iaxg==
+X-Gm-Message-State: APjAAAWclL3JnyOEiuVgTPwwnFxyTJKf6GJouNLyJ9yksoPcu/VCFwob
+        F4iTqut2T7Z49zaGQ5xJvcCIyf8hc4o=
+X-Google-Smtp-Source: APXvYqz9TaqARifec01OfdYWj2kMU7q+PLhcaExwWTN9FPY+N/cNY618C4h3V98GkqmjgKtzU47fyw==
+X-Received: by 2002:a17:90a:654a:: with SMTP id f10mr1450058pjs.50.1582174265877;
+        Wed, 19 Feb 2020 20:51:05 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:29a7:b1bb:5b40:3d61? ([2601:647:4000:d7:29a7:b1bb:5b40:3d61])
-        by smtp.gmail.com with ESMTPSA id d69sm1373596pfd.72.2020.02.19.20.49.26
+        by smtp.gmail.com with ESMTPSA id d22sm1284509pfo.187.2020.02.19.20.51.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Feb 2020 20:49:27 -0800 (PST)
-Subject: Re: [PATCH 1/3] ch: fixup refcounting imbalance for SCSI devices
+        Wed, 19 Feb 2020 20:51:05 -0800 (PST)
+Subject: Re: [PATCH 2/3] ch: synchronize ch_probe() and ch_open()
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org
 References: <20200213153207.123357-1-hare@suse.de>
- <20200213153207.123357-2-hare@suse.de>
+ <20200213153207.123357-3-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <03c4146b-59f7-18d9-2283-d5499e4280f4@acm.org>
-Date:   Wed, 19 Feb 2020 20:49:25 -0800
+Message-ID: <e4e0ea82-3651-df94-78a6-85060ea9fe85@acm.org>
+Date:   Wed, 19 Feb 2020 20:51:04 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200213153207.123357-2-hare@suse.de>
+In-Reply-To: <20200213153207.123357-3-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -88,13 +88,11 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-02-13 07:32, Hannes Reinecke wrote:
-> The SCSI device is required to be present during ch_probe()
-> and ch_open(). But the SCSI device itself is only checked during
-> ch_open(), so it's anyones guess if it had been present during
-> ch_probe(). And consequently we can't reliably detach it during
-> ch_release(), as ch_remove() might have been called first.
-> So initialize the changer device during ch_probe(), and
-> take a reference to the SCSI device during both ch_probe()
-> and ch_open().
+> The 'ch' device node is created before the configuration is
+> being read in, which leads to a race window when ch_open() is called
+> before that.
+> To avoid any races we should be taking the device mutex during
+> ch_readconfig() and ch_init_elem(), and also during ch_open().
+> That ensures ch_probe is finished before ch_open() completes.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
