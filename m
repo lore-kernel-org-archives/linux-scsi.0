@@ -2,177 +2,129 @@ Return-Path: <SRS0=qpW3=4I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE88C11D0B
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 16:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57445C11D12
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 16:28:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 323EB24672
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 16:02:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39256208C4
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 16:28:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728601AbgBTQCb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Feb 2020 11:02:31 -0500
-Received: from mx2.suse.de ([195.135.220.15]:44352 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728410AbgBTQCa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Feb 2020 11:02:30 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id E8B81ADD9;
-        Thu, 20 Feb 2020 16:02:28 +0000 (UTC)
-From:   Antonio Larrosa <alarrosa@suse.de>
-Subject: ioctl seems to change errno behaviour in 5.6.0rc2
-Autocrypt: addr=alarrosa@suse.de; prefer-encrypt=mutual; keydata=
- mQGiBD8pc34RBADax1+cDEPv04aOUxFQ1N947ZeER5rbOwA4THsMnFbdJd3cQealCk3SkGx/
- 1CkHCAp8MKmIFWg73zDWBjyWJ4OMPkfhsSZRSW2LgQ6XAEylnZJjrmldBOF/6mrvaGhtTtrs
- F0FXsqO12QpljCb5O0pqKZbsUcaZETqkFcMM9/9ijwCgxVq/f3znU/gbfKcKs2dKwWdD4UkE
- AKQZoP0WIlGplrWLd+FVY0ElvxPqamKrGLsEnoSfjk7N+hjo5QqWRhNMhjhIE+ghur2EP9lD
- PmCHXuXuPfg9O26SdW3ea6zxeUsj7tfsN3loEbTZ45oEULwVv6FM3Jnk7sYr8+GwUoar0ZjY
- W+MtEnV5tLLQv9v1b72QT4YDrpAiA/9W7FNMmN8g6a9YM1vzjUO17xEA0xOe0UgraiFe3Ag4
- IMKoICvll666LjHCwqATjYtYoZ9Bvmc4EMyAHyIlj3/gwQGTfabmNzt70uUu0/+rmdF683KK
- 48riI/tEw4QWDQvKShSuVNlwa8Q+2ZhLGTY3xByHBvU9yT6PS9398gobZbQrQW50b25pbyBM
- YXJyb3NhIEppbcOpbmV6IDxhbGFycm9zYUBzdXNlLmRlPohjBBMRAgAjBQJSAKP/AhsDBwsJ
- CAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQ3mWkZZAItZAMJACfePOU9E2m5r8UKeuhoOUV
- ov8VE+AAoLfpxeB3YJAD5Sk8g0XEQ6U/IRSnuQINBD8pc4cQCACaRlpl+4QHEOcT4BdHFvwl
- rUYIPkHkQGqFQdBx1+9lo7F1FMRVnqe1HF4MTNPaWIjcze3TbeTh5XMhNgdT3zEyilPu3oQ7
- HcKvBigQOqfzLLhs3ay+2A+Rhv2HJd+V8RUb5go0SK4VnOyFtmA4P7t805HYVvLiV9c8dyOt
- kpuazNKqzpmz0bWIcoTli0FWekPkEmzwiU0AcRPO0ftRYVv4oIf/Rf7ReeQN1EK2gYRc902R
- W6mVRZthfllUXtAVb1M/hXTagu9s/jXYngE7ld7FtJ4ZicFwkrx14ko/08ZnbY/Vpfgu4QU3
- ze72Dl/4gNksLKIM47V+xprtMyNr5rg7AAMFB/9KPipiSB6Kxh8loHb9Wki2SzPnK5JQxU2s
- IBYXa88M8az2qjq3SkrBP7ckHGiqswzIF70gdUYrH4q7jNMpAikI1ABo+sHnCMYRgamZnfft
- EJSsrGKhnj0+VsYTlf9d+YxoWHfi4bkhidySD7evA/kmW4lQoX8zTjw1sqgqIFxeBmYizhMy
- prlxBBc7AGPy+ZSH0kvgH3XgiAz5+iUw5XibccJha7SfHztmMM/swxTQNLSp0bOyWfrR56lw
- D43kfUVx0SFSy/YqtEUN/PwW0n5pxa5mOmZMdFwKih/31kL2F7EwN5pmN+D6ECkKCiJMeYCn
- YEq8X+S1iZzz8rms4lUYiEYEGBECAAYFAj8pc4cACgkQ3mWkZZAItZA0QQCdGIzCpf1tHypW
- +d3i2kPyMOeZ80MAmwZBSIo8R9KruBK9rohkjiDfFDvV
-To:     Doug Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-scsi@vger.kernel.org
-Message-ID: <68516393-f24a-dbb5-4c81-99fb1b70bb6f@suse.de>
-Date:   Thu, 20 Feb 2020 17:02:27 +0100
+        id S1728759AbgBTQ2T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Feb 2020 11:28:19 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37207 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728384AbgBTQ2T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Feb 2020 11:28:19 -0500
+Received: by mail-pf1-f193.google.com with SMTP id p14so2167182pfn.4
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Feb 2020 08:28:18 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=oxz6C3dKFO9CzkuaAEMikP5JOe7URCIE/6uFToYyeys=;
+        b=rAsoH6yEauq/q6pwKpvnIxYswNtg/fJtzXZAWeKgJOFU3M8wamkukdtZHuyXL94VDN
+         47h2akxL/Ih5jGoEJdfv1Cghemuydv/XxYC7SFk8iMjItzHEC8zQXDMWan8fDno69bFc
+         xufyFKvobRMg1qKFGKI+2o9ZZi8TqJBB725ThwwJC4YkAMxrsCKIEPg0Iz4Nm+nB7A2y
+         Erd84D8hmctcFswMFHzLdi0b7H8zhx6U10cEZ3p/FAOOjTCeAercfsP6zx19eS+/C3rz
+         AsCpv6Cta9Vmz+YGuGWIIunTm2nEOwBv+FTRtx1CthFUE/qlmjZhYyLDNoo3+pR4Ce2J
+         qzDQ==
+X-Gm-Message-State: APjAAAXAnlY3+PsEKBd0owhFspnxHoGqOKTsAWcblKrMMik/bHkAkDJl
+        3lfVIrBdGI+kwMIjIzE5c0VhXwAx
+X-Google-Smtp-Source: APXvYqyOodspx/iVBOT91SxuS5iMEvmuCSXw3KImkrqPIf+WcLHk2lNrs7bTMHLyRgm4PO63kenNXQ==
+X-Received: by 2002:a63:8f59:: with SMTP id r25mr35265464pgn.280.1582216098256;
+        Thu, 20 Feb 2020 08:28:18 -0800 (PST)
+Received: from ?IPv6:2620:15c:2d1:206:bfe1:be9c:5072:1789? ([2620:15c:2d1:206:bfe1:be9c:5072:1789])
+        by smtp.gmail.com with ESMTPSA id w8sm65250pfn.186.2020.02.20.08.28.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 20 Feb 2020 08:28:17 -0800 (PST)
+Subject: Re: [PATCH v3 4/5] qla2xxx: Convert MAKE_HANDLE() from a define into
+ an inline function
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200220043441.20504-1-bvanassche@acm.org>
+ <20200220043441.20504-5-bvanassche@acm.org>
+ <20200220082155.c2dwknz2hcvwhwcg@beryllium.lan>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <e91c9277-8a98-6e08-6219-005d03ee97c8@acm.org>
+Date:   Thu, 20 Feb 2020 08:28:16 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------9444AF95A2D512A04BF03B9C"
+In-Reply-To: <20200220082155.c2dwknz2hcvwhwcg@beryllium.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------9444AF95A2D512A04BF03B9C
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+On 2/20/20 12:21 AM, Daniel Wagner wrote:
+> On Wed, Feb 19, 2020 at 08:34:40PM -0800, Bart Van Assche wrote:
+>> -#define MAKE_HANDLE(x, y) ((uint32_t)((((uint32_t)(x)) << 16) | (uint32_t)(y)))
+>> +static inline uint32_t make_handle(uint16_t x, uint16_t y)
+>> +{
+>> +	return ((uint32_t)x << 16) | y;
+>> +}
+>>   
+>>   /*
+>>    * I/O register
+>> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+>> index 47bf60a9490a..1816660768da 100644
+>> --- a/drivers/scsi/qla2xxx/qla_iocb.c
+>> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
+>> @@ -530,7 +530,7 @@ __qla2x00_marker(struct scsi_qla_host *vha, struct qla_qpair *qpair,
+>>   			int_to_scsilun(lun, (struct scsi_lun *)&mrk24->lun);
+>>   			host_to_fcp_swap(mrk24->lun, sizeof(mrk24->lun));
+>>   			mrk24->vp_index = vha->vp_idx;
+>> -			mrk24->handle = MAKE_HANDLE(req->id, mrk24->handle);
+>> +			mrk24->handle = make_handle(req->id, mrk24->handle);
+> 
+> The type of mrk24->handle is uint32_t and make_handle() is using type
+> uint16_t. Shouldn't the argument type for the y argument be uint32_t
+> as well?
 
-Hello,
+Hi Daniel,
 
-I noticed cdparanoia stopped working with kernel 5.6.0rc2 while it worked fine
-with 5.5.2 .
+As one can see in __qla2x00_marker() a value is assigned to 
+mrk24->handle() by __qla2x00_alloc_iocbs(). That function calls 
+qla2xxx_get_next_handle() to determine the 'handle' value. The 
+implementation of that last function is as follows:
 
-Running as root `cdparanoia -v -d /dev/sr0 [0]` with 5.6.0rc2, gives the
-following errors:
+uint32_t qla2xxx_get_next_handle(struct req_que *req)
+{
+	uint32_t index, handle = req->current_outstanding_cmd;
 
-Testing /dev/sr0 for SCSI/MMC interface
-        no SG_IO support for device: /dev/sr0
-Error trying to open /dev/sga exclusively (No such file or directory).
+	for (index = 1; index < req->num_outstanding_cmds; index++) {
+		handle++;
+		if (handle == req->num_outstanding_cmds)
+			handle = 1;
+		if (!req->outstanding_cmds[handle])
+			return handle;
+	}
 
-I checked that the sg module is loaded with both kernels and also did a diff of
-the lsmod output with both kernels and didn't find anything suspicious.
-
-After some tests, I did a small c application using code from cdparanoia where
-it can be seen that the ioctl(fd, SG_IO, &hdr) call returns EINVAL in errno with
-the 5.5.2 kernel but returns EFAULT with 5.6.0rc2 .
-
-The code is attached and can be built just with `gcc test.c -o test` (note it's
-hardcoded in main to use /dev/sr0, so it doesn't have any parameter).
-
-Note that I'm not a cdparanoia developer (in fact, it seems to have been
-unmaintained for many years), but I thought it might be interesting to report an
-ioctl that changes the behaviour in different kernels.
-
-Greetings,
-
--- 
-Antonio Larrosa
-
---------------9444AF95A2D512A04BF03B9C
-Content-Type: text/x-csrc; charset=UTF-8;
- name="test.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="test.c"
-
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <scsi/sg.h>
-
-int check_sgio(const char *device){
-  int fd;
-  struct sg_io_hdr hdr;
-
-  if (!device) return 0;
-
-  /* we don't really care what type of device it is -- if it can do
-   * SG_IO, then we'll put it through the normal mmc/atapi/etc tests
-   * later, but it's good enough for now. */
-  fd = open(device, O_RDWR|O_NONBLOCK);
-  if (fd < 0){
-    printf("Could not access device %s to test for SG_IO support\n",device);
-    return 0;
-  }
-
-  memset(&hdr, 0, sizeof (struct sg_io_hdr));
-  /* First try with interface_id = 'A'; for all but the sg case,
-   * that'll get us a -EINVAL if it supports SG_IO, and some other
-   * error for all other cases. */
-  hdr.interface_id = 'A';
-  if (ioctl(fd, SG_IO, &hdr)) {
-    int err=errno;
-    printf("errno: %d\n", err);
-    switch (err) {
-    case EINVAL: /* sr and ata give us EINVAL when SG_IO is
-                  * supported but interface_id is bad. */
-
-    case ENOSYS: /* sg gives us ENOSYS when SG_IO is supported but
-                  * interface_id is bad.  IMHO, this is wrong and
-                  * needs fixing in the kernel. */
-
-      close(fd);
-      return 1;
-
-    default: /* everything else gives ENOTTY, I think.  I'm just
-              * going to be paranoid and reject everything else. */
-
-      close(fd);
-      return 0;
-
-    }
-  }
-  /* if we get here, something is dreadfuly wrong. ioctl(fd,SG_IO,&hdr)
-   * handled SG_IO, but took hdr.interface_id = 'A' as valid, and an empty
-   * command as good.  Don't trust it. */
-  printf("closing\n");
-  close(fd);
-  return 0;
+	return 0;
 }
 
-int main(int argc, char**argv)
-{
-  const char *specialized_device = "/dev/sr0";
+Since 'num_outstanding_cmds' is a 16-bit variable I think that 
+guarantees that the code quoted in your e-mail passes a 16-bit value as 
+the second argument to make_handle().
 
-  if(check_sgio(specialized_device)){
-     printf("SG_IO device: %s\n",specialized_device);
-  }else{
-     printf("no SG_IO support for device: %s\n",specialized_device);
-  }
-  return 0;
-};
+Additionally, if the second argument to make_handle() would be larger 
+than 0x10000, the following code from qla2x00_status_entry() would map 
+sts->handle to another queue and another command than those through wich 
+the command was submitted to the firmware:
 
---------------9444AF95A2D512A04BF03B9C--
+	handle = (uint32_t) LSW(sts->handle);
+	que = MSW(sts->handle);
+	req = ha->req_q_map[que];
+
+Bart.
