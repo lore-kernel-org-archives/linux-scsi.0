@@ -2,40 +2,42 @@ Return-Path: <SRS0=qpW3=4I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97672C11D0C
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 20:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9792AC11D1E
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 20:08:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 771D8207FD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 20:08:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E74C208CD
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 Feb 2020 20:08:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729045AbgBTUIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 Feb 2020 15:08:48 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:47204 "EHLO smtp.infotech.no"
+        id S1729058AbgBTUIv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 Feb 2020 15:08:51 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:47222 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728770AbgBTUIs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Feb 2020 15:08:48 -0500
+        id S1728969AbgBTUIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 20 Feb 2020 15:08:50 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 3485C204259;
-        Thu, 20 Feb 2020 21:08:45 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 99F5720425C;
+        Thu, 20 Feb 2020 21:08:48 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id aHTkePfw4SU1; Thu, 20 Feb 2020 21:08:42 +0100 (CET)
+        with ESMTP id 8pPHScGk1zHm; Thu, 20 Feb 2020 21:08:46 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id C46A1204155;
-        Thu, 20 Feb 2020 21:08:41 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id B400B204155;
+        Thu, 20 Feb 2020 21:08:45 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         Damien.LeMoal@wdc.com
-Subject: [PATCH v3 00/15] host managed ZBC + doublestore
-Date:   Thu, 20 Feb 2020 15:08:23 -0500
-Message-Id: <20200220200838.15809-1-dgilbert@interlog.com>
+Subject: [PATCH v3 03/15] scsi_debug: implement verify(10), add verify(16)
+Date:   Thu, 20 Feb 2020 15:08:26 -0500
+Message-Id: <20200220200838.15809-4-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200220200838.15809-1-dgilbert@interlog.com>
+References: <20200220200838.15809-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -43,105 +45,196 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patchset is a follow-on from an earlier patchset titled:
-    [RFC v2 0/6] scsi_debug: random doublestore verify
-posted on the linux-scsi list on 20200109.
+With the addition of the doublestore option, the ability to check
+whether the two different ramdisk images are the same or not
+becomes useful. Prior to this patch VERIFY(10) always returned
+true (i.e. the SCSI GOOD status) without checking. This option
+adds support for BYTCHK equal to 1 and 3 . If the comparison
+fails then a sense key of MISCOMPARE is returned as per the
+T10 standards. Add support for the VERIFY(16).
 
-The major addition is support for host-managed ZBC devices.
-The bulk of the work in this area was done by Damien Le Moal.
-It allows ZBC devices with a mix of conventional and
-"sequential write required" zones to be specified. These
-follow the same model as direct access devices in this
-driver. Namely, each device has its own metadata (including
-its write pointer(s)) but all (scsi_debug) devices share the
-same user data store (see doublestore below).
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 103 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 95 insertions(+), 8 deletions(-)
 
-Significantly, this simulation passes the test/zbc_tests.sh
-script in the https://github.com/hgst/libzbc repository.
-
-The lower numbered patches in this set contain various
-measures to improve the speed and usefulness of this driver.
-It is being used to test the rewrite of the SCSI generic (sg)
-driver which is still underway. Disk to disk copies are the
-test of choice by the author [DG]. Comparing the results
-between (simulated) disks is useless since all scsi_debug
-devices share the same user data store. This limitation was
-circumvented by adding the doublestore parameter. When set,
-doublestore doubles the data store and allocates them in an
-alternating pattern to each scsi_debug device. To enhance
-the comparisons, simulations of VERIFY(10 and 16) commands
-have been added. A further enhancement is to simulate the
-PRE-FETCH command (which does nothing as the data is
-already cached).
-
-doublestore can also help with ZBC testing. Single threaded
-copy commands like dd (and ddpt) can be used to copy one
-non-empty zone into another empty zone. Multiple-threaded
-copies (e.g. sgp_dd) can do out-of-order WRITEs which
-become a WRITE VIOLATION error in a "sequential write
-required" zone.
-
-The author [DG] found that precise command duration timing
-gave a false impression of how "bulletproof" the sg driver
-state machines and locking were. The first patch involves
-randomizing the command durations and it did expose various
-issues in the driver under test (sg).
-
-Since all scsi_debug memory store accesses are done in the
-context of queuecommand() call, the *_irqsave() and
-*_irqrestore() variants of the associated locks have been
-removed.  That could be a problem if queuecommand() can ever
-be called form an interrupt or related context.
-
-Finally to address the discrepancy between command duration
-times seen by the sg driver compared to what was set with
-this driver's ndelay option, this driver's timekeeping for
-short durations was made more accurate.
-
-If and when this patchset is accepted, this page will be
-updated:   http://sg.danny.cz/sg/sdebug26.html
-This patchset is against Martin Petersen's git repository
-and its 5.7/scsi-queue branch.
-
-Changes since v2 (RFC):
-  - add support for host-managed zbc devices with
-    conventional and "sequential write required"
-    zones [DLM]
-
-Changes since v1 (RFC):
-  - testing with version 1 caused several strange crashes that
-    turned out to be caused by a code trick to read in the
-    data-out buffer but _not_ place it in the big fake_storep
-    array. This approach failed badly when multiple threads
-    were doing verifies at the same time.
-  - replace the code trick with a new do_dout_fetch() function
-  - since the code trick was borrowed from the COMPARE AND
-    WRITE implementation [resp_comp_write()] using
-    do_dout_fetch() fixes the same bug in the existing driver
-    which hasn't been reported (yet).
-
-Damien Le Moal (3):
-  scsi_debug: zone_max_open module parameter
-  scsi_debug: zone_nr_conv module parameter
-  scsi_debug: zone_size_mb module parameter
-
-Douglas Gilbert (12):
-  scsi_debug: randomize command completion time
-  scsi_debug: add doublestore option
-  scsi_debug: implement verify(10), add verify(16)
-  scsi_debug: weaken rwlock around ramdisk access
-  scsi_debug: improve command duration calculation
-  scsi_debug: implement pre-fetch commands
-  scsi_debug: expand zbc support
-  scsi_debug: add zone commands
-  scsi_debug: zbc module parameter
-  scsi_debug: re-arrange parameters alphabetically
-  scsi_debug: zbc parameter can be string
-  scsi_debug: bump to version 1.89
-
- drivers/scsi/scsi_debug.c | 1593 ++++++++++++++++++++++++++++++++-----
- 1 file changed, 1389 insertions(+), 204 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index a32be83b22c7..0cd27eca263a 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -342,7 +342,7 @@ enum sdeb_opcode_index {
+ 	SDEB_I_SERV_ACT_OUT_16 = 13,	/* add ...SERV_ACT_OUT_12 if needed */
+ 	SDEB_I_MAINT_IN = 14,
+ 	SDEB_I_MAINT_OUT = 15,
+-	SDEB_I_VERIFY = 16,		/* 10 only */
++	SDEB_I_VERIFY = 16,		/* VERIFY(10), VERIFY(16) */
+ 	SDEB_I_VARIABLE_LEN = 17,	/* READ(32), WRITE(32), WR_SCAT(32) */
+ 	SDEB_I_RESERVE = 18,		/* 6, 10 */
+ 	SDEB_I_RELEASE = 19,		/* 6, 10 */
+@@ -385,7 +385,8 @@ static const unsigned char opcode_ind_arr[256] = {
+ 	0, SDEB_I_VARIABLE_LEN,
+ /* 0x80; 0x80->0x9f: 16 byte cdbs */
+ 	0, 0, 0, 0, 0, SDEB_I_ATA_PT, 0, 0,
+-	SDEB_I_READ, SDEB_I_COMP_WRITE, SDEB_I_WRITE, 0, 0, 0, 0, 0,
++	SDEB_I_READ, SDEB_I_COMP_WRITE, SDEB_I_WRITE, 0,
++	0, 0, 0, SDEB_I_VERIFY,
+ 	0, SDEB_I_SYNC_CACHE, 0, SDEB_I_WRITE_SAME, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, SDEB_I_SERV_ACT_IN_16, SDEB_I_SERV_ACT_OUT_16,
+ /* 0xa0; 0xa0->0xbf: 12 byte cdbs */
+@@ -427,6 +428,7 @@ static int resp_report_tgtpgs(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_unmap(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_rsup_opcodes(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_rsup_tmfs(struct scsi_cmnd *, struct sdebug_dev_info *);
++static int resp_verify(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_write_same_10(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_write_same_16(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_comp_write(struct scsi_cmnd *, struct sdebug_dev_info *);
+@@ -471,6 +473,12 @@ static const struct opcode_info_t write_iarr[] = {
+ 		   0xbf, 0xc7, 0, 0, 0, 0} },
+ };
+ 
++static const struct opcode_info_t verify_iarr[] = {
++	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_MEDIA_IO, resp_verify,/* VERIFY(10) */
++	    NULL, {10,  0xf7, 0xff, 0xff, 0xff, 0xff, 0xbf, 0xff, 0xff, 0xc7,
++		   0, 0, 0, 0, 0, 0} },
++};
++
+ static const struct opcode_info_t sa_in_16_iarr[] = {
+ 	{0, 0x9e, 0x12, F_SA_LOW | F_D_IN, resp_get_lba_status, NULL,
+ 	    {16,  0x12, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+@@ -571,9 +579,10 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
+ /* 15 */
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL, /* MAINT OUT */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+-	{0, 0x2f, 0, F_D_OUT_MAYBE | FF_MEDIA_IO, NULL, NULL, /* VERIFY(10) */
+-	    {10,  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc7,
+-	     0, 0, 0, 0, 0, 0} },
++	{ARRAY_SIZE(verify_iarr), 0x8f, 0,
++	    F_D_OUT_MAYBE | FF_MEDIA_IO, resp_verify,	/* VERIFY(16) */
++	    verify_iarr, {16,  0xf6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++			  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} },
+ 	{ARRAY_SIZE(vl_iarr), 0x7f, 0x9, F_SA_HIGH | F_D_IN | FF_MEDIA_IO,
+ 	    resp_read_dt0, vl_iarr,	/* VARIABLE LENGTH, READ(32) */
+ 	    {32,  0xc7, 0, 0, 0, 0, 0x3f, 0x18, 0x0, 0x9, 0xfe, 0, 0xff, 0xff,
+@@ -2556,7 +2565,8 @@ static int do_dout_fetch(struct scsi_cmnd *scmd, u32 num, u8 *doutp)
+ /* If lba2fake_store(lba,num) compares equal to arr(num), then copy top half of
+  * arr into lba2fake_store(lba,num) and return true. If comparison fails then
+  * return false. */
+-static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num)
++static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num,
++			      bool compare_only)
+ {
+ 	bool res;
+ 	u64 block, rest = 0;
+@@ -2578,6 +2588,8 @@ static bool comp_write_worker(u64 lba, u32 num, const u8 *arr, int acc_num)
+ 			     rest * lb_size);
+ 	if (!res)
+ 		return res;
++	if (compare_only)
++		return true;
+ 	arr += num * lb_size;
+ 	memcpy(fsp + (block * lb_size), arr, (num - rest) * lb_size);
+ 	if (rest)
+@@ -3491,7 +3503,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 		sdev_printk(KERN_INFO, scp->device, "%s: compare_write: cdb "
+ 			    "indicated=%u, IO sent=%d bytes\n", my_name,
+ 			    dnum * lb_size, ret);
+-	if (!comp_write_worker(lba, num, arr, scp2acc_num(scp))) {
++	if (!comp_write_worker(lba, num, arr, acc_num, false)) {
+ 		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
+ 		retval = check_condition_result;
+ 		goto cleanup;
+@@ -3555,7 +3567,7 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		if (ret)
+ 			goto out;
+ 
+-		unmap_region(lba, num, scp2acc_num(scp));
++		unmap_region(lba, num, acc_num);
+ 	}
+ 
+ 	ret = 0;
+@@ -3736,6 +3748,81 @@ static int resp_report_luns(struct scsi_cmnd *scp,
+ 	return res;
+ }
+ 
++static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
++{
++	bool is_bytchk3 = false;
++	u8 bytchk;
++	int ret, j;
++	int acc_num = scp2acc_num(scp);
++	u32 vnum, a_num, off;
++	const u32 lb_size = sdebug_sector_size;
++	unsigned long iflags;
++	u64 lba;
++	u8 *arr;
++	u8 *cmd = scp->cmnd;
++
++	bytchk = (cmd[1] >> 1) & 0x3;
++	if (bytchk == 0) {
++		return 0;	/* always claim internal verify okay */
++	} else if (bytchk == 2) {
++		mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, 2);
++		return check_condition_result;
++	} else if (bytchk == 3) {
++		is_bytchk3 = true;	/* 1 block sent, compared repeatedly */
++	}
++	switch (cmd[0]) {
++	case VERIFY_16:
++		lba = get_unaligned_be64(cmd + 2);
++		vnum = get_unaligned_be32(cmd + 10);
++		break;
++	case VERIFY:		/* is VERIFY(10) */
++		lba = get_unaligned_be32(cmd + 2);
++		vnum = get_unaligned_be16(cmd + 7);
++		break;
++	default:
++		mk_sense_invalid_opcode(scp);
++		return check_condition_result;
++	}
++	a_num = is_bytchk3 ? 1 : vnum;
++	/* Treat following check like one for read (i.e. no write) access */
++	ret = check_device_access_params(scp, lba, a_num, false);
++	if (ret)
++		return ret;
++
++	arr = kcalloc(lb_size, vnum, GFP_ATOMIC);
++	if (!arr) {
++		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
++				INSUFF_RES_ASCQ);
++		return check_condition_result;
++	}
++	/* Not changing store, so only need read access */
++	read_lock_irqsave(ramdisk_lck_a[acc_num % 2], iflags);
++
++	ret = do_dout_fetch(scp, a_num, arr);
++	if (ret == -1) {
++		ret = DID_ERROR << 16;
++		goto cleanup;
++	} else if (sdebug_verbose && (ret < (a_num * lb_size))) {
++		sdev_printk(KERN_INFO, scp->device,
++			    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
++			    my_name, __func__, a_num * lb_size, ret);
++	}
++	if (is_bytchk3) {
++		for (j = 1, off = lb_size; j < vnum; ++j, off += lb_size)
++			memcpy(arr + off, arr, lb_size);
++	}
++	ret = 0;
++	if (!comp_write_worker(lba, vnum, arr, acc_num, true)) {
++		mk_sense_buffer(scp, MISCOMPARE, MISCOMPARE_VERIFY_ASC, 0);
++		ret = check_condition_result;
++		goto cleanup;
++	}
++cleanup:
++	read_unlock_irqrestore(ramdisk_lck_a[acc_num % 2], iflags);
++	kfree(arr);
++	return ret;
++}
++
+ static struct sdebug_queue *get_queue(struct scsi_cmnd *cmnd)
+ {
+ 	u32 tag = blk_mq_unique_tag(cmnd->request);
 -- 
 2.25.0
 
