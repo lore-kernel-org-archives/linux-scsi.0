@@ -2,78 +2,124 @@ Return-Path: <SRS0=iCCw=4J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A81BBC35658
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 14:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5554BC35656
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:33:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75077206EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 14:20:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E5412073A
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:33:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DZyV9UxL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="IzElhE0b";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="fRcfF4f5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728646AbgBUOUU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 09:20:20 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:36952 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728081AbgBUOUT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 09:20:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=LytBCHQtySSQHC//YYsk3cTp1SDQnnhLtWFiulJBZy8=; b=DZyV9UxLlQ1dXSvWlM5ACgoz8S
-        66UCzAs+/vDp19vCMf/XiGjrgq/QpQ5MSmVm/cq7+gbhKX2cMIX1taXRr/28lPIKdmzmh69nv04Ah
-        jwc9CKCejXv0Yp4mbSM/q3/tDIhqtMMSmNl9pu3s8tg24ZdjHzYMMgLs+rc7QJw5HNC07Z3yyMc8F
-        LrWSlmph5HCQzhVD6l+1jhZTBzUgoCltUXUStnxF/6+NXmWhqg6fe/7W9ZhC1tQlUPJRTzQ06pK5k
-        wVCnFwUDhQ7pTnQaf3ggXDyfYcZZNw61QTbu1cIlLeHfVXYoXnrImvysZ5JDQhd9ynz72vOhOetCJ
-        eJPdKzew==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j59AA-0005Lk-DL; Fri, 21 Feb 2020 14:20:18 +0000
-Date:   Fri, 21 Feb 2020 06:20:18 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Eric Biggers <ebiggers@kernel.org>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v6 0/9] Inline Encryption Support
-Message-ID: <20200221142018.GA27636@infradead.org>
-References: <20200108184305.GA173657@google.com>
- <20200117085210.GA5473@infradead.org>
- <20200201005341.GA134917@google.com>
- <20200203091558.GA28527@infradead.org>
- <20200204033915.GA122248@google.com>
- <20200204145832.GA28393@infradead.org>
- <20200204212110.GA122850@gmail.com>
- <20200205073601.GA191054@sol.localdomain>
- <20200205180541.GA32041@infradead.org>
- <20200221123030.GA253045@google.com>
+        id S1728081AbgBUPdz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 10:33:55 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:48170 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727312AbgBUPdz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 10:33:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1582299235; x=1613835235;
+  h=from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=cNe2LmVzr4ZV176LN1dAUXmYYmpRruF8M5dAxcL9xM4=;
+  b=IzElhE0b8Kmq07zrRIEQcJN3ZfjGF01pWEbUF7jghUgil+ys6X9rR4q2
+   cHJYW4hoKtj/s6BwfMIE0SKLz2jxCsyTCJeUwbSmmYkpKtrb7yqQEdww4
+   xEXqA/K1Sg66GaWvl5p7hrzXorCR8SWjMPjjLl3BtufhyfutRBuuTKdrL
+   9QYf6PaFiijjUIiSnqwsISCvSygK+G8Kawdt72nd8qnUfAhYw6+J6pP+7
+   IYCWVYUKLSqVCDCWZtLteKBehNuJy1BgNEjuAsNt331QnNHBQFnAD0yF2
+   WsYEkG8JRIOnlHDcaanPNXUwNNnUbgZWAmTga3sccrLgB0jY/IG7NBuOR
+   g==;
+IronPort-SDR: NkcNXYeAJE9yjZA5s3nv8NxRevnh/ZtV/zhUkI1VyzJ4/X3ErzbneC1FBvp77bKzCiUc0lv9p3
+ KLuLS7qHaguNgq9cVrHDkzabiko2tp38HyaTGuSkAEi4XCvLLziFTRAre4ZZtUYjuyWSkmOhEb
+ YlYoCqnuKxTLt4WZoVg/Oc/eFqAvNtWgb2ma9TWebPU+9occlxxVDmF8vVCJY/HrOFR+/qLMBN
+ usSqxXiTAQ37IpdhUJqtRcphInGtaYnAjwSZZlf45ysea2e6j73cAkwmRLbVl5gPD3VEubgsVz
+ LZg=
+X-IronPort-AV: E=Sophos;i="5.70,468,1574092800"; 
+   d="scan'208";a="134762427"
+Received: from mail-bn7nam10lp2103.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.103])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Feb 2020 23:33:55 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Oo14jLDfFHNo1F+nkgekglFk05uWMxFkLPPDhmPORhBXpBB72FU0VlVXvEs2Oxm/v+jRFJZ61TcKOewSdtX3SSI1IBqtwANsGypDypw/JE5x9aqHKXBOHGPzr8lT7jgnJPlY0V2THc12TLzjeW67AwbVzSrzMRI5Rezwujn2PpMvxoQUw1IHMT0Lrhmxm/+oD8PEz01PsGCdXNHLOI2sqdzS67lnpcNCCjGn2Bz8iZboCj7uyttGhA1DmAcCK2+jWmwejA5+MYTNQ7h7MPFCeqlsM/dUgHKppPWrtProLpq8uWHyVpne9+2tTfg+rOHaVumDScEa7R+S55WDkjVkZA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/kTdH0cDRGM8IxvztgE0fLybdJQFVx5/BfmDzapV7r0=;
+ b=WOr9GK/qJbVzj9u4keyOzq5FrJv1wb7sENH+k2SsMQDREToGo6hKhfMiidB7Xei278XPIDFY3t0/iMx9afTZEDX1RDYx+E9T5NoQecP1/N4Ja1F1xoaRWOSmSBEYP6bLqT0o3+Qe2Yc5O72NUaJ6c+D9FbDydXRpMuPtPb0vVPWw+NG8dEQ+KE7CVGy2MRKEwbwShXzeS6CQDQjP6erk6PFJM2V2PkjQdXjs52lp9BvYrGH52wbrXUca0VxVNrYQCStj1rTc9rPtAzno6P3NAY4LmqijnlkCOqOhNneRGaNliQIyw0bH18t6m8tQkHDX9x6rqrNkThLCvbvSDZ2KmA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/kTdH0cDRGM8IxvztgE0fLybdJQFVx5/BfmDzapV7r0=;
+ b=fRcfF4f5NYPJnmmD5zlSg7Lra942A8Essp3ujxlCHN7uvtKxdQ2fqGQvi5Z+w0vSLimkgHwkaNNYccsV7b/1dz82Wfril+pzIWg1tnB5HpnUyxy3qoW5f7Zo6oZWMfOVHNwxYV5bDDuiZMirXjoPw5hTRI1ad0OFefBwP0FnmVE=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3517.namprd04.prod.outlook.com
+ (2603:10b6:803:45::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.31; Fri, 21 Feb
+ 2020 15:33:53 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::e5f5:84d2:cabc:da32]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::e5f5:84d2:cabc:da32%5]) with mapi id 15.20.2750.021; Fri, 21 Feb 2020
+ 15:33:53 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: sd_sbc: Fix sd_zbc_report_zones()
+Thread-Topic: [PATCH] scsi: sd_sbc: Fix sd_zbc_report_zones()
+Thread-Index: AQHV5u8mtLDHoG2CaUuquQf370HZOg==
+Date:   Fri, 21 Feb 2020 15:33:53 +0000
+Message-ID: <SN4PR0401MB35984CBF44735A92BC71B8339B120@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200219063800.880834-1-damien.lemoal@wdc.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: cdd69259-676f-4146-7422-08d7b6e37530
+x-ms-traffictypediagnostic: SN4PR0401MB3517:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN4PR0401MB3517D97660AAA3AA4057098C9B120@SN4PR0401MB3517.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1079;
+x-forefront-prvs: 0320B28BE1
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(346002)(396003)(136003)(39860400002)(376002)(366004)(199004)(189003)(64756008)(76116006)(33656002)(66556008)(5660300002)(110136005)(8676002)(52536014)(66946007)(66476007)(316002)(558084003)(91956017)(478600001)(66446008)(55016002)(186003)(2906002)(9686003)(26005)(7696005)(71200400001)(86362001)(81166006)(8936002)(6506007)(81156014)(53546011);DIR:OUT;SFP:1102;SCL:1;SRVR:SN4PR0401MB3517;H:SN4PR0401MB3598.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 1vHTwi7jdX4py1ok+BbfPwL6cGI2LWKab1SY1KpEvGXoKA2vKqMXHsWRhEqaI5LgIwkOw2DcgHMy57EFiGuZdvl4ivL0LQfT7iPvOqI+RRZB21kGUvaM1EUYBK4253sdcaElXTJW/WRjAJ8U+LjyiaeBZqTt5eN6RdPj+6dDGPuZFb9s+E5qddZkfUN730nazxcFSSBd4WuA9wB7KgahrqSEzElItbD/Pi4/NI44UpQ2FNPQy0YF0cu8umi7G4syrO+xchGAcMEfEEpDnaY/gbt516wPCN4kCSvzkCaFjMbwg/kVfqjXee1ROIXc/Sz1uA/rzJg+PKzx3C2VhIVUWik475Iefxy032hV1BaJpvRFdmknh9vTcqLaXru2FsDmqi2A6+PUTLoSxxI0am7w3GuffqwmvNUQoHcQJENDEKeCdDChHjZzRPRJ9u0xoB70
+x-ms-exchange-antispam-messagedata: tSOmPZvVzWOw0mLYWQgdiTzsaPqLe5JfTHO0adjir0872XGbFcZ+PTMyn7k60eSJ1QAaXP5KlfLr+12WH5Xvt1E8/WMsJmif/EQCUFDBtvH8MIJSUmLXUUjB2mb8fAWrq3YYAKmBXU8lw0NbAvYuZQ==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221123030.GA253045@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cdd69259-676f-4146-7422-08d7b6e37530
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Feb 2020 15:33:53.4256
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: f7nFjKEKkYPIHANBCIFfYloY49UF3Jtw8m3tmX/URHJxKpuB69kg4CvGxweIewAMw7HFPyiv1BqHQ9DYlhhaKY6DKlfkykvv9Y78b3aLkSk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3517
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 04:30:30AM -0800, Satya Tangirala wrote:
-> Hi Christoph,
-> 
-> I sent out v7 of the patch series. It's at
-> https://lore.kernel.org/linux-fscrypt/20200221115050.238976-1-satyat@google.com/T/#t
-> 
-> It manages keyslots on a per-request basis now - I made it get keyslots
-> in blk_mq_get_request, because that way I wouldn't have to worry about
-> programming keys in an atomic context. What do you think of the new
-> approach?
-
-I'll try to review it soon, thanks!
+On 19/02/2020 07:38, Damien Le Moal wrote:=0A=
+> Fixes: d41003513e61 ("block: rework zone reporting")=0A=
+> Cc: Cc:<stable@vger.kernel.org>  # v5.5=0A=
+=0A=
+Double Cc:=0A=
+Otherwise looks good,=0A=
+=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
