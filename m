@@ -2,61 +2,62 @@ Return-Path: <SRS0=iCCw=4J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9975C35655
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 11:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC59C35658
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 11:51:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7032024653
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 11:51:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543AD24650
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 11:51:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WXjmMIeD"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="u+0X6p2l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728107AbgBULvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 06:51:07 -0500
-Received: from mail-pg1-f202.google.com ([209.85.215.202]:47475 "EHLO
-        mail-pg1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728049AbgBULvG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 06:51:06 -0500
-Received: by mail-pg1-f202.google.com with SMTP id l15so1046289pgk.14
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 03:51:05 -0800 (PST)
+        id S1728238AbgBULvO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 06:51:14 -0500
+Received: from mail-pg1-f201.google.com ([209.85.215.201]:44574 "EHLO
+        mail-pg1-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728002AbgBULvM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 06:51:12 -0500
+Received: by mail-pg1-f201.google.com with SMTP id o2so1049347pgj.11
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 03:51:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=yagKer9E3Fu9lQJukupqwDAeVgC9XQWyGMZE/BCTkPQ=;
-        b=WXjmMIeD5Clp1E3WUfxXU6XVKFsaTJV2rihZnO9J+2+G29xShEPS1Vc3Yh1Dl3SOj3
-         nM9lCRabGMS5+xIHZYDccGTxrF23r+W3vryc9tAzDMwEqwY6TfIaH3JknA33G/86hnjX
-         jl/9KRYrtG24jlIvIMachjun4Yt892oZRlWGHnl7CLSoQENDaRhJK0MfyM5CflIlJAht
-         MFYacpv5D7Ubo3DMXIQUUxXuBAd8iyV/TmyDeSo8ivncLgGjecfT2uagD/gt6lvAwmBF
-         1uN+CtkGWpLg0XdmVBCKxVe7pS6GYl2pEk+rlN9k5f1olVkBJSqA2y38jpqf4cHjQLl6
-         sx8g==
+        bh=nOCr5soMbFPN55gY83Au6v1ryHYW2yWXRYcaIBANmhA=;
+        b=u+0X6p2lyAiKGbiY9gwm5O8V+rmjbHiH10TU/uwZyq0BRDcfGEfXCSy1PcJmZpryHr
+         tg4ltEKt3wF8jNPsLhFjh/ibMVe2hrYnNxDr2xmEHNr7fK0JX7bqbW3XeiVG63eQRB67
+         kmuK7LEQtZYBzDfiCkwXeTB1UypzIeBUWs0ic17FbEM7MxNrMM+i87baAIdGK4CydrHQ
+         /XLAYoCY722lnRK8o2pHspjwibqPYhPtMy+cKDYUAWJICfch1AkK39ehV6cflt9wA/zE
+         kaDf6odcIMNj43OxL6Y7o1K6t833M5Yd0e6sAUdQxL5k+ma4FhoY9UfnhBEtyNx2dmvP
+         yTuA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=yagKer9E3Fu9lQJukupqwDAeVgC9XQWyGMZE/BCTkPQ=;
-        b=pI10h7oLv27Bx5MxZxhyfEUSld1K4p8s0fJqU7d2gqMxziIkBCvxH0W07t84jPC7L8
-         0BtOQlkmCxcDGH4YlLZVPUFWNXzIZRKlWKoEgneQq7sjsRGT1aCFzoq3C0B0gqJhtP1U
-         CHxkBbsTviHuWVIZw7OKwwh8wQBsIp3GjxaigROkGZJlIE8gGzGSY501gSz9RFbQRgEP
-         84imQNrKjSD7Ym9kRbidwqRnfooXyE4V5y9ouxkoa8z5Yig6gyJTdVSNb6TEjgMJFp39
-         kgv7TmT7owCMl+O9groaQAVs9Ww3m2fear7m3OfjLe21CJ+TNmJQ4OoRvKsq60RH5uXr
-         pqNA==
-X-Gm-Message-State: APjAAAX5W5ugPprCasrl9UoCvT3TC1cJQikpu6q7bzf4vTKv9Q2dsF/R
-        cc79jC/6sf71PZb8mZB7IlOYHdGbF8U=
-X-Google-Smtp-Source: APXvYqyrDeM4OxvA+zHYLAifyWEkwKHj+euE5iN6s5zqBXK3iA20CLokxJhQbyTFJif/TKARZCoevDbsvak=
-X-Received: by 2002:a65:44cd:: with SMTP id g13mr112135pgs.365.1582285865406;
- Fri, 21 Feb 2020 03:51:05 -0800 (PST)
-Date:   Fri, 21 Feb 2020 03:50:43 -0800
+        bh=nOCr5soMbFPN55gY83Au6v1ryHYW2yWXRYcaIBANmhA=;
+        b=h/hFySz9ugkJzuaqssLiOMTA2Ws5ihZVCDVMuT+sbZfO6seKS9G9kLTMl/GsNyZPdw
+         y9VnNkzwO1fZ6aSvXjJtDMPny9pCdnjKzHkrShzLRk82KgzLWNzDOUVn1w6OSiaIolf0
+         dYf0B0KvwXCpL02/EA34oU1IOv5EuOOAP75Ftdzvh9hzDtAJ0OwOZGmGvDfe874h5ZUz
+         HZaOUx2KuXGSwUY+TRwA2DzSXPG98h7AM+rdWn296LNHHZEUH7aP6GMjG/lxgX8PQco9
+         2VNW4mKWxI/KyOM/38cSoedrQVY+BHHZiuMICAz1uyeMF29gh4g7PjVGWPn3QxKyTtBO
+         lSLw==
+X-Gm-Message-State: APjAAAVw4KZ/enqa6bSkysuV3PEdUWlRPYlE4ZID2lxT+dNpbqKOiWFY
+        2MoDf22kQRa1eW9kLW7i2+Cjcb/ZhR0=
+X-Google-Smtp-Source: APXvYqxVbqunElJvToNd5wB4499UQvmSu1yyZ640lQs5gM8um4rCTfvTKdosPvZp9Yt1E+ZVVs0/yI9vtLQ=
+X-Received: by 2002:a63:6d45:: with SMTP id i66mr19203216pgc.56.1582285870200;
+ Fri, 21 Feb 2020 03:51:10 -0800 (PST)
+Date:   Fri, 21 Feb 2020 03:50:45 -0800
 In-Reply-To: <20200221115050.238976-1-satyat@google.com>
-Message-Id: <20200221115050.238976-3-satyat@google.com>
+Message-Id: <20200221115050.238976-5-satyat@google.com>
 Mime-Version: 1.0
 References: <20200221115050.238976-1-satyat@google.com>
 X-Mailer: git-send-email 2.25.0.265.gbab2e86ba0-goog
-Subject: [PATCH v7 2/9] block: Inline encryption support for blk-mq
+Subject: [PATCH v7 4/9] scsi: ufs: UFS driver v2.1 spec crypto additions
 From:   Satya Tangirala <satyat@google.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -71,1094 +72,162 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We must have some way of letting a storage device driver know what
-encryption context it should use for en/decrypting a request. However,
-it's the upper layers (like the filesystem/fscrypt) that knows about
-and manages encryption contexts. As such, when the upper layer submits
-a bio to the block layer, and this bio eventually reaches a device
-driver with support for inline encryption, the device driver will need
-to have been told the encryption context for that bio.
-
-We want to communicate the encryption context from the upper layer
-to the storage device along with the bio, when the bio is submitted to the
-block layer. To do this, we add a struct bio_crypt_ctx to struct bio, which
-can represent an encryption context (note that we can't use the bi_private
-field in struct bio to do this because that field does not function to pass
-information across layers in the storage stack). We also introduce various
-functions to manipulate the bio_crypt_ctx and make the bio/request merging
-logic aware of the bio_crypt_ctx.
-
-We also make changes to blk-mq to make it handle bios with encryption
-contexts. blk-mq can merge many bios into the same request. These bios need
-to have contiguous data unit numbers (the necessary changes to blk-merge
-are also made to ensure this) - as such, it suffices to keep the data unit
-number of just the first bio, since that's all a storage driver needs to
-infer the data unit number to use for each data block in each bio in a
-request. blk-mq keeps track of the encryption context to be used for all
-the bios in a request with the request's rq_crypt_ctx. When the first bio
-is added to an empty request, blk-mq will program the encryption context
-of that bio into the request_queue's keyslot manager, and store the
-returned keyslot in the request's rq_crypt_ctx. All the functions to
-operate on encryption contexts are in blk-crypto.c.
-
-For now, blk-crypto and blk-integrity can't be used with each other
-(and any attempts to do both on a bio will cause the bio to fail).
-
-Upper layers only need to call bio_crypt_set_ctx with the encryption key,
-algorithm and data_unit_num; they don't have to worry about getting a
-keyslot for each encryption context, as blk-mq/blk-crypto handles that.
-Blk-crypto also makes it possible for request-based layered devices like
-dm-rq to make use of inline encryption hardware by cloning the
-rq_crypt_ctx and programming a keyslot in the new request_queue when
-necessary.
-
-Note that any user of the block layer can submit bios with an
-encryption context, such as filesystems, device-mapper targets, etc.
+Add the crypto registers and structs defined in v2.1 of the JEDEC UFSHCI
+specification in preparation to add support for inline encryption to
+UFS.
 
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- block/Makefile              |   2 +-
- block/bio-integrity.c       |   5 +
- block/bio.c                 |   7 +-
- block/blk-core.c            |  16 ++
- block/blk-crypto-internal.h |  19 ++
- block/blk-crypto.c          | 412 ++++++++++++++++++++++++++++++++++++
- block/blk-map.c             |   1 +
- block/blk-merge.c           |  11 +
- block/blk-mq.c              |  16 ++
- block/blk.h                 |   3 +
- block/bounce.c              |   2 +
- drivers/md/dm.c             |   2 +
- include/linux/blk-crypto.h  | 211 ++++++++++++++++++
- include/linux/blk_types.h   |   6 +
- include/linux/blkdev.h      |  10 +
- 15 files changed, 721 insertions(+), 2 deletions(-)
- create mode 100644 block/blk-crypto-internal.h
- create mode 100644 block/blk-crypto.c
+ drivers/scsi/ufs/ufshcd.c |  2 ++
+ drivers/scsi/ufs/ufshcd.h |  5 +++
+ drivers/scsi/ufs/ufshci.h | 67 +++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 72 insertions(+), 2 deletions(-)
 
-diff --git a/block/Makefile b/block/Makefile
-index ef3a05dcf1f2..82f42ca3f769 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -37,4 +37,4 @@ obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
- obj-$(CONFIG_BLK_DEBUG_FS_ZONED)+= blk-mq-debugfs-zoned.o
- obj-$(CONFIG_BLK_SED_OPAL)	+= sed-opal.o
- obj-$(CONFIG_BLK_PM)		+= blk-pm.o
--obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= keyslot-manager.o
-+obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= keyslot-manager.o blk-crypto.o
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index bf62c25cde8f..bce563031e7c 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -42,6 +42,11 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
- 	struct bio_set *bs = bio->bi_pool;
- 	unsigned inline_vecs;
- 
-+	if (bio_has_crypt_ctx(bio)) {
-+		pr_warn("blk-integrity can't be used together with blk-crypto en/decryption.");
-+		return ERR_PTR(-EOPNOTSUPP);
-+	}
-+
- 	if (!bs || !mempool_initialized(&bs->bio_integrity_pool)) {
- 		bip = kmalloc(struct_size(bip, bip_inline_vecs, nr_vecs), gfp_mask);
- 		inline_vecs = nr_vecs;
-diff --git a/block/bio.c b/block/bio.c
-index 94d697217887..115fd5960508 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -17,6 +17,7 @@
- #include <linux/cgroup.h>
- #include <linux/blk-cgroup.h>
- #include <linux/highmem.h>
-+#include <linux/blk-crypto.h>
- 
- #include <trace/events/block.h>
- #include "blk.h"
-@@ -236,6 +237,8 @@ void bio_uninit(struct bio *bio)
- 
- 	if (bio_integrity(bio))
- 		bio_integrity_free(bio);
-+
-+	bio_crypt_free_ctx(bio);
- }
- EXPORT_SYMBOL(bio_uninit);
- 
-@@ -664,11 +667,12 @@ struct bio *bio_clone_fast(struct bio *bio, gfp_t gfp_mask, struct bio_set *bs)
- 
- 	__bio_clone_fast(b, bio);
- 
-+	bio_crypt_clone(b, bio, gfp_mask);
-+
- 	if (bio_integrity(bio)) {
- 		int ret;
- 
- 		ret = bio_integrity_clone(b, bio, gfp_mask);
--
- 		if (ret < 0) {
- 			bio_put(b);
- 			return NULL;
-@@ -1046,6 +1050,7 @@ void bio_advance(struct bio *bio, unsigned bytes)
- 	if (bio_integrity(bio))
- 		bio_integrity_advance(bio, bytes);
- 
-+	bio_crypt_advance(bio, bytes);
- 	bio_advance_iter(bio, &bio->bi_iter, bytes);
- }
- EXPORT_SYMBOL(bio_advance);
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 089e890ab208..1d8f3fa5cb6c 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -38,6 +38,7 @@
- #include <linux/debugfs.h>
- #include <linux/bpf.h>
- #include <linux/psi.h>
-+#include <linux/blk-crypto.h>
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/block.h>
-@@ -120,6 +121,9 @@ void blk_rq_init(struct request_queue *q, struct request *rq)
- 	rq->start_time_ns = ktime_get_ns();
- 	rq->part = NULL;
- 	refcount_set(&rq->ref, 1);
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	rq->rq_crypt_ctx.keyslot = -EINVAL;
-+#endif
- }
- EXPORT_SYMBOL(blk_rq_init);
- 
-@@ -617,6 +621,8 @@ bool bio_attempt_back_merge(struct request *req, struct bio *bio,
- 	req->biotail = bio;
- 	req->__data_len += bio->bi_iter.bi_size;
- 
-+	bio_crypt_free_ctx(bio);
-+
- 	blk_account_io_start(req, false);
- 	return true;
- }
-@@ -641,6 +647,8 @@ bool bio_attempt_front_merge(struct request *req, struct bio *bio,
- 	req->__sector = bio->bi_iter.bi_sector;
- 	req->__data_len += bio->bi_iter.bi_size;
- 
-+	blk_crypto_rq_bio_prep(req, bio);
-+
- 	blk_account_io_start(req, false);
- 	return true;
- }
-@@ -1258,6 +1266,9 @@ blk_status_t blk_insert_cloned_request(struct request_queue *q, struct request *
- 	    should_fail_request(&rq->rq_disk->part0, blk_rq_bytes(rq)))
- 		return BLK_STS_IOERR;
- 
-+	if (blk_crypto_insert_cloned_request(q, rq))
-+		return BLK_STS_IOERR;
-+
- 	if (blk_queue_io_stat(q))
- 		blk_account_io_start(rq, true);
- 
-@@ -1646,6 +1657,8 @@ int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
- 
- 	__blk_rq_prep_clone(rq, rq_src);
- 
-+	blk_crypto_rq_prep_clone(rq, rq_src);
-+
- 	return 0;
- 
- free_and_out:
-@@ -1813,5 +1826,8 @@ int __init blk_dev_init(void)
- 	blk_debugfs_root = debugfs_create_dir("block", NULL);
- #endif
- 
-+	if (bio_crypt_ctx_init() < 0)
-+		panic("Failed to allocate mem for bio crypt ctxs\n");
-+
- 	return 0;
- }
-diff --git a/block/blk-crypto-internal.h b/block/blk-crypto-internal.h
-new file mode 100644
-index 000000000000..2452b5dee140
---- /dev/null
-+++ b/block/blk-crypto-internal.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright 2019 Google LLC
-+ */
-+
-+#ifndef __LINUX_BLK_CRYPTO_INTERNAL_H
-+#define __LINUX_BLK_CRYPTO_INTERNAL_H
-+
-+#include <linux/bio.h>
-+#include <linux/blkdev.h>
-+
-+/* Represents a crypto mode supported by blk-crypto  */
-+struct blk_crypto_mode {
-+	const char *cipher_str; /* crypto API name (for fallback case) */
-+	unsigned int keysize; /* key size in bytes */
-+	unsigned int ivsize; /* iv size in bytes */
-+};
-+
-+#endif /* __LINUX_BLK_CRYPTO_INTERNAL_H */
-diff --git a/block/blk-crypto.c b/block/blk-crypto.c
-new file mode 100644
-index 000000000000..b10b01c83907
---- /dev/null
-+++ b/block/blk-crypto.c
-@@ -0,0 +1,412 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright 2019 Google LLC
-+ */
-+
-+#define pr_fmt(fmt) "blk-crypto: " fmt
-+
-+#include <linux/bio.h>
-+#include <linux/blkdev.h>
-+#include <linux/keyslot-manager.h>
-+#include <linux/module.h>
-+#include <linux/random.h>
-+#include <linux/siphash.h>
-+#include <linux/slab.h>
-+
-+#include "blk-crypto-internal.h"
-+
-+const struct blk_crypto_mode blk_crypto_modes[] = {
-+	[BLK_ENCRYPTION_MODE_AES_256_XTS] = {
-+		.cipher_str = "xts(aes)",
-+		.keysize = 64,
-+		.ivsize = 16,
-+	},
-+	[BLK_ENCRYPTION_MODE_AES_128_CBC_ESSIV] = {
-+		.cipher_str = "essiv(cbc(aes),sha256)",
-+		.keysize = 16,
-+		.ivsize = 16,
-+	},
-+	[BLK_ENCRYPTION_MODE_ADIANTUM] = {
-+		.cipher_str = "adiantum(xchacha12,aes)",
-+		.keysize = 32,
-+		.ivsize = 32,
-+	},
-+};
-+
-+static int num_prealloc_crypt_ctxs = 128;
-+
-+module_param(num_prealloc_crypt_ctxs, int, 0444);
-+MODULE_PARM_DESC(num_prealloc_crypt_ctxs,
-+		"Number of bio crypto contexts to preallocate");
-+
-+static struct kmem_cache *bio_crypt_ctx_cache;
-+static mempool_t *bio_crypt_ctx_pool;
-+
-+int __init bio_crypt_ctx_init(void)
-+{
-+	size_t i;
-+
-+	bio_crypt_ctx_cache = KMEM_CACHE(bio_crypt_ctx, 0);
-+	if (!bio_crypt_ctx_cache)
-+		return -ENOMEM;
-+
-+	bio_crypt_ctx_pool = mempool_create_slab_pool(num_prealloc_crypt_ctxs,
-+						      bio_crypt_ctx_cache);
-+	if (!bio_crypt_ctx_pool)
-+		return -ENOMEM;
-+
-+	/* This is assumed in various places. */
-+	BUILD_BUG_ON(BLK_ENCRYPTION_MODE_INVALID != 0);
-+
-+	/* Sanity check that no algorithm exceeds the defined limits. */
-+	for (i = 0; i < BLK_ENCRYPTION_MODE_MAX; i++) {
-+		BUG_ON(blk_crypto_modes[i].keysize > BLK_CRYPTO_MAX_KEY_SIZE);
-+		BUG_ON(blk_crypto_modes[i].ivsize > BLK_CRYPTO_MAX_IV_SIZE);
-+	}
-+
-+	return 0;
-+}
-+
-+struct bio_crypt_ctx *bio_crypt_alloc_ctx(gfp_t gfp_mask)
-+{
-+	return mempool_alloc(bio_crypt_ctx_pool, gfp_mask);
-+}
-+
-+void bio_crypt_free_ctx(struct bio *bio)
-+{
-+	mempool_free(bio->bi_crypt_context, bio_crypt_ctx_pool);
-+	bio->bi_crypt_context = NULL;
-+}
-+
-+void bio_crypt_clone(struct bio *dst, struct bio *src, gfp_t gfp_mask)
-+{
-+	const struct bio_crypt_ctx *src_bc = src->bi_crypt_context;
-+
-+	if (!src_bc)
-+		return;
-+
-+	dst->bi_crypt_context = bio_crypt_alloc_ctx(gfp_mask);
-+	*dst->bi_crypt_context = *src_bc;
-+}
-+EXPORT_SYMBOL_GPL(bio_crypt_clone);
-+
-+/*
-+ * Checks that two bio crypt contexts are compatible - i.e. that
-+ * they are mergeable except for data_unit_num continuity.
-+ */
-+static bool bio_crypt_ctx_compatible(struct bio_crypt_ctx *bc1,
-+				     struct bio_crypt_ctx *bc2)
-+{
-+	if (!bc1)
-+		return !bc2;
-+
-+	return bc2 && bc1->bc_key == bc2->bc_key;
-+}
-+
-+bool bio_crypt_rq_ctx_compatible(struct request *rq, struct bio *bio)
-+{
-+	return bio_crypt_ctx_compatible(rq->rq_crypt_ctx.bc,
-+					bio->bi_crypt_context);
-+}
-+
-+/*
-+ * Checks that two bio crypt contexts are compatible, and also
-+ * that their data_unit_nums are continuous (and can hence be merged)
-+ * in the order b_1 followed by b_2.
-+ */
-+static bool bio_crypt_ctx_mergeable(struct bio_crypt_ctx *bc1,
-+				    unsigned int bc1_bytes,
-+				    struct bio_crypt_ctx *bc2)
-+{
-+	if (!bio_crypt_ctx_compatible(bc1, bc2))
-+		return false;
-+
-+	return !bc1 || bio_crypt_dun_is_contiguous(bc1, bc1_bytes, bc2->bc_dun);
-+}
-+
-+bool bio_crypt_ctx_back_mergeable(struct request *req, struct bio *bio)
-+{
-+	return bio_crypt_ctx_mergeable(req->rq_crypt_ctx.bc, blk_rq_bytes(req),
-+				       bio->bi_crypt_context);
-+}
-+
-+bool bio_crypt_ctx_front_mergeable(struct request *req, struct bio *bio)
-+{
-+	return bio_crypt_ctx_mergeable(bio->bi_crypt_context,
-+				       bio->bi_iter.bi_size,
-+				       req->rq_crypt_ctx.bc);
-+}
-+
-+bool bio_crypt_ctx_merge_rq(struct request *req, struct request *next)
-+{
-+	return bio_crypt_ctx_mergeable(req->rq_crypt_ctx.bc, blk_rq_bytes(req),
-+				       next->rq_crypt_ctx.bc);
-+}
-+
-+/* Check that all I/O segments are data unit aligned */
-+static int bio_crypt_check_alignment(struct bio *bio)
-+{
-+	const unsigned int data_unit_size =
-+				bio->bi_crypt_context->bc_key->data_unit_size;
-+	struct bvec_iter iter;
-+	struct bio_vec bv;
-+
-+	bio_for_each_segment(bv, bio, iter) {
-+		if (!IS_ALIGNED(bv.bv_len | bv.bv_offset, data_unit_size))
-+			return -EIO;
-+	}
-+	return 0;
-+}
-+
-+/* Return: 0 on success, negative on error */
-+int rq_crypt_ctx_acquire_keyslot(struct bio_crypt_ctx *bc,
-+				  struct keyslot_manager *ksm,
-+				  struct rq_crypt_ctx *rc)
-+{
-+	rc->keyslot = blk_ksm_get_slot_for_key(ksm, bc->bc_key);
-+	return rc->keyslot >= 0 ? 0 : rc->keyslot;
-+}
-+
-+void rq_crypt_ctx_release_keyslot(struct keyslot_manager *ksm,
-+				  struct rq_crypt_ctx *rc)
-+{
-+	if (rc->keyslot >= 0)
-+		blk_ksm_put_slot(ksm, rc->keyslot);
-+	rc->keyslot = -EINVAL;
-+}
-+
-+/**
-+ * blk_crypto_init_request - Initializes the request's rq_crypt_ctx based on the
-+ *			     bio to be added to the request, and prepares it for
-+ *			     hardware inline encryption.
-+ *
-+ * @rq: The request to init
-+ * @q: The request queue this request will be submitted to
-+ * @bio: The bio that will (eventually) be added to @rq.
-+ *
-+ * Initializes the request's rq_crypt_ctx to appropriate default values.
-+ * Then, if the bio doesn't have an encryption context, there's nothing to do.
-+ * Otherwise, we're relying on the underlying device's inline encryption HW for
-+ * en/decryption, so get a keyslot for the bio crypt ctx.
-+ *
-+ * Return: 0 on success, and negative error code otherwise.
-+ */
-+int blk_crypto_init_request(struct request *rq, struct request_queue *q,
-+			    struct bio *bio)
-+{
-+	struct rq_crypt_ctx *rc = &rq->rq_crypt_ctx;
-+	struct bio_crypt_ctx *bc;
-+	int err;
-+
-+	rc->bc = NULL;
-+	rc->keyslot = -EINVAL;
-+
-+	if (!bio)
-+		return 0;
-+
-+	bc = bio->bi_crypt_context;
-+	if (!bc)
-+		return 0;
-+
-+	err = rq_crypt_ctx_acquire_keyslot(bc, q->ksm, rc);
-+	if (err)
-+		pr_warn_once("Failed to acquire keyslot for %s (err=%d).\n",
-+			     bio->bi_disk->disk_name, err);
-+	return err;
-+}
-+
-+/**
-+ * blk_crypto_free_request - Uninitialize the rq_crypt_ctx of a request.
-+ *
-+ * @rq: The request whose rq_crypt_ctx to uninitialize.
-+ *
-+ * Completely uninitializes the rq_crypt_ctx of a request. If a keyslot has been
-+ * programmed into some inline encryption hardware, that keyslot is released.
-+ * The bio_crypt_ctx pointed to by the rq_crypt_ctx is also freed, if any.
-+ */
-+void blk_crypto_free_request(struct request *rq)
-+{
-+	struct rq_crypt_ctx *rc = &rq->rq_crypt_ctx;
-+
-+	rq_crypt_ctx_release_keyslot(rq->q->ksm, rc);
-+	mempool_free(rc->bc, bio_crypt_ctx_pool);
-+	rc->bc = NULL;
-+}
-+
-+/**
-+ * blk_crypto_bio_prep - Prepare bio for inline encryption
-+ *
-+ * @bio_ptr: pointer to original bio pointer
-+ *
-+ * Succeeds if the bio doesn't have inline encryption enabled or if the bio
-+ * crypt context provided for the bio is supported by the underlying device's
-+ * inline encryption hardware. Ends the bio with error otherwise.
-+ *
-+ * Return: 0 on success; nonzero on error (and bio_endio() will have been called
-+ *	   so bio submission should abort).
-+ */
-+int blk_crypto_bio_prep(struct bio **bio_ptr)
-+{
-+	struct bio *bio = *bio_ptr;
-+	struct bio_crypt_ctx *bc = bio->bi_crypt_context;
-+	int err;
-+
-+	if (!bc)
-+		return 0;
-+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index abd0e6b05f79..825d9eb34f10 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -4759,6 +4759,8 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	case OCS_MISMATCH_RESP_UPIU_SIZE:
+ 	case OCS_PEER_COMM_FAILURE:
+ 	case OCS_FATAL_ERROR:
++	case OCS_INVALID_CRYPTO_CONFIG:
++	case OCS_GENERAL_CRYPTO_ERROR:
+ 	default:
+ 		result |= DID_ERROR << 16;
+ 		dev_err(hba->dev,
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 2ae6c7c8528c..978781c538c4 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -716,6 +716,11 @@ struct ufs_hba {
+ 	 * for userspace to control the power management.
+ 	 */
+ #define UFSHCD_CAP_RPM_AUTOSUSPEND (1 << 6)
 +	/*
-+	 * If bio has no data, just pretend it didn't have an encryption
-+	 * context.
++	 * This capability allows the host controller driver to use the
++	 * inline crypto engine, if it is present
 +	 */
-+	if (!bio_has_data(bio)) {
-+		bio_crypt_free_ctx(bio);
-+		return 0;
-+	}
-+
-+	err = bio_crypt_check_alignment(bio);
-+	if (err)
-+		goto fail;
-+
-+	/* Success if device supports the encryption context */
-+	if (blk_ksm_crypto_mode_supported(bio->bi_disk->queue->ksm, bc->bc_key))
-+		return 0;
-+
-+fail:
-+	bio->bi_status = BLK_STS_IOERR;
-+	bio_endio(*bio_ptr);
-+	return err;
-+}
-+
-+/**
-+ * blk_crypto_rq_bio_prep - Prepare a request when its first bio is inserted
-+ *
-+ * @rq: The request to prepare
-+ * @bio: The first bio being inserted into the request
-+ *
-+ * Frees the bio crypt context in the request's old rq_crypt_ctx, if any, and
-+ * moves the bio crypt context of the bio into the request's rq_crypt_ctx.
-+ */
-+void blk_crypto_rq_bio_prep(struct request *rq, struct bio *bio)
-+{
-+	mempool_free(rq->rq_crypt_ctx.bc, bio_crypt_ctx_pool);
-+	rq->rq_crypt_ctx.bc = bio->bi_crypt_context;
-+	bio->bi_crypt_context = NULL;
-+}
-+
-+void blk_crypto_rq_prep_clone(struct request *dst, struct request *src)
-+{
-+	dst->rq_crypt_ctx.bc = NULL;
-+	dst->rq_crypt_ctx.keyslot = -EINVAL;
-+
-+	if (src->rq_crypt_ctx.keyslot < 0) {
-+		/* src doesn't have any crypto info, so nothing to do */
-+		return;
-+	}
-+
-+	dst->rq_crypt_ctx.bc = src->rq_crypt_ctx.bc;
-+}
-+
-+/**
-+ * blk_crypto_insert_cloned_request - Prepare a cloned request to be inserted
-+ *				      into a request queue.
-+ * @q: the queue to submit the request
-+ * @rq: the request being queued
-+ *
-+ * Return: 0 on success, nonzero on error.
-+ */
-+int blk_crypto_insert_cloned_request(struct request_queue *q,
-+				     struct request *rq)
-+{
-+	int err;
-+
-+	if (!rq->bio)
-+		return 0;
-+
-+	/*
-+	 * Pretend that the bio had the encryption ctx before calling
-+	 * blk_crypto_init_request
-+	 */
-+	rq->bio->bi_crypt_context = rq->rq_crypt_ctx.bc;
-+	err = blk_crypto_init_request(rq, q, rq->bio);
-+	/*
-+	 * blk_crypto_init_request *always* clears the rq->rq_crypt_ctx to
-+	 * defaults, so regardless of what err is, restore the rq->rq_crypt_ctx.
-+	 */
-+	blk_crypto_rq_bio_prep(rq, rq->bio);
-+
-+	return err;
-+}
-+
-+/**
-+ * blk_crypto_init_key() - Prepare a key for use with blk-crypto
-+ * @blk_key: Pointer to the blk_crypto_key to initialize.
-+ * @raw_key: Pointer to the raw key. Must be the correct length for the chosen
-+ *	     @crypto_mode; see blk_crypto_modes[].
-+ * @crypto_mode: identifier for the encryption algorithm to use
-+ * @blk_crypto_dun_bytes: number of bytes that will be used to specify the DUN
-+ *			  when this key is used
-+ * @data_unit_size: the data unit size to use for en/decryption
-+ *
-+ * Return: 0 on success, -errno on failure.  The caller is responsible for
-+ *	   zeroizing both blk_key and raw_key when done with them.
-+ */
-+int blk_crypto_init_key(struct blk_crypto_key *blk_key, const u8 *raw_key,
-+			enum blk_crypto_mode_num crypto_mode,
-+			unsigned int blk_crypto_dun_bytes,
-+			unsigned int data_unit_size)
-+{
-+	const struct blk_crypto_mode *mode;
-+	static siphash_key_t hash_key;
-+
-+	memset(blk_key, 0, sizeof(*blk_key));
-+
-+	if (crypto_mode >= ARRAY_SIZE(blk_crypto_modes))
-+		return -EINVAL;
-+
-+	mode = &blk_crypto_modes[crypto_mode];
-+	if (mode->keysize == 0)
-+		return -EINVAL;
-+
-+	if (!is_power_of_2(data_unit_size))
-+		return -EINVAL;
-+
-+	blk_key->crypto_mode = crypto_mode;
-+	blk_key->dun_bytes = blk_crypto_dun_bytes;
-+	blk_key->data_unit_size = data_unit_size;
-+	blk_key->data_unit_size_bits = ilog2(data_unit_size);
-+	blk_key->size = mode->keysize;
-+	memcpy(blk_key->raw, raw_key, mode->keysize);
-+
-+	/*
-+	 * The keyslot manager uses the SipHash of the key to implement O(1) key
-+	 * lookups while avoiding leaking information about the keys.  It's
-+	 * precomputed here so that it only needs to be computed once per key.
-+	 */
-+	get_random_once(&hash_key, sizeof(hash_key));
-+	blk_key->hash = siphash(raw_key, mode->keysize, &hash_key);
-+
-+	return 0;
-+}
-+
-+/**
-+ * blk_crypto_evict_key() - Evict a key from any inline encryption hardware
-+ *			    it may have been programmed into
-+ * @q: The request queue who's keyslot manager this key might have been
-+ *     programmed into
-+ * @key: The key to evict
-+ *
-+ * Upper layers (filesystems) should call this function to ensure that a key
-+ * is evicted from hardware that it might have been programmed into. This
-+ * will call blk_ksm_evict_key on the queue's keyslot manager, if one
-+ * exists, and supports the crypto algorithm with the specified data unit size.
-+ *
-+ * Return: 0 on success or if key is not present in the q's ksm, -err on error.
-+ */
-+int blk_crypto_evict_key(struct request_queue *q,
-+			 const struct blk_crypto_key *key)
-+{
-+	if (q->ksm && blk_ksm_crypto_mode_supported(q->ksm, key))
-+		return blk_ksm_evict_key(q->ksm, key);
-+
-+	return 0;
-+}
-diff --git a/block/blk-map.c b/block/blk-map.c
-index b0790268ed9d..4484e37d316e 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -41,6 +41,7 @@ int blk_rq_append_bio(struct request *rq, struct bio **bio)
- 		rq->biotail->bi_next = *bio;
- 		rq->biotail = *bio;
- 		rq->__data_len += (*bio)->bi_iter.bi_size;
-+		bio_crypt_free_ctx(*bio);
- 	}
++#define UFSHCD_CAP_CRYPTO (1 << 7)
  
- 	return 0;
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 1534ed736363..a0c24b6e0eb3 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -596,6 +596,8 @@ int ll_back_merge_fn(struct request *req, struct bio *bio, unsigned int nr_segs)
- 	if (blk_integrity_rq(req) &&
- 	    integrity_req_gap_back_merge(req, bio))
- 		return 0;
-+	if (!bio_crypt_ctx_back_mergeable(req, bio))
-+		return 0;
- 	if (blk_rq_sectors(req) + bio_sectors(bio) >
- 	    blk_rq_get_max_sectors(req, blk_rq_pos(req))) {
- 		req_set_nomerge(req->q, req);
-@@ -612,6 +614,8 @@ int ll_front_merge_fn(struct request *req, struct bio *bio, unsigned int nr_segs
- 	if (blk_integrity_rq(req) &&
- 	    integrity_req_gap_front_merge(req, bio))
- 		return 0;
-+	if (!bio_crypt_ctx_front_mergeable(req, bio))
-+		return 0;
- 	if (blk_rq_sectors(req) + bio_sectors(bio) >
- 	    blk_rq_get_max_sectors(req, bio->bi_iter.bi_sector)) {
- 		req_set_nomerge(req->q, req);
-@@ -661,6 +665,9 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
- 	if (blk_integrity_merge_rq(q, req, next) == false)
- 		return 0;
- 
-+	if (!bio_crypt_ctx_merge_rq(req, next))
-+		return 0;
-+
- 	/* Merge is OK... */
- 	req->nr_phys_segments = total_phys_segments;
- 	return 1;
-@@ -885,6 +892,10 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (blk_integrity_merge_bio(rq->q, rq, bio) == false)
- 		return false;
- 
-+	/* Only merge if the crypt contexts are compatible */
-+	if (!bio_crypt_rq_ctx_compatible(rq, bio))
-+		return false;
-+
- 	/* must be using the same buffer */
- 	if (req_op(rq) == REQ_OP_WRITE_SAME &&
- 	    !blk_write_same_mergeable(rq->bio, bio))
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a12b1763508d..6b437637d029 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -26,6 +26,7 @@
- #include <linux/delay.h>
- #include <linux/crash_dump.h>
- #include <linux/prefetch.h>
-+#include <linux/blk-crypto.h>
- 
- #include <trace/events/block.h>
- 
-@@ -316,6 +317,10 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 	rq->nr_phys_segments = 0;
- #if defined(CONFIG_BLK_DEV_INTEGRITY)
- 	rq->nr_integrity_segments = 0;
-+#endif
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	rq->rq_crypt_ctx.bc = NULL;
-+	rq->rq_crypt_ctx.keyslot = -EINVAL;
- #endif
- 	/* tag was already set */
- 	rq->extra_len = 0;
-@@ -474,6 +479,7 @@ static void __blk_mq_free_request(struct request *rq)
- 	struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
- 	const int sched_tag = rq->internal_tag;
- 
-+	blk_crypto_free_request(rq);
- 	blk_pm_mark_last_busy(rq);
- 	rq->mq_hctx = NULL;
- 	if (rq->tag != -1)
-@@ -1968,6 +1974,9 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	unsigned int nr_segs;
- 	blk_qc_t cookie;
- 
-+	if (blk_crypto_bio_prep(&bio))
-+		return BLK_QC_T_NONE;
-+
- 	blk_queue_bounce(q, &bio);
- 	__blk_queue_split(q, &bio, &nr_segs);
- 
-@@ -1998,6 +2007,13 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 
- 	cookie = request_to_qc_t(data.hctx, rq);
- 
-+	if (blk_crypto_init_request(rq, q, bio)) {
-+		bio->bi_status = BLK_STS_RESOURCE;
-+		bio_endio(bio);
-+		blk_mq_end_request(rq, BLK_STS_RESOURCE);
-+		return BLK_QC_T_NONE;
-+	}
-+
- 	blk_mq_bio_to_request(rq, bio, nr_segs);
- 
- 	plug = blk_mq_plug(q, bio);
-diff --git a/block/blk.h b/block/blk.h
-index 0b8884353f6b..3929900fca02 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/idr.h>
- #include <linux/blk-mq.h>
-+#include <linux/blk-crypto.h>
- #include <xen/xen.h>
- #include "blk-mq.h"
- #include "blk-mq-sched.h"
-@@ -117,6 +118,8 @@ static inline void blk_rq_bio_prep(struct request *rq, struct bio *bio,
- 
- 	if (bio->bi_disk)
- 		rq->rq_disk = bio->bi_disk;
-+
-+	blk_crypto_rq_bio_prep(rq, bio);
- }
- 
- #ifdef CONFIG_BLK_DEV_INTEGRITY
-diff --git a/block/bounce.c b/block/bounce.c
-index f8ed677a1bf7..c3aaed070124 100644
---- a/block/bounce.c
-+++ b/block/bounce.c
-@@ -267,6 +267,8 @@ static struct bio *bounce_clone_bio(struct bio *bio_src, gfp_t gfp_mask,
- 		break;
- 	}
- 
-+	bio_crypt_clone(bio, bio_src, gfp_mask);
-+
- 	if (bio_integrity(bio_src)) {
- 		int ret;
- 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index b89f07ee2eff..e5b5ffa73619 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1304,6 +1304,8 @@ static int clone_bio(struct dm_target_io *tio, struct bio *bio,
- 
- 	__bio_clone_fast(clone, bio);
- 
-+	bio_crypt_clone(clone, bio, GFP_NOIO);
-+
- 	if (bio_integrity(bio)) {
- 		int r;
- 
-diff --git a/include/linux/blk-crypto.h b/include/linux/blk-crypto.h
-index b8d54eca1c0d..f855895770f6 100644
---- a/include/linux/blk-crypto.h
-+++ b/include/linux/blk-crypto.h
-@@ -6,6 +6,8 @@
- #ifndef __LINUX_BLK_CRYPTO_H
- #define __LINUX_BLK_CRYPTO_H
- 
-+#include <linux/types.h>
-+
- enum blk_crypto_mode_num {
- 	BLK_ENCRYPTION_MODE_INVALID,
- 	BLK_ENCRYPTION_MODE_AES_256_XTS,
-@@ -42,4 +44,213 @@ struct blk_crypto_key {
- 	u8 raw[BLK_CRYPTO_MAX_KEY_SIZE];
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index c2961d37cc1c..c0651fe6dbbc 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -90,6 +90,7 @@ enum {
+ 	MASK_64_ADDRESSING_SUPPORT		= 0x01000000,
+ 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+ 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
++	MASK_CRYPTO_SUPPORT			= 0x10000000,
  };
  
-+#define BLK_CRYPTO_MAX_IV_SIZE		32
-+#define BLK_CRYPTO_DUN_ARRAY_SIZE	(BLK_CRYPTO_MAX_IV_SIZE/sizeof(u64))
-+
-+/**
-+ * struct bio_crypt_ctx - an inline encryption context
-+ * @bc_key: the key, algorithm, and data unit size to use
-+ * @bc_dun: the data unit number (starting IV) to use
-+ * @bc_keyslot: the keyslot that has been assigned for this key in @bc_ksm,
-+ *		or -1 if no keyslot has been assigned yet.
-+ * @bc_ksm: the keyslot manager into which the key has been programmed with
-+ *	    @bc_keyslot, or NULL if this key hasn't yet been programmed.
-+ *
-+ * A bio_crypt_ctx specifies that the contents of the bio will be encrypted (for
-+ * write requests) or decrypted (for read requests) inline by the storage device
-+ * or controller.
-+ */
-+struct bio_crypt_ctx {
-+	const struct blk_crypto_key	*bc_key;
-+	u64				bc_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
-+};
-+
-+#ifdef CONFIG_BLOCK
-+
-+#include <linux/blk_types.h>
-+
-+struct request;
-+struct request_queue;
-+
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+
-+int bio_crypt_ctx_init(void);
-+
-+struct bio_crypt_ctx *bio_crypt_alloc_ctx(gfp_t gfp_mask);
-+
-+void bio_crypt_free_ctx(struct bio *bio);
-+
-+static inline bool bio_has_crypt_ctx(struct bio *bio)
-+{
-+	return bio->bi_crypt_context;
-+}
-+
-+void bio_crypt_clone(struct bio *dst, struct bio *src, gfp_t gfp_mask);
-+
-+static inline void bio_crypt_set_ctx(struct bio *bio,
-+				     const struct blk_crypto_key *key,
-+				     const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
-+				     gfp_t gfp_mask)
-+{
-+	struct bio_crypt_ctx *bc = bio_crypt_alloc_ctx(gfp_mask);
-+
-+	bc->bc_key = key;
-+	memcpy(bc->bc_dun, dun, sizeof(bc->bc_dun));
-+
-+	bio->bi_crypt_context = bc;
-+}
-+
-+static inline bool bio_crypt_dun_is_contiguous(const struct bio_crypt_ctx *bc,
-+					       unsigned int bytes,
-+					u64 next_dun[BLK_CRYPTO_DUN_ARRAY_SIZE])
-+{
-+	int i = 0;
-+	unsigned int inc = bytes >> bc->bc_key->data_unit_size_bits;
-+
-+	while (i < BLK_CRYPTO_DUN_ARRAY_SIZE) {
-+		if (bc->bc_dun[i] + inc != next_dun[i])
-+			return false;
-+		inc = ((bc->bc_dun[i] + inc)  < inc);
-+		i++;
-+	}
-+
-+	return true;
-+}
-+
-+static inline void bio_crypt_dun_increment(u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
-+					   unsigned int inc)
-+{
-+	int i = 0;
-+
-+	while (inc && i < BLK_CRYPTO_DUN_ARRAY_SIZE) {
-+		dun[i] += inc;
-+		inc = (dun[i] < inc);
-+		i++;
-+	}
-+}
-+
-+static inline void bio_crypt_advance(struct bio *bio, unsigned int bytes)
-+{
-+	struct bio_crypt_ctx *bc = bio->bi_crypt_context;
-+
-+	if (!bc)
-+		return;
-+
-+	bio_crypt_dun_increment(bc->bc_dun,
-+				bytes >> bc->bc_key->data_unit_size_bits);
-+}
-+
-+bool bio_crypt_rq_ctx_compatible(struct request *rq, struct bio *bio);
-+
-+bool bio_crypt_ctx_front_mergeable(struct request *req, struct bio *bio);
-+
-+bool bio_crypt_ctx_back_mergeable(struct request *req, struct bio *bio);
-+
-+bool bio_crypt_ctx_merge_rq(struct request *req, struct request *next);
-+
-+void blk_crypto_bio_back_merge(struct request *req, struct bio *bio);
-+
-+void blk_crypto_bio_front_merge(struct request *req, struct bio *bio);
-+
-+void blk_crypto_free_request(struct request *rq);
-+
-+int blk_crypto_init_request(struct request *rq, struct request_queue *q,
-+			    struct bio *bio);
-+
-+int blk_crypto_bio_prep(struct bio **bio_ptr);
-+
-+void blk_crypto_rq_bio_prep(struct request *rq, struct bio *bio);
-+
-+void blk_crypto_rq_prep_clone(struct request *dst, struct request *src);
-+
-+int blk_crypto_insert_cloned_request(struct request_queue *q,
-+				     struct request *rq);
-+
-+int blk_crypto_init_key(struct blk_crypto_key *blk_key, const u8 *raw_key,
-+			enum blk_crypto_mode_num crypto_mode,
-+			unsigned int blk_crypto_dun_bytes,
-+			unsigned int data_unit_size);
-+
-+int blk_crypto_evict_key(struct request_queue *q,
-+			 const struct blk_crypto_key *key);
-+
-+#else /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+static inline int bio_crypt_ctx_init(void)
-+{
-+	return 0;
-+}
-+
-+static inline bool bio_has_crypt_ctx(struct bio *bio)
-+{
-+	return false;
-+}
-+
-+static inline void bio_crypt_clone(struct bio *dst, struct bio *src,
-+				   gfp_t gfp_mask) { }
-+
-+static inline void bio_crypt_free_ctx(struct bio *bio) { }
-+
-+static inline void bio_crypt_advance(struct bio *bio, unsigned int bytes) { }
-+
-+static inline bool bio_crypt_rq_ctx_compatible(struct request *rq,
-+					       struct bio *bio)
-+{
-+	return true;
-+}
-+
-+static inline bool bio_crypt_ctx_front_mergeable(struct request *req,
-+						 struct bio *bio)
-+{
-+	return true;
-+}
-+
-+static inline bool bio_crypt_ctx_back_mergeable(struct request *req,
-+						struct bio *bio)
-+{
-+	return true;
-+}
-+
-+static inline bool bio_crypt_ctx_merge_rq(struct request *req,
-+					  struct request *next)
-+{
-+	return true;
-+}
-+
-+static inline void blk_crypto_bio_back_merge(struct request *req,
-+					     struct bio *bio) { }
-+
-+static inline void blk_crypto_bio_front_merge(struct request *req,
-+					      struct bio *bio) { }
-+
-+static inline void blk_crypto_free_request(struct request *rq) { }
-+
-+static inline int blk_crypto_init_request(struct request *rq,
-+					  struct request_queue *q,
-+					  struct bio *bio)
-+{
-+	return 0;
-+}
-+
-+static inline int blk_crypto_bio_prep(struct bio **bio_ptr)
-+{
-+	return 0;
-+}
-+
-+static inline void blk_crypto_rq_bio_prep(struct request *rq, struct bio *bio)
-+{ }
-+
-+static inline void blk_crypto_rq_prep_clone(struct request *dst,
-+					    struct request *src) { }
-+
-+static inline int blk_crypto_insert_cloned_request(struct request_queue *q,
-+						   struct request *rq)
-+{
-+	return 0;
-+}
-+
-+#endif /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+#endif /* CONFIG_BLOCK */
-+
- #endif /* __LINUX_BLK_CRYPTO_H */
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 70254ae11769..1996689c51d3 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -18,6 +18,7 @@ struct block_device;
- struct io_context;
- struct cgroup_subsys_state;
- typedef void (bio_end_io_t) (struct bio *);
-+struct bio_crypt_ctx;
+ #define UFS_MASK(mask, offset)		((mask) << (offset))
+@@ -143,6 +144,7 @@ enum {
+ #define DEVICE_FATAL_ERROR			0x800
+ #define CONTROLLER_FATAL_ERROR			0x10000
+ #define SYSTEM_BUS_FATAL_ERROR			0x20000
++#define CRYPTO_ENGINE_FATAL_ERROR		0x40000
  
- /*
-  * Block error status values.  See block/blk-core:blk_errors for the details.
-@@ -173,6 +174,11 @@ struct bio {
- 	u64			bi_iocost_cost;
- #endif
- #endif
-+
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	struct bio_crypt_ctx	*bi_crypt_context;
-+#endif
-+
- 	union {
- #if defined(CONFIG_BLK_DEV_INTEGRITY)
- 		struct bio_integrity_payload *bi_integrity; /* data integrity */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8881b25ef58b..a90332299f29 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -27,6 +27,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/scatterlist.h>
- #include <linux/blkzoned.h>
-+#include <linux/blk-crypto.h>
+ #define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
+ 				UIC_HIBERNATE_EXIT)
+@@ -155,11 +157,13 @@ enum {
+ #define UFSHCD_ERROR_MASK	(UIC_ERROR |\
+ 				DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+-				SYSTEM_BUS_FATAL_ERROR)
++				SYSTEM_BUS_FATAL_ERROR |\
++				CRYPTO_ENGINE_FATAL_ERROR)
  
- struct module;
- struct scsi_ioctl_command;
-@@ -124,6 +125,11 @@ enum mq_rq_state {
- 	MQ_RQ_COMPLETE		= 2,
+ #define INT_FATAL_ERRORS	(DEVICE_FATAL_ERROR |\
+ 				CONTROLLER_FATAL_ERROR |\
+-				SYSTEM_BUS_FATAL_ERROR)
++				SYSTEM_BUS_FATAL_ERROR |\
++				CRYPTO_ENGINE_FATAL_ERROR)
+ 
+ /* HCS - Host Controller Status 30h */
+ #define DEVICE_PRESENT				0x1
+@@ -318,6 +322,61 @@ enum {
+ 	INTERRUPT_MASK_ALL_VER_21	= 0x71FFF,
  };
  
-+struct rq_crypt_ctx {
-+	struct bio_crypt_ctx *bc;
-+	int keyslot;
++/* CCAP - Crypto Capability 100h */
++union ufs_crypto_capabilities {
++	__le32 reg_val;
++	struct {
++		u8 num_crypto_cap;
++		u8 config_count;
++		u8 reserved;
++		u8 config_array_ptr;
++	};
++};
++
++enum ufs_crypto_key_size {
++	UFS_CRYPTO_KEY_SIZE_INVALID	= 0x0,
++	UFS_CRYPTO_KEY_SIZE_128		= 0x1,
++	UFS_CRYPTO_KEY_SIZE_192		= 0x2,
++	UFS_CRYPTO_KEY_SIZE_256		= 0x3,
++	UFS_CRYPTO_KEY_SIZE_512		= 0x4,
++};
++
++enum ufs_crypto_alg {
++	UFS_CRYPTO_ALG_AES_XTS			= 0x0,
++	UFS_CRYPTO_ALG_BITLOCKER_AES_CBC	= 0x1,
++	UFS_CRYPTO_ALG_AES_ECB			= 0x2,
++	UFS_CRYPTO_ALG_ESSIV_AES_CBC		= 0x3,
++};
++
++/* x-CRYPTOCAP - Crypto Capability X */
++union ufs_crypto_cap_entry {
++	__le32 reg_val;
++	struct {
++		u8 algorithm_id;
++		u8 sdus_mask; /* Supported data unit size mask */
++		u8 key_size;
++		u8 reserved;
++	};
++};
++
++#define UFS_CRYPTO_CONFIGURATION_ENABLE (1 << 7)
++#define UFS_CRYPTO_KEY_MAX_SIZE 64
++/* x-CRYPTOCFG - Crypto Configuration X */
++union ufs_crypto_cfg_entry {
++	__le32 reg_val[32];
++	struct {
++		u8 crypto_key[UFS_CRYPTO_KEY_MAX_SIZE];
++		u8 data_unit_size;
++		u8 crypto_cap_idx;
++		u8 reserved_1;
++		u8 config_enable;
++		u8 reserved_multi_host;
++		u8 reserved_2;
++		u8 vsb[2];
++		u8 reserved_3[56];
++	};
 +};
 +
  /*
-  * Try to put the fields that are referenced together in the same cacheline.
-  *
-@@ -224,6 +230,10 @@ struct request {
- 	unsigned short nr_integrity_segments;
- #endif
+  * Request Descriptor Definitions
+  */
+@@ -339,6 +398,7 @@ enum {
+ 	UTP_NATIVE_UFS_COMMAND		= 0x10000000,
+ 	UTP_DEVICE_MANAGEMENT_FUNCTION	= 0x20000000,
+ 	UTP_REQ_DESC_INT_CMD		= 0x01000000,
++	UTP_REQ_DESC_CRYPTO_ENABLE_CMD	= 0x00800000,
+ };
  
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	struct rq_crypt_ctx rq_crypt_ctx;
-+#endif
-+
- 	unsigned short write_hint;
- 	unsigned short ioprio;
- 
+ /* UTP Transfer Request Data Direction (DD) */
+@@ -358,6 +418,9 @@ enum {
+ 	OCS_PEER_COMM_FAILURE		= 0x5,
+ 	OCS_ABORTED			= 0x6,
+ 	OCS_FATAL_ERROR			= 0x7,
++	OCS_DEVICE_FATAL_ERROR		= 0x8,
++	OCS_INVALID_CRYPTO_CONFIG	= 0x9,
++	OCS_GENERAL_CRYPTO_ERROR	= 0xA,
+ 	OCS_INVALID_COMMAND_STATUS	= 0x0F,
+ 	MASK_OCS			= 0x0F,
+ };
 -- 
 2.25.0.265.gbab2e86ba0-goog
 
