@@ -4,31 +4,32 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E457C35641
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 09:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B3E0C35641
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 09:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE69D20679
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 09:18:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 083F120722
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 09:21:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727046AbgBUJSq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 04:18:46 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46340 "EHLO mx2.suse.de"
+        id S1727150AbgBUJVi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 04:21:38 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48518 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726244AbgBUJSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Feb 2020 04:18:46 -0500
+        id S1726244AbgBUJVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 21 Feb 2020 04:21:38 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4672BAAC2;
-        Fri, 21 Feb 2020 09:18:44 +0000 (UTC)
-Subject: Re: [PATCH RESEND 1/2] scsi: libfc: free response frame from GPN_ID
+        by mx2.suse.de (Postfix) with ESMTP id 65871AE5C;
+        Fri, 21 Feb 2020 09:21:36 +0000 (UTC)
+Subject: Re: [PATCH RESEND 2/2] scsi: libfc: drop extra rport reference in
+ fc_rport_create()
 To:     Igor Druzhinin <igor.druzhinin@citrix.com>,
         fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com
 References: <1579013000-14570-1-git-send-email-igor.druzhinin@citrix.com>
- <1579013000-14570-2-git-send-email-igor.druzhinin@citrix.com>
+ <1579013000-14570-3-git-send-email-igor.druzhinin@citrix.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -74,12 +75,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <e8e618f7-df20-bb09-a9ff-bd6e3442ceba@suse.de>
-Date:   Fri, 21 Feb 2020 10:18:43 +0100
+Message-ID: <cdaf7362-b0dd-de99-b7ec-318b60b85192@suse.de>
+Date:   Fri, 21 Feb 2020 10:21:36 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1579013000-14570-2-git-send-email-igor.druzhinin@citrix.com>
+In-Reply-To: <1579013000-14570-3-git-send-email-igor.druzhinin@citrix.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,29 +90,39 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 1/14/20 3:43 PM, Igor Druzhinin wrote:
-> fc_disc_gpn_id_resp() should be the last function using it so free it
-> here to avoid memory leak.
+> The callers of this function seem to assume the reference is not taken
+> in case rport already exists. This results in one extra reference taken
+> on each rport re-discovery that will eventually get to inability to
+> free rport structure on port removal.
 > 
 > Signed-off-by: Igor Druzhinin <igor.druzhinin@citrix.com>
 > ---
->  drivers/scsi/libfc/fc_disc.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/libfc/fc_rport.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-> index 9c5f7c9..2b865c6 100644
-> --- a/drivers/scsi/libfc/fc_disc.c
-> +++ b/drivers/scsi/libfc/fc_disc.c
-> @@ -628,6 +628,8 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
->  	}
->  out:
->  	kref_put(&rdata->kref, fc_rport_destroy);
-> +	if (!IS_ERR(fp))
-> +		fc_frame_free(fp);
->  }
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index da6e97d..a43f9dd 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -133,8 +133,10 @@ struct fc_rport_priv *fc_rport_create(struct fc_lport *lport, u32 port_id)
+>  	lockdep_assert_held(&lport->disc.disc_mutex);
 >  
->  /**
+>  	rdata = fc_rport_lookup(lport, port_id);
+> -	if (rdata)
+> +	if (rdata) {
+> +		kref_put(&rdata->kref, fc_rport_destroy);
+>  		return rdata;
+> +	}
+>  
+>  	if (lport->rport_priv_size > 0)
+>  		rport_priv_size = lport->rport_priv_size;
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+NAK.
+The caller _does_ assume that a reference is taken once
+fc_rport_create() returns non-NULL.
+And the caller is responsible to drop the reference once 'rdatat' isn't
+used anymore.
+Any other usage is an error, but should be fixed in the caller, not here.
 
 Cheers,
 
