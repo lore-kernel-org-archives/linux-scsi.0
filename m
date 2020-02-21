@@ -2,143 +2,93 @@ Return-Path: <SRS0=iCCw=4J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED9A3C3565B
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 18:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1730C3566F
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 22:57:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5D4D24650
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 18:40:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582310413;
-	bh=3YrQ2Cspduv8p1rKuaa41bpCFtQWvnwvF2Buv3BWSGE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=yvNbvmQPcsgC84lAuei8To2L5bX0dyq0ZOc5YNQWSA78ntSy9GR5k3djPnDkGve8n
-	 wECocgc//vp8ow5lTjyRhcA1KvnFhyrr571yQDlwdIIKp9TJRtsmwUAEST5PMca2Yk
-	 z+YaLwdWZGNlfO3R0J4rThqd6QqxkKH15Dp9DKTo=
+	by mail.kernel.org (Postfix) with ESMTP id B9C8920722
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 22:57:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uOHwG2vY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729477AbgBUSkN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 13:40:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40522 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729288AbgBUSkM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Feb 2020 13:40:12 -0500
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 04462208E4;
-        Fri, 21 Feb 2020 18:40:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582310411;
-        bh=3YrQ2Cspduv8p1rKuaa41bpCFtQWvnwvF2Buv3BWSGE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UAEVGHH0S7mhCC+QS//PHH1fwrlrqpoUQbMfcOGAzku9VHK4DRtsBKSt+PxFmIBCf
-         KMS80bOXgolqa1nlyFbwYcANnTzGrE/4USZOCmCppD6ZYYrSHA/Dbdy00MoaOi6Fl6
-         sLYGJ/B6gcxiMLvXAT3ZDqwNJeO/ox8wMsKJBFp8=
-Date:   Fri, 21 Feb 2020 10:40:09 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v7 7/9] fscrypt: add inline encryption support
-Message-ID: <20200221184009.GD925@sol.localdomain>
-References: <20200221115050.238976-1-satyat@google.com>
- <20200221115050.238976-8-satyat@google.com>
+        id S1728722AbgBUW5P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 17:57:15 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:34884 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726802AbgBUW5O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 17:57:14 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LMiJMA173951;
+        Fri, 21 Feb 2020 22:57:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=mHXErjrqGneRv2hmmW4O5dP0FIgiXEVOdcSpIVObv2c=;
+ b=uOHwG2vYSTHxA4n2PE+dWpoS0X6e5Jv5bK9Gh83QZfwXAWIPmG4kAV2w6AAcLVFgeZmT
+ nmUcxMPKm9jR2WIMCgzxuT673R7uWsYtG2JndQAQkPI2wFXZgXo8i4DDqagwo3OytxMd
+ 98ENFpSMwd94UyRoKjDEfk6EhgHD/EK1Rr/JxIfQedpZDPfBKhlnqVoLh3A5a5z75v0V
+ aZsMoY4NdSOJNw0JmrtKhbkW5Xuvq/Jgaaqi4+z2OeoyZSEp8cduL7/BktF6mPkz5UQW
+ wPvG3uSzp4HwCnnx+lxQeULJqp1G0FDA0u3a+SwwirBDWm44ojM75hYJLaME+AnzXCUk tA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2y8ud1kaa7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Feb 2020 22:57:07 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01LMgZJH101171;
+        Fri, 21 Feb 2020 22:57:06 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2y8udg3yuw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Feb 2020 22:57:06 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01LMv238008888;
+        Fri, 21 Feb 2020 22:57:03 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 21 Feb 2020 14:57:02 -0800
+To:     Igor Druzhinin <igor.druzhinin@citrix.com>
+Cc:     <fcoe-devel@open-fcoe.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <hare@suse.de>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+Subject: Re: [PATCH RESEND 1/2] scsi: libfc: free response frame from GPN_ID
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <1579013000-14570-1-git-send-email-igor.druzhinin@citrix.com>
+        <1579013000-14570-2-git-send-email-igor.druzhinin@citrix.com>
+Date:   Fri, 21 Feb 2020 17:56:59 -0500
+In-Reply-To: <1579013000-14570-2-git-send-email-igor.druzhinin@citrix.com>
+        (Igor Druzhinin's message of "Tue, 14 Jan 2020 14:43:19 +0000")
+Message-ID: <yq18skvsg5g.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221115050.238976-8-satyat@google.com>
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
+ mlxlogscore=886 malwarescore=0 bulkscore=0 suspectscore=2 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002210170
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9538 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 malwarescore=0
+ suspectscore=2 bulkscore=0 spamscore=0 priorityscore=1501 phishscore=0
+ impostorscore=0 mlxlogscore=960 clxscore=1015 adultscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002210170
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 03:50:48AM -0800, Satya Tangirala wrote:
-> diff --git a/fs/crypto/bio.c b/fs/crypto/bio.c
-> index 4fa18fff9c4e..82d06cf4b94a 100644
-> --- a/fs/crypto/bio.c
-> +++ b/fs/crypto/bio.c
-> @@ -24,6 +24,8 @@
->  #include <linux/module.h>
->  #include <linux/bio.h>
->  #include <linux/namei.h>
-> +#include <linux/fscrypt.h>
 
-No need to include <linux/fscrypt.h> explicitly here, since everything in
-fs/crypto/ already gets it via "fscrypt_private.h".
+Igor,
 
-> +static int fscrypt_zeroout_range_inline_crypt(const struct inode *inode,
-> +					      pgoff_t lblk, sector_t pblk,
-> +					      unsigned int len)
-> +{
-> +	const unsigned int blockbits = inode->i_blkbits;
-> +	const unsigned int blocks_per_page = 1 << (PAGE_SHIFT - blockbits);
-> +	struct bio *bio;
-> +	int ret, err = 0;
-> +	int num_pages = 0;
-> +
-> +	/* This always succeeds since __GFP_DIRECT_RECLAIM is set. */
-> +	bio = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
-> +
-> +	while (len) {
-> +		unsigned int blocks_this_page = min(len, blocks_per_page);
-> +		unsigned int bytes_this_page = blocks_this_page << blockbits;
-> +
-> +		if (num_pages == 0) {
-> +			fscrypt_set_bio_crypt_ctx(bio, inode, lblk, GFP_NOIO);
+> fc_disc_gpn_id_resp() should be the last function using it so free it
+> here to avoid memory leak.
 
-This should use GFP_NOFS rather than the stricter GFP_NOIO.
+Applied to 5.6/scsi-fixes, thanks!
 
-> +			bio_set_dev(bio, inode->i_sb->s_bdev);
-> +			bio->bi_iter.bi_sector =
-> +					pblk << (blockbits - SECTOR_SHIFT);
-> +			bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
-> +		}
-> +		ret = bio_add_page(bio, ZERO_PAGE(0), bytes_this_page, 0);
-> +		if (WARN_ON(ret != bytes_this_page)) {
-> +			err = -EIO;
-> +			goto out;
-> +		}
-> +		num_pages++;
-> +		len -= blocks_this_page;
-> +		lblk += blocks_this_page;
-> +		pblk += blocks_this_page;
-> +		if (num_pages == BIO_MAX_PAGES || !len) {
-> +			err = submit_bio_wait(bio);
-> +			if (!err && bio->bi_status)
-> +				err = -EIO;
-
-submit_bio_wait() already checks bi_status and reflects it in the returned
-error, so checking it again here is redundant.
-
-> @@ -69,12 +119,17 @@ int fscrypt_zeroout_range(const struct inode *inode, pgoff_t lblk,
->  	unsigned int nr_pages;
->  	unsigned int i;
->  	unsigned int offset;
-> +	const bool inlinecrypt = fscrypt_inode_uses_inline_crypto(inode);
->  	struct bio *bio;
->  	int ret, err;
->  
->  	if (len == 0)
->  		return 0;
->  
-> +	if (inlinecrypt)
-> +		return fscrypt_zeroout_range_inline_crypt(inode, lblk, pblk,
-> +							  len);
-> +
-
-No need for the 'inlinecrypt' bool variable.  Just do:
-
-	if (fscrypt_inode_uses_inline_crypto(inode))
-
-FYI, I had suggested a merge resolution to use here which didn't have the above
-problems.  Looks like you missed it?
-https://lkml.kernel.org/linux-block/20200114211243.GC41220@gmail.com/
-
-- Eric
+-- 
+Martin K. Petersen	Oracle Linux Engineering
