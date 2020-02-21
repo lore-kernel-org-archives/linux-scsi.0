@@ -2,91 +2,69 @@ Return-Path: <SRS0=iCCw=4J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C990C35646
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7D0C35656
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:48:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 101AD208E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:38:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A482206E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 Feb 2020 15:48:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728249AbgBUPh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 10:37:59 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58572 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727053AbgBUPh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Feb 2020 10:37:59 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id E0A7EAECA;
-        Fri, 21 Feb 2020 15:37:57 +0000 (UTC)
-Date:   Fri, 21 Feb 2020 16:37:57 +0100
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH v3 4/5] qla2xxx: Convert MAKE_HANDLE() from a define into
- an inline function
-Message-ID: <20200221153757.qxeustl7k46db54f@beryllium.lan>
-References: <20200220043441.20504-1-bvanassche@acm.org>
- <20200220043441.20504-5-bvanassche@acm.org>
- <20200220082155.c2dwknz2hcvwhwcg@beryllium.lan>
- <e91c9277-8a98-6e08-6219-005d03ee97c8@acm.org>
+        id S1729019AbgBUPsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 10:48:47 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:57331 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728364AbgBUPsr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 10:48:47 -0500
+Received: from [82.43.126.140] (helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1j5AXi-0002Np-Pl; Fri, 21 Feb 2020 15:48:42 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: lpfc: fix spelling mistake "Notication" -> "Notification"
+Date:   Fri, 21 Feb 2020 15:48:41 +0000
+Message-Id: <20200221154841.77791-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e91c9277-8a98-6e08-6219-005d03ee97c8@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+From: Colin Ian King <colin.king@canonical.com>
 
-On Thu, Feb 20, 2020 at 08:28:16AM -0800, Bart Van Assche wrote:
-> As one can see in __qla2x00_marker() a value is assigned to mrk24->handle()
-> by __qla2x00_alloc_iocbs(). That function calls qla2xxx_get_next_handle() to
-> determine the 'handle' value. The implementation of that last function is as
-> follows:
-> 
-> uint32_t qla2xxx_get_next_handle(struct req_que *req)
-> {
-> 	uint32_t index, handle = req->current_outstanding_cmd;
-> 
-> 	for (index = 1; index < req->num_outstanding_cmds; index++) {
-> 		handle++;
-> 		if (handle == req->num_outstanding_cmds)
-> 			handle = 1;
-> 		if (!req->outstanding_cmds[handle])
-> 			return handle;
-> 	}
-> 
-> 	return 0;
-> }
-> 
-> Since 'num_outstanding_cmds' is a 16-bit variable I think that guarantees
-> that the code quoted in your e-mail passes a 16-bit value as the second
-> argument to make_handle().
-> 
-> Additionally, if the second argument to make_handle() would be larger than
-> 0x10000, the following code from qla2x00_status_entry() would map
-> sts->handle to another queue and another command than those through wich the
-> command was submitted to the firmware:
-> 
-> 	handle = (uint32_t) LSW(sts->handle);
-> 	que = MSW(sts->handle);
-> 	req = ha->req_q_map[que];
+There is a spelling mistake in a lpfc_printf_vlog info messgae. Fix it.
 
-Thanks for digging through it. I stopped at the function signature :)
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/lpfc/lpfc_els.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changing the return type of qla2xxx_get_next_handle() would be a new
-patch.
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index a712f15bc88c..80d1e661b0d4 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3128,7 +3128,7 @@ lpfc_cmpl_els_disc_cmd(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		for (i = 0; i < ELS_RDF_REG_TAG_CNT &&
+ 			    i < be32_to_cpu(prdf->reg_d1.reg_desc.count); i++)
+ 			lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+-				 "4677 Fabric RDF Notication Grant Data: "
++				 "4677 Fabric RDF Notification Grant Data: "
+ 				 "0x%08x\n",
+ 				 be32_to_cpu(
+ 					prdf->reg_d1.desc_tags[i]));
+-- 
+2.25.0
 
-In this case this patch is good.
-
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
