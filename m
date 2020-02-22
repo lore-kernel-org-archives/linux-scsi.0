@@ -6,49 +6,47 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB23C35669
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:45:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F59C35669
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FD292072C
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:45:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B635E206D7
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727646AbgBVCpk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 21:45:40 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:45607 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbgBVCpk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 21:45:40 -0500
-Received: by mail-pg1-f195.google.com with SMTP id b9so1915638pgk.12
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 18:45:40 -0800 (PST)
+        id S1727823AbgBVCqK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 21:46:10 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42475 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726802AbgBVCqK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 21:46:10 -0500
+Received: by mail-pf1-f196.google.com with SMTP id 4so2256415pfz.9
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 18:46:08 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=HE7sH2ZRXmWzWVLBJHBdZ14L20XJIe9q/E4kuKDwjU4=;
-        b=mRq75tcTXAbNIzgJtL5siP1hZt+gt1nn2JLkJr9aD/udAO94V/ArcrNSr9nb/+w99z
-         1E9v/GZX6DhCatSaoEsDyOJyGQ+KaoeMvw3Bl7lZJSYsZILprs9daOTUkg2xuDjAiDFR
-         Pj+V7pSwIlM/wxCenxxNy240dqOGVVJfsJ2FiU3YLRfgCjrfMONOQY5KfNDsOQEH1Lud
-         F9zslNbdxrNHZTnwxU07omRzi7+p4BC38KbaSA39CsYzUim30QmzCaBBVKJVsJEUm9fN
-         THHbEe9hJ00cFpnMGqVLS9wvTrllcviGy95ql+mmxQcSMfHnyHfSlRO4Ydp687s3XnVT
-         Emow==
-X-Gm-Message-State: APjAAAXcJGujUBb/rRHjm2szb3ccwEuo+nAcOaeu72A2piuABnXLd5n4
-        E0IGdAxp2deE/I7VE26pmMdDWky7n5o=
-X-Google-Smtp-Source: APXvYqzWs5Cwc9Gw6SGmemF4Gxw1DEKMcOcBzdi6hvMjMNXjEVF7UMked63C4B4O+B31HwHnm43JpA==
-X-Received: by 2002:a63:8f59:: with SMTP id r25mr42861772pgn.280.1582339539924;
-        Fri, 21 Feb 2020 18:45:39 -0800 (PST)
+        bh=pQKS9egMPUlLc/tYaFJevI8N7JjrVdDrD283FD5jfv0=;
+        b=CtmbAY/+juu1zoWpfCpHvuhPtHbJKP6rqvVJgAH5Id87+4X3ekAkQKb6tHV8e+sevG
+         A8A0WONdtStKoQ3LkUW7HEDS09+g3vG6VrGgkqdD8af6DP8NEmG3j9zxc49qFrgQNJUf
+         UqwqAQXxM3Ysck0myEuw8T4BtpSTBU77k54wyBVQjiFCXG+CbebBKviFtaAtAGC+VdJI
+         MBV4TaKZM2gi/jOVjYjcpwlkhFs/6xZWNulmq/7TgeYWubqyMvPOkOgCcnYcbd278Ar8
+         xzuIbrxhLJRBIC7y8kzoLFjMz5yMLW6CGmY8T6pf3MUoUZOczInlmw9j3xXR/uqXYl7y
+         srgQ==
+X-Gm-Message-State: APjAAAXldW7paoTNnWZ2DmmgQAlRwpT8esUyfifYbGHKGVNMwydi4pk7
+        j3GV1qS3UKZDNIB7BP8LFN4=
+X-Google-Smtp-Source: APXvYqwpJZQDX+a9nP/W7XgZZzuoxyr/I3CZPPQs6dLVS48Mbxo/yKoHVjX37MK0T6/M0YLkWU8tjw==
+X-Received: by 2002:a62:188:: with SMTP id 130mr41187155pfb.249.1582339567963;
+        Fri, 21 Feb 2020 18:46:07 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:89d3:733:bb73:c1a4? ([2601:647:4000:d7:89d3:733:bb73:c1a4])
-        by smtp.gmail.com with ESMTPSA id w25sm4136378pfi.106.2020.02.21.18.45.38
+        by smtp.gmail.com with ESMTPSA id r13sm3693088pjp.14.2020.02.21.18.46.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Feb 2020 18:45:39 -0800 (PST)
-Subject: Re: [PATCH 2/2] ufshcd: use an enum for quirks
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+        Fri, 21 Feb 2020 18:46:07 -0800 (PST)
+Subject: Re: [PATCH 1/2] ufshcd: remove unused quirks
+To:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
 References: <20200221140812.476338-1-hch@lst.de>
- <20200221140812.476338-3-hch@lst.de>
- <7f2394fb-d1fc-830b-eab7-30650c92e87f@codeaurora.org>
+ <20200221140812.476338-2-hch@lst.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,28 +71,22 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <530c2c48-7bc7-1a8e-07b9-997854188f9c@acm.org>
-Date:   Fri, 21 Feb 2020 18:45:37 -0800
+Message-ID: <b8a9f380-a005-6c34-b10c-ab9759d84b4f@acm.org>
+Date:   Fri, 21 Feb 2020 18:46:06 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <7f2394fb-d1fc-830b-eab7-30650c92e87f@codeaurora.org>
+In-Reply-To: <20200221140812.476338-2-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-21 10:18, Asutosh Das (asd) wrote:
-> On 2/21/2020 6:08 AM, Christoph Hellwig wrote:
->> +    /* Interrupt aggregation support is broken */
->> +    UFSHCD_QUIRK_BROKEN_INTR_AGGR            = 1 << 0,
->> +
-> 
-> How about using BIT() here?
+On 2020-02-21 06:08, Christoph Hellwig wrote:
+> Remove various quirks that don't have users, as well as the dead code
+> keyed off them.
 
-Not everyone is convinced that using BIT() improves code readability.
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
