@@ -2,376 +2,123 @@ Return-Path: <SRS0=uhQV=4K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
-	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 159C9C35641
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 00:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6C1C35641
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E015A24676
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 00:52:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="GjuIbG+7"
+	by mail.kernel.org (Postfix) with ESMTP id 22AD0206D7
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727941AbgBVAwm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 19:52:42 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:40874 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727933AbgBVAwl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 19:52:41 -0500
-Received: by mail-pl1-f193.google.com with SMTP id y1so1589363plp.7
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 16:52:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=RgwHC/xJ6z3IoTDapB9+p/azB4W+mfq89bfnSBwiKXw=;
-        b=GjuIbG+7JA8abt7bW6huT9ZvjkX1f3LeWLtW5lZ5cGz7SJ2HOzUv/dG2M4967+1JYP
-         HJRxITLIyW/oZmu04niY1J1QG/KT/nxK6DxZtm3pKN9Ajr1DeUiqqW9drC6CR9OqQKes
-         lKiJQqwd4OoEPalnxIh00V+nH1Yz209z9U0t0etisTudESVS2PTg51Y79+QAe0k+hNsK
-         WvyDA565stfk7ZmKC4wypvKeB+dE8zuRptwJRq1THi5oB6zlm8ixUNZRx9jB2hjqbn0n
-         Zw+0qic6cakfHxYEWHPkgyk06t2EQbf4rokK4lQrkhEeRwxVygCOBAgv7LRllNhvUw6Z
-         OLlg==
+        id S1727939AbgBVCkV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 21:40:21 -0500
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:32826 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727734AbgBVCkV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 21:40:21 -0500
+Received: by mail-pf1-f176.google.com with SMTP id n7so2272387pfn.0
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 18:40:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RgwHC/xJ6z3IoTDapB9+p/azB4W+mfq89bfnSBwiKXw=;
-        b=S2mdc09FJfNb2USSm49xWemMQywJ/+j+AuaiQtpf1n+gmJWW6zGc6Np4lstGo4DxB1
-         p+VdUCY+3VSO0sYdGqdDxOq2zCGLP4SVTr6F469BolzHSmGCEdB1nycS/al4Btx/Ehw4
-         uQUsPVWVn3yQw0lUIz3bKT5j3NkwTrZc+AZZtiurrXbWchVRK7wv5ULrNd8Uu/TBFuM4
-         VS+9teMV41zzYmF3ETqj4zdTsKsMsDeO3NotRTOSrfQWFMc2qOenXtQsUtKZJCdZVJ4O
-         hB0fJr7mLePijE5V3AQ5JnKkKTCGPY9lreqG6OjOX7fhGr11LsPSz40ntXF6l+GrSh+T
-         m1rw==
-X-Gm-Message-State: APjAAAWv9Sw3ETXUvbtwPJvTrg9BUya23SYqnzL31WPmQN9kyH1pHQQC
-        g7PZHQHRQe/q6AjVcfg4lYBXI4mEWSCRWg==
-X-Google-Smtp-Source: APXvYqxQiXBE77sn3DOouv+cexHyfbWflYwaP1vyX0KGTbCxCKNBOxslYHw0Aq5oGZmGbGj9/1XTiQ==
-X-Received: by 2002:a17:902:104:: with SMTP id 4mr38397960plb.24.1582332759540;
-        Fri, 21 Feb 2020 16:52:39 -0800 (PST)
-Received: from google.com ([2620:15c:201:0:7f8c:9d6e:20b8:e324])
-        by smtp.gmail.com with ESMTPSA id j4sm4086854pfh.152.2020.02.21.16.52.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Feb 2020 16:52:38 -0800 (PST)
-Date:   Fri, 21 Feb 2020 16:52:33 -0800
-From:   Satya Tangirala <satyat@google.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v7 2/9] block: Inline encryption support for blk-mq
-Message-ID: <20200222005233.GA209268@google.com>
-References: <20200221115050.238976-1-satyat@google.com>
- <20200221115050.238976-3-satyat@google.com>
- <20200221172205.GB438@infradead.org>
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5GfUZ5+xFFUc8swffX9Wu3QPinfKFzgnfzYfREcsOK0=;
+        b=pF1N5JiUJmIkv/BAVtC3TA3t5m0YI8kf2tutIsDD84vkqNTrLRfNr0XQwiMUIImR3r
+         j2nWlVtJrkF6RzYH8o3t+S6lw5XBxa3Y75S/WOglVaYHPWivhvNu9CSEf7vsg1a6nYSk
+         cUoX7z1xUJexM2SELT2yliAL79vERq8/ewijw+5EtDv95Cmr/ZjM1nVFpuPUf4usNp37
+         VIIbAWFLwZvKU9dJiu9G04ArhEJVEeyXxCWPvC+3syQ9exV7nKsrKj73EX27WtpcOu1Q
+         y/olvXYq9y3rCKLWZBDimNjO8sUEk9tYJDMwsH9PN6/bXtTLqidRSCWRUkBj8opB3ogi
+         u9hA==
+X-Gm-Message-State: APjAAAUCfXk6pTwr/QSN6mfYL3yR0TQUrdYUOGqgBYTi86n8Cf7WOCRS
+        +uSbi/MbDa/VaUzo14TO5bhsRV8b7Lc=
+X-Google-Smtp-Source: APXvYqz4bXgK87izp29JJQJIoXo6ZbrnXOXZ5sIJdi51jKRs/X0xRCrU1736WuPMb3wQ4qd3nAeA8Q==
+X-Received: by 2002:a63:5508:: with SMTP id j8mr40113227pgb.170.1582339219909;
+        Fri, 21 Feb 2020 18:40:19 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:89d3:733:bb73:c1a4? ([2601:647:4000:d7:89d3:733:bb73:c1a4])
+        by smtp.gmail.com with ESMTPSA id s130sm4391758pfc.62.2020.02.21.18.40.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 21 Feb 2020 18:40:18 -0800 (PST)
+Subject: Re: [<RFC PATCH v1> 1/2] scsi: ufs: add write booster feature support
+To:     Asutosh Das <asutoshd@codeaurora.org>, asutoshd@qti.qualcomm.com,
+        linux-scsi@vger.kernel.org
+References: <cover.1582330473.git.asutoshd@codeaurora.org>
+ <0eb182e6731bc4ce0c1d6a97f102155d7186520f.1582330473.git.asutoshd@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <a5a45551-8852-a8de-3ea5-f7cf761c7a15@acm.org>
+Date:   Fri, 21 Feb 2020 18:40:17 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221172205.GB438@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <0eb182e6731bc4ce0c1d6a97f102155d7186520f.1582330473.git.asutoshd@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 09:22:05AM -0800, Christoph Hellwig wrote:
-> > index bf62c25cde8f..bce563031e7c 100644
-> > --- a/block/bio-integrity.c
-> > +++ b/block/bio-integrity.c
-> > @@ -42,6 +42,11 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
-> >  	struct bio_set *bs = bio->bi_pool;
-> >  	unsigned inline_vecs;
-> >  
-> > +	if (bio_has_crypt_ctx(bio)) {
-> > +		pr_warn("blk-integrity can't be used together with blk-crypto en/decryption.");
-> > +		return ERR_PTR(-EOPNOTSUPP);
-> > +	}
-> 
-> What is the rationale for this limitation?  Restricting unrelated
-> features from being used together is a pretty bad design pattern and
-> should be avoided where possible.  If it can't it needs to be documented
-> very clearly.
-> 
-My understanding of blk-integrity is that for writes, blk-integrity
-generates some integrity info for a bio and sends it along with the bio,
-and the device on the other end verifies that the data it received to
-write matches up with the integrity info provided with the bio, and
-saves the integrity info along with the data. As for reads, the device
-sends the data along with the saved integrity info and blk-integrity
-verifies that the data received matches up with the integrity info.
+On 2020-02-21 16:38, Asutosh Das wrote:
+> @@ -371,6 +379,12 @@ UFS_GEOMETRY_DESC_PARAM(enh4_memory_max_alloc_units,
+>  	_ENM4_MAX_NUM_UNITS, 4);
+>  UFS_GEOMETRY_DESC_PARAM(enh4_memory_capacity_adjustment_factor,
+>  	_ENM4_CAP_ADJ_FCTR, 2);
+> +UFS_GEOMETRY_DESC_PARAM(wb_max_alloc_units, _WB_MAX_ALLOC_UNITS, 4);
+> +UFS_GEOMETRY_DESC_PARAM(wb_max_wb_luns, _WB_MAX_WB_LUNS, 1);
+> +UFS_GEOMETRY_DESC_PARAM(wb_buff_cap_adj, _WB_BUFF_CAP_ADJ, 1);
+> +UFS_GEOMETRY_DESC_PARAM(wb_sup_red_type, _WB_SUP_RED_TYPE, 1);
+> +UFS_GEOMETRY_DESC_PARAM(wb_sup_wb_type, _WB_SUP_WB_TYPE, 1);
+> +
+>  
+>  static struct attribute *ufs_sysfs_geometry_descriptor[] = {
 
-So for encryption and integrity to work together, in systems without
-hardware inline encryption support, encryption of data in a bio must
-happen in the kernel before bio_integrity_prep, since we shouldn't
-modify data in the bio after integrity calculation, and similarly,
-decryption of data in the bio must happen in the kernel after integrity
-verification. The integrity info saved on disk is the integrity info of
-the ciphertext.
+This patch converts a bunch of single blank lines into double blank
+lines. Are such changes useful?
 
-But in systems with hardware inline encryption support, during write, the
-device will receive integrity info of the plaintext data, and during
-read, it will send integrity info of the plaintext data to the kernel. I'm
-worried that the device may not do anything special and simply save the
-integrity info of the plaintext on disk which will cause the on disk
-format to no longer be the same whether or not hardware inline encryption
-support is present, which will cause issues like not being able to ever
-switch between using the "inlinecrypt" mount option (and in particular,
-that means people with existing encrypted filesystems on disks with
-integrity can't just turn on the "inlinecrypt" mount option).
+> +	/* Enable WB only for UFS-3.1 OR if desc len >= 0x59 */
+> +	if (dev_info->wspecversion >= 0x310) {
+> +		hba->dev_info.d_ext_ufs_feature_sup =
+> +			desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP]
+> +								<< 24 |
+> +			desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 1]
+> +								<< 16 |
+> +			desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 2]
+> +								<< 8 |
+> +			desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 3];
 
-As far as I can tell, I think all the issues go away if the hardware
-explicitly computes integrity info for the ciphertext and stores that on
-disk instead of what the kernel passes it, and on the read path, it
-decrypts the data on disk and generates integrity info for the plain
-text, and passes it to the kernel. Eric also points out that a device
-that just stores integrity info of the plaintext on disk would be broken
-since the integrity info would leak information about the plaintext, and
-that the correct thing for the device to do is store integrity info
-computed using only the ciphertext.
+Please use get_unaligned_be32() instead of open-coding it.
 
-So if we're alright with assuming for now that hardware vendors will at
-least plan to do the "right" thing, I'll just remove the exclusivity
-check in bio-integrity and also the REQ_NO_SPECIAL code :) (and figure
-out how to handle dm-integrity) because the rest of the code will
-otherwise work as intended w.r.t encryption with integrity. As for
-handling cases like devices that actually don't do the "right" thing, or
-devices that support both features but just not at the same time, I think
-I'll leave that to when we actually have hardware that has both these
-features.
+> +			res = wb_buf[0] << 24 | wb_buf[1] << 16 |
+> +				wb_buf[2] << 8 | wb_buf[3];
 
-> > +#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-> > +	rq->rq_crypt_ctx.keyslot = -EINVAL;
-> > +#endif
-> 
-> All the other core block calls to the crypto code are in helpers that
-> are stubbed out.  It might make sense to follow that style here.
-> 
-> >  
-> >  free_and_out:
-> > @@ -1813,5 +1826,8 @@ int __init blk_dev_init(void)
-> >  	blk_debugfs_root = debugfs_create_dir("block", NULL);
-> >  #endif
-> >  
-> > +	if (bio_crypt_ctx_init() < 0)
-> > +		panic("Failed to allocate mem for bio crypt ctxs\n");
-> 
-> Maybe move that panic into bio_crypt_ctx_init itself?
-> 
-> > +static int num_prealloc_crypt_ctxs = 128;
-> > +
-> > +module_param(num_prealloc_crypt_ctxs, int, 0444);
-> > +MODULE_PARM_DESC(num_prealloc_crypt_ctxs,
-> > +		"Number of bio crypto contexts to preallocate");
-> 
-> Please write a comment why this is a tunable, how the default is choosen
-> and why someone might want to chane it.
-> 
-> > +struct bio_crypt_ctx *bio_crypt_alloc_ctx(gfp_t gfp_mask)
-> > +{
-> > +	return mempool_alloc(bio_crypt_ctx_pool, gfp_mask);
-> > +}
-> 
-> I'd rather move bio_crypt_set_ctx out of line, at which point we don't
-> really need this helper.
-> 
-> > +/* Return: 0 on success, negative on error */
-> > +int rq_crypt_ctx_acquire_keyslot(struct bio_crypt_ctx *bc,
-> > +				  struct keyslot_manager *ksm,
-> > +				  struct rq_crypt_ctx *rc)
-> > +{
-> > +	rc->keyslot = blk_ksm_get_slot_for_key(ksm, bc->bc_key);
-> > +	return rc->keyslot >= 0 ? 0 : rc->keyslot;
-> > +}
-> > +
-> > +void rq_crypt_ctx_release_keyslot(struct keyslot_manager *ksm,
-> > +				  struct rq_crypt_ctx *rc)
-> > +{
-> > +	if (rc->keyslot >= 0)
-> > +		blk_ksm_put_slot(ksm, rc->keyslot);
-> > +	rc->keyslot = -EINVAL;
-> > +}
-> 
-> Is there really much of a need for these helpers?  I think the
-> callers would generally be simpler without them.  Especially the
-> fallback code can avoid having to declare rq_crypt_ctx variables
-> on stack without the helpers.
-> 
-> > +int blk_crypto_init_request(struct request *rq, struct request_queue *q,
-> > +			    struct bio *bio)
-> 
-> We can always derive the request_queue from rq->q, so there is no need
-> to pass it explicitly (even if a lot of legacy block code does, but
-> it is slowly getting cleaned up).
-> 
-> > +{
-> > +	struct rq_crypt_ctx *rc = &rq->rq_crypt_ctx;
-> > +	struct bio_crypt_ctx *bc;
-> > +	int err;
-> > +
-> > +	rc->bc = NULL;
-> > +	rc->keyslot = -EINVAL;
-> > +
-> > +	if (!bio)
-> > +		return 0;
-> > +
-> > +	bc = bio->bi_crypt_context;
-> > +	if (!bc)
-> > +		return 0;
-> 
-> Shouldn't the checks if the bio actually requires crypto handling be
-> done by the caller based on a new handler ala:
-> 
-> static inline bool bio_is_encrypted(struct bio *bio)
-> {
-> 	return bio && bio->bi_crypt_context;
-> }
-> 
-> and maybe some inline helpers to reduce the clutter?
-> 
-> That way a kernel with blk crypto support, but using non-crypto I/O
-> saves all the function calls to blk-crypto.
-> 
-> > +	err = bio_crypt_check_alignment(bio);
-> > +	if (err)
-> > +		goto fail;
-> 
-> This seems pretty late to check the alignment, it would be more
-> useful in bio_add_page.  Then again Jens didn't like alignment checks
-> in the block layer at all even for the normal non-crypto alignment,
-> so I don't see why we'd have them here but not for the general case
-> (I'd actually like to ee them for the general case, btw).
-> 
-> > +int blk_crypto_evict_key(struct request_queue *q,
-> > +			 const struct blk_crypto_key *key)
-> > +{
-> > +	if (q->ksm && blk_ksm_crypto_mode_supported(q->ksm, key))
-> > +		return blk_ksm_evict_key(q->ksm, key);
-> > +
-> > +	return 0;
-> > +}
-> 
-> Is there any point in this wrapper that just has a single caller?
-> Als why doesn't blk_ksm_evict_key have the blk_ksm_crypto_mode_supported
-> sanity check itself?
-> 
-> > @@ -1998,6 +2007,13 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
-> >  
-> >  	cookie = request_to_qc_t(data.hctx, rq);
-> >  
-> > +	if (blk_crypto_init_request(rq, q, bio)) {
-> > +		bio->bi_status = BLK_STS_RESOURCE;
-> > +		bio_endio(bio);
-> > +		blk_mq_end_request(rq, BLK_STS_RESOURCE);
-> > +		return BLK_QC_T_NONE;
-> > +	}
-> 
-> This looks fundamentally wrong given that layers above blk-mq
-> can't handle BLK_STS_RESOURCE.  It will just show up as an error
-> in the calller insteaf of being requeued.
-> 
-> That being said I think the only error return from
-> blk_crypto_init_request is and actual hardware error.  So failing this
-> might be ok, but it should be BLK_STS_IOERR, or even better an error
-> directly propagated from the driver. 
-> 
-> > +int bio_crypt_ctx_init(void);
-> > +
-> > +struct bio_crypt_ctx *bio_crypt_alloc_ctx(gfp_t gfp_mask);
-> > +
-> > +void bio_crypt_free_ctx(struct bio *bio);
-> 
-> These can go into block layer internal headers.
-> 
-> > +static inline bool bio_crypt_dun_is_contiguous(const struct bio_crypt_ctx *bc,
-> > +					       unsigned int bytes,
-> > +					u64 next_dun[BLK_CRYPTO_DUN_ARRAY_SIZE])
-> > +{
-> > +	int i = 0;
-> > +	unsigned int inc = bytes >> bc->bc_key->data_unit_size_bits;
-> > +
-> > +	while (i < BLK_CRYPTO_DUN_ARRAY_SIZE) {
-> > +		if (bc->bc_dun[i] + inc != next_dun[i])
-> > +			return false;
-> > +		inc = ((bc->bc_dun[i] + inc)  < inc);
-> > +		i++;
-> > +	}
-> > +
-> > +	return true;
-> > +}
-> > +
-> > +static inline void bio_crypt_dun_increment(u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
-> > +					   unsigned int inc)
-> > +{
-> > +	int i = 0;
-> > +
-> > +	while (inc && i < BLK_CRYPTO_DUN_ARRAY_SIZE) {
-> > +		dun[i] += inc;
-> > +		inc = (dun[i] < inc);
-> > +		i++;
-> > +	}
-> > +}
-> 
-> Should these really be inline?
-> 
-> > +bool bio_crypt_rq_ctx_compatible(struct request *rq, struct bio *bio);
-> > +
-> > +bool bio_crypt_ctx_front_mergeable(struct request *req, struct bio *bio);
-> > +
-> > +bool bio_crypt_ctx_back_mergeable(struct request *req, struct bio *bio);
-> > +
-> > +bool bio_crypt_ctx_merge_rq(struct request *req, struct request *next);
-> > +
-> > +void blk_crypto_bio_back_merge(struct request *req, struct bio *bio);
-> > +
-> > +void blk_crypto_bio_front_merge(struct request *req, struct bio *bio);
-> > +
-> > +void blk_crypto_free_request(struct request *rq);
-> > +
-> > +int blk_crypto_init_request(struct request *rq, struct request_queue *q,
-> > +			    struct bio *bio);
-> > +
-> > +int blk_crypto_bio_prep(struct bio **bio_ptr);
-> > +
-> > +void blk_crypto_rq_bio_prep(struct request *rq, struct bio *bio);
-> > +
-> > +void blk_crypto_rq_prep_clone(struct request *dst, struct request *src);
-> > +
-> > +int blk_crypto_insert_cloned_request(struct request_queue *q,
-> > +				     struct request *rq);
-> > +
-> > +int blk_crypto_init_key(struct blk_crypto_key *blk_key, const u8 *raw_key,
-> > +			enum blk_crypto_mode_num crypto_mode,
-> > +			unsigned int blk_crypto_dun_bytes,
-> > +			unsigned int data_unit_size);
-> > +
-> > +int blk_crypto_evict_key(struct request_queue *q,
-> > +			 const struct blk_crypto_key *key);
-> 
-> Most of this should be block layer private.
-> 
-> > +struct rq_crypt_ctx {
-> > +	struct bio_crypt_ctx *bc;
-> > +	int keyslot;
-> > +};
-> > +
-> >  /*
-> >   * Try to put the fields that are referenced together in the same cacheline.
-> >   *
-> > @@ -224,6 +230,10 @@ struct request {
-> >  	unsigned short nr_integrity_segments;
-> >  #endif
-> >  
-> > +#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-> > +	struct rq_crypt_ctx rq_crypt_ctx;
-> > +#endif
-> 
-> I'd be tempted to just add
-> 
-> 	struct bio_crypt_ctx *crypt_ctx;
-> 	int crypt_keyslot;
-> 
-> directly to struct request.
+Same comment here.
+
+Thanks,
+
+Bart.
