@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F59C35669
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42F4EC35669
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B635E206D7
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2034E206D7
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 02:46:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727823AbgBVCqK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 Feb 2020 21:46:10 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:42475 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726802AbgBVCqK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 21:46:10 -0500
-Received: by mail-pf1-f196.google.com with SMTP id 4so2256415pfz.9
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 18:46:08 -0800 (PST)
+        id S1727874AbgBVCqe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 Feb 2020 21:46:34 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:54195 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726802AbgBVCqe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Feb 2020 21:46:34 -0500
+Received: by mail-pj1-f65.google.com with SMTP id n96so1586871pjc.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Feb 2020 18:46:34 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=pQKS9egMPUlLc/tYaFJevI8N7JjrVdDrD283FD5jfv0=;
-        b=CtmbAY/+juu1zoWpfCpHvuhPtHbJKP6rqvVJgAH5Id87+4X3ekAkQKb6tHV8e+sevG
-         A8A0WONdtStKoQ3LkUW7HEDS09+g3vG6VrGgkqdD8af6DP8NEmG3j9zxc49qFrgQNJUf
-         UqwqAQXxM3Ysck0myEuw8T4BtpSTBU77k54wyBVQjiFCXG+CbebBKviFtaAtAGC+VdJI
-         MBV4TaKZM2gi/jOVjYjcpwlkhFs/6xZWNulmq/7TgeYWubqyMvPOkOgCcnYcbd278Ar8
-         xzuIbrxhLJRBIC7y8kzoLFjMz5yMLW6CGmY8T6pf3MUoUZOczInlmw9j3xXR/uqXYl7y
-         srgQ==
-X-Gm-Message-State: APjAAAXldW7paoTNnWZ2DmmgQAlRwpT8esUyfifYbGHKGVNMwydi4pk7
-        j3GV1qS3UKZDNIB7BP8LFN4=
-X-Google-Smtp-Source: APXvYqwpJZQDX+a9nP/W7XgZZzuoxyr/I3CZPPQs6dLVS48Mbxo/yKoHVjX37MK0T6/M0YLkWU8tjw==
-X-Received: by 2002:a62:188:: with SMTP id 130mr41187155pfb.249.1582339567963;
-        Fri, 21 Feb 2020 18:46:07 -0800 (PST)
+        bh=PvAYvDqhaPTZlLoA847uVi8ySiCkV3euPEtNGYYyCaw=;
+        b=Zp/+ICbSlw9M+wJjgOJXf2PQEQ9lt1EMwL8MJgrLJB1S0fkKeJmg8HNiDlxmtBFCCy
+         z/LH3vS3dp7rOJPuqCvaTwRdHkeEYpcw1+420M3rSzJMWBjfUVrU4GcLvTUtoDrKPsCS
+         Hw6lcdZKRczSakCVMhfqMQ5ZA2uEwTehgsQhL2fo7gd3wO6BkSr17WL9Y4FOikf61eyf
+         4t58nVItoz/Lml34iCNEVs8BhtPkRbqt6NtSo0lfhqoqcww7H3erTcz22qIdOa91YXdT
+         hfTAaVdbj8XYFF9WIcOi236+QR2qUjXL843rDIFVSr/bbnTWutJ1vd0QMBEHnVOdR0CQ
+         5/7g==
+X-Gm-Message-State: APjAAAVUB+FrvtQhpvCSdy11GTvkWExvwi8sZyHK/5fbNq5tu1FiX2gy
+        DEBqpcMoGv6/vSa9EHLuvj4=
+X-Google-Smtp-Source: APXvYqz+YVFEy4ysNPg6I5Jjc1p19jTTSx6eqnlPeKSBoWijGcfdNzNAK+DUcz+/oPrn/FgpccsLBA==
+X-Received: by 2002:a17:902:7d8c:: with SMTP id a12mr39558096plm.47.1582339593925;
+        Fri, 21 Feb 2020 18:46:33 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:89d3:733:bb73:c1a4? ([2601:647:4000:d7:89d3:733:bb73:c1a4])
-        by smtp.gmail.com with ESMTPSA id r13sm3693088pjp.14.2020.02.21.18.46.06
+        by smtp.gmail.com with ESMTPSA id s130sm4402191pfc.62.2020.02.21.18.46.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Feb 2020 18:46:07 -0800 (PST)
-Subject: Re: [PATCH 1/2] ufshcd: remove unused quirks
+        Fri, 21 Feb 2020 18:46:33 -0800 (PST)
+Subject: Re: [PATCH 2/2] ufshcd: use an enum for quirks
 To:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
 References: <20200221140812.476338-1-hch@lst.de>
- <20200221140812.476338-2-hch@lst.de>
+ <20200221140812.476338-3-hch@lst.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -71,12 +71,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <b8a9f380-a005-6c34-b10c-ab9759d84b4f@acm.org>
-Date:   Fri, 21 Feb 2020 18:46:06 -0800
+Message-ID: <688c5472-6709-993b-54ee-70d14d52150f@acm.org>
+Date:   Fri, 21 Feb 2020 18:46:32 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200221140812.476338-2-hch@lst.de>
+In-Reply-To: <20200221140812.476338-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -86,7 +86,8 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-02-21 06:08, Christoph Hellwig wrote:
-> Remove various quirks that don't have users, as well as the dead code
-> keyed off them.
+> Use an enum to specify the various quirks instead of #defines inside
+> the structure definition.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
