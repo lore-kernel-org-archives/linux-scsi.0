@@ -1,69 +1,160 @@
-Return-Path: <SRS0=uhQV=4K=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=lsQb=4L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B96C35673
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 19:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B9EBC35670
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 05:42:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A14520707
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 Feb 2020 19:45:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582400730;
-	bh=h38DsexsnPLyzlNsyAIRLwx5vcEcDMQ9BnyiEQEEr6g=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=VP1/iKFJNhO7EEGqqL0EYfUsDJnQrTQNFJ1wuV+/wwD180YyzGD7UFunPiNRuwgKn
-	 hufUjh32HdJdNuSOjT+oOmU0wMu500tVq2iFskCXguzPSY5CMZ4T9IeWRah8fI39zq
-	 gQcpkS/NKfc0fAbK2p+XjMdzQxgmVQsXvefFj7uY=
+	by mail.kernel.org (Postfix) with ESMTP id 226C6208C4
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 05:42:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IKPPeRPi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726884AbgBVTpP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 22 Feb 2020 14:45:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55760 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726550AbgBVTpO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 22 Feb 2020 14:45:14 -0500
-Subject: Re: [GIT PULL] SCSI fixes for 5.6-rc2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582400714;
-        bh=h38DsexsnPLyzlNsyAIRLwx5vcEcDMQ9BnyiEQEEr6g=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=UMfehu7pUA8Ll2P0oMClAipkC6Rz6REVflVD/RGRyot4zsKgz6bzejC5Q4X3ZNX8Q
-         aeiLcvv6M3x5HFaOUE6A/8EQuSMU0PJponErJvCASZcc9qZs7K9KbUySpZgpbCEHCn
-         qIeIcK/k6eERCs05/zne/onRblpo4myJJEuG+Z4k=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <1582328069.3692.13.camel@HansenPartnership.com>
-References: <1582328069.3692.13.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <1582328069.3692.13.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 807b9515b7d044cf77df31f1af9d842a76ecd5cb
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: b98b809c0a1311239605e8d2ce1583191d3efd5b
-Message-Id: <158240071437.14316.1008658180249121782.pr-tracker-bot@kernel.org>
-Date:   Sat, 22 Feb 2020 19:45:14 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S1726046AbgBWFmg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Feb 2020 00:42:36 -0500
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:36041 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725978AbgBWFmg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Feb 2020 00:42:36 -0500
+Received: by mail-pj1-f67.google.com with SMTP id gv17so2626598pjb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Feb 2020 21:42:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=sBcpUEikr4BVNDaC5sxBh2nBjtOfILlrf6tgzXt34O8=;
+        b=IKPPeRPih+jfKOW4lu6ThGJsCEPhs768DPYXk+92Sg2BK6jnvCSVIv031QOpfQk8zu
+         HBtlh2wZ63/JKwpBxnv7EktCFn7HmsK2nDHg5w/6AO6VLpkztl6JXjQn7rh770uH3r5b
+         Tms281tqAloYvjz+GSzFUz6M/BqEye8qcVp0Dtu1vprx7fNeZZZh6+VKyYKgEZxBGL9I
+         VDPJDJ9wGzSFnM+U/ZtVPPh7/qE4eqgwxlFgo2K3b/XrXw9USs8thwum2bWBReImjfAa
+         8UEz5bolUrJ3HwPOZMTBuqBnOpsIUaGl+0leqvkI4BrEFB1gVe9C6C2Ncd5Tg6S7LwDh
+         Zq0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=sBcpUEikr4BVNDaC5sxBh2nBjtOfILlrf6tgzXt34O8=;
+        b=n/img6AtCr1Qhm+SGDq9T5tVEyd0z4aSxxzjqjF/UNjfOgnqoN88a+2Hv+REPyjHE+
+         EJ7Ur3XWWAnmJUdT85I++L5za+YL7nRj+xBYUOiUTZv5iwfwKR6wAACnsEt/t5QOlbv8
+         jg1uLogzz+V29IznNX8n8GsKLPcxiMuJQLKYg/UbKtCXla29N/HScITjuWdJ1oR47q5K
+         trTve4qosa0H6Mby/jnXh4Kd2O8lQmCOJPI09Fv2U216BHDsYvEkJ80DtG7rUbp6HQiM
+         +aUTUbmgK+2kti+7Hro6zDEDAAbItPBYS+7C7KVBO3MjmUP/OvSV7mMFqpjLK4ZqvbER
+         5Q9Q==
+X-Gm-Message-State: APjAAAW9Key9unBsr23P+PzN8DMB06KqjZcRyXHCokVtyyNwwmi11Zmo
+        ANWwWdmbXiufICYPnumyO+jRUnsMvIc=
+X-Google-Smtp-Source: APXvYqzjsPedUCsVxjjtx79y1TvT2dc0ATqNmiVnXjfR7ppxUrfFB3YGktpiD3Kp1Z70qscXjV6Z0Q==
+X-Received: by 2002:a17:90a:8c0f:: with SMTP id a15mr13348002pjo.86.1582436555656;
+        Sat, 22 Feb 2020 21:42:35 -0800 (PST)
+Received: from localhost ([43.224.245.179])
+        by smtp.gmail.com with ESMTPSA id g72sm8306239pfb.11.2020.02.22.21.42.34
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Sat, 22 Feb 2020 21:42:35 -0800 (PST)
+From:   qiwuchen55@gmail.com
+To:     linux@armlinux.org.uk, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+        chenqiwu <chenqiwu@xiaomi.com>
+Subject: [PATCH] scsi: arm: list_for_each() -> list_for_each_entry()
+Date:   Sun, 23 Feb 2020 13:42:31 +0800
+Message-Id: <1582436551-14244-1-git-send-email-qiwuchen55@gmail.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Fri, 21 Feb 2020 15:34:29 -0800:
+From: chenqiwu <chenqiwu@xiaomi.com>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Use list_for_each_entry() instead of list_for_each() to
+simplify code.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/b98b809c0a1311239605e8d2ce1583191d3efd5b
+Signed-off-by: chenqiwu <chenqiwu@xiaomi.com>
+---
+ drivers/scsi/arm/queue.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/arm/queue.c b/drivers/scsi/arm/queue.c
+index e5559f2..da39597 100644
+--- a/drivers/scsi/arm/queue.c
++++ b/drivers/scsi/arm/queue.c
+@@ -158,12 +158,11 @@ static struct scsi_cmnd *__queue_remove(Queue_t *queue, struct list_head *ent)
+ struct scsi_cmnd *queue_remove_exclude(Queue_t *queue, unsigned long *exclude)
+ {
+ 	unsigned long flags;
+-	struct list_head *l;
++	QE_t *q;
+ 	struct scsi_cmnd *SCpnt = NULL;
+ 
+ 	spin_lock_irqsave(&queue->queue_lock, flags);
+-	list_for_each(l, &queue->head) {
+-		QE_t *q = list_entry(l, QE_t, list);
++	list_for_each_entry(q, &queue->head, list) {
+ 		if (!test_bit(q->SCpnt->device->id * 8 +
+ 			      (u8)(q->SCpnt->device->lun & 0x7), exclude)) {
+ 			SCpnt = __queue_remove(queue, l);
+@@ -207,12 +206,11 @@ struct scsi_cmnd *queue_remove_tgtluntag(Queue_t *queue, int target, int lun,
+ 					 int tag)
+ {
+ 	unsigned long flags;
+-	struct list_head *l;
++	QE_t *q;
+ 	struct scsi_cmnd *SCpnt = NULL;
+ 
+ 	spin_lock_irqsave(&queue->queue_lock, flags);
+-	list_for_each(l, &queue->head) {
+-		QE_t *q = list_entry(l, QE_t, list);
++	list_for_each_entry(q, &queue->head, list) {
+ 		if (q->SCpnt->device->id == target && q->SCpnt->device->lun == lun &&
+ 		    q->SCpnt->tag == tag) {
+ 			SCpnt = __queue_remove(queue, l);
+@@ -234,11 +232,10 @@ struct scsi_cmnd *queue_remove_tgtluntag(Queue_t *queue, int target, int lun,
+ void queue_remove_all_target(Queue_t *queue, int target)
+ {
+ 	unsigned long flags;
+-	struct list_head *l;
++	QE_t *q;
+ 
+ 	spin_lock_irqsave(&queue->queue_lock, flags);
+-	list_for_each(l, &queue->head) {
+-		QE_t *q = list_entry(l, QE_t, list);
++	list_for_each_entry(q, &queue->head, list) {
+ 		if (q->SCpnt->device->id == target)
+ 			__queue_remove(queue, l);
+ 	}
+@@ -257,12 +254,11 @@ void queue_remove_all_target(Queue_t *queue, int target)
+ int queue_probetgtlun (Queue_t *queue, int target, int lun)
+ {
+ 	unsigned long flags;
+-	struct list_head *l;
++	QE_t *q;
+ 	int found = 0;
+ 
+ 	spin_lock_irqsave(&queue->queue_lock, flags);
+-	list_for_each(l, &queue->head) {
+-		QE_t *q = list_entry(l, QE_t, list);
++	list_for_each_entry(q, &queue->head, list) {
+ 		if (q->SCpnt->device->id == target && q->SCpnt->device->lun == lun) {
+ 			found = 1;
+ 			break;
+@@ -283,12 +279,11 @@ int queue_probetgtlun (Queue_t *queue, int target, int lun)
+ int queue_remove_cmd(Queue_t *queue, struct scsi_cmnd *SCpnt)
+ {
+ 	unsigned long flags;
+-	struct list_head *l;
++	QE_t *q;
+ 	int found = 0;
+ 
+ 	spin_lock_irqsave(&queue->queue_lock, flags);
+-	list_for_each(l, &queue->head) {
+-		QE_t *q = list_entry(l, QE_t, list);
++	list_for_each_entry(q, &queue->head, list) {
+ 		if (q->SCpnt == SCpnt) {
+ 			__queue_remove(queue, l);
+ 			found = 1;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+1.9.1
+
