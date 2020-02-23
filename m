@@ -2,429 +2,110 @@ Return-Path: <SRS0=lsQb=4L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B59FDC35666
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 16:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41A1C35666
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 18:38:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79B4B208C3
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 16:57:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F1sMk0AT"
+	by mail.kernel.org (Postfix) with ESMTP id 82A37206E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 Feb 2020 18:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727104AbgBWQ5c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 Feb 2020 11:57:32 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:38174 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726208AbgBWQ5c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 Feb 2020 11:57:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582477050;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=dXCdUOifL1y7ImhKHM+pt2dYrIIgz91G/sg1cRDWUbQ=;
-        b=F1sMk0ATmuy4hA4xhokUYMbdoWoVZT9qcfF8TCF2PzN91u7ratq6fUp4UMu5d9wUhGwJPj
-        uB9UP78y2Ds8yoqCBzXdz/urXSZ+tyjoj0ix48kcRtrK4lvs7Q47tn3Qb3Cl2aGpHLs4Rr
-        IGtnxjJ7rfqf4eHntI69RYz4WBYSct8=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-312-RZjsbX75NUyMV7cH3AWxiQ-1; Sun, 23 Feb 2020 11:57:28 -0500
-X-MC-Unique: RZjsbX75NUyMV7cH3AWxiQ-1
-Received: by mail-wr1-f71.google.com with SMTP id t3so2435185wrp.2
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Feb 2020 08:57:28 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=dXCdUOifL1y7ImhKHM+pt2dYrIIgz91G/sg1cRDWUbQ=;
-        b=tsg4hoWRaM8sEITMX+mf72Sx9PriO4ZZlzKnF0Re2nofSuqQhVXqLn4QMA5DJXhhOd
-         qBjok6/OpwItd07Pt7lGkeZ1Gab08VRtNxZqTmk6apMO2vxWRyQovE1Isahtyr9k5X9T
-         Jm0XZDb/oyjyJ5gAZ6x5H9Ega/9W5N3xtPn7cD8NDYKcV3XYkd4Oubq/0/60MM5uKZfg
-         LVnvRSwy1hDxJsLGj2iHGvs2Pr58QTYCDE2y98pPs667Bh30olJuwaR+cnF/SVR8WLxQ
-         ROXtO1wWKHuKpE+SCjpP8Utq7ich3eOEMz0QEPqayntWkvgP0rvVvufj0tA9Wi7WIrt1
-         pnfA==
-X-Gm-Message-State: APjAAAUzZUt9H4OH6X1WW8OIlCtSwFKYSHuS/38gURvgi2zxJgBBW3ti
-        mPvO1/DT92QStKHZZTXu95IDXaFITAvE5T9zP1eL6Dib7pvTy5tOs+r8JRQdk22btT3pYxuCYIu
-        o0RjqzwFwlyj+AKOl1E29pg==
-X-Received: by 2002:adf:f1d0:: with SMTP id z16mr59912064wro.209.1582477047451;
-        Sun, 23 Feb 2020 08:57:27 -0800 (PST)
-X-Google-Smtp-Source: APXvYqzFS3zBFiCGocQiagTjPvaYTxt1nbybeymUVf9l9vfZLsjf4vyDXj0+jj+RaLCK+CJNKHdgWA==
-X-Received: by 2002:adf:f1d0:: with SMTP id z16mr59912042wro.209.1582477047115;
-        Sun, 23 Feb 2020 08:57:27 -0800 (PST)
-Received: from raver.teknoraver.net (net-47-53-225-50.cust.vodafonedsl.it. [47.53.225.50])
-        by smtp.gmail.com with ESMTPSA id 133sm15212193wme.32.2020.02.23.08.57.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Feb 2020 08:57:26 -0800 (PST)
-From:   Matteo Croce <mcroce@redhat.com>
-To:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
-        linux-nfs@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Anna Schumaker <anna.schumaker@netapp.com>
-Subject: [PATCH] block: refactor duplicated macros
-Date:   Sun, 23 Feb 2020 17:57:24 +0100
-Message-Id: <20200223165724.23816-1-mcroce@redhat.com>
-X-Mailer: git-send-email 2.24.1
+        id S1726678AbgBWSiK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 Feb 2020 13:38:10 -0500
+Received: from hosting.gsystem.sk ([212.5.213.30]:52830 "EHLO
+        hosting.gsystem.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726208AbgBWSiK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Feb 2020 13:38:10 -0500
+X-Greylist: delayed 546 seconds by postgrey-1.27 at vger.kernel.org; Sun, 23 Feb 2020 13:38:10 EST
+Received: from [192.168.0.2] (unknown [188.167.68.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id E54DE7A00BF;
+        Sun, 23 Feb 2020 19:29:03 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: NULL pointer dereference in qla24xx_abort_command, kernel 4.19.98 (Debian)
+Date:   Sun, 23 Feb 2020 19:29:01 +0100
+User-Agent: KMail/1.9.10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202002231929.01662.linux@zary.sk>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
-several times in different flavours across the whole tree.
-Define them just once in a common header.
+Hello,
+a couple of days after upgrading a server from Debian 9 (kernel 4.9.210-1)
+to 10 (kernel 4.19.98), qla2xxx crashed, along with mysql.
 
-Signed-off-by: Matteo Croce <mcroce@redhat.com>
----
- block/blk-lib.c                  |  2 +-
- drivers/block/brd.c              |  3 ---
- drivers/block/null_blk_main.c    |  4 ----
- drivers/block/zram/zram_drv.c    |  8 ++++----
- drivers/block/zram/zram_drv.h    |  2 --
- drivers/dax/super.c              |  2 +-
- drivers/md/bcache/util.h         |  2 --
- drivers/md/dm-bufio.c            |  6 +++---
- drivers/md/dm-integrity.c        | 10 +++++-----
- drivers/md/md.c                  |  4 ++--
- drivers/md/raid1.c               |  2 +-
- drivers/mmc/core/host.c          |  3 ++-
- drivers/scsi/xen-scsifront.c     |  4 ++--
- fs/iomap/buffered-io.c           |  2 +-
- fs/nfs/blocklayout/blocklayout.h |  2 --
- include/linux/blkdev.h           |  4 ++++
- include/linux/device-mapper.h    |  1 -
- 17 files changed, 26 insertions(+), 35 deletions(-)
+There is an EMC CX3 array connected through the fibre-channel adapter.
+No errors are present in EMC event log.
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 5f2c429d4378..f5e705d307e0 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -260,7 +260,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
-  */
- static unsigned int __blkdev_sectors_to_bio_pages(sector_t nr_sects)
- {
--	sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SIZE / 512);
-+	sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SECTORS);
- 
- 	return min(pages, (sector_t)BIO_MAX_PAGES);
- }
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 220c5e18aba0..33e2cbe11400 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -25,9 +25,6 @@
- 
- #include <linux/uaccess.h>
- 
--#define PAGE_SECTORS_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
--#define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
--
- /*
-  * Each block ramdisk device has a radix_tree brd_pages of pages that stores
-  * the pages containing the block device's contents. A brd page's ->index is
-diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-index 16510795e377..c42af6cf0b97 100644
---- a/drivers/block/null_blk_main.c
-+++ b/drivers/block/null_blk_main.c
-@@ -11,10 +11,6 @@
- #include <linux/init.h>
- #include "null_blk.h"
- 
--#define PAGE_SECTORS_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
--#define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
--#define SECTOR_MASK		(PAGE_SECTORS - 1)
--
- #define FREE_BATCH		16
- 
- #define TICKS_PER_SEC		50ULL
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index 1bdb5793842b..6ee59da4a6e2 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -1548,9 +1548,9 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
- 	struct bio_vec bvec;
- 	struct bvec_iter iter;
- 
--	index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
-+	index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
- 	offset = (bio->bi_iter.bi_sector &
--		  (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
-+		  SECTOR_MASK) << SECTOR_SHIFT;
- 
- 	switch (bio_op(bio)) {
- 	case REQ_OP_DISCARD:
-@@ -1643,8 +1643,8 @@ static int zram_rw_page(struct block_device *bdev, sector_t sector,
- 		goto out;
- 	}
- 
--	index = sector >> SECTORS_PER_PAGE_SHIFT;
--	offset = (sector & (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
-+	index = sector >> PAGE_SECTORS_SHIFT;
-+	offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
- 
- 	bv.bv_page = page;
- 	bv.bv_len = PAGE_SIZE;
-diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
-index f2fd46daa760..12309175d55e 100644
---- a/drivers/block/zram/zram_drv.h
-+++ b/drivers/block/zram/zram_drv.h
-@@ -21,8 +21,6 @@
- 
- #include "zcomp.h"
- 
--#define SECTORS_PER_PAGE_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
--#define SECTORS_PER_PAGE	(1 << SECTORS_PER_PAGE_SHIFT)
- #define ZRAM_LOGICAL_BLOCK_SHIFT 12
- #define ZRAM_LOGICAL_BLOCK_SIZE	(1 << ZRAM_LOGICAL_BLOCK_SHIFT)
- #define ZRAM_SECTOR_PER_LOGICAL_BLOCK	\
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 0aa4b6bc5101..7f7672f72085 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -92,7 +92,7 @@ bool __generic_fsdax_supported(struct dax_device *dax_dev,
- 		return false;
- 	}
- 
--	last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SIZE / 512;
-+	last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SECTORS;
- 	err = bdev_dax_pgoff(bdev, last_page, PAGE_SIZE, &pgoff_end);
- 	if (err) {
- 		pr_debug("%s: error: unaligned partition for dax\n",
-diff --git a/drivers/md/bcache/util.h b/drivers/md/bcache/util.h
-index c029f7443190..55196e0f37c3 100644
---- a/drivers/md/bcache/util.h
-+++ b/drivers/md/bcache/util.h
-@@ -15,8 +15,6 @@
- 
- #include "closure.h"
- 
--#define PAGE_SECTORS		(PAGE_SIZE / 512)
--
- struct closure;
- 
- #ifdef CONFIG_BCACHE_DEBUG
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index 2d519c223562..f4496ce0d598 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -384,7 +384,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
- 	    gfp_mask & __GFP_NORETRY) {
- 		*data_mode = DATA_MODE_GET_FREE_PAGES;
- 		return (void *)__get_free_pages(gfp_mask,
--						c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+						c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
- 	}
- 
- 	*data_mode = DATA_MODE_VMALLOC;
-@@ -422,7 +422,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
- 
- 	case DATA_MODE_GET_FREE_PAGES:
- 		free_pages((unsigned long)data,
--			   c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+			   c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
- 		break;
- 
- 	case DATA_MODE_VMALLOC:
-@@ -597,7 +597,7 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
- 	unsigned vec_size, len;
- 
- 	vec_size = b->c->block_size >> PAGE_SHIFT;
--	if (unlikely(b->c->sectors_per_block_bits < PAGE_SHIFT - SECTOR_SHIFT))
-+	if (unlikely(b->c->sectors_per_block_bits < PAGE_SECTORS_SHIFT))
- 		vec_size += 2;
- 
- 	bio = bio_kmalloc(GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN, vec_size);
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index b225b3e445fa..4e60cda465cc 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -652,7 +652,7 @@ static void page_list_location(struct dm_integrity_c *ic, unsigned section, unsi
- 
- 	sector = section * ic->journal_section_sectors + offset;
- 
--	*pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-+	*pl_index = sector >> PAGE_SECTORS_SHIFT;
- 	*pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
- }
- 
-@@ -951,7 +951,7 @@ static void rw_journal_sectors(struct dm_integrity_c *ic, int op, int op_flags,
- 		return;
- 	}
- 
--	pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-+	pl_index = sector >> PAGE_SECTORS_SHIFT;
- 	pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
- 
- 	io_req.bi_op = op;
-@@ -1072,7 +1072,7 @@ static void copy_from_journal(struct dm_integrity_c *ic, unsigned section, unsig
- 
- 	sector = section * ic->journal_section_sectors + JOURNAL_BLOCK_SECTORS + offset;
- 
--	pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-+	pl_index = sector >> PAGE_SECTORS_SHIFT;
- 	pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
- 
- 	io_req.bi_op = REQ_OP_WRITE;
-@@ -3343,7 +3343,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
- 	ic->commit_ids[3] = cpu_to_le64(0x4444444444444444ULL);
- 
- 	journal_pages = roundup((__u64)ic->journal_sections * ic->journal_section_sectors,
--				PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SHIFT - SECTOR_SHIFT);
-+				PAGE_SIZE >> SECTOR_SHIFT) >> PAGE_SECTORS_SHIFT;
- 	journal_desc_size = journal_pages * sizeof(struct page_list);
- 	if (journal_pages >= totalram_pages() - totalhigh_pages() || journal_desc_size > ULONG_MAX) {
- 		*error = "Journal doesn't fit into memory";
-@@ -4075,7 +4075,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 			spin_lock_init(&bbs->bio_queue_lock);
- 
- 			sector = i * (BITMAP_BLOCK_SIZE >> SECTOR_SHIFT);
--			pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-+			pl_index = sector >> PAGE_SECTORS_SHIFT;
- 			pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
- 
- 			bbs->bitmap = lowmem_page_address(ic->journal[pl_index].page) + pl_offset;
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 469f551863be..b28f9390608f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1734,7 +1734,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
- 		__le64 *bbp;
- 		int i;
- 		int sectors = le16_to_cpu(sb->bblog_size);
--		if (sectors > (PAGE_SIZE / 512))
-+		if (sectors > PAGE_SECTORS)
- 			return -EINVAL;
- 		offset = le32_to_cpu(sb->bblog_offset);
- 		if (offset == 0)
-@@ -8733,7 +8733,7 @@ void md_do_sync(struct md_thread *thread)
- 	/*
- 	 * Tune reconstruction:
- 	 */
--	window = 32 * (PAGE_SIZE / 512);
-+	window = 32 * PAGE_SECTORS;
- 	pr_debug("md: using %dk window, over a total of %lluk.\n",
- 		 window/2, (unsigned long long)max_sectors/2);
- 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index cd810e195086..37a0b571903a 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2129,7 +2129,7 @@ static void process_checks(struct r1bio *r1_bio)
- 	int vcnt;
- 
- 	/* Fix variable parts of all bios */
--	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
-+	vcnt = (r1_bio->sectors + PAGE_SECTORS - 1) >> (PAGE_SHIFT - 9);
- 	for (i = 0; i < conf->raid_disks * 2; i++) {
- 		blk_status_t status;
- 		struct bio *b = r1_bio->bios[i];
-diff --git a/drivers/mmc/core/host.c b/drivers/mmc/core/host.c
-index c8768726d925..4a23fb9d5642 100644
---- a/drivers/mmc/core/host.c
-+++ b/drivers/mmc/core/host.c
-@@ -18,6 +18,7 @@
- #include <linux/export.h>
- #include <linux/leds.h>
- #include <linux/slab.h>
-+#include <linux/blkdev.h>
- 
- #include <linux/mmc/host.h>
- #include <linux/mmc/card.h>
-@@ -427,7 +428,7 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
- 
- 	host->max_req_size = PAGE_SIZE;
- 	host->max_blk_size = 512;
--	host->max_blk_count = PAGE_SIZE / 512;
-+	host->max_blk_count = PAGE_SECTORS;
- 
- 	host->fixed_drv_type = -EINVAL;
- 	host->ios.power_delay_ms = 10;
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index f0068e96a177..e6b29e54d07a 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -852,7 +852,7 @@ static int scsifront_probe(struct xenbus_device *dev,
- 	host->max_id      = VSCSIIF_MAX_TARGET;
- 	host->max_channel = 0;
- 	host->max_lun     = VSCSIIF_MAX_LUN;
--	host->max_sectors = (host->sg_tablesize - 1) * PAGE_SIZE / 512;
-+	host->max_sectors = (host->sg_tablesize - 1) * PAGE_SECTORS;
- 	host->max_cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
- 
- 	err = scsi_add_host(host, &dev->dev);
-@@ -1073,7 +1073,7 @@ static void scsifront_read_backend_params(struct xenbus_device *dev,
- 			 host->sg_tablesize, nr_segs);
- 
- 	host->sg_tablesize = nr_segs;
--	host->max_sectors = (nr_segs - 1) * PAGE_SIZE / 512;
-+	host->max_sectors = (nr_segs - 1) * PAGE_SECTORS;
- }
- 
- static void scsifront_backend_changed(struct xenbus_device *dev,
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 7c84c4c027c4..60505fc156c5 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -29,7 +29,7 @@ struct iomap_page {
- 	atomic_t		read_count;
- 	atomic_t		write_count;
- 	spinlock_t		uptodate_lock;
--	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-+	DECLARE_BITMAP(uptodate, PAGE_SECTORS);
- };
- 
- static inline struct iomap_page *to_iomap_page(struct page *page)
-diff --git a/fs/nfs/blocklayout/blocklayout.h b/fs/nfs/blocklayout/blocklayout.h
-index 716bc75e9ed2..22407751e0fd 100644
---- a/fs/nfs/blocklayout/blocklayout.h
-+++ b/fs/nfs/blocklayout/blocklayout.h
-@@ -40,8 +40,6 @@
- #include "../pnfs.h"
- #include "../netns.h"
- 
--#define PAGE_CACHE_SECTORS (PAGE_SIZE >> SECTOR_SHIFT)
--#define PAGE_CACHE_SECTOR_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
- #define SECTOR_SIZE (1 << SECTOR_SHIFT)
- 
- struct pnfs_block_dev;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 053ea4b51988..b3c9be6906a0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
- #define SECTOR_SIZE (1 << SECTOR_SHIFT)
- #endif
- 
-+#define PAGE_SECTORS_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
-+#define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
-+#define SECTOR_MASK		(PAGE_SECTORS - 1)
-+
- /*
-  * blk_rq_pos()			: the current sector
-  * blk_rq_bytes()		: bytes left in the entire request
-diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-index 475668c69dbc..c98a533f8ffa 100644
---- a/include/linux/device-mapper.h
-+++ b/include/linux/device-mapper.h
-@@ -141,7 +141,6 @@ typedef long (*dm_dax_direct_access_fn) (struct dm_target *ti, pgoff_t pgoff,
- 		long nr_pages, void **kaddr, pfn_t *pfn);
- typedef size_t (*dm_dax_copy_iter_fn)(struct dm_target *ti, pgoff_t pgoff,
- 		void *addr, size_t bytes, struct iov_iter *i);
--#define PAGE_SECTORS (PAGE_SIZE / 512)
- 
- void dm_error(const char *message);
- 
+This server was running without any problems since Debian 4.
+Is this a known bug?
+
+[979178.888922] BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
+[979178.889160] PGD 0 P4D 0
+[979178.889243] Oops: 0002 [#1] SMP PTI
+[979178.889362] CPU: 6 PID: 11060 Comm: kworker/u16:2 Not tainted 4.19.0-8-amd64 #1 Debian 4.19.98-1
+[979178.889617] Hardware name: Dell Inc. PowerEdge 2950/0JR815, BIOS 2.7.0 10/30/2010
+[979178.889855] Workqueue: scsi_tmf_4 scmd_eh_abort_handler [scsi_mod]
+[979178.890069] RIP: 0010:qla24xx_async_abort_cmd+0x1b/0x250 [qla2xxx]
+[979178.890258] Code: e9 19 ff ff ff 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 41 57 41 56 41 55 41 54 55 53 4c 8b 6f 28 4c 8b 7f 20 4c 8b 77 48 <f0> 41 ff 46 04 0f ae
+ f0 41 f6 46 24 04 74 17 f0 41 ff 4e 04 bd 02
+[979178.890801] RSP: 0018:ffffb1250ba83da8 EFLAGS: 00010293
+[979178.890966] RAX: 0000000000000800 RBX: ffff93b89db837a8 RCX: 00000000000005f4
+[979178.891178] RDX: ffff93b89e28afa8 RSI: 0000000000000001 RDI: ffff93b8a5018fc0
+[979178.891389] RBP: ffff93b89ccb89c0 R08: ffffffffc0595860 R09: 0000000000000000
+[979178.891600] R10: 8080808080808080 R11: 0000000000000010 R12: ffff93b89db82000
+[979178.891811] R13: ffff93b89db837a8 R14: 0000000000000000 R15: ffff93b89d88a800
+[979178.892023] FS:  0000000000000000(0000) GS:ffff93b8a7b80000(0000) knlGS:0000000000000000
+[979178.892258] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[979178.892430] CR2: 0000000000000004 CR3: 000000021a62a000 CR4: 00000000000006e0
+[979178.892642] Call Trace:
+[979178.892748]  qla24xx_abort_command+0x218/0x2d0 [qla2xxx]
+[979178.892911]  ? __switch_to_asm+0x41/0x70
+[979178.893031]  ? __switch_to_asm+0x35/0x70
+[979178.893160]  qla2xxx_eh_abort+0x117/0x310 [qla2xxx]
+[979178.893323]  scmd_eh_abort_handler+0x85/0x220 [scsi_mod]
+[979178.893484]  process_one_work+0x1a7/0x3a0
+[979178.893611]  worker_thread+0x30/0x390
+[979178.893727]  ? create_worker+0x1a0/0x1a0
+[979178.893847]  kthread+0x112/0x130
+[979178.893948]  ? kthread_bind+0x30/0x30
+[979178.894064]  ret_from_fork+0x35/0x40
+[979178.894174] Modules linked in: loop ipmi_ssif radeon ttm drm_kms_helper drm coretemp i2c_algo_bit iTCO_wdt iTCO_vendor_support ipmi_si joydev kvm sg evdev i5000_edac
+ipmi_devintf pcc_cpufreq ipmi_msghandler rng_core i5k_amb irqbypass dcdbas serio_raw acpi_cpufreq button pcspkr ext4 crc16 mbcache jbd2 crc32c_generic fscrypto ecb crypto
+_simd cryptd glue_helper aes_x86_64 dm_service_time dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua uas usb_storage hid_generic usbhid hid sr_mod ses cdrom encl
+osure sd_mod scsi_transport_sas ata_generic qla2xxx uhci_hcd ehci_pci ehci_hcd psmouse ata_piix nvme_fc libata nvme_fabrics usbcore nvme_core megaraid_sas scsi_transport_
+fc scsi_mod lpc_ich mfd_core usb_common bnx2
+[979178.895968] CR2: 0000000000000004
+[979178.896075] ---[ end trace 4d42692cc0dc3c87 ]---
+[979178.896225] RIP: 0010:qla24xx_async_abort_cmd+0x1b/0x250 [qla2xxx]
+[979178.896414] Code: e9 19 ff ff ff 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 41 57 41 56 41 55 41 54 55 53 4c 8b 6f 28 4c 8b 7f 20 4c 8b 77 48 <f0> 41 ff 46 04 0f ae
+ f0 41 f6 46 24 04 74 17 f0 41 ff 4e 04 bd 02
+[979178.896956] RSP: 0018:ffffb1250ba83da8 EFLAGS: 00010293
+[979178.897121] RAX: 0000000000000800 RBX: ffff93b89db837a8 RCX: 00000000000005f4
+[979178.897332] RDX: ffff93b89e28afa8 RSI: 0000000000000001 RDI: ffff93b8a5018fc0
+[979178.897544] RBP: ffff93b89ccb89c0 R08: ffffffffc0595860 R09: 0000000000000000
+[979178.908415] R10: 8080808080808080 R11: 0000000000000010 R12: ffff93b89db82000
+[979178.919419] R13: ffff93b89db837a8 R14: 0000000000000000 R15: ffff93b89d88a800
+[979178.930444] FS:  0000000000000000(0000) GS:ffff93b8a7b80000(0000) knlGS:0000000000000000
+[979178.941366] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[979178.952142] CR2: 0000000000000004 CR3: 000000021a62a000 CR4: 00000000000006e0
+[980103.072740] mysqld[2175]: segfault at 0 ip 000055bbc5cd2d93 sp 00007f2362ffb450 error 6 in mysqld[55bbc551a000+805000]
+[980103.083956] Code: c7 45 00 00 00 00 00 8b 7d cc 4c 89 e2 4c 89 f6 e8 62 81 84 ff 49 89 c7 49 39 c4 0f 84 f6 00 00 00 e8 e1 1c 00 00 41 8b 4d 00 <89> 08 85 c9 74 37 49
+ 83 ff ff 0f 84 9d 00 00 00 f6 c3 06 75 28 4d
+
+
+
+
 -- 
-2.24.1
-
+Ondrej Zary
