@@ -2,58 +2,63 @@ Return-Path: <SRS0=fKRq=4M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E675C38BE6
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 20:08:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6466DC38BE7
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 20:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB15620836
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 20:08:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C92A21744
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 20:18:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CbIF5SEd"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="SSIU4cLl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727219AbgBXUIO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Feb 2020 15:08:14 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:33774 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726628AbgBXUIN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2020 15:08:13 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OK4TLV133082;
-        Mon, 24 Feb 2020 20:07:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=Hd3LEkvAPQYHika9QfHdeFbvOxdWRjzd8q/4lvbxKVY=;
- b=CbIF5SEdVsVyMvVmRJoqInq/Vinm8gJQXm7cSWIwJYJSMP40NrswmhZMDmaO1sp8O8l3
- Sth6a2w7STp5MrgFIfRADFjWYny5vl2WbLIdDAZKjh1MMzKMs6e7nQR3D2uQ/jXx6Co4
- fQEbk/2detkbcClGayIPs3kqgUPZMH+I/KdB2T4MVjDCiKNPJz54PyVdyr+Lim0aRd/I
- 08fzRb/1+KwZWIHUoA8Xg9msKIpHelK18bghPrcnHuVUh9vbFQTYbkWGHLTDywNFqVz1
- GZQkOgS9WUzAOzLZ2jW/tS2exLXUEZYhuIS/fn/0zqDpPleCrYQtbmpX4CAd3+QiyRrj Sw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2yavxrhqkv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Feb 2020 20:07:21 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01OK2pQe147603;
-        Mon, 24 Feb 2020 20:07:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2ybduv428f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Feb 2020 20:07:20 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01OK7DdR008300;
-        Mon, 24 Feb 2020 20:07:15 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 24 Feb 2020 12:07:13 -0800
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        id S1727483AbgBXUSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Feb 2020 15:18:43 -0500
+Received: from mail-pj1-f53.google.com ([209.85.216.53]:50679 "EHLO
+        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727197AbgBXUSn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2020 15:18:43 -0500
+Received: by mail-pj1-f53.google.com with SMTP id r67so240029pjb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2020 12:18:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=AsAkVqeBlUTVNMBFWbPGk3JGWoog8P01z4Gn0jtsTzU=;
+        b=SSIU4cLlI2n2qbxmevdwvOEapG9ngx6Anv8KODNUhHrGmYkwT+Vofd9rZbxyHYkKrL
+         OxIz6NSZEnenQmkNwJTqQ7MX59IDkoyi5+gbn6dZSi/Vmqw2XCm1CT1uozT+GL7ce+3I
+         LkkDnNqFQ5GJLRTLckEy6NzC4iL9ezTOdrkohbZ8ObYNe5mKFiQ/hXG32lxMg3M7PXH6
+         RwO3R25e38NobOg9yVRKix9CgSdWvD1Sk80l+Z5DSkfFYtF1zX3wjPB0Tx2vMiP8SPnd
+         MiuDWaNOseXqsfnYBNDDkZWqHqMUP1nXomlnJbj5nzcgYwftoxxDbjvfAuOOH+hQ2PSr
+         mD4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=AsAkVqeBlUTVNMBFWbPGk3JGWoog8P01z4Gn0jtsTzU=;
+        b=rPAVldF6wGfyFwZ0Qk1DlfHqlbZgFNmhBZbjBu2wbw65bbwX6F7M18tjj9kgA4qN4r
+         v9dQ464v9kkGEw35OXCIvDFb0SqYnEZNm/A4Y+tkAUrH4lhZ3CIbbcCCCFvJdXCG9CO5
+         8VaGN17wW04x3iWPFRB1TAoYl3NczbIxlr2JIe9Iad6RflQJU8xYEr0+NoF7hKEJSwJf
+         YGbmCQWRACx2cYZ8s7fwckE1i4qXNCpH9JFuy/HHq1+Tc0AZlQ/0cc5dyrYl8UMWWHEw
+         +lWWZpOxizc5OL5LpRCTazJAul9Vfz18O3OHLdoehMBCz9RbVhgJSXOeoCRXmbV2ZS8g
+         IK0g==
+X-Gm-Message-State: APjAAAU71z8WGLciS4F5F8IoKd3M4UADe7Ro/CxDsI7uIdayFVti5QZK
+        hYfRbxcnkIRuVQphILqfierD43CuG2E=
+X-Google-Smtp-Source: APXvYqzMuuqbYsAPQLvRqQa13jz2PshPPsaVA7gSaadKM9nV82v1GczAEn13xMLYijD8wngok8Dx/g==
+X-Received: by 2002:a17:90b:11cd:: with SMTP id gv13mr955512pjb.94.1582575521719;
+        Mon, 24 Feb 2020 12:18:41 -0800 (PST)
+Received: from ?IPv6:2620:10d:c085:21c8::10cd? ([2620:10d:c090:400::5:9b45])
+        by smtp.gmail.com with ESMTPSA id e2sm300316pjs.25.2020.02.24.12.18.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Feb 2020 12:18:41 -0800 (PST)
+Subject: Re: [PATCH] compat_ioctl, cdrom: Replace .ioctl with .compat_ioctl in
+ four appropriate places
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Adam Williamson <awilliam@redhat.com>,
         Chris Murphy <bugzilla@colorremedies.com>,
         Ben Hutchings <ben.hutchings@codethink.co.uk>,
@@ -62,44 +67,38 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         "David S. Miller" <davem@davemloft.net>,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] compat_ioctl, cdrom: Replace .ioctl with .compat_ioctl in four appropriate places
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
 References: <20200219165139.3467320-1-arnd@arndb.de>
-Date:   Mon, 24 Feb 2020 15:07:10 -0500
-In-Reply-To: <20200219165139.3467320-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 19 Feb 2020 17:50:07 +0100")
-Message-ID: <yq1eeujda1d.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+ <yq1eeujda1d.fsf@oracle.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <d9d25fda-e3c3-e6b6-0189-93fbe7c5f743@kernel.dk>
+Date:   Mon, 24 Feb 2020 13:18:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- mlxlogscore=999 malwarescore=0 mlxscore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002240146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9541 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 lowpriorityscore=0
- spamscore=0 clxscore=1011 suspectscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002240146
+In-Reply-To: <yq1eeujda1d.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2/24/20 1:07 PM, Martin K. Petersen wrote:
+> 
+> Arnd,
+> 
+>> Arnd Bergmann inadvertently typoed these in d320a9551e394 and
+>> 64cbfa96551a; they seem to be the cause of
+>> https://bugzilla.redhat.com/show_bug.cgi?id=1801353 , invalid SCSI
+>> commands when udev tries to query a DVD drive.
+> 
+> Applied to 5.6/scsi-fixes. Thanks!
+> 
+> Jens, I hope that's OK? I keep getting mail about this bug.
 
-Arnd,
-
-> Arnd Bergmann inadvertently typoed these in d320a9551e394 and
-> 64cbfa96551a; they seem to be the cause of
-> https://bugzilla.redhat.com/show_bug.cgi?id=1801353 , invalid SCSI
-> commands when udev tries to query a DVD drive.
-
-Applied to 5.6/scsi-fixes. Thanks!
-
-Jens, I hope that's OK? I keep getting mail about this bug.
+Yeah that's fine, thanks for picking this up.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
+
