@@ -2,138 +2,351 @@ Return-Path: <SRS0=fKRq=4M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B60D6C11D2F
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 16:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D111C11D32
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 17:03:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72E3C20637
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 16:36:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25A2220838
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 Feb 2020 17:03:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="l+qDZkmF";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="pxwa2rCj"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="FdNeV6gs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727681AbgBXQgl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Feb 2020 11:36:41 -0500
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46232 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727438AbgBXQgl (ORCPT
+        id S1727887AbgBXRDP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 Feb 2020 12:03:15 -0500
+Received: from gateway36.websitewelcome.com ([192.185.192.36]:43486 "EHLO
+        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727440AbgBXRDP (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Feb 2020 11:36:41 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01OGPEKp014666;
-        Mon, 24 Feb 2020 08:36:38 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=pfpt0818;
- bh=N9gfIpX8tIuDc6yVni3wmTksl9HduOKC2q8kz9JL3n0=;
- b=l+qDZkmFDTA312dAFAv8996+1sYXKDzvynSWEm/jdh72bsVeSYkJnJ7kU/9bEIOiMv5Q
- twjrha9GYbbtVyn6CGXGLlwU9h694V3iwKwUCnf4+oHWpvNeji9sq8/RI+pyI2/HPiI2
- M7GAuC+WmPYVZb6vI4Ifn3aDnGESqwXHWcp5zABNd50bNPsV6cyPl5GoU468uYphoe7p
- AG/ND1QW7TEmyHK0ly8TiwSdSfCxb8mb65bq6/JBXOf4pXAKU1B5iouzNo2DT6uZ10pL
- z0paVf5dGULBvDQ/VDykFUFUwndbxDmoljpHb2eESwDOxdUZMdYI8hy9fNlC9WSBFOPk PA== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2yb2hv7mqq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 24 Feb 2020 08:36:38 -0800
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 24 Feb
- 2020 08:36:37 -0800
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.169)
- by SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Mon, 24 Feb 2020 08:36:37 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fxgQu3wE3YIWUHQ6w0C5ShIJL4VUnxwCQT2jZa1AUCVZXx4lN0uuDX6jvFMB5zV5OqOiSPyJzKVYoLFG2n20umZZ/kqf7G7ME4yU2atBB1aWFEhGDqDSCvckslCpquAaM8McQwcONddxojSLiizw1TzRRnOJlhbFn54+kjpzNAm4GZq12zL3n5ATqxM50jD5uKN07a5o+2rrzOHHSP219gb9+XsmKGRG4XHmiKkhmB8V1ByGZ66RhC+yfsRkVsfv2sgKOdyNJwEgk2wN2iF7CR8Oz2WrrQEoFB23bGccofohsXhBmKaimMnz3+H9WXSFE1fTycN72txSULrZpNFmPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=N9gfIpX8tIuDc6yVni3wmTksl9HduOKC2q8kz9JL3n0=;
- b=UgibVkT1HU9cHPYc5doxn1fm/D/2CSZGKhq4lF1S1bpQ/uaKgWygYKzzvHgemaq+9A5Vfr/TDlu6445dStYXyEl6Wffopsr5BwDM+pzI4pj9TSorWaAk6aU8OlABJZVYcVEk7BPQQWzL3YIiHgahUcJ1Po5MlIQaPa6OiAlNSRNxwTkjwOaTEQ92tMn9BjgBPwxy75isdIZMSIzr839oPN+msVsBjowuxj7RurzGaBO2bGsoFV0lfVq2kI3xBDUktb0Hmq1IVVCmGUWJ6aoW0JLY17yE33MrAGCEqYR7AZnCo/YGHvppyDk2aNMUz2Tpea1V+Lx8ZTXY15wic5iXDg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=N9gfIpX8tIuDc6yVni3wmTksl9HduOKC2q8kz9JL3n0=;
- b=pxwa2rCjqB6Sp5kd1zlPDB719MSVlTlAFnDnS1dzavS8L3qlDAiGNbZYBPWVGALRGxMsxoRJULQkplOSU51fAGWD3OEUl/NCEbqWkYJvrQiTjQ6hqOsDy/CHapQf2e2mXR4JEtUHNE6JQrnKUWCdUdTOvhPUwZPLsoEa17ffExk=
-Received: from DM5PR1801MB1820.namprd18.prod.outlook.com (2603:10b6:4:6a::12)
- by DM5PR1801MB1932.namprd18.prod.outlook.com (2603:10b6:4:64::26) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2750.21; Mon, 24 Feb
- 2020 16:36:35 +0000
-Received: from DM5PR1801MB1820.namprd18.prod.outlook.com
- ([fe80::3cc1:38d7:b255:9e2b]) by DM5PR1801MB1820.namprd18.prod.outlook.com
- ([fe80::3cc1:38d7:b255:9e2b%3]) with mapi id 15.20.2750.021; Mon, 24 Feb 2020
- 16:36:35 +0000
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     "James.Bottomley@HansenPartnership.com" 
-        <James.Bottomley@HansenPartnership.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 00/25] qla2xxx: Updates for the driver
-Thread-Topic: [PATCH 00/25] qla2xxx: Updates for the driver
-Thread-Index: AQHV4e2gMNq0o9M7WUGhp9OToSSbcKgmWr/DgAPd9wA=
-Date:   Mon, 24 Feb 2020 16:36:35 +0000
-Message-ID: <A4B1A096-FDD1-4ABA-802F-F0A5327EC56C@marvell.com>
-References: <20200212214436.25532-1-hmadhani@marvell.com>
- <yq1r1ynqzwv.fsf@oracle.com>
-In-Reply-To: <yq1r1ynqzwv.fsf@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Microsoft-MacOutlook/10.22.0.200209
-x-originating-ip: [2605:6000:1023:35a:9cbf:2825:d6b4:8acf]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 54b58c7a-7102-47f1-df2f-08d7b947b6a2
-x-ms-traffictypediagnostic: DM5PR1801MB1932:
-x-microsoft-antispam-prvs: <DM5PR1801MB1932C1317173F16CA61391A7D6EC0@DM5PR1801MB1932.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 032334F434
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(39860400002)(136003)(366004)(376002)(346002)(396003)(199004)(189003)(86362001)(4326008)(54906003)(6512007)(66556008)(66574012)(91956017)(66946007)(316002)(76116006)(66476007)(64756008)(478600001)(66446008)(6506007)(6486002)(2616005)(36756003)(71200400001)(81156014)(81166006)(5660300002)(186003)(6916009)(33656002)(8676002)(15650500001)(8936002)(2906002)(4744005);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR1801MB1932;H:DM5PR1801MB1820.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: zg3PNe41DzWPSsmD3he3ofsC5Qh90OPCOXdAmh2lKg6W05uIsJee60k5lXULk0JFK6qwfjvtwJdxEx1eXJ7kY90r2S/1dhH+Quenxeqvjb5f4GY+kmQfHBYn3e+njsHqeq8D+QtN7yr4Y5Db1DOrhGTYQSwnVLTY/jtzThjEiRTIiZDCOkqFL6joL+W/tpEBb7Hm4N14+peLeVHyX7wXrNQZdPCC7IzhcKx2UhFbbmI1rtUsjn9dOhpwK+UCvbVDQJLBImipPNwOdbBq3CvF70T23LPLo0V4KlKmX7LQwC2c1i6U/52/29nhkQaTJ/od0ya99XV+7LMQc8ZkaXF0ypYbiYtXgjYSChH2rUlAG85cr+VHcMsu44ocneYel6ssGh9n2/3QA19L8AxtPuDWsjm/53qEg7rWVc/g17huBpJrNYSQxNCyWsh8nTfwM+Fw
-x-ms-exchange-antispam-messagedata: YQlBTDY5jAXcvGVSBlv0b92EHLdVuCs+3t58PWc/AiXoPkHa97C5YSw73bYtSUq8oIgu9i2QyMyEdfWaEr4kCs4sC39uaDe4jXNu4ZHA0d+NuIXHtPu098ruD19NyKiS81f2HlCTs4JnjCJtqzKpRKwjW7BIw0d2DzbIcioFHuKyeZhQb4+kw7QD7ZG0e4xKGcUUcAnhP12agJIjycAHXg==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <F4C97ABC56CFF54E9A25B8246FB7AD39@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        Mon, 24 Feb 2020 12:03:15 -0500
+X-Greylist: delayed 1421 seconds by postgrey-1.27 at vger.kernel.org; Mon, 24 Feb 2020 12:03:14 EST
+Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
+        by gateway36.websitewelcome.com (Postfix) with ESMTP id C0C9D40157E9B
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2020 09:54:15 -0600 (CST)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id 6GlYjYKV0RP4z6GlYjxVoA; Mon, 24 Feb 2020 10:39:32 -0600
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=9MaTLdhyE2lqQeKKEie4NEqJq9AQ+rH9XoGJxwhMLV0=; b=FdNeV6gsZdQPOoKmEq9XL5aIW1
+        57t9bacLPIHttu4CgT/3YNYmaHVDKnCZiWFdysBXPGLxBx2atz87M/rLEp0IV+eaYD4Hb/OUI6tSX
+        Kxb0KZ+MPk4TAgJ2J65jtD8qUIm07AUvmo1CwIRioDG06xmIP9X2b2FSGV5HBNPlUXkDuCVxvzPC7
+        rmO58X2jgu2tQ6wv3nEkaNYoYyoc17SUjds1cqP/wwL5Y9fyfG3dFZdPzT1K3GK7Nefa827fPuECs
+        1xHqJdhvtqC2eKSNUvVzbNCT1cmo98sl5q268Z3G1Apg1+cjXAUCDDlC6OsBW9JrPi/gEwaFxdTC/
+        RZ2nZkmA==;
+Received: from [200.68.140.135] (port=33450 helo=[192.168.43.131])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.92)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1j6GlY-002tup-0H; Mon, 24 Feb 2020 10:39:32 -0600
+Subject: Re: [PATCH] scsi: Replace zero-length array with flexible-array
+ member
+To:     Lee Duncan <lduncan@suse.com>, Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Brian King <brking@us.ibm.com>,
+        Intel SCU Linux support <intel-linux-scu@intel.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Chris Leech <cleech@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, open-iscsi@googlegroups.com,
+        linux-rdma@vger.kernel.org
+References: <20200224161406.GA21454@embeddedor>
+ <b44f60b7-3091-592e-b319-a929bcd19486@suse.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ VtSixD1uOgytAP7RWS474w==
+Message-ID: <026b4947-e38b-6d23-d330-414aebb19735@embeddedor.com>
+Date:   Mon, 24 Feb 2020 10:42:16 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 54b58c7a-7102-47f1-df2f-08d7b947b6a2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Feb 2020 16:36:35.2629
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: XG3u3GUNGTVY+0q1Yb6BZAeUeq6noQ6gBFGt/M3H1fLKcVo3VwdE2PSd4v74KQC5U+fQDZ9I1d9jB/wJN6jJ7w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1801MB1932
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-24_04:2020-02-21,2020-02-24 signatures=0
+In-Reply-To: <b44f60b7-3091-592e-b319-a929bcd19486@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 200.68.140.135
+X-Source-L: No
+X-Exim-ID: 1j6GlY-002tup-0H
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.43.131]) [200.68.140.135]:33450
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 81
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQoNCu+7v09uIDIvMjEvMjAsIDU6MzMgUE0sICJsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVs
-Lm9yZyBvbiBiZWhhbGYgb2YgTWFydGluIEsuIFBldGVyc2VuIiA8bGludXgtc2NzaS1vd25lckB2
-Z2VyLmtlcm5lbC5vcmcgb24gYmVoYWxmIG9mIG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiB3
-cm90ZToNCg0KICAgIA0KICAgIEhpbWFuc2h1LA0KICAgIA0KICAgID4gVGhpcyBzZXJpZXMgYWRk
-ZXMgZW5oYW5jZW1lbnRzIHRvIHRoZSBkcml2ZXIgaW4gdGhlIGFyZWEgb2YgRkRNSQ0KICAgID4g
-Y29tbWFuZHMgYW5kIGFkZGluZyBzdXBwb3J0IGZvciBSRFAgY29tbWFuZC4gVGhpcyBzZXJpZXMg
-YWxzbyBhZGRzDQogICAgPiBzdXBwb3J0IGZvciBCZWFjb24gTEVEL0QtUG9ydCBTeXNGUyBub2Rl
-cy4NCiAgICA+DQogICAgPiBUaGVyZSBhcmUgZmV3IG90aGVyIHBhdGNoZXMgd2hpY2ggYXJlIGNs
-ZWFudXAgdG8gaW1wcm92ZSByZWFkYWJpbGl0eQ0KICAgID4gYXMgd2VsbCBhcyBjb25zb2xpZGF0
-ZXMgY29kZS4gIA0KICAgID4NCiAgICA+IFBsZWFzZSBhcHBseSB0aGlzIHNlcmllcyB0byA1Ljcu
-MC9zY3NpLW1pc2MgYXQgeW91ciBlYXJsaWVzdA0KICAgID4gY29udmVuaWVuY2UuDQogICAgDQog
-ICAgQXBwbGllZCB0byA1Ljcvc2NzaS1xdWV1ZS4gVGhpcyBzZXJpZXMgbGl0IHVwIGxpa2UgYSBY
-bWFzIHRyZWUgaW4NCiAgICBjaGVja3BhdGNoLiBOZXh0IHRpbWUsIHBsZWFzZSB2ZXJpZnkgYmVm
-b3JlIHBvc3RpbmcuDQogIA0KV2lsbCBkby4gDQoNClRoYW5rcywNCkhpbWFuc2h1DQogIA0KICAg
-IC0tIA0KICAgIE1hcnRpbiBLLiBQZXRlcnNlbglPcmFjbGUgTGludXggRW5naW5lZXJpbmcNCiAg
-ICANCg0K
+
+
+On 2/24/20 10:30, Lee Duncan wrote:
+> On 2/24/20 8:14 AM, Gustavo A. R. Silva wrote:
+>> The current codebase makes use of the zero-length array language
+>> extension to the C90 standard, but the preferred mechanism to declare
+>> variable-length types such as these ones is a flexible array member[1][2],
+>> introduced in C99:
+>>
+>> struct foo {
+>>         int stuff;
+>>         struct boo array[];
+>> };
+>>
+>> By making use of the mechanism above, we will get a compiler warning
+>> in case the flexible array does not occur last in the structure, which
+>> will help us prevent some kind of undefined behavior bugs from being
+>> inadvertently introduced[3] to the codebase from now on.
+>>
+>> Also, notice that, dynamic memory allocations won't be affected by
+>> this change:
+>>
+>> "Flexible array members have incomplete type, and so the sizeof operator
+>> may not be applied. As a quirk of the original implementation of
+>> zero-length arrays, sizeof evaluates to zero."[1]
+>>
+>> This issue was found with the help of Coccinelle.
+>>
+>> [1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+>> [2] https://github.com/KSPP/linux/issues/21
+>> [3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
+>>
+>> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+>> ---
+>>  ...
+>> diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+>> index 92b11c7e0b4f..b0e240b10bf9 100644
+>> --- a/include/scsi/iscsi_if.h
+>> +++ b/include/scsi/iscsi_if.h
+>> @@ -311,7 +311,7 @@ enum iscsi_param_type {
+>>  struct iscsi_param_info {
+>>  	uint32_t len;		/* Actual length of the param value */
+>>  	uint16_t param;		/* iscsi param */
+>> -	uint8_t value[0];	/* length sized value follows */
+>> +	uint8_t value[];	/* length sized value follows */
+>>  } __packed;
+>>  
+>>  struct iscsi_iface_param_info {
+>> @@ -320,7 +320,7 @@ struct iscsi_iface_param_info {
+>>  	uint16_t param;		/* iscsi param value */
+>>  	uint8_t iface_type;	/* IPv4 or IPv6 */
+>>  	uint8_t param_type;	/* iscsi_param_type */
+>> -	uint8_t value[0];	/* length sized value follows */
+>> +	uint8_t value[];	/* length sized value follows */
+>>  } __packed;
+>>  
+>>  /*
+>> @@ -697,7 +697,7 @@ enum iscsi_flashnode_param {
+>>  struct iscsi_flashnode_param_info {
+>>  	uint32_t len;		/* Actual length of the param */
+>>  	uint16_t param;		/* iscsi param value */
+>> -	uint8_t value[0];	/* length sized value follows */
+>> +	uint8_t value[];	/* length sized value follows */
+>>  } __packed;
+>>  
+>>  enum iscsi_discovery_parent_type {
+>> @@ -815,7 +815,7 @@ struct iscsi_stats {
+>>  	 * up to ISCSI_STATS_CUSTOM_MAX
+>>  	 */
+>>  	uint32_t custom_length;
+>> -	struct iscsi_stats_custom custom[0]
+>> +	struct iscsi_stats_custom custom[]
+>>  		__attribute__ ((aligned (sizeof(uint64_t))));
+>>  };
+>>  
+>> @@ -946,7 +946,7 @@ struct iscsi_offload_host_stats {
+>>  	 * up to ISCSI_HOST_STATS_CUSTOM_MAX
+>>  	 */
+>>  	uint32_t custom_length;
+>> -	struct iscsi_host_stats_custom custom[0]
+>> +	struct iscsi_host_stats_custom custom[]
+>>  		__aligned(sizeof(uint64_t));
+>>  };
+>>  
+>> diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
+>> index fa0c820a1663..6b8128005af8 100644
+>> --- a/include/scsi/scsi_bsg_iscsi.h
+>> +++ b/include/scsi/scsi_bsg_iscsi.h
+>> @@ -52,7 +52,7 @@ struct iscsi_bsg_host_vendor {
+>>  	uint64_t vendor_id;
+>>  
+>>  	/* start of vendor command area */
+>> -	uint32_t vendor_cmd[0];
+>> +	uint32_t vendor_cmd[];
+>>  };
+>>  
+>>  /* Response:
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index f8312a3e5b42..4dc158cf09b8 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -231,7 +231,7 @@ struct scsi_device {
+>>  	struct mutex		state_mutex;
+>>  	enum scsi_device_state sdev_state;
+>>  	struct task_struct	*quiesced_by;
+>> -	unsigned long		sdev_data[0];
+>> +	unsigned long		sdev_data[];
+>>  } __attribute__((aligned(sizeof(unsigned long))));
+>>  
+>>  #define	to_scsi_device(d)	\
+>> @@ -315,7 +315,7 @@ struct scsi_target {
+>>  	char			scsi_level;
+>>  	enum scsi_target_state	state;
+>>  	void 			*hostdata; /* available to low-level driver */
+>> -	unsigned long		starget_data[0]; /* for the transport */
+>> +	unsigned long		starget_data[]; /* for the transport */
+>>  	/* starget_data must be the last element!!!! */
+>>  } __attribute__((aligned(sizeof(unsigned long))));
+>>  
+>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+>> index 7a97fb8104cf..e6811ea8f984 100644
+>> --- a/include/scsi/scsi_host.h
+>> +++ b/include/scsi/scsi_host.h
+>> @@ -682,7 +682,7 @@ struct Scsi_Host {
+>>  	 * and also because some compilers (m68k) don't automatically force
+>>  	 * alignment to a long boundary.
+>>  	 */
+>> -	unsigned long hostdata[0]  /* Used for storage of host specific stuff */
+>> +	unsigned long hostdata[]  /* Used for storage of host specific stuff */
+>>  		__attribute__ ((aligned (sizeof(unsigned long))));
+>>  };
+>>  
+>> diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+>> index 4fe69d863b5d..b465799f4d2d 100644
+>> --- a/include/scsi/scsi_ioctl.h
+>> +++ b/include/scsi/scsi_ioctl.h
+>> @@ -27,7 +27,7 @@ struct scsi_device;
+>>  typedef struct scsi_ioctl_command {
+>>  	unsigned int inlen;
+>>  	unsigned int outlen;
+>> -	unsigned char data[0];
+>> +	unsigned char data[];
+>>  } Scsi_Ioctl_Command;
+>>  
+>>  typedef struct scsi_idlun {
+>> diff --git a/include/scsi/srp.h b/include/scsi/srp.h
+>> index 9220758d5087..177d8026e96f 100644
+>> --- a/include/scsi/srp.h
+>> +++ b/include/scsi/srp.h
+>> @@ -109,7 +109,7 @@ struct srp_direct_buf {
+>>  struct srp_indirect_buf {
+>>  	struct srp_direct_buf	table_desc;
+>>  	__be32			len;
+>> -	struct srp_direct_buf	desc_list[0];
+>> +	struct srp_direct_buf	desc_list[];
+>>  } __attribute__((packed));
+>>  
+>>  /* Immediate data buffer descriptor as defined in SRP2. */
+>> @@ -244,7 +244,7 @@ struct srp_cmd {
+>>  	u8	reserved4;
+>>  	u8	add_cdb_len;
+>>  	u8	cdb[16];
+>> -	u8	add_data[0];
+>> +	u8	add_data[];
+>>  };
+>>  
+>>  enum {
+>> @@ -274,7 +274,7 @@ struct srp_rsp {
+>>  	__be32	data_in_res_cnt;
+>>  	__be32	sense_data_len;
+>>  	__be32	resp_data_len;
+>> -	u8	data[0];
+>> +	u8	data[];
+>>  } __attribute__((packed));
+>>  
+>>  struct srp_cred_req {
+>> @@ -306,7 +306,7 @@ struct srp_aer_req {
+>>  	struct scsi_lun	lun;
+>>  	__be32	sense_data_len;
+>>  	u32	reserved3;
+>> -	u8	sense_data[0];
+>> +	u8	sense_data[];
+>>  } __attribute__((packed));
+>>  
+>>  struct srp_aer_rsp {
+>> diff --git a/include/uapi/scsi/scsi_bsg_fc.h b/include/uapi/scsi/scsi_bsg_fc.h
+>> index 3ae65e93235c..7f5930801f72 100644
+>> --- a/include/uapi/scsi/scsi_bsg_fc.h
+>> +++ b/include/uapi/scsi/scsi_bsg_fc.h
+>> @@ -209,7 +209,7 @@ struct fc_bsg_host_vendor {
+>>  	__u64 vendor_id;
+>>  
+>>  	/* start of vendor command area */
+>> -	__u32 vendor_cmd[0];
+>> +	__u32 vendor_cmd[];
+>>  };
+>>  
+>>  /* Response:
+>>
+> 
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
+> 
+
+Thanks, Lee.
+
+--
+Gustavo
