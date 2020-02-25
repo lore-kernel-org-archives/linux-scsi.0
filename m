@@ -2,126 +2,106 @@ Return-Path: <SRS0=dnTk=4N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158C4C35E04
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 16:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 055FAC35E04
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 18:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD5452082F
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 16:58:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03F92176D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 18:09:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qtkWQ55A"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="DNgC7U0m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731253AbgBYQ6Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Feb 2020 11:58:24 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:32967 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730607AbgBYQ6Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Feb 2020 11:58:24 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1582649904; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=gW7KKTafC5UnPh4r9NHeJkvVzV8LOu3rxJ2WBv0Sl28=; b=qtkWQ55A9V3DKIK8tvAa3Un6VEROqkM46IrX+QSavT3yQmaU7PT3Osw7mfFr5TVut0izI0E4
- Xjii0vCCBEiiD7Ch7ArF8jtbJUd8G0YgLb5SWVT7KAvEdefU5yiHxAHiGNJaOjjcxPmk4cYD
- VSUXF5fVsuxiISkrqkJHX2Ec6J8=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e55522f.7fb60110b7d8-smtp-out-n01;
- Tue, 25 Feb 2020 16:58:23 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 655EFC447A3; Tue, 25 Feb 2020 16:58:23 +0000 (UTC)
-Received: from [10.71.154.194] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1730017AbgBYSJi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 13:09:38 -0500
+Received: from mta-02.yadro.com ([89.207.88.252]:56182 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728367AbgBYSJi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Feb 2020 13:09:38 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id B39B5412E7;
+        Tue, 25 Feb 2020 18:09:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1582654175;
+         x=1584468576; bh=H5gSP8coFFpwsP2zHji9ETs/bRvrFtK3zvdojgMnRUw=; b=
+        DNgC7U0mWHCZDNM5YrEg8hX9IIDZV2CXOorG4hzMmDgUm0RxCu/UrrWHc2qzu8yz
+        74736R0MjXHGCQq++OA2+EoJocys+Dpo5I9tNiUmVRwVGegHFqi5WjZwhHeVbIhm
+        Y7xBSEzRVUM1P/E/2fMzQ9JjuuH9YQtimXJiHFfcOsY=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gqOPZMp3xzoP; Tue, 25 Feb 2020 21:09:35 +0300 (MSK)
+Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8146EC43383;
-        Tue, 25 Feb 2020 16:58:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8146EC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v2 2/2] scsi: ufs-qcom: Apply QUIRK_HOST_TACTIVATE for WDC
- UFS devices
-To:     Can Guo <cang@codeaurora.org>, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Evan Green <evgreen@chromium.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1582517363-11536-1-git-send-email-cang@codeaurora.org>
- <1582517363-11536-3-git-send-email-cang@codeaurora.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <3fd54f3f-c580-71b4-1e05-ba9802dff995@codeaurora.org>
-Date:   Tue, 25 Feb 2020 08:58:22 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        by mta-01.yadro.com (Postfix) with ESMTPS id 6453640418;
+        Tue, 25 Feb 2020 21:09:33 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-01.corp.yadro.com
+ (172.17.10.101) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 25
+ Feb 2020 21:09:33 +0300
+Date:   Tue, 25 Feb 2020 21:09:33 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
+Subject: Re: [PATCH v2 4/6] qla2xxx: Fix sparse warnings triggered by the PCI
+ state checking code
+Message-ID: <20200225180933.qrcfoimmjexuhtpe@SPB-NB-133.local>
+References: <20200123042345.23886-1-bvanassche@acm.org>
+ <20200123042345.23886-5-bvanassche@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <1582517363-11536-3-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20200123042345.23886-5-bvanassche@acm.org>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-01.corp.yadro.com (172.17.10.101)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/23/2020 8:09 PM, Can Guo wrote:
-> Western Digital UFS devices require host's PA_TACTIVATE to be lower than
-> device's PA_TACTIVATE, otherwise it may get stuck during hibern8 sequence.
+On Wed, Jan 22, 2020 at 08:23:43PM -0800, Bart Van Assche wrote:
+> This patch fixes the following sparse warnings:
 > 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
+> drivers/scsi/qla2xxx/qla_mbx.c:120:21: warning: restricted pci_channel_state_t degrades to integer
+> drivers/scsi/qla2xxx/qla_mbx.c:120:37: warning: restricted pci_channel_state_t degrades to integer
+> 
+> From include/linux/pci.h:
+> 
+> enum pci_channel_state {
+> 	/* I/O channel is in normal state */
+> 	pci_channel_io_normal = (__force pci_channel_state_t) 1,
+> 
+> 	/* I/O to channel is blocked */
+> 	pci_channel_io_frozen = (__force pci_channel_state_t) 2,
+> 
+> 	/* PCI card is dead */
+> 	pci_channel_io_perm_failure = (__force pci_channel_state_t) 3,
+> };
+> 
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-
->   drivers/scsi/ufs/ufs-qcom.c   | 3 +++
->   drivers/scsi/ufs/ufs_quirks.h | 1 +
->   2 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index c69c29a1c..4caa57f 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -956,6 +956,9 @@ static int ufs_qcom_apply_dev_quirks(struct ufs_hba *hba)
->   	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_SAVECONFIGTIME)
->   		err = ufs_qcom_quirk_host_pa_saveconfigtime(hba);
->   
-> +	if (hba->dev_info.wmanufacturerid == UFS_VENDOR_WDC)
-> +		hba->dev_quirks |= UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE;
-> +
->   	return err;
->   }
->   
-> diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-> index d0ab147..df7a1e6 100644
-> --- a/drivers/scsi/ufs/ufs_quirks.h
-> +++ b/drivers/scsi/ufs/ufs_quirks.h
-> @@ -15,6 +15,7 @@
->   #define UFS_VENDOR_TOSHIBA     0x198
->   #define UFS_VENDOR_SAMSUNG     0x1CE
->   #define UFS_VENDOR_SKHYNIX     0x1AD
-> +#define UFS_VENDOR_WDC         0x145
->   
->   /**
->    * ufs_dev_fix - ufs device quirk info
+>  drivers/scsi/qla2xxx/qla_mbx.c | 5 ++---
+>  drivers/scsi/qla2xxx/qla_mr.c  | 5 ++---
+>  2 files changed, 4 insertions(+), 6 deletions(-)
 > 
 
+Hi Bart,
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+
+Best regards,
+Roman
