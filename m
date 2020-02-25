@@ -2,42 +2,40 @@ Return-Path: <SRS0=dnTk=4N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A177C35DF5
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02557C35DF2
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A82021D7E
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D46DD21D7E
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729068AbgBYGYD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Feb 2020 01:24:03 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:36077 "EHLO smtp.infotech.no"
+        id S1729069AbgBYGYG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 01:24:06 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:36097 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725783AbgBYGYC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Feb 2020 01:24:02 -0500
+        id S1729022AbgBYGYG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Feb 2020 01:24:06 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id F34CF20425A;
-        Tue, 25 Feb 2020 07:23:59 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 4565E204269;
+        Tue, 25 Feb 2020 07:24:04 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id c9h4Q2El9MTh; Tue, 25 Feb 2020 07:23:57 +0100 (CET)
+        with ESMTP id R8G7tbYzYZV0; Tue, 25 Feb 2020 07:23:56 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id F25A22041E3;
-        Tue, 25 Feb 2020 07:23:56 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id BA7C4204188;
+        Tue, 25 Feb 2020 07:23:55 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         Damien.LeMoal@wdc.com
-Subject: [PATCH v4 01/14] scsi_debug: randomize command completion time
-Date:   Tue, 25 Feb 2020 01:23:38 -0500
-Message-Id: <20200225062351.21267-2-dgilbert@interlog.com>
+Subject: [PATCH v4 00/14] scsi_debug: host managed ZBC + doublestore
+Date:   Tue, 25 Feb 2020 01:23:37 -0500
+Message-Id: <20200225062351.21267-1-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200225062351.21267-1-dgilbert@interlog.com>
-References: <20200225062351.21267-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -45,134 +43,108 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a new command line option (e.g. random=1) and sysfs attribute
-that causes subsequent command completion times to be between the
-current command delay setting and 0. A unformily distributed 32
-bit, kernel provided integer is used for this purpose.
+The major addition is support for host-managed ZBC devices.
+The bulk of the work in this area was done by Damien Le Moal.
+It allows ZBC devices with a mix of conventional and
+"sequential write required" zones to be specified. These
+follow the same model as direct access devices in this
+driver. Namely, each device has its own metadata (including
+its write pointer(s)) but all (scsi_debug) devices share the
+same user data store (see doublestore below).
 
-Since the existing 'delay' whose units are jiffies (typically
-milliseconds) and 'ndelay' (units: nanoseconds) options (and sysfs
-attributes) span a range greater than 32 bits, some scaling is
-required.
+Significantly, this simulation passes the test/zbc_tests.sh
+script in the https://github.com/hgst/libzbc repository.
 
-The purpose of this patch is to widen the range of testing cases
-that are visited in long running tests. Put simply: rarely struct
-race conditions are more likely to be found when this facility is
-used.
+The lower numbered patches in this set contain various
+measures to improve the speed and usefulness of this driver.
+It is being used to test the rewrite of the SCSI generic (sg)
+driver which is still underway. Disk to disk copies are the
+test of choice by the author [DG]. Comparing the results
+between (simulated) disks is useless since all scsi_debug
+devices share the same user data store. This limitation was
+circumvented by adding the doublestore parameter. When set,
+doublestore doubles the data store and allocates them in an
+alternating pattern to each scsi_debug device. To enhance
+the comparisons, simulations of VERIFY(10 and 16) commands
+have been added. A further enhancement is to simulate the
+PRE-FETCH command (which does nothing as the data is
+already cached).
 
-The default is the previous case in which all command completions
-were roughly equal to (if not, slightly longer) than the value
-given by the 'delay' or 'ndelay' settings (or their defaults).
-This option's default is equivalent to setting 'random=0' .
+doublestore can also help with ZBC testing. Single threaded
+copy commands like dd (and ddpt) can be used to copy one
+non-empty zone into another empty zone. Multiple-threaded
+copies (e.g. sgp_dd) can do out-of-order WRITEs which
+become a WRITE VIOLATION error in a "sequential write
+required" zone.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 42 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 39 insertions(+), 3 deletions(-)
+The author [DG] found that precise command duration timing
+gave a false impression of how "bulletproof" the sg driver
+state machines and locking were. The first patch involves
+randomizing the command durations and it did expose various
+issues in the driver under test (sg).
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 44cb054d5e66..18c07e9ace15 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -38,6 +38,7 @@
- #include <linux/hrtimer.h>
- #include <linux/uuid.h>
- #include <linux/t10-pi.h>
-+#include <linux/random.h>
- 
- #include <net/checksum.h>
- 
-@@ -125,6 +126,7 @@ static const char *sdebug_version_date = "20190125";
- #define DEF_PHYSBLK_EXP 0
- #define DEF_OPT_XFERLEN_EXP 0
- #define DEF_PTYPE   TYPE_DISK
-+#define DEF_RANDOM false
- #define DEF_REMOVABLE false
- #define DEF_SCSI_LEVEL   7    /* INQUIRY, byte2 [6->SPC-4; 7->SPC-5] */
- #define DEF_SECTOR_SIZE 512
-@@ -655,6 +657,7 @@ static unsigned int sdebug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
- static unsigned int sdebug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
- static unsigned int sdebug_write_same_length = DEF_WRITESAME_LENGTH;
- static int sdebug_uuid_ctl = DEF_UUID_CTL;
-+static bool sdebug_random = DEF_RANDOM;
- static bool sdebug_removable = DEF_REMOVABLE;
- static bool sdebug_clustering;
- static bool sdebug_host_lock = DEF_HOST_LOCK;
-@@ -4354,9 +4357,21 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 		ktime_t kt;
- 
- 		if (delta_jiff > 0) {
--			kt = ns_to_ktime((u64)delta_jiff * (NSEC_PER_SEC / HZ));
--		} else
--			kt = ndelay;
-+			u64 ns = jiffies_to_nsecs(delta_jiff);
-+
-+			if (sdebug_random && ns < U32_MAX) {
-+				ns = prandom_u32_max((u32)ns);
-+			} else if (sdebug_random) {
-+				ns >>= 12;	/* scale to 4 usec precision */
-+				if (ns < U32_MAX)	/* over 4 hours max */
-+					ns = prandom_u32_max((u32)ns);
-+				ns <<= 12;
-+			}
-+			kt = ns_to_ktime(ns);
-+		} else {	/* ndelay has a 4.2 second max */
-+			kt = sdebug_random ? prandom_u32_max((u32)ndelay) :
-+					     (u32)ndelay;
-+		}
- 		if (!sd_dp->init_hrt) {
- 			sd_dp->init_hrt = true;
- 			sqcp->sd_dp = sd_dp;
-@@ -4451,6 +4466,7 @@ module_param_named(opts, sdebug_opts, int, S_IRUGO | S_IWUSR);
- module_param_named(physblk_exp, sdebug_physblk_exp, int, S_IRUGO);
- module_param_named(opt_xferlen_exp, sdebug_opt_xferlen_exp, int, S_IRUGO);
- module_param_named(ptype, sdebug_ptype, int, S_IRUGO | S_IWUSR);
-+module_param_named(random, sdebug_random, bool, S_IRUGO | S_IWUSR);
- module_param_named(removable, sdebug_removable, bool, S_IRUGO | S_IWUSR);
- module_param_named(scsi_level, sdebug_scsi_level, int, S_IRUGO);
- module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
-@@ -4511,6 +4527,7 @@ MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err...
- MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
- MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent (def=physblk_exp)");
- MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
-+MODULE_PARM_DESC(random, "If set, uniformly randomize command duration between 0 and delay_in_ns");
- MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
- MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=7[SPC-5])");
- MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
-@@ -5101,6 +5118,24 @@ static ssize_t map_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(map);
- 
-+static ssize_t random_show(struct device_driver *ddp, char *buf)
-+{
-+	return scnprintf(buf, PAGE_SIZE, "%d\n", (int)sdebug_random);
-+}
-+
-+static ssize_t random_store(struct device_driver *ddp, const char *buf,
-+			    size_t count)
-+{
-+	int n;
-+
-+	if (count > 0 && kstrtoint(buf, 10, &n) == 0 && n >= 0) {
-+		sdebug_random = (n > 0);
-+		return count;
-+	}
-+	return -EINVAL;
-+}
-+static DRIVER_ATTR_RW(random);
-+
- static ssize_t removable_show(struct device_driver *ddp, char *buf)
- {
- 	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_removable ? 1 : 0);
-@@ -5211,6 +5246,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_guard.attr,
- 	&driver_attr_ato.attr,
- 	&driver_attr_map.attr,
-+	&driver_attr_random.attr,
- 	&driver_attr_removable.attr,
- 	&driver_attr_host_lock.attr,
- 	&driver_attr_ndelay.attr,
+Since all scsi_debug memory store accesses are done in the
+context of queuecommand() call, the *_irqsave() and
+*_irqrestore() variants of the associated locks have been
+removed.  That could be a problem if queuecommand() can ever
+be called form an interrupt or related context.
+
+Finally to address the discrepancy between command duration
+times seen by the sg driver compared to what was set with
+this driver's ndelay option, this driver's timekeeping for
+short durations was made more accurate.
+
+If and when this patchset is accepted, this page will be
+updated:   http://sg.danny.cz/sg/sdebug26.html
+This patchset is against Martin Petersen's git repository
+and its 5.7/scsi-queue branch.
+
+Changes since v3:
+  - make enumeration constants of sdebug_z_cond upper case
+  - move stray alphabetical re-order into correct patch
+  - add some reviewed-by lines
+  - meld 'zbc module parameter' and 'zbc parameter can be
+    string' into single 'add zbc parameter' patch
+  - make zbc= parameter read-only
+
+Changes since v2 (RFC):
+  - add support for host-managed zbc devices with
+    conventional and "sequential write required"
+    zones [DLM]
+
+Changes since v1 (RFC):
+  - testing with version 1 caused several strange crashes that
+    turned out to be caused by a code trick to read in the
+    data-out buffer but _not_ place it in the big fake_storep
+    array. This approach failed badly when multiple threads
+    were doing verifies at the same time.
+  - replace the code trick with a new do_dout_fetch() function
+  - since the code trick was borrowed from the COMPARE AND
+    WRITE implementation [resp_comp_write()] using
+    do_dout_fetch() fixes the same bug in the existing driver
+    which hasn't been reported (yet).
+
+Damien Le Moal (3):
+  scsi_debug: zone_max_open module parameter
+  scsi_debug: zone_nr_conv module parameter
+  scsi_debug: zone_size_mb module parameter
+
+Douglas Gilbert (11):
+  scsi_debug: randomize command completion time
+  scsi_debug: add doublestore option
+  scsi_debug: implement verify(10), add verify(16)
+  scsi_debug: weaken rwlock around ramdisk access
+  scsi_debug: improve command duration calculation
+  scsi_debug: implement pre-fetch commands
+  scsi_debug: expand zbc support
+  scsi_debug: add zone commands
+  scsi_debug: add zbc parameter
+  scsi_debug: re-arrange parameters alphabetically
+  scsi_debug: bump to version 1.89
+
+ drivers/scsi/scsi_debug.c | 1555 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 1359 insertions(+), 196 deletions(-)
+
 -- 
 2.25.1
 
