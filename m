@@ -2,105 +2,126 @@ Return-Path: <SRS0=dnTk=4N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B111C35DF0
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 04:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 995F7C35DF2
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E803E2467C
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 04:32:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7565024650
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728871AbgBYEc0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 Feb 2020 23:32:26 -0500
-Received: from mail-pj1-f49.google.com ([209.85.216.49]:52234 "EHLO
-        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728725AbgBYEc0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Feb 2020 23:32:26 -0500
-Received: by mail-pj1-f49.google.com with SMTP id ep11so700229pjb.2
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2020 20:32:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=pE6zqt3bnWGK3EdKXSF9UXMzNDDRg2FPxZwGmQ6FdxE=;
-        b=jldg44jaTIuUgZVxdfSuQqGzLJY9UxFk76iKdOFwW6wrica0US3WzuT6ZohF10BMUB
-         4llX3cQuGhoCUO4WcGTROvlSTieRBwvGfn0/6Ab7yMQP/mNJwklMViNyQfaulnw4vP6K
-         nZjmZtlewTaZHoKI3/QrarBhOm/PJbPf1udR5th6kPEtkpiVVRTJObnbvQKTvQgIEN2A
-         K+krxwxkJGkMa2pDgMU3FejaQYq204LdHVll+4jp2UsXsXEqAHhxTXsJyJyixOo6tqPn
-         3ulGKMZb9wiZP5qkj5V6F2g4TzRpe+crIpo0fq7RiiLbClW8kImK50YffluI7IK7GiqD
-         +nbw==
-X-Gm-Message-State: APjAAAUN3vTjhHu+a8puVzWhCdGmlhz9CTG+F7GJtIPFx93wXOJKFp+N
-        KeCOXDENP0BVSNtlq77soFicSbd8YvE=
-X-Google-Smtp-Source: APXvYqztlmx52n467+LnLcnbu7rbltAmecbRBRlmrR5nbw6sIi/h343t5H6EISs8FUCETgZ4G7Ky+Q==
-X-Received: by 2002:a17:90b:3c9:: with SMTP id go9mr2939545pjb.7.1582605145106;
-        Mon, 24 Feb 2020 20:32:25 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:e0d5:574d:fc92:e4e? ([2601:647:4000:d7:e0d5:574d:fc92:e4e])
-        by smtp.gmail.com with ESMTPSA id h3sm14494995pfo.102.2020.02.24.20.32.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Feb 2020 20:32:24 -0800 (PST)
-Subject: Re: [PATCH 00/25] qla2xxx: Updates for the driver
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Cc:     James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-References: <20200212214436.25532-1-hmadhani@marvell.com>
- <yq1r1ynqzwv.fsf@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <5dd657a9-c9c8-088e-47ba-c324af4fe256@acm.org>
-Date:   Mon, 24 Feb 2020 20:32:23 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
-MIME-Version: 1.0
-In-Reply-To: <yq1r1ynqzwv.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1728968AbgBYGVV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 01:21:21 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9584 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725783AbgBYGVU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Feb 2020 01:21:20 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01P6L0ji120016;
+        Tue, 25 Feb 2020 01:21:04 -0500
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1as8a5v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 25 Feb 2020 01:21:04 -0500
+Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 01P6L3rZ120513;
+        Tue, 25 Feb 2020 01:21:03 -0500
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2yb1as8a26-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 25 Feb 2020 01:21:03 -0500
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 01P6JqV9018607;
+        Tue, 25 Feb 2020 06:20:48 GMT
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+        by ppma04dal.us.ibm.com with ESMTP id 2yaux6r3jx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 25 Feb 2020 06:20:48 +0000
+Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
+        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 01P6Kmev49414562
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 25 Feb 2020 06:20:48 GMT
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 21836B205F;
+        Tue, 25 Feb 2020 06:20:48 +0000 (GMT)
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 85627B2065;
+        Tue, 25 Feb 2020 06:20:44 +0000 (GMT)
+Received: from [9.109.247.196] (unknown [9.109.247.196])
+        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
+        Tue, 25 Feb 2020 06:20:44 +0000 (GMT)
+Message-ID: <1582611644.19645.6.camel@abdul.in.ibm.com>
+Subject: Re: [linux-next/mainline][bisected 3acac06][ppc] Oops when
+ unloading mpt3sas driver
+From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        sachinp <sachinp@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>, jcmvbkbc@gmail.com,
+        linux-next <linux-next@vger.kernel.org>,
+        Oliver <oohall@gmail.com>,
+        "aneesh.kumar" <aneesh.kumar@linux.vnet.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>,
+        manvanth <manvanth@linux.vnet.ibm.com>,
+        iommu@lists.linux-foundation.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+Date:   Tue, 25 Feb 2020 11:50:44 +0530
+In-Reply-To: <1579265473.17382.5.camel@abdul>
+References: <1578489498.29952.11.camel@abdul>
+         <1578560245.30409.0.camel@abdul.in.ibm.com>
+         <20200109142218.GA16477@infradead.org>
+         <1578980874.11996.3.camel@abdul.in.ibm.com>
+         <20200116174443.GA30158@infradead.org> <1579265473.17382.5.camel@abdul>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.10.4-0ubuntu1 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-02-25_01:2020-02-21,2020-02-25 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ priorityscore=1501 mlxlogscore=918 malwarescore=0 mlxscore=0 adultscore=0
+ phishscore=0 bulkscore=0 clxscore=1011 impostorscore=0 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002250050
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-21 15:33, Martin K. Petersen wrote:
-> Applied to 5.7/scsi-queue. This series lit up like a Xmas tree in
-> checkpatch. Next time, please verify before posting.
+On Fri, 2020-01-17 at 18:21 +0530, Abdul Haleem wrote:
+> On Thu, 2020-01-16 at 09:44 -0800, Christoph Hellwig wrote:
+> > Hi Abdul,
+> > 
+> > I think the problem is that mpt3sas has some convoluted logic to do
+> > some DMA allocations with a 32-bit coherent mask, and then switches
+> > to a 63 or 64 bit mask, which is not supported by the DMA API.
+> > 
+> > Can you try the patch below?
+> 
+> Thank you Christoph, with the given patch applied the bug is not seen.
+> 
+> rmmod of mpt3sas driver is successful, no kernel Oops
+> 
+> Reported-and-tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
 
-Hi Martin,
+Hi Christoph,
 
-Have these changes already been pushed out? It seems like it has been a
-few days since your 5.7/scsi-queue branch has been published:
+I see the patch is under discussion, will this be merged upstream any
+time soon ? as boot is broken on our machines with out your patch.
 
-$ git fetch mkp-scsi && git show mkp-scsi/5.7/scsi-queue | head
-commit b417107a659e9745f9ff905196ddff70cbe4eaa7
-Author: Gustavo A. R. Silva <gustavo@embeddedor.com>
-Date:   Wed Feb 12 18:02:11 2020 -0600
+-- 
+Regard's
 
-    scsi: advansys: Replace zero-length array with flexible-array member
+Abdul Haleem
+IBM Linux Technology Centre
 
-Thanks,
 
-Bart.
+
