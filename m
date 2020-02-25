@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD13C35DF7
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DE0C35DF9
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B5692176D
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C30892176D
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbgBYGYL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729080AbgBYGYL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 25 Feb 2020 01:24:11 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:36129 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:36105 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729074AbgBYGYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1729025AbgBYGYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 25 Feb 2020 01:24:10 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id DF45A20425C;
+        by smtp.infotech.no (Postfix) with ESMTP id 76E3C20425B;
         Tue, 25 Feb 2020 07:24:08 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Iq6dEZmeD0b1; Tue, 25 Feb 2020 07:24:06 +0100 (CET)
+        with ESMTP id JXKEKwZGolNk; Tue, 25 Feb 2020 07:24:06 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 9ADE2204188;
-        Tue, 25 Feb 2020 07:24:04 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id 5B3D620423A;
+        Tue, 25 Feb 2020 07:24:03 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
         Damien.LeMoal@wdc.com
-Subject: [PATCH v4 07/14] scsi_debug: expand zbc support
-Date:   Tue, 25 Feb 2020 01:23:44 -0500
-Message-Id: <20200225062351.21267-8-dgilbert@interlog.com>
+Subject: [PATCH v4 06/14] scsi_debug: implement pre-fetch commands
+Date:   Tue, 25 Feb 2020 01:23:43 -0500
+Message-Id: <20200225062351.21267-7-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200225062351.21267-1-dgilbert@interlog.com>
 References: <20200225062351.21267-1-dgilbert@interlog.com>
@@ -45,164 +45,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The ZBC standard "piggy-backs" on many, but not all, of the
-facilities in SBC. Add those ZBC mode pages (plus mode
-parameter block descriptors (e.g. "WP")) and VPD pages in
-common with SBC. Add ZBC specific VPD page.
+Many disks implement the SCSI PRE-FETCH commands. One use case
+might be a disk-to-disk compare, say between disks A and B.
+Then this sequence of commands might be used:
+PRE-FETCH(from B, IMMED), READ(from A), VERIFY (BYTCHK=1 on B
+with data returned from READ). The PRE-FETCH (which returns
+quickly due to the IMMED) fetches the data from the media into
+B's cache which should speed the trailing VERIFY command.
+The next chunk of the compare might be done in parallel,
+with A and B reversed.
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi_debug.c | 55 +++++++++++++++++++++++++++++++--------
- 1 file changed, 44 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_debug.c | 54 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 49 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 6568ad7cfb56..5a720d2a14c4 100644
+index 6193a88f9e24..6568ad7cfb56 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1416,6 +1416,24 @@ static int inquiry_vpd_b2(unsigned char *arr)
- 	return 0x4;
+@@ -355,7 +355,8 @@ enum sdeb_opcode_index {
+ 	SDEB_I_WRITE_SAME = 26,		/* 10, 16 */
+ 	SDEB_I_SYNC_CACHE = 27,		/* 10, 16 */
+ 	SDEB_I_COMP_WRITE = 28,
+-	SDEB_I_LAST_ELEMENT = 29,	/* keep this last (previous + 1) */
++	SDEB_I_PRE_FETCH = 29,		/* 10, 16 */
++	SDEB_I_LAST_ELEM_P1 = 30,	/* keep this last (previous + 1) */
+ };
+ 
+ 
+@@ -371,7 +372,7 @@ static const unsigned char opcode_ind_arr[256] = {
+ /* 0x20; 0x20->0x3f: 10 byte cdbs */
+ 	0, 0, 0, 0, 0, SDEB_I_READ_CAPACITY, 0, 0,
+ 	SDEB_I_READ, 0, SDEB_I_WRITE, 0, 0, 0, 0, SDEB_I_VERIFY,
+-	0, 0, 0, 0, 0, SDEB_I_SYNC_CACHE, 0, 0,
++	0, 0, 0, 0, SDEB_I_PRE_FETCH, SDEB_I_SYNC_CACHE, 0, 0,
+ 	0, 0, 0, SDEB_I_WRITE_BUFFER, 0, 0, 0, 0,
+ /* 0x40; 0x40->0x5f: 10 byte cdbs */
+ 	0, SDEB_I_WRITE_SAME, SDEB_I_UNMAP, 0, 0, 0, 0, 0,
+@@ -387,7 +388,7 @@ static const unsigned char opcode_ind_arr[256] = {
+ 	0, 0, 0, 0, 0, SDEB_I_ATA_PT, 0, 0,
+ 	SDEB_I_READ, SDEB_I_COMP_WRITE, SDEB_I_WRITE, 0,
+ 	0, 0, 0, SDEB_I_VERIFY,
+-	0, SDEB_I_SYNC_CACHE, 0, SDEB_I_WRITE_SAME, 0, 0, 0, 0,
++	SDEB_I_PRE_FETCH, SDEB_I_SYNC_CACHE, 0, SDEB_I_WRITE_SAME, 0, 0, 0, 0,
+ 	0, 0, 0, 0, 0, 0, SDEB_I_SERV_ACT_IN_16, SDEB_I_SERV_ACT_OUT_16,
+ /* 0xa0; 0xa0->0xbf: 12 byte cdbs */
+ 	SDEB_I_REPORT_LUNS, SDEB_I_ATA_PT, 0, SDEB_I_MAINT_IN,
+@@ -434,6 +435,7 @@ static int resp_write_same_16(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_comp_write(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_write_buffer(struct scsi_cmnd *, struct sdebug_dev_info *);
+ static int resp_sync_cache(struct scsi_cmnd *, struct sdebug_dev_info *);
++static int resp_pre_fetch(struct scsi_cmnd *, struct sdebug_dev_info *);
+ 
+ /*
+  * The following are overflow arrays for cdbs that "hit" the same index in
+@@ -525,11 +527,17 @@ static const struct opcode_info_t sync_cache_iarr[] = {
+ 	     0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} },	/* SYNC_CACHE (16) */
+ };
+ 
++static const struct opcode_info_t pre_fetch_iarr[] = {
++	{0, 0x90, 0, F_SYNC_DELAY | F_M_ACCESS, resp_pre_fetch, NULL,
++	    {16,  0x2, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
++	     0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} },	/* PRE-FETCH (16) */
++};
++
+ 
+ /* This array is accessed via SDEB_I_* values. Make sure all are mapped,
+  * plus the terminating elements for logic that scans this table such as
+  * REPORT SUPPORTED OPERATION CODES. */
+-static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
++static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+ /* 0 */
+ 	{0, 0, 0, F_INV_OP | FF_RESPOND, NULL, NULL,	/* unknown opcodes */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+@@ -621,8 +629,12 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEMENT + 1] = {
+ 	{0, 0x89, 0, F_D_OUT | FF_MEDIA_IO, resp_comp_write, NULL,
+ 	    {16,  0xf8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0,
+ 	     0, 0xff, 0x3f, 0xc7} },		/* COMPARE AND WRITE */
++	{ARRAY_SIZE(pre_fetch_iarr), 0x34, 0, F_SYNC_DELAY | F_M_ACCESS,
++	    resp_pre_fetch, pre_fetch_iarr,
++	    {10,  0x2, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0,
++	     0, 0, 0, 0} },			/* PRE-FETCH (10) */
+ 
+-/* 29 */
++/* 30 */
+ 	{0xff, 0, 0, 0, NULL, NULL,		/* terminating element */
+ 	    {0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
+ };
+@@ -735,6 +747,8 @@ static const int illegal_condition_result =
+ static const int device_qfull_result =
+ 	(DID_OK << 16) | (COMMAND_COMPLETE << 8) | SAM_STAT_TASK_SET_FULL;
+ 
++static const int condition_met_result = SAM_STAT_CONDITION_MET;
++
+ 
+ /* Only do the extra work involved in logical block provisioning if one or
+  * more of the lbpu, lbpws or lbpws10 parameters are given and we are doing
+@@ -3638,6 +3652,36 @@ static int resp_sync_cache(struct scsi_cmnd *scp,
+ 	return res;
  }
  
-+/* Zoned block device characteristics VPD page (ZBC mandatory) */
-+static int inquiry_vpd_b6(unsigned char *arr)
++/*
++ * Assuming the LBA+num_blocks is not out-of-range, this function will return
++ * CONDITION MET if the specified blocks will/have fitted in the cache, and
++ * a GOOD status otherwise. Model a disk with a big cache and yield
++ * CONDITION MET.
++ */
++static int resp_pre_fetch(struct scsi_cmnd *scp,
++			  struct sdebug_dev_info *devip)
 +{
-+	memset(arr, 0, 0x3c);
-+	arr[0] = 0x1; /* set URSWRZ (unrestricted read in seq. wr req zone) */
-+	/*
-+	 * Set Optimal number of open sequential write preferred zones and
-+	 * Optimal number of non-sequentially written sequential write
-+	 * preferred zones and Maximum number of open sequential write
-+	 * required zones fields to 'not reported' (0xffffffff). Leave other
-+	 * fields set to zero.
-+	 */
-+	put_unaligned_be32(0xffffffff, &arr[4]);
-+	put_unaligned_be32(0xffffffff, &arr[8]);
-+	put_unaligned_be32(0xffffffff, &arr[12]);
-+	return 0x3c;
++	int res = 0;
++	u64 lba;
++	u32 num_blocks;
++	u8 *cmd = scp->cmnd;
++
++	if (cmd[0] == PRE_FETCH) {	/* 10 byte cdb */
++		lba = get_unaligned_be32(cmd + 2);
++		num_blocks = get_unaligned_be16(cmd + 7);
++	} else {			/* PRE-FETCH(16) */
++		lba = get_unaligned_be64(cmd + 2);
++		num_blocks = get_unaligned_be32(cmd + 10);
++	}
++	if (lba + num_blocks > sdebug_capacity) {
++		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE, 0);
++		return check_condition_result;
++	}
++	if (cmd[1] & 0x2)
++		res = SDEG_RES_IMMED_MASK;
++	return res | condition_met_result;
 +}
 +
- #define SDEBUG_LONG_INQ_SZ 96
- #define SDEBUG_MAX_INQ_ARR_SZ 584
+ #define RL_BUCKET_ELEMS 8
  
-@@ -1425,13 +1443,15 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	unsigned char *arr;
- 	unsigned char *cmd = scp->cmnd;
- 	int alloc_len, n, ret;
--	bool have_wlun, is_disk;
-+	bool have_wlun, is_disk, is_zbc, is_disk_zbc;
- 
- 	alloc_len = get_unaligned_be16(cmd + 3);
- 	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
- 	if (! arr)
- 		return DID_REQUEUE << 16;
- 	is_disk = (sdebug_ptype == TYPE_DISK);
-+	is_zbc = (sdebug_ptype == TYPE_ZBC);
-+	is_disk_zbc = (is_disk || is_zbc);
- 	have_wlun = scsi_is_wlun(scp->device->lun);
- 	if (have_wlun)
- 		pq_pdt = TYPE_WLUN;	/* present, wlun */
-@@ -1469,11 +1489,14 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 			arr[n++] = 0x86;  /* extended inquiry */
- 			arr[n++] = 0x87;  /* mode page policy */
- 			arr[n++] = 0x88;  /* SCSI ports */
--			if (is_disk) {	  /* SBC only */
-+			if (is_disk_zbc) {	  /* SBC or ZBC */
- 				arr[n++] = 0x89;  /* ATA information */
- 				arr[n++] = 0xb0;  /* Block limits */
- 				arr[n++] = 0xb1;  /* Block characteristics */
--				arr[n++] = 0xb2;  /* Logical Block Prov */
-+				if (is_disk)
-+					arr[n++] = 0xb2;  /* LB Provisioning */
-+				else if (is_zbc)
-+					arr[n++] = 0xb6;  /* ZB dev. char. */
- 			}
- 			arr[3] = n - 4;	  /* number of supported VPD pages */
- 		} else if (0x80 == cmd[2]) { /* unit serial number */
-@@ -1512,19 +1535,22 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		} else if (0x88 == cmd[2]) { /* SCSI Ports */
- 			arr[1] = cmd[2];	/*sanity */
- 			arr[3] = inquiry_vpd_88(&arr[4], target_dev_id);
--		} else if (is_disk && 0x89 == cmd[2]) { /* ATA information */
-+		} else if (is_disk_zbc && 0x89 == cmd[2]) { /* ATA info */
- 			arr[1] = cmd[2];        /*sanity */
- 			n = inquiry_vpd_89(&arr[4]);
- 			put_unaligned_be16(n, arr + 2);
--		} else if (is_disk && 0xb0 == cmd[2]) { /* Block limits */
-+		} else if (is_disk_zbc && 0xb0 == cmd[2]) { /* Block limits */
- 			arr[1] = cmd[2];        /*sanity */
- 			arr[3] = inquiry_vpd_b0(&arr[4]);
--		} else if (is_disk && 0xb1 == cmd[2]) { /* Block char. */
-+		} else if (is_disk_zbc && 0xb1 == cmd[2]) { /* Block char. */
- 			arr[1] = cmd[2];        /*sanity */
- 			arr[3] = inquiry_vpd_b1(&arr[4]);
- 		} else if (is_disk && 0xb2 == cmd[2]) { /* LB Prov. */
- 			arr[1] = cmd[2];        /*sanity */
- 			arr[3] = inquiry_vpd_b2(&arr[4]);
-+		} else if (is_zbc && cmd[2] == 0xb6) { /* ZB dev. charact. */
-+			arr[1] = cmd[2];        /*sanity */
-+			arr[3] = inquiry_vpd_b6(&arr[4]);
- 		} else {
- 			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 2, -1);
- 			kfree(arr);
-@@ -1562,6 +1588,9 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	} else if (sdebug_ptype == TYPE_TAPE) {	/* SSC-4 rev 3 */
- 		put_unaligned_be16(0x525, arr + n);
- 		n += 2;
-+	} else if (is_zbc) {	/* ZBC BSR INCITS 536 revision 05 */
-+		put_unaligned_be16(0x624, arr + n);
-+		n += 2;
- 	}
- 	put_unaligned_be16(0x2100, arr + n);	/* SPL-4 no version claimed */
- 	ret = fill_from_dev_buffer(scp, arr,
-@@ -2151,7 +2180,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	unsigned char *ap;
- 	unsigned char arr[SDEBUG_MAX_MSENSE_SZ];
- 	unsigned char *cmd = scp->cmnd;
--	bool dbd, llbaa, msense_6, is_disk, bad_pcode;
-+	bool dbd, llbaa, msense_6, is_disk, is_zbc, bad_pcode;
- 
- 	dbd = !!(cmd[1] & 0x8);		/* disable block descriptors */
- 	pcontrol = (cmd[2] & 0xc0) >> 6;
-@@ -2160,7 +2189,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	msense_6 = (MODE_SENSE == cmd[0]);
- 	llbaa = msense_6 ? false : !!(cmd[1] & 0x10);
- 	is_disk = (sdebug_ptype == TYPE_DISK);
--	if (is_disk && !dbd)
-+	is_zbc = (sdebug_ptype == TYPE_ZBC);
-+	if ((is_disk || is_zbc) && !dbd)
- 		bd_len = llbaa ? 16 : 8;
- 	else
- 		bd_len = 0;
-@@ -2172,8 +2202,8 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 	}
- 	target_dev_id = ((devip->sdbg_host->shost->host_no + 1) * 2000) +
- 			(devip->target * 1000) - 3;
--	/* for disks set DPOFUA bit and clear write protect (WP) bit */
--	if (is_disk) {
-+	/* for disks+zbc set DPOFUA bit and clear write protect (WP) bit */
-+	if (is_disk || is_zbc) {
- 		dev_spec = 0x10;	/* =0x90 if WP=1 implies read-only */
- 		if (sdebug_wp)
- 			dev_spec |= 0x80;
-@@ -2233,7 +2263,7 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 			bad_pcode = true;
- 		break;
- 	case 0x8:	/* Caching page, direct access */
--		if (is_disk) {
-+		if (is_disk || is_zbc) {
- 			len = resp_caching_pg(ap, pcontrol, target);
- 			offset += len;
- 		} else
-@@ -2271,6 +2301,9 @@ static int resp_mode_sense(struct scsi_cmnd *scp,
- 						      target);
- 				len += resp_caching_pg(ap + len, pcontrol,
- 						       target);
-+			} else if (is_zbc) {
-+				len += resp_caching_pg(ap + len, pcontrol,
-+						       target);
- 			}
- 			len += resp_ctrl_m_pg(ap + len, pcontrol, target);
- 			len += resp_sas_sf_m_pg(ap + len, pcontrol, target);
+ /* Even though each pseudo target has a REPORT LUNS "well known logical unit"
 -- 
 2.25.1
 
