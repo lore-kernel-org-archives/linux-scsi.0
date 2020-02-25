@@ -2,133 +2,102 @@ Return-Path: <SRS0=dnTk=4N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B8AC35DF8
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 361F8C35DF8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 07:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D08620CC7
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:53:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07D4B218AC
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 07:21:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QSWYzPYT"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="hDN9ebhS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729213AbgBYGx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Feb 2020 01:53:26 -0500
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:44418 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729073AbgBYGxZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Feb 2020 01:53:25 -0500
-Received: by mail-oi1-f195.google.com with SMTP id d62so11550814oia.11
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2020 22:53:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fSxteq8BvR6bLu5LA6jd2BwkLJks1DyRranxnHnzEYU=;
-        b=QSWYzPYTbGtdSQcLlCKj5AEGOQ+3AMV+xZg0/U1875q3JKfM5DYKKf5p6HAK6CwjIP
-         AOzaHHJjmake0476dUff+71jZhuvNc745oA0rLIGZ2I2H4J5IKOXbhyQXmahB1wqF2Iv
-         U7eNIah3q24sEOYyMKrA6vRUfjNnXNBHWLXsY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fSxteq8BvR6bLu5LA6jd2BwkLJks1DyRranxnHnzEYU=;
-        b=eKOZR65C1nXGJKTWUs2jGACM+3YDwKQfQGo0f8eMxg4iY2eJjhSVhzL1Ciig83csGf
-         0W1VQyPgThL0gK0zOTURKJr6rCQZzYn2MEHlGLqhyTZeHa+RSIxk2vfPRzJx5UGrWp0g
-         HimHOQtOE96hNzPW/K/cizCYaNLgTHa7YNSPgHj48AwXqugvcyOEEyQiaw7p/Ylbg6nM
-         AKm1RNX6pwQT/AuFxIDhWSJrs4N8ZAmhVQduk4VB6rB6g+C+ACO2J1WvtLbIw/Ulj56A
-         fUzYB3lYG1rBWRN6ogjGYE5EnxkLbZ6rs34/rJFc7wJdZV0LccDGR+I/QXDbqSbKFpQT
-         2BCA==
-X-Gm-Message-State: APjAAAUXa7UZReoqT1pt7sy9lYXA2pWnKk9P7xvcpLn/6shmvqE2QsEm
-        zt0StttCGdCGZQjDa5bB6EzNyhs5WPfVPtzS65rRyA==
-X-Google-Smtp-Source: APXvYqzA/xFMqccjb+BVRQhIHMzDqHfwlaweZ5oYatBKG1/zxpMzG0KS3wxN/jHbU7SS9W3Ga5Oz56oRA9wsAEb0Dk0=
-X-Received: by 2002:aca:f587:: with SMTP id t129mr2226747oih.143.1582613605142;
- Mon, 24 Feb 2020 22:53:25 -0800 (PST)
-MIME-Version: 1.0
-References: <1578489498.29952.11.camel@abdul> <1578560245.30409.0.camel@abdul.in.ibm.com>
- <20200109142218.GA16477@infradead.org> <1578980874.11996.3.camel@abdul.in.ibm.com>
- <20200116174443.GA30158@infradead.org> <1579265473.17382.5.camel@abdul> <1582611644.19645.6.camel@abdul.in.ibm.com>
-In-Reply-To: <1582611644.19645.6.camel@abdul.in.ibm.com>
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Tue, 25 Feb 2020 12:23:13 +0530
-Message-ID: <CAK=zhgpWCz0+xpSGymbQEAbysH_rQf=s8iQ1gn4KwysP3c1Gcw@mail.gmail.com>
-Subject: Re: [linux-next/mainline][bisected 3acac06][ppc] Oops when unloading
- mpt3sas driver
-To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        sachinp <sachinp@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>, jcmvbkbc@gmail.com,
-        linux-next <linux-next@vger.kernel.org>,
-        Oliver <oohall@gmail.com>,
-        "aneesh.kumar" <aneesh.kumar@linux.vnet.ibm.com>,
-        Brian King <brking@linux.vnet.ibm.com>,
-        manvanth <manvanth@linux.vnet.ibm.com>,
-        iommu@lists.linux-foundation.org,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+        id S1729181AbgBYHVc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 02:21:32 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:44357 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727114AbgBYHVc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Feb 2020 02:21:32 -0500
+X-UUID: c48abae84cc14d3a9f6612981b2feae3-20200225
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=PlAFoeZLv3yl1DNrLtJ5lhwXHfBU7bpENIh3MZoxiYA=;
+        b=hDN9ebhS0qLFNFnIpNSWd+pVCu3tZtv8DLG1dzuO+lunq8we8otu7OCMl4ArxSpNat/j5KOOiwfRiL/dhoC43DIh4hDUzhThq3qRXyTnY8B0NjsEfL+dJ71lSLooFXET1z+hykUK6Ybc+GQVMLtMKms0AYJ4G23qqbbmvdk6FCI=;
+X-UUID: c48abae84cc14d3a9f6612981b2feae3-20200225
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 215015611; Tue, 25 Feb 2020 15:21:26 +0800
+Received: from mtkcas09.mediatek.inc (172.21.101.178) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 25 Feb 2020 15:19:33 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkcas09.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 25 Feb 2020 15:21:12 +0800
+Message-ID: <1582615285.26304.93.camel@mtksdccf07>
+Subject: Re: [PATCH v7 6/9] scsi: ufs: Add inline encryption support to UFS
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     Eric Biggers <ebiggers@kernel.org>,
+        Satya Tangirala <satyat@google.com>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-fscrypt@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        <linux-ext4@vger.kernel.org>,
+        "Barani Muthukumaran" <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        "Ladvine D Almeida" <Ladvine.DAlmeida@synopsys.com>,
+        Parshuram Raju Thombare <pthombar@cadence.com>
+Date:   Tue, 25 Feb 2020 15:21:25 +0800
+In-Reply-To: <20200224233759.GC30288@infradead.org>
+References: <20200221115050.238976-1-satyat@google.com>
+         <20200221115050.238976-7-satyat@google.com>
+         <20200221172244.GC438@infradead.org> <20200221181109.GB925@sol.localdomain>
+         <1582465656.26304.69.camel@mtksdccf07>
+         <20200224233759.GC30288@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Feb 25, 2020 at 11:51 AM Abdul Haleem
-<abdhalee@linux.vnet.ibm.com> wrote:
->
-> On Fri, 2020-01-17 at 18:21 +0530, Abdul Haleem wrote:
-> > On Thu, 2020-01-16 at 09:44 -0800, Christoph Hellwig wrote:
-> > > Hi Abdul,
-> > >
-> > > I think the problem is that mpt3sas has some convoluted logic to do
-> > > some DMA allocations with a 32-bit coherent mask, and then switches
-> > > to a 63 or 64 bit mask, which is not supported by the DMA API.
-> > >
-> > > Can you try the patch below?
-> >
-> > Thank you Christoph, with the given patch applied the bug is not seen.
-> >
-> > rmmod of mpt3sas driver is successful, no kernel Oops
-> >
-> > Reported-and-tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
->
-> Hi Christoph,
->
-> I see the patch is under discussion, will this be merged upstream any
-> time soon ? as boot is broken on our machines with out your patch.
->
+SGkgQ2hyaXN0b3BoLA0KDQpPbiBNb24sIDIwMjAtMDItMjQgYXQgMTU6MzcgLTA4MDAsIENocmlz
+dG9waCBIZWxsd2lnIHdyb3RlOg0KPiBPbiBTdW4sIEZlYiAyMywgMjAyMCBhdCAwOTo0NzozNlBN
+ICswODAwLCBTdGFubGV5IENodSB3cm90ZToNCj4gPiBZZXMsIE1lZGlhVGVrIGlzIGtlZXBpbmcg
+d29yayBjbG9zZWx5IHdpdGggaW5saW5lIGVuY3J5cHRpb24gcGF0Y2ggc2V0cy4NCj4gPiBDdXJy
+ZW50bHkgdGhlIHY2IHZlcnNpb24gY2FuIHdvcmsgd2VsbCAod2l0aG91dA0KPiA+IFVGU0hDRF9R
+VUlSS19CUk9LRU5fQ1JZUFRPIHF1aXJrKSBhdCBsZWFzdCBpbiBvdXIgTVQ2Nzc5IFNvQyBwbGF0
+Zm9ybQ0KPiA+IHdoaWNoIGJhc2ljIFNvQyBzdXBwb3J0IGFuZCBzb21lIG90aGVyIHBlcmlwaGVy
+YWwgZHJpdmVycyBhcmUgdW5kZXINCj4gPiB1cHN0cmVhbWluZyBhcyBiZWxvdyBsaW5rLA0KPiA+
+IA0KPiA+IGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcvcHJvamVjdC9saW51eC1tZWRpYXRl
+ay9saXN0Lz9zdGF0ZT0lDQo+ID4gMkEmcT02Nzc5JnNlcmllcz0mc3VibWl0dGVyPSZkZWxlZ2F0
+ZT0mYXJjaGl2ZT1ib3RoDQo+ID4gDQo+ID4gVGhlIGludGVncmF0aW9uIHdpdGggaW5saW5lIGVu
+Y3J5cHRpb24gcGF0Y2ggc2V0IG5lZWRzIHRvIHBhdGNoDQo+ID4gdWZzLW1lZGlhdGVrIGFuZCBw
+YXRjaGVzIGFyZSByZWFkeSBpbiBkb3duc3RyZWFtLiBXZSBwbGFuIHRvIHVwc3RyZWFtDQo+ID4g
+dGhlbSBzb29uIGFmdGVyIGlubGluZSBlbmNyeXB0aW9uIHBhdGNoIHNldHMgZ2V0IG1lcmdlZC4N
+Cj4gDQo+IFdoYXQgYW1vdW50IG9mIHN1cHBvcnQgZG8geW91IG5lZWQgaW4gdWZzLW1lZGlhdGVr
+PyAgSXQgc2VlbXMgbGlrZQ0KPiBwcmV0dHkgbXVjaCBldmVyeSB1ZnMgbG93LWxldmVsIGRyaXZl
+ciBuZWVkcyBzb21lIGtpbmQgb2Ygc3BlY2lmaWMNCj4gc3VwcG9ydCBub3csIHJpZ2h0PyAgSSB3
+b25kZXIgaWYgd2Ugc2hvdWxkIGluc3RlYWQgb3B0IGludG8gdGhlIHN1cHBvcnQNCj4gaW5zdGVh
+ZCBvZiBhbGwgdGhlIHF1aXJraW5nIGhlcmUuDQoNClRoZSBwYXRjaCBpbiB1ZnMtbWVkaWF0ZWsg
+aXMgYWltZWQgdG8gaXNzdWUgdmVuZG9yLXNwZWNpZmljIFNNQyBjYWxscw0KZm9yIGhvc3QgaW5p
+dGlhbGl6YXRpb24gYW5kIGNvbmZpZ3VyYXRpb24uIFRoaXMgaXMgYmVjYXVzZSBNZWRpYVRlayBV
+RlMNCmhvc3QgaGFzIHNvbWUgInNlY3VyZS1wcm90ZWN0ZWQiIHJlZ2lzdGVycy9mZWF0dXJlcyB3
+aGljaCBuZWVkIHRvIGJlDQphY2Nlc3NlZC9zd2l0Y2hlZCBpbiBzZWN1cmUgd29ybGQuIA0KDQpT
+dWNoIHByb3RlY3Rpb24gaXMgbm90IG1lbnRpb25lZCBieSBVRlNIQ0kgc3BlY2lmaWNhdGlvbnMg
+dGh1cyBpbmxpbmUNCmVuY3J5cHRpb24gcGF0Y2ggc2V0IGFzc3VtZXMgdGhhdCBldmVyeSByZWdp
+c3RlcnMgaW4gVUZTSENJIGNhbiBiZQ0KYWNjZXNzZWQgbm9ybWFsbHkgaW4ga2VybmVsLiBUaGlz
+IG1ha2VzIHNlbnNlIGFuZCBzdXJlbHkgdGhlIHBhdGNoc2V0DQpjYW4gd29yayBmaW5lIGluIGFu
+eSAic3RhbmRhcmQiIFVGUyBob3N0LiBIb3dldmVyIGlmIGhvc3QgaGFzIHNwZWNpYWwNCmRlc2ln
+biB0aGVuIGl0IGNhbiB3b3JrIG5vcm1hbGx5IG9ubHkgaWYgc29tZSB2ZW5kb3Itc3BlY2lmaWMg
+dHJlYXRtZW50DQppcyBhcHBsaWVkLg0KDQpJIHRoaW5rIG9uZSBvZiB0aGUgcmVhc29uIHRvIGFw
+cGx5IFVGU0hDRF9RVUlSS19CUk9LRU5fQ1JZUFRPIHF1aXJrIGluDQp1ZnMtcWNvbSBob3N0IGlz
+IHNpbWlsYXIgdG8gYWJvdmUgY2FzZS4NCg0KVGhhbmtzLA0KU3RhbmxleSBDaHUNCg0K
 
-Hi Abdul,
-
-We have posted a new set of patches to fix this issue. This patch set
-won't change the DMA Mask on the fly and also won't hardcode the DMA
-mask to 32 bit.
-
-[PATCH 0/5] mpt3sas: Fix changing coherent mask after allocation.
-
-This patchset will have below patches, Please review and try with this
-patch set.
-
-Suganath Prabu S (5):
-  mpt3sas: Don't change the dma coherent mask after      allocations
-  mpt3sas: Rename function name is_MSB_are_same
-  mpt3sas: Code Refactoring.
-  mpt3sas: Handle RDPQ DMA allocation in same 4g region
-  mpt3sas: Update version to 33.101.00.00
-
-Regards,
-Sreekanth
-
-> --
-> Regard's
->
-> Abdul Haleem
-> IBM Linux Technology Centre
->
->
->
