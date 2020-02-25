@@ -2,105 +2,133 @@ Return-Path: <SRS0=dnTk=4N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E563C35DF2
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B8AC35DF8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:53:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5EF0821D7E
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:24:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D08620CC7
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 Feb 2020 06:53:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QSWYzPYT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729114AbgBYGYQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Feb 2020 01:24:16 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:36097 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729089AbgBYGYO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Feb 2020 01:24:14 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id C4B4820425B;
-        Tue, 25 Feb 2020 07:24:13 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id karuw0Gk6N6Z; Tue, 25 Feb 2020 07:24:12 +0100 (CET)
-Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id E0BEF204188;
-        Tue, 25 Feb 2020 07:24:09 +0100 (CET)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com, Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v4 11/14] scsi_debug: zone_max_open module parameter
-Date:   Tue, 25 Feb 2020 01:23:48 -0500
-Message-Id: <20200225062351.21267-12-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200225062351.21267-1-dgilbert@interlog.com>
-References: <20200225062351.21267-1-dgilbert@interlog.com>
+        id S1729213AbgBYGx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 01:53:26 -0500
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:44418 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729073AbgBYGxZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Feb 2020 01:53:25 -0500
+Received: by mail-oi1-f195.google.com with SMTP id d62so11550814oia.11
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Feb 2020 22:53:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=fSxteq8BvR6bLu5LA6jd2BwkLJks1DyRranxnHnzEYU=;
+        b=QSWYzPYTbGtdSQcLlCKj5AEGOQ+3AMV+xZg0/U1875q3JKfM5DYKKf5p6HAK6CwjIP
+         AOzaHHJjmake0476dUff+71jZhuvNc745oA0rLIGZ2I2H4J5IKOXbhyQXmahB1wqF2Iv
+         U7eNIah3q24sEOYyMKrA6vRUfjNnXNBHWLXsY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=fSxteq8BvR6bLu5LA6jd2BwkLJks1DyRranxnHnzEYU=;
+        b=eKOZR65C1nXGJKTWUs2jGACM+3YDwKQfQGo0f8eMxg4iY2eJjhSVhzL1Ciig83csGf
+         0W1VQyPgThL0gK0zOTURKJr6rCQZzYn2MEHlGLqhyTZeHa+RSIxk2vfPRzJx5UGrWp0g
+         HimHOQtOE96hNzPW/K/cizCYaNLgTHa7YNSPgHj48AwXqugvcyOEEyQiaw7p/Ylbg6nM
+         AKm1RNX6pwQT/AuFxIDhWSJrs4N8ZAmhVQduk4VB6rB6g+C+ACO2J1WvtLbIw/Ulj56A
+         fUzYB3lYG1rBWRN6ogjGYE5EnxkLbZ6rs34/rJFc7wJdZV0LccDGR+I/QXDbqSbKFpQT
+         2BCA==
+X-Gm-Message-State: APjAAAUXa7UZReoqT1pt7sy9lYXA2pWnKk9P7xvcpLn/6shmvqE2QsEm
+        zt0StttCGdCGZQjDa5bB6EzNyhs5WPfVPtzS65rRyA==
+X-Google-Smtp-Source: APXvYqzA/xFMqccjb+BVRQhIHMzDqHfwlaweZ5oYatBKG1/zxpMzG0KS3wxN/jHbU7SS9W3Ga5Oz56oRA9wsAEb0Dk0=
+X-Received: by 2002:aca:f587:: with SMTP id t129mr2226747oih.143.1582613605142;
+ Mon, 24 Feb 2020 22:53:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1578489498.29952.11.camel@abdul> <1578560245.30409.0.camel@abdul.in.ibm.com>
+ <20200109142218.GA16477@infradead.org> <1578980874.11996.3.camel@abdul.in.ibm.com>
+ <20200116174443.GA30158@infradead.org> <1579265473.17382.5.camel@abdul> <1582611644.19645.6.camel@abdul.in.ibm.com>
+In-Reply-To: <1582611644.19645.6.camel@abdul.in.ibm.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Tue, 25 Feb 2020 12:23:13 +0530
+Message-ID: <CAK=zhgpWCz0+xpSGymbQEAbysH_rQf=s8iQ1gn4KwysP3c1Gcw@mail.gmail.com>
+Subject: Re: [linux-next/mainline][bisected 3acac06][ppc] Oops when unloading
+ mpt3sas driver
+To:     Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        sachinp <sachinp@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>, jcmvbkbc@gmail.com,
+        linux-next <linux-next@vger.kernel.org>,
+        Oliver <oohall@gmail.com>,
+        "aneesh.kumar" <aneesh.kumar@linux.vnet.ibm.com>,
+        Brian King <brking@linux.vnet.ibm.com>,
+        manvanth <manvanth@linux.vnet.ibm.com>,
+        iommu@lists.linux-foundation.org,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+On Tue, Feb 25, 2020 at 11:51 AM Abdul Haleem
+<abdhalee@linux.vnet.ibm.com> wrote:
+>
+> On Fri, 2020-01-17 at 18:21 +0530, Abdul Haleem wrote:
+> > On Thu, 2020-01-16 at 09:44 -0800, Christoph Hellwig wrote:
+> > > Hi Abdul,
+> > >
+> > > I think the problem is that mpt3sas has some convoluted logic to do
+> > > some DMA allocations with a 32-bit coherent mask, and then switches
+> > > to a 63 or 64 bit mask, which is not supported by the DMA API.
+> > >
+> > > Can you try the patch below?
+> >
+> > Thank you Christoph, with the given patch applied the bug is not seen.
+> >
+> > rmmod of mpt3sas driver is successful, no kernel Oops
+> >
+> > Reported-and-tested-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+>
+> Hi Christoph,
+>
+> I see the patch is under discussion, will this be merged upstream any
+> time soon ? as boot is broken on our machines with out your patch.
+>
 
-Add the zone_max_open module parameters to control the maximum number
-of open zones of a ZBC device. This parameter is ignored for device
-types other than 0x14 (zbc=2 case).
+Hi Abdul,
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi_debug.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+We have posted a new set of patches to fix this issue. This patch set
+won't change the DMA Mask on the fly and also won't hardcode the DMA
+mask to 32 bit.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 7e601e96808e..c40ec259ff1b 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -799,7 +799,7 @@ static int dif_errors;
- /* ZBC global data */
- static bool sdeb_zbc_in_use;		/* true when ptype=TYPE_ZBC [0x14] */
- static const int zbc_zone_size_mb;
--static const int zbc_max_open_zones = DEF_ZBC_MAX_OPEN_ZONES;
-+static int sdeb_zbc_max_open = DEF_ZBC_MAX_OPEN_ZONES;
- 
- static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
- static struct sdebug_queue *sdebug_q_arr;  /* ptr to array of submit queues */
-@@ -4699,11 +4699,11 @@ static int sdebug_device_create_zones(struct sdebug_dev_info *devip)
- 	devip->zsize_shift = ilog2(devip->zsize);
- 	devip->nr_zones = (capacity + devip->zsize - 1) >> devip->zsize_shift;
- 
--	/* zbc_max_open_zones can be 0, meaning "no limit" */
--	if (zbc_max_open_zones >= devip->nr_zones - 1)
-+	/* sdeb_zbc_max_open can be 0, meaning "no limit" */
-+	if (sdeb_zbc_max_open >= devip->nr_zones - 1)
- 		devip->max_open = (devip->nr_zones - 1) / 2;
- 	else
--		devip->max_open = zbc_max_open_zones;
-+		devip->max_open = sdeb_zbc_max_open;
- 
- 	devip->zstate = kcalloc(devip->nr_zones,
- 				sizeof(struct sdeb_zone_state), GFP_KERNEL);
-@@ -5452,6 +5452,7 @@ module_param_named(wp, sdebug_wp, bool, S_IRUGO | S_IWUSR);
- module_param_named(write_same_length, sdebug_write_same_length, int,
- 		   S_IRUGO | S_IWUSR);
- module_param_named(zbc, sdeb_zbc_model_s, charp, S_IRUGO);
-+module_param_named(zone_max_open, sdeb_zbc_max_open, int, S_IRUGO);
- 
- MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI debug adapter driver");
-@@ -5514,6 +5515,7 @@ MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique de
- MODULE_PARM_DESC(wp, "Write Protect (def=0)");
- MODULE_PARM_DESC(write_same_length, "Maximum blocks per WRITE SAME cmd (def=0xffff)");
- MODULE_PARM_DESC(zbc, "'none' [0]; 'aware' [1]; 'managed' [2] (def=0). Can have 'host_' prefix");
-+MODULE_PARM_DESC(zone_max_open, "Maximum number of open zones; [0] for no limit (def=auto)");
- 
- #define SDEBUG_INFO_LEN 256
- static char sdebug_info[SDEBUG_INFO_LEN];
--- 
-2.25.1
+[PATCH 0/5] mpt3sas: Fix changing coherent mask after allocation.
 
+This patchset will have below patches, Please review and try with this
+patch set.
+
+Suganath Prabu S (5):
+  mpt3sas: Don't change the dma coherent mask after      allocations
+  mpt3sas: Rename function name is_MSB_are_same
+  mpt3sas: Code Refactoring.
+  mpt3sas: Handle RDPQ DMA allocation in same 4g region
+  mpt3sas: Update version to 33.101.00.00
+
+Regards,
+Sreekanth
+
+> --
+> Regard's
+>
+> Abdul Haleem
+> IBM Linux Technology Centre
+>
+>
+>
