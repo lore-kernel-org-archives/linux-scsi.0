@@ -7,58 +7,61 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FACEC4BA24
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CF9C4BA24
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:42:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21D0F20658
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:42:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3CCA24672
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:42:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="mLFWmPBQ"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="hbSibUYb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727832AbgBZWmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Feb 2020 17:42:52 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3748 "EHLO
+        id S1727846AbgBZWm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Feb 2020 17:42:56 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65310 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727761AbgBZWmw (ORCPT
+        by vger.kernel.org with ESMTP id S1727761AbgBZWm4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Feb 2020 17:42:52 -0500
+        Wed, 26 Feb 2020 17:42:56 -0500
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01QMePCO006141;
-        Wed, 26 Feb 2020 14:40:51 -0800
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01QMeN60006111;
+        Wed, 26 Feb 2020 14:40:55 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=FiMekS55xMzk5crhh6yM+zRZFIndKMtiEg9AY+lIMUA=;
- b=mLFWmPBQ818qG9NxuSP7GfN5uFjKbVpX4VbTLl2orscDtnKUswJW355qhOPNj3vnEfSc
- UX4ti4OvLgxJPdNvj7ynUe5SBHDM7uP3xzLigQpeePjjBqJpiRrPJ1RvcywhQdTsWajJ
- jrwP3WwJVHmjmF/j1H2otIOQVs9s2gGFKpO2HGeN2HFwTUQogqejQ3JHK9Qmzsb1K7xY
- 7S1LzVnsTFRXyv3z0zqMCyq+Qs/Zgl8XBsHufhF0hIZPXR3k68jDss4MV9Lh1MriL1yG
- pbsxz07J0F7XpXi0ApGRWuCXskmsdjFoBvSZXOk0YSFynxseGzqyyjB49Hvuix6kg1b/ Qw== 
+ content-type; s=pfpt0818; bh=sHF4c/FFcPXhqMyfelKCwoVFJP3Jx31YGyrTr2j1oCU=;
+ b=hbSibUYbB0IYzaj+UJuonDDKbV8Te0uRE/2uapFIy8G+87maqo8V5pyknlOMzgvD8Dcz
+ 5+9MOVpjH3FdwhN3Jd+zxCqzkreTsBbegrDh7jtgqnaVk4NAIS4JpFmcP+oGi14V+ZsT
+ gjgf1U3xgOOlYqYZlJkerzP/ZeF5pdPdWw/i1mbXN3kC9gAOvESqq+7kdu57ZOO3E9da
+ RXSwmNtoXQjeD7FcJPXjt73XRF/mBbLuATQpmjoNlWEKLOZBVVIYHO4rU+U8V4tjCbe/
+ o2979OTDV3YTO4EhJWNLEw4hlx/doLPV/fCyXhRZNyafpGLYz5LQtLxVxSHNqde3hui5 3Q== 
 Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2ydchtd6mc-1
+        by mx0b-0016f401.pphosted.com with ESMTP id 2ydchtd6mr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 26 Feb 2020 14:40:51 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH01.marvell.com
+        Wed, 26 Feb 2020 14:40:54 -0800
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 26 Feb
- 2020 14:40:48 -0800
+ 2020 14:40:53 -0800
+Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 26 Feb
+ 2020 14:40:52 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 26 Feb 2020 14:40:48 -0800
+ Transport; Wed, 26 Feb 2020 14:40:52 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id E4B6B3F703F;
-        Wed, 26 Feb 2020 14:40:48 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 57D193F7040;
+        Wed, 26 Feb 2020 14:40:52 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01QMemdt024593;
-        Wed, 26 Feb 2020 14:40:48 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01QMeq1I024601;
+        Wed, 26 Feb 2020 14:40:52 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01QMemIZ024584;
-        Wed, 26 Feb 2020 14:40:48 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01QMeqch024600;
+        Wed, 26 Feb 2020 14:40:52 -0800
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 08/18] qla2xxx: fix FW resource count values
-Date:   Wed, 26 Feb 2020 14:40:12 -0800
-Message-ID: <20200226224022.24518-9-hmadhani@marvell.com>
+Subject: [PATCH 10/18] qla2xxx: add more FW debug information
+Date:   Wed, 26 Feb 2020 14:40:14 -0800
+Message-ID: <20200226224022.24518-11-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200226224022.24518-1-hmadhani@marvell.com>
 References: <20200226224022.24518-1-hmadhani@marvell.com>
@@ -73,47 +76,49 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-This patch fixes issue where currenrt and original
-exchanges count were swapped for intiator and targets.
-
-Also fix IOCB count for current and original which
-were swapped.
+Per FW request, MB 1-7 should be logged for 8002 error.
 
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 0a6fb359f4d5..e62b2115235e 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -134,11 +134,11 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 	} else {
- 		seq_puts(s, "FW Resource count\n\n");
- 		seq_printf(s, "Original TGT exchg count[%d]\n", mb[1]);
--		seq_printf(s, "current TGT exchg count[%d]\n", mb[2]);
--		seq_printf(s, "original Initiator Exchange count[%d]\n", mb[3]);
--		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[6]);
--		seq_printf(s, "Original IOCB count[%d]\n", mb[7]);
--		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
-+		seq_printf(s, "Current TGT exchg count[%d]\n", mb[2]);
-+		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[3]);
-+		seq_printf(s, "Original Initiator Exchange count[%d]\n", mb[6]);
-+		seq_printf(s, "Current IOCB count[%d]\n", mb[7]);
-+		seq_printf(s, "Original IOCB count[%d]\n", mb[10]);
- 		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
- 		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
- 		seq_printf(s, "Current free pageable XCB buffer cnt[%d]\n",
-@@ -149,7 +149,6 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 		    mb[22]);
- 		seq_printf(s, "Original Target fast XCB buffer cnt[%d]\n",
- 		    mb[23]);
--
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 785f5319aa1b..0217a3456705 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -854,12 +854,24 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 		break;
  
- 	return 0;
+ 	case MBA_SYSTEM_ERR:		/* System Error */
+-		mbx = (IS_QLA81XX(ha) || IS_QLA83XX(ha) || IS_QLA27XX(ha) ||
+-		    IS_QLA28XX(ha)) ?
+-			RD_REG_WORD(&reg24->mailbox7) : 0;
+-		ql_log(ql_log_warn, vha, 0x5003,
+-		    "ISP System Error - mbx1=%xh mbx2=%xh mbx3=%xh "
+-		    "mbx7=%xh.\n", mb[1], mb[2], mb[3], mbx);
++		mbx = 0;
++		if (IS_QLA81XX(ha) || IS_QLA83XX(ha) ||
++		    IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++			u16 m[4];
++
++			m[0] = RD_REG_WORD(&reg24->mailbox4);
++			m[1] = RD_REG_WORD(&reg24->mailbox5);
++			m[2] = RD_REG_WORD(&reg24->mailbox6);
++			mbx = m[3] = RD_REG_WORD(&reg24->mailbox7);
++
++			ql_log(ql_log_warn, vha, 0x5003,
++			    "ISP System Error - mbx1=%xh mbx2=%xh mbx3=%xh mbx4=%xh mbx5=%xh mbx6=%xh mbx7=%xh.\n",
++			    mb[1], mb[2], mb[3], m[0], m[1], m[2], m[3]);
++		} else
++			ql_log(ql_log_warn, vha, 0x5003,
++			    "ISP System Error - mbx1=%xh mbx2=%xh mbx3=%xh.\n ",
++			    mb[1], mb[2], mb[3]);
++
+ 		ha->fw_dump_mpi =
+ 		    (IS_QLA27XX(ha) || IS_QLA28XX(ha)) &&
+ 		    RD_REG_WORD(&reg24->mailbox7) & BIT_8;
 -- 
 2.12.0
 
