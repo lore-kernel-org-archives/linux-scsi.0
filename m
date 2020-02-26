@@ -7,61 +7,58 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEAC3C4BA24
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84DBC4BA24
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:43:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B38E524672
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F82E24672
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 22:43:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="b2g+5FhI"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="IEkM9X/z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727857AbgBZWnJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Feb 2020 17:43:09 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61704 "EHLO
+        id S1727877AbgBZWnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Feb 2020 17:43:11 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25482 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727761AbgBZWnJ (ORCPT
+        by vger.kernel.org with ESMTP id S1727761AbgBZWnL (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Feb 2020 17:43:09 -0500
+        Wed, 26 Feb 2020 17:43:11 -0500
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01QMeZXO006185;
-        Wed, 26 Feb 2020 14:41:07 -0800
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01QMeNj7006110;
+        Wed, 26 Feb 2020 14:41:10 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=ZBa2o7VanPiSYTjpBO9TVHMViJwrxEEosZykuMsVV8A=;
- b=b2g+5FhIRuE7UfFwA87nPGbJ34Zt09sFjtrZaSKNsZslmIr+mhvWcB30XoERg9q6OzdN
- fZedHWhu4YZmZR+utiWp8HnutDib41xc6wnpNzxtiLcnuf7BNt26tfzZwkQns5rigmTT
- 7HjmzWnYUxm1YRfKvbLMWIM0a/3iAiei+iRGlrQNZUlBjFjXCdbFgHoSV+sE4T6io8o1
- 08ZWIv+AcgdIsqU9hhvn/OjcKNSR39SR8ka378blVVBQibYpklNPApHID0OAMm/h5x8C
- e5uywmNf6cc30djE6W91MTHK2stXpaRNwDONSK207R/Sn9GNddF5XQ2Ml6uT1SyqhA3f VQ== 
+ content-type; s=pfpt0818; bh=zLQ3/8PmJEq8wcSG/mrPn3mOx2leQyUdPNux7EESj80=;
+ b=IEkM9X/zawxNUIDRzCtO0l+gatc7S4W04U3nhEi9jAXgKLfeMAGUqypgQdeKQzQMw3aK
+ DXUycKMHSZZ+HgUw1JPbdJMgAG9RSY9TVcNrI3EtHsNydYfw3ECO36uc7Hfk7ey8l0jA
+ sPtbfvdGpCZIxEa1D/jmCDjLtIEWjEz4vVP08axlFTtyKdb65Yi+bwWqabM3paYmgch+
+ 9R732AO0fmQ7YJw6GP93c3hQS0t3/2je2ZNQi9Ur6GfGZv0Jbpl8Tbg5+kouq9mlwfGd
+ w0LHPM5WhQ1P8RduucBwqIPiY8Hj2unaTgfT5v98fIZqp80MpXS8J7EpzL4U2/X1LWWX 0Q== 
 Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2ydchtd6nk-1
+        by mx0b-0016f401.pphosted.com with ESMTP id 2ydchtd6nr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 26 Feb 2020 14:41:07 -0800
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
+        Wed, 26 Feb 2020 14:41:10 -0800
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 26 Feb
- 2020 14:41:05 -0800
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 26 Feb
- 2020 14:41:05 -0800
+ 2020 14:41:08 -0800
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 26 Feb 2020 14:41:04 -0800
+ Transport; Wed, 26 Feb 2020 14:41:08 -0800
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 233173F703F;
-        Wed, 26 Feb 2020 14:41:05 -0800 (PST)
+        by maili.marvell.com (Postfix) with ESMTP id 4F1533F703F;
+        Wed, 26 Feb 2020 14:41:08 -0800 (PST)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01QMf4Db024617;
-        Wed, 26 Feb 2020 14:41:05 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 01QMf8Ih024621;
+        Wed, 26 Feb 2020 14:41:08 -0800
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01QMf4nq024616;
-        Wed, 26 Feb 2020 14:41:04 -0800
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 01QMf8O2024620;
+        Wed, 26 Feb 2020 14:41:08 -0800
 From:   Himanshu Madhani <hmadhani@marvell.com>
 To:     <James.Bottomley@HansenPartnership.com>,
         <martin.petersen@oracle.com>
 CC:     <hmadhani@marvell.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 14/18] qla2xxx: Serialize fc_port alloc in N2N
-Date:   Wed, 26 Feb 2020 14:40:18 -0800
-Message-ID: <20200226224022.24518-15-hmadhani@marvell.com>
+Subject: [PATCH 15/18] qla2xxx: Remove restriction of FC T10-PI and FC-NVMe
+Date:   Wed, 26 Feb 2020 14:40:19 -0800
+Message-ID: <20200226224022.24518-16-hmadhani@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200226224022.24518-1-hmadhani@marvell.com>
 References: <20200226224022.24518-1-hmadhani@marvell.com>
@@ -76,48 +73,32 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <qutran@marvell.com>
 
-For N2N, fc_port struct is created during report id acquistion.
-At later time, the loop resync (fabric, n2n, loop) would trigger
-the rest of the login using the created fc_port struct.  The loop
-resync logic can trigger another fc_port allocation if the 1st
-allocation was not able to execute.  This patch prevents the 2nd
-allocation trigger.
+T10-PI and FC-NVMe are not mutually exclusive of each
+other. This patch removes restrictions where if FC-NVMe
+is enabled T10-PI defaults to disabled.
 
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 1 +
- drivers/scsi/qla2xxx/qla_os.c   | 5 ++---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 453b47006a59..3815f5321b3b 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5148,6 +5148,7 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
- 		}
-+		return QLA_FUNCTION_FAILED;
- 	}
- 
- 	found_devs = 0;
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ede4529c4718..80c5c7b16150 100644
+index 80c5c7b16150..6973fe400ce4 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5202,9 +5202,8 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 					fcport->n2n_flag = 1;
- 				}
- 				fcport->fw_login_state = 0;
--				/*
--				 * wait link init done before sending login
--				 */
-+
-+				schedule_delayed_work(&vha->scan.scan_work, 5);
- 			} else {
- 				qla24xx_fcport_handle_login(vha, fcport);
- 			}
+@@ -123,11 +123,7 @@ MODULE_PARM_DESC(ql2xmaxqdepth,
+ 		"Maximum queue depth to set for each LUN. "
+ 		"Default is 64.");
+ 
+-#if (IS_ENABLED(CONFIG_NVME_FC))
+-int ql2xenabledif;
+-#else
+ int ql2xenabledif = 2;
+-#endif
+ module_param(ql2xenabledif, int, S_IRUGO);
+ MODULE_PARM_DESC(ql2xenabledif,
+ 		" Enable T10-CRC-DIF:\n"
 -- 
 2.12.0
 
