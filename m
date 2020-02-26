@@ -6,155 +6,83 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33438C4BA0B
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 11:09:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C32C4BA0E
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 11:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F7FC24690
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 11:09:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D617B20838
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 11:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727785AbgBZLJx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 Feb 2020 06:09:53 -0500
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2466 "EHLO huawei.com"
+        id S1727191AbgBZLvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 Feb 2020 06:51:07 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:10697 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726408AbgBZLJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Feb 2020 06:09:53 -0500
-Received: from LHREML714-CAH.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 6549A6E87B0A9156BA9C;
-        Wed, 26 Feb 2020 11:09:50 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML714-CAH.china.huawei.com (10.201.108.37) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 26 Feb 2020 11:09:50 +0000
-Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5; Wed, 26 Feb
- 2020 11:09:48 +0000
-Subject: Re: [PATCH RFC v5 00/11] blk-mq/scsi: Provide hostwide shared tags
- for SCSI HBAs
-To:     Hannes Reinecke <hare@suse.de>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Ming Lei <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
-        <linux-block@vger.kernel.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        chenxiang <chenxiang66@hisilicon.com>
-References: <20191202153914.84722-1-hare@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <14b627ba-890c-ffe1-a648-7f22a4829372@huawei.com>
-Date:   Wed, 26 Feb 2020 11:09:46 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726408AbgBZLvH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Feb 2020 06:51:07 -0500
+Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id C3EDBF05E85AF203D49F;
+        Wed, 26 Feb 2020 19:50:58 +0800 (CST)
+Received: from [127.0.0.1] (10.173.222.231) by DGGEMS403-HUB.china.huawei.com
+ (10.3.19.203) with Microsoft SMTP Server id 14.3.439.0; Wed, 26 Feb 2020
+ 19:50:47 +0800
+Message-ID: <5E565B97.2070004@huawei.com>
+Date:   Wed, 26 Feb 2020 19:50:47 +0800
+From:   AlexChen <alex.chen@huawei.com>
+User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20130509 Thunderbird/17.0.6
 MIME-Version: 1.0
-In-Reply-To: <20191202153914.84722-1-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.45]
-X-ClientProxiedBy: lhreml708-chm.china.huawei.com (10.201.108.57) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <zhengchuan@huawei.com>,
+        <jiangyiwen@huawei.com>, <robin.yb@huawei.com>,
+        <yangjieyj.yang@huawei.com>
+Subject: Re: [PATCH V2] scsi: add a new flag to set whether SCSI disks support
+ WRITE_SAME_16 by default
+References: <5E28118F.3070706@huawei.com> <5E3520A7.5030501@huawei.com> <20200225183126.GA6261@infradead.org>
+In-Reply-To: <20200225183126.GA6261@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.173.222.231]
 X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02/12/2019 15:39, Hannes Reinecke wrote:
-> Hi all,
+Hi Christoph,
+
+Thanks for your reply.
+
+On 2020/2/26 2:31, Christoph Hellwig wrote:
+> On Sat, Feb 01, 2020 at 02:54:31PM +0800, AlexChen wrote:
+>> When the SCSI device is initialized, check whether it supports
+>> WRITE_SAME_16 or WRITE_SAME_10 in the sd_read_write_same(). If
+>> the back-end storage device does not support queries, it will not
+>> set sdkp->ws16 as 1.
+>>
+>> When the WRITE_SAME io is issued through the blkdev_issue_write_same(),
+>> the WRITE_SAME type is set to WRITE_SAME_10 by default in
+>> the sd_setup_write_same_cmnd() since of "sdkp->ws16=0". If the storage
+>> device does not support WRITE_SAME_10, then the SCSI device is set to
+>> not support WRITE_SAME.
+>>
+>> Currently, some storage devices do not provide queries for WRITE_SAME_16
+>> support, and only WRITE_SAME_16 is supported, not WRITE_SAME_10.
+>> Therefore, we need to provide a new flag for these storage devices. When
+>> initializing these devices, we will no longer query for support for
+>> WRITE_SAME_16 in the sd_read_write_same(), but set these SCSI disks to
+>> support WRITE_SAME_16 by default. In that way, we can add
+>> 'vendor:product:flag' to the module parameter 'dev_flags' for these
+>> storage devices.
+> 
+> Please send this along with the patch that actually sets the flag
+> somewhere..
 > 
 
-JFYI, Sumit requested that we rebase this patchset for testing against 
-the latest kernel - it no longer applies for 5.6-rc. I'm going to do 
-that now and repost.
+If we want Huawei storage device to support WRITE_SAME_16 by default,
+we can add module parameter dev_flags='HUAWEI::‭17179869184‬' to the kernel
+command line parameters.
+Do you mean I need to add these to this patch description?
 
-Thanks,
-John
-
-> here now is an updated version of the v2 patchset from John Garry,
-> including the suggestions and reviews from the mailing list.
-> John, apologies for hijacking your work :-)
-> 
-> For this version I've only added some slight modifications to Johns
-> original patch (renaming variables etc); the contentious separate sbitmap
-> allocation has been dropped in favour of Johns original version with pointers
-> to the embedded sbitmap.
-> 
-> But more importantly I've reworked the scheduler tag allocation after
-> discussions with Ming Lei.
-> 
-> Point is, hostwide shared tags can't really be resized; they surely
-> cannot be increased (as it's a hardware limitation), and even decreasing
-> is questionable as any modification here would affect all devices
-> served by this HBA.
-> 
-> Scheduler tags, OTOH, can be considered as per-queue, as the I/O scheduler
-> might want to look at all requests on all queues. As such the queue depth
-> is distinct from the actual queue depth of the tagset.
-> Seeing that it is distinct the depth can now be changed independently of
-> the underlying tagset, and there's no need ever to change the tagset itself.
-> 
-> I've also modified megaraid_sas, smartpqi and hpsa to take advantage of
-> host_tags.
-> 
-> Performance for megaraid_sas is on par with the original implementation,
-> with the added benefit that with this we should be able to handle cpu
-> hotplug properly.
-> 
-> Differences to v4:
-> - Rework scheduler tag allocations
-> - Revert back to the original implementation from John
-> 
-> Differences to v3:
-> - Include reviews from Ming Lei
-> 
-> Differences to v2:
-> - Drop embedded tag bitmaps
-> - Do not share scheduling tags
-> - Add patches for hpsa and smartpqi
-> 
-> Differences to v1:
-> - Use a shared sbitmap, and not a separate shared tags (a big change!)
-> 	- Drop request.shared_tag
-> - Add RB tags
-> 
-> Hannes Reinecke (7):
->    blk-mq: rename blk_mq_update_tag_set_depth()
->    blk-mq: add WARN_ON in blk_mq_free_rqs()
->    blk-mq: move shared sbitmap into elevator queue
->    scsi: Add template flag 'host_tagset'
->    megaraid_sas: switch fusion adapters to MQ
->    smartpqi: enable host tagset
->    hpsa: enable host_tagset and switch to MQ
-> 
-> John Garry (3):
->    blk-mq: Remove some unused function arguments
->    blk-mq: Facilitate a shared sbitmap per tagset
->    scsi: hisi_sas: Switch v3 hw to MQ
-> 
-> Ming Lei (1):
->    blk-mq: rename BLK_MQ_F_TAG_SHARED as BLK_MQ_F_TAG_QUEUE_SHARED
-> 
->   block/bfq-iosched.c                         |   4 +-
->   block/blk-mq-debugfs.c                      |  12 +--
->   block/blk-mq-sched.c                        |  22 +++++
->   block/blk-mq-tag.c                          | 140 +++++++++++++++++++++-------
->   block/blk-mq-tag.h                          |  27 ++++--
->   block/blk-mq.c                              | 104 +++++++++++++++------
->   block/blk-mq.h                              |   7 +-
->   block/blk-sysfs.c                           |   7 ++
->   block/kyber-iosched.c                       |   4 +-
->   drivers/scsi/hisi_sas/hisi_sas.h            |   3 +-
->   drivers/scsi/hisi_sas/hisi_sas_main.c       |  36 +++----
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |  86 +++++++----------
->   drivers/scsi/hpsa.c                         |  44 ++-------
->   drivers/scsi/hpsa.h                         |   1 -
->   drivers/scsi/megaraid/megaraid_sas.h        |   1 -
->   drivers/scsi/megaraid/megaraid_sas_base.c   |  65 ++++---------
->   drivers/scsi/megaraid/megaraid_sas_fusion.c |  14 ++-
->   drivers/scsi/scsi_lib.c                     |   2 +
->   drivers/scsi/smartpqi/smartpqi_init.c       |  38 ++++++--
->   include/linux/blk-mq.h                      |   7 +-
->   include/linux/elevator.h                    |   3 +
->   include/scsi/scsi_host.h                    |   3 +
->   22 files changed, 380 insertions(+), 250 deletions(-)
-> 
+Thanks
+Alex
 
