@@ -2,92 +2,142 @@ Return-Path: <SRS0=mj/2=4O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5C1C4BA09
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 00:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2505BC4BA0A
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 00:30:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B6D821D7E
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 00:28:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="rbcXGWyI"
+	by mail.kernel.org (Postfix) with ESMTP id EEFBA20732
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 Feb 2020 00:30:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582677059;
+	bh=bSWh+q++sx8C8D9lAd6ZLiMK7C4FjpFs2du6fFMigso=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=BSe4hRWJKH0hzQvdEbY1Pmqcw0fapmhtSkQzxeyldbkHsyzM93AInpVPaXpRRunCf
+	 YJ2NP3YCMhrcLPKZlwPRv7NbSvy7Oom6Z3hQZT5lNM7BHLkHkvjo0fzJ/hdsM+JOxg
+	 yAPhdwKtTLbCTYPrqYk8gHJ62u5VBRbxysnUu5BI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729336AbgBZA2Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 Feb 2020 19:28:16 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:40816 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728756AbgBZA2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 Feb 2020 19:28:15 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id E6AE241273;
-        Wed, 26 Feb 2020 00:28:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1582676891;
-         x=1584491292; bh=WedSfKeqc1zyGNbtC4jXPgZg3Uq2c72mEw1tYMH2yGo=; b=
-        rbcXGWyI4LinALWFVS7U7i36Z4ylczKGvDlnDDePvkuGD5+iHpx6WgU+YDBxdZOt
-        gnCqxR+wmMSBX0sin7dteL7h7tgKn5iFycMxQIUImcQeRy7lB7hBBdm/+l7hGqmu
-        +JIXoI6p7MPhMo7VcV39cq0cOVd6RNoU2y/TLPXyR2s=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id wW-viEYMCRss; Wed, 26 Feb 2020 03:28:11 +0300 (MSK)
-Received: from T-EXCH-01.corp.yadro.com (t-exch-01.corp.yadro.com [172.17.10.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        id S1729754AbgBZAa6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 Feb 2020 19:30:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48778 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729387AbgBZAa5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Feb 2020 19:30:57 -0500
+Received: from gmail.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 75921412F5;
-        Wed, 26 Feb 2020 03:28:10 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-01.corp.yadro.com
- (172.17.10.101) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 26
- Feb 2020 03:28:10 +0300
-Date:   Wed, 26 Feb 2020 03:28:10 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
-Subject: Re: [PATCH v3 4/5] qla2xxx: Convert MAKE_HANDLE() from a define into
- an inline function
-Message-ID: <20200226002810.cyy7f3yms3vljb45@SPB-NB-133.local>
-References: <20200220043441.20504-1-bvanassche@acm.org>
- <20200220043441.20504-5-bvanassche@acm.org>
+        by mail.kernel.org (Postfix) with ESMTPSA id 2220721D7E;
+        Wed, 26 Feb 2020 00:30:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582677056;
+        bh=bSWh+q++sx8C8D9lAd6ZLiMK7C4FjpFs2du6fFMigso=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iPlCxoABGs8vm/dCfwQe7NAQXpNxvKvL/hghlJBEeMiaWyVPkj76Y8RftvlocF5QQ
+         O38Q2Y7BPU3Fom0eR+SD1OFL79U9zFr79KbcFx2n0xjjE/J2+AeXoHaA3bS1cQW3Xe
+         RjZqqiITwX9rWuGTXEyKS+hv4IXCbJJVbxX/ZjSs=
+Date:   Tue, 25 Feb 2020 16:30:54 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v7 7/9] fscrypt: add inline encryption support
+Message-ID: <20200226003054.GC114977@gmail.com>
+References: <20200221115050.238976-1-satyat@google.com>
+ <20200221115050.238976-8-satyat@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200220043441.20504-5-bvanassche@acm.org>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-01.corp.yadro.com (172.17.10.101)
+In-Reply-To: <20200221115050.238976-8-satyat@google.com>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 08:34:40PM -0800, Bart Van Assche wrote:
-> This patch allows sparse to verify the endianness of the arguments passed
-> to make_handle().
-> 
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h    |  5 ++++-
->  drivers/scsi/qla2xxx/qla_iocb.c   | 22 +++++++++++-----------
->  drivers/scsi/qla2xxx/qla_mbx.c    | 10 +++++-----
->  drivers/scsi/qla2xxx/qla_mr.c     |  8 ++++----
->  drivers/scsi/qla2xxx/qla_nvme.c   |  2 +-
->  drivers/scsi/qla2xxx/qla_target.c |  6 +++---
->  6 files changed, 28 insertions(+), 25 deletions(-)
-> 
+On Fri, Feb 21, 2020 at 03:50:48AM -0800, Satya Tangirala wrote:
+> +/**
+> + * fscrypt_inode_uses_inline_crypto - test whether an inode uses inline
+> + *				      encryption
+> + * @inode: an inode
+> + *
+> + * Return: true if the inode requires file contents encryption and if the
+> + *	   encryption should be done in the block layer via blk-crypto rather
+> + *	   than in the filesystem layer.
+> + */
+> +bool fscrypt_inode_uses_inline_crypto(const struct inode *inode)
+> +{
+> +	return IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
+> +		inode->i_crypt_info->ci_inlinecrypt;
+> +}
+> +EXPORT_SYMBOL_GPL(fscrypt_inode_uses_inline_crypto);
+> +
+> +/**
+> + * fscrypt_inode_uses_fs_layer_crypto - test whether an inode uses fs-layer
+> + *					encryption
+> + * @inode: an inode
+> + *
+> + * Return: true if the inode requires file contents encryption and if the
+> + *	   encryption should be done in the filesystem layer rather than in the
+> + *	   block layer via blk-crypto.
+> + */
+> +bool fscrypt_inode_uses_fs_layer_crypto(const struct inode *inode)
+> +{
+> +	return IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
+> +		!inode->i_crypt_info->ci_inlinecrypt;
+> +}
+> +EXPORT_SYMBOL_GPL(fscrypt_inode_uses_fs_layer_crypto);
 
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+We should use the fscrypt_needs_contents_encryption() helper function which I
+added in v5.6.  I.e.:
 
-Thanks,
-Roman
+diff --git a/fs/crypto/inline_crypt.c b/fs/crypto/inline_crypt.c
+index 72692366795aa9..36510802a3665a 100644
+--- a/fs/crypto/inline_crypt.c
++++ b/fs/crypto/inline_crypt.c
+@@ -32,7 +32,7 @@ void fscrypt_select_encryption_impl(struct fscrypt_info *ci)
+ 	struct super_block *sb = inode->i_sb;
+ 
+ 	/* The file must need contents encryption, not filenames encryption */
+-	if (!S_ISREG(inode->i_mode))
++	if (!fscrypt_needs_contents_encryption(inode))
+ 		return;
+ 
+ 	/* blk-crypto must implement the needed encryption algorithm */
+@@ -148,7 +148,7 @@ void fscrypt_destroy_inline_crypt_key(struct fscrypt_prepared_key *prep_key)
+  */
+ bool fscrypt_inode_uses_inline_crypto(const struct inode *inode)
+ {
+-	return IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
++	return fscrypt_needs_contents_encryption(inode) &&
+ 		inode->i_crypt_info->ci_inlinecrypt;
+ }
+ EXPORT_SYMBOL_GPL(fscrypt_inode_uses_inline_crypto);
+@@ -164,7 +164,7 @@ EXPORT_SYMBOL_GPL(fscrypt_inode_uses_inline_crypto);
+  */
+ bool fscrypt_inode_uses_fs_layer_crypto(const struct inode *inode)
+ {
+-	return IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
++	return fscrypt_needs_contents_encryption(inode) &&
+ 		!inode->i_crypt_info->ci_inlinecrypt;
+ }
+ EXPORT_SYMBOL_GPL(fscrypt_inode_uses_fs_layer_crypto);
+diff --git a/include/linux/fscrypt.h b/include/linux/fscrypt.h
+index 2a84131ab270fd..1d9810eb88b113 100644
+--- a/include/linux/fscrypt.h
++++ b/include/linux/fscrypt.h
+@@ -528,7 +528,7 @@ static inline bool fscrypt_inode_uses_inline_crypto(const struct inode *inode)
+ 
+ static inline bool fscrypt_inode_uses_fs_layer_crypto(const struct inode *inode)
+ {
+-	return IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode);
++	return fscrypt_needs_contents_encryption(inode);
+ }
+ 
+ static inline void fscrypt_set_bio_crypt_ctx(struct bio *bio,
