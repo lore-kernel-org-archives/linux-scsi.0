@@ -2,86 +2,84 @@ Return-Path: <SRS0=MD5Y=4P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3131AC11D3D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 17:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C649CC35DF9
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:14:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE75B24692
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 17:42:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="D6x4UpXi"
+	by mail.kernel.org (Postfix) with ESMTP id 99091246BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:14:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582827254;
+	bh=DfvmaQgMZxcqfEpHuvrrlNTCaevj5uxdnW4bw4l/cwQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=mWNYnRGAdNlxLvzboEQpm60u3bgR6E08FpMIvmv1zR/hgxaPEfYv1QJBzFCLaDL/f
+	 KVoolxB08ZMT1oNgzb2KfFjhwn9ef2L9ONrtyp/IufwzHEe7ss2L7d3i4wQrNmD2iG
+	 sXG5cLzoV/LmEtkaIrUvxpZVm0vzj8LMoUxzmlsk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729663AbgB0Rmc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 12:42:32 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:39383 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729548AbgB0Rmc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Feb 2020 12:42:32 -0500
-Received: by mail-ot1-f65.google.com with SMTP id x97so1111472ota.6
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Feb 2020 09:42:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8JF0Sq9TMHlIj6nNGPj9/FTICwVPrKDQH8lBEonhthM=;
-        b=D6x4UpXioiVO0N+8syCQO4IWLQ0DOzAGN3eg1ttY1abydTr/0KmEqEy959onG+4p7U
-         rmx2PLJw8kA53G8M/Qwd3nwxKhDZ3vmNqWClIbzrAvG9VU/K7S/wJZr/E7uuc+KS10u9
-         VYq79Fx0NuO3lPZ1PNl7byYEmS8EnR8DO3JmY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8JF0Sq9TMHlIj6nNGPj9/FTICwVPrKDQH8lBEonhthM=;
-        b=CSirlH1ySoFFYP2R4xc0QE65zgo35I3JyjYeskVnZzEEG3ysR+M4h1lVxrsegRkaLu
-         k0yedM2MKb/04FHeUjXzf1bSfNnC93Y4ZegGEdaCxWDRPfBT7FpEGP54hCJZHg3f5H82
-         a3oWAoSYJYW0Q0E59aPlXHukSt1Wk5N3SHXQqM15jXszkgpqMx/dmBKke27Auy9UYaAX
-         lQRCv6uiTQK4pqcbxDr7Dp+RaQ1yDNvfiFO3BEaDVZOHrAPUVQn+YB3fGuW6gytR8m5+
-         G6OtFb7oTIgdmq4nW7cxveNa39jfRxHKHSB+DGanvdEPsvmepm3sBVaWyr3fNEgOAvAE
-         DkWw==
-X-Gm-Message-State: APjAAAUdWfPI02JVodBa3TgZhn1nqoHK6nwo7xr7Loe33yIcVCNSjZ9w
-        ng1KF8J+stH62ba9HOV8xRhifIPzs5r9rJFtqxme9Mzj
-X-Google-Smtp-Source: APXvYqzqLX38/qvLkJRfk1Ki+0Q2fbb8+HyF/v+JJcj2/U+7pt2xZdLk5ouvolOdu36/R5M/0OYQ7BCGn7YZLCBpmVg=
-X-Received: by 2002:a9d:6b12:: with SMTP id g18mr22027otp.211.1582825351442;
- Thu, 27 Feb 2020 09:42:31 -0800 (PST)
+        id S1729570AbgB0SOO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Feb 2020 13:14:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726877AbgB0SOO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Feb 2020 13:14:14 -0500
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02F29246B0;
+        Thu, 27 Feb 2020 18:14:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582827253;
+        bh=DfvmaQgMZxcqfEpHuvrrlNTCaevj5uxdnW4bw4l/cwQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=sT4dmVR9UsPbGMcknWI3bgOsjSvrPsgtUAmdt1lWngGDPvi6tYTXfp8zAlivAVVGE
+         Nodjsd6dayZE3c3DVdI5DxqXH1cs4fq2TQNuuy1ir3hHqyCE3C9nGSpbDbR7iyczgy
+         thWQWFpyhElDDeVDwp9+De4JDQO1/TZDUfWsjIts=
+Date:   Thu, 27 Feb 2020 10:14:11 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v7 1/9] block: Keyslot Manager for Inline Encryption
+Message-ID: <20200227181411.GB877@sol.localdomain>
+References: <20200221115050.238976-1-satyat@google.com>
+ <20200221115050.238976-2-satyat@google.com>
+ <20200221170434.GA438@infradead.org>
+ <20200221173118.GA30670@infradead.org>
 MIME-Version: 1.0
-References: <49751508-48b0-eab4-a371-1b9eded12a19@yandex.ru>
-In-Reply-To: <49751508-48b0-eab4-a371-1b9eded12a19@yandex.ru>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Thu, 27 Feb 2020 23:12:07 +0530
-Message-ID: <CAL2rwxpw+bPg24O4V71dqpyW3aCsOYEGycm0=skBgg8pyBzncQ@mail.gmail.com>
-Subject: Re: Linux / mpt3sas support for PCI 1000:0014 (weird device?)
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     MPT-FusionLinux.pdl@broadcom.com,
-        Linux SCSI List <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200221173118.GA30670@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 27, 2020 at 6:45 PM Dmitry Antipov <dmantipov@yandex.ru> wrote:
->
-> Hello,
-Hi Dmitry,
->
-> my Debian 9.12 system with 4.9-based kernel reports the following device:
->
-> # lspci | grep -i sas
-> 04:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID Tri-Mode SAS3516 (rev 01)
->
-> # lspci -n | grep '04:00.0'
-> 04:00.0 0104: 1000:0014 (rev 01)
->
-> but 0014 is not listed in drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h among the supported device ids.
->
-> Any ideas on who 1000:0014 is really are, and should it be supported by mpt3sas?
-1000:0014 is LSI/Broadcom MegaRAID controller and supported by
-megaraid_sas driver (drivers/scsi/megaraid).
+On Fri, Feb 21, 2020 at 09:31:18AM -0800, Christoph Hellwig wrote:
+> On Fri, Feb 21, 2020 at 09:04:34AM -0800, Christoph Hellwig wrote:
+> > Given that blk_ksm_get_slot_for_key returns a signed keyslot that
+> > can return errors, and the only callers stores it in a signed variable
+> > I think this function should take a signed slot as well, and the check
+> > for a non-negative slot should be moved here from the only caller.
+> 
+> Actually looking over the code again I think it might be better to
+> return only the error code (and that might actually be a blk_status_t),
+> and then use an argument to return a pointer to the actual struct
+> keyslot.  That gives us much easier to understand code and better
+> type safety.
 
-Thanks,
-Sumit
->
-> Dmitry
+That doesn't make sense because the caller only cares about the keyslot number,
+not the 'struct keyslot'.  The 'struct keyslot' is internal to
+keyslot-manager.c, as it only contains keyslot management information.
+
+Your earlier suggestion of making blk_ksm_put_slot() be a no-op on a negative
+keyslot number sounds fine though.
+
+- Eric
