@@ -2,73 +2,177 @@ Return-Path: <SRS0=MD5Y=4P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF72EC4BA2D
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 13:15:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEB7C11D3D
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 16:59:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C6462469C
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 13:15:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="ITAna7uo"
+	by mail.kernel.org (Postfix) with ESMTP id 844E6246A2
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 16:59:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729175AbgB0NPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 08:15:11 -0500
-Received: from forward101o.mail.yandex.net ([37.140.190.181]:57582 "EHLO
-        forward101o.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729080AbgB0NPK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Feb 2020 08:15:10 -0500
-X-Greylist: delayed 439 seconds by postgrey-1.27 at vger.kernel.org; Thu, 27 Feb 2020 08:15:09 EST
-Received: from mxback16g.mail.yandex.net (mxback16g.mail.yandex.net [IPv6:2a02:6b8:0:1472:2741:0:8b7:316])
-        by forward101o.mail.yandex.net (Yandex) with ESMTP id A629C3C01109;
-        Thu, 27 Feb 2020 16:07:48 +0300 (MSK)
-Received: from sas2-ee0cb368bd51.qloud-c.yandex.net (sas2-ee0cb368bd51.qloud-c.yandex.net [2a02:6b8:c08:b7a3:0:640:ee0c:b368])
-        by mxback16g.mail.yandex.net (mxback/Yandex) with ESMTP id bCElxBkT7g-7mHSgXbW;
-        Thu, 27 Feb 2020 16:07:48 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1582808868;
-        bh=qBHL0qr+x8cdyhYGWsEgpPInMSxdDw1AjYPV/7CcSpo=;
-        h=Subject:From:To:Cc:Date:Message-ID;
-        b=ITAna7uoz9djAiL7YZLVNqkyawbWdKFNWkq+Nr8tKQ2ZfAcpevLneELZIjdtGME8i
-         VBq3WkxhOtYk70UMByWuWZWbmGyggqlk30+MlDb7Jnll3bgRYOYYYKArT8eTsNuJw1
-         dtO9R1ML5KLphYu9ZBYk8hHthQaY5dzoWc8iYRyQ=
-Authentication-Results: mxback16g.mail.yandex.net; dkim=pass header.i=@yandex.ru
-Received: by sas2-ee0cb368bd51.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id HMTffoU91p-7lYCTmLm;
-        Thu, 27 Feb 2020 16:07:47 +0300
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client certificate not present)
-To:     MPT-FusionLinux.pdl@broadcom.com
-Cc:     linux-scsi@vger.kernel.org
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-Subject: Linux / mpt3sas support for PCI 1000:0014 (weird device?)
-Message-ID: <49751508-48b0-eab4-a371-1b9eded12a19@yandex.ru>
-Date:   Thu, 27 Feb 2020 16:07:47 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1729334AbgB0Q7U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Feb 2020 11:59:20 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:47124 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729223AbgB0Q7T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Feb 2020 11:59:19 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 7ABC0204197;
+        Thu, 27 Feb 2020 17:59:17 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id KqvsppYxKnt5; Thu, 27 Feb 2020 17:59:10 +0100 (CET)
+Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 0B2E220416A;
+        Thu, 27 Feb 2020 17:59:09 +0100 (CET)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+Subject: [PATCH v7 00/38] sg: add v4 interface
+Date:   Thu, 27 Feb 2020 11:58:24 -0500
+Message-Id: <20200227165902.11861-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+This patchset is the first stage of a two stage rewrite of the scsi
+generic (sg) driver. The main goal of the first stage is to
+introduce the sg v4 interface that uses 'struct sg_io_v4' as well
+as keeping and modernizing the sg v3 interface (based on 'struct
+sg_io_hdr'). The async interface formerly requiring the use of
+write() and read() system calls now have ioctl(SG_IOSUBMIT) and
+ioctl(SG_IORECEIVE) replacements. See:
+    http://sg.danny.cz/sg/sg_v40.html
+for more details.
 
-my Debian 9.12 system with 4.9-based kernel reports the following device:
+Due to changes in the production sg driver (mainly due to
+compat_ioctl() work) there are many changes in this patchset just
+keeping up. Significant changes appeared in lk 5.5.3 with more
+in lk 5.6.0-rc1. This patchset is build on the latter.
 
-# lspci | grep -i sas
-04:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID Tri-Mode SAS3516 (rev 01)
+The complete patchset, whose second stage has an additional 25
+patches (i.e. 63 patches in all), can be found at the above link.
 
-# lspci -n | grep '04:00.0'
-04:00.0 0104: 1000:0014 (rev 01)
+Changes since v6 (sent to linux-scsi list on 20200112)
+  - based on Martin Petersen's 5.7/scsi-queue branch in his
+    linux-scsi repository
+  - major work on mmap support: when mmap(2) is used the reserve
+    request scatter gather list is rebuilt to have order=0
+    elements (i.e. each is PAGE_SIZE bytes).
+  - address one kbuild robot issue: add include defining size_t
+  - nearly all patches that have been reviewed have been changed,
+    usually in minor ways. Those patches have "***" before the
+    "Reviewed-by" line.
 
-but 0014 is not listed in drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h among the supported device ids.
+Changes since v5 (sent to linux-scsi list on 20191008)
+  - replace linked lists with xarray mechanism
+  - use the locking in the xarray implementation to
+    replace several discrete locks
+  - some patches that were previously reviewed by
+    Hannes Reinecke have had small changes made to
+    them usually associated with xarrays. Those have
+    been marked with "***" prepended to the
+    "Reviewed-by" line
+  - bump the driver version number to 4.0.08
 
-Any ideas on who 1000:0014 is really are, and should it be supported by mpt3sas?
+Changes since v4 (sent to linux-scsi list on 20190829)
+  - remove much of the logic in the previous patchset
+    series from and including:
+        [PATCH v4 11/22] sg: replace rq array with lists
+    to
+        [PATCH v4 22/22] sg: bump version to 4.0.03
+  - bump the driver version number from 3.5.36 to 3.9.01
+    [20190606] reflecting that the v4 interface has not
+    been implemented (in this patchset)
+  - patches 13/23 through to 22/23 reduce the complexity
+    of "[PATCH v4 11/22] sg: replace rq array with lists"
+    measured in KiloBytes from about 130 KB to 80 KB.
+  - various changes suggested by reviewers of the v4
+    patchset have been implemented
+  - change all %p descriptors (mainly in SG_LOG() macros)
+    to %pK so that the debug output remains useful in
+    recent kernels. Evidently sys admins can selectively
+    turn on pointer obfuscation on %pK as required on
+    secure systems.
 
-Dmitry
+Changes since v3 (sent to linux-scsi list on 20190807):
+  - move __must_hold attributes into separate patch
+  - move procfs and debugfs file scope definitions toward
+    the end of sg.c to avoid forward declarations
+  - move module_param* and MODULE_* macros to end of sg.c
+  - expand debugfs support with snapshot_devs which allows
+    filtering of snapshot output by sg device(s)
+  - add a WARN_ONCE when write(2) is used with the sg v3
+    interface. Suggest using SG_IOSUBMIT_V3 instead.
+  - address more of the review comments from Hannes Reinecke
+    and Christoph Hellwig
+  - add various reviewed-by tags where appropriate
+
+Changes since v2 (sent to linux-scsi list on 20190727):
+  - address issues "Reported-by: kbuild test robot <lkp@intel.com>".
+    The main one was to change the bsg header included to:
+    include/uapi/linux/bsg.h rather than include/linux/bsg.h
+  - address some of the review comments from Hannes Reinecke;
+    email responses have been sent for review comments that
+    did not result in code changes
+
+Changes since v1 (sent to linux-scsi list on 20190616):
+  - change ktime_get_boot_ns() to ktime_get_boottime_ns() to reflect
+    kernel API change first seen in lk 5.3.0-rc1
+
+Douglas Gilbert (38):
+  sg: move functions around
+  sg: remove typedefs, type+formatting cleanup
+  sg: sg_log and is_enabled
+  sg: rework sg_poll(), minor changes
+  sg: bitops in sg_device
+  sg: make open count an atomic
+  sg: move header to uapi section
+  sg: speed sg_poll and sg_get_num_waiting
+  sg: sg_allow_if_err_recovery and renames
+  sg: improve naming
+  sg: change rwlock to spinlock
+  sg: ioctl handling
+  sg: split sg_read
+  sg: sg_common_write add structure for arguments
+  sg: rework sg_vma_fault
+  sg: rework sg_mmap
+  sg: replace sg_allow_access
+  sg: rework scatter gather handling
+  sg: introduce request state machine
+  sg: sg_find_srp_by_id
+  sg: sg_fill_request_element
+  sg: printk change %p to %pK
+  sg: xarray for fds in device
+  sg: xarray for reqs in fd
+  sg: replace rq array with lists
+  sg: sense buffer rework
+  sg: add sg v4 interface support
+  sg: rework debug info
+  sg: add 8 byte SCSI LUN to sg_scsi_id
+  sg: expand sg_comm_wr_t
+  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
+  sg: add some __must_hold macros
+  sg: move procfs objects to avoid forward decls
+  sg: protect multiple receivers
+  sg: first debugfs support
+  sg: rework mmap support
+  sg: warn v3 write system call users
+  sg: bump version to 4.0.08
+
+ drivers/scsi/sg.c      | 5182 +++++++++++++++++++++++++++-------------
+ include/scsi/sg.h      |  270 +--
+ include/uapi/scsi/sg.h |  374 +++
+ 3 files changed, 3917 insertions(+), 1909 deletions(-)
+ create mode 100644 include/uapi/scsi/sg.h
+
+-- 
+2.25.1
+
