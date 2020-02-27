@@ -2,115 +2,85 @@ Return-Path: <SRS0=MD5Y=4P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
-	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE3EC3F2C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 21:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4276AC3F2C4
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 22:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6CFB9246A0
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 21:25:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 171D2246A2
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 22:06:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PD5AuIH9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="c1ZfL7f0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729923AbgB0VZT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 16:25:19 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:35063 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729697AbgB0VZS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Feb 2020 16:25:18 -0500
-Received: by mail-pj1-f68.google.com with SMTP id q39so340764pjc.0
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Feb 2020 13:25:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=zbiMEvwdKM/tvZAA5Qj434C9S081Ob3tK31bpwxJweM=;
-        b=PD5AuIH9YkPwMY1wk/M2YjcFyJ0ifFKkRpny5ZyGDYGn1QOO/zohITOuyJrm8SULUl
-         7i+MnHC+yUTXTPi9Ej+G5yNVS3jFkcc7VmG08QcNrBd6venEz216NN4gW5ri9dfRMEY5
-         T9q3N+SI14tw/2hmTyKa+XjXBZtxMwuu/SYW/t2qpCgLUResl8ne20dFgnF5Clkq+VPd
-         fKd4zMbXTcBkWMq/t3v6ItovAlemxDo+YGgs9x//wHp14jvdIoTrJr8E7cFsndG+SFrU
-         lQ3Su/cUXhsTRXyXiXcqdziWtx03q3ThazV8PbjImCgXZMy3x3k0A2xd3rU2TVHPaLCB
-         3Adg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=zbiMEvwdKM/tvZAA5Qj434C9S081Ob3tK31bpwxJweM=;
-        b=skF/Nz40hWLYJGLG8XcTRPskh2VQPfF2XWMA0+a/9SPPs36bhCzrFVaA31+5grtEoJ
-         r6hhyNqv+leb0K/B+gg2k7Kyt4D8zD5DdVVU7XYNilT4au+//MHFEDmwvXgIXoXys+qQ
-         GpT+dyZUeQQi6c5Ks854Ub0ORYt0mjqO96nE0Cra6ej5upujwZ0H8/H1JIF5smEGN1jr
-         3UMZvfqt2rjlqgIWXWRdBWmyRTpPlMIrXgGZIeKIQ5kOVnutpv78MmxBgQ1KLHXhmf6M
-         EQcx+q326JXnB5RF8v09E+ueZVFSvBVLV07SIK0FAiZqbJa2n4Phso7ysPAyQFcQ1R3e
-         XFQg==
-X-Gm-Message-State: APjAAAWlMBdmgNKZqLNrQBVH+IxOdh7YZZfsmizAXDsVxaiGE3RY6VUI
-        LxMlMekyKUQ8+vk6gCvXDvmTWg==
-X-Google-Smtp-Source: APXvYqx9TDG0Lr2SN5dRxW/+L8a98eXpzWzxOnFNh71eBbIDihuNaU52qVET1Y7r5ElfIRGM27CypQ==
-X-Received: by 2002:a17:902:6907:: with SMTP id j7mr807838plk.88.1582838717243;
-        Thu, 27 Feb 2020 13:25:17 -0800 (PST)
-Received: from google.com ([2620:15c:201:0:7f8c:9d6e:20b8:e324])
-        by smtp.gmail.com with ESMTPSA id k9sm8493396pfh.153.2020.02.27.13.25.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Feb 2020 13:25:16 -0800 (PST)
-Date:   Thu, 27 Feb 2020 13:25:12 -0800
-From:   Satya Tangirala <satyat@google.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v7 1/9] block: Keyslot Manager for Inline Encryption
-Message-ID: <20200227212512.GA162309@google.com>
-References: <20200221115050.238976-1-satyat@google.com>
- <20200221115050.238976-2-satyat@google.com>
- <20200221170434.GA438@infradead.org>
- <20200221173118.GA30670@infradead.org>
- <20200227181411.GB877@sol.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200227181411.GB877@sol.localdomain>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+        id S1729944AbgB0WGK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Feb 2020 17:06:10 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:12715 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729831AbgB0WGK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Feb 2020 17:06:10 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1582841170; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=5Yb5NWMFrqzXj1+cgPqRQMaN6UQ8BdghPQnNiD41NVQ=; b=c1ZfL7f0nMTQFveLoovVTHL2HB8U5xNgUvDjdmph1Q/hLmmTHSh3RrJjPVNxrxPhZBRuhvye
+ ygcWdg2WQ0EKBr0rivYfUOj7kityax8mWsTdQHAzm87IKXWoerkDQ/kJGIqxAjLbNmEByij6
+ ChIb1LOMa0hsZ60G+W7Tzck23/8=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e583d3d.7fd95dc67110-smtp-out-n02;
+ Thu, 27 Feb 2020 22:05:49 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3C600C4479C; Thu, 27 Feb 2020 22:05:49 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 782E6C43383;
+        Thu, 27 Feb 2020 22:05:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 782E6C43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
+From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
+To:     ulf.hansson@linaro.org, robh+dt@kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     linux-mmc@vger.kernel.org, asutoshd@codeaurora.org,
+        cang@codeaurora.org, "Bao D. Nguyen" <nguyenb@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org
+Subject: [<PATCH v1> 0/4]  SD card bug fixes
+Date:   Thu, 27 Feb 2020 14:05:38 -0800
+Message-Id: <cover.1582839544.git.nguyenb@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Feb 27, 2020 at 10:14:11AM -0800, Eric Biggers wrote:
-> On Fri, Feb 21, 2020 at 09:31:18AM -0800, Christoph Hellwig wrote:
-> > On Fri, Feb 21, 2020 at 09:04:34AM -0800, Christoph Hellwig wrote:
-> > > Given that blk_ksm_get_slot_for_key returns a signed keyslot that
-> > > can return errors, and the only callers stores it in a signed variable
-> > > I think this function should take a signed slot as well, and the check
-> > > for a non-negative slot should be moved here from the only caller.
-> > 
-> > Actually looking over the code again I think it might be better to
-> > return only the error code (and that might actually be a blk_status_t),
-> > and then use an argument to return a pointer to the actual struct
-> > keyslot.  That gives us much easier to understand code and better
-> > type safety.
-> 
-> That doesn't make sense because the caller only cares about the keyslot number,
-> not the 'struct keyslot'.  The 'struct keyslot' is internal to
-> keyslot-manager.c, as it only contains keyslot management information.
-> 
-I think it does make some sense at least to make the keyslot type opaque
-to most of the system other than the driver itself (the driver will now
-have to call a function like blk_ksm_slot_idx_for_keyslot to actually get
-a keyslot number at the end of the day). Also this way, the keyslot manager
-can verify that the keyslot passed to blk_ksm_put_slot is actually part of
-that keyslot manager (and that somebody isn't releasing a slot number that
-was actually acquired from a different keyslot manager). I don't think
-it's much benefit or loss either way, but I already switched to passing
-pointers to struct keyslot around instead of ints, so I'll keep it that
-way unless you strongly feel that using ints in this case is better
-than struct keyslot *.
-> Your earlier suggestion of making blk_ksm_put_slot() be a no-op on a negative
-> keyslot number sounds fine though.
-> 
-> - Eric
+I tried to make some changes earlier in the patch
+[<PATCH v1> 9/9] mmc: sd: Fix trivial SD card issues].
+There were a lot of valid comments asking to clarify
+and separate the fixes into logical patches. With this
+patch series, I am trying to address those comments.
+
+Bao D. Nguyen (1):
+  mmc: core: Add check for NULL pointer access
+
+Ritesh Harjani (1):
+  mmc: core: Make host->card as NULL when card is removed
+
+Sahitya Tummala (1):
+  mmc: core: update host->card after getting RCA for SD card
+
+Subhash Jadavani (1):
+  mmc: core: Attribute the IO wait time properly in
+    mmc_wait_for_req_done()
+
+ drivers/mmc/core/bus.c  | 8 ++++++++
+ drivers/mmc/core/core.c | 5 ++++-
+ drivers/mmc/core/sd.c   | 6 ++++--
+ 3 files changed, 16 insertions(+), 3 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
