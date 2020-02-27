@@ -2,107 +2,263 @@ Return-Path: <SRS0=MD5Y=4P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 129D9C35DF9
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722D0C11D3D
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:41:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB4D724650
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:25:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582827947;
-	bh=ppmsgmJewgic6G8TyCPg5XN+BbEH2w+mIirTlE881lU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=I5GE4T8ZptAv9YEkz/86T9Yl29wgQVO7D8BqYFBKBrFJA5YbNphzbUX1HhFaFpwIC
-	 91l5erDk2kwzuDZb0jJwUHNMWiO0R3qoYZ1oPe7qUtmzrQsGyhaF65MC1iFmM6UUxB
-	 TztB1f9FlE1FLWgy12vmGlwgNdiGajnZ3xyopqCA=
+	by mail.kernel.org (Postfix) with ESMTP id 40D2624695
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 18:41:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730645AbgB0SZp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 13:25:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48138 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729504AbgB0SZp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Feb 2020 13:25:45 -0500
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 92AA12469C;
-        Thu, 27 Feb 2020 18:25:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582827944;
-        bh=ppmsgmJewgic6G8TyCPg5XN+BbEH2w+mIirTlE881lU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Rv/J+aex7sJzrVtxikFTce8cCr8/2At1pTM6DS4zoQmnPK6LdfBrO3VcaDBml1o8j
-         uZlALOG7V9KujDvjy4l3Yzoe2v9e4amlZ1g7tPPyYoCDeWkO3x8y/pZMpA/jHoajC5
-         fNsOS3mWSF3O1iNaWOlI5CNtSb+C4H/O2cjhJHGE=
-Date:   Thu, 27 Feb 2020 10:25:43 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v7 2/9] block: Inline encryption support for blk-mq
-Message-ID: <20200227182543.GC877@sol.localdomain>
-References: <20200221115050.238976-1-satyat@google.com>
- <20200221115050.238976-3-satyat@google.com>
- <20200221172205.GB438@infradead.org>
+        id S1729172AbgB0Slr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Feb 2020 13:41:47 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2476 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726805AbgB0Slr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Feb 2020 13:41:47 -0500
+Received: from LHREML711-CAH.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id CD9D27696479F810DC0E;
+        Thu, 27 Feb 2020 18:41:45 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ LHREML711-CAH.china.huawei.com (10.201.108.34) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 27 Feb 2020 18:41:45 +0000
+Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5; Thu, 27 Feb
+ 2020 18:41:45 +0000
+From:   John Garry <john.garry@huawei.com>
+Subject: megaraid_sas problem for scsi_add_host() fail
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+CC:     <megaraidlinux.pdl@broadcom.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Message-ID: <8f9838bb-d59a-90d9-fd22-87945320e976@huawei.com>
+Date:   Thu, 27 Feb 2020 18:41:44 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200221172205.GB438@infradead.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.45]
+X-ClientProxiedBy: lhreml708-chm.china.huawei.com (10.201.108.57) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Feb 21, 2020 at 09:22:05AM -0800, Christoph Hellwig wrote:
-> > +int blk_crypto_evict_key(struct request_queue *q,
-> > +			 const struct blk_crypto_key *key)
-> > +{
-> > +	if (q->ksm && blk_ksm_crypto_mode_supported(q->ksm, key))
-> > +		return blk_ksm_evict_key(q->ksm, key);
-> > +
-> > +	return 0;
-> > +}
-> 
-> Is there any point in this wrapper that just has a single caller?
-> Als why doesn't blk_ksm_evict_key have the blk_ksm_crypto_mode_supported
-> sanity check itself?
+Hi guys,
 
-Later in the series it's changed to:
+While do some testing, I noticed that the megaraid SAS driver has a 
+problem and looks to corrupt my system when the call to scsi_add_host() 
+in the driver fails:
 
-int blk_crypto_evict_key(struct request_queue *q,
-                         const struct blk_crypto_key *key)
-{
-        if (q->ksm && blk_ksm_crypto_mode_supported(q->ksm, key))
-                return blk_ksm_evict_key(q->ksm, key);
+[   62.516871] megasas: 07.713.01.00-rc1
+[   62.526189] megaraid_sas 0000:08:00.0: Adding to iommu group 1
+[   62.571790] megaraid_sas 0000:08:00.0: BAR:0x0  BAR's 
+base_addr(phys):0x0000080010000000  mapped virt_addr:0x(____ptrval____)
+[   62.571802] megaraid_sas 0000:08:00.0: FW now in Ready state
+[   62.583811] megaraid_sas 0000:08:00.0: 63 bit DMA mask and 63 bit 
+consistent mask
+[   62.602143] megaraid_sas 0000:08:00.0: firmware supports msix : (128)
+[   62.780250] megaraid_sas 0000:08:00.0: requested/available msix 128/128
+[   62.794292] megaraid_sas 0000:08:00.0: current msix/online cpus : 
+(128/128)
+[   62.809011] megaraid_sas 0000:08:00.0: RDPQ mode : (enabled)
+[   62.820968] megaraid_sas 0000:08:00.0: Current firmware supports 
+maximum commands: 4077 LDIO threshold: 0
+[   62.937043] megaraid_sas 0000:08:00.0: Configured max firmware 
+commands: 4076
+[   63.509185] megaraid_sas 0000:08:00.0: Performance mode :Latency
+[   63.521906] megaraid_sas 0000:08:00.0: FW supports sync cache : Yes
+[   63.535148] megaraid_sas 0000:08:00.0: megasas_disable_intr_fusion is 
+called outbound_intr_mask:0x40000009
+[   63.610607] megaraid_sas 0000:08:00.0: FW provided supportMaxExtLDs: 
+1 max_lds: 64
+[   63.626618] megaraid_sas 0000:08:00.0: controller type : MR(2048MB)
+[   63.639870] megaraid_sas 0000:08:00.0: Online Controller Reset(OCR) : 
+Enabled
+[   63.654945] megaraid_sas 0000:08:00.0: Secure JBOD support : Yes
+[   63.667661] megaraid_sas 0000:08:00.0: NVMe passthru support : Yes
+[   63.667672] megaraid_sas 0000:08:00.0: FW provided TM TaskAbort/Reset 
+timeout : 6 secs/60 secs
+[   63.698922] megaraid_sas 0000:08:00.0: JBOD sequence map support : Yes
+[   63.712715] megaraid_sas 0000:08:00.0: PCI Lane Margining support : No
+[   63.754764] megaraid_sas 0000:08:00.0: NVME page size : (4096)
+[   63.787258] megaraid_sas 0000:08:00.0: megasas_enable_intr_fusion is 
+called outbound_intr_mask:0x40000000
+[   63.807485] megaraid_sas 0000:08:00.0: INIT adapter done
+[   63.822235] megaraid_sas 0000:08:00.0: pci id : 
+(0x1000)/(0x0016)/(0x19e5)/(0xd215)
+[   63.838652] megaraid_sas 0000:08:00.0: unevenspan support : no
+[   63.850980] megaraid_sas 0000:08:00.0: firmware crash dump : no
+[   63.863499] megaraid_sas 0000:08:00.0: JBOD sequence map : enabled
+[   63.877352] scsi host0: Avago SAS based MegaRAID driver
+[   63.890398] megaraid_sas 0000:08:00.0: Failed to add host from 
+megasas_io_attach 6802
+[   63.906999] megaraid_sas 0000:08:00.0: megasas_disable_intr_fusion is 
+called outbound_intr_mask:0x40000009
+[   64.591755] nvme 0000:81:00.0: Adding to iommu group 2
+[   64.636476] nvme nvme0: pci function 0000:81:00.0
+[   64.669635] libphy: Fixed MDIO Bus: probed
+[   64.680255] tun: Universal TUN/TAP device driver, 1.6
+[   64.694422] thunder_xcv, ver 1.0
+[   64.702042] thunder_bgx, ver 1.0
+[   64.709277] nicpf, ver 1.0
+[   64.718144] e1000e: Intel(R) PRO/1000 Network Driver - 3.2.6-k
+[   64.730402] e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
+[   64.743337] igb: Intel(R) Gigabit Ethernet Network Driver - version 
+5.6.0-k
+[   64.754981] nvme nvme0: Removing after probe failure status: -12
+[   64.757953] igb: Copyright (c) 2007-2014 Intel Corporation.
+[   64.782805] igbvf: Intel(R) Gigabit Virtual Function Network Driver - 
+version 2.4.0-k
+[   64.799423] igbvf: Copyright (c) 2009 - 2012 Intel Corporation.
+[   64.813848] sky2: driver version 1.30
+[   64.825564] VFIO - User Level meta-driver version: 0.3
+[   64.848089] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[   64.862029] ehci-pci: EHCI PCI platform driver
+[   64.873445] ehci-pci 0000:7a:01.0: Adding to iommu group 3
+[   64.886700] 
+==================================================================
+[   64.901999] BUG: KASAN: slab-out-of-bounds in 
+run_timer_softirq+0x6f4/0xae0
+[   64.916663] Write of size 8 at addr ffff0026b931aae0 by task swapper/0/0
 
-        return blk_crypto_fallback_evict_key(key);
-}
+[   64.933914] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 
+5.6.0-rc3-00005-g17ceebe3a05c-dirty #1775
+[   64.952240] Hardware name: Huawei TaiShan 200 (Model 2280)/BC82AMDD, 
+BIOS 2280-V2 CS V3.B160.01 02/24/2020
+[   64.972575] Call trace:
+[   64.977729]  dump_backtrace+0x0/0x298
+[   64.985439]  show_stack+0x14/0x20
+[   64.992418]  dump_stack+0x118/0x190
+[   64.999762]  print_address_description.isra.9+0x6c/0x3b8
+[   65.010953]  __kasan_report+0x134/0x23c
+[   65.019029]  kasan_report+0xc/0x18
+[   65.026188]  __asan_store8+0x94/0xb8
+[   65.033720]  run_timer_softirq+0x6f4/0xae0
+[   65.042343]  efi_header_end+0x16c/0x840
+[   65.050420]  irq_exit+0x19c/0x1a8
+[   65.057396]  __handle_domain_irq+0x7c/0xe0
+[   65.066022]  gic_handle_irq+0x64/0x168
+[   65.073917]  el1_irq+0xbc/0x180
+[   65.080528]  arch_cpu_idle+0x3c/0x320
+[   65.088239]  default_idle_call+0x28/0x4c
+[   65.096502]  do_idle+0x278/0x348
+[   65.103295]  cpu_startup_entry+0x24/0x40
+[   65.111554]  rest_init+0x1c4/0x298
+[   65.118718]  arch_call_rest_init+0xc/0x14
+[   65.127159]  start_kernel+0x848/0x888
 
-I.e. if the encryption mode is using hardware, then the key needs to be evicted
-from q->ksm.  Otherwise the key needs to be evicted from the fallback.
+[   65.138006] Allocated by task 0:
+[   65.144802] (stack is not available)
 
-Also keep in mind that our goal is to define a clean API for any user of the
-block layer to use encryption, not just fs/crypto/.  That API includes:
+[   65.155465] Freed by task 0:
+[   65.161530] (stack is not available)
 
-	blk_crypto_init_key()
-	blk_crypto_start_using_key()
-	bio_crypt_set_ctx()
-	blk_crypto_evict_key()
+[   65.172193] The buggy address belongs to the object at ffff0026b931aa00
+  which belongs to the cache pool_workqueue of size 256
+[   65.199113] The buggy address is located 224 bytes inside of
+  256-byte region [ffff0026b931aa00, ffff0026b931ab00)
+[   65.223840] The buggy address belongs to the page:
+[   65.233931] page:fffffe009ac4c600 refcount:1 mapcount:0 
+mapping:ffff0026dd81c880 index:0xffff0026b931fe00 compound_mapcount: 0
+[   65.257923] flags: 0x6ffff00000010200(slab|head)
+[   65.267649] raw: 6ffff00000010200 fffffe009b20b208 fffffe009ac07608 
+ffff0026dd81c880
+[   65.283959] raw: ffff0026b931fe00 0000000000400002 00000001ffffffff 
+0000000000000000
+[   65.300270] page dumped because: kasan: bad access detected
 
-If anyone else decides to use inline encryption (e.g., if inline encryption
-support were added to dm-crypt or another device-mapper target), they'll use
-these same functions.
+[   65.315139] Memory state around the buggy address:
+[   65.325231]  ffff0026b931a980: fc fc fc fc fc fc fc fc fc fc fc fc fc 
+fc fc fc
+[   65.340445]  ffff0026b931aa00: fc fc fc fc fc fc fc fc fc fc fc fc fc 
+fc fc fc
+[   65.355660] >ffff0026b931aa80: fc fc fc fc fc fc fc fc fc fc fc fc fc 
+fc fc fc
+[   65.370870]                                                        ^
+[   65.384256]  ffff0026b931ab00: fc fc fc fc fc fc fc fc fc fc fc fc fc 
+fc fc fc
+[   65.399467]  ffff0026b931ab80: fc fc fc fc fc fc fc fc fc fc fc fc fc 
+fc fc fc
+[   65.414675] 
+==================================================================
+[   65.429885] Disabling lock debugging due to kernel taint
+[   65.441431] Unable to handle kernel paging request at virtual address 
+ffffa0001013c0b0
+[   65.441695] ehci-pci 0000:7a:01.0: EHCI Host Controller
+[   65.458088] Mem abort info:
+[   65.469183] ehci-pci 0000:7a:01.0: new USB bus registered, assigned 
+bus number 1
+[   65.474927]   ESR = 0x96000007
+[   65.491201] ehci-pci 0000:7a:01.0: irq 65, io mem 0x20c101000
+[   65.496913]   EC = 0x25: DABT (current EL), IL = 32 bits
+[   65.496918]   SET = 0, FnV = 0
+[   65.496922]   EA = 0, S1PTW = 0
+[   65.522586] ehci-pci 0000:7a:01.0: USB 0.0 started, EHCI 1.00
+[   65.526575] Data abort info:
+[   65.526580]   ISV = 0, ISS = 0x00000007
+[   65.535948] hub 1-0:1.0: USB hub found
+[   65.545245]   CM = 0, WnR = 0
+[   65.545251] swapper pgtable: 4k pages, 48-bit VAs, pgdp=0000000052530000
+[   65.545256] [ffffa0001013c0b0] pgd=00002027fffff003, 
+pud=00002027ffffe003, pmd=00000026dda5b003, pte=0000000000000000
+[   65.551519] hub 1-0:1.0: 2 ports detected
+[   65.559375] Internal error: Oops: 96000007 [#1] PREEMPT SMP
+[   65.559379] Modules linked in:
+[   65.569534] ehci-platform: EHCI generic platform driver
+[   65.573475] CPU: 34 PID: 8 Comm: kworker/u256:0 Tainted: G    B 
+       5.6.0-rc3-00005-g17ceebe3a05c-dirty #1775
+[   65.573477] Hardware name: Huawei TaiShan 200 (Model 2280)/BC82AMDD, 
+BIOS 2280-V2 CS V3.B160.01 02/24/2020
+[   65.573487] Workqueue: poll_megasas0_status megasas_fault_detect_work
+[   65.573492] pstate: 80c00009 (Nzcv daif +PAN +UAO)
+[   65.588048] ehci-orion: EHCI orion driver
+[   65.609756] pc : megasas_readl+0x60/0x80
+[   65.609759] lr : megasas_readl+0x1c/0x80
+[   65.609761] sp : ffff0026d97bfc00
+[   65.609763] x29: ffff0026d97bfc00 x28: ffff0026d97a9890
+[   65.609767] x27: ffff0026d97a0618 x26: ffff0026d97a9880
+[   65.609771] x25: ffff0026d9758808 x24: ffff0026b931aa28
+[   65.609775] x23: ffff0026b931aa98 x22: ffffa0002931e000
+[   65.609779] x21: ffff0026dd898800 x20: ffff0026b931dcd8
+[   65.618543] ehci-exynos: EHCI Exynos driver
+[   65.629840] x19: ffffa0001013c0b0 x18: 0000000000000000
+[   65.629843] x17: 0000000000001d50 x16: ffffffffffffe240
+[   65.629847] x15: 00000000000013a8 x14: 0000000000000000
+[   65.629850] x13: 00000000000013a0 x12: 1fffe004db2f7f7c
+[   65.629854] x11: ffff8004db2f7f78 x10: dfffa00000000000
+[   65.629857] x9 : ffffa00028f679e8 x8 : ffffa0002a483a48
+[   65.629861] x7 : ffffa00026d5ed94 x6 : 0000000000000000
+[   65.629864] x5 : ffffa0002a483a48 x4 : 0000000000000000
+[   65.629868] x3 : ffffa000279df03c x2 : 0000000000000000
+[   65.636662] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[   65.647207] x1 : ef244e124d671400 x0 : 0000000000000004
+[   65.647210] Call trace:
+[   65.647214]  megasas_readl+0x60/0x80
+[   65.647218]  megasas_read_fw_status_reg_fusion+0x2c/0x38
+[   65.647221]  megasas_fault_detect_work+0x44/0x520
+[   65.647226]  process_one_work+0x488/0xc08
+[   65.647228]  worker_thread+0x68/0x5d0
+[   65.647233]  kthread+0x1c8/0x1d0
+[   65.669535] ohci-pci: OHCI PCI platform driver
+[   65.689683]  ret_from_fork+0x10/0x18
+[   65.689689] Code: 54ffff09 a94153f3 a8c27bfd d65f03c0 (b9400260)
+[   65.689695] ---[ end trace 3632c7efc4f2d69c ]---
 
-So IMO it's important to define a clean API that won't need to be refactored as
-soon as anyone else starts using it, and not e.g. micro-optimize for code length
-based on there currently being only one user.
 
-- Eric
+That's 5.6-rc3 .
+
+Please have a look,
+
+John
+
+
+
