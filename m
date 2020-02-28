@@ -2,99 +2,111 @@ Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 974ADC3F2CE
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 02:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB61C3F2CF
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 06:46:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C3F52469F
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 02:12:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A40112469C
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 06:46:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qfDTCOc9"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MGFfkxsi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730442AbgB1CMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 21:12:25 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:43598 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730343AbgB1CMZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Feb 2020 21:12:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=rUbHo/iSA4OojiqqN3boyQPCM+9w5ozJWmrKCLdqwUA=; b=qfDTCOc9M7tFOsEWaCkVpeIFQT
-        S6Z7WjOM//7VMGPstpuv6B4OBj2C3dvs5elNLcPyCr8Fzv7joMnAN29RnuOUGrlIxlw6p1cD4I4Dj
-        88mPIIacDn7+eoIWzXJ8imeQ2nXy84Je0c4nNnwupnnqT89R93eZyLVREd/GJOWE2R1J+3gSyaKuU
-        UoqUzJtKJK4qxuAMD8uslp7DJ8j4LwpDJ56dAx6/0RLO0HHeJI/hsIH5Qddv553G3E7IFlPkDyXL2
-        rGcIs3N+oiBfefR96aUMS58YUinqCWPFb9MCfbzWnZ/F1gN8sHRH9Q62NDv3ne99900liJoueTUxa
-        W7Xq/Rdw==;
-Received: from [2601:1c0:6280:3f0::19c2]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j7V8Z-00075q-MN; Fri, 28 Feb 2020 02:12:23 +0000
-To:     linux-scsi <linux-scsi@vger.kernel.org>
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] fusion: fix if-statement empty body warning
-Message-ID: <ce2233a7-e470-0fc2-f908-75f52c6ec3e1@infradead.org>
-Date:   Thu, 27 Feb 2020 18:12:23 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1726785AbgB1Gqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 01:46:39 -0500
+Received: from mail-ua1-f65.google.com ([209.85.222.65]:40019 "EHLO
+        mail-ua1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725862AbgB1Gqi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Feb 2020 01:46:38 -0500
+Received: by mail-ua1-f65.google.com with SMTP id t20so602568uao.7
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Feb 2020 22:46:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sPJ2OvRxOCmEPKIxeEp6m+UO5YYbHEl1NGnXOdz3GOc=;
+        b=MGFfkxsit/DPkZmPZOjFO6NBpVO57ycjoKQUSv7jQj14fcYOkrwzJha//tF5sJe2SV
+         rF6/JutXvVt2AOglHZVx9Ai2EwW+iLiXVM732Q9nhPogw+H9zadQ4AIx3HXzrnYnYyCG
+         GeT5N73h22uMiC9bkUxDGXcYQ1cLePWqdGJLaP7LKHsyT7ze61fSD0SKDxuQhR8E4RnX
+         /RSJFJS1e91CvXGgeZORmjefHV7XvbOV+8hdgirz7uSZ0s2nH9AVFE8iBNRaouL0bthe
+         Y5bIxyTZbHjwwgE+Tc+hOireM9WHpfbKxx+oh9YKw6gQSUvlA2Pf7Ou/l2YSMIR0P8l/
+         ZKTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sPJ2OvRxOCmEPKIxeEp6m+UO5YYbHEl1NGnXOdz3GOc=;
+        b=sAQRLkGDVPfRlq6x5dYRwaleAUicDhfj3zJdOkviq94P+vmjQUgNaCKjKRefQUfC/f
+         6cfs2pUYMDWT4fmtSpfzymvf3ELocVe8rKjNliXQB5p08cLwzYG2ib36a89QfE9+N4xz
+         yXivW0df3ivc7X5MU20PUVDzJyxHhmjzcAkmpjRxsz6ykJF786cwP0LlLbu5XEYxTeVN
+         sOPeFOo2af/hT1O5y1DgV4u+c58dkHdirP1NCDnBnQsumb/SNhgien1IGiygfa6BIdcc
+         yvmI2X8l2wtI0efXx2pKbsUxk80iTRRJ6C5WgTHE8ilJXk3l0UFKIF/bN025YjaEeggT
+         qqwQ==
+X-Gm-Message-State: ANhLgQ1wvo6RTtboJY5YXRZx/bUyV5/WtO9KGhHSBdM4XCLuKBJlTqNT
+        xESdXB8//wz2pXQZO+lWQKQe8kPd6PfObv6elmyCdAeB
+X-Google-Smtp-Source: ADFU+vvpOsoBDpUk5r/gx8ycA0CjgosW3O8Yiua7BRgqnWzXr4ld+qyf42jXy3BVL1pBAmWF2tn0rIv6kueQhwavvmg=
+X-Received: by 2002:a9f:3046:: with SMTP id i6mr1323024uab.15.1582872397671;
+ Thu, 27 Feb 2020 22:46:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <cover.1582839544.git.nguyenb@codeaurora.org> <b328b981a785525b8424b4ab2197dc1ec54417d1.1582839544.git.nguyenb@codeaurora.org>
+In-Reply-To: <b328b981a785525b8424b4ab2197dc1ec54417d1.1582839544.git.nguyenb@codeaurora.org>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Fri, 28 Feb 2020 07:46:01 +0100
+Message-ID: <CAPDyKFrGmXj8HWNz2irUd7i8Cb77U8rLM=V91vcrWE+r7Pqeyg@mail.gmail.com>
+Subject: Re: [<PATCH v1> 1/4] mmc: core: Add check for NULL pointer access
+To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On Thu, 27 Feb 2020 at 23:06, Bao D. Nguyen <nguyenb@codeaurora.org> wrote:
+>
+> If the SD card is removed, the mmc_card pointer can be set to NULL
+> by the mmc_sd_remove() function. Check mmc_card pointer to avoid NULL
+> pointer access.
+>
+> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> ---
+>  drivers/mmc/core/bus.c  | 5 +++++
+>  drivers/mmc/core/core.c | 3 +++
+>  2 files changed, 8 insertions(+)
+>
+> diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
+> index 74de3f2..4558f51 100644
+> --- a/drivers/mmc/core/bus.c
+> +++ b/drivers/mmc/core/bus.c
+> @@ -131,6 +131,11 @@ static void mmc_bus_shutdown(struct device *dev)
+>         struct mmc_host *host = card->host;
+>         int ret;
 
-When driver debugging is not enabled, make the debug print macros
-be empty do-while loops.
+This obviously doesn't solve anything as we have already dereferenced
+the card->host above. In other words we should hit a NULL pointer
+dereference bug then.
 
-This fixes a gcc warning when -Wextra is set:
-../drivers/message/fusion/mptlan.c:266:39: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+More exactly, how do you trigger this problem?
 
-I have verified that there is no object code change (with gcc 7.5.0).
+>
+> +       if (!card) {
+> +               dev_dbg(dev, "%s: %s: card is NULL\n", dev_name(dev), __func__);
+> +               return;
+> +       }
+> +
+>         if (dev->driver && drv->shutdown)
+>                 drv->shutdown(card);
+>
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com
-Cc: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
----
- drivers/message/fusion/mptlan.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[...]
 
---- linux-next-20200225.orig/drivers/message/fusion/mptlan.h
-+++ linux-next-20200225/drivers/message/fusion/mptlan.h
-@@ -111,13 +111,13 @@ MODULE_DESCRIPTION(LANAME);
- #ifdef MPT_LAN_IO_DEBUG
- #define dioprintk(x)  printk x
- #else
--#define dioprintk(x)
-+#define dioprintk(x)  do {} while (0)
- #endif
- 
- #ifdef MPT_LAN_DEBUG
- #define dlprintk(x)  printk x
- #else
--#define dlprintk(x)
-+#define dlprintk(x)  do {} while (0)
- #endif
- 
- #define NETDEV_TO_LANPRIV_PTR(d)	((struct mpt_lan_priv *)netdev_priv(d))
-
+Kind regards
+Uffe
