@@ -6,35 +6,34 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CFA1C3F2D0
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:16:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72296C3F2D0
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:16:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72C4B246A2
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:16:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F0EB246A2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726207AbgB1JQW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 04:16:22 -0500
-Received: from mx2.suse.de ([195.135.220.15]:49714 "EHLO mx2.suse.de"
+        id S1726207AbgB1JQu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 04:16:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49956 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726063AbgB1JQW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 04:16:22 -0500
+        id S1726005AbgB1JQt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 04:16:49 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 89F6BAC4A;
-        Fri, 28 Feb 2020 09:16:20 +0000 (UTC)
-Subject: Re: [PATCH v7 31/38] sg: add sg_iosubmit_v3 and sg_ioreceive_v3
- ioctls
+        by mx2.suse.de (Postfix) with ESMTP id 4670FAC4A;
+        Fri, 28 Feb 2020 09:16:48 +0000 (UTC)
+Subject: Re: [PATCH v7 32/38] sg: add some __must_hold macros
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20200227165902.11861-1-dgilbert@interlog.com>
- <20200227165902.11861-32-dgilbert@interlog.com>
+ <20200227165902.11861-33-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <55a02453-1a6b-d873-1eb0-e3423c4539f1@suse.de>
-Date:   Fri, 28 Feb 2020 10:16:19 +0100
+Message-ID: <665bec93-b460-1a12-86a0-99cfd6ab1ec1@suse.de>
+Date:   Fri, 28 Feb 2020 10:16:47 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200227165902.11861-32-dgilbert@interlog.com>
+In-Reply-To: <20200227165902.11861-33-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,26 +43,17 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2/27/20 5:58 PM, Douglas Gilbert wrote:
-> Add ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3). These ioctls
-> are meant to be (almost) drop-in replacements for the write()/read()
-> async version 3 interface. They only accept the version 3 interface.
-> 
-> See the webpage at: http://sg.danny.cz/sg/sg_v40.html
-> specifically the table in the section titled: "13 SG interface
-> support changes".
-> 
-> If sgv3 is a struct sg_io_hdr object, suitably configured, then
->      res = write(sg_fd, &sgv3, sizeof(sgv3));
-> and
->      res = ioctl(sg_fd, SG_IOSUBMIT_V3, &sgv3);
-> are equivalent. Dito for read() and ioctl(SG_IORECEIVE_V3).
+> In the case of sg_wait_open_event() which calls mutex_unlock on
+> sdp->open_rel_lock and later calls mutex_lock on the same
+> lock; this macro is needed to stop sparse complaining. In
+> other cases it is a reminder to the coder (a precondition).
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->   drivers/scsi/sg.c      | 77 +++++++++++++++++++++++++++++++++++++++++-
->   include/uapi/scsi/sg.h |  6 ++++
->   2 files changed, 82 insertions(+), 1 deletion(-)
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   drivers/scsi/sg.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
