@@ -2,100 +2,114 @@ Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F34CFC3F2D1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E9FBC3F2D3
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB6A4246AE
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3689C2467B
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726961AbgB1HxX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726994AbgB1HxX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 28 Feb 2020 02:53:23 -0500
-Received: from mx2.suse.de ([195.135.220.15]:59748 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59746 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726792AbgB1HxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726671AbgB1HxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 28 Feb 2020 02:53:23 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1C508B03C;
+        by mx2.suse.de (Postfix) with ESMTP id 1AE0CAF22;
         Fri, 28 Feb 2020 07:53:20 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 02/13] scsi: add scsi_host_complete_all_commands() helper
-Date:   Fri, 28 Feb 2020 08:53:07 +0100
-Message-Id: <20200228075318.91255-3-hare@suse.de>
+Subject: [PATCHv8 00/13] scsi: remove legacy cmd_list implementation
+Date:   Fri, 28 Feb 2020 08:53:05 +0100
+Message-Id: <20200228075318.91255-1-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200228075318.91255-1-hare@suse.de>
-References: <20200228075318.91255-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a helper scsi_host_complete_all_commands() to terminate all outstanding
-commands on a scsi host.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/hosts.c     | 28 ++++++++++++++++++++++++++++
- include/scsi/scsi_host.h |  2 ++
- 2 files changed, 30 insertions(+)
+with the switch to blk-mq we have an efficient way of looking up
+outstanding commands via blk_mq_rq_busy_iter().
+In this patchset the dpt_i2o and aacraid drivers are switched over
+to using that function, and the now obsolete cmd_list implemantation
+in the SCSI midlayer is removed.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1d669e47b692..00ae9d43ce9f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -650,3 +650,31 @@ void scsi_flush_work(struct Scsi_Host *shost)
- 	flush_workqueue(shost->work_q);
- }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
-+
-+static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
-+{
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	int status = *(int *)data;
-+
-+	scsi_dma_unmap(scmd);
-+	scmd->result = status << 16;
-+	scmd->scsi_done(scmd);
-+	return true;
-+}
-+
-+/**
-+ * scsi_host_complete_all_commands - Terminate all running commands
-+ * @shost:	Scsi Host on which commands should be terminated
-+ * @status:	Status to be set for the terminated commands
-+ *
-+ * There is no protection against modification of the number
-+ * of outstanding commands. It is the responsibility of the
-+ * caller to ensure that concurrent I/O submission and/or
-+ * completion is stopped when calling this function.
-+ */
-+void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status)
-+{
-+	blk_mq_tagset_busy_iter(&shost->tag_set, complete_all_cmds_iter,
-+				&status);
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_complete_all_commands);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 7a97fb8104cf..25bef781cbe1 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -732,6 +732,8 @@ extern int scsi_host_busy(struct Scsi_Host *shost);
- extern void scsi_host_put(struct Scsi_Host *t);
- extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern const char *scsi_host_state_name(enum scsi_host_state);
-+extern void scsi_host_complete_all_commands(struct Scsi_Host *shost,
-+					    int status);
- 
- static inline int __must_check scsi_add_host(struct Scsi_Host *host,
- 					     struct device *dev)
+As usual, comments and reviews are welcome.
+
+Changes to v1:
+- Fixup kbuild warning
+
+Changes to v2:
+- Add scsi_host_busy_iter()
+- Include reviews from Christoph
+
+Changes to v3:
+- Include reviews from Christoph
+- Add midlayer helper to terminate outstanding commands
+- Split off aacraid modifcations into several patches
+
+Changes to v4:
+- Include reviews from Bart
+- Add new midlayer helper scsi_host_quiesce()/scsi_host_resume()
+- Improve comments
+
+Changes to v5:
+- Add reviews from Balsundar P.
+- Rename scsi_host_flush_commands()
+- Replace patch using scsi_host_quiesce() by using busy iterator
+
+Changes to v6:
+- Add reviews from Balsundar P.
+
+Changes to v7:
+- Add reviews from Christoph
+
+Hannes Reinecke (13):
+  dpt_i2o: rename adpt_i2o_to_scsi() to adpt_i2o_scsi_complete()
+  scsi: add scsi_host_complete_all_commands() helper
+  dpt_i2o: use scsi_host_complete_all_commands() to abort outstanding
+    commands
+  aacraid: Do not wait for outstanding write commands on
+    synchronize_cache
+  aacraid: use scsi_host_complete_all_commands() to terminate
+    outstanding commands
+  aacraid: replace aac_flush_ios() with midlayer helper
+  aacraid: move scsi_(block,unblock)_requests out of
+    _aac_reset_adapter()
+  scsi: add scsi_host_(block,unblock) helper function
+  aacraid: use scsi_host_(block,unblock) to block I/O
+  scsi: add scsi_host_busy_iter()
+  aacraid: use scsi_host_busy_iter() to wait for outstanding commands
+  aacraid: use scsi_host_busy_iter() in get_num_of_incomplete_fibs()
+  scsi: Remove cmd_list functionality
+
+ drivers/scsi/aacraid/aachba.c   |  76 +------------------------
+ drivers/scsi/aacraid/comminit.c |  35 ++++++------
+ drivers/scsi/aacraid/commsup.c  |  46 +++------------
+ drivers/scsi/aacraid/linit.c    | 120 ++++++++++++++++------------------------
+ drivers/scsi/dpt_i2o.c          |  25 +--------
+ drivers/scsi/dpti.h             |   3 +-
+ drivers/scsi/hosts.c            |  65 ++++++++++++++++++++++
+ drivers/scsi/scsi.c             |  14 -----
+ drivers/scsi/scsi_error.c       |   1 -
+ drivers/scsi/scsi_lib.c         |  61 ++++++++++----------
+ drivers/scsi/scsi_priv.h        |   2 -
+ drivers/scsi/scsi_scan.c        |   1 -
+ include/scsi/scsi_cmnd.h        |   1 -
+ include/scsi/scsi_device.h      |   1 -
+ include/scsi/scsi_host.h        |   9 ++-
+ 15 files changed, 181 insertions(+), 279 deletions(-)
+
 -- 
 2.16.4
 
