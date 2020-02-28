@@ -2,109 +2,116 @@ Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 186F6C3F2D3
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E8AC3F2D0
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:28:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5D1F246AA
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DD9E246A2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:28:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727009AbgB1Hx2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 02:53:28 -0500
-Received: from mx2.suse.de ([195.135.220.15]:59826 "EHLO mx2.suse.de"
+        id S1726413AbgB1I2B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 03:28:01 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49580 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726998AbgB1HxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 02:53:25 -0500
+        id S1726151AbgB1I2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 03:28:00 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 5FFD5B1FE;
-        Fri, 28 Feb 2020 07:53:21 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 6D4DAAC65;
+        Fri, 28 Feb 2020 08:27:58 +0000 (UTC)
+Subject: Re: [PATCH v7 10/38] sg: improve naming
+To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+References: <20200227165902.11861-1-dgilbert@interlog.com>
+ <20200227165902.11861-11-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/13] aacraid: move scsi_(block,unblock)_requests out of _aac_reset_adapter()
-Date:   Fri, 28 Feb 2020 08:53:12 +0100
-Message-Id: <20200228075318.91255-8-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200228075318.91255-1-hare@suse.de>
-References: <20200228075318.91255-1-hare@suse.de>
+Message-ID: <11e41b41-8569-173a-3ce0-a6013e57f7da@suse.de>
+Date:   Fri, 28 Feb 2020 09:27:57 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
+MIME-Version: 1.0
+In-Reply-To: <20200227165902.11861-11-dgilbert@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-_aac_reset_adapter() only has one caller, and that one already calls
-scsi_block_requests(). So move the calls out of _aac_reset_adapter()
-to avoid calling scsi_block_requests() twice.
+On 2/27/20 5:58 PM, Douglas Gilbert wrote:
+> Remove use of typedef sg_io_hdr_t and replace with struct
+> sg_io_hdr. Change some names on driver wide structure fields
+> and comment them. Rename sg_alloc() to sg_add_device_helper()
+> to reflect its current role.
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+> ---
+>   drivers/scsi/sg.c | 240 ++++++++++++++++++++++++----------------------
+>   1 file changed, 127 insertions(+), 113 deletions(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 246c630d3523..eb3b333ea30b 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -92,7 +92,7 @@ static int sg_allow_dio = SG_ALLOW_DIO_DEF;
+>   static int scatter_elem_sz = SG_SCATTER_SZ;
+>   static int scatter_elem_sz_prev = SG_SCATTER_SZ;
+>   
+> -#define SG_SECTOR_SZ 512
+> +#define SG_DEF_SECTOR_SZ 512
+>   
+>   static int sg_add_device(struct device *, struct class_interface *);
+>   static void sg_remove_device(struct device *, struct class_interface *);
+> @@ -105,12 +105,13 @@ static struct class_interface sg_interface = {
+>   	.remove_dev     = sg_remove_device,
+>   };
+>   
+> -struct sg_scatter_hold { /* holding area for scsi scatter gather info */
+> -	u16 k_use_sg; /* Count of kernel scatter-gather pieces */
+> +struct sg_scatter_hold {     /* holding area for scsi scatter gather info */
+> +	struct page **pages;	/* num_sgat element array of struct page* */
+> +	int buflen;		/* capacity in bytes (dlen<=buflen) */
+> +	int dlen;		/* current valid data length of this req */
+> +	u16 page_order;		/* byte_len = (page_size*(2**page_order)) */
+> +	u16 num_sgat;		/* actual number of scatter-gather segments */
+>   	unsigned int sglist_len; /* size of malloc'd scatter-gather list ++ */
+> -	unsigned int bufflen;	/* Size of (aggregate) data buffer */
+> -	struct page **pages;
+> -	int page_order;
+>   	char dio_in_use;	/* 0->indirect IO (or mmap), 1->dio */
+>   	u8 cmd_opcode;		/* first byte of command */
+>   };
+While you're at it, it might be worthwhile to exchange the order of the 
+last two fields.
+Having a 'char' before the 'u8' guarantees either a misaligned structure 
+or implicit padding by the compiler, neither of which is a good thing.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Balsundar P < Balsundar.P@microchip.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/aacraid/commsup.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+> @@ -122,20 +123,20 @@ struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
+>   	struct list_head entry;	/* list entry */
+>   	struct sg_fd *parentfp;	/* NULL -> not in use */
+>   	struct sg_scatter_hold data;	/* hold buffer, perhaps scatter list */
+> -	sg_io_hdr_t header;	/* scsi command+info, see <scsi/sg.h> */
+> +	struct sg_io_hdr header;  /* scsi command+info, see <scsi/sg.h> */
+>   	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
+>   	char res_used;		/* 1 -> using reserve buffer, 0 -> not ... */
+>   	char orphan;		/* 1 -> drop on sight, 0 -> normal */
+>   	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
+>   	/* done protected by rq_list_lock */
+>   	char done;		/* 0->before bh, 1->before read, 2->read */
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 8736a540a048..0d8c1ee40759 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1476,7 +1476,7 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- {
- 	int index, quirks;
- 	int retval;
--	struct Scsi_Host *host;
-+	struct Scsi_Host *host = aac->scsi_host_ptr;
- 	struct scsi_device *dev;
- 	int jafo = 0;
- 	int bled;
-@@ -1493,8 +1493,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 *	- The card is dead, or will be very shortly ;-/ so no new
- 	 *	  commands are completing in the interrupt service.
- 	 */
--	host = aac->scsi_host_ptr;
--	scsi_block_requests(host);
- 	aac_adapter_disable_int(aac);
- 	if (aac->thread && aac->thread->pid != current->pid) {
- 		spin_unlock_irq(host->host_lock);
-@@ -1619,7 +1617,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 
- out:
- 	aac->in_reset = 0;
--	scsi_unblock_requests(host);
- 
- 	/*
- 	 * Issue bus rescan to catch any configuration that might have
-@@ -1640,7 +1637,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- {
- 	unsigned long flagv = 0;
- 	int retval;
--	struct Scsi_Host * host;
-+	struct Scsi_Host * host = aac->scsi_host_ptr;
- 	int bled;
- 
- 	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
-@@ -1658,7 +1655,6 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	 * target (block maximum 60 seconds). Although not necessary,
- 	 * it does make us a good storage citizen.
- 	 */
--	host = aac->scsi_host_ptr;
- 	scsi_block_requests(host);
- 
- 	/* Quiesce build, flush cache, write through mode */
-@@ -1670,6 +1666,8 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
- 	retval = _aac_reset_adapter(aac, bled, reset_type);
- 	spin_unlock_irqrestore(host->host_lock, flagv);
- 
-+	scsi_unblock_requests(host);
-+
- 	if ((forced < 2) && (retval == -ENODEV)) {
- 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
- 		struct fib * fibctx = aac_fib_alloc(aac);
+And here a bitfield might be a good idea, as otherwise you might run 
+into alignment / padding issues again ...
+
+Cheers,
+
+Hannes
+
 -- 
-2.16.4
-
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
