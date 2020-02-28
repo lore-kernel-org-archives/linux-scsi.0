@@ -2,38 +2,38 @@ Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E868C3F2CF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:31:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB2EC3F2D0
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:33:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CCA0246AC
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:31:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDD16246A2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:33:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726359AbgB1Ib4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 03:31:56 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51684 "EHLO mx2.suse.de"
+        id S1726440AbgB1IdR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 03:33:17 -0500
+Received: from mx2.suse.de ([195.135.220.15]:52000 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725877AbgB1Ib4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 03:31:56 -0500
+        id S1725877AbgB1IdR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 03:33:17 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id DBC03AD08;
-        Fri, 28 Feb 2020 08:31:54 +0000 (UTC)
-Subject: Re: [PATCH v7 11/38] sg: change rwlock to spinlock
+        by mx2.suse.de (Postfix) with ESMTP id E28C5AD5F;
+        Fri, 28 Feb 2020 08:33:15 +0000 (UTC)
+Subject: Re: [PATCH v7 12/38] sg: ioctl handling
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20200227165902.11861-1-dgilbert@interlog.com>
- <20200227165902.11861-12-dgilbert@interlog.com>
+ <20200227165902.11861-13-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <e7492987-ef65-50fb-ad9a-065a1935ef9e@suse.de>
-Date:   Fri, 28 Feb 2020 09:31:53 +0100
+Message-ID: <89fd38c1-5a65-2b71-2227-0886a33c8630@suse.de>
+Date:   Fri, 28 Feb 2020 09:33:14 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200227165902.11861-12-dgilbert@interlog.com>
+In-Reply-To: <20200227165902.11861-13-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -43,68 +43,16 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2/27/20 5:58 PM, Douglas Gilbert wrote:
-> A reviewer suggested that the extra overhead associated with a
-> rw lock compared to a spinlock was not worth it for short,
-> oft-used critcal sections.
-> 
-> So the rwlock on the request list/array is changed to a spinlock.
-> The head of that list is in the owning sf file descriptor object.
+> Shorten sg_ioctl() by adding some helper functions. sg_ioctl()
+> is the main entry point for ioctls used on this driver's
+> devices.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->   drivers/scsi/sg.c | 52 +++++++++++++++++++++++------------------------
->   1 file changed, 26 insertions(+), 26 deletions(-)
+>   drivers/scsi/sg.c | 328 ++++++++++++++++++++++++++++------------------
+>   1 file changed, 199 insertions(+), 129 deletions(-)
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index eb3b333ea30b..99d7b1f76fc7 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -139,7 +139,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
->   	struct list_head sfd_entry;	/* member sg_device::sfds list */
->   	struct sg_device *parentdp;	/* owning device */
->   	wait_queue_head_t read_wait;	/* queue read until command done */
-> -	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
-> +	spinlock_t rq_list_lock;	/* protect access to list in req_arr */
->   	struct mutex f_mutex;	/* protect against changes in this fd */
->   	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
->   	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
-> @@ -738,17 +738,17 @@ sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
->   	struct sg_request *resp;
->   	unsigned long iflags;
->   
-> -	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-> +	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
->   	list_for_each_entry(resp, &sfp->rq_list, entry) {
->   		/* look for requests that are ready + not SG_IO owned */
->   		if (resp->done == 1 && !resp->sg_io_owned &&
->   		    (-1 == pack_id || resp->header.pack_id == pack_id)) {
->   			resp->done = 2;	/* guard against other readers */
-> -			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-> +			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
->   			return resp;
->   		}
->   	}
-> -	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-> +	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
->   	return NULL;
->   }
->   
-> @@ -802,9 +802,9 @@ srp_done(struct sg_fd *sfp, struct sg_request *srp)
->   	unsigned long flags;
->   	int ret;
->   
-> -	read_lock_irqsave(&sfp->rq_list_lock, flags);
-> +	spin_lock_irqsave(&sfp->rq_list_lock, flags);
->   	ret = srp->done;
-> -	read_unlock_irqrestore(&sfp->rq_list_lock, flags);
-> +	spin_unlock_irqrestore(&sfp->rq_list_lock, flags);
->   	return ret;
->   }
->   
-This one is pretty much pointless.
-By the time the 'return' statement is reached the 'ret' value is already 
-stale, and the lock has achieved precisely nothing.
-Use READ_ONCE() and drop the lock.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
