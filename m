@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F69C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 23:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5AFEC3F2D2
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 23:30:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EA152469C
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 23:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2112246A8
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 23:30:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q1paOzq2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="crGKxoSI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726682AbgB1XaZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 18:30:25 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:28359 "EHLO
+        id S1726766AbgB1Xaa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 18:30:30 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:23740 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726561AbgB1XaZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Feb 2020 18:30:25 -0500
+        with ESMTP id S1726627AbgB1Xaa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Feb 2020 18:30:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582932624;
+        s=mimecast20190719; t=1582932628;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=e9vcqksjgrzibgB/ZK/iccYxqnzedXPb7WyOQzHZ7cA=;
-        b=Q1paOzq27ddsmy7Tofa5EkHxIvnEtNKTiWuRMRLohn1Dyc66zlTnFCl5GBVPkf+DsvXkI9
-        NZPn5ryicyrl4Of8ssYSaUs+ueqw+U6x9IW/D4CdT3BHPVl5km7tNMlCE5IwB35AudmvzM
-        kFzfBjsb8BSxmFIssxXVAzN8Oy6Gaqc=
+        bh=YNirpvSklIIdah2sC5h7VgXF/Vtwy4NgWlnpUX3i0go=;
+        b=crGKxoSIIWCvQqQLR+bOEGAv/wIyjkvranJleNkVGPlfzw3sMx0xD9O//8p0Jy4R6AbSRo
+        4fQsVLWW2HMRbLyAG8hQtLgLn0XraYsM2n4fBNSgPbJfQxKHatxQ09jv+HiMiavtA5j81B
+        xEXnttj7HFR1RjHDEFySQqfnhQ39DSg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-390-oPu8jtkkN_WK2Ta1KiVlHw-1; Fri, 28 Feb 2020 18:30:22 -0500
-X-MC-Unique: oPu8jtkkN_WK2Ta1KiVlHw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-224-YOarZEngPCSuglUyrcok7g-1; Fri, 28 Feb 2020 18:30:25 -0500
+X-MC-Unique: YOarZEngPCSuglUyrcok7g-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 16CA413F5;
-        Fri, 28 Feb 2020 23:30:20 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7E7188017DF;
+        Fri, 28 Feb 2020 23:30:23 +0000 (UTC)
 Received: from localhost (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D0A59101D491;
-        Fri, 28 Feb 2020 23:30:16 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9137C60BF1;
+        Fri, 28 Feb 2020 23:30:22 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         James Bottomley <James.Bottomley@HansenPartnership.com>,
@@ -59,21 +59,55 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bart.vanassche@wdc.com>
-Subject: [PATCH V2 09/10] scsi: add scsi_device_busy() to read sdev->device_busy
-Date:   Sat, 29 Feb 2020 07:29:19 +0800
-Message-Id: <20200228232920.20960-10-ming.lei@redhat.com>
+Subject: [PATCH V2 10/10] scsi: replace sdev->device_busy with sbitmap
+Date:   Sat, 29 Feb 2020 07:29:20 +0800
+Message-Id: <20200228232920.20960-11-ming.lei@redhat.com>
 In-Reply-To: <20200228232920.20960-1-ming.lei@redhat.com>
 References: <20200228232920.20960-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add scsi_device_busy() for drivers, so that we can prepare for tracking
-device queue depth via sbitmap_queue.
+scsi uses one global atomic variable to track queue depth for each
+LUN/request queue.
+
+This way doesn't scale well when there is lots of CPU cores and the
+disk is very fast. It has been observed that IOPS is affected a lot
+by tracking queue depth via sdev->device_busy in IO path.
+
+So replace the atomic variable sdev->device_busy with sbitmap for
+tracking scsi device queue depth.
+
+Test shows that IOPS difference is just ~1% compared with bypassing
+device queue depth on scsi_debug by applying patches [1]. Meantime
+IOPS is improved > 20% compared with linus tree.
+
+Follows test steps:
+
+1) test machine(32 logical CPU cores)
+	Thread(s) per core:  2
+	Core(s) per socket:  8
+	Socket(s):           2
+	NUMA node(s):        2
+	Model name:          Intel(R) Xeon(R) CPU E5-2630 v3 @ 2.40GHz
+
+2) setup scsi_debug:
+modprobe scsi_debug virtual_gb=3D128 max_luns=3D1 submit_queues=3D32 dela=
+y=3D0 max_queue=3D256
+
+3) fio script:
+fio --rw=3Drandread --size=3D128G --direct=3D1 --ioengine=3Dlibaio --iode=
+pth=3D2048 \
+	--numjobs=3D32 --bs=3D4k --group_reporting=3D1 --group_reporting=3D1 --r=
+untime=3D60 \
+	--loops=3D10000 --name=3Djob1 --filename=3D/dev/sdN
+
+[1] https://lore.kernel.org/linux-block/20200119071432.18558-6-ming.lei@r=
+edhat.com/
 
 Cc: Omar Sandoval <osandov@fb.com>
 Cc: Sathya Prakash <sathya.prakash@broadcom.com>
@@ -87,113 +121,257 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Bart Van Assche <bart.vanassche@wdc.com>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/message/fusion/mptsas.c      | 2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- drivers/scsi/scsi_lib.c              | 4 ++--
- drivers/scsi/scsi_sysfs.c            | 2 +-
- drivers/scsi/sg.c                    | 2 +-
- include/scsi/scsi_device.h           | 5 +++++
- 6 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi.c        |  2 ++
+ drivers/scsi/scsi_lib.c    | 37 ++++++++++++++++++-------------------
+ drivers/scsi/scsi_priv.h   |  1 +
+ drivers/scsi/scsi_scan.c   | 21 +++++++++++++++++++--
+ drivers/scsi/scsi_sysfs.c  |  2 ++
+ include/scsi/scsi_cmnd.h   |  2 ++
+ include/scsi/scsi_device.h |  5 +++--
+ 7 files changed, 47 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mpt=
-sas.c
-index 6a79cd0ebe2b..71d96526b24d 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -3756,7 +3756,7 @@ mptsas_send_link_status_event(struct fw_event_work =
-*fw_event)
- 						printk(MYIOC_s_DEBUG_FMT
- 						"SDEV OUTSTANDING CMDS"
- 						"%d\n", ioc->name,
--						atomic_read(&sdev->device_busy)));
-+						scsi_device_busy(sdev)));
- 				}
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 4b9fdfab77d9..62771a92db9b 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -245,6 +245,8 @@ int scsi_change_queue_depth(struct scsi_device *sdev,=
+ int depth)
+ 	if (sdev->request_queue)
+ 		blk_set_queue_depth(sdev->request_queue, depth);
 =20
- 			}
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-index c597d544eb39..6685ec041c38 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3060,7 +3060,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
- 		MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 0,
- 		tr_timeout, tr_method);
- 	/* Check for busy commands after reset */
--	if (r =3D=3D SUCCESS && atomic_read(&scmd->device->device_busy))
-+	if (r =3D=3D SUCCESS && scsi_device_busy(scmd->device))
- 		r =3D FAILED;
-  out:
- 	sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(0x%p)\n",
++	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
++
+ 	return sdev->queue_depth;
+ }
+ EXPORT_SYMBOL(scsi_change_queue_depth);
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c8eb555b3ce8..a3474b418602 100644
+index a3474b418602..e7fbf3a9a6aa 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -410,7 +410,7 @@ static void scsi_single_lun_run(struct scsi_device *c=
-urrent_sdev)
+@@ -354,7 +354,7 @@ void scsi_device_unbusy(struct scsi_device *sdev, str=
+uct scsi_cmnd *cmd)
+ 	if (starget->can_queue > 0)
+ 		atomic_dec(&starget->target_busy);
 =20
- static inline bool scsi_device_is_busy(struct scsi_device *sdev)
- {
--	if (atomic_read(&sdev->device_busy) >=3D sdev->queue_depth)
-+	if (scsi_device_busy(sdev) >=3D sdev->queue_depth)
- 		return true;
- 	if (atomic_read(&sdev->device_blocked) > 0)
- 		return true;
-@@ -1635,7 +1635,7 @@ static int scsi_mq_get_budget(struct blk_mq_hw_ctx =
-*hctx)
- 	if (scsi_dev_queue_ready(q, sdev))
- 		return 0;
-=20
--	if (atomic_read(&sdev->device_busy) =3D=3D 0 && !scsi_device_blocked(sd=
-ev))
-+	if (scsi_device_busy(sdev) =3D=3D 0 && !scsi_device_blocked(sdev))
- 		blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
- 	return -1;
+-	atomic_dec(&sdev->device_busy);
++	sbitmap_put(&sdev->budget_map, cmd->budget_token);
  }
+=20
+ static void scsi_kick_queue(struct request_queue *q)
+@@ -1274,19 +1274,17 @@ scsi_prep_state_check(struct scsi_device *sdev, s=
+truct request *req)
+ }
+=20
+ /*
+- * scsi_dev_queue_ready: if we can send requests to sdev, return 1 else
+- * return 0.
+- *
+- * Called with the queue_lock held.
++ * scsi_dev_queue_ready: if we can send requests to sdev, assign one tok=
+en
++ * and return the token else return -1.
+  */
+ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 				  struct scsi_device *sdev)
+ {
+-	unsigned int busy;
++	int token;
+=20
+-	busy =3D atomic_inc_return(&sdev->device_busy) - 1;
++	token =3D sbitmap_get(&sdev->budget_map);
+ 	if (atomic_read(&sdev->device_blocked)) {
+-		if (busy)
++		if (token >=3D 0)
+ 			goto out_dec;
+=20
+ 		/*
+@@ -1298,13 +1296,11 @@ static inline int scsi_dev_queue_ready(struct req=
+uest_queue *q,
+ 				   "unblocking device at zero depth\n"));
+ 	}
+=20
+-	if (busy >=3D sdev->queue_depth)
+-		goto out_dec;
+-
+-	return 1;
++	return token;
+ out_dec:
+-	atomic_dec(&sdev->device_busy);
+-	return 0;
++	if (token >=3D 0)
++		sbitmap_put(&sdev->budget_map, token);
++	return -1;
+ }
+=20
+ /*
+@@ -1624,16 +1620,17 @@ static void scsi_mq_put_budget(struct blk_mq_hw_c=
+tx *hctx, int budget_token)
+ 	struct request_queue *q =3D hctx->queue;
+ 	struct scsi_device *sdev =3D q->queuedata;
+=20
+-	atomic_dec(&sdev->device_busy);
++	sbitmap_put(&sdev->budget_map, budget_token);
+ }
+=20
+ static int scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct request_queue *q =3D hctx->queue;
+ 	struct scsi_device *sdev =3D q->queuedata;
++	int token =3D scsi_dev_queue_ready(q, sdev);
+=20
+-	if (scsi_dev_queue_ready(q, sdev))
+-		return 0;
++	if (token >=3D 0)
++		return token;
+=20
+ 	if (scsi_device_busy(sdev) =3D=3D 0 && !scsi_device_blocked(sdev))
+ 		blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
+@@ -1677,6 +1674,8 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_=
+ctx *hctx,
+ 		blk_mq_start_request(req);
+ 	}
+=20
++	cmd->budget_token =3D bd->budget_token;
++
+ 	cmd->flags &=3D SCMD_PRESERVED_FLAGS;
+ 	if (sdev->simple_tags)
+ 		cmd->flags |=3D SCMD_TAGGED;
+@@ -1701,12 +1700,12 @@ static blk_status_t scsi_queue_rq(struct blk_mq_h=
+w_ctx *hctx,
+ 	if (scsi_target(sdev)->can_queue > 0)
+ 		atomic_dec(&scsi_target(sdev)->target_busy);
+ out_put_budget:
+-	scsi_mq_put_budget(hctx, 0);
++	scsi_mq_put_budget(hctx, bd->budget_token);
+ 	switch (ret) {
+ 	case BLK_STS_OK:
+ 		break;
+ 	case BLK_STS_RESOURCE:
+-		if (atomic_read(&sdev->device_busy) ||
++		if (sbitmap_any_bit_set(&sdev->budget_map) ||
+ 		    scsi_device_blocked(sdev))
+ 			ret =3D BLK_STS_DEV_RESOURCE;
+ 		break;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 25b0aaaf5ae8..f6856a946542 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -5,6 +5,7 @@
+ #include <linux/device.h>
+ #include <linux/async.h>
+ #include <scsi/scsi_device.h>
++#include <linux/sbitmap.h>
+=20
+ struct request_queue;
+ struct request;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 058079f915f1..27b64c82d26b 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -215,6 +215,7 @@ static void scsi_unlock_floptical(struct scsi_device =
+*sdev,
+ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 					   u64 lun, void *hostdata)
+ {
++	unsigned int depth;
+ 	struct scsi_device *sdev;
+ 	int display_failure_msg =3D 1, ret;
+ 	struct Scsi_Host *shost =3D dev_to_shost(starget->dev.parent);
+@@ -277,8 +278,23 @@ static struct scsi_device *scsi_alloc_sdev(struct sc=
+si_target *starget,
+ 	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
+ 	sdev->request_queue->queuedata =3D sdev;
+=20
+-	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?
+-					sdev->host->cmd_per_lun : 1);
++	depth =3D sdev->host->cmd_per_lun ?: 1;
++
++	/*
++	 * Use .can_queue as budget map's depth because we have to
++	 * support adjusting queue depth from sysfs. Meantime use
++	 * default device queue depth to figure out sbitmap shift
++	 * since we use this queue depth most of times.
++	 */
++	if (sbitmap_init_node(&sdev->budget_map, sdev->host->can_queue,
++				sbitmap_calculate_shift(depth),
++				GFP_KERNEL, sdev->request_queue->node,
++				false, true)) {
++		put_device(&starget->dev);
++		kfree(sdev);
++	}
++
++	scsi_change_queue_depth(sdev, depth);
+=20
+ 	scsi_sysfs_device_initialize(sdev);
+=20
+@@ -980,6 +996,7 @@ static int scsi_add_lun(struct scsi_device *sdev, uns=
+igned char *inq_result,
+ 		scsi_attach_vpd(sdev);
+=20
+ 	sdev->max_queue_depth =3D sdev->queue_depth;
++	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
+ 	sdev->sdev_bflags =3D *bflags;
+=20
+ 	/*
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 677b5c5403d2..d6cb5a0a03f2 100644
+index d6cb5a0a03f2..835566b805fb 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -659,7 +659,7 @@ sdev_show_device_busy(struct device *dev, struct devi=
-ce_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev =3D to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_busy));
-+	return snprintf(buf, 20, "%d\n", scsi_device_busy(sdev));
- }
- static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
+@@ -466,6 +466,8 @@ static void scsi_device_dev_release_usercontext(struc=
+t work_struct *work)
+ 	/* NULL queue means the device can't be used */
+ 	sdev->request_queue =3D NULL;
 =20
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 4e6af592f018..943a18256881 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -2507,7 +2507,7 @@ static int sg_proc_seq_show_dev(struct seq_file *s,=
- void *v)
- 			      scsidp->id, scsidp->lun, (int) scsidp->type,
- 			      1,
- 			      (int) scsidp->queue_depth,
--			      (int) atomic_read(&scsidp->device_busy),
-+			      (int) scsi_device_busy(scsidp),
- 			      (int) scsi_device_online(scsidp));
- 	}
- 	read_unlock_irqrestore(&sg_index_lock, iflags);
++	sbitmap_free(&sdev->budget_map);
++
+ 	mutex_lock(&sdev->inquiry_mutex);
+ 	vpd_pg0 =3D rcu_replace_pointer(sdev->vpd_pg0, vpd_pg0,
+ 				       lockdep_is_held(&sdev->inquiry_mutex));
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a2849bb9cd19..e6f750f43889 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -76,6 +76,8 @@ struct scsi_cmnd {
+=20
+ 	int eh_eflags;		/* Used by error handlr */
+=20
++	int budget_token;
++
+ 	/*
+ 	 * This is set to jiffies as it was when the command was first
+ 	 * allocated.  It is used to time how long the command has
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f8312a3e5b42..09caf6f2f528 100644
+index 09caf6f2f528..cdc1f28ec57f 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -584,6 +584,11 @@ static inline int scsi_device_supports_vpd(struct sc=
-si_device *sdev)
- 	return 0;
+@@ -8,6 +8,7 @@
+ #include <linux/blkdev.h>
+ #include <scsi/scsi.h>
+ #include <linux/atomic.h>
++#include <linux/sbitmap.h>
+=20
+ struct device;
+ struct request_queue;
+@@ -106,7 +107,7 @@ struct scsi_device {
+ 	struct list_head    siblings;   /* list of all devices on this host */
+ 	struct list_head    same_target_siblings; /* just the devices sharing s=
+ame target id */
+=20
+-	atomic_t device_busy;		/* commands actually active on LLDD */
++	struct sbitmap budget_map;
+ 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
+=20
+ 	spinlock_t list_lock;
+@@ -586,7 +587,7 @@ static inline int scsi_device_supports_vpd(struct scs=
+i_device *sdev)
+=20
+ static inline int scsi_device_busy(struct scsi_device *sdev)
+ {
+-	return atomic_read(&sdev->device_busy);
++	return sbitmap_weight(&sdev->budget_map);
  }
 =20
-+static inline int scsi_device_busy(struct scsi_device *sdev)
-+{
-+	return atomic_read(&sdev->device_busy);
-+}
-+
  #define MODULE_ALIAS_SCSI_DEVICE(type) \
- 	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
- #define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
 --=20
 2.20.1
 
