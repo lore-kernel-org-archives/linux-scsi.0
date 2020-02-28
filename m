@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E8AC3F2D0
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:28:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E868C3F2CF
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:31:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DD9E246A2
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:28:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CCA0246AC
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 08:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726413AbgB1I2B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 03:28:01 -0500
-Received: from mx2.suse.de ([195.135.220.15]:49580 "EHLO mx2.suse.de"
+        id S1726359AbgB1Ib4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 03:31:56 -0500
+Received: from mx2.suse.de ([195.135.220.15]:51684 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726151AbgB1I2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 03:28:00 -0500
+        id S1725877AbgB1Ib4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 03:31:56 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 6D4DAAC65;
-        Fri, 28 Feb 2020 08:27:58 +0000 (UTC)
-Subject: Re: [PATCH v7 10/38] sg: improve naming
+        by mx2.suse.de (Postfix) with ESMTP id DBC03AD08;
+        Fri, 28 Feb 2020 08:31:54 +0000 (UTC)
+Subject: Re: [PATCH v7 11/38] sg: change rwlock to spinlock
 To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 References: <20200227165902.11861-1-dgilbert@interlog.com>
- <20200227165902.11861-11-dgilbert@interlog.com>
+ <20200227165902.11861-12-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <11e41b41-8569-173a-3ce0-a6013e57f7da@suse.de>
-Date:   Fri, 28 Feb 2020 09:27:57 +0100
+Message-ID: <e7492987-ef65-50fb-ad9a-065a1935ef9e@suse.de>
+Date:   Fri, 28 Feb 2020 09:31:53 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200227165902.11861-11-dgilbert@interlog.com>
+In-Reply-To: <20200227165902.11861-12-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -43,73 +43,72 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2/27/20 5:58 PM, Douglas Gilbert wrote:
-> Remove use of typedef sg_io_hdr_t and replace with struct
-> sg_io_hdr. Change some names on driver wide structure fields
-> and comment them. Rename sg_alloc() to sg_add_device_helper()
-> to reflect its current role.
+> A reviewer suggested that the extra overhead associated with a
+> rw lock compared to a spinlock was not worth it for short,
+> oft-used critcal sections.
+> 
+> So the rwlock on the request list/array is changed to a spinlock.
+> The head of that list is in the owning sf file descriptor object.
 > 
 > Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->   drivers/scsi/sg.c | 240 ++++++++++++++++++++++++----------------------
->   1 file changed, 127 insertions(+), 113 deletions(-)
+>   drivers/scsi/sg.c | 52 +++++++++++++++++++++++------------------------
+>   1 file changed, 26 insertions(+), 26 deletions(-)
 > 
 > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 246c630d3523..eb3b333ea30b 100644
+> index eb3b333ea30b..99d7b1f76fc7 100644
 > --- a/drivers/scsi/sg.c
 > +++ b/drivers/scsi/sg.c
-> @@ -92,7 +92,7 @@ static int sg_allow_dio = SG_ALLOW_DIO_DEF;
->   static int scatter_elem_sz = SG_SCATTER_SZ;
->   static int scatter_elem_sz_prev = SG_SCATTER_SZ;
+> @@ -139,7 +139,7 @@ struct sg_fd {		/* holds the state of a file descriptor */
+>   	struct list_head sfd_entry;	/* member sg_device::sfds list */
+>   	struct sg_device *parentdp;	/* owning device */
+>   	wait_queue_head_t read_wait;	/* queue read until command done */
+> -	rwlock_t rq_list_lock;	/* protect access to list in req_arr */
+> +	spinlock_t rq_list_lock;	/* protect access to list in req_arr */
+>   	struct mutex f_mutex;	/* protect against changes in this fd */
+>   	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
+>   	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
+> @@ -738,17 +738,17 @@ sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
+>   	struct sg_request *resp;
+>   	unsigned long iflags;
 >   
-> -#define SG_SECTOR_SZ 512
-> +#define SG_DEF_SECTOR_SZ 512
+> -	write_lock_irqsave(&sfp->rq_list_lock, iflags);
+> +	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
+>   	list_for_each_entry(resp, &sfp->rq_list, entry) {
+>   		/* look for requests that are ready + not SG_IO owned */
+>   		if (resp->done == 1 && !resp->sg_io_owned &&
+>   		    (-1 == pack_id || resp->header.pack_id == pack_id)) {
+>   			resp->done = 2;	/* guard against other readers */
+> -			write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> +			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+>   			return resp;
+>   		}
+>   	}
+> -	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+> +	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+>   	return NULL;
+>   }
 >   
->   static int sg_add_device(struct device *, struct class_interface *);
->   static void sg_remove_device(struct device *, struct class_interface *);
-> @@ -105,12 +105,13 @@ static struct class_interface sg_interface = {
->   	.remove_dev     = sg_remove_device,
->   };
+> @@ -802,9 +802,9 @@ srp_done(struct sg_fd *sfp, struct sg_request *srp)
+>   	unsigned long flags;
+>   	int ret;
 >   
-> -struct sg_scatter_hold { /* holding area for scsi scatter gather info */
-> -	u16 k_use_sg; /* Count of kernel scatter-gather pieces */
-> +struct sg_scatter_hold {     /* holding area for scsi scatter gather info */
-> +	struct page **pages;	/* num_sgat element array of struct page* */
-> +	int buflen;		/* capacity in bytes (dlen<=buflen) */
-> +	int dlen;		/* current valid data length of this req */
-> +	u16 page_order;		/* byte_len = (page_size*(2**page_order)) */
-> +	u16 num_sgat;		/* actual number of scatter-gather segments */
->   	unsigned int sglist_len; /* size of malloc'd scatter-gather list ++ */
-> -	unsigned int bufflen;	/* Size of (aggregate) data buffer */
-> -	struct page **pages;
-> -	int page_order;
->   	char dio_in_use;	/* 0->indirect IO (or mmap), 1->dio */
->   	u8 cmd_opcode;		/* first byte of command */
->   };
-While you're at it, it might be worthwhile to exchange the order of the 
-last two fields.
-Having a 'char' before the 'u8' guarantees either a misaligned structure 
-or implicit padding by the compiler, neither of which is a good thing.
-
-> @@ -122,20 +123,20 @@ struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
->   	struct list_head entry;	/* list entry */
->   	struct sg_fd *parentfp;	/* NULL -> not in use */
->   	struct sg_scatter_hold data;	/* hold buffer, perhaps scatter list */
-> -	sg_io_hdr_t header;	/* scsi command+info, see <scsi/sg.h> */
-> +	struct sg_io_hdr header;  /* scsi command+info, see <scsi/sg.h> */
->   	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
->   	char res_used;		/* 1 -> using reserve buffer, 0 -> not ... */
->   	char orphan;		/* 1 -> drop on sight, 0 -> normal */
->   	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
->   	/* done protected by rq_list_lock */
->   	char done;		/* 0->before bh, 1->before read, 2->read */
-
-And here a bitfield might be a good idea, as otherwise you might run 
-into alignment / padding issues again ...
+> -	read_lock_irqsave(&sfp->rq_list_lock, flags);
+> +	spin_lock_irqsave(&sfp->rq_list_lock, flags);
+>   	ret = srp->done;
+> -	read_unlock_irqrestore(&sfp->rq_list_lock, flags);
+> +	spin_unlock_irqrestore(&sfp->rq_list_lock, flags);
+>   	return ret;
+>   }
+>   
+This one is pretty much pointless.
+By the time the 'return' statement is reached the 'ret' value is already 
+stale, and the lock has achieved precisely nothing.
+Use READ_ONCE() and drop the lock.
 
 Cheers,
 
 Hannes
-
 -- 
 Dr. Hannes Reinecke            Teamlead Storage & Networking
 hare@suse.de                               +49 911 74053 688
