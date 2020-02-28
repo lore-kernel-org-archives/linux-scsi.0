@@ -2,184 +2,196 @@ Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B1EC3F2CF
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3461C3F2D4
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 11:39:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BFEB24695
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 09:34:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iNwkoOkW"
+	by mail.kernel.org (Postfix) with ESMTP id CFE43246AA
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 11:39:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726614AbgB1JeG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 04:34:06 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:33527 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726538AbgB1JeF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 04:34:05 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582882445;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=bukg1E7s/jol6gr/YlHe9RA8JYmCB17ynKnnQIzeNiQ=;
-        b=iNwkoOkWGgig7N070qM5S7LcbazRzefvDNRTMEOIDl9F/nQ31W4USi5XKopyjFqYP3pB1L
-        8gbDPRgiCPZEZUNstE6D85xrRwYr8S5rZFiHABzgE6qXL6rwmudrsE5J3ZiCbSdTe4DGha
-        7rQepAYyJs/cxJdgWwlhVrvtRb1fSp0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-315-hxaeBYT4NZao-s_XY_b-Zw-1; Fri, 28 Feb 2020 04:33:59 -0500
-X-MC-Unique: hxaeBYT4NZao-s_XY_b-Zw-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 679EE19057A3;
-        Fri, 28 Feb 2020 09:33:57 +0000 (UTC)
-Received: from localhost (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 83BE687B08;
-        Fri, 28 Feb 2020 09:33:53 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi: avoid to fetch scsi host template instance in IO path
-Date:   Fri, 28 Feb 2020 17:33:46 +0800
-Message-Id: <20200228093346.31213-1-ming.lei@redhat.com>
+        id S1726700AbgB1LjG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 06:39:06 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:44638 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726451AbgB1LjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 06:39:05 -0500
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 11420E61C5EEB366BDFB;
+        Fri, 28 Feb 2020 19:38:46 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
+ 14.3.439.0; Fri, 28 Feb 2020 19:38:36 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <takondra@cisco.com>,
+        <tj@kernel.org>, "John Garry" <john.garry@huawei.com>
+Subject: [PATCH] libata: Remove extra scsi_host_put() in ata_scsi_add_hosts()
+Date:   Fri, 28 Feb 2020 19:33:35 +0800
+Message-ID: <1582889615-146214-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi host template struct is quite big, and the following three
-fields are needed in SCSI IO path:
+If the call to scsi_add_host_with_dma() in ata_scsi_add_hosts() fails,
+then we may get use-after-free KASAN warns:
 
-- queuecommand
-- commit_rqs
-- cmd_size
+==================================================================
+BUG: KASAN: use-after-free in kobject_put+0x24/0x180
+Read of size 1 at addr ffff0026b8c80364 by task swapper/0/1
+CPU: 1 PID: 1 Comm: swapper/0 Tainted: G        W         5.6.0-rc3-00004-g5a71b206ea82-dirty #1765
+Hardware name: Huawei TaiShan 200 (Model 2280)/BC82AMDD, BIOS 2280-V2 CS V3.B160.01 02/24/2020
+Call trace:
+dump_backtrace+0x0/0x298
+show_stack+0x14/0x20
+dump_stack+0x118/0x190
+print_address_description.isra.9+0x6c/0x3b8
+__kasan_report+0x134/0x23c
+kasan_report+0xc/0x18
+__asan_load1+0x5c/0x68
+kobject_put+0x24/0x180
+put_device+0x10/0x20
+scsi_host_put+0x10/0x18
+ata_devres_release+0x74/0xb0
+release_nodes+0x2d0/0x470
+devres_release_all+0x50/0x78
+really_probe+0x2d4/0x560
+driver_probe_device+0x7c/0x148
+device_driver_attach+0x94/0xa0
+__driver_attach+0xa8/0x110
+bus_for_each_dev+0xe8/0x158
+driver_attach+0x30/0x40
+bus_add_driver+0x220/0x2e0
+driver_register+0xbc/0x1d0
+__pci_register_driver+0xbc/0xd0
+ahci_pci_driver_init+0x20/0x28
+do_one_initcall+0xf0/0x608
+kernel_init_freeable+0x31c/0x384
+kernel_init+0x10/0x118
+ret_from_fork+0x10/0x18
 
-Cache them into scsi host intance, so that we can avoid to fetch
-big scsi host template instance in IO path.
+Allocated by task 5:
+save_stack+0x28/0xc8
+__kasan_kmalloc.isra.8+0xbc/0xd8
+kasan_kmalloc+0xc/0x18
+__kmalloc+0x1a8/0x280
+scsi_host_alloc+0x44/0x678
+ata_scsi_add_hosts+0x74/0x268
+ata_host_register+0x228/0x488
+ahci_host_activate+0x1c4/0x2a8
+ahci_init_one+0xd18/0x1298
+local_pci_probe+0x74/0xf0
+work_for_cpu_fn+0x2c/0x48
+process_one_work+0x488/0xc08
+worker_thread+0x330/0x5d0
+kthread+0x1c8/0x1d0
+ret_from_fork+0x10/0x18
 
-40% IOPS boost can be observed in my scsi_debug performance test after
-applying this change.
+Freed by task 5:
+save_stack+0x28/0xc8
+__kasan_slab_free+0x118/0x180
+kasan_slab_free+0x10/0x18
+slab_free_freelist_hook+0xa4/0x1a0
+kfree+0xd4/0x3a0
+scsi_host_dev_release+0x100/0x148
+device_release+0x7c/0xe0
+kobject_put+0xb0/0x180
+put_device+0x10/0x20
+scsi_host_put+0x10/0x18
+ata_scsi_add_hosts+0x210/0x268
+ata_host_register+0x228/0x488
+ahci_host_activate+0x1c4/0x2a8
+ahci_init_one+0xd18/0x1298
+local_pci_probe+0x74/0xf0
+work_for_cpu_fn+0x2c/0x48
+process_one_work+0x488/0xc08
+worker_thread+0x330/0x5d0
+kthread+0x1c8/0x1d0
+ret_from_fork+0x10/0x18
 
-Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-Cc: Ewan D . Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bart.vanassche@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+There is also refcount issue, as well:
+WARNING: CPU: 1 PID: 1 at lib/refcount.c:28 refcount_warn_saturate+0xf8/0x170
+
+The issue is that we make an erroneous extra call to scsi_host_put()
+for that host:
+
+So in ahci_init_one()->ata_host_alloc_pinfo()->ata_host_alloc(), we setup
+a device release method - ata_devres_release() - which intends to release
+the SCSI hosts:
+
+static void ata_devres_release(struct device *gendev, void *res)
+{
+	...
+	for (i = 0; i < host->n_ports; i++) {
+		struct ata_port *ap = host->ports[i];
+
+		if (!ap)
+			continue;
+
+		if (ap->scsi_host)
+			scsi_host_put(ap->scsi_host);
+
+	}
+	...
+}
+
+However in the ata_scsi_add_hosts() error path, we also call
+scsi_host_put() for the SCSI hosts.
+
+Fix by removing the the scsi_host_put() calls in ata_scsi_add_hosts() and
+leave this to ata_devres_release().
+
+Fixes: f31871951b38 ("libata: separate out ata_host_alloc() and ata_host_register()")
+Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hosts.c     |  4 ++++
- drivers/scsi/scsi_lib.c  | 10 +++++-----
- include/scsi/scsi_host.h | 11 ++++++++++-
- 3 files changed, 19 insertions(+), 6 deletions(-)
+Another approach here is to keep the scsi_host_put() call in
+ata_scsi_add_hosts(), but just clear ap->scsi_host there. It may be
+better, as it keeps the alloc and put together, which is more logical.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1d669e47b692..8012c1db092e 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -466,6 +466,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_t=
-emplate *sht, int privsize)
- 	if (sht->virt_boundary_mask)
- 		shost->virt_boundary_mask =3D sht->virt_boundary_mask;
-=20
-+	shost->cmd_size =3D sht->cmd_size;
-+	shost->queuecommand =3D sht->queuecommand;
-+	shost->commit_rqs =3D sht->commit_rqs;
-+
- 	device_initialize(&shost->shost_gendev);
- 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
- 	shost->shost_gendev.bus =3D &scsi_bus_type;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e7fbf3a9a6aa..f4243ae1d4a9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1148,7 +1148,7 @@ void scsi_init_command(struct scsi_device *dev, str=
-uct scsi_cmnd *cmd)
- 	in_flight =3D test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
--		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
-+		sizeof(*cmd) - sizeof(cmd->req) + dev->host->cmd_size);
-=20
- 	cmd->device =3D dev;
- 	cmd->sense_buffer =3D buf;
-@@ -1547,7 +1547,7 @@ static int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+I went with this one as it removes code, instead of adding it, above. And
+it also ensures we have a single location for the scsi_host_put() for
+ap->host set.
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index eb2eb599e602..061eebf85e6d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4562,22 +4562,19 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		 */
+ 		shost->max_host_blocked = 1;
+ 
+-		rc = scsi_add_host_with_dma(ap->scsi_host,
+-						&ap->tdev, ap->host->dev);
++		rc = scsi_add_host_with_dma(shost, &ap->tdev, ap->host->dev);
+ 		if (rc)
+-			goto err_add;
++			goto err_alloc;
  	}
-=20
- 	trace_scsi_dispatch_cmd_start(cmd);
--	rtn =3D host->hostt->queuecommand(host, cmd);
-+	rtn =3D host->queuecommand(host, cmd);
- 	if (rtn) {
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
- 		if (rtn !=3D SCSI_MLQUEUE_DEVICE_BUSY &&
-@@ -1584,7 +1584,7 @@ static blk_status_t scsi_mq_prep_fn(struct request =
-*req)
- 	cmd->tag =3D req->tag;
- 	cmd->prot_op =3D SCSI_PROT_NORMAL;
-=20
--	sg =3D (void *)cmd + sizeof(struct scsi_cmnd) + shost->hostt->cmd_size;
-+	sg =3D (void *)cmd + sizeof(struct scsi_cmnd) + shost->cmd_size;
- 	cmd->sdb.table.sgl =3D sg;
-=20
- 	if (scsi_host_get_prot(shost)) {
-@@ -1752,7 +1752,7 @@ static int scsi_mq_init_request(struct blk_mq_tag_s=
-et *set, struct request *rq,
-=20
- 	if (scsi_host_get_prot(shost)) {
- 		sg =3D (void *)cmd + sizeof(struct scsi_cmnd) +
--			shost->hostt->cmd_size;
-+			shost->cmd_size;
- 		cmd->prot_sdb =3D (void *)sg + scsi_mq_inline_sgl_size(shost);
+ 
+ 	return 0;
+ 
+- err_add:
+-	scsi_host_put(host->ports[i]->scsi_host);
+  err_alloc:
+ 	while (--i >= 0) {
+ 		struct Scsi_Host *shost = host->ports[i]->scsi_host;
+ 
++		/* scsi_host_put() is in ata_devres_release() */
+ 		scsi_remove_host(shost);
+-		scsi_host_put(shost);
  	}
-=20
-@@ -1844,7 +1844,7 @@ static void scsi_commit_rqs(struct blk_mq_hw_ctx *h=
-ctx)
- 	struct scsi_device *sdev =3D q->queuedata;
- 	struct Scsi_Host *shost =3D sdev->host;
-=20
--	shost->hostt->commit_rqs(shost, hctx->queue_num);
-+	shost->commit_rqs(shost, hctx->queue_num);
+ 	return rc;
  }
-=20
- static const struct blk_mq_ops scsi_mq_ops =3D {
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f577647bf5f2..ccd5b9a5de2a 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -522,7 +522,16 @@ struct Scsi_Host {
- 	 */
- 	struct list_head	__devices;
- 	struct list_head	__targets;
--=09
-+
-+	/*
-+	 * cacahe the three fields from scsi_host_template, so that
-+	 * the big host template  instance needn't to be fetched in
-+	 * IO path. Big IOPS boost can be observed by this way.
-+	 */
-+	unsigned int cmd_size;
-+	int (*queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
-+	void (*commit_rqs)(struct Scsi_Host *, u16);
-+
- 	struct list_head	starved_list;
-=20
- 	spinlock_t		default_lock;
---=20
-2.20.1
+-- 
+2.17.1
 
