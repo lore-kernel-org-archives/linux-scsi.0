@@ -1,117 +1,100 @@
-Return-Path: <SRS0=MD5Y=4P=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=EUsX=4Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C566CC3F2C5
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 22:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 974ADC3F2CE
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 02:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C183246A6
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 Feb 2020 22:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C3F52469F
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 02:12:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="S3jj8Bn1"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qfDTCOc9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730187AbgB0WGy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 Feb 2020 17:06:54 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:12715 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730149AbgB0WGy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Feb 2020 17:06:54 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1582841213; h=References: In-Reply-To: References:
- In-Reply-To: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=KA5SegCo5AW0cExJCz9BWH9qh1K5CDu6sI3vMXYPwJc=; b=S3jj8Bn127oG/+b1JpXKOds8/FS8ZwYdRIasUENwuZL5nbgWk1sIn1W8+PVo44bOAXnhYemr
- ZEp3uaGkh1Jht5KZU5HbnL0Z4jJ8aSJSgfNVdOawrzOHnLMIpKHm0MdPHfx7bL1KBg1Fq6f8
- NlU38gBoBQF+LvuAHpP8HuXCy2c=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e583d71.7fb467084030-smtp-out-n03;
- Thu, 27 Feb 2020 22:06:41 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 16488C447A0; Thu, 27 Feb 2020 22:06:40 +0000 (UTC)
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2ED8FC43383;
-        Thu, 27 Feb 2020 22:06:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2ED8FC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
-From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
-To:     ulf.hansson@linaro.org, robh+dt@kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     linux-mmc@vger.kernel.org, asutoshd@codeaurora.org,
-        cang@codeaurora.org, Sahitya Tummala <stummala@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        "Bao D. Nguyen" <nguyenb@codeaurora.org>
-Subject: [<PATCH v1> 4/4] mmc: core: update host->card after getting RCA for SD card
-Date:   Thu, 27 Feb 2020 14:05:42 -0800
-Message-Id: <630eb41f01456cd862495166b9cef2b36ae2861e.1582839544.git.nguyenb@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <cover.1582839544.git.nguyenb@codeaurora.org>
-References: <cover.1582839544.git.nguyenb@codeaurora.org>
-In-Reply-To: <cover.1582839544.git.nguyenb@codeaurora.org>
-References: <cover.1582839544.git.nguyenb@codeaurora.org>
+        id S1730442AbgB1CMZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 Feb 2020 21:12:25 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:43598 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730343AbgB1CMZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Feb 2020 21:12:25 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=rUbHo/iSA4OojiqqN3boyQPCM+9w5ozJWmrKCLdqwUA=; b=qfDTCOc9M7tFOsEWaCkVpeIFQT
+        S6Z7WjOM//7VMGPstpuv6B4OBj2C3dvs5elNLcPyCr8Fzv7joMnAN29RnuOUGrlIxlw6p1cD4I4Dj
+        88mPIIacDn7+eoIWzXJ8imeQ2nXy84Je0c4nNnwupnnqT89R93eZyLVREd/GJOWE2R1J+3gSyaKuU
+        UoqUzJtKJK4qxuAMD8uslp7DJ8j4LwpDJ56dAx6/0RLO0HHeJI/hsIH5Qddv553G3E7IFlPkDyXL2
+        rGcIs3N+oiBfefR96aUMS58YUinqCWPFb9MCfbzWnZ/F1gN8sHRH9Q62NDv3ne99900liJoueTUxa
+        W7Xq/Rdw==;
+Received: from [2601:1c0:6280:3f0::19c2]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j7V8Z-00075q-MN; Fri, 28 Feb 2020 02:12:23 +0000
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] fusion: fix if-statement empty body warning
+Message-ID: <ce2233a7-e470-0fc2-f908-75f52c6ec3e1@infradead.org>
+Date:   Thu, 27 Feb 2020 18:12:23 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sahitya Tummala <stummala@codeaurora.org>
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Make the host->card available before tuning is invoked for SD card.
-In the sdhci_msm_execute_tuning(), we will send CMD13 only if
-host->card is present because it needs the card->rca as its
-argument to be sent. For emmc, host->card is already updated
-immediately after the mmc_alloc_card(). In the similar way,
-this change is for SD card. Without this change, tuning functionality
-will not be able to send CMD13 to make sure the card is ready
-for next data command. If the last tuning command failed
-and we did not send CMD13 to ensure card is in transfer state,
-the next read/write command will fail.
+When driver debugging is not enabled, make the debug print macros
+be empty do-while loops.
 
-Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
-Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+This fixes a gcc warning when -Wextra is set:
+../drivers/message/fusion/mptlan.c:266:39: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+
+I have verified that there is no object code change (with gcc 7.5.0).
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 ---
- drivers/mmc/core/sd.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptlan.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/core/sd.c b/drivers/mmc/core/sd.c
-index 76c7add..f0872e3 100644
---- a/drivers/mmc/core/sd.c
-+++ b/drivers/mmc/core/sd.c
-@@ -989,6 +989,7 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
- 		err = mmc_send_relative_addr(host, &card->rca);
- 		if (err)
- 			goto free_card;
-+		host->card = card;
- 	}
+--- linux-next-20200225.orig/drivers/message/fusion/mptlan.h
++++ linux-next-20200225/drivers/message/fusion/mptlan.h
+@@ -111,13 +111,13 @@ MODULE_DESCRIPTION(LANAME);
+ #ifdef MPT_LAN_IO_DEBUG
+ #define dioprintk(x)  printk x
+ #else
+-#define dioprintk(x)
++#define dioprintk(x)  do {} while (0)
+ #endif
  
- 	if (!oldcard) {
-@@ -1100,12 +1101,13 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
- 		goto free_card;
- 	}
- done:
--	host->card = card;
- 	return 0;
+ #ifdef MPT_LAN_DEBUG
+ #define dlprintk(x)  printk x
+ #else
+-#define dlprintk(x)
++#define dlprintk(x)  do {} while (0)
+ #endif
  
- free_card:
--	if (!oldcard)
-+	if (!oldcard) {
-+		host->card = NULL;
- 		mmc_remove_card(card);
-+	}
- 
- 	return err;
- }
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+ #define NETDEV_TO_LANPRIV_PTR(d)	((struct mpt_lan_priv *)netdev_priv(d))
+
