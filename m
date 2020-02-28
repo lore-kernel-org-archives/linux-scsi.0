@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76B4AC3F2CF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C471C3F2D4
 	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F281246AA
+	by mail.kernel.org (Postfix) with ESMTP id 23E702467B
 	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727027AbgB1Hx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 02:53:26 -0500
-Received: from mx2.suse.de ([195.135.220.15]:59836 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727023AbgB1HxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726996AbgB1HxZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 28 Feb 2020 02:53:25 -0500
+Received: from mx2.suse.de ([195.135.220.15]:59824 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727003AbgB1HxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 02:53:24 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 5BF3DB1AD;
+        by mx2.suse.de (Postfix) with ESMTP id 60902B21B;
         Fri, 28 Feb 2020 07:53:21 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 08/13] scsi: add scsi_host_(block,unblock) helper function
-Date:   Fri, 28 Feb 2020 08:53:13 +0100
-Message-Id: <20200228075318.91255-9-hare@suse.de>
+Subject: [PATCH 10/13] scsi: add scsi_host_busy_iter()
+Date:   Fri, 28 Feb 2020 08:53:15 +0100
+Message-Id: <20200228075318.91255-11-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200228075318.91255-1-hare@suse.de>
 References: <20200228075318.91255-1-hare@suse.de>
@@ -38,72 +38,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add helper functions to call scsi_internal_device_block()/
-scsi_internal_device_unblock() for all attached devices on a
-scsi host.
+Add an iterator scsi_host_busy_iter() to traverse all busy commands.
+If locking against concurrent command completions is required it
+has to be provided by the caller.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c  | 30 ++++++++++++++++++++++++++++++
- include/scsi/scsi_host.h |  2 ++
- 2 files changed, 32 insertions(+)
+ drivers/scsi/hosts.c     | 37 +++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_host.h |  3 +++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 610ee41fa54c..a48a5727831b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2845,6 +2845,36 @@ scsi_target_unblock(struct device *dev, enum scsi_device_state new_state)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 00ae9d43ce9f..7ec91c3a66ca 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -678,3 +678,40 @@ void scsi_host_complete_all_commands(struct Scsi_Host *shost, int status)
+ 				&status);
  }
- EXPORT_SYMBOL_GPL(scsi_target_unblock);
- 
-+int
-+scsi_host_block(struct Scsi_Host *shost)
+ EXPORT_SYMBOL_GPL(scsi_host_complete_all_commands);
++
++struct scsi_host_busy_iter_data {
++	bool (*fn)(struct scsi_cmnd *, void *, bool);
++	void *priv;
++};
++
++static bool __scsi_host_busy_iter_fn(struct request *req, void *priv,
++				   bool reserved)
 +{
-+	struct scsi_device *sdev;
-+	int ret = 0;
++	struct scsi_host_busy_iter_data *iter_data = priv;
++	struct scsi_cmnd *sc = blk_mq_rq_to_pdu(req);
 +
-+	shost_for_each_device(sdev, shost) {
-+		ret = scsi_internal_device_block(sdev);
-+		if (ret)
-+			break;
-+	}
-+	return ret;
++	return iter_data->fn(sc, iter_data->priv, reserved);
 +}
-+EXPORT_SYMBOL_GPL(scsi_host_block);
 +
-+int
-+scsi_host_unblock(struct Scsi_Host *shost, int new_state)
++/**
++ * scsi_host_busy_iter - Iterate over all busy commands
++ * @shost:	Pointer to Scsi_Host.
++ * @fn:		Function to call on each busy command
++ * @priv:	Data pointer passed to @fn
++ *
++ * If locking against concurrent command completions is required
++ * ithas to be provided by the caller
++ **/
++void scsi_host_busy_iter(struct Scsi_Host *shost,
++			 bool (*fn)(struct scsi_cmnd *, void *, bool),
++			 void *priv)
 +{
-+	struct scsi_device *sdev;
-+	int ret = 0;
++	struct scsi_host_busy_iter_data iter_data = {
++		.fn = fn,
++		.priv = priv,
++	};
 +
-+	shost_for_each_device(sdev, shost) {
-+		ret = scsi_internal_device_unblock(sdev, new_state);
-+		if (ret)
-+			break;
-+	}
-+	return ret;
++	blk_mq_tagset_busy_iter(&shost->tag_set, __scsi_host_busy_iter_fn,
++				&iter_data);
 +}
-+EXPORT_SYMBOL_GPL(scsi_host_unblock);
-+
- /**
-  * scsi_kmap_atomic_sg - find and atomically map an sg-elemnt
-  * @sgl:	scatter-gather list
++EXPORT_SYMBOL_GPL(scsi_host_busy_iter);
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 25bef781cbe1..613c3820028e 100644
+index 613c3820028e..eff12445b823 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -758,6 +758,8 @@ static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
+@@ -761,6 +761,9 @@ extern void scsi_block_requests(struct Scsi_Host *);
+ extern int scsi_host_block(struct Scsi_Host *shost);
+ extern int scsi_host_unblock(struct Scsi_Host *shost, int new_state);
  
- extern void scsi_unblock_requests(struct Scsi_Host *);
- extern void scsi_block_requests(struct Scsi_Host *);
-+extern int scsi_host_block(struct Scsi_Host *shost);
-+extern int scsi_host_unblock(struct Scsi_Host *shost, int new_state);
- 
++void scsi_host_busy_iter(struct Scsi_Host *,
++			 bool (*fn)(struct scsi_cmnd *, void *, bool), void *priv);
++
  struct class_container;
  
+ /*
 -- 
 2.16.4
 
