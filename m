@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C193C3F2D2
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA15C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69490246AA
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C662467B
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 Feb 2020 07:53:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727022AbgB1HxX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 02:53:23 -0500
-Received: from mx2.suse.de ([195.135.220.15]:59758 "EHLO mx2.suse.de"
+        id S1727025AbgB1Hx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 02:53:26 -0500
+Received: from mx2.suse.de ([195.135.220.15]:59820 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726897AbgB1HxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Feb 2020 02:53:23 -0500
+        id S1726995AbgB1HxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Feb 2020 02:53:25 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1B0A3AFF9;
-        Fri, 28 Feb 2020 07:53:20 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 5F349B1F5;
+        Fri, 28 Feb 2020 07:53:21 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 04/13] aacraid: Do not wait for outstanding write commands on synchronize_cache
-Date:   Fri, 28 Feb 2020 08:53:09 +0100
-Message-Id: <20200228075318.91255-5-hare@suse.de>
+Subject: [PATCH 05/13] aacraid: use scsi_host_complete_all_commands() to terminate outstanding commands
+Date:   Fri, 28 Feb 2020 08:53:10 +0100
+Message-Id: <20200228075318.91255-6-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200228075318.91255-1-hare@suse.de>
 References: <20200228075318.91255-1-hare@suse.de>
@@ -38,120 +38,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need to wait for outstanding write commands on synchronize
-cache; the block layer is responsible for I/O scheduling, no need
-to out-guess it on the driver layer.
+Use scsi_host_complete_all_commands() to terminate all outstanding commands
+instead, and change the command result for terminated commands to
+the more common 'DID_RESET' instead of 'QUEUE_FULL'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Balsundar P <balsundar.b@microchip.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Balsundar P <balsundar.p@microchip.com>
 ---
- drivers/scsi/aacraid/aachba.c | 76 ++-----------------------------------------
- 1 file changed, 2 insertions(+), 74 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 24 ++----------------------
+ 1 file changed, 2 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 33dbc051bff9..474d48eb1348 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -2601,9 +2601,7 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- static void synchronize_callback(void *context, struct fib *fibptr)
- {
- 	struct aac_synchronize_reply *synchronizereply;
--	struct scsi_cmnd *cmd;
--
--	cmd = context;
-+	struct scsi_cmnd *cmd = context;
- 
- 	if (!aac_valid_context(cmd, fibptr))
- 		return;
-@@ -2644,77 +2642,8 @@ static int aac_synchronize(struct scsi_cmnd *scsicmd)
- 	int status;
- 	struct fib *cmd_fibcontext;
- 	struct aac_synchronize *synchronizecmd;
--	struct scsi_cmnd *cmd;
- 	struct scsi_device *sdev = scsicmd->device;
--	int active = 0;
- 	struct aac_dev *aac;
--	u64 lba = ((u64)scsicmd->cmnd[2] << 24) | (scsicmd->cmnd[3] << 16) |
--		(scsicmd->cmnd[4] << 8) | scsicmd->cmnd[5];
--	u32 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
--	unsigned long flags;
--
--	/*
--	 * Wait for all outstanding queued commands to complete to this
--	 * specific target (block).
--	 */
--	spin_lock_irqsave(&sdev->list_lock, flags);
--	list_for_each_entry(cmd, &sdev->cmd_list, list)
--		if (cmd->SCp.phase == AAC_OWNER_FIRMWARE) {
--			u64 cmnd_lba;
--			u32 cmnd_count;
--
--			if (cmd->cmnd[0] == WRITE_6) {
--				cmnd_lba = ((cmd->cmnd[1] & 0x1F) << 16) |
--					(cmd->cmnd[2] << 8) |
--					cmd->cmnd[3];
--				cmnd_count = cmd->cmnd[4];
--				if (cmnd_count == 0)
--					cmnd_count = 256;
--			} else if (cmd->cmnd[0] == WRITE_16) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 56) |
--					((u64)cmd->cmnd[3] << 48) |
--					((u64)cmd->cmnd[4] << 40) |
--					((u64)cmd->cmnd[5] << 32) |
--					((u64)cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--				cmnd_count = (cmd->cmnd[10] << 24) |
--					(cmd->cmnd[11] << 16) |
--					(cmd->cmnd[12] << 8) |
--					cmd->cmnd[13];
--			} else if (cmd->cmnd[0] == WRITE_12) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[6] << 24) |
--					(cmd->cmnd[7] << 16) |
--					(cmd->cmnd[8] << 8) |
--					cmd->cmnd[9];
--			} else if (cmd->cmnd[0] == WRITE_10) {
--				cmnd_lba = ((u64)cmd->cmnd[2] << 24) |
--					(cmd->cmnd[3] << 16) |
--					(cmd->cmnd[4] << 8) |
--					cmd->cmnd[5];
--				cmnd_count = (cmd->cmnd[7] << 8) |
--					cmd->cmnd[8];
--			} else
--				continue;
--			if (((cmnd_lba + cmnd_count) < lba) ||
--			  (count && ((lba + count) < cmnd_lba)))
--				continue;
--			++active;
--			break;
--		}
--
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
--
--	/*
--	 *	Yield the processor (requeue for later)
--	 */
--	if (active)
--		return SCSI_MLQUEUE_DEVICE_BUSY;
- 
- 	aac = (struct aac_dev *)sdev->host->hostdata;
- 	if (aac->in_reset)
-@@ -2723,8 +2652,7 @@ static int aac_synchronize(struct scsi_cmnd *scsicmd)
- 	/*
- 	 *	Allocate and initialize a Fib
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 5a8a999606ea..8736a540a048 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1478,8 +1478,6 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	int retval;
+ 	struct Scsi_Host *host;
+ 	struct scsi_device *dev;
+-	struct scsi_cmnd *command;
+-	struct scsi_cmnd *command_list;
+ 	int jafo = 0;
+ 	int bled;
+ 	u64 dmamask;
+@@ -1607,26 +1605,8 @@ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 	 * This is where the assumption that the Adapter is quiesced
+ 	 * is important.
  	 */
--	if (!(cmd_fibcontext = aac_fib_alloc(aac)))
--		return SCSI_MLQUEUE_HOST_BUSY;
-+	cmd_fibcontext = aac_fib_alloc_tag(aac, scsicmd);
- 
- 	aac_fib_init(cmd_fibcontext);
- 
+-	command_list = NULL;
+-	__shost_for_each_device(dev, host) {
+-		unsigned long flags;
+-		spin_lock_irqsave(&dev->list_lock, flags);
+-		list_for_each_entry(command, &dev->cmd_list, list)
+-			if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
+-				command->SCp.buffer = (struct scatterlist *)command_list;
+-				command_list = command;
+-			}
+-		spin_unlock_irqrestore(&dev->list_lock, flags);
+-	}
+-	while ((command = command_list)) {
+-		command_list = (struct scsi_cmnd *)command->SCp.buffer;
+-		command->SCp.buffer = NULL;
+-		command->result = DID_OK << 16
+-		  | COMMAND_COMPLETE << 8
+-		  | SAM_STAT_TASK_SET_FULL;
+-		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+-		command->scsi_done(command);
+-	}
++	scsi_host_complete_all_commands(host, DID_RESET);
++
+ 	/*
+ 	 * Any Device that was already marked offline needs to be marked
+ 	 * running
 -- 
 2.16.4
 
