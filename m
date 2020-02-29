@@ -7,92 +7,85 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ABE9C3F2D2
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Feb 2020 01:42:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F19CAC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Feb 2020 01:46:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7295D2468A
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 Feb 2020 01:42:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C18F62468A
+	for <linux-scsi@archiver.kernel.org>; Sat, 29 Feb 2020 01:46:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wL4ybZdc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="evPEml/+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726764AbgB2Bmp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 Feb 2020 20:42:45 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:32952 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726418AbgB2Bmp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Feb 2020 20:42:45 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1bXAc065791;
-        Sat, 29 Feb 2020 01:42:20 GMT
+        id S1726720AbgB2Bq1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 Feb 2020 20:46:27 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:50954 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726658AbgB2Bq1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Feb 2020 20:46:27 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1giS2043130;
+        Sat, 29 Feb 2020 01:46:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2020-01-29;
- bh=UCaZQzCibrp5i2NwfsLib4Z71x6Il8AQ8MzcZ2mUUYk=;
- b=wL4ybZdc+ba7eRS6S6OZjJGecIG2HsG0vDdBVlKs37aQZtJyMSi/grAq1Pc6wVfuPgdf
- 3iWcy1LxqAalSUuu1O3mXzvdwE6gcNcDpRjUnFHsC34sJmw2WjGNGuS8q3LHeq/v8szM
- g1JBknmZoQ4Xi6Goaot6Eld7TkWEubMqiRAPE3tUhzXaPseONHqARK3AA+xEHoTrlCDL
- 36UOBwbNXBimrosGsKn0skIeAvodZHrs2Iiu+oET0DiiIOGJM1ZpCtKcnhOUalrFCGo9
- grwWice2uINjQdZw2a6mf8fZr0nWpMa9tHyu1Q9oAyZ//K/ZM1lDLeTiMhH4you/BJpg UA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2ydcsnx6qe-1
+ bh=541CdlYQ/NJwQN95TS6F7fpWNki9nNrg7JPjVEdd4L4=;
+ b=evPEml/+g7EE1b7xKs7/jO+79Pekxs+VbB6Os8TU1+MKr2bxMCAVYtUspNPATsiEWqcY
+ TcgWSx3JEzF7KOsfr7ejsEVTyxNQ4j+X/62SaNU1j5gdX9JZAppcoAlorD36UzpEh4h/
+ i8NxxPbFB/XqrRDls18SCvtELAch4q2WCWG7Py0xKeXFKSfKPHvry5SwKDDUic25p+/d
+ flVJtyhBHh1GvAEYhecbKTqIKoUys3ZzxQzSrWCpptW+bwAX808pGbG5+38A+kIwQAU2
+ ePv+UZ+bqZ29lvs3cIIjfrw9XHO+1GfqKSFHwJ35CfP7Rphq9jFerRSJcTpHCO9R4OYb Fg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2ydct3p25h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 29 Feb 2020 01:42:20 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1gJxw187800;
-        Sat, 29 Feb 2020 01:42:20 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2yfd2v5eja-1
+        Sat, 29 Feb 2020 01:46:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 01T1iOLw122368;
+        Sat, 29 Feb 2020 01:44:24 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2ydj4sbna0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 29 Feb 2020 01:42:19 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 01T1gFSV017596;
-        Sat, 29 Feb 2020 01:42:16 GMT
+        Sat, 29 Feb 2020 01:44:24 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 01T1iMr8015371;
+        Sat, 29 Feb 2020 01:44:22 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 28 Feb 2020 17:42:15 -0800
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <beanhuo@micron.com>,
-        <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>
-Subject: Re: [PATCH v2 0/1] scsi: ufs: fix waiting time for reference clock
+        with ESMTP ; Fri, 28 Feb 2020 17:44:22 -0800
+To:     guosongsu@gmail.com
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Guosong Su <suguosong@xiaomi.com>
+Subject: Re: [PATCH] SCSI: use kobj_to_dev
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-References: <20200220134848.8807-1-stanley.chu@mediatek.com>
-Date:   Fri, 28 Feb 2020 20:42:11 -0500
-In-Reply-To: <20200220134848.8807-1-stanley.chu@mediatek.com> (Stanley Chu's
-        message of "Thu, 20 Feb 2020 21:48:47 +0800")
-Message-ID: <yq18skm6ufg.fsf@oracle.com>
+References: <20200225100411.10250-1-guosongsu@gmail.com>
+Date:   Fri, 28 Feb 2020 20:44:19 -0500
+In-Reply-To: <20200225100411.10250-1-guosongsu@gmail.com>
+        (guosongsu@gmail.com's message of "Tue, 25 Feb 2020 18:04:11 +0800")
+Message-ID: <yq14kva6ubw.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=959 adultscore=0
- spamscore=0 phishscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2002290008
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- lowpriorityscore=0 mlxlogscore=999 phishscore=0 spamscore=0 adultscore=0
- suspectscore=0 impostorscore=0 clxscore=1011 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 suspectscore=1
+ spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=763 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002290007
+ definitions=main-2002290008
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9545 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
+ impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0 adultscore=0
+ phishscore=0 mlxlogscore=823 mlxscore=0 suspectscore=1 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002290008
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Stanley,
+Guosong,
 
-> This patchset adds waiting time for reference clock provided to UFS
-> device in MediaTek UFS implementation.
+> Use kobj_to_dev to instead of open-coding it.
 
 Applied to 5.7/scsi-queue, thanks!
 
